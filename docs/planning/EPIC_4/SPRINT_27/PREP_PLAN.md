@@ -335,7 +335,7 @@ done
 
 ### Objective
 
-Run a full pipeline retest at Sprint 27 Day 0 (`scripts/gamslib/run_full_test.py`), produce `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` documenting the per-bucket baseline + per-failing-model bucket provenance with Sprint 26 final → Sprint 27 Day 0 bucket transitions. Freeze the in-scope model set at 142 (matching Sprint 26 Day 14 final per the Sprint 26 abel reclassification).
+Run a full pipeline retest at Sprint 27 Day 0 (`scripts/gamslib/run_full_test.py`), produce `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` documenting the per-bucket baseline + per-failing-model bucket provenance with Sprint 26 final → Sprint 27 Day 0 bucket transitions. Freeze the in-scope model set at 142 (matching Sprint 26 Day 13 (final) per the Sprint 26 abel reclassification).
 
 ### Why This Matters
 
@@ -349,14 +349,14 @@ Scope freeze at 142 (continuing Sprint 26's abel runtime-filter policy) prevents
 
 - Sprint 26 baseline pattern: `docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md` with §5 scope-freeze + §6 bucket-provenance per-failing-model
 - Sprint 25 §5 scope-freeze policy: `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5 + §5.1 abel reclassification
-- Current pipeline state: `data/gamslib/gamslib_status.json` reflects Sprint 26 Day 14 final (Match 59, Solve 103, path_syntax_error 17)
+- Current pipeline state: `data/gamslib/gamslib_status.json` reflects Sprint 26 Day 13 (final) (Match 59, Solve 103, path_syntax_error 17)
 - PR15 (scope freeze): Sprint 25 retrospective process recommendation reaffirmed in Sprint 26 retrospective
 - PR17 (bucket-provenance baseline): Sprint 25 retrospective process recommendation reaffirmed in Sprint 26 retrospective
 - Pipeline retest command: `.venv/bin/python scripts/gamslib/run_full_test.py` (full pipeline; runtime varies with machine load — Sprint 26 Day 0 took ~3h33m / 12779s, Sprint 26 Day 13 retest took ~1h26m / 5165.8s on a faster runner; budget ~1–3.5h)
 
 ### What Needs to Be Done
 
-1. **Run full pipeline retest** — execute `.venv/bin/python scripts/gamslib/run_full_test.py` to produce updated `gamslib_status.json` reflecting the Sprint 27 Day 0 state. If results match Sprint 26 Day 14 final (expected since main has not changed substantively post-Sprint 26 final retest), proceed with existing JSON; otherwise document any drift.
+1. **Run full pipeline retest** — execute `.venv/bin/python scripts/gamslib/run_full_test.py` to produce updated `gamslib_status.json` reflecting the Sprint 27 Day 0 state. If results match Sprint 26 Day 13 (final) (expected since main has not changed substantively post-Sprint 26 final retest), proceed with existing JSON; otherwise document any drift.
 
 2. **Author `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md`** with the standard sections (modeled on `SPRINT_26/BASELINE_METRICS.md`):
    - §1: Sprint 27 Goals (from PROJECT_PLAN.md)
@@ -369,12 +369,12 @@ Scope freeze at 142 (continuing Sprint 26's abel runtime-filter policy) prevents
 
 3. **Per-failing-model bucket provenance** — for each model in a non-compare_match bucket, document:
    - Current Sprint 27 Day 0 bucket
-   - Sprint 26 final bucket (from `SPRINT_26/BASELINE_METRICS.md` §6 or Sprint 26 Day 14 SPRINT_LOG)
+   - Sprint 26 final bucket (from `SPRINT_26/BASELINE_METRICS.md` §6 or Sprint 26 Day 13 (final) SPRINT_LOG)
    - Sprint 26 Day 0 bucket (for models that shifted during Sprint 26)
    - Triggering Sprint 26 fix (if applicable)
    - Sprint 27 priority that targets this model (if any)
 
-4. **Verify no drift from Sprint 26 final** — `git diff` the updated `gamslib_status.json` against the Sprint 26 Day 14 commit; if any drift, investigate root cause before freezing baseline.
+4. **Verify no drift from Sprint 26 final** — `git diff` the updated `gamslib_status.json` against the Sprint 26 Day 13 (final) commit; if any drift, investigate root cause before freezing baseline.
 
 5. **Update CHANGELOG.md** — add entry under Sprint 27 Preparation referencing the new BASELINE_METRICS.md.
 
@@ -408,7 +408,7 @@ grep -cE '^#### `[a-z_]+`' docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md
 # Scope freeze at 142 in-scope
 grep -A3 "Scope Freeze" docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md | grep -E "142|in-scope"
 
-# Pipeline retest results match Sprint 26 Day 14 final
+# Pipeline retest results match Sprint 26 Day 13 (final)
 .venv/bin/python -c "
 import json
 with open('data/gamslib/gamslib_status.json') as f:
@@ -425,7 +425,7 @@ print(buckets)
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` with §1–§7 sections
-- Updated `data/gamslib/gamslib_status.json` from Day 0 retest (or confirmation no drift from Sprint 26 Day 14)
+- Updated `data/gamslib/gamslib_status.json` from Day 0 retest (or confirmation no drift from Sprint 26 Day 13 (final))
 - Per-failing-model bucket-provenance entries for all ~83 failing models
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknown 1.1
 - CHANGELOG.md updated with Task 3 completion entry
@@ -433,9 +433,9 @@ print(buckets)
 ### Acceptance Criteria
 
 - [ ] BASELINE_METRICS.md contains all 7 standard sections
-- [ ] §5 Scope Freeze documents 142 in-scope models (matching Sprint 26 Day 14 final)
+- [ ] §5 Scope Freeze documents 142 in-scope models (matching Sprint 26 Day 13 (final))
 - [ ] §6 Per-Failing-Model Bucket Provenance covers all failing models with Sprint 26 final → Sprint 27 Day 0 transitions
-- [ ] No unexplained drift between Sprint 26 Day 14 `gamslib_status.json` and Sprint 27 Day 0 `gamslib_status.json`; any drift root-caused and documented
+- [ ] No unexplained drift between Sprint 26 Day 13 (final) `gamslib_status.json` and Sprint 27 Day 0 `gamslib_status.json`; any drift root-caused and documented
 - [ ] Sprint 27 target metrics in §7 match PROJECT_PLAN.md §Sprint 27 Acceptance Criteria
 - [ ] Unknown 1.1 verified and updated in KNOWN_UNKNOWNS.md
 
@@ -461,7 +461,7 @@ Sprint 27 Priority 1 (#1398 Phase A gate predicate tightening) is the single hig
 
 If the formal hand-derived analysis collapses two anchor models to the same shape (over-coverage), Sprint 27 Priority 1 can reduce verification budget. If it reveals additional shapes among the 7 non-anchor models (under-coverage), Priority 1 needs to expand the anchor set — both decisions must be made before Day 1.
 
-Additionally, Sprint 27 Day 0 baseline (Task 3) may surface that one or more of the 15 affected models has self-recovered between Sprint 26 Day 14 and Sprint 27 Day 0 (e.g., if any Sprint 26-merged fix has a delayed effect on dependent models), reducing the #1398 scope. Or it may surface additional models not in the original 15, expanding the scope.
+Additionally, Sprint 27 Day 0 baseline (Task 3) may surface that one or more of the 15 affected models has self-recovered between Sprint 26 Day 13 (final) and Sprint 27 Day 0 (e.g., if any Sprint 26-merged fix has a delayed effect on dependent models), reducing the #1398 scope. Or it may surface additional models not in the original 15, expanding the scope.
 
 ### Background
 

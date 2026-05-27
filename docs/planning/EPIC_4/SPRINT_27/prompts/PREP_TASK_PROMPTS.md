@@ -180,7 +180,7 @@ EOF
 
 **Priority:** Critical (4–5 hours)
 
-**Objective:** Run a full pipeline retest at Sprint 27 Day 0 (`scripts/gamslib/run_full_test.py`), produce `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` documenting the per-bucket baseline + per-failing-model bucket provenance with Sprint 26 final → Sprint 27 Day 0 bucket transitions. Freeze the in-scope model set at 142 (matching Sprint 26 Day 14 final per the Sprint 26 abel reclassification). Reaffirms Sprint 26 retrospective process recommendations **PR15** (scope freeze) and **PR17** (bucket-provenance baseline) for Sprint 27.
+**Objective:** Run a full pipeline retest at Sprint 27 Day 0 (`scripts/gamslib/run_full_test.py`), produce `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` documenting the per-bucket baseline + per-failing-model bucket provenance with Sprint 26 final → Sprint 27 Day 0 bucket transitions. Freeze the in-scope model set at 142 (matching Sprint 26 Day 13 (final) per the Sprint 26 abel reclassification). Reaffirms Sprint 26 retrospective process recommendations **PR15** (scope freeze) and **PR17** (bucket-provenance baseline) for Sprint 27.
 
 **Unknowns Verified:** 1.1
 
@@ -190,13 +190,13 @@ EOF
 - `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` §Unknown 1.1
 - `docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md` (Sprint 26 baseline pattern with §5 scope-freeze + §6 bucket-provenance)
 - `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5 + §5.1 (abel reclassification + scope-freeze policy)
-- Current state: `data/gamslib/gamslib_status.json` (Sprint 26 Day 14 final — Match 59, Solve 103, path_syntax_error 17)
+- Current state: `data/gamslib/gamslib_status.json` (Sprint 26 Day 13 (final) — Match 59, Solve 103, path_syntax_error 17)
 - Sprint 27 PROJECT_PLAN.md §Sprint 27 (target metrics)
 
 **Tasks to Complete:**
 
 1. **Run full pipeline retest** — `.venv/bin/python scripts/gamslib/run_full_test.py` (full pipeline; runtime varies with machine load: Sprint 26 Day 0 took ~3h33m / 12779s, Sprint 26 Day 13 retest took ~1h26m / 5165.8s on a faster runner — budget ~1–3.5h). Capture stdout/stderr.
-2. **Diff updated `gamslib_status.json` against Sprint 26 Day 14 commit** — `git diff data/gamslib/gamslib_status.json` to surface bucket transitions; investigate any unexpected drift before freezing baseline.
+2. **Diff updated `gamslib_status.json` against Sprint 26 Day 13 (final) commit** — `git diff data/gamslib/gamslib_status.json` to surface bucket transitions; investigate any unexpected drift before freezing baseline.
 3. **Author `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md`** with the standard sections (modeled on `SPRINT_26/BASELINE_METRICS.md`):
    - §1: Sprint 27 Goals (from PROJECT_PLAN.md)
    - §2: Per-Bucket Baseline (Match, Solve, path_syntax_error, path_solve_terminated, model_infeasible, translate, parse counts)
@@ -210,7 +210,7 @@ EOF
 **Deliverables:**
 
 - `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` with §1–§7 sections
-- Updated `data/gamslib/gamslib_status.json` from Day 0 retest (or confirmation no drift from Sprint 26 Day 14)
+- Updated `data/gamslib/gamslib_status.json` from Day 0 retest (or confirmation no drift from Sprint 26 Day 13 (final))
 - Per-failing-model bucket-provenance entries for all ~83 failing models
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknown 1.1
 - CHANGELOG.md updated with Task 3 completion entry
@@ -241,7 +241,7 @@ In `docs/planning/EPIC_4/SPRINT_27/PREP_PLAN.md` §Task 3:
 Under `[Unreleased]` → `### Sprint 27 Preparation`, prepend a new bullet:
 
 ```markdown
-- **Prep Task 3 COMPLETE (YYYY-MM-DD):** Sprint 26 → Sprint 27 bucket-provenance baseline + scope freeze (PR15 + PR17 reaffirmation). Sprint 27 Day 0 baseline: Parse 142/142, Translate <N>/142, Solve <N>, Match <N>, path_syntax_error <N>, path_solve_terminated <N>, model_infeasible <N>. <Drift summary: any bucket transitions Sprint 26 Day 14 → Sprint 27 Day 0 + root-cause attribution>. Scope frozen at 142 in-scope (continues Sprint 25 abel runtime-filter policy). Validation document at `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md`. Verified Unknown 1.1.
+- **Prep Task 3 COMPLETE (YYYY-MM-DD):** Sprint 26 → Sprint 27 bucket-provenance baseline + scope freeze (PR15 + PR17 reaffirmation). Sprint 27 Day 0 baseline: Parse 142/142, Translate <N>/142, Solve <N>, Match <N>, path_syntax_error <N>, path_solve_terminated <N>, model_infeasible <N>. <Drift summary: any bucket transitions Sprint 26 Day 13 (final) → Sprint 27 Day 0 + root-cause attribution>. Scope frozen at 142 in-scope (continues Sprint 25 abel runtime-filter policy). Validation document at `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md`. Verified Unknown 1.1.
 ```
 
 **Quality Gate:**
@@ -278,7 +278,7 @@ reference point for all Sprint 27 progress metrics.
 
 - 142 in-scope (continues Sprint 25 abel runtime-filter policy)
 
-## Sprint 26 Day 14 → Sprint 27 Day 0 Drift
+## Sprint 26 Day 13 (final) → Sprint 27 Day 0 Drift
 
 - <Summary of any bucket transitions + root-cause attribution>
 
@@ -306,7 +306,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 3: Bucket-Provenance Baseline
 - [x] Pipeline retest completed (`scripts/gamslib/run_full_test.py` exit 0)
 - [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit" (`make format`, `make lint`, `make test`) + `docs/development/AGENTS.md` §"Before submitting" (adds `make typecheck`): `make typecheck && make format && make lint && make test` all PASS
 - [x] BASELINE_METRICS.md contains all 7 sections (§1–§7)
-- [x] Scope frozen at 142 (matches Sprint 26 Day 14)
+- [x] Scope frozen at 142 (matches Sprint 26 Day 13 (final))
 - [x] Per-failing-model bucket-provenance entries present for ~83 failing models
 - [x] Unknown 1.1 verified in KNOWN_UNKNOWNS.md
 - [x] Task 3 Acceptance Criteria all checked in PREP_PLAN.md

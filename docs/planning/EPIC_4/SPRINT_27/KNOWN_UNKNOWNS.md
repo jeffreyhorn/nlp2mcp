@@ -118,7 +118,7 @@ Priority 1 workstream — Sprint 27 highest-leverage priority. Tightens the Phas
 
 ### Priority
 
-**Critical** — If 1+ models have self-recovered between Sprint 26 Day 14 and Sprint 27 Day 0 (e.g., a Sprint 26 fix has a delayed effect on dependent models), Priority 1's scope shrinks. Conversely, if Day 0 retest surfaces additional affected models, Priority 1's scope expands. Either case forces a re-budget of Priority 1's 10–14h allocation before Day 1.
+**Critical** — If 1+ models have self-recovered between Sprint 26 Day 13 (final) and Sprint 27 Day 0 (e.g., a Sprint 26 fix has a delayed effect on dependent models), Priority 1's scope shrinks. Conversely, if Day 0 retest surfaces additional affected models, Priority 1's scope expands. Either case forces a re-budget of Priority 1's 10–14h allocation before Day 1.
 
 ### Assumption
 
@@ -126,15 +126,15 @@ All 15 models identified in the Sprint 26 Day 13 #1398 sweep (qdemo7, egypt, fer
 
 ### Research Questions
 
-1. Does Sprint 27 Day 0 pipeline retest reproduce the exact 15-model bucket set from Sprint 26 Day 14?
+1. Does Sprint 27 Day 0 pipeline retest reproduce the exact 15-model bucket set from Sprint 26 Day 13 (final)?
 2. Are there models outside the 15 that exhibit the same gate-overreach pattern (e.g., models that translate but produce wrong-but-compiling emit with similar Phase A consolidated-multiplier shapes)?
 3. Has any Sprint 26 post-Day-13 fix (PR #1399 review-driven changes, etc.) silently shifted any of the 15 models' bucket?
-4. Does the bucket-provenance baseline (Task 3 of PREP_PLAN.md) capture the Sprint 26 Day 14 → Sprint 27 Day 0 transitions cleanly for all 15 models?
+4. Does the bucket-provenance baseline (Task 3 of PREP_PLAN.md) capture the Sprint 26 Day 13 (final) → Sprint 27 Day 0 transitions cleanly for all 15 models?
 
 ### How to Verify
 
 1. Run `.venv/bin/python scripts/gamslib/run_full_test.py` at Sprint 27 Day 0.
-2. Diff resulting `gamslib_status.json` against Sprint 26 Day 14 commit version.
+2. Diff resulting `gamslib_status.json` against Sprint 26 Day 13 (final) commit version.
 3. For each of the 15 models, confirm bucket has not changed; flag any drift.
 4. Grep `data/gamslib/mcp/*_mcp.gms` for the Phase A consolidated-multiplier pattern (e.g., `sum(j$(domain_filter), imat(j,i) * nu_<eq>(j))` style) across all 142 in-scope models; cross-reference against the 15 to identify any non-flagged models.
 
@@ -142,7 +142,7 @@ All 15 models identified in the Sprint 26 Day 13 #1398 sweep (qdemo7, egypt, fer
 
 - **Scope shrinkage (1+ self-recovered):** Priority 1 budget overestimated; potential reallocation of 1–2h to other priorities.
 - **Scope expansion (additional affected models):** Priority 1 budget underestimated; potential 2–4h additional verification effort.
-- **Drift in Sprint 26 Day 14 → Sprint 27 Day 0 baseline:** Bucket-provenance baseline becomes unreliable, affecting Sprint 27 progress measurement.
+- **Drift in Sprint 26 Day 13 (final) → Sprint 27 Day 0 baseline:** Bucket-provenance baseline becomes unreliable, affecting Sprint 27 progress measurement.
 
 ### Estimated Research Time
 
