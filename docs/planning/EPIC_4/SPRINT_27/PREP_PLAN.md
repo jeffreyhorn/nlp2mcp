@@ -208,9 +208,10 @@ grep -cE "^# Category " docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md
 
 ## Task 2: Author Missing Phase 0 Acceptance Gates (PR20)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-27
 **Priority:** Critical
-**Estimated Time:** 4–6 hours
+**Estimated Time:** 4–6 hours (actual: ~3h)
 **Deadline:** Before Sprint 27 Day 1 (this is the Sprint 26 PR20 implementation; must complete before any Priority 5 / 7 src/ work begins)
 **Owner:** Sprint planning + AD/KKT engineer
 **Dependencies:** Task 1 (KU-37/38/39 inform the Phase 0 derivation scope)
@@ -271,11 +272,31 @@ Codifying the Phase 0 rule in CONTRIBUTING.md (separate from the per-issue deriv
 
 ### Changes
 
-To be completed.
+Authored `## Phase 0: Acceptance Gate` sections (each with the 4 required `###` subsections per PR20 codification: Hand-Derived KKT Shape, Expected Emit Pattern, Verification Methodology, PROCEED/REPLAN Signal) on 4 target issue docs:
+
+- `docs/issues/ISSUE_1356_fawley-stationarity-domain-violations-171.md`
+- `docs/issues/ISSUE_1357_otpop-stationarity-domain-violations-171.md`
+- `docs/issues/ISSUE_1387_cclinpts-stat-b-stat-fb-condition-guard-or-sign-bug.md`
+- `docs/issues/ISSUE_1388_camshape-mcp-locally-infeasible-post-pattern-e-reclassification.md`
+
+Added new §"Phase 0 Acceptance Gates" section to `CONTRIBUTING.md` (between §"Emit-Affecting PRs" and §"Project Structure") with: the hard rule, "Why this exists" rationale + 2 incident citations (Sprint 26 PR #1379 + PR #1394), explicit Exception scope (scripts/**, tests/**, docs/**, .github/**, data/**), 5-step Workflow guidance, 3-bullet Reviewer expectations checklist, and cross-references to Sprint 26 retrospective + Sprint 27 Prep Task 2.
+
+Updated KNOWN_UNKNOWNS.md Verification Results for Unknowns 7.1 (#1387 bug class — both sign-flip AND term-omission), 7.2 (#1388 emit-bug-vs-property — Phase 0 derivation complete; NLP-warm-start runtime test selects between Sprint 27 fix vs Sprint 28 carryforward), 9.1 (PR20 friction-management — #1400 exempt, #1374 reduced-scope; mixed-touch PRs still require Phase 0 for the `src/` portion).
+
+Added CHANGELOG.md entry under Sprint 27 Preparation summarizing Task 2 completion.
 
 ### Result
 
-To be completed.
+**Per-issue PROCEED/REPLAN status:**
+
+- **#1356 fawley:** PROCEED — bug class is comp_up subset/superset domain widening; fix is either equation-domain narrowing to `cr(c)` OR nested `$`-filter `$(cr(c))$(crdat(c,"supply") < inf)`. Sprint 27 Priority 5 src/ implementation may begin.
+- **#1357 otpop:** PROCEED — same root cause as #1356 (comp_up subset/superset). Combined fix applies to both. Compile-clean PROCEED criterion is independent of #1393 + #1335 (Priority 3 AD bugs that produce solve-correctness errors orthogonal to the $171 compile bug).
+- **#1387 cclinpts:** PROCEED-with-investigation — Phase 0 identified BOTH a suspected sign-flip (double-negation that flattens to positive) AND term-omission (`stat_fb(j)` missing 3 of 4 expected contributions). Both are fixable in `src/kkt/stationarity.py` or upstream `src/ad/`; flag for Sprint 27 Day 1 to evaluate whether to bundle with Priority 3 AD redesigns.
+- **#1388 camshape:** PROCEED-with-condition — Phase 0 derivation identifies 5 specific verification checks. NLP-warm-started PATH solve test (Sprint 27 Day 0 or Day 1) distinguishes Sprint 27 fix (emit bug) from Sprint 28 carryforward (fundamental model property). Sprint 27 Priority 7 budget covers either outcome.
+
+**CONTRIBUTING.md codification:** New §"Phase 0 Acceptance Gates" section adds the hard rule + exception scope + reviewer-checklist enforcement to the project's contribution policy. Future `src/{ad,kkt,emit}/`-touching PRs are blocked until linked issue has Phase 0 section authored.
+
+**Sprint 27 readiness:** Priorities 5 (#1356 fawley + #1357 otpop) and 7 (#1387 cclinpts + #1388 camshape) cleared for src/ implementation per the per-issue PROCEED criteria. Priority 8 (#1400) exempt from PR20 (scripts-only). Priority 9 (#1374) requires reduced-scope Phase 0 to be authored as part of #1374 issue-doc work, not part of this Task 2.
 
 ### Verification
 
@@ -314,12 +335,12 @@ done
 
 ### Acceptance Criteria
 
-- [ ] All 4 target ISSUE_*.md files contain a `## Phase 0: Acceptance Gate` section
-- [ ] Each Phase 0 section contains all 4 required subsections (Hand-Derived KKT Shape, Expected Emit Pattern, Verification Methodology, PROCEED/REPLAN Signal)
-- [ ] CONTRIBUTING.md §"Phase 0 Acceptance Gates" exists with hard rule, exception scope, and Sprint 26 incident citations
-- [ ] Each Phase 0 section's "Verification Methodology" subsection includes at least one concrete `grep` / `diff` / pattern-match command runnable against regenerated `<model>_mcp.gms`
-- [ ] Unknowns 7.1, 7.2, 9.1 verified and updated in KNOWN_UNKNOWNS.md
-- [ ] CHANGELOG.md entry references all 4 issues + CONTRIBUTING.md update
+- [x] All 4 target ISSUE_*.md files contain a `## Phase 0: Acceptance Gate` section
+- [x] Each Phase 0 section contains all 4 required subsections (Hand-Derived KKT Shape, Expected Emit Pattern, Verification Methodology, PROCEED/REPLAN Signal)
+- [x] CONTRIBUTING.md §"Phase 0 Acceptance Gates" exists with hard rule, exception scope, and Sprint 26 incident citations
+- [x] Each Phase 0 section's "Verification Methodology" subsection includes at least one concrete `grep` / `diff` / pattern-match command runnable against regenerated `<model>_mcp.gms`
+- [x] Unknowns 7.1, 7.2, 9.1 verified and updated in KNOWN_UNKNOWNS.md
+- [x] CHANGELOG.md entry references all 4 issues + CONTRIBUTING.md update
 
 ---
 

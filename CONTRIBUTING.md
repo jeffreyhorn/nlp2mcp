@@ -230,6 +230,65 @@ A pure refactor PR may need both labels; a functional emit change typically gets
 
 ---
 
+## Phase 0 Acceptance Gates (PR20, Sprint 27 Prep Task 2)
+
+### The hard rule
+
+**Any issue whose Phase 1 design touches `src/ad/`, `src/kkt/`, or `src/emit/` MUST have a `## Phase 0: Acceptance Gate` section in its `docs/issues/ISSUE_<N>_*.md` file BEFORE any `src/` commit lands for that issue.**
+
+The Phase 0 section must contain exactly these 4 subsections, each rendered as a markdown `###` heading (do NOT use bold text or `####` — verification grep matches the literal `### <name>` form):
+
+- `### Hand-Derived KKT Shape` — formal Lagrangian + stationarity / primal-feasibility / complementarity equations for the target equation(s)
+- `### Expected Emit Pattern` — what the regenerated `<model>_mcp.gms` should contain (by equation name + index pattern)
+- `### Verification Methodology` — explicit byte-comparison or pattern-match command(s) to run against the regenerated emit
+- `### PROCEED/REPLAN Signal` — binary criteria for whether Phase 1 `src/` implementation may begin
+
+### Why this exists
+
+Unit tests, integration tests, and byte-stability gates are **insufficient** to catch alias-AD pipeline architectural-drift regressions. Sprint 26 had two incidents proving this:
+
+- **PR #1379 (Phase A consolidated zero-offset builder, Sprint 26 Day 1):** shipped through PR19's CI target list with all quality gates GREEN, then PR #1399 reviewer-driven retest discovered the new gate predicate had regressed 15 non-target models with `path_syntax_error`. Filed as #1398 with the prep-task PR20 codification + PR19 target-list widening as structural mitigations.
+- **PR #1394 (#1335 in-place scalar-eq fix, Sprint 26 Day 9):** shipped with `make typecheck && make format && make lint && make test` clean, but reviewer hand-derived the expected KKT shape and identified that the emit's `stat_p(tt)` body was structurally wrong (would have produced wrong solver behavior). Rolled back during PR review; reclassified as #1393 + #1335 in-place reopen.
+
+Both incidents prove: **only hand-derived KKT comparison reliably surfaces architectural-drift regressions that GREEN quality gates miss.**
+
+### Exception scope
+
+Phase 0 is NOT required for changes that touch ONLY:
+
+- `scripts/**` (pipeline / CI / audit scripts)
+- `tests/**` (test-only changes; new test cases without `src/` changes)
+- `docs/**` (documentation, planning docs, retrospectives)
+- `.github/**` (CI workflows)
+- `data/**` (regenerated artifacts; status JSON updates)
+
+A PR that touches BOTH `src/{ad,kkt,emit}/` AND any of the exempted paths still requires Phase 0 for the `src/` portion.
+
+### Workflow
+
+1. **File / re-open the issue** with the bug description, reproducer, and investigation pointers.
+2. **Author the `## Phase 0: Acceptance Gate` section** in `docs/issues/ISSUE_<N>_*.md` with the 4 required subsections. Use existing Phase 0 sections (e.g., `docs/issues/ISSUE_1356_*.md` from Sprint 27 Prep Task 2) as format reference.
+3. **Run the Verification Methodology commands** against a prototype patch (model-name-guarded to avoid regression risk) BEFORE writing the production fix. Capture the PROCEED / REPLAN signal in the issue.
+4. **If PROCEED:** proceed to Phase 1 (`src/` implementation) with the hand-derived KKT shape as the acceptance reference. Cite Phase 0 in the PR description.
+5. **If REPLAN:** either revise the Phase 0 hand-derivation (if it was wrong), or rescope the issue (e.g., file a successor issue with a different fix-surface diagnosis). Do NOT commit `src/` changes against a REPLAN'd Phase 0.
+
+### Reviewer expectations
+
+PR reviewers for `src/{ad,kkt,emit}/`-touching PRs MUST:
+
+- Check that the linked issue has a `## Phase 0: Acceptance Gate` section
+- Verify the PR description references the Phase 0 PROCEED signal (or explicitly explains why it doesn't apply — e.g., exception-scope follow-on cleanup that doesn't change emit shape)
+- Run the Verification Methodology commands locally and confirm the emit shape matches the Expected Emit Pattern
+
+A PR missing Phase 0 should be blocked by the reviewer until Phase 0 is authored, NOT merged with a "follow-on TODO" note.
+
+### Related
+
+- Sprint 26 retrospective §"What We'd Do Differently" PR20 codification rationale: `docs/planning/EPIC_4/SPRINT_26/SPRINT_RETROSPECTIVE.md`
+- Sprint 27 Prep Task 2 (the codification of this rule): `docs/planning/EPIC_4/SPRINT_27/PREP_PLAN.md` §Task 2
+
+---
+
 ## Project Structure
 
 ```
