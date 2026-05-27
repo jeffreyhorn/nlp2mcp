@@ -348,7 +348,7 @@ Scope freeze at 142 (continuing Sprint 26's abel runtime-filter policy) prevents
 - Current pipeline state: `data/gamslib/gamslib_status.json` reflects Sprint 26 Day 14 final (Match 59, Solve 103, path_syntax_error 17)
 - PR15 (scope freeze): Sprint 25 retrospective process recommendation reaffirmed in Sprint 26 retrospective
 - PR17 (bucket-provenance baseline): Sprint 25 retrospective process recommendation reaffirmed in Sprint 26 retrospective
-- Pipeline retest command: `.venv/bin/python scripts/gamslib/run_full_test.py` (full pipeline, ~10-15 min depending on cache state)
+- Pipeline retest command: `.venv/bin/python scripts/gamslib/run_full_test.py` (full pipeline; runtime varies with machine load — Sprint 26 Day 0 took ~3h33m / 12779s, Sprint 26 Day 13 retest took ~1h26m / 5165.8s on a faster runner; budget ~1–3.5h)
 
 ### What Needs to Be Done
 

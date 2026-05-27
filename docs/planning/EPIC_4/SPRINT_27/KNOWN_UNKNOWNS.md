@@ -1368,7 +1368,7 @@ Sprint planning + AD/KKT engineer
 
 ### Pipeline Infrastructure (Sprints 25–26)
 
-- ✅ `scripts/gamslib/run_full_test.py` is reliable for pipeline retests (~10–15 min)
+- ✅ `scripts/gamslib/run_full_test.py` is reliable for pipeline retests; runtime varies with machine load — Sprint 26 Day 0 was ~3h33m (12779s); Sprint 26 Day 13 retest was ~1h26m (5165.8s) on a faster runner. Budget ~1–3.5h for full-pipeline runs.
 - ✅ Pre-Sprint-0 baselining (PR15 scope freeze) prevents mid-sprint scope-shift confusion
 - ✅ PR12 byte-stability guard: full pipeline produces byte-identical output under ≥ 3 different `PYTHONHASHSEED` values
 
