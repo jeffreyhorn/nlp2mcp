@@ -552,7 +552,7 @@ Plan the PR19 CI target-list widening to cover all 15 #1398-affected models + la
 
 ### Why This Matters
 
-Sprint 26 PR #1379 ("Phase A consolidated zero-offset builder") shipped GREEN through PR19's existing CI target list because launch was NOT in the target set — the gate-overreach surface on launch + the 14 other affected models was invisible until PR #1399 reviewer-driven retest discovered it days later. **PR19 widening is the structural mitigation against this class of regression for the entire Sprint 27 emit-pipeline work** (Priorities 1, 2, 3 all touch emit-affecting code paths).
+Sprint 26 PR #1379 ("Phase A consolidated zero-offset builder") shipped GREEN through PR19's existing CI target list because launch (the Phase A fix target) was NOT in the target set — the emit changes on launch AND the gate-overreach surface on the 15 affected non-target models (qdemo7 + 14 others) were invisible until PR #1399 reviewer-driven retest discovered the regressions days later. **PR19 widening is the structural mitigation against this class of regression for the entire Sprint 27 emit-pipeline work** (Priorities 1, 2, 3 all touch emit-affecting code paths).
 
 The widening is non-trivial: PR19's CI extension runs PATH-solve on each target model, and PATH-solve is the most expensive pipeline stage (~20-60 seconds per model). Adding 15 models could add 5-15 minutes per PR run, which becomes friction if not budgeted. The design must trade off coverage (all 15 vs subset) against CI runtime budget.
 
@@ -1013,7 +1013,7 @@ For Sprint 27, this is especially critical because the sprint has 14 issues touc
 
 4. **Test the script:**
    - Run against Sprint 26 history to validate output format
-   - Verify it surfaces the Sprint 26 Day 13 #1398-regenerated emit artifacts (e.g., `launch_mcp.gms` + `launch_mcp_presolve.gms` + the 14 other #1398-affected models' `*_mcp.gms`). NOTE: #1400 (`scripts/gamslib/*` path-relativization) is intentionally NOT in scope for this script — it's not an emit artifact and will not appear in output; #1396 (PR19 CI YAML) is also out of scope
+   - Verify it surfaces 16 regenerated emit artifacts from Sprint 26: `launch_mcp.gms` + `launch_mcp_presolve.gms` (Phase A target — regenerated Day 1 PR #1379; launch is NOT one of the 15 #1398-affected models, it's a separate target) PLUS all 15 #1398-affected models' `*_mcp.gms` (regenerated Day 13). NOTE: #1400 (`scripts/gamslib/*` path-relativization) is intentionally NOT in scope for this script — it's not an emit artifact and will not appear in output; #1396 (PR19 CI YAML) is also out of scope
    - Document expected output in a `--help` text or accompanying README
 
 5. **Author `docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md`** with:
