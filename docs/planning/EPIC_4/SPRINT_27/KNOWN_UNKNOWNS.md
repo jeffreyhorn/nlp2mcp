@@ -249,26 +249,26 @@ Sprint planning + AD/KKT engineer
 
 ### Priority
 
-**High** — PR19's existing CI extension (per Sprint 26 PR #1396) runs PATH-solve on each target model, the most expensive pipeline stage. Adding 16 models could push per-PR runtime past developer-friction thresholds. If runtime exceeds 5 min, Sprint 27 must implement Option C (parallelized CI jobs) instead of Option A (full widening).
+**High** — PR19's existing CI extension (per Sprint 26 PR #1396) runs PATH-solve on each target model, the most expensive pipeline stage. The current PR19 list is 15 models; adding the 16-candidate widening cohort (15 #1398-affected + launch) means 15 net new entries after deduping `fawley` (already in Pattern C tier), bringing the final union to 30 unique models. That doubling could push per-PR runtime past developer-friction thresholds. If runtime exceeds 5 min, Sprint 27 must implement Option C (parallelized CI jobs) instead of Option A (full widening).
 
 ### Assumption
 
-PR19 widening to 16 models (Option A from Task 5 of PREP_PLAN.md) adds < 5 minutes per PR runtime, keeping the CI feedback loop within developer-friction thresholds without requiring parallelization (Option C).
+PR19 widening to add the 16-model cohort (15 #1398-affected + launch) to the existing 15-model PR19 list — `fawley` is already present in the Pattern C tier so net additions = 15, final union = 30 unique models — adds < 5 minutes per PR runtime under Option A, keeping the CI feedback loop within developer-friction thresholds without requiring parallelization (Option C).
 
 ### Research Questions
 
 1. What is the current PR19 per-model PATH-solve runtime distribution (min, median, max, per-model timeout cap)?
-2. With the 16 candidate models added, what is the projected total CI runtime?
+2. With 15 net new models added (16 candidates − 1 `fawley` already in list), final widened union 30 unique models, what is the projected total CI runtime?
 3. Does GitHub Actions' per-job runtime limit (typically 6 hours, but Sprint 26 CI typically completes in < 30 min) constrain Option A?
 4. If Option A exceeds 5 min, does Option C (split into 2 parallel CI jobs) keep both jobs under 5 min?
-5. Does Option B (anchor-only widening to 8 models) leave the 7 non-anchor models uncovered in a way that breaks Sprint 27's structural-mitigation rationale (KU-37 → PR19 widening is the structural mitigation)?
+5. Does Option B (anchor-only widening to 8 anchors — 8 net new since no anchor is currently in PR19 list; final union 23 unique models) leave the 7 non-anchor #1398-affected models uncovered in a way that breaks Sprint 27's structural-mitigation rationale (KU-37 → PR19 widening is the structural mitigation)?
 
 ### How to Verify
 
-1. Inspect Sprint 26 PR #1396 CI logs for per-model runtime data: `gh run list -w "PATH Solve Validation" --json conclusion,createdAt,databaseId | head -20`.
-2. Project widened runtime: current_total + (16_new_models × avg_per_model_time).
+1. Inspect Sprint 26 PR #1396 CI logs for per-model runtime data: `gh run list -w "PR19 Pre-Merge Solve-Time Validation" --json conclusion,createdAt,databaseId | head -20`.
+2. Project widened runtime: 30 unique models (final union) × avg per-model time — refine using per-model medians from CI logs.
 3. Run a dummy PR with the widened target list to measure actual CI runtime.
-4. If Option A exceeds threshold, design Option C split (e.g., 8 anchors in job 1, 7 non-anchors + launch in job 2) and project per-job runtime.
+4. If Option A exceeds threshold, design Option C split (e.g., 8 anchors in job 1, 7 non-anchors + launch in job 2 — total 15 net new across both jobs) and project per-job runtime.
 
 ### Risk if Wrong
 

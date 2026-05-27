@@ -570,14 +570,17 @@ The widening is non-trivial: PR19's CI extension runs PATH-solve on each target 
 1. **Inventory current PR19 target list** — read `.github/path-solve-ci-targets.txt`; document current models + per-model PATH-solve runtime (from Sprint 26 PR #1396 CI logs if available).
 
 2. **Calculate CI runtime impact of widening:**
-   - Current list runtime: N models × per-model time
-   - Widened list runtime: (N + 16) models × per-model time
+   - Current list: 15 models (11 Tier 0/1 hard-fail + 4 Pattern C soft-fail — `camcge`, `cesam2`, `fawley`, `otpop`); per `.github/path-solve-ci-targets.txt`
+   - 16-candidate widening cohort (15 #1398-affected + launch) overlaps current list by 1 model — `fawley` is already in the Pattern C tier
+   - Net additions = 16 − 1 = 15 models
+   - Final widened union = 15 (current) + 15 (net new) = 30 unique models
+   - Widened list runtime: 30 models × per-model time (refine using per-model medians from CI logs)
    - Threshold check: does widened list exceed any GitHub Actions per-job runtime limit?
 
 3. **Design widening strategy:**
-   - **Option A (full widening):** Add all 16 models (15 #1398-affected + launch) to PR19 target list — maximum coverage, maximum runtime cost
-   - **Option B (anchor-only widening):** Add only the 8 Phase 0 anchor models (launch + 7 anchors from Task 4) — partial coverage (7 non-anchor models still uncovered), lower runtime cost
-   - **Option C (tiered widening):** Add 16 models but split into 2 CI jobs (parallelized) — full coverage, runtime cost amortized
+   - **Option A (full widening):** Add the 16-candidate cohort with `fawley` deduped — 15 net new entries; final union 30 unique models — maximum coverage, maximum runtime cost
+   - **Option B (anchor-only widening):** Add only the 8 Phase 0 anchor models (none currently in PR19 list — 8 net new); final union 23 unique models — partial coverage (7 non-anchor #1398-affected models still uncovered), lower runtime cost
+   - **Option C (tiered widening):** Same final union as Option A (30 unique) but split into 2 CI jobs (parallelized) — full coverage, runtime cost amortized
    - Recommend one option with explicit reasoning; the recommendation should align with Sprint 27 retrospective intent (PR19 is the structural mitigation, suggesting Option A or C)
 
 4. **Author `docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIGN.md`** with:
@@ -625,10 +628,11 @@ grep -E "^## Recommendation:" docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIG
 ### Acceptance Criteria
 
 - [ ] PR19_WIDENING_DESIGN.md exists with all 4 required sections (state, runtime calc, options, recommendation)
-- [ ] All 16 candidate model names appear in the document
+- [ ] All 16 candidate model names appear in the document (15 #1398-affected + launch; `fawley` overlap with current PR19 list is called out)
+- [ ] Runtime calc documents net additions (15, after deduping `fawley`) and final widened union (30 unique models for Options A/C, 23 for Option B)
 - [ ] Recommended option includes estimated CI runtime delta
 - [ ] Unknown 1.4 verified and updated in KNOWN_UNKNOWNS.md
-- [ ] Implementation steps include the exact `.github/path-solve-ci-targets.txt` lines to add
+- [ ] Implementation steps include the exact `.github/path-solve-ci-targets.txt` lines to add (only the 15 net new entries, not `fawley`)
 - [ ] Validation plan defines how Sprint 27 Day 1 will confirm CI works on the widened set
 
 ---

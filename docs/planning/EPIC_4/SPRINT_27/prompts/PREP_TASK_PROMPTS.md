@@ -467,12 +467,12 @@ EOF
 
 **Tasks to Complete:**
 
-1. **Inventory current PR19 target list** — read `.github/path-solve-ci-targets.txt`; document current models + per-model PATH-solve runtime (from CI logs).
-2. **Calculate CI runtime impact of widening:** Current runtime + (16 new models × avg per-model time). Threshold check against GitHub Actions per-job runtime limit.
+1. **Inventory current PR19 target list** — read `.github/path-solve-ci-targets.txt`; document current models + per-model PATH-solve runtime (from CI logs). Note that the current list (15 models: 11 Tier 0/1 canaries hard-fail + 4 Pattern C target models soft-fail) already includes `fawley` (Pattern C tier), which is one of the 15 #1398-affected models — so the candidate cohort of 16 (15 #1398-affected + launch) overlaps the current list by 1 model.
+2. **Calculate CI runtime impact of widening:** Compute net additions = 16 candidates − 1 (`fawley` already present) = 15 net new models. Final widened union = current 15 + 15 net new = 30 unique models. Project runtime = 30 models × avg per-model time (or refine using per-model medians from CI logs). Threshold check against GitHub Actions per-job runtime limit.
 3. **Design widening strategy — evaluate 3 options:**
-   - **Option A (full widening):** Add all 16 models (15 #1398-affected + launch) — max coverage, max runtime cost
-   - **Option B (anchor-only widening):** Add only the 8 Phase 0 anchor models — partial coverage, lower runtime cost
-   - **Option C (tiered widening):** 16 models split into 2 parallel CI jobs — full coverage, runtime amortized
+   - **Option A (full widening):** Add 15 net new models (the 16-candidate cohort minus `fawley` already present) — final union 30 unique models, max coverage, max runtime cost
+   - **Option B (anchor-only widening):** Add only the 8 Phase 0 anchor models (none currently in PR19 list — 8 net new); final union 23 unique models; partial coverage (7 non-anchor #1398-affected models still uncovered), lower runtime cost
+   - **Option C (tiered widening):** Same final union as Option A (30 unique) but split into 2 parallel CI jobs — full coverage, runtime cost amortized
    - Recommend one option with explicit reasoning (Option A or C preferred per KU-37 mitigation rationale)
 4. **Author `docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIGN.md`** with:
    - Current state inventory
@@ -515,7 +515,7 @@ In `docs/planning/EPIC_4/SPRINT_27/PREP_PLAN.md` §Task 5:
 Under `[Unreleased]` → `### Sprint 27 Preparation`, prepend a new bullet:
 
 ```markdown
-- **Prep Task 5 COMPLETE (YYYY-MM-DD):** PR19 target-list widening design. Current PR19 list: <N models>, baseline runtime <T min>. Widened to 16 models (15 #1398-affected + launch). Selected Option <A/B/C> (<one-line rationale>). Projected CI runtime: <T'  min> (<delta>). Implementation lands in Sprint 27 Day 0 (per Task 11 schedule). Validation document at `docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIGN.md`. Verified Unknown 1.4.
+- **Prep Task 5 COMPLETE (YYYY-MM-DD):** PR19 target-list widening design. Current PR19 list: 15 models (11 Tier 0/1 hard-fail + 4 Pattern C soft-fail including `fawley`), baseline runtime <T min>. 16-candidate widening cohort (15 #1398-affected + launch) overlaps current list by 1 (`fawley`), so net additions = 15; final widened union = 30 unique models. Selected Option <A/B/C> (<one-line rationale>). Projected CI runtime: <T' min> (<delta>). Implementation lands in Sprint 27 Day 0 (per Task 11 schedule). Validation document at `docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIGN.md`. Verified Unknown 1.4.
 ```
 
 **Quality Gate:**
@@ -539,15 +539,19 @@ against Sprint 26's PR #1379 gate-overreach incident (KU-37).
 
 ## Recommendation: Option <A/B/C>
 
-- Coverage: <N>/16 candidate models
+- Coverage: <N>/16 candidate models (15 net new — `fawley` already
+  present); final widened union <30 / 23> unique models
 - Projected CI runtime: <T> min (current: <T0>, delta <ΔT>)
 - Implementation steps: edit `.github/path-solve-ci-targets.txt`
-  with N new entries; <any workflow YAML changes>
+  with <15 / 8> net new entries; <any workflow YAML changes>
 
 ## Runtime Projection
 
 - Current per-model PATH-solve median: <Ts>
-- Widened total: 16 models × <Ts> = <Tw>
+- Current PR19 list: 15 models (11 Tier 0/1 + 4 Pattern C inc. fawley)
+- Net additions after deduping fawley: 15 (Option A/C) or 8 (Option B)
+- Final widened union: 30 (Option A/C) or 23 (Option B) unique models
+- Projected total: <final-union> × <Ts> = <Tw>
 - Per-job budget: <Tw> vs GitHub Actions limit <budget>
 
 ## Deliverables
@@ -571,9 +575,10 @@ gh pr create --title "Complete Sprint 27 Prep Task 5: PR19 Target-List Widening 
 
 - [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
 - [x] PR19_WIDENING_DESIGN.md exists with all 4 required sections
-- [x] All 16 candidate model names appear in document
+- [x] All 16 candidate model names appear in document (15 #1398-affected + launch; `fawley` overlap with current PR19 list called out)
+- [x] Runtime calc documents net additions (15 after deduping `fawley`) and final widened union (30 unique for Options A/C, 23 for Option B)
 - [x] Recommended option includes estimated CI runtime delta
-- [x] Implementation steps include exact `.github/path-solve-ci-targets.txt` edits
+- [x] Implementation steps include exact `.github/path-solve-ci-targets.txt` edits (only the 15 net new entries, not `fawley`)
 - [x] Unknown 1.4 verified in KNOWN_UNKNOWNS.md
 - [x] Task 5 Acceptance Criteria all checked in PREP_PLAN.md
 EOF
