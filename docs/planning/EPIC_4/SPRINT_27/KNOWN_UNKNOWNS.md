@@ -19,7 +19,7 @@ This document identifies all assumptions and unknowns for Sprint 27 features **b
 5. **Priority 5: comp_up Subset/Superset Workstream (#1356 fawley + #1357 otpop)** — Domain-widening fix in `src/kkt/complementarity.py` + `src/emit/emit_gams.py`
 6. **Priority 6: #1224 mine ParamRef IndexOffset** — `src/ad/index_mapping.py` UserWarning fix
 7. **Priority 7: Day 6 Close-and-Refile Carryforwards (#1387 cclinpts + #1388 camshape)** — Fix-surface analysis + implementation OR Sprint 28 carryforward filing
-8. **Priority 8: Pipeline Absolute-Path Leak Fix (#1400)** — `scripts/gamslib/solve_mcp.py` + `run_full_test.py` path-relativization
+8. **Priority 8: Pipeline Absolute-Path Leak Fix (#1400)** — `scripts/gamslib/run_full_test.py` path-relativization (sets `mcp_file_used` at line 899 + uses default `warnings.formatwarning` which emits absolute paths); `scripts/gamslib/test_solve.py:911 solve_mcp` function may also need audit
 9. **Priority 9: Emit Duplicate-Init Bugs (#1374)** — Observation-style sweep of regenerated `*_mcp.gms` artifacts
 10. **Process Recommendations:** PR20 (Phase 0 acceptance gate codification), PR21 (prep-task end-to-end emit verification template), PR22 (mid-sprint `scripts/sprint_audit/changed_emit_artifacts.py`), PR23 (CI-workflow PR self-review checklist)
 
@@ -1080,17 +1080,17 @@ Sprint planning
 
 # Category 8: Pipeline Absolute-Path Leak Fix (#1400)
 
-Priority 8 workstream — `scripts/gamslib/solve_mcp.py` `mcp_file_used` field writes absolute paths; `run_full_test.py` warning capture uses Python's default `warnings.formatwarning` which emits `<absolute path>:<line>`. Fix to repo-relative paths.
+Priority 8 workstream — `scripts/gamslib/run_full_test.py` sets the `mcp_file_used` field at line 899 (`model["mcp_solve"]["mcp_file_used"] = str(presolve_path)`) which serializes an absolute path; the same file's warning capture uses Python's default `warnings.formatwarning` which emits `<absolute path>:<line>`. PATH solve logic lives in `scripts/gamslib/test_solve.py` (`solve_mcp` function at line 911). Fix to repo-relative paths. (Note: there is no `scripts/gamslib/solve_mcp.py` file in the repo — `solve_mcp` is a function in `test_solve.py`.)
 
-## Unknown 8.1: Are there other absolute-path leak sources beyond `solve_mcp.py` (mcp_file_used) and `run_full_test.py` (warnings.formatwarning)?
+## Unknown 8.1: Are there other absolute-path leak sources beyond `run_full_test.py` (mcp_file_used + warnings.formatwarning)?
 
 ### Priority
 
-**Medium** — Sprint 26 Day 13 surfaced 2 leak sources, but the audit may not have been exhaustive. If 1+ additional sources exist, Sprint 27 Priority 8 effort grows; if not caught, `gamslib_status.json` will not be byte-identical across machines post-fix.
+**Medium** — Sprint 26 Day 13 surfaced 2 leak sources (both in `scripts/gamslib/run_full_test.py`), but the audit may not have been exhaustive — `scripts/gamslib/test_solve.py` (`solve_mcp` function) may also contribute paths to the status JSON. If 1+ additional sources exist, Sprint 27 Priority 8 effort grows; if not caught, `gamslib_status.json` will not be byte-identical across machines post-fix.
 
 ### Assumption
 
-The 2 sources surfaced in Sprint 26 Day 13 (`solve_mcp.py:mcp_file_used` + `run_full_test.py:warnings.formatwarning`) are the only absolute-path leak sources in the pipeline. The fix is contained to these 2 files.
+The 2 sources surfaced in Sprint 26 Day 13 (`scripts/gamslib/run_full_test.py:899` mcp_file_used assignment + `run_full_test.py:warnings.formatwarning` capture) are the only absolute-path leak sources in the pipeline. The fix is contained to that single file; `scripts/gamslib/test_solve.py:911 solve_mcp` and the other `scripts/gamslib/*.py` modules do not contribute leaked paths.
 
 ### Research Questions
 
@@ -1142,7 +1142,7 @@ Basename-only relativization is sufficient because the mcp file is always at `da
 
 ### How to Verify
 
-1. Confirm cwd convention in `scripts/gamslib/solve_mcp.py` (per #1345/#1346/#1347).
+1. Confirm cwd convention in `scripts/gamslib/run_full_test.py` (per #1345/#1346/#1347 — `mcp_file_used` is assigned at line 899 to `str(presolve_path)` where `presolve_path` is constructed at line 701 as `mcp_path.with_name(f"{model_id}_mcp_presolve.gms")`). Also audit `scripts/gamslib/test_solve.py:911 solve_mcp` for any cwd / abspath dependency.
 2. Decide per-leak-source: basename for mcp_file_used (fixed path); PROJECT_ROOT for warnings (variable paths).
 3. Document chosen approach in `docs/issues/ISSUE_1400_*.md`.
 
