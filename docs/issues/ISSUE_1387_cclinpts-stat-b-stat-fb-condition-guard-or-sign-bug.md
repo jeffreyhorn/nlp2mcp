@@ -172,8 +172,22 @@ echo "$STAT_FB" | grep -cE '0\.5.*b\(j\+1\) - b\(j\)' | grep -v '^0$' > /dev/nul
 echo "$STAT_B" | grep -F '((-1) * (((-1) *' && echo "WARNING: double-negation pattern detected — Lagrangian-sign convention may have a bug"
 
 # Step 5: PATH solve — should reach MODEL STATUS 1 (Optimal) with obj
-# matching the NLP solve (rel_diff < 1% post-fix; was 69.9% pre-fix)
+# matching the NLP solve (rel_diff < 1% post-fix; was 69.9% pre-fix).
+#
+# Approach A (quick local check via .lst inspection — recommended for the
+# Phase 0 prototype iteration). gams produces a .lst file alongside the
+# .gms; parse it directly for MODEL STATUS / OBJECTIVE VALUE:
 gams /tmp/cclinpts_mcp.gms lo=2
+grep -E 'MODEL STATUS|SOLVER STATUS|OBJECTIVE VALUE' /tmp/cclinpts_mcp.lst
+# Expected post-fix: MODEL STATUS 1 (Optimal); OBJECTIVE VALUE matches the
+# NLP solve's objective (re-run cclinpts as NLP to compare if not cached).
+#
+# Approach B (full-pipeline verification — recommended before the PR ships,
+# to update data/gamslib/gamslib_status.json and confirm rel_diff via the
+# canonical solution_comparison stage). gamslib_status.json is produced by
+# the pipeline runner, NOT by gams alone; running gams on a single model
+# leaves the JSON stale:
+.venv/bin/python scripts/gamslib/run_full_test.py --only cclinpts
 .venv/bin/python -c "
 import json
 with open('data/gamslib/gamslib_status.json') as f:

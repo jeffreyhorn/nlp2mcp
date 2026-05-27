@@ -107,13 +107,15 @@ Combining for interior `i`:
 ```
 stat_r(i)..   (pi * R_v / n)
             + (-r(i-1) - r(i+1)) * lam_convexity(i)$(middle(i))
-            + (-r(i-1) + 2*r(i-2)*cos(d_theta)) * lam_convexity(i-1)$(middle(i-1) and ord(i)>2)
-            + (-r(i+1) + 2*r(i+2)*cos(d_theta)) * lam_convexity(i+1)$(middle(i+1) and ord(i)<card(i)-1)
+            + (-r(i-1) + 2*r(i-2)*cos(d_theta)) * lam_convexity(i-1)$(middle(i-1))
+            + (-r(i+1) + 2*r(i+2)*cos(d_theta)) * lam_convexity(i+1)$(middle(i+1))
             + nu_eqrdiff(i-1)$(j(i) and ord(i)>1)
             - nu_eqrdiff(i)$(j(i+1))
             - piL_r(i) + piU_r(i)
             = 0   (where r is free; the bound-fixup multiplier emit handles fixed r instances)
 ```
+
+The `middle(i-1)` guard implies `ord(i)>2 and ord(i)<=card(i)` (i.e., `i-1` is a middle index), and `middle(i+1)` implies `ord(i)>=1 and ord(i)<card(i)-1` (i.e., `i+1` is a middle index). These are the canonical correct guards — note the current emit uses LOOSER guards (`$(ord(i) > 1)$(middle(i))` for the lam_convexity(i-1) term, which over-fires at `i=2` where convexity(1)=convexity(first(i)) doesn't exist), which is one suspected bug surface.
 
 For edge cases (`first(i)` / `last(i)`), additional terms from `convex_edge*` apply with their own multiplier coefficients.
 
@@ -124,12 +126,12 @@ The current emit at line 428 (`stat_r(i)..`) **DOES contain** the `(pi * R_v / n
 **Key Phase 0 verifications:**
 
 1. Check that the constant `(pi * R_v / n)` (or `(pi * R_v / 100)`) appears with the correct sign in `stat_r(i)`. Current emit shows `((-1) * (pi * R_v / 100))` — Lagrangian-sign-flipped, consistent.
-2. Check that `lam_convexity(i-1)` cross-term is present for `middle(i)` AND `ord(i) > 1` (not just `middle(i)`).
-3. Check that `lam_convexity(i+1)` cross-term is present for `middle(i)` AND `ord(i) <= card(i) - 1`.
+2. Check that `lam_convexity(i-1)` cross-term is present **guarded by `middle(i-1)`** (which implies `ord(i)>2 and ord(i)<=card(i)`), NOT by the looser `ord(i)>1` currently in the emit. The emit's looser guard over-fires at `i=2` where `convexity(1)=convexity(first(i))` doesn't exist — this is one of the suspected bug surfaces.
+3. Check that `lam_convexity(i+1)` cross-term is present **guarded by `middle(i+1)`** (which implies `ord(i)>=1 and ord(i)<card(i)-1`), NOT by the looser `ord(i)<=card(i)-1` currently in the emit. Same over-fire risk at `i=card(i)-1` boundary as item 2.
 4. Check that `nu_eqrdiff(i-1)` (with `+1` coefficient) and `nu_eqrdiff(i)` (with `-1` coefficient) are both present where appropriate.
 5. Check the bound-fixup `$(r.up(i) - r.lo(i) > 1e-10)` outer wrap — if it incorrectly fixes `stat_r(i)` to zero on first/last instances where `r` is genuinely free, that creates infeasibility.
 
-If hand-derivation matches the emit byte-for-byte (after equivalence simplifications), then this is case (c) — fundamental model property — and should be Sprint 28 carryforward. If the emit is missing terms or has wrong signs, this is case (a) — fix-and-ship in Sprint 27.
+If all 5 per-term pattern-match checks in §"Verification Methodology" Step 3 pass (every expected term present with correct sign and guard, no extras) AND the NLP-warm-started PATH solve still fails to converge, then this is case (c) — fundamental model property — and should be Sprint 28 carryforward. If any of the 5 checks fails (missing term, wrong sign, or mis-guarded condition), this is case (a) — fix-and-ship in Sprint 27.
 
 ### Verification Methodology
 
@@ -153,13 +155,20 @@ STAT_R=$(grep -E '^stat_r\(i\)\.\.' /tmp/camshape_mcp.gms)
 echo "$STAT_R" | grep -cE '\(-1\).*\(pi.*R_v.*100\)' | grep -v '^0$' > /dev/null \
   || echo "MISSING/WRONG-SIGN: objective gradient (-1)*(pi*R_v/100) on stat_r(i)"
 
-# Check 2: lam_convexity(i-1) cross-term with middle(i-1) AND ord(i)>1 guard
-echo "$STAT_R" | grep -cE 'lam_convexity\(i-1\).*ord\(i\) > 1' | grep -v '^0$' > /dev/null \
-  || echo "MISSING/MIS-GUARDED: lam_convexity(i-1) cross-term + ord(i)>1 guard"
+# Check 2: lam_convexity(i-1) cross-term with middle(i-1) guard
+# (the canonical correct guard per hand-derivation; current emit uses LOOSER
+# $(ord(i)>1)$(middle(i)) which over-fires at i=2 — suspected bug surface)
+echo "$STAT_R" | grep -cF 'lam_convexity(i-1)' | grep -v '^0$' > /dev/null \
+  || echo "MISSING: lam_convexity(i-1) cross-term in stat_r(i)"
+echo "$STAT_R" | grep -cE 'lam_convexity\(i-1\).*middle\(i-1\)' | grep -v '^0$' > /dev/null \
+  || echo "MIS-GUARDED: lam_convexity(i-1) cross-term should be guarded by middle(i-1) (canonical), not the looser ord(i)>1 currently emitted"
 
-# Check 3: lam_convexity(i+1) cross-term with middle(i+1) AND ord(i)<=card(i)-1 guard
-echo "$STAT_R" | grep -cE 'lam_convexity\(i\+1\).*ord\(i\) <= card\(i\) - 1' | grep -v '^0$' > /dev/null \
-  || echo "MISSING/MIS-GUARDED: lam_convexity(i+1) cross-term + ord(i)<=card(i)-1 guard"
+# Check 3: lam_convexity(i+1) cross-term with middle(i+1) guard
+# (same canonical-vs-looser distinction as Check 2)
+echo "$STAT_R" | grep -cF 'lam_convexity(i+1)' | grep -v '^0$' > /dev/null \
+  || echo "MISSING: lam_convexity(i+1) cross-term in stat_r(i)"
+echo "$STAT_R" | grep -cE 'lam_convexity\(i\+1\).*middle\(i\+1\)' | grep -v '^0$' > /dev/null \
+  || echo "MIS-GUARDED: lam_convexity(i+1) cross-term should be guarded by middle(i+1) (canonical), not the looser ord(i)<=card(i)-1 currently emitted"
 
 # Check 4: nu_eqrdiff(i-1) (+1 coefficient) and nu_eqrdiff(i) (-1 coefficient)
 echo "$STAT_R" | grep -cF 'nu_eqrdiff(i-1)' | grep -v '^0$' > /dev/null \
