@@ -1086,7 +1086,7 @@ Priority 8 workstream — `scripts/gamslib/solve_mcp.py` `mcp_file_used` field w
 
 ### Priority
 
-**Medium** — Sprint 26 Day 13 surfaced 2 leak sources, but the audit may not have been exhaustive. If 1+ additional sources exist, Sprint 27 Priority 8 effort grows; if not caught, `gams_lib_status.json` will not be byte-identical across machines post-fix.
+**Medium** — Sprint 26 Day 13 surfaced 2 leak sources, but the audit may not have been exhaustive. If 1+ additional sources exist, Sprint 27 Priority 8 effort grows; if not caught, `gamslib_status.json` will not be byte-identical across machines post-fix.
 
 ### Assumption
 

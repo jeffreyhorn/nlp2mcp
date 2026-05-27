@@ -155,7 +155,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 2: Author Missing Phase 0 Acc
 
 ## Test plan
 
-- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
+- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit" (`make format`, `make lint`, `make test`) + `docs/development/AGENTS.md` §"Before submitting" (adds `make typecheck`): `make typecheck && make format && make lint && make test` all PASS
 - [x] All 4 ISSUE_*.md files contain `## Phase 0: Acceptance Gate` section with 4 required subsections
 - [x] CONTRIBUTING.md §"Phase 0 Acceptance Gates" exists with hard rule + exception scope + Sprint 26 incident citations
 - [x] Unknowns 7.1, 7.2, 9.1 verified in KNOWN_UNKNOWNS.md
@@ -298,7 +298,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 3: Bucket-Provenance Baseline
 ## Test plan
 
 - [x] Pipeline retest completed (`scripts/gamslib/run_full_test.py` exit 0)
-- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
+- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit" (`make format`, `make lint`, `make test`) + `docs/development/AGENTS.md` §"Before submitting" (adds `make typecheck`): `make typecheck && make format && make lint && make test` all PASS
 - [x] BASELINE_METRICS.md contains all 7 sections (§1–§7)
 - [x] Scope frozen at 142 (matches Sprint 26 Day 14)
 - [x] Per-failing-model bucket-provenance entries present for ~83 failing models
@@ -431,7 +431,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 4: #1398 Widened-Scope Verifi
 
 ## Test plan
 
-- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
+- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit" (`make format`, `make lint`, `make test`) + `docs/development/AGENTS.md` §"Before submitting" (adds `make typecheck`): `make typecheck && make format && make lint && make test` all PASS
 - [x] PRIORITY_1_ANCHOR_MAPPING.md exists; all 15 #1398-affected models referenced
 - [x] All 8 anchor models have dedicated sections with distinguishing emit patterns
 - [x] All 7 non-anchor models assigned to anchors with justification
@@ -573,7 +573,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 5: PR19 Target-List Widening 
 
 ## Test plan
 
-- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
+- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit" (`make format`, `make lint`, `make test`) + `docs/development/AGENTS.md` §"Before submitting" (adds `make typecheck`): `make typecheck && make format && make lint && make test` all PASS
 - [x] PR19_WIDENING_DESIGN.md exists with all 4 required sections
 - [x] All 16 candidate model names appear in document (15 #1398-affected + launch; `fawley` overlap with current PR19 list called out)
 - [x] Runtime calc documents net additions (15 after deduping `fawley`) and final widened union (30 unique for Options A/C, 23 for Option B)
@@ -850,7 +850,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 7: comp_up Subset/Superset Fi
 
 ## Test plan
 
-- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
+- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit" (`make format`, `make lint`, `make test`) + `docs/development/AGENTS.md` §"Before submitting" (adds `make typecheck`): `make typecheck && make format && make lint && make test` all PASS
 - [x] PRIORITY_5_FIX_SURFACE.md exists with all 6 required sections
 - [x] Patch sites identified with `file:line` precision
 - [x] Unified diff sketch covers all required changes
@@ -997,7 +997,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 8: #1387 cclinpts + #1388 cam
 
 ## Test plan
 
-- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
+- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit" (`make format`, `make lint`, `make test`) + `docs/development/AGENTS.md` §"Before submitting" (adds `make typecheck`): `make typecheck && make format && make lint && make test` all PASS
 - [x] PRIORITY_7_FIX_SURFACE.md exists with per-issue subsections for #1387 + #1388
 - [x] Each issue has a documented verdict (Sprint 27 fix OR Sprint 28 carryforward)
 - [x] If Sprint 27 fix verdict: source-code patch sites identified + effort estimate
@@ -1287,7 +1287,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 10: PR23 CI-Workflow PR Self-
 
 ## Test plan
 
-- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
+- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit" (`make format`, `make lint`, `make test`) + `docs/development/AGENTS.md` §"Before submitting" (adds `make typecheck`): `make typecheck && make format && make lint && make test` all PASS
 - [x] CONTRIBUTING.md §"CI Workflow PR Checklist" exists with rationale + scope + 7-category checklist
 - [x] Each of 7 categories has 3-5 specific items
 - [x] Total checklist contains ≥ 25 items
@@ -1456,7 +1456,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 11: Plan Sprint 27 Detailed S
 
 ## Test plan
 
-- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
+- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit" (`make format`, `make lint`, `make test`) + `docs/development/AGENTS.md` §"Before submitting" (adds `make typecheck`): `make typecheck && make format && make lint && make test` all PASS
 - [x] PLAN.md covers all 14 days (Day 0 + Days 1-13)
 - [x] PLAN_PROMPTS.md covers all 14 days
 - [x] SPRINT_LOG.md skeleton covers all 14 days
