@@ -36,7 +36,7 @@ Tasks 2–11 are dispatchable in the following order per the dependency graph in
 - `docs/planning/EPIC_4/SPRINT_27/PREP_PLAN.md` §Task 2
 - `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` §Unknown 7.1, §Unknown 7.2, §Unknown 9.1
 - `docs/planning/EPIC_4/SPRINT_26/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently" PR20 codification rationale
-- Existing Phase 0 reference examples: search `docs/issues/` for issues with existing Phase 0 sections (e.g., #1306, #1308, #1334) for format reference
+- Existing Phase 0 reference content (Note: no issue doc currently has a formal `## Phase 0: Acceptance Gate` section header — that's literally what this task establishes as a template. The following 4 issue docs mention Phase 0 in their content for guidance on what to include in each subsection): `docs/issues/ISSUE_1390_kand-tree-predicate-aliased-sum-architecture-redesign.md` (most comprehensive — see lines 88+ and 107), `docs/issues/ISSUE_1393_ad-scalar-eq-sum-collapse-symbolic-superset.md` (lines 95+), `docs/issues/ISSUE_1385_option-1-short-circuit-redesign-symbolic-instance-handling.md` (line 201), `docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md` (line 45). After Task 2 lands, these 4 issues should also be updated with formal `## Phase 0: Acceptance Gate` sections in a follow-on (Sprint 27 Day 0).
 - The 4 target issue documents (current state):
   - `docs/issues/ISSUE_1356_*.md` (fawley comp_up — no formal Phase 0)
   - `docs/issues/ISSUE_1357_*.md` (otpop comp_up — no formal Phase 0)
@@ -758,7 +758,7 @@ EOF
    - In `src/kkt/complementarity.py`: locate function(s) generating `comp_up_x(tt)$(...)` equations
    - In `src/emit/emit_gams.py`: locate function(s) emitting `$(t(tt) and xb(tt) < inf)` domain condition + `piU_x.fx(tt)$(...)` initialization
 3. **Diagnose the subset/superset domain mismatch:** Compare current emit against Phase 0 target shape; identify which part of domain condition needs widening; document proposed patch as unified diff sketch.
-4. **Confirm fawley + otpop are the only affected models:** `grep -lE "comp_up_x\(.*\)\$\(.*<\s*inf\)" data/gamslib/mcp/*_mcp.gms` for corpus sweep; document any additional models found.
+4. **Confirm fawley + otpop are the only affected models:** `grep -lE "comp_up_x\(.*\)\$\(.*<[[:space:]]*inf\)" data/gamslib/mcp/*_mcp.gms` for corpus sweep (note: `[[:space:]]*` instead of `\s*` — `\s` is not valid in POSIX ERE; use `grep -P` if you prefer PCRE `\s`); document any additional models found.
 5. **Estimate implementation effort** vs Priority 5's 8-12h budget.
 6. **Author `docs/planning/EPIC_4/SPRINT_27/PRIORITY_5_FIX_SURFACE.md`** with: Phase 0 target shape cross-reference; source code patch site identification (file:line); unified diff sketch (~50-100 lines); affected-model corpus sweep results; implementation effort estimate; Day 1 readiness assessment.
 

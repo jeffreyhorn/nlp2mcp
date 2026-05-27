@@ -794,7 +794,7 @@ fawley + otpop are the only two models in the 142 in-scope corpus that exhibit t
 
 ### How to Verify
 
-1. `grep -lE "comp_up_x\(.*\)\$\(.*<\s*inf\)" data/gamslib/mcp/*_mcp.gms` for corpus sweep.
+1. `grep -lE "comp_up_x\(.*\)\$\(.*<[[:space:]]*inf\)" data/gamslib/mcp/*_mcp.gms` for corpus sweep (note: `[[:space:]]*` instead of `\s*` — `\s` is not valid in POSIX ERE; use `grep -P` if you prefer PCRE `\s`).
 2. Cross-reference with `gamslib_status.json` path_syntax_error bucket entries.
 3. Document any additional model in `PRIORITY_5_FIX_SURFACE.md`.
 
