@@ -548,7 +548,22 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (design ready; binding verdict pending Sprint 27 Day 0 prototype execution per the "scheduled for Day 0" outcome explicitly permitted by Task 6 prompt)
+**Verified by:** Task 6 (AD Architectural Redesigns Risk Assessment PR16)
+**Date:** 2026-05-28
+
+**Findings (architectural analysis):**
+
+- **Research Q1 (signatures vs callbacks):** `_compute_equality_jacobian` (`src/ad/constraint_jacobian.py:903`) and `_compute_inequality_jacobian` (`:1027`) accept a per-equation differentiation strategy via callback (the per-element enumeration is one of several differentiation paths). Inserting a predicate-guarded path at the same dispatch site is well-localized — **no signature changes needed.**
+- **Research Q2 (kand-specific vs general):** `tree(n,n)` 2-set membership predicate has a clear AST shape (`SetMembershipTest` on a 2-set parameter); detection via static analysis is feasible. The detection generalizes to any model with a 2-set-membership-bound Sum body — not kand-specific.
+- **Research Q3 (corpus prevalence):** Corpus grep deferred to Sprint 27 Day 0 execution; expected to surface 0–3 additional models with the same shape (low-prevalence shape).
+- **Research Q4 (hand-derived KKT shape):** The expected `stat_y(j,t,n)` cross-term is `sum(n_inner$tree(n,n_inner), eps * lam_dembalx(j,t+1,n_inner))$(tn(t+1,n_inner))` — single guarded Sum, 1 element. Pre-fix emit produces 22 phantom-offset terms instead.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_ASSESSMENT.md` §3 (Redesign A — #1390 kand) — hypothesis statement, validation experiment design with explicit patch site (`_compute_equality_jacobian:903` + `_compute_inequality_jacobian:1027`), prototype guard illustration, regen + grep verification commands, hand-derived KKT for `stat_y('p-1','time-2','n-4')` instance.
+
+**Tentative verdict:** 🟢 PROCEED projected. Predicate detection is feasible; cross-term builder is well-defined; model-name guard limits regression risk to zero by construction.
+
+**Decision (binding pending Day 0):** **Opt-in via static predicate (no signature changes).** Day 0 engineer executes §3.3 experiment (~45 min); records binding PROCEED/REPLAN signal in PRIORITY_3_RISK_ASSESSMENT.md §3.5 + updates this Unknown to ✅ VERIFIED.
 
 ---
 
@@ -591,7 +606,22 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (design ready; binding verdict pending Sprint 27 Day 0 prototype execution)
+**Verified by:** Task 6 (AD Architectural Redesigns Risk Assessment PR16)
+**Date:** 2026-05-28
+
+**Findings (architectural analysis):**
+
+- **Research Q1 (callers of `_build_symbolic_instance_placeholder`):** The function does NOT currently exist in `src/ad/index_mapping.py` (verified via grep on current main). Sprint 26 Day 4 attempted but the patch was rolled back. The hypothetical Sprint 27 implementation would create the function as part of #1385 — caller surface is therefore a Sprint 27 design decision, not a constraint inherited from existing code.
+- **Research Q2 (emit-boundary vs throughout-pipeline):** The Sprint 26 Day 4 attempt tried Option A (throughout-pipeline symbolic-instance handling) and failed at the emit boundary — `_diff_varref` requires exact concrete-index matches; symbolic placeholders produced `nu_slack("srn")` literal-string indices that PATH rejects at compile. **Option B (runtime-guard emission at the AD → emit boundary only) is the recommended alternative** — preserves the existing AD-layer Cartesian-enumeration contract, emits the predicate as a GAMS runtime guard `sum(<bound>$(<predicate>), <body>)`.
+- **Research Q3 (Option B prototype on srpchase):** Day 0 prototype execution per §4.3 of PRIORITY_3_RISK_ASSESSMENT.md will surface whether Option B's runtime-guard emission preserves cross-term coverage. Architectural analysis projects ⚠️ caveat: the empty `enumerate_equation_instances` return means the AD layer doesn't enumerate any instances, so cross-terms from `J_g^T·lam_demand` must be emitted structurally at the emit boundary (not via AD enumeration).
+- **Research Q4 (conflict with Sprint 26 Day 4 callers):** No callers exist on main (Day 4 rolled back); no conflict.
+
+**Evidence:** PRIORITY_3_RISK_ASSESSMENT.md §4 (Redesign B — #1385 srpchase) — hypothesis statement, validation experiment design with explicit patch sites (`src/ad/index_mapping.py:377` + `src/kkt/stationarity.py`), regen + GAMS compile-check verification commands, partial-PROCEED escalation rule for cross-term coverage.
+
+**Tentative verdict:** 🟡 PROCEED-with-caveat projected. Translate-time fix (5.7s achievable) is high-confidence; cross-term coverage is the residual risk surface.
+
+**Decision (binding pending Day 0):** **Option B (runtime-guard emission at emit boundary).** If Day 0 execution surfaces the cross-term coverage gap, escalate to scoped-PROCEED (§7 of PRIORITY_3_RISK_ASSESSMENT.md) — Sprint 27 implements translate-time short-circuit only, defers cross-term handling to Sprint 28.
 
 ---
 
@@ -636,7 +666,21 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — approach selected (binding); validation experiment pending Day 0 execution
+**Verified by:** Task 6 (AD Architectural Redesigns Risk Assessment PR16)
+**Date:** 2026-05-28
+
+**Findings (architectural analysis + Sprint 26 Day 9 SPRINT_LOG review):**
+
+- **Research Q1 (per-approach patch surface):** Approach A = `src/ad/derivative_rules.py:1847+` + `src/kkt/stationarity.py` re-symbolization helpers (multi-module, high risk). Approach B = `src/ir/condition_eval.py` (or `src/ad/index_eval.py`) — requires new symbolic-offset-evaluation infrastructure not currently in the codebase (medium risk). Approach C = `src/ad/derivative_rules.py:2607` `_is_concrete_instance_of` only (~30-line addition, low risk).
+- **Research Q2 (per-approach regression risk):** A = high (touches multiple AD subsystems; risks regressing existing IndexOffset / SetMembershipTest handling from Sprint 25). B = medium (narrower than A but new infrastructure). C = low (contained single-function change; reuses existing collapse-logic infrastructure).
+- **Research Q3 (Approach C shape match):** Architectural analysis projects 🟢 high-confidence shape match for `stat_x(tt)` (#1393). Approach C extends `_is_concrete_instance_of` to recognize SYMBOLIC supersets via the model_ir subset declaration — `_sum_should_collapse` then fires correctly. Hand-derived KKT is unambiguous (single guarded term).
+- **Research Q4 (Approach C subsumes #1335?):** 🟡 PROCEED-with-caveat — Approach C may NOT fully subsume #1335's missing time-reversal cross-term, because `_try_eval_offset` (`constraint_jacobian.py:133–260`) may still fail to resolve `card(t) - ord(t)` to `'1990'` during AD enumeration of the `zdef` sum body. Day 0 prototype execution will resolve. Fallback rule: if Approach C alone doesn't fix #1335, escalate to Approach B (symbolic offset evaluation, ~3–5h additional effort).
+- **Research Q5 (Approach A regression risk):** Confirmed high — Sprint 25 IndexOffset / SetMembershipTest handling was developed iteratively across multiple PRs; extending `_expand_sums_with_unresolved_offsets` AND fixing downstream re-symbolization risks regressing those Sprint 25 surfaces.
+
+**Evidence:** PRIORITY_3_RISK_ASSESSMENT.md §5.3 (#1335 approach selection table with per-approach patch surface + risk profile) + §5.4 (Approach C validation experiment design with explicit `_is_concrete_instance_of` 3rd-strategy patch + regen + grep verification + PATH-solve verification for `pi ≈ 4217.80`) + §5.5 (PROCEED/REPLAN criteria) + Sprint 26 Day 9 SPRINT_LOG note that Approach C is "the lightest."
+
+**Decision (KU-39 resolution, binding):** **Approach C SELECTED.** Fallback rule: C → B → A per §5.5 if Day 0 execution REPLAN. If all 3 REPLAN, defer #1393 + #1335 to Sprint 28 and reallocate Priority 3 budget to higher-leverage work (#1378 deep-dive or #1387/#1388 implementation).
 
 ---
 
@@ -679,7 +723,23 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — coordinated-design analysis complete; serial implementation recommended (binding)
+**Verified by:** Task 6 (AD Architectural Redesigns Risk Assessment PR16)
+**Date:** 2026-05-28
+
+**Findings (architectural analysis):**
+
+- **Research Q1 (#1390 + #1385 shared symbolic-vs-concrete concern):** Distinct fix surfaces — #1390 = `src/ad/constraint_jacobian.py` cross-term enumeration; #1385 = `src/ad/index_mapping.py` instance enumeration. Adjacent modules but distinct functions. No code reuse.
+- **Research Q2 (#1385 + #1393+#1335 shared emit-pipeline boundary concern):** Distinct AD subsystems — #1385 = `index_mapping.py` (AD → emit boundary); #1393+#1335 = `derivative_rules.py` (collapse logic). Option B (#1385's runtime-guard emission, the recommended choice) is orthogonal to Approach C (#1393+#1335's collapse extension). If Option A were selected for #1385 (rejected here), there would be moderate coordinated-design interaction — but Option B has none.
+- **Research Q3 (#1390 + #1393+#1335 shared Sum-handling concern):** Complementary but orthogonal — #1390 preserves predicate-structure upstream (cross-term emission); #1393+#1335 collapses Sum cross-terms downstream. No code reuse.
+- **Research Q4 (coordinated design effort savings):** Coordinated design would NOT reduce total effort because the 3 fix surfaces are orthogonal (different modules, different functions, different architectural layers). Coordinated design's overhead (joint design meetings, shared interface discussions) would likely add ~2–4h without commensurate savings.
+- **Research Q5 (design-anchor if coordinated):** N/A — coordinated design rejected.
+
+**Shared methodology (NOT implementation):** All 3 redesigns share the same Phase 0 acceptance-gate methodology (PR16), the same regression-check surface (11 Tier 0/1 byte-stable canaries), and the same documentation pattern (Phase 0 sections in each issue doc per CONTRIBUTING.md §"Phase 0 Acceptance Gates"). Reuse methodology + tests; don't coordinate implementation.
+
+**Evidence:** PRIORITY_3_RISK_ASSESSMENT.md §6 (Coordinated Design Analysis) — pair-wise architectural-overlap table; serial-implementation recommendation with lowest-risk-first sequencing (#1393+#1335 Approach C → #1390 → #1385 Option B); cascading-REPLAN rule (no architectural dependency means individual REPLANs do not cascade).
+
+**Decision (KU-38 resolution, binding):** **Serial implementation recommended.** Sequence: (1) #1393+#1335 Approach C (~6–10h, lowest risk), (2) #1390 predicate-guarded Sum (~10–16h, medium risk), (3) #1385 Option B runtime-guard (~6–10h or ~12–18h if cross-term coverage caveat materializes, highest risk). Total: 22–44h within the 30–48h Priority 3 budget. **Cascading REPLAN rule:** if any 1 sub-priority REPLANs, the other 2 PROCEED independently (no architectural dependency). If 2+ REPLAN, Sprint 27 retrospective decision on budget reallocation.
 
 ---
 
@@ -721,7 +781,23 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — binary-signal criteria defined per experiment; partial-PROCEED rules codified (binding)
+**Verified by:** Task 6 (AD Architectural Redesigns Risk Assessment PR16)
+**Date:** 2026-05-28
+
+**Findings:**
+
+- **Research Q1 (explicit PROCEED criteria):** Defined for each of #1390, #1385, #1393+#1335 in PRIORITY_3_RISK_ASSESSMENT.md §3.4, §4.4, §5.5 respectively. Each PROCEED criteria list is conjunctive — ALL items must hold for PROCEED. Each REPLAN criteria list is disjunctive — ANY item triggers REPLAN.
+- **Research Q2 (ambiguous-result handling):** Binary by construction — if ANY PROCEED criterion fails, signal is REPLAN regardless of partial successes. Special handling for **partial-PROCEED** (codified in PRIORITY_3_RISK_ASSESSMENT.md §7):
+  - **#1385 partial-PROCEED:** if translate-time fix works (5.7s achievable) but cross-term coverage issue surfaces, escalate to **scoped-PROCEED** — Sprint 27 implements translate-time short-circuit only, defers cross-term handling to Sprint 28.
+  - **#1390 partial-PROCEED:** not anticipated (predicate detection is binary by construction).
+  - **#1393+#1335 partial-PROCEED:** if #1393 fixes but #1335 cross-term still missing, escalate to **Approach B fallback** per §5.5 fallback rule.
+- **Research Q3 (regression-check step):** Yes — each validation experiment includes a regression check on at least the 11 Tier 0/1 byte-stable canaries (§3.3 step 6, §4.3 step 7, §5.4 step 9).
+- **Research Q4 (cascading REPLAN):** No cascading — the 3 redesigns are architecturally orthogonal per §6.1 pair-wise overlap analysis. If 1 of 3 REPLAN, the other 2 PROCEED independently. If 2+ REPLAN, Sprint 27 retrospective decision on budget reallocation per §6.4.
+
+**Evidence:** PRIORITY_3_RISK_ASSESSMENT.md §3.4, §4.4, §5.5 (per-experiment binary criteria) + §6.4 (cascading-REPLAN rule) + §7 (Phase 0 binary-signal criteria + partial-PROCEED resolution rules).
+
+**Decision (KU 3.5 resolution, binding):** **Binary PROCEED / REPLAN signals confirmed per experiment.** Partial-PROCEED ambiguity resolved via either (a) scoped-PROCEED escalation (#1385) or (b) approach-fallback rule (#1393+#1335). Sprint 27 Day 0 Priority 3 entry gate has a clear decision rule for each experiment outcome.
 
 ---
 

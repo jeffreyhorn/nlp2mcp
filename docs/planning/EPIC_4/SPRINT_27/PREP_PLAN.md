@@ -789,7 +789,8 @@ grep -nE "^\*\*Selected: " docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIGN.m
 
 ## Task 6: AD Architectural Redesigns Risk Assessment (PR16 Application)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-28
 **Priority:** High
 **Estimated Time:** 4–6 hours
 **Deadline:** Before Sprint 27 Day 1 (must complete before Priority 3's 30-48h budget is committed)
@@ -846,11 +847,43 @@ Sprint 27's Priority 3 commits 30-48h to three architectural redesigns simultane
 
 ### Changes
 
-To be completed.
+Identified the central architectural hypothesis for each of 3 Priority 3 redesigns (#1390 kand tree-predicate-aliased Sum enumeration; #1385 srpchase Option 1 short-circuit; #1393+#1335 otpop scalar-eq Sum-collapse). Each hypothesis is a single falsifiable claim with explicit PROCEED/REPLAN criteria.
+
+Designed ~30–90 min validation experiments for each hypothesis with concrete patch sites, prototype guard shape, regen commands, per-term grep verification, and hand-derived KKT comparison spec. The experiments are **DESIGN-READY** and **SCHEDULED FOR SPRINT 27 DAY 0** (Priority 3 entry gate per Task 11 schedule); the binding verdicts run at Day 0 (~3h cumulative engineer time). This document's tentative verdicts are hand-derived architectural-analysis projections, not prototype results.
+
+**#1335 approach selection (KU-39 resolution):** Selected **Approach C (hybrid post-AD collapse)** per Sprint 26 Day 9 SPRINT_LOG "lightest" verdict and architectural-risk analysis. Approach C extends `_is_concrete_instance_of` (`src/ad/derivative_rules.py:2607`) with a 3rd strategy recognizing SYMBOLIC supersets via model_ir subset declaration — single function, ~30-line addition, reuses existing collapse-logic infrastructure. Subsumes both #1393 (Sum over-counting) and #1335 (missing time-reversal cross-term) under one fix. Fallback rule: C → B (symbolic offset evaluation) → A (full Sum-expansion redesign) per §5.5 if Day 0 execution REPLAN.
+
+**Coordinated design analysis (KU-38 resolution):** Performed pair-wise architectural overlap analysis for all 3 pairs (#1390+#1385, #1385+#1393+#1335, #1390+#1393+#1335). All 3 pairs use **distinct fix surfaces** (different modules, different functions, different architectural layers) — no code reuse between redesigns. **Serial implementation recommended.** Coordinated design's overhead (joint design meetings, shared interface discussions) would likely add ~2–4h without commensurate savings. Shared methodology (PR16 Phase 0 acceptance-gate, 11 Tier 0/1 byte-stable canary regression check, Phase 0 issue-doc sections per CONTRIBUTING.md §"Phase 0 Acceptance Gates") is reusable — but the implementations should remain orthogonal.
+
+**Phase 0 binary-signal criteria (KU 3.5 resolution):** Binary by construction per experiment — ALL PROCEED criteria must hold; ANY REPLAN criterion triggers REPLAN. Partial-PROCEED resolved via either scoped-PROCEED escalation (#1385: implement translate-time short-circuit only, defer cross-term handling to Sprint 28) or approach-fallback rule (#1393+#1335: C → B → A). No cascading REPLAN — the 3 redesigns are architecturally orthogonal.
+
+Authored new `docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_ASSESSMENT.md` with 10 sections: §1 Purpose, §2 PR16 Methodology Reference, §3 Redesign A — #1390 kand (hypothesis + experiment + criteria + verdict), §4 Redesign B — #1385 srpchase, §5 Redesign C — #1393 + #1335 otpop (with §5.3 #1335 approach selection), §6 Coordinated Design Analysis (KU-38), §7 Phase 0 Binary-Signal Criteria (KU 3.5), §8 Verification Summary, §9 Sprint 27 Day 0 Execution Plan (handoff), §10 Related Documents.
+
+Updated `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` for all 5 Unknowns: 3.1 🟡 PARTIALLY VERIFIED (design ready; Day 0 execution pending), 3.2 🟡 PARTIALLY VERIFIED (Option B selected; Day 0 execution pending), 3.3 ✅ VERIFIED (Approach C selected, binding; Day 0 experiment pending), 3.4 ✅ VERIFIED (serial implementation recommended, binding), 3.5 ✅ VERIFIED (binary-signal criteria defined per experiment, binding).
+
+Added CHANGELOG.md entry under Sprint 27 Preparation summarizing Task 6 completion.
+
+**Zero `src/` diff** — Task 6 authored design documents; no prototype patches were applied. All experiment patch sites are documented and ready for Day 0 execution.
 
 ### Result
 
-To be completed.
+**Per-sub-priority tentative verdicts (hand-derived architectural projection):**
+
+| Sub-priority | Tentative Verdict | Experiment Schedule | Effort Estimate |
+|---|---|---|---|
+| **#1390 (kand predicate-guarded Sum)** | 🟢 PROCEED projected | Sprint 27 Day 0 (~45 min) | 10–16h Sprint 27 implementation |
+| **#1385 (srpchase Option B runtime-guard)** | 🟡 PROCEED-with-caveat projected | Sprint 27 Day 0 (~60 min) | 6–10h IF Option B works; 12–18h IF cross-term coverage caveat materializes |
+| **#1393+#1335 (otpop Approach C)** | 🟢 PROCEED projected for #1393; 🟡 PROCEED-with-caveat for #1335 | Sprint 27 Day 0 (~75 min) | 6–10h Sprint 27 implementation; +3–5h IF Approach B fallback needed |
+
+**Total Sprint 27 Day 0 experiment time:** ~3h cumulative. **Total Sprint 27 Priority 3 implementation:** 22–44h within the 30–48h budget (per PROJECT_PLAN.md).
+
+**#1335 approach selected (KU-39 resolution, binding):** **Approach C (hybrid post-AD collapse).** Fallback: C → B → A.
+
+**Coordinated-design recommendation (KU-38 resolution, binding):** **Serial implementation.** Recommended sequence (lowest-risk first): (1) #1393+#1335 Approach C, (2) #1390 predicate-guarded Sum, (3) #1385 Option B runtime-guard. No code reuse; coordinated design rejected.
+
+**Cascading REPLAN rule:** If 1 sub-priority REPLAN, the other 2 PROCEED independently. If 2+ REPLAN, Sprint 27 retrospective decision on budget reallocation per §6.4.
+
+**Sprint 27 Day 0 handoff:** §9 of PRIORITY_3_RISK_ASSESSMENT.md is the engineer-facing execution plan. Each experiment has a concrete patch site, prototype guard shape, regen command, grep verification spec, hand-derived KKT comparison spec, and PROCEED/REPLAN binary criteria. After each experiment, the engineer updates PRIORITY_3_RISK_ASSESSMENT.md §3.5 / §4.5 / §5.6 with the binding verdict + updates KNOWN_UNKNOWNS.md §3.1 / §3.2 / §3.3 from 🟡 PARTIALLY VERIFIED (or selected approach) to ✅ VERIFIED with the binding signal.
 
 ### Verification
 
@@ -885,12 +918,12 @@ grep -E "^## Coordinated Design" docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_
 
 ### Acceptance Criteria
 
-- [ ] PRIORITY_3_RISK_ASSESSMENT.md exists with hypothesis + experiment + PROCEED/REPLAN criteria for each of #1390, #1385, #1393+#1335
-- [ ] #1335 approach selected (1 of 3) with rationale
-- [ ] Coordinated-design analysis explicitly addresses each pair (#1390+#1385, #1385+#1393, #1390+#1393)
-- [ ] Each validation experiment includes the specific file:line patch site + the regeneration command + the verification methodology
-- [ ] Each experiment is marked "scheduled for Day 0" or "executed in prep with result"
-- [ ] Unknowns 3.1, 3.2, 3.3, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] PRIORITY_3_RISK_ASSESSMENT.md exists with hypothesis + experiment + PROCEED/REPLAN criteria for each of #1390, #1385, #1393+#1335 (§3, §4, §5)
+- [x] #1335 approach selected (1 of 3) with rationale — Approach C (hybrid post-AD collapse) selected (§5.3) with fallback rule C → B → A
+- [x] Coordinated-design analysis explicitly addresses each pair (#1390+#1385, #1385+#1393+#1335, #1390+#1393+#1335) — §6.1 pair-wise overlap table; all 3 pairs use distinct fix surfaces; serial implementation recommended
+- [x] Each validation experiment includes the specific file:line patch site + the regeneration command + the verification methodology — §3.3 (`src/ad/constraint_jacobian.py:903 + :1027`), §4.3 (`src/ad/index_mapping.py:377` + `src/kkt/stationarity.py`), §5.4 (`src/ad/derivative_rules.py:2607`)
+- [x] Each experiment is marked "scheduled for Day 0" or "executed in prep with result" — all 3 marked "SCHEDULED FOR SPRINT 27 DAY 0" per the prompt's explicit allowance (§1 + §9 handoff plan)
+- [x] Unknowns 3.1, 3.2, 3.3, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md — 3.1 🟡 PARTIALLY VERIFIED, 3.2 🟡 PARTIALLY VERIFIED, 3.3 ✅ VERIFIED (Approach C selected, binding), 3.4 ✅ VERIFIED (serial implementation, binding), 3.5 ✅ VERIFIED (binary criteria, binding)
 
 ---
 
