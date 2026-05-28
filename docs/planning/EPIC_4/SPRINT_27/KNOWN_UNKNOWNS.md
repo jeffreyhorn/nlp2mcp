@@ -988,7 +988,18 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Author Missing Phase 0 Acceptance Gates PR20)
+**Date:** 2026-05-27
+
+**Findings:** #1387's bug class is **BOTH a sign-flip AND a term-omission** (not pure condition-guard):
+
+- The current `stat_b(j)` emit shows `((-1) * (((-1) * ((fb(j) - fb(j-1)) * 1$((not last(j))))))` — a double-negation that flattens to positive, which is suspected to be a sign bug at the Lagrangian-sign conversion step (Term 1's `-b(j)` factor in source should yield `-(fb(j) - fb(j-1))` after Lagrangian flip, not `+(fb(j) - fb(j-1))`).
+- The current `stat_fb(j)` emit shows ONLY the Term-2-at-j contribution `((-1) * (0.5 * (b(j) - b(j-1)) * 1$((not first(j)))))`; it is **MISSING 3 of the 4 expected contributions** (Term 1 at j, Term 1 at j+1, Term 2 at j+1 — all involve `b(j)` or `b(j+1)` factors and the offset-indexed `(fb(j+1) - fb(j))` cross-term).
+
+**Evidence:** Hand-derivation in Phase 0 §"Hand-Derived KKT Shape" of `docs/issues/ISSUE_1387_cclinpts-stat-b-stat-fb-condition-guard-or-sign-bug.md` walks through `∂ObjV/∂b(j)` and `∂ObjV/∂fb(j)` term-by-term and identifies the 3 missing `stat_fb` terms + the suspected double-negation in `stat_b`.
+
+**Decision:** Sprint 27 Priority 7 PROCEED criteria are documented in #1387 Phase 0 §"PROCEED/REPLAN Signal". The bug class is now actionable (sign-flip + term-omission, both fixable in `src/kkt/stationarity.py` or upstream in `src/ad/`). Effort estimate stays at the 3–6h range; root cause is likely shared with a broader AD-pipeline issue around indexed-sum partial derivatives w.r.t. an index-bound variable — flag for Sprint 27 Day 1 to evaluate whether to bundle with Priority 3 AD redesigns.
 
 ---
 
@@ -1031,7 +1042,23 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Phase 0 derivation complete; runtime classification deferred to Sprint 27 Day 0/1 NLP-warm-start experiment per Phase 0 §"PROCEED/REPLAN Signal")
+**Verified by:** Task 2 (Author Missing Phase 0 Acceptance Gates PR20)
+**Date:** 2026-05-27
+
+**Findings:** Phase 0 hand-derivation for `stat_r(i)` (middle index) identifies **5 specific per-term presence-and-sign checks** (executed via grep against the emit) that distinguish emit bug (case a/b — fixable in Sprint 27) from fundamental model property (case c — Sprint 28 carryforward):
+
+1. Constant `(pi * R_v / n)` objective gradient term presence + sign (Lagrangian-flipped)
+2. `lam_convexity(i-1)` cross-term presence with canonical `middle(i-1)` guard (NOT the looser `ord(i) > 1` currently in the emit — `middle(i-1)` implies `ord(i)>2 and ord(i)<=card(i)`; the emit's looser form over-fires at `i=2` where `convexity(1)=convexity(first(i))` doesn't exist, which is itself a suspected bug surface)
+3. `lam_convexity(i+1)` cross-term presence with canonical `middle(i+1)` guard (NOT the looser `ord(i) <= card(i) - 1` currently in the emit; same over-fire risk at the `i=card(i)-1` boundary)
+4. `nu_eqrdiff(i-1)` (+1) and `nu_eqrdiff(i)` (-1) presence with correct signs
+5. The bound-fixup `$(r.up(i) - r.lo(i) > 1e-10)` outer wrap correctness
+
+The Phase 0 §"PROCEED/REPLAN Signal" specifies that the canonical fundamental-property test is the **NLP-warm-started PATH solve**: if PATH converges to MODEL STATUS 1 with `obj ≈ 4.2841` from the NLP starting point but fails to do so from the default starting point, then camshape is starting-point sensitive (case c variant) and Sprint 28 carryforward applies. If even the NLP-warm-started solve fails AND all 5 per-term grep checks above pass (no emit bug), then this is case (c) — fundamental property; Sprint 28 carryforward. If any of the 5 grep checks fails, this is case (a) — fix-and-ship in Sprint 27.
+
+**Evidence:** Hand-derivation in Phase 0 §"Hand-Derived KKT Shape" of `docs/issues/ISSUE_1388_camshape-mcp-locally-infeasible-post-pattern-e-reclassification.md` walks through `∂L/∂r(i)` term-by-term for middle indices. The Phase 0 verification methodology is grep/pattern-based per-term presence-and-sign checks (NOT a literal byte-diff or canonicalized normalization step — the emit may reorder or differently-parenthesize terms vs the canonical hand-derived form), plus the NLP-warm-started PATH solve test.
+
+**Decision:** Sprint 27 Priority 7 prep is at PROCEED-with-condition state — the runtime warm-start experiment (Sprint 27 Day 0 or Day 1) selects between Sprint 27 fix vs Sprint 28 carryforward. Effort estimate stays at 3–6h for Sprint 27 fix path; +1h for Sprint 28 carryforward filing if case (c) is confirmed.
 
 ---
 
@@ -1207,7 +1234,20 @@ Sprint planning
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Author Missing Phase 0 Acceptance Gates PR20)
+**Date:** 2026-05-27
+
+**Findings:** PR20 codified in CONTRIBUTING.md §"Phase 0 Acceptance Gates" with explicit exception scope covering `scripts/**`, `tests/**`, `docs/**`, `.github/**`, and `data/**`. Friction-management decisions:
+
+- **#1400 (Priority 8 — pipeline absolute-path leak):** EXEMPT per the scripts/-only scope; the actual leak source is `scripts/gamslib/run_full_test.py:899` (verified via Sprint 27 PR #1402 audit), entirely within the exempted `scripts/**` path. No Phase 0 required.
+- **#1374 (Priority 9 — emit duplicate-init bugs):** Touches `src/emit/` so requires Phase 0. Reduced-scope: the Phase 0 §"Hand-Derived KKT Shape" subsection becomes "duplicate-init shape catalog" (the per-element-override-after-parameterized-init pattern observed on ganges + corpus-sweep results) rather than a full per-equation Lagrangian derivation. The 4 standard Phase 0 subsections still apply with content adapted to the observation-style nature of the work.
+- **PR author "Phase 0 exempt" marker:** Codified — PRs touching ONLY exempted paths note this in PR description (no separate label required; reviewer enforces via PR checklist).
+- **Mixed-touch PRs:** A PR that touches BOTH `src/{ad,kkt,emit}/` AND exempted paths still requires Phase 0 for the `src/` portion (explicitly stated in CONTRIBUTING.md §"Exception scope").
+
+**Evidence:** CONTRIBUTING.md §"Phase 0 Acceptance Gates" sections: "The hard rule" (mandatory rule statement), "Why this exists" (2 incident citations: PR #1379 + PR #1394), "Exception scope" (scripts/**, tests/**, docs/**, .github/**, data/**), "Workflow" (5-step author guidance), "Reviewer expectations" (3-bullet reviewer checklist).
+
+**Decision:** Friction risk mitigated by explicit exception scope + the Phase 0 template makes authoring fast (~30-60min per Phase 0 section vs uncapped speculative debugging time post-merge). Sprint 27 PROCEED on all Priority workstreams: Priority 5 (#1356, #1357) + Priority 7 (#1387, #1388) Phase 0 sections authored as part of this Task 2; Priority 8 (#1400) exempt; Priority 9 (#1374) reduced-scope Phase 0 deferred to its issue-doc authoring step.
 
 ---
 
