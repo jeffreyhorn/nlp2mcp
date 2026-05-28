@@ -98,8 +98,8 @@ stat_xcrop(c).. ... + sum(s, 1$(sc(c,s)) * lam_plow(c)) + ... =E= 0;
 
 **Distinguishing features:**
 
-- **Pattern C alias-sum** with parameter-set-membership indicator `1$(sc(c,s))` (2-set membership: crop `c` belongs to soil class `s`).
-- **Suspected bug:** Multiplier `lam_plow(c)` uses the **eq-domain index** `c` rather than the **sum bound index** `s`. The hand-derived KKT for `stat_xcrop(c)` of the Lagrangian L = … + sum(s, lam_plow(s) * (sum(c$(sc(c,s)), xcrop(c)) − plow_cap(s))) gives ∂L/∂xcrop(c) = sum(s$(sc(c,s)), lam_plow(s)). The Phase A `_find_pattern_c_alias_sum` gate over-consolidated and propagated `c` instead of `s` into the multiplier.
+- **Pattern C alias-sum** with parameter-set-membership indicator. Source constraint (per `data/gamslib/raw/qdemo7.gms` L177 + `qdemo7_mcp.gms` L248): `comp_plow(s).. ((-1) * (sum(c$(sc(s,c)), xcrop(c)) − ...)) =G= 0;` — the source uses **`sc(s,c)`** (s first, c second) per the parameter declaration `sc(s,c) /summer.cotton, ..., winter.onions/` (L24).
+- **Suspected bug (2 compounding errors):** Current emit (`stat_xcrop(c)` L240) is `sum(s, 1$(sc(c,s)) * lam_plow(c))` — has BOTH (a) the indicator's argument order swapped (`sc(c,s)` instead of `sc(s,c)`) AND (b) the multiplier using the eq-domain index `c` instead of the sum bound index `s`. The hand-derived KKT for `stat_xcrop(c)` of the Lagrangian L = … + sum(s, lam_plow(s) * (sum(c$(sc(s,c)), xcrop(c)) − plow_cap(s))) gives ∂L/∂xcrop(c) = sum(s$(sc(s,c)), lam_plow(s)) — with `sc(s,c)` argument order matching the source constraint AND with `lam_plow(s)` bound-index multiplier. The Phase A `_find_pattern_c_alias_sum` gate over-consolidated, propagated `c` instead of `s` into the multiplier, AND swapped the parameter-indicator argument order.
 - **Path failure mechanism:** GAMS PATH compile-error surfaces because `lam_plow(c)` introduces an out-of-scope index reference at the consolidated sum's body (the `lam_plow` symbol's declared domain mismatches the sum-body indexer used).
 
 **Phase 0 verification approach:**
@@ -107,13 +107,18 @@ stat_xcrop(c).. ... + sum(s, 1$(sc(c,s)) * lam_plow(c)) + ... =E= 0;
 After Sprint 27 tightening lands, regenerate `qdemo7_mcp.gms` and verify per-term:
 
 ```bash
-# Expected post-fix emit (bound-index in multiplier):
-grep -n 'sum(s, 1\$(sc(c,s)) \* lam_plow(s))' data/gamslib/mcp/qdemo7_mcp.gms
+# Expected post-fix emit (BOTH bugs fixed — sc(s,c) source-matching arg order
+# AND lam_plow(s) bound-index multiplier):
+grep -n 'sum(s, 1\$(sc(s,c)) \* lam_plow(s))' data/gamslib/mcp/qdemo7_mcp.gms
 # Expect: 1 match (stat_xcrop)
 
-# Regression check — pre-fix shape must NOT appear:
+# Regression checks — neither buggy shape must appear:
 grep -n 'sum(s, 1\$(sc(c,s)) \* lam_plow(c))' data/gamslib/mcp/qdemo7_mcp.gms
-# Expect: 0 matches
+# Expect: 0 matches (current Sprint 27 Day 0 buggy shape — arg order swapped + eq-index leak)
+grep -n 'sum(s, 1\$(sc(c,s)) \* lam_plow(s))' data/gamslib/mcp/qdemo7_mcp.gms
+# Expect: 0 matches (partial-fix shape — multiplier corrected but indicator still wrong-order)
+grep -n 'sum(s, 1\$(sc(s,c)) \* lam_plow(c))' data/gamslib/mcp/qdemo7_mcp.gms
+# Expect: 0 matches (partial-fix shape — indicator corrected but multiplier still leaks)
 ```
 
 **Recovery impact:** qdemo7 is the **+1 firm Solve / +1 firm Match** recovery anchor for Sprint 27 Priority 1 (compare_match at Sprint 26 Day 0 → path_syntax_error post-PR #1379 regression). Fix verified by qdemo7 returning to compare_match.

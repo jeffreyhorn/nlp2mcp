@@ -237,7 +237,7 @@ Sprint planning + AD/KKT engineer
 | Anchor | Distinguishing emit pattern (canonical equation) |
 |---|---|
 | `launch` | `sum(ss, ((-1) * 1$(ge(s,ss))) * nu_dweight(ss))` — order-relation alias-indicator (`ge(s,ss)`) |
-| `qdemo7` | `sum(s, 1$(sc(c,s)) * lam_plow(c))` — `sc(c,s)` 2-set membership; suspected bug — multiplier uses eq-index `c` instead of bound-index `s` |
+| `qdemo7` | `sum(s, 1$(sc(c,s)) * lam_plow(c))` — Pattern C alias-sum with `sc(s,c)`-domain (source constraint is `sum(c$(sc(s,c)), xcrop(c))`); suspected bug has 2 compounding errors — (a) indicator argument order swapped to `sc(c,s)` AND (b) multiplier uses eq-index `c` instead of bound-index `s`; expected post-fix `sum(s, 1$(sc(s,c)) * lam_plow(s))` |
 | `ferts` | `sum(c, ((-1) * (a(c,i) * 1$(ppos(i,p)))) * lam_mb(c,p))` — multi-bound-index sum with `ppos(i,p)` 2-set membership; multiplier projects bound + eq |
 | `sambal` | `sum(i__kkt1, ((-1) * 1$(xb(i,i__kkt1))) * nu_cbal(i))` — `__kkt1` synthetic alias + `xb(i,i__kkt1)` parameter-as-condition + cbal-derivative |
 | `ganges` | 4 inner Pattern C alias-sums with `ri(i,r)` 2-set membership + outer set-membership existential guard `$(sum(i, 1$(ri(r,i))))` |

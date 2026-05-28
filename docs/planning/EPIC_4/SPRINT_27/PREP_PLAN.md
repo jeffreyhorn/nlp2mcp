@@ -617,13 +617,16 @@ for m in qdemo7 egypt ferts shale sambal qsambal harker tfordy dinam ganges gang
     || echo "$m: MISSING"
 done
 
-# All 8 anchors have a dedicated section
+# All 8 anchors have a dedicated section (heading style: launch uses
+# `## 3. Anchor: launch`, the 7 in-cohort anchors use `### 4.N Anchor: <name>`
+# — pattern allows any `#` depth and any leading numbering before "Anchor: ")
 for a in launch qdemo7 ferts sambal ganges sroute turkpow dinam; do
-  grep -E "^### Anchor: $a" docs/planning/EPIC_4/SPRINT_27/PRIORITY_1_ANCHOR_MAPPING.md
+  grep -nE "^#+ .*Anchor: $a( |$|—)" docs/planning/EPIC_4/SPRINT_27/PRIORITY_1_ANCHOR_MAPPING.md
 done
 
-# Each non-anchor has an assigned anchor
-grep -E "^- (egypt|shale|qsambal|harker|tfordy|gangesx|srpchase) → " docs/planning/EPIC_4/SPRINT_27/PRIORITY_1_ANCHOR_MAPPING.md
+# Each non-anchor has an assigned anchor (actual mapping format in §5:
+# `- **<model> → <anchor>** — ...` with bold; pattern allows either bold or plain)
+grep -nE "^- (\*\*)?(egypt|shale|qsambal|harker|tfordy|gangesx|srpchase) → " docs/planning/EPIC_4/SPRINT_27/PRIORITY_1_ANCHOR_MAPPING.md
 ```
 
 ### Deliverables
