@@ -437,7 +437,7 @@ Net failure count UNCHANGED — these 3 models still fail, just at translate sta
 
 **Scope Freeze:** Confirmed 142 in-scope models (88 likely_convex + 54 verified_convex); 24-model exclusion set (21 explicit `excluded` + 3 multi-solve-driver translate-gated `danwolfe`/`decomp`/`saras`); abel runtime-filter from Sprint 25 §5.1 carried forward (Sprint 27 baseline freezes scope at 142 throughout).
 
-**Unknown 1.1 verdict:** All 15 #1398-affected models confirmed at non-compare_match buckets — Priority 1 scope CONFIRMED at 15 models. No self-recoveries; the 2 translate_timeout churn-backs (`ganges`, `srpchase`) still fail and remain in #1398 scope.
+**Unknown 1.1 verdict:** All 15 #1398-affected models confirmed at non-compare_match buckets — Priority 1 scope CONFIRMED at 15 models. No self-recoveries; the 2 machine-variance churn models (`ganges`, `srpchase` — Sprint 26 Day 13 final `path_syntax_error` → Sprint 27 Day 0 `translate_timeout`; also churn-backs vs Sprint 26 Day 0 where they were `translate_timeout`) still fail and remain in #1398 scope.
 
 ### Verification
 
