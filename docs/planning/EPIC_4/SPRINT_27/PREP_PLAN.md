@@ -496,7 +496,8 @@ print(buckets)
 
 ## Task 4: #1398 Widened-Scope Verification + Anchor Model Audit
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-28
 **Priority:** High
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 27 Day 1 (must complete before Priority 1 work begins on Day 1)
@@ -553,11 +554,55 @@ Additionally, Sprint 27 Day 0 baseline (Task 3) may surface that one or more of 
 
 ### Changes
 
-To be completed.
+Cross-referenced all 15 #1398-affected models (qdemo7, egypt, ferts, shale, sambal, qsambal, harker, tfordy, dinam, ganges, gangesx, fawley, srpchase, sroute, turkpow) against Sprint 27 Day 0 baseline (Task 3 output) and confirmed all 15 present at non-compare_match buckets: 8 path_syntax_error (qdemo7/egypt/ferts/shale/dinam/fawley/gangesx/turkpow), 2 translate_timeout machine-variance (ganges/srpchase — were path_syntax_error at Sprint 26 Day 13 final; in #1398 scope), 2 path_solve_license (tfordy/sroute), 3 compare_mismatch (sambal/qsambal/harker) = 8+2+2+3=15. No self-recoveries; no bucket drift since Task 3.
+
+Inspected `data/gamslib/mcp/<model>_mcp.gms` for each of the 8 anchor models (launch + qdemo7 + ferts + sambal + ganges + sroute + turkpow + dinam) and documented per-anchor distinguishing emit pattern with the canonical stationarity equation, cross-term structure, and alias-conditional shape. Inspection surfaced 8 structurally distinct shapes (no inspection-level anchor-pair collapse).
+
+Inspected `_mcp.gms` for each of the 7 non-anchor models (egypt, shale, qsambal, harker, tfordy, gangesx, srpchase) and assigned each to a presumed-matching anchor with justification: egypt → qdemo7 (high confidence), shale → ferts (medium-high), qsambal → sambal (high), harker → sroute (medium), tfordy → sambal (medium), gangesx → ganges (high), srpchase → turkpow (low-medium).
+
+Authored `docs/planning/EPIC_4/SPRINT_27/PRIORITY_1_ANCHOR_MAPPING.md` with 8 sections: §1 Purpose, §2 Cross-Reference Table (15 #1398-affected models), §3 Anchor: launch (byte-stability anchor), §4 Anchors (7 from the 15-affected cohort) with per-anchor distinguishing emit pattern + Phase 0 grep-based verification commands + recovery-impact note, §5 Non-Anchor Mappings (7 models with justification), §6 Open Questions (5 items escalating to Sprint 27 Day 1/2 hand-derived KKT), §7 Verification Summary, §8 Related Documents.
+
+Updated `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` Verification Results for 3 unknowns: Unknown 1.1 (added Task 4 cross-reference confirmation), Unknown 1.2 (✅ VERIFIED inspection-based: 8 distinct shapes confirmed; 5 Open Questions escalate to Day 1/2), Unknown 4.2 (🟡 PARTIALLY VERIFIED: launch anchor pattern documented; emit-impact analysis deferred to Unknown 4.1).
+
+Added CHANGELOG.md entry under Sprint 27 Preparation summarizing Task 4 completion.
 
 ### Result
 
-To be completed.
+**Cross-reference verdict (Sprint 27 Day 0 cohort):**
+
+| Bucket | Count | Models |
+|---|---|---|
+| path_syntax_error | 8 | qdemo7, egypt, ferts, shale, dinam, fawley, gangesx, turkpow |
+| translate_timeout (machine-variance) | 2 | ganges, srpchase |
+| path_solve_license | 2 | tfordy, sroute |
+| compare_mismatch | 3 | sambal, qsambal, harker |
+| **Total** | **15** | — |
+
+**Anchor distinctness verdict (inspection-based):**
+
+- **8/8 anchors confirmed distinct shapes** at inspection granularity. No anchor-pair collapse identified. Formal hand-derived KKT confirmation deferred to Sprint 27 Day 1/2 Phase 0 (per CONTRIBUTING.md §"Phase 0 Acceptance Gates").
+- **launch** byte-stability anchor confirmed as the canonical `ge(s,ss)` order-relation Pattern C shape (`stat_iweight(s)` + `stat_pweight(s)`).
+- **Provisional** byte-stability anchor pending Unknown 4.1 (Priority 4 emit-impact analysis on `_apply_pattern_c_swap_to_term`). If Priority 4 changes launch's emit, anchor shifts (likely to qdemo7 post-fix).
+
+**Non-anchor mapping (7/7 mapped):**
+
+- egypt → qdemo7 (2-region extension of `stat_xcrop(c)`)
+- shale → ferts (multi-bound-index `stat_z(p,tf)` family)
+- qsambal → sambal (structurally identical `stat_x(i,j)`)
+- harker → sroute (network-arc parameter family — tentative)
+- tfordy → sambal (cbal-style multiplier family — tentative)
+- gangesx → ganges (eXtended variant of `stat_pls(r)`)
+- srpchase → turkpow (self-loop indicator family — tentative)
+
+**5 Open Questions escalate to Sprint 27 Day 1/2:**
+
+1. fawley's #1398 surface vs #1356 fix scope (folded into Priority 5 #1356 per PROJECT_PLAN.md L1032)
+2. shale's sameas-Cartesian sub-shape — candidate 9th shape under turkpow's pattern
+3. Non-anchor mapping confidence for harker/tfordy/srpchase
+4. dinam's "2 distinct shapes" claim — may collapse to 1 logical shape with positional variations
+5. Anchor-pair collapse risk (launch vs sambal; qdemo7 vs ferts — no inspection-level collapse, formal hand-derived KKT may surface)
+
+**Scope decision:** Sprint 27 Priority 1 scope **CONFIRMED at 15 models** with **8 anchors**. No anchor-set expansion or contraction required from this inspection-only audit. Anchor mapping document is the explicit input to Day 1/2 Phase 0 hand-derived KKT verification.
 
 ### Verification
 
@@ -572,13 +617,16 @@ for m in qdemo7 egypt ferts shale sambal qsambal harker tfordy dinam ganges gang
     || echo "$m: MISSING"
 done
 
-# All 8 anchors have a dedicated section
+# All 8 anchors have a dedicated section (heading style: launch uses
+# `## 3. Anchor: launch`, the 7 in-cohort anchors use `### 4.N Anchor: <name>`
+# — pattern allows any `#` depth and any leading numbering before "Anchor: ")
 for a in launch qdemo7 ferts sambal ganges sroute turkpow dinam; do
-  grep -E "^### Anchor: $a" docs/planning/EPIC_4/SPRINT_27/PRIORITY_1_ANCHOR_MAPPING.md
+  grep -nE "^#+ .*Anchor: $a( |$|—)" docs/planning/EPIC_4/SPRINT_27/PRIORITY_1_ANCHOR_MAPPING.md
 done
 
-# Each non-anchor has an assigned anchor
-grep -E "^- (egypt|shale|qsambal|harker|tfordy|gangesx|srpchase) → " docs/planning/EPIC_4/SPRINT_27/PRIORITY_1_ANCHOR_MAPPING.md
+# Each non-anchor has an assigned anchor (actual mapping format in §5:
+# `- **<model> → <anchor>** — ...` with bold; pattern allows either bold or plain)
+grep -nE "^- (\*\*)?(egypt|shale|qsambal|harker|tfordy|gangesx|srpchase) → " docs/planning/EPIC_4/SPRINT_27/PRIORITY_1_ANCHOR_MAPPING.md
 ```
 
 ### Deliverables
@@ -591,12 +639,12 @@ grep -E "^- (egypt|shale|qsambal|harker|tfordy|gangesx|srpchase) → " docs/plan
 
 ### Acceptance Criteria
 
-- [ ] PRIORITY_1_ANCHOR_MAPPING.md exists and documents all 15 #1398-affected models
-- [ ] All 8 anchor models have a dedicated section with distinguishing emit pattern
-- [ ] All 7 non-anchor models have an assigned anchor with justification
-- [ ] Any anchor pair flagged as "may share shape" has a Day 1/2 hand-derived KKT escalation note
-- [ ] Any model from the original 15 that has self-recovered or shifted bucket is flagged with Sprint 27 scope-impact note
-- [ ] Unknowns 1.2 and 4.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] PRIORITY_1_ANCHOR_MAPPING.md exists and documents all 15 #1398-affected models (§2 Cross-Reference Table)
+- [x] All 8 anchor models have a dedicated section with distinguishing emit pattern (§3 launch + §4.1–§4.7 the 7 in-cohort anchors)
+- [x] All 7 non-anchor models have an assigned anchor with justification (§5)
+- [x] Any anchor pair flagged as "may share shape" has a Day 1/2 hand-derived KKT escalation note (§6 Open Question 5 — launch vs sambal, qdemo7 vs ferts — no inspection-level collapse, Day 1/2 confirmation pending)
+- [x] Any model from the original 15 that has self-recovered or shifted bucket is flagged with Sprint 27 scope-impact note (no self-recoveries; ganges + srpchase at translate_timeout due to machine-variance churn but remain in #1398 scope — §2 + §6 Open Question 1 for fawley folded into #1356)
+- [x] Unknowns 1.2 and 4.2 verified and updated in KNOWN_UNKNOWNS.md (1.2 ✅ VERIFIED inspection-based; 4.2 🟡 PARTIALLY VERIFIED pending Unknown 4.1)
 
 ---
 

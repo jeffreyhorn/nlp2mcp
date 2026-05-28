@@ -184,6 +184,8 @@ Sprint planning + AD/KKT engineer
 
 **Bonus finding (not in original Unknown 1.1 scope but surfaced by retest):** Sprint 27 Day 0 also exhibits the same 3-model machine-variance churn pattern as Sprint 26 Day 0 (clearlak/ganges/srpchase vs Sprint 26 Day 0's clearlak/ganges/turkpow; the exact boundary-crosser identity shifts run-to-run based on machine load, but the count is stable at ~3). Sprint 27 Day-N retests should expect this churn and use bucket provenance (per PR17 / BASELINE_METRICS.md §6.3) to distinguish fix-driven from churn-driven transitions.
 
+**Cross-reference (Task 4):** Task 4 (#1398 widened-scope verification + anchor-model audit) re-verified all 15 models against `data/gamslib/mcp/*_mcp.gms` regenerated emit on 2026-05-28 and confirmed no bucket drift since Task 3. Per-model anchor mapping recorded in `docs/planning/EPIC_4/SPRINT_27/PRIORITY_1_ANCHOR_MAPPING.md` §2.
+
 ---
 
 ## Unknown 1.2: Do the 8 Phase 0 anchor models (launch + qdemo7 + ferts + sambal + ganges + sroute + turkpow + dinam) actually cover 8 distinct emit shapes?
@@ -226,7 +228,44 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (inspection-based; formal hand-derived KKT confirmation deferred to Sprint 27 Day 1/2 Phase 0)
+**Verified by:** Task 4 (#1398 Widened-Scope Verification + Anchor Model Audit)
+**Date:** 2026-05-28
+
+**Findings:** Inspection of regenerated `data/gamslib/mcp/<anchor>_mcp.gms` for all 8 anchor models surfaces **8 structurally distinct emit shapes** at the inspection level (no anchor pair collapses to the same shape under emit-artifact comparison):
+
+| Anchor | Distinguishing emit pattern (canonical equation) |
+|---|---|
+| `launch` | `sum(ss, ((-1) * 1$(ge(s,ss))) * nu_dweight(ss))` — order-relation alias-indicator (`ge(s,ss)`) |
+| `qdemo7` | `sum(s, 1$(sc(c,s)) * lam_plow(c))` — Pattern C alias-sum with `sc(s,c)`-domain (source constraint is `sum(c$(sc(s,c)), xcrop(c))`); suspected bug has 2 compounding errors — (a) indicator argument order swapped to `sc(c,s)` AND (b) multiplier uses eq-index `c` instead of bound-index `s`; expected post-fix `sum(s, 1$(sc(s,c)) * lam_plow(s))` |
+| `ferts` | `sum(c, ((-1) * (a(c,i) * 1$(ppos(i,p)))) * lam_mb(c,p))` — multi-bound-index sum with `ppos(i,p)` 2-set membership; multiplier projects bound + eq |
+| `sambal` | `sum(i__kkt1, ((-1) * 1$(xb(i,i__kkt1))) * nu_cbal(i))` — `__kkt1` synthetic alias + `xb(i,i__kkt1)` parameter-as-condition + cbal-derivative |
+| `ganges` | 4 inner Pattern C alias-sums with `ri(i,r)` 2-set membership + outer set-membership existential guard `$(sum(i, 1$(ri(r,i))))` |
+| `sroute` | `(1$(darc(ip,ipp)) * lam_nb(i,ip))$((not sameas(i,ipp)))` — parameter-arc indicator + negation guard; NO outer sum (unwrapped Pattern C) |
+| `turkpow` | `vs(t__,t__)` self-loop alias + `bs(bp,b)` separate-var conditional + massive `sameas`-Cartesian inner-sum-of-bs-conditioned-products |
+| `dinam` | `stat_ka(te)` row-multiplier-collapse `lam_mb(i,t)` (both bound) + `ts2(te,te)` eq-index self-loop + `IndexOffset(te+7)` inside Pattern C |
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_27/PRIORITY_1_ANCHOR_MAPPING.md` §3 (launch) + §4 (7 in-cohort anchors) — per-anchor distinguishing emit pattern, Phase 0 grep-based verification commands, and recovery-impact note. Inspection commands run on Sprint 27 Day 0 `data/gamslib/mcp/*_mcp.gms` artifacts (`e0be4fb1`-baselined; no `src/` changes since).
+
+**Decision:** Priority 1 Phase 0 anchor set CONFIRMED at 8 anchors covering 8 distinct emit shapes (at inspection granularity). 7 non-anchor models mapped to anchors with justification (`docs/planning/EPIC_4/SPRINT_27/PRIORITY_1_ANCHOR_MAPPING.md` §5):
+
+- egypt → qdemo7 (high confidence — 2-region extension)
+- shale → ferts (medium-high — multi-bound-index sum family; sameas-Cartesian sub-shape flagged Open Question 2)
+- qsambal → sambal (high — structurally identical, quadratic objective only)
+- harker → sroute (medium — network-arc parameter family; sameas-aliased inner-sum sub-shape flagged Open Question 3)
+- tfordy → sambal (medium — cbal-style multiplier family without `__kkt1` alias; Open Question 3)
+- gangesx → ganges (high — eXtended variant, same 4-inner-sum + `ri(i,r)` family)
+- srpchase → turkpow (low-medium — `ancestor(srn,srn)` self-loop mirrors turkpow's `vs(t__,t__)`; Open Question 3)
+
+**5 Open Questions escalate to Sprint 27 Day 1/2 Phase 0 hand-derived KKT** (`PRIORITY_1_ANCHOR_MAPPING.md` §6):
+
+1. fawley's #1398 surface vs #1356 fix scope (folded into #1356 per PROJECT_PLAN.md L1032; confirmation needed after Day 1 #1356 fix lands)
+2. shale's sameas-Cartesian sub-shape — candidate 9th shape under turkpow's pattern
+3. Non-anchor mapping confidence for harker/tfordy/srpchase — possible 9th/10th/11th distinct shapes
+4. dinam's "2 distinct shapes" claim (Shape A `stat_ka` + Shape B `comp_mb` differentiate) — may collapse to 1 logical shape with positional variations
+5. Anchor-pair collapse risk (launch vs sambal both have synthetic-alias structure; qdemo7 vs ferts both have set-membership indicators) — no inspection-level collapse, but formal hand-derived KKT may reduce verification budget
+
+**Bonus finding:** No 9th-shape candidate identified at inspection that REQUIRES additional anchor (5 of the open questions are confirmation tasks, not gap fixes). Sprint 27 anchor set unchanged at 8 unless Day 1/2 Phase 0 surfaces an unambiguous shape that no anchor covers.
 
 ---
 
@@ -753,7 +792,23 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (anchor identified; Priority 4 emit-impact analysis deferred to Unknown 4.1)
+**Verified by:** Task 4 (#1398 Widened-Scope Verification + Anchor Model Audit)
+**Date:** 2026-05-28
+
+**Findings:** Task 4 inspection of `data/gamslib/mcp/launch_mcp.gms` confirms the launch byte-stability anchor is the **Pattern C consolidated zero-offset with `ge(s,ss)` order-relation indicator** shape (`stat_iweight(s)` + `stat_pweight(s)` — 2 stationarity equations, identical Pattern C shape per `PRIORITY_1_ANCHOR_MAPPING.md` §3). This is the canonical Sprint 26 PR #1379 target shape.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_27/PRIORITY_1_ANCHOR_MAPPING.md` §3 with per-term emit + grep-based Phase 0 verification command.
+
+**Constraint inputs identified (escalates to Unknown 4.1 emit-impact analysis):**
+
+- If Priority 4 (#1378) is **solver-tuning only** (no `src/` change touching `_apply_pattern_c_swap_to_term` or related emit helpers) → launch byte-stability anchor preserved, no anchor mapping update needed.
+- If Priority 4 is an **in-place sign/scaling refinement of `_apply_pattern_c_swap_to_term`** producing semantically-equivalent emit → launch byte-stability anchor MUST shift to a new reference (likely qdemo7 post-fix, since qdemo7's recovery from path_syntax_error → compare_match is itself a byte-stability signal). Anchor mapping document (§3) would be updated to reflect the new byte-stability anchor.
+- If Priority 4 changes launch's emit AND launch fails to solve under new emit → joint Priority 1 + Priority 4 conflict; one workstream must accept partial compromise.
+
+**Decision (Sprint 27 Day 0 prep):** Anchor mapping document records launch as the **provisional** byte-stability anchor pending Unknown 4.1 (Priority 4 emit-impact analysis on `_apply_pattern_c_swap_to_term`). Task 4 does NOT itself resolve Unknown 4.1; the anchor-shift decision is deferred to Sprint 27 Day 0/1 #1378 Phase 0 work.
+
+**Cross-reference:** `PRIORITY_1_ANCHOR_MAPPING.md` §3 explicitly notes "Unknown 4.2 (will Priority 4 #1378 break launch byte-stability?) feeds into this anchor" — when Priority 4 Phase 0 resolves the emit-impact question, this Unknown's status updates from PARTIALLY VERIFIED to ✅ VERIFIED (anchor preserved) or ⚠️ ANCHOR SHIFTED (anchor mapping document updated with new byte-stability reference).
 
 ---
 
