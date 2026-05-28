@@ -254,7 +254,7 @@ Sprint 27 retrospective should clarify this. **For Day-N evaluation: use bucket 
 - **Solve +6 firm**: #1381 camcge/cesam2 [+2] + #1398 qdemo7 recovery [+1] + #1357 otpop [+1] + #1356 fawley [+1] + #1388 camshape [+1]
 - **Solve +2 conditional**: #1385 [+1 conditional on iswnm/mexls/nebrazil/sarf subsequently solving] + #1224 [+1 conditional on mine subsequently solving cleanly]
 - **Match +7**: #1381 [+2] + #1398 qdemo7 [+1] + #1357 [+1] + #1356 [+1] + #1378 launch mismatch→match [+1] + #1390 kand mismatch→match [+1]
-- **path_syntax_error −8**: #1398 [up to 9 currently-affected models recover — of which 11 are in path_syntax_error (qdemo7/egypt/ferts/shale/dinam/fawley/gangesx/turkpow at Day 0, plus the 3 churn-backs once they translate again)] + #1381 [camcge, cesam2] + #1357 [otpop]; well above the 8 needed to reach ≤ 6
+- **path_syntax_error −8**: #1398 [up to 10 #1398-affected models reduce path_syntax_error count — 8 currently in path_syntax_error at Day 0 (qdemo7/egypt/ferts/shale/dinam/fawley/gangesx/turkpow), plus 2 #1398-affected machine-variance churn-backs (ganges/srpchase, currently in translate_timeout per §6.1) returning to path_syntax_error before recovery] + #1381 [camcge, cesam2] + #1357 [otpop]; well above the 8 needed to reach ≤ 6
 
 ---
 
@@ -264,7 +264,7 @@ Sprint 27 retrospective should clarify this. **For Day-N evaluation: use bucket 
 - [x] All 8 acceptance-criteria metrics recorded → Parse / Translate / Solve / Match + 4 `outcome_category` counts in §2
 - [x] Bucket-provenance column added per PR17 → §6 (per-failing-model Sprint 26 → Sprint 27 transitions)
 - [x] Scope-freeze decision documented → §5 (carried forward from Sprint 26 §5)
-- [x] Unknown 1.1 verified and updated in KNOWN_UNKNOWNS.md → all 15 #1398-affected models confirmed at non-compare_match buckets (10 path_syntax_error, 2 translate_timeout churn-back ganges/srpchase, 2 path_solve_license tfordy/sroute, 3 compare_mismatch sambal/qsambal/harker — solves `model_optimal` but `compare_mismatch`)
+- [x] Unknown 1.1 verified and updated in KNOWN_UNKNOWNS.md → all 15 #1398-affected models confirmed at non-compare_match buckets (8 path_syntax_error qdemo7/egypt/ferts/shale/dinam/fawley/gangesx/turkpow, 2 translate_timeout machine-variance ganges/srpchase, 2 path_solve_license tfordy/sroute, 3 compare_mismatch sambal/qsambal/harker — solves `model_optimal` but `compare_mismatch`) — 8+2+2+3=15
 
 ---
 

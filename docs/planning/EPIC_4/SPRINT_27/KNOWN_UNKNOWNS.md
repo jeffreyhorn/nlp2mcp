@@ -170,8 +170,8 @@ Sprint planning + AD/KKT engineer
 | `fawley` | path_syntax_error | ✓ (also Priority 5 #1356) |
 | `gangesx` | path_syntax_error | ✓ |
 | `turkpow` | path_syntax_error | ✓ |
-| `ganges` | translate_timeout | ✓ (machine-variance churn-back — was path_syntax_error at Sprint 26 Day 13 final; still failing) |
-| `srpchase` | translate_timeout | ✓ (machine-variance churn-back — was path_syntax_error at Sprint 26 Day 13 final; still failing) |
+| `ganges` | translate_timeout | ✓ (machine-variance churn — was path_syntax_error at Sprint 26 Day 13 final, churned forward to translate_timeout at Day 0; also a churn-back vs Sprint 26 Day 0 where it was translate_timeout; still failing) |
+| `srpchase` | translate_timeout | ✓ (machine-variance churn — was path_syntax_error at Sprint 26 Day 13 final, churned forward to translate_timeout at Day 0; also a churn-back vs Sprint 26 Day 0 where it was translate_timeout; still failing) |
 | `tfordy` | path_solve_license | ✓ (license bucket, not Phase A regression — but in #1398 scope per PR #1399 review surface) |
 | `sroute` | path_solve_license | ✓ (same as tfordy) |
 | `sambal` | compare_mismatch | ✓ (solve `model_optimal` but `compare_mismatch` — not a Phase A syntax regression) |
