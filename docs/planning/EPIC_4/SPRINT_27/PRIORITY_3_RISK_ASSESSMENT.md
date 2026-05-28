@@ -315,17 +315,43 @@ Per Sprint 26 Day 9 SPRINT_LOG, 3 approaches were enumerated but not selected:
 ```python
 # In _is_concrete_instance_of (derivative_rules.py:2607), after the existing
 # model_ir set-membership check at strategy 1:
+#
+# Note: SetDef does NOT have a `subset_of` field. Subset relations are
+# represented by `SetDef.domain` — a tuple of parent set names
+# (see src/ir/symbols.py:48-54). For example, `Set t(tt) /...;` produces
+# `SetDef(name='t', members=[...], domain=('tt',))`. Alias resolution is
+# also required (e.g., if `tt` is declared as `Alias(t,tt)`, the canonical
+# resolution must follow `model_ir.aliases` to the underlying set).
+#
+# Existing helpers in src/kkt/stationarity.py:3626-3670 already implement
+# this lookup: `_find_superset_in_domain(subset_idx, var_domain, model_ir)`
+# returns the in-scope parent index name (with alias resolution) given a
+# subset index and a domain tuple. The Approach C prototype below can
+# reuse the same lookup pattern; for the AD layer's _is_concrete_instance_of,
+# we check whether `symbolic` is a declared subset whose parent (after
+# alias resolution) matches `concrete`.
 if config is not None and config.model_ir is not None and config.model_ir.name == 'otpop':
     model_ir = config.model_ir
     # Strategy 3: symbolic-superset check — concrete may be the eq-domain
     # index whose set is a SUPERSET of the symbolic iteration variable's set.
     if isinstance(concrete, str) and concrete != symbolic:
-        if symbolic in model_ir.sets and concrete in model_ir.sets:
-            # Is `symbolic` declared as a subset of `concrete`?
-            symbolic_set = model_ir.sets[symbolic]
-            if hasattr(symbolic_set, 'subset_of') and symbolic_set.subset_of == concrete:
-                return True
+        # Resolve both names through any alias chain to canonical set names.
+        # (`_resolve_alias_target` from src/kkt/stationarity.py handles
+        # transitive alias chains and self-aliasing safely.)
+        canonical_symbolic = _resolve_alias_target(symbolic, model_ir)
+        canonical_concrete = _resolve_alias_target(concrete, model_ir)
+        if canonical_symbolic in model_ir.sets:
+            symbolic_set = model_ir.sets[canonical_symbolic]
+            # SetDef.domain is a tuple of parent set names; a single-parent
+            # entry like `domain=('tt',)` signals a subset declaration.
+            if len(symbolic_set.domain) == 1:
+                parent = symbolic_set.domain[0]
+                canonical_parent = _resolve_alias_target(parent, model_ir)
+                if canonical_parent == canonical_concrete:
+                    return True
 ```
+
+**API reuse note:** Day 0 engineer can simplify the prototype by calling the existing `_find_superset_in_domain` helper from `src/kkt/stationarity.py:3626-3670` with a single-element `var_domain=(concrete,)` tuple — that helper already encapsulates the alias-resolution + subset-domain-lookup logic. Whether to inline the logic (per the snippet above) or call the existing helper is a Day 0 implementation choice; both produce equivalent results.
 
 **Execution steps:**
 
@@ -400,7 +426,7 @@ grep -E 'MODEL STATUS|OBJECTIVE' /tmp/otpop_solve.lst
 - **#1393 (Sum over-counting):** The fix is well-localized — `_is_concrete_instance_of` already accepts `config.model_ir` and has two strategies (model_ir set-membership + heuristic prefix). Adding a 3rd strategy for subset-relation lookup is a contained ~30-line addition reusing existing infrastructure. The hand-derived collapse is unambiguous. **High confidence PROCEED.**
 - **#1335 (missing time-reversal cross-term):** The hypothesis is that Approach C ALSO fixes #1335 by allowing `_sum_should_collapse` to fire on the `zdef` sum body, which would trigger the AD machinery to compute the partial w.r.t. `p('1990')`. But `_try_eval_offset` may need a separate fix to resolve `card(t) - ord(t)` to `'1990'` — Approach C alone may not subsume #1335. **Moderate confidence PROCEED-with-caveat.**
 
-**Risk factors that could flip to REPLAN:** the subset relation `t ⊂ tt` may not be queryable in the standard `model_ir.sets` representation — the Sprint 25 dynamic-subset handling (per #723) may require a different lookup path (`resolve_set_members`). Day 0 execution will resolve.
+**Risk factors that could flip to REPLAN:** the subset relation `t ⊂ tt` IS queryable in the standard `model_ir.sets` representation via `SetDef.domain` (a tuple of parent set names; see `src/ir/symbols.py:48-54`), AND alias resolution is already implemented (see `_find_superset_in_domain` at `src/kkt/stationarity.py:3626-3670`) — so the previously-flagged "may not be queryable" concern is resolved at the IR-API level. The remaining risk is Sprint 25 dynamic-subset handling (per #723) for cases where the subset has a runtime `$`-condition: `resolve_set_members` falls back to parent-set members, which may produce false-positive supersets in subset-of-subset chains. Day 0 execution will verify whether otpop's `t ⊂ tt` relation is dynamic-subset-affected.
 
 ---
 
