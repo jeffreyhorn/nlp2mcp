@@ -650,7 +650,8 @@ grep -nE "^- (\*\*)?(egypt|shale|qsambal|harker|tfordy|gangesx|srpchase) → " d
 
 ## Task 5: PR19 Target-List Widening Design
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-28
 **Priority:** High
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 27 Day 1 (PR19 widening must land before Priority 1 to prevent re-regression)
@@ -706,11 +707,46 @@ The widening is non-trivial: PR19's CI extension runs PATH-solve on each target 
 
 ### Changes
 
-To be completed.
+Inventoried current PR19 target list (`.github/path-solve-ci-targets.txt`): 11 Tier 0/1 hard-fail canaries + 4 Pattern C soft-fail target models including `fawley`. Extracted per-model PATH-solve runtimes from Sprint 26 PR #1396 CI run `25862102598` via `gh run view`: Tier 0/1 sum ~0.5s (median 0.04s per model), Pattern C sum ~0.06s (all rc=2 compile-fail at ~0.01–0.02s each), whole-workflow wall-clock ~27s (dominated by ~14s GAMS install + ~22s total setup overhead). Per-model timeout cap: 60s (reslim=30s + 30s subprocess buffer per `pr19-emit-solve-validation.yml` L21-32).
+
+Computed 16-candidate widening cohort overlap with current list: `fawley` already in Pattern C tier → **net additions = 15** (16 candidates − 1 overlap). **Final widened union = 30 unique models** (12 Tier 0/1 hard-fail = current 11 + `launch`; 18 Pattern C soft-fail = current 4 + 14 net-new #1398-affected models).
+
+Projected widened runtime for each of 3 options:
+
+- **Option A (full widening, 30 unique):** ~37s steady state (22s setup + 2s Tier 0/1 + ~10s Pattern C + 3s overhead). Worst case ~18.5min if all 18 Pattern C hit reslim timeout (within 20-min hard ceiling but tight; mitigated by observed fail-fast behavior of #1398-affected models at compile).
+- **Option B (anchor-only, 23 unique):** ~32s steady state. Saves ~5s vs Option A but leaves 7 non-anchor #1398-affected models (egypt, shale, qsambal, harker, tfordy, gangesx, srpchase) UNCOVERED — defeats KU-37 mitigation rationale.
+- **Option C (tiered parallel split, same 30 unique):** ~35s wall-clock (max of 2 parallel jobs). Same coverage as Option A but adds ~1–2h implementation effort (workflow YAML rewrite + 2× artifact + 2× PR-comment) and duplicates GAMS install overhead.
+
+Authored new `docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIGN.md` with 10 sections: §1 Purpose, §2 Current State Inventory (Tier 0/1 + Pattern C + whole-workflow timing), §3 16-Candidate Widening Cohort (overlap + per-candidate tier assignment table), §4 Runtime Impact Calculation (per-model time projections + total widened runtime + threshold check), §5 Three Widening Options + Recommendation (A/B/C with pros/cons), §6 Implementation Steps (exact `.github/path-solve-ci-targets.txt` block to append + no YAML/script changes), §7 Validation Plan (local dry-run + Sprint 27 Day 0 implementation PR + post-merge regression check), §8 Open Questions / Deferred Items (tier promotion automation + PR19 trigger path expansion for #1224 + launch byte-stability check), §9 Verification Summary, §10 Related Documents.
+
+Updated `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` Unknown 1.4 Verification Results to ✅ VERIFIED (projection-based; dummy-PR confirmation deferred to Sprint 27 Day 0 implementation PR) with answers to all 5 research questions. Recorded bonus finding: Sprint 27 Day 0 widening PR should also add `src/ad/index_mapping.py` to the PR19 trigger paths for Priority 6 #1224 coverage (1-line YAML edit, too cheap to defer).
+
+Added CHANGELOG.md entry under Sprint 27 Preparation summarizing Task 5 completion.
 
 ### Result
 
-To be completed.
+**Selected: Option A (full widening).**
+
+**Runtime projection (steady state):**
+
+| Metric | Current | Option A widened | Delta |
+|---|---|---|---|
+| Total models | 15 (11 + 4) | 30 (12 + 18) | +15 net new |
+| Setup overhead | ~22s | ~22s | 0s |
+| Tier 0/1 solves | ~0.5s | ~2s | +1.5s |
+| Pattern C solves | ~0.06s | ~10s | +~10s |
+| **Wall-clock total** | **~27s** | **~37s** | **+~10s** |
+
+**Threshold checks:** 5-min friction threshold = 8× headroom; 20-min hard ceiling = within bounds (worst-case timeout scenario ~18.5min tight but observed fail-fast behavior makes this implausible).
+
+**Implementation effort:** ~10 min (file edit only). NO CI workflow YAML or helper script changes needed.
+
+**Rationale for Option A over B/C:**
+
+- Option B (~5s saving) does NOT justify losing coverage on 7 non-anchor #1398-affected models — these are exactly the surface Sprint 26's #1398 incident demonstrated PR19 must cover.
+- Option C (parallel split) adds ~1–2h implementation effort + duplicates ~22s GAMS install overhead × 2 jobs without solving a real bottleneck. Reserve for Sprint 28+ if Pattern C cohort grows past ~25 models.
+
+**Implementation lands at Sprint 27 Day 0** (per Task 11 schedule) via 15-line append to `.github/path-solve-ci-targets.txt` + 1-line YAML edit to add `src/ad/index_mapping.py` to PR19 trigger paths (bonus finding from KU 1.4 verification — too cheap to defer).
 
 ### Verification
 
@@ -725,8 +761,10 @@ for m in launch qdemo7 egypt ferts shale sambal qsambal harker tfordy dinam gang
     || echo "$m: MISSING"
 done
 
-# Recommendation section explicitly states chosen option
-grep -E "^## Recommendation:" docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIGN.md
+# Recommendation section explicitly states chosen option (heading is
+# `### 5.4 Recommendation` and the body declares "Selected: Option A")
+grep -nE "^### .* Recommendation" docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIGN.md
+grep -nE "^\*\*Selected: " docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIGN.md
 ```
 
 ### Deliverables
@@ -739,13 +777,13 @@ grep -E "^## Recommendation:" docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIG
 
 ### Acceptance Criteria
 
-- [ ] PR19_WIDENING_DESIGN.md exists with all 4 required sections (state, runtime calc, options, recommendation)
-- [ ] All 16 candidate model names appear in the document (15 #1398-affected + launch; `fawley` overlap with current PR19 list is called out)
-- [ ] Runtime calc documents net additions (15, after deduping `fawley`) and final widened union (30 unique models for Options A/C, 23 for Option B)
-- [ ] Recommended option includes estimated CI runtime delta
-- [ ] Unknown 1.4 verified and updated in KNOWN_UNKNOWNS.md
-- [ ] Implementation steps include the exact `.github/path-solve-ci-targets.txt` lines to add (only the 15 net new entries, not `fawley`)
-- [ ] Validation plan defines how Sprint 27 Day 1 will confirm CI works on the widened set
+- [x] PR19_WIDENING_DESIGN.md exists with all 4 required sections (state §2, runtime calc §4, options §5.1–§5.3, recommendation §5.4) — exceeds the 4-section minimum with 10 sections including implementation §6 + validation §7 + open questions §8
+- [x] All 16 candidate model names appear in the document (15 #1398-affected + launch; `fawley` overlap with current PR19 list called out in §3.1)
+- [x] Runtime calc documents net additions (15, after deduping `fawley`) and final widened union (30 unique models for Options A/C, 23 for Option B) — §3.1 + §4.2
+- [x] Recommended option includes estimated CI runtime delta (Option A: ~37s steady state, +~10s vs current baseline; §4.2 + §5.4)
+- [x] Unknown 1.4 verified and updated in KNOWN_UNKNOWNS.md (✅ VERIFIED projection-based; all 5 research questions answered; dummy-PR confirmation deferred to Sprint 27 Day 0 implementation PR)
+- [x] Implementation steps include the exact `.github/path-solve-ci-targets.txt` lines to add (only the 15 net new entries, not `fawley`) — §6.1
+- [x] Validation plan defines how Sprint 27 Day 0 will confirm CI works on the widened set (local `parse_pr19_targets.py` dry-run + Sprint 27 Day 0 implementation PR triggers PR19 + post-merge regression check) — §7
 
 ---
 
