@@ -154,7 +154,35 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 3 (Sprint 26 → Sprint 27 Bucket-Provenance Baseline + Scope Freeze PR15 + PR17)
+**Date:** 2026-05-28
+
+**Findings:** All 15 #1398-affected models present at non-compare_match buckets at Sprint 27 Day 0:
+
+| Model | Sprint 27 Day 0 bucket | Sprint 27 Priority 1 target? |
+|---|---|---|
+| `qdemo7` | path_syntax_error | ✓ (the +1 firm Solve / +1 firm Match recovery anchor) |
+| `egypt` | path_syntax_error | ✓ |
+| `ferts` | path_syntax_error | ✓ |
+| `shale` | path_syntax_error | ✓ |
+| `dinam` | path_syntax_error | ✓ (Phase 0 anchor — 2 distinct shapes) |
+| `fawley` | path_syntax_error | ✓ (also Priority 5 #1356) |
+| `gangesx` | path_syntax_error | ✓ |
+| `turkpow` | path_syntax_error | ✓ |
+| `ganges` | translate_timeout | ✓ (machine-variance churn — was path_syntax_error at Sprint 26 Day 13 final, churned forward to translate_timeout at Day 0; also a churn-back vs Sprint 26 Day 0 where it was translate_timeout; still failing) |
+| `srpchase` | translate_timeout | ✓ (machine-variance churn — was path_syntax_error at Sprint 26 Day 13 final, churned forward to translate_timeout at Day 0; also a churn-back vs Sprint 26 Day 0 where it was translate_timeout; still failing) |
+| `tfordy` | path_solve_license | ✓ (license bucket, not Phase A regression — but in #1398 scope per PR #1399 review surface) |
+| `sroute` | path_solve_license | ✓ (same as tfordy) |
+| `sambal` | compare_mismatch | ✓ (solve `model_optimal` but `compare_mismatch` — not a Phase A syntax regression) |
+| `qsambal` | compare_mismatch | ✓ (same as sambal) |
+| `harker` | compare_mismatch | ✓ (same as sambal) |
+
+**Evidence:** Sprint 27 Day 0 baseline retest (BASELINE_METRICS.md §6.2 + §6 tables; raw data in `data/gamslib/gamslib_status.json`).
+
+**Decision:** Priority 1 scope CONFIRMED at 15 models (no self-recoveries, no scope shrinkage). All 15 models remain candidates for the Sprint 27 #1398 Phase A gate-tightening fix per the PROJECT_PLAN.md target. The 2 machine-variance churn models (`ganges`, `srpchase` — Sprint 26 Day 13 final `path_syntax_error` → Sprint 27 Day 0 `translate_timeout`; also churn-backs vs Sprint 26 Day 0 where they were `translate_timeout`) are still failing — just at an earlier pipeline stage — and will return to their Sprint 26 Day 13 final `path_syntax_error` bucket once translate completes on a faster runner; the fix surface remains the same as for the path_syntax_error cohort.
+
+**Bonus finding (not in original Unknown 1.1 scope but surfaced by retest):** Sprint 27 Day 0 also exhibits the same 3-model machine-variance churn pattern as Sprint 26 Day 0 (clearlak/ganges/srpchase vs Sprint 26 Day 0's clearlak/ganges/turkpow; the exact boundary-crosser identity shifts run-to-run based on machine load, but the count is stable at ~3). Sprint 27 Day-N retests should expect this churn and use bucket provenance (per PR17 / BASELINE_METRICS.md §6.3) to distinguish fix-driven from churn-driven transitions.
 
 ---
 

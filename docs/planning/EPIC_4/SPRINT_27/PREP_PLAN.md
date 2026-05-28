@@ -346,9 +346,10 @@ done
 
 ## Task 3: Sprint 26 → Sprint 27 Bucket-Provenance Baseline + Scope Freeze (PR15 + PR17)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-28
 **Priority:** Critical
-**Estimated Time:** 4–5 hours
+**Estimated Time:** 4–5 hours (actual: ~3h10m pipeline + ~1h analysis/authoring = ~4h)
 **Deadline:** Before Sprint 27 Day 1 (Day 0 baseline must exist before any Sprint 27 src/ work)
 **Owner:** Sprint planning
 **Dependencies:** None
@@ -401,11 +402,42 @@ Scope freeze at 142 (continuing Sprint 26's abel runtime-filter policy) prevents
 
 ### Changes
 
-To be completed.
+Ran full pipeline retest via `.venv/bin/python scripts/gamslib/run_full_test.py --quiet` (11422.1s ≈ 3h10m, exit 0, 142/142 in-scope models processed). The pre-retest state is reproducible from version control: `git show e0be4fb1:data/gamslib/gamslib_status.json` returns the Sprint 26 Day 13 (final) snapshot (commit `e0be4fb1` "Sprint 26 Day 13: Final pipeline retest + Sprint 26 close") that this baseline compares against. The pinned SHA remains stable after this PR merges (whereas `main` will move forward to the Sprint 27 Day 0 baseline). (A local-only convenience snapshot was kept in `/tmp` during authoring for diff iteration, but it is NOT a repo-tracked artifact — the canonical pre-retest reference is the pinned `e0be4fb1` commit.)
+
+Authored new `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` (modeled on `docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md`) with all 9 sections: §1 Purpose, §2 Baseline Headline Metrics (with 2.1 Translate / 2.2 Solve / 2.3 Comparison sub-breakdowns), §3 Tests Baseline, §4 Determinism Baseline (PR12 reaffirmation), §5 Frozen v2.2.1 Exclusion Set + Scope Freeze (5.1 MINLP / 5.2 Legacy / 5.3 Multi-solve drivers / 5.4 Policy carried forward), §6 Bucket Provenance with per-bucket Sprint 26 Day 13 (final) → Sprint 27 Day 0 transition tables for all 6 failing buckets + compare_mismatch + compare_skipped (covering all 83 non-compare_match models), §7 Sprint 27 Target Metrics (from PROJECT_PLAN.md Sprint 27 §Acceptance Criteria), §8 Acceptance Criteria (all checked), §9 Related Documents.
+
+Updated KNOWN_UNKNOWNS.md Unknown 1.1 Verification Results to ✅ VERIFIED with the per-model bucket inventory for all 15 #1398-affected models, decision Priority 1 scope CONFIRMED at 15, plus the bonus finding about the recurring machine-variance churn pattern.
+
+Added CHANGELOG.md entry under Sprint 27 Preparation summarizing Task 3 completion.
 
 ### Result
 
-To be completed.
+**Sprint 27 Day 0 Headline Metrics:**
+
+| Metric | Sprint 26 Day 13 (final) | Sprint 27 Day 0 | Δ |
+|---|---|---|---|
+| Parse | 142/142 | 142/142 | 0 |
+| Translate | 134/142 | 131/142 | **−3** (machine-variance churn — see §6.1) |
+| Solve | 103 | 103 | 0 |
+| Match | 59 | 59 | 0 |
+| path_syntax_error | 17 | 14 | −3 (same machine-variance churn — models moved to translate_timeout) |
+| path_solve_terminated | 5 | 5 | 0 |
+| model_infeasible | 4 | 4 | 0 |
+| path_solve_license | 5 | 5 | 0 |
+| translate_timeout | 4 | 7 | +3 (same machine-variance churn — models moved from path_syntax_error) |
+| translate_internal_error | 4 | 4 | 0 |
+
+**Bucket-Provenance Drift Summary (Sprint 26 Day 13 final → Sprint 27 Day 0):** 3 models churned, all attributed to machine-load variance at the 600s translate timeout boundary (no Sprint 27 prep src/ changes):
+
+- `clearlak`: path_syntax_error → translate_timeout (128.6s → 600.1s)
+- `ganges`: path_syntax_error → translate_timeout (227.3s → 600.6s)
+- `srpchase`: path_syntax_error → translate_timeout (274.2s → 600.2s)
+
+Net failure count UNCHANGED — these 3 models still fail, just at translate stage instead of solve stage. Same pattern as Sprint 26 Day 0 baseline (which had clearlak/ganges/turkpow churn under a similar-speed runner); boundary-crosser identity shifts run-to-run but count is stable at ~3.
+
+**Scope Freeze:** Confirmed 142 in-scope models (88 likely_convex + 54 verified_convex); 24-model exclusion set (21 explicit `excluded` + 3 multi-solve-driver translate-gated `danwolfe`/`decomp`/`saras`); abel runtime-filter from Sprint 25 §5.1 carried forward (Sprint 27 baseline freezes scope at 142 throughout).
+
+**Unknown 1.1 verdict:** All 15 #1398-affected models confirmed at non-compare_match buckets — Priority 1 scope CONFIRMED at 15 models. No self-recoveries; the 2 machine-variance churn models (`ganges`, `srpchase` — Sprint 26 Day 13 final `path_syntax_error` → Sprint 27 Day 0 `translate_timeout`; also churn-backs vs Sprint 26 Day 0 where they were `translate_timeout`) still fail and remain in #1398 scope.
 
 ### Verification
 
@@ -453,12 +485,12 @@ print(buckets)
 
 ### Acceptance Criteria
 
-- [ ] BASELINE_METRICS.md contains all 7 standard sections
-- [ ] §5 Scope Freeze documents 142 in-scope models (matching Sprint 26 Day 13 (final))
-- [ ] §6 Per-Failing-Model Bucket Provenance covers all failing models with Sprint 26 final → Sprint 27 Day 0 transitions
-- [ ] No unexplained drift between Sprint 26 Day 13 (final) `gamslib_status.json` and Sprint 27 Day 0 `gamslib_status.json`; any drift root-caused and documented
-- [ ] Sprint 27 target metrics in §7 match PROJECT_PLAN.md §Sprint 27 Acceptance Criteria
-- [ ] Unknown 1.1 verified and updated in KNOWN_UNKNOWNS.md
+- [x] BASELINE_METRICS.md contains all 9 sections (§1 Purpose + §2 Headline + §3 Tests + §4 Determinism + §5 Scope Freeze + §6 Bucket Provenance + §7 Targets + §8 Acceptance + §9 Related — exceeds the §1–§7 minimum)
+- [x] §5 Scope Freeze documents 142 in-scope models (matching Sprint 26 Day 13 (final); 24-model exclusion set unchanged)
+- [x] §6 Per-Failing-Model Bucket Provenance covers all 83 non-compare_match models with Sprint 26 final → Sprint 27 Day 0 transitions (path_syntax_error 17→14 + path_solve_terminated 5→5 + model_infeasible 4→4 + path_solve_license 5→5 + translate_timeout 4→7 + translate_internal_error 4→4 + compare_mismatch 38→38 + compare_skipped 6→6)
+- [x] All drift between Sprint 26 Day 13 (final) and Sprint 27 Day 0 root-caused: 3 models (clearlak, ganges, srpchase) churned path_syntax_error → translate_timeout due to machine-load variance at the 600s translate timeout boundary; not a Sprint 27 prep regression (PRs #1402 + #1403 were docs-only)
+- [x] Sprint 27 target metrics in §7 match PROJECT_PLAN.md §Sprint 27 Acceptance Criteria (with explanatory note re: Translate target ambiguity vs anticipated 134 vs actual 131 Day 0 baseline)
+- [x] Unknown 1.1 verified and updated in KNOWN_UNKNOWNS.md (all 15 #1398-affected models confirmed at non-compare_match buckets; Priority 1 scope CONFIRMED at 15)
 
 ---
 
