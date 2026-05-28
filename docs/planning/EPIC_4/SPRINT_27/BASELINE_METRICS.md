@@ -194,8 +194,8 @@ Same scope-freeze rules apply to Sprint 27:
 | Model | Sprint 26 Day 0 | Sprint 26 Day 13 (final) | Sprint 27 Day 0 | Note |
 |---|---|---|---|---|
 | `iswnm`, `mexls`, `nebrazil`, `sarf` | translate_timeout | translate_timeout | translate_timeout | All stayed (Sprint 27 Priority 3 candidates via #1385 Option 1 short-circuit redesign) |
-| `clearlak`, `ganges` | translate_timeout | path_syntax_error | translate_timeout | **Churn-back** (machine variance — see §6.1) |
-| `srpchase` | translate_timeout | path_syntax_error | translate_timeout | **Churn-back** (machine variance — see §6.1) |
+| `clearlak`, `ganges` | translate_timeout | path_syntax_error | translate_timeout | **Machine-variance churn** (Day 13 → Day 0: `path_syntax_error → translate_timeout`; also a churn-back vs Sprint 26 Day 0 where it was translate_timeout — see §6.1) |
+| `srpchase` | translate_timeout | path_syntax_error | translate_timeout | **Machine-variance churn** (Day 13 → Day 0: `path_syntax_error → translate_timeout`; also a churn-back vs Sprint 26 Day 0 where it was translate_timeout — see §6.1) |
 | `turkpow` | translate_timeout | path_syntax_error | path_syntax_error | (Not in this bucket post-Sprint-26 Day 13 — stayed at path_syntax_error this run; runner just barely fast enough vs srpchase which crossed) |
 
 #### `translate_internal_error` (4 → 4)
