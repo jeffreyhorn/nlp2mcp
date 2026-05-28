@@ -175,9 +175,11 @@ echo "$STAT_B" | grep -F '((-1) * (((-1) *' && echo "WARNING: double-negation pa
 # matching the NLP solve (rel_diff < 1% post-fix; was 69.9% pre-fix).
 #
 # Approach A (quick local check via .lst inspection — recommended for the
-# Phase 0 prototype iteration). gams produces a .lst file alongside the
-# .gms; parse it directly for MODEL STATUS / OBJECTIVE VALUE:
-gams /tmp/cclinpts_mcp.gms lo=2
+# Phase 0 prototype iteration). gams writes the .lst to a path determined
+# by the `o=` flag; without `o=`, gams defaults to writing
+# `<basename>.lst` in the CURRENT WORKING DIRECTORY (NOT alongside the
+# input .gms). Pass `o=` explicitly so the .lst location is reproducible:
+gams /tmp/cclinpts_mcp.gms lo=2 o=/tmp/cclinpts_mcp.lst
 grep -E 'MODEL STATUS|SOLVER STATUS|OBJECTIVE VALUE' /tmp/cclinpts_mcp.lst
 # Expected post-fix: MODEL STATUS 1 (Optimal); OBJECTIVE VALUE matches the
 # NLP solve's objective (re-run cclinpts as NLP to compare if not cached).
