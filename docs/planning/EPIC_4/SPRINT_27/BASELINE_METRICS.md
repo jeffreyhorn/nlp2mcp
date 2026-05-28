@@ -76,7 +76,7 @@ The path_syntax_error −3 is **the same 3-model bucket churn** as Translate −
 ## 3. Tests Baseline
 
 - **Sprint 26 Day 13 final:** 4,737 passed / 10 skipped / 1 xfailed (per CHANGELOG.md Sprint 26 Summary)
-- **Sprint 27 Day 0:** Inherits Sprint 26 final test count (no `src/` or `tests/` changes between Sprint 26 close and this baseline). Full `make test` run is part of the standard pre-commit quality gate; counts reproduce.
+- **Sprint 27 Day 0:** **Inherited from Sprint 26 final without re-running `make test` for this Day 0 baseline** (only the pipeline retest `scripts/gamslib/run_full_test.py` was rerun). Since no `src/` or `tests/` Python files changed between Sprint 26 close (last src/ commit was 8d4cc4ac on Sprint 26 Day 1, verified via `git log -- src/`) and this baseline, the Sprint 26 Day 13 final count of 4,737 passed / 10 skipped / 1 xfailed is **expected to reproduce** when `make test` is next run. The full quality gate (`make typecheck && make format && make lint && make test`) is part of the standard pre-commit workflow per CONTRIBUTING.md §"Before Every Commit" + docs/development/AGENTS.md §"Before submitting"; the next Sprint 27 PR that touches Python code will re-verify the count. Last actual `make test` run: 2026-05-14 (Sprint 26 Day 13 final retest, per CHANGELOG.md).
 - **Sprint 27 target:** ≥ 4,750 (matches Sprint 26 floor + room for ≥ 13 new tests across Priorities 1–9 work)
 
 ---
