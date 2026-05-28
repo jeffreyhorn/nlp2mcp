@@ -207,9 +207,9 @@ Same scope-freeze rules apply to Sprint 27:
 
 #### `compare_mismatch` (38 → 38)
 
-All 38 are `model_optimal` or `model_optimal_presolve` solves where the MCP solution doesn't match the NLP solution. Sprint 27 doesn't directly target the mismatch cohort except via emit-bug fixes that may incidentally improve specific mismatch cases.
+All 38 are `model_optimal` or `model_optimal_presolve` solves where the MCP solution doesn't match the NLP solution (top-level bucket: `compare_mismatch`; underlying `comparison_status` field: `mismatch`). Sprint 27 doesn't directly target the `compare_mismatch` cohort except via emit-bug fixes that may incidentally improve specific `compare_mismatch` cases.
 
-Models (Sprint 27 Day 0): `catmix`, `cclinpts` (Sprint 27 Priority 7 target — #1387 condition-guard/sign bug), `chain`, `chakra`, `chenery`, `china`, `circle`, `cpack`, `etamac`, `harker` (Sprint 27 Priority 1 #1398-affected, mismatch sub-bucket), `hhfair`, `himmel16`, `imsl`, `irscge`, `kand` (Sprint 27 Priority 3 target — #1390 per-instance enumeration redesign), `launch` (Sprint 27 Priority 4 target — #1378 PATH-numerics divergence), `like`, `lmp2`, `lrgcge`, `marco`, `markov`, `mathopt1`, `mathopt4`, `mingamma`, `moncge`, `paperco`, `polygon`, `prodsp2`, `qsambal` (Sprint 27 Priority 1 #1398-affected), `robert`, `sambal` (Sprint 27 Priority 1 #1398-affected), `spatequ`, `srkandw`, `stdcge`, `tforss`, `trig`, `weapons`, `worst` (38 total)
+Models (Sprint 27 Day 0): `catmix`, `cclinpts` (Sprint 27 Priority 7 target — #1387 condition-guard/sign bug), `chain`, `chakra`, `chenery`, `china`, `circle`, `cpack`, `etamac`, `harker` (Sprint 27 Priority 1 #1398-affected, `compare_mismatch` sub-bucket), `hhfair`, `himmel16`, `imsl`, `irscge`, `kand` (Sprint 27 Priority 3 target — #1390 per-instance enumeration redesign), `launch` (Sprint 27 Priority 4 target — #1378 PATH-numerics divergence), `like`, `lmp2`, `lrgcge`, `marco`, `markov`, `mathopt1`, `mathopt4`, `mingamma`, `moncge`, `paperco`, `polygon`, `prodsp2`, `qsambal` (Sprint 27 Priority 1 #1398-affected), `robert`, `sambal` (Sprint 27 Priority 1 #1398-affected), `spatequ`, `srkandw`, `stdcge`, `tforss`, `trig`, `weapons`, `worst` (38 total)
 
 #### `compare_skipped` (6 → 6)
 
@@ -221,7 +221,7 @@ Models (Sprint 27 Day 0): `catmix`, `cclinpts` (Sprint 27 Priority 7 target — 
 
 Sprint 27's acceptance criteria (per PROJECT_PLAN.md §Sprint 27) must be evaluated with bucket provenance because:
 
-- **Priority 1 (#1398) recovery is bucket-transition-positive**: 15 models currently in path_syntax_error / path_solve_license / mismatch should return to their Day 0 bucket (e.g., qdemo7 compare_match, egypt path_solve_license, sambal mismatch); the headline metric improvement requires distinguishing fix-driven transitions from regression-driven transitions.
+- **Priority 1 (#1398) recovery is bucket-transition-positive**: 15 models currently in path_syntax_error / path_solve_license / compare_mismatch should return to their Sprint 26 Day 0 bucket (e.g., qdemo7 compare_match, egypt path_solve_license, sambal compare_mismatch); the headline metric improvement requires distinguishing fix-driven transitions from regression-driven transitions.
 - **Translate target ≥ 135**: net +1 from Day 0 (131). Sprint 27 Priority 3 #1385 unblocks iswnm/mexls/nebrazil/sarf if Option 1 short-circuit lands; bucket provenance distinguishes "translate recovery via #1385" from "machine-variance translate-timeout flake on the boundary models" (clearlak/ganges/srpchase/turkpow — Sprint 26 + Sprint 27 historical pattern).
 - **Match target ≥ 66**: +7 from Day 0 (59). Multiple priorities contribute: #1381 (+2 camcge/cesam2), #1398 qdemo7 recovery (+1), #1357 (+1), #1356 (+1), #1378 launch (+1), #1390 kand (+1). PR17 bucket provenance ensures we don't double-count a model that transitions through multiple buckets across consecutive Day-N retests.
 
