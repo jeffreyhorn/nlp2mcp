@@ -424,7 +424,7 @@ Added CHANGELOG.md entry under Sprint 27 Preparation summarizing Task 3 completi
 | path_solve_terminated | 5 | 5 | 0 |
 | model_infeasible | 4 | 4 | 0 |
 | path_solve_license | 5 | 5 | 0 |
-| translate_timeout | 4 | 7 | +3 (machine-variance churn-back) |
+| translate_timeout | 4 | 7 | +3 (same machine-variance churn — models moved from path_syntax_error) |
 | translate_internal_error | 4 | 4 | 0 |
 
 **Bucket-Provenance Drift Summary (Sprint 26 Day 13 final → Sprint 27 Day 0):** 3 models churned, all attributed to machine-load variance at the 600s translate timeout boundary (no Sprint 27 prep src/ changes):
