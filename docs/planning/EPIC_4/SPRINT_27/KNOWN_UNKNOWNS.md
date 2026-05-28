@@ -174,9 +174,9 @@ Sprint planning + AD/KKT engineer
 | `srpchase` | translate_timeout | ✓ (machine-variance churn-back — was path_syntax_error at Sprint 26 Day 13 final; still failing) |
 | `tfordy` | path_solve_license | ✓ (license bucket, not Phase A regression — but in #1398 scope per PR #1399 review surface) |
 | `sroute` | path_solve_license | ✓ (same as tfordy) |
-| `sambal` | model_optimal/mismatch | ✓ (mismatch sub-bucket, not Phase A syntax regression) |
-| `qsambal` | model_optimal/mismatch | ✓ (same as sambal) |
-| `harker` | model_optimal/mismatch | ✓ (same as sambal) |
+| `sambal` | compare_mismatch | ✓ (solve `model_optimal` but `compare_mismatch` — not a Phase A syntax regression) |
+| `qsambal` | compare_mismatch | ✓ (same as sambal) |
+| `harker` | compare_mismatch | ✓ (same as sambal) |
 
 **Evidence:** Sprint 27 Day 0 baseline retest (BASELINE_METRICS.md §6.2 + §6 tables; raw data in `data/gamslib/gamslib_status.json`).
 

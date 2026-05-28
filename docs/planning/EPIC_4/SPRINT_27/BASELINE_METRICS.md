@@ -141,7 +141,7 @@ Same scope-freeze rules apply to Sprint 27:
 |---|---|---|---|---|
 | `clearlak` | `path_syntax_error` (translates, PATH compile-fails) | `translate_timeout` | Bucket churn (recurring — same pattern as Sprint 26 Day 0 baseline) | 128.6s → 600.1s |
 | `ganges` | `path_syntax_error` | `translate_timeout` | Bucket churn (recurring — same pattern as Sprint 26 Day 0 baseline) | 227.3s → 600.6s |
-| `srpchase` | `path_syntax_error` | `translate_timeout` | Bucket churn (newly surfaces at the boundary; Sprint 26 Day 0 had this model but the boundary-crosser then was `turkpow` not `srpchase` — exact mix depends on runner machine load) | 274.2s → 600.2s |
+| `srpchase` | `path_syntax_error` | `translate_timeout` | Bucket churn (newly surfaced at the boundary; Sprint 26 Day 0 had this model but the boundary-crosser then was `turkpow` not `srpchase` — exact mix depends on runner machine load) | 274.2s → 600.2s |
 
 **All 3 still fail; net failure count is unchanged.** They moved earlier in the pipeline because the Sprint 27 Day 0 baseline run was slower than the Sprint 26 Day 13 retest (~3h10m vs ~1h26m), pushing translate times that were 128–274s into the 600s timeout. **Comparison: Sprint 26 Day 0 baseline (~3h33m, similar-speed runner) had the same kind of churn on clearlak/ganges/turkpow** — the boundary-crosser identity shifts run-to-run but the count (~3 models) is stable.
 
@@ -187,9 +187,9 @@ Same scope-freeze rules apply to Sprint 27:
 | Model | Sprint 26 Day 0 | Sprint 26 Day 13 (final) | Sprint 27 Day 0 | Note |
 |---|---|---|---|---|
 | `egypt`, `ferts`, `shale` | path_solve_license | path_syntax_error | path_syntax_error | (Not in this bucket post-Sprint-26 — moved to path_syntax_error due to Sprint 26 #1398 Phase A gate regression; see path_syntax_error table) |
-| `glider`, `robot`, `sroute`, `tabora`, `tfordy` | path_solve_license | path_solve_license | path_solve_license | All stayed (Sprint 27 Priority 1 #1398-affected: `tfordy`, `sroute` |
+| `glider`, `robot`, `sroute`, `tabora`, `tfordy` | path_solve_license | path_solve_license | path_solve_license | All stayed (Sprint 27 Priority 1 #1398-affected: `tfordy`, `sroute`) |
 
-#### `translate_timeout` (8 → 7)
+#### `translate_timeout` (4 → 7)
 
 | Model | Sprint 26 Day 0 | Sprint 26 Day 13 (final) | Sprint 27 Day 0 | Note |
 |---|---|---|---|---|
@@ -264,7 +264,7 @@ Sprint 27 retrospective should clarify this. **For Day-N evaluation: use bucket 
 - [x] All 8 acceptance-criteria metrics recorded → Parse / Translate / Solve / Match + 4 `outcome_category` counts in §2
 - [x] Bucket-provenance column added per PR17 → §6 (per-failing-model Sprint 26 → Sprint 27 transitions)
 - [x] Scope-freeze decision documented → §5 (carried forward from Sprint 26 §5)
-- [x] Unknown 1.1 verified and updated in KNOWN_UNKNOWNS.md → all 15 #1398-affected models confirmed at non-compare_match buckets (10 path_syntax_error, 2 translate_timeout churn-back ganges/srpchase, 2 path_solve_license tfordy/sroute, 3 model_optimal mismatch sambal/qsambal/harker)
+- [x] Unknown 1.1 verified and updated in KNOWN_UNKNOWNS.md → all 15 #1398-affected models confirmed at non-compare_match buckets (10 path_syntax_error, 2 translate_timeout churn-back ganges/srpchase, 2 path_solve_license tfordy/sroute, 3 compare_mismatch sambal/qsambal/harker — solves `model_optimal` but `compare_mismatch`)
 
 ---
 
