@@ -3,7 +3,7 @@
 **Status:** ✅ COMPLETE (Day 0 prep — fix surface mapped; implementation lands Sprint 27 Day 1 per Task 11 schedule)
 **Date:** 2026-05-28
 **Owner:** Prep Task 7
-**Inputs:** `docs/issues/ISSUE_1356_*.md` Phase 0 section (Sprint 27 Prep Task 2 / PR #1403); `docs/issues/ISSUE_1357_*.md` Phase 0 section (same); `src/kkt/complementarity.py:465-513`; `src/emit/emit_gams.py:1518-1698 + :2230-2243`; corpus sweep across `data/gamslib/mcp/*_mcp.gms` (Sprint 27 Day 0 baseline); Sprint 25 #1349 fix at `src/emit/emit_gams.py:1518-1531 + :1679-1698 + :1897-1906`.
+**Inputs:** `docs/issues/ISSUE_1356_*.md` Phase 0 section (Sprint 27 Prep Task 2 / PR #1403); `docs/issues/ISSUE_1357_*.md` Phase 0 section (same); `src/kkt/complementarity.py:465-513`; `src/emit/emit_gams.py:1518-1698 + :2230-2243`; corpus sweep across `data/gamslib/mcp/*_mcp.gms` (Sprint 27 Day 0 baseline); Sprint 25 #1349 fix at `src/emit/emit_gams.py:1518-1531 + :1668-1698 + :1897-1906` (the `eq_paired_in_mcp` block starts at L1668 — the inline #1349 comment block starts at L1680).
 
 ---
 
@@ -56,7 +56,7 @@ piU_u.fx(c)$(not cr(c)) = 0;
 piU_u.fx(c)$(cr(c))$(not (crdat(c,"supply") < inf)) = 0;
 ```
 
-Either shape is acceptable per the Phase 0 verification methodology. **Recommendation:** Option (b) nested-`$` form preserves the equation-domain (`c`) for consistency with `piU_u`'s declared multiplier domain; Option (a) narrows the equation domain (`cr`) which may surface as a separate symbolic-domain change downstream.
+Either shape is acceptable per the Phase 0 verification methodology. **Final overall recommendation:** see §6.2 — Option (a) equation-domain-narrowing is the single-file `complementarity.py`-only recommended shape (smaller patch surface; cleaner semantic alignment with the parameter's declared domain; no `emit_gams.py` change needed; lower regression risk to Sprint 25 #1349). The earlier-prep concern that Option (a) "may surface as a separate symbolic-domain change downstream" was deprecated by the §6.2 analysis (the multiplier `piU_u` is declared by the same `bound_def`, so its declared domain follows the narrowing automatically). Option (b) nested-`$` form is the defensive fallback if Day 1 execution surfaces downstream issues with equation-domain narrowing.
 
 ### 2.2 #1357 otpop
 
@@ -302,6 +302,15 @@ def _bound_expr_subset_dependency(
 **Note:** The defensive change above is the **nested-`$` form** alternative if Patch site B chooses NOT to narrow `domain` (preserves equation-domain `c` while applying subset-narrowing at the emit boundary). Sprint 27 Day 1 implementation may choose either approach; both produce GAMS-compile-clean emit per the Phase 0 acceptance gate.
 
 ---
+
+<!-- Alias heading kept stable so PREP_PLAN.md §Task 7 Verification block's
+     `grep -E "^## Affected Models" ...` continues to match without
+     editing PREP_PLAN.md. The full corpus sweep + per-model
+     classification lives in §5 immediately below. -->
+
+## Affected Models
+
+See §5 below for the complete corpus sweep results, the per-model classification table (with Day 0 buckets), and the bug-condition analysis confirming **fawley + otpop are the only 2 affected models** in the 142-in-scope corpus.
 
 ## 5. Affected-Model Corpus Sweep (Unknown 5.2 Resolution)
 
