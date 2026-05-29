@@ -1178,7 +1178,7 @@ Added CHANGELOG.md entry under Sprint 27 Preparation summarizing Task 8 completi
 **Day 0/1 engineer handoff (§8 of PRIORITY_7_FIX_SURFACE.md):**
 
 1. **Day 0/1 morning:** Run #1388 NLP-warm-start runtime test (~45 min including warm-start verification injection per §4.6) — produces MODEL STATUS 1 (→ Case (a)) OR MODEL STATUS 5 (→ Case (b) or Case (c), distinguished by step 2's shape-divergence check). Run #1388 default-start failing-solve diagnosis + per-term Phase 0 grep checks (~1h) — inspect listing's infeasibility-row report; pin Candidate A vs B patch site; check for non-inert shape divergence (excluding the inert boundary-guard form-mismatch). Combined with the warm-start MS result, these discriminate Case (b) (MS 5 + non-inert divergence → Sprint 27 fix) from Case (c) (MS 5 + no non-inert divergence → Sprint 28 carryforward). Run #1387 sign-flip diagnosis (~1h).
-2. **Day 1/2 implementation:** #1387 (~5h post-diagnosis); #1388 Case (a/b) ~3.5–4.5h post-Day-0/1-diagnosis OR Case (c) ~1.25h carryforward filing.
+2. **Day 1/2 implementation:** #1387 (~6h post-diagnosis, total ~7h including the Day 0/1 sign-flip diagnosis from step 1; matches PRIORITY_7_FIX_SURFACE.md §8); #1388 Case (a) ~3.5h or Case (b) ~4.5h post-Day-0/1-diagnosis OR Case (c) ~1.25h carryforward filing.
 3. **End of Day 1/2:** Both PRs opened (or carryforward filed); KNOWN_UNKNOWNS.md §Unknowns 7.1, 7.2, 7.3 updated from prep projection to binding Sprint 27 implementation outcome.
 
 ### Verification
