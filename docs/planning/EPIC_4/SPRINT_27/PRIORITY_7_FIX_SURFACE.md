@@ -264,16 +264,24 @@ grep -E 'MODEL STATUS|OBJECTIVE VALUE' /tmp/camshape_mcp_warm.lst
 # 1. Regenerate the MCP emit:
 .venv/bin/python -m src.cli data/gamslib/raw/camshape.gms -o /tmp/camshape_mcp.gms --quiet
 
-# 2. Solve NLP and extract r(i) levels from the listing (or write a tiny
-#    GAMS script that solves NLP then `display r.l;`):
+# 2. Solve NLP and extract ALL primal-variable levels from the listing
+#    (camshape declares THREE primal variables per `data/gamslib/raw/
+#    camshape.gms:50-53`: `r(i)`, `rdiff(i)`, and `area`. Restoring only
+#    `r.l` leaves `rdiff` and `area` at their MCP defaults, which can
+#    make a MODEL STATUS 5 result reflect an incomplete warm-start
+#    rather than the Case (b)/(c) discriminator):
 gams data/gamslib/raw/camshape.gms o=/tmp/camshape_nlp.lst lo=2
-# Parse the listing's "---- VAR r" block into a series of
-# r.l('i1') = <val>; ... lines; assemble into /tmp/camshape_warm_overrides.gms.
+# Parse the listing's "---- VAR r", "---- VAR rdiff", and "---- VAR area"
+# blocks. Assemble into /tmp/camshape_warm_overrides.gms as:
+#   r.l('i1') = <val>; ... r.l('iN') = <val>;
+#   rdiff.l('i1') = <val>; ... rdiff.l('iN') = <val>;
+#   area.l = <val>;
 
-# 3. Inject the per-instance `.l` overrides into the MCP file BEFORE the
+# 3. Inject the per-variable `.l` overrides into the MCP file BEFORE the
 #    `Solve mcp_model using MCP;` statement (same sed-injection pattern as
 #    Approach A, but inserting the contents of camshape_warm_overrides.gms
-#    instead of an `execute_loadpoint` directive).
+#    instead of an `execute_loadpoint` directive). All three primal
+#    variables MUST be restored — `r.l` alone is incomplete.
 
 # 4. Re-solve from warm-started point:
 gams /tmp/camshape_mcp.gms o=/tmp/camshape_mcp_warm.lst lo=2
@@ -282,25 +290,42 @@ grep -E 'MODEL STATUS|OBJECTIVE VALUE' /tmp/camshape_mcp_warm.lst
 
 **Note:** Approach A is canonical (smaller injection footprint; survives `r(i)` set-size changes) but requires GDX-capable GAMS (the demo edition does support GDX). Approach B is more portable but requires per-instance level extraction and re-injection. Day 0/1 engineer picks whichever is cheapest in the local environment.
 
-**Verify the warm-start actually took effect** before classifying the test result. The PATH listing's `---- VAR r` block reports the SOLVER OUTPUT (final iterate, or failure point if MODEL STATUS 5) — not the initial `r.l` levels PATH started from. A failed run would incorrectly look like "the warm-start was loaded but PATH still failed" when in reality PATH may have started from `(R_min+R_max)/2` defaults and never saw the NLP point.
+**Verify the warm-start actually took effect** before classifying the test result. The PATH listing's `---- VAR <name>` blocks report the SOLVER OUTPUT (final iterate, or failure point if MODEL STATUS 5) — not the initial `.l` levels PATH started from. A failed run would incorrectly look like "the warm-start was loaded but PATH still failed" when in reality PATH may have started from MCP defaults and never saw the NLP point. **Critically, the verification MUST cover EVERY primal variable the warm-start workflow restores** — not just `r.l`. For camshape that means `r.l`, `rdiff.l`, and `area.l`; leaving any one of those at MCP defaults makes a MODEL STATUS 5 result reflect an incomplete start, NOT a valid Case (b)/(c) discriminator.
 
-**Correct check: inject a `display r.l;` marker statement IMMEDIATELY AFTER the `execute_loadpoint` (Approach A) or `.l` override block (Approach B) AND IMMEDIATELY BEFORE the `Solve mcp_model using MCP;` line.** Then grep the listing's display block (which is written during compilation, before the solve, and reflects the actual starting levels):
+**Correct check: inject a `display r.l, rdiff.l, area.l;` marker statement IMMEDIATELY AFTER the `execute_loadpoint` (Approach A) or `.l` override block (Approach B) AND IMMEDIATELY BEFORE the `Solve mcp_model using MCP;` line.** Then grep the listing's display blocks (which are written during compilation, before the solve, and reflect the actual starting levels):
 
 ```bash
-# Inject `display r.l;` right after the warm-start block (Approach A or B) and
-# right before the `Solve mcp_model using MCP;` line. Example (Approach A):
+# Inject `display r.l, rdiff.l, area.l;` right after the warm-start block
+# (Approach A or B) and right before the `Solve mcp_model using MCP;` line.
 SOLVE_LINE_NO=$(grep -n '^Solve mcp_model using MCP' /tmp/camshape_mcp.gms | cut -d: -f1)
 sed -i.bak "${SOLVE_LINE_NO}i\\
-display r.l;
+display r.l, rdiff.l, area.l;
 " /tmp/camshape_mcp.gms
 
-# After the next `gams` run, the display block appears in the listing BEFORE
-# any solver output. Find it via the GAMS display header:
+# After the next `gams` run, the display blocks appear in the listing BEFORE
+# any solver output. Find each via the GAMS display header. ALL THREE blocks
+# must show NLP-solution values, NOT MCP defaults:
+
+# r.l block:
 awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+r\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
 # Each `r.l('i_k')` value here should match the NLP solution, NOT the default
-# `(R_min + R_max) / 2;` from camshape_mcp.gms:300. If they match defaults,
-# the warm-start did NOT load and the test result is INVALID (classify as
-# "warm-start mechanism failed"; rerun after debugging the injection).
+# `(R_min + R_max) / 2;` from camshape_mcp.gms:300.
+
+# rdiff.l block (extra primal variable; MUST also be verified):
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+rdiff\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
+# Each `rdiff.l('i_k')` value here should match the NLP solution, NOT the
+# MCP default of 0.
+
+# area.l block (scalar; MUST also be verified):
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+area\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -10
+# `area.l` here should match the NLP-optimal value ≈ 4.2841, NOT the MCP
+# default of 0.
+
+# If ANY of the three displayed blocks match MCP defaults, the warm-start
+# is INCOMPLETE and the test result is INVALID — classify as "warm-start
+# mechanism failed", rerun after debugging the injection. Do NOT classify
+# the MODEL STATUS as Case (b) vs Case (c) until all three blocks confirm
+# NLP-solution values.
 ```
 
 **Result interpretation (only valid AFTER the warm-start verification above confirms `r.l` was loaded from NLP):**
