@@ -328,7 +328,7 @@ awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+area\.L/,/^[[:space
 # NLP-solution values.
 ```
 
-**Result interpretation (only valid AFTER the warm-start verification above confirms `r.l` was loaded from NLP):**
+**Result interpretation (only valid AFTER the warm-start verification above confirms ALL THREE primal levels — `r.l`, `rdiff.l`, AND `area.l` — were loaded from NLP; an MS-5 outcome that has only `r.l` verified is INVALID for Case (b)/(c) classification because incomplete `rdiff` and/or `area` starts can independently drive PATH to Locally Infeasible):**
 
 - **MODEL STATUS 1 with obj ≈ 4.2841** → Case (a); emit bug exists. **PROCEED for Sprint 27 fix.** Day 0/1 engineer inspects the default-start failing-solve listing's infeasibility-row report to identify which residual is non-zero, traces back to the originating Python helper, then pins the patch site at Candidate A `src/kkt/stationarity.py:1835` OR Candidate B `src/ad/constraint_jacobian.py:903/:1027` per §4.4. Effort ~4.5h.
 - **MODEL STATUS 5 Locally Infeasible from NLP warm-start** AND the per-term Phase 0 grep checks reveal a shape divergence (other than the inert boundary-guard mis-specification noted in §4.3) → Case (b); emit bug exists but PATH cannot escape the wrong stationary point from NLP either. Day 0/1 engineer applies the same diagnostic-then-fix workflow + adds NLP-warm-start guidance. Effort ~5.5h.
