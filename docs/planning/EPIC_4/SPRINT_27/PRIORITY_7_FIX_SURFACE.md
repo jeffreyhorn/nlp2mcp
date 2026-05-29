@@ -1,6 +1,6 @@
 # Sprint 27 Priority 7 Fix-Surface Analysis: #1387 cclinpts + #1388 camshape
 
-**Status:** ✅ COMPLETE (Day 0 prep — fix surfaces mapped; implementation lands Sprint 27 Day 1/2 per Task 11 schedule; #1388 binding verdict pending Day 0/1 NLP-warm-start runtime test per Phase 0 PROCEED-with-condition signal)
+**Status:** ✅ COMPLETE (Day 0 prep — fix surfaces mapped; implementation lands Sprint 27 Day 1/2 per Task 11 schedule; #1388 binding verdict pending the full §4.6 3-way discriminator at Day 0/1 — NLP-warm-start runtime test PLUS per-term Phase 0 shape-divergence check, NOT the warm-start runtime test alone — per Phase 0 PROCEED-with-condition signal)
 **Date:** 2026-05-28
 **Owner:** Prep Task 8
 **Inputs:** `docs/issues/ISSUE_1387_*.md` §"Phase 0 Acceptance Gate" (Sprint 27 Prep Task 2 / PR #1403); `docs/issues/ISSUE_1388_*.md` §"Phase 0 Acceptance Gate" (same); `data/gamslib/mcp/cclinpts_mcp.gms:133-134` (current emit); `data/gamslib/mcp/camshape_mcp.gms:428` (current emit); `data/gamslib/gamslib_status.json` Sprint 27 Day 0 baseline buckets; Sprint 26 retrospective §"Sprint 27 Recommendations" §"Priority 7".
@@ -15,7 +15,7 @@ This document is the Sprint 27 Day 0 fix-surface analysis for **Priority 7** (th
 - A **current-emit-vs-target comparison** identifying the bug class.
 - **Source-code patch sites** at `file:line` precision (Sprint 27 fix path) OR the **fundamental-property classification** (Sprint 28 carryforward path).
 - An **implementation effort estimate** vs Priority 7's combined 6–12h budget.
-- A **per-issue verdict** (Sprint 27 fix vs Sprint 28 carryforward). Note: #1388's binding verdict requires a Day 0/1 NLP-warm-started PATH solve test to discriminate between (a/b) emit bug → Sprint 27 fix and (c) fundamental model property → Sprint 28 carryforward. The Phase 0 PROCEED-with-condition signal codifies this.
+- A **per-issue verdict** (Sprint 27 fix vs Sprint 28 carryforward). Note: #1388's binding verdict requires the FULL §4.6 3-way discriminator at Day 0/1 — (1) NLP-warm-started PATH solve test AND (2) per-term Phase 0 grep checks for non-inert shape divergence. MS 1 → Case (a) Sprint 27 fix; MS 5 + non-inert divergence → Case (b) Sprint 27 fix; MS 5 + no non-inert divergence → Case (c) Sprint 28 carryforward. The warm-start runtime test alone is NOT sufficient to classify Case (c) — the shape-divergence check splits MS 5 outcomes into Case (b) vs Case (c). The Phase 0 PROCEED-with-condition signal codifies this 3-way discrimination.
 
 The fix itself ships at Sprint 27 Day 1/2 (#1387) or Day 0/1 (#1388 runtime test → conditional fix or filing); this document is the engineering input.
 
@@ -153,9 +153,9 @@ stat_r(i)..
   )$(r.up(i) - r.lo(i) > 1e-10) =E= 0;
 ```
 
-### 4.3 Suspected Bug Class: Guard Mis-Specification
+### 4.3 Boundary-Guard Form-Mismatch (NON-CANONICAL FORM — NUMERICALLY INERT — UNPROVEN as cause of Locally Infeasible)
 
-**Current `lam_convexity(i-1)` guard:** `$(ord(i) > 1)$(middle(i))`. Expanding `middle(i)` = `ord(i) > 1 AND ord(i) < card(i)` gives effective guard `ord(i) > 1 AND ord(i) < card(i)`. **Canonical** (per Phase 0) is `$(middle(i-1))` = `ord(i-1) > 1 AND ord(i-1) < card(i)` = `ord(i) > 2 AND ord(i) < card(i)+1` = `ord(i) > 2`. **Difference at i=2:** current emit fires the term, canonical doesn't. This over-firing produces a spurious `lam_convexity(1)` reference at the i=2 stationarity, breaking the matched-pair complementarity structure for `comp_convexity(i)` (which itself has guard `$((middle(i)) and ((ord(i) <= card(i) - 1) and (ord(i) > 1)))` per L435 — and `lam_convexity.fx(i)$(not ((ord(i) <= card(i) - 1) and (ord(i) > 1))) = 0` per L467 fixes `lam_convexity(i)` to zero for non-middle `i`).
+**Current `lam_convexity(i-1)` guard:** `$(ord(i) > 1)$(middle(i))`. Expanding `middle(i)` = `ord(i) > 1 AND ord(i) < card(i)` gives effective guard `ord(i) > 1 AND ord(i) < card(i)`. **Canonical** (per Phase 0) is `$(middle(i-1))` = `ord(i-1) > 1 AND ord(i-1) < card(i)` = `ord(i) > 2 AND ord(i) < card(i)+1` = `ord(i) > 2`. **Difference at i=2:** current emit fires the term, canonical doesn't. The current form is a **non-canonical form mismatch** vs the hand-derived KKT shape — the spurious `lam_convexity(1)` reference at the i=2 stationarity is structurally present in the emit but is multiplied by a multiplier that the matched-pair fixup at `comp_convexity(i)` per L435 + `lam_convexity.fx(i)$(not ((ord(i) <= card(i) - 1) and (ord(i) > 1))) = 0` per L467 fixes to ZERO for non-middle `i`. The form-mismatch is real (a Phase 0 form-correctness cleanup item) but it does NOT have a demonstrated residual impact on the solve — see the "Mechanism of failure" paragraph below for why this is UNPROVEN as a cause of Locally Infeasible. The Day 0/1 diagnosis should NOT treat the boundary guard as an established structural cause of MODEL STATUS 5.
 
 **Current `lam_convexity(i+1)` guard:** `$(ord(i) <= card(i) - 1)$(middle(i))` = `ord(i) <= card(i)-1 AND ord(i) > 1 AND ord(i) < card(i)`. **Canonical** = `$(middle(i+1))` = `ord(i) > 0 AND ord(i) < card(i)-1` = `ord(i) < card(i)-1`. **Difference at i=card(i)-1:** current emit fires the term, canonical doesn't. Same over-firing issue.
 
@@ -227,7 +227,7 @@ Since the actual root cause is unknown pre-Day 0 (per §4.3 downgrade), the per-
 
 ### 4.6 PROCEED/REPLAN Signal (Phase 0 PROCEED-with-Condition, binding)
 
-The Day 0/1 NLP-warm-started PATH solve test discriminates the three cases.
+The binding §4.6 3-way discriminator requires BOTH the Day 0/1 NLP-warm-started PATH solve test AND the per-term Phase 0 grep checks for non-inert shape divergence — the warm-started solve alone does NOT split MS 5 outcomes into Case (b) vs Case (c). See the "Result interpretation" block below for the full 3-way rule; the per-term check is what splits MS 5 into Sprint 27 fix path (Case (b)) vs Sprint 28 carryforward (Case (c)).
 
 **Important caveat on GAMS warm-start mechanics:** GAMS does NOT accept a generic `--starting-point=<file>` double-dash parameter to initialize variable levels for an MCP — `--<name>=<value>` is a user-defined parameter, and the generated `camshape_mcp.gms` does NOT have any `execute_loadpoint`/GDX-reading or `$ifthen --starting-point` logic that would consume such a parameter. Setting `--starting-point=...` would be a NO-OP; PATH would still start from the default initial levels emitted at `camshape_mcp.gms:300+` (`r.l(i) = (R_min + R_max) / 2;` plus per-element overrides), which is NOT the NLP solution. The Day 0/1 engineer MUST use one of the two GAMS-supported warm-start mechanisms below.
 
