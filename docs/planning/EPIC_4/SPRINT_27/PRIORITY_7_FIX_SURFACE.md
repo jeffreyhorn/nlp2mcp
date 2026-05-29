@@ -159,19 +159,34 @@ stat_r(i)..
 
 **Current `lam_convexity(i+1)` guard:** `$(ord(i) <= card(i) - 1)$(middle(i))` = `ord(i) <= card(i)-1 AND ord(i) > 1 AND ord(i) < card(i)`. **Canonical** = `$(middle(i+1))` = `ord(i) > 0 AND ord(i) < card(i)-1` = `ord(i) < card(i)-1`. **Difference at i=card(i)-1:** current emit fires the term, canonical doesn't. Same over-firing issue.
 
-**Mechanism of failure:** Although `lam_convexity.fx(i)$(...)` at L467 fixes `lam_convexity(<non-middle i>)` to zero, the structurally over-firing terms in `stat_r(i)` create an inconsistency between (a) the emitted KKT system's dimensionality (which expects `lam_convexity` to participate at the boundaries) and (b) the matched-pair constraint that fixes those `lam_convexity` entries to zero. PATH may converge to a Locally Infeasible point because the over-firing terms create equations that are only satisfiable at degenerate configurations.
+**Mechanism of failure: UNPROVEN — boundary guard over-firing does NOT explain Locally Infeasible.** A prior version of this section asserted that the over-firing creates a structural inconsistency that drives PATH to MODEL STATUS 5. That assertion is incorrect. The emit at L464 + L467 fixes `lam_convexity(<non-middle i>) = 0` via:
 
-**Caveat:** This is a STRONG SUSPICION (Phase 0 PROCEED-with-condition) — the binding diagnosis requires Day 0/1 NLP-warm-started PATH solve test. Three possible outcomes:
+```gams
+lam_convexity.fx(i)$(not (middle(i))) = 0;                                          [L464]
+lam_convexity.fx(i)$(not ((ord(i) <= card(i) - 1) and (ord(i) > 1))) = 0;          [L467, same condition as L464]
+```
 
-- **(a) Emit bug, NLP-warm-start solves:** PATH from NLP-warm-start reaches MODEL STATUS 1; the guard correction fix (~2h) lands and #1388 is +1 Solve.
-- **(b) Emit bug, NLP-warm-start still fails:** Suggests the guard mis-specification creates a non-convex KKT system that has multiple stationary points and PATH cannot escape the wrong one; emit fix still needed but may require additional warm-start guidance (~3h).
-- **(c) Fundamental property, NLP-warm-start fails AND grep checks all pass:** The KKT system as emitted IS correct; the model itself is a non-convex MCP with multiple stationary points. **Sprint 28 carryforward** (no Sprint 27 fix possible without changing the model formulation).
+So the over-fired `lam_convexity(i-1)` term at i=2 references `lam_convexity(1)`, which is fixed to 0 — the contribution is mathematically `<coefficient> * 0 = 0`. Same at i=card(i)-1 for `lam_convexity(card(i)) = 0`. **The over-firing produces identically-zero contributions to `stat_r(i)`; it cannot be the cause of Locally Infeasible.**
+
+**What the guard mis-specification IS:** a Phase 0 form-correctness mismatch. The emit's guard differs from the canonical hand-derived `middle(i±1)` form, which is a documentation / shape concern (the per-term grep checks in Phase 0 §4 of `docs/issues/ISSUE_1388_*.md` will flag this as a non-canonical shape). Cleaning this up to `middle(i±1)` is a low-cost correctness improvement, but it is NOT a fix for the Locally Infeasible outcome on its own.
+
+**Actual cause of Locally Infeasible: UNKNOWN at Day 0 prep stage.** Day 0/1 diagnosis is required (see §4.6).
+
+**Caveat:** This downgrades the prior "STRONG SUSPICION" of guard-mis-specification-as-root-cause to **HYPOTHESIS (UNPROVEN)**. The three Day 0/1 outcomes remain valid as the discrimination structure but with revised meaning:
+
+- **(a) Emit bug, NLP-warm-start solves:** PATH from a verified-loaded NLP warm-start reaches MODEL STATUS 1 with obj ≈ 4.2841. Some emit bug exists; the actual bug location is identified post-hoc by inspecting the PATH listing for which row was reported as infeasible on the default-start solve, then comparing the same row's structure in the emit against hand-derived KKT. Fix scope and patch site are determined at this point. (Bug may or may not be related to the boundary guards.)
+- **(b) Emit bug, NLP-warm-start still fails:** PATH from a verified-loaded NLP warm-start still returns MODEL STATUS 5. The emit bug exists but PATH cannot find the feasible region even from the NLP optimum — suggests structural KKT divergence (e.g., a missing or extra term elsewhere in the emit, not the boundary guards). Day 0/1 engineer inspects the PATH listing's infeasibility-row report to identify which residual is non-zero and traces back through the emit.
+- **(c) Fundamental property, NLP-warm-start fails AND no shape divergence visible:** No identifiable emit bug; the model itself is a non-convex MCP that PATH cannot solve. **Sprint 28 carryforward** (no Sprint 27 fix possible without changing the model formulation or switching solvers).
 
 ### 4.4 Source-Code Patch Site (if Cases a/b — Sprint 27 fix)
 
-**Primary site:**
+**Patch site: TBD pending Day 0/1 diagnosis.** Until Day 0/1 identifies which residual row PATH reports as infeasible, the specific patch site cannot be pinned at `file:line` precision. Two candidate areas remain plausible based on Day 0 evidence:
 
-- **`src/kkt/stationarity.py:1835`** (`_build_indexed_stationarity_expr`) — assembles the indexed stationarity body. The guard-construction logic for offset-indexed cross-term contributions must be inspected: when a cross-term references `lam_convexity(i-1)` or `lam_convexity(i+1)`, the guard should reference `middle(i-1)` / `middle(i+1)` (the matched-pair complementarity's domain at the SHIFTED index), not the union `middle(i) AND boundary-check`. The fix likely involves a substitution of the symbolic `middle(i)` predicate with its IndexOffset-shifted variant when building the cross-term guard.
+- **Candidate A — `src/kkt/stationarity.py:1835`** (`_build_indexed_stationarity_expr`): if the actual bug surfaces in stationarity assembly (e.g., a missing or extra term in `stat_r(i)` interior), the fix lands here.
+  - The boundary guard mis-specification noted in §4.3 (Phase 0 form-correctness divergence) is a likely cleanup item here too, but it is NOT the demonstrated root cause of Locally Infeasible — only a same-file co-issue worth fixing while touching the area.
+- **Candidate B — `src/ad/constraint_jacobian.py:903 + :1027`**: if the missing/extra term traces back to a Jacobian-collection issue at the AD layer (similar in spirit to #1387's Bug 2 hypothesis), the fix lands here.
+
+Day 0/1 engineer inspects the PATH-listing infeasibility-row report from the failing default-start solve to identify which residual is non-zero, traces back through the emit to the originating Python helper, and pins the patch site. The boundary-guard cleanup may or may not be coincidentally on the same fix path.
 
 **Secondary site (if Bug surfaces at AD layer):**
 
@@ -179,32 +194,36 @@ stat_r(i)..
 
 ### 4.5 Implementation Effort Estimate
 
+Since the actual root cause is unknown pre-Day 0 (per §4.3 downgrade), the per-case estimates below INCLUDE a diagnostic step to identify the patch site from the PATH-listing infeasibility-row report.
+
 **Case (a) Emit bug, NLP-warm-start solves (most likely):**
 
 | Sub-task | Effort |
 |---|---|
-| Guard substitution logic in `_build_indexed_stationarity_expr` (~30-line change) | 1h |
+| Diagnose actual root cause from default-start PATH listing's infeasibility-row report | 1h |
+| Fix (location depends on diagnosis — Candidate A `_build_indexed_stationarity_expr` OR Candidate B `_compute_equality_jacobian`/`_compute_inequality_jacobian`) | 1.5h |
+| Optional Phase 0 form-correctness cleanup: boundary guards `middle(i)` → `middle(i±1)` (cosmetic since fixups zero them, but matches canonical hand-derived form) | 0.5h |
 | Unit + integration tests | 0.5h |
 | GAMS compile-check + PATH solve verification (camshape MODEL STATUS 1 with obj ≈ 4.2841) | 0.5h |
 | 11 Tier 0/1 canary regression check (auto via PR19 widening CI) | 0.5h |
-| **Total** | **~2.5h** |
+| **Total** | **~4.5h** |
 
 **Case (b) Emit bug + NLP-warm-start guidance needed:**
 
 | Sub-task | Effort |
 |---|---|
-| Guard fix (per Case a) | 2.5h |
-| Add NLP-warm-start in `solve_mcp` flow or document it as user-required for camshape | 1h |
-| **Total** | **~3.5h** |
+| Diagnosis + fix (per Case a) | 4.5h |
+| Add NLP-warm-start in `solve_mcp` flow OR document it as user-required for camshape | 1h |
+| **Total** | **~5.5h** |
 
 **Case (c) Fundamental property — Sprint 28 carryforward:**
 
 | Sub-task | Effort |
 |---|---|
-| File Sprint 28 carryforward in `docs/issues/ISSUE_1388_*.md` with formal classification + Sprint 28 budget estimate | 0.5h |
+| Document diagnostic evidence (PATH-listing infeasibility-row + comparison against hand-derived KKT shape) in `docs/issues/ISSUE_1388_*.md` with formal Sprint 28 classification + budget estimate | 0.75h |
 | Update GitHub issue label (remove `sprint-27`, add `sprint-28`) | 0.1h |
 | Update PROJECT_PLAN.md Sprint 28 §Priority section to add #1388 | 0.4h |
-| **Total** | **~1h** |
+| **Total** | **~1.25h** |
 
 ### 4.6 PROCEED/REPLAN Signal (Phase 0 PROCEED-with-Condition, binding)
 
@@ -263,25 +282,42 @@ grep -E 'MODEL STATUS|OBJECTIVE VALUE' /tmp/camshape_mcp_warm.lst
 
 **Note:** Approach A is canonical (smaller injection footprint; survives `r(i)` set-size changes) but requires GDX-capable GAMS (the demo edition does support GDX). Approach B is more portable but requires per-instance level extraction and re-injection. Day 0/1 engineer picks whichever is cheapest in the local environment.
 
-**Verify the warm-start actually took effect** before classifying the test result:
+**Verify the warm-start actually took effect** before classifying the test result. The PATH listing's `---- VAR r` block reports the SOLVER OUTPUT (final iterate, or failure point if MODEL STATUS 5) — not the initial `r.l` levels PATH started from. A failed run would incorrectly look like "the warm-start was loaded but PATH still failed" when in reality PATH may have started from `(R_min+R_max)/2` defaults and never saw the NLP point.
+
+**Correct check: inject a `display r.l;` marker statement IMMEDIATELY AFTER the `execute_loadpoint` (Approach A) or `.l` override block (Approach B) AND IMMEDIATELY BEFORE the `Solve mcp_model using MCP;` line.** Then grep the listing's display block (which is written during compilation, before the solve, and reflects the actual starting levels):
 
 ```bash
-grep -A2 '\-\-\-\- VAR r' /tmp/camshape_mcp_warm.lst | head -10
-# The starting r.l values should match the NLP solution, NOT the default
-# `(R_min + R_max) / 2` from camshape_mcp.gms:300.
+# Inject `display r.l;` right after the warm-start block (Approach A or B) and
+# right before the `Solve mcp_model using MCP;` line. Example (Approach A):
+SOLVE_LINE_NO=$(grep -n '^Solve mcp_model using MCP' /tmp/camshape_mcp.gms | cut -d: -f1)
+sed -i.bak "${SOLVE_LINE_NO}i\\
+display r.l;
+" /tmp/camshape_mcp.gms
+
+# After the next `gams` run, the display block appears in the listing BEFORE
+# any solver output. Find it via the GAMS display header:
+awk '/^---- [0-9]+ VARIABLE r\.L/,/^$/' /tmp/camshape_mcp_warm.lst | head -20
+# Each `r.l('i_k')` value here should match the NLP solution, NOT the default
+# `(R_min + R_max) / 2;` from camshape_mcp.gms:300. If they match defaults,
+# the warm-start did NOT load and the test result is INVALID (classify as
+# "warm-start mechanism failed"; rerun after debugging the injection).
 ```
 
-**Result interpretation:**
+**Result interpretation (only valid AFTER the warm-start verification above confirms `r.l` was loaded from NLP):**
 
-- **MODEL STATUS 1 with obj ≈ 4.2841** → Case (a) or (b); emit bug exists; **PROCEED for Sprint 27 fix** (effort 2.5–3.5h). Patch `_build_indexed_stationarity_expr` guard-substitution logic.
-- **MODEL STATUS 5 Locally Infeasible** (after confirming the warm-start values were actually loaded per the verify step above) → Case (c); model is non-convex MCP; **REPLAN to Sprint 28 carryforward** (effort 1h for filing).
+- **MODEL STATUS 1 with obj ≈ 4.2841** → Case (a); emit bug exists. **PROCEED for Sprint 27 fix.** Day 0/1 engineer inspects the default-start failing-solve listing's infeasibility-row report to identify which residual is non-zero, traces back to the originating Python helper, then pins the patch site at Candidate A `src/kkt/stationarity.py:1835` OR Candidate B `src/ad/constraint_jacobian.py:903/:1027` per §4.4. Effort ~4.5h.
+- **MODEL STATUS 5 Locally Infeasible from NLP warm-start** AND the per-term Phase 0 grep checks reveal a shape divergence (other than the inert boundary-guard mis-specification noted in §4.3) → Case (b); emit bug exists but PATH cannot escape the wrong stationary point from NLP either. Day 0/1 engineer applies the same diagnostic-then-fix workflow + adds NLP-warm-start guidance. Effort ~5.5h.
+- **MODEL STATUS 5 Locally Infeasible from NLP warm-start** AND per-term Phase 0 grep checks reveal NO non-inert shape divergence → Case (c); no identifiable emit bug. **REPLAN to Sprint 28 carryforward.** Effort ~1.25h filing.
 
-### 4.7 Verdict (binding pending Day 0/1 runtime test)
+### 4.7 Verdict (binding pending Day 0/1 runtime test + diagnosis)
 
-**SPRINT 27 CONDITIONAL.** Per Phase 0 PROCEED-with-condition signal:
+**SPRINT 27 CONDITIONAL.** The Phase 0 PROCEED-with-condition signal still gates the verdict on the Day 0/1 runtime test, but the prior-version assertion that the boundary-guard mis-specification IS the root cause is downgraded to **UNPROVEN HYPOTHESIS** (per §4.3 — the over-fired terms are zeroed by the L464+L467 fixups, so they cannot drive Locally Infeasible). The binding Sprint 27 fix path requires both:
 
-- **If Day 0/1 NLP-warm-start test PASSES** → **Sprint 27 FIX** (2.5–3.5h effort; +1 Solve recovery).
-- **If Day 0/1 NLP-warm-start test FAILS AND all Phase 0 grep checks pass on current emit** → **Sprint 28 CARRYFORWARD** (1h filing; no +1 Solve gain in Sprint 27; reclassify as fundamental property).
+1. **Day 0/1 NLP-warm-start test** (with verified-loaded warm-start per §4.6) — discriminates Case (a/b) from Case (c).
+2. **Day 0/1 default-start failing-solve listing diagnosis** — identifies the actual residual-causing emit bug (Candidate A `stationarity.py:1835` OR Candidate B `constraint_jacobian.py:903/:1027` per §4.4), since the boundary guard is no longer the assumed culprit.
+
+- **If Day 0/1 NLP-warm-start test PASSES AND diagnosis identifies the residual-causing emit bug** → **Sprint 27 FIX** (~4.5–5.5h effort; +1 Solve recovery).
+- **If Day 0/1 NLP-warm-start test FAILS AND no non-inert shape divergence visible from per-term Phase 0 grep checks** → **Sprint 28 CARRYFORWARD** (~1.25h filing; no +1 Solve gain in Sprint 27; reclassify as fundamental property).
 
 The Day 0/1 engineer runs the test before any `src/` patching; the binding verdict is recorded in PRIORITY_7_FIX_SURFACE.md §4.7 + KNOWN_UNKNOWNS.md §Unknown 7.2.
 
@@ -294,8 +330,8 @@ The Day 0/1 engineer runs the test before any `src/` patching; the binding verdi
 | Issue | Effort | Sub-priority |
 |---|---|---|
 | #1387 cclinpts (sign-flip + term-omission) | ~6h | Priority 7a |
-| #1388 camshape (guard correction, Case a/b) | ~2.5–3.5h | Priority 7b |
-| **Combined Sprint 27 effort** | **~8.5–9.5h** | **Within 6–12h budget** ✅ |
+| #1388 camshape (diagnose-then-fix, Case a/b) | ~4.5–5.5h | Priority 7b |
+| **Combined Sprint 27 effort** | **~10.5–11.5h** | **Within 6–12h budget** ✅ (tight; at upper end) |
 
 **Sprint 27 gains** (if both PROCEED): **+1 Match (cclinpts) + +1 Solve (camshape).**
 
@@ -304,8 +340,8 @@ The Day 0/1 engineer runs the test before any `src/` patching; the binding verdi
 | Issue | Effort | Sub-priority |
 |---|---|---|
 | #1387 cclinpts (sign-flip + term-omission) | ~6h | Priority 7a |
-| #1388 camshape (carryforward filing) | ~1h | Priority 7b (deferred) |
-| **Combined Sprint 27 effort** | **~7h** | **Within 6–12h budget** ✅ |
+| #1388 camshape (carryforward filing) | ~1.25h | Priority 7b (deferred) |
+| **Combined Sprint 27 effort** | **~7.25h** | **Within 6–12h budget** ✅ |
 
 **Sprint 27 gains:** **+1 Match (cclinpts) only** (no +1 Solve from camshape; deferred to Sprint 28).
 
@@ -314,14 +350,14 @@ The Day 0/1 engineer runs the test before any `src/` patching; the binding verdi
 | Issue | Effort | Sub-priority |
 |---|---|---|
 | #1387 cclinpts (escalated to Sprint 28 AD-architecture bundle) | ~1h filing | Priority 7a (deferred) |
-| #1388 camshape (guard correction, Case a/b) | ~2.5–3.5h | Priority 7b |
-| **Combined Sprint 27 effort** | **~3.5–4.5h** | **Within 6–12h budget** ✅ (but Priority 7 under-utilized; reallocate slack to other priorities) |
+| #1388 camshape (diagnose-then-fix, Case a/b) | ~4.5–5.5h | Priority 7b |
+| **Combined Sprint 27 effort** | **~5.5–6.5h** | **Within 6–12h budget** ✅ (lower end; reallocate slack to other priorities) |
 
 **Sprint 27 gains:** **+1 Solve (camshape) only.**
 
 ### 5.4 Worst-worst case (both deferred)
 
-If #1387 diagnosis reveals AD-architecture issue AND #1388 Day 0/1 test fails: both deferred to Sprint 28; ~2h Sprint 27 effort (filings + label updates). Priority 7 effectively zero Sprint 27 gain; budget reallocates to other priorities. **Unlikely** (Phase 0 hand-derivation already classified both as emit-layer bugs, not AD/model fundamental issues — both expected to fall in §5.1 most-likely path).
+If #1387 diagnosis reveals AD-architecture issue AND #1388 Day 0/1 test fails AND no shape divergence visible: both deferred to Sprint 28; ~2.25h Sprint 27 effort (filings + label updates). Priority 7 effectively zero Sprint 27 gain; budget reallocates to other priorities. **Less unlikely than the prior version of this section suggested** — #1388's "guard mis-specification is root cause" hypothesis was downgraded to UNPROVEN per §4.3 review, so the Case (c) probability is now higher than the prior "low probability" claim.
 
 ---
 
@@ -365,14 +401,14 @@ Add to PROJECT_PLAN.md Sprint 28 priorities section with the carryforward ration
 | Phase 0 target shape cross-reference (from Prep Task 2) for #1387 | ✅ §3.1 |
 | Phase 0 target shape cross-reference (from Prep Task 2) for #1388 | ✅ §4.1 |
 | Current-emit-vs-target comparison for #1387 | ✅ §3.2 + §3.3 (2 bugs identified: sign-flip + term-omission) |
-| Current-emit-vs-target comparison for #1388 | ✅ §4.2 + §4.3 (guard mis-specification suspected) |
-| Source-code patch sites at file:line precision | ✅ §3.4 (#1387: `derivative_rules.py:1847,577` + `stationarity.py:1352,1835` + `constraint_jacobian.py:903`); §4.4 (#1388: `stationarity.py:1835` primary, `constraint_jacobian.py:903/1027` secondary) |
-| Implementation effort estimate per issue | ✅ §3.5 (#1387 ~6h); §4.5 (#1388 ~2.5–3.5h Case a/b, ~1h Case c) |
-| Combined Priority 7 budget fit | ✅ §5 (most-likely path ~8.5–9.5h within 6–12h budget) |
-| Per-issue verdict | ✅ §3.7 (#1387 SPRINT 27 FIX binding); §4.7 (#1388 SPRINT 27 CONDITIONAL, binding pending Day 0/1 NLP-warm-start runtime test) |
+| Current-emit-vs-target comparison for #1388 | ✅ §4.2 + §4.3 (boundary guard shape divergence noted, but UNPROVEN as cause of Locally Infeasible — the over-fired contributions are zeroed by L464+L467 fixups; actual cause requires Day 0/1 diagnosis) |
+| Source-code patch sites at file:line precision | ✅ §3.4 (#1387: `derivative_rules.py:1847,577` + `stationarity.py:1352,1835` + `constraint_jacobian.py:903`); §4.4 (#1388: candidates A `stationarity.py:1835` OR B `constraint_jacobian.py:903/1027` — specific patch site is TBD pending Day 0/1 diagnosis of the actual residual-causing bug) |
+| Implementation effort estimate per issue | ✅ §3.5 (#1387 ~6h); §4.5 (#1388 ~4.5h Case a, ~5.5h Case b, ~1.25h Case c) |
+| Combined Priority 7 budget fit | ✅ §5 (most-likely path ~10.5–11.5h within 6–12h budget — tight at upper end) |
+| Per-issue verdict | ✅ §3.7 (#1387 SPRINT 27 FIX binding); §4.7 (#1388 SPRINT 27 CONDITIONAL, binding pending Day 0/1 NLP-warm-start runtime test + diagnostic-row identification) |
 | Sprint 28 carryforward template documented | ✅ §6 |
 
-**Sprint 27 Priority 7 PROCEED.** Combined effort within budget. #1387 binding Sprint 27 fix verdict (high confidence). #1388 conditional verdict pending Day 0/1 runtime test (high probability of Case a/b emit bug → Sprint 27 fix; low probability of Case c fundamental property → Sprint 28 carryforward).
+**Sprint 27 Priority 7 PROCEED.** Combined effort within budget (tight at upper end for most-likely path). #1387 binding Sprint 27 fix verdict (high confidence). #1388 conditional verdict pending Day 0/1 runtime test AND default-start failing-solve listing diagnosis — Case (c) probability is no longer "low" since the boundary-guard mechanism was disproved (zeroed by fixups); the actual residual-causing emit bug is unknown pre-Day 0.
 
 ---
 
@@ -380,14 +416,15 @@ Add to PROJECT_PLAN.md Sprint 28 priorities section with the carryforward ration
 
 **Day 0/1 morning (before any `src/` patching):**
 
-1. **#1388 NLP-warm-start runtime test** (~30 min) — discriminates Case (a/b) vs Case (c). Result determines #1388's binding verdict.
-2. **#1387 sign-flip diagnosis** (~1h) — debug-trace `stationarity.py` Lagrangian-conversion on cclinpts to locate the double-negation root.
+1. **#1388 NLP-warm-start runtime test** (~45 min including warm-start verification injection per §4.6) — discriminates Case (a/b) vs Case (c). Result classifies #1388's binding verdict.
+2. **#1388 default-start failing-solve diagnosis** (~1h) — inspect the listing's infeasibility-row report from the default-start failing solve to identify which residual is non-zero; trace back through `camshape_mcp.gms:428` to the originating Python helper (Candidate A `stationarity.py:1835` OR Candidate B `constraint_jacobian.py:903/:1027`); pin patch site.
+3. **#1387 sign-flip diagnosis** (~1h) — debug-trace `stationarity.py` Lagrangian-conversion on cclinpts to locate the double-negation root.
 
 **Day 1/2 (implementation):**
 
 - **#1387** (~5h after diagnosis): apply Bug 1 (sign-flip) fix + Bug 2 (term-omission) fix; regenerate `cclinpts_mcp.gms`; verify per-term grep checks + PATH solve + Tier 0/1 canary byte-stability.
-- **#1388** (~2.5h if Case a/b): apply guard-substitution fix in `_build_indexed_stationarity_expr`; regenerate `camshape_mcp.gms`; verify per-term grep checks + PATH solve + Tier 0/1 canary byte-stability.
-- **#1388** (~1h if Case c): file Sprint 28 carryforward per §6 template; update GitHub labels.
+- **#1388** (~3.5–4.5h if Case a/b after Day 0/1 diagnosis pins the actual residual-causing emit bug): apply the diagnosed fix at the identified patch site; OPTIONALLY clean up the boundary-guard form-mismatch noted in §4.3 (cosmetic since fixups zero them); regenerate `camshape_mcp.gms`; verify per-term grep checks + PATH solve + Tier 0/1 canary byte-stability.
+- **#1388** (~1.25h if Case c): file Sprint 28 carryforward per §6 template with discriminating evidence (PATH-listing infeasibility-row + warm-start-verification confirming NLP point was loaded); update GitHub labels.
 
 **End of Day 1/2:** Both PRs opened (or Sprint 28 carryforward filed); KNOWN_UNKNOWNS.md §Unknowns 7.1, 7.2, 7.3 updated from this prep's projection to the binding Sprint 27 implementation outcome.
 
