@@ -311,13 +311,14 @@ awk '/^---- [0-9]+ VARIABLE r\.L/,/^$/' /tmp/camshape_mcp_warm.lst | head -20
 
 ### 4.7 Verdict (binding pending Day 0/1 runtime test + diagnosis)
 
-**SPRINT 27 CONDITIONAL.** The Phase 0 PROCEED-with-condition signal still gates the verdict on the Day 0/1 runtime test, but the prior-version assertion that the boundary-guard mis-specification IS the root cause is downgraded to **UNPROVEN HYPOTHESIS** (per §4.3 — the over-fired terms are zeroed by the L464+L467 fixups, so they cannot drive Locally Infeasible). The binding Sprint 27 fix path requires both:
+**SPRINT 27 CONDITIONAL.** The Phase 0 PROCEED-with-condition signal still gates the verdict on the Day 0/1 runtime test, but the prior-version assertion that the boundary-guard mis-specification IS the root cause is downgraded to **UNPROVEN HYPOTHESIS** (per §4.3 — the over-fired terms are zeroed by the L464+L467 fixups, so they cannot drive Locally Infeasible). The binding Sprint 27 fix path requires the FULL 3-way discriminator from §4.6 — the NLP-warm-start runtime test ALONE is NOT sufficient to classify Case (c):
 
-1. **Day 0/1 NLP-warm-start test** (with verified-loaded warm-start per §4.6) — discriminates Case (a/b) from Case (c).
-2. **Day 0/1 default-start failing-solve listing diagnosis** — identifies the actual residual-causing emit bug (Candidate A `stationarity.py:1835` OR Candidate B `constraint_jacobian.py:903/:1027` per §4.4), since the boundary guard is no longer the assumed culprit.
+1. **Day 0/1 NLP-warm-start test** (with verified-loaded warm-start per §4.6) — produces MODEL STATUS 1 (→ Case (a) Sprint 27 fix) OR MODEL STATUS 5 (→ further classification needed via step 2 + the shape-divergence check).
+2. **Day 0/1 default-start failing-solve listing diagnosis + per-term Phase 0 grep checks for non-inert shape divergence** — identifies the actual residual-causing emit bug (Candidate A `stationarity.py:1835` OR Candidate B `constraint_jacobian.py:903/:1027` per §4.4) AND discriminates Case (b) (MS 5 + non-inert divergence visible → still Sprint 27 fix path) from Case (c) (MS 5 + no non-inert divergence → Sprint 28 carryforward). The "inert" exclusion is critical — the boundary-guard form-mismatch noted in §4.3 is inert (zeroed by L464+L467 fixups) and does NOT trigger Case (b); only divergences elsewhere in the emit do.
 
-- **If Day 0/1 NLP-warm-start test PASSES AND diagnosis identifies the residual-causing emit bug** → **Sprint 27 FIX** (~4.5–5.5h effort; +1 Solve recovery).
-- **If Day 0/1 NLP-warm-start test FAILS AND no non-inert shape divergence visible from per-term Phase 0 grep checks** → **Sprint 28 CARRYFORWARD** (~1.25h filing; no +1 Solve gain in Sprint 27; reclassify as fundamental property).
+- **If Day 0/1 NLP-warm-start test PASSES AND diagnosis identifies the residual-causing emit bug** → **Case (a) Sprint 27 FIX** (~4.5h effort; +1 Solve recovery).
+- **If Day 0/1 NLP-warm-start test FAILS AND per-term Phase 0 grep checks reveal a non-inert shape divergence** → **Case (b) Sprint 27 FIX** (~5.5h effort; emit bug + warm-start guidance; +1 Solve recovery).
+- **If Day 0/1 NLP-warm-start test FAILS AND no non-inert shape divergence visible from per-term Phase 0 grep checks** → **Case (c) Sprint 28 CARRYFORWARD** (~1.25h filing; no +1 Solve gain in Sprint 27; reclassify as fundamental property).
 
 The Day 0/1 engineer runs the test before any `src/` patching; the binding verdict is recorded in PRIORITY_7_FIX_SURFACE.md §4.7 + KNOWN_UNKNOWNS.md §Unknown 7.2.
 
@@ -418,8 +419,8 @@ Add to PROJECT_PLAN.md Sprint 28 priorities section with the carryforward ration
 
 **Day 0/1 morning (before any `src/` patching):**
 
-1. **#1388 NLP-warm-start runtime test** (~45 min including warm-start verification injection per §4.6) — discriminates Case (a/b) vs Case (c). Result classifies #1388's binding verdict.
-2. **#1388 default-start failing-solve diagnosis** (~1h) — inspect the listing's infeasibility-row report from the default-start failing solve to identify which residual is non-zero; trace back through `camshape_mcp.gms:428` to the originating Python helper (Candidate A `stationarity.py:1835` OR Candidate B `constraint_jacobian.py:903/:1027`); pin patch site.
+1. **#1388 NLP-warm-start runtime test** (~45 min including warm-start verification injection per §4.6) — produces MODEL STATUS 1 (→ Case (a)) OR MODEL STATUS 5 (→ Case (b) or Case (c), distinguished by step 2's shape-divergence check). The runtime test alone is NOT sufficient to classify Case (c) — see §4.7.
+2. **#1388 default-start failing-solve diagnosis + per-term Phase 0 grep checks** (~1h) — inspect the listing's infeasibility-row report from the default-start failing solve to identify which residual is non-zero; trace back through `camshape_mcp.gms:428` to the originating Python helper (Candidate A `stationarity.py:1835` OR Candidate B `constraint_jacobian.py:903/:1027`); pin patch site. Run per-term Phase 0 grep checks for non-inert shape divergence (excluding the inert boundary-guard form-mismatch per §4.3). Combined with step 1's MODEL STATUS, this discriminates Case (b) (MS 5 + non-inert divergence → Sprint 27 fix) from Case (c) (MS 5 + no non-inert divergence → Sprint 28 carryforward).
 3. **#1387 sign-flip diagnosis** (~1h) — debug-trace `stationarity.py` Lagrangian-conversion on cclinpts to locate the double-negation root.
 
 **Day 1/2 (implementation):**
