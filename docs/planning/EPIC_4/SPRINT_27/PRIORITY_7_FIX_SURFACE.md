@@ -103,7 +103,7 @@ stat_fb(j).. ((-1) * (0.5 * (b(j) - b(j-1)) * 1$((not first(j))))) + nu_FBCalc(j
 | Regression check on 11 Tier 0/1 canaries | 0.5h | Auto via PR19 widening CI (Sprint 27 Day 0 widening lands cclinpts in Pattern C tier) |
 | GAMS compile-check + PATH solve verification: cclinpts MODEL STATUS 1 with `rel_diff < 1%` | 1h | Run full solve + compare against NLP optimum |
 | Review iteration buffer | 0.5h | PR review may surface refinements |
-| **Total** | **~6h** | Mid-range of Phase 0's 3–6h estimate; within Priority 7 budget when combined with #1388 |
+| **Total** | **~7h** (1 + 1 + 1.5 + 1.5 + 0.5 + 1 + 0.5) | Above the upper edge of Phase 0's 3–6h estimate range due to the explicit per-bug diagnosis steps; within Priority 7 budget when combined with #1388. |
 
 **Risk factor that could expand effort to 8–12h:** if Bug 2 diagnosis reveals a broader AD-architecture issue (e.g., `_diff_sum`'s offset-substitution enumeration is structurally missing for an entire class of expressions, not just cclinpts's product), the fix may need to be deferred to a broader Sprint 28 AD-refactor workstream. In that case, **#1387 escalates to Sprint 28 carryforward.** Day 1 diagnosis is the binding factor here.
 
@@ -120,11 +120,11 @@ Per Phase 0 verification methodology, **PROCEED** when ALL hold (verified post-i
 
 ### 3.7 Verdict (binding)
 
-**SPRINT 27 FIX** (high confidence). Bug class identified; fix sites located at `file:line` precision; effort ~6h within Priority 7 budget. **Conditional escalation to Sprint 28** ONLY IF Day 1 diagnosis reveals broader AD-architecture issue with `_diff_sum`'s offset-substitution enumeration — in that case, file Sprint 28 carryforward and bundle with Priority 3's AD-redesign workstream (Approach C in PRIORITY_3_RISK_ASSESSMENT.md §5.3 may share infrastructure).
+**SPRINT 27 FIX** (high confidence). Bug class identified; fix sites located at `file:line` precision; effort ~7h within Priority 7 budget (combined with #1388 — see §5.1 most-likely path). **Conditional escalation to Sprint 28** ONLY IF Day 1 diagnosis reveals broader AD-architecture issue with `_diff_sum`'s offset-substitution enumeration — in that case, file Sprint 28 carryforward and bundle with Priority 3's AD-redesign workstream (Approach C in PRIORITY_3_RISK_ASSESSMENT.md §5.3 may share infrastructure).
 
 ---
 
-## 4. Issue #1388 camshape — Guard Mis-Specification (Suspected) + PROCEED-with-Condition
+## 4. Issue #1388 camshape — Root Cause UNKNOWN at Day 0 + PROCEED-with-Condition (boundary-guard hypothesis downgraded per §4.3)
 
 ### 4.1 Phase 0 Target Shape (from `docs/issues/ISSUE_1388_*.md` §"Phase 0 Acceptance Gate")
 
@@ -329,19 +329,21 @@ The Day 0/1 engineer runs the test before any `src/` patching; the binding verdi
 
 | Issue | Effort | Sub-priority |
 |---|---|---|
-| #1387 cclinpts (sign-flip + term-omission) | ~6h | Priority 7a |
+| #1387 cclinpts (sign-flip + term-omission) | ~7h | Priority 7a |
 | #1388 camshape (diagnose-then-fix, Case a/b) | ~4.5–5.5h | Priority 7b |
-| **Combined Sprint 27 effort** | **~10.5–11.5h** | **Within 6–12h budget** ✅ (tight; at upper end) |
+| **Combined Sprint 27 effort** | **~11.5–12.5h** | **At-or-just-above 6–12h budget** ⚠️ (upper end of range edges past the 12h ceiling by ~0.5h on the high estimate — see escalation note below) |
 
 **Sprint 27 gains** (if both PROCEED): **+1 Match (cclinpts) + +1 Solve (camshape).**
+
+**Escalation note:** if Day 0/1 diagnosis pushes either issue toward the upper end of its range, the combined effort can edge marginally past the nominal 12h ceiling (e.g., 7h + 5.5h = 12.5h). Sprint 27 retrospective should treat the budget as a soft guideline here; tighten by trimming the 0.5h optional guard cleanup in #1388 if needed, or accept the 0.5h overrun by drawing from the Day 13 buffer.
 
 ### 5.2 Mixed path (#1387 Sprint 27 fix + #1388 Case (c) Sprint 28 carryforward)
 
 | Issue | Effort | Sub-priority |
 |---|---|---|
-| #1387 cclinpts (sign-flip + term-omission) | ~6h | Priority 7a |
+| #1387 cclinpts (sign-flip + term-omission) | ~7h | Priority 7a |
 | #1388 camshape (carryforward filing) | ~1.25h | Priority 7b (deferred) |
-| **Combined Sprint 27 effort** | **~7.25h** | **Within 6–12h budget** ✅ |
+| **Combined Sprint 27 effort** | **~8.25h** | **Within 6–12h budget** ✅ |
 
 **Sprint 27 gains:** **+1 Match (cclinpts) only** (no +1 Solve from camshape; deferred to Sprint 28).
 
@@ -403,12 +405,12 @@ Add to PROJECT_PLAN.md Sprint 28 priorities section with the carryforward ration
 | Current-emit-vs-target comparison for #1387 | ✅ §3.2 + §3.3 (2 bugs identified: sign-flip + term-omission) |
 | Current-emit-vs-target comparison for #1388 | ✅ §4.2 + §4.3 (boundary guard shape divergence noted, but UNPROVEN as cause of Locally Infeasible — the over-fired contributions are zeroed by L464+L467 fixups; actual cause requires Day 0/1 diagnosis) |
 | Source-code patch sites at file:line precision | ✅ §3.4 (#1387: `derivative_rules.py:1847,577` + `stationarity.py:1352,1835` + `constraint_jacobian.py:903`); §4.4 (#1388: candidates A `stationarity.py:1835` OR B `constraint_jacobian.py:903/1027` — specific patch site is TBD pending Day 0/1 diagnosis of the actual residual-causing bug) |
-| Implementation effort estimate per issue | ✅ §3.5 (#1387 ~6h); §4.5 (#1388 ~4.5h Case a, ~5.5h Case b, ~1.25h Case c) |
-| Combined Priority 7 budget fit | ✅ §5 (most-likely path ~10.5–11.5h within 6–12h budget — tight at upper end) |
+| Implementation effort estimate per issue | ✅ §3.5 (#1387 ~7h); §4.5 (#1388 ~4.5h Case a, ~5.5h Case b, ~1.25h Case c) |
+| Combined Priority 7 budget fit | ⚠️ §5 (most-likely path ~11.5–12.5h — upper end edges past the 12h ceiling by ~0.5h; mitigations documented in §5.1 escalation note) |
 | Per-issue verdict | ✅ §3.7 (#1387 SPRINT 27 FIX binding); §4.7 (#1388 SPRINT 27 CONDITIONAL, binding pending Day 0/1 NLP-warm-start runtime test + diagnostic-row identification) |
 | Sprint 28 carryforward template documented | ✅ §6 |
 
-**Sprint 27 Priority 7 PROCEED.** Combined effort within budget (tight at upper end for most-likely path). #1387 binding Sprint 27 fix verdict (high confidence). #1388 conditional verdict pending Day 0/1 runtime test AND default-start failing-solve listing diagnosis — Case (c) probability is no longer "low" since the boundary-guard mechanism was disproved (zeroed by fixups); the actual residual-causing emit bug is unknown pre-Day 0.
+**Sprint 27 Priority 7 PROCEED (with caveat).** Most-likely path (both Sprint 27 fix) is ~11.5–12.5h — the upper end edges past the nominal 12h Priority 7 budget by ~0.5h, mitigated by trimming the 0.5h #1388 optional guard cleanup OR drawing from the Day 13 buffer. Mixed path (#1387 fix + #1388 carryforward) is ~8.25h, comfortably within budget. #1387 binding Sprint 27 fix verdict (high confidence). #1388 conditional verdict pending Day 0/1 runtime test AND default-start failing-solve listing diagnosis — Case (c) probability is no longer "low" since the boundary-guard mechanism was disproved (zeroed by fixups); the actual residual-causing emit bug is unknown pre-Day 0.
 
 ---
 
@@ -422,7 +424,7 @@ Add to PROJECT_PLAN.md Sprint 28 priorities section with the carryforward ration
 
 **Day 1/2 (implementation):**
 
-- **#1387** (~5h after diagnosis): apply Bug 1 (sign-flip) fix + Bug 2 (term-omission) fix; regenerate `cclinpts_mcp.gms`; verify per-term grep checks + PATH solve + Tier 0/1 canary byte-stability.
+- **#1387** (~6h after diagnosis, total ~7h including the Day 0/1 sign-flip diagnosis step): apply Bug 1 (sign-flip) fix + Bug 2 (term-omission) fix; regenerate `cclinpts_mcp.gms`; verify per-term grep checks + PATH solve + Tier 0/1 canary byte-stability.
 - **#1388** (~3.5–4.5h if Case a/b after Day 0/1 diagnosis pins the actual residual-causing emit bug): apply the diagnosed fix at the identified patch site; OPTIONALLY clean up the boundary-guard form-mismatch noted in §4.3 (cosmetic since fixups zero them); regenerate `camshape_mcp.gms`; verify per-term grep checks + PATH solve + Tier 0/1 canary byte-stability.
 - **#1388** (~1.25h if Case c): file Sprint 28 carryforward per §6 template with discriminating evidence (PATH-listing infeasibility-row + warm-start-verification confirming NLP point was loaded); update GitHub labels.
 
