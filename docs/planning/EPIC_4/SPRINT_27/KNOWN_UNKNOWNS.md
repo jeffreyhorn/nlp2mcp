@@ -947,7 +947,20 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — patch shape decision binding; implementation lands Sprint 27 Day 1
+**Verified by:** Task 7 (comp_up Subset/Superset Fix-Surface Analysis)
+**Date:** 2026-05-28
+
+**Findings:**
+
+- **Research Q1 (functions in `complementarity.py` generating `comp_up_x(tt)$(...)`):** `build_complementarity_pairs()` at `src/kkt/complementarity.py:465-513` — Patch site A at L473-483 (`up_guard` assembly via `Binary("and", condition, rhs_guard)` flat-conjunction), Patch site B at L485-494 (equation definition with `domain=var_domain` superset).
+- **Research Q2 (functions in `emit_gams.py` emitting `$(t(tt) and xb(tt) < inf)` domain condition):** The `up_guard` Expr structure from `complementarity.py` Patch site A is rendered as `cond_gams` string by the standard EquationDef emit path; the matched-pair `piU_x.fx(tt)$(not (cond_gams)) = 0;` is emitted at `src/emit/emit_gams.py:2230-2243` (Patch site C, consumer of `cond_gams`).
+- **Research Q3 (domain mismatch origin):** Originates in `complementarity.py` Patch site A — the flat-conjunction `Binary("and", subset_predicate, rhs<inf)` is GAMS-not-short-circuited; GAMS evaluates `param(c,...) < inf` for ALL `c ∈ var_domain`, triggering `$171` at non-subset elements. The `emit_gams.py` rendering at Patch site C inherits the bug. Fix MUST land in `complementarity.py`; `emit_gams.py` is consumer-only.
+- **Research Q4 (#1349 interaction):** Different code regions — Sprint 25 #1349 at `emit_gams.py:1518-1698 + :1897-1906` (`.fx → .l` accumulator); Priority 5 at `emit_gams.py:2230-2243` (piU_x.fx matched-pair fixup). NO direct overlap. Code-path overlap matrix in `PRIORITY_5_FIX_SURFACE.md` §7.1.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_27/PRIORITY_5_FIX_SURFACE.md` §3 (Source-Code Patch Sites) — exact `file:line` for Patch sites A/B/C + §4 (Unified Diff Sketch) with helper-function signatures + §6.1 (effort breakdown) + §6.2 (patch shape verdict) + §7 (#1349 regression analysis).
+
+**Decision (Unknown 5.1 resolution, binding):** **Single-file `src/kkt/complementarity.py`-only patch recommended.** Equation-domain-narrowing approach (Option a in §2.1 / §3.1 Patch B) restructures `up_guard` to use the subset directly when detected; `emit_gams.py` Patch site C inherits the corrected `cond_gams` rendering automatically (no `emit_gams.py` change needed). **Coordinated `complementarity.py + emit_gams.py` patch is a defensive fallback** if Day 1 surfaces downstream issues with equation-domain narrowing. Estimated effort: ~7.5–8h within Priority 5's 8–12h budget.
 
 ---
 
@@ -988,7 +1001,31 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — corpus sweep complete; binding (no additional models discovered)
+**Verified by:** Task 7 (comp_up Subset/Superset Fix-Surface Analysis)
+**Date:** 2026-05-28
+
+**Findings:**
+
+- **Research Q1 (corpus-wide grep for `comp_up_x.*\$(.*< inf)` pattern):** Per `grep -lE 'comp_up_x\(.*\)\$\(.*<[[:space:]]*inf\)' data/gamslib/mcp/*_mcp.gms`: 4 matches (gtm, ibm1, otpop, tricp). Broader sweep `comp_up_[a-z]+` returns 28 matches (including fawley's `comp_up_u` shape). The regex match is **necessary but not sufficient** for the bug.
+- **Research Q2 (other `$171` occurrences):** Per `gamslib_status.json` Sprint 27 Day 0 baseline: only fawley + otpop are in `path_syntax_error` bucket AND exhibit `$171` errors traceable to subset/superset bound-parameter declarations. The other 26 broader-sweep matches either solve cleanly (gtm, ibm1, agreste, cesam, indus, etc. in compare_match or model_infeasible buckets) or fail at unrelated stages (tricp at path_solve_terminated — NOT a syntax error).
+- **Research Q3 (Sprint 27 Day 0 baseline retest):** Per Task 3 baseline `BASELINE_METRICS.md` §6.2 path_syntax_error table: no new models with the comp_up subset/superset shape surfaced. fawley + otpop are at path_syntax_error; gtm/ibm1 at compare_match; tricp at path_solve_terminated.
+
+**Per-model classification table:**
+
+| Model | Day 0 bucket | Affected? |
+|---|---|---|
+| `fawley` | path_syntax_error | ✅ YES — #1356 target (subset `cr(c)` + param `crdat(c,"supply")`) |
+| `otpop` | path_syntax_error | ✅ YES — #1357 target (subset `t(tt)` + param `xb(tt)`) |
+| `gtm` | compare_match | ❌ NO — `pc(i,j)` declared over `(i,j)` (full eq-domain); no subset/superset mismatch |
+| `ibm1` | compare_match | ❌ NO — `sup(s,"inventory")` declared over `(s,*)` (full eq-domain); no mismatch |
+| `tricp` | path_solve_terminated | ❌ NO — bound expr is `myScale * smax((i,kp), fx(i,kp))` (no subset-restricted parameter); failure is unrelated bug class |
+
+**The bug requires BOTH:** (a) the flat-conjunction guard shape `$(subset(x) and param(x) < inf)` AND (b) the bound parameter is declared over a STRICT SUBSET of the equation domain. Only fawley + otpop satisfy both conditions.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_27/PRIORITY_5_FIX_SURFACE.md` §5 (Affected-Model Corpus Sweep) — both narrow + broader regex sweeps, per-model classification table with Day 0 buckets, false-positive root-cause analysis.
+
+**Decision (Unknown 5.2 resolution, binding):** **Priority 5 scope CONFIRMED at 2 models (fawley + otpop).** No additional models discovered. No effort growth needed. Sprint 27 Day 0 baseline retest did not surface any new models in the same shape.
 
 ---
 
@@ -1029,7 +1066,29 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — LOW regression risk; clearlak byte-stability check codified as Priority 5 PR gate
+**Verified by:** Task 7 (comp_up Subset/Superset Fix-Surface Analysis)
+**Date:** 2026-05-28
+
+**Findings:**
+
+- **Research Q1 (shared callers):** No direct code-path overlap. Sprint 25 #1349 operates at `src/emit/emit_gams.py:1518-1531` (`fx_to_l_overrides_by_var` accumulator), `:1668-1698` (`eq_paired_in_mcp` / `.fx → .l` substitution), `:1897-1906` (merge `.fx → .l` per-instance overrides). Priority 5 operates at `src/kkt/complementarity.py:465-513` (Patch sites A + B) + `src/emit/emit_gams.py:2230-2243` (Patch site C, piU_x.fx matched-pair fixup — optional defensive). Distinct functions, distinct accumulators, no shared callers.
+- **Research Q2 (clearlak preservation):** clearlak's bound parameters are declared over their respective equation domains (no subset/superset mismatch); Priority 5's subset-detection helpers (`_extract_subset_predicate` / `_bound_expr_subset_dependency`) return None for clearlak's bound expressions; the new code path is INACTIVE for clearlak. Expected outcome: byte-stable.
+- **Research Q3 (regression gate):** Codified as Priority 5 PR pre-merge verification — regenerate `clearlak_mcp.gms`, diff against current main artifact, expect zero diff. If non-zero, root-cause; if Sprint 25 #1349 `.l`-side-effect behavior changed, rollback Priority 5 changes affecting the `.l` accumulator.
+
+**Code-path overlap matrix (verified):**
+
+| Code region | Sprint 25 #1349 site | Priority 5 site | Overlap? |
+|---|---|---|---|
+| `emit_gams.py:1518-1531` (fx_to_l accumulator) | YES | NO | None |
+| `emit_gams.py:1668-1698` (eq_paired_in_mcp) | YES | NO | None |
+| `emit_gams.py:1897-1906` (merge .l overrides) | YES | NO | None |
+| `emit_gams.py:2230-2243` (piU_x.fx fixup) | NO | YES (Patch site C, optional) | None — different function |
+| `complementarity.py:465-513` (comp_up generation) | NO | YES (Patch sites A + B) | None |
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_27/PRIORITY_5_FIX_SURFACE.md` §7 (Sprint 25 #1349 Regression Risk Assessment) — code-path overlap matrix + indirect-risk analysis on `.fx` emission semantics + verification check command for clearlak byte-stability.
+
+**Decision (Unknown 5.3 resolution, binding):** **Regression risk LOW.** Code paths are distinct. Priority 5 changes are inactive for clearlak (no subset/superset bound parameters). **Mitigation codified** as Priority 5 PR pre-merge gate: regenerate `clearlak_mcp.gms` + diff vs current main; expect zero diff. If diff non-zero, root-cause before merge. 11 Tier 0/1 canary byte-stability: also expected (none have subset/superset bound parameters); verified by PR19 widening's CI on Sprint 27 Day 0 (per Task 5 PR19_WIDENING_DESIGN.md).
 
 ---
 

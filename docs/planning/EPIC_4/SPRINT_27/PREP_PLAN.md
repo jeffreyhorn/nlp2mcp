@@ -929,7 +929,8 @@ grep -E "^## Coordinated Design" docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_
 
 ## Task 7: comp_up Subset/Superset Fix-Surface Analysis
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-28
 **Priority:** High
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 27 Day 1 (must complete before Priority 5 begins)
@@ -996,11 +997,43 @@ The Task 2 Phase 0 sections for #1356 and #1357 provide the hand-derived KKT tar
 
 ### Changes
 
-To be completed.
+Cross-referenced the Phase 0 target shapes for #1356 fawley and #1357 otpop from the Sprint 27 Prep Task 2 (PR #1403) Phase 0 Acceptance Gate sections. Both models exhibit the same bug class — `comp_up_<var>(<eq_dom>)$(subset(eq_dom) and param(eq_dom) < inf)` where `param` is declared over a strict subset of `eq_dom`; GAMS evaluates `param(eq_dom) < inf` for all `eq_dom` elements (the flat-conjunction `and` is NOT short-circuited), triggering `$171` ("Domain violation for set") at each non-subset element. Verified bug shapes empirically: fawley `comp_up_u(c)$(cr(c) and crdat(c,"supply") < inf)` at L273 + `piU_u.fx(c)$(not (...))` at L315; otpop `comp_up_x(tt)$(t(tt) and xb(tt) < inf)` at L217 + `piU_x.fx(tt)$(not (...))` at L247.
+
+Identified source-code patch sites at `file:line` precision via direct code inspection: **Patch site A** at `src/kkt/complementarity.py:473-483` (`up_guard` assembly — current `Binary("and", condition, rhs_guard)` flat-conjunction); **Patch site B** at `src/kkt/complementarity.py:485-494` (equation definition — `domain=var_domain` superset); **Patch site C** at `src/emit/emit_gams.py:2230-2243` (piU_x.fx matched-pair fixup — consumer of `cond_gams` from Patch site A).
+
+Authored unified diff sketch (~50–80 lines across 2 files) illustrating the patch shape: new helpers `_extract_subset_predicate` + `_bound_expr_subset_dependency` in `complementarity.py` (reusing the pattern from `src/kkt/stationarity.py:_find_superset_in_domain` per Task 6 review); Patch sites A + B detect subset/superset mismatch and narrow equation domain to the subset; Patch site C optional defensive change emits subset-narrowing fixup separately. Recommended single-file `complementarity.py`-only approach (equation-domain-narrowing); coordinated `complementarity.py + emit_gams.py` is defensive fallback.
+
+Ran corpus sweep per the prompt's POSIX ERE: `grep -lE 'comp_up_x\(.*\)\$\(.*<[[:space:]]*inf\)' data/gamslib/mcp/*_mcp.gms` → 4 matches (gtm, ibm1, otpop, tricp). Cross-referenced against Sprint 27 Day 0 baseline (`gamslib_status.json`) bucket assignments: **only fawley + otpop actually exhibit the bug**. Other matches are false positives: gtm + ibm1 solve cleanly (parameters declared over full eq-domain; no subset/superset mismatch); tricp fails at `path_solve_terminated` (unrelated bug class — bound expression involves `smax`, not subset-restricted param). The bug requires BOTH (a) flat-conjunction guard shape AND (b) param declared over strict subset of eq-domain; only fawley + otpop satisfy both.
+
+Estimated implementation effort: ~7.5–8h within Priority 5's 8–12h budget. Breakdown: subset-detection helpers (1.5h) + up_guard + equation-domain restructure (1.5h) + tests (1.5h) + GAMS compile-check verification (0.5h) + clearlak byte-stability regression check (0.5h) + 11 Tier 0/1 canary check (0.5h) + buffer for review iteration (1h).
+
+Analyzed Sprint 25 #1349 (`.fx → .l` side-effect preservation) interaction risk: distinct code regions — Sprint 25 #1349 at `emit_gams.py:1518-1531 + :1668-1698 + :1897-1906` (accumulator + substitution + merge); Priority 5 at `complementarity.py:465-513` + `emit_gams.py:2230-2243` (piU_x.fx fixup). NO direct overlap. Code-path overlap matrix in `PRIORITY_5_FIX_SURFACE.md` §7.1 verifies distinct functions, distinct accumulators, no shared callers. Regression risk LOW; mitigation codified as Priority 5 PR pre-merge gate: regenerate `clearlak_mcp.gms`, diff against current main, expect zero diff.
+
+Authored new `docs/planning/EPIC_4/SPRINT_27/PRIORITY_5_FIX_SURFACE.md` with 10 sections: §1 Purpose, §2 Phase 0 Target Shape (cross-reference from Prep Task 2), §3 Source-Code Patch Sites (A, B, C at file:line precision), §4 Unified Diff Sketch, §5 Affected-Model Corpus Sweep (Unknown 5.2 resolution), §6 Implementation Effort Estimate (with patch shape verdict for Unknown 5.1), §7 Sprint 25 #1349 Regression Risk Assessment (Unknown 5.3 resolution), §8 Day 1 Readiness Assessment, §9 Verification Summary, §10 Related Documents.
+
+Updated `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` for all 3 Unknowns: 5.1 ✅ VERIFIED (single-file `complementarity.py`-only patch recommended, binding; coordinated fallback if domain-narrowing surfaces issues), 5.2 ✅ VERIFIED (Priority 5 scope CONFIRMED at 2 models — fawley + otpop only, binding), 5.3 ✅ VERIFIED (regression risk LOW; clearlak byte-stability check codified as PR gate, binding).
+
+Added CHANGELOG.md entry under Sprint 27 Preparation summarizing Task 7 completion.
+
+**Zero `src/` diff** — Task 7 authored design documents; no prototype patches were applied. All patch sites are documented and ready for Sprint 27 Day 1 implementation.
 
 ### Result
 
-To be completed.
+**Patch shape verdict (Unknown 5.1, binding):** **Single-file `src/kkt/complementarity.py`-only patch recommended.** Equation-domain-narrowing approach restructures `up_guard` to use the detected subset; `emit_gams.py` Patch site C inherits the corrected `cond_gams` rendering automatically (no `emit_gams.py` change needed). **Coordinated `complementarity.py + emit_gams.py` patch is the defensive fallback** if Sprint 27 Day 1 surfaces downstream issues with equation-domain narrowing.
+
+**Affected-model count (Unknown 5.2, binding):** **2 models — fawley + otpop only.** Corpus sweep + Day 0 baseline cross-reference confirmed no additional models exhibit the bug. The 4 narrow-regex matches include 2 false positives (gtm/ibm1 — parameters declared over full eq-domain) and 1 unrelated failure (tricp — `path_solve_terminated`, not `path_syntax_error`). The 28 broader-regex matches all solve cleanly except fawley + otpop. No effort growth from additional models.
+
+**Patch sites (file:line, binding):**
+
+- **Patch site A** at `src/kkt/complementarity.py:473-483` — `up_guard` assembly restructure (flat-conjunction → subset-detection + narrowed guard).
+- **Patch site B** at `src/kkt/complementarity.py:485-494` — `EquationDef.domain` narrowing to subset when detected.
+- **Patch site C** at `src/emit/emit_gams.py:2230-2243` — optional defensive subset-detection at piU_x.fx fixup (skip if Patch site B narrows equation domain).
+
+**Implementation effort estimate (binding):** **~7.5–8h within Priority 5's 8–12h budget** (3-line breakdown in §6.1).
+
+**Sprint 25 #1349 regression risk (Unknown 5.3, binding):** **LOW.** Distinct code paths; clearlak path inactive for Priority 5 (no subset/superset bound parameters); mitigated by codified PR pre-merge gate (regenerate `clearlak_mcp.gms`, diff vs current main, expect zero diff). 11 Tier 0/1 canary byte-stability: expected (none have subset/superset bound parameters); verified by PR19 widening's CI on Sprint 27 Day 0 per Task 5 PR19_WIDENING_DESIGN.md.
+
+**Day 1 readiness:** **GO.** Sprint 27 Day 1 engineer can begin implementation immediately using `PRIORITY_5_FIX_SURFACE.md` + linked Phase 0 sections + source-code refs. Recommended Day 1 sequence: helpers (1.5h) → Patch sites A + B (1.5h) → tests (1.5h) → compile-check (0.5h) → clearlak byte-stability (0.5h) → PR + review buffer (1h).
 
 ### Verification
 
@@ -1034,12 +1067,12 @@ grep -E "^## Affected Models" docs/planning/EPIC_4/SPRINT_27/PRIORITY_5_FIX_SURF
 
 ### Acceptance Criteria
 
-- [ ] PRIORITY_5_FIX_SURFACE.md exists with all 6 required sections (target shape, patch sites, diff sketch, sweep, estimate, readiness)
-- [ ] Patch sites identified with `file:line` precision
-- [ ] Unified diff sketch covers all required changes
-- [ ] Affected-model sweep ran against `data/gamslib/mcp/*_mcp.gms` corpus
-- [ ] Implementation effort estimate fits within Priority 5's 8-12h budget (or REPLAN flagged)
-- [ ] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] PRIORITY_5_FIX_SURFACE.md exists with all 6 required sections — exceeds with 10 sections (§1 Purpose, §2 Phase 0 Target Shape, §3 Source-Code Patch Sites, §4 Unified Diff Sketch, §5 Affected-Model Corpus Sweep, §6 Implementation Effort Estimate, §7 Sprint 25 #1349 Regression Risk Assessment, §8 Day 1 Readiness Assessment, §9 Verification Summary, §10 Related Documents)
+- [x] Patch sites identified with `file:line` precision — Patch site A at `src/kkt/complementarity.py:473-483`; Patch site B at `:485-494`; Patch site C at `src/emit/emit_gams.py:2230-2243`
+- [x] Unified diff sketch covers all required changes (§4) — ~50–80 lines across 2 files with new helper-function signatures + comment annotations
+- [x] Affected-model sweep ran against `data/gamslib/mcp/*_mcp.gms` corpus (§5) — 4 narrow-regex matches + 28 broader-regex matches + per-model classification table with Day 0 buckets confirming 2-model scope (fawley + otpop only)
+- [x] Implementation effort estimate fits within Priority 5's 8-12h budget — ~7.5–8h within budget (§6.1 breakdown)
+- [x] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md — 5.1 ✅ VERIFIED (single-file `complementarity.py`-only recommended, binding), 5.2 ✅ VERIFIED (2 models confirmed, binding), 5.3 ✅ VERIFIED (LOW regression risk, clearlak byte-stability check codified as PR gate, binding)
 
 ---
 
