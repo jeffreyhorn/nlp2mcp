@@ -130,7 +130,7 @@ Per Phase 0 verification methodology, **PROCEED** when ALL hold (verified post-i
 
 **Hand-derived KKT for `∂L/∂r(i) = 0`** at interior `i` (where `middle(i) = ord(i) > 1 AND ord(i) < card(i)`) combines:
 
-- **Objective gradient:** `+ (-1) * (pi * R_v / 100)` (Lagrangian-flipped from objective `(-pi * R_v / 100) * r(i)`).
+- **Objective gradient:** `+ (-1) * (pi * R_v / 100)` (Lagrangian-flipped from the POSITIVE objective `obj.. area =E= ((pi*R_v)/%n%) * sum(i, r(i))` at `data/gamslib/raw/camshape.gms:63` — `n=100` resolves the `%n%` macro). The positive gradient `+pi * R_v / 100` becomes negative in `stat_r(i)` due to the Lagrangian sign-flip on the objective, NOT because the source objective is negative.
 - **`lam_convexity(i)` cross-term:** `(-r(i-1) - r(i+1)) * lam_convexity(i)$(middle(i))`.
 - **`lam_convexity(i-1)` cross-term:** `(-r(i-1) + 2*r(i-2)*cos(d_theta)) * lam_convexity(i-1)`. **Canonical guard:** `$(middle(i-1))` — which implies `ord(i-1) > 1 AND ord(i-1) < card(i)`, i.e., `ord(i) > 2 AND ord(i) < card(i)+1` ≡ `ord(i) > 2` for interior `i`.
 - **`lam_convexity(i+1)` cross-term:** `(-r(i+1) + 2*r(i+2)*cos(d_theta)) * lam_convexity(i+1)`. **Canonical guard:** `$(middle(i+1))` — which implies `ord(i+1) > 1 AND ord(i+1) < card(i)`, i.e., `ord(i) > 0 AND ord(i) < card(i)-1` ≡ `ord(i) < card(i)-1` for interior `i`.
@@ -208,21 +208,73 @@ stat_r(i)..
 
 ### 4.6 PROCEED/REPLAN Signal (Phase 0 PROCEED-with-Condition, binding)
 
-The Day 0/1 NLP-warm-started PATH solve test discriminates the three cases:
+The Day 0/1 NLP-warm-started PATH solve test discriminates the three cases.
+
+**Important caveat on GAMS warm-start mechanics:** GAMS does NOT accept a generic `--starting-point=<file>` double-dash parameter to initialize variable levels for an MCP — `--<name>=<value>` is a user-defined parameter, and the generated `camshape_mcp.gms` does NOT have any `execute_loadpoint`/GDX-reading or `$ifthen --starting-point` logic that would consume such a parameter. Setting `--starting-point=...` would be a NO-OP; PATH would still start from the default initial levels emitted at `camshape_mcp.gms:300+` (`r.l(i) = (R_min + R_max) / 2;` plus per-element overrides), which is NOT the NLP solution. The Day 0/1 engineer MUST use one of the two GAMS-supported warm-start mechanisms below.
+
+**Approach A — GDX-loadpoint (canonical GAMS warm-start):**
 
 ```bash
-# Day 0/1 runtime test
+# Day 0/1 runtime test, Approach A: GDX loadpoint
+
+# 1. Regenerate the MCP emit:
 .venv/bin/python -m src.cli data/gamslib/raw/camshape.gms -o /tmp/camshape_mcp.gms --quiet
-# Capture NLP solution as warm-start
-gams camshape.gms o=/tmp/camshape_nlp.lst lo=2
-# Apply NLP solution as MCP starting point
-gams /tmp/camshape_mcp.gms o=/tmp/camshape_mcp_warm.lst lo=2 \
-     --starting-point=/tmp/camshape_nlp.lst
-grep -E 'MODEL STATUS|OBJECTIVE' /tmp/camshape_mcp_warm.lst
+
+# 2. Capture NLP solution to GDX (save *.gdx using `gdx=` argument):
+gams data/gamslib/raw/camshape.gms gdx=/tmp/camshape_nlp.gdx o=/tmp/camshape_nlp.lst lo=2
+
+# 3. Inject an `execute_loadpoint` directive into the MCP file BEFORE the
+#    `Solve mcp_model using MCP;` statement. The generated emit does not
+#    include this, so the test driver must patch it in (or maintain a
+#    wrapper script that injects + runs):
+SOLVE_LINE_NO=$(grep -n '^Solve mcp_model using MCP' /tmp/camshape_mcp.gms | cut -d: -f1)
+sed -i.bak "${SOLVE_LINE_NO}i\\
+execute_loadpoint '/tmp/camshape_nlp.gdx';
+" /tmp/camshape_mcp.gms
+
+# 4. Re-solve from warm-started point:
+gams /tmp/camshape_mcp.gms o=/tmp/camshape_mcp_warm.lst lo=2
+grep -E 'MODEL STATUS|OBJECTIVE VALUE' /tmp/camshape_mcp_warm.lst
 ```
 
-- **Result: MODEL STATUS 1 with obj ≈ 4.2841** → Case (a) or (b); emit bug exists; **PROCEED for Sprint 27 fix** (effort 2.5–3.5h). Patch `_build_indexed_stationarity_expr` guard-substitution logic.
-- **Result: MODEL STATUS 5 Locally Infeasible** → Case (c); model is non-convex MCP; **REPLAN to Sprint 28 carryforward** (effort 1h for filing).
+**Approach B — Explicit `.l` overrides extracted from the NLP solve (no GDX required):**
+
+```bash
+# Day 0/1 runtime test, Approach B: explicit .l assignments
+
+# 1. Regenerate the MCP emit:
+.venv/bin/python -m src.cli data/gamslib/raw/camshape.gms -o /tmp/camshape_mcp.gms --quiet
+
+# 2. Solve NLP and extract r(i) levels from the listing (or write a tiny
+#    GAMS script that solves NLP then `display r.l;`):
+gams data/gamslib/raw/camshape.gms o=/tmp/camshape_nlp.lst lo=2
+# Parse the listing's "---- VAR r" block into a series of
+# r.l('i1') = <val>; ... lines; assemble into /tmp/camshape_warm_overrides.gms.
+
+# 3. Inject the per-instance `.l` overrides into the MCP file BEFORE the
+#    `Solve mcp_model using MCP;` statement (same sed-injection pattern as
+#    Approach A, but inserting the contents of camshape_warm_overrides.gms
+#    instead of an `execute_loadpoint` directive).
+
+# 4. Re-solve from warm-started point:
+gams /tmp/camshape_mcp.gms o=/tmp/camshape_mcp_warm.lst lo=2
+grep -E 'MODEL STATUS|OBJECTIVE VALUE' /tmp/camshape_mcp_warm.lst
+```
+
+**Note:** Approach A is canonical (smaller injection footprint; survives `r(i)` set-size changes) but requires GDX-capable GAMS (the demo edition does support GDX). Approach B is more portable but requires per-instance level extraction and re-injection. Day 0/1 engineer picks whichever is cheapest in the local environment.
+
+**Verify the warm-start actually took effect** before classifying the test result:
+
+```bash
+grep -A2 '\-\-\-\- VAR r' /tmp/camshape_mcp_warm.lst | head -10
+# The starting r.l values should match the NLP solution, NOT the default
+# `(R_min + R_max) / 2` from camshape_mcp.gms:300.
+```
+
+**Result interpretation:**
+
+- **MODEL STATUS 1 with obj ≈ 4.2841** → Case (a) or (b); emit bug exists; **PROCEED for Sprint 27 fix** (effort 2.5–3.5h). Patch `_build_indexed_stationarity_expr` guard-substitution logic.
+- **MODEL STATUS 5 Locally Infeasible** (after confirming the warm-start values were actually loaded per the verify step above) → Case (c); model is non-convex MCP; **REPLAN to Sprint 28 carryforward** (effort 1h for filing).
 
 ### 4.7 Verdict (binding pending Day 0/1 runtime test)
 
