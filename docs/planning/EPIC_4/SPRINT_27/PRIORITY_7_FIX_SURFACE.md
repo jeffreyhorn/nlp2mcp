@@ -296,7 +296,7 @@ display r.l;
 
 # After the next `gams` run, the display block appears in the listing BEFORE
 # any solver output. Find it via the GAMS display header:
-awk '/^---- [0-9]+ VARIABLE r\.L/,/^$/' /tmp/camshape_mcp_warm.lst | head -20
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+r\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
 # Each `r.l('i_k')` value here should match the NLP solution, NOT the default
 # `(R_min + R_max) / 2;` from camshape_mcp.gms:300. If they match defaults,
 # the warm-start did NOT load and the test result is INVALID (classify as
