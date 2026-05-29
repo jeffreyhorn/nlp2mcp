@@ -1078,7 +1078,8 @@ grep -E "^## Affected Models" docs/planning/EPIC_4/SPRINT_27/PRIORITY_5_FIX_SURF
 
 ## Task 8: #1387 cclinpts + #1388 camshape Fix-Surface Analysis
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-28
 **Priority:** Medium
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 27 Day 1 (must complete before Priority 7 begins; informs Sprint 28 carryforward decision)
@@ -1139,11 +1140,46 @@ If either issue's fix-surface exceeds Sprint 27 budget, formal carryforward fili
 
 ### Changes
 
-To be completed.
+Cross-referenced the Phase 0 target shapes for #1387 cclinpts and #1388 camshape from the Sprint 27 Prep Task 2 (PR #1403) Phase 0 Acceptance Gate sections. Verified Day 0 baseline state from `gamslib_status.json`: cclinpts at `solve=model_optimal, compare=mismatch, rel_diff=1.0` (drifted from originally-filed ~70%); camshape at `solve=model_infeasible, compare=not_tested`.
+
+**#1387 cclinpts bug-class identification:** Compared current emit (`data/gamslib/mcp/cclinpts_mcp.gms:133-134`) against hand-derived KKT. Identified TWO compounding bugs: **Bug 1 (sign-flip)** — `stat_b(j)` shows `((-1) * (((-1) * ((fb(j) - fb(j-1)) * 1$(not last(j)))) + 0.5 * ...))` double-negation, distributing the outer `(-1)` gives both terms wrong signs post-Lagrangian-flip; **Bug 2 (term omission)** — `stat_fb(j)` contains only Term-2-at-j (1 of 4 expected contributions); MISSING Term 1 at j (`+(b('s30') - b(j)) * 1$(not last(j))`), Term 1 at j+1 (`-(b('s30') - b(j+1)) * 1$(not last(j+1))`), Term 2 at j+1 offset (`-0.5 * (b(j+1) - b(j)) * 1$(not first(j+1))`).
+
+Mapped #1387 to source-code patch sites at `file:line` precision: **Primary (Bug 2)** `src/ad/derivative_rules.py:1847` (`_diff_sum` — handles partial derivatives of Sum expressions; current implementation likely missing j+1 offset-substitution path for products where both factors contain wrt-variable's index) + `:577` (`_diff_binary` product-rule dispatch). **Secondary (Bug 1)** `src/kkt/stationarity.py:1352` (`build_stationarity_equations`) or `:1835` (`_build_indexed_stationarity_expr` — Lagrangian-sign-conversion step). **Tertiary fallback** `src/ad/constraint_jacobian.py:903` (`_compute_equality_jacobian`). Effort estimate: ~6h within Priority 7 budget. **Verdict: SPRINT 27 FIX binding** (high confidence). Conditional escalation to Sprint 28 ONLY IF Day 1 diagnosis reveals broader AD-architecture issue with `_diff_sum`'s offset-substitution enumeration (in that case, bundle with Priority 3 #1335 Approach C workstream per PRIORITY_3_RISK_ASSESSMENT.md §5.3).
+
+**#1388 camshape emit-bug vs fundamental-property classification:** Verified current emit (`data/gamslib/mcp/camshape_mcp.gms:428`) against hand-derived KKT. Strong suspicion of **guard mis-specification**: `lam_convexity(i-1)` cross-term has guard `$(ord(i) > 1)$(middle(i))` vs canonical `$(middle(i-1))` — over-fires at i=2 boundary because `ord(2) > 1` AND `middle(2)` both hold but canonical `middle(i-1) = middle(1)` does NOT (since `ord(1) = 1`). Similarly `lam_convexity(i+1)` guard is `$(ord(i) <= card(i) - 1)$(middle(i))` vs canonical `$(middle(i+1))` — over-fires at i=card(i)-1. The over-firing terms create inconsistency between the emitted KKT system's dimensionality (expects `lam_convexity` to participate at boundaries) and the matched-pair constraint (which fixes those `lam_convexity` entries to zero per L467 — `lam_convexity.fx(i)$(not ((ord(i) <= card(i) - 1) and (ord(i) > 1))) = 0`).
+
+Mapped #1388 to primary patch site `src/kkt/stationarity.py:1835` (`_build_indexed_stationarity_expr` — guard-construction logic for offset-indexed cross-term contributions should substitute symbolic `middle(i)` predicate with IndexOffset-shifted variant `middle(i±1)` when building cross-term guards for offset-indexed multipliers). Secondary fallback: `src/ad/constraint_jacobian.py:903 + :1027`. Effort estimate: ~2.5h Case (a) emit bug + NLP-warm-start solves, ~3.5h Case (b) emit bug + warm-start guidance, ~1h Case (c) fundamental property + Sprint 28 carryforward filing. **Verdict: SPRINT 27 CONDITIONAL** (binding pending Day 0/1 NLP-warm-start runtime test per Phase 0 PROCEED-with-condition signal). Day 0/1 engineer runs `gams <camshape_mcp.gms> --starting-point=<NLP solution>`; MODEL STATUS 1 with obj≈4.2841 → Case (a/b) Sprint 27 fix; MODEL STATUS 5 → Case (c) Sprint 28 carryforward.
+
+Computed combined-budget fit across all 4 scenarios (most-likely / mixed / worst / worst-worst). Most-likely path: both Sprint 27 fix (~8.5–9.5h within 6–12h budget; +1 Match + +1 Solve gains). Mixed path: #1387 fix + #1388 carryforward Case c (~7h; +1 Match only). Worst path: #1387 AD-architecture escalation + #1388 fix (~3.5–4.5h, under-utilized; +1 Solve only). All paths within budget; no deferral pressure from budget capacity.
+
+Authored new `docs/planning/EPIC_4/SPRINT_27/PRIORITY_7_FIX_SURFACE.md` with 9 sections: §1 Purpose, §2 Sprint 27 Day 0 Baseline State, §3 #1387 cclinpts (Phase 0 target + current emit + bug class + patch sites + effort + PROCEED criteria + verdict), §4 #1388 camshape (same per-issue structure with 3 cases a/b/c + PROCEED-with-condition signal + verdict), §5 Combined Priority 7 Budget Fit (4-scenario table), §6 Sprint 28 Carryforward Template, §7 Verification Summary, §8 Sprint 27 Day 0/1 Engineer Handoff, §9 Related Documents.
+
+Updated `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` for all 3 Unknowns: 7.1 ✅ VERIFIED + Task 8 supplementary finding (patch sites at file:line, SPRINT 27 FIX binding verdict), 7.2 ✅ VERIFIED + Task 8 supplementary finding (current-emit verification of guard mis-specification, SPRINT 27 CONDITIONAL binding pending Day 0/1 test), 7.3 ✅ VERIFIED (combined-budget fit binding for most-likely path; no carryforward filings needed at prep stage).
+
+**No Sprint 28 carryforward filings made at this prep stage** — both verdicts are Sprint 27-positive (binding for #1387, conditional for #1388 pending Day 0/1 runtime test). Day 0/1 engineer files #1388 carryforward conditionally if NLP-warm-start runtime test fails (Case c).
+
+Added CHANGELOG.md entry under Sprint 27 Preparation summarizing Task 8 completion.
+
+**Zero `src/` diff** — Task 8 authored design documents; no prototype patches applied. All patch sites documented for Sprint 27 Day 1/2 implementation.
 
 ### Result
 
-To be completed.
+**Per-issue verdicts (binding):**
+
+| Issue | Verdict | Effort (Sprint 27) | Sprint 27 Gain | Patch Sites |
+|---|---|---|---|---|
+| **#1387 cclinpts** | **SPRINT 27 FIX** (binding, high confidence) | ~6h | +1 Match | `derivative_rules.py:1847` (`_diff_sum`) + `:577` (`_diff_binary`) primary; `stationarity.py:1352`/`:1835` secondary; `constraint_jacobian.py:903` fallback |
+| **#1388 camshape** | **SPRINT 27 CONDITIONAL** (binding pending Day 0/1 NLP-warm-start runtime test) | ~2.5–3.5h Case (a/b) emit bug; ~1h Case (c) carryforward filing | +1 Solve if Case (a/b); 0 if Case (c) | `stationarity.py:1835` (`_build_indexed_stationarity_expr`) primary; `constraint_jacobian.py:903 + :1027` fallback |
+
+**Combined Priority 7 effort (most-likely path):** ~8.5–9.5h within 6–12h budget. **Sprint 27 gains (most-likely path):** +1 Match (cclinpts) + +1 Solve (camshape) = 2 headline-metric improvements.
+
+**Sprint 28 carryforward filings:** None at this prep stage. **Conditional triggers:** (1) Day 1 #1387 diagnosis reveals broader AD-architecture issue → escalate to Sprint 28 (bundle with Priority 3 #1335 Approach C). (2) Day 0/1 #1388 NLP-warm-start test fails AND emit grep checks all pass → Case (c) Sprint 28 carryforward. Both triggers are conditional on Day 0/1 runtime evidence; neither requires prep-stage filing.
+
+**Day 0/1 engineer handoff (§8 of PRIORITY_7_FIX_SURFACE.md):**
+
+1. **Day 0/1 morning:** Run #1388 NLP-warm-start runtime test (~30 min) — discriminates Case (a/b) vs Case (c); binding #1388 verdict. Run #1387 sign-flip diagnosis (~1h) — debug-trace `stationarity.py` Lagrangian-conversion on cclinpts.
+2. **Day 1/2 implementation:** #1387 (~5h post-diagnosis); #1388 Case (a/b) ~2.5h OR Case (c) ~1h carryforward filing.
+3. **End of Day 1/2:** Both PRs opened (or carryforward filed); KNOWN_UNKNOWNS.md §Unknowns 7.1, 7.2, 7.3 updated from prep projection to binding Sprint 27 implementation outcome.
 
 ### Verification
 
@@ -1173,12 +1209,12 @@ gh issue list --label sprint-28 --json number,title | grep -E "1387|1388"
 
 ### Acceptance Criteria
 
-- [ ] PRIORITY_7_FIX_SURFACE.md exists with per-issue subsections for #1387 and #1388
-- [ ] Each issue has a documented verdict (Sprint 27 fix OR Sprint 28 carryforward)
-- [ ] If Sprint 27 fix verdict, source-code patch sites identified + effort estimate
-- [ ] If Sprint 28 carryforward verdict, GitHub issue labeled `sprint-28` + carryforward rationale documented
-- [ ] Combined Sprint 27 effort for #1387 + #1388 (if both kept) fits within Priority 7's 6-12h budget
-- [ ] Unknowns 7.1, 7.2, 7.3 verified and updated in KNOWN_UNKNOWNS.md (Task 2 may already verify 7.1/7.2 via Phase 0 authoring; Task 8 finalizes with fix-surface analysis)
+- [x] PRIORITY_7_FIX_SURFACE.md exists with per-issue subsections for #1387 (§3) and #1388 (§4)
+- [x] Each issue has a documented verdict — #1387 SPRINT 27 FIX (binding §3.7); #1388 SPRINT 27 CONDITIONAL (binding pending Day 0/1 NLP-warm-start test §4.7)
+- [x] Source-code patch sites identified + effort estimate — §3.4 (#1387: `derivative_rules.py:1847,577` + `stationarity.py:1352,1835` + `constraint_jacobian.py:903`) at ~6h; §4.4 (#1388: `stationarity.py:1835` primary, `constraint_jacobian.py:903/1027` fallback) at ~2.5–3.5h (Case a/b) or ~1h (Case c)
+- [x] Sprint 28 carryforward template documented (§6) for conditional use IF Day 0/1 runtime test triggers Case (c); no carryforward filings made at this prep stage
+- [x] Combined Sprint 27 effort fits within Priority 7's 6–12h budget — §5 4-scenario table; most-likely path ~8.5–9.5h within budget; all 4 scenarios within budget
+- [x] Unknowns 7.1, 7.2, 7.3 verified and updated in KNOWN_UNKNOWNS.md — 7.1 ✅ VERIFIED (Task 2 Phase 0 + Task 8 patch sites + SPRINT 27 FIX binding); 7.2 ✅ VERIFIED (Task 2 Phase 0 + Task 8 emit verification + SPRINT 27 CONDITIONAL binding); 7.3 ✅ VERIFIED (combined-budget fit binding for most-likely path)
 
 ---
 
