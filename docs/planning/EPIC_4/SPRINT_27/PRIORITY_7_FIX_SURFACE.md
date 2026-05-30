@@ -313,36 +313,51 @@ grep -E 'MODEL STATUS|OBJECTIVE VALUE' /tmp/camshape_mcp_warm.lst
 
 ```bash
 # Inject the display of all 10 warm-startable symbols right before the solve.
-# Approach A (presolve emit):
-SOLVE_LINE_NO=$(grep -n '^Solve mcp_model using MCP' /tmp/camshape_mcp_presolve.gms | cut -d: -f1)
+# Pick the GMS file matching the approach used above and re-run gams to
+# regenerate the listing AFTER the display injection. Set both shell variables
+# (GMS_FILE for the injection target; LST_FILE for the awk-block source) to
+# match the chosen approach — these MUST be consistent or the pre-check
+# inspects a stale/nonexistent file.
+
+# --- For Approach A (recommended; presolve emit) ---
+GMS_FILE=/tmp/camshape_mcp_presolve.gms
+LST_FILE=/tmp/camshape_mcp_presolve.lst
+
+# --- For Approach B (manual override fallback; non-presolve emit) ---
+# GMS_FILE=/tmp/camshape_mcp.gms
+# LST_FILE=/tmp/camshape_mcp_warm.lst
+
+# Inject the display statement BEFORE the solve, then re-run gams to refresh
+# LST_FILE with the display blocks:
+SOLVE_LINE_NO=$(grep -n '^Solve mcp_model using MCP' "${GMS_FILE}" | cut -d: -f1)
 sed -i.bak "${SOLVE_LINE_NO}i\\
 display r.l, rdiff.l, area.l, lam_convexity.l, lam_convex_edge1.l, lam_convex_edge3.l, lam_convex_edge4.l, nu_eqrdiff.l, piL_r.l, piU_r.l;
-" /tmp/camshape_mcp_presolve.gms
-# Approach B (non-presolve emit, same sed pattern on /tmp/camshape_mcp.gms).
+" "${GMS_FILE}"
+gams "${GMS_FILE}" o="${LST_FILE}" lo=2
 
-# After the next `gams` run, the display blocks appear in the listing BEFORE
-# any solver output. Find each via the GAMS display header. ALL TEN blocks
-# must show NLP-solution-derived values, NOT MCP defaults:
+# After the gams run, the display blocks appear in LST_FILE BEFORE any solver
+# output. Find each via the GAMS display header. ALL TEN blocks must show
+# NLP-solution-derived values, NOT MCP defaults:
 
 # --- Primal blocks (3) ---
-awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+r\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+r\.L/,/^[[:space:]]*$/' "${LST_FILE}" | head -20
 # r.l('i_k') should match NLP, NOT default `(R_min + R_max) / 2;` from camshape_mcp.gms:300.
-awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+rdiff\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+rdiff\.L/,/^[[:space:]]*$/' "${LST_FILE}" | head -20
 # rdiff.l('i_k') should match NLP, NOT MCP default 0.
-awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+area\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -10
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+area\.L/,/^[[:space:]]*$/' "${LST_FILE}" | head -10
 # area.l should match NLP ≈ 4.2841, NOT MCP default 0.
 
 # --- Multiplier blocks (7) — these are the additions vs the prior-round check ---
-awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+lam_convexity\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+lam_convexity\.L/,/^[[:space:]]*$/' "${LST_FILE}" | head -20
 # lam_convexity.l('i_k') should equal abs(convexity.m('i_k')) from the NLP marginals; zeros at non-middle i are expected (per lam_convexity.fx fixup at L464).
-awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+lam_convex_edge1\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
-awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+lam_convex_edge3\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
-awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+lam_convex_edge4\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+lam_convex_edge1\.L/,/^[[:space:]]*$/' "${LST_FILE}" | head -20
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+lam_convex_edge3\.L/,/^[[:space:]]*$/' "${LST_FILE}" | head -20
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+lam_convex_edge4\.L/,/^[[:space:]]*$/' "${LST_FILE}" | head -20
 # Each lam_convex_edge{1,3,4}.l('i_k') should equal abs(convex_edge{1,3,4}.m('i_k')) from the NLP marginals.
-awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+nu_eqrdiff\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+nu_eqrdiff\.L/,/^[[:space:]]*$/' "${LST_FILE}" | head -20
 # nu_eqrdiff.l('i_k') should equal eqrdiff.m('i_k') from the NLP marginals (no abs — eqrdiff is equality).
-awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+piL_r\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
-awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+piU_r\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+piL_r\.L/,/^[[:space:]]*$/' "${LST_FILE}" | head -20
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+piU_r\.L/,/^[[:space:]]*$/' "${LST_FILE}" | head -20
 # piL_r.l('i_k') and piU_r.l('i_k') are nonzero only at active bounds (per the
 # guards at camshape_mcp_presolve.gms:308-309); all-zero is expected when no
 # r-bound is active in the NLP solution, but mass-zero where bounds ARE active
