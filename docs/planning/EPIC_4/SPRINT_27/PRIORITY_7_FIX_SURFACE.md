@@ -231,104 +231,131 @@ The binding §4.6 3-way discriminator requires BOTH the Day 0/1 NLP-warm-started
 
 **Important caveat on GAMS warm-start mechanics:** GAMS does NOT accept a generic `--starting-point=<file>` double-dash parameter to initialize variable levels for an MCP — `--<name>=<value>` is a user-defined parameter, and the generated `camshape_mcp.gms` does NOT have any `execute_loadpoint`/GDX-reading or `$ifthen --starting-point` logic that would consume such a parameter. Setting `--starting-point=...` would be a NO-OP; PATH would still start from the default initial levels emitted at `camshape_mcp.gms:300+` (`r.l(i) = (R_min + R_max) / 2;` plus per-element overrides), which is NOT the NLP solution. The Day 0/1 engineer MUST use one of the two GAMS-supported warm-start mechanisms below.
 
-**Approach A — GDX-loadpoint (canonical GAMS warm-start):**
+**Critical caveat on MCP multiplier initialization:** A complete MCP warm-start requires BOTH (a) the original primal variables AND (b) the multiplier variables introduced by the KKT reformulation. The KKT-derived MCP at `data/gamslib/mcp/camshape_mcp.gms:69-78` declares 10 distinct warm-start-able variables — **3 primals** (`r(i)`, `rdiff(i)`, `area`) and **7 multipliers** (`nu_eqrdiff(i)`, `lam_convexity(i)`, `lam_convex_edge1(i)`, `lam_convex_edge3(i)`, `lam_convex_edge4(i)`, `piL_r(i)`, `piU_r(i)`). A workflow that loads only NLP primals (e.g., raw `execute_loadpoint` of an NLP GDX, which contains `convexity.m` but NOT `lam_convexity.l` because those are distinct symbol names) leaves all 7 MCP multipliers at zero. Starting PATH with all multipliers at zero is itself an incomplete warm-start that can drive MODEL STATUS 5 independently of any emit bug, INVALIDATING the §4.6 Case (b)/(c) discriminator. The existing presolve emit at `data/gamslib/mcp/camshape_mcp_presolve.gms:300-309` documents the canonical multiplier-transfer pattern: `lam_convexity.l(i) = abs(convexity.m(i))`, `lam_convex_edge{1,3,4}.l(i) = abs(convex_edge{1,3,4}.m(i))`, `nu_eqrdiff.l(i) = eqrdiff.m(i)`, plus conditional bound-multiplier transfers `piL_r.l(i)$(abs(r.l(i) - r.lo(i)) < 1e-6 and r.m(i) > 0) = r.m(i)` and `piU_r.l(i)$(abs(r.l(i) - r.up(i)) < 1e-6 and r.m(i) < 0) = -(r.m(i))`. Any warm-start workflow used as the §4.6 discriminator MUST replicate this transfer set (or use Approach A below, which generates it automatically).
+
+**Approach A — Use the existing presolve emit (canonical; RECOMMENDED):**
 
 ```bash
-# Day 0/1 runtime test, Approach A: GDX loadpoint
+# Day 0/1 runtime test, Approach A: regenerate the presolve emit via the
+# tool's `--nlp-presolve` flag, which auto-emits both the NLP solve AND
+# the complete primal-and-multiplier dual-transfer block.
 
-# 1. Regenerate the MCP emit:
-.venv/bin/python -m src.cli data/gamslib/raw/camshape.gms -o /tmp/camshape_mcp.gms --quiet
+# 1. Regenerate the presolve emit (includes NLP solve + dual transfers):
+.venv/bin/python -m src.cli data/gamslib/raw/camshape.gms --nlp-presolve -o /tmp/camshape_mcp_presolve.gms --quiet
 
-# 2. Capture NLP solution to GDX (save *.gdx using `gdx=` argument):
-gams data/gamslib/raw/camshape.gms gdx=/tmp/camshape_nlp.gdx o=/tmp/camshape_nlp.lst lo=2
-
-# 3. Inject an `execute_loadpoint` directive into the MCP file BEFORE the
-#    `Solve mcp_model using MCP;` statement. The generated emit does not
-#    include this, so the test driver must patch it in (or maintain a
-#    wrapper script that injects + runs):
-SOLVE_LINE_NO=$(grep -n '^Solve mcp_model using MCP' /tmp/camshape_mcp.gms | cut -d: -f1)
-sed -i.bak "${SOLVE_LINE_NO}i\\
-execute_loadpoint '/tmp/camshape_nlp.gdx';
-" /tmp/camshape_mcp.gms
-
-# 4. Re-solve from warm-started point:
-gams /tmp/camshape_mcp.gms o=/tmp/camshape_mcp_warm.lst lo=2
-grep -E 'MODEL STATUS|OBJECTIVE VALUE' /tmp/camshape_mcp_warm.lst
+# 2. Solve directly. The emit handles end-to-end warm-start:
+#    - $onMultiR + $include "data/gamslib/raw/camshape.gms" runs the NLP
+#      in-line, populating .l (primals) and .m (marginals) for all NLP
+#      variables and equations.
+#    - L301-L309 transfer NLP marginals into MCP multiplier levels for
+#      ALL 7 multiplier variables (lam_convexity, lam_convex_edge1/3/4,
+#      nu_eqrdiff, piL_r, piU_r).
+#    - The NLP primals (`r.l`, `rdiff.l`, `area.l`) carry into the MCP
+#      automatically because they share symbol names.
+#    - Solve mcp_model runs PATH from this fully-initialized point.
+gams /tmp/camshape_mcp_presolve.gms o=/tmp/camshape_mcp_presolve.lst lo=2
+grep -E 'MODEL STATUS|OBJECTIVE VALUE' /tmp/camshape_mcp_presolve.lst
 ```
 
-**Approach B — Explicit `.l` overrides extracted from the NLP solve (no GDX required):**
+This is the canonical and recommended approach because (a) it reuses the existing tested emit pattern, (b) it handles all 3 primals + all 7 multipliers in a single artifact, and (c) it requires no per-instance manual injection. The Day 0/1 engineer should prefer Approach A unless there's a specific reason to test on the non-presolve emit.
+
+**Approach B — Manual explicit `.l` overrides on the non-presolve emit (fallback; only if Approach A's `--nlp-presolve` path is unsuitable):**
 
 ```bash
-# Day 0/1 runtime test, Approach B: explicit .l assignments
+# Day 0/1 runtime test, Approach B: explicit .l assignments for BOTH all 3
+# primals AND all 7 multipliers. The override block MUST match the
+# camshape_mcp_presolve.gms:300-309 transfer pattern exactly — a workflow
+# that initializes only primals leaves multipliers at zero, which makes
+# the §4.6 discriminator invalid.
 
-# 1. Regenerate the MCP emit:
+# 1. Regenerate the (non-presolve) MCP emit:
 .venv/bin/python -m src.cli data/gamslib/raw/camshape.gms -o /tmp/camshape_mcp.gms --quiet
 
-# 2. Solve NLP and extract ALL primal-variable levels from the listing
-#    (camshape declares THREE primal variables per `data/gamslib/raw/
-#    camshape.gms:50-53`: `r(i)`, `rdiff(i)`, and `area`. Restoring only
-#    `r.l` leaves `rdiff` and `area` at their MCP defaults, which can
-#    make a MODEL STATUS 5 result reflect an incomplete warm-start
-#    rather than the Case (b)/(c) discriminator):
+# 2. Solve NLP and extract ALL primal LEVELS and ALL relevant constraint
+#    MARGINALS + bound-marginal data from the listing (10 distinct values
+#    per `camshape_mcp.gms:69-78` warm-start surface):
 gams data/gamslib/raw/camshape.gms o=/tmp/camshape_nlp.lst lo=2
-# Parse the listing's "---- VAR r", "---- VAR rdiff", and "---- VAR area"
-# blocks. Assemble into /tmp/camshape_warm_overrides.gms as:
+# Parse the listing's per-symbol blocks. Assemble
+# /tmp/camshape_warm_overrides.gms as:
+#
+#   * --- Primals (3 variables) ---
 #   r.l('i1') = <val>; ... r.l('iN') = <val>;
 #   rdiff.l('i1') = <val>; ... rdiff.l('iN') = <val>;
 #   area.l = <val>;
+#
+#   * --- Multipliers (7 variables; replicate camshape_mcp_presolve.gms:301-309) ---
+#   lam_convexity.l('i1') = abs(<convexity.m at i1>); ... ;
+#   lam_convex_edge1.l('i1') = abs(<convex_edge1.m at i1>); ... ;
+#   lam_convex_edge3.l('i1') = abs(<convex_edge3.m at i1>); ... ;
+#   lam_convex_edge4.l('i1') = abs(<convex_edge4.m at i1>); ... ;
+#   nu_eqrdiff.l('i1') = <eqrdiff.m at i1>; ... ;
+#   * Bound multipliers (only at active bounds, per the presolve guard):
+#   piL_r.l('i_k') = <r.m at i_k>;   * if abs(r.l('i_k') - r.lo('i_k')) < 1e-6 and r.m('i_k') > 0
+#   piU_r.l('i_k') = -(<r.m at i_k>); * if abs(r.l('i_k') - r.up('i_k')) < 1e-6 and r.m('i_k') < 0
 
-# 3. Inject the per-variable `.l` overrides into the MCP file BEFORE the
-#    `Solve mcp_model using MCP;` statement (same sed-injection pattern as
-#    Approach A, but inserting the contents of camshape_warm_overrides.gms
-#    instead of an `execute_loadpoint` directive). All three primal
-#    variables MUST be restored — `r.l` alone is incomplete.
+# 3. Inject the per-variable `.l` overrides (all 10 symbols) into the MCP
+#    file BEFORE the `Solve mcp_model using MCP;` statement:
+SOLVE_LINE_NO=$(grep -n '^Solve mcp_model using MCP' /tmp/camshape_mcp.gms | cut -d: -f1)
+sed -i.bak "${SOLVE_LINE_NO}i\\
+$(cat /tmp/camshape_warm_overrides.gms)
+" /tmp/camshape_mcp.gms
 
-# 4. Re-solve from warm-started point:
+# 4. Re-solve from fully warm-started point:
 gams /tmp/camshape_mcp.gms o=/tmp/camshape_mcp_warm.lst lo=2
 grep -E 'MODEL STATUS|OBJECTIVE VALUE' /tmp/camshape_mcp_warm.lst
 ```
 
-**Note:** Approach A is canonical (smaller injection footprint; survives `r(i)` set-size changes) but requires GDX-capable GAMS (the demo edition does support GDX). Approach B is more portable but requires per-instance level extraction and re-injection. Day 0/1 engineer picks whichever is cheapest in the local environment.
+**Note:** Approach A is **strongly preferred** because it generates the complete primal+multiplier warm-start automatically via the existing `--nlp-presolve` emit pattern. Approach B is a manual fallback that requires precise replication of the `camshape_mcp_presolve.gms:301-309` transfer formulas (especially the `abs(...)` wrapping on `lam_*` and the conditional bound-multiplier guards on `piL_r`/`piU_r`); any deviation makes the §4.6 discriminator invalid. Day 0/1 engineer should pick Approach A unless the test environment specifically requires testing against the non-presolve emit.
 
-**Verify the warm-start actually took effect** before classifying the test result. The PATH listing's `---- VAR <name>` blocks report the SOLVER OUTPUT (final iterate, or failure point if MODEL STATUS 5) — not the initial `.l` levels PATH started from. A failed run would incorrectly look like "the warm-start was loaded but PATH still failed" when in reality PATH may have started from MCP defaults and never saw the NLP point. **Critically, the verification MUST cover EVERY primal variable the warm-start workflow restores** — not just `r.l`. For camshape that means `r.l`, `rdiff.l`, and `area.l`; leaving any one of those at MCP defaults makes a MODEL STATUS 5 result reflect an incomplete start, NOT a valid Case (b)/(c) discriminator.
+**Verify the warm-start actually took effect** before classifying the test result. The PATH listing's `---- VAR <name>` blocks report the SOLVER OUTPUT (final iterate, or failure point if MODEL STATUS 5) — not the initial `.l` levels PATH started from. A failed run would incorrectly look like "the warm-start was loaded but PATH still failed" when in reality PATH may have started from MCP defaults and never saw the NLP point. **Critically, the verification MUST cover EVERY variable the warm-start workflow restores — BOTH all 3 primals AND all 7 multipliers** (per `camshape_mcp.gms:69-78` warm-start surface). Leaving any of these 10 symbols at MCP defaults makes a MODEL STATUS 5 result reflect an incomplete start, NOT a valid Case (b)/(c) discriminator.
 
-**Correct check: inject a `display r.l, rdiff.l, area.l;` marker statement IMMEDIATELY AFTER the `execute_loadpoint` (Approach A) or `.l` override block (Approach B) AND IMMEDIATELY BEFORE the `Solve mcp_model using MCP;` line.** Then grep the listing's display blocks (which are written during compilation, before the solve, and reflect the actual starting levels):
+**Correct check: inject a `display r.l, rdiff.l, area.l, lam_convexity.l, lam_convex_edge1.l, lam_convex_edge3.l, lam_convex_edge4.l, nu_eqrdiff.l, piL_r.l, piU_r.l;` marker statement IMMEDIATELY AFTER the dual-transfer block (Approach A: just before `Solve mcp_model using MCP;` in the presolve emit) or the override block (Approach B: just before the solve line in the non-presolve emit).** Then grep the listing's display blocks (which are written during compilation, before the solve, and reflect the actual starting levels):
 
 ```bash
-# Inject `display r.l, rdiff.l, area.l;` right after the warm-start block
-# (Approach A or B) and right before the `Solve mcp_model using MCP;` line.
-SOLVE_LINE_NO=$(grep -n '^Solve mcp_model using MCP' /tmp/camshape_mcp.gms | cut -d: -f1)
+# Inject the display of all 10 warm-startable symbols right before the solve.
+# Approach A (presolve emit):
+SOLVE_LINE_NO=$(grep -n '^Solve mcp_model using MCP' /tmp/camshape_mcp_presolve.gms | cut -d: -f1)
 sed -i.bak "${SOLVE_LINE_NO}i\\
-display r.l, rdiff.l, area.l;
-" /tmp/camshape_mcp.gms
+display r.l, rdiff.l, area.l, lam_convexity.l, lam_convex_edge1.l, lam_convex_edge3.l, lam_convex_edge4.l, nu_eqrdiff.l, piL_r.l, piU_r.l;
+" /tmp/camshape_mcp_presolve.gms
+# Approach B (non-presolve emit, same sed pattern on /tmp/camshape_mcp.gms).
 
 # After the next `gams` run, the display blocks appear in the listing BEFORE
-# any solver output. Find each via the GAMS display header. ALL THREE blocks
-# must show NLP-solution values, NOT MCP defaults:
+# any solver output. Find each via the GAMS display header. ALL TEN blocks
+# must show NLP-solution-derived values, NOT MCP defaults:
 
-# r.l block:
+# --- Primal blocks (3) ---
 awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+r\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
-# Each `r.l('i_k')` value here should match the NLP solution, NOT the default
-# `(R_min + R_max) / 2;` from camshape_mcp.gms:300.
-
-# rdiff.l block (extra primal variable; MUST also be verified):
+# r.l('i_k') should match NLP, NOT default `(R_min + R_max) / 2;` from camshape_mcp.gms:300.
 awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+rdiff\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
-# Each `rdiff.l('i_k')` value here should match the NLP solution, NOT the
-# MCP default of 0.
-
-# area.l block (scalar; MUST also be verified):
+# rdiff.l('i_k') should match NLP, NOT MCP default 0.
 awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+area\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -10
-# `area.l` here should match the NLP-optimal value ≈ 4.2841, NOT the MCP
-# default of 0.
+# area.l should match NLP ≈ 4.2841, NOT MCP default 0.
 
-# If ANY of the three displayed blocks match MCP defaults, the warm-start
-# is INCOMPLETE and the test result is INVALID — classify as "warm-start
-# mechanism failed", rerun after debugging the injection. Do NOT classify
-# the MODEL STATUS as Case (b) vs Case (c) until all three blocks confirm
-# NLP-solution values.
+# --- Multiplier blocks (7) — these are the additions vs the prior-round check ---
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+lam_convexity\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
+# lam_convexity.l('i_k') should equal abs(convexity.m('i_k')) from the NLP marginals; zeros at non-middle i are expected (per lam_convexity.fx fixup at L464).
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+lam_convex_edge1\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+lam_convex_edge3\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+lam_convex_edge4\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
+# Each lam_convex_edge{1,3,4}.l('i_k') should equal abs(convex_edge{1,3,4}.m('i_k')) from the NLP marginals.
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+nu_eqrdiff\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
+# nu_eqrdiff.l('i_k') should equal eqrdiff.m('i_k') from the NLP marginals (no abs — eqrdiff is equality).
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+piL_r\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
+awk '/^----[[:space:]]+[0-9]+[[:space:]]+VARIABLE[[:space:]]+piU_r\.L/,/^[[:space:]]*$/' /tmp/camshape_mcp_warm.lst | head -20
+# piL_r.l('i_k') and piU_r.l('i_k') are nonzero only at active bounds (per the
+# guards at camshape_mcp_presolve.gms:308-309); all-zero is expected when no
+# r-bound is active in the NLP solution, but mass-zero where bounds ARE active
+# in NLP indicates an INCOMPLETE multiplier transfer.
+
+# If ANY of the 10 displayed blocks shows MCP defaults where NLP-derived
+# values are expected, the warm-start is INCOMPLETE and the test result is
+# INVALID — classify as "warm-start mechanism failed", rerun after debugging
+# the injection. Do NOT classify the MODEL STATUS as Case (b) vs Case (c)
+# until all 10 blocks confirm NLP-solution-derived values.
 ```
 
-**Result interpretation (only valid AFTER the warm-start verification above confirms ALL THREE primal levels — `r.l`, `rdiff.l`, AND `area.l` — were loaded from NLP; an MS-5 outcome that has only `r.l` verified is INVALID for Case (b)/(c) classification because incomplete `rdiff` and/or `area` starts can independently drive PATH to Locally Infeasible):**
+**Result interpretation (only valid AFTER the warm-start verification above confirms ALL 10 warm-startable symbols — the 3 primals `r.l`, `rdiff.l`, `area.l` AND the 7 multipliers `lam_convexity.l`, `lam_convex_edge1.l`, `lam_convex_edge3.l`, `lam_convex_edge4.l`, `nu_eqrdiff.l`, `piL_r.l`, `piU_r.l` — were loaded from NLP solution / NLP marginals per the `camshape_mcp_presolve.gms:300-309` transfer pattern; an MS-5 outcome that leaves ANY of these 10 symbols at MCP defaults is INVALID for Case (b)/(c) classification because incomplete primal AND/OR multiplier starts can independently drive PATH to Locally Infeasible regardless of any emit bug):**
 
 - **MODEL STATUS 1 with obj ≈ 4.2841** → Case (a); emit bug exists. **PROCEED for Sprint 27 fix.** Day 0/1 engineer inspects the default-start failing-solve listing's infeasibility-row report to identify which residual is non-zero, traces back to the originating Python helper, then pins the patch site at Candidate A `src/kkt/stationarity.py:1835` OR Candidate B `src/ad/constraint_jacobian.py:903/:1027` per §4.4. Effort ~4.5h.
 - **MODEL STATUS 5 Locally Infeasible from NLP warm-start** AND the per-term Phase 0 grep checks reveal a shape divergence (other than the inert boundary-guard mis-specification noted in §4.3) → Case (b); emit bug exists but PATH cannot escape the wrong stationary point from NLP either. Day 0/1 engineer applies the same diagnostic-then-fix workflow + adds NLP-warm-start guidance. Effort ~5.5h.
