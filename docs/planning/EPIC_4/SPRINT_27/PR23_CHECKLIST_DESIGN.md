@@ -18,7 +18,7 @@ Author a structured self-review checklist for CI-workflow PRs (covering `.github
 
 PR #1396 (PR19 CI extension — emit-solve validation workflow + `scripts/ci/parse_pr19_targets.py` + `scripts/ci/run_pr19_solves.py`) produced 42 distinct top-level review comments across 11 review rounds.
 
-Pulled via `gh api repos/jeffreyhorn/nlp2mcp/pulls/1396/comments?per_page=100 --paginate | jq '[.[] | select(.in_reply_to_id == null)] | length'` = **42**.
+Pulled via `gh api repos/jeffreyhorn/nlp2mcp/pulls/1396/comments --paginate --slurp | jq '[.[] | select(.in_reply_to_id == null)] | length'` = **42**. (`--paginate --slurp` is the canonical `gh api` combined invocation for streaming all pages into a single JSON array, matching the §Pagination checklist guidance in CONTRIBUTING.md. The earlier `--paginate | jq` form without `--slurp` would have returned a per-page count for any PR exceeding `per_page=100`; PR #1396's 42 comments fit on one page so the original count happened to be correct, but the slurped form is robust regardless of page count.)
 
 The 42 comments cluster into the **7 recurring categories** below.
 

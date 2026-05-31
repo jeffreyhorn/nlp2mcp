@@ -265,7 +265,7 @@ Every input — environment variable, CLI flag, file path, JSON/YAML field, targ
 
 GitHub REST and `gh` CLI list endpoints are paginated with a default page size that is often smaller than real-world PR / comment / run / artifact counts. A workflow that calls `issues.listComments` (or any `*.list*` endpoint) on a long-lived PR will silently miss results past the first page. Sprint 26 PR #1396 produced 2 review comments in this category (both about `issues.listComments` for marker-based comment upsert).
 
-- [ ] Every `*.list*` API call (issues, comments, runs, artifacts, pulls, reviews, …) either passes an explicit `per_page` AND paginates until a sentinel is found, OR uses the API's pagination helper (`octokit.paginate`, `gh api --paginate`, `--slurp` for jq aggregation).
+- [ ] Every `*.list*` API call (issues, comments, runs, artifacts, pulls, reviews, …) either passes an explicit `per_page` AND paginates until a sentinel is found, OR uses the API's pagination helper (`octokit.paginate`; for shell scripts use `gh api --paginate` to stream pages, or `gh api --paginate --slurp` to aggregate all pages into a single JSON array for `jq` to consume in one shot).
 - [ ] When the workflow searches a list for a marker (e.g., "find the existing PR comment with this header"), the search keeps paginating until either the marker is found or pagination is exhausted — finding nothing on page 1 is NOT the same as "marker does not exist".
 - [ ] When pagination is exhausted without finding the marker, the workflow makes the **create vs update** decision explicitly (and logs which path it took) — a silent fallthrough to "create" produces duplicate comments on long-lived PRs.
 
