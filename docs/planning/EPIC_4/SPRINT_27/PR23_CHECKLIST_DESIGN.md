@@ -10,7 +10,7 @@
 
 ## 1. Purpose
 
-Author a structured self-review checklist for CI-workflow PRs (covering `.github/workflows/*.yml` and `scripts/ci/*`) so PR authors can catch the recurring failure modes that produced 11 review rounds on Sprint 26 PR #1396. The deliverable is a new `## CI Workflow PR Checklist (PR23, Sprint 27 Prep Task 10)` section in `CONTRIBUTING.md`.
+Author a structured self-review checklist for CI-workflow PRs (covering `.github/workflows/*.yml`/`*.yaml`, `scripts/ci/*`, `.github/actions/*`, and composite/reusable workflows under `.github/workflows/composite/*` — matching the scope clauses in the delivered `CONTRIBUTING.md` section) so PR authors can catch the recurring failure modes that produced 11 review rounds on Sprint 26 PR #1396. The deliverable is a new `## CI Workflow PR Checklist (PR23, Sprint 27 Prep Task 10)` section in `CONTRIBUTING.md`.
 
 ---
 
@@ -22,7 +22,7 @@ Pulled via `gh api repos/jeffreyhorn/nlp2mcp/pulls/1396/comments?per_page=100 --
 
 The 42 comments cluster into the **7 recurring categories** below.
 
-### 2.1 Input validation (7 comments)
+### 2.1 Input validation (8 comments)
 
 | ID | Path:line | Issue |
 |---|---|---|
@@ -48,7 +48,7 @@ The 42 comments cluster into the **7 recurring categories** below.
 |---|---|---|
 | 3241094201 | `pr19-emit-solve-validation.yml:81` | PR-comment upsert API calls have no fork-PR guard; commonly fail with 403 for fork PRs and break the whole workflow. |
 
-### 2.4 Schema validation (5 comments)
+### 2.4 Schema validation (6 comments)
 
 | ID | Path:line | Issue |
 |---|---|---|
@@ -59,11 +59,10 @@ The 42 comments cluster into the **7 recurring categories** below.
 | 3241212011 | `run_pr19_solves.py:281` | Per-entry shape not validated — `entry["model"]` raises on non-dict / missing key / non-string. |
 | 3241310033 | `run_pr19_solves.py:322` | `entry.get('reslim')` not type-checked — hand-edited string/float values raise `TypeError` on `<0` comparison. |
 
-### 2.5 Error handling (7 comments)
+### 2.5 Error handling (6 comments)
 
 | ID | Path:line | Issue |
 |---|---|---|
-| 3238239775 | `run_pr19_solves.py:109` | `FileNotFoundError` from missing `gams` should return structured failure, not crash. (Also categorized under input validation.) |
 | 3239595479 | `run_pr19_solves.py:149` | `git rev-parse --show-toplevel` no error handling — add `--repo-root` override / `$GITHUB_WORKSPACE` fallback / clear error + exit 2. |
 | 3239907373 | `run_pr19_solves.py:111` | `TimeoutExpired` record lacks `error` field — schema drift vs other failure modes. |
 | 3241310088 | `parse_pr19_targets.py:48` | `path.read_text()` not guarded — `OSError` (permission/transient FS) surfaces as Python traceback. |
@@ -71,13 +70,15 @@ The 42 comments cluster into the **7 recurring categories** below.
 | 3241462806 | `run_pr19_solves.py:326` | Final `write_text(json.dumps(results))` unguarded — `OSError` loses in-memory per-model results. |
 | 3239091401 | `run_pr19_solves.py:91` | `passed` checks `rc + MODEL STATUS` but NOT `SOLVER STATUS` — abnormal solver termination silently marked pass. |
 
+**Note:** comment **3238239775** (`gams` not on PATH → `FileNotFoundError`) is also relevant here as a subprocess-error-handling case, but it is assigned to §2.1 (Input validation) as its primary category — the canonical fix is `shutil.which('gams')` at startup, which is an input-presence check. Each comment is listed in exactly one primary category in §2 to keep the per-category counts and the §2.9 totals consistent.
+
 ### 2.6 Marker uniqueness (1 comment)
 
 | ID | Path:line | Issue |
 |---|---|---|
 | 3241211963 | `pr19-emit-solve-validation.yml:96` | Upsert selector matches any comment containing 'PR19 Pre-Merge Solve Validation' — but that substring is also used by the results upsert, so toggling bypass label overwrites the wrong comment. Fix: per-type HTML-comment marker like `<!-- pr19-validation:bypass -->`. |
 
-### 2.7 Logging visibility (11 comments)
+### 2.7 Logging visibility (14 comments)
 
 This is the largest category — stale step comments, stale PR-description text, stale CHANGELOG entries, broken Markdown tables in PR comments, and missing columns for fields the gate depends on.
 
@@ -98,7 +99,7 @@ This is the largest category — stale step comments, stale PR-description text,
 | 3241281026 | `CHANGELOG.md:12` | LOC counts in changelog drifted (`~50` / `~170` vs actual `~115` / `~324`) — fix or drop. |
 | 3241281075 | `SPRINT_LOG.md:1092` | Same LOC-drift issue in the Sprint 26 deliverables table. |
 
-### 2.8 Other (3 comments) — fold into the 7 categories above
+### 2.8 Other (4 comments) — fold into the 7 categories above
 
 | ID | Path:line | Issue | Folds into |
 |---|---|---|---|
@@ -107,22 +108,26 @@ This is the largest category — stale step comments, stale PR-description text,
 | 3239154045 | `run_pr19_solves.py:224` | `--tier soft-fail` and standalone `--soft-fail` flag inconsistency — running `--tier soft-fail` without `--soft-fail` still hard-fails. | CLI design / Input validation (consistency between related flags). |
 | 3241310106 | `pr19-emit-solve-validation.yml:21` | Job `timeout-minutes: 12` < worst-case runtime (11 models × (reslim + 30s) + GAMS install + comment/artifact upload). | CI configuration / Error handling (timeout risk on regression). |
 
-These 3–4 "other" comments are not assigned their own category in the checklist (the 7-category structure comes from the Sprint 26 retrospective). They're addressed indirectly through the existing categories: docs-drift items via §Logging visibility, blocking-by-default via §Error handling, and CLI consistency via §Input validation.
+These 4 "other" comments are not assigned their own category in the checklist (the 7-category structure comes from the Sprint 26 retrospective). They're addressed indirectly through the existing categories: docs-drift items via §Logging visibility, blocking-by-default via §Error handling, and CLI consistency via §Input validation. The §2.9 totals table counts them in the "Other (folded)" row so the per-category counts above sum cleanly to 38 unique primary assignments + 4 cross-cutting = 42.
 
 ### 2.9 Category totals
 
-| Category | Comments | Checklist items in CONTRIBUTING.md |
+Counts below match the row counts of the §2.1–§2.8 tables exactly. Each comment is assigned to **one** primary category in §2 (no double-counting); §2.5's note clarifies the single cross-listing case (3238239775 → §2.1).
+
+| Category | Comments (primary assignment) | Checklist items in CONTRIBUTING.md |
 |---|---|---|
-| Input validation | 7 (+1 from Other) | 5 |
+| Input validation | 8 | 5 |
 | Pagination | 2 | 3 |
 | Fork tolerance | 1 | 4 |
-| Schema validation | 5 | 5 |
-| Error handling | 7 (+2 from Other) | 5 |
+| Schema validation | 6 | 5 |
+| Error handling | 6 | 5 |
 | Marker uniqueness | 1 | 4 |
-| Logging visibility | 11 (+2 from Other) | 6 |
+| Logging visibility | 14 | 6 |
+| **Subtotal (7 categories)** | **38** | **32** |
+| Other (folded into above categories via §2.8) | 4 | — |
 | **Total** | **42** | **32** |
 
-The CONTRIBUTING.md checklist is **32 items**, exceeding the §Task 10 acceptance criterion of ≥25 items. Each category has 3–6 items (within the prescribed 3–5 range, with Logging visibility at 6 because it absorbed the most PR #1396 comments).
+The CONTRIBUTING.md checklist is **32 items**, exceeding the §Task 10 acceptance criterion of ≥25 items. Per-category item counts are 5, 3, 4, 5, 5, 4, 6 — six categories sit within the prescribed 3–5 range; **Logging visibility is the documented exception at 6 items** because it absorbed the most PR #1396 comments (14/42 primary-assignment) — see the matching note in `PREP_PLAN.md` §Task 10 Acceptance Criteria.
 
 ---
 

@@ -1406,11 +1406,11 @@ Sprint 27 has multiple Process Recommendations producing CI-workflow PRs (PR22's
 
 ### Changes
 
-Pulled the 42 top-level Copilot review comments on Sprint 26 PR #1396 (PR19 CI extension — `.github/workflows/pr19-emit-solve-validation.yml` + `scripts/ci/parse_pr19_targets.py` + `scripts/ci/run_pr19_solves.py`) via `gh api repos/jeffreyhorn/nlp2mcp/pulls/1396/comments`. Categorized the 42 comments across the 7 recurring categories from the Sprint 26 retrospective: input validation (7), pagination (2), fork tolerance (1), schema validation (5), error handling (7), marker uniqueness (1), logging visibility (11) — plus 9 cross-cutting "other" comments folded into existing categories (placeholder-SHA256 blocking-default → error handling + logging; `--soft-fail` vs `--tier soft-fail` flag inconsistency → input validation; 12-minute job timeout < worst-case runtime → error handling).
+Pulled the 42 top-level Copilot review comments on Sprint 26 PR #1396 (PR19 CI extension — `.github/workflows/pr19-emit-solve-validation.yml` + `scripts/ci/parse_pr19_targets.py` + `scripts/ci/run_pr19_solves.py`) via `gh api repos/jeffreyhorn/nlp2mcp/pulls/1396/comments`. Categorized the 42 comments across the 7 recurring categories from the Sprint 26 retrospective. Per-category comment counts (single primary-category assignment per comment, no double-counting; see `PR23_CHECKLIST_DESIGN.md` §2 for the authoritative tables and §2.9 for the totals): input validation, pagination, fork tolerance, schema validation, error handling, marker uniqueness, logging visibility — with 4 cross-cutting "Other" comments folded into existing categories per `PR23_CHECKLIST_DESIGN.md` §2.8 (placeholder-SHA256 blocking-default → logging + error handling; `--soft-fail` vs `--tier soft-fail` flag inconsistency → input validation; 12-minute job timeout < worst-case runtime → error handling). Comment counts and category totals are maintained in one place — `PR23_CHECKLIST_DESIGN.md` §2 — to avoid drift between docs; this PREP_PLAN.md §Changes paragraph deliberately does not duplicate the numbers.
 
-Authored new top-level §"CI Workflow PR Checklist (PR23, Sprint 27 Prep Task 10)" section in CONTRIBUTING.md (inserted before the existing §"Emit-PR `.gms` Diff Workflow (PR22, ...)" section), comprising: (a) brief rationale paragraph naming the Sprint 26 PR #1396 incident; (b) explicit scope (`.github/workflows/*.yml` + `*.yaml`, `scripts/ci/*`, `.github/actions/*`, composite workflows); (c) how-to-use note for PR authors and reviewers ("`N/A — <reason>` instead of leaving unchecked"); (d) the 7-category checklist totalling 32 specific actionable items.
+Authored new top-level §"CI Workflow PR Checklist (PR23, Sprint 27 Prep Task 10)" section in CONTRIBUTING.md (inserted before the existing §"Emit-PR `.gms` Diff Workflow (PR22, ...)" section), comprising: (a) brief rationale paragraph naming the Sprint 26 PR #1396 incident; (b) explicit scope (`.github/workflows/*.yml` + `*.yaml`, `scripts/ci/*`, `.github/actions/*`, composite/reusable workflows under `.github/workflows/composite/*`); (c) how-to-use note for PR authors and reviewers ("`N/A — <reason>` instead of leaving unchecked"); (d) the 7-category checklist totalling 32 specific actionable items.
 
-Each category's items are a mix of (i) literal restatements of the PR #1396 issue and (ii) defense-in-depth extensions generalizing the same root cause to related failure modes. Per-category item counts: Input validation 5, Pagination 3, Fork tolerance 4, Schema validation 5, Error handling 5, Marker uniqueness 4, Logging visibility 6 — all within the prescribed 3–5 range (Logging visibility carries 6 because it absorbed the most PR #1396 comments at 11).
+Each category's items are a mix of (i) literal restatements of the PR #1396 issue and (ii) defense-in-depth extensions generalizing the same root cause to related failure modes. Per-category item counts: Input validation 5, Pagination 3, Fork tolerance 4, Schema validation 5, Error handling 5, Marker uniqueness 4, Logging visibility 6. Six categories sit within the prescribed 3–5 range; **Logging visibility at 6 is the documented exception** because it absorbed the most PR #1396 comments (the largest per-category cluster) — see `PR23_CHECKLIST_DESIGN.md` §2.9 for the matching note and acceptance-criteria amendment below.
 
 Authored `docs/planning/EPIC_4/SPRINT_27/PR23_CHECKLIST_DESIGN.md` (6 sections): §1 Purpose; §2 Sprint 26 PR #1396 categorization (7 per-category tables enumerating all 42 comments with id, path:line, and one-line issue summary); §3 Per-category item rationale (32-row mapping from checklist item to the originating comment ID(s)); §4 Sample PR self-review applied to a hypothetical Sprint 27 mid-sprint-audit workflow PR (27/32 checked, 5 N/A with reason); §5 Quality gate; §6 Related documents.
 
@@ -1421,7 +1421,7 @@ Authored `docs/planning/EPIC_4/SPRINT_27/PR23_CHECKLIST_DESIGN.md` (6 sections):
 | CONTRIBUTING.md section | new §"CI Workflow PR Checklist (PR23, Sprint 27 Prep Task 10)" added before the PR22 audit-script section |
 | Scope clauses | `.github/workflows/*.yml`/`*.yaml` + `scripts/ci/*` + `.github/actions/*` + composite/reusable workflows |
 | Total checklist items | **32** (acceptance criterion: ≥ 25) |
-| Category coverage | all 7 categories present, each with 3–6 items (within prescribed 3–5 range; Logging visibility at 6) |
+| Category coverage | all 7 categories present; per-category item counts 5, 3, 4, 5, 5, 4, 6 — six categories within the prescribed 3–5 range, **Logging visibility at 6 is the documented exception** because it absorbed the largest PR #1396 comment cluster (see `PR23_CHECKLIST_DESIGN.md` §2.9) |
 | Source PR | Sprint 26 PR #1396 — 42 top-level review comments across 11 rounds, all categorized in PR23_CHECKLIST_DESIGN.md §2 |
 | Item-to-comment traceability | PR23_CHECKLIST_DESIGN.md §3 maps each of the 32 checklist items back to the originating comment ID(s) or marks the item as a defense-in-depth extension |
 | Sample PR self-review | PR23_CHECKLIST_DESIGN.md §4 applies the checklist to a hypothetical Sprint 27 mid-sprint audit-workflow PR (27/32 checked, 5 N/A with reason) |
@@ -1457,9 +1457,9 @@ grep -cE "^- \[ \]" CONTRIBUTING.md
 ### Acceptance Criteria
 
 - [x] CONTRIBUTING.md §"CI Workflow PR Checklist" exists with rationale + scope + 7-category checklist
-- [x] Each of the 7 categories has 3-5 specific actionable items
-- [x] Total checklist contains ≥ 25 items
-- [x] Scope clearly defines applicability (`.github/workflows/*.yml` + `scripts/ci/*`)
+- [x] Each of the 7 categories has 3-5 specific actionable items — **as delivered: six categories within the 3–5 range and Logging visibility at 6 as the documented exception** (the category absorbed the largest PR #1396 cluster, per `PR23_CHECKLIST_DESIGN.md` §2.9; both PREP_PLAN.md §Changes/§Result and the design doc record the exception explicitly)
+- [x] Total checklist contains ≥ 25 items (delivered: 32)
+- [x] Scope clearly defines applicability — full scope as delivered in CONTRIBUTING.md: `.github/workflows/*.yml`/`*.yaml` + `scripts/ci/*` + `.github/actions/*` + composite/reusable workflows under `.github/workflows/composite/*`
 - [x] PR23_CHECKLIST_DESIGN.md contains the Sprint 26 PR #1396 categorization that motivated each item
 
 ---
