@@ -1594,7 +1594,25 @@ Sprint planning + tooling engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — script implemented + Sprint 26 dry-runs surface the expected #1398 + launch artifacts
+**Verified by:** Task 9 (PR22 Mid-Sprint Audit Script Design)
+**Date:** 2026-05-30
+
+**Findings:**
+
+- **Research Q1 (two distinct flags?):** YES. CLI exposes `--since-date <DATE>` (date-based; uses `git log --since`) and `--since-commit <SHA>` (commit-based; uses `git log <SHA>..HEAD`) as a mutually exclusive group; exactly one is required. A single overloaded `--since` was rejected because `git log --since` is date-only and an overloaded flag would have to internally dispatch on "looks like a SHA?" heuristics.
+- **Research Q2 (`--since-date` timestamp resolution):** Delegated to `git log --since` semantics — accepts ISO-8601 dates, full timestamps, or relative expressions like `"2 days ago"`. Same-day commit-boundary ambiguity is the known limitation; `--since-commit` is the recommended structural mitigation.
+- **Research Q3 (`--since-commit` validation):** YES. SHA is validated via `git rev-parse --verify <sha>^{commit}` before constructing the revision range (`scripts/sprint_audit/changed_emit_artifacts.py:96-112`). Invalid SHA produces a clear stderr message + exit code 2.
+- **Research Q4 (record Day 0 SHA in PLAN.md?):** YES — this is the canonical mid-sprint workflow. Task 11 will record `Sprint 27 Day 0 anchor SHA: <sha>` in `PLAN.md` Day 0 entry; mid-sprint retests then pass that SHA to `--since-commit`.
+
+**Evidence:** Sprint 26 dry-runs (both `--since-date "2026-04-22"` and `--since-commit 0d8446d2...` — Sprint 26 Day 0 resolved via `git rev-list -1 --before="2026-04-23" main`) surface 19 commits / 209 emit changes / 103 unique paths, INCLUDING:
+
+- **`e0be4fb16e8b`** (Sprint 26 Day 13 final retest): 16 files — all 15 #1398-affected models' `*_mcp.gms` (qdemo7, egypt, ferts, shale, sambal, qsambal, harker, tfordy, dinam, ganges, gangesx, fawley, srpchase, sroute, turkpow) PLUS `launch_mcp_presolve.gms`.
+- **`8d4cc4acc59c`** (Sprint 26 Day 1 Phase A): 1 file — `launch_mcp.gms` (separate Phase A target, NOT one of the 15 #1398-affected).
+
+**#1400 (`scripts/gamslib/*` path-relativization) intentionally absent** from output — it's not an emit artifact and falls outside `data/gamslib/mcp/`. Confirmed by-design.
+
+**Decision:** Script ready for Sprint 27 mid-sprint use. CONTRIBUTING.md §"Emit-PR `.gms` Diff Workflow (PR22, Sprint 27 Prep Task 9)" documents per-PR + mid-sprint workflows. Validation document at `docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md`. KU 9.3 cross-sprint timestamp-ambiguity question is structurally mitigated by the `--since-commit` design.
 
 ---
 

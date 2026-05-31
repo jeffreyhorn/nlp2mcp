@@ -1220,7 +1220,8 @@ gh issue list --label sprint-28 --json number,title | grep -E "1387|1388"
 
 ## Task 9: PR22 Mid-Sprint Audit Script Design
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-30
 **Priority:** Medium
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 27 Day 1 (script must exist before mid-sprint retests rely on it)
@@ -1282,11 +1283,29 @@ For Sprint 27, this is especially critical because the sprint has 14 issues touc
 
 ### Changes
 
-To be completed.
+Implemented `scripts/sprint_audit/changed_emit_artifacts.py` (~340 lines, stdlib-only — `argparse`, `json`, `subprocess`, `dataclasses`, `pathlib`). CLI exposes mutually exclusive `--since-date <DATE>` (date-based, uses `git log --since`) and `--since-commit <SHA>` (commit-based, uses `git log <SHA>..HEAD`); SHA validated via `git rev-parse --verify <sha>^{commit}` before constructing the revision range. Output formats: `text` (default; grouped by commit), `markdown` (table format for retest reports / PR descriptions), `json` (downstream tooling). Report-header mode `--mode {pr14,retest}` (default `retest`) is a label hint only — does not affect diff-detection logic.
+
+Pathspec design follows the §Task 9 prescription: directory pathspec `data/gamslib/mcp/` is passed to `git log` (NOT a `*.gms` glob — argv-list `subprocess.run` bypasses shell expansion and Git's `*` pathspec semantics are version-/`core.literalPathspecs`-dependent); `_mcp.gms` / `_mcp_presolve.gms` suffix filter is applied in Python at `:153`. `git log --name-only --pretty=format:COMMIT:%H` is intentionally SHA-only — commit subjects are fetched in a separate `git log --no-walk` pass at `:178` to avoid the parser misclassifying a `%s` subject line as a changed file path.
+
+Sprint 26 dry-runs (both `--since-date "2026-04-22"` and `--since-commit 0d8446d23223...` Sprint 26 Day 0 anchor resolved via `git rev-list -1 --before="2026-04-23" main`) both surface 19 commits / 209 emit changes / 103 unique paths, including: (a) Day 1 Phase A `8d4cc4acc59c` with `launch_mcp.gms`; (b) Day 13 final retest `e0be4fb16e8b` with all 15 #1398-affected models' `*_mcp.gms` (qdemo7, egypt, ferts, shale, sambal, qsambal, harker, tfordy, dinam, ganges, gangesx, fawley, srpchase, sroute, turkpow) PLUS `launch_mcp_presolve.gms`. #1400 (`scripts/gamslib/*` path-relativization) is intentionally NOT in scope — confirmed absent from output by design.
+
+CONTRIBUTING.md updated with new §"Emit-PR `.gms` Diff Workflow (PR22, Sprint 27 Prep Task 9)" section (immediately after the PR14 section); covers per-PR usage (PR14 companion: `--since-commit $(git merge-base main HEAD) --format markdown --mode pr14` for the PR description) and mid-sprint retest usage (Day 0 SHA → `--since-commit ... --format markdown --mode retest > /tmp/sprint_retest_surface.md` for the SPRINT_LOG retest entry). Full design + validation in `docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md` (8 sections).
 
 ### Result
 
-To be completed.
+| Item | Outcome |
+|---|---|
+| Script path | `scripts/sprint_audit/changed_emit_artifacts.py` (executable bit set) |
+| LoC | ~340 (stdlib only) |
+| CLI flags | `--since-date` + `--since-commit` (mutually exclusive, one required) + `--format {text,markdown,json}` + `--mode {pr14,retest}` |
+| Output | grouped-by-commit; commit SHA + subject + matched file paths |
+| Sprint 26 dry-run match | 16-file Day 13 commit (15 #1398 models + launch_mcp_presolve) + 1-file Day 1 commit (launch_mcp); 19 total commits in range |
+| #1400 (out-of-scope) | confirmed absent from output (not an emit artifact) |
+| KU 9.3 cross-sprint timestamp ambiguity | structurally mitigated by `--since-commit` (commit boundaries are unambiguous unlike `--since` date semantics) |
+| Quality gate | `make typecheck && make format && make lint && make test` PASS (4734 passed, 13 skipped, 1 xfailed) |
+| CONTRIBUTING.md | new §"Emit-PR `.gms` Diff Workflow (PR22, ...)" section added after PR14 section |
+| Design document | `docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md` (8 sections) |
+| Verdict | **Ready for Sprint 27 mid-sprint use.** Task 11 records the Sprint 27 Day 0 commit SHA in `PLAN.md` Day 0 as the canonical `--since-commit` anchor. |
 
 ### Verification
 
@@ -1320,13 +1339,13 @@ SPRINT26_DAY0_SHA=$(git rev-list -1 --before="2026-04-23" main)
 
 ### Acceptance Criteria
 
-- [ ] Script exists at `scripts/sprint_audit/changed_emit_artifacts.py` with executable bit set
-- [ ] Script accepts mutually exclusive `--since-date <date>` (date-based via `git log --since`) and `--since-commit <sha>` (commit-based via `git log <sha>..HEAD`) arguments
-- [ ] Script output groups changes by triggering commit
-- [ ] Both dry-runs against Sprint 26 history (`--since-date` + `--since-commit`) surface the #1398-regenerated `*_mcp.gms` artifacts (15 affected models + presolve variants). #1400 (`scripts/gamslib/*` path-relativization) is intentionally NOT in scope for this script and does not appear in output
-- [ ] CONTRIBUTING.md updated with script-invocation workflow
-- [ ] Script handles the cross-sprint timestamp ambiguity case via `--since-commit` (documented in PR22_SCRIPT_DESIGN.md)
-- [ ] Unknown 9.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Script exists at `scripts/sprint_audit/changed_emit_artifacts.py` with executable bit set
+- [x] Script accepts mutually exclusive `--since-date <date>` (date-based via `git log --since`) and `--since-commit <sha>` (commit-based via `git log <sha>..HEAD`) arguments
+- [x] Script output groups changes by triggering commit
+- [x] Both dry-runs against Sprint 26 history (`--since-date` + `--since-commit`) surface the #1398-regenerated `*_mcp.gms` artifacts (15 affected models + presolve variants). #1400 (`scripts/gamslib/*` path-relativization) is intentionally NOT in scope for this script and does not appear in output
+- [x] CONTRIBUTING.md updated with script-invocation workflow
+- [x] Script handles the cross-sprint timestamp ambiguity case via `--since-commit` (documented in PR22_SCRIPT_DESIGN.md)
+- [x] Unknown 9.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
