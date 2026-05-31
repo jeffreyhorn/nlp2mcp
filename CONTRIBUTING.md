@@ -230,6 +230,102 @@ A pure refactor PR may need both labels; a functional emit change typically gets
 
 ---
 
+## CI Workflow PR Checklist (PR23, Sprint 27 Prep Task 10)
+
+**Codified per Sprint 26 retrospective recommendation PR23.**
+
+Sprint 26 PR #1396 (PR19 CI extension — `.github/workflows/pr19-emit-solve-validation.yml` plus `scripts/ci/parse_pr19_targets.py` and `scripts/ci/run_pr19_solves.py`) required **11 rounds and 42 Copilot review comments** to land cleanly. The feedback clustered into seven recurring categories. Running through this checklist before requesting review on a CI-workflow PR is expected to compress the review iteration count to ~3–4 rounds.
+
+### Scope
+
+This checklist applies to PRs whose diff touches **any** of:
+
+- `.github/workflows/*.yml` (or `.github/workflows/*.yaml`) — includes reusable workflows, which live in the same directory under the same suffixes and are called via `workflow_call` from a top-level workflow.
+- `scripts/ci/*` (any file under `scripts/ci/`)
+- Action definitions under `.github/actions/*` — includes composite actions (the most common reusable-action style); the `action.yml` / `action.yaml` plus any companion scripts live here.
+
+If your PR touches none of these, this checklist does not apply (use the PR14 emit-artifact rule above if relevant).
+
+### How to use
+
+1. **PR author** copy-pastes the seven category blocks below into the PR description (or a `CHECKLIST.md`-style scratch comment) and ticks each item before requesting review.
+2. **Reviewer** treats any unchecked item as an open question. An item that does not apply should be checked with a one-line `N/A — <reason>` annotation rather than left unchecked.
+
+### Input validation
+
+Every input — environment variable, CLI flag, file path, JSON/YAML field, target-list annotation — must fail fast on bad data with a concrete error message and exit code 2 (not a Python traceback or shell error). One of the larger clusters of Sprint 26 PR #1396 review comments fell here (see `docs/planning/EPIC_4/SPRINT_27/PR23_CHECKLIST_DESIGN.md` §2.1 for the authoritative per-category count and the per-comment table).
+
+- [ ] All required environment variables are checked for presence via `os.environ.get("X")` followed by an explicit `None`-check that prints a clear stderr message and exits 2 — NOT raw `os.environ["X"]` (which raises `KeyError` and produces a Python traceback, contradicting the "no tracebacks" guidance above). If you must use `os.environ["X"]`, wrap it in `try/except KeyError` that converts the exception to the same clean-error + exit-2 path.
+- [ ] All file paths and directory paths from user input are validated (existence, type, absolute-vs-relative as expected) before use, with errors that name the offending path.
+- [ ] String inputs that become filesystem path components (model names, scratch-dir suffixes, artifact names) are validated against a safe pattern (e.g., `^[A-Za-z0-9_.-]+$`) and reject `..`, path separators, whitespace, and absolute-path prefixes. **Defense in depth:** validate both at parse time AND at the consumer that builds the path.
+- [ ] Numeric inputs (`reslim`, `timeout`, `--limit N`) are validated for type AND range — `int()` parsing is wrapped in `try/except ValueError`, and downstream values are checked for non-negativity / minimum-value constraints. Zero-or-falsy distinction is explicit (`x is None`, not `x or default`).
+- [ ] Subprocess targets that may be absent on the runner (`gams`, `git`, custom tools) are guarded — either pre-check with `shutil.which(...)` or catch `FileNotFoundError` from `subprocess.run` and return a structured failure record with exit code 2.
+
+### Pagination
+
+GitHub REST and `gh` CLI list endpoints are paginated with a default page size that is often smaller than real-world PR / comment / run / artifact counts. A workflow that calls `issues.listComments` (or any `*.list*` endpoint) on a long-lived PR will silently miss results past the first page. Sprint 26 PR #1396 produced 2 review comments in this category (both about `issues.listComments` for marker-based comment upsert).
+
+- [ ] Every `*.list*` API call (issues, comments, runs, artifacts, pulls, reviews, …) either passes an explicit `per_page` AND paginates until a sentinel is found, OR uses the API's pagination helper (`octokit.paginate`; for shell scripts use `gh api --paginate` to stream pages, or `gh api --paginate --slurp` to aggregate all pages into a single JSON array for `jq` to consume in one shot).
+- [ ] When the workflow searches a list for a marker (e.g., "find the existing PR comment with this header"), the search keeps paginating until either the marker is found or pagination is exhausted — finding nothing on page 1 is NOT the same as "marker does not exist".
+- [ ] When pagination is exhausted without finding the marker, the workflow makes the **create vs update** decision explicitly (and logs which path it took) — a silent fallthrough to "create" produces duplicate comments on long-lived PRs.
+
+### Fork tolerance
+
+`pull_request` workflows running on fork-originating PRs operate with a read-only `GITHUB_TOKEN` and no access to repository secrets. Calls that work on same-repo PRs (commenting, labeling, dispatching, accessing secrets) commonly return 403 from forks and will fail the workflow if not guarded. Sprint 26 PR #1396 produced 1 review comment in this category (the PR-comment upsert calls had no fork-PR guard).
+
+- [ ] Any API call that requires write permission (`issues.createComment`, `issues.updateComment`, `pulls.createReview`, labeling, dispatch) is guarded by either (a) an early `if: github.event.pull_request.head.repo.fork == false` step condition, OR (b) a `try/catch` that downgrades to `core.warning` so the rest of the workflow still completes.
+- [ ] Any step that reads a repository secret (`${{ secrets.* }}`) has an explicit "skip-on-fork" or "skip-when-secret-missing" guard rather than failing late inside a shell command with an opaque error.
+- [ ] If the workflow's main result (e.g., solve validation) must still report status on fork PRs, the **check-run status** (set via the workflow's exit code or via `actions/github-script` calling `checks.create`) is the fallback signaling channel — not the PR comment. Document the fallback in the PR description for the reviewer.
+- [ ] Error messages from skipped/degraded steps explicitly say "skipped because PR is from a fork" rather than appearing as a generic 403 — fork contributors should not see a confusing failure.
+
+### Schema validation
+
+JSON / YAML inputs consumed by `scripts/ci/*` are frequently hand-edited (target lists, override files, status reports) and may bypass the upstream parser that wrote them. Every consumer must validate per-entry shape — type, required keys, value types — and exit 2 with an actionable error rather than raising `KeyError` / `TypeError` from deep in the code. Sprint 26 PR #1396 produced multiple review comments here, split between target-list / results-JSON consumer issues and the parser's "unknown tier" silent-drop (see `docs/planning/EPIC_4/SPRINT_27/PR23_CHECKLIST_DESIGN.md` §2.4 for the authoritative per-category count and the per-comment table).
+
+- [ ] The top-level structure of every JSON / YAML input is checked (`isinstance(data, dict)`, required top-level keys present) before any indexing. Missing top-level keys produce a clear stderr message and exit code 2.
+- [ ] Each list entry is shape-checked before field access — `isinstance(entry, dict) and "model" in entry and isinstance(entry["model"], str)` — and malformed entries produce a clear error naming the offending entry index/line.
+- [ ] Enum-valued fields (`tier`, `status`, etc.) are validated against the explicit allow-list of known values. Unknown values produce a hard error with exit code 2 — they MUST NOT silently drop the entry or downgrade to a warning, because typos (`tier=patternc` vs `tier=pattern-c`) silently reduce coverage.
+- [ ] Numeric fields in the JSON / YAML are type-checked AND range-checked at the consumer (not just at the parser that wrote the file) — `reslim` must be `int >= 0`, etc. Defense in depth against hand-edits that bypass the parser.
+- [ ] When validation fails, the error message includes both the field name AND the source location (file path + line number if available, or entry index in the JSON array).
+
+### Error handling
+
+Every step that calls a subprocess, file-system operation, network resource, or external tool must wrap the call in error handling that produces a structured failure record (for downstream JSON consumers) AND an actionable stderr message (for the human reading the workflow log). Sprint 26 PR #1396 produced one of the larger review-comment clusters here — `FileNotFoundError`, `OSError`, `subprocess.TimeoutExpired`, and missing-error-field cases that crashed with tracebacks or produced inconsistent JSON (see `docs/planning/EPIC_4/SPRINT_27/PR23_CHECKLIST_DESIGN.md` §2.5 for the authoritative per-category count and the per-comment table; §2.5 also documents the single cross-listing case for the `gams` `FileNotFoundError` comment, which is assigned to §2.1 Input validation as its primary category).
+
+- [ ] Every `subprocess.run([...])` call has explicit `FileNotFoundError` handling AND `subprocess.TimeoutExpired` handling. Both branches return a structured failure record with the same shape as the success record (no missing fields, no schema drift).
+- [ ] Every `Path(...).read_text()` / `write_text()` / `.mkdir(...)` is wrapped in `try/except OSError`. The handler prints a concrete error naming the path and exits with code 2.
+- [ ] Every `git rev-parse` (or other git-tooling call used for path/SHA discovery) has a fallback path — `$GITHUB_WORKSPACE`, `Path(__file__).resolve().parents[N]`, or a `--repo-root` CLI override — and a clear error when neither succeeds.
+- [ ] Exit codes are propagated through `subprocess.run(..., check=False)` consumers: rc != 0 from a downstream tool is captured in the structured result, not swallowed. Workflow-level pass/fail is computed from the full set of structured fields (e.g., `rc == 0 AND MODEL_STATUS == 1 AND SOLVER_STATUS == 1`), not just the easiest-to-check field.
+- [ ] Failures that happen AFTER per-entry work has completed (e.g., the final `write_text(json.dumps(results))`) are handled in a way that does not lose the in-memory results — either retry, or print results to stderr as a fallback, before exiting 2.
+
+### Marker uniqueness
+
+Concurrent runs of the same workflow (multiple commits to the same PR; parallel `matrix` jobs; reruns after a fix) MUST NOT collide on shared filesystem paths, cache keys, artifact names, or PR-comment marker substrings. Sprint 26 PR #1396 produced 1 review comment in this category (PR-comment marker substring matched across two distinct comment types). The remaining items below are defense-in-depth extensions.
+
+- [ ] PR-comment upserts use a **unique HTML-comment marker per comment type** (e.g., `<!-- pr19-validation:bypass -->` vs `<!-- pr19-validation:results -->`) — not a substring match on the visible heading text, which can drift or collide.
+- [ ] Scratch directory names include `$GITHUB_RUN_ID` (or another run-unique token like `$GITHUB_RUN_ATTEMPT`) so concurrent runs of the same workflow do not stomp each other's `/tmp/scratch/<model>` subdirectories.
+- [ ] `actions/cache` keys include all dimensions that should produce a fresh cache (`os`, `matrix.*`, `hashFiles('lockfile')`, workflow version) — never a static string that would silently share a stale cache across unrelated runs.
+- [ ] `actions/upload-artifact` artifact names are unique within a workflow run — if a job runs in a `matrix`, the artifact name must include the matrix dimensions (otherwise GitHub returns 409 on the second upload and the workflow fails late).
+
+### Logging visibility
+
+The workflow log and the PR-comment summary are the primary debugging surfaces for failures. Each pass/fail signal that the workflow enforces MUST be visible in both places, with no silent gaps between "what the gate checks" and "what the comment says". **This was the largest review-comment cluster on Sprint 26 PR #1396** — stale step-comments, stale PR-description text, table-rendering bugs, missing columns for fields the gate depends on, and LOC counts in changelogs that drifted from reality (see `docs/planning/EPIC_4/SPRINT_27/PR23_CHECKLIST_DESIGN.md` §2.7 for the authoritative per-category count and the per-comment table; the size of this cluster is why the matching CONTRIBUTING.md checklist below has 6 items rather than the 3–5 prescribed for other categories).
+
+- [ ] **Every field that the pass/fail logic depends on** is rendered in the PR-comment summary table (or other user-visible output). If the gate checks `rc + MODEL STATUS + SOLVER STATUS`, all three appear as columns — never let the table show only two so failures look unexplained.
+- [ ] Markdown tables in PR comments are well-formed in **all** rendering paths — both the success path AND every fallback path (e.g., when an upstream step failed and the JSON results file is missing, the fallback row has the same column count as the header).
+- [ ] Step-comment annotations (`# This step hard-fails when ...`) match the actual gate logic implemented downstream. When you change the gate, grep for the old condition in step comments and PR-description text and update both.
+- [ ] PR description text, CHANGELOG entries, and SPRINT_LOG deliverable tables match the actual workflow / script state. Common drift sources: placeholder values that were later pinned (`<SHA256-TBD>`), CLI flags that were renamed or merged into other flags (`--soft-fail` → `--tier soft-fail`), and LOC counts that grew during review iteration.
+- [ ] Setup-failure messages reference **current** log lines / commands. When you change an install or validation step, search the workflow's failure-comment template for the old command/marker (`sha256sum -c`, etc.) and update the message to point at the new diagnostic output.
+- [ ] Sensitive values (tokens, installer URLs that embed credentials, signed-URL secrets) are redacted from log output via `core.setSecret(...)` or equivalent — and the redaction is exercised in a smoke test, not just trusted from the masked-string convention.
+
+### Related
+
+- Sprint 26 PR #1396 review history (42 comments across 11 rounds — input for this checklist).
+- Sprint 27 Prep Task 10 design doc: `docs/planning/EPIC_4/SPRINT_27/PR23_CHECKLIST_DESIGN.md` (per-category rationale + sample PR self-review).
+- Companion CI-workflow rule: PR19 emit-solve validation labels (above) and PR22 audit script (above).
+
+---
+
 ## Emit-PR `.gms` Diff Workflow (PR22, Sprint 27 Prep Task 9)
 
 **Codified per Sprint 26 retrospective recommendation PR22.**
