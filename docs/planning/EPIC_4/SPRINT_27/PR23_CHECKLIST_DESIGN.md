@@ -236,7 +236,7 @@ The PR author runs through the checklist below before requesting review:
 - [x] N/A — no list-of-dicts entries to per-entry shape-check (workflow doesn't consume JSON / YAML; the audit script's internal `CommitGroup` dataclass enforces shape at the boundary).
 - [x] N/A — no enum-valued fields to validate against an allow-list (workflow doesn't consume JSON / YAML; the only enum-style CLI flag is `--mode {pr14,retest}`, validated by `argparse.choices`).
 - [x] N/A — no numeric fields read from JSON / YAML (workflow uses CLI flags only; numeric / type validation for those flags is handled in §Input validation above).
-- [x] N/A — no JSON / YAML validation errors to format with field-name + source-location info (no JSON / YAML inputs). The wrapped `git log` parser's failure paths already include line context via the underlying `subprocess.CalledProcessError`.
+- [x] N/A — no JSON / YAML validation errors to format with field-name + source-location info (no JSON / YAML inputs). When `_run_git` does fail, the raised `subprocess.CalledProcessError` carries the failed `argv` (`.cmd`), the exit code (`.returncode`), and the captured `stderr` (`.stderr`) — git itself typically writes the offending argument and reason into stderr (e.g., `fatal: ambiguous argument '<bad-sha>'`), so the failure is identifiable from the exception's fields; no automatic source-line-number context is claimed, just the standard `CalledProcessError` payload plus whatever git printed.
 
 ### Error handling
 - [x] `subprocess.run` of `git log` / `gh api` wrapped — `FileNotFoundError` and `TimeoutExpired` both handled; both return structured `{error: ..., exit_code: 2}` records.
