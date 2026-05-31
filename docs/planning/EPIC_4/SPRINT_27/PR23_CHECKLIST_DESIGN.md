@@ -232,7 +232,11 @@ The PR author runs through the checklist below before requesting review:
 - [x] Fork-PR skip reason explicit in the workflow log: "Skipped PR comment upsert: PR is from a fork (head.repo.fork=true)".
 
 ### Schema validation
-- [x] N/A — workflow doesn't consume JSON/YAML input beyond `git log` output (which is already shape-checked by the audit script's existing `_run_git` wrapper).
+- [x] N/A — workflow doesn't consume JSON / YAML input, so there's no top-level structure to `isinstance(data, dict)`-check. The audit script reads `git log` output via its `_run_git` wrapper; the wrapper's `COMMIT:<sha>` + file-path line parsing in `collect_changed_artifacts` enforces the expected structure at runtime, and an unexpected line shape would surface as an empty / partial commit group rather than a `KeyError`.
+- [x] N/A — no list-of-dicts entries to per-entry shape-check (workflow doesn't consume JSON / YAML; the audit script's internal `CommitGroup` dataclass enforces shape at the boundary).
+- [x] N/A — no enum-valued fields to validate against an allow-list (workflow doesn't consume JSON / YAML; the only enum-style CLI flag is `--mode {pr14,retest}`, validated by `argparse.choices`).
+- [x] N/A — no numeric fields read from JSON / YAML (workflow uses CLI flags only; numeric / type validation for those flags is handled in §Input validation above).
+- [x] N/A — no JSON / YAML validation errors to format with field-name + source-location info (no JSON / YAML inputs). The wrapped `git log` parser's failure paths already include line context via the underlying `subprocess.CalledProcessError`.
 
 ### Error handling
 - [x] `subprocess.run` of `git log` / `gh api` wrapped — `FileNotFoundError` and `TimeoutExpired` both handled; both return structured `{error: ..., exit_code: 2}` records.
