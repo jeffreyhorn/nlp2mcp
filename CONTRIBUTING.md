@@ -230,6 +230,65 @@ A pure refactor PR may need both labels; a functional emit change typically gets
 
 ---
 
+## Emit-PR `.gms` Diff Workflow (PR22, Sprint 27 Prep Task 9)
+
+**Codified per Sprint 26 retrospective recommendation PR22.**
+
+The companion automation to the PR14 rule above. The PR14 rule says *"include a regenerated `.gms` artifact from an affected model"*; PR22 helps you and reviewers enumerate **which** artifacts are affected by an upstream `src/` change, and powers the mid-sprint retest comparison surface.
+
+### Script
+
+`scripts/sprint_audit/changed_emit_artifacts.py` scans `git log` for changes under `data/gamslib/mcp/` matching the emit-artifact suffixes `*_mcp.gms` and `*_mcp_presolve.gms`, grouped by triggering commit. Three output formats (`text`, `markdown`, `json`) and two report-header modes (`pr14`, `retest`).
+
+### Per-PR usage (PR14 companion)
+
+Before opening an emit-affecting PR, list every `.gms` artifact your branch has regenerated since branching off `main`:
+
+```bash
+# Get the PR base SHA (usually the merge-base with main):
+BASE_SHA=$(git merge-base main HEAD)
+
+.venv/bin/python scripts/sprint_audit/changed_emit_artifacts.py \
+    --since-commit "$BASE_SHA" --format markdown --mode pr14
+```
+
+Paste the markdown output into the PR description under a `## Emit artifacts touched` heading. Reviewers use it as the checklist for PR14 §"What reviewers must do".
+
+### Mid-sprint retest usage
+
+At each mid-sprint retest checkpoint, generate the comparison surface relative to the Sprint Day 0 anchor commit (recorded in `docs/planning/EPIC_4/SPRINT_<N>/PLAN.md` Day 0):
+
+```bash
+SPRINT_DAY0=<the recorded Day 0 SHA>
+
+.venv/bin/python scripts/sprint_audit/changed_emit_artifacts.py \
+    --since-commit "$SPRINT_DAY0" --format markdown --mode retest \
+    > /tmp/sprint_retest_surface.md
+```
+
+Paste `/tmp/sprint_retest_surface.md` into the retest entry in `SPRINT_LOG.md`. This replaces the Sprint 26 practice of manually maintaining the retest model list in a frozen `PLAN_PROMPTS.md` (Day 12 staleness incident).
+
+### Why two flags (`--since-date` vs `--since-commit`)
+
+`git log --since <DATE>` is date-only — it does not accept commit SHAs. The script exposes two distinct flags rather than one overloaded `--since`:
+
+| Flag | When to use |
+|---|---|
+| `--since-date "2026-04-22"` | Quick ad-hoc lookups; OK if cross-day commit boundary doesn't matter. |
+| `--since-commit <SHA>` | **Preferred for mid-sprint retests** — commit boundaries are unambiguous, eliminating timestamp-edge cases. |
+
+### Exit codes
+
+- `0` — success (zero or more commits found).
+- `2` — invalid arguments (e.g., bad `--since-commit` SHA, both flags set, neither flag set).
+
+### Related
+
+- This rule's companion: `## Emit-Affecting PRs — Required .gms Artifact in Diff (PR14)` above.
+- Design document: `docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md`.
+
+---
+
 ## Phase 0 Acceptance Gates (PR20, Sprint 27 Prep Task 2)
 
 ### The hard rule
