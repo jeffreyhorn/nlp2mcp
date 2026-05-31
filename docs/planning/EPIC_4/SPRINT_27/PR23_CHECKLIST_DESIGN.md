@@ -10,7 +10,7 @@
 
 ## 1. Purpose
 
-Author a structured self-review checklist for CI-workflow PRs (covering `.github/workflows/*.yml`/`*.yaml`, `scripts/ci/*`, `.github/actions/*`, and composite/reusable workflows under `.github/workflows/composite/*` — matching the scope clauses in the delivered `CONTRIBUTING.md` section) so PR authors can catch the recurring failure modes that produced 11 review rounds on Sprint 26 PR #1396. The deliverable is a new `## CI Workflow PR Checklist (PR23, Sprint 27 Prep Task 10)` section in `CONTRIBUTING.md`.
+Author a structured self-review checklist for CI-workflow PRs (covering `.github/workflows/*.yml` / `.github/workflows/*.yaml` — which is also where reusable workflows live — plus `scripts/ci/*` and `.github/actions/*` — which is where composite actions live — matching the scope clauses in the delivered `CONTRIBUTING.md` section) so PR authors can catch the recurring failure modes that produced 11 review rounds on Sprint 26 PR #1396. The deliverable is a new `## CI Workflow PR Checklist (PR23, Sprint 27 Prep Task 10)` section in `CONTRIBUTING.md`.
 
 ---
 
@@ -221,8 +221,8 @@ The PR author runs through the checklist below before requesting review:
 - [x] `git` and `gh` subprocess targets pre-checked via `shutil.which('git')` / `shutil.which('gh')` at workflow start; missing tool exits 2 with a clear error.
 
 ### Pagination
-- [x] N/A — workflow does not list comments. Comment upsert uses `actions/github-script` with `octokit.paginate(octokit.rest.issues.listComments, {...})` to find marker.
-- [x] Marker-search continues across pages via `octokit.paginate`.
+- [x] Comment upsert wraps `octokit.rest.issues.listComments` in `actions/github-script` with `octokit.paginate(octokit.rest.issues.listComments, {...})`, so pagination is handled automatically across all pages.
+- [x] Marker-search continues across pages via `octokit.paginate` (same call as above).
 - [x] On exhausted pagination, workflow logs "marker not found, creating new comment" before the `createComment` call.
 
 ### Fork tolerance

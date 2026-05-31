@@ -240,10 +240,9 @@ Sprint 26 PR #1396 (PR19 CI extension — `.github/workflows/pr19-emit-solve-val
 
 This checklist applies to PRs whose diff touches **any** of:
 
-- `.github/workflows/*.yml` (or `*.yaml`)
+- `.github/workflows/*.yml` (or `.github/workflows/*.yaml`) — includes reusable workflows, which live in the same directory under the same suffixes and are called via `workflow_call` from a top-level workflow.
 - `scripts/ci/*` (any file under `scripts/ci/`)
-- Action definitions under `.github/actions/*`
-- Composite or reusable workflows under `.github/workflows/composite/*`
+- Action definitions under `.github/actions/*` — includes composite actions (the most common reusable-action style); the `action.yml` / `action.yaml` plus any companion scripts live here.
 
 If your PR touches none of these, this checklist does not apply (use the PR14 emit-artifact rule above if relevant).
 
@@ -256,7 +255,7 @@ If your PR touches none of these, this checklist does not apply (use the PR14 em
 
 Every input — environment variable, CLI flag, file path, JSON/YAML field, target-list annotation — must fail fast on bad data with a concrete error message and exit code 2 (not a Python traceback or shell error). One of the larger clusters of Sprint 26 PR #1396 review comments fell here (see `docs/planning/EPIC_4/SPRINT_27/PR23_CHECKLIST_DESIGN.md` §2.1 for the authoritative per-category count and the per-comment table).
 
-- [ ] All required environment variables are checked for presence (`os.environ["X"]` with a clear `KeyError`-equivalent message, or `os.environ.get("X")` followed by an explicit `None`-check + exit-2 path).
+- [ ] All required environment variables are checked for presence via `os.environ.get("X")` followed by an explicit `None`-check that prints a clear stderr message and exits 2 — NOT raw `os.environ["X"]` (which raises `KeyError` and produces a Python traceback, contradicting the "no tracebacks" guidance above). If you must use `os.environ["X"]`, wrap it in `try/except KeyError` that converts the exception to the same clean-error + exit-2 path.
 - [ ] All file paths and directory paths from user input are validated (existence, type, absolute-vs-relative as expected) before use, with errors that name the offending path.
 - [ ] String inputs that become filesystem path components (model names, scratch-dir suffixes, artifact names) are validated against a safe pattern (e.g., `^[A-Za-z0-9_.-]+$`) and reject `..`, path separators, whitespace, and absolute-path prefixes. **Defense in depth:** validate both at parse time AND at the consumer that builds the path.
 - [ ] Numeric inputs (`reslim`, `timeout`, `--limit N`) are validated for type AND range — `int()` parsing is wrapped in `try/except ValueError`, and downstream values are checked for non-negativity / minimum-value constraints. Zero-or-falsy distinction is explicit (`x is None`, not `x or default`).
