@@ -254,7 +254,7 @@ If your PR touches none of these, this checklist does not apply (use the PR14 em
 
 ### Input validation
 
-Every input — environment variable, CLI flag, file path, JSON/YAML field, target-list annotation — must fail fast on bad data with a concrete error message and exit code 2 (not a Python traceback or shell error). Sprint 26 PR #1396 produced 7 review comments in this category.
+Every input — environment variable, CLI flag, file path, JSON/YAML field, target-list annotation — must fail fast on bad data with a concrete error message and exit code 2 (not a Python traceback or shell error). One of the larger clusters of Sprint 26 PR #1396 review comments fell here (see `docs/planning/EPIC_4/SPRINT_27/PR23_CHECKLIST_DESIGN.md` §2.1 for the authoritative per-category count and the per-comment table).
 
 - [ ] All required environment variables are checked for presence (`os.environ["X"]` with a clear `KeyError`-equivalent message, or `os.environ.get("X")` followed by an explicit `None`-check + exit-2 path).
 - [ ] All file paths and directory paths from user input are validated (existence, type, absolute-vs-relative as expected) before use, with errors that name the offending path.
@@ -281,7 +281,7 @@ GitHub REST and `gh` CLI list endpoints are paginated with a default page size t
 
 ### Schema validation
 
-JSON / YAML inputs consumed by `scripts/ci/*` are frequently hand-edited (target lists, override files, status reports) and may bypass the upstream parser that wrote them. Every consumer must validate per-entry shape — type, required keys, value types — and exit 2 with an actionable error rather than raising `KeyError` / `TypeError` from deep in the code. Sprint 26 PR #1396 produced 5 review comments in this category (4 on target-list / results-JSON consumers; 1 on the parser's "unknown tier" silent-drop).
+JSON / YAML inputs consumed by `scripts/ci/*` are frequently hand-edited (target lists, override files, status reports) and may bypass the upstream parser that wrote them. Every consumer must validate per-entry shape — type, required keys, value types — and exit 2 with an actionable error rather than raising `KeyError` / `TypeError` from deep in the code. Sprint 26 PR #1396 produced multiple review comments here, split between target-list / results-JSON consumer issues and the parser's "unknown tier" silent-drop (see `docs/planning/EPIC_4/SPRINT_27/PR23_CHECKLIST_DESIGN.md` §2.4 for the authoritative per-category count and the per-comment table).
 
 - [ ] The top-level structure of every JSON / YAML input is checked (`isinstance(data, dict)`, required top-level keys present) before any indexing. Missing top-level keys produce a clear stderr message and exit code 2.
 - [ ] Each list entry is shape-checked before field access — `isinstance(entry, dict) and "model" in entry and isinstance(entry["model"], str)` — and malformed entries produce a clear error naming the offending entry index/line.
@@ -291,7 +291,7 @@ JSON / YAML inputs consumed by `scripts/ci/*` are frequently hand-edited (target
 
 ### Error handling
 
-Every step that calls a subprocess, file-system operation, network resource, or external tool must wrap the call in error handling that produces a structured failure record (for downstream JSON consumers) AND an actionable stderr message (for the human reading the workflow log). Sprint 26 PR #1396 produced 7 review comments in this category — all `FileNotFoundError`, `OSError`, `subprocess.TimeoutExpired`, and missing-error-field cases that crashed with tracebacks or produced inconsistent JSON.
+Every step that calls a subprocess, file-system operation, network resource, or external tool must wrap the call in error handling that produces a structured failure record (for downstream JSON consumers) AND an actionable stderr message (for the human reading the workflow log). Sprint 26 PR #1396 produced one of the larger review-comment clusters here — `FileNotFoundError`, `OSError`, `subprocess.TimeoutExpired`, and missing-error-field cases that crashed with tracebacks or produced inconsistent JSON (see `docs/planning/EPIC_4/SPRINT_27/PR23_CHECKLIST_DESIGN.md` §2.5 for the authoritative per-category count and the per-comment table; §2.5 also documents the single cross-listing case for the `gams` `FileNotFoundError` comment, which is assigned to §2.1 Input validation as its primary category).
 
 - [ ] Every `subprocess.run([...])` call has explicit `FileNotFoundError` handling AND `subprocess.TimeoutExpired` handling. Both branches return a structured failure record with the same shape as the success record (no missing fields, no schema drift).
 - [ ] Every `Path(...).read_text()` / `write_text()` / `.mkdir(...)` is wrapped in `try/except OSError`. The handler prints a concrete error naming the path and exits with code 2.
@@ -310,7 +310,7 @@ Concurrent runs of the same workflow (multiple commits to the same PR; parallel 
 
 ### Logging visibility
 
-The workflow log and the PR-comment summary are the primary debugging surfaces for failures. Each pass/fail signal that the workflow enforces MUST be visible in both places, with no silent gaps between "what the gate checks" and "what the comment says". Sprint 26 PR #1396 produced 11 review comments in this category — stale step-comments, stale PR-description text, table-rendering bugs, missing columns for fields the gate depends on, and LOC counts in changelogs that drifted from reality.
+The workflow log and the PR-comment summary are the primary debugging surfaces for failures. Each pass/fail signal that the workflow enforces MUST be visible in both places, with no silent gaps between "what the gate checks" and "what the comment says". **This was the largest review-comment cluster on Sprint 26 PR #1396** — stale step-comments, stale PR-description text, table-rendering bugs, missing columns for fields the gate depends on, and LOC counts in changelogs that drifted from reality (see `docs/planning/EPIC_4/SPRINT_27/PR23_CHECKLIST_DESIGN.md` §2.7 for the authoritative per-category count and the per-comment table; the size of this cluster is why the matching CONTRIBUTING.md checklist below has 6 items rather than the 3–5 prescribed for other categories).
 
 - [ ] **Every field that the pass/fail logic depends on** is rendered in the PR-comment summary table (or other user-visible output). If the gate checks `rc + MODEL STATUS + SOLVER STATUS`, all three appear as columns — never let the table show only two so failures look unexplained.
 - [ ] Markdown tables in PR comments are well-formed in **all** rendering paths — both the success path AND every fallback path (e.g., when an upstream step failed and the JSON results file is missing, the fallback row has the same column count as the header).
