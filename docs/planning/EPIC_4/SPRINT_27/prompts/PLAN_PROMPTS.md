@@ -220,7 +220,7 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 1. #1390 implement the predicate-guarded-Sum collapse at `src/kkt/stationarity.py` (`_apply_offset_substitution:2433` / `_apply_alias_offset_to_deriv:2264` / `_collect_lead_lag_offsets:95`) — **NOT** `constraint_jacobian.py:903/1027`. Collapse the 22 per-offset `lam_dembalx(j,t+1,n±k)` terms into one `sum(n_inner$tree(n,n_inner), eps*lam_dembalx(j,t+1,n_inner))$(tn(t+1,n_inner))`.
 2. Phase 0 verify: regenerate `kand_mcp.gms`; verify the 22 phantom-offset terms collapse to 1 predicate-guarded Sum; byte-compare against the Day 5 hand-derived KKT. KU 3.1 ✅ re-VERIFIED on the redirected layer.
-3. Tier 0/1 byte-stability (regenerate all 12 canaries, diff vs main).
+3. Tier 0/1 byte-stability (regenerate all 11 Tier 0/1 canaries + `launch` byte-stability anchor, diff vs main — `launch` is PR19 pattern-c after the Day 0 correction but is still byte-checked here).
 4. **Parallel: Priority 5 #1357 otpop** — apply Phase 0 + first patch (same `complementarity.py:473-483` + `:485-494` patch sites as #1356 fawley); regenerate `otpop_mcp.gms`.
 5. EOD quality gate + SPRINT_LOG.md.
 
