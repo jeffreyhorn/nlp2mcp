@@ -48,7 +48,7 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 1. **Record Day 0 anchor SHA.** Run `git rev-parse HEAD` on `main`. Open `PLAN.md` §4 "Day 0 Anchor SHA" and replace `**TBD**` with the SHA. Commit on a `planning/sprint27-day0-setup` branch.
 2. **Run PR22 baseline.** `.venv/bin/python scripts/sprint_audit/changed_emit_artifacts.py --since-commit <Day-0 SHA> --format markdown --mode retest > /tmp/sprint27_day0_baseline.md`. Expect output: 0 commits / 0 changes (Day 0 = anchor itself).
-3. **PR19 widening.** Edit `.github/path-solve-ci-targets.txt` per `PR19_WIDENING_DESIGN.md` §6 (add launch as Tier 1 hard-fail; add 14 net-new #1398-affected models as Pattern C soft-fail). Open PR. PR23 self-review NOT required — the targets file is outside PR23 scope per `CONTRIBUTING.md`:239-247 (PR23 applies to `.github/workflows/*.yml`/`.yaml`, `scripts/ci/*`, `.github/actions/*` only). Include the PR19 widening dry-run validation evidence from `PR19_WIDENING_DESIGN.md` §6 in the PR description. Expected file count: 1.
+3. **PR19 widening.** Edit `.github/path-solve-ci-targets.txt` per `PR19_WIDENING_DESIGN.md` §6 (add launch as Tier 1 hard-fail; add 14 net-new #1398-affected models as Pattern C soft-fail). Open PR. PR23 self-review NOT required — the targets file is outside PR23 scope per `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)" §"Scope" (PR23 applies to `.github/workflows/*.yml`/`.yaml`, `scripts/ci/*`, `.github/actions/*` only). Include the PR19 widening dry-run validation evidence from `PR19_WIDENING_DESIGN.md` §6 in the PR description. Expected file count: 1.
 4. **AD experiment #1390 kand** per `PRIORITY_3_RISK_ASSESSMENT.md` §3.1. Apply prototype at `src/ad/constraint_jacobian.py:903` + `:1027`. Regenerate `kand_mcp.gms`. Verify 22 phantom-offset `lam_dembalx(j,t+1,n+k)` terms collapse to 1 predicate-guarded Sum. Record binding signal in `PRIORITY_3_RISK_ASSESSMENT.md` §3.5 table (PROCEED / REPLAN).
 5. **AD experiment #1385 srpchase** per `PRIORITY_3_RISK_ASSESSMENT.md` §3.2. Apply Option B runtime-guard at `src/ad/index_mapping.py:377` + `src/kkt/stationarity.py`. Regenerate `srpchase_mcp.gms`. Verify clean GAMS compile. Record binding signal.
 6. **AD experiment #1393+#1335 otpop** per `PRIORITY_3_RISK_ASSESSMENT.md` §3.3. Apply Approach C at `src/ad/derivative_rules.py:2607`. Regenerate `otpop_mcp.gms`. Run NLP+MCP and verify `pi ≈ 4217.80` matches NLP. Record binding signal.
@@ -59,7 +59,7 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 **Success criteria (Day 0):**
 - [ ] Day 0 anchor SHA recorded in PLAN.md.
-- [ ] PR19 widening PR open with the dry-run validation evidence from `PR19_WIDENING_DESIGN.md` §6 in the PR description (PR23 self-review NOT required for this targets-file-only PR per `CONTRIBUTING.md`:239-247).
+- [ ] PR19 widening PR open with the dry-run validation evidence from `PR19_WIDENING_DESIGN.md` §6 in the PR description (PR23 self-review NOT required for this targets-file-only PR per `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)" §"Scope").
 - [ ] All 3 Priority 3 sub-priorities have binding PROCEED or REPLAN signals.
 - [ ] 2 of 8 Priority 1 anchor KKT shapes hand-derived.
 - [ ] KU 6.1 (#1224 bundle decision) ✅ VERIFIED.
@@ -96,12 +96,12 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 ## Day 2 Prompt — Priority 1 full regression + PR open (~10h)
 
-**Context:** Land the tightened predicate. Regenerate all 15 #1398-affected models + launch. Verify bucket-provenance recovery (qdemo7 → compare_match, etc.). Open PR with **PR14 reaffirmation + PR20 Phase 0 cross-reference** (the predicate change is in `src/kkt/stationarity.py` — pure `src/` change, so PR23 does NOT apply per `CONTRIBUTING.md`:239-247).
+**Context:** Land the tightened predicate. Regenerate all 15 #1398-affected models + launch. Verify bucket-provenance recovery (qdemo7 → compare_match, etc.). Open PR with **PR14 reaffirmation + PR20 Phase 0 cross-reference** (the predicate change is in `src/kkt/stationarity.py` — pure `src/` change, so PR23 does NOT apply per `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)" §"Scope").
 
 **Read first:**
 - `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §5 "Day 2"
 - `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §6 (15 affected models + Day 0 buckets)
-- `CONTRIBUTING.md` §"Emit-Affecting PRs — Required `.gms` Artifact in Diff (PR14)" + §"Phase 0 Acceptance Gates (PR20, ...)" (PR23 NOT applicable to this `src/`-only PR per CONTRIBUTING.md:239-247 scope clauses)
+- `CONTRIBUTING.md` §"Emit-Affecting PRs — Required `.gms` Artifact in Diff (PR14)" + §"Phase 0 Acceptance Gates (PR20, ...)" (PR23 NOT applicable to this `src/`-only PR per the `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)" §"Scope" subsection)
 
 **Tasks:**
 
