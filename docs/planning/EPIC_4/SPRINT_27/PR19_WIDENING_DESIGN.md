@@ -338,11 +338,11 @@ Pattern C → Tier 0/1 promotion is currently a manual per-PR follow-up step. Sp
 
 ### 8.2 Open Question: PR19 trigger path expansion
 
-Sprint 27 Priority 6 (#1224 mine `IndexOffset(ParamRef)`) touches `src/ad/index_mapping.py` — NOT in the current PR19 `paths:` filter (per `pr19-emit-solve-validation.yml` L6-L15). If Sprint 27 lands #1224 without expanding the trigger paths, PR19 won't fire on that PR.
+This open question assumed Sprint 27 Priority 6 (#1224 mine `IndexOffset(ParamRef)`) touches `src/ad/index_mapping.py`, which is NOT in the PR19 `paths:` filter.
 
 **Question:** Should the Sprint 27 Day 0 widening PR also add `src/ad/index_mapping.py` to the trigger paths?
 
-**Recommended action:** YES. Add `src/ad/index_mapping.py` to the trigger paths in the same Sprint 27 Day 0 PR that widens the target list. This is a 1-line YAML edit and avoids forgetting it before #1224 lands. (This is a small scope creep beyond Task 5's strict charter but is too cheap to defer.)
+**Resolved Day 0 — NO (premise was wrong).** Day 0 KU 6.1 inspection found `index_mapping.py` has no `IndexOffset`/`ParamRef` code; #1224's actual surface is `src/ad/constraint_jacobian.py` (`_try_eval_offset:133`) + `src/ad/derivative_rules.py:2793`, **both already in the PR19 `paths:` filter** (`pr19-emit-solve-validation.yml` L10–L11). PR19 therefore already fires on #1224's emit-affecting changes — **no `paths:` edit is needed**, and adding `index_mapping.py` would be a spurious trigger.
 
 ### 8.3 Open Question: launch byte-stability check
 
