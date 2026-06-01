@@ -67,7 +67,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 | 0.8 | **KU 6.1 inspection** — read `src/ad/index_mapping.py` to decide bundle-with-#1385 vs standalone for #1224 (per `PRIORITY_3_RISK_ASSESSMENT.md` discussion + Unknown 6.1 research questions). | 0.5h | Bundle decision recorded in KU 6.1 |
 | 0.9 | **Mid-day Day 0 wrap** — update KNOWN_UNKNOWNS.md: KUs 3.1/3.2/3.3 (Priority 3 sub-priority PROCEED/REPLAN) and 6.1 (bundle decision) move 🔍 INCOMPLETE → ✅ VERIFIED. Update PLAN.md with binding sub-priority budget allocations for Days 5–9 based on PROCEED count. | 0.8h | KU updates committed |
 
-**Day 0 Anchor SHA:** **TBD** — record `git rev-parse HEAD` once Day 0 setup commits land (typically after Task 0.3 PR opens).
+**Day 0 Anchor SHA:** `148662a5cfba7034920965e1c4e3bb38e40be184` — `main` tip at Sprint 27 Day 0 kickoff (2026-06-01). Used by `scripts/sprint_audit/changed_emit_artifacts.py --since-commit <SHA>` for every mid-sprint retest (Days 5, 10, 13).
 
 **Day 0 success criteria:**
 - [ ] PR19 widening PR opened (the `.github/path-solve-ci-targets.txt` edit is outside PR23 scope; PR description includes the rationale and the dry-run validation evidence from `PR19_WIDENING_DESIGN.md` §6).

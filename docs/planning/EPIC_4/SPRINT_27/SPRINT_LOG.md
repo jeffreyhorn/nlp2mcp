@@ -18,7 +18,7 @@
 
 ## Day 0 Anchor SHA
 
-**TBD** — record `git rev-parse HEAD` here once Day 0 setup PR opens. Used by `scripts/sprint_audit/changed_emit_artifacts.py --since-commit <SHA>` for every mid-sprint retest (Days 5, 10, 13).
+`148662a5cfba7034920965e1c4e3bb38e40be184` — `main` tip at Sprint 27 Day 0 kickoff (2026-06-01). Used by `scripts/sprint_audit/changed_emit_artifacts.py --since-commit <SHA>` for every mid-sprint retest (Days 5, 10, 13).
 
 ---
 
