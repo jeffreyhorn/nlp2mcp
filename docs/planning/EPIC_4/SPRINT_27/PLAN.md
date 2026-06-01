@@ -30,7 +30,7 @@ Per `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 27":
 | **Tests** | 4,737 | ≥ 4,750 | +13 |
 | **Determinism** | n/a | Byte-identical under ≥ 3 `PYTHONHASHSEED` values | new (PR12 guard) |
 | **Process recs** | n/a | PR20 codified + 4 Phase 0 backlog sections authored; PR21 codified; PR22 script landed; PR23 checklist landed | done in prep (Tasks 2–10) |
-| **PR19 widening** | 11 models | 30 models (12 Tier 0/1 + 18 Pattern C) | done Day 0 per Task 5 |
+| **PR19 widening** | 11 models | 30 models (11 Tier 0/1 + 19 Pattern C; `launch` corrected to pattern-c Day 0 — MODEL STATUS 5, the #1378 target) | done Day 0 per Task 5 |
 
 Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0 baseline frozen 2026-05-28 at Solve=103, Match=59, path_syntax_error=14, model_infeasible=4, Translate=131/142, Tests=4,737. The Day 0 numbers reflect machine-load variance pushing 3 models into translate_timeout — these are NOT Sprint 27 regressions.
 
@@ -61,7 +61,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 |---|---|---|---|
 | 0.1 | **Record Day 0 anchor commit SHA** in BOTH this PLAN.md §"Day 0 Anchor SHA" subsection below AND `SPRINT_LOG.md` §"Day 0 Anchor SHA" (top-level field near the beginning of that file). The SHA is used by the PR22 script for all mid-sprint retests; both files must carry the same recorded SHA so neither stays at `**TBD**`. | 0.1h | SHA recorded in both PLAN.md and SPRINT_LOG.md |
 | 0.2 | **Run PR22 audit script** (`scripts/sprint_audit/changed_emit_artifacts.py --since-commit <Day-0 SHA>`) to produce the Day-0 audit baseline (should be empty — no emit changes yet). | 0.1h | `/tmp/sprint27_day0_baseline.md` (expected empty) |
-| 0.3 | **PR19 widening** — edit `.github/path-solve-ci-targets.txt` per `PR19_WIDENING_DESIGN.md` §6 (add launch as Tier 1 hard-fail + 14 net-new #1398-affected models as Pattern C soft-fail). Open PR. PR23 self-review NOT required — the targets file is outside PR23 scope per `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)" §"Scope". | 1h | PR open |
+| 0.3 | **PR19 widening** — edit `.github/path-solve-ci-targets.txt` per `PR19_WIDENING_DESIGN.md` §6 (add launch + 14 net-new #1398-affected models as Pattern C soft-fail — **launch corrected Day 0 from tier=1 to pattern-c: it is MODEL STATUS 5 Locally Infeasible (the #1378 target), so it cannot be a hard-fail canary**). Open PR. PR23 self-review NOT required — the targets file is outside PR23 scope per `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)" §"Scope". | 1h | PR open |
 | 0.4 | **AD architectural Phase 0 validation experiment for #1390 kand** (per `PRIORITY_3_RISK_ASSESSMENT.md` §3 / Task 6). Prototype patch at `constraint_jacobian.py:903/1027` (predicate-guarded Sum vs per-instance enumeration); regenerate `kand_mcp.gms`; verify 22 phantom-offset terms collapse to 1. | 1h | Binding PROCEED/REPLAN signal recorded in `PRIORITY_3_RISK_ASSESSMENT.md` §3.5 |
 | 0.5 | **AD architectural Phase 0 validation experiment for #1385 srpchase** (Option B runtime-guard). Prototype at `index_mapping.py:377` + `stationarity.py`; regenerate `srpchase_mcp.gms`; verify clean compile. | 1h | Binding PROCEED/REPLAN signal |
 | 0.6 | **AD architectural Phase 0 validation experiment for #1393+#1335 otpop** (Approach C: extend `_is_concrete_instance_of` for symbolic supersets). Prototype at `derivative_rules.py:2607`; regenerate `otpop_mcp.gms`; verify `pi ≈ 4217.80` matches NLP. | 1h | Binding PROCEED/REPLAN signal |
@@ -99,7 +99,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 |---|---|---|
 | Regenerate `*_mcp.gms` for all 15 #1398-affected models + launch | 2h | Per `BASELINE_METRICS.md` §6 affected-models list |
 | Run pipeline tests + bucket-provenance check for affected models | 2h | qdemo7 must return to `compare_match`; egypt/ferts/shale to `path_solve_license`; etc. |
-| Tier 0/1 byte-stability verification (regenerate all 12 Tier 0/1 canaries, diff vs main) | 1h | Per PR19 widening Task 5 |
+| Tier 0/1 byte-stability verification (regenerate all 11 Tier 0/1 canaries + `launch` byte-stability anchor, diff vs main) | 1h | Per PR19 widening Task 5 (`launch` is PR19 pattern-c, but still byte-checked here as the #1379 anchor) |
 | Author PR description (PR14 reaffirmation + PR20 Phase 0 acceptance-gate cross-reference) | 2h | Regenerated `.gms` diffs included in PR; PR description cross-references `PRIORITY_1_ANCHOR_MAPPING.md` §4 anchor-by-anchor hand-derived KKT shapes. PR23 not applicable — pure `src/kkt/stationarity.py` change, no workflow/CI files touched |
 | Open PR; respond to first review iteration | 3h | |
 

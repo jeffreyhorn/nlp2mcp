@@ -1,7 +1,9 @@
 # Sprint 27 PR19 Target-List Widening Design
 
-**Status:** ✅ COMPLETE (Day 0 design — implementation lands Sprint 27 Day 0 per Task 11 schedule)
-**Date:** 2026-05-28
+**Status:** ✅ COMPLETE (Day 0 design) — ⚠️ **CORRECTED 2026-06-01 (Day 0 CI evidence): `launch` is `tier=pattern-c`, NOT `tier=1`** (see banner below)
+**Date:** 2026-05-28 (design) / 2026-06-01 (Day 0 launch-tier correction)
+
+> ⚠️ **DAY 0 CORRECTION (2026-06-01).** This design's §3.2 premise that *"launch PATH-solves cleanly today (model_optimal)"* is **empirically false** — the PR19 CI on PR #1413 ran PATH on `launch` and got **MODEL STATUS 5 (Locally Infeasible)**. That is exactly the **Priority 4 #1378** numerics target. A Tier 0/1 hard-fail on `launch` would therefore red every emit PR's CI until #1378 lands (~Day 9). **Resolution:** `launch` is added as **`tier=pattern-c` (soft-fail)**, to be promoted to `tier=1` after #1378 fixes its numerics (per §6.4 tier-promotion). **Corrected counts: the final union is 30 unique models = 11 Tier 0/1 hard-fail + 19 Pattern C soft-fail.** Any "12 Tier 0/1 + 18 Pattern C" figures in the analysis sections below predate this correction and are superseded by 11 + 19.
 **Owner:** Prep Task 5
 **Inputs:** `.github/path-solve-ci-targets.txt` (current Sprint 26 PR #1396 target list); `.github/workflows/pr19-emit-solve-validation.yml` (current CI workflow + budgeted timeout); Sprint 26 PR #1396 CI run timings (from `gh run view 25862102598`); `PRIORITY_1_ANCHOR_MAPPING.md` (Task 4 — 8 anchor identification); `PROJECT_PLAN.md` §Sprint 27 Priority 1 + §"PR19 target-list widening" rationale.
 
@@ -94,7 +96,7 @@ Based on each model's Sprint 27 Day 0 bucket (from `PRIORITY_1_ANCHOR_MAPPING.md
 
 | Candidate | Day 0 Bucket | Proposed Tier | Reasoning |
 |---|---|---|---|
-| `launch` | compare_mismatch (solves model_optimal) | **`tier=1` hard-fail** | Sprint 26 PR #1379 fix target; PATH-solves cleanly today — promote to hard-fail per PROJECT_PLAN.md L1034 "(`tier=1` — currently NOT in PR19)" |
+| `launch` | **model_infeasible (MODEL STATUS 5 Locally Infeasible — corrected Day 0 from the erroneous "solves model_optimal")** | **`tier=pattern-c` soft-fail** (corrected Day 0 from `tier=1`) | Sprint 26 PR #1379 fix target AND Priority 4 #1378 numerics target. PATH returns MODEL STATUS 5 today (PR #1413 CI), so it CANNOT be a hard-fail canary; promote to `tier=1` once #1378 fixes its numerics (§6.4). |
 | `qdemo7` | path_syntax_error | `tier=pattern-c` soft-fail | Expected to fail compile-fast until Sprint 27 #1398 lands; promote to tier=1 once recovery confirmed |
 | `egypt` | path_syntax_error | `tier=pattern-c` soft-fail | Same as qdemo7 |
 | `ferts` | path_syntax_error | `tier=pattern-c` soft-fail | Same as qdemo7 |
@@ -112,8 +114,8 @@ Based on each model's Sprint 27 Day 0 bucket (from `PRIORITY_1_ANCHOR_MAPPING.md
 
 **Tier counts (post-widening):**
 
-- **Tier 0/1 hard-fail:** 11 (current) + 1 (`launch`) = **12 models**
-- **Pattern C soft-fail:** 4 (current including `fawley`) + 14 (net new) = **18 models**
+- **Tier 0/1 hard-fail:** 11 (current) + 0 (`launch` → pattern-c per the Day 0 correction) = **11 models**
+- **Pattern C soft-fail:** 4 (current including `fawley`) + 15 (net new incl. `launch`) = **19 models**
 - **Total widened union:** 30 models
 
 ---
@@ -126,7 +128,7 @@ Based on each model's Sprint 27 Day 0 PATH behavior (extrapolated from `gamslib_
 
 | Model | Expected PATH behavior | Time estimate | Rationale |
 |---|---|---|---|
-| `launch` | Solves model_optimal | ~0.5–1.5s | Real solve (small NLP); somewhat larger than Tier 0/1 canaries |
+| `launch` | **MODEL STATUS 5 Locally Infeasible** (corrected Day 0 from "solves model_optimal" — per PR #1413 CI) | ~0.22s | Fails fast at solve; soft-fail (pattern-c) until #1378 fixes numerics |
 | `qdemo7`, `egypt`, `ferts`, `shale`, `dinam`, `gangesx`, `turkpow`, `ganges`, `srpchase` (9 models) | Compile-fail rc=2 (path_syntax_error) | ~0.02s each | Matches camcge/cesam2/fawley/otpop's PR #1396 timing |
 | `tfordy`, `sroute` (2 models) | License-fail (compile succeeds, solve license-rejects) | ~0.5–1s each | License rejection typically fast |
 | `sambal`, `qsambal`, `harker` (3 models) | Solve model_optimal | ~0.5–2s each | Real solves; medium-size NLPs |
@@ -146,7 +148,7 @@ Based on each model's Sprint 27 Day 0 PATH behavior (extrapolated from `gamslib_
 | **Total wall-clock** | **~27s** | **~37s** | **+~10s** |
 
 **Worst case (one Pattern C timeout):** ~37s + 60s = ~97s.
-**Worst case (assume all 18 Pattern C models timeout):** ~22s + 2s + 18×60s + 3s ≈ 1107s = 18.5 min — exceeds the 20-min job timeout. **BUT** this scenario only occurs when every #1398-affected model hits PATH timeout simultaneously, which doesn't match observed behavior (path_syntax_error → fail-fast rc=2 in <0.05s).
+**Worst case (assume all 19 Pattern C models timeout):** ~22s + 2s + 19×60s + 3s ≈ 1167s = 19.5 min — within the 20-min job timeout but tight. **BUT** this scenario only occurs when every #1398-affected model hits PATH timeout simultaneously, which doesn't match observed behavior (path_syntax_error → fail-fast rc=2 in <0.05s; launch → MODEL STATUS 5 in ~0.2s).
 
 ### 4.3 Threshold check against budgets
 
@@ -161,7 +163,7 @@ Based on each model's Sprint 27 Day 0 PATH behavior (extrapolated from `gamslib_
 
 ### 5.1 Option A — Full widening (RECOMMENDED)
 
-**Description:** Add all 15 net new models to `.github/path-solve-ci-targets.txt`. Final widened union: 30 unique models (12 Tier 0/1 + 18 Pattern C).
+**Description:** Add all 15 net new models to `.github/path-solve-ci-targets.txt`. Final widened union: 30 unique models (**11 Tier 0/1 + 19 Pattern C** per the Day 0 launch-tier correction).
 
 **Pros:**
 - Full coverage of KU-37 mitigation surface — all 15 #1398-affected models + launch byte-stability anchor are in PR19.
@@ -229,11 +231,13 @@ Append the following block to the end of `.github/path-solve-ci-targets.txt` (af
 ```
 # Sprint 27 PR19 widening (per PR19_WIDENING_DESIGN.md Task 5): cover all 15
 # #1398-affected models + launch (byte-stability anchor for Sprint 26 PR #1379
-# Phase A fix). launch joins Tier 0/1 (currently solves model_optimal). The
-# 14 net-new #1398-affected models (fawley already in Pattern C above) join
-# Pattern C soft-fail; once each model's Sprint 27 priority fix lands and the
-# model returns to its Sprint 26 Day 0 baseline bucket, promote to tier=1.
-launch           # tier=1
+# Phase A fix). launch joins Pattern C soft-fail (CORRECTED Day 0: it is MODEL
+# STATUS 5 Locally Infeasible today — the Priority 4 #1378 target — so it cannot
+# be a Tier 0/1 hard-fail; promote to tier=1 after #1378 lands). The 14 net-new
+# #1398-affected models (fawley already in Pattern C above) join Pattern C
+# soft-fail; once each model's Sprint 27 priority fix lands and the model
+# returns to its Sprint 26 Day 0 baseline bucket, promote to tier=1.
+launch           # tier=pattern-c
 qdemo7           # tier=pattern-c
 egypt            # tier=pattern-c
 ferts            # tier=pattern-c
@@ -252,7 +256,7 @@ turkpow          # tier=pattern-c
 
 **Net additions:** 15 lines. **NOT added:** `fawley` (already present in Pattern C — would duplicate).
 
-**Final widened union:** 30 unique models (12 Tier 0/1 hard-fail + 18 Pattern C soft-fail).
+**Final widened union:** 30 unique models (**11 Tier 0/1 hard-fail + 19 Pattern C soft-fail** — corrected Day 0: `launch` is pattern-c, not tier=1).
 
 ### 6.2 NO changes to CI workflow YAML
 
@@ -277,6 +281,7 @@ When each Sprint 27 priority fix lands and a Pattern C model returns to a passin
 - Sprint 27 Priority 5 (#1356 lands) → promote fawley to tier=1.
 - Sprint 27 Priority 5 (#1357 lands) → promote otpop to tier=1.
 - Sprint 27 Priority 2 (#1381 lands) → promote camcge + cesam2 to tier=1.
+- **Sprint 27 Priority 4 (#1378 lands) → promote `launch` to tier=1** (added Day 0: `launch` starts as pattern-c because it is MODEL STATUS 5 Locally Infeasible today; once #1378 restores MODEL STATUS 1 it becomes a valid hard-fail canary).
 
 ---
 
@@ -289,17 +294,17 @@ When each Sprint 27 priority fix lands and a Pattern C model returns to a passin
    ```bash
    python3 scripts/ci/parse_pr19_targets.py .github/path-solve-ci-targets.txt > /tmp/pr19-targets.json
    jq '.tier_0_1 | length' /tmp/pr19-targets.json
-   # Expect: 12 (current 11 + launch)
+   # Expect: 11 (current 11; launch is pattern-c per the Day 0 correction)
    jq '.pattern_c | length' /tmp/pr19-targets.json
-   # Expect: 18 (current 4 + 14 net new)
+   # Expect: 19 (current 4 + 15 net new incl. launch)
    ```
 
 2. **Open the Sprint 27 Day 0 implementation PR** with a no-op edit to a path under `.github/path-solve-ci-targets.txt` (which is in the workflow's `paths:` trigger list per `pr19-emit-solve-validation.yml` L15). This triggers PR19 CI on the actual widened target list with the actual current `data/gamslib/mcp/*.gms` artifacts.
 
 3. **Verify the PR19 CI workflow:**
    - Workflow completes within budget (target: <60s, hard ceiling 20 min)
-   - Tier 0/1 hard-fail surface: 12/12 PASS (including new `launch` row)
-   - Pattern C soft-fail surface: ~3/18 PASS (sambal/qsambal/harker should solve; the other 15 expected pre-fix). The actual PASS count depends on which Sprint 27 priorities have already landed when validation runs.
+   - Tier 0/1 hard-fail surface: 11/11 PASS (`launch` is now Pattern C, not a hard-fail canary — it is MODEL STATUS 5 today)
+   - Pattern C soft-fail surface: ~3/19 PASS (sambal/qsambal/harker should solve; `launch` + the other 15 expected pre-fix). The actual PASS count depends on which Sprint 27 priorities have already landed when validation runs.
    - PR comment renders correctly (table layout, no Markdown indentation regressions from the larger Pattern C table).
    - Artifacts upload successfully (`pr19-solve-results` artifact contains both JSON results files + scratch `.lst` files for each widened model).
 
@@ -315,8 +320,8 @@ After the widening PR merges to main, ensure subsequent emit-affecting PRs (any 
 
 - [ ] `.github/path-solve-ci-targets.txt` final union = 30 unique models (no duplicates, including `fawley` not duplicated).
 - [ ] PR19 CI workflow runs end-to-end on the implementation PR within the 20-min budget.
-- [ ] Tier 0/1 hard-fail (12 models) all PASS — workflow exits 0.
-- [ ] Pattern C soft-fail count matches projection (≥3 PASS, ≤18 PASS, depending on which priorities have landed).
+- [ ] Tier 0/1 hard-fail (11 models) all PASS — workflow exits 0.
+- [ ] Pattern C soft-fail count matches projection (≥3 PASS, ≤19 PASS, depending on which priorities have landed).
 - [ ] PR comment renders correctly with the widened tables.
 
 ---
@@ -355,7 +360,7 @@ PR19's current Tier 0/1 hard-fail only asserts MODEL STATUS 1 + SOLVER STATUS 1 
 |---|---|
 | Current PR19 target list inventoried with per-model timing data | ✅ §2 (PR #1396 run 25862102598 cited; Tier 0/1 sum ~0.5s; Pattern C sum ~0.06s) |
 | 16-candidate cohort overlap calculated | ✅ §3.1 (1 overlap on `fawley`; 15 net new) |
-| Final widened union calculated | ✅ §3.1 (30 unique models = 12 Tier 0/1 + 18 Pattern C) |
+| Final widened union calculated | ✅ §3.1 (30 unique models = **11 Tier 0/1 + 19 Pattern C** per Day 0 launch-tier correction) |
 | 3 options evaluated with explicit pros/cons | ✅ §5.1–§5.3 |
 | Runtime impact calculated for the recommended option | ✅ §4.2 (Option A projected ~37s steady state, ~18.5min worst case) |
 | Threshold check against 5-min developer-friction budget | ✅ §4.3 (~37s vs 5min — 8× headroom) |

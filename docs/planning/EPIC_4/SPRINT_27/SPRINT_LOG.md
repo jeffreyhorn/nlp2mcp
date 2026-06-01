@@ -50,7 +50,7 @@ Filled in at each checkpoint (Days 5, 10, 13). Track delta vs Day 0 baseline.
 ### Tasks completed
 - **0.1** Anchor SHA `148662a5` recorded in PLAN.md §4 + SPRINT_LOG.md (this file).
 - **0.2** PR22 baseline audit → 0 commits / 0 changes (expected; Day 0 = anchor).
-- **0.3** PR19 target-list widening (30 models; dry-run 12/18/30 GREEN) → **PR #1413 opened**.
+- **0.3** PR19 target-list widening (30 models; dry-run **11/19/30** GREEN — `launch` corrected to pattern-c Day 0 per PR #1413 CI: MODEL STATUS 5 Locally Infeasible, the #1378 target) → **PR #1413 opened**.
 - **0.4–0.6** 3 AD architectural Phase 0 validation experiments executed serially (C→A→B); all prototypes model-guarded + **reverted (zero `src/` diff)**.
 - **0.7** launch + qdemo7 anchor KKT hand-derived → `DAY0_ANCHOR_SCRATCH_NOTES.md`.
 - **0.8** KU 6.1 → STANDALONE (no #1224/#1385 bundle).
