@@ -14,7 +14,7 @@ Each section below is a self-contained prompt for one Sprint 27 day. Each prompt
 
 1. **References the canonical PLAN.md day section** — read `PLAN.md` §"Day N" alongside the prompt before starting.
 2. **Lists prep-task deliverables to read** — the Phase 0 anchor specs, patch sites, and effort estimates live there.
-3. **Names the PRs to open** — each `src/`-touching PR follows PR14 (regenerated `.gms` in diff) + PR23 (32-item self-review) + PR20 (Phase 0 acceptance gate).
+3. **Names the PRs to open** — each `src/`-touching PR follows **PR14** (regenerated `.gms` in diff) + **PR20** (Phase 0 acceptance gate cross-reference). **PR23 self-review applies only when the diff additionally touches `.github/workflows/*.yml`/`.yaml`, `scripts/ci/*`, or `.github/actions/*`** (per `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)" scope clauses); a pure `src/` PR with no workflow/CI changes does NOT require PR23. The PR19 widening PR (Day 0) edits `.github/path-solve-ci-targets.txt` only and is also outside PR23 scope.
 4. **Names the pipeline-retest invocation** for checkpoint days (Days 5, 10, 13) — including the PR22 audit-script command.
 5. **Has explicit success criteria** mirroring PLAN.md but expressed as one-line check items the engineer can ✅ at end-of-day.
 
@@ -42,13 +42,13 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 - `docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIGN.md` §6 (10-min edit spec)
 - `docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_ASSESSMENT.md` §3.1–3.3 (3 experiments)
 - `docs/planning/EPIC_4/SPRINT_27/PRIORITY_1_ANCHOR_MAPPING.md` §4.1–4.2 (launch + qdemo7 anchors)
-- `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)" (apply to PR19 widening PR)
+- `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)" (scope clauses — note that PR23 does **NOT** apply to the PR19 widening, which edits `.github/path-solve-ci-targets.txt` only; the scope is `.github/workflows/*.yml`/`.yaml`, `scripts/ci/*`, `.github/actions/*`)
 
 **Tasks (in order):**
 
 1. **Record Day 0 anchor SHA.** Run `git rev-parse HEAD` on `main`. Open `PLAN.md` §4 "Day 0 Anchor SHA" and replace `**TBD**` with the SHA. Commit on a `planning/sprint27-day0-setup` branch.
 2. **Run PR22 baseline.** `.venv/bin/python scripts/sprint_audit/changed_emit_artifacts.py --since-commit <Day-0 SHA> --format markdown --mode retest > /tmp/sprint27_day0_baseline.md`. Expect output: 0 commits / 0 changes (Day 0 = anchor itself).
-3. **PR19 widening.** Edit `.github/path-solve-ci-targets.txt` per `PR19_WIDENING_DESIGN.md` §6 (add launch as Tier 1 hard-fail; add 14 net-new #1398-affected models as Pattern C soft-fail). Run the PR23 32-item self-review in your scratch notes. Open PR. Expected file count: 1.
+3. **PR19 widening.** Edit `.github/path-solve-ci-targets.txt` per `PR19_WIDENING_DESIGN.md` §6 (add launch as Tier 1 hard-fail; add 14 net-new #1398-affected models as Pattern C soft-fail). Open PR. PR23 self-review NOT required — the targets file is outside PR23 scope per `CONTRIBUTING.md`:239-247 (PR23 applies to `.github/workflows/*.yml`/`.yaml`, `scripts/ci/*`, `.github/actions/*` only). Include the PR19 widening dry-run validation evidence from `PR19_WIDENING_DESIGN.md` §6 in the PR description. Expected file count: 1.
 4. **AD experiment #1390 kand** per `PRIORITY_3_RISK_ASSESSMENT.md` §3.1. Apply prototype at `src/ad/constraint_jacobian.py:903` + `:1027`. Regenerate `kand_mcp.gms`. Verify 22 phantom-offset `lam_dembalx(j,t+1,n+k)` terms collapse to 1 predicate-guarded Sum. Record binding signal in `PRIORITY_3_RISK_ASSESSMENT.md` §3.5 table (PROCEED / REPLAN).
 5. **AD experiment #1385 srpchase** per `PRIORITY_3_RISK_ASSESSMENT.md` §3.2. Apply Option B runtime-guard at `src/ad/index_mapping.py:377` + `src/kkt/stationarity.py`. Regenerate `srpchase_mcp.gms`. Verify clean GAMS compile. Record binding signal.
 6. **AD experiment #1393+#1335 otpop** per `PRIORITY_3_RISK_ASSESSMENT.md` §3.3. Apply Approach C at `src/ad/derivative_rules.py:2607`. Regenerate `otpop_mcp.gms`. Run NLP+MCP and verify `pi ≈ 4217.80` matches NLP. Record binding signal.
@@ -59,7 +59,7 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 **Success criteria (Day 0):**
 - [ ] Day 0 anchor SHA recorded in PLAN.md.
-- [ ] PR19 widening PR open with PR23 32-item self-review filled in (≥ 27 ticked + ≤ 5 N/A annotations).
+- [ ] PR19 widening PR open with the dry-run validation evidence from `PR19_WIDENING_DESIGN.md` §6 in the PR description (PR23 self-review NOT required for this targets-file-only PR per `CONTRIBUTING.md`:239-247).
 - [ ] All 3 Priority 3 sub-priorities have binding PROCEED or REPLAN signals.
 - [ ] 2 of 8 Priority 1 anchor KKT shapes hand-derived.
 - [ ] KU 6.1 (#1224 bundle decision) ✅ VERIFIED.
@@ -96,19 +96,19 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 ## Day 2 Prompt — Priority 1 full regression + PR open (~10h)
 
-**Context:** Land the tightened predicate. Regenerate all 15 #1398-affected models + launch. Verify bucket-provenance recovery (qdemo7 → compare_match, etc.). Open PR with PR14 + PR23 self-review.
+**Context:** Land the tightened predicate. Regenerate all 15 #1398-affected models + launch. Verify bucket-provenance recovery (qdemo7 → compare_match, etc.). Open PR with **PR14 reaffirmation + PR20 Phase 0 cross-reference** (the predicate change is in `src/kkt/stationarity.py` — pure `src/` change, so PR23 does NOT apply per `CONTRIBUTING.md`:239-247).
 
 **Read first:**
 - `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §5 "Day 2"
 - `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §6 (15 affected models + Day 0 buckets)
-- `CONTRIBUTING.md` §"Emit-Affecting PRs — Required `.gms` Artifact in Diff (PR14)" + §"CI Workflow PR Checklist (PR23, ...)"
+- `CONTRIBUTING.md` §"Emit-Affecting PRs — Required `.gms` Artifact in Diff (PR14)" + §"Phase 0 Acceptance Gates (PR20, ...)" (PR23 NOT applicable to this `src/`-only PR per CONTRIBUTING.md:239-247 scope clauses)
 
 **Tasks:**
 
 1. Regenerate `*_mcp.gms` for all 15 #1398-affected models + launch (`run_full_test.py --model <name>` or pipeline subset).
 2. Run `scripts/gamslib/run_full_test.py --quiet` on the 15-model + launch subset. Verify bucket-provenance: qdemo7 → `compare_match`; egypt/ferts/shale → `path_solve_license`; sambal/qsambal/harker/tfordy/dinam/ganges/gangesx/sroute/turkpow → Day 0 baseline buckets; launch byte-stable.
 3. Tier 0/1 byte-stability verification — regenerate all 12 Tier 0/1 canaries (per `PR19_WIDENING_DESIGN.md` §6 widened list), diff vs main. Expect zero diffs on non-affected canaries.
-4. Author PR description: PR14 disclosure (list regenerated `.gms` files via PR22 audit-script invocation) + PR23 32-item self-review filled in.
+4. Author PR description: **PR14 disclosure** (list regenerated `.gms` files via PR22 audit-script invocation) + **PR20 Phase 0 cross-reference** (cite `PRIORITY_1_ANCHOR_MAPPING.md` §4 anchor-by-anchor hand-derived KKT shapes; reviewer checks regenerated `.gms` matches the hand-derived shape for each of the 8 anchors). PR23 self-review NOT required — pure `src/kkt/stationarity.py` change, no workflow/CI files touched.
 5. Open PR. Respond to first review iteration.
 6. EOD quality gate + SPRINT_LOG.md Day 2 entry.
 
@@ -116,7 +116,7 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 - [ ] 15 #1398-affected models recovered to Day 0 baseline buckets.
 - [ ] launch byte-stable.
 - [ ] Tier 0/1 canaries byte-stable (zero diffs on non-affected models).
-- [ ] PR open with PR14 + PR23 disclosures.
+- [ ] PR open with PR14 + PR20 Phase 0 disclosures (PR23 not applicable to this `src/`-only PR).
 - [ ] First review iteration responded to.
 
 ---
@@ -132,7 +132,7 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 **Tasks:**
 
-1. PR review iteration on Priority 1 PR (expect ≤ 2 rounds per PR23 compression target).
+1. PR review iteration on Priority 1 PR (target: ≤ 2 rounds; the PR description's PR14 regenerated-`.gms` list + PR20 anchor-by-anchor Phase 0 cross-reference are pre-filled so the reviewer can verify each artifact against the hand-derived KKT directly).
 2. Merge Priority 1 PR.
 3. Verify PR19 widening CI fires correctly: trigger a no-op PR on the new widened target list; expect ~37s steady-state runtime per `PR19_WIDENING_DESIGN.md` §7 projection.
 4. **Start Priority 2 Phase 0** — hand-derive KKT for camcge `nu_ieq` cross-term. Recorded in scratch notes. Identify cesam2 as second-anchor model (same Phase C-derived shape per `PROJECT_PLAN.md` Priority 2).
@@ -162,7 +162,7 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 2. Implement Pattern C Phase B "build consolidated multiplier term from source Sum body structure" at `src/kkt/stationarity.py`. Per `PROJECT_PLAN.md` Priority 2, the approach intercepts BEFORE element-to-set substitution (which collapses alias name on the launch-shape Phase A swap).
 3. Regenerate camcge + cesam2 `*_mcp.gms`. Verify hand-derived KKT byte-stable for `nu_ieq` cross-term.
 4. Tier 0/1 canary byte-stability check (KU 2.3).
-5. Author PR description: PR14 + PR23 self-review. Open PR.
+5. Author PR description: PR14 + PR20 Phase 0 cross-reference (cite the camcge + cesam2 `nu_ieq` cross-term Phase 0 from Day 3/4 hand-derivation). PR23 not applicable — pure `src/kkt/stationarity.py` change. Open PR.
 6. EOD quality gate + SPRINT_LOG.md Day 4 entry.
 
 **Success criteria (Day 4):**
@@ -241,7 +241,7 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 **Tasks:**
 
-1. Open #1390 PR (PR14 + PR23 self-review).
+1. Open #1390 PR with PR14 + PR20 Phase 0 cross-reference (cite the kand `stat_y(j,t,n)` cross-term hand-derived KKT from Day 0 experiment). PR23 not applicable — pure `src/ad/constraint_jacobian.py` change.
 2. #1385 implement Option B runtime-guard at `src/ad/index_mapping.py:377` + `src/kkt/stationarity.py` per Day 0 binding patch shape.
 3. #1385 Phase 0 verify: regenerate `srpchase_mcp.gms`; verify clean GAMS compile; iswnm/mexls/nebrazil/sarf translates pass. KU 3.2 ✅ VERIFIED.
 4. **Priority 5 close:** combined fawley + otpop PR open. Per `PRIORITY_5_FIX_SURFACE.md` §8, run clearlak byte-stability check (zero diff expected per KU 5.3 LOW regression risk).

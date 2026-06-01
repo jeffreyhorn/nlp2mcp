@@ -45,7 +45,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 5. **Pipeline retest checkpoints:** Day 5, Day 10, Day 13 per PR6 — each invokes the PR22 audit script (`scripts/sprint_audit/changed_emit_artifacts.py`) to enumerate `*_mcp.gms` artifacts changed since the Day 0 anchor commit.
 6. **Phase 0 gate is HARD** for any PR touching `src/ad/`, `src/kkt/`, or `src/emit/` — per PR20 codification in CONTRIBUTING.md (merged Sprint 27 prep Task 2 / PR #1403).
 7. **PR14 reaffirmation** on every emit-affecting PR (regenerated `.gms` diff in the PR) — per CONTRIBUTING.md §"Emit-Affecting PRs — Required `.gms` Artifact in Diff (PR14)".
-8. **PR23 self-review** on any CI-workflow PR (e.g., Day 0 PR19 widening) — 32-item checklist per CONTRIBUTING.md §"CI Workflow PR Checklist (PR23, ...)".
+8. **PR23 self-review** on any PR whose diff touches `.github/workflows/*.yml`/`.yaml`, `scripts/ci/*`, or `.github/actions/*` — 32-item checklist per `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)". **PR23 does NOT apply to** pure `src/` PRs (those follow PR14 + PR20), nor to the Day 0 PR19 widening (which edits `.github/path-solve-ci-targets.txt` only and is outside PR23 scope per `CONTRIBUTING.md`:239-247).
 
 ---
 
@@ -59,7 +59,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 |---|---|---|---|
 | 0.1 | **Record Day 0 anchor commit SHA** in this PLAN.md §"Day 0 Anchor SHA" subsection below. Used by PR22 script for all mid-sprint retests. | 0.1h | SHA recorded |
 | 0.2 | **Run PR22 audit script** (`scripts/sprint_audit/changed_emit_artifacts.py --since-commit <Day-0 SHA>`) to produce the Day-0 audit baseline (should be empty — no emit changes yet). | 0.1h | `/tmp/sprint27_day0_baseline.md` (expected empty) |
-| 0.3 | **PR19 widening** — edit `.github/path-solve-ci-targets.txt` per `PR19_WIDENING_DESIGN.md` §6 (add launch as Tier 1 hard-fail + 14 net-new #1398-affected models as Pattern C soft-fail). Open PR with PR23 32-item self-review. | 1.5h | PR open + PR23 self-review filled in |
+| 0.3 | **PR19 widening** — edit `.github/path-solve-ci-targets.txt` per `PR19_WIDENING_DESIGN.md` §6 (add launch as Tier 1 hard-fail + 14 net-new #1398-affected models as Pattern C soft-fail). Open PR. PR23 self-review NOT required — the targets file is outside PR23 scope per `CONTRIBUTING.md`:239-247. | 1h | PR open |
 | 0.4 | **AD architectural Phase 0 validation experiment for #1390 kand** (per `PRIORITY_3_RISK_ASSESSMENT.md` §3 / Task 6). Prototype patch at `constraint_jacobian.py:903/1027` (predicate-guarded Sum vs per-instance enumeration); regenerate `kand_mcp.gms`; verify 22 phantom-offset terms collapse to 1. | 1h | Binding PROCEED/REPLAN signal recorded in `PRIORITY_3_RISK_ASSESSMENT.md` §3.5 |
 | 0.5 | **AD architectural Phase 0 validation experiment for #1385 srpchase** (Option B runtime-guard). Prototype at `index_mapping.py:377` + `stationarity.py`; regenerate `srpchase_mcp.gms`; verify clean compile. | 1h | Binding PROCEED/REPLAN signal |
 | 0.6 | **AD architectural Phase 0 validation experiment for #1393+#1335 otpop** (Approach C: extend `_is_concrete_instance_of` for symbolic supersets). Prototype at `derivative_rules.py:2607`; regenerate `otpop_mcp.gms`; verify `pi ≈ 4217.80` matches NLP. | 1h | Binding PROCEED/REPLAN signal |
@@ -70,7 +70,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 **Day 0 Anchor SHA:** **TBD** — record `git rev-parse HEAD` once Day 0 setup commits land (typically after Task 0.3 PR opens).
 
 **Day 0 success criteria:**
-- [ ] PR19 widening PR opened with PR23 32-item self-review filled in (≥ 27 ticked + ≤ 5 N/A with reason).
+- [ ] PR19 widening PR opened (the `.github/path-solve-ci-targets.txt` edit is outside PR23 scope; PR description includes the rationale and the dry-run validation evidence from `PR19_WIDENING_DESIGN.md` §6).
 - [ ] All 3 Priority 3 sub-priorities have binding PROCEED or REPLAN signals recorded in `PRIORITY_3_RISK_ASSESSMENT.md` §3.5.
 - [ ] 2 of 8 Priority 1 anchor KKT shapes hand-derived.
 - [ ] KU 6.1 (#1224 bundle decision) ✅ VERIFIED.
@@ -98,14 +98,14 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 | Regenerate `*_mcp.gms` for all 15 #1398-affected models + launch | 2h | Per `BASELINE_METRICS.md` §6 affected-models list |
 | Run pipeline tests + bucket-provenance check for affected models | 2h | qdemo7 must return to `compare_match`; egypt/ferts/shale to `path_solve_license`; etc. |
 | Tier 0/1 byte-stability verification (regenerate all 12 Tier 0/1 canaries, diff vs main) | 1h | Per PR19 widening Task 5 |
-| Author PR description (PR14 reaffirmation + PR23 self-review) | 2h | Regenerated `.gms` diffs included in PR |
+| Author PR description (PR14 reaffirmation + PR20 Phase 0 acceptance-gate cross-reference) | 2h | Regenerated `.gms` diffs included in PR; PR description cross-references `PRIORITY_1_ANCHOR_MAPPING.md` §4 anchor-by-anchor hand-derived KKT shapes. PR23 not applicable — pure `src/kkt/stationarity.py` change, no workflow/CI files touched |
 | Open PR; respond to first review iteration | 3h | |
 
 ### Day 3 (~8h) — PR review iteration + merge + transition
 
 | Task | Effort | Notes |
 |---|---|---|
-| PR review iteration (expect ≤ 2 rounds per PR23 §"How to use" expected compression) | 3h | |
+| PR review iteration (target: ≤ 2 rounds; PR14 + PR20 disclosures pre-filled so reviewer can verify regenerated `.gms` against hand-derived KKT directly) | 3h | |
 | Merge PR | 0.5h | |
 | Verify PR19 widening CI fires correctly on the merged commit | 0.5h | Per Task 5 §7 PR-runtime projection |
 | Start P2 Phase 0 hand-derivation for camcge `nu_ieq` cross-term (per `PROJECT_PLAN.md` Priority 2) | 3h | KU 2.1 still 🔍 INCOMPLETE; Day 0 PR19 widening Day 4 P2 commits gated on this |
@@ -129,7 +129,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 | Implement Phase B build-from-source-Sum-body approach at `src/kkt/stationarity.py` | 4h | Per `PROJECT_PLAN.md` Priority 2 + Task 6 PROCEED-gated approach |
 | Regenerate camcge + cesam2; verify hand-derived KKT byte-stable | 1.5h | KU 2.1 ✅ VERIFIED |
 | Tier 0/1 canary byte-stability check (KU 2.3) | 1h | KU 2.3 ✅ VERIFIED |
-| Author PR; PR14 + PR23 self-review; open PR | 2.5h | |
+| Author PR description (PR14 + PR20 Phase 0 cross-reference); open PR. PR23 not applicable — pure `src/kkt/stationarity.py` change | 2.5h | |
 | Buffer / PR review prep | 1h | |
 
 **P2 success criteria:**
@@ -181,7 +181,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 
 | Task | Effort | Notes |
 |---|---|---|
-| #1390 PR open (PR14 + PR23) + first review iteration | 3h | |
+| #1390 PR open (PR14 + PR20 Phase 0 cross-reference; PR23 not applicable — pure `src/ad/constraint_jacobian.py` change) + first review iteration | 3h | |
 | #1385 implement Option B runtime-guard at `index_mapping.py:377` + `stationarity.py` | 6h | Per Task 6 PROCEED + Day 0 binding patch shape |
 | #1385 Phase 0 verify (srpchase translates cleanly; KU 3.2 ✅ VERIFIED) | 1.5h | |
 | **Priority 5 close** — PR open for combined fawley + otpop fix; Tier 0/1 clearlak byte-stability (KU 5.3 mitigation) | 1.5h | |
@@ -190,7 +190,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 
 | Task | Effort | Notes |
 |---|---|---|
-| #1385 PR open (PR14 + PR23) + review iteration | 3h | |
+| #1385 PR open (PR14 + PR20 Phase 0 cross-reference; PR23 not applicable — pure `src/ad/index_mapping.py` + `src/kkt/stationarity.py` change) + review iteration | 3h | |
 | #1393+#1335 implement Approach C at `derivative_rules.py:2607` per Task 6 PROCEED | 5h | KU 3.3 ✅ VERIFIED at Day 0; binding approach selected |
 | #1393+#1335 Phase 0 verify (otpop `pi ≈ 4217.80` matches NLP) | 1.5h | |
 | **Priority 7 #1387 cclinpts** — Phase 0 hand-derivation (sign-flip + term-omission per `PRIORITY_7_FIX_SURFACE.md` §3) | 2h | KU 7.1 ✅ VERIFIED at prep |
@@ -235,7 +235,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 | **Priority 4 close** — PR open + merge launch fix | 2h | |
 | **Priority 7 #1387 cclinpts** — implement sign-flip + term-omission fixes at `derivative_rules.py:1847` + `stationarity.py:1352/1835` per `PRIORITY_7_FIX_SURFACE.md` §3 | 3.5h | |
 
-**Checkpoint 2 success criteria** (P1 merged Day 3 + P2 Day 5 + P5 Days 7–8 + P3 #1390 Day 7 + P3 #1385+#1393+#1335 Day 9 + P4 #1378 Day 10 → most planned Match recoveries should already be at the Sprint final target):
+**Checkpoint 2 success criteria** (P1 merged Day 3 + **P2 merged Day 4** (matching the Checkpoint 1 assumption that P2's gains appear in the Day 5 retest) + P5 Days 7–8 + P3 #1390 Day 7 + P3 #1385+#1393+#1335 Day 9 + P4 #1378 Day 10 → most planned Match recoveries should already be at the Sprint final target):
 - [ ] **Solve ≥ 108** (Day 0 103 + 5 firm: **#1398 qdemo7 +1**, #1381 camcge/cesam2 +2, #1357 otpop +1, #1356 fawley +1). Launch's #1378 is a Match gain (mismatch → match), not Solve — corrected from the earlier "launch via #1378" attribution.
 - [ ] **Match ≥ 66** (Day 0 59 + 7 firm: **#1398 qdemo7 +1**, #1381 ×2, #1357 +1, #1356 +1, **#1390 kand mismatch→match +1**, **#1378 launch mismatch→match +1** = +7 → 66). This already matches the Sprint 27 final target — Checkpoint 2 must NOT pass at Match = 63 with multiple planned recoveries silently failing.
 - [ ] **path_syntax_error ≤ 6** (final target reached at Checkpoint 2 since P1 + P2 + P5 — the path_syntax_error contributors — all merge by Day 9). Day 0 14 − #1398 reductions (qdemo7, dinam, egypt, ferts, gangesx, shale, turkpow recoveries) − #1381 (camcge, cesam2) − #1357 (otpop) − #1356 (fawley) → ≤ 6.
@@ -385,7 +385,7 @@ The 11 INCOMPLETE KUs are **all implementation-time-dependent** (their answer is
 | #1388 camshape Case (c) (Sprint 28 carryforward) | Medium (per Task 8 verdict — `PRIORITY_7_FIX_SURFACE.md` §4.6 binding 3-way discriminator) | **Medium:** #1388 is listed as a +1 firm Solve gain in §2 / `PROJECT_PLAN.md` Sprint 27 acceptance criteria; if Case (c) materializes, the firm count drops from +6 to +5 and target Solve ≥ 111 requires BOTH conditional gains (#1385 unblocking iswnm/mexls/nebrazil/sarf AND #1224 mine clean-solve) to land. Filing itself is low-cost (~1.25h) | Carryforward template in `PRIORITY_7_FIX_SURFACE.md` §6; Day 13 buffer absorbs filing time; the §2 caveat documents the firm-count-impact path explicitly so the Day 13 retrospective can attribute any Solve ≥ 111 miss to the §17 risk that materialized |
 | #1335 Approach C fails Phase 0 (need to fall back to Approach A or B) | Low-Medium (per Task 6) | Medium (~3h pivot per `PRIORITY_3_RISK_ASSESSMENT.md`) | Day 13 buffer + 26h sprint slack |
 | Day 4 P2 byte-stability surface breaks Tier 0/1 canary (KU 2.3) | Low | Medium (~2h debug + repair) | clearlak byte-stability canary check codified at Day 4 + Day 7 P5 close |
-| P1 PR review iteration exceeds Day 3 budget (PR23 not yet battle-tested) | Medium | Low (overflow into Day 4 slack) | PR23 32-item self-review fully filled in BEFORE requesting review |
+| P1 PR review iteration exceeds Day 3 budget (CONTRIBUTING.md PR14 + PR20 disclosure conventions not yet battle-tested on the kind of multi-anchor regression PR Priority 1 produces) | Medium | Low (overflow into Day 4 slack) | PR description pre-fills the PR14 regenerated-`.gms` list AND the PR20 anchor-by-anchor Phase 0 cross-reference (per `PRIORITY_1_ANCHOR_MAPPING.md` §4) BEFORE requesting review, so the reviewer can verify each regenerated artifact against the corresponding hand-derived KKT directly |
 | Day 11 P6 #1224 bundle decision (KU 6.1) shows bundle is wrong → mine becomes Day 12 work | Low | Low (1h shift) | Day 0 inspection completed before P3 #1385 starts (no rework downstream) |
 | Pipeline retest variance (3 models on translate_timeout boundary; same machine-load risk as Day 0) | Medium | Low (cosmetic only — bucket-provenance documents the variance per PR17) | Re-run if Day 13 final retest shows > 3 translate_timeout models that weren't in scope; document machine-load variance per `BASELINE_METRICS.md` §6.1 |
 
