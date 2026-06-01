@@ -78,9 +78,9 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 
 ---
 
-## 5. Days 1–3 — Priority 1: Phase A Gate-Predicate Tightening (#1398) (~26h total; P1 budget 10–14h)
+## 5. Days 1–3 — Priority 1: Phase A Gate-Predicate Tightening (#1398) (~28h total; P1 budget 10–14h)
 
-**Day-budget allocation:** Day 1 = 10h, Day 2 = 10h, Day 3 = 8h.
+**Day-budget allocation:** Day 1 = 10h, Day 2 = 10h, Day 3 = 8h (sum 28h; matches the §14 Budget Summary table). The Day 1–3 budget exceeds the P1-only budget (10–14h) because Day 3 includes 3h of P2 Phase 0 hand-derivation (camcge `nu_ieq`) as the transition step into Day 4.
 
 ### Day 1 (~10h) — Phase 0 anchor completion + first prototype
 
@@ -151,10 +151,13 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 | **Priority 5 #1356 fawley** — Phase 0 hand-derivation + first prototype patch per `PRIORITY_5_FIX_SURFACE.md` §3 (patch sites `complementarity.py:473-483` + `:485-494`) | 4h | KU 5.1 ✅ VERIFIED at prep; Day 5 implementation per §8 handoff |
 | **Priority 3 first PROCEED sub-priority** (per Day 0 binding signal): if #1390 PROCEEDs → start implementation; else if #1385 → start; else if #1393 → start. Land first patch + regenerate. | 1.5h start | Continued Days 6–7 |
 
-**Checkpoint 1 success criteria:**
-- [ ] Pipeline retest shows Solve ≥ 105 (Day 0 +2 from camcge/cesam2; Match ≥ 61 likewise).
-- [ ] PR22 script output includes camcge_mcp.gms + cesam2_mcp.gms + 15 #1398-affected models.
+**Checkpoint 1 success criteria** (P1 merged Day 3 + P2 merged Day 4 → both gains expected at Day 5 retest):
+- [ ] Pipeline retest shows **Solve ≥ 106** (Day 0 103 + **#1398 qdemo7 +1** from P1 Day 3 merge + #1381 camcge/cesam2 +2 from P2 Day 4 merge = 106).
+- [ ] Pipeline retest shows **Match ≥ 62** (Day 0 59 + **#1398 qdemo7 +1** + #1381 ×2 = 62).
+- [ ] PR22 script output includes camcge_mcp.gms + cesam2_mcp.gms + 15 #1398-affected `*_mcp.gms` artifacts + launch byte-stable diff.
 - [ ] P5 #1356 Phase 0 hand-derivation complete; first prototype committed.
+
+**Note:** Checkpoint 1 must catch a failed P1 #1398 recovery. If Solve = 105 / Match = 61 (i.e., only camcge+cesam2 recovered) the checkpoint **FAILS** even though +2 landed — that pattern indicates qdemo7 (and possibly other #1398-affected models) did not return to their Day 0 baseline buckets, requiring a Day 5/6 P1 re-investigation before Priority 3 begins.
 
 ---
 
@@ -232,10 +235,12 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 | **Priority 4 close** — PR open + merge launch fix | 2h | |
 | **Priority 7 #1387 cclinpts** — implement sign-flip + term-omission fixes at `derivative_rules.py:1847` + `stationarity.py:1352/1835` per `PRIORITY_7_FIX_SURFACE.md` §3 | 3.5h | |
 
-**Checkpoint 2 success criteria:**
-- [ ] Solve ≥ 108 (Day 0 +5 firm: #1381 ×2 + #1357 + #1356 + launch via #1378).
-- [ ] Match ≥ 63 (Day 0 +4: #1381 ×2 + #1357 + #1356).
-- [ ] path_syntax_error ≤ 10 (Day 0 −4 via #1398 reductions + #1381 + #1357).
+**Checkpoint 2 success criteria** (P1 merged Day 3 + P2 Day 5 + P5 Days 7–8 + P3 #1390 Day 7 + P3 #1385+#1393+#1335 Day 9 + P4 #1378 Day 10 → most planned Match recoveries should already be at the Sprint final target):
+- [ ] **Solve ≥ 108** (Day 0 103 + 5 firm: **#1398 qdemo7 +1**, #1381 camcge/cesam2 +2, #1357 otpop +1, #1356 fawley +1). Launch's #1378 is a Match gain (mismatch → match), not Solve — corrected from the earlier "launch via #1378" attribution.
+- [ ] **Match ≥ 66** (Day 0 59 + 7 firm: **#1398 qdemo7 +1**, #1381 ×2, #1357 +1, #1356 +1, **#1390 kand mismatch→match +1**, **#1378 launch mismatch→match +1** = +7 → 66). This already matches the Sprint 27 final target — Checkpoint 2 must NOT pass at Match = 63 with multiple planned recoveries silently failing.
+- [ ] **path_syntax_error ≤ 6** (final target reached at Checkpoint 2 since P1 + P2 + P5 — the path_syntax_error contributors — all merge by Day 9). Day 0 14 − #1398 reductions (qdemo7, dinam, egypt, ferts, gangesx, shale, turkpow recoveries) − #1381 (camcge, cesam2) − #1357 (otpop) − #1356 (fawley) → ≤ 6.
+
+**Note:** If any planned recovery fails to land by Day 10, the corresponding metric will undershoot the threshold and the checkpoint **FAILS**. The thresholds are intentionally set at the cumulative planned gain so a silent failure cannot pass.
 
 ---
 
@@ -327,19 +332,21 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 
 ## 15. Phase 0 Coverage Audit (per PR20 hard rule)
 
-Every `src/`-touching priority has a Phase 0 acceptance gate authored at prep stage:
+Every `src/`-touching priority has either (a) a **Phase 0 acceptance gate authored at prep stage** (prep-authored gate; KKT shape hand-derived and recorded in a prep-task doc before Sprint 27 Day 0), or (b) a **scheduled pre-commit inspection / corpus-sweep step** (P6 and P9 — the Phase 0 evidence is a Day 0 inspection or Day 12 corpus sweep rather than a prep-stage hand-derivation, because the scope is "inspect-then-decide" rather than "verify-against-known-target"):
 
-| Priority | Issue(s) | Phase 0 doc | Status |
-|---|---|---|---|
-| Priority 1 | #1398 | `PRIORITY_1_ANCHOR_MAPPING.md` §4.1–4.7 (8 anchors) | ✅ ready Day 0 |
-| Priority 2 | #1381 | `PROJECT_PLAN.md` §"Priority 2" (camcge `nu_ieq`) | ✅ ready Day 3 |
-| Priority 3 | #1390/#1385/#1393+#1335 | `PRIORITY_3_RISK_ASSESSMENT.md` §3 (3 experiments) | ✅ ready Day 0 |
-| Priority 4 | #1378 | `PROJECT_PLAN.md` §"Priority 4" + `PRIORITY_1_ANCHOR_MAPPING.md` §3 (launch byte-stability anchor) | ✅ ready Day 9 |
-| Priority 5 | #1356/#1357 | `PRIORITY_5_FIX_SURFACE.md` §3 (patch sites + helpers) | ✅ ready Day 5 |
-| Priority 6 | #1224 | KU 6.1 inspection on Day 0 + `PROJECT_PLAN.md` §"Priority 6" | ✅ ready Day 11/12 (post-Day 0 bundle decision) |
-| Priority 7 | #1387/#1388 | `PRIORITY_7_FIX_SURFACE.md` §3 (#1387 sign-flip+term-omission) + §4 (#1388 3-way discriminator) | ✅ ready Day 8/11 |
-| Priority 8 | #1400 | Day 0 inspection + `PROJECT_PLAN.md` §"Priority 8" (corrected scope) | ✅ ready Day 12 |
-| Priority 9 | #1374 | KU 9.4 corpus sweep on Day 12 | ✅ ready Day 12 |
+| Priority | Issue(s) | Phase 0 evidence | Type | Status |
+|---|---|---|---|---|
+| Priority 1 | #1398 | `PRIORITY_1_ANCHOR_MAPPING.md` §4.1–4.7 (8 anchors) | Prep-authored gate | ✅ ready Day 0 |
+| Priority 2 | #1381 | `PROJECT_PLAN.md` §"Priority 2" (camcge `nu_ieq`) | Prep-authored gate | ✅ ready Day 3 |
+| Priority 3 | #1390/#1385/#1393+#1335 | `PRIORITY_3_RISK_ASSESSMENT.md` §3 (3 experiments) | Prep-authored gate (per-experiment design ready; binding PROCEED/REPLAN signal at Day 0) | ✅ ready Day 0 |
+| Priority 4 | #1378 | `PROJECT_PLAN.md` §"Priority 4" + `PRIORITY_1_ANCHOR_MAPPING.md` §3 (launch byte-stability anchor) | Prep-authored gate (launch byte-stability anchor only; KU 4.1 fix-shape selection is the Day 9 implementation step) | ✅ ready Day 9 |
+| Priority 5 | #1356/#1357 | `PRIORITY_5_FIX_SURFACE.md` §3 (patch sites + helpers) | Prep-authored gate | ✅ ready Day 5 |
+| Priority 6 | #1224 | KU 6.1 inspection on Day 0 + `PROJECT_PLAN.md` §"Priority 6" | **Scheduled pre-commit inspection** (KU 6.1 = "does `src/ad/index_mapping.py` overlap with #1385's patch site?" — answerable only by reading the file, not pre-derivable) | ✅ scheduled Day 0 |
+| Priority 7 | #1387/#1388 | `PRIORITY_7_FIX_SURFACE.md` §3 (#1387 sign-flip+term-omission) + §4 (#1388 3-way discriminator) | Prep-authored gate | ✅ ready Day 8/11 |
+| Priority 8 | #1400 | Day 0 inspection + `PROJECT_PLAN.md` §"Priority 8" (corrected scope) | **Scheduled pre-commit inspection** (KU 8.1/8.2 = "is `run_full_test.py:899` the only leak field?" — answerable only by running the audit grep on the JSON, not pre-derivable) | ✅ scheduled Day 12 |
+| Priority 9 | #1374 | KU 9.4 corpus sweep on Day 12 | **Scheduled pre-commit corpus sweep** (KU 9.4 = "how widespread is the duplicate-init pattern?" — answerable only by scanning the 134 translating models, not pre-derivable) | ✅ scheduled Day 12 |
+
+**Coverage verdict:** all 9 priorities have an explicit Phase 0 evidence source. **6 priorities are covered by prep-authored gates** (P1, P2, P3, P4, P5, P7); **3 priorities are covered by scheduled inspection/sweep steps** (P6, P8, P9) where the answer fundamentally cannot be pre-derived at prep stage but is a deterministic mechanical check on Day 0 (P6, P8) or Day 12 (P9). The pre-commit inspection/sweep steps still satisfy PR20's intent — they produce a verified Phase 0 artifact (the inspection result or sweep output) BEFORE any src/ commit in that priority.
 
 ---
 

@@ -197,8 +197,9 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 4. **Priority 5 #1356 fawley start** per `PRIORITY_5_FIX_SURFACE.md` §3 + §8: author helpers `_extract_subset_predicate` + `_bound_expr_subset_dependency` at `src/kkt/complementarity.py`; apply Patch A+B at `:473-483` + `:485-494`; regenerate `fawley_mcp.gms`.
 5. **Priority 3 first PROCEED sub-priority start** — apply prototype to main (lift from Day 0 experiment scratch branch); first regression test pass.
 
-**Checkpoint 1 success criteria:**
-- [ ] Pipeline retest shows Solve ≥ 105 (Day 0 +2 from camcge/cesam2; Match ≥ 61).
+**Checkpoint 1 success criteria** (P1 merged Day 3 + P2 merged Day 4 → both gains expected at Day 5 retest):
+- [ ] Pipeline retest shows **Solve ≥ 106** (Day 0 103 + **#1398 qdemo7 +1** + #1381 camcge/cesam2 +2 = 106). A reading of 105 indicates qdemo7 did not recover — investigate P1 before Day 6 P3 commits.
+- [ ] Pipeline retest shows **Match ≥ 62** (Day 0 59 + **#1398 qdemo7 +1** + #1381 ×2 = 62).
 - [ ] PR22 audit script output captures camcge + cesam2 + 15 #1398 + launch artifacts.
 - [ ] P5 #1356 first patch committed.
 - [ ] P3 first sub-priority in progress.
@@ -321,13 +322,15 @@ The prompts are designed for **direct invocation** — the engineer copies the d
    ```
    Paste into SPRINT_LOG.md Day 10. Expected: P1+P2+P3+P5 artifacts (large diff).
 2. **Full pipeline retest** — Checkpoint 2.
-3. Author Day 10 SPRINT_LOG.md checkpoint entry. Expected: Solve ≥ 108 (P1+P2+P3+P5 firm gains); Match ≥ 63.
+3. Author Day 10 SPRINT_LOG.md checkpoint entry. Expected: **Solve ≥ 108** (Day 0 +5 firm: #1398 qdemo7 +1, #1381 ×2, #1357, #1356) and **Match ≥ 66** (Day 0 +7 firm: #1398 qdemo7 +1, #1381 ×2, #1357, #1356, #1390 kand +1, #1378 launch +1 — already matches Sprint final target since most planned Match recoveries land by Day 10).
 4. **Priority 4 close** — merge launch fix PR.
 5. **Priority 7 #1387 implement** — apply sign-flip fix at `stationarity.py:1352/1835` + term-omission fix at `derivative_rules.py:1847` (`_diff_sum`) per `PRIORITY_7_FIX_SURFACE.md` §3.
 6. EOD quality gate + SPRINT_LOG.md.
 
-**Checkpoint 2 success criteria:**
-- [ ] Solve ≥ 108. Match ≥ 63. path_syntax_error ≤ 10.
+**Checkpoint 2 success criteria** (P1+P2+P5+P3#1390+P4#1378 all scheduled to merge by Day 10 → Match should already match the Sprint 27 final target ≥ 66):
+- [ ] **Solve ≥ 108** (Day 0 103 + 5 firm: #1398 qdemo7 +1, #1381 ×2, #1357, #1356; launch's #1378 is a Match gain not Solve).
+- [ ] **Match ≥ 66** (Day 0 59 + 7 firm: #1398 qdemo7 +1, #1381 ×2, #1357, #1356, #1390 kand +1, #1378 launch +1 = Sprint final target). A reading of 63 indicates 3 planned recoveries silently failed — investigate before Day 11.
+- [ ] **path_syntax_error ≤ 6** (all path_syntax_error contributors P1+P2+P5 merged by Day 9; the final-target threshold should already be met).
 - [ ] PR22 output captures all P1+P2+P3+P5 artifacts.
 - [ ] Priority 4 PR merged.
 - [ ] #1387 sign-flip + term-omission patches committed.
