@@ -142,10 +142,10 @@ Based on each model's Sprint 27 Day 0 PATH behavior (extrapolated from `gamslib_
 | Component | Current (15 models) | Option A widened (30 models) | Delta |
 |---|---|---|---|
 | Setup overhead (checkout + Python + GAMS install + verify + parse) | ~22s | ~22s | 0s |
-| Tier 0/1 solves (11 → 12) | ~0.5s | ~2s (+launch) | +1.5s |
-| Pattern C solves (4 → 18) | ~0.06s | ~10s (estimated) | +~10s |
+| Tier 0/1 solves (11 → 11) | ~0.5s | ~0.5s | 0s (launch is pattern-c per Day 0 correction, not Tier 0/1) |
+| Pattern C solves (4 → 19) | ~0.06s | ~10s (estimated; incl. launch MODEL STATUS 5 ~0.2s) | +~10s |
 | Comment + artifact upload | ~3s | ~3s | 0s |
-| **Total wall-clock** | **~27s** | **~37s** | **+~10s** |
+| **Total wall-clock** | **~27s** | **~36s** | **+~9s** |
 
 **Worst case (one Pattern C timeout):** ~37s + 60s = ~97s.
 **Worst case (assume all 19 Pattern C models timeout):** ~22s + 2s + 19×60s + 3s ≈ 1167s = 19.5 min — within the 20-min job timeout but tight. **BUT** this scenario only occurs when every #1398-affected model hits PATH timeout simultaneously, which doesn't match observed behavior (path_syntax_error → fail-fast rc=2 in <0.05s; launch → MODEL STATUS 5 in ~0.2s).
@@ -153,7 +153,7 @@ Based on each model's Sprint 27 Day 0 PATH behavior (extrapolated from `gamslib_
 ### 4.3 Threshold check against budgets
 
 - **5-min developer-friction threshold** (per Unknown 1.4 framing): Option A projected ~37s, well under 5 min ✅
-- **20-min per-job hard ceiling** (workflow `timeout-minutes: 20`): Option A worst-case ~18.5 min if all Pattern C hit timeout (unlikely but theoretically possible) — within budget but tight ⚠️ (see §5.3 Option C as defensive option if Pattern C cohort grows beyond Sprint 27)
+- **20-min per-job hard ceiling** (workflow `timeout-minutes: 20`): Option A worst-case ~19.5 min if all 19 Pattern C hit timeout (unlikely but theoretically possible) — within budget but tight ⚠️ (see §5.3 Option C as defensive option if Pattern C cohort grows beyond Sprint 27)
 - **GitHub Actions per-job runtime limit** (6 hours default): not a constraint ✅
 - **GAMS demo daily quota** (no documented limit but installer fetches 648MB per run): not affected by widening ✅
 
@@ -173,8 +173,8 @@ Based on each model's Sprint 27 Day 0 PATH behavior (extrapolated from `gamslib_
 - No tier-promotion script required — pattern-c models become tier=1 incrementally as each Sprint 27 priority lands and recovers the model.
 
 **Cons:**
-- Worst-case all-timeout scenario (~18.5 min) is tight under the 20-min workflow ceiling. Mitigation: per-model reslim=30s + 30s buffer caps timeouts; failure mode is `time` field in PR comment, observable.
-- Pattern C cohort grows from 4 to 18 models (4.5× expansion) — PR comment table doubles in length.
+- Worst-case all-timeout scenario (~19.5 min, 19 Pattern C models) is tight under the 20-min workflow ceiling. Mitigation: per-model reslim=30s + 30s buffer caps timeouts; failure mode is `time` field in PR comment, observable.
+- Pattern C cohort grows from 4 to 19 models (~4.75× expansion; incl. `launch` as pattern-c per the Day 0 correction) — PR comment table grows substantially.
 
 **Implementation effort:** ~10 min (file edit only). Implementation lands at Sprint 27 Day 0.
 
@@ -184,7 +184,7 @@ Based on each model's Sprint 27 Day 0 PATH behavior (extrapolated from `gamslib_
 
 **Pros:**
 - Smallest runtime delta (~5s vs current ~27s baseline).
-- Minimal Pattern C table growth (4 + 7 = 11 models — only the 7 in-cohort anchors as pattern-c; launch as tier=1).
+- Minimal Pattern C table growth (4 + 8 = 12 models — all 8 anchors, including `launch`, as pattern-c per the Day 0 correction; `launch` is MODEL STATUS 5, not a tier=1 canary).
 
 **Cons:**
 - **Defeats KU-37 mitigation rationale.** The 7 non-anchor #1398-affected models (egypt, shale, qsambal, harker, tfordy, gangesx, srpchase) remain UNCOVERED by PR19. If Sprint 27's #1398 fix introduces a non-anchor-only regression (e.g., shale's sameas-Cartesian sub-shape per Open Question 2; harker/tfordy/srpchase mappings per Open Question 3 — all flagged in `PRIORITY_1_ANCHOR_MAPPING.md` §6), PR19 doesn't catch it. Sprint 26's #1398 incident is exactly this failure mode at the launch level.
@@ -215,7 +215,7 @@ Based on each model's Sprint 27 Day 0 PATH behavior (extrapolated from `gamslib_
 **Rationale:**
 
 1. **KU-37 mitigation fully satisfied:** All 15 #1398-affected models + launch byte-stability anchor in PR19.
-2. **Runtime projection well within budget:** ~37s steady state vs 5-min friction threshold (8× headroom); worst-case ~18.5 min vs 20-min hard ceiling (tight but within bounds; mitigated by per-model reslim=30s caps).
+2. **Runtime projection well within budget:** ~37s steady state vs 5-min friction threshold (8× headroom); worst-case ~19.5 min vs 20-min hard ceiling (tight but within bounds; mitigated by per-model reslim=30s caps).
 3. **Minimal implementation effort:** `.github/path-solve-ci-targets.txt` line edits only. No CI workflow YAML changes. No tier-promotion script needed.
 4. **Option B's cost saving (~5s) does not justify losing coverage on 7 non-anchor models** — these are exactly the surface Sprint 26's #1398 incident demonstrated PR19 must cover.
 5. **Option C's complexity (workflow YAML rewrite + 2× artifact + 2× PR-comment) is unwarranted at current cohort size** — defer until Pattern C grows past ~25 models.
@@ -362,9 +362,9 @@ PR19's current Tier 0/1 hard-fail only asserts MODEL STATUS 1 + SOLVER STATUS 1 
 | 16-candidate cohort overlap calculated | ✅ §3.1 (1 overlap on `fawley`; 15 net new) |
 | Final widened union calculated | ✅ §3.1 (30 unique models = **11 Tier 0/1 + 19 Pattern C** per Day 0 launch-tier correction) |
 | 3 options evaluated with explicit pros/cons | ✅ §5.1–§5.3 |
-| Runtime impact calculated for the recommended option | ✅ §4.2 (Option A projected ~37s steady state, ~18.5min worst case) |
+| Runtime impact calculated for the recommended option | ✅ §4.2 (Option A projected ~37s steady state, ~19.5min worst case) |
 | Threshold check against 5-min developer-friction budget | ✅ §4.3 (~37s vs 5min — 8× headroom) |
-| Threshold check against 20-min per-job hard ceiling | ⚠️ §4.3 (worst-case ~18.5min within budget but tight — mitigated by per-model reslim=30s) |
+| Threshold check against 20-min per-job hard ceiling | ⚠️ §4.3 (worst-case ~19.5min within budget but tight — mitigated by per-model reslim=30s) |
 | Recommendation made with rationale | ✅ §5.4 (Option A) |
 | Implementation steps documented (file edits, no YAML/script changes) | ✅ §6 |
 | Validation plan documented (local dry-run + dummy PR + post-merge check) | ✅ §7 |
