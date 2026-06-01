@@ -1530,7 +1530,7 @@ The Sprint 27 schedule must explicitly:
 
 Synthesized the 10 prep-task deliverables (Tasks 1–10 — `KNOWN_UNKNOWNS.md`, `BASELINE_METRICS.md`, `PRIORITY_1_ANCHOR_MAPPING.md`, `PR19_WIDENING_DESIGN.md`, `PRIORITY_3_RISK_ASSESSMENT.md`, `PRIORITY_5_FIX_SURFACE.md`, `PRIORITY_7_FIX_SURFACE.md`, `PR22_SCRIPT_DESIGN.md`, `PR23_CHECKLIST_DESIGN.md`) + `PROJECT_PLAN.md` §"Sprint 27" canonical priorities + Sprint 26 PLAN.md structural reference. Constructed a 14-day schedule (Day 0 + Days 1–13) with explicit dependency sequencing: PR19 widening + AD Phase 0 validation experiments on Day 0; Priority 1 (#1398) on Days 1–3; Priority 2 (#1381) on Day 4; Priority 3 sub-priorities (#1390, #1385, #1393+#1335) on Days 5–9 (serial-by-PR per KU 3.4 binding decision); Priority 5 (#1356, #1357) parallel on Days 5–7; Priority 4 (#1378 launch numerics) on Days 9–10; Priority 7 (#1387 + #1388) on Days 8/10/11; Priority 6 (#1224) on Day 11–12; Priorities 8 (#1400) + 9 (#1374) on Day 12; final retest + retrospective on Day 13.
 
-Authored `docs/planning/EPIC_4/SPRINT_27/PLAN.md` (18 sections, ~402 lines as delivered): §1 Sprint goal, §2 Acceptance criteria + Day 0 baseline, §3 Sequencing constraints (8 binding rules), §4–§13 per-day schedules with tasks/effort/notes tables + success criteria, §14 Budget summary (142h total within 168h cap; heaviest day 12h at Days 4/6/7/8; parallelization opportunities enumerated), §15 Phase 0 coverage audit (per PR20 hard rule — prep-authored gates plus Day 0 inspection / Day 12 corpus-sweep steps for the priorities whose Phase 0 lives in implementation), §16 Known Unknowns status snapshot (14 ✅ VERIFIED + 3 🟡 PARTIALLY VERIFIED + 11 🔍 INCOMPLETE = 28 KUs; per-day verification schedule), §17 Risk register + mitigations (7 risks named with likelihoods + impact + mitigation), §18 Related documents.
+Authored `docs/planning/EPIC_4/SPRINT_27/PLAN.md` (18 sections — line count omitted intentionally since it drifts with every minor edit): §1 Sprint goal, §2 Acceptance criteria + Day 0 baseline, §3 Sequencing constraints (8 binding rules), §4–§13 per-day schedules with tasks/effort/notes tables + success criteria, §14 Budget summary (142h total within 168h cap; heaviest day 12h at Days 4/6/7/8; parallelization opportunities enumerated), §15 Phase 0 coverage audit (per PR20 hard rule — prep-authored gates plus Day 0 inspection / Day 12 corpus-sweep steps for the priorities whose Phase 0 lives in implementation), §16 Known Unknowns status snapshot (14 ✅ VERIFIED + 3 🟡 PARTIALLY VERIFIED + 11 🔍 INCOMPLETE = 28 KUs; per-day verification schedule), §17 Risk register + mitigations (7 risks named with likelihoods + impact + mitigation), §18 Related documents.
 
 Authored `docs/planning/EPIC_4/SPRINT_27/prompts/PLAN_PROMPTS.md` (14 per-day prompts + cross-cutting rules + pipeline-retest cadence summary). Each prompt is self-contained for direct invocation: references the canonical PLAN.md day section + lists prep-task deliverables to read + names the PRs to open + names the pipeline-retest invocation + has explicit success criteria as ✅-able check items. Cross-cutting rules (PR14, PR20, PR23, PR22 audit script, quality gate, SPRINT_LOG update) listed once at the top so per-day prompts can reference rather than restate.
 
@@ -1542,7 +1542,7 @@ Budget validation: 14 days × hour budgets = 8 + 10 + 10 + 8 + 12 + 10 + 12 + 12
 
 | Item | Outcome |
 |---|---|
-| PLAN.md path | `docs/planning/EPIC_4/SPRINT_27/PLAN.md` (18 sections, 402 lines) |
+| PLAN.md path | `docs/planning/EPIC_4/SPRINT_27/PLAN.md` (18 sections; line count omitted — drifts with edits) |
 | PLAN_PROMPTS.md path | `docs/planning/EPIC_4/SPRINT_27/prompts/PLAN_PROMPTS.md` (14 per-day prompts) |
 | SPRINT_LOG.md path | `docs/planning/EPIC_4/SPRINT_27/SPRINT_LOG.md` (skeleton, 14 per-day sections + cumulative tracker + end-of-sprint summary) |
 | Days covered | Day 0 + Days 1–13 (14 total) |
@@ -1552,7 +1552,7 @@ Budget validation: 14 days × hour budgets = 8 + 10 + 10 + 8 + 12 + 10 + 12 + 12
 | Process recommendations | PR20–PR23 all ✅ done in prep (Tasks 2, 6, 9, 10); Sprint 27 execution just applies them |
 | Pipeline retest checkpoints | Day 5, Day 10, Day 13 (per PR6) — each with PR22 audit-script invocation |
 | Phase 0 gates (per PR20) | All 9 priorities have a Phase 0 doc or KU inspection step scheduled before any src/ commit |
-| KU verification schedule | 14 ✅ VERIFIED at prep; 10 🔍 INCOMPLETE all scheduled for verification on the day the relevant src/ work lands |
+| KU verification schedule | **14 ✅ VERIFIED + 3 🟡 PARTIALLY VERIFIED + 11 🔍 INCOMPLETE = 28 KUs** at prep complete; the 3 PARTIALLY VERIFIED + 11 INCOMPLETE are implementation-time-dependent and scheduled for verification on the day the relevant src/ work lands (see PLAN.md §16 for the per-day verification schedule and `KNOWN_UNKNOWNS.md` for the per-KU detail) |
 | Budget verdict | **Sprint 27 ready to kick off Day 0** — no blocking prep gaps; 26h slack absorbs (a) AD-experiment REPLAN, (b) #1335 approach pivot, (c) PR review iteration overhead, (d) #1388 Case (a/b) effort overrun |
 
 ### Verification
@@ -1568,10 +1568,19 @@ test -f docs/planning/EPIC_4/SPRINT_27/SPRINT_LOG.md && echo "SPRINT_LOG.md EXIS
 #   PLAN_PROMPTS.md "## Day N Prompt — ..." (14 per-day prompt sections)
 #   SPRINT_LOG.md   "## Day N — ..." (14 per-day log sections)
 
-# PLAN.md: count distinct day labels in the per-day section headers (§§4–13)
-grep -cE '^## [0-9]+\. Day' docs/planning/EPIC_4/SPRINT_27/PLAN.md
+# PLAN.md: count per-day section headers in §§4–13.
+# PLAN.md uses BOTH "## N. Day X — ..." (single-day sections, e.g. "## 4. Day 0")
+# AND "## N. Days X–Y — ..." (multi-day sections, e.g. "## 5. Days 1–3", "## 8.
+# Days 6–8"). The regex below matches both literal-`Day` and literal-`Days`
+# (since `Day` is a prefix of `Days`, the unanchored alternative `^## [0-9]+\.
+# Day` would still match both, but spelling them out as `(Day|Days)` makes the
+# intent explicit and survives if anyone later switches to a strict-word-boundary
+# regex matcher).
+grep -cE '^## [0-9]+\. (Day|Days)' docs/planning/EPIC_4/SPRINT_27/PLAN.md
 # Expected: 10 (sections 4–13 are the per-day sections; §5 covers Days 1–3 in
-# one section, §8 covers Days 6–8 in one section, §15–§18 are non-day sections)
+# one section, §8 covers Days 6–8 in one section, §15–§18 are non-day sections).
+# The 10 section headers cover 14 distinct day labels — Day 0 + Days 1–13 — see
+# the §14 Budget Summary cross-check below for the per-day count.
 
 # Cross-check by counting day labels referenced in §14 Budget Summary table:
 awk '/^## 14\. Budget Summary/,/^## 15\./' docs/planning/EPIC_4/SPRINT_27/PLAN.md | grep -cE '^\| Day [0-9]+ '

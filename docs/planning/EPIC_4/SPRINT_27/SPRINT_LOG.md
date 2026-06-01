@@ -105,7 +105,7 @@ Filled in at each checkpoint (Days 5, 10, 13). Track delta vs Day 0 baseline.
 - _(to be filled in during execution)_
 
 ### PR opened
-- _(P1 #1398 PR link + PR23 self-review summary)_
+- _(P1 #1398 PR link + PR14 regenerated `.gms` artifact list (via PR22 audit script) + PR20 Phase 0 cross-reference to `PRIORITY_1_ANCHOR_MAPPING.md` §4 anchor-by-anchor hand-derived KKT shapes. PR23 not applicable — pure `src/kkt/stationarity.py` change.)_
 
 ---
 

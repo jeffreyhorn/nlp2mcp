@@ -57,7 +57,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 
 | # | Task | Effort | Deliverable |
 |---|---|---|---|
-| 0.1 | **Record Day 0 anchor commit SHA** in this PLAN.md §"Day 0 Anchor SHA" subsection below. Used by PR22 script for all mid-sprint retests. | 0.1h | SHA recorded |
+| 0.1 | **Record Day 0 anchor commit SHA** in BOTH this PLAN.md §"Day 0 Anchor SHA" subsection below AND `SPRINT_LOG.md` §"Day 0 Anchor SHA" (top-level field near the beginning of that file). The SHA is used by the PR22 script for all mid-sprint retests; both files must carry the same recorded SHA so neither stays at `**TBD**`. | 0.1h | SHA recorded in both PLAN.md and SPRINT_LOG.md |
 | 0.2 | **Run PR22 audit script** (`scripts/sprint_audit/changed_emit_artifacts.py --since-commit <Day-0 SHA>`) to produce the Day-0 audit baseline (should be empty — no emit changes yet). | 0.1h | `/tmp/sprint27_day0_baseline.md` (expected empty) |
 | 0.3 | **PR19 widening** — edit `.github/path-solve-ci-targets.txt` per `PR19_WIDENING_DESIGN.md` §6 (add launch as Tier 1 hard-fail + 14 net-new #1398-affected models as Pattern C soft-fail). Open PR. PR23 self-review NOT required — the targets file is outside PR23 scope per `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)" §"Scope". | 1h | PR open |
 | 0.4 | **AD architectural Phase 0 validation experiment for #1390 kand** (per `PRIORITY_3_RISK_ASSESSMENT.md` §3 / Task 6). Prototype patch at `constraint_jacobian.py:903/1027` (predicate-guarded Sum vs per-instance enumeration); regenerate `kand_mcp.gms`; verify 22 phantom-offset terms collapse to 1. | 1h | Binding PROCEED/REPLAN signal recorded in `PRIORITY_3_RISK_ASSESSMENT.md` §3.5 |
@@ -74,7 +74,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 - [ ] All 3 Priority 3 sub-priorities have binding PROCEED or REPLAN signals recorded in `PRIORITY_3_RISK_ASSESSMENT.md` §3.5.
 - [ ] 2 of 8 Priority 1 anchor KKT shapes hand-derived.
 - [ ] KU 6.1 (#1224 bundle decision) ✅ VERIFIED.
-- [ ] Day 0 anchor SHA recorded.
+- [ ] Day 0 anchor SHA recorded in BOTH PLAN.md §4 "Day 0 Anchor SHA" AND SPRINT_LOG.md §"Day 0 Anchor SHA".
 
 ---
 

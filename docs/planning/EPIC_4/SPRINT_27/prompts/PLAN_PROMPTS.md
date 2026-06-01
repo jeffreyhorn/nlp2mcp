@@ -46,7 +46,7 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 **Tasks (in order):**
 
-1. **Record Day 0 anchor SHA.** Run `git rev-parse HEAD` on `main`. Open `PLAN.md` §4 "Day 0 Anchor SHA" and replace `**TBD**` with the SHA. Commit on a `planning/sprint27-day0-setup` branch.
+1. **Record Day 0 anchor SHA in BOTH PLAN.md AND SPRINT_LOG.md.** Run `git rev-parse HEAD` on `main`. Open `PLAN.md` §4 "Day 0 Anchor SHA" and replace `**TBD**` with the SHA. Then open `SPRINT_LOG.md` §"Day 0 Anchor SHA" (top-level section, near the beginning of the file) and replace its `**TBD**` with the same SHA. **Both files need the same recorded SHA** — `PLAN.md` is the canonical schedule reference and `SPRINT_LOG.md` is what mid-sprint retest entries cite for `--since-commit <SHA>` paste-ins; leaving either at `TBD` causes confusion later. Commit both edits on a `planning/sprint27-day0-setup` branch.
 2. **Run PR22 baseline.** `.venv/bin/python scripts/sprint_audit/changed_emit_artifacts.py --since-commit <Day-0 SHA> --format markdown --mode retest > /tmp/sprint27_day0_baseline.md`. Expect output: 0 commits / 0 changes (Day 0 = anchor itself).
 3. **PR19 widening.** Edit `.github/path-solve-ci-targets.txt` per `PR19_WIDENING_DESIGN.md` §6 (add launch as Tier 1 hard-fail; add 14 net-new #1398-affected models as Pattern C soft-fail). Open PR. PR23 self-review NOT required — the targets file is outside PR23 scope per `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)" §"Scope" (PR23 applies to `.github/workflows/*.yml`/`.yaml`, `scripts/ci/*`, `.github/actions/*` only). Include the PR19 widening dry-run validation evidence from `PR19_WIDENING_DESIGN.md` §6 in the PR description. Expected file count: 1.
 4. **AD experiment #1390 kand** per `PRIORITY_3_RISK_ASSESSMENT.md` §3.1. Apply prototype at `src/ad/constraint_jacobian.py:903` + `:1027`. Regenerate `kand_mcp.gms`. Verify 22 phantom-offset `lam_dembalx(j,t+1,n+k)` terms collapse to 1 predicate-guarded Sum. Record binding signal in `PRIORITY_3_RISK_ASSESSMENT.md` §3.5 table (PROCEED / REPLAN).
@@ -58,7 +58,7 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 10. **Open SPRINT_LOG.md Day 0 entry.** Record hours, deliverables, binding signals, KUs verified.
 
 **Success criteria (Day 0):**
-- [ ] Day 0 anchor SHA recorded in PLAN.md.
+- [ ] Day 0 anchor SHA recorded in BOTH `PLAN.md` §4 "Day 0 Anchor SHA" AND `SPRINT_LOG.md` §"Day 0 Anchor SHA" — neither file may remain at `**TBD**`.
 - [ ] PR19 widening PR open with the dry-run validation evidence from `PR19_WIDENING_DESIGN.md` §6 in the PR description (PR23 self-review NOT required for this targets-file-only PR per `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)" §"Scope").
 - [ ] All 3 Priority 3 sub-priorities have binding PROCEED or REPLAN signals.
 - [ ] 2 of 8 Priority 1 anchor KKT shapes hand-derived.
