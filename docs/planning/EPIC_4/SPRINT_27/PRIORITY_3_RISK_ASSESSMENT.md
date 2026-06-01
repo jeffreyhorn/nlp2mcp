@@ -257,7 +257,7 @@ grep -nE '1\$\(ancestor\("srn",' /tmp/srpchase_mcp_experiment.gms
 
 #### 🟡 BINDING VERDICT (Sprint 27 Day 0 execution, anchor `148662a5`): **SCOPED-PROCEED (translate-time only) — the §7 partial-PROCEED escalation fires.**
 
-Empirical results (`model_name='purchase'`; `n` = 1001 members; `srn(n)` is a **dynamic subset** with 0 static members; conditioned eqs `slack(srn)$(not leaf(srn))` + `demand(leaf(srn))`, both containing `sum(ancestor(srn,n), y(n))` over n×n ≈ 1M):
+Empirical results (model id **`srpchase`** = `data/gamslib/raw/srpchase.gms`, the identifier used in CI targets and `gamslib_status.json`; its GAMS model-statement name — the `ModelIR.model_name` value the prototype guards on — is **`purchase`** (`Model purchase / all /`). `n` = 1001 members; `srn(n)` is a **dynamic subset** with 0 static members; conditioned eqs `slack(srn)$(not leaf(srn))` + `demand(leaf(srn))`, both containing `sum(ancestor(srn,n), y(n))` over n×n ≈ 1M):
 
 | §4.4 criterion | Result |
 |---|---|
