@@ -550,7 +550,7 @@ Sprint planning + AD/KKT engineer
 
 ✅ **Status:** VERIFIED (Sprint 27 Day 0 execution) — **binding signal: 🔴 REPLAN.** The §3.3 patch site (`constraint_jacobian.py:903/1027`) is **misattributed**: a full-translate trace shows the 22 phantom-offset terms are produced by `stationarity.py::_apply_offset_substitution` (fires exactly 22×), while `_compute_inequality_jacobian` only stores concrete per-(row,col) partials. RQ1's "callback dispatch insertion" premise does not address the bug. Redirected surface = stationarity lead/lag-offset re-symbolization. See `PRIORITY_3_RISK_ASSESSMENT.md` §3.5 + §8.5 binding table.
 **Verified by:** Task 6 design + Sprint 27 Day 0 prototype execution (PR16)
-**Date:** 2026-05-28
+**Date:** 2026-05-28 (prep) / 2026-06-01 Sprint 27 Day 0 (binding)
 
 **Findings (architectural analysis):**
 
@@ -608,7 +608,7 @@ Sprint planning + AD/KKT engineer
 
 ✅ **Status:** VERIFIED (Sprint 27 Day 0 execution) — **binding signal: 🟡 SCOPED-PROCEED (translate-time only).** The AD→emit-boundary short-circuit (skip `slack`/`demand` enumeration at `index_mapping.py:377`) brings translate **>180s → 6.0s** with clean GAMS compile and no quoted-literal indices (crit 1–3 ✓). But it preserves concrete-index semantics only by **dropping** the equations — cross-term coverage (crit 4) is NOT preserved; the runtime-guard *emit* half (the answer to this KU — "only at the AD→emit boundary") was not authored and is an emit-layer problem. Sprint 27 may land translate-time only and defer cross-terms to Sprint 28. See `PRIORITY_3_RISK_ASSESSMENT.md` §4.5 + §8.5.
 **Verified by:** Task 6 design + Sprint 27 Day 0 prototype execution (PR16)
-**Date:** 2026-05-28
+**Date:** 2026-05-28 (prep) / 2026-06-01 Sprint 27 Day 0 (binding)
 
 **Findings (architectural analysis):**
 
@@ -668,7 +668,7 @@ Sprint planning + AD/KKT engineer
 
 ✅ **Status:** VERIFIED (Sprint 27 Day 0 execution) — **Approach C selected at prep, but DISPROVEN on Day 0 → 🔴 REPLAN.** The §5.3 premise (the collapse routes through `_is_concrete_instance_of('tt','t')`) is empirically false — that call never happens; the otpop-guarded Approach-C prototype produced **byte-identical** emit (#1393 over-count + #1335 missing `nu_zdef` both persist). Per the §5.5 fallback rule, the empirical answer to "which approach is best" becomes **Approach B** (symbolic offset evaluation of `card(t)-ord(t)`), which is ALSO required independently for #1335 — Approach C does not subsume it. #1393 and #1335 are now distinct fixes. See `PRIORITY_3_RISK_ASSESSMENT.md` §5.6 + §8.5.
 **Verified by:** Task 6 design + Sprint 27 Day 0 prototype execution (PR16)
-**Date:** 2026-05-28
+**Date:** 2026-05-28 (prep) / 2026-06-01 Sprint 27 Day 0 (binding)
 
 **Findings (architectural analysis + Sprint 26 Day 9 SPRINT_LOG review):**
 
