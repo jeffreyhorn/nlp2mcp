@@ -163,6 +163,8 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 
 ## 8. Days 6–8 — Priority 3: AD Architectural Redesigns (#1390, #1385, #1393+#1335) + parallel Priority 5 (~36h total; P3 budget 30–48h)
 
+> 🔴 **DAY 0 BINDING-SIGNAL GATE (do not commit this schedule as-is):** The Day 0 Phase 0 experiments returned **#1390 REPLAN, #1393+#1335 REPLAN, #1385 SCOPED-PROCEED (translate-time only)** — all 3 prep patch sites were mis-scoped to the AD layer; the bugs live in the KKT stationarity/emit layer. Per the §6.4 cascading rule (2+ REPLAN), **the Days 6–8 ~30–48h Priority 3 budget should be reallocated**, not spent on the schedule below. See `PRIORITY_3_RISK_ASSESSMENT.md` §8.5 (binding table + budget-reallocation recommendation) and SPRINT_LOG Day 0 entry. Recommended: land #1385 translate-time short-circuit only; re-scope #1390/#1393/#1335 against the redirected `stationarity.py` surface (re-run Phase 0 on the correct layer) or defer to Sprint 28; redirect freed budget to P4/P5/P7. **Match target +1 from #1390 is at risk.** The schedule below is retained for reference pending the Day 0 retrospective decision.
+
 **Day-budget allocation:** Day 6 = 12h, Day 7 = 12h, Day 8 = 12h.
 
 **Sub-priority sequencing:** Serial implementation (per `PRIORITY_3_RISK_ASSESSMENT.md` §3.4 / KU 3.4 binding decision — serial preferred over coordinated; per-sub-priority Phase 0 gates passed independently on Day 0). Order: #1390 → #1385 → #1393+#1335 (driven by patch-site independence; #1390 in `constraint_jacobian.py`, #1385 in `index_mapping.py` + `stationarity.py`, #1393+#1335 in `derivative_rules.py`).
