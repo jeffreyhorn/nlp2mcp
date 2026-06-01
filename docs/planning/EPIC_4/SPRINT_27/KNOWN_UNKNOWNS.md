@@ -1134,7 +1134,15 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Sprint 27 Day 0 inspection) — **Decision: STANDALONE (do NOT bundle #1224 with #1385).**
+
+**Day 0 code inspection (`src/ad/index_mapping.py` @ anchor `148662a5`):**
+
+1. **No overlap.** `src/ad/index_mapping.py` contains **zero** `IndexOffset` or `ParamRef` references (grep returns nothing). The #1385 patch site is `enumerate_equation_instances` (`index_mapping.py:377`), which does set-membership **condition filtering** on equation instances — it has no offset-arithmetic code path. (RQ1: the two do not modify overlapping functions.)
+2. **The #1224 `IndexOffset(ParamRef)` surface is in a different module.** Offset resolution lives in `src/ad/constraint_jacobian.py` — `_try_eval_offset` (`:133`), the `IndexOffset` index-resolution helpers (`:93`, `:274`, `:1283`), and `src/ad/derivative_rules.py:2793` ("Substitute indices in ParamRef, including IndexOffset bases"). None of these are touched by #1385. (The PR19_WIDENING_DESIGN §8.2 / KNOWN_UNKNOWNS premise that #1224 "touches `src/ad/index_mapping.py`" is imprecise — the actual `IndexOffset(ParamRef)` evaluation code is in `constraint_jacobian.py`/`derivative_rules.py`.)
+3. **Blast-radius argument confirms standalone.** Because there is no shared function or even shared module on the critical path, bundling would yield no context/test reuse savings (RQ2) while coupling #1224's fate to #1385's Phase 0 outcome. If #1385 REPLANs, #1224 proceeds unaffected (RQ3 = yes). No interaction between #1224's offset fix and #1385's short-circuit logic (RQ4 = none).
+
+**Schedule impact:** #1224 stays as **standalone Day 12** work per PLAN.md §12 — NOT brought forward to Day 11 with #1385. PLAN.md §3 sequencing constraint 4 ("Priority 6 #1224 may bundle with Priority 3 #1385") resolves to **no bundle**.
 
 ---
 
