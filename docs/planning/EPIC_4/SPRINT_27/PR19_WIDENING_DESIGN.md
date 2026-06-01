@@ -194,7 +194,7 @@ Based on each model's Sprint 27 Day 0 PATH behavior (extrapolated from `gamslib_
 
 ### 5.3 Option C — Tiered widening (split into 2 parallel CI jobs) (RESERVE)
 
-**Description:** Same final widened union as Option A (30 unique models), but split into 2 parallel CI jobs. E.g., Job 1: 12 Tier 0/1 hard-fail (current 11 + launch). Job 2: 18 Pattern C soft-fail (current 4 + 14 net new). Each job has its own GAMS install + setup overhead.
+**Description:** Same final widened union as Option A (30 unique models), but split into 2 parallel CI jobs. E.g., Job 1: 11 Tier 0/1 hard-fail. Job 2: 19 Pattern C soft-fail (current 4 + 15 net new incl. `launch`, which is pattern-c per the Day 0 correction). Each job has its own GAMS install + setup overhead.
 
 **Pros:**
 - Same coverage as Option A.
