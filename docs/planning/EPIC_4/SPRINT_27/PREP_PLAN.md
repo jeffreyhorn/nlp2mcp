@@ -1563,25 +1563,52 @@ test -f docs/planning/EPIC_4/SPRINT_27/PLAN.md && echo "PLAN.md EXISTS"
 test -f docs/planning/EPIC_4/SPRINT_27/prompts/PLAN_PROMPTS.md && echo "PLAN_PROMPTS.md EXISTS"
 test -f docs/planning/EPIC_4/SPRINT_27/SPRINT_LOG.md && echo "SPRINT_LOG.md EXISTS"
 
-# PLAN.md covers Day 0 + Days 1-13
-grep -cE "^## Day [0-9]+" docs/planning/EPIC_4/SPRINT_27/PLAN.md
+# Day coverage — each doc uses a slightly different heading style:
+#   PLAN.md         §§4–13 numbered sections titled "## N. Day X — ..." (Day 0 + Days 1–13)
+#   PLAN_PROMPTS.md "## Day N Prompt — ..." (14 per-day prompt sections)
+#   SPRINT_LOG.md   "## Day N — ..." (14 per-day log sections)
+
+# PLAN.md: count distinct day labels in the per-day section headers (§§4–13)
+grep -cE '^## [0-9]+\. Day' docs/planning/EPIC_4/SPRINT_27/PLAN.md
+# Expected: 10 (sections 4–13 are the per-day sections; §5 covers Days 1–3 in
+# one section, §8 covers Days 6–8 in one section, §15–§18 are non-day sections)
+
+# Cross-check by counting day labels referenced in §14 Budget Summary table:
+awk '/^## 14\. Budget Summary/,/^## 15\./' docs/planning/EPIC_4/SPRINT_27/PLAN.md | grep -cE '^\| Day [0-9]+ '
+# Expected: 14 (one row per day: Day 0–13)
+
+# PLAN_PROMPTS.md covers Day 0 + Days 1–13
+grep -cE '^## Day [0-9]+ Prompt' docs/planning/EPIC_4/SPRINT_27/prompts/PLAN_PROMPTS.md
 # Expected: 14
 
-# PLAN_PROMPTS.md covers Day 0 + Days 1-13
-grep -cE "^## Day [0-9]+" docs/planning/EPIC_4/SPRINT_27/prompts/PLAN_PROMPTS.md
+# SPRINT_LOG.md covers Day 0 + Days 1–13
+grep -cE '^## Day [0-9]+ —' docs/planning/EPIC_4/SPRINT_27/SPRINT_LOG.md
 # Expected: 14
 
-# Hours budget check
-grep -E "Hours: [0-9]+" docs/planning/EPIC_4/SPRINT_27/PLAN.md | awk -F': ' '{sum+=$2} END {print "Total: " sum}'
-# Expected: ≤ 168
+# Hours budget — sum the per-day hour column in PLAN.md §14 Budget Summary table.
+# The table rows look like `| Day N | H | cumulative | workstreams |`.
+# Extract column 2 (the H value) from each `| Day N | ... |` row:
+awk '/^## 14\. Budget Summary/,/^## 15\./' docs/planning/EPIC_4/SPRINT_27/PLAN.md \
+  | awk -F'|' '/^\| Day [0-9]+/ { gsub(/ /, "", $3); sum += $3 } END { print "Total: " sum }'
+# Expected: 142
 
-# Per-day hours ≤ 12
-grep -E "Hours: [0-9]+" docs/planning/EPIC_4/SPRINT_27/PLAN.md | awk -F': ' '{ if ($2 > 12) print "EXCEEDS: " $0 }'
+# Per-day hours ≤ 12 — flag any row where the hours column exceeds 12.
+# Note the `+0` to coerce the trimmed string to numeric (without it, awk does
+# string comparison and "8" > "12" lexicographically returns true):
+awk '/^## 14\. Budget Summary/,/^## 15\./' docs/planning/EPIC_4/SPRINT_27/PLAN.md \
+  | awk -F'|' '/^\| Day [0-9]+/ { gsub(/ /, "", $3); if ($3 + 0 > 12) print "EXCEEDS: " $0 }'
 # Expected: no output
 
 # All 9 priorities scheduled
 for p in "Priority 1" "Priority 2" "Priority 3" "Priority 4" "Priority 5" "Priority 6" "Priority 7" "Priority 8" "Priority 9"; do
   grep -q "$p" docs/planning/EPIC_4/SPRINT_27/PLAN.md && echo "$p: SCHEDULED" || echo "$p: MISSING"
+done
+
+# Checkpoint days called out at Day 5, 10, 13
+for d in 5 10 13; do
+  grep -qE "Day $d.*Checkpoint|Day $d.*Final" docs/planning/EPIC_4/SPRINT_27/PLAN.md \
+    && echo "Day $d: CHECKPOINT/FINAL" \
+    || echo "Day $d: not flagged as checkpoint/final (likely OK if pure execution day)"
 done
 ```
 
@@ -1625,15 +1652,20 @@ All 11 Sprint 27 prep tasks complete. Sprint 27 ready to kick off Day 0.
 | 9 | PR22 Mid-Sprint Audit Script Design | ✅ COMPLETE | 2026-05-30 | #1410 | KU 9.3 ✅ VERIFIED | ~3h |
 | 10 | PR23 CI-Workflow PR Self-Review Checklist Authoring | ✅ COMPLETE | 2026-05-30 | #1411 | KU 9.1 ✅ VERIFIED | ~3h |
 | 11 | Plan Sprint 27 Detailed Schedule | ✅ COMPLETE | 2026-05-31 | (this PR) | integrates all KUs | ~4h |
-| **Total** | | **11/11 ✅** | | | **14 ✅ VERIFIED at prep + 10 🔍 INCOMPLETE (implementation-time-dependent; scheduled for VERIFICATION on the day the relevant src/ work lands per PLAN.md §16)** | **~42h within 31–44h budget** |
+| **Total** | | **11/11 ✅** | | | **14 ✅ VERIFIED + 3 🟡 PARTIALLY VERIFIED + 11 🔍 INCOMPLETE = 28 KUs total** (all PARTIALLY VERIFIED + INCOMPLETE are implementation-time-dependent; scheduled for VERIFICATION on the day the relevant src/ work lands per PLAN.md §16) | **~42h within 31–44h budget** |
 
 ### Prep-stage KU Coverage Summary (per `KNOWN_UNKNOWNS.md`)
 
-- **✅ VERIFIED at prep (14 KUs):** 1.1, 1.2, 1.4, 2.1 (decided at Task 6), 2.2 (decided), 3.4, 3.5, 4.2, 5.1, 5.2, 5.3, 7.1, 7.2, 7.3, 8.1, 9.1, 9.3 (some KUs dual-counted in source spread).
-- **🔍 INCOMPLETE at prep (10 KUs, all implementation-time-dependent — scheduled in PLAN.md):**
+Audited 2026-05-31 by grepping every `Status:` line in `KNOWN_UNKNOWNS.md` and binning by emoji. The KU census is **14 ✅ VERIFIED + 3 🟡 PARTIALLY VERIFIED + 11 🔍 INCOMPLETE = 28 total**.
+
+- **✅ VERIFIED at prep (14 KUs):** 1.1, 1.2, 1.4, 3.3, 3.4, 3.5, 5.1, 5.2, 5.3, 7.1, 7.2, 7.3, 9.1, 9.3.
+- **🟡 PARTIALLY VERIFIED at prep (3 KUs; design-ready, Day 0/1 binding signal pending):**
+  - **KU 3.1** (#1390 kand per-instance enumeration opt-in via static predicate) — design ready; binding verdict pending Sprint 27 Day 0 prototype execution.
+  - **KU 3.2** (#1385 short-circuit concrete-index preservation) — design ready; binding verdict pending Sprint 27 Day 0 prototype execution.
+  - **KU 4.2** (launch byte-stability anchor constraint on Priority 4) — anchor identified; Priority 4 emit-impact analysis deferred to KU 4.1's Day 9 fix-shape selection.
+- **🔍 INCOMPLETE at prep (11 KUs, all implementation-time-dependent — scheduled in PLAN.md):**
   - **KU 1.3** (gate predicate fires only on launch-shape) → verified Day 1–3 when prototype lands.
   - **KU 2.1, 2.2, 2.3** (Pattern C Phase B generalization, sequencing, byte-stability) → verified Day 4 on P2 implementation.
-  - **KU 3.1, 3.2, 3.3** (each AD sub-priority binding signal) → verified Day 0 (experiments) + Days 6–8 (implementation).
   - **KU 4.1** (launch numerics fix path) → verified Day 9.
   - **KU 6.1** (#1224 bundle decision) → verified Day 0 inspection.
   - **KU 6.2** (mine next failure mode) → verified Day 12 post-fix.
@@ -1641,7 +1673,7 @@ All 11 Sprint 27 prep tasks complete. Sprint 27 ready to kick off Day 0.
   - **KU 9.2** (PR21 template reusability) → deferred to Sprint 28+ retrospective (not blocking Sprint 27 kickoff).
   - **KU 9.4** (#1374 corpus prevalence) → verified Day 12 sweep.
 
-**No blocking research remains.** All Sprint 27 src/ commit paths have: (a) Phase 0 acceptance gates authored (PR20), (b) anchor models or fix surfaces mapped at `file:line` precision, (c) effort estimates within budget, (d) PROCEED/REPLAN signals scheduled BEFORE budget commitment. The 10 INCOMPLETE KUs are the implementation-time questions whose answers ARE the Sprint 27 work — they are recorded for VERIFICATION on the appropriate day.
+**No blocking research remains.** All Sprint 27 src/ commit paths have: (a) Phase 0 acceptance gates authored (PR20), (b) anchor models or fix surfaces mapped at `file:line` precision, (c) effort estimates within budget, (d) PROCEED/REPLAN signals scheduled BEFORE budget commitment. The 3 PARTIALLY VERIFIED KUs are explicitly design-ready Day 0 experiment slots (that's the intended state for the AD architectural redesign chain). The 11 INCOMPLETE KUs are the implementation-time questions whose answers ARE the Sprint 27 work — they are recorded for VERIFICATION on the appropriate day.
 
 ### Sprint 27 Targets vs Day 0 Baseline (recap)
 

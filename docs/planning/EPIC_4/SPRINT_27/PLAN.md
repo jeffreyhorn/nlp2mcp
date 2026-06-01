@@ -20,7 +20,7 @@ Per `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 27":
 
 | Metric | Day 0 baseline | Sprint 27 target | Δ |
 |---|---|---|---|
-| **Solve** | 103 | ≥ 111 | +6 firm (#1381 ×2, #1398 qdemo7, #1357, #1356, #1388) + 2 conditional (#1385, #1224) |
+| **Solve** | 103 | ≥ 111 | +6 firm (#1381 ×2, #1398 qdemo7, #1357, #1356, #1388 per `PROJECT_PLAN.md` Sprint 27 §"Acceptance Criteria") + 2 conditional (#1385, #1224). **Caveat per Task 8 / `PRIORITY_7_FIX_SURFACE.md`:** #1388 is conditional on the Day 11 §4.6 3-way discriminator — Case (a)/(b) → +1 firm Solve as documented; Case (c) → Sprint 28 carryforward → +5 firm in Sprint 27, requiring BOTH conditional gains (#1385 + #1224) to land for Solve ≥ 111 (see §17 Risk Register). |
 | **Match** | 59 | ≥ 66 | +7 firm (#1381 ×2, #1398 qdemo7, #1357, #1356, #1378, #1390) |
 | **path_syntax_error** | 14 (was 17 at Sprint 26 final; 3 machine-variance churn into translate_timeout) | ≤ 6 | −8 to ≤ 6 |
 | **path_solve_terminated** | 5 | ≤ 5 (maintain) | 0 |
@@ -40,7 +40,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 
 1. **Day 0 ONLY:** PR19 widening (Task 5; 10-min edit to `.github/path-solve-ci-targets.txt`) + Phase 0 codification application (Task 2; CONTRIBUTING.md §"Phase 0 Acceptance Gates" already merged) + AD architectural Phase 0 validation experiments (Task 6 PROCEED/REPLAN signal for #1390/#1385/#1393; ~3h on Day 0).
 2. **Day 0 precedes Day 1 Priority 1 work** — the PR19 widening must be in place BEFORE the tightened gate predicate from #1398 lands, so similar gate-overreach catches at PR-review time.
-3. **Day 4 Priority 3 commits are PHASE-0-GATED** — Day 0 experiment results for #1390 / #1385 / #1393 determine which sub-priorities PROCEED at Day 4 vs REPLAN to Sprint 28. If any sub-priority REPLANs, its budget rolls to Day 13 buffer.
+3. **Priority 3 commits (starting Day 5 per §8) are PHASE-0-GATED** — Day 0 experiment results for #1390 / #1385 / #1393 determine which sub-priorities PROCEED at Day 5+ vs REPLAN to Sprint 28. (Day 4 is Priority 2 / #1381 Pattern C Phase B redesign, not Priority 3.) If any P3 sub-priority REPLANs, its budget rolls to Day 13 buffer.
 4. **Priority 6 #1224 may bundle with Priority 3 #1385** (both touch `src/ad/index_mapping.py`) — Day 0 inspection of the file's structure determines bundle vs standalone (KU 6.1).
 5. **Pipeline retest checkpoints:** Day 5, Day 10, Day 13 per PR6 — each invokes the PR22 audit script (`scripts/sprint_audit/changed_emit_artifacts.py`) to enumerate `*_mcp.gms` artifacts changed since the Day 0 anchor commit.
 6. **Phase 0 gate is HARD** for any PR touching `src/ad/`, `src/kkt/`, or `src/emit/` — per PR20 codification in CONTRIBUTING.md (merged Sprint 27 prep Task 2 / PR #1403).
@@ -345,26 +345,28 @@ Every `src/`-touching priority has a Phase 0 acceptance gate authored at prep st
 
 ## 16. Known Unknowns Status Snapshot (Day 0 entry state)
 
-Per `KNOWN_UNKNOWNS.md` at prep complete:
+Per `KNOWN_UNKNOWNS.md` at prep complete (audited 2026-05-31 by grepping every `Status:` line in the file and binning by emoji):
 
 | Status | Count | KUs |
 |---|---|---|
-| ✅ VERIFIED at prep | 14 | 1.1, 1.2, 1.4, 2.1 (decided), 2.2 (decided), 3.4, 3.5, 4.2, 5.1, 5.2, 5.3, 7.1, 7.2, 7.3, 8.1, 9.1, 9.3 (some KU 9.x dual-counted in source spread) |
-| 🔍 INCOMPLETE (implementation-time) | 10 | 1.3, 2.1, 2.2, 2.3, 4.1, 6.1, 6.2, 8.1, 8.2, 9.2, 9.4 |
+| ✅ VERIFIED at prep | 14 | 1.1, 1.2, 1.4, 3.3, 3.4, 3.5, 5.1, 5.2, 5.3, 7.1, 7.2, 7.3, 9.1, 9.3 |
+| 🟡 PARTIALLY VERIFIED (design-ready; binding signal pending Day 0/1 experiment) | 3 | 3.1, 3.2, 4.2 |
+| 🔍 INCOMPLETE (implementation-time) | 11 | 1.3, 2.1, 2.2, 2.3, 4.1, 6.1, 6.2, 8.1, 8.2, 9.2, 9.4 |
 | **Total** | **28** | |
 
-The 10 INCOMPLETE KUs are **all implementation-time-dependent** (their answer is the output of running a prototype patch or experiment, not a prep-stage research question). They are scheduled for VERIFICATION on the day the relevant src/ work lands:
+The 3 PARTIALLY VERIFIED KUs (3.1, 3.2, 4.2) have design-ready patch shapes per Tasks 6 and 4, with the binding PROCEED/REPLAN signal scheduled for the Day 0 AD-experiment block. KUs 3.1 and 3.2 move to ✅ VERIFIED when the Day 0 #1390 kand and #1385 srpchase prototypes produce binary PROCEED/REPLAN signals; KU 4.2 (launch byte-stability constraint on Priority 4 #1378) moves to ✅ VERIFIED when KU 4.1's Day 9 launch-numerics fix shape is selected.
+
+The 11 INCOMPLETE KUs are **all implementation-time-dependent** (their answer is the output of running a prototype patch or experiment, not a prep-stage research question). They are scheduled for VERIFICATION on the day the relevant src/ work lands:
 - KU 1.3 → Day 1–2
 - KU 2.1, 2.2, 2.3 → Day 4
-- KU 3.1, 3.2, 3.3 → Day 0 (experiments) + Day 6–8 (implementation confirmation)
 - KU 4.1 → Day 9
-- KU 6.1 → Day 0
+- KU 6.1 → Day 0 inspection
 - KU 6.2 → Day 12
 - KU 8.1, 8.2 → Day 12
 - KU 9.4 → Day 12
 - KU 9.2 → deferred to Sprint 28+ retrospective (reusability assessment)
 
-**No INCOMPLETE KU blocks Sprint 27 start.** All blocking research (PROCEED/REPLAN signals, scope freezes, anchor mappings, patch-site identification, effort estimates) was resolved in prep tasks 1–10.
+**No INCOMPLETE KU blocks Sprint 27 start.** All blocking research (PROCEED/REPLAN signals, scope freezes, anchor mappings, patch-site identification, effort estimates) was resolved in prep tasks 1–10. The 3 PARTIALLY VERIFIED KUs are explicitly design-ready with Day 0 experiment slots — that's the intended state for the AD architectural redesign chain.
 
 ---
 
@@ -373,7 +375,7 @@ The 10 INCOMPLETE KUs are **all implementation-time-dependent** (their answer is
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | Day 0 AD experiment REPLANs all 3 P3 sub-priorities | Low (per Task 6 design-ready experiments) | High (P3 = 30–48h of sprint budget) | 26h slack absorbs at most 1 REPLAN; if all 3 REPLAN → trim to 4 sub-priorities + extend Sprint 28 |
-| #1388 camshape Case (c) (Sprint 28 carryforward) | Medium (per Task 8 verdict) | Low (1.25h filing; no Solve gain lost — wasn't counted as firm) | Carryforward template in `PRIORITY_7_FIX_SURFACE.md` §6; Day 13 buffer |
+| #1388 camshape Case (c) (Sprint 28 carryforward) | Medium (per Task 8 verdict — `PRIORITY_7_FIX_SURFACE.md` §4.6 binding 3-way discriminator) | **Medium:** #1388 is listed as a +1 firm Solve gain in §2 / `PROJECT_PLAN.md` Sprint 27 acceptance criteria; if Case (c) materializes, the firm count drops from +6 to +5 and target Solve ≥ 111 requires BOTH conditional gains (#1385 unblocking iswnm/mexls/nebrazil/sarf AND #1224 mine clean-solve) to land. Filing itself is low-cost (~1.25h) | Carryforward template in `PRIORITY_7_FIX_SURFACE.md` §6; Day 13 buffer absorbs filing time; the §2 caveat documents the firm-count-impact path explicitly so the Day 13 retrospective can attribute any Solve ≥ 111 miss to the §17 risk that materialized |
 | #1335 Approach C fails Phase 0 (need to fall back to Approach A or B) | Low-Medium (per Task 6) | Medium (~3h pivot per `PRIORITY_3_RISK_ASSESSMENT.md`) | Day 13 buffer + 26h sprint slack |
 | Day 4 P2 byte-stability surface breaks Tier 0/1 canary (KU 2.3) | Low | Medium (~2h debug + repair) | clearlak byte-stability canary check codified at Day 4 + Day 7 P5 close |
 | P1 PR review iteration exceeds Day 3 budget (PR23 not yet battle-tested) | Medium | Low (overflow into Day 4 slack) | PR23 32-item self-review fully filled in BEFORE requesting review |
