@@ -148,6 +148,12 @@ done
 
 **Risk factors that could flip to REPLAN:** the per-element enumeration may not have a clean callback insertion point (would force a deeper refactor); the tree-predicate detection may match unrelated Sums (would produce false positives on other models). Day 0 execution will resolve.
 
+#### 🔴 BINDING VERDICT (Sprint 27 Day 0 execution, anchor `148662a5`): **REPLAN**
+
+**The documented patch site is misattributed.** Empirical trace during a full kand translate: `_apply_offset_substitution` (`src/kkt/stationarity.py:2433`) fires **exactly 22 times** — one-to-one with the 22 phantom-offset `lam_dembalx(j,t+1,n±k)` terms (k = −8..+11) in `stat_y(j,t,n)`. Companion functions `_apply_alias_offset_to_deriv` (140×) and `_collect_lead_lag_offsets` (24×) also fire. `_find_pattern_c_alias_sum` does **not** fire. `_compute_inequality_jacobian` (`constraint_jacobian.py:1027`) only stores **concrete** per-(row,col) partials (`J_g.set_derivative(row_id, col_id, …)` over concrete `eq_indices`/`var_indices`) — it cannot and does not emit symbolic `n+k` offset Sums. **The 22-term structure is produced by the KKT stationarity offset re-symbolization layer (`stationarity.py`), not the AD constraint-Jacobian site `:903/:1027` named in §3.3.** A predicate-guarded path inserted at `:903/:1027` is therefore inert by construction (no patch applied; no `src/` diff).
+
+**Redirected fix surface (for Sprint 27 REPLAN decision):** the predicate-guarded-Sum collapse must be designed at `stationarity.py`'s lead/lag-offset machinery (`_collect_lead_lag_offsets:95` → `_apply_offset_substitution:2433` / `_apply_alias_offset_to_deriv:2264`), where the 22 per-offset terms over the `tree(nn,n)` predicate should collapse into one guarded Sum. This is a different (and likely larger) effort than the §3.3 estimate, which assumed an AD-layer dispatch-site insertion.
+
 ---
 
 ## 4. Redesign B — #1385 srpchase Option 1 Short-Circuit Symbolic-Instance Handling
@@ -248,6 +254,21 @@ grep -nE '1\$\(ancestor\("srn",' /tmp/srpchase_mcp_experiment.gms
 **Risk factors that could flip to REPLAN:** the cross-term contributions from `J_g^T·lam_demand` (the 3rd bug in §4.2) may not naturally re-derive under Option B — the AD layer still doesn't enumerate any instances, so it cannot produce cross-terms for the empty `enumerate_equation_instances` return. The emit-boundary runtime-guard must ALSO emit the cross-terms structurally (without AD-layer enumeration). This is a non-trivial design step; the experiment may surface it as a REPLAN.
 
 **Caveat:** If Day 0 execution reveals the cross-term coverage issue, the #1385 sub-priority may need to **partial-PROCEED** — short-circuit for translate-time only (5.7s achievable), with explicit deferred handling of cross-terms via a Sprint 28 fix.
+
+#### 🟡 BINDING VERDICT (Sprint 27 Day 0 execution, anchor `148662a5`): **SCOPED-PROCEED (translate-time only) — the §7 partial-PROCEED escalation fires.**
+
+Empirical results (`model_name='purchase'`; `n` = 1001 members; `srn(n)` is a **dynamic subset** with 0 static members; conditioned eqs `slack(srn)$(not leaf(srn))` + `demand(leaf(srn))`, both containing `sum(ancestor(srn,n), y(n))` over n×n ≈ 1M):
+
+| §4.4 criterion | Result |
+|---|---|
+| 1. Translate < 10s | ✅ **6.0s** (baseline > 180s timeout). Model-guarded enumeration short-circuit of `slack`/`demand` at `enumerate_equation_instances:377`. Matches Sprint 26 Day 4's 5.7s. |
+| 2. GAMS compile 0 errors | ✅ compile rc=0, zero `****` error markers (the lone `**** FILE SUMMARY` is the benign .lst footer). |
+| 3. No quoted-literal set-name indices | ✅ 0 matches (no `nu_slack("srn")` / `ancestor("srn",…)`). |
+| 4. Cross-term coverage / hand-derived KKT match | ❌ **NOT validated.** The skip-only prototype enumerates **zero** instances of slack/demand → their stationarity cross-terms and complementarity rows are **entirely absent** (0 `nu_slack`/`lam_demand` rows). The full Option B runtime-guard *emit* (the `sum(<bound>$(<pred>), <body>)` reconstruction at the emit boundary) was **not authored** in this Day 0 prototype — it is exactly the §4.2 bug #3 / §4.5 cross-term-coverage risk that the Sprint 26 Day 4 attempt got wrong. |
+
+**Profiling note:** the >180s blow-up is in `differentiate_expr` + `simplify` (AD differentiation/simplification of the n×n `ancestor` Cartesian bodies), confirmed by faulthandler stack snapshots — NOT in `enumerate_equation_instances` itself. Skipping enumeration of slack/demand avoids differentiating them, which is why translate drops to 6.0s.
+
+**Net signal — SCOPED-PROCEED per §7:** the translate-time short-circuit is real, valuable, and low-risk. But the binary criteria (§4.4) FAIL on criterion 4, so this is **not a clean PROCEED**. The half that remains unproven (correct cross-term emit via runtime-guard) lives at the **emit/stationarity boundary** — consistent with the #1390/#1393 misattribution finding (the real work is in the KKT emit layer, not the AD enumeration layer). Sprint 27 may implement the translate-time short-circuit only and **defer cross-term handling to Sprint 28**, per the §7 scoped-PROCEED rule.
 
 ---
 
@@ -428,6 +449,12 @@ grep -E 'MODEL STATUS|OBJECTIVE' /tmp/otpop_solve.lst
 
 **Risk factors that could flip to REPLAN:** the subset relation `t ⊂ tt` IS queryable in the standard `model_ir.sets` representation via `SetDef.domain` (a tuple of parent set names; see `src/ir/symbols.py:48-54`), AND alias resolution is already implemented (see `_find_superset_in_domain` at `src/kkt/stationarity.py:3626-3670`) — so the previously-flagged "may not be queryable" concern is resolved at the IR-API level. The remaining risk is Sprint 25 dynamic-subset handling (per #723) for cases where the subset has a runtime `$`-condition: `resolve_set_members` falls back to parent-set members, which may produce false-positive supersets in subset-of-subset chains. Day 0 execution will verify whether otpop's `t ⊂ tt` relation is dynamic-subset-affected.
 
+#### 🔴 BINDING VERDICT (Sprint 27 Day 0 execution, anchor `148662a5`): **REPLAN (Approach C disproven)**
+
+**The §5.3 root-cause hypothesis is empirically false.** §5.3 asserts the over-count arises because `_sum_should_collapse` calls `_is_concrete_instance_of('tt', 't', config)` and it returns False on the symbolic superset. A trace over otpop's full constraint-Jacobian computation shows `_is_concrete_instance_of` is **never invoked** with the `(concrete='tt', symbolic='t')` pair (nor any `tt`/`t` pairing). The Approach-C prototype (otpop-guarded symbolic-superset strategy added to `_is_concrete_instance_of` at `derivative_rules.py:2607`; `model_name == 'otpop1'`, `SetDef.domain == ('tt',)` confirmed correct) regenerated `otpop_mcp.gms` **byte-identical** to baseline — the patch is **inert**. (#1393 over-count `sum(t__, del(t__) … * nu_kdef)` persists in both `stat_x(tt)` and `stat_p(tt)`; #1335 `nu_zdef` cross-term still absent from `stat_p(tt)`.) No `src/` diff (reverted).
+
+**Redirected fix surface:** the over-counted Sum keeps the synthetic KKT alias `t__` as its bound index and differentiates w.r.t. the **symbolic** stationarity index `tt` (not a concrete element). The collapse decision for symbolic-stationarity wrt-indices does NOT route through `_is_concrete_instance_of`; it is handled in the KKT symbolic-collapse path (where `t→t__` aliasing occurs). **Approach C as specified cannot work.** Per the §5.5 fallback rule (C → B → A), Sprint 27 must either pursue Approach B (symbolic offset evaluation, `_try_eval_offset` for `card(t)-ord(t)` — also needed for #1335) or defer to Sprint 28. Note #1393 and #1335 are now **distinct fixes** (Approach C does not subsume #1335; the #1335 `nu_zdef` cross-term requires the offset evaluator independently).
+
 ---
 
 ## 6. Coordinated Design Analysis (KU-38 Resolution)
@@ -499,6 +526,36 @@ Per Sprint 26 retrospective PR16 codification: each Phase 0 validation experimen
 | Phase 0 binary-signal criteria (KU 3.5 resolution) | ✅ §7 — Binary by construction; partial-PROCEED resolved via scoped-PROCEED or fallback rule per-experiment |
 | Sprint 27 Day 0 experiment execution scheduled | ✅ All 3 experiments DESIGN-READY; ~3h cumulative Day 0 work for binding verdicts |
 | Zero `src/` diff in Task 6 commit | ✅ (all prototype patches scheduled for Day 0; this prep authoring is docs-only) |
+
+---
+
+## 8.5 Day 0 Binding Verdicts — Consolidated (EXECUTION RESULTS)
+
+Executed Sprint 27 Day 0 (anchor `148662a5`, GAMS 53). All prototype patches model-name-guarded and **reverted — zero `src/` diff**.
+
+| Experiment | Sub-priority | Designed patch site | **Binding signal** | Evidence |
+|---|---|---|---|---|
+| C | #1393 + #1335 otpop (Approach C) | `derivative_rules.py:2607` | 🔴 **REPLAN** | `_is_concrete_instance_of` never called with `(tt,t)`; patch inert (byte-identical emit). |
+| A | #1390 kand (predicate-guarded Sum) | `constraint_jacobian.py:903/1027` | 🔴 **REPLAN** | `_apply_offset_substitution` fires 22× in `stationarity.py` (= 22 phantom terms); Jacobian site only stores concrete partials. |
+| B | #1385 srpchase (Option B) | `index_mapping.py:377` + `stationarity.py` | 🟡 **SCOPED-PROCEED** (translate-time only) | Skip → 6.0s translate + clean compile (crit 1–3 ✓); cross-term emit unproven (crit 4 ✗). |
+
+### Cross-cutting finding (the headline Day 0 result)
+
+**The Priority 3 prep-doc patch-site attributions are systematically wrong for the current codebase.** All three redesigns were designed to patch the **AD layer** (`constraint_jacobian.py` / `derivative_rules.py` / the AD half of `index_mapping.py`). Empirically, the bugs all live in (or are only fixable at) the **KKT stationarity / emit re-symbolization layer** (`src/kkt/stationarity.py`):
+
+- #1390's 22-term blow-up is produced by `_apply_offset_substitution` / `_apply_alias_offset_to_deriv` (stationarity offset re-symbolization), not the AD constraint-Jacobian.
+- #1393/#1335's collapse decision for symbolic-stationarity indices never reaches the AD predicate `_is_concrete_instance_of`.
+- #1385's correctness half (cross-term emit) is an emit-boundary problem, not an AD-enumeration problem.
+
+This is exactly the failure class PR16 (§2) exists to catch: **unit/integration/byte-stability gates would not have surfaced these mis-scopings — only hand-derive-then-regenerate did.** The prep estimates (§6.3: #1390 ~10–16h, #1393+#1335 ~6–10h, #1385 ~6–10h) were sized for AD-layer dispatch-site insertions and are now invalid; the redirected stationarity-layer surfaces are likely larger.
+
+### Budget-reallocation recommendation (per §6.4 cascading rule)
+
+**2 of 3 sub-priorities REPLAN (#1390, #1393+#1335); the 3rd (#1385) is only a scoped/partial PROCEED.** Per §6.4 ("If 2 or more REPLAN: Sprint 27 reallocates Priority 3's remaining budget to other priorities"), the **Priority 3 implementation budget (Days 6–8, ~30–48h) should NOT be committed as planned.** Recommended Sprint 27 Day 0 retrospective decision:
+
+1. **#1385** — implement the translate-time short-circuit only (low effort, ~6.0s validated), defer cross-term emit to Sprint 28. (+0 firm Solve; removes the translate_timeout.)
+2. **#1390, #1393, #1335** — re-scope against the redirected `stationarity.py` surfaces and re-run a Phase 0 experiment on the *correct* layer before committing budget, OR defer to Sprint 28 with formal carryforward filings.
+3. **Reallocate the freed Days 6–8 budget** to higher-confidence priorities (P5 #1356/#1357, P4 #1378, P7) and/or the redirected-surface re-scoping. This materially changes the Match target math (§2): the +1 firm Match from #1390 (kand mismatch→match) is now **at risk**.
 
 ---
 
