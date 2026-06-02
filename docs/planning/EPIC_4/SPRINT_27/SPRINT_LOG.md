@@ -1,8 +1,8 @@
 # Sprint 27 Log
 
 **Sprint:** 27
-**Status:** 🟡 NOT YET STARTED — Day 0 kickoff pending
-**Start date:** TBD (Day 0)
+**Status:** 🟢 IN PROGRESS — Day 0 complete (kickoff landed; Priority 3 binding signals recorded)
+**Start date:** 2026-06-01 (Day 0)
 **End date:** TBD (Day 13)
 **Owner:** Sprint 27 engineer
 **Budget:** ≤ 168 hours over 14 days (Day 0 + Days 1–13); planned ~142h with ~26h slack
@@ -18,7 +18,7 @@
 
 ## Day 0 Anchor SHA
 
-**TBD** — record `git rev-parse HEAD` here once Day 0 setup PR opens. Used by `scripts/sprint_audit/changed_emit_artifacts.py --since-commit <SHA>` for every mid-sprint retest (Days 5, 10, 13).
+`148662a5cfba7034920965e1c4e3bb38e40be184` — `main` tip at Sprint 27 Day 0 kickoff (2026-06-01). Used by `scripts/sprint_audit/changed_emit_artifacts.py --since-commit <SHA>` for every mid-sprint retest (Days 5, 10, 13).
 
 ---
 
@@ -42,25 +42,51 @@ Filled in at each checkpoint (Days 5, 10, 13). Track delta vs Day 0 baseline.
 
 ## Day 0 — Sprint Kickoff
 
-**Date:** TBD
-**Status:** 🔵 NOT STARTED
+**Date:** 2026-06-01
+**Status:** 🟢 COMPLETE
 **Hours budgeted:** ≤ 8
-**Hours actual:** —
+**Hours actual:** ~6 (agent-executed)
 
 ### Tasks completed
-- _(to be filled in during execution)_
+- **0.1** Anchor SHA `148662a5` recorded in PLAN.md §4 + SPRINT_LOG.md (this file).
+- **0.2** PR22 baseline audit → 0 commits / 0 changes (expected; Day 0 = anchor).
+- **0.3** PR19 target-list widening (30 models; dry-run **11/19/30** GREEN — `launch` corrected to pattern-c Day 0 per PR #1413 CI: MODEL STATUS 5 Locally Infeasible, the #1378 target) → **PR #1413 opened**.
+- **0.4–0.6** 3 AD architectural Phase 0 validation experiments executed serially (C→A→B); all prototypes model-guarded + **reverted (zero `src/` diff)**.
+- **0.7** launch + qdemo7 anchor KKT hand-derived → `DAY0_ANCHOR_SCRATCH_NOTES.md`.
+- **0.8** KU 6.1 → STANDALONE (no #1224/#1385 bundle).
+- **0.9** Binding signals recorded in `PRIORITY_3_RISK_ASSESSMENT.md` §3.5/§4.5/§5.6 + new §8.5 consolidated table; KNOWN_UNKNOWNS 3.1–3.5 + 6.1 updated.
 
 ### Deliverables
-- _(to be filled in during execution)_
+- PR #1413 (anchor SHA + PR19 widening + Phase 0 prep notes).
+- `DAY0_ANCHOR_SCRATCH_NOTES.md` (2 of 8 anchor KKT derivations).
+- `PRIORITY_3_RISK_ASSESSMENT.md` §8.5 binding verdicts + budget-reallocation recommendation.
+
+### Binding signals (Priority 3 — Days 6–8 gate)
+| Exp | Sub-priority | Signal | One-line reason |
+|---|---|---|---|
+| C | #1393+#1335 otpop (Approach C) | 🔴 **REPLAN** | `_is_concrete_instance_of` never reached; patch inert (byte-identical emit). |
+| A | #1390 kand (predicate-guarded Sum) | 🔴 **REPLAN** | bug is in `stationarity.py::_apply_offset_substitution` (×22), not `constraint_jacobian.py:903/1027`. |
+| B | #1385 srpchase (Option B) | 🟡 **SCOPED-PROCEED** | translate 6.0s + clean compile ✓, but cross-term emit (runtime-guard) unproven. |
+
+**Headline finding:** all 3 prep patch sites were mis-scoped to the **AD layer**; the bugs live in the **KKT stationarity/emit layer**. Per the `PRIORITY_3_RISK_ASSESSMENT.md` §6.4 cascading rule (2+ REPLAN), the Priority 3 Days 6–8 budget (~30–48h) should NOT commit as planned — see `PRIORITY_3_RISK_ASSESSMENT.md` §8.5 budget-reallocation recommendation. **Match target (`PLAN.md` §2) +1 from #1390 is now at risk.**
 
 ### KUs verified
-- _(target: 3.1, 3.2, 3.3, 6.1)_
+- ✅ 3.1 (#1390 → REPLAN), 3.2 (#1385 → scoped-PROCEED), 3.3 (#1335 → Approach C disproven, fallback to B), 3.4/3.5 (Day 0 cross-ref), 6.1 (standalone).
 
 ### Carryforward to Day 1
-- _(to be filled in during execution)_
+- Priority 1 #1398: complete hand-derivation for 6 remaining anchors (ferts, sambal, ganges, sroute, turkpow, dinam ×2) per `DAY0_ANCHOR_SCRATCH_NOTES.md` queue; first prototype of tightened `_find_pattern_c_alias_sum`.
+- **Day 0 retrospective decision needed:** re-scope #1390/#1393/#1335 against the redirected `stationarity.py` surfaces (re-run Phase 0 on the correct layer) OR defer to Sprint 28; reallocate freed Days 6–8 budget. Land #1385 translate-time short-circuit only (defer cross-terms to Sprint 28).
+- PR #1413: verify PR19 CI fires on the widened 30-model list; merge.
 
 ### PR22 audit-script baseline output
-- _(paste `/tmp/sprint27_day0_baseline.md` here — expected empty)_
+```
+## Mid-sprint retest surface
+
+- **Range:** 148662a5cfba..HEAD
+- **Commits:** 0 — **emit changes:** 0 (0 unique paths)
+
+_(no emit-affecting changes in range)_
+```
 
 ---
 

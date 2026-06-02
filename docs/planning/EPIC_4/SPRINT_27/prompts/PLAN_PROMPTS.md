@@ -48,7 +48,7 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 1. **Record Day 0 anchor SHA in BOTH PLAN.md AND SPRINT_LOG.md.** Run `git rev-parse HEAD` on `main`. Open `PLAN.md` §4 "Day 0 Anchor SHA" and replace `**TBD**` with the SHA. Then open `SPRINT_LOG.md` §"Day 0 Anchor SHA" (top-level section, near the beginning of the file) and replace its `**TBD**` with the same SHA. **Both files need the same recorded SHA** — `PLAN.md` is the canonical schedule reference and `SPRINT_LOG.md` is what mid-sprint retest entries cite for `--since-commit <SHA>` paste-ins; leaving either at `TBD` causes confusion later. Commit both edits on a `planning/sprint27-day0-setup` branch.
 2. **Run PR22 baseline.** `.venv/bin/python scripts/sprint_audit/changed_emit_artifacts.py --since-commit <Day-0 SHA> --format markdown --mode retest > /tmp/sprint27_day0_baseline.md`. Expect output: 0 commits / 0 changes (Day 0 = anchor itself).
-3. **PR19 widening.** Edit `.github/path-solve-ci-targets.txt` per `PR19_WIDENING_DESIGN.md` §6 (add launch as Tier 1 hard-fail; add 14 net-new #1398-affected models as Pattern C soft-fail). Open PR. PR23 self-review NOT required — the targets file is outside PR23 scope per `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)" §"Scope" (PR23 applies to `.github/workflows/*.yml`/`.yaml`, `scripts/ci/*`, `.github/actions/*` only). Include the PR19 widening dry-run validation evidence from `PR19_WIDENING_DESIGN.md` §6 in the PR description. Expected file count: 1.
+3. **PR19 widening.** Edit `.github/path-solve-ci-targets.txt` per `PR19_WIDENING_DESIGN.md` §6 (add launch + 14 net-new #1398-affected models as Pattern C soft-fail — **launch corrected Day 0 from tier=1 to pattern-c: MODEL STATUS 5 Locally Infeasible, the #1378 target**). Open PR. PR23 self-review NOT required — the targets file is outside PR23 scope per `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)" §"Scope" (PR23 applies to `.github/workflows/*.yml`/`.yaml`, `scripts/ci/*`, `.github/actions/*` only). Include the PR19 widening dry-run validation evidence from `PR19_WIDENING_DESIGN.md` §6 in the PR description. Expected file count: 1.
 4. **AD experiment #1390 kand** per `PRIORITY_3_RISK_ASSESSMENT.md` §3.1. Apply prototype at `src/ad/constraint_jacobian.py:903` + `:1027`. Regenerate `kand_mcp.gms`. Verify 22 phantom-offset `lam_dembalx(j,t+1,n+k)` terms collapse to 1 predicate-guarded Sum. Record binding signal in `PRIORITY_3_RISK_ASSESSMENT.md` §3.5 table (PROCEED / REPLAN).
 5. **AD experiment #1385 srpchase** per `PRIORITY_3_RISK_ASSESSMENT.md` §3.2. Apply Option B runtime-guard at `src/ad/index_mapping.py:377` + `src/kkt/stationarity.py`. Regenerate `srpchase_mcp.gms`. Verify clean GAMS compile. Record binding signal.
 6. **AD experiment #1393+#1335 otpop** per `PRIORITY_3_RISK_ASSESSMENT.md` §3.3. Apply Approach C at `src/ad/derivative_rules.py:2607`. Regenerate `otpop_mcp.gms`. Run NLP+MCP and verify `pi ≈ 4217.80` matches NLP. Record binding signal.
@@ -107,7 +107,7 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 1. Regenerate `*_mcp.gms` for all 15 #1398-affected models + launch (`run_full_test.py --model <name>` or pipeline subset).
 2. Run `scripts/gamslib/run_full_test.py --quiet` on the 15-model + launch subset. Verify bucket-provenance: qdemo7 → `compare_match`; egypt/ferts/shale → `path_solve_license`; sambal/qsambal/harker/tfordy/dinam/ganges/gangesx/sroute/turkpow → Day 0 baseline buckets; launch byte-stable.
-3. Tier 0/1 byte-stability verification — regenerate all 12 Tier 0/1 canaries (per `PR19_WIDENING_DESIGN.md` §6 widened list), diff vs main. Expect zero diffs on non-affected canaries.
+3. Tier 0/1 byte-stability verification — regenerate all 11 Tier 0/1 canaries + `launch` (byte-stability anchor; PR19 pattern-c but still byte-checked here per §6), diff vs main. Expect zero diffs on non-affected canaries.
 4. Author PR description: **PR14 disclosure** (list regenerated `.gms` files via PR22 audit-script invocation) + **PR20 Phase 0 cross-reference** (cite `PRIORITY_1_ANCHOR_MAPPING.md` §4 anchor-by-anchor hand-derived KKT shapes; reviewer checks regenerated `.gms` matches the hand-derived shape for each of the 8 anchors). PR23 self-review NOT required — pure `src/kkt/stationarity.py` change, no workflow/CI files touched.
 5. Open PR. Respond to first review iteration.
 6. EOD quality gate + SPRINT_LOG.md Day 2 entry.
@@ -176,12 +176,12 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 ## Day 5 Prompt — Checkpoint 1: Pipeline Retest + Priority 5 start + Priority 3 first sub-priority (~10h)
 
-**Context:** Mid-sprint Checkpoint 1 per PR6 cadence. Run full pipeline retest. Invoke PR22 audit script to enumerate emit-changed models. Start Priority 5 (#1356 fawley) + Priority 3 first PROCEED'd sub-priority from Day 0.
+**Context:** Mid-sprint Checkpoint 1 per PR6 cadence. Run full pipeline retest. Invoke PR22 audit script to enumerate emit-changed models. Start Priority 5 (#1356 fawley). **Per the Option 1 re-plan (Day 0 binding signals: all 3 P3 prep sites disproven), there is no "P3 first sub-priority" to lift — instead, run the #1390 re-scoped Phase 0 on the `stationarity.py` layer** to decide whether #1390 implements Days 6–7.
 
 **Read first:**
-- `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §7 "Day 5" (Checkpoint 1)
+- `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §7 "Day 5" + the §2 Option 1 re-plan banner + §8 (re-planned P3)
 - `docs/planning/EPIC_4/SPRINT_27/PRIORITY_5_FIX_SURFACE.md` §3 + §8 (Day 5 handoff)
-- Day 0 `PRIORITY_3_RISK_ASSESSMENT.md` §3.5 binding signals (which P3 sub-priority started)
+- `docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_ASSESSMENT.md` §3.5 (#1390 REPLAN evidence: `_apply_offset_substitution` fires 22×) + §8.5 (binding table + redirected surface)
 
 **Tasks:**
 
@@ -195,118 +195,119 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 2. **Full pipeline retest:** `.venv/bin/python scripts/gamslib/run_full_test.py --quiet` (background). Track headline metrics + bucket-provenance per PR17.
 3. Author Day 5 SPRINT_LOG.md checkpoint entry: headline metrics (Solve/Match/path_syntax_error counts), bucket-provenance table (Day 0 → Day 5 transitions), KU updates.
 4. **Priority 5 #1356 fawley start** per `PRIORITY_5_FIX_SURFACE.md` §3 + §8: author helpers `_extract_subset_predicate` + `_bound_expr_subset_dependency` at `src/kkt/complementarity.py`; apply Patch A+B at `:473-483` + `:485-494`; regenerate `fawley_mcp.gms`.
-5. **Priority 3 first PROCEED sub-priority start** — apply prototype to main (lift from Day 0 experiment scratch branch); first regression test pass.
+5. **#1390 re-scoped Phase 0** (Option 1 re-plan): hand-derive the predicate-guarded-Sum collapse on the `stationarity.py` offset re-symbolization layer (`_collect_lead_lag_offsets:95` → `_apply_offset_substitution:2433` / `_apply_alias_offset_to_deriv:2264` — the functions that fire 22× = the 22 kand phantom terms). Prototype the collapse (model-guarded), regenerate `kand_mcp.gms`, verify the 22 `lam_dembalx(j,t+1,n±k)` terms become 1 predicate-guarded Sum + Tier 0/1 byte-stable. Record a binding **re-PROCEED / re-REPLAN** signal in `PRIORITY_3_RISK_ASSESSMENT.md` §3.5.
+6. **Verify the otpop interaction:** at this retest, check whether otpop reached compare_match from #1357 alone, or still needs the deferred #1393+#1335 — this determines whether the #1357 firm Solve gain holds (see PLAN.md §2 Solve row).
 
 **Checkpoint 1 success criteria** (P1 merged Day 3 + P2 merged Day 4 → both gains expected at Day 5 retest):
-- [ ] Pipeline retest shows **Solve ≥ 106** (Day 0 103 + **#1398 qdemo7 +1** + #1381 camcge/cesam2 +2 = 106). A reading of 105 indicates qdemo7 did not recover — investigate P1 before Day 6 P3 commits.
+- [ ] Pipeline retest shows **Solve ≥ 106** (Day 0 103 + **#1398 qdemo7 +1** + #1381 camcge/cesam2 +2 = 106). A reading of 105 indicates qdemo7 did not recover — investigate P1 before Day 6.
 - [ ] Pipeline retest shows **Match ≥ 62** (Day 0 59 + **#1398 qdemo7 +1** + #1381 ×2 = 62).
 - [ ] PR22 audit script output captures camcge + cesam2 + 15 #1398 + launch artifacts.
 - [ ] P5 #1356 first patch committed.
-- [ ] P3 first sub-priority in progress.
+- [ ] **#1390 re-scoped Phase 0 binding signal recorded** (re-PROCEED → implement Days 6–7; re-REPLAN → defer #1390 to Sprint 28, redirect Days 6–7 to P7/P4, Match → 65 per §17).
 
 ---
 
-## Day 6 Prompt — Priority 3 #1390 kand + parallel Priority 5 #1357 otpop (~12h)
+## Day 6 Prompt — Priority 3 #1390 implement (re-scoped to `stationarity.py`) + parallel Priority 5 #1357 otpop (~12h)
 
-**Context:** Implement #1390 kand per-instance enumeration redesign. In parallel, start P5 #1357 otpop (same patch sites as #1356 fawley).
+**Context:** Implement #1390 on the **redirected `stationarity.py` offset re-symbolization layer** (the Day 0 AD site `constraint_jacobian.py:903/1027` was disproven). **Gated on the Day 5 #1390 re-scoped Phase 0** — if it re-REPLAN'd, SKIP #1390, file a Sprint 28 carryforward, redirect this slot to P7 #1387 / P4, and note Match → 65 (§17). In parallel, start P5 #1357 otpop.
 
 **Read first:**
-- `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §8 "Day 6"
-- `docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_ASSESSMENT.md` §3.1 (#1390 binding patch shape) + §4 implementation guidance
-- Day 0 `PRIORITY_3_RISK_ASSESSMENT.md` §3.5 binding signals for #1390
+- `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §8 "Day 6" (re-planned)
+- `docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_ASSESSMENT.md` §3.5 (#1390 binding REPLAN + redirected surface) + §8.5
+- Day 5 #1390 re-scoped Phase 0 result + scratch notes
 
-**Tasks:**
+**Tasks (if Day 5 re-PROCEED'd):**
 
-1. #1390 implement predicate-guarded Sum at `src/ad/constraint_jacobian.py:903 + :1027` per Day 0 binding patch shape.
-2. Phase 0 verify: regenerate `kand_mcp.gms`; verify 22 phantom-offset `lam_dembalx(j,t+1,n+k)` terms collapse to 1 element. KU 3.1 ✅ VERIFIED.
-3. Tier 0/1 byte-stability.
+1. #1390 implement the predicate-guarded-Sum collapse at `src/kkt/stationarity.py` (`_apply_offset_substitution:2433` / `_apply_alias_offset_to_deriv:2264` / `_collect_lead_lag_offsets:95`) — **NOT** `constraint_jacobian.py:903/1027`. Collapse the 22 per-offset `lam_dembalx(j,t+1,n±k)` terms into one `sum(n_inner$tree(n,n_inner), eps*lam_dembalx(j,t+1,n_inner))$(tn(t+1,n_inner))`.
+2. Phase 0 verify: regenerate `kand_mcp.gms`; verify the 22 phantom-offset terms collapse to 1 predicate-guarded Sum; byte-compare against the Day 5 hand-derived KKT. KU 3.1 ✅ re-VERIFIED on the redirected layer.
+3. Tier 0/1 byte-stability (regenerate all 11 Tier 0/1 canaries + `launch` byte-stability anchor, diff vs main — `launch` is PR19 pattern-c after the Day 0 correction but is still byte-checked here).
 4. **Parallel: Priority 5 #1357 otpop** — apply Phase 0 + first patch (same `complementarity.py:473-483` + `:485-494` patch sites as #1356 fawley); regenerate `otpop_mcp.gms`.
 5. EOD quality gate + SPRINT_LOG.md.
 
 **Success criteria (Day 6):**
-- [ ] #1390 kand cross-term reduces 22 → 1 element.
-- [ ] KU 3.1 ✅ VERIFIED.
+- [ ] #1390 kand 22 → 1 predicate-guarded Sum on the `stationarity.py` layer (OR #1390 deferred + redirected if Day 5 re-REPLAN'd).
+- [ ] KU 3.1 re-verified on the redirected layer.
 - [ ] P5 #1357 otpop first patch committed.
 
 ---
 
-## Day 7 Prompt — #1390 PR + Priority 3 #1385 srpchase + Priority 5 close (~12h)
+## Day 7 Prompt — #1390 PR + #1385 translate-time-only short-circuit + Priority 5 close (~12h)
 
-**Context:** Open #1390 PR. Implement #1385 srpchase Option B runtime-guard. Close Priority 5 (#1356 + #1357 combined PR).
+**Context:** Open the #1390 PR (if it landed). Implement #1385 as a **translate-time-only** short-circuit (the cross-term emit half is DEFERRED to Sprint 28 per the §7 scoped-PROCEED rule). Close Priority 5 (#1356 + #1357 combined PR).
 
 **Read first:**
-- `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §8 "Day 7"
-- `docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_ASSESSMENT.md` §3.2 (#1385 binding patch shape)
+- `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §8 "Day 7" (re-planned)
+- `docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_ASSESSMENT.md` §4.5 (#1385 SCOPED-PROCEED: translate >180s→6.0s validated; cross-terms unproven) + §8.5
 - `docs/planning/EPIC_4/SPRINT_27/PRIORITY_5_FIX_SURFACE.md` §8 (clearlak byte-stability mitigation per KU 5.3)
 
 **Tasks:**
 
-1. Open #1390 PR with PR14 + PR20 Phase 0 cross-reference (cite the kand `stat_y(j,t,n)` cross-term hand-derived KKT from Day 0 experiment). PR23 not applicable — pure `src/ad/constraint_jacobian.py` change.
-2. #1385 implement Option B runtime-guard at `src/ad/index_mapping.py:377` + `src/kkt/stationarity.py` per Day 0 binding patch shape.
-3. #1385 Phase 0 verify: regenerate `srpchase_mcp.gms`; verify clean GAMS compile; iswnm/mexls/nebrazil/sarf translates pass. KU 3.2 ✅ VERIFIED.
+1. Open the #1390 PR (if Day 6 landed it) with PR14 + PR20 Phase 0 cross-reference to the **`stationarity.py`** redirected shape (cite the Day 5/6 hand-derived kand `stat_y(j,t,n)` collapse). PR23 not applicable — pure `src/kkt/stationarity.py` change.
+2. #1385 implement the **translate-time-only** short-circuit: generalize the single-`SetMembershipTest` detection to skip enumeration at `src/ad/index_mapping.py:377` (Day 0-validated: srpchase >180s → **6.0s**), plus a runtime-guard equation-body emit at `src/kkt/stationarity.py`. **Do NOT attempt the J_gᵀ·lam cross-terms** — file a Sprint 28 follow-on issue for them.
+3. #1385 Phase 0 verify: regenerate `srpchase_mcp.gms`; verify translate <10s + clean GAMS compile + no quoted-literal set-name indices. Document the deferred-cross-term scope in the PR. KU 3.2 ✅ VERIFIED **as scoped (translate-time only)**. Note: this is a **Translate** gain, not a Solve gain — iswnm/mexls/nebrazil/sarf do NOT reach compare_match this sprint.
 4. **Priority 5 close:** combined fawley + otpop PR open. Per `PRIORITY_5_FIX_SURFACE.md` §8, run clearlak byte-stability check (zero diff expected per KU 5.3 LOW regression risk).
 5. EOD quality gate + SPRINT_LOG.md.
 
 **Success criteria (Day 7):**
-- [ ] #1390 PR open.
-- [ ] #1385 srpchase translates cleanly; iswnm/mexls/nebrazil/sarf unblock.
+- [ ] #1390 PR open (if landed Day 6).
+- [ ] #1385 srpchase translates <10s, clean compile; Sprint 28 cross-term issue filed.
 - [ ] P5 combined PR open with clearlak byte-stability proof.
-- [ ] KUs 3.2, 5.1, 5.2, 5.3 ✅ VERIFIED.
+- [ ] KUs 3.2 (scoped), 5.1, 5.2, 5.3 ✅ VERIFIED.
 
 ---
 
-## Day 8 Prompt — #1385 PR + Priority 3 #1393+#1335 + Priority 7 #1387 start (~12h)
+## Day 8 Prompt — #1385 PR + #1393+#1335 Sprint 28 carryforward + Priority 7 #1387 implement (pulled forward) (~12h)
 
-**Context:** Open #1385 PR. Implement #1393+#1335 otpop Approach C. Start Priority 7 #1387 cclinpts Phase 0.
+**Context:** Open the #1385 PR. **Do NOT implement #1393+#1335** — Approach C was disproven Day 0; file the Sprint 28 carryforward instead. Use the freed budget to **implement P7 #1387** (pulled forward from Day 10).
 
 **Read first:**
-- `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §8 "Day 8"
-- `docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_ASSESSMENT.md` §3.3 (#1393+#1335 Approach C binding)
+- `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §8 "Day 8" (re-planned)
+- `docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_ASSESSMENT.md` §5.6 (#1393+#1335 Approach C REPLAN; redirected surfaces) + §5.5 fallback rule
 - `docs/planning/EPIC_4/SPRINT_27/PRIORITY_7_FIX_SURFACE.md` §3 (#1387 sign-flip + term-omission specs)
 
 **Tasks:**
 
-1. Open #1385 PR. Iterate first review round.
-2. #1393+#1335 implement Approach C at `src/ad/derivative_rules.py:2607` per Day 0 binding shape (extend `_is_concrete_instance_of` to recognize symbolic supersets).
-3. Phase 0 verify: regenerate `otpop_mcp.gms`; run NLP+MCP; verify `pi ≈ 4217.80` matches NLP. KU 3.3 ✅ VERIFIED.
-4. **Priority 7 #1387 cclinpts start** — hand-derive expected `stat_b(j)` (sign-flip fix) + `stat_fb(j)` (missing 3 of 4 cross-terms) per `PRIORITY_7_FIX_SURFACE.md` §3.
-5. EOD quality gate + SPRINT_LOG.md.
+1. Open #1385 PR (PR14 + PR20). State the scoped/translate-only boundary + link the Sprint 28 cross-term issue. Iterate first review round.
+2. **#1393+#1335 Sprint 28 carryforward filing** (replaces implementation): file the issue with the Day 0 evidence — Approach C inert (`_is_concrete_instance_of` never reached, byte-identical emit); #1393 redirects to the `stationarity.py` symbolic-collapse path; #1335 needs a `card(t)-ord(t)` offset evaluator (`_try_eval_offset`). They are now **distinct** fixes. Use the carryforward template in `PRIORITY_3_RISK_ASSESSMENT.md` §5.5.
+3. **Priority 7 #1387 cclinpts — Phase 0 hand-derivation AND implement** (pulled forward from Day 10): hand-derive `stat_b(j)` (sign-flip) + `stat_fb(j)` (missing 3 of 4 cross-terms) per `PRIORITY_7_FIX_SURFACE.md` §3, then implement at `src/ad/derivative_rules.py:1847` + `src/kkt/stationarity.py:1352/1835`. Regenerate `cclinpts_mcp.gms`; verify against hand-derived KKT.
+4. EOD quality gate + SPRINT_LOG.md.
 
 **Success criteria (Day 8):**
 - [ ] #1385 PR review iteration in flight.
-- [ ] #1393+#1335 otpop solves with `pi ≈ 4217.80`.
-- [ ] #1387 Phase 0 hand-derivation complete.
-- [ ] KU 3.3 ✅ VERIFIED.
+- [ ] #1393+#1335 Sprint 28 carryforward filed (NOT implemented).
+- [ ] #1387 Phase 0 hand-derivation complete AND implemented; cclinpts emit matches hand-derived KKT.
+- [ ] KU 3.3 reflects the Day 0 REPLAN + Sprint 28 deferral (already updated Day 0).
 
 ---
 
-## Day 9 Prompt — Priority 3 close + Priority 4 #1378 launch numerics start (~10h)
+## Day 9 Prompt — Priority 3 close + P7 #1387 close (pulled forward) + Priority 4 #1378 launch numerics start (~10h)
 
-**Context:** Close all Priority 3 PRs. Start Priority 4 launch numerics investigation.
+**Context:** Merge the remaining Priority 3 PRs (#1390 if it landed + #1385 translate-only — **#1393+#1335 has NO PR**, it was filed as a Sprint 28 carryforward Day 8). Open the **P7 #1387 PR** (implemented Day 8 — pulled forward from Day 11). Start Priority 4 launch numerics.
 
 **Read first:**
-- `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §9 "Day 9"
+- `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §9 "Day 9" (re-planned)
 - `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 27" §"Priority 4" (launch PATH-numerics investigation)
 - `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` Unknown 4.1 + 4.2 research questions
 
 **Tasks:**
 
-1. #1393+#1335 PR open + review iteration.
-2. Merge any P3 PRs still open from Days 6–8.
+1. Merge any P3 PRs still open from Days 6–7 (#1390 if landed; #1385 translate-only). #1393+#1335 = no PR (Sprint 28 carryforward).
+2. **P7 #1387 PR open** (implemented Day 8) with PR14 + PR20 cross-reference; first review iteration. (Pulled forward from Day 11.)
 3. **Priority 4 #1378 launch numerics:** investigate per `PROJECT_PLAN.md` Priority 4 — try (a) initial-point tuning, (b) `--nlp-presolve`, (c) NLP-warm-start, (d) sign/scaling refinement in `_apply_pattern_c_swap_to_term`. Pick the approach that produces MODEL STATUS 1 or `model_optimal_presolve` recovery with matching solution. KU 4.1 ✅ VERIFIED.
 4. Verify launch byte-stability anchor preserved (KU 4.2 — does the Priority 4 fix shape constrain launch byte-stability?).
 5. EOD quality gate + SPRINT_LOG.md.
 
 **Success criteria (Day 9):**
-- [ ] All Priority 3 PRs merged or in final review.
+- [ ] P3 PRs merged or in final review (#1390 if landed + #1385 scoped); #1393+#1335 carryforward filed (no PR).
+- [ ] P7 #1387 PR open.
 - [ ] launch MODEL STATUS 1 or `model_optimal_presolve` with matching solution.
-- [ ] KUs 3.4, 3.5, 4.1, 4.2 ✅ VERIFIED.
+- [ ] KUs 4.1, 4.2 ✅ VERIFIED (3.4/3.5 verified Day 0).
 
 ---
 
-## Day 10 Prompt — Checkpoint 2: Pipeline Retest + Priority 4 close + Priority 7 #1387 implement (~10h)
+## Day 10 Prompt — Checkpoint 2: Pipeline Retest + Priority 4 close + Priority 7 #1387 merge (~10h)
 
-**Context:** Mid-sprint Checkpoint 2 per PR6. Full pipeline retest. PR22 audit-script invocation. Close Priority 4. Implement Priority 7 #1387 cclinpts.
+**Context:** Mid-sprint Checkpoint 2 per PR6. Full pipeline retest. PR22 audit-script invocation. Close Priority 4. **Merge** Priority 7 #1387 (implemented Day 8, PR'd Day 9 — pulled forward under the Option 1 re-plan). Freed ~2.5h → start P6 #1224 / P9 #1374 early if convenient.
 
 **Read first:**
 - `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §10 "Day 10" (Checkpoint 2)
@@ -322,29 +323,28 @@ The prompts are designed for **direct invocation** — the engineer copies the d
    ```
    Paste into SPRINT_LOG.md Day 10. Expected: P1+P2+P3+P5 artifacts (large diff).
 2. **Full pipeline retest** — Checkpoint 2.
-3. Author Day 10 SPRINT_LOG.md checkpoint entry. Expected: **Solve ≥ 108** (Day 0 +5 firm: #1398 qdemo7 +1, #1381 ×2, #1357, #1356) and **Match ≥ 66** (Day 0 +7 firm: #1398 qdemo7 +1, #1381 ×2, #1357, #1356, #1390 kand +1, #1378 launch +1 — already matches Sprint final target since most planned Match recoveries land by Day 10).
+3. Author Day 10 SPRINT_LOG.md checkpoint entry. Expected (Option 1 re-plan): **Solve ≥ 108** (Day 0 +5 firm: #1398 qdemo7 +1, #1381 ×2, #1357, #1356 — verify #1357 otpop held despite the #1393+#1335 deferral) and **Match ≥ 65 firm / 66 if #1390 re-scope landed** (Day 0 +6 firm: #1398 qdemo7 +1, #1381 ×2, #1357, #1356, #1378 launch +1; **#1390 kand +1 conditional** on the Day 5 re-scoped Phase 0). #1385 is translate-only → a Translate gain, not Solve/Match.
 4. **Priority 4 close** — merge launch fix PR.
-5. **Priority 7 #1387 implement** — apply sign-flip fix at `stationarity.py:1352/1835` + term-omission fix at `derivative_rules.py:1847` (`_diff_sum`) per `PRIORITY_7_FIX_SURFACE.md` §3.
+5. **Priority 7 #1387 merge** (implemented Day 8, PR'd Day 9). Freed time → optionally start P6 #1224 / P9 #1374 early.
 6. EOD quality gate + SPRINT_LOG.md.
 
-**Checkpoint 2 success criteria** (P1+P2+P5+P3#1390+P4#1378 all scheduled to merge by Day 10 → Match should already match the Sprint 27 final target ≥ 66):
-- [ ] **Solve ≥ 108** (Day 0 103 + 5 firm: #1398 qdemo7 +1, #1381 ×2, #1357, #1356; launch's #1378 is a Match gain not Solve).
-- [ ] **Match ≥ 66** (Day 0 59 + 7 firm: #1398 qdemo7 +1, #1381 ×2, #1357, #1356, #1390 kand +1, #1378 launch +1 = Sprint final target). A reading of 63 indicates 3 planned recoveries silently failed — investigate before Day 11.
+**Checkpoint 2 success criteria** (re-planned):
+- [ ] **Solve ≥ 108** (Day 0 103 + 5 firm: #1398 qdemo7 +1, #1381 ×2, #1357, #1356; launch's #1378 is a Match gain not Solve). If #1357 otpop slipped (needs deferred #1393+#1335) → Solve = 107; re-classify per PLAN.md §2.
+- [ ] **Match ≥ 65 firm; 66 if the #1390 re-scope landed** (Day 0 59 + 6 firm + #1390 conditional). A reading of 62 indicates firm recoveries silently failed — investigate before Day 11. Match = 65 (with #1390 deferred) is an at-target-minus-one result to record per §17, not a checkpoint failure.
 - [ ] **path_syntax_error ≤ 6** (all path_syntax_error contributors P1+P2+P5 merged by Day 9; the final-target threshold should already be met).
-- [ ] PR22 output captures all P1+P2+P3+P5 artifacts.
-- [ ] Priority 4 PR merged.
-- [ ] #1387 sign-flip + term-omission patches committed.
+- [ ] PR22 output captures all P1+P2(+P3 #1390 if landed)+P5 artifacts.
+- [ ] Priority 4 PR merged; #1387 merged.
 
 ---
 
-## Day 11 Prompt — Priority 7 #1388 discriminator + #1387 close + Priority 6 #1224 start (~10h)
+## Day 11 Prompt — Priority 7 #1388 discriminator + Priority 6 #1224 start (~10h)
 
-**Context:** Run the §4.6 3-way discriminator on #1388 camshape. Classify Case (a) / (b) / (c). Close #1387 PR. Start #1224 mine.
+**Context:** Run the §4.6 3-way discriminator on #1388 camshape. Classify Case (a) / (b) / (c). Start #1224 mine (standalone). **#1387 was implemented Day 8 + closed Day 9–10** under the Option 1 re-plan, so it is NOT on Day 11; the freed ~2h is slack.
 
 **Read first:**
 - `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §11 "Day 11"
 - `docs/planning/EPIC_4/SPRINT_27/PRIORITY_7_FIX_SURFACE.md` §4.6 (NLP-warm-start + 10-symbol display pre-check + 3-way discriminator)
-- Day 0 KU 6.1 bundle decision for #1224
+- Day 0 KU 6.1 decision for #1224 (**STANDALONE**)
 
 **Tasks:**
 
@@ -358,15 +358,14 @@ The prompts are designed for **direct invocation** — the engineer copies the d
    - Case (a): emit-bug fix at Candidate A `src/kkt/stationarity.py:1835` OR Candidate B `src/ad/constraint_jacobian.py:903 + :1027` per §4.4. ~4.5h.
    - Case (b): emit-bug fix + add warm-start guidance to `data/gamslib/mcp/camshape_mcp_presolve.gms` defaults. ~5.5h.
    - Case (c): file Sprint 28 carryforward per §6 template. ~1.25h.
-3. **#1387 PR close** — merge.
-4. **Priority 6 #1224 start** — apply bundle-vs-standalone decision from Day 0 KU 6.1. If bundled with #1385: this is brought forward from Day 12 (Day 0 verified the index_mapping.py overlap). Implement per `PROJECT_PLAN.md` §"Priority 6".
-5. EOD quality gate + SPRINT_LOG.md.
+3. **Priority 6 #1224 start (standalone)** — Day 0 KU 6.1 decided **STANDALONE** (no `index_mapping.py` overlap with #1385; the `IndexOffset(ParamRef)` surface is `constraint_jacobian.py:_try_eval_offset:133` + `derivative_rules.py:2793`). Implement per `PROJECT_PLAN.md` §"Priority 6" — do NOT bundle with #1385.
+4. EOD quality gate + SPRINT_LOG.md.
 
 **Success criteria (Day 11):**
 - [ ] #1388 camshape classified per §4.6 3-way discriminator.
 - [ ] #1388 fix landed (Case a/b) OR Sprint 28 carryforward filed (Case c).
-- [ ] #1387 PR merged.
-- [ ] KUs 7.1, 7.2, 7.3 ✅ VERIFIED.
+- [ ] #1224 mine implementation started (standalone).
+- [ ] KUs 7.2, 7.3 ✅ VERIFIED (7.1 verified at prep; #1387 delivered Day 8–10).
 
 ---
 

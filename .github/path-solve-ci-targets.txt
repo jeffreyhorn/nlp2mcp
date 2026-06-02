@@ -33,3 +33,28 @@ camcge           # tier=pattern-c
 cesam2           # tier=pattern-c
 fawley           # tier=pattern-c
 otpop            # tier=pattern-c
+
+# Sprint 27 PR19 widening (per PR19_WIDENING_DESIGN.md Task 5): cover all 15
+# #1398-affected models + launch (byte-stability anchor for Sprint 26 PR #1379
+# Phase A fix). launch joins Pattern C soft-fail for now: it is MODEL STATUS 5
+# (Locally Infeasible) today — which is exactly the Priority 4 #1378 target — so
+# it cannot be a Tier 0/1 hard-fail until #1378 fixes its numerics (promote to
+# tier=1 then, per PR19_WIDENING_DESIGN.md §6.4). The 14 net-new #1398-affected models (fawley already
+# in Pattern C above) join Pattern C soft-fail; once each model's Sprint 27
+# priority fix lands and the model returns to its Sprint 26 Day 0 baseline
+# bucket, promote to tier=1.
+launch           # tier=pattern-c
+qdemo7           # tier=pattern-c
+egypt            # tier=pattern-c
+ferts            # tier=pattern-c
+shale            # tier=pattern-c
+sambal           # tier=pattern-c
+qsambal          # tier=pattern-c
+harker           # tier=pattern-c
+tfordy           # tier=pattern-c
+dinam            # tier=pattern-c
+ganges           # tier=pattern-c
+gangesx          # tier=pattern-c
+srpchase         # tier=pattern-c
+sroute           # tier=pattern-c
+turkpow          # tier=pattern-c

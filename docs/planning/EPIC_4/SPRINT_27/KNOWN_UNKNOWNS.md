@@ -360,16 +360,16 @@ Sprint planning + CI engineer
 **Findings:**
 
 - **Q1 (current PR19 runtime distribution):** Per `gh run view 25862102598` (Sprint 26 PR #1396 latest run 2026-05-14T13:15:47Z): Tier 0/1 11 models @ 0.02–0.17s each, sum ~0.5s; Pattern C 4 models @ 0.01–0.02s each (all rc=2 compile-fail), sum ~0.06s; setup overhead ~22s (dominated by GAMS install ~14s); whole-workflow wall-clock ~27s. Per-model timeout cap: 60s (reslim=30s + 30s subprocess buffer per `pr19-emit-solve-validation.yml` L21-32).
-- **Q2 (projected widened runtime, Option A):** ~37s steady state. Breakdown: 22s setup + 2s Tier 0/1 (12 models @ ~0.04–0.2s including launch) + ~10s Pattern C (18 models — 9 compile-fast @ ~0.02s + 2 license-fail @ ~0.5–1s + 3 solve-pass @ ~0.5–2s + buffer) + 3s overhead. Worst case (all 18 Pattern C hit reslim timeout): ~18.5min — within 20-min hard ceiling but tight (mitigated by observed compile-fast behavior of #1398-affected models).
-- **Q3 (GitHub Actions per-job limit):** Not a constraint. 6-hour default ceiling; current workflow has `timeout-minutes: 20`. Option A worst case 18.5min stays inside this.
-- **Q4 (Option C necessity):** NOT NEEDED. Option A projected runtime (~37s) is 8× under the 5-min friction threshold; Option C (parallel split) adds ~1–2h implementation effort + duplicates GAMS install (~22s overhead × 2) without solving a real bottleneck. Reserve Option C for Sprint 28+ if Pattern C cohort grows past ~25 models.
+- **Q2 (projected widened runtime, Option A):** ~36s steady state. Breakdown: 22s setup + ~0.5s Tier 0/1 (11 models @ ~0.04s) + ~10s Pattern C (19 models incl. launch — launch ~0.2s MODEL STATUS 5, 9 compile-fast @ ~0.02s + 2 license-fail @ ~0.5–1s + 3 solve-pass @ ~0.5–2s + buffer) + 3s overhead. Worst case (all 19 Pattern C hit reslim timeout): ~19.5 min — within 20-min hard ceiling but tight (mitigated by observed compile-fast/fail-fast behavior). **(Corrected Day 0: launch is pattern-c, not Tier 0/1 — MODEL STATUS 5 Locally Infeasible.)**
+- **Q3 (GitHub Actions per-job limit):** Not a constraint. 6-hour default ceiling; current workflow has `timeout-minutes: 20`. Option A worst case ~19.5 min stays inside this.
+- **Q4 (Option C necessity):** NOT NEEDED. Option A projected runtime (~36s) is 8× under the 5-min friction threshold; Option C (parallel split) adds ~1–2h implementation effort + duplicates GAMS install (~22s overhead × 2) without solving a real bottleneck. Reserve Option C for Sprint 28+ if Pattern C cohort grows past ~25 models.
 - **Q5 (Option B coverage gap):** Option B (anchor-only — 8 net new, final union 23) defeats the KU-37 mitigation rationale. The 7 non-anchor #1398-affected models (egypt, shale, qsambal, harker, tfordy, gangesx, srpchase) would remain UNCOVERED by PR19. Sprint 26's #1398 incident is exactly this failure mode at the launch level — failing to widen the structural mitigation surface to match the structural-regression surface. The ~5s runtime saving from Option B does not justify losing coverage on 7 non-anchor models.
 
 **Evidence:** `docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIGN.md` §2 (PR #1396 CI log timing data), §4 (runtime calculation), §5 (3-option comparison), §6 (implementation steps).
 
-**Decision: Option A SELECTED.** Sprint 27 Day 0 widens PR19 to 30 unique models (12 Tier 0/1 hard-fail + 18 Pattern C soft-fail) via 15 net-new appended lines in `.github/path-solve-ci-targets.txt`. NO CI workflow YAML or helper script changes needed. Validation plan: local `parse_pr19_targets.py` dry-run + Sprint 27 Day 0 implementation PR triggers PR19 with the widened list + post-merge regression check on the first follow-up emit-affecting PR.
+**Decision: Option A SELECTED.** Sprint 27 Day 0 widens PR19 to 30 unique models (**11 Tier 0/1 hard-fail + 19 Pattern C soft-fail** — corrected Day 0: launch is pattern-c, MODEL STATUS 5 Locally Infeasible) via 15 net-new appended lines in `.github/path-solve-ci-targets.txt`. NO CI workflow YAML or helper script changes needed. Validation plan: local `parse_pr19_targets.py` dry-run + Sprint 27 Day 0 implementation PR triggers PR19 with the widened list + post-merge regression check on the first follow-up emit-affecting PR.
 
-**Bonus finding (deferred to Sprint 27 Day 0 widening PR per PR19_WIDENING_DESIGN.md §8.2):** Sprint 27 Priority 6 (#1224 mine `IndexOffset(ParamRef)`) touches `src/ad/index_mapping.py` — NOT in the current PR19 `paths:` filter (per `pr19-emit-solve-validation.yml` L6-L15). The Sprint 27 Day 0 widening PR should ALSO add `src/ad/index_mapping.py` to the trigger paths in a same-PR 1-line YAML edit to avoid forgetting before #1224 lands. Scope-creep beyond Task 5 strict charter, but too cheap to defer.
+**Bonus finding — ❌ SUPERSEDED by Day 0 KU 6.1 (no action needed):** The prep-stage `PR19_WIDENING_DESIGN.md` §8.2 open question proposed adding `src/ad/index_mapping.py` to the PR19 `paths:` filter, on the premise that #1224 (`IndexOffset(ParamRef)`) touches that file. **Day 0 KU 6.1 disproved the premise** — `index_mapping.py` contains no `IndexOffset`/`ParamRef` code; #1224's actual surface is `src/ad/constraint_jacobian.py` (`_try_eval_offset:133`) + `src/ad/derivative_rules.py:2793`, **both already in the PR19 `paths:` filter** (`pr19-emit-solve-validation.yml` L10–L11). **No workflow `paths:` edit is needed** — PR19 already fires on #1224's emit-affecting changes. (Adding `index_mapping.py` would be a spurious edit.)
 
 ---
 
@@ -548,9 +548,9 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🟡 **Status:** PARTIALLY VERIFIED (design ready; binding verdict pending Sprint 27 Day 0 prototype execution per the "scheduled for Day 0" outcome explicitly permitted by Task 6 prompt)
-**Verified by:** Task 6 (AD Architectural Redesigns Risk Assessment PR16)
-**Date:** 2026-05-28
+✅ **Status:** VERIFIED (Sprint 27 Day 0 execution) — **binding signal: 🔴 REPLAN.** The §3.3 patch site (`constraint_jacobian.py:903/1027`) is **misattributed**: a full-translate trace shows the 22 phantom-offset terms are produced by `stationarity.py::_apply_offset_substitution` (fires exactly 22×), while `_compute_inequality_jacobian` only stores concrete per-(row,col) partials. RQ1's "callback dispatch insertion" premise does not address the bug. Redirected surface = stationarity lead/lag-offset re-symbolization. See `PRIORITY_3_RISK_ASSESSMENT.md` §3.5 + §8.5 binding table.
+**Verified by:** Task 6 design + Sprint 27 Day 0 prototype execution (PR16)
+**Date:** 2026-05-28 (prep) / 2026-06-01 Sprint 27 Day 0 (binding)
 
 **Findings (architectural analysis):**
 
@@ -606,9 +606,9 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🟡 **Status:** PARTIALLY VERIFIED (design ready; binding verdict pending Sprint 27 Day 0 prototype execution)
-**Verified by:** Task 6 (AD Architectural Redesigns Risk Assessment PR16)
-**Date:** 2026-05-28
+✅ **Status:** VERIFIED (Sprint 27 Day 0 execution) — **binding signal: 🟡 SCOPED-PROCEED (translate-time only).** The AD→emit-boundary short-circuit (skip `slack`/`demand` enumeration at `index_mapping.py:377`) brings translate **>180s → 6.0s** with clean GAMS compile and no quoted-literal indices (crit 1–3 ✓). But it preserves concrete-index semantics only by **dropping** the equations — cross-term coverage (crit 4) is NOT preserved; the runtime-guard *emit* half (the answer to this KU — "only at the AD→emit boundary") was not authored and is an emit-layer problem. Sprint 27 may land translate-time only and defer cross-terms to Sprint 28. See `PRIORITY_3_RISK_ASSESSMENT.md` §4.5 + §8.5.
+**Verified by:** Task 6 design + Sprint 27 Day 0 prototype execution (PR16)
+**Date:** 2026-05-28 (prep) / 2026-06-01 Sprint 27 Day 0 (binding)
 
 **Findings (architectural analysis):**
 
@@ -666,9 +666,9 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-✅ **Status:** VERIFIED — approach selected (binding); validation experiment pending Day 0 execution
-**Verified by:** Task 6 (AD Architectural Redesigns Risk Assessment PR16)
-**Date:** 2026-05-28
+✅ **Status:** VERIFIED (Sprint 27 Day 0 execution) — **Approach C selected at prep, but DISPROVEN on Day 0 → 🔴 REPLAN.** The §5.3 premise (the collapse routes through `_is_concrete_instance_of('tt','t')`) is empirically false — that call never happens; the otpop-guarded Approach-C prototype produced **byte-identical** emit (#1393 over-count + #1335 missing `nu_zdef` both persist). Per the §5.5 fallback rule, the empirical answer to "which approach is best" becomes **Approach B** (symbolic offset evaluation of `card(t)-ord(t)`), which is ALSO required independently for #1335 — Approach C does not subsume it. #1393 and #1335 are now distinct fixes. See `PRIORITY_3_RISK_ASSESSMENT.md` §5.6 + §8.5.
+**Verified by:** Task 6 design + Sprint 27 Day 0 prototype execution (PR16)
+**Date:** 2026-05-28 (prep) / 2026-06-01 Sprint 27 Day 0 (binding)
 
 **Findings (architectural analysis + Sprint 26 Day 9 SPRINT_LOG review):**
 
@@ -723,9 +723,9 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-✅ **Status:** VERIFIED — coordinated-design analysis complete; serial implementation recommended (binding)
-**Verified by:** Task 6 (AD Architectural Redesigns Risk Assessment PR16)
-**Date:** 2026-05-28
+✅ **Status:** VERIFIED — coordinated-design analysis complete; serial implementation recommended (binding). **Day 0 update:** serial execution confirmed correct — running C → A → B independently let each REPLAN be diagnosed in isolation (the §6.4 cascading rule fired: 2 of 3 REPLAN). See `PRIORITY_3_RISK_ASSESSMENT.md` §8.5 binding table + budget-reallocation recommendation.
+**Verified by:** Task 6 (PR16) + Sprint 27 Day 0 execution
+**Date:** 2026-05-28 (prep) / Sprint 27 Day 0 (binding)
 
 **Findings (architectural analysis):**
 
@@ -781,9 +781,9 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-✅ **Status:** VERIFIED — binary-signal criteria defined per experiment; partial-PROCEED rules codified (binding)
-**Verified by:** Task 6 (AD Architectural Redesigns Risk Assessment PR16)
-**Date:** 2026-05-28
+✅ **Status:** VERIFIED — binary-signal criteria defined per experiment; partial-PROCEED rules codified (binding). **Day 0 update:** the methodology produced unambiguous signals for all 3 (C → 🔴 REPLAN, A → 🔴 REPLAN, B → 🟡 SCOPED-PROCEED per the §7 partial-PROCEED escalation). PR16 caught a failure class unit/byte gates could not: all 3 prep patch sites were mis-scoped to the AD layer when the bugs live in the KKT stationarity/emit layer. See `PRIORITY_3_RISK_ASSESSMENT.md` §8.5.
+**Verified by:** Task 6 (PR16) + Sprint 27 Day 0 execution
+**Date:** 2026-05-28 (prep) / Sprint 27 Day 0 (binding)
 
 **Findings:**
 
@@ -1134,7 +1134,15 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Sprint 27 Day 0 inspection) — **Decision: STANDALONE (do NOT bundle #1224 with #1385).**
+
+**Day 0 code inspection (`src/ad/index_mapping.py` @ anchor `148662a5`):**
+
+1. **No overlap.** `src/ad/index_mapping.py` contains **zero** `IndexOffset` or `ParamRef` references (grep returns nothing). The #1385 patch site is `enumerate_equation_instances` (`index_mapping.py:377`), which does set-membership **condition filtering** on equation instances — it has no offset-arithmetic code path. (RQ1: the two do not modify overlapping functions.)
+2. **The #1224 `IndexOffset(ParamRef)` surface is in a different module.** Offset resolution lives in `src/ad/constraint_jacobian.py` — `_try_eval_offset` (`:133`), the `IndexOffset` index-resolution helpers (`:93`, `:274`, `:1283`), and `src/ad/derivative_rules.py:2793` ("Substitute indices in ParamRef, including IndexOffset bases"). None of these are touched by #1385. (The PR19_WIDENING_DESIGN §8.2 / KNOWN_UNKNOWNS premise that #1224 "touches `src/ad/index_mapping.py`" is imprecise — the actual `IndexOffset(ParamRef)` evaluation code is in `constraint_jacobian.py`/`derivative_rules.py`.)
+3. **Blast-radius argument confirms standalone.** Because there is no shared function or even shared module on the critical path, bundling would yield no context/test reuse savings (RQ2) while coupling #1224's fate to #1385's Phase 0 outcome. If #1385 REPLANs, #1224 proceeds unaffected (RQ3 = yes). No interaction between #1224's offset fix and #1385's short-circuit logic (RQ4 = none).
+
+**Schedule impact:** #1224 is **standalone** — NOT bundled with #1385. Per the Option 1 re-plan it **starts Day 11 (PLAN.md §11) and closes Day 12 (§12)** on its own `constraint_jacobian.py`/`derivative_rules.py` surface (the move to Day 11 is the re-plan's slack-driven pull-forward, NOT a bundle with #1385). PLAN.md §3 sequencing constraint 4 ("Priority 6 #1224 may bundle with Priority 3 #1385") resolves to **no bundle**.
 
 ---
 
