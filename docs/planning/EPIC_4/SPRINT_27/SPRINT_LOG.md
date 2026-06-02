@@ -92,22 +92,42 @@ _(no emit-affecting changes in range)_
 
 ## Day 1 — Priority 1 Phase 0 anchors complete + first prototype
 
-**Date:** TBD
-**Status:** 🔵 NOT STARTED
+**Date:** 2026-06-02
+**Status:** 🟢 COMPLETE
 **Hours budgeted:** ≤ 10
-**Hours actual:** —
+**Hours actual:** ~7 (agent-executed)
 
 ### Tasks completed
-- _(to be filled in during execution)_
+- Hand-derived KKT for the 6 remaining anchors (ferts, sambal, ganges, sroute, turkpow, dinam) from raw GAMS sources → `DAY0_ANCHOR_SCRATCH_NOTES.md` Day 1 section. All 8 anchors now derived.
+- **Implemented + verified the #1398 gate-predicate tightening** at `src/kkt/stationarity.py::_find_pattern_c_alias_sum`: the Pattern C `alias↔eq_dom` swap now fires only when `alias_name` and `eq_domain_index` resolve to the **same canonical set** (genuine self-alias, the launch shape). Cross-set alias sums (qdemo7's `sc(s,c)`, ferts's `ppos(p,i)`, ganges's `ri(r,i)`) fall through to the correct naive emit.
+- Added regression test `test_cross_set_alias_sum_is_not_pattern_c_swapped` (asserts the gate does NOT swap cross-set sums).
+- Quality gate: `make format/typecheck/lint` ✅; `make test` → **4737 passed, 10 skipped, 1 xfailed** (no regressions; new test +1 → 4738 with the unit test, run separately ✅).
 
 ### Deliverables
-- _(to be filled in during execution)_
+- `src/kkt/stationarity.py` 1-condition tightening (same-canonical-set guard) + explanatory comment.
+- 8 anchor hand-derivations in `DAY0_ANCHOR_SCRATCH_NOTES.md`.
+- New unit regression test in `tests/unit/kkt/test_pattern_c_alias_offset_gate.py`.
+
+### Anchor verification (regenerated vs committed baseline)
+| Anchor | Δ | correct per hand-derivation |
+|---|---|---|
+| launch | byte-stable | ✅ (KU 4.2 anchor preserved) |
+| qdemo7 | changed | ✅ `sc(s,c)`/`lam_plow(s)` |
+| ferts | changed | ✅ `ppos(p,i)`/`lam_mb(c,i)` |
+| sambal | byte-stable | ✅ `nu_cbal(i)` |
+| ganges | changed | ✅ `ri(r,i)` |
+| sroute | byte-stable | ✅ |
+| turkpow | byte-stable | ✅ (order-relation self-alias) |
+| dinam | changed | ✅ row-mult-collapse, no `te` leak |
+| 11 Tier 0/1 canaries | byte-stable | ✅ zero regressions |
 
 ### KUs verified
-- _(target: KU 1.3 progress)_
+- **KU 1.3 ✅ VERIFIED** — the tightened gate fires only on same-canonical-set self-aliases (launch shape); no positional info from the source Sum body is needed. The distinguishing signal is purely `canonical(alias) == canonical(eq_dom)`.
 
 ### Carryforward to Day 2
-- _(to be filled in during execution)_
+- **Doc fix:** `PRIORITY_1_ANCHOR_MAPPING.md` §4.1/§4.2/§4.4 grep specs for qdemo7/ferts/ganges document the *buggy baseline* (swapped arg order) — update to the corrected source-order shapes before they gate the PR.
+- Regenerate the full 15-model #1398 cohort + bucket-provenance (egypt/shale/qsambal/harker/tfordy/gangesx/srpchase timed out at the 120s cap on Day 1 — re-run with a longer cap); verify qdemo7 → compare_match, etc.
+- Open the P1 PR (PR14 + PR20 cross-reference; pure `src/kkt/stationarity.py` change → PR23 N/A).
 
 ---
 

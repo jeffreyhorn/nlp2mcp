@@ -427,7 +427,26 @@ def _find_pattern_c_alias_sum(
                     if _resolve_alias_target(idx, model_ir) in target_canonical_sets:
                         alias_name = idx.lower()
                         break
-                if alias_name is not None:
+                # Sprint 27 #1398 gate tightening: the Pattern C alias↔eq-domain
+                # swap (``_apply_pattern_c_swap_to_term``) is only valid when the
+                # consolidation is over a SELF-ALIAS of a single set — launch's
+                # ``dweight(s).. ... sum(ss$ge(ss,s), iweight(ss)+...)`` where the
+                # alias ``ss`` and the eq-domain index ``s`` are the SAME set
+                # (``Alias(s, ss)``). When ``alias_name`` and ``eq_domain_index``
+                # resolve to DIFFERENT canonical sets — e.g. qdemo7's
+                # ``plow(s).. sum(c$sc(s,c), xcrop(c))`` where the gate picks
+                # alias=``c`` (crop) and eq_dom=``s`` (season) — the blanket
+                # ``alias↔eq_dom`` swap transposes the source condition's argument
+                # order AND the multiplier index, mangling the already-correct
+                # naive emit ``sum(s, 1$(sc(s,c)) * lam_plow(s))`` into the buggy
+                # ``sum(s, 1$(sc(c,s)) * lam_plow(c))``. Phase A over-reached on 15
+                # such models (#1398). Restrict the gate to the same-set self-alias
+                # case so the swap fires only where it is mathematically valid; for
+                # different-set Sums fall through to the recursive descent (a deeper
+                # Sum may still be a genuine self-alias Pattern C).
+                if alias_name is not None and _resolve_alias_target(
+                    alias_name, model_ir
+                ) == _resolve_alias_target(eq_idx_name, model_ir):
                     return {
                         "alias_name": alias_name,
                         "eq_domain_index": eq_idx_name,
