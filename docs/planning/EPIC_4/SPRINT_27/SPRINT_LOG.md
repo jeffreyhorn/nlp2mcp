@@ -68,7 +68,7 @@ Filled in at each checkpoint (Days 5, 10, 13). Track delta vs Day 0 baseline.
 | A | #1390 kand (predicate-guarded Sum) | 🔴 **REPLAN** | bug is in `stationarity.py::_apply_offset_substitution` (×22), not `constraint_jacobian.py:903/1027`. |
 | B | #1385 srpchase (Option B) | 🟡 **SCOPED-PROCEED** | translate 6.0s + clean compile ✓, but cross-term emit (runtime-guard) unproven. |
 
-**Headline finding:** all 3 prep patch sites were mis-scoped to the **AD layer**; the bugs live in the **KKT stationarity/emit layer**. Per §6.4 cascading rule (2+ REPLAN), the Priority 3 Days 6–8 budget (~30–48h) should NOT commit as planned — see `PRIORITY_3_RISK_ASSESSMENT.md` §8.5 budget-reallocation recommendation. **Match target (§2) +1 from #1390 is now at risk.**
+**Headline finding:** all 3 prep patch sites were mis-scoped to the **AD layer**; the bugs live in the **KKT stationarity/emit layer**. Per the `PRIORITY_3_RISK_ASSESSMENT.md` §6.4 cascading rule (2+ REPLAN), the Priority 3 Days 6–8 budget (~30–48h) should NOT commit as planned — see `PRIORITY_3_RISK_ASSESSMENT.md` §8.5 budget-reallocation recommendation. **Match target (`PLAN.md` §2) +1 from #1390 is now at risk.**
 
 ### KUs verified
 - ✅ 3.1 (#1390 → REPLAN), 3.2 (#1385 → scoped-PROCEED), 3.3 (#1335 → Approach C disproven, fallback to B), 3.4/3.5 (Day 0 cross-ref), 6.1 (standalone).
