@@ -1,6 +1,6 @@
 # Sprint 27 Day 3 — Priority 2 (#1381 Pattern C Phase B) Phase 0 hand-derivations
 
-**Status:** 🟡 IN PROGRESS — camcge fully hand-derived (5 of 5 consolidation variants); cesam2 (dim-mismatch, B-3) identified + shape stated; full cesam2 derivation finalizes Day 4 per PLAN §6.
+**Status:** 🟢 COMPLETE — camcge (5 of 5 consolidation variants) + cesam2 (B-3 dim-mismatch, incl. ROWSUM companion) fully hand-derived. Ready for Day 4 implementation.
 **Date:** 2026-06-03
 **Anchor commit:** `8f755328` (main; post-P1 #1398)
 **Issue:** `docs/issues/ISSUE_1381_pattern-c-phase-b-redesign-plain-alias-and-dim-mismatch.md`
@@ -91,18 +91,28 @@ stat_p(i):  dst(i) * sum(j, kio(j) * nu_prodinv(j))
 
 ---
 
-## cesam2 — dim-mismatch second anchor (B-3) — Day 4 finalize
+## cesam2 — dim-mismatch second anchor (B-3) — ✅ FINALIZED (Day 4)
 
-`COLSUM(jj)..  sum(ii, TSAM(ii,jj)) =e= Y(jj);` — eq-domain 1-D `(jj,)` (canonical `i`); variable `TSAM` is **2-D** `(i,i)`. The alias-Sum iterator `ii` binds TSAM's **position 0**; the eq-domain `jj` binds TSAM's **position 1**. Correct consolidated form (NO outer Sum — the alias is already controlled by the stat-eq's own variable-domain index):
+**Set relationships (cesam2.gms):** `Set i` (SAM accounts); `ii(i)` = strict **subset** (`ii(i)=yes; ii("Total")=no;` — all accounts except Total); `Alias (i,j), (ii,jj)` → `j` aliases full set `i`, `jj` aliases the **subset** `ii`. So **`jj ⊆ i` confirmed** → the `$(jj(j))` guard is real. Variable `TSAM(i,j)` is 2-D (canonical `(i,i)`); `COLSUM(jj)` is 1-D → dim-mismatch.
+
+**`COLSUM(jj)..  sum(ii, TSAM(ii,jj)) =e= Y(jj);`  → stat_tsam(i,j)**
+
+∂COLSUM(jj')/∂TSAM(i,j): in `sum(ii, TSAM(ii,jj'))` the TSAM(i,j) term needs `ii=i` (sum picks it) AND `jj'=j` (the COLSUM instance). Both collapse — `ii=i` is bound by stat_tsam's 1st domain index, `jj'=j` selects the single COLSUM instance. So:
 
 ```
-stat_tsam(i,j):  … + nu_COLSUM(j)$(jj(j)) + …
+stat_tsam(i,j):  … + nu_COLSUM(j)$(jj(j)) + …      (NO outer Sum)
 ```
 - multiplier `nu_COLSUM(j)` indexed by `var_dom[binding_position=1] = j`;
-- subset guard `$(jj(j))` since `jj ⊆ i`;
-- suppress the spurious `sameas`-block guards element-to-set emits under dim-mismatch (emit-formatting artifact). [ISSUE_1381 §B-3]
+- subset guard `$(jj(j))` (COLSUM's domain `jj ⊆ i`);
+- suppress the spurious `sameas`-block guards element-to-set emits under dim-mismatch. [ISSUE_1381 §B-3]
 
-**Day 4:** read cesam2 source (`TSAM`/`COLSUM`/`jj` decls), confirm the binding-position inference + the `jj ⊆ i` subset, finalize the stat_tsam hand-derivation; then implement Phase B-1/B-2/B-3 per ISSUE_1381 §Files Involved.
+**Companion (same builder): `ROWSUM(ii)..  sum(jj, TSAM(ii,jj)) =e= Y(ii);`  → stat_tsam(i,j):  `nu_ROWSUM(i)$(ii(i))`** — binds TSAM's **position 0** (`i`), guard `$(ii(i))`. (SAMCOEF/TSAMEQ reference `TSAM(ii,jj)` directly with no inner Sum → ordinary diagonal terms, not Pattern C.)
+
+**B-3 builder rule:** when `len(var_domain) != len(eq_domain)`, infer the binding position from the source body's variable reference (position of the eq-domain index in `TSAM(ii,jj)`), build `MultiplierRef(nu_eq, (var_dom[binding_pos],))`, apply the subset guard if the eq-domain set is a strict subset, and emit NO outer Sum.
+
+---
+
+## Phase 0 status: ✅ COMPLETE (camcge 5 variants + cesam2 B-3). Ready for Day 4 implementation.
 
 ---
 
