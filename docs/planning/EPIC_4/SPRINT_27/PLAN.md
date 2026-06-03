@@ -118,7 +118,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 | Buffer | 1h | |
 
 **P1 success criteria:**
-- [x] 15 #1398-affected models recover to Day 0 baseline buckets (✅ no regressions): qdemo7 → compare_match; egypt/ferts/shale/srpchase → path_solve_license; ganges → path_syntax_error (from timeout). **Caveat:** dinam/gangesx/turkpow remain at path_syntax_error — their Pattern C emit is now correct, but they carry **pre-existing non-#1398 errors** (various GAMS compile errors in other equations, model-dependent — dinam `$140`/`$171`, turkpow `$170`/`$171`, gangesx `$145`/`$149`/`$300`; turkpow byte-identical to baseline, dinam −2 errors). These are NOT #1398 recoveries → **file as Sprint 28 candidates**.
+- [x] 15 #1398-affected models recover to Day 0 baseline buckets (✅ no regressions): qdemo7 → compare_match; egypt/ferts/shale/srpchase → path_solve_license; ganges → path_syntax_error (from timeout). **Caveat:** dinam/gangesx/turkpow remain at path_syntax_error — their Pattern C emit is now correct, but they carry **pre-existing non-#1398 errors** (GAMS compile errors in other equations, model-dependent — dinam `$140/$141/$171/$257`, turkpow `$141/$149/$170/$171/$257`, gangesx `$141/$145/$149/$257/$300`; turkpow byte-identical to baseline, dinam −2 errors; full enumeration in SPRINT_LOG Day 2). These are NOT #1398 recoveries → **file as Sprint 28 candidates**.
 - [x] launch byte-stable vs Sprint 26 final emit (per KU 4.2). ✅
 - [x] PR19 target list widened to 30 models per Task 5. ✅ (Day 0, PR #1413 merged)
 - [x] All 4 Phase 0 KUs 1.1–1.4 ✅ VERIFIED (1.3 moved from INCOMPLETE on Day 1).

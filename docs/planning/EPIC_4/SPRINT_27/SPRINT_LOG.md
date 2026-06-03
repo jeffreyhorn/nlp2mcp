@@ -151,7 +151,7 @@ _(no emit-affecting changes in range)_
 | shale | path_syntax_error | path_solve_license | ✅ recovered → license |
 | srpchase | translate_timeout | path_solve_license | ✅ now translates → license |
 | ganges | translate_timeout | path_syntax_error | ✅ recovered from timeout (residual non-#1398 syntax) |
-| dinam | path_syntax_error | path_syntax_error | emit corrected (−2 `$149` errors vs git baseline); residual $140/$171 pre-existing |
+| dinam | path_syntax_error | path_syntax_error | emit corrected (−2 `$149` errors vs git baseline); residual `$140/$141/$171/$257` pre-existing |
 | gangesx | path_syntax_error | path_syntax_error | emit corrected; residual errors pre-existing |
 | turkpow | path_syntax_error | path_syntax_error | byte-identical to baseline — path_syntax_error entirely pre-existing |
 | sambal/qsambal/harker | compare_mismatch | compare_mismatch | unchanged (correct; pre-existing numerics) |
@@ -159,7 +159,7 @@ _(no emit-affecting changes in range)_
 | fawley | path_syntax_error | path_syntax_error | folded into #1356 (P5), not P1 |
 | launch | compare_mismatch | compare_mismatch | byte-identical (KU 4.2 anchor; #1378 target) |
 
-**No regressions** — every model is at its Day 0 bucket or better. The #1398 fix fully clears the Pattern C over-reach; dinam/gangesx/turkpow's residual `path_syntax_error` is **pre-existing** — independent GAMS compile errors in non-Pattern-C equations, with **model-dependent** codes (not a shared set): dinam `$140`/`$141`/`$171`, turkpow `$141`/`$149`/`$170`/`$171`, gangesx `$141`/`$145`/`$149`/`$300` (all `+$257`). turkpow is byte-identical to baseline (confirms pre-existing); dinam has *fewer* errors than baseline. Out of #1398 scope (Sprint 28 candidates).
+**No regressions** — every model is at its Day 0 bucket or better. The #1398 fix fully clears the Pattern C over-reach; dinam/gangesx/turkpow's residual `path_syntax_error` is **pre-existing** — independent GAMS compile errors in non-Pattern-C equations, with **model-dependent** codes (not a shared set): dinam `$140/$141/$171/$257`, turkpow `$141/$149/$170/$171/$257`, gangesx `$141/$145/$149/$257/$300`. turkpow is byte-identical to baseline (confirms pre-existing); dinam has *fewer* errors than baseline. Out of #1398 scope (Sprint 28 candidates).
 
 ### KUs verified
 - KU 1.3 ✅ (Day 1). Bucket-provenance confirms the Day 0 recovery projections (§2 acceptance): qdemo7 → compare_match; egypt/ferts/shale → path_solve_license.
