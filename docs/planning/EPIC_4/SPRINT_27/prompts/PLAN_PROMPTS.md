@@ -110,9 +110,9 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 1. ✅ DONE (carryforward). Regenerate `*_mcp.gms` for all 15 #1398-affected models + launch (`run_full_test.py --model <name>`). 9 artifacts changed; 6 affected + launch + 11 canaries byte-identical.
 2. ✅ DONE (carryforward). Bucket-provenance (Day 0 → Day 2): qdemo7 → `compare_match`; egypt/ferts/shale/srpchase → `path_solve_license`; ganges → `path_syntax_error` (recovered from translate_timeout); sambal/qsambal/harker → compare_mismatch; tfordy/sroute → path_solve_license; **dinam/gangesx/turkpow → `path_syntax_error` (residual PRE-EXISTING non-#1398 errors — turkpow byte-identical to baseline, dinam −2 errors; file as Sprint 28 candidates)**; launch byte-stable. **No regressions.**
 3. ✅ DONE (carryforward). Tier 0/1 byte-stability — all 11 canaries + `launch` byte-identical vs main (zero diffs).
-4. Author PR description: **PR14 disclosure** (list regenerated `.gms` files via PR22 audit-script invocation) + **PR20 Phase 0 cross-reference** (cite `PRIORITY_1_ANCHOR_MAPPING.md` §4 anchor-by-anchor hand-derived KKT shapes; reviewer checks regenerated `.gms` matches the hand-derived shape for each of the 8 anchors). PR23 self-review NOT required — pure `src/kkt/stationarity.py` change, no workflow/CI files touched.
-5. Open PR. Respond to first review iteration.
-6. EOD quality gate + SPRINT_LOG.md Day 2 entry.
+4. ✅ DONE (PR #1414). Authored PR description: **PR14 disclosure** (9 regenerated `.gms` files in diff) + **PR20 Phase 0 cross-reference** (`PRIORITY_1_ANCHOR_MAPPING.md` §4 anchor-by-anchor hand-derived KKT shapes). PR23 N/A — pure `src/kkt/stationarity.py` change.
+5. ✅ DONE. PR #1414 opened; one review comment (ferts §4.2 header consistency) addressed; **merged to main (`853000ef`)**.
+6. ✅ DONE. Quality gate green (`make test` → 4737 passed, 10 skipped, 1 xfailed); SPRINT_LOG Day 2 entry recorded.
 
 **Success criteria (Day 2):**
 - [x] 15 #1398-affected models at Day 0 baseline buckets or better — **no regressions** (qdemo7 → compare_match; egypt/ferts/shale/srpchase → path_solve_license). dinam/gangesx/turkpow stay at path_syntax_error from pre-existing non-#1398 errors → Sprint 28 candidates.
@@ -125,7 +125,7 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 ## Day 3 Prompt — Priority 1 merge + Priority 2 Phase 0 start (~8h)
 
-**Context:** Iterate Priority 1 PR to merge. Verify PR19 widening fires correctly on the merged commit. Start Priority 2 #1381 Phase 0 hand-derivation for camcge `nu_ieq`.
+**Context:** Verify PR19 widening fires correctly on the merged commit. Start Priority 2 #1381 Phase 0 hand-derivation for camcge `nu_ieq`. (**Priority 1 #1398 already merged early** — PR #1414 → main `853000ef`, 2026-06-03 — so the "iterate + merge" tasks below are ✅ DONE; Day 3's live work is tasks 3–6.)
 
 **Read first:**
 - `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §5 "Day 3" + §6 "Day 4"
@@ -134,18 +134,18 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 **Tasks:**
 
-1. PR review iteration on Priority 1 PR (target: ≤ 2 rounds; the PR description's PR14 regenerated-`.gms` list + PR20 anchor-by-anchor Phase 0 cross-reference are pre-filled so the reviewer can verify each artifact against the hand-derived KKT directly).
-2. Merge Priority 1 PR.
-3. Verify PR19 widening CI fires correctly: trigger a no-op PR on the new widened target list; expect ~37s steady-state runtime per `PR19_WIDENING_DESIGN.md` §7 projection.
+1. ✅ DONE. PR review iteration on Priority 1 PR #1414 (one round: ferts §4.2 header consistency).
+2. ✅ DONE. Priority 1 PR #1414 merged to main (`853000ef`).
+3. Verify PR19 widening CI fires correctly: trigger a no-op PR on the new widened target list; expect ~36s steady-state runtime per `PR19_WIDENING_DESIGN.md` §7 projection.
 4. **Start Priority 2 Phase 0** — hand-derive KKT for camcge `nu_ieq` cross-term. Recorded in scratch notes. Identify cesam2 as second-anchor model (same Phase C-derived shape per `PROJECT_PLAN.md` Priority 2).
 5. Update KNOWN_UNKNOWNS.md: KU 1.3 ✅ VERIFIED (gate predicate fires only on launch-shape); KU 1.1, 1.2, 1.4 already verified at prep.
 6. SPRINT_LOG.md Day 3 entry. Update sprint cumulative metrics: Solve / Match unchanged but P1 unblocks Day 5 retest.
 
 **Success criteria (Day 3):**
-- [ ] Priority 1 PR merged to main.
+- [x] Priority 1 PR merged to main (PR #1414, `853000ef`).
 - [ ] PR19 widening verified on a follow-up no-op PR.
 - [ ] camcge Phase 0 hand-derivation complete.
-- [ ] KU 1.3 ✅ VERIFIED.
+- [x] KU 1.3 ✅ VERIFIED (Day 1).
 
 ---
 

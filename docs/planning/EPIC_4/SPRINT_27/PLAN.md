@@ -105,12 +105,14 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 | Author PR description (PR14 reaffirmation + PR20 Phase 0 acceptance-gate cross-reference) | 2h | Regenerated `.gms` diffs included in PR; PR description cross-references `PRIORITY_1_ANCHOR_MAPPING.md` §4 anchor-by-anchor hand-derived KKT shapes. PR23 not applicable — pure `src/kkt/stationarity.py` change, no workflow/CI files touched |
 | Open PR; respond to first review iteration | 3h | |
 
-### Day 3 (~8h) — PR review iteration + merge + transition
+### Day 3 (~8h) — P2 Phase 0 transition (P1 PR review + merge done early in Day 2)
+
+> ℹ️ **The P1 #1398 PR review iteration + merge happened early** — PR #1414 was opened, reviewed, and **merged to main (`853000ef`)** during the Day 2 compressed timeline, so the first two rows below are already ✅ DONE. Day 3's live work is the PR19-CI verification + the P2 #1381 Phase 0 start.
 
 | Task | Effort | Notes |
 |---|---|---|
-| PR review iteration (target: ≤ 2 rounds; PR14 + PR20 disclosures pre-filled so reviewer can verify regenerated `.gms` against hand-derived KKT directly) | 3h | |
-| Merge PR | 0.5h | |
+| PR review iteration (target: ≤ 2 rounds; PR14 + PR20 disclosures pre-filled so reviewer can verify regenerated `.gms` against hand-derived KKT directly) | 3h | ✅ DONE — PR #1414 (one round: ferts §4.2 header consistency) |
+| Merge PR | 0.5h | ✅ DONE — merged to main `853000ef` (2026-06-03) |
 | Verify PR19 widening CI fires correctly on the merged commit | 0.5h | Per Task 5 §7 PR-runtime projection |
 | Start P2 Phase 0 hand-derivation for camcge `nu_ieq` cross-term (per `PROJECT_PLAN.md` Priority 2) | 3h | KU 2.1 still 🔍 INCOMPLETE; Day 0 PR19 widening Day 4 P2 commits gated on this |
 | Buffer | 1h | |
