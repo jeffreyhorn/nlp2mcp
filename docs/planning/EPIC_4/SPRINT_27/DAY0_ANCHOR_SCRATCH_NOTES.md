@@ -126,7 +126,7 @@ The Sprint 26 Phase A gate over-reached: it fired on **cross-set** alias sums an
 
 **Verification:** qdemo7 fixed; launch + sambal + sroute + turkpow + all 11 Tier 0/1 canaries **byte-identical**; ferts/ganges/dinam corrected to source-order shapes (below). **KU 1.3 ✅** (gate fires on launch-shape self-aliases only).
 
-> ⚠️ **Doc caveat (resolved OQ2/OQ3/OQ5):** `PRIORITY_1_ANCHOR_MAPPING.md` §4 is *inspection-based, not formal* — its grep "expected" shapes for the **cross-set** models (qdemo7 §4.1, ferts §4.2, ganges §4.4) were transcribed from the **buggy gate-mangled baseline**, so they assert the WRONG arg order. The formal hand-derivations below give the correct (source-order) shapes; the §4 grep specs for those three must be updated on Day 2 before they gate the PR.
+> ⚠️ **Doc caveat (resolved OQ2/OQ3/OQ5; Day 2 update):** `PRIORITY_1_ANCHOR_MAPPING.md` §4 is *inspection-based, not formal* — the grep "expected" shapes for **ferts §4.2** and **ganges §4.4** were transcribed from the **buggy gate-mangled baseline** (wrong arg order + eq-index leak), so they asserted the WRONG shape. (**qdemo7 §4.1 was already correct** — it documents the Day 0 bug explicitly and expects the *fixed* `sc(s,c)`/`lam_plow(s)` shape.) The formal hand-derivations below give the correct (source-order) shapes; **§4.2 and §4.4 were corrected on Day 2** (2026-06-03).
 
 ## Anchor 3 — ferts `stat_z(p,i)` (CHANGED → corrected)
 
@@ -176,4 +176,4 @@ Source: `Alias(te,tep)`; `ts2(te,tep)` time-summation matrix. Two sub-features:
 | dinam | changed | ✅ row-mult-collapse, no te leak |
 | **11 Tier 0/1 canaries** | byte-stable | ✅ zero regressions |
 
-**Day 2 carryforward:** update `PRIORITY_1_ANCHOR_MAPPING.md` §4.1/§4.2/§4.4 grep specs to the corrected source-order shapes; regenerate the full 15-model #1398 cohort (egypt/shale/qsambal/harker/tfordy/gangesx/srpchase timed out at the 120s cap on this run — re-run with a longer cap) + bucket-provenance; open the P1 PR.
+**Day 2 (2026-06-03) — DONE:** corrected `PRIORITY_1_ANCHOR_MAPPING.md` §4.2 (ferts) + §4.4 (ganges) grep specs to the source-order shapes (qdemo7 §4.1 was already correct); regenerated the full 15-model #1398 cohort + launch through the pipeline for bucket-provenance (see SPRINT_LOG Day 2). **Remaining for the P1 PR:** PR14 + PR20 cross-reference, open PR.

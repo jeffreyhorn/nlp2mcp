@@ -125,7 +125,7 @@ _(no emit-affecting changes in range)_
 - **KU 1.3 ✅ VERIFIED** — the tightened gate fires only on same-canonical-set self-aliases (launch shape); no positional info from the source Sum body is needed. The distinguishing signal is purely `canonical(alias) == canonical(eq_dom)`.
 
 ### Carryforward to Day 2
-- **Doc fix:** `PRIORITY_1_ANCHOR_MAPPING.md` §4.1/§4.2/§4.4 grep specs for qdemo7/ferts/ganges document the *buggy baseline* (swapped arg order) — update to the corrected source-order shapes before they gate the PR.
+- **Doc fix (DONE Day 2):** `PRIORITY_1_ANCHOR_MAPPING.md` §4.2 (ferts) + §4.4 (ganges) grep specs documented the *buggy baseline* (swapped arg order + eq-index leak) — corrected to source-order shapes on Day 2. (qdemo7 §4.1 was already correct.)
 - Regenerate the full 15-model #1398 cohort + bucket-provenance (egypt/shale/qsambal/harker/tfordy/gangesx/srpchase timed out at the 120s cap on Day 1 — re-run with a longer cap); verify qdemo7 → compare_match, etc.
 - Open the P1 PR (PR14 + PR20 cross-reference; pure `src/kkt/stationarity.py` change → PR23 N/A).
 
@@ -133,25 +133,43 @@ _(no emit-affecting changes in range)_
 
 ## Day 2 — Priority 1 full regression + PR open
 
-**Date:** TBD
-**Status:** 🔵 NOT STARTED
+**Date:** 2026-06-03
+**Status:** 🟡 IN PROGRESS — full regression + bucket-provenance + doc-spec fix DONE; PR opening pending
 **Hours budgeted:** ≤ 10
-**Hours actual:** —
+**Hours actual:** ~3 (carryforward portion)
 
 ### Tasks completed
-- _(to be filled in during execution)_
+- **Corrected the buggy anchor-mapping grep specs:** `PRIORITY_1_ANCHOR_MAPPING.md` §4.2 (ferts) + §4.4 (ganges) documented the *gate-mangled Day 0 baseline* (transposed condition + eq-index leak). Rewrote both to the hand-derived source-order shapes (ferts `ppos(p,i)`/`lam_mb(c,i)`; ganges `ri(r,i)`/`nu_qdep(i)`) with regression-check grep lines; verified all match the regenerated emit. (qdemo7 §4.1 was already correct.)
+- **Regenerated the full 15-model #1398 cohort + launch** through the pipeline (translate + PATH solve + compare). **9 `_mcp.gms` artifacts changed** (corrected emit): dinam, egypt, fawley, ferts, ganges, gangesx, qdemo7, shale, srpchase. The other 6 affected + launch + all 11 Tier 0/1 canaries are byte-identical.
 
-### Deliverables
-- _(to be filled in during execution)_
+### Bucket-provenance (Sprint 27 Day 0 → Day 2, post-#1398)
+| model | Day 0 bucket | Day 2 bucket | note |
+|---|---|---|---|
+| **qdemo7** | path_syntax_error | **compare_match** | ✅ +1 Solve / +1 Match recovery anchor |
+| egypt | path_syntax_error | path_solve_license | ✅ recovered past syntax → license gate |
+| ferts | path_syntax_error | path_solve_license | ✅ recovered → license |
+| shale | path_syntax_error | path_solve_license | ✅ recovered → license |
+| srpchase | translate_timeout | path_solve_license | ✅ now translates → license |
+| ganges | translate_timeout | path_syntax_error | ✅ recovered from timeout (residual non-#1398 syntax) |
+| dinam | path_syntax_error | path_syntax_error | emit corrected (−2 `$149` errors vs git baseline); residual $140/$171 pre-existing |
+| gangesx | path_syntax_error | path_syntax_error | emit corrected; residual errors pre-existing |
+| turkpow | path_syntax_error | path_syntax_error | byte-identical to baseline — path_syntax_error entirely pre-existing |
+| sambal/qsambal/harker | compare_mismatch | compare_mismatch | unchanged (correct; pre-existing numerics) |
+| tfordy/sroute | path_solve_license | path_solve_license | unchanged (license-gated) |
+| fawley | path_syntax_error | path_syntax_error | folded into #1356 (P5), not P1 |
+| launch | compare_mismatch | compare_mismatch | byte-identical (KU 4.2 anchor; #1378 target) |
+
+**No regressions** — every model is at its Day 0 bucket or better. The #1398 fix fully clears the Pattern C over-reach; dinam/gangesx/turkpow's residual `path_syntax_error` is **pre-existing** (independent `$140`/`$170`/`$171` errors in non-Pattern-C equations — turkpow byte-identical to baseline confirms it; dinam has *fewer* errors than baseline). Those residuals are out of #1398 scope (Sprint 28 candidates).
 
 ### KUs verified
-- _(to be filled in during execution)_
+- KU 1.3 ✅ (Day 1). Bucket-provenance confirms the Day 0 recovery projections (§2 acceptance): qdemo7 → compare_match; egypt/ferts/shale → path_solve_license.
 
 ### Carryforward to Day 3
-- _(to be filled in during execution)_
+- **Open the P1 #1398 PR** (PR14: the 9 regenerated `_mcp.gms` in the diff; PR20: cross-reference `DAY0_ANCHOR_SCRATCH_NOTES.md` hand-derivations + `PRIORITY_1_ANCHOR_MAPPING.md` §4; PR23 N/A — pure `src/kkt/stationarity.py`). Branch `planning/sprint27-day1-p1`.
+- File Sprint 28 candidates for dinam/gangesx/turkpow residual (non-#1398) path_syntax_error.
 
 ### PR opened
-- _(P1 #1398 PR link + PR14 regenerated `.gms` artifact list (via PR22 audit script) + PR20 Phase 0 cross-reference to `PRIORITY_1_ANCHOR_MAPPING.md` §4 anchor-by-anchor hand-derived KKT shapes. PR23 not applicable — pure `src/kkt/stationarity.py` change.)_
+- _(pending — see Carryforward; the diff + provenance are ready)_
 
 ---
 
