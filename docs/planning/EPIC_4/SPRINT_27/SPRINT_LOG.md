@@ -134,7 +134,7 @@ _(no emit-affecting changes in range)_
 ## Day 2 — Priority 1 full regression + PR open
 
 **Date:** 2026-06-03
-**Status:** 🟡 IN PROGRESS — full regression + bucket-provenance + doc-spec fix DONE; PR opening pending
+**Status:** 🟢 COMPLETE — full regression + bucket-provenance + doc-spec fix + **PR #1414 opened, reviewed, and MERGED** (merge `853000ef`, 2026-06-03)
 **Hours budgeted:** ≤ 10
 **Hours actual:** ~3 (carryforward portion)
 
@@ -165,11 +165,12 @@ _(no emit-affecting changes in range)_
 - KU 1.3 ✅ (Day 1). Bucket-provenance confirms the Day 0 recovery projections (§2 acceptance): qdemo7 → compare_match; egypt/ferts/shale → path_solve_license.
 
 ### Carryforward to Day 3
-- **Open the P1 #1398 PR** (PR14: the 9 regenerated `_mcp.gms` in the diff; PR20: cross-reference `DAY0_ANCHOR_SCRATCH_NOTES.md` hand-derivations + `PRIORITY_1_ANCHOR_MAPPING.md` §4; PR23 N/A — pure `src/kkt/stationarity.py`). Branch `planning/sprint27-day1-p1`.
-- File Sprint 28 candidates for dinam/gangesx/turkpow residual (non-#1398) path_syntax_error.
+- ✅ P1 #1398 PR opened + merged (PR #1414, merge `853000ef`). One review comment (ferts §4.2 header consistency) addressed.
+- Day 3: verify PR19 widening CI fired correctly on the merged commit; start P2 #1381 Phase 0 hand-derivation (camcge `nu_ieq` cross-term).
+- **Sprint 28 candidate filed:** dinam/gangesx/turkpow residual (non-#1398) path_syntax_error — `$140`/`$170`/`$171` in non-Pattern-C equations (recorded in PLAN.md §13 Day 13 carryforward).
 
 ### PR opened
-- _(pending — see Carryforward; the diff + provenance are ready)_
+- **PR #1414** — "Sprint 27 P1: #1398 Phase A gate tightening (qdemo7 → compare_match; no regressions)". PR14: 9 regenerated `_mcp.gms` in diff. PR20: `DAY0_ANCHOR_SCRATCH_NOTES.md` hand-derivations + `PRIORITY_1_ANCHOR_MAPPING.md` §4 (§4.2/§4.4 corrected). PR23 N/A. **MERGED to main 2026-06-03 (`853000ef`).**
 
 ---
 

@@ -98,7 +98,7 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 **Context:** Land the tightened predicate. Regenerate all 15 #1398-affected models + launch. Verify bucket-provenance recovery (qdemo7 → compare_match, etc.). Open PR with **PR14 reaffirmation + PR20 Phase 0 cross-reference** (the predicate change is in `src/kkt/stationarity.py` — pure `src/` change, so PR23 does NOT apply per `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)" §"Scope").
 
-> ✅ **Tasks 1–3 + 6 already complete (2026-06-03 carryforward, branch `planning/sprint27-day1-p1`, commit `4de59037`)** — regeneration, bucket-provenance, Tier 0/1 byte-stability, and the §4.2/§4.4 grep-spec correction are done (see SPRINT_LOG Day 2). **Only tasks 4–5 (author + open the PR) remain.** Note: `PRIORITY_1_ANCHOR_MAPPING.md` §4.2 (ferts) + §4.4 (ganges) grep specs were CORRECTED on Day 2 — they had documented the buggy gate-mangled baseline; use the corrected source-order specs. (qdemo7 §4.1 was already correct.)
+> ✅ **DAY 2 COMPLETE (2026-06-03).** All tasks done: regeneration, bucket-provenance, Tier 0/1 byte-stability, the §4.2/§4.4 grep-spec correction (carryforward commit `4de59037`), and **PR #1414 opened, reviewed, and MERGED to main (`853000ef`)** — Priority 1 #1398 landed. Note for reference: `PRIORITY_1_ANCHOR_MAPPING.md` §4.2 (ferts) + §4.4 (ganges) grep specs were corrected (they had documented the buggy gate-mangled baseline; qdemo7 §4.1 was already correct).
 
 **Read first:**
 - `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §5 "Day 2"
@@ -118,8 +118,8 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 - [x] 15 #1398-affected models at Day 0 baseline buckets or better — **no regressions** (qdemo7 → compare_match; egypt/ferts/shale/srpchase → path_solve_license). dinam/gangesx/turkpow stay at path_syntax_error from pre-existing non-#1398 errors → Sprint 28 candidates.
 - [x] launch byte-stable.
 - [x] Tier 0/1 canaries byte-stable (zero diffs on non-affected models).
-- [ ] **PR open with PR14 + PR20 Phase 0 disclosures (PR23 not applicable to this `src/`-only PR).** ← remaining
-- [ ] First review iteration responded to. ← remaining
+- [x] PR open with PR14 + PR20 Phase 0 disclosures (PR23 not applicable to this `src/`-only PR) — **PR #1414**.
+- [x] First review iteration responded to (ferts §4.2 header consistency) — **PR #1414 MERGED to main (`853000ef`)**.
 
 ---
 

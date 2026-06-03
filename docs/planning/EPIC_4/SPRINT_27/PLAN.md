@@ -120,7 +120,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 - [x] launch byte-stable vs Sprint 26 final emit (per KU 4.2). ✅
 - [x] PR19 target list widened to 30 models per Task 5. ✅ (Day 0, PR #1413 merged)
 - [x] All 4 Phase 0 KUs 1.1–1.4 ✅ VERIFIED (1.3 moved from INCOMPLETE on Day 1).
-- [ ] **Remaining: open the P1 #1398 PR** (PR14: 9 regenerated `_mcp.gms` in diff; PR20: cross-ref `DAY0_ANCHOR_SCRATCH_NOTES.md` + `PRIORITY_1_ANCHOR_MAPPING.md` §4; PR23 N/A).
+- [x] **P1 #1398 PR opened + merged** — PR #1414 (PR14: 9 regenerated `_mcp.gms` in diff; PR20: cross-ref `DAY0_ANCHOR_SCRATCH_NOTES.md` + `PRIORITY_1_ANCHOR_MAPPING.md` §4; PR23 N/A). **Merged to main 2026-06-03 (`853000ef`).** Priority 1 COMPLETE.
 
 ---
 
