@@ -106,3 +106,74 @@ grep -n 'sum(s, 1\$(sc(s,c)) \* lam_plow(c))' qdemo7_mcp.gms   # expect 0 (parti
 | dinam | Shape A `stat_ka(te)` row-mult-collapse `lam_mb(i,t)` + `ts2(te,te)` self-loop; Shape B `comp_mb(i,t)` pre-collapse | §4.7 | OQ4 (1 shape or 2?) |
 
 Open Questions 1–5 (`PRIORITY_1_ANCHOR_MAPPING.md` §6) resolved during Day 1/2 hand-derivation.
+
+---
+
+# Day 1 (2026-06-02) — remaining 6 anchors + the #1398 tightening
+
+## The #1398 root cause + fix (binding)
+
+**Empirical trace of `_find_pattern_c_alias_sum`** (`src/kkt/stationarity.py`) on qdemo7 vs launch:
+
+| model | gate fires as | `canonical(alias)` vs `canonical(eq_dom)` | verdict |
+|---|---|---|---|
+| launch | `alias=ss, eq_dom=s` | `s == s` (SAME — `Alias(s,ss)`) | swap valid |
+| qdemo7 | `alias=c, eq_dom=s` | `c[crop] ≠ s[season]` (DIFFERENT) | swap INVALID — mangles |
+
+The Sprint 26 Phase A gate over-reached: it fired on **cross-set** alias sums and applied a blanket `alias↔eq_dom` swap (`_apply_pattern_c_swap_to_term` → `_rewrite_subset_to_superset`, which rewrites BOTH `SetMembershipTest` conditions AND `MultiplierRef` indices). For qdemo7 this transposed the source condition arg order AND the multiplier index, turning the **correct naive** emit `sum(s, 1$(sc(s,c)) * lam_plow(s))` into the **buggy** `sum(s, 1$(sc(c,s)) * lam_plow(c))`.
+
+**Fix (committed prototype):** in `_find_pattern_c_alias_sum`, only return a match when `_resolve_alias_target(alias_name) == _resolve_alias_target(eq_domain_index)` (genuine self-alias of a single set, the launch shape); otherwise fall through to the recursive descent. The swap then fires only where it is mathematically valid.
+
+**Verification:** qdemo7 fixed; launch + sambal + sroute + turkpow + all 11 Tier 0/1 canaries **byte-identical**; ferts/ganges/dinam corrected to source-order shapes (below). **KU 1.3 ✅** (gate fires on launch-shape self-aliases only).
+
+> ⚠️ **Doc caveat (resolved OQ2/OQ3/OQ5; Day 2 update):** `PRIORITY_1_ANCHOR_MAPPING.md` §4 is *inspection-based, not formal* — the grep "expected" shapes for **ferts §4.2** and **ganges §4.4** were transcribed from the **buggy gate-mangled baseline** (wrong arg order + eq-index leak), so they asserted the WRONG shape. (**qdemo7 §4.1 was already correct** — it documents the Day 0 bug explicitly and expects the *fixed* `sc(s,c)`/`lam_plow(s)` shape.) The formal hand-derivations below give the correct (source-order) shapes; **§4.2 and §4.4 were corrected on Day 2** (2026-06-03).
+
+## Anchor 3 — ferts `stat_z(p,i)` (CHANGED → corrected)
+
+Source (`ferts.gms`): `ppos(p,i)` declared `(p,i)` (L297); `z(p,i)`; `mb(c,i).. sum(p$ppos(p,i), a(c,p)*z(p,i)) - … =g= 0`; `cc(m,i)$mpos(m,i).. sum(p$ppos(p,i), b(m,p)*z(p,i)) =l= util*k(m,i)`.
+
+∂mb(c,i)/∂z(p,i) = `a(c,p)$ppos(p,i)` (the p'=p term), multiplier **`lam_mb(c,i)`** (i matches z's domain). Likewise cc → `b(m,p)$ppos(p,i) · lam_cc(m,i)`.
+
+**Correct emit:** `… 1$(ppos(p,i)) … * lam_mb(c,i)` and `… * lam_cc(m,i)` — **source-order `ppos(p,i)`, multiplier index `i`** (NOT `ppos(i,p)`/`lam_mb(c,p)` as §4.2 claimed). ✅ matches my fix's output.
+
+## Anchor 4 — sambal `stat_x(i,j)` (byte-stable — same-set self-alias)
+
+Source: `Alias(i,j)`; `cbal(j).. t(j) =e= sum(i$xb(i,j), x(i,j))`; `rbal(i).. t(i) =e= sum(j$xb(i,j), x(i,j))`. ∂rbal(i)/∂x(i,j) collects via a synthetic alias `i__kkt1` of `i` (avoids GAMS "set under control"). `nu_cbal(i)` uses the **eq-domain index i — correct** (cbal is indexed by the balance set; the multiplier is genuinely eq-indexed). alias `i__kkt1` and eq_dom `i` are the **same set** → gate fires (correctly), emit unchanged: `sum(i__kkt1, ((-1) * 1$(xb(i,i__kkt1))) * nu_cbal(i))`. ✅ byte-stable.
+
+## Anchor 5 — ganges `stat_pls(r)` (CHANGED → corrected)
+
+Source: `ri(r,i)` declared `(r,i)` (L45); `pls(r)`; 4 constraints `qdep(i)/values(i)/firsts(i)/yself(i)` each containing `sum(r$ri(r,i), pls(r)·…)`. ∂qdep(i)/∂pls(r) = `ls(i)·depl(i)$ri(r,i)` (the r'=r term), multiplier `nu_qdep(i)`.
+
+**Correct emit:** inner condition **`ri(r,i)` (source order)**, NOT `ri(i,r)` as §4.4 claimed. ✅ matches my fix (`ri(r,i)`, 45 occurrences). Outer existential guard `$(sum(i, 1$(ri(r,i))))` preserved.
+
+## Anchor 6 — sroute `stat_x(i,ip,ipp)` (byte-stable — unwrapped Pattern C)
+
+Source: `Alias(i,ip,ipp)`; `nb(i,ip)$(not sameas(i,ip)).. sum(ipp$darc(ipp,ip), x(i,ipp,ip)) =g= sum(ipp$darc(ip,ipp), x(i,ip,ipp)) + 1`. ∂[RHS sum]/∂x(i,ip,ipp) = `darc(ip,ipp)`, multiplier `lam_nb(i,ip)`, guarded by the eq's `(not sameas(...))`. No wrapping Sum (the matching ipp is the eq's 3rd index). Emit `(1$(darc(ip,ipp)) * lam_nb(i,ip))$((not sameas(i, ipp)))` ✅ byte-stable (the relevant indices are all the eq's own — no spurious cross-set swap).
+
+## Anchor 7 — turkpow `stat_zt(m,v,b,t)` (byte-stable — order-relation self-alias)
+
+Source: `Alias(t,v),(b,bp)`; `vs(t,v) = (ord(t) >= ord(v))` and `bs(b,bp) = (ord(b) >= ord(bp))` — **order relations on aliased sets** (structurally launch's `ge` family). The `t__kkt1`/`t__kkt2` synthetic aliases are aliases of `t` (=`v`), so `vs(t__kkt,t__kkt)` self-loops are **same-set** → gate fires (correctly), byte-stable. Both `__kkt` aliases, both self-loop indicators, and `bs(bp,b)` present (2/2/2 per grep). ✅
+
+## Anchor 8 — dinam `stat_ka(te)` (CHANGED → corrected; 1 logical shape, resolves OQ4)
+
+Source: `Alias(te,tep)`; `ts2(te,tep)` time-summation matrix. Two sub-features:
+- **`ts2(te,te)` self-loop** (te/tep same set) — same-set → unaffected, byte-stable part.
+- **`comp_mb(i,t)` cross-term** `bk(i,"agri",t)·ka(t)` → ∂/∂ka(te): the gate previously **leaked te into `lam_mb`** (cross-set over-reach: bound indices `i,t` vs eq index `te`). My fix stops it → **row-multiplier-collapse** `sum((i,t), (bk(i,"agri",t) * lam_mb(i,t))$(t(t)))` with both indices bound, no `te` leak. ✅ matches §4.7.
+
+**OQ4 resolved:** dinam is **1 logical shape with 2 positional variations** (the self-loop ts2 part is byte-stable; the row-mult-collapse part is the single thing the tightening corrects). No separate gate-predicate input.
+
+## Day 1 verification summary
+
+| Anchor | Δ vs baseline | Correct per hand-derivation? |
+|---|---|---|
+| launch | byte-stable | ✅ (KU 4.2 anchor preserved) |
+| qdemo7 | changed | ✅ `sc(s,c)`/`lam_plow(s)` |
+| ferts | changed | ✅ `ppos(p,i)`/`lam_mb(c,i)` |
+| sambal | byte-stable | ✅ `nu_cbal(i)` eq-index correct |
+| ganges | changed | ✅ `ri(r,i)` source order |
+| sroute | byte-stable | ✅ unwrapped, eq-own indices |
+| turkpow | byte-stable | ✅ order-relation self-alias |
+| dinam | changed | ✅ row-mult-collapse, no te leak |
+| **11 Tier 0/1 canaries** | byte-stable | ✅ zero regressions |
+
+**Day 2 (2026-06-03) — DONE:** corrected `PRIORITY_1_ANCHOR_MAPPING.md` §4.2 (ferts) + §4.4 (ganges) grep specs to the source-order shapes (qdemo7 §4.1 was already correct); regenerated the full 15-model #1398 cohort + launch through the pipeline for bucket-provenance (see SPRINT_LOG Day 2). **Remaining for the P1 PR:** PR14 + PR20 cross-reference, open PR.

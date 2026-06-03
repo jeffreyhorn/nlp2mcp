@@ -166,6 +166,95 @@ solve m using nlp minimizing z;
 
 
 @pytest.mark.unit
+def test_cross_set_alias_sum_is_not_pattern_c_swapped(tmp_path):
+    """Sprint 27 #1398 gate tightening: a `sum(c$sc(s,c), xcrop(c))` body where
+    the summed set ``c`` and the eq-domain set ``s`` are DIFFERENT sets (a
+    2-set membership, NOT a self-alias) must NOT trigger the Pattern C
+    ``alias ↔ eq_dom`` swap.
+
+    This is the qdemo7 failure mode: the Sprint 26 Phase A gate over-reached,
+    firing on cross-set alias sums and applying a blanket swap that transposed
+    BOTH the source condition's argument order AND the multiplier index. The
+    correct (naive) stationarity for ``stat_xcrop(c)`` of
+    ``plow(s).. sum(c$sc(s,c), xcrop(c)) =l= cap(s)`` is::
+
+        sum(s, 1$(sc(s,c)) * lam_plow(s))      # source-order cond, alias-indexed mult
+
+    The over-reaching swap produced the buggy::
+
+        sum(s, 1$(sc(c,s)) * lam_plow(c))      # transposed cond AND eq-index leak
+
+    which references ``lam_plow(c)`` out of the ``plow`` (domain ``s``) multiplier's
+    declared domain → GAMS path_syntax_error. The tightening restricts the gate
+    to same-canonical-set self-aliases (launch's ``s``/``ss``), so this cross-set
+    case falls through to the correct naive emit. (#1398 regressed 15 such models.)
+    """
+    gams = """\
+Set s / summer, winter /;
+Set c / cotton, wheat /;
+Set sc(s,c) / summer.cotton, winter.wheat /;
+Parameter cap(s) / summer 10, winter 8 /;
+Positive Variable xcrop(c), z;
+Equation plow(s), zdef;
+plow(s).. sum(c$sc(s,c), xcrop(c)) =l= cap(s);
+zdef.. z =e= sum(c, xcrop(c));
+Model m / plow, zdef /;
+solve m using nlp maximizing z;
+"""
+    gams_file = tmp_path / "mini_qdemo7.gms"
+    gams_file.write_text(gams)
+
+    old_limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(50000)
+    try:
+        from src.ad.constraint_jacobian import compute_constraint_jacobian
+        from src.ad.gradient import compute_objective_gradient
+        from src.emit.emit_gams import emit_gams_mcp
+        from src.ir.normalize import normalize_model
+        from src.ir.parser import parse_model_file
+        from src.kkt.assemble import assemble_kkt_system
+
+        model = parse_model_file(str(gams_file))
+        normalize_model(model)
+        j_eq, j_ineq = compute_constraint_jacobian(model)
+        grad = compute_objective_gradient(model)
+        kkt = assemble_kkt_system(model, grad, j_eq, j_ineq)
+        output = emit_gams_mcp(kkt)
+    finally:
+        sys.setrecursionlimit(old_limit)
+
+    stat_xcrop_lines = [line for line in output.splitlines() if "stat_xcrop" in line]
+    assert stat_xcrop_lines, (
+        "Expected at least one line mentioning stat_xcrop in emitted MCP; none "
+        f"found. Output (first 1200 chars):\n{output[:1200]}"
+    )
+    stat_xcrop_text = "\n".join(stat_xcrop_lines)
+
+    # Correct (naive) shape: source-order condition + alias-indexed multiplier.
+    assert "1$(sc(s,c))" in stat_xcrop_text, (
+        "Expected source-order condition `sc(s,c)` in stat_xcrop body (the gate "
+        "must NOT swap a cross-set alias sum). "
+        f"Full stat_xcrop text:\n{stat_xcrop_text}"
+    )
+    assert "lam_plow(s)" in stat_xcrop_text, (
+        "Expected alias/constraint-domain-indexed multiplier `lam_plow(s)`. "
+        f"Full stat_xcrop text:\n{stat_xcrop_text}"
+    )
+
+    # The Phase A over-reach signatures must NOT appear.
+    assert "1$(sc(c,s))" not in stat_xcrop_text, (
+        "Found transposed condition `sc(c,s)` — the Pattern C swap wrongly fired "
+        "on a cross-set (s≠c) alias sum (#1398 over-reach). "
+        f"Full stat_xcrop text:\n{stat_xcrop_text}"
+    )
+    assert "lam_plow(c)" not in stat_xcrop_text, (
+        "Found eq-index-leaked multiplier `lam_plow(c)` (out of plow's domain `s`) "
+        "— the Pattern C swap wrongly fired on a cross-set alias sum (#1398). "
+        f"Full stat_xcrop text:\n{stat_xcrop_text}"
+    )
+
+
+@pytest.mark.unit
 def test_helpers_unit_contracts():
     """Unit-level contracts on the three Pattern C helpers, covering the
     edge cases flagged in PR #1308 Copilot review:

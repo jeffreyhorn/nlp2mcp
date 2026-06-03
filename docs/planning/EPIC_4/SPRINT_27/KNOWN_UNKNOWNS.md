@@ -308,7 +308,11 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Sprint 27 Day 1, 2026-06-02) — **the gate fires only on the launch-shape self-alias case; NO positional info from the source Sum body is needed.**
+
+**Finding:** an empirical trace of `_find_pattern_c_alias_sum` showed the Sprint 26 Phase A gate over-reached by firing on **cross-set** alias sums (qdemo7: `alias=c[crop]`, `eq_dom=s[season]`) and applying a blanket `alias↔eq_dom` swap that transposed both the condition arg order and the multiplier index. The distinguishing signal between a valid Pattern C (launch's `s`/`ss` — `Alias(s,ss)`, same set) and an over-reach (qdemo7's `s`/`c`, different sets) is purely **`_resolve_alias_target(alias) == _resolve_alias_target(eq_domain_index)`**.
+
+**Fix:** restrict `_find_pattern_c_alias_sum` to return a match only when alias and eq-domain index resolve to the same canonical set; otherwise fall through to the recursive descent (a deeper Sum may still be a genuine self-alias). Verified: launch + sambal + sroute + turkpow + 11 Tier 0/1 canaries byte-identical; qdemo7/ferts/ganges/dinam corrected to source-order shapes (hand-derived in `DAY0_ANCHOR_SCRATCH_NOTES.md`); `make test` 4737 passed + new regression test. No source-Sum positional metadata required — the canonical-set identity is sufficient.
 
 ---
 

@@ -30,15 +30,15 @@ Per Task 3 (BASELINE_METRICS.md §6.2 + Unknown 1.1 verification table), all 15 
 |---|---|---|---|---|
 | 1 | `qdemo7` | path_syntax_error | **Anchor** | `stat_xcrop(c)` — Phase A overreach primary target; +1 firm Solve / +1 firm Match recovery anchor |
 | 2 | `egypt` | path_syntax_error | Non-anchor → **qdemo7** | `stat_xcrop(r,c)` (2-region extension of qdemo7 shape) |
-| 3 | `ferts` | path_syntax_error | **Anchor** | `stat_z(p,i)` — multi-bound-index sum with `ppos(i,p)` 2-set alias-conditional |
+| 3 | `ferts` | path_syntax_error | **Anchor** | `stat_z(p,i)` — multi-bound-index sum with `ppos(p,i)` 2-set alias-conditional (source order; see §4.2) |
 | 4 | `shale` | path_syntax_error | Non-anchor → **ferts** | `stat_z(p,tf)` (same multi-bound-index sum family) |
 | 5 | `sambal` | compare_mismatch | **Anchor** | `stat_x(i,j)` — `__kkt1` synthetic alias + `xb(i,i__kkt1)` parameter-as-condition + `nu_cbal(i)` cbal-derivative shape |
 | 6 | `qsambal` | compare_mismatch | Non-anchor → **sambal** | `stat_x(i,j)` (structurally identical, quadratic variant) |
 | 7 | `harker` | compare_mismatch | Non-anchor → **sroute** (tentative) | `stat_t(n,np)` `arc(n,np)` parameter-as-condition network shape |
 | 8 | `tfordy` | path_solve_license | Non-anchor → **sambal** (tentative) | `stat_x(c,t)` Pattern C with `cf(c)` parameter-as-condition + `lam_bal(c,t)` cbal-style multiplier |
 | 9 | `dinam` | path_syntax_error | **Anchor** | `stat_ka(te)` row-multiplier-collapse + claimed 2nd shape via `comp_mb(i,t)` differentiate-vs-current-eq-index |
-| 10 | `ganges` | translate_timeout (Day 0; was path_syntax_error at Sprint 26 Day 13 final) | **Anchor** | `stat_pls(r)` — 4 inner Pattern C alias-sums with `ri(i,r)` 2-set membership + outer set-guard `$(sum(i, 1$(ri(r,i))))` |
-| 11 | `gangesx` | path_syntax_error | Non-anchor → **ganges** | `stat_pls(r)` (eXtended variant — same 4-sum + `ri(i,r)` family) |
+| 10 | `ganges` | translate_timeout (Day 0; was path_syntax_error at Sprint 26 Day 13 final) | **Anchor** | `stat_pls(r)` — 4 inner Pattern C alias-sums with `ri(r,i)` 2-set membership (source order; see §4.4) + outer set-guard `$(sum(i, 1$(ri(r,i))))` |
+| 11 | `gangesx` | path_syntax_error | Non-anchor → **ganges** | `stat_pls(r)` (eXtended variant — same 4-sum + `ri(r,i)` family) |
 | 12 | `fawley` | path_syntax_error | (Folded into #1356 — see §6 Open Question 1) | `stat_bq(c,cf)` Pattern C-like shape; per PROJECT_PLAN.md L1032 "already in #1356 scope" |
 | 13 | `srpchase` | translate_timeout (Day 0; was path_syntax_error at Sprint 26 Day 13 final) | Non-anchor → **turkpow** (tentative) | `stat_x(n)` / `stat_y(n)` with `ancestor(srn,srn)` self-loop indicator (mirrors turkpow's `vs(t__,t__)` self-loop family) |
 | 14 | `sroute` | path_solve_license | **Anchor** | `stat_x(i,ip,ipp)` — `darc(ip,ipp)` network arc parameter + nested `(not sameas(i,ipp))` negation guard |
@@ -67,7 +67,7 @@ stat_pweight(s).. ... + sum(ss, ((-1) * 1$(ge(s,ss))) * nu_dweight(ss)) + ... =E
 
 **Distinguishing features:**
 
-- **Order-relation alias-indicator** `1$(ge(s,ss))` — distinct from the parameter-set-membership indicators used by other anchors (`sc(c,s)`, `xb(i,j)`, `ri(i,r)`, etc.). Sprint 27 tightening must continue to accept `ge(s,ss)` order-relation as a valid Pattern C trigger.
+- **Order-relation alias-indicator** `1$(ge(s,ss))` — distinct from the parameter-set-membership indicators used by other anchors (`sc(s,c)`, `xb(i,j)`, `ri(r,i)`, etc. — all source order). Sprint 27 tightening must continue to accept `ge(s,ss)` order-relation as a valid Pattern C trigger.
 - **Eq-index `s` paired with synthetic-alias `ss`** declared via `Alias(s, s__)` / `Alias(s, ss)` GAMS preamble.
 - **Multiplier `nu_dweight(ss)` uses the bound alias index** `ss`, not the eq index `s` — this is the correct semantic per the Lagrangian `-sum_{k≤s} nu_dweight(k)` of the dweight constraint.
 
@@ -123,31 +123,36 @@ grep -n 'sum(s, 1\$(sc(s,c)) \* lam_plow(c))' data/gamslib/mcp/qdemo7_mcp.gms
 
 **Recovery impact:** qdemo7 is the **+1 firm Solve / +1 firm Match** recovery anchor for Sprint 27 Priority 1 (compare_match at Sprint 26 Day 0 → path_syntax_error post-PR #1379 regression). Fix verified by qdemo7 returning to compare_match.
 
-### 4.2 Anchor: ferts — `stat_z(p,i)` multi-bound-index Pattern C with `ppos(i,p)` 2-set membership
+### 4.2 Anchor: ferts — `stat_z(p,i)` multi-bound-index Pattern C with `ppos(p,i)` 2-set membership
 
 **Bucket at Day 0:** path_syntax_error.
 
-**Distinguishing emit pattern (from `ferts_mcp.gms` L367):**
+> ⚠️ **Day 2 correction (2026-06-03):** the original §4.2 emit pattern + grep specs below transcribed the **gate-mangled Day 0 baseline** (transposed condition `ppos(i,p)`, eq-index-leaked multipliers `lam_mb(c,p)`/`lam_cc(m,p)`, and even `a(c,i)`/`b(m,i)` instead of `a(c,p)`/`b(m,p)`). The Sprint 27 Day 1 #1398 tightening (`_find_pattern_c_alias_sum` same-canonical-set guard) regenerates the **correct source-order** shape below. Source: `ppos(p,i)` declared `(p,i)`; `mb(c,i).. sum(p$ppos(p,i), a(c,p)*z(p,i))`; `cc(m,i)$mpos(m,i).. sum(p$ppos(p,i), b(m,p)*z(p,i))`. ∂mb(c,i)/∂z(p,i) = `a(c,p)$ppos(p,i)·lam_mb(c,i)` — the `i` matches `z(p,i)`'s domain.
+
+**Distinguishing emit pattern (CORRECTED — from regenerated `ferts_mcp.gms` post-#1398):**
 
 ```
-stat_z(p,i).. (sum(c, ((-1) * (a(c,i) * 1$(ppos(i,p)))) * lam_mb(c,p))
-             + sum(m, (b(m,i) * 1$(ppos(i,p)) * lam_cc(m,p))$(mpos(m,p))))$(ppos(p,i)) =E= 0;
+stat_z(p,i).. (sum(c, ((-1) * (a(c,p) * 1$(ppos(p,i)))) * lam_mb(c,i))
+             + sum(m, (b(m,p) * 1$(ppos(p,i)) * lam_cc(m,i))$(mpos(m,i))))$(ppos(p,i)) =E= 0;
 ```
 
 **Distinguishing features:**
 
 - **Multi-bound-index sums:** `sum(c, ...)` and `sum(m, ...)` over bound indices that are NOT the eq-domain indices (`p,i`).
-- **2-index alias-conditional `ppos(i,p)`** — parameter set-membership with order-significant arguments (`i` is eq index, `p` is eq index; conditional asserts the process `p` is at position `i`).
-- **Multiplier `lam_mb(c,p)`** uses **bound index `c` + eq index `p`** — distinct from qdemo7's single-index multiplier collapse.
+- **2-index alias-conditional `ppos(p,i)`** — parameter set-membership in **source order** (`p` first, `i` second, matching the `ppos(p,i)` declaration and `z(p,i)`'s domain).
+- **Multiplier `lam_mb(c,i)`** uses **bound index `c` + eq index `i`** (the `i` shared with `z(p,i)`/`stat_z(p,i)`) — NOT the eq index `p`. This is the row whose Day 0 buggy emit leaked `p` into the multiplier.
 - **Outer eq-level guard** `$(ppos(p,i))` — conditional gates the entire equation on the same parameter-set-membership.
 
 **Phase 0 verification approach:**
 
 ```bash
-grep -n 'sum(c, ((-1) \* (a(c,i) \* 1\$(ppos(i,p)))) \* lam_mb(c,p))' data/gamslib/mcp/ferts_mcp.gms
+grep -n 'sum(c, ((-1) \* (a(c,p) \* 1\$(ppos(p,i)))) \* lam_mb(c,i))' data/gamslib/mcp/ferts_mcp.gms
 # Expect: 1 match (stat_z)
-grep -n 'sum(m, (b(m,i) \* 1\$(ppos(i,p)) \* lam_cc(m,p))\$(mpos(m,p)))' data/gamslib/mcp/ferts_mcp.gms
+grep -n 'sum(m, (b(m,p) \* 1\$(ppos(p,i)) \* lam_cc(m,i))\$(mpos(m,i)))' data/gamslib/mcp/ferts_mcp.gms
 # Expect: 1 match (stat_z)
+# Regression — the Day 0 gate-mangled shapes must NOT appear:
+grep -n 'lam_mb(c,p)' data/gamslib/mcp/ferts_mcp.gms     # Expect: 0 (eq-index leak)
+grep -n '1\$(ppos(i,p))' data/gamslib/mcp/ferts_mcp.gms  # Expect: 0 (transposed condition)
 ```
 
 **Recovery impact:** ferts returning to its Sprint 26 Day 0 bucket (`path_solve_license` — license-gated; not a structural fix) confirms the Phase A gate-overreach revert. ferts is the **multi-bound-index sum shape** anchor for the Sprint 27 tightening; the gate predicate must distinguish single-bound-index from multi-bound-index Pattern C contexts.
@@ -177,40 +182,45 @@ grep -n 'sum(i__kkt1, ((-1) \* 1\$(xb(i,i__kkt1))) \* nu_cbal(i))' data/gamslib/
 
 **Recovery impact:** sambal stays at compare_mismatch (Sprint 26 Day 0 baseline bucket — pre-existing solver-numerical issue, not a Phase A regression). The Sprint 27 fix is verified by sambal's regenerated emit being byte-identical to a hand-derived reference, NOT by sambal becoming compare_match (which depends on solver behavior).
 
-### 4.4 Anchor: ganges — `stat_pls(r)` 4 inner Pattern C alias-sums with `ri(i,r)` + outer set-membership guard
+### 4.4 Anchor: ganges — `stat_pls(r)` 4 inner Pattern C alias-sums with `ri(r,i)` + outer set-membership guard
 
 **Bucket at Day 0:** translate_timeout (machine-variance churn — was path_syntax_error at Sprint 26 Day 13 final; remains in #1398 scope per Unknown 1.1).
 
-**Distinguishing emit pattern (from `ganges_mcp.gms` L1011):**
+> ⚠️ **Day 2 correction (2026-06-03):** the original §4.4 emit pattern + grep specs below transcribed the **gate-mangled Day 0 baseline** — they showed the INNER condition as `ri(i,r)` and the multipliers/coefficients as eq-index `r` (`depl(r)·ls(r)·nu_qdep(r)`). Both are wrong. Source: `ri(r,i)` declared `(r,i)`; e.g. `qdep(i).. … + sum(r$ri(r,i), pls(r)*ls(i)*depl(i))`. ∂qdep(i)/∂pls(r) = `ls(i)·depl(i)$ri(r,i)`, multiplier `nu_qdep(i)` — so the inner condition is `ri(r,i)` (source order) and the multiplier/coefficients carry the **constraint index `i`**, summed `sum(i, …)`. Feature bullet 3's old claim that "`nu_<eq>(r)` … is semantically correct" was itself wrong. The Sprint 27 Day 1 #1398 tightening regenerates the correct shape below.
+
+**Distinguishing emit pattern (CORRECTED — from regenerated `ganges_mcp.gms` post-#1398):**
 
 ```
-stat_pls(r).. (sum(i, ((-1) * (depl(r) * ls(r) * 1$(ri(i,r)))) * nu_qdep(r))
-             + sum(i, ((-1) * (ls(r) * 1$(ri(i,r)))) * nu_values(r))
-             + sum(i, (... * 1$(ri(i,r)) ...) * nu_firsts(r))$((not si(r)))
-             + sum(i, ((-1) * ((1 - tw(r)) * ls(r) * 1$(ri(i,r)))) * nu_yself(r))
+stat_pls(r).. (sum(i, ((-1) * (depl(i) * ls(i) * 1$(ri(r,i)))) * nu_qdep(i))
+             + sum(i, ((-1) * (ls(i) * 1$(ri(r,i)))) * nu_values(i))
+             + sum(i, (... 1$(ri(r,i)) ... sigmas(i) ...) * nu_firsts(i))$((not si(i)))
+             + sum(i, ((-1) * ((1 - tw(i)) * ls(i) * 1$(ri(r,i)))) * nu_yself(i))
              - piL_pls(r))$(sum(i, 1$(ri(r,i)))) =E= 0;
 ```
 
 **Distinguishing features:**
 
-- **4 separate inner Pattern C alias-sums** with the same `ri(i,r)` 2-set membership pattern but distinct outer multipliers (`nu_qdep`, `nu_values`, `nu_firsts`, `nu_yself`).
-- **Outer eq-level guard `$(sum(i, 1$(ri(r,i))))`** — set-membership existential quantification: equation gated only if at least one `i` satisfies `ri(r,i)`. Distinct from ferts's deterministic `$(ppos(p,i))`.
-- **Multiplier `nu_<eq>(r)` uses eq-domain index `r`** for all 4 inner sums — semantically correct (each `nu_<eq>` constraint is indexed by `r`).
-- **Nested CES-derivative shape** in the `nu_firsts` term (with `sigmas(r)` exponent + `sqr(...)` divisor) — Pattern C alias-sum interacts with non-trivial nonlinear expressions, distinct from sambal's simpler linear cbal-derivative.
+- **4 separate inner Pattern C alias-sums** with the same `ri(r,i)` 2-set membership (source order) but distinct multipliers (`nu_qdep`, `nu_values`, `nu_firsts`, `nu_yself`).
+- **Outer eq-level guard `$(sum(i, 1$(ri(r,i))))`** — set-membership existential quantification (this one was already source-order in the baseline). Distinct from ferts's deterministic `$(ppos(p,i))`.
+- **Multiplier `nu_<eq>(i)` uses the constraint index `i`** (each `nu_<eq>` constraint is indexed by `i`), summed `sum(i, …)` — NOT the stat-domain index `r`. The Day 0 baseline leaked `r` into the multiplier (gate over-reach).
+- **Nested CES-derivative shape** in the `nu_firsts` term (with `sigmas(i)` exponent + `sqr(...)` divisor, and an inner `sum(r__$(ri(r__,i)), pls(r__))` from the source `firsts` constraint).
 
 **Phase 0 verification approach:**
 
 ```bash
-# 4 inner alias-sums all present in stat_pls (use grep -o for occurrence count,
-# not grep -c which counts lines — stat_pls is a single long line):
-grep -o '1\$(ri(i,r))' data/gamslib/mcp/ganges_mcp.gms | wc -l
-# Expect: ≥ 4 occurrences total in the file (4 in stat_pls + any in other
-# eqs that share the ri(i,r) pattern). At Sprint 27 Day 0 baseline: 7
-# occurrences across 2 lines (4 in stat_pls L1011 + 3 in stat_ks-family L1036).
+# 4 inner alias-sums use SOURCE-ORDER ri(r,i) (grep -o: stat_pls is one long line):
+grep -o '1\$(ri(r,i))' data/gamslib/mcp/ganges_mcp.gms | wc -l
+# Expect: ≥ 4 occurrences in stat_pls (file-wide post-#1398: 45 — all ri are ri(r,i)).
+grep -o 'nu_qdep(i)' data/gamslib/mcp/ganges_mcp.gms | wc -l
+# Expect: ≥ 1 (constraint-index multiplier, inside sum(i, ...)).
 
 # Outer set-membership guard preserved:
 grep -n 'piL_pls(r))\$(sum(i, 1\$(ri(r,i))))' data/gamslib/mcp/ganges_mcp.gms
 # Expect: 1 match (stat_pls outer wrapping)
+
+# Regression — the Day 0 gate-mangled shapes must NOT appear:
+grep -o '1\$(ri(i,r))' data/gamslib/mcp/ganges_mcp.gms | wc -l   # Expect: 0 (transposed condition)
+grep -o 'nu_qdep(r)' data/gamslib/mcp/ganges_mcp.gms | wc -l     # Expect: 0 (stat-index leak)
 ```
 
 **Recovery impact:** ganges returning to `path_syntax_error` (a faster runner; or persisting at `translate_timeout` if the runner remains slow) plus the regenerated emit matching the 4-inner-sum + outer-guard shape confirms the fix. ganges is the **repeated-Pattern-C-with-distinct-outer-multipliers + set-membership-existential** anchor.
@@ -342,11 +352,11 @@ grep -n '1\$(ts2(te,te))' data/gamslib/mcp/dinam_mcp.gms
 Each non-anchor model is assigned to a presumed-matching anchor based on the structural shape of its `_mcp.gms` stationarity equations. Verification is provisional pending Sprint 27 Day 1/2 hand-derived KKT — ambiguous mappings are flagged in §6.
 
 - **egypt → qdemo7** — `stat_xcrop(r,c)` (from `egypt_mcp.gms` L290) is the explicit 2-region (`r`) extension of qdemo7's `stat_xcrop(c)`. Same `yld(c+k,c,r) * lam_comb(c+k)` Pattern C indexing with crop-rotation offsets (`c+22`, `c+8`, etc.); same `lam_landbal` + `lam_comb` multiplier family. Confidence: **high**. Sprint 27 fix on the qdemo7 shape should mechanically apply to egypt.
-- **shale → ferts** — `stat_z(p,tf)` (from `shale_mcp.gms` L357) shares the multi-bound-index sum structure: `sum((crs,t), (a(crs,p) * nu_msu(crs,t))$(...))` and `sum((cf,t), ...$(cf(cf) and t(t)))`. Multiplier-index projection across bound `+ eq` mirrors ferts's `lam_mb(c,p)` shape. shale has additional sameas-Cartesian inner enumeration (similar to turkpow's pattern) but the dominant Pattern C shape is the multi-bound-index sum — ferts-family. Confidence: **medium-high**. The sameas-Cartesian sub-shape is a candidate 9th-shape claim — see §6 Open Question 2.
+- **shale → ferts** — `stat_z(p,tf)` (from `shale_mcp.gms` L357) shares the multi-bound-index sum structure: `sum((crs,t), (a(crs,p) * nu_msu(crs,t))$(...))` and `sum((cf,t), ...$(cf(cf) and t(t)))`. Multiplier-index projection across bound `+ eq` mirrors ferts's `lam_mb(c,i)` shape (source order; see §4.2). shale has additional sameas-Cartesian inner enumeration (similar to turkpow's pattern) but the dominant Pattern C shape is the multi-bound-index sum — ferts-family. Confidence: **medium-high**. The sameas-Cartesian sub-shape is a candidate 9th-shape claim — see §6 Open Question 2.
 - **qsambal → sambal** — `stat_x(i,j)` (from `qsambal_mcp.gms` L90) is structurally identical to sambal's `stat_x(i,j)`: same `__kkt1` synthetic alias, same `1$(xb(i,i__kkt1))` parameter-as-condition, same `nu_cbal(i)` cbal-derivative. qsambal is the quadratic-objective variant of sambal; the structural KKT shape is unchanged because the nonlinearity is in the objective, not the constraints. Confidence: **high**. Sprint 27 fix on sambal should mechanically apply to qsambal.
 - **harker → sroute** (tentative) — `stat_t(n,np)` (from `harker_mcp.gms` L126) uses `1$(arc(n,np))` parameter-as-condition for network arcs (mirrors sroute's `darc(ip,ipp)` family). Additional features: `sum(l__$(sameas(l__, n)), ...)` linear-path enumeration in stat_d / stat_s. The dominant network-arc shape maps to sroute; the sameas-aliased inner-sum is a sub-shape that may be a 9th-shape candidate. Confidence: **medium**. See §6 Open Question 3.
 - **tfordy → sambal** (tentative) — `stat_x(c,t)` (from `tfordy_mcp.gms` L221) has `(1$(cf(c)) * lam_bal(c,t))$(t(t))` Pattern C with `cf(c)` parameter-as-condition + `lam_bal(c,t)` 2-index multiplier. Closer to sambal's cbal-style multiplier family than sroute's network-flow family. Confidence: **medium**. The Pattern C shape is simpler than sambal's `__kkt1` synthetic alias structure — may or may not be a sub-shape. See §6 Open Question 3.
-- **gangesx → ganges** — `stat_pls(r)` (from `gangesx_mcp.gms` L1011) has 4 inner Pattern C alias-sums with `1$(ri(i,r))` 2-set membership identical to ganges. gangesx is the eXtended variant of ganges (same set/parameter structure, slightly different objective). Confidence: **high**. Sprint 27 fix on ganges should mechanically apply to gangesx.
+- **gangesx → ganges** — `stat_pls(r)` (from `gangesx_mcp.gms` L1011) has 4 inner Pattern C alias-sums with `1$(ri(r,i))` 2-set membership identical to ganges. gangesx is the eXtended variant of ganges (same set/parameter structure, slightly different objective). Confidence: **high**. Sprint 27 fix on ganges should mechanically apply to gangesx.
 - **srpchase → turkpow** (tentative) — `stat_x(n)` and `stat_y(n)` (from `srpchase_mcp.gms` L131-132) use `1$(ancestor(srn,srn))` self-loop indicator (mirrors turkpow's `vs(t__,t__)` self-loop family) + Pattern C-style nested guards `($(srn(srn)))$((not leaf(srn)))`. The 4-index eq-domain of turkpow vs srpchase's 1-index eq-domain (`stat_x(n)`) is a structural difference — srpchase's shape may be a degenerate subset of turkpow's. Confidence: **low-medium**. See §6 Open Question 3.
 
 ---
@@ -392,7 +402,7 @@ Inspection-only finding (this document): Shape A (`stat_ka(te)` row-multiplier-c
 Inspection-only finding: no two anchors show structurally identical shapes. Closest near-pairs:
 
 - **launch vs sambal** — both use synthetic-alias indices (`ss` / `__kkt1`) inside Pattern C sums. Distinct via the alias-indicator (`ge(s,ss)` order-relation vs `xb(i,i__kkt1)` parameter-as-condition).
-- **qdemo7 vs ferts** — both use set-membership indicators (`sc(c,s)` 2-set / `ppos(i,p)` 2-set). Distinct via the bound-index count (qdemo7 1-bound vs ferts 2-bound).
+- **qdemo7 vs ferts** — both use set-membership indicators (`sc(s,c)` 2-set / `ppos(p,i)` 2-set — source order). Distinct via the bound-index count (qdemo7 1-bound vs ferts 2-bound).
 - **ganges vs gangesx** — same family (gangesx → ganges mapping, NOT an anchor-pair).
 
 **Question:** Will formal hand-derived KKT collapse any near-pair to a single shape?

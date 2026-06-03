@@ -129,7 +129,7 @@ Equations
 
 * Stationarity equations
 stat_x(n).. (prob(n) * price(n) + (((-1) * nu_slack(n))$(srn(n)))$((not leaf(n))) + (((-1) * lam_demand(n))$(srn(n)))$(leaf(n)) - piL_x(n))$(srn(n)) =E= 0;
-stat_y(n).. ((((-1) * 1$(ancestor(srn,srn))) * nu_slack("srn"))$(srn(srn)))$((not leaf(srn))) + nu_slack(n)$(srn(n)) + ((((-1) * 1$(ancestor(srn,srn))) * lam_demand("srn"))$(srn(srn)))$(leaf(srn)) - piL_y(n) =E= 0;
+stat_y(n).. ((((-1) * 1$(ancestor(n,n))) * nu_slack(n))$(srn(n)))$((not leaf(n))) + nu_slack(n)$(srn(n)) + ((((-1) * 1$(ancestor(n,n))) * lam_demand(n))$(srn(n)))$(leaf(n)) - piL_y(n) =E= 0;
 
 * Inequality complementarity equations
 comp_demand(srn)$(leaf(srn)).. x(srn) + sum(n$(ancestor(srn,n)), y(n)) - 1 =G= 0;

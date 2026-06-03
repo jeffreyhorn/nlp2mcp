@@ -98,6 +98,8 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 **Context:** Land the tightened predicate. Regenerate all 15 #1398-affected models + launch. Verify bucket-provenance recovery (qdemo7 → compare_match, etc.). Open PR with **PR14 reaffirmation + PR20 Phase 0 cross-reference** (the predicate change is in `src/kkt/stationarity.py` — pure `src/` change, so PR23 does NOT apply per `CONTRIBUTING.md` §"CI Workflow PR Checklist (PR23, ...)" §"Scope").
 
+> ✅ **Tasks 1–3 + 6 already complete (2026-06-03 carryforward, branch `planning/sprint27-day1-p1`, commit `4de59037`)** — regeneration, bucket-provenance, Tier 0/1 byte-stability, and the §4.2/§4.4 grep-spec correction are done (see SPRINT_LOG Day 2). **Only tasks 4–5 (author + open the PR) remain.** Note: `PRIORITY_1_ANCHOR_MAPPING.md` §4.2 (ferts) + §4.4 (ganges) grep specs were CORRECTED on Day 2 — they had documented the buggy gate-mangled baseline; use the corrected source-order specs. (qdemo7 §4.1 was already correct.)
+
 **Read first:**
 - `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §5 "Day 2"
 - `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §6 (15 affected models + Day 0 buckets)
@@ -105,19 +107,19 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 **Tasks:**
 
-1. Regenerate `*_mcp.gms` for all 15 #1398-affected models + launch (`run_full_test.py --model <name>` or pipeline subset).
-2. Run `scripts/gamslib/run_full_test.py --quiet` on the 15-model + launch subset. Verify bucket-provenance: qdemo7 → `compare_match`; egypt/ferts/shale → `path_solve_license`; sambal/qsambal/harker/tfordy/dinam/ganges/gangesx/sroute/turkpow → Day 0 baseline buckets; launch byte-stable.
-3. Tier 0/1 byte-stability verification — regenerate all 11 Tier 0/1 canaries + `launch` (byte-stability anchor; PR19 pattern-c but still byte-checked here per §6), diff vs main. Expect zero diffs on non-affected canaries.
+1. ✅ DONE (carryforward). Regenerate `*_mcp.gms` for all 15 #1398-affected models + launch (`run_full_test.py --model <name>`). 9 artifacts changed; 6 affected + launch + 11 canaries byte-identical.
+2. ✅ DONE (carryforward). Bucket-provenance (Day 0 → Day 2): qdemo7 → `compare_match`; egypt/ferts/shale/srpchase → `path_solve_license`; ganges → `path_syntax_error` (recovered from translate_timeout); sambal/qsambal/harker → compare_mismatch; tfordy/sroute → path_solve_license; **dinam/gangesx/turkpow → `path_syntax_error` (residual PRE-EXISTING non-#1398 errors — turkpow byte-identical to baseline, dinam −2 errors; file as Sprint 28 candidates)**; launch byte-stable. **No regressions.**
+3. ✅ DONE (carryforward). Tier 0/1 byte-stability — all 11 canaries + `launch` byte-identical vs main (zero diffs).
 4. Author PR description: **PR14 disclosure** (list regenerated `.gms` files via PR22 audit-script invocation) + **PR20 Phase 0 cross-reference** (cite `PRIORITY_1_ANCHOR_MAPPING.md` §4 anchor-by-anchor hand-derived KKT shapes; reviewer checks regenerated `.gms` matches the hand-derived shape for each of the 8 anchors). PR23 self-review NOT required — pure `src/kkt/stationarity.py` change, no workflow/CI files touched.
 5. Open PR. Respond to first review iteration.
 6. EOD quality gate + SPRINT_LOG.md Day 2 entry.
 
 **Success criteria (Day 2):**
-- [ ] 15 #1398-affected models recovered to Day 0 baseline buckets.
-- [ ] launch byte-stable.
-- [ ] Tier 0/1 canaries byte-stable (zero diffs on non-affected models).
-- [ ] PR open with PR14 + PR20 Phase 0 disclosures (PR23 not applicable to this `src/`-only PR).
-- [ ] First review iteration responded to.
+- [x] 15 #1398-affected models at Day 0 baseline buckets or better — **no regressions** (qdemo7 → compare_match; egypt/ferts/shale/srpchase → path_solve_license). dinam/gangesx/turkpow stay at path_syntax_error from pre-existing non-#1398 errors → Sprint 28 candidates.
+- [x] launch byte-stable.
+- [x] Tier 0/1 canaries byte-stable (zero diffs on non-affected models).
+- [ ] **PR open with PR14 + PR20 Phase 0 disclosures (PR23 not applicable to this `src/`-only PR).** ← remaining
+- [ ] First review iteration responded to. ← remaining
 
 ---
 
