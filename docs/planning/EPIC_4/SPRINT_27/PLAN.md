@@ -95,7 +95,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 
 ### Day 2 (~10h) — Full regression + PR open
 
-> ✅ **Carryforward done (2026-06-03):** the regeneration, bucket-provenance, Tier 0/1 byte-stability, and the `PRIORITY_1_ANCHOR_MAPPING.md` §4.2/§4.4 grep-spec correction are **already complete** on branch `planning/sprint27-day1-p1` (commit `4de59037`); see SPRINT_LOG Day 2. **Only the PR-open + review iteration remain.** Provenance result: **qdemo7 → compare_match** (the +1 Solve/Match anchor); egypt/ferts/shale/srpchase → path_solve_license; ganges → path_syntax_error (from translate_timeout); **dinam/gangesx/turkpow stay at path_syntax_error from PRE-EXISTING non-#1398 errors** (turkpow byte-identical to baseline; dinam has fewer errors) → Sprint 28 candidates. **No regressions.**
+> ✅ **DAY 2 COMPLETE (2026-06-03) — Priority 1 #1398 merged.** Regeneration, bucket-provenance, Tier 0/1 byte-stability, the `PRIORITY_1_ANCHOR_MAPPING.md` §4.2/§4.4 grep-spec correction, **and the PR (PR #1414, opened + reviewed + MERGED to main `853000ef`)** are all done; see SPRINT_LOG Day 2. Provenance result: **qdemo7 → compare_match** (the +1 Solve/Match anchor); egypt/ferts/shale/srpchase → path_solve_license; ganges → path_syntax_error (from translate_timeout); **dinam/gangesx/turkpow stay at path_syntax_error from PRE-EXISTING non-#1398 errors** (turkpow byte-identical to baseline; dinam has fewer errors) → Sprint 28 candidates. **No regressions.**
 
 | Task | Effort | Notes |
 |---|---|---|
