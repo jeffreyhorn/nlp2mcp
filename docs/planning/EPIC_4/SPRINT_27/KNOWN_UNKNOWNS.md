@@ -420,7 +420,13 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (Sprint 27 Day 3 hand-derivation; binding verdict + implementation Day 4) — see `DAY3_P2_PHASE0_NOTES.md`.
+
+**Day 3 finding:** the "build consolidated term from the source Sum body" philosophy generalizes, but camcge and cesam2 need **related-but-distinct builders** (not a single code path):
+- **camcge (B-1/B-2):** all 5 variants hand-derived. Consolidation rule = `sum(j, COEFF'·nu_eq(j))` where `COEFF'` keeps the source coefficient's argument *positions* but rewrites the sum-index slot → stat index `i` and the eq-index slot → alias `j` (e.g. ieq `imat(i,j)→imat(j,i)`; actp `io(j,i)→io(i,j)`). prodinv (B-2) additionally factors a var-side `dst(i)` outside + an eq-side `kio(i)→kio(j)` inside the new Sum. The Phase A swap fails here because element-to-set collapses `imat(i,j)→imat(i,i)` (positions erased) → so Phase B must intercept BEFORE element-to-set.
+- **cesam2 (B-3):** dim-mismatch (1-D eq `COLSUM(jj)` vs 2-D var `TSAM(i,i)`) needs a **separate** builder — multiplier indexed by the var-domain position the eq-domain binds to, **no outer Sum**, + a `$(jj(j))` subset guard. Distinct detection (`len(var_domain) != len(eq_domain)`).
+
+**Binding answer (provisional):** YES, generalizes — under one source-body-driven design with **three sub-builders** (`_build_pattern_c_consolidated_term` B-1, `_classify_eq_body_factors` B-2, `_build_pattern_c_dim_mismatch_term` B-3) per ISSUE_1381 §Files Involved. Budget split across B-1/B-2/B-3 is sound. **Day 4: finalize cesam2 derivation + implement + byte-verify → moves to ✅ VERIFIED.**
 
 ---
 

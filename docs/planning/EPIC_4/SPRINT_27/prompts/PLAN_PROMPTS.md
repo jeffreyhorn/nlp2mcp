@@ -143,8 +143,8 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 **Success criteria (Day 3):**
 - [x] Priority 1 PR merged to main (PR #1414, `853000ef`).
-- [ ] PR19 widening verified on a follow-up no-op PR.
-- [ ] camcge Phase 0 hand-derivation complete.
+- [x] PR19 widening verified — fired on PR #1414 (touches the trigger paths) and **passed (37s)**; a dedicated no-op PR was unnecessary.
+- [x] camcge Phase 0 hand-derivation complete — all 5 consolidation variants in `DAY3_P2_PHASE0_NOTES.md` (cesam2 B-3 identified; finalizes Day 4).
 - [x] KU 1.3 ✅ VERIFIED (Day 1).
 
 ---
