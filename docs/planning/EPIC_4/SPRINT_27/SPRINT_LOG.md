@@ -182,7 +182,7 @@ _(no emit-affecting changes in range)_
 **Hours actual:** ~4 (agent-executed)
 
 ### Tasks completed
-- **Task 3 — PR19 CI verified:** PR #1414's `pr19-emit-solve-validation` run **passed (37s, ≈ §7 projection)** on the merged P1 emit (sha `0bd1d8d2`/`102b2b3f` → success) — the widened 30-model target list fires correctly with the recovered emit (launch soft-fails as pattern-c; Tier 0/1 hard-fail all pass).
+- **Task 3 — PR19 CI verified:** PR #1414's `pr19-emit-solve-validation` run on the final PR head sha `0bd1d8d2` (run id 26911925363) **passed (37s, ≈ §7 projection)** — the widened 30-model target list fires correctly with the recovered emit (launch soft-fails as pattern-c; Tier 0/1 hard-fail all pass). (PR19 re-ran on each push to PR #1414 because the PR's cumulative diff includes `src/kkt/stationarity.py`; the head-sha run above is the authoritative one.)
 - **Task 4 — Priority 2 (#1381) Phase 0 started:** hand-derived all **5 camcge** Pattern C consolidation variants from source → `DAY3_P2_PHASE0_NOTES.md`, and identified/stated **cesam2** as the dim-mismatch (B-3) second anchor (full cesam2 derivation finalizes Day 4). Derived the **consolidation rule** (source coeff positions preserved; sum-index slot → stat index `i`, eq-index slot → alias `j`; multiplier alias-indexed) — the invariant Phase B's source-body-driven builder must honor.
 - **Tasks 5–6** — KNOWN_UNKNOWNS KU 2.1 → 🟡 PARTIALLY VERIFIED (design-ready; binding Day 4); this Day 3 entry.
 
