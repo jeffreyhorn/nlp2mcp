@@ -136,15 +136,15 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 1. ✅ DONE. PR review iteration on Priority 1 PR #1414 (one round: ferts §4.2 header consistency).
 2. ✅ DONE. Priority 1 PR #1414 merged to main (`853000ef`).
-3. Verify PR19 widening CI fires correctly: trigger a no-op PR on the new widened target list; expect ~36s steady-state runtime per `PR19_WIDENING_DESIGN.md` §7 projection.
-4. **Start Priority 2 Phase 0** — hand-derive KKT for camcge `nu_ieq` cross-term. Recorded in scratch notes. Identify cesam2 as second-anchor model (same Phase C-derived shape per `PROJECT_PLAN.md` Priority 2).
-5. Update KNOWN_UNKNOWNS.md: KU 1.3 ✅ VERIFIED (gate predicate fires only on launch-shape); KU 1.1, 1.2, 1.4 already verified at prep.
-6. SPRINT_LOG.md Day 3 entry. Update sprint cumulative metrics: Solve / Match unchanged but P1 unblocks Day 5 retest.
+3. ✅ DONE. Verify PR19 widening CI fires correctly. Verified via **PR #1414's** `pr19-emit-solve-validation` run (it touches the trigger paths) — **passed at 37s** (~`PR19_WIDENING_DESIGN.md` §7 projection); launch soft-fails as pattern-c, Tier 0/1 hard-fail all pass. A dedicated no-op PR was unnecessary. (If verifying a future emit-only change that does NOT touch the trigger paths, trigger a no-op PR on the target list instead.)
+4. ✅ DONE. **Priority 2 Phase 0 started** — hand-derived camcge `nu_ieq` (stat_dk) cross-term + all 5 camcge consolidation variants; identified cesam2 (dim-mismatch B-3) as second anchor. Recorded in `DAY3_P2_PHASE0_NOTES.md`.
+5. ✅ DONE. KNOWN_UNKNOWNS.md: KU 1.3 ✅ VERIFIED (Day 1, in PR #1414); KU 2.1 → 🟡 PARTIALLY VERIFIED (Day 3 hand-derivation); KU 1.1/1.2/1.4 verified at prep.
+6. ✅ DONE. SPRINT_LOG.md Day 3 entry recorded. Solve/Match unchanged (P1 unblocks the Day 5 retest).
 
 **Success criteria (Day 3):**
 - [x] Priority 1 PR merged to main (PR #1414, `853000ef`).
-- [ ] PR19 widening verified on a follow-up no-op PR.
-- [ ] camcge Phase 0 hand-derivation complete.
+- [x] PR19 widening verified — fired on PR #1414 (touches the trigger paths) and **passed (37s)**; a dedicated no-op PR was unnecessary.
+- [x] camcge Phase 0 hand-derivation complete — all 5 consolidation variants in `DAY3_P2_PHASE0_NOTES.md` (cesam2 B-3 identified; finalizes Day 4).
 - [x] KU 1.3 ✅ VERIFIED (Day 1).
 
 ---

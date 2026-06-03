@@ -176,25 +176,41 @@ _(no emit-affecting changes in range)_
 
 ## Day 3 — Priority 1 merge + Priority 2 Phase 0 start
 
-**Date:** TBD
-**Status:** 🔵 NOT STARTED
+**Date:** 2026-06-03
+**Status:** 🟢 COMPLETE
 **Hours budgeted:** ≤ 8
-**Hours actual:** —
+**Hours actual:** ~4 (agent-executed)
 
 ### Tasks completed
-- _(to be filled in during execution)_
+- **Task 3 — PR19 CI verified:** PR #1414's `pr19-emit-solve-validation` run on the final PR head sha `0bd1d8d2` (run id 26911925363) **passed (37s, ≈ §7 projection)** — the widened 30-model target list fires correctly with the recovered emit (launch soft-fails as pattern-c; Tier 0/1 hard-fail all pass). (PR19 re-ran on each push to PR #1414 because the PR's cumulative diff includes `src/kkt/stationarity.py`; the head-sha run above is the authoritative one.)
+- **Task 4 — Priority 2 (#1381) Phase 0 started:** hand-derived all **5 camcge** Pattern C consolidation variants from source → `DAY3_P2_PHASE0_NOTES.md`, and identified/stated **cesam2** as the dim-mismatch (B-3) second anchor (full cesam2 derivation finalizes Day 4). Derived the **consolidation rule** (source coeff positions preserved; sum-index slot → stat index `i`, eq-index slot → alias `j`; multiplier alias-indexed) — the invariant Phase B's source-body-driven builder must honor.
+- **Tasks 5–6** — KNOWN_UNKNOWNS KU 2.1 → 🟡 PARTIALLY VERIFIED (design-ready; binding Day 4); this Day 3 entry.
 
 ### Deliverables
-- _(to be filled in during execution)_
+- `DAY3_P2_PHASE0_NOTES.md` — camcge stat_dk/stat_xd/stat_p (×3) hand-derived KKTs + cesam2 B-3 shape + Day-4 per-term grep verification specs.
+- KU 2.1 updated (generalizes under one source-body design with 3 sub-builders B-1/B-2/B-3).
+
+### Phase 0 baseline (camcge, current main `8f755328`)
+path_syntax_error (`$141`×2 + `$257`). The #1398 (Phase A) gate does NOT fire (camcge alias-Sums have no `$`-condition) → phantom-offset enumeration (~20 guarded terms/multiplier; 40 for prodinv). Phase B consolidates each into a single alias-Sum.
+
+| eq | stat | correct consolidated form | sub-phase |
+|---|---|---|---|
+| ieq | stat_dk | `sum(j, (-imat(j,i)) * nu_ieq(j))` | B-1 |
+| inteq | stat_xd | `sum(j, (-io(j,i)) * nu_inteq(j))` | B-1 |
+| actp | stat_p | `sum(j, (-io(i,j)) * nu_actp(j))` | B-1 |
+| pkdef | stat_p | `sum(j, (-imat(i,j)) * nu_pkdef(j))` | B-1 |
+| prodinv | stat_p | `dst(i) * sum(j, kio(j) * nu_prodinv(j))` | B-2 |
+| cesam2 COLSUM | stat_tsam | `nu_COLSUM(j)$(jj(j))` (no outer Sum) | B-3 |
 
 ### KUs verified
-- _(target: KU 1.3 ✅ VERIFIED on merge)_
+- KU 1.3 ✅ VERIFIED (Day 1, merged in PR #1414). KU 2.1 → 🟡 PARTIALLY VERIFIED (Day 3 hand-derivation; binding Day 4). KU 1.1/1.2/1.4 verified at prep.
 
 ### Carryforward to Day 4
-- _(to be filled in during execution)_
+- Finalize cesam2 (B-3) hand-derivation (read `TSAM`/`COLSUM`/`jj` decls; confirm binding-position inference + `jj ⊆ i` subset).
+- Implement Phase B-1/B-2/B-3 per ISSUE_1381 §Files Involved (`_build_pattern_c_consolidated_term`, `_classify_eq_body_factors`, `_build_pattern_c_dim_mismatch_term`); regenerate camcge + cesam2; byte-verify against the §"Phase 0 verification specs"; expect 11 plain-alias canaries (quocge/prolog/paklive/…) to byte-shift (consolidation) — regenerate goldens per PR14.
 
 ### PR merged
-- _(P1 #1398 PR — merge SHA + bucket-recovery summary)_
+- **PR #1414** (P1 #1398) merged to main `853000ef`. Bucket recovery: qdemo7 → compare_match (+1 Solve/Match); egypt/ferts/shale/srpchase → path_solve_license; no regressions.
 
 ---
 
