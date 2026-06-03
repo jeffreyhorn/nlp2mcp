@@ -103,7 +103,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 | Run pipeline tests + bucket-provenance check for affected models | 2h | ✅ DONE — qdemo7 → `compare_match`; egypt/ferts/shale/srpchase → `path_solve_license`; ganges → `path_syntax_error` (from timeout); dinam/gangesx/turkpow → `path_syntax_error` (residual pre-existing, non-#1398); sambal/qsambal/harker → compare_mismatch; tfordy/sroute → path_solve_license |
 | Tier 0/1 byte-stability verification (regenerate all 11 Tier 0/1 canaries + `launch` byte-stability anchor, diff vs main) | 1h | ✅ DONE (carryforward) — all 11 canaries + launch byte-identical. `launch` is PR19 pattern-c but still byte-checked here as the #1379 anchor |
 | Author PR description (PR14 reaffirmation + PR20 Phase 0 acceptance-gate cross-reference) | 2h | Regenerated `.gms` diffs included in PR; PR description cross-references `PRIORITY_1_ANCHOR_MAPPING.md` §4 anchor-by-anchor hand-derived KKT shapes. PR23 not applicable — pure `src/kkt/stationarity.py` change, no workflow/CI files touched |
-| Open PR; respond to first review iteration | 3h | |
+| Open PR; respond to first review iteration | 3h | ✅ DONE — PR #1414 opened, one review round (ferts §4.2 header consistency), merged to main `853000ef` |
 
 ### Day 3 (~8h) — P2 Phase 0 transition (P1 PR review + merge done early in Day 2)
 
@@ -118,7 +118,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 | Buffer | 1h | |
 
 **P1 success criteria:**
-- [x] 15 #1398-affected models recover to Day 0 baseline buckets (✅ no regressions): qdemo7 → compare_match; egypt/ferts/shale/srpchase → path_solve_license; ganges → path_syntax_error (from timeout). **Caveat:** dinam/gangesx/turkpow remain at path_syntax_error — their Pattern C emit is now correct, but they carry **pre-existing non-#1398 errors** ($140/$170/$171 in other equations; turkpow byte-identical to baseline, dinam −2 errors). These are NOT #1398 recoveries → **file as Sprint 28 candidates**.
+- [x] 15 #1398-affected models recover to Day 0 baseline buckets (✅ no regressions): qdemo7 → compare_match; egypt/ferts/shale/srpchase → path_solve_license; ganges → path_syntax_error (from timeout). **Caveat:** dinam/gangesx/turkpow remain at path_syntax_error — their Pattern C emit is now correct, but they carry **pre-existing non-#1398 errors** (various GAMS compile errors in other equations, model-dependent — dinam `$140`/`$171`, turkpow `$170`/`$171`, gangesx `$145`/`$149`/`$300`; turkpow byte-identical to baseline, dinam −2 errors). These are NOT #1398 recoveries → **file as Sprint 28 candidates**.
 - [x] launch byte-stable vs Sprint 26 final emit (per KU 4.2). ✅
 - [x] PR19 target list widened to 30 models per Task 5. ✅ (Day 0, PR #1413 merged)
 - [x] All 4 Phase 0 KUs 1.1–1.4 ✅ VERIFIED (1.3 moved from INCOMPLETE on Day 1).
@@ -300,7 +300,7 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 | **Final pipeline retest** under 3 `PYTHONHASHSEED` values (PR12 determinism guard) | 3h | Determinism acceptance criterion verification |
 | Author Sprint 27 SPRINT_LOG.md final-day entry: headline metrics, bucket-provenance Sprint 26 final → Sprint 27 final, per-priority deliverables | 2h | |
 | Author Sprint 27 SPRINT_RETROSPECTIVE.md (mirror Sprint 26 retrospective structure: What Went Well / What We'd Do Differently / Sprint 28 Recommendations / KU Coverage Summary) | 2h | |
-| Buffer / Sprint 28 carryforward filings (issues that REPLANned or didn't fit budget) | 0.5h | Includes: #1385 cross-terms + #1393+#1335 (P3 re-plan); **dinam/gangesx/turkpow residual non-#1398 path_syntax_error** (Day 2 finding — `$140`/`$170`/`$171` in non-Pattern-C equations; #1398 emit is correct but these models carry independent errors) |
+| Buffer / Sprint 28 carryforward filings (issues that REPLANned or didn't fit budget) | 0.5h | Includes: #1385 cross-terms + #1393+#1335 (P3 re-plan); **dinam/gangesx/turkpow residual non-#1398 path_syntax_error** (Day 2 finding — pre-existing GAMS errors in non-Pattern-C equations, model-dependent codes; #1398 emit is correct but these models carry independent errors) |
 
 **Day 13 success criteria:**
 - [ ] All Sprint 27 acceptance criteria met OR explicitly carried forward to Sprint 28 with formal Phase 0 filing.
