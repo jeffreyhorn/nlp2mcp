@@ -66,6 +66,8 @@ Scalars
     mlevel /0/
 ;
 
+Set nlp2mcp_uel_registry / 'total' /;
+
 $onImplicitAssign
 amc(c,s,"total") = sum(i, amc(c,s,i)) + amc(c,s,"families") + amc(c,s,"exp") + amc(c,s,"duty");
 ce(c,c) = 1;
@@ -94,6 +96,28 @@ mu(c,s) = sb(c,s);
 sc(c,s,i) = amc(c,s,i) / amt(i);
 sk(i) = amf("capital",i) / amt(i);
 sl(i) = amf("labor",i) / amt(i);
+
+execError = 0;
+
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+alpha(c,s,i)$(NOT (alpha(c,s,i) > -inf and alpha(c,s,i) < inf)) = 0;
+alphae(c,s)$(NOT (alphae(c,s) > -inf and alphae(c,s) < inf)) = 0;
+alphak(i)$(NOT (alphak(i) > -inf and alphak(i) < inf)) = 0;
+alphal(i)$(NOT (alphal(i) > -inf and alphal(i) < inf)) = 0;
+m(c,i)$(NOT (m(c,i) > -inf and m(c,i) < inf)) = 0;
+nm(c)$(NOT (nm(c) > -inf and nm(c) < inf)) = 0;
+nx(c)$(NOT (nx(c) > -inf and nx(c) < inf)) = 0;
+r(c,i)$(NOT (r(c,i) > -inf and r(c,i) < inf)) = 0;
+sb(c,s)$(NOT (sb(c,s) > -inf and sb(c,s) < inf)) = 0;
+sc(c,s,i)$(NOT (sc(c,s,i) > -inf and sc(c,s,i) < inf)) = 0;
+sk(i)$(NOT (sk(i) > -inf and sk(i) < inf)) = 0;
+sl(i)$(NOT (sl(i) > -inf and sl(i) < inf)) = 0;
+wc(c,s)$(NOT (wc(c,s) > -inf and wc(c,s) < inf)) = 0;
+we(c)$(NOT (we(c) > -inf and we(c) < inf)) = 0;
+wi(c,s,i)$(NOT (wi(c,s,i) > -inf and wi(c,s,i) < inf)) = 0;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -165,19 +189,23 @@ Variables
 ;
 
 * ============================================
-* Variable Bounds
+* Variable Initialization
 * ============================================
 
-df.fx('clothing') = 1;
-df.fx('food') = 1;
-e.fx('clothing') = 1;
-kappa.fx('agric') = 3;
-kappa.fx('manuf') = 3;
-pm.fx('clothing') = -2;
-pm.fx('food') = -2;
-t.fx('clothing') = 0;
-t.fx('food') = 0;
-v.fx('food') = 0;
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+
+df.l('clothing') = 1;
+df.l('food') = 1;
+e.l('clothing') = 1;
+kappa.l('agric') = 3;
+kappa.l('manuf') = 3;
+pm.l('clothing') = -2;
+pm.l('food') = -2;
+t.l('clothing') = 0;
+t.l('food') = 0;
+v.l('food') = 0;
 
 * ============================================
 * Equations
@@ -251,7 +279,7 @@ Equations
 
 * Stationarity equations
 stat_b.. nu_baltrade =E= 0;
-stat_cn(c,s).. nu_con(c,s) =E= 0;
+stat_cn(c,s).. nu_con(c,s) + (((-1) * wc(c,s)) * nu_bald(c))$(sameas(s, 'domestic')) + (((-1) * (nm(c) * wc(c,s))) * nu_imports)$(sameas(s, 'imported')) =E= 0;
 stat_cr.. nu_realc =E= 0;
 stat_df(c).. ((-1) * nu_expd(c)) + nu_df_fx_clothing$(sameas(c, 'clothing')) + nu_df_fx_food$(sameas(c, 'food')) =E= 0;
 stat_e(c).. gamma(c) * nu_expd(c) + ((-1) * we(c)) * nu_bald(c) + ((-1) * nx(c)) * nu_exports + nu_e_fx_clothing$(sameas(c, 'clothing')) =E= 0;
@@ -261,7 +289,7 @@ stat_kappa(i).. ((-1) * nu_balcap(i)) + nu_kappa_fx_agric$(sameas(i, 'agric')) +
 stat_l.. (-1) * nu_ballab =E= 0;
 stat_li(i).. nu_indlab(i) + wl(i) * nu_ballab =E= 0;
 stat_mt.. nu_imports + ((-1) * (100 * ((-1) * mlevel) / 10000)) * nu_baltrade =E= 0;
-stat_p(c,s).. mu(c,s) + sum((cp,sp), ((-1) * eta(c,s,cp,sp)) * nu_con(c,s)) + sum((cp,sp), (((-1) * eta(c,s,cp,sp)) * nu_con(c,s+1))$(ord(s) <= card(s) - 1)) + sum((cp,sp), (((-1) * eta(c,s,cp,sp)) * nu_con(c-1,s))$(ord(c) > 1)) + sum((cp,sp), (((-1) * eta(c,s,cp,sp)) * nu_con(c-1,s+1))$(ord(c) > 1 and ord(s) <= card(s) - 1)) + sum((cp,sp), (((-1) * eta(c,s,cp,sp)) * nu_con(c,s-1))$(ord(s) > 1)) + sum((cp,sp), (((-1) * eta(c,s,cp,sp)) * nu_con(c-1,s-1))$(ord(c) > 1 and ord(s) > 1)) + sum((cp,sp), (((-1) * eta(c,s,cp,sp)) * nu_con(c+1,s))$(ord(c) <= card(c) - 1)) + sum((cp,sp), (((-1) * eta(c,s,cp,sp)) * nu_con(c+1,s+1))$(ord(c) <= card(c) - 1 and ord(s) <= card(s) - 1)) + sum((cp,sp), (((-1) * eta(c,s,cp,sp)) * nu_con(c+1,s-1))$(ord(c) <= card(c) - 1 and ord(s) > 1)) + sum(i, (1 - alpha(c,s,i)) * nu_indc(c,s,i)) + sum(i, ((-1) * sc(c,s,i)) * nu_pric(i)) =E= 0;
+stat_p(c,s).. mu(c,s) + ((-1) * eta(c,s,c,s)) * nu_con(c,s) + (((-1) * eta(c,s+1,c,s)) * nu_con(c,s+1))$(ord(s) <= card(s) - 1) + (((-1) * eta(c-1,s,c,s)) * nu_con(c-1,s))$(ord(c) > 1) + (((-1) * eta(c-1,s+1,c,s)) * nu_con(c-1,s+1))$(ord(c) > 1 and ord(s) <= card(s) - 1) + (((-1) * eta(c,s-1,c,s)) * nu_con(c,s-1))$(ord(s) > 1) + (((-1) * eta(c-1,s-1,c,s)) * nu_con(c-1,s-1))$(ord(c) > 1 and ord(s) > 1) + (((-1) * eta(c+1,s,c,s)) * nu_con(c+1,s))$(ord(c) <= card(c) - 1) + (((-1) * eta(c+1,s+1,c,s)) * nu_con(c+1,s+1))$(ord(c) <= card(c) - 1 and ord(s) <= card(s) - 1) + (((-1) * eta(c+1,s-1,c,s)) * nu_con(c+1,s-1))$(ord(c) <= card(c) - 1 and ord(s) > 1) + sum(i, ((-1) * (1 - r(c,i))) * nu_supply(c,i)) + sum(cp, sum(i, (r(cp-1,i) * nu_supply(c-1,i))$(ord(c) > 1))) + sum(cp, sum(i, (r(cp+1,i) * nu_supply(c+1,i))$(ord(c) <= card(c) - 1))) + sum(i, (1 - alpha(c,s,i)) * nu_indc(c,s,i)) + sum(i, (r(c,i) - sc(c,s,i)) * nu_pric(i)) + nu_priexp(c)$(sameas(s, 'domestic')) + nu_priimp(c)$(sameas(s, 'imported')) =E= 0;
 stat_phi.. sum(c, (-1) * nu_priexp(c)) + sum(c, (-1) * nu_priimp(c)) + nu_phi_fx =E= 0;
 stat_pk(i).. (1 - alphak(i)) * nu_indcap(i) + ((-1) * alphak(i)) * nu_indlab(i) + ((-1) * sk(i)) * nu_pric(i) =E= 0;
 stat_pm(c).. ((-1) * nu_priimp(c)) + ((-1) * nm(c)) * nu_imports + nu_pm_fx_clothing$(sameas(c, 'clothing')) + nu_pm_fx_food$(sameas(c, 'food')) =E= 0;
@@ -271,7 +299,7 @@ stat_t(c).. ((-1) * nu_priimp(c)) + nu_t_fx_clothing$(sameas(c, 'clothing')) + n
 stat_v(c).. ((-1) * nu_priexp(c)) + nu_v_fx_food$(sameas(c, 'food')) =E= 0;
 stat_w.. sum(i, ((-1) * alphal(i)) * nu_indcap(i)) + sum(i, (1 - alphal(i)) * nu_indlab(i)) + sum(i, ((-1) * sl(i)) * nu_pric(i)) + nu_wage =E= 0;
 stat_ws.. ((-1) * nu_wage) + nu_ws_fx =E= 0;
-stat_x(c,s,i).. nu_indc(c,s,i) =E= 0;
+stat_x(c,s,i).. nu_indc(c,s,i) + (((-1) * wi(c,s,i)) * nu_bald(c))$(sameas(s, 'domestic')) + (((-1) * (nm(c) * wi(c,s,i))) * nu_imports)$(sameas(s, 'imported')) =E= 0;
 stat_ye.. sum((c,s), ((-1) * epsilon(c,s)) * nu_con(c,s)) - nu_realc + nu_ye_fx =E= 0;
 stat_z(i).. sum(c, (-1) * nu_supply(c,i)) + sum((c,s), (-1) * nu_indc(c,s,i)) - nu_indcap(i) - nu_indlab(i) =E= 0;
 

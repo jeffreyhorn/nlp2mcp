@@ -36,7 +36,7 @@ Parameters
     a(n,np) /consumpt.consumpt 0.914, consumpt.invest -0.016, invest.consumpt 0.097, invest.invest 0.424/
     b(n,m) /consumpt.'gov-expend' 0.305, consumpt.money 0.424, invest.'gov-expend' -0.101, invest.money 1.459/
     wk(n,np) /consumpt.consumpt 0.0625, invest.invest 1/
-    lambda(m,mp) /'gov-expend'.'gov-expend' 1, money.'gov-expend' 0.444/
+    lambda(m,mp) /'gov-expend'.'gov-expend' 1, money.money 0.444/
     c(n) /consumpt -59.4, invest -184.7/
     xinit(n) /consumpt 387.9, invest 85.3/
     uinit(m) /'gov-expend' 110.5, money 147.1/
@@ -114,11 +114,13 @@ Equations
 
 * Index aliases to avoid 'Set is under control already' error
 * (GAMS Error 125 when equation domain index is reused in sum)
+Alias(m, mp__);
+Alias(m, m__);
 Alias(n, np__);
 Alias(n, n__);
 
 * Stationarity equations
-stat_u(m,k).. sum(n, ((-1) * b(n,m)) * nu_stateq(n,k))$(ku(k)) =E= 0;
+stat_u(m,k).. (0.5 * (sum(mp__, (u(mp__,k) - utilde(mp__,k)) * lambda(m,mp__)) + sum(m__, (u(m__,k) - utilde(m__,k)) * lambda(m__,m))) + sum(n, ((-1) * b(n,m)) * nu_stateq(n,k)))$(ku(k)) =E= 0;
 stat_x(n,k).. 0.5 * (sum(np__, (x(np__,k) - xtilde(np__,k)) * w(n,np__,k)) + sum(n__, (x(n__,k) - xtilde(n__,k)) * w(n__,n,k))) + ((-1) * a(n,n)) * nu_stateq(n,k) + (((-1) * a(n+1,n)) * nu_stateq(n+1,k))$(ord(n) <= card(n) - 1) + nu_stateq(n,k-1)$(ord(k) > 1) + (((-1) * a(n-1,n)) * nu_stateq(n-1,k))$(ord(n) > 1) =E= 0;
 
 * Original equality equations

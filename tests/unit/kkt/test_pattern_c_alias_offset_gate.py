@@ -255,6 +255,83 @@ solve m using nlp maximizing z;
 
 
 @pytest.mark.unit
+def test_plain_alias_pattern_c_consolidates_from_source_body(tmp_path):
+    """Sprint 27 #1381 Phase B-1: a plain-alias (no-``$``-condition) Pattern C
+    sum — ``ieq(i).. idv(i) =e= sum(j, imat(i,j)*dk(j));`` with ``Alias(i,j)`` —
+    must consolidate to a single source-body-driven term, NOT a phantom
+    per-offset enumeration.
+
+    The launch-shape gate requires a ``$`` condition, so camcge's plain-alias
+    sums otherwise fall through to ``nu_ieq(i±N)`` phantom-offset enumeration
+    (→ path_syntax_error).  Phase B-1 builds the consolidated term directly from
+    the source ``Sum`` body BEFORE element-to-set (which would collapse
+    ``imat(i,j) → imat(i,i)`` and break the Phase A swap), giving the correct
+    ``sum(j, -imat(j,i) * nu_ieq(j))`` — coefficient swapped at the SOURCE level
+    (``imat(j,i)``, not the mis-swapped ``imat(j,j)``), multiplier alias-indexed.
+    """
+    gams = """\
+Set i / s1, s2, s3 /;
+Alias (i,j);
+Parameter imat(i,j);
+imat(i,j) = 1 + ord(i) + 2*ord(j);
+Positive Variable dk(i), idv(i), z;
+Equation ieq(i), zdef;
+ieq(i).. idv(i) =e= sum(j, imat(i,j)*dk(j));
+zdef.. z =e= sum(i, dk(i) + idv(i));
+Model m / ieq, zdef /;
+solve m using nlp minimizing z;
+"""
+    gams_file = tmp_path / "mini_camcge.gms"
+    gams_file.write_text(gams)
+
+    old_limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(50000)
+    try:
+        from src.ad.constraint_jacobian import compute_constraint_jacobian
+        from src.ad.gradient import compute_objective_gradient
+        from src.emit.emit_gams import emit_gams_mcp
+        from src.ir.normalize import normalize_model
+        from src.ir.parser import parse_model_file
+        from src.kkt.assemble import assemble_kkt_system
+
+        model = parse_model_file(str(gams_file))
+        normalize_model(model)
+        j_eq, j_ineq = compute_constraint_jacobian(model)
+        grad = compute_objective_gradient(model)
+        kkt = assemble_kkt_system(model, grad, j_eq, j_ineq)
+        output = emit_gams_mcp(kkt)
+    finally:
+        sys.setrecursionlimit(old_limit)
+
+    stat_dk_lines = [line for line in output.splitlines() if "stat_dk" in line]
+    assert stat_dk_lines, f"Expected a stat_dk line in emitted MCP. Output:\n{output[:1200]}"
+    text = "\n".join(stat_dk_lines)
+
+    # Correct consolidated form: a single alias-Sum with the source-swapped
+    # coefficient imat(j,i) and an alias-indexed multiplier nu_ieq(j).
+    assert (
+        "imat(j,i)" in text
+    ), f"Expected source-swapped coefficient imat(j,i) in stat_dk. Full:\n{text}"
+    assert (
+        "nu_ieq(j)" in text
+    ), f"Expected alias-indexed multiplier nu_ieq(j) in stat_dk. Full:\n{text}"
+
+    # No phantom per-offset enumeration (the unconsolidated failure mode).
+    import re
+
+    assert not re.search(r"nu_ieq\(i[+-]\d+\)", text), (
+        f"Found phantom-offset nu_ieq(i±N) — the plain-alias sum was not "
+        f"consolidated. Full:\n{text}"
+    )
+    # No Phase A mis-swap (element-to-set collapsed imat(i,j)→imat(i,i) then
+    # swapped to imat(j,j)).
+    assert "imat(j,j)" not in text, (
+        f"Found mis-swapped imat(j,j) — Phase B-1 must swap the SOURCE "
+        f"coefficient, not the element-to-set-collapsed one. Full:\n{text}"
+    )
+
+
+@pytest.mark.unit
 def test_helpers_unit_contracts():
     """Unit-level contracts on the three Pattern C helpers, covering the
     edge cases flagged in PR #1308 Copilot review:

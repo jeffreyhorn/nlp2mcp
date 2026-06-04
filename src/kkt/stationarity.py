@@ -516,6 +516,157 @@ def _apply_pattern_c_swap_to_term(
     return _rewrite_subset_to_superset(term, swap_map)
 
 
+def _find_varref_with_index(expr: Expr, var_name: str, index: str) -> VarRef | None:
+    """Return the first ``VarRef`` to ``var_name`` that uses the string
+    ``index`` as one of its indices, or ``None``."""
+    if isinstance(expr, VarRef) and expr.name.lower() == var_name.lower():
+        if any(isinstance(i, str) and i.lower() == index.lower() for i in expr.indices):
+            return expr
+        return None
+    for child in expr.children():
+        found = _find_varref_with_index(child, var_name, index)
+        if found is not None:
+            return found
+    return None
+
+
+def _find_plain_alias_pattern_c(
+    eq_def: EquationDef,
+    var_name: str,
+    var_canonical_sets: frozenset[str],
+    eq_domain_canonical: frozenset[str],
+    model_ir: ModelIR,
+) -> dict | None:
+    """Detect a plain-alias (no-``$``-condition) Pattern C alias-sum for
+    Sprint 27 #1381 Phase B-1.
+
+    The launch-shape gate (``_find_pattern_c_alias_sum``) requires a ``$``
+    condition.  camcge's plain-alias consolidations — e.g.
+    ``ieq(i).. id(i) =e= sum(j, imat(i,j)*dk(j));`` with ``Alias(i,j)`` — have
+    none, so they otherwise fall through to a phantom per-offset enumeration
+    (``nu_ieq(i±N)`` terms).  This locates the source ``Sum`` so the caller can
+    build the consolidated term directly from the source body (BEFORE
+    element-to-set, which would collapse ``imat(i,j) → imat(i,i)`` and break the
+    Phase A swap).
+
+    Matches a single-index ``Sum`` (no condition) whose iteration set is
+    canonical-shared by both the variable's domain and the equation's own
+    domain (plain-alias), reached through additive (+/-/unary-minus) structure
+    only — a bare ``sum`` term, NOT an eq-domain-factor-multiplied ``sum``
+    (that is Phase B-2) — with ``var(sum_idx)`` referenced in the body.
+
+    Returns ``{"sum_node", "sum_idx", "sign"}`` or ``None``.
+    """
+    if eq_def is None:
+        return None
+    common = var_canonical_sets & eq_domain_canonical
+    if not common:
+        return None
+    lhs, rhs = eq_def.lhs_rhs
+    for side, base_sign in ((lhs, 1.0), (rhs, -1.0)):
+        res = _walk_plain_alias_sum(side, var_name, common, model_ir, base_sign)
+        if res is not None:
+            # Single-pattern guard (avoid the Issue #1110 multi-pattern case):
+            # only consolidate when the variable appears EXCLUSIVELY inside the
+            # matched alias-Sum.  When it also appears elsewhere in the equation
+            # body — e.g. chenery's ``mb(i).. x(i) =g= ... + sum(j, aio(i,j)*x(j))``
+            # references ``x`` both diagonally AND in the sum — bypassing the
+            # offset-groups path (which carries the #1110 diagonal correction)
+            # would silently drop the diagonal term.  Fall back to the standard
+            # path in that case.
+            total = _count_varref(lhs, var_name) + _count_varref(rhs, var_name)
+            in_sum = _count_varref(res["sum_node"].body, var_name)
+            if total == in_sum:
+                return res
+            return None
+    return None
+
+
+def _count_varref(expr: Expr, var_name: str) -> int:
+    """Count references to ``var_name`` (any indices) in an expression tree."""
+    n = 1 if isinstance(expr, VarRef) and expr.name.lower() == var_name.lower() else 0
+    for child in expr.children():
+        n += _count_varref(child, var_name)
+    return n
+
+
+def _walk_plain_alias_sum(
+    expr: Expr,
+    var_name: str,
+    common_canonical: frozenset[str],
+    model_ir: ModelIR,
+    sign: float,
+) -> dict | None:
+    """Recursively locate the plain-alias ``Sum``, tracking the additive sign.
+    Descends ONLY through ``+``/``-``/unary-minus (a bare additive sum term); a
+    ``*`` with an index-bearing factor is Phase B-2, handled elsewhere."""
+    if isinstance(expr, Sum) and expr.condition is None and len(expr.index_sets) == 1:
+        sum_idx = expr.index_sets[0]
+        if _resolve_alias_target(sum_idx, model_ir) in common_canonical:
+            vref = _find_varref_with_index(expr.body, var_name, sum_idx)
+            if vref is not None and len(vref.indices) == 1:
+                return {"sum_node": expr, "sum_idx": sum_idx, "sign": sign}
+        return None
+    if isinstance(expr, Unary) and expr.op == "-":
+        return _walk_plain_alias_sum(expr.child, var_name, common_canonical, model_ir, -sign)
+    if isinstance(expr, Binary) and expr.op in ("+", "-"):
+        left = _walk_plain_alias_sum(expr.left, var_name, common_canonical, model_ir, sign)
+        if left is not None:
+            return left
+        right_sign = sign if expr.op == "+" else -sign
+        return _walk_plain_alias_sum(expr.right, var_name, common_canonical, model_ir, right_sign)
+    return None
+
+
+def _build_plain_alias_consolidated_term(
+    found: dict,
+    var_name: str,
+    var_domain: tuple[str, ...],
+    eq_domain: tuple[str, ...],
+    mult_name: str,
+    mult_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> Expr | None:
+    """Build the Sprint 27 #1381 Phase B-1 consolidated stationarity term from
+    the source ``Sum`` body:
+
+        ``Sum((alias,), (sign * COEFF') * nu_eq(alias))``
+
+    where ``COEFF'`` is ``∂(sum_body)/∂var(sum_idx)`` with the swap
+    ``{eq_idx → alias, sum_idx → stat_idx}`` applied (positions preserved,
+    BEFORE element-to-set), ``stat_idx`` is the variable's own domain index and
+    ``alias`` is the constraint-domain alias (= ``eq_idx`` when it differs from
+    ``stat_idx``, else the source ``sum_idx``).  1-D constraint / 1-D variable
+    only (camcge's B-1 variants); returns ``None`` otherwise so the caller
+    falls back to the standard path.
+    """
+    from src.ad.derivative_rules import differentiate_expr
+
+    if len(var_domain) != 1 or len(eq_domain) != 1 or len(mult_domain) != 1:
+        return None
+    sum_node: Sum = found["sum_node"]
+    sum_idx: str = found["sum_idx"]
+    sign: float = found["sign"]
+    stat_idx = var_domain[0]
+    eq_idx = eq_domain[0]
+    if eq_idx.lower() != stat_idx.lower():
+        alias = eq_idx
+    elif sum_idx.lower() != stat_idx.lower():
+        alias = sum_idx
+    else:
+        return None  # no distinct alias symbol available
+    coeff = differentiate_expr(sum_node.body, var_name, (sum_idx,), Config(model_ir=model_ir))
+    coeff = apply_simplification(coeff, "advanced")
+    if coeff is None or (isinstance(coeff, Const) and coeff.value == 0.0):
+        return None
+    swap_map = {eq_idx.lower(): alias, sum_idx.lower(): stat_idx}
+    coeff = _rewrite_subset_to_superset(coeff, swap_map)
+    if sign < 0:
+        coeff = Binary("*", Const(-1.0), coeff)
+    mult_ref = MultiplierRef(mult_name, (alias,))
+    return Sum((alias,), Binary("*", coeff, mult_ref))
+
+
 def _build_lead_lag_condition_expr(
     lead_offsets: dict[str, int],
     lag_offsets: dict[str, int],
@@ -4577,6 +4728,41 @@ def _add_indexed_jacobian_terms(
                         )
                         if pattern_c_info is not None:
                             allow_nonzero_offsets = False
+                        else:
+                            # Sprint 27 #1381 Phase B-1: plain-alias Pattern C
+                            # (no ``$`` condition — the launch-shape gate above
+                            # didn't fire). Build the consolidated multiplier
+                            # term directly from the source Sum body (BEFORE
+                            # element-to-set, which would collapse the coefficient
+                            # alias coordinate), then skip the offset-groups
+                            # enumeration for this (eq, var) pair. Without this,
+                            # camcge's ``sum(j, imat(i,j)*dk(j))`` emits a phantom
+                            # ``nu_ieq(i±N)`` enumeration → path_syntax_error.
+                            _plain = _find_plain_alias_pattern_c(
+                                eq_def_for_gate,
+                                var_name,
+                                variable_canonical_sets,
+                                eq_domain_canonical,
+                                kkt.model_ir,
+                            )
+                            if _plain is not None:
+                                _mn = name_func(eq_name_base)
+                                _b1_term = (
+                                    _build_plain_alias_consolidated_term(
+                                        _plain,
+                                        var_name,
+                                        var_domain,
+                                        eq_def_for_gate.domain or (),
+                                        _mn,
+                                        mult_domain,
+                                        kkt.model_ir,
+                                    )
+                                    if _mn in multipliers
+                                    else None
+                                )
+                                if _b1_term is not None:
+                                    expr = Binary("+", expr, _b1_term)
+                                    continue
 
                 # Issue #1045: Sub-group entries by their index offset pattern.
                 # For lead/lag equations like totalcap(t).. k(t+1) = k(t)*spda + kn(t+1),

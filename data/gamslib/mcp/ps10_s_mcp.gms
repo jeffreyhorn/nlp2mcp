@@ -33,6 +33,15 @@ Scalars
 theta(i) = ord(i) / card(i);
 p(i) = 1 / card(i);
 
+execError = 0;
+
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+p(i)$(NOT (p(i) > -inf and p(i) < inf)) = 0;
+theta(i)$(NOT (theta(i) > -inf and theta(i) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -82,7 +91,9 @@ x.l('8') = 0.0001;
 x.l('9') = 0.0001;
 x.l(i) = min(max(x.l(i), 1e-6), x.up(i));
 b.l(i) = 1;
+b.l(i) = min(b.l(i), b.up(i));
 w.l(i) = 1;
+w.l(i) = min(w.l(i), w.up(i));
 
 * ============================================
 * Equations
@@ -112,7 +123,7 @@ Equations
 * Stationarity equations
 stat_b(i).. ((-1) * p(i)) + nu_rev(i) - piL_b(i) =E= 0;
 stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) - lam_licd(i) + lam_licd(i-1)$(ord(i) > 1) - piL_w(i) =E= 0;
-stat_x(i).. ((-1) * (0.5 * x(i) ** (-0.5))) * nu_rev(i) + theta(i) * lam_pc(i) + theta(i) * lam_licd(i) + (((-1) * theta(i)) * lam_licd(i-1))$(ord(i) > 1) - piL_x(i) =E= 0;
+stat_x(i).. ((-1) * (0.5 * x(i) ** (-0.5))) * nu_rev(i) + theta(i) * lam_pc(i) + theta(i) * lam_licd(i) + (((-1) * theta(i-1)) * lam_licd(i-1))$(ord(i) > 1) - piL_x(i) =E= 0;
 
 * Inequality complementarity equations
 comp_licd(i)$(ord(i) <= card(i) - 1).. w(i) - theta(i) * x(i) - (w(i+1) - theta(i) * x(i+1)) =G= 0;

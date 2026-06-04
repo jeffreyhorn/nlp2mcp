@@ -28,7 +28,6 @@ Alias(i, j);
 Parameters
     mu(s) /cn 0.1287, fr 0.1096, gr 0.0501, jp 0.1524, sw 0.0763, uk 0.1854, us 0.062, wr 0.0916/
     q(i,j) /cn.cn 42.18, fr.cn 20.18, fr.fr 70.89, gr.cn 10.88, gr.fr 21.58, gr.gr 25.51, jp.cn 5.3, jp.fr 15.41, jp.gr 9.6, jp.jp 22.33, sw.cn 12.32, sw.fr 23.24, sw.gr 22.63, sw.jp 10.32, sw.sw 30.01, uk.cn 23.84, uk.fr 23.8, uk.gr 13.22, uk.jp 10.46, uk.sw 16.36, uk.uk 42.23, us.cn 17.41, us.fr 12.62, us.gr 4.7, us.jp 1, us.sw 7.2, us.uk 9.9, us.us 16.42/
-    xres(*,p)
 ;
 
 Scalars
@@ -40,6 +39,8 @@ Scalars
 ;
 
 q(i,j)$(ord(j) > ord(i)) = q(j,i);
+
+execError = 0;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -81,6 +82,7 @@ Positive Variables
 
 v.l = 0.01;
 x.l(i) = 1;
+x.l(i) = min(x.l(i), x.up(i));
 
 * ============================================
 * Equations
@@ -109,10 +111,15 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(i, j__);
+Alias(i, i__);
+
 * Stationarity equations
 stat_m.. ((-1) * (1 / sqrt(v) ** 1)) - nu_meanbal + nu_m_fx - piL_m =E= 0;
 stat_v.. ((-1) * (((-1) * (m * 1 / (2 * sqrt(v)))) / sqr(sqrt(v)))) + nu_vbal - piL_v =E= 0;
-stat_x(i).. ((-1) * sum(j, x(j) * q(i,j))) * nu_vbal + nu_budget + (sf * sum(h, mu(h)) + (1 - sf) * mu(i)) * nu_meanbal - piL_x(i) + piU_x(i) =E= 0;
+stat_x(i).. ((-1) * (sum(j__, x(j__) * q(i,j__)) + sum(i__, x(i__) * q(i__,i)))) * nu_vbal + nu_budget + (sf * sum(h, mu(h)) + (1 - sf) * mu(i)) * nu_meanbal - piL_x(i) + piU_x(i) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_m.. m - 0 =G= 0;

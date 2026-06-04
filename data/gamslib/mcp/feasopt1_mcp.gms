@@ -35,6 +35,14 @@ Scalars
 c(i,j) = f * d(i,j) / 1000;
 b(j) = 1.2 * b(j);
 
+execError = 0;
+
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+c(i,j)$(NOT (c(i,j) > -inf and c(i,j) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -67,6 +75,7 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x.l(i,j) = 1;
+x.l(i,j) = min(x.l(i,j), x.up(i,j));
 
 * ============================================
 * Equations
