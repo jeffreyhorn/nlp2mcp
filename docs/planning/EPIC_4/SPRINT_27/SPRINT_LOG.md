@@ -216,25 +216,31 @@ path_syntax_error (`$141`×2 + `$257`). The #1398 (Phase A) gate does NOT fire (
 
 ## Day 4 — Priority 2 Pattern C Phase B implement
 
-**Date:** TBD
-**Status:** 🔵 NOT STARTED
+**Date:** 2026-06-04
+**Status:** 🟡 IN PROGRESS
 **Hours budgeted:** ≤ 12
 **Hours actual:** —
 
 ### Tasks completed
-- _(to be filled in during execution)_
+- **B-1 (plain-alias Pattern C consolidated builder)** landed (commit `2870b47e`): `_find_plain_alias_pattern_c` + `_build_plain_alias_consolidated_term` in `src/kkt/stationarity.py` consolidate plain-alias sums from the source body (camcge ieq/inteq/actp/pkdef). 23 goldens byte-shift, chenery reverted to baseline (single-pattern guard), zero solve regressions.
+- **Parameter-ordering $141 fix** (this entry): root-caused camcge's `path_syntax_error`. GAMS `name(args)` is ambiguous between function call and indexed param ref, so `gamma(it)` parsed as a `Call` node; `_collect_param_refs` (`src/emit/original_symbols.py`) only inspected `ParamRef`, so the `at → gamma` dependency edge was invisible to the statement-level topo sort and `at(it) = …gamma(it)…` emitted **before** `gamma(it) = …` → $141. Fix: also collect `Call.func` names (downstream consumers intersect with actual computed params, so genuine function names are harmless). **camcge: `path_syntax_error` → `model_infeasible`** (now compiles + translates cleanly). New unit test `test_call_node_param_dependency_ordered`.
 
-### Deliverables
-- _(to be filled in during execution)_
+### Verification
+- Corpus regen (153 models): only **camcge** golden changed (exact `at`-after-`gamma` reorder); all others byte-identical; the 7 CLI FAILs (danwolfe/decomp/mine/nemhaus/nonsharp/saras/trnspwl) are **pre-existing** (fail on baseline too).
+- `make typecheck && make format && make lint`: clean. `make test`: 4739 passed, 0 failed.
+
+### Findings / carryforward
+- **cesam2 NOT unblocked** — its `$141` is **not** ordering. Two distinct, deeper bugs (logged, B-3 / follow-up): (1) `wbar1(ii,jwt1)=1/7` dropped because the parser statically expands over the *dynamic* subset `ii` (empty static members; `ii(i)=yes` at runtime) → assignment vanishes; (2) the entire `loop((ii,jj)$NONZERO(ii,jj), …)` body (`sigmay3`/`vbar3`/`wbar3`) is dropped (loop-body handling gap). Prototyped a fix for (1) (store symbolically when expand target has empty members) but reverted to keep this branch scoped to the ordering fix; (2) blocks cesam2 regardless.
+- **B-2 (camcge prodinv eq-factor-outside)** and **B-3 (cesam2 dim-mismatch)** still pending.
 
 ### KUs verified
-- _(target: 2.1, 2.2, 2.3)_
+- _(target: 2.1, 2.2, 2.3)_ — KU 2.1 binding in progress
 
 ### Carryforward to Day 5
-- _(to be filled in during execution)_
+- B-2/B-3 implementation; cesam2 dynamic-subset + loop-body drops.
 
 ### PR opened
-- _(P2 #1381 PR link)_
+- _(P2 #1381 PR link — pending)_
 
 ---
 

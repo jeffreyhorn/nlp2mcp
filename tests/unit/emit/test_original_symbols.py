@@ -868,6 +868,49 @@ class TestEmitComputedParameterAssignments:
         sys_line = next(i for i, ln in enumerate(lines) if ln.lower().startswith("sys("))
         assert syield_first < sys_line, "syield phase 0 should precede sys"
 
+    def test_call_node_param_dependency_ordered(self):
+        """A param read parsed as a Call node still creates an ordering dep.
+
+        GAMS ``name(args)`` is ambiguous between a function call and an indexed
+        parameter reference, so an indexed parameter read like ``gamma(it)`` can
+        be parsed as a ``Call`` node rather than a ``ParamRef`` (camcge).  The
+        statement-level topological sort must still recognise ``at``'s dependency
+        on ``gamma`` so ``gamma`` is emitted first — otherwise the emitted GAMS
+        reads ``gamma`` before it is assigned (GAMS $141).
+        """
+        model = ModelIR()
+        model.sets["it"] = SetDef(name="it", members=["a", "b"])
+
+        # at(it) = xd0(it) / gamma(it)   — gamma(it) parsed as a Call node.
+        # `at` is declared (and thus iterated) BEFORE `gamma` so declaration
+        # order alone would emit at first; only the dependency edge reorders it.
+        model.params["at"] = ParameterDef(
+            name="at",
+            domain=("it",),
+            values={},
+            expressions=[
+                (
+                    ("it",),
+                    Binary("/", ParamRef("xd0", ("it",)), Call("gamma", (SymbolRef("it"),))),
+                ),
+            ],
+        )
+        model.params["gamma"] = ParameterDef(
+            name="gamma",
+            domain=("it",),
+            values={},
+            expressions=[(("it",), Binary("*", ParamRef("xd0", ("it",)), Const(2.0)))],
+        )
+        model.params["xd0"] = ParameterDef(
+            name="xd0", domain=("it",), values={("a",): 1.0, ("b",): 2.0}
+        )
+
+        result = emit_computed_parameter_assignments(model)
+        lines = [ln.strip() for ln in result.strip().splitlines() if ln.strip()]
+        gamma_line = next(i for i, ln in enumerate(lines) if ln.lower().startswith("gamma("))
+        at_line = next(i for i, ln in enumerate(lines) if ln.lower().startswith("at("))
+        assert gamma_line < at_line, "gamma must be emitted before at (Call-node dependency)"
+
 
 @pytest.mark.unit
 class TestSetElementQuoting:
