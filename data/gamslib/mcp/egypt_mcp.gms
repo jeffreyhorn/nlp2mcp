@@ -62,6 +62,7 @@ Parameters
     tranc(r,rp) /'m-egypt'.'e-delta' 6, 'm-egypt'.'m-delta' 7, 'e-delta'.'m-egypt' 6, 'e-delta'.'m-delta' 3, 'm-delta'.'m-egypt' 7, 'm-delta'.'e-delta' 3/
     los(c) /wheat 0.09, barley 0.114, 'horse-bean' 0.152, lentils 0.188, 'w-tomato' 0.1, cotton 0.54, 's-maize' 0.049, 's-tomato' 0.1, sorghum 0.055, 'w-onion' 0.057, rice 0.045, groundnut 0.038, 's-potato' 0.285, citrus 0.1/
     stran(r,rp)
+    grdfcon(c)
     dfyld(r,c)
     pe(c)
     pm(c)

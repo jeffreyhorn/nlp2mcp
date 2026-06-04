@@ -20,11 +20,6 @@ Sets
 ;
 
 Alias(i, j);
-Alias(i, i__kkt1);
-Alias(i, i__kkt2);
-Alias(i, i__kkt3);
-Alias(i, i__kkt4);
-Alias(i, i__kkt5);
 
 Parameters
     a0(i,j) /'1'.'1' 0.12, '1'.'2' 0.1, '1'.'3' 0.049, '2'.'1' 0.21, '2'.'2' 0.247, '2'.'3' 0.265, '3'.'1' 0.026, '3'.'2' 0.249, '3'.'3' 0.145/
@@ -114,7 +109,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_a(i,j).. a0(i,j) * 2 * (a(i,j) + a0(i,j)) / sqr(a0(i,j)) + x(j) * nu_rowbal(i) + sum(i__kkt1, x(i__kkt1) * nu_colbal(i))$(sameas(i, '1') and sameas(j, '1') or sameas(i, '2') and sameas(j, '2') or sameas(i, '3') and sameas(j, '3')) + sum(i__kkt2, (x(i__kkt2) * nu_colbal(i__kkt2))$(ord(i__kkt2) = 1))$((sameas(i, '1') or sameas(i, '2')) and (sameas(j, '2') or sameas(j, '3'))) + sum(i__kkt3, (x(i__kkt3) * nu_colbal(i__kkt3))$(ord(i__kkt3) = 2))$(sameas(i, '1') and sameas(j, '3')) + sum(i__kkt4, (x(i__kkt4) * nu_colbal(i__kkt4))$(ord(i__kkt4) = 1))$((sameas(i, '2') or sameas(i, '3')) and (sameas(j, '1') or sameas(j, '2'))) + sum(i__kkt5, (x(i__kkt5) * nu_colbal(i__kkt5))$(ord(i__kkt5) = 2))$(sameas(i, '3') and sameas(j, '1')) - piL_a(i,j) =E= 0;
+stat_a(i,j).. a0(i,j) * 2 * (a(i,j) + a0(i,j)) / sqr(a0(i,j)) + x(j) * nu_rowbal(i) + x(j) * nu_colbal(j) - piL_a(i,j) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_a(i,j).. a(i,j) - 1e-05 =G= 0;

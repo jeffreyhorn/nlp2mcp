@@ -5461,6 +5461,21 @@ class _ModelBuilder:
                                         stack.extend(parent_def.domain)
 
                     if expand_positions:
+                        # Issue #1381 (Sprint 27): If any expanding position is a
+                        # dynamic subset with no STATIC members (e.g. cesam2's
+                        # ``ii(i)`` populated at runtime via ``ii(i) = yes;``), we
+                        # cannot enumerate its members at parse time. Previously the
+                        # whole assignment was silently dropped, leaving the symbol
+                        # unassigned → "$141 Symbol declared but no values" in the
+                        # generated model (cesam2 ``wbar1(ii,jwt1) = 1/7;``). Instead
+                        # emit it as a GAMS statement (store as expression) so the
+                        # solver expands the runtime-populated set itself — mirroring
+                        # how a set-indexed assignment with a non-constant RHS is
+                        # already handled below.
+                        if any(not expand_set_defs[pos].members for pos in expand_positions):
+                            param.expressions.append((tuple(indices), expr))
+                            return
+
                         # Build list of member lists for positions that need expansion
                         # For non-expanding positions, use the literal index
                         dim_values: list[list[str]] = []

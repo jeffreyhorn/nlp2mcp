@@ -331,6 +331,219 @@ solve m using nlp minimizing z;
     )
 
 
+def _emit_mini_mcp(tmp_path, gams: str, fname: str) -> str:
+    """Translate a small GAMS model to MCP and return the emitted text."""
+    gams_file = tmp_path / fname
+    gams_file.write_text(gams)
+    old_limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(50000)
+    try:
+        from src.ad.constraint_jacobian import compute_constraint_jacobian
+        from src.ad.gradient import compute_objective_gradient
+        from src.emit.emit_gams import emit_gams_mcp
+        from src.ir.normalize import normalize_model
+        from src.ir.parser import parse_model_file
+        from src.kkt.assemble import assemble_kkt_system
+
+        model = parse_model_file(str(gams_file))
+        # Match the real pipeline: pass the normalized equations to the Jacobian
+        # so inequality (=l=/=g=) multiplier signs are canonical (test helper
+        # parity with tests/e2e/test_gamslib_match.py::_do_pipeline_and_solve).
+        normalized_eqs, _ = normalize_model(model)
+        grad = compute_objective_gradient(model)
+        j_eq, j_ineq = compute_constraint_jacobian(model, normalized_eqs)
+        kkt = assemble_kkt_system(model, grad, j_eq, j_ineq)
+        return emit_gams_mcp(kkt)
+    finally:
+        sys.setrecursionlimit(old_limit)
+
+
+@pytest.mark.unit
+def test_b2_eq_domain_factor_outside_sum_consolidates(tmp_path):
+    """Sprint 27 #1381 Phase B-2: an alias-Sum multiplied by an eq-domain factor
+    OUTSIDE the sum — camcge's ``prodinv(i).. pk(i)*dk(i) =e= kio(i)*savings -
+    kio(i)*sum(j, dst(j)*p(j));`` — must consolidate to
+    ``dst(i) * sum(j, kio(j) * nu_prodinv(j))``: the var-side coefficient
+    ``dst(i)`` (from the inner-sum coefficient, reindexed sum→stat) stays OUTSIDE
+    the new Sum, while the eq-side factor ``kio(i) → kio(j)`` moves INSIDE,
+    reindexed to the alias; the multiplier is alias-indexed.  Without B-2 the
+    standard path emits a phantom ``kio(i±N)*dst(i)*nu_prodinv(i±N)`` enumeration.
+    """
+    gams = """\
+Set i / s1, s2, s3 /;
+Alias (i,j);
+Parameter kio(i), dst0(i);
+kio(i) = 1 + ord(i);
+dst0(i) = 2 + ord(i);
+Positive Variable pk(i), dk(i), p(i), dst(i), savings, z;
+Equation prodinv(i), zdef;
+prodinv(i).. pk(i)*dk(i) =e= kio(i)*savings - kio(i)*sum(j, dst(j)*p(j));
+zdef.. z =e= sum(i, pk(i) + dk(i) + p(i) + dst(i)) + savings;
+Model m / prodinv, zdef /;
+solve m using nlp minimizing z;
+"""
+    output = _emit_mini_mcp(tmp_path, gams, "mini_prodinv.gms")
+    stat_p_lines = [ln for ln in output.splitlines() if "stat_p(" in ln]
+    assert stat_p_lines, f"Expected a stat_p line. Output:\n{output[:1200]}"
+    text = "\n".join(stat_p_lines)
+
+    # Consolidated B-2 form: var-side dst(i) outside, eq-side kio(j) inside the Sum.
+    assert "dst(i) * sum(j, kio(j) * nu_prodinv(j))" in text, (
+        f"Expected consolidated B-2 form dst(i) * sum(j, kio(j) * nu_prodinv(j)). " f"Full:\n{text}"
+    )
+    # No phantom per-offset enumeration of the consolidated multiplier.
+    import re
+
+    assert not re.search(r"nu_prodinv\(i[+-]\d+\)", text), (
+        f"Found phantom-offset nu_prodinv(i±N) — the eq-domain-factor sum was not "
+        f"consolidated (B-2 builder did not fire). Full:\n{text}"
+    )
+
+
+@pytest.mark.unit
+def test_b3_dim_mismatch_consolidates_no_outer_sum(tmp_path):
+    """Sprint 27 #1381 Phase B-3: a dim-mismatch reducing Sum — cesam2's
+    ``COLSUM(jj).. sum(ii, TSAM(ii,jj)) =e= Y(jj);`` over a 2-D variable ``TSAM``
+    with a 1-D constraint domain (``jj`` a strict subset of ``i``) — must
+    consolidate to ``nu_COLSUM(j)$(jj(j))`` (multiplier indexed by the variable
+    coordinate the eq-domain index binds, guarded by the subset membership, NO
+    outer Sum).  Its companion ``ROWSUM`` binds the other coordinate →
+    ``nu_ROWSUM(i)$(ii(i))``.  Without B-3 the standard element-to-set path
+    mis-binds the eq-domain index and emits a spurious ``sameas`` block.
+    """
+    gams = """\
+Set i / total, a1, a2 /;
+Set ii(i); ii(i) = yes; ii("total") = no;
+Alias (i,j), (ii,jj);
+Variable tsam(i,j), y(i), z;
+Equation colsum(jj), rowsum(ii), zdef;
+colsum(jj).. sum(ii, tsam(ii,jj)) =e= y(jj);
+rowsum(ii).. sum(jj, tsam(ii,jj)) =e= y(ii);
+zdef.. z =e= sum((i,j), tsam(i,j)) + sum(i, y(i));
+Model m / colsum, rowsum, zdef /;
+solve m using nlp minimizing z;
+"""
+    output = _emit_mini_mcp(tmp_path, gams, "mini_cesam2.gms")
+    stat_lines = [ln for ln in output.splitlines() if "stat_tsam(" in ln]
+    assert stat_lines, f"Expected a stat_tsam line. Output:\n{output[:1200]}"
+    text = "\n".join(stat_lines)
+
+    # COLSUM binds TSAM position 1 → multiplier indexed by j (the SECOND
+    # variable coordinate), NOT the mis-bound position-0 nu_colsum(i).  (The
+    # subset-membership guard $(jj(j)) is added downstream from the multiplier's
+    # declared domain; the real cesam2 integration verifies it end-to-end.)
+    assert "nu_colsum(j)" in text, (
+        f"Expected dim-mismatch B-3 multiplier nu_colsum(j) (binding position 1). " f"Full:\n{text}"
+    )
+    assert "nu_colsum(i)" not in text, (
+        f"Found mis-bound nu_colsum(i) — B-3 must bind the eq-domain index to "
+        f"variable position 1 (j), not position 0 (i). Full:\n{text}"
+    )
+    # ROWSUM binds TSAM position 0 → nu_rowsum(i).
+    assert "nu_rowsum(i)" in text, (
+        f"Expected companion B-3 multiplier nu_rowsum(i) (binding position 0). " f"Full:\n{text}"
+    )
+    # No spurious sameas block on the COLSUM term, and no phantom offsets.
+    import re
+
+    assert not re.search(
+        r"nu_colsum\(i[+-]\d+\)", text
+    ), f"Found phantom-offset nu_colsum(i±N) in stat_tsam. Full:\n{text}"
+    assert "sameas" not in text, (
+        f"Found spurious sameas block — B-3 builder should bind by position, "
+        f"not by sameas enumeration. Full:\n{text}"
+    )
+
+
+@pytest.mark.unit
+def test_dynamic_subset_constant_assignment_not_dropped(tmp_path):
+    """Sprint 27 #1381: a constant assignment indexed over a DYNAMIC subset —
+    cesam2's ``wbar1(ii,jwt1) = 1/7;`` where ``ii(i)`` is populated at runtime
+    via ``ii(i) = yes;`` — must NOT be silently dropped at parse time.
+
+    The Issue #622 set-expansion path enumerates set-indexed constant assignments
+    into per-element values, but a dynamic subset has no STATIC members, so the
+    enumeration previously skipped the whole assignment → the parameter stayed
+    unassigned and the generated model raised ``$141 Symbol declared but no
+    values``.  The fix stores it as an expression so it is emitted as a GAMS
+    statement (the solver expands the runtime-populated subset itself).
+    """
+    old_limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(50000)
+    try:
+        from src.ir.parser import parse_model_file
+
+        gams = """\
+Set i / total, a1, a2 /;
+Set ii(i); ii(i) = yes; ii("total") = no;
+Set jwt / w1, w2 /;
+Set jwt1(jwt) / w1, w2 /;
+Parameter wbar1(i,jwt);
+wbar1(ii,jwt1) = 1/7;
+Scalar z;
+"""
+        gams_file = tmp_path / "mini_dynsubset.gms"
+        gams_file.write_text(gams)
+        model = parse_model_file(str(gams_file))
+    finally:
+        sys.setrecursionlimit(old_limit)
+
+    wbar1 = model.params.get("wbar1")
+    assert wbar1 is not None
+    # The assignment must survive — as an expression (set indices preserved),
+    # NOT dropped (which would leave both values and expressions empty).
+    assert wbar1.expressions, (
+        "Dynamic-subset constant assignment wbar1(ii,jwt1) = 1/7 was dropped — "
+        "expected it stored as an expression so it emits as a GAMS statement."
+    )
+    keys = [tuple(k) for k, _ in wbar1.expressions]
+    assert ("ii", "jwt1") in keys, (
+        f"Expected the assignment stored with its original set indices " f"(ii, jwt1); got {keys}."
+    )
+
+
+@pytest.mark.unit
+def test_b3_does_not_fire_on_inequality_or_distinct_set_dim_mismatch(tmp_path):
+    """Sprint 27 #1381 Phase B-3 regression guard: the dim-mismatch builder must
+    NOT intercept a constraint whose standard path is already correct —
+    specifically (a) inequalities and (b) variables whose two coordinates are
+    DISTINCT canonical sets — mirroring trnsport's
+    ``demand(j).. sum(i, x(i,j)) =g= b(j);`` (``x(i,j)`` over genuinely different
+    sets ``i``/``j``).  If B-3 fired here it would emit ``+lam_demand(j)`` instead
+    of the correct ``-lam_demand(j)`` and make the model infeasible.
+    """
+    gams = """\
+Set i / s1, s2 /;
+Set j / m1, m2, m3 /;
+Parameter c(i,j); c(i,j) = ord(i) + ord(j);
+Positive Variable x(i,j), z;
+Equation supply(i), demand(j), zdef;
+supply(i).. sum(j, x(i,j)) =l= 10;
+demand(j).. sum(i, x(i,j)) =g= 1;
+zdef.. z =e= sum((i,j), c(i,j)*x(i,j));
+Model m / supply, demand, zdef /;
+solve m using lp minimizing z;
+"""
+    output = _emit_mini_mcp(tmp_path, gams, "mini_trnsport.gms")
+    stat_lines = [ln for ln in output.splitlines() if "stat_x(" in ln]
+    assert stat_lines, f"Expected a stat_x line. Output:\n{output[:1200]}"
+    text = "\n".join(stat_lines)
+
+    # demand is a >= inequality: KKT for a min problem gives -lam_demand(j).
+    assert "- lam_demand(j)" in text, (
+        f"Expected -lam_demand(j) (correct =g= sign); B-3 must not consolidate "
+        f"an inequality dim-mismatch. Full:\n{text}"
+    )
+    assert "+ lam_demand(j)" not in text, (
+        f"Found +lam_demand(j) — B-3 wrongly intercepted the inequality and "
+        f"flipped the multiplier sign. Full:\n{text}"
+    )
+    # No outer Sum-wrapped nu_-style consolidation of the demand/supply multipliers.
+    assert "nu_demand" not in text and "nu_supply" not in text, (
+        f"Inequality multipliers must stay lam_*, not be consolidated as nu_*. " f"Full:\n{text}"
+    )
+
+
 @pytest.mark.unit
 def test_helpers_unit_contracts():
     """Unit-level contracts on the three Pattern C helpers, covering the

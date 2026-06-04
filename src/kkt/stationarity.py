@@ -667,6 +667,428 @@ def _build_plain_alias_consolidated_term(
     return Sum((alias,), Binary("*", coeff, mult_ref))
 
 
+def _expr_references_index(expr: Expr, index: str) -> bool:
+    """Return True iff the literal string ``index`` appears anywhere in ``expr``
+    as an index of a ``VarRef``/``ParamRef``/``MultiplierRef``/``EquationRef``,
+    as a bare ``SymbolRef``, or as an ``IndexOffset.base``.
+
+    Unlike ``_expr_mentions_indices_canonical`` this matches the *exact* symbol
+    (case-insensitive), not the canonical set — used by the Sprint 27 #1381
+    Phase B-2 factor classifier to decide whether an outer factor carries the
+    equation-domain index ``i`` (e.g. ``kio(i)`` → eq-side) versus a constant.
+    """
+    from src.ir.ast import SymbolRef
+
+    target = index.lower()
+    if isinstance(expr, SymbolRef) and expr.name.lower() == target:
+        return True
+    if isinstance(expr, IndexOffset) and isinstance(expr.base, str) and expr.base.lower() == target:
+        return True
+    if isinstance(expr, (VarRef, ParamRef, MultiplierRef, EquationRef)):
+        for idx in expr.indices:
+            if isinstance(idx, str) and idx.lower() == target:
+                return True
+            if (
+                isinstance(idx, IndexOffset)
+                and isinstance(idx.base, str)
+                and idx.base.lower() == target
+            ):
+                return True
+    return any(_expr_references_index(c, index) for c in expr.children())
+
+
+def _flatten_mult(expr: Expr) -> list[Expr]:
+    """Flatten a left/right-nested ``Binary("*", ...)`` product into its list of
+    multiplicative factors. Non-``*`` nodes are returned as a singleton list."""
+    if isinstance(expr, Binary) and expr.op == "*":
+        return _flatten_mult(expr.left) + _flatten_mult(expr.right)
+    return [expr]
+
+
+def _walk_b2_alias_sum(
+    expr: Expr,
+    var_name: str,
+    common_canonical: frozenset[str],
+    model_ir: ModelIR,
+    sign: float,
+) -> dict | None:
+    """Locate a Sprint 27 #1381 Phase B-2 alias-``Sum`` — an alias-``Sum`` that is
+    *multiplied* by one or more eq-domain factors OUTSIDE the sum (e.g. camcge's
+    ``prodinv(i).. ... - kio(i)*sum(j, dst(j)*p(j))``).
+
+    Descends additive structure (``+``/``-``/unary-``-``) tracking the sign, and at
+    each multiplicative leaf flattens the product, requiring EXACTLY ONE plain
+    alias-``Sum`` factor (no condition, single canonical-shared index, ``var(sum_idx)``
+    in its body) and AT LEAST ONE outer factor — none of which may reference
+    ``var_name`` (otherwise the equation is a different, unsupported pattern).
+
+    Returns ``{"sum_node", "sum_idx", "sign", "outer_factors"}`` or ``None``. The
+    bare-sum (no outer factor) case is Phase B-1 — ``_walk_plain_alias_sum`` — and
+    is deliberately rejected here.
+    """
+    if isinstance(expr, Unary) and expr.op == "-":
+        return _walk_b2_alias_sum(expr.child, var_name, common_canonical, model_ir, -sign)
+    if isinstance(expr, Binary) and expr.op in ("+", "-"):
+        left = _walk_b2_alias_sum(expr.left, var_name, common_canonical, model_ir, sign)
+        if left is not None:
+            return left
+        right_sign = sign if expr.op == "+" else -sign
+        return _walk_b2_alias_sum(expr.right, var_name, common_canonical, model_ir, right_sign)
+    if isinstance(expr, Binary) and expr.op == "*":
+        factors = _flatten_mult(expr)
+        sum_factors: list[tuple[Sum, str]] = []
+        outer: list[Expr] = []
+        for f in factors:
+            if isinstance(f, Sum) and f.condition is None and len(f.index_sets) == 1:
+                sidx = f.index_sets[0]
+                if _resolve_alias_target(sidx, model_ir) in common_canonical:
+                    vref = _find_varref_with_index(f.body, var_name, sidx)
+                    if vref is not None and len(vref.indices) == 1:
+                        sum_factors.append((f, sidx))
+                        continue
+            outer.append(f)
+        if (
+            len(sum_factors) == 1
+            and outer
+            and all(not _expr_references_var(f, var_name) for f in outer)
+        ):
+            sum_node, sum_idx = sum_factors[0]
+            return {
+                "sum_node": sum_node,
+                "sum_idx": sum_idx,
+                "sign": sign,
+                "outer_factors": outer,
+            }
+    return None
+
+
+def _find_b2_pattern_c(
+    eq_def: EquationDef,
+    var_name: str,
+    var_canonical_sets: frozenset[str],
+    eq_domain_canonical: frozenset[str],
+    model_ir: ModelIR,
+) -> dict | None:
+    """Detect a Sprint 27 #1381 Phase B-2 pattern: a plain alias-``Sum`` multiplied
+    by an eq-domain factor that sits OUTSIDE the inner sum (camcge ``prodinv``).
+
+    Mirrors ``_find_plain_alias_pattern_c`` (B-1) — same canonical-overlap gate and
+    single-pattern guard (``var`` appears EXCLUSIVELY inside the matched sum) — but
+    via ``_walk_b2_alias_sum``, which descends through ``*`` to capture the outer
+    factors. Returns ``{"sum_node", "sum_idx", "sign", "outer_factors"}`` or ``None``.
+    """
+    if eq_def is None:
+        return None
+    # An equation-level domain condition (e.g. cesam's
+    # ``ROWSUM(ii)$(not sameas(ii,"ROW"))..``) restricts which multiplier
+    # instances exist; the consolidated builder does not propagate it, so fall
+    # back to the standard path (which carries the guard into every term).
+    if eq_def.condition is not None:
+        return None
+    common = var_canonical_sets & eq_domain_canonical
+    if not common:
+        return None
+    lhs, rhs = eq_def.lhs_rhs
+    for side, base_sign in ((lhs, 1.0), (rhs, -1.0)):
+        res = _walk_b2_alias_sum(side, var_name, common, model_ir, base_sign)
+        if res is not None:
+            total = _count_varref(lhs, var_name) + _count_varref(rhs, var_name)
+            in_sum = _count_varref(res["sum_node"].body, var_name)
+            if total == in_sum:
+                return res
+            return None
+    return None
+
+
+def _classify_eq_body_factors(
+    outer_factors: list[Expr],
+    eq_idx: str,
+    model_ir: ModelIR,
+) -> tuple[list[Expr], list[Expr]]:
+    """Split B-2 outer (multiplicative) factors into ``(eq_side, var_side)``.
+
+    - **eq-side**: factors referencing the equation-domain index (``kio(i)``) — these
+      vary per eq-instance, so they move INSIDE the consolidated ``Sum`` reindexed to
+      the alias (``kio(j)``).
+    - **var-side**: factors referencing neither (pure constants/scalars) — they are
+      common to every eq-instance, so they stay OUTSIDE the ``Sum``.
+
+    In the 1-D same-domain plain-alias case (camcge), the eq-domain index and the
+    variable's own domain index are the same symbol ``i``; the var-side coefficient
+    (e.g. ``dst(i)``) does NOT originate from an outer factor — it comes from the
+    inner-sum coefficient — so the only outer factors are eq-side or constant.
+    """
+    eq_side: list[Expr] = []
+    var_side: list[Expr] = []
+    for f in outer_factors:
+        if _expr_references_index(f, eq_idx):
+            eq_side.append(f)
+        else:
+            var_side.append(f)
+    return eq_side, var_side
+
+
+def _build_b2_consolidated_term(
+    found: dict,
+    var_name: str,
+    var_domain: tuple[str, ...],
+    eq_domain: tuple[str, ...],
+    mult_name: str,
+    mult_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> Expr | None:
+    """Build the Sprint 27 #1381 Phase B-2 consolidated stationarity term for an
+    eq-domain factor sitting OUTSIDE the inner alias-``Sum`` (camcge ``prodinv``):
+
+        ``<var-side> * Sum((alias,), <eq-side reindexed> * nu_eq(alias))``
+
+    e.g. ``dst(i) * sum(j, kio(j) * nu_prodinv(j))`` for
+    ``prodinv(i).. pk(i)*dk(i) =e= kio(i)*savings - kio(i)*sum(j, dst(j)*p(j))``.
+
+    - ``<var-side>`` = ``∂(inner sum body)/∂var(sum_idx)`` reindexed ``sum_idx → stat_idx``
+      (the inner coefficient ``dst(j) → dst(i)``), times any constant outer factors;
+      stays OUTSIDE the new Sum.
+    - ``<eq-side reindexed>`` = the eq-domain outer factors with ``eq_idx → alias``
+      (``kio(i) → kio(j)``); moves INSIDE the new Sum.
+    - multiplier ``nu_eq(alias)`` is alias-indexed.
+
+    1-D constraint / 1-D variable only; returns ``None`` otherwise so the caller
+    falls back to the standard offset-groups path.
+    """
+    from src.ad.derivative_rules import differentiate_expr
+
+    if len(var_domain) != 1 or len(eq_domain) != 1 or len(mult_domain) != 1:
+        return None
+    sum_node: Sum = found["sum_node"]
+    sum_idx: str = found["sum_idx"]
+    sign: float = found["sign"]
+    outer_factors: list[Expr] = found["outer_factors"]
+    stat_idx = var_domain[0]
+    eq_idx = eq_domain[0]
+    if eq_idx.lower() != stat_idx.lower():
+        alias = eq_idx
+    elif sum_idx.lower() != stat_idx.lower():
+        alias = sum_idx
+    else:
+        return None  # no distinct alias symbol available
+
+    # Inner coefficient: ∂(sum body)/∂var(sum_idx), reindexed sum_idx → stat_idx.
+    inner_coeff = differentiate_expr(sum_node.body, var_name, (sum_idx,), Config(model_ir=model_ir))
+    inner_coeff = apply_simplification(inner_coeff, "advanced")
+    if inner_coeff is None or (isinstance(inner_coeff, Const) and inner_coeff.value == 0.0):
+        return None
+    inner_coeff = _rewrite_subset_to_superset(inner_coeff, {sum_idx.lower(): stat_idx})
+
+    eq_side, var_side = _classify_eq_body_factors(outer_factors, eq_idx, model_ir)
+    if not eq_side:
+        return None  # no eq-domain factor to move inside → not a B-2 shape
+
+    # eq-side factors move inside the new Sum, reindexed eq_idx → alias.
+    eq_side_reindexed = [_rewrite_subset_to_superset(f, {eq_idx.lower(): alias}) for f in eq_side]
+    mult_ref = MultiplierRef(mult_name, (alias,))
+    inner: Expr = mult_ref
+    for f in eq_side_reindexed:
+        inner = Binary("*", f, inner)
+    new_sum = Sum((alias,), inner)
+
+    # var-side: inner coefficient * any constant outer factors, OUTSIDE the Sum.
+    outside: Expr = inner_coeff
+    for f in var_side:
+        outside = Binary("*", outside, f)
+    term: Expr = Binary("*", outside, new_sum)
+    if sign < 0:
+        term = Binary("*", Const(-1.0), term)
+    return term
+
+
+def _find_varref_arity(expr: Expr, var_name: str, arity: int) -> VarRef | None:
+    """Return the first ``VarRef`` to ``var_name`` with exactly ``arity`` indices."""
+    if (
+        isinstance(expr, VarRef)
+        and expr.name.lower() == var_name.lower()
+        and len(expr.indices) == arity
+    ):
+        return expr
+    for child in expr.children():
+        found = _find_varref_arity(child, var_name, arity)
+        if found is not None:
+            return found
+    return None
+
+
+def _walk_dim_mismatch_sum(
+    expr: Expr,
+    var_name: str,
+    var_arity: int,
+    model_ir: ModelIR,
+    sign: float,
+) -> dict | None:
+    """Locate a Sprint 27 #1381 Phase B-3 dim-mismatch reducing ``Sum`` — a
+    single-index ``Sum`` over one of a higher-dimensional variable's coordinates,
+    e.g. cesam2's ``COLSUM(jj).. sum(ii, TSAM(ii,jj)) =e= Y(jj)``.
+
+    Descends additive structure (``+``/``-``/unary-``-``) tracking the sign.
+    Returns ``{"sum_node", "sum_idx", "var_ref", "sign"}`` when the sum's body
+    references ``var_name`` at full arity with the sum index among its coordinates,
+    or ``None``.
+    """
+    if isinstance(expr, Unary) and expr.op == "-":
+        return _walk_dim_mismatch_sum(expr.child, var_name, var_arity, model_ir, -sign)
+    if isinstance(expr, Binary) and expr.op in ("+", "-"):
+        left = _walk_dim_mismatch_sum(expr.left, var_name, var_arity, model_ir, sign)
+        if left is not None:
+            return left
+        right_sign = sign if expr.op == "+" else -sign
+        return _walk_dim_mismatch_sum(expr.right, var_name, var_arity, model_ir, right_sign)
+    if isinstance(expr, Sum) and len(expr.index_sets) == 1:
+        sum_idx = expr.index_sets[0]
+        vref = _find_varref_arity(expr.body, var_name, var_arity)
+        if vref is not None and any(
+            isinstance(i, str) and i.lower() == sum_idx.lower() for i in vref.indices
+        ):
+            return {"sum_node": expr, "sum_idx": sum_idx, "var_ref": vref, "sign": sign}
+    return None
+
+
+def _find_dim_mismatch_pattern_c(
+    eq_def: EquationDef,
+    var_name: str,
+    var_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> dict | None:
+    """Detect a Sprint 27 #1381 Phase B-3 dim-mismatch Pattern C — a constraint
+    whose domain has FEWER indices than the variable, reducing the variable over
+    one coordinate (cesam2 ``COLSUM(jj).. sum(ii, TSAM(ii,jj))`` / ``ROWSUM``).
+
+    Unlike B-1/B-2 the canonical-overlap test does not apply: the eq-domain index
+    (``jj``) resolves to a *subset* set (``ii``), not the variable's canonical full
+    set (``i``).  Detection keys purely on the structural dim-mismatch.  Returns
+    the ``_walk_dim_mismatch_sum`` dict or ``None``.
+    """
+    if eq_def is None:
+        return None
+    # Pattern C consolidation is an EQUALITY-constraint (nu_) multiplier fix.
+    # Restrict to ``=e=`` so the builder never intercepts an inequality whose
+    # standard path already emits the correct multiplier sign — e.g. trnsport's
+    # ``demand(j).. sum(i, x(i,j)) =g= b(j)`` is the same dim-mismatch SHAPE but
+    # its ``lam_demand`` term must stay ``-lam_demand(j)`` (#1381 regression guard).
+    if eq_def.relation != Rel.EQ:
+        return None
+    # An equation-level domain condition (cesam's
+    # ``ROWSUM(ii)$(not sameas(ii,"ROW"))..``) restricts which multiplier
+    # instances exist; the dim-mismatch builder emits NO guard of its own, so
+    # fall back to the standard path which carries the condition into the term.
+    if eq_def.condition is not None:
+        return None
+    eq_domain = eq_def.domain or ()
+    if not (0 < len(eq_domain) < len(var_domain)):
+        return None
+    lhs, rhs = eq_def.lhs_rhs
+    for side, base_sign in ((lhs, 1.0), (rhs, -1.0)):
+        res = _walk_dim_mismatch_sum(side, var_name, len(var_domain), model_ir, base_sign)
+        if res is not None:
+            total = _count_varref(lhs, var_name) + _count_varref(rhs, var_name)
+            in_sum = _count_varref(res["sum_node"].body, var_name)
+            if total == in_sum:
+                return res
+            return None
+    return None
+
+
+def _build_pattern_c_dim_mismatch_term(
+    found: dict,
+    var_name: str,
+    var_domain: tuple[str, ...],
+    eq_domain: tuple[str, ...],
+    mult_name: str,
+    model_ir: ModelIR,
+) -> Expr | None:
+    """Build the Sprint 27 #1381 Phase B-3 consolidated stationarity term for a
+    dim-mismatch reducing ``Sum`` (cesam2):
+
+        ``stat_tsam(i,j).. ... + nu_COLSUM(j)$(jj(j)) + ...``     (NO outer Sum)
+
+    The eq-domain index binds one coordinate of the higher-dim variable; the
+    multiplier is indexed by the variable-domain symbol at that binding position
+    and guarded by the eq-domain set's subset membership.  No outer ``Sum`` is
+    needed — the alias is already controlled by the stationarity equation's own
+    variable-domain index.  ``COLSUM`` binds position 1 (``→ nu_COLSUM(j)$(jj(j))``),
+    its companion ``ROWSUM`` binds position 0 (``→ nu_ROWSUM(i)$(ii(i))``).
+
+    Supports a single eq-domain index (cesam2); returns ``None`` otherwise so the
+    caller falls back to the standard path.
+    """
+    from src.ad.derivative_rules import differentiate_expr
+
+    if not (0 < len(eq_domain) < len(var_domain)):
+        return None
+    sum_node: Sum = found["sum_node"]
+    sum_idx: str = found["sum_idx"]
+    var_ref: VarRef = found["var_ref"]
+    sign: float = found["sign"]
+    src_indices = var_ref.indices
+
+    def _pos(sym: str) -> int | None:
+        for k, ix in enumerate(src_indices):
+            if isinstance(ix, str) and ix.lower() == sym.lower():
+                return k
+        return None
+
+    sum_position = _pos(sum_idx)
+    if sum_position is None:
+        return None
+    bindings: dict[str, int] = {}
+    for eqi in eq_domain:
+        p = _pos(eqi)
+        if p is None:
+            return None
+        bindings[eqi] = p
+    if len(bindings) != 1:
+        return None  # only the single-eq-index case is supported (cesam2)
+    eq_idx, binding_position = next(iter(bindings.items()))
+    binding_symbol = var_domain[binding_position]
+
+    # Only the ALIASED dim-mismatch needs this builder: cesam2's ``TSAM(i,j)``
+    # has both domain coordinates resolving to the SAME canonical set (``j``
+    # aliases ``i``), which is exactly where element-to-set collapses and emits a
+    # spurious ``sameas`` block.  When the sum-position and binding-position
+    # coordinates resolve to DISTINCT canonical sets (e.g. trnsport's
+    # ``x(i,j)`` over genuinely different sets ``i``/``j``), the standard path
+    # already binds correctly — fall back to it.
+    if _resolve_alias_target(var_domain[sum_position], model_ir) != _resolve_alias_target(
+        binding_symbol, model_ir
+    ):
+        return None
+
+    # Coefficient: ∂(sum body)/∂var(source indices), reindexed source → stat.
+    coeff = differentiate_expr(sum_node.body, var_name, src_indices, Config(model_ir=model_ir))
+    coeff = apply_simplification(coeff, "advanced")
+    if coeff is None or (isinstance(coeff, Const) and coeff.value == 0.0):
+        return None
+    coeff = _rewrite_subset_to_superset(
+        coeff,
+        {
+            sum_idx.lower(): var_domain[sum_position],
+            eq_idx.lower(): var_domain[binding_position],
+        },
+    )
+
+    mult = MultiplierRef(mult_name, (binding_symbol,))
+    if isinstance(coeff, Const) and coeff.value == 1.0:
+        term: Expr = mult
+    else:
+        term = Binary("*", coeff, mult)
+
+    # NOTE: the subset-membership guard ($(jj(j))) is intentionally NOT applied
+    # here.  The multiplier ``nu_COLSUM`` is declared over the subset domain, so
+    # the downstream domain-guarding pass adds ``$(jj(j))`` from the multiplier's
+    # own declared domain — emitting it here too would double-guard and would
+    # break ROWSUM's byte-identical match against the pre-existing emit.
+    if sign < 0:
+        term = Binary("*", Const(-1.0), term)
+    return term
+
+
 def _build_lead_lag_condition_expr(
     lead_offsets: dict[str, int],
     lag_offsets: dict[str, int],
@@ -4762,6 +5184,73 @@ def _add_indexed_jacobian_terms(
                                 )
                                 if _b1_term is not None:
                                     expr = Binary("+", expr, _b1_term)
+                                    continue
+
+                            # Sprint 27 #1381 Phase B-2: eq-domain factor OUTSIDE
+                            # the inner alias-Sum — camcge's ``prodinv(i)..
+                            # pk(i)*dk(i) =e= kio(i)*savings - kio(i)*sum(j,
+                            # dst(j)*p(j))``. The standard path enumerates a
+                            # phantom ``kio(i±N)*dst(i)*nu_prodinv(i±N)`` group;
+                            # consolidate it to ``dst(i)*sum(j, kio(j)*
+                            # nu_prodinv(j))`` directly from the source body.
+                            _b2 = _find_b2_pattern_c(
+                                eq_def_for_gate,
+                                var_name,
+                                variable_canonical_sets,
+                                eq_domain_canonical,
+                                kkt.model_ir,
+                            )
+                            if _b2 is not None:
+                                _mn = name_func(eq_name_base)
+                                _b2_term = (
+                                    _build_b2_consolidated_term(
+                                        _b2,
+                                        var_name,
+                                        var_domain,
+                                        eq_def_for_gate.domain or (),
+                                        _mn,
+                                        mult_domain,
+                                        kkt.model_ir,
+                                    )
+                                    if _mn in multipliers
+                                    else None
+                                )
+                                if _b2_term is not None:
+                                    expr = Binary("+", expr, _b2_term)
+                                    continue
+
+                            # Sprint 27 #1381 Phase B-3: dim-mismatch reducing
+                            # Sum — cesam2's ``COLSUM(jj).. sum(ii, TSAM(ii,jj))
+                            # =e= Y(jj)`` (1-D eq over a 2-D variable). The
+                            # eq-domain index binds ONE coordinate of TSAM; the
+                            # standard element-to-set path mis-binds it (position
+                            # 0) and emits a spurious ``sameas`` block. Build the
+                            # consolidated ``nu_COLSUM(j)$(jj(j))`` term directly
+                            # (NO outer Sum). Canonical-overlap does not apply here
+                            # (``jj`` resolves to subset ``ii``, not ``i``), so this
+                            # is detected structurally, independent of B-1/B-2.
+                            _dm = _find_dim_mismatch_pattern_c(
+                                eq_def_for_gate,
+                                var_name,
+                                var_domain,
+                                kkt.model_ir,
+                            )
+                            if _dm is not None:
+                                _mn = name_func(eq_name_base)
+                                _b3_term = (
+                                    _build_pattern_c_dim_mismatch_term(
+                                        _dm,
+                                        var_name,
+                                        var_domain,
+                                        eq_def_for_gate.domain or (),
+                                        _mn,
+                                        kkt.model_ir,
+                                    )
+                                    if _mn in multipliers
+                                    else None
+                                )
+                                if _b3_term is not None:
+                                    expr = Binary("+", expr, _b3_term)
                                     continue
 
                 # Issue #1045: Sub-group entries by their index offset pattern.
