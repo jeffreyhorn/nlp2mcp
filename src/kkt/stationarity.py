@@ -4208,6 +4208,26 @@ def _build_sameas_guard(
         # exact entry tuples.
         return _build_tuple_or_guard(var_domain, all_fixed)
 
+    # Issue #1381 follow-up: even when some dimension is a strict subset, the
+    # per-dimension AND (a Cartesian product of the per-dim selections) can
+    # OVER-select when the entry tuples aren't Cartesian.  cesam2's GDPDEF
+    # references TSAM cells {(fac,act),(gov,act),(act,gov),(gov,com)}; the
+    # per-dim guard ``i in {fac,gov,act} and j in {act,gov,com}`` also selects
+    # the FREE cell (act,com), injecting a spurious nu_GDPDEF into
+    # stat_tsam(act,com) and corrupting the KKT.  Verify the Cartesian
+    # selection, intersected with the instance space, picks EXACTLY the entry
+    # tuples; otherwise emit the exact OR-of-ANDs.  (Mirror of the check in
+    # _build_sameas_guard_for_instances.)
+    entry_tuples = {tuple(v.lower() for v in idx) for idx in all_fixed}
+    instance_tuples = {tuple(v.lower() for v in idx) for _, idx in instances}
+    selected_lc = [
+        per_dim_entry_lc[d] if per_dim_entry_lc[d] < per_dim_all_lc[d] else per_dim_all_lc[d]
+        for d in range(ndim)
+    ]
+    filtered = {t for t in instance_tuples if all(t[d] in selected_lc[d] for d in range(ndim))}
+    if filtered != entry_tuples:
+        return _build_tuple_or_guard(var_domain, all_fixed)
+
     # AND all dimension guards together
     guard: Expr = dim_guards[0]
     for dg in dim_guards[1:]:

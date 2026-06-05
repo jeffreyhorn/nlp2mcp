@@ -187,6 +187,46 @@ class TestBuildSameasGuard:
         assert isinstance(guard, Binary)
         assert guard.op == "and"
 
+    def test_partial_both_dims_non_cartesian_falls_back_to_tuple_or(self):
+        """Strict-subset coverage in BOTH dims but non-Cartesian entries must
+        emit the exact OR-of-ANDs, NOT a per-dim Cartesian AND.
+
+        Regression for the cesam2 GDPDEF over-approximation: a scalar equation
+        references TSAM cells {(a,x),(b,x),(a,y)} of a 3x3 variable.  The per-dim
+        AND ``i in {a,b} and j in {x,y}`` ALSO selects the free cell (b,y) and
+        injects a spurious multiplier there.  Each dimension is a strict subset
+        (so ``dim_guards`` is non-empty — not the previously-handled
+        all-covered path), yet the Cartesian over-selects, so the guard must
+        fall back to the exact tuple-OR.
+        """
+        kkt = _make_kkt()
+        instances = [
+            (10, ("a", "x")),
+            (11, ("a", "y")),
+            (12, ("a", "z")),
+            (13, ("b", "x")),
+            (14, ("b", "y")),
+            (15, ("b", "z")),
+            (16, ("c", "x")),
+            (17, ("c", "y")),
+            (18, ("c", "z")),
+        ]
+        # Non-Cartesian: {(a,x),(b,x),(a,y)} — i in {a,b}, j in {x,y}, but (b,y) absent.
+        entries = [(0, 10), (1, 13), (2, 11)]
+        kkt.gradient.index_mapping.col_to_var = {c: ("v", idx) for c, idx in instances}
+
+        guard = _build_sameas_guard(("i", "j"), instances, entries, kkt)
+        assert guard is not None
+        # Must be an OR-of-ANDs over the 3 exact cells, not a Cartesian AND.
+        assert isinstance(guard, Binary)
+        assert guard.op == "or", f"Expected exact tuple-OR, got: {guard!r}"
+        # The spurious cell (b,y) must NOT be selectable: render and check there
+        # is no standalone "(b and y)" conjunction beyond the 3 real cells.
+        text = repr(guard)
+        assert (
+            text.count("sameas") == 6
+        ), f"Expected exactly 3 AND-pairs (6 sameas calls); got {text.count('sameas')}: {text}"
+
     def test_non_cartesian_entries_fallback_to_tuple_or(self):
         """Entries covering all per-dim values but not all tuples get OR-of-ANDs guard.
 

@@ -262,7 +262,7 @@ stat_err1(ii).. ((-1) * nu_SAMEQ(ii)$(ii(ii))) + sum(jj, ((((-1) * a(ii+7,jj)) *
 stat_err2(macro).. ((-1) * nu_GDPDEF)$(sameas(macro, 'gdp2')) + nu_ERROR2EQ(macro) + ((-1) * nu_GDPFCDEF)$(sameas(macro, 'gdpfc2')) =E= 0;
 stat_gdp.. nu_GDPDEF =E= 0;
 stat_gdpfc.. nu_GDPFCDEF =E= 0;
-stat_tsam(ii,jj).. (nu_SAMMAKE(ii,jj)$(ii(ii) and jj(jj)))$(nonzero(ii,jj)) + (nu_ROWSUM(ii)$(ii(ii)))$((not sameas(ii, "ROW"))) + nu_COLSUM(jj)$(jj(jj)) + nu_GDPDEF$((sameas(ii, 'ACT') or sameas(ii, 'FAC') or sameas(ii, 'GRE')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'GRE'))) + ((-1) * nu_GDPFCDEF)$(sameas(ii, 'FAC') and sameas(jj, 'ACT')) - piL_tsam(ii,jj) =E= 0;
+stat_tsam(ii,jj).. (nu_SAMMAKE(ii,jj)$(ii(ii) and jj(jj)))$(nonzero(ii,jj)) + (nu_ROWSUM(ii)$(ii(ii)))$((not sameas(ii, "ROW"))) + nu_COLSUM(jj)$(jj(jj)) + nu_GDPDEF$(sameas(ii, 'ACT') and sameas(jj, 'GRE') or sameas(ii, 'FAC') and sameas(jj, 'ACT') or sameas(ii, 'GRE') and sameas(jj, 'ACT') or sameas(ii, 'GRE') and sameas(jj, 'COM')) + ((-1) * nu_GDPFCDEF)$(sameas(ii, 'FAC') and sameas(jj, 'ACT')) - piL_tsam(ii,jj) =E= 0;
 stat_w1(ii,jwt).. log(w1(ii,jwt) + epsilon) - log(wbar1(ii,jwt) + epsilon) + w1(ii,jwt) * 1 / (w1(ii,jwt) + epsilon) + (((-1) * vbar1(ii,jwt)) * nu_ERROR1EQ(ii))$(ii(ii)) + nu_SUMW1(ii)$(ii(ii)) - piL_w1(ii,jwt) + piU_w1(ii,jwt) =E= 0;
 stat_w2(macro,jwt).. log(w2(macro,jwt) + epsilon) - log(wbar2(macro,jwt) + epsilon) + w2(macro,jwt) * 1 / (w2(macro,jwt) + epsilon) + ((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro) + nu_SUMW2(macro) - piL_w2(macro,jwt) + piU_w2(macro,jwt) =E= 0;
 stat_x(ii).. ((-1) * nu_SAMEQ(ii)$(ii(ii))) + sum(jj, ((((-1) * a(ii+7,jj)) * nu_SAMMAKE(ii,jj))$(ii(ii) and jj(jj)))$(nonzero(ii,jj))) - nu_COLSUM(ii)$(jj(ii)) =E= 0;
