@@ -995,6 +995,58 @@ def _find_dim_mismatch_pattern_c(
     return None
 
 
+def _b3_multiplier_ref_is_valid(
+    binding_symbol: str,
+    mult_declared_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> bool:
+    """Return True iff a 1-D ``nu_X(binding_symbol)`` reference is a valid GAMS
+    index against the multiplier's EMITTED declaration (PR #1417 review).
+
+    The B-3 builder references the multiplier at the variable's binding coordinate
+    without performing any subset→parent rename of its own, so the reference is
+    only safe when ``binding_symbol``'s set is a subset-or-equal of the
+    multiplier's emitted declared set.  Two wrinkles:
+
+    - ``mult_declared_domain`` is the multiplier object's domain at stationarity
+      time, which may be a DYNAMIC subset (e.g. ``jj``).  The emit declares a
+      dynamic-subset domain over its PARENT (#1327 / Error-187 avoidance — e.g.
+      ``nu_COLSUM(jj)`` is emitted as ``nu_COLSUM(j)``), so a dynamic
+      ``mult_declared_domain`` index is widened to its parent here first.
+    - ``binding_symbol`` may itself be a subset (cesam: ``nu_COLSUM(jj)`` against a
+      parent-declared multiplier) — valid because ``jj ⊆ j`` — or the full parent
+      (cesam2/mini) — valid because ``j ⊆ j``.
+
+    A STATIC subset multiplier declaration is NOT widened, so referencing the full
+    parent index against it would be a GAMS domain error → returns False (caller
+    falls back to the standard offset-groups path).
+    """
+    if len(mult_declared_domain) != 1:
+        return False
+    decl_canon = _resolve_alias_target(mult_declared_domain[0], model_ir)
+    decl_set = model_ir.sets.get(decl_canon)
+    # Widen a DYNAMIC subset (no static members) to its declared parent.
+    if (
+        decl_set is not None
+        and not getattr(decl_set, "members", None)
+        and getattr(decl_set, "domain", None)
+    ):
+        parent = decl_set.domain[0]
+        if isinstance(parent, str):
+            decl_canon = _resolve_alias_target(parent, model_ir)
+    # binding_symbol's set ⊆ decl_canon: equal, or its parent chain reaches it.
+    cur: str | None = _resolve_alias_target(binding_symbol, model_ir)
+    seen: set[str] = set()
+    while cur is not None and cur not in seen:
+        if cur == decl_canon:
+            return True
+        seen.add(cur)
+        s = model_ir.sets.get(cur)
+        parents = getattr(s, "domain", None) if s is not None else None
+        cur = parents[0].lower() if parents and isinstance(parents[0], str) else None
+    return False
+
+
 def _build_pattern_c_dim_mismatch_term(
     found: dict,
     var_name: str,
@@ -1002,6 +1054,7 @@ def _build_pattern_c_dim_mismatch_term(
     eq_domain: tuple[str, ...],
     mult_name: str,
     model_ir: ModelIR,
+    mult_declared_domain: tuple[str, ...],
 ) -> Expr | None:
     """Build the Sprint 27 #1381 Phase B-3 consolidated stationarity term for a
     dim-mismatch reducing ``Sum`` (cesam2):
@@ -1047,6 +1100,13 @@ def _build_pattern_c_dim_mismatch_term(
         return None  # only the single-eq-index case is supported (cesam2)
     eq_idx, binding_position = next(iter(bindings.items()))
     binding_symbol = var_domain[binding_position]
+
+    # Multiplier-declaration safety (PR #1417 review): only fire when the emitted
+    # ``nu_X(binding_symbol)`` reference is a valid index against the multiplier's
+    # declared domain; otherwise fall back to the standard offset-groups path
+    # (which performs the subset→parent rename + widening itself).
+    if not _b3_multiplier_ref_is_valid(binding_symbol, mult_declared_domain, model_ir):
+        return None
 
     # Only the ALIASED dim-mismatch needs this builder: cesam2's ``TSAM(i,j)``
     # has both domain coordinates resolving to the SAME canonical set (``j``
@@ -5257,6 +5317,13 @@ def _add_indexed_jacobian_terms(
                             )
                             if _dm is not None:
                                 _mn = name_func(eq_name_base)
+                                # Pass the multiplier's ACTUAL declared domain so the
+                                # builder can verify ``nu_X(parent)`` is a valid
+                                # reference. Subset-domain equations already declare
+                                # their multiplier over the parent (#1327 / Error-187
+                                # avoidance), e.g. ``COLSUM(jj)`` → ``nu_COLSUM(j)``;
+                                # the builder canonical-checks against this.
+                                _b3_decl_dom = multipliers[_mn].domain if _mn in multipliers else ()
                                 _b3_term = (
                                     _build_pattern_c_dim_mismatch_term(
                                         _dm,
@@ -5265,6 +5332,7 @@ def _add_indexed_jacobian_terms(
                                         eq_def_for_gate.domain or (),
                                         _mn,
                                         kkt.model_ir,
+                                        _b3_decl_dom,
                                     )
                                     if _mn in multipliers
                                     else None

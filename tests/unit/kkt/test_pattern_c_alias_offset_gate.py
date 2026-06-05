@@ -671,3 +671,43 @@ def test_helpers_unit_contracts():
         "IndexOffset.base; otherwise the gate's condition-link check has "
         "false negatives on nested lead/lag fingerprints."
     )
+
+
+@pytest.mark.unit
+def test_b3_multiplier_ref_validity_guard():
+    """PR #1417 review: `_b3_multiplier_ref_is_valid` must only let B-3 fire when
+    the emitted `nu_X(binding_symbol)` reference is a valid GAMS index against the
+    multiplier's declared domain — otherwise B-3 would bypass the subset→parent
+    rename/widening and emit a domain-erroring reference.
+
+    Cases:
+      - multiplier declared over the PARENT, reference the parent → valid (cesam2).
+      - multiplier declared over the PARENT, reference a subset → valid (cesam).
+      - multiplier declared over a DYNAMIC subset (no static members) → emit widens
+        it to the parent, so a parent reference is valid (mini-cesam2).
+      - multiplier declared over a STATIC subset (has members) → NOT widened, so a
+        parent reference is a domain error → invalid (fall back to standard path).
+    """
+    from src.ir.model_ir import ModelIR
+    from src.ir.symbols import AliasDef, SetDef
+    from src.kkt.stationarity import _b3_multiplier_ref_is_valid
+
+    ir = ModelIR()
+    ir.sets["i"] = SetDef(name="i", members=["a", "b", "c"])
+    # dynamic subset of i (no static members — populated at runtime)
+    ir.sets["ii"] = SetDef(name="ii", members=[], domain=("i",))
+    # static subset of i (has members)
+    ir.sets["istat"] = SetDef(name="istat", members=["a", "b"], domain=("i",))
+    ir.aliases["j"] = AliasDef(name="j", target="i")
+    ir.aliases["jj"] = AliasDef(name="jj", target="ii")
+
+    # parent-declared multiplier, parent reference (cesam2-style): valid
+    assert _b3_multiplier_ref_is_valid("j", ("j",), ir) is True
+    # parent-declared multiplier, subset reference (cesam-style jj ⊆ j): valid
+    assert _b3_multiplier_ref_is_valid("jj", ("j",), ir) is True
+    # dynamic-subset-declared multiplier, parent reference (emit widens jj→i): valid
+    assert _b3_multiplier_ref_is_valid("j", ("jj",), ir) is True
+    # STATIC-subset-declared multiplier, parent reference: INVALID → fall back
+    assert _b3_multiplier_ref_is_valid("j", ("istat",), ir) is False
+    # non-1-D declared domain → invalid (defensive)
+    assert _b3_multiplier_ref_is_valid("j", ("i", "j"), ir) is False
