@@ -2591,9 +2591,7 @@ def join_multiline_assignments(source: str) -> str:
                     and _next_line_is_operator_continuation(idx)
                 )
 
-                if (
-                    paren_depth != 0 or ends_with_assign or op_continuation
-                ) and not ends_with_semi:
+                if (paren_depth != 0 or ends_with_assign or op_continuation) and not ends_with_semi:
                     # Unbalanced parentheses, trailing =, or an operator-led
                     # continuation line follows - start continuation
                     in_continuation = True
