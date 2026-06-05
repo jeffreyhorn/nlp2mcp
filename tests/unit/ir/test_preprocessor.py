@@ -1061,20 +1061,27 @@ class TestJoinMultilineAssignments:
         assert "+ c)" in lines[0]
         assert "+ f)" in lines[0]
 
-    def test_balanced_parens_per_line_not_joined(self):
-        """Lines with balanced parens per line should NOT be joined.
+    def test_operator_led_continuation_balanced_parens_joined(self):
+        """Operator-led continuation lines (balanced parens per line) MUST be joined.
 
-        The parser already handles these via %ignore NEWLINE in the grammar.
-        The join_multiline_assignments function only needs to handle unbalanced cases.
+        Regression for the camcge ``qd(i)`` factor-drop: each line balances its
+        own parens and the first line lacks a terminating ``;``, but the
+        ``* (...)`` continuation lines carry the rest of the product.  The grammar
+        does NOT rescue this — its ``%ignore /(?m)^\\s*\\*.*$/`` comment rule treats
+        an *indented* ``*`` line as a comment and silently drops it — so the join
+        must happen here.  Previously this method asserted the (buggy) opposite.
         """
         source = """qd(i)  = (xllb(i,"rural")**alphl("rural",i))
        * (xllb(i,"urban-unsk")**alphl("urban-unsk",i))
        * (xllb(i,"urban-skil")**alphl("urban-skil",i))
        * (k0(i)**(1 - sum(lc, alphl(lc,i))));"""
         result = join_multiline_assignments(source)
-        # Should remain as 4 separate lines since parens are balanced per line
         lines = [line for line in result.split("\n") if line.strip()]
-        assert len(lines) == 4
+        assert len(lines) == 1, f"Expected the 4 factors joined onto one line; got:\n{result}"
+        assert lines[0].endswith(";")
+        # All four factors must survive.
+        for factor in ("rural", "urban-unsk", "urban-skil", "k0(i)"):
+            assert factor in lines[0], f"Factor {factor!r} dropped: {lines[0]}"
 
     def test_comment_line_not_joined(self):
         """Comment lines (starting with *) outside continuation should not be joined."""

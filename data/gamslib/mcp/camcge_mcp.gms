@@ -128,7 +128,7 @@ alphl(lc,i) = wdist(i,lc) * wa0(lc) * xle(i,lc) / (pva0(i) * xd0(i));
 delta(it)$(m0(it)) = pm0(it) / pd0(it) * (m0(it) / xxd0(it)) ** (1 + rhoc(it));
 delta(it) = delta(it) / (1 + delta(it));
 at(it) = xd0(it) / (gamma(it) * e0(it) ** rhot(it) + (1 - gamma(it)) * xxd0(it) ** rhot(it)) ** (1 / rhot(it));
-qd(i) = xllb(i,"rural") ** alphl("rural",i) * k0(i) ** (1 - sum(lc, alphl(lc,i)));
+qd(i) = xllb(i,"rural") ** alphl("rural",i) * xllb(i,"urban-unsk") ** alphl("urban-unsk",i) * xllb(i,"urban-skil") ** alphl("urban-skil",i) * k0(i) ** (1 - sum(lc, alphl(lc,i)));
 ac(it) = x0(it) / (delta(it) * m0(it) ** ((-1) * rhoc(it)) + (1 - delta(it)) * xxd0(it) ** ((-1) * rhoc(it))) ** ((-1) / rhoc(it));
 ad(i) = xd0(i) / qd(i);
 

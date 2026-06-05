@@ -2517,7 +2517,33 @@ def join_multiline_assignments(source: str) -> str:
     continuation_buffer: list[tuple[str, str]] = []
     paren_depth = 0
 
-    for line in lines:
+    def _next_line_is_operator_continuation(start_idx: int) -> bool:
+        """Look ahead past blank and column-1-comment lines: does the next
+        significant line begin with a binary operator (``+ - * /``)?
+
+        GAMS lets an assignment span lines with the operator leading the
+        continuation line, e.g.::
+
+            qd(i) = (xllb(i,"rural")**alphl("rural",i))
+                  * (xllb(i,"urban-unsk")**alphl("urban-unsk",i))
+                  * (k0(i)**(1 - sum(lc, alphl(lc,i))));
+
+        The first line has BALANCED parens and no trailing ``=``, so the
+        paren/`=`-based heuristic alone would treat it as complete and the
+        ``* (...)`` factors would be lost (camcge ``qd``).  An *indented* ``*``
+        is multiplication, not a comment (a comment needs ``*`` in column 1).
+        """
+        for j in range(start_idx + 1, len(lines)):
+            nxt = lines[j]
+            nxt_stripped = nxt.strip()
+            if not nxt_stripped:
+                continue
+            if nxt.startswith("*"):  # column-1 comment — skip, keep looking
+                continue
+            return nxt_stripped[0] in "+-*/" and not nxt_stripped.startswith("//")
+        return False
+
+    for idx, line in enumerate(lines):
         stripped = line.strip()
 
         # Skip empty lines - preserve them as-is
@@ -2557,8 +2583,19 @@ def join_multiline_assignments(source: str) -> str:
                 # Check if line ends with = (assignment continuation onto next line)
                 ends_with_assign = stripped.endswith("=") and not stripped.endswith("==")
 
-                if (paren_depth != 0 or ends_with_assign) and not ends_with_semi:
-                    # Unbalanced parentheses or trailing = and no semicolon - start continuation
+                # Operator-led continuation: a balanced, ;-less assignment whose
+                # next significant line starts with +/-/*// continues onto it.
+                op_continuation = (
+                    paren_depth == 0
+                    and not ends_with_assign
+                    and _next_line_is_operator_continuation(idx)
+                )
+
+                if (
+                    paren_depth != 0 or ends_with_assign or op_continuation
+                ) and not ends_with_semi:
+                    # Unbalanced parentheses, trailing =, or an operator-led
+                    # continuation line follows - start continuation
                     in_continuation = True
                     continuation_buffer = [(line, stripped)]
                 else:
@@ -2637,8 +2674,15 @@ def insert_missing_semicolons(source: str) -> str:
     for i, line in enumerate(lines):
         stripped = line.strip()
 
-        # Skip empty lines and comments
-        if not stripped or stripped.startswith("*"):
+        # Skip empty lines and comments. A GAMS full-line comment requires the
+        # ``*`` in COLUMN 1 — an *indented* ``*`` is a multiplication/continuation
+        # (e.g. ``q(i) = (a)\n      * (b)\n      * (c);``), NOT a comment. Using
+        # ``stripped.startswith("*")`` here misclassified such continuation lines
+        # as comments, so the look-back for "last content line before a block
+        # keyword" landed on the first line of the assignment and a spurious ``;``
+        # was inserted mid-expression — silently dropping the trailing factors
+        # (camcge ``qd(i)`` lost its urban-unsk/urban-skil terms).
+        if not stripped or line.startswith("*"):
             result.append(line)
             continue
 
