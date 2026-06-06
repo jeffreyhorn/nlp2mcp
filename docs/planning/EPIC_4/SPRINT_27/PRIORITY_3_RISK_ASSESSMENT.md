@@ -154,6 +154,25 @@ done
 
 **Redirected fix surface (for Sprint 27 REPLAN decision):** the predicate-guarded-Sum collapse must be designed at `stationarity.py`'s lead/lag-offset machinery (`_collect_lead_lag_offsets:95` → `_apply_offset_substitution:2433` / `_apply_alias_offset_to_deriv:2264`), where the 22 per-offset terms over the `tree(nn,n)` predicate should collapse into one guarded Sum. This is a different (and likely larger) effort than the §3.3 estimate, which assumed an AD-layer dispatch-site insertion.
 
+#### 🔴 BINDING VERDICT — Day 5 re-scoped Phase 0 (Option 1 re-plan, 2026-06-06): **re-REPLAN — defer #1390 to Sprint 28**
+
+Executed the re-scoped Phase 0 on the **correct** layer (the `stationarity.py` offset re-symbolization machinery, post-Day-4 the functions are at `_apply_offset_substitution:3257` / `_apply_alias_offset_to_deriv:3088` — line numbers shifted +~800 by the Day-4 Pattern-C / cesam2 work). Built an **env-guarded prototype** (`KAND_1390_PROTOTYPE`) intercepting the `(dembalx, y)` pair before the offset-groups enumeration and emitting the hand-derived collapse. **Prototype reverted — zero `src/` diff.**
+
+**Precise mechanism (refines §3.5 Day-0):** kand's back-link is `Sum(index_sets=('nn',), condition=SetMembershipTest(tree,(nn,n)), body=y(j,t-1,nn))` — a `$`-conditioned alias-Sum over the `n`-axis **combined with a genuine `t-1` lag on a *different* axis**. The Pattern-C gate (`if not body_has_index_offset:`) deliberately bails because `_body_has_index_offset_on_sets` sees the `t` lag (the guard that protects real lead/lag canaries — paklive/twocge/qabel/abel). So the `n`-axis `tree` predicate falls through to offset-enumeration, which `_apply_offset_substitution` expands into one `IndexOffset(n, k)` group per distinct `tree` ordinal difference → **22 phantom `lam_dembalx(j,t+1,n±k)` terms** (k=−8..+11).
+
+**The collapse IS achievable at this layer:**
+```
+stat_y(j,t,n).. ( prob(n)*f(j,t)*1$(tn(t,n))
+  + ((-1)*lam_dembalx(j,t,n))$(tn(t,n))
+  + (eps*sum(nn$(tree(n,nn)), lam_dembalx(j,t+1,nn)))$(ord(t) <= card(t)-1)
+  - piL_y(j,t,n) )$(tn(t,n)) =E= 0;
+```
+The 22 phantom terms collapse to **one** predicate-guarded Sum; the prototype compiles `action=c`-clean (0 errors); the direct/diagonal `-lam_dembalx(j,t,n)` term must be preserved alongside (dembalx references `y` BOTH directly and in the back-link — a multi-pattern case, a `continue` that skips it drops the diagonal).
+
+**Why re-REPLAN (the decisive empirical result):** the collapsed emit is **solution-equivalent** to the verbose 22-term enumeration — **both solve to MCP `cost = 195.0`, unchanged**, while the NLP/LP optimum is **2613.0**. kand stays `compare_objective_mismatch` *with the collapse applied*. **The phantom-term enumeration is therefore NOT the root cause of the kand mismatch** — the back-link contribution is reproduced faithfully by the collapse, so the real defect lies elsewhere (candidate surfaces for Sprint 28 re-diagnosis: the `bal(j,t,n)` / `x` stationarity, the `t-1`↔`t+1` lag duality, or the LP first-stage/recourse coupling — NOT the `tree`-predicate re-symbolization). The §3.5 premise that collapsing the 22 terms would flip kand mismatch→match is **disproven**.
+
+**Consequence (binding):** #1390's projected **+1 Match does NOT materialize**; defer #1390 to Sprint 28 with a carryforward filing (re-diagnose the true mismatch source). Days 6–7 are freed — redirect per the Option 1 §6.4 cascading rule (P7/P4, or the #1385 translate-time short-circuit). **Sprint 27 Match target → 65** (record in the Day 13 retrospective per §17).
+
 ---
 
 ## 4. Redesign B — #1385 srpchase Option 1 Short-Circuit Symbolic-Instance Handling
