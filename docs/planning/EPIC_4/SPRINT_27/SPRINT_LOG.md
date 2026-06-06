@@ -310,24 +310,33 @@ Full output: `/tmp/sprint27_day5_retest_audit.md` (`changed_emit_artifacts.py --
 
 ---
 
-## Day 6 — Priority 3 #1390 kand + parallel Priority 5 #1357 otpop
+## Day 6 — #1390 SKIP (re-REPLAN) + Sprint 28 carryforward + P5 #1357 confirmed + P7 #1387 redirect scoped
 
-**Date:** TBD
-**Status:** 🔵 NOT STARTED
+**Date:** 2026-06-06
+**Status:** 🟢 DONE (re-REPLAN branch) — #1390 implementation SKIPPED per the Day-5 re-scoped Phase 0 verdict; freed Day 6–7 budget redirected to P7 #1387 (scoped; implementation gated on user greenlight — see below).
 **Hours budgeted:** ≤ 12
-**Hours actual:** —
+
+### Gating decision
+Day 6 is **gated on the Day 5 #1390 re-scoped Phase 0**, which returned **re-REPLAN** (the 22→1 predicate-Sum collapse is achievable but solution-equivalent — MCP `cost` stays 195.0 ≠ NLP 2613.0; the phantom terms are NOT the mismatch cause). Per the Day 6 prompt + PLAN §8 "if it re-REPLAN'd": **skip the #1390 implementation rows, defer #1390 to Sprint 28, Match → 65, pull P7 #1387 / P4 forward into this slot.**
 
 ### Tasks completed
-- _(to be filled in)_
+- **#1390 Sprint 28 carryforward FILED** — `docs/issues/ISSUE_1390_*.md` status → DEFERRED to Sprint 28 with the Day-5 re-REPLAN evidence + re-diagnosis direction (true mismatch source is NOT the `tree`-predicate re-symbolization; candidates: `bal`/`x` stationarity, `t-1`↔`t+1` lag duality, LP first-stage/recourse coupling). `PRIORITY_3_RISK_ASSESSMENT.md` §3.5 (Day-5 binding block) + PLAN §17 risk row updated; **Match target 66 → 65** recorded. ✅
+- **P5 #1357 otpop — confirmed CLOSED (landed Day 5)**: the comp_up subset/superset narrowing committed Day 5 (`05589235`, merged PR #1418) is the same single fix for #1356 fawley AND #1357 otpop. `otpop_mcp.gms` on main carries `comp_up_x(t)$(xb(t) < inf).. xb(t) - x(t) =G= 0;` — `$171` cleared. Solve gap (locally infeasible) needs #1393+#1335 → Sprint 28. ✅
+- **P7 #1387 cclinpts redirect — SCOPED (Phase 0 diagnosis)**: confirmed both documented bugs against the current emit (`cclinpts_mcp.gms:133-134`) and the hand-derived KKT (`PRIORITY_7_FIX_SURFACE.md` §3.1):
+  - **Bug 1 (sign-flip):** `stat_b(j)` emits `((-1)*(((-1)*T1)+T2))` = `T1 - T2`; expected (maximize, post-Lagrangian-flip) is `-T1 + T2` — the exact negative, i.e. ONE spurious outer `(-1)`. Root site = the Lagrangian objective-gradient sign step (`stationarity.py:1352/1835`).
+  - **Bug 2 (term omission):** `stat_fb(j)` emits only 1 of 4 contributions (the 3 `j+1`-offset cross-terms from `∂/∂fb(j)` of products where `fb(j)` appears both directly and as `fb((j+1)-1)` are missing). Root site = `_diff_sum`/`_diff_binary` offset-substitution enumeration in `src/ad/derivative_rules.py`.
+  - **Readiness assessment → NOT a quick fix; HIGH blast radius.** Both sites are **shared across every model**: Bug 1 is the global Lagrangian sign convention (changing it risks flipping signs in all maximize/minimize stat equations); Bug 2 is the core AD product-rule offset enumeration (affects differentiation corpus-wide). `PRIORITY_7_FIX_SURFACE.md` §3.7 itself flags Sprint-28 escalation if Bug 2 is a broad AD-architecture issue. This is unlike the Day-4/5 tightly-gated, byte-stability-verifiable changes. **Recommendation: implement #1387 in a dedicated focused session** with full-corpus byte-stability + solve verification, rather than as a rushed tail-of-session global change. Surfaced to the user for a greenlight decision.
 
 ### Deliverables
-- _(to be filled in)_
+- `docs/issues/ISSUE_1390_*.md` Sprint 28 carryforward section; PLAN §17 + §3.5 Match→65 records.
+- This Day 6 SPRINT_LOG entry. No `src/` changes Day 6 (the #1390 prototype was reverted Day 5; #1387 implementation pending greenlight).
 
 ### KUs verified
-- _(target: KU 3.1)_
+- **KU 3.1** (#1390 kand) → re-verified on the redirected `stationarity.py` layer as **re-REPLAN** (the collapse is achievable but inert to the objective); deferred to Sprint 28.
 
 ### Carryforward to Day 7
-- _(to be filled in)_
+- **P7 #1387** scoped + Phase-0-diagnosed; awaiting greenlight for the (high-blast-radius) implementation. Per PLAN §8, #1385 translate-time-only short-circuit is the other Day-7 item.
+- #1390, #1393+#1335 → Sprint 28 carryforwards filed.
 
 ---
 
