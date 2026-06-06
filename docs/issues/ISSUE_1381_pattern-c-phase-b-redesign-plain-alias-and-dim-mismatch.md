@@ -17,6 +17,75 @@
 
 ---
 
+## Phase 0: Acceptance Gate
+
+**Authored:** 2026-06-03 (Sprint 27 Day 3, per PR20 codification). Full per-variant hand-derivations in `docs/planning/EPIC_4/SPRINT_27/DAY3_P2_PHASE0_NOTES.md`.
+**Target equation(s):** `stat_dk(i)` / `stat_xd(i)` / `stat_p(i)` (camcge, B-1 + B-2) and `stat_tsam(i,j)` (cesam2, B-3). `src/kkt/stationarity.py` is the fix surface, so Phase 0 is required (CONTRIBUTING.md §"Phase 0 Acceptance Gates").
+**Bug class:** plain-alias / dim-mismatch Pattern C consolidation. The Phase A `alias↔eq-domain` swap (`_apply_pattern_c_swap_to_term`) erases coefficient positional info via element-to-set (`imat(i,j)→imat(i,i)`) BEFORE the swap, then swaps to `imat(j,j)` (both coords wrong + `j` unbound). Phase B must build the consolidated term directly from the source `Sum` body (positions intact) BEFORE element-to-set. See §Root Cause below.
+
+### Hand-Derived KKT Shape
+
+For a source alias-Sum `eq(i).. … sum(j, COEFF·var(j)) …` with `Alias(i,j)` (canonical `i`), the stationarity cross-term in `stat_var(i)` is `sum_{j'} nu_eq(j')·∂eq(j')/∂var(i)`, which consolidates (rename `j'→j`) to **`sum(j, ±COEFF'·nu_eq(j))`**, where `COEFF'` is the source `COEFF` with argument positions preserved but the **sum-index slot rewritten to the stat/var index `i`** and the **eq-domain slot rewritten to the alias `j`**; the multiplier `nu_eq(j)` is alias-indexed.
+
+- **B-1 (plain-alias)** — `ieq(i).. id(i) =e= sum(j, imat(i,j)*dk(j))` → `stat_dk(i): sum(j, (-imat(j,i))·nu_ieq(j))`. (`imat(i,j)` [eq-slot `i`, sum-slot `j`] → `imat(j,i)`; RHS sum → sign `-`.)
+- **B-2 (eq-domain factor OUTSIDE the inner Sum)** — `prodinv(i).. pk(i)*dk(i) =e= kio(i)*savings - kio(i)*sum(j, dst(j)*p(j))` → `stat_p(i): dst(i) · sum(j, kio(j)·nu_prodinv(j))`. The var-side factor `dst(i)` (from the inner coefficient, sum-index→stat) stays OUTSIDE the new Sum; the eq-side factor `kio(i)→kio(j)` moves INSIDE.
+- **B-3 (dim-mismatch)** — `COLSUM(jj).. sum(ii, TSAM(ii,jj)) =e= Y(jj)` over 2-D `TSAM(i,j)` whose coords share canonical set `i` → `stat_tsam(i,j): … + nu_COLSUM(j)$(jj(j)) + …` (NO outer Sum; multiplier indexed by the var coordinate the eq-domain index binds; subset guard `$(jj(j))` since `jj ⊆ i`). Companion `ROWSUM(ii)` binds position 0 → `nu_ROWSUM(i)$(ii(i))`.
+
+### Expected Emit Pattern
+
+Regenerated `camcge_mcp.gms` (all 5 consolidation variants, single-Sum forms; phantom `nu_*(i±N)` enumeration gone):
+
+```gams
+sum(j, ((-1) * imat(j,i)) * nu_ieq(j))      * ieq    → stat_dk
+sum(j, ((-1) * io(j,i)) * nu_inteq(j))       * inteq  → stat_xd
+sum(j, ((-1) * io(i,j)) * nu_actp(j))        * actp   → stat_p
+sum(j, ((-1) * imat(i,j)) * nu_pkdef(j))     * pkdef  → stat_p
+dst(i) * sum(j, kio(j) * nu_prodinv(j))      * prodinv (B-2) → stat_p
+```
+
+Regenerated `cesam2_mcp.gms` (`stat_tsam(i,j)` body), with NO outer Sum and NO spurious `sameas` block on the COLSUM/ROWSUM terms:
+
+```gams
+… + nu_ROWSUM(i)$(ii(i)) + nu_COLSUM(j)$(jj(j)) + …
+```
+
+### Verification Methodology
+
+```bash
+# Regenerate camcge + cesam2 (correct pipeline: pass normalized_eqs to the Jacobian)
+.venv/bin/python -c "import sys; sys.setrecursionlimit(50000); \
+from src.ir.parser import parse_model_file; from src.ir.normalize import normalize_model; \
+from src.ad.gradient import compute_objective_gradient; from src.ad.constraint_jacobian import compute_constraint_jacobian; \
+from src.kkt.assemble import assemble_kkt_system; from src.emit.emit_gams import emit_gams_mcp; \
+m=parse_model_file('data/gamslib/raw/camcge.gms'); neq,_=normalize_model(m); \
+print(emit_gams_mcp(assemble_kkt_system(m, compute_objective_gradient(m), *compute_constraint_jacobian(m,neq))))" > /tmp/camcge_mcp.gms
+
+# B-1/B-2 consolidated forms present (expect 1 each), phantom enumeration gone (expect 0):
+grep -c 'dst(i) * sum(j, kio(j) * nu_prodinv(j))' /tmp/camcge_mcp.gms          # B-2 → 1
+grep -oE 'nu_(ieq|inteq|actp|pkdef|prodinv)\(i[+-][0-9]+\)' /tmp/camcge_mcp.gms | wc -l   # → 0
+grep -c 'imat(j,j)' /tmp/camcge_mcp.gms                                         # Phase-A mis-swap → 0
+
+# B-3 (cesam2): nu_COLSUM(j)$(jj(j)) + nu_ROWSUM(i)$(ii(i)); no sameas on those terms
+grep -oE 'nu_COLSUM\(j\)\$\(jj\(j\)\)|nu_ROWSUM\(i\)\$\(ii\(i\)\)' /tmp/cesam2_mcp.gms
+
+# GAMS compile-clean (camcge + cesam2 leave path_syntax_error):
+gams /tmp/camcge_mcp.gms action=c lo=2     # expect 0 error markers
+gams /tmp/cesam2_mcp.gms action=c lo=2      # expect 0 error markers
+```
+
+### PROCEED/REPLAN Signal
+
+**PROCEED** with Phase B implementation if ALL of:
+
+- (a) camcge emits all 5 consolidated single-Sum forms above; `nu_*(i±N)` phantom count = 0; `imat(j,j)` count = 0.
+- (b) cesam2 `stat_tsam` emits `nu_COLSUM(j)$(jj(j))` + `nu_ROWSUM(i)$(ii(i))` with no `sameas` block on those terms.
+- (c) camcge **and** cesam2 compile `action=c`-clean (0 error markers).
+- (d) Full-corpus golden regression: only the plain-alias / dim-mismatch canaries byte-shift, each verified mathematically correct against the hand-derived gradient; no `compare_match → compare_mismatch` regressions.
+
+**Outcome (Sprint 27 Day 4): PROCEED — all four criteria met.** B-1/B-2/B-3 landed; camcge + cesam2 compile clean; korcge stays `compare_match` (no regression). Residual `compare_mismatch`/`model_infeasible` on camcge/cesam2 trace to separate, non-Pattern-C issues (camcge singular Jacobian; cesam2 GDPDEF `sameas` over-approximation + objective-gradient — tracked separately).
+
+---
+
 ## Problem Summary
 
 Sprint 26 Day 1 Phase A landed the consolidated zero-offset Pattern C builder for launch (per Sprint 25 SPRINT_LOG.md Day 11 follow-up). The fix uses a **post-hoc alias↔eq-domain swap** on the auto Sum-wrapped term — works correctly for launch because the source body `sum(ss$ge(ss,s), iweight(ss) + ...)` has the alias `ss` and eq-domain `s` as **textually distinct** symbols.

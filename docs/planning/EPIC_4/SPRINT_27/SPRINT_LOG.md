@@ -216,25 +216,36 @@ path_syntax_error (`$141`×2 + `$257`). The #1398 (Phase A) gate does NOT fire (
 
 ## Day 4 — Priority 2 Pattern C Phase B implement
 
-**Date:** TBD
-**Status:** 🔵 NOT STARTED
+**Date:** 2026-06-04
+**Status:** 🟡 IN PROGRESS
 **Hours budgeted:** ≤ 12
 **Hours actual:** —
 
 ### Tasks completed
-- _(to be filled in during execution)_
+- **B-1 (plain-alias Pattern C consolidated builder)** landed (commit `2870b47e`): `_find_plain_alias_pattern_c` + `_build_plain_alias_consolidated_term` in `src/kkt/stationarity.py` consolidate plain-alias sums from the source body (camcge ieq/inteq/actp/pkdef). 23 goldens byte-shift, chenery reverted to baseline (single-pattern guard), zero solve regressions.
+- **Parameter-ordering $141 fix** (this entry): root-caused camcge's `path_syntax_error`. GAMS `name(args)` is ambiguous between function call and indexed param ref, so `gamma(it)` parsed as a `Call` node; `_collect_param_refs` (`src/emit/original_symbols.py`) only inspected `ParamRef`, so the `at → gamma` dependency edge was invisible to the statement-level topo sort and `at(it) = …gamma(it)…` emitted **before** `gamma(it) = …` → $141. Fix: also collect `Call.func` names (downstream consumers intersect with actual computed params, so genuine function names are harmless). **camcge: `path_syntax_error` → `model_infeasible`** (now compiles + translates cleanly). New unit test `test_call_node_param_dependency_ordered`.
 
-### Deliverables
-- _(to be filled in during execution)_
+### Verification
+- Corpus regen (153 models): only **camcge** golden changed (exact `at`-after-`gamma` reorder); all others byte-identical; the 7 CLI FAILs (danwolfe/decomp/mine/nemhaus/nonsharp/saras/trnspwl) are **pre-existing** (fail on baseline too).
+- `make typecheck && make format && make lint`: clean. `make test`: 4739 passed, 0 failed.
+
+### B-2 + B-3 + dynamic-subset (completed)
+- **B-2 (camcge `prodinv`)** — eq-domain factor `kio(i)` sits OUTSIDE the inner alias-Sum. New `_walk_b2_alias_sum`/`_find_b2_pattern_c` descend through `*` to capture outer factors; `_classify_eq_body_factors` splits eq-side (`kio(i)` → inside, reindexed `kio(j)`) from var-side (constants → outside); `_build_b2_consolidated_term` emits `dst(i) * sum(j, kio(j) * nu_prodinv(j))`. **camcge compiles `a=c`-clean**, all 5 variants correct, 0 phantom offsets.
+- **B-3 (cesam2 `COLSUM`/`ROWSUM`)** — dim-mismatch 1-D eq over 2-D var (both coords canonical `i`). New `_find_dim_mismatch_pattern_c`/`_build_pattern_c_dim_mismatch_term` infer the binding position from the source var-ref and emit `nu_COLSUM(j)$(jj(j))` / `nu_ROWSUM(i)$(ii(i))`, NO outer Sum; guarded to `=e=` + same-canonical-set (won't touch trnsport's `demand(j) =g=`). **Bonus: also fixes `iobalance`** — `stat_a(i,j)` collapses a 5-way phantom `sum(i__kkt1..5,…)$(sameas…)` block (+5 spurious aliases) to the correct `x(j)*nu_colbal(j)` (math-verified); iobalance now solves cleanly.
+- **Dynamic-subset assignment drop (cesam2 `wbar1`)** — `wbar1(ii,jwt1)=1/7` over the runtime-populated subset `ii(i)` was dropped (Issue #622 expansion path: empty static members → silent skip → $141). Fix in `src/ir/parser.py`: when an expand position has empty members, store as an expression so the solver expands the runtime set. (The earlier "loop-body drop" concern was a FALSE ALARM — `loop((ii,jj)$NONZERO,…)` bodies emit as a literal `loop` statement, not via `param.expressions`.)
+
+### Bucket outcomes (B-2/B-3)
+- **cesam2:** `path_syntax_error` → **solves** (`compare_mismatch`). **camcge:** `path_syntax_error` → `model_infeasible` (correct emit; residual infeasibility is separate numerics). **egypt:** `path_syntax_error` → `path_solve_license`. **iobalance:** now solves cleanly. Net: **+1 Solve** (cesam2), **−2 path_syntax_error** (camcge/cesam2/egypt all leave the bucket).
+- Corpus regen: 6 goldens changed (camcge/cesam2/cesam/egypt/iobalance/korcge), all verified; **korcge stays `compare_match`** (no regression); 7 CLI FAILs pre-existing. `make test`: 4744 passed, 0 failed. typecheck/format/lint clean.
 
 ### KUs verified
-- _(target: 2.1, 2.2, 2.3)_
+- KU 2.1 / 2.2 / 2.3 — Phase B-1/B-2/B-3 builders all landed and verified.
 
 ### Carryforward to Day 5
-- _(to be filled in during execution)_
+- camcge `model_infeasible` + cesam2 `compare_mismatch` are deeper numerics/emit issues beyond Pattern C consolidation (Sprint 28 candidates).
 
 ### PR opened
-- _(P2 #1381 PR link)_
+- PR #1417 (`planning/sprint27-day4-p2-phaseb`) — B-1 + ordering fix + B-2/B-3 + dynamic-subset.
 
 ---
 

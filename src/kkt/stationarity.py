@@ -516,6 +516,724 @@ def _apply_pattern_c_swap_to_term(
     return _rewrite_subset_to_superset(term, swap_map)
 
 
+def _find_varref_with_index(expr: Expr, var_name: str, index: str) -> VarRef | None:
+    """Return the first ``VarRef`` to ``var_name`` that uses the string
+    ``index`` as one of its indices, or ``None``."""
+    if isinstance(expr, VarRef) and expr.name.lower() == var_name.lower():
+        if any(isinstance(i, str) and i.lower() == index.lower() for i in expr.indices):
+            return expr
+        return None
+    for child in expr.children():
+        found = _find_varref_with_index(child, var_name, index)
+        if found is not None:
+            return found
+    return None
+
+
+def _find_plain_alias_pattern_c(
+    eq_def: EquationDef,
+    var_name: str,
+    var_canonical_sets: frozenset[str],
+    eq_domain_canonical: frozenset[str],
+    model_ir: ModelIR,
+) -> dict | None:
+    """Detect a plain-alias (no-``$``-condition) Pattern C alias-sum for
+    Sprint 27 #1381 Phase B-1.
+
+    The launch-shape gate (``_find_pattern_c_alias_sum``) requires a ``$``
+    condition.  camcge's plain-alias consolidations — e.g.
+    ``ieq(i).. id(i) =e= sum(j, imat(i,j)*dk(j));`` with ``Alias(i,j)`` — have
+    none, so they otherwise fall through to a phantom per-offset enumeration
+    (``nu_ieq(i±N)`` terms).  This locates the source ``Sum`` so the caller can
+    build the consolidated term directly from the source body (BEFORE
+    element-to-set, which would collapse ``imat(i,j) → imat(i,i)`` and break the
+    Phase A swap).
+
+    Matches a single-index ``Sum`` (no condition) whose iteration set is
+    canonical-shared by both the variable's domain and the equation's own
+    domain (plain-alias), reached through additive (+/-/unary-minus) structure
+    only — a bare ``sum`` term, NOT an eq-domain-factor-multiplied ``sum``
+    (that is Phase B-2) — with ``var(sum_idx)`` referenced in the body.
+
+    Returns ``{"sum_node", "sum_idx", "sign"}`` or ``None``.
+    """
+    if eq_def is None:
+        return None
+    common = var_canonical_sets & eq_domain_canonical
+    if not common:
+        return None
+    lhs, rhs = eq_def.lhs_rhs
+    for side, base_sign in ((lhs, 1.0), (rhs, -1.0)):
+        res = _walk_plain_alias_sum(side, var_name, common, model_ir, base_sign)
+        if res is not None:
+            # Single-pattern guard (avoid the Issue #1110 multi-pattern case):
+            # only consolidate when the variable appears EXCLUSIVELY inside the
+            # matched alias-Sum.  When it also appears elsewhere in the equation
+            # body — e.g. chenery's ``mb(i).. x(i) =g= ... + sum(j, aio(i,j)*x(j))``
+            # references ``x`` both diagonally AND in the sum — bypassing the
+            # offset-groups path (which carries the #1110 diagonal correction)
+            # would silently drop the diagonal term.  Fall back to the standard
+            # path in that case.
+            total = _count_varref(lhs, var_name) + _count_varref(rhs, var_name)
+            in_sum = _count_varref(res["sum_node"].body, var_name)
+            if total == in_sum:
+                return res
+            return None
+    return None
+
+
+def _count_varref(expr: Expr, var_name: str) -> int:
+    """Count references to ``var_name`` (any indices) in an expression tree."""
+    n = 1 if isinstance(expr, VarRef) and expr.name.lower() == var_name.lower() else 0
+    for child in expr.children():
+        n += _count_varref(child, var_name)
+    return n
+
+
+def _walk_plain_alias_sum(
+    expr: Expr,
+    var_name: str,
+    common_canonical: frozenset[str],
+    model_ir: ModelIR,
+    sign: float,
+) -> dict | None:
+    """Recursively locate the plain-alias ``Sum``, tracking the additive sign.
+    Descends ONLY through ``+``/``-``/unary-minus (a bare additive sum term); a
+    ``*`` with an index-bearing factor is Phase B-2, handled elsewhere."""
+    if isinstance(expr, Sum) and expr.condition is None and len(expr.index_sets) == 1:
+        sum_idx = expr.index_sets[0]
+        if _resolve_alias_target(sum_idx, model_ir) in common_canonical:
+            vref = _find_varref_with_index(expr.body, var_name, sum_idx)
+            if vref is not None and len(vref.indices) == 1:
+                return {"sum_node": expr, "sum_idx": sum_idx, "sign": sign}
+        return None
+    if isinstance(expr, Unary) and expr.op == "-":
+        return _walk_plain_alias_sum(expr.child, var_name, common_canonical, model_ir, -sign)
+    if isinstance(expr, Binary) and expr.op in ("+", "-"):
+        left = _walk_plain_alias_sum(expr.left, var_name, common_canonical, model_ir, sign)
+        if left is not None:
+            return left
+        right_sign = sign if expr.op == "+" else -sign
+        return _walk_plain_alias_sum(expr.right, var_name, common_canonical, model_ir, right_sign)
+    return None
+
+
+def _build_plain_alias_consolidated_term(
+    found: dict,
+    var_name: str,
+    var_domain: tuple[str, ...],
+    eq_domain: tuple[str, ...],
+    mult_name: str,
+    mult_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> Expr | None:
+    """Build the Sprint 27 #1381 Phase B-1 consolidated stationarity term from
+    the source ``Sum`` body:
+
+        ``Sum((alias,), (sign * COEFF') * nu_eq(alias))``
+
+    where ``COEFF'`` is ``∂(sum_body)/∂var(sum_idx)`` with the swap
+    ``{eq_idx → alias, sum_idx → stat_idx}`` applied (positions preserved,
+    BEFORE element-to-set), ``stat_idx`` is the variable's own domain index and
+    ``alias`` is the constraint-domain alias (= ``eq_idx`` when it differs from
+    ``stat_idx``, else the source ``sum_idx``).  1-D constraint / 1-D variable
+    only (camcge's B-1 variants); returns ``None`` otherwise so the caller
+    falls back to the standard path.
+    """
+    from src.ad.derivative_rules import differentiate_expr
+
+    if len(var_domain) != 1 or len(eq_domain) != 1 or len(mult_domain) != 1:
+        return None
+    sum_node: Sum = found["sum_node"]
+    sum_idx: str = found["sum_idx"]
+    sign: float = found["sign"]
+    stat_idx = var_domain[0]
+    eq_idx = eq_domain[0]
+    if eq_idx.lower() != stat_idx.lower():
+        alias = eq_idx
+    elif sum_idx.lower() != stat_idx.lower():
+        alias = sum_idx
+    else:
+        return None  # no distinct alias symbol available
+    coeff = differentiate_expr(sum_node.body, var_name, (sum_idx,), Config(model_ir=model_ir))
+    coeff = apply_simplification(coeff, "advanced")
+    if coeff is None or (isinstance(coeff, Const) and coeff.value == 0.0):
+        return None
+    swap_map = {eq_idx.lower(): alias, sum_idx.lower(): stat_idx}
+    coeff = _rewrite_subset_to_superset(coeff, swap_map)
+    if sign < 0:
+        coeff = Binary("*", Const(-1.0), coeff)
+    mult_ref = MultiplierRef(mult_name, (alias,))
+    return Sum((alias,), Binary("*", coeff, mult_ref))
+
+
+def _expr_references_index(expr: Expr, index: str) -> bool:
+    """Return True iff the literal string ``index`` appears anywhere in ``expr``
+    as an index of a ``VarRef``/``ParamRef``/``MultiplierRef``/``EquationRef``,
+    as a bare ``SymbolRef``, or as an ``IndexOffset.base``.
+
+    Unlike ``_expr_mentions_indices_canonical`` this matches the *exact* symbol
+    (case-insensitive), not the canonical set — used by the Sprint 27 #1381
+    Phase B-2 factor classifier to decide whether an outer factor carries the
+    equation-domain index ``i`` (e.g. ``kio(i)`` → eq-side) versus a constant.
+    """
+    from src.ir.ast import SymbolRef
+
+    target = index.lower()
+    if isinstance(expr, SymbolRef) and expr.name.lower() == target:
+        return True
+    if isinstance(expr, IndexOffset) and isinstance(expr.base, str) and expr.base.lower() == target:
+        return True
+    if isinstance(expr, (VarRef, ParamRef, MultiplierRef, EquationRef)):
+        for idx in expr.indices:
+            if isinstance(idx, str) and idx.lower() == target:
+                return True
+            if (
+                isinstance(idx, IndexOffset)
+                and isinstance(idx.base, str)
+                and idx.base.lower() == target
+            ):
+                return True
+    return any(_expr_references_index(c, index) for c in expr.children())
+
+
+def _flatten_mult(expr: Expr) -> list[Expr]:
+    """Flatten a left/right-nested ``Binary("*", ...)`` product into its list of
+    multiplicative factors. Non-``*`` nodes are returned as a singleton list."""
+    if isinstance(expr, Binary) and expr.op == "*":
+        return _flatten_mult(expr.left) + _flatten_mult(expr.right)
+    return [expr]
+
+
+def _walk_b2_alias_sum(
+    expr: Expr,
+    var_name: str,
+    common_canonical: frozenset[str],
+    model_ir: ModelIR,
+    sign: float,
+) -> dict | None:
+    """Locate a Sprint 27 #1381 Phase B-2 alias-``Sum`` — an alias-``Sum`` that is
+    *multiplied* by one or more eq-domain factors OUTSIDE the sum (e.g. camcge's
+    ``prodinv(i).. ... - kio(i)*sum(j, dst(j)*p(j))``).
+
+    Descends additive structure (``+``/``-``/unary-``-``) tracking the sign, and at
+    each multiplicative leaf flattens the product, requiring EXACTLY ONE plain
+    alias-``Sum`` factor (no condition, single canonical-shared index, ``var(sum_idx)``
+    in its body) and AT LEAST ONE outer factor — none of which may reference
+    ``var_name`` (otherwise the equation is a different, unsupported pattern).
+
+    Returns ``{"sum_node", "sum_idx", "sign", "outer_factors"}`` or ``None``. The
+    bare-sum (no outer factor) case is Phase B-1 — ``_walk_plain_alias_sum`` — and
+    is deliberately rejected here.
+    """
+    if isinstance(expr, Unary) and expr.op == "-":
+        return _walk_b2_alias_sum(expr.child, var_name, common_canonical, model_ir, -sign)
+    if isinstance(expr, Binary) and expr.op in ("+", "-"):
+        left = _walk_b2_alias_sum(expr.left, var_name, common_canonical, model_ir, sign)
+        if left is not None:
+            return left
+        right_sign = sign if expr.op == "+" else -sign
+        return _walk_b2_alias_sum(expr.right, var_name, common_canonical, model_ir, right_sign)
+    if isinstance(expr, Binary) and expr.op == "*":
+        factors = _flatten_mult(expr)
+        sum_factors: list[tuple[Sum, str]] = []
+        outer: list[Expr] = []
+        for f in factors:
+            if isinstance(f, Sum) and f.condition is None and len(f.index_sets) == 1:
+                sidx = f.index_sets[0]
+                if _resolve_alias_target(sidx, model_ir) in common_canonical:
+                    vref = _find_varref_with_index(f.body, var_name, sidx)
+                    if vref is not None and len(vref.indices) == 1:
+                        sum_factors.append((f, sidx))
+                        continue
+            outer.append(f)
+        if (
+            len(sum_factors) == 1
+            and outer
+            and all(not _expr_references_var(f, var_name) for f in outer)
+        ):
+            sum_node, sum_idx = sum_factors[0]
+            return {
+                "sum_node": sum_node,
+                "sum_idx": sum_idx,
+                "sign": sign,
+                "outer_factors": outer,
+            }
+    return None
+
+
+def _find_b2_pattern_c(
+    eq_def: EquationDef,
+    var_name: str,
+    var_canonical_sets: frozenset[str],
+    eq_domain_canonical: frozenset[str],
+    model_ir: ModelIR,
+) -> dict | None:
+    """Detect a Sprint 27 #1381 Phase B-2 pattern: a plain alias-``Sum`` multiplied
+    by an eq-domain factor that sits OUTSIDE the inner sum (camcge ``prodinv``).
+
+    Mirrors ``_find_plain_alias_pattern_c`` (B-1) — same canonical-overlap gate and
+    single-pattern guard (``var`` appears EXCLUSIVELY inside the matched sum) — but
+    via ``_walk_b2_alias_sum``, which descends through ``*`` to capture the outer
+    factors. Returns ``{"sum_node", "sum_idx", "sign", "outer_factors"}`` or ``None``.
+    """
+    if eq_def is None:
+        return None
+    # An equation-level domain condition (e.g. cesam's
+    # ``ROWSUM(ii)$(not sameas(ii,"ROW"))..``) restricts which multiplier
+    # instances exist; the consolidated builder does not propagate it, so fall
+    # back to the standard path (which carries the guard into every term).
+    if eq_def.condition is not None:
+        return None
+    common = var_canonical_sets & eq_domain_canonical
+    if not common:
+        return None
+    lhs, rhs = eq_def.lhs_rhs
+    for side, base_sign in ((lhs, 1.0), (rhs, -1.0)):
+        res = _walk_b2_alias_sum(side, var_name, common, model_ir, base_sign)
+        if res is not None:
+            total = _count_varref(lhs, var_name) + _count_varref(rhs, var_name)
+            in_sum = _count_varref(res["sum_node"].body, var_name)
+            if total == in_sum:
+                return res
+            return None
+    return None
+
+
+def _classify_eq_body_factors(
+    outer_factors: list[Expr],
+    eq_idx: str,
+    model_ir: ModelIR,
+) -> tuple[list[Expr], list[Expr]]:
+    """Split B-2 outer (multiplicative) factors into ``(eq_side, var_side)``.
+
+    - **eq-side**: factors referencing the equation-domain index (``kio(i)``) — these
+      vary per eq-instance, so they move INSIDE the consolidated ``Sum`` reindexed to
+      the alias (``kio(j)``).
+    - **var-side**: factors referencing neither (pure constants/scalars) — they are
+      common to every eq-instance, so they stay OUTSIDE the ``Sum``.
+
+    In the 1-D same-domain plain-alias case (camcge), the eq-domain index and the
+    variable's own domain index are the same symbol ``i``; the var-side coefficient
+    (e.g. ``dst(i)``) does NOT originate from an outer factor — it comes from the
+    inner-sum coefficient — so the only outer factors are eq-side or constant.
+    """
+    eq_side: list[Expr] = []
+    var_side: list[Expr] = []
+    for f in outer_factors:
+        if _expr_references_index(f, eq_idx):
+            eq_side.append(f)
+        else:
+            var_side.append(f)
+    return eq_side, var_side
+
+
+def _build_b2_consolidated_term(
+    found: dict,
+    var_name: str,
+    var_domain: tuple[str, ...],
+    eq_domain: tuple[str, ...],
+    mult_name: str,
+    mult_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> Expr | None:
+    """Build the Sprint 27 #1381 Phase B-2 consolidated stationarity term for an
+    eq-domain factor sitting OUTSIDE the inner alias-``Sum`` (camcge ``prodinv``):
+
+        ``<var-side> * Sum((alias,), <eq-side reindexed> * nu_eq(alias))``
+
+    e.g. ``dst(i) * sum(j, kio(j) * nu_prodinv(j))`` for
+    ``prodinv(i).. pk(i)*dk(i) =e= kio(i)*savings - kio(i)*sum(j, dst(j)*p(j))``.
+
+    - ``<var-side>`` = ``∂(inner sum body)/∂var(sum_idx)`` reindexed ``sum_idx → stat_idx``
+      (the inner coefficient ``dst(j) → dst(i)``), times any constant outer factors;
+      stays OUTSIDE the new Sum.
+    - ``<eq-side reindexed>`` = the eq-domain outer factors with ``eq_idx → alias``
+      (``kio(i) → kio(j)``); moves INSIDE the new Sum.
+    - multiplier ``nu_eq(alias)`` is alias-indexed.
+
+    1-D constraint / 1-D variable only; returns ``None`` otherwise so the caller
+    falls back to the standard offset-groups path.
+    """
+    from src.ad.derivative_rules import differentiate_expr
+
+    if len(var_domain) != 1 or len(eq_domain) != 1 or len(mult_domain) != 1:
+        return None
+    sum_node: Sum = found["sum_node"]
+    sum_idx: str = found["sum_idx"]
+    sign: float = found["sign"]
+    outer_factors: list[Expr] = found["outer_factors"]
+    stat_idx = var_domain[0]
+    eq_idx = eq_domain[0]
+    if eq_idx.lower() != stat_idx.lower():
+        alias = eq_idx
+    elif sum_idx.lower() != stat_idx.lower():
+        alias = sum_idx
+    else:
+        return None  # no distinct alias symbol available
+
+    # Inner coefficient: ∂(sum body)/∂var(sum_idx), reindexed sum_idx → stat_idx.
+    inner_coeff = differentiate_expr(sum_node.body, var_name, (sum_idx,), Config(model_ir=model_ir))
+    inner_coeff = apply_simplification(inner_coeff, "advanced")
+    if inner_coeff is None or (isinstance(inner_coeff, Const) and inner_coeff.value == 0.0):
+        return None
+    inner_coeff = _rewrite_subset_to_superset(inner_coeff, {sum_idx.lower(): stat_idx})
+
+    eq_side, var_side = _classify_eq_body_factors(outer_factors, eq_idx, model_ir)
+    if not eq_side:
+        return None  # no eq-domain factor to move inside → not a B-2 shape
+
+    # eq-side factors move inside the new Sum, reindexed eq_idx → alias.
+    eq_side_reindexed = [_rewrite_subset_to_superset(f, {eq_idx.lower(): alias}) for f in eq_side]
+    mult_ref = MultiplierRef(mult_name, (alias,))
+    inner: Expr = mult_ref
+    for f in eq_side_reindexed:
+        inner = Binary("*", f, inner)
+    new_sum = Sum((alias,), inner)
+
+    # var-side: inner coefficient * any constant outer factors, OUTSIDE the Sum.
+    outside: Expr = inner_coeff
+    for f in var_side:
+        outside = Binary("*", outside, f)
+    term: Expr = Binary("*", outside, new_sum)
+    if sign < 0:
+        term = Binary("*", Const(-1.0), term)
+    return term
+
+
+def _find_varref_arity(expr: Expr, var_name: str, arity: int) -> VarRef | None:
+    """Return the first ``VarRef`` to ``var_name`` with exactly ``arity`` indices."""
+    if (
+        isinstance(expr, VarRef)
+        and expr.name.lower() == var_name.lower()
+        and len(expr.indices) == arity
+    ):
+        return expr
+    for child in expr.children():
+        found = _find_varref_arity(child, var_name, arity)
+        if found is not None:
+            return found
+    return None
+
+
+def _walk_dim_mismatch_sum(
+    expr: Expr,
+    var_name: str,
+    var_arity: int,
+    model_ir: ModelIR,
+    sign: float,
+) -> dict | None:
+    """Locate a Sprint 27 #1381 Phase B-3 dim-mismatch reducing ``Sum`` — a
+    single-index ``Sum`` over one of a higher-dimensional variable's coordinates,
+    e.g. cesam2's ``COLSUM(jj).. sum(ii, TSAM(ii,jj)) =e= Y(jj)``.
+
+    Descends additive structure (``+``/``-``/unary-``-``) tracking the sign.
+    Returns ``{"sum_node", "sum_idx", "var_ref", "sign"}`` when the sum's body
+    references ``var_name`` at full arity with the sum index among its coordinates,
+    or ``None``.
+
+    Only UNCONDITIONAL ``Sum``s are matched (PR #1417 review): the B-3 builder
+    differentiates ``sum_node.body`` and intentionally emits no guard, so matching
+    a ``Sum`` with a ``$`` condition would silently drop that condition and emit an
+    unguarded multiplier term. Consistent with the B-1/B-2 walkers.
+    """
+    if isinstance(expr, Unary) and expr.op == "-":
+        return _walk_dim_mismatch_sum(expr.child, var_name, var_arity, model_ir, -sign)
+    if isinstance(expr, Binary) and expr.op in ("+", "-"):
+        left = _walk_dim_mismatch_sum(expr.left, var_name, var_arity, model_ir, sign)
+        if left is not None:
+            return left
+        right_sign = sign if expr.op == "+" else -sign
+        return _walk_dim_mismatch_sum(expr.right, var_name, var_arity, model_ir, right_sign)
+    if isinstance(expr, Sum) and expr.condition is None and len(expr.index_sets) == 1:
+        sum_idx = expr.index_sets[0]
+        vref = _find_varref_arity(expr.body, var_name, var_arity)
+        if vref is not None and any(
+            isinstance(i, str) and i.lower() == sum_idx.lower() for i in vref.indices
+        ):
+            return {"sum_node": expr, "sum_idx": sum_idx, "var_ref": vref, "sign": sign}
+    return None
+
+
+def _find_dim_mismatch_pattern_c(
+    eq_def: EquationDef,
+    var_name: str,
+    var_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> dict | None:
+    """Detect a Sprint 27 #1381 Phase B-3 dim-mismatch Pattern C — a constraint
+    whose domain has FEWER indices than the variable, reducing the variable over
+    one coordinate (cesam2 ``COLSUM(jj).. sum(ii, TSAM(ii,jj))`` / ``ROWSUM``).
+
+    Unlike B-1/B-2 the canonical-overlap test does not apply: the eq-domain index
+    (``jj``) resolves to a *subset* set (``ii``), not the variable's canonical full
+    set (``i``).  Detection keys purely on the structural dim-mismatch.  Returns
+    the ``_walk_dim_mismatch_sum`` dict or ``None``.
+    """
+    if eq_def is None:
+        return None
+    # Pattern C consolidation is an EQUALITY-constraint (nu_) multiplier fix.
+    # Restrict to ``=e=`` so the builder never intercepts an inequality whose
+    # standard path already emits the correct multiplier sign — e.g. trnsport's
+    # ``demand(j).. sum(i, x(i,j)) =g= b(j)`` is the same dim-mismatch SHAPE but
+    # its ``lam_demand`` term must stay ``-lam_demand(j)`` (#1381 regression guard).
+    if eq_def.relation != Rel.EQ:
+        return None
+    # An equation-level domain condition (cesam's
+    # ``ROWSUM(ii)$(not sameas(ii,"ROW"))..``) restricts which multiplier
+    # instances exist; the dim-mismatch builder emits NO guard of its own, so
+    # fall back to the standard path which carries the condition into the term.
+    if eq_def.condition is not None:
+        return None
+    eq_domain = eq_def.domain or ()
+    if not (0 < len(eq_domain) < len(var_domain)):
+        return None
+    lhs, rhs = eq_def.lhs_rhs
+    for side, base_sign in ((lhs, 1.0), (rhs, -1.0)):
+        res = _walk_dim_mismatch_sum(side, var_name, len(var_domain), model_ir, base_sign)
+        if res is not None:
+            total = _count_varref(lhs, var_name) + _count_varref(rhs, var_name)
+            in_sum = _count_varref(res["sum_node"].body, var_name)
+            if total == in_sum:
+                return res
+            return None
+    return None
+
+
+def _b3_multiplier_ref_is_valid(
+    binding_symbol: str,
+    mult_declared_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> bool:
+    """Return True iff a 1-D ``nu_X(binding_symbol)`` reference is a valid GAMS
+    index against the multiplier's EMITTED declaration (PR #1417 review).
+
+    The B-3 builder references the multiplier at the variable's binding coordinate
+    without performing any subset→parent rename of its own, so the reference is
+    only safe when ``binding_symbol``'s set is a subset-or-equal of the
+    multiplier's emitted declared set.  Two wrinkles:
+
+    - ``mult_declared_domain`` is the multiplier object's domain at stationarity
+      time, which may be a DYNAMIC subset (e.g. ``jj``).  The emit declares a
+      dynamic-subset domain over its PARENT (#1327 / Error-187 avoidance — e.g.
+      ``nu_COLSUM(jj)`` is emitted as ``nu_COLSUM(j)``), so a dynamic
+      ``mult_declared_domain`` index is widened to its parent here first.
+    - ``binding_symbol`` may itself be a subset (cesam: ``nu_COLSUM(jj)`` against a
+      parent-declared multiplier) — valid because ``jj ⊆ j`` — or the full parent
+      (cesam2/mini) — valid because ``j ⊆ j``.
+
+    A STATIC subset multiplier declaration is NOT widened, so referencing the full
+    parent index against it would be a GAMS domain error → returns False (caller
+    falls back to the standard offset-groups path).
+    """
+    if len(mult_declared_domain) != 1:
+        return False
+    decl_canon = _resolve_alias_target(mult_declared_domain[0], model_ir)
+    decl_set = model_ir.sets.get(decl_canon)
+    # Widen a DYNAMIC subset (no static members) to its declared parent.
+    if (
+        decl_set is not None
+        and not getattr(decl_set, "members", None)
+        and getattr(decl_set, "domain", None)
+    ):
+        parent = decl_set.domain[0]
+        if isinstance(parent, str):
+            decl_canon = _resolve_alias_target(parent, model_ir)
+    # binding_symbol's set ⊆ decl_canon: equal, or its parent chain reaches it.
+    cur: str | None = _resolve_alias_target(binding_symbol, model_ir)
+    seen: set[str] = set()
+    while cur is not None and cur not in seen:
+        if cur == decl_canon:
+            return True
+        seen.add(cur)
+        s = model_ir.sets.get(cur)
+        parents = getattr(s, "domain", None) if s is not None else None
+        cur = parents[0].lower() if parents and isinstance(parents[0], str) else None
+    return False
+
+
+def _build_pattern_c_dim_mismatch_term(
+    found: dict,
+    var_name: str,
+    var_domain: tuple[str, ...],
+    eq_domain: tuple[str, ...],
+    mult_name: str,
+    model_ir: ModelIR,
+    mult_declared_domain: tuple[str, ...],
+) -> Expr | None:
+    """Build the Sprint 27 #1381 Phase B-3 consolidated stationarity term for a
+    dim-mismatch reducing ``Sum`` (cesam2):
+
+        ``stat_tsam(i,j).. ... + nu_COLSUM(j)$(jj(j)) + ...``     (NO outer Sum)
+
+    The eq-domain index binds one coordinate of the higher-dim variable; the
+    multiplier is indexed by the variable-domain symbol at that binding position
+    and guarded by the eq-domain set's subset membership.  No outer ``Sum`` is
+    needed — the alias is already controlled by the stationarity equation's own
+    variable-domain index.  ``COLSUM`` binds position 1 (``→ nu_COLSUM(j)$(jj(j))``),
+    its companion ``ROWSUM`` binds position 0 (``→ nu_ROWSUM(i)$(ii(i))``).
+
+    Supports a single eq-domain index (cesam2); returns ``None`` otherwise so the
+    caller falls back to the standard path.
+    """
+    from src.ad.derivative_rules import differentiate_expr
+
+    if not (0 < len(eq_domain) < len(var_domain)):
+        return None
+    sum_node: Sum = found["sum_node"]
+    sum_idx: str = found["sum_idx"]
+    var_ref: VarRef = found["var_ref"]
+    sign: float = found["sign"]
+    src_indices = var_ref.indices
+
+    def _pos(sym: str) -> int | None:
+        for k, ix in enumerate(src_indices):
+            if isinstance(ix, str) and ix.lower() == sym.lower():
+                return k
+        return None
+
+    sum_position = _pos(sum_idx)
+    if sum_position is None:
+        return None
+    bindings: dict[str, int] = {}
+    for eqi in eq_domain:
+        p = _pos(eqi)
+        if p is None:
+            return None
+        bindings[eqi] = p
+    if len(bindings) != 1:
+        return None  # only the single-eq-index case is supported (cesam2)
+    eq_idx, binding_position = next(iter(bindings.items()))
+    binding_symbol = var_domain[binding_position]
+
+    # Multiplier-declaration safety (PR #1417 review): only fire when the emitted
+    # ``nu_X(binding_symbol)`` reference is a valid index against the multiplier's
+    # declared domain; otherwise fall back to the standard offset-groups path
+    # (which performs the subset→parent rename + widening itself).
+    if not _b3_multiplier_ref_is_valid(binding_symbol, mult_declared_domain, model_ir):
+        return None
+
+    # Only the ALIASED dim-mismatch needs this builder: cesam2's ``TSAM(i,j)``
+    # has both domain coordinates resolving to the SAME canonical set (``j``
+    # aliases ``i``), which is exactly where element-to-set collapses and emits a
+    # spurious ``sameas`` block.  When the sum-position and binding-position
+    # coordinates resolve to DISTINCT canonical sets (e.g. trnsport's
+    # ``x(i,j)`` over genuinely different sets ``i``/``j``), the standard path
+    # already binds correctly — fall back to it.
+    if _resolve_alias_target(var_domain[sum_position], model_ir) != _resolve_alias_target(
+        binding_symbol, model_ir
+    ):
+        return None
+
+    # Coefficient: ∂(sum body)/∂var(source indices), reindexed source → stat.
+    coeff = differentiate_expr(sum_node.body, var_name, src_indices, Config(model_ir=model_ir))
+    coeff = apply_simplification(coeff, "advanced")
+    if coeff is None or (isinstance(coeff, Const) and coeff.value == 0.0):
+        return None
+    coeff = _rewrite_subset_to_superset(
+        coeff,
+        {
+            sum_idx.lower(): var_domain[sum_position],
+            eq_idx.lower(): var_domain[binding_position],
+        },
+    )
+
+    mult = MultiplierRef(mult_name, (binding_symbol,))
+    if isinstance(coeff, Const) and coeff.value == 1.0:
+        term: Expr = mult
+    else:
+        term = Binary("*", coeff, mult)
+
+    # NOTE: the subset-membership guard ($(jj(j))) is intentionally NOT applied
+    # here.  The multiplier ``nu_COLSUM`` is declared over the subset domain, so
+    # the downstream domain-guarding pass adds ``$(jj(j))`` from the multiplier's
+    # own declared domain — emitting it here too would double-guard and would
+    # break ROWSUM's byte-identical match against the pre-existing emit.
+    if sign < 0:
+        term = Binary("*", Const(-1.0), term)
+    return term
+
+
+def _collect_varrefs_arity(expr: Expr, var_name: str, arity: int) -> list[VarRef]:
+    """Return ALL ``VarRef`` nodes to ``var_name`` with exactly ``arity`` indices."""
+    out: list[VarRef] = []
+    if (
+        isinstance(expr, VarRef)
+        and expr.name.lower() == var_name.lower()
+        and len(expr.indices) == arity
+    ):
+        out.append(expr)
+    for child in expr.children():
+        out.extend(_collect_varrefs_arity(child, var_name, arity))
+    return out
+
+
+def _dual_binding_map(
+    eq_def: EquationDef | None,
+    var_name: str,
+    var_domain: tuple[str, ...],
+    mult_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> dict[str, str] | None:
+    """Sprint 27 #1381 follow-up — the DUAL of Phase B-3 (cesam2 ``stat_y``).
+
+    A constraint whose domain has MORE indices than the variable references the
+    variable DIRECTLY (not inside an inner reducing sum) at one of its
+    coordinates, e.g. ``SAMCOEF(ii,jj)$NONZERO.. TSAM(ii,jj) =e= A(ii,jj)*Y(jj)``
+    — ``Y`` is 1-D, the constraint is 2-D, and ``Y(jj)`` binds the constraint's
+    ``jj`` coordinate.
+
+    The standard disjoint-sum path sums the multiplier over BOTH constraint
+    coordinates (``sum((ii,jj), -A(ii,jj)*nu_SAMCOEF(ii,jj))``) because the
+    aliased domain (``ii``/``jj`` both resolve to canonical ``i``) makes the
+    coordinates look name-disjoint from the variable's ``i``.  The correct term
+    BINDS the matched coordinate to the stationarity index and sums over only the
+    remaining coordinate(s): ``sum(ii, -A(ii,i)*nu_SAMCOEF(ii,i))``.
+
+    Returns a rename map ``{mult_idx_lower: var_domain_idx}`` for the bound
+    coordinates, or ``None`` when this aliased dim-mismatch signature is absent
+    (so the caller keeps the existing sum-over-all behaviour).
+    """
+    if eq_def is None:
+        return None
+    if not (0 < len(var_domain) < len(mult_domain)):
+        return None
+    mult_lower = {d.lower() for d in mult_domain if isinstance(d, str)}
+    binding: dict[str, str] = {}
+    found_ref = False
+    for side in eq_def.lhs_rhs:
+        for vref in _collect_varrefs_arity(side, var_name, len(var_domain)):
+            found_ref = True
+            local: dict[str, str] = {}
+            for k, ix in enumerate(vref.indices):
+                if not isinstance(ix, str):
+                    return None  # offset index — out of scope
+                if ix.lower() in mult_lower:
+                    local[ix.lower()] = var_domain[k]
+            if not local:
+                # The variable's coordinate is not one of the constraint's own
+                # domain indices (e.g. it appears inside an inner sum) — the
+                # sum-over-all behaviour is correct, leave it alone.
+                return None
+            for key, val in local.items():
+                if key in binding and binding[key] != val:
+                    return None  # inconsistent binding across references
+                binding[key] = val
+    if not found_ref or not binding:
+        return None
+    # Aliased-ambiguity gate: at least one SUMMED constraint coordinate must
+    # share a canonical set with a BOUND coordinate — the exact signature where
+    # name-matching mis-binds (cesam2: summed ``ii`` and bound ``jj`` both
+    # canonical ``i``).  When the summed and bound coordinates are genuinely
+    # different sets the standard path already binds correctly; leave it alone to
+    # contain the blast radius.
+    bound_canons = {_resolve_alias_target(k, model_ir) for k in binding}
+    summed = [d for d in mult_domain if isinstance(d, str) and d.lower() not in binding]
+    if not any(_resolve_alias_target(d, model_ir) in bound_canons for d in summed):
+        return None
+    return binding
+
+
 def _build_lead_lag_condition_expr(
     lead_offsets: dict[str, int],
     lag_offsets: dict[str, int],
@@ -1851,6 +2569,83 @@ def _group_variables_by_name(
     return groups
 
 
+def _objective_varref_positional_rename(
+    model_ir: ModelIR, var_name: str, domain: tuple[str, ...]
+) -> dict[str, str]:
+    """Positional index rename from the OBJECTIVE's reference of ``var_name`` to
+    the variable's own domain (#1381 follow-up: aliased multi-D objective gradient).
+
+    When the objective sums a variable over SUBSET indices that share a common
+    parent set — e.g. cesam2's ``sum((ii,jj,jwt3)$nonzero(ii,jj),
+    W3(ii,jj,jwt3)*…)`` where ``ii(i)`` and ``jj`` (alias of ``ii``) are BOTH
+    dynamic subsets of the same root set ``i`` — the gradient term carries the
+    objective's domain condition ``$nonzero(ii,jj)`` with those subset symbols.
+    ``_replace_indices_in_expr`` only rewrites element labels, so the subset set
+    names survive and become "uncontrolled"; the superset-finding wrap then binds
+    EVERY such index to the FIRST domain superset (``i``), COLLAPSING the guard to
+    ``nonzero(i,i)`` (diagonal) and dropping the gradient on every off-diagonal
+    cell.
+
+    The fix is narrow and COLLISION-driven: an objective index is renamed to its
+    positional domain coordinate (``ii→i`` at position 0, ``jj→j`` at position 1)
+    ONLY when another objective index shares the same root set but maps to a
+    DIFFERENT domain coordinate — i.e. exactly the multi-index collapse above.
+
+    A LONE subset index is deliberately left untouched so its load-bearing
+    ``sum(l__$sameas(l__,n), …)`` self-sum survives.  That self-sum maps the
+    parent stationarity index back onto a valid subset member, which is required
+    whenever the gradient references a subset-domain symbol — e.g. harker's
+    ``coefs(l,*)`` with ``l ⊂ n`` (renaming ``l→n`` would emit ``coefs(n,*)`` →
+    GAMS ``$171`` domain violation), or cesam2's own ``jwt3 ⊂ jwt`` dimension
+    (no collision, so untouched).  Returns the rename map (only entries that
+    actually change), or ``{}``.
+    """
+    if model_ir.objective is None or model_ir.objective.expr is None or not domain:
+        return {}
+    n = len(domain)
+    result: list[dict[str, str] | None] = [None]
+
+    def _root(s: str) -> str:
+        """Resolve ``s`` to its ultimate parent set: alias target, then the
+        single parent of a 1-D (dynamic) subset, then alias-resolve again."""
+        canon = _resolve_alias_target(s, model_ir)
+        sdef = model_ir.sets.get(canon)
+        if sdef is not None and getattr(sdef, "domain", None) and len(sdef.domain) == 1:
+            return _resolve_alias_target(str(sdef.domain[0]), model_ir)
+        return canon
+
+    def _walk(e: Expr) -> None:
+        if result[0] is not None:
+            return
+        if (
+            isinstance(e, VarRef)
+            and e.name.lower() == var_name.lower()
+            and len(e.indices) == n
+            and all(isinstance(ix, str) for ix in e.indices)
+        ):
+            idxs = [str(ix) for ix in e.indices]
+            roots = [_root(ix) for ix in idxs]
+            rename: dict[str, str] = {}
+            for k, ix in enumerate(idxs):
+                if ix.lower() == domain[k].lower():
+                    continue
+                # Rename only to break a same-root collision across positions
+                # that target DISTINCT domain coordinates (the collapse bug).
+                colliding = any(
+                    kk != k and roots[kk] == roots[k] and domain[kk].lower() != domain[k].lower()
+                    for kk in range(n)
+                )
+                if colliding:
+                    rename[ix.lower()] = domain[k]
+            result[0] = rename
+            return
+        for ch in e.children():
+            _walk(ch)
+
+    _walk(model_ir.objective.expr)
+    return result[0] or {}
+
+
 def _build_indexed_stationarity_expr(
     kkt: KKTSystem,
     var_name: str,
@@ -1876,6 +2671,16 @@ def _build_indexed_stationarity_expr(
     # Build gradient term: ∂f/∂x(i)
     # We use VarRef with domain indices instead of element labels
     expr = _build_indexed_gradient_term(kkt, var_name, domain, instances)
+
+    # #1381 follow-up: map the objective reference's SUBSET indices to the
+    # variable's domain coordinates POSITIONALLY (ii→i, jj→j) BEFORE the
+    # superset-wrap below.  Otherwise an objective domain guard like
+    # ``$nonzero(ii,jj)`` carried on the gradient has both ii and jj bound to the
+    # first superset (``i``), collapsing to ``nonzero(i,i)`` and dropping the
+    # gradient on off-diagonal cells of an aliased 2-D variable (cesam2 stat_w3).
+    obj_rename = _objective_varref_positional_rename(kkt.model_ir, var_name, domain)
+    if obj_rename:
+        expr = _rewrite_subset_to_superset(expr, obj_rename)
 
     # Issue #949 / #1010: The gradient term may contain free indices not in
     # the variable domain (e.g. subset index 't' when domain uses 'tt').
@@ -3635,6 +4440,26 @@ def _build_sameas_guard(
         # exact entry tuples.
         return _build_tuple_or_guard(var_domain, all_fixed)
 
+    # Issue #1381 follow-up: even when some dimension is a strict subset, the
+    # per-dimension AND (a Cartesian product of the per-dim selections) can
+    # OVER-select when the entry tuples aren't Cartesian.  cesam2's GDPDEF
+    # references TSAM cells {(fac,act),(gov,act),(act,gov),(gov,com)}; the
+    # per-dim guard ``i in {fac,gov,act} and j in {act,gov,com}`` also selects
+    # the FREE cell (act,com), injecting a spurious nu_GDPDEF into
+    # stat_tsam(act,com) and corrupting the KKT.  Verify the Cartesian
+    # selection, intersected with the instance space, picks EXACTLY the entry
+    # tuples; otherwise emit the exact OR-of-ANDs.  (Mirror of the check in
+    # _build_sameas_guard_for_instances.)
+    entry_tuples = {tuple(v.lower() for v in idx) for idx in all_fixed}
+    instance_tuples = {tuple(v.lower() for v in idx) for _, idx in instances}
+    selected_lc = [
+        per_dim_entry_lc[d] if per_dim_entry_lc[d] < per_dim_all_lc[d] else per_dim_all_lc[d]
+        for d in range(ndim)
+    ]
+    filtered = {t for t in instance_tuples if all(t[d] in selected_lc[d] for d in range(ndim))}
+    if filtered != entry_tuples:
+        return _build_tuple_or_guard(var_domain, all_fixed)
+
     # AND all dimension guards together
     guard: Expr = dim_guards[0]
     for dg in dim_guards[1:]:
@@ -4577,6 +5402,116 @@ def _add_indexed_jacobian_terms(
                         )
                         if pattern_c_info is not None:
                             allow_nonzero_offsets = False
+                        else:
+                            # Sprint 27 #1381 Phase B-1: plain-alias Pattern C
+                            # (no ``$`` condition — the launch-shape gate above
+                            # didn't fire). Build the consolidated multiplier
+                            # term directly from the source Sum body (BEFORE
+                            # element-to-set, which would collapse the coefficient
+                            # alias coordinate), then skip the offset-groups
+                            # enumeration for this (eq, var) pair. Without this,
+                            # camcge's ``sum(j, imat(i,j)*dk(j))`` emits a phantom
+                            # ``nu_ieq(i±N)`` enumeration → path_syntax_error.
+                            _plain = _find_plain_alias_pattern_c(
+                                eq_def_for_gate,
+                                var_name,
+                                variable_canonical_sets,
+                                eq_domain_canonical,
+                                kkt.model_ir,
+                            )
+                            if _plain is not None:
+                                _mn = name_func(eq_name_base)
+                                _b1_term = (
+                                    _build_plain_alias_consolidated_term(
+                                        _plain,
+                                        var_name,
+                                        var_domain,
+                                        eq_def_for_gate.domain or (),
+                                        _mn,
+                                        mult_domain,
+                                        kkt.model_ir,
+                                    )
+                                    if _mn in multipliers
+                                    else None
+                                )
+                                if _b1_term is not None:
+                                    expr = Binary("+", expr, _b1_term)
+                                    continue
+
+                            # Sprint 27 #1381 Phase B-2: eq-domain factor OUTSIDE
+                            # the inner alias-Sum — camcge's ``prodinv(i)..
+                            # pk(i)*dk(i) =e= kio(i)*savings - kio(i)*sum(j,
+                            # dst(j)*p(j))``. The standard path enumerates a
+                            # phantom ``kio(i±N)*dst(i)*nu_prodinv(i±N)`` group;
+                            # consolidate it to ``dst(i)*sum(j, kio(j)*
+                            # nu_prodinv(j))`` directly from the source body.
+                            _b2 = _find_b2_pattern_c(
+                                eq_def_for_gate,
+                                var_name,
+                                variable_canonical_sets,
+                                eq_domain_canonical,
+                                kkt.model_ir,
+                            )
+                            if _b2 is not None:
+                                _mn = name_func(eq_name_base)
+                                _b2_term = (
+                                    _build_b2_consolidated_term(
+                                        _b2,
+                                        var_name,
+                                        var_domain,
+                                        eq_def_for_gate.domain or (),
+                                        _mn,
+                                        mult_domain,
+                                        kkt.model_ir,
+                                    )
+                                    if _mn in multipliers
+                                    else None
+                                )
+                                if _b2_term is not None:
+                                    expr = Binary("+", expr, _b2_term)
+                                    continue
+
+                            # Sprint 27 #1381 Phase B-3: dim-mismatch reducing
+                            # Sum — cesam2's ``COLSUM(jj).. sum(ii, TSAM(ii,jj))
+                            # =e= Y(jj)`` (1-D eq over a 2-D variable). The
+                            # eq-domain index binds ONE coordinate of TSAM; the
+                            # standard element-to-set path mis-binds it (position
+                            # 0) and emits a spurious ``sameas`` block. Build the
+                            # consolidated ``nu_COLSUM(j)$(jj(j))`` term directly
+                            # (NO outer Sum). Canonical-overlap does not apply here
+                            # (``jj`` resolves to subset ``ii``, not ``i``), so this
+                            # is detected structurally, independent of B-1/B-2.
+                            _dm = _find_dim_mismatch_pattern_c(
+                                eq_def_for_gate,
+                                var_name,
+                                var_domain,
+                                kkt.model_ir,
+                            )
+                            if _dm is not None:
+                                _mn = name_func(eq_name_base)
+                                # Pass the multiplier's ACTUAL declared domain so the
+                                # builder can verify ``nu_X(parent)`` is a valid
+                                # reference. Subset-domain equations already declare
+                                # their multiplier over the parent (#1327 / Error-187
+                                # avoidance), e.g. ``COLSUM(jj)`` → ``nu_COLSUM(j)``;
+                                # the builder canonical-checks against this.
+                                _b3_decl_dom = multipliers[_mn].domain if _mn in multipliers else ()
+                                _b3_term = (
+                                    _build_pattern_c_dim_mismatch_term(
+                                        _dm,
+                                        var_name,
+                                        var_domain,
+                                        eq_def_for_gate.domain or (),
+                                        _mn,
+                                        kkt.model_ir,
+                                        _b3_decl_dom,
+                                    )
+                                    if _mn in multipliers
+                                    else None
+                                )
+                                if _b3_term is not None:
+                                    expr = Binary("+", expr, _b3_term)
+                                    continue
 
                 # Issue #1045: Sub-group entries by their index offset pattern.
                 # For lead/lag equations like totalcap(t).. k(t+1) = k(t)*spda + kn(t+1),
@@ -5472,9 +6407,33 @@ def _add_indexed_jacobian_terms(
                             # No sum needed - the i index is shared
                             pass
                         elif not mult_domain_set.intersection(var_domain_set):
-                            # Truly disjoint: constraint has indices independent
-                            # of variable. Need to sum over the constraint's domain.
-                            term = Sum(mult_domain, term)
+                            # Truly disjoint by NAME: constraint has indices that
+                            # look independent of the variable. Usually we sum over
+                            # the constraint's whole domain. But an aliased
+                            # higher-dim constraint may BIND the variable to a
+                            # specific coordinate via its body — cesam2 stat_y:
+                            # SAMCOEF(ii,jj).. ... =e= A(ii,jj)*Y(jj) binds jj→i,
+                            # so only the remaining coordinate (ii) is summed. The
+                            # aliased domain (ii/jj both canonical i) hides this
+                            # from name-based matching (#1381 follow-up).
+                            dual_binding = _dual_binding_map(
+                                eq_def,
+                                var_name,
+                                var_domain,
+                                mult_domain,
+                                kkt.model_ir,
+                            )
+                            if dual_binding:
+                                term = _rewrite_subset_to_superset(term, dual_binding)
+                                reduced_sum_indices = tuple(
+                                    d
+                                    for d in mult_domain
+                                    if isinstance(d, str) and d.lower() not in dual_binding
+                                )
+                                if reduced_sum_indices:
+                                    term = Sum(reduced_sum_indices, term)
+                            else:
+                                term = Sum(mult_domain, term)
                         else:
                             # Partial overlap: domains share some indices but each has unique ones
                             # This happens when a constraint sums over a variable using different indices.
@@ -5574,34 +6533,62 @@ def _add_indexed_jacobian_terms(
             mult_name = name_func(eq_name_base)
 
             if mult_name in multipliers:
-                mult_ref = MultiplierRef(mult_name, ())
-                # Replace indices in derivative using element_to_set mapping
-                # Issue #620: Pass var_domain as equation_domain for subset substitution
-                indexed_deriv = _replace_indices_in_expr(
-                    derivative, var_domain, element_to_set, kkt.model_ir, equation_domain=var_domain
-                )
-                term = Binary("*", indexed_deriv, mult_ref)
-                # Issue #670: scalar constraints have no multiplier domain, so any
-                # index in the derivative that is not in var_domain is uncontrolled.
-                # Wrap such indices in a Sum to avoid GAMS Error 149.
-                free_in_deriv = _collect_free_indices(indexed_deriv, kkt.model_ir)
-                # Use lowercase comparison to match _collect_free_indices output,
-                # consistent with the indexed-constraint branch above.
-                uncontrolled = free_in_deriv - {d.lower() for d in var_domain}
-                if uncontrolled:
-                    sum_indices = tuple(sorted(uncontrolled))
-                    term = Sum(sum_indices, term)
+                # Issue #1381 follow-up (cesam2 GDPDEF / bug class): a scalar
+                # constraint can reference an indexed variable at multiple cells
+                # with DIFFERENT derivatives. GDPDEF's residual is
+                #   MACROV(gdp2) - TSAM(fac,act) - TSAM(gov,act)
+                #                + TSAM(act,gov) - TSAM(gov,com)
+                # so ∂/∂TSAM is -1 for (fac,act)/(gov,act)/(gov,com) but +1 for
+                # (act,gov). Emitting a single term from entries[0]'s derivative
+                # collapses these per-cell signs/coeffs onto one representative,
+                # corrupting stat_tsam for the cells whose sign was dropped.
+                # Group entries by derivative structure and emit one guarded term
+                # per group. When all entries share one structure (the common
+                # case) this reduces to the original single-term behavior.
+                deriv_groups: dict[str, list[tuple[int, int]]] = {}
+                for _rid, _cid in entries:
+                    _d = jacobian.get_derivative(_rid, _cid)
+                    deriv_groups.setdefault(_derivative_structure_key(_d), []).append((_rid, _cid))
 
-                # Issue #767 / #764: Guard multiplier terms with $(sameas(...))
-                # when only a subset of the indexed variable's instances have a
-                # nonzero Jacobian entry.  Handles both single-entry (.fx) and
-                # multi-entry (scalar equation summing over a subset) cases.
-                if var_domain and len(entries) < len(instances):
-                    sameas_guard = _build_sameas_guard(var_domain, instances, entries, kkt)
-                    if sameas_guard is not None:
-                        term = DollarConditional(value_expr=term, condition=sameas_guard)
+                for _grp_entries in deriv_groups.values():
+                    _grp_rid, _grp_cid = _grp_entries[0]
+                    _grp_deriv = jacobian.get_derivative(_grp_rid, _grp_cid)
+                    mult_ref = MultiplierRef(mult_name, ())
+                    # Replace indices in derivative using element_to_set mapping
+                    # Issue #620: Pass var_domain as equation_domain for subset
+                    # substitution
+                    indexed_deriv = _replace_indices_in_expr(
+                        _grp_deriv,
+                        var_domain,
+                        element_to_set,
+                        kkt.model_ir,
+                        equation_domain=var_domain,
+                    )
+                    term = Binary("*", indexed_deriv, mult_ref)
+                    # Issue #670: scalar constraints have no multiplier domain, so
+                    # any index in the derivative that is not in var_domain is
+                    # uncontrolled. Wrap such indices in a Sum to avoid GAMS Error
+                    # 149.
+                    free_in_deriv = _collect_free_indices(indexed_deriv, kkt.model_ir)
+                    # Use lowercase comparison to match _collect_free_indices
+                    # output, consistent with the indexed-constraint branch above.
+                    uncontrolled = free_in_deriv - {d.lower() for d in var_domain}
+                    if uncontrolled:
+                        sum_indices = tuple(sorted(uncontrolled))
+                        term = Sum(sum_indices, term)
 
-                expr = Binary("+", expr, term)
+                    # Issue #767 / #764: Guard multiplier terms with $(sameas(...))
+                    # when only a subset of the indexed variable's instances have a
+                    # nonzero Jacobian entry.  Handles both single-entry (.fx) and
+                    # multi-entry (scalar equation summing over a subset) cases.
+                    # With per-derivative grouping, each group restricts to its own
+                    # cells so signs stay separated.
+                    if var_domain and len(_grp_entries) < len(instances):
+                        sameas_guard = _build_sameas_guard(var_domain, instances, _grp_entries, kkt)
+                        if sameas_guard is not None:
+                            term = DollarConditional(value_expr=term, condition=sameas_guard)
+
+                    expr = Binary("+", expr, term)
 
     return expr
 

@@ -43,6 +43,8 @@ Scalars
 u(i) = sum(j, z1(i,j));
 v(j) = sum(i, z1(i,j));
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -56,7 +58,8 @@ v(j) = sum(i, z1(i,j));
 
 Variables
     obj
-    nu_colbal(i)
+    nu_rowbal(i)
+    nu_colbal(j)
 ;
 
 Positive Variables
@@ -98,6 +101,7 @@ Equations
     comp_lo_a(i,j)
     colbal(j)
     defrsd
+    rowbal(i)
 ;
 
 * ============================================
@@ -105,14 +109,15 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_a(i,j).. a0(i,j) * 2 * (a(i,j) + a0(i,j)) / sqr(a0(i,j)) + x(i) * nu_colbal(i) - piL_a(i,j) =E= 0;
+stat_a(i,j).. a0(i,j) * 2 * (a(i,j) + a0(i,j)) / sqr(a0(i,j)) + x(j) * nu_rowbal(i) + x(j) * nu_colbal(j) - piL_a(i,j) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_a(i,j).. a(i,j) - 1e-05 =G= 0;
 
 * Original equality equations
+rowbal(i).. sum(j, a(i,j) * x(j)) =E= u(i);
 colbal(j).. sum(i, a(i,j) * x(j)) =E= v(j);
-defrsd.. obj =E= sum((i,j), sqr(a(i,j) + a0(i,j)) / a0(i,j));
+defrsd.. obj =E= sum((i,j)$(a0(i,j) <> 0), sqr(a(i,j) + a0(i,j)) / a0(i,j));
 
 
 * ============================================
@@ -132,6 +137,7 @@ Model mcp_model /
     stat_a.a,
     colbal.nu_colbal,
     defrsd.obj,
+    rowbal.nu_rowbal,
     comp_lo_a.piL_a
 /;
 

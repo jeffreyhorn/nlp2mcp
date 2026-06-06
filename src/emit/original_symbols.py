@@ -1356,10 +1356,25 @@ def _expr_contains_varref_attribute(expr: Expr) -> bool:
 
 
 def _collect_param_refs(expr: Expr) -> set[str]:
-    """Collect all ParamRef names from an expression tree and its index expressions."""
+    """Collect all ParamRef names from an expression tree and its index expressions.
+
+    GAMS ``name(args)`` is syntactically ambiguous between a function call and an
+    indexed parameter reference, so an indexed parameter read (e.g. ``gamma(it)``)
+    can be parsed as a ``Call`` node rather than a ``ParamRef``.  We therefore also
+    collect ``Call.func`` names: every downstream consumer intersects this result
+    with a relevant symbol set before using it — the eligible computed parameters
+    in ``_topological_sort_params`` (``eligible_lower``) or the statement-written
+    targets in ``_topological_sort_statements`` (``writable``) — so a genuine
+    function name (``exp``, ``log``) that is neither an eligible parameter nor a
+    writable target is dropped and harmless, while a ``Call`` that is really a
+    parameter reference is correctly recognised as a dependency for statement
+    ordering.
+    """
     refs: set[str] = set()
     if isinstance(expr, ParamRef):
         refs.add(expr.name.lower())
+    elif isinstance(expr, Call):
+        refs.add(expr.func.lower())
     for child in expr.children():
         refs.update(_collect_param_refs(child))
     if isinstance(expr, (VarRef, ParamRef, MultiplierRef)):
