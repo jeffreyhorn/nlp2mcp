@@ -1,12 +1,24 @@
 # cclinpts: stat_b / stat_fb condition-guard or sign bug producing ~70% rel_diff (post-Pattern-A reclassification)
 
 **GitHub Issue:** [#1387](https://github.com/jeffreyhorn/nlp2mcp/issues/1387)
-**Status:** OPEN (filed Sprint 26 Day 6, 2026-05-12)
-**Severity:** Medium — produces a valid MCP solve but with ~70% rel_diff vs the NLP optimum; not a Pattern A AD-layer bug.
+**Status:** OPEN — **Sprint 27 Day 6 diagnosis re-scopes this (the documented two-bug framing is partly wrong); see "Day 6 diagnosis" below.**
+**Severity:** Medium — MCP cold-solves to a spurious degenerate KKT point (ObjV≈0 vs NLP −3.0011); not a Pattern A AD-layer bug.
 **Date:** 2026-05-12
-**Last Updated:** 2026-05-27 (Sprint 27 Prep Task 2 — Phase 0 acceptance-gate section authored per PR20 codification)
+**Last Updated:** 2026-06-06 (Sprint 27 Day 6 — empirical diagnosis: sign "bug" is a misdiagnosis; cross-term form confirmed via residual check; non-convex warm-start need identified)
 **Affected Models:** cclinpts
-**Target Sprint:** Sprint 27 (3–6h investigation + fix)
+**Target Sprint:** ~~Sprint 27~~ → likely **Sprint 28** (the legitimate fix is a high-blast-radius AD change that, alone, does not deliver the match — non-convex warm-start also required; see Day 6 diagnosis).
+
+## Sprint 27 Day 6 diagnosis (2026-06-06) — empirical; re-scopes the §3.3 two-bug framing
+
+Implementation was greenlit Day 6. Before editing `src/`, traced the actual AD gradient + ran an eliminated-KKT residual check at the NLP optimum. Findings (NO `src/` changes made — all probing on scratch copies):
+
+1. **Bug 1 (sign-flip) is a MISDIAGNOSIS.** The outer `(-1)` in `stat_b`/`stat_fb` is the **standard maximize negation** (`src/ad/gradient.py:265-267`, applied to every MAX model); combined with the inner `(-1)` from `d(b_M − b_j)/db_j` it yields the CORRECT `T1 − T2` signs under the codebase's `stat = −∇f + Jᵀν = 0` convention. `PRIORITY_7_FIX_SURFACE.md` §3.1/§3.3 hand-derived the **un-negated** `∂ObjV` and so flagged a sign error that does not exist. **Do NOT touch the sign logic — it would break every maximize model.**
+2. **Bug 2 (missing j+1 offset cross-terms) is REAL, and the corrected form is CONFIRMED.** The per-instance objective gradient omits the `j+1`-offset contributions (where the wrt-variable appears as `fb((j+1)−1)`/`b((j+1)−1)` inside the sum). Hand-patching the emit with the missing **negated** terms — `stat_b += 0.5*(fb(j+1)−fb(j))*1$(not first(j+1))`; `stat_fb += −(b('s30')−b(j))*1$(not last(j)) + (b('s30')−b(j+1))*1$(not last(j+1)) + 0.5*(b(j+1)−b(j))*1$(not first(j+1))` — makes the NLP optimum satisfy the eliminated KKT condition `objgrad_b(j) + b(j)^(−γ)·objgrad_fb(j) = 0` to **max|residual| = 5e-8**. So the cross-term form is correct.
+3. **BUT the cross-term fix does NOT make cclinpts MATCH in the cold pipeline.** cclinpts is **non-convex with a spurious degenerate KKT point** (b≈const ⇒ all difference-based gradient terms vanish ⇒ trivially stationary for ANY version of the stat equations, ObjV=0). PATH converges there from BOTH the cold `b=5` start AND a near-optimal ramp start. So §3.6 PROCEED criterion #5 ("MODEL STATUS 1, rel_diff < 1%") **cannot be met by the gradient fix alone** — cclinpts additionally needs an **nlp-presolve warm start** (start PATH at the NLP optimum, which the fix makes a valid KKT point).
+
+**Re-scoped verdict:** the legitimate fix is the **objective-gradient offset cross-term enumeration** (Bug 2) — a **high-blast-radius AD change** (affects every model with an offset-indexed sum in the objective; needs full-corpus byte-stability + re-solve verification) which **on its own does not deliver the cclinpts +1 Solve/Match** (the non-convex warm-start is also required). Recommend implementing the AD cross-term fix as its own focused, fully-verified PR and handling the cclinpts warm-start separately — likely **Sprint 28** given the combined blast radius + non-convexity. The Day-6 probe established the correct target shape + residual-verified acceptance, so the implementation is well-specified for that session.
+
+### (prior framing — superseded by the Day 6 diagnosis above)
 **Cross-references:**
 - Predecessor: #1145 (now CLOSED 2026-05-12 via Sprint 26 Day 6 — see [docs/issues/completed/ISSUE_1145_cclinpts-alias-mismatch.md](completed/ISSUE_1145_cclinpts-alias-mismatch.md)).
 - Reclassification source: [docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md](../planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md) §"Issue #1145".
