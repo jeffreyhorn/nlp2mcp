@@ -931,6 +931,11 @@ def _walk_dim_mismatch_sum(
     Returns ``{"sum_node", "sum_idx", "var_ref", "sign"}`` when the sum's body
     references ``var_name`` at full arity with the sum index among its coordinates,
     or ``None``.
+
+    Only UNCONDITIONAL ``Sum``s are matched (PR #1417 review): the B-3 builder
+    differentiates ``sum_node.body`` and intentionally emits no guard, so matching
+    a ``Sum`` with a ``$`` condition would silently drop that condition and emit an
+    unguarded multiplier term. Consistent with the B-1/B-2 walkers.
     """
     if isinstance(expr, Unary) and expr.op == "-":
         return _walk_dim_mismatch_sum(expr.child, var_name, var_arity, model_ir, -sign)
@@ -940,7 +945,7 @@ def _walk_dim_mismatch_sum(
             return left
         right_sign = sign if expr.op == "+" else -sign
         return _walk_dim_mismatch_sum(expr.right, var_name, var_arity, model_ir, right_sign)
-    if isinstance(expr, Sum) and len(expr.index_sets) == 1:
+    if isinstance(expr, Sum) and expr.condition is None and len(expr.index_sets) == 1:
         sum_idx = expr.index_sets[0]
         vref = _find_varref_arity(expr.body, var_name, var_arity)
         if vref is not None and any(

@@ -2517,6 +2517,18 @@ def join_multiline_assignments(source: str) -> str:
     continuation_buffer: list[tuple[str, str]] = []
     paren_depth = 0
 
+    # Precompute, for each line, the index of the next "significant" line — one
+    # that is non-blank and not a column-1 comment.  A single O(n) backward pass
+    # so the operator-continuation lookahead below is O(1) per call instead of an
+    # independent forward scan (PR #1417 review: avoids quadratic behavior on
+    # large sources with many balanced assignment lines).
+    next_significant: list[int] = [-1] * len(lines)
+    _seen_significant = -1
+    for j in range(len(lines) - 1, -1, -1):
+        next_significant[j] = _seen_significant
+        if lines[j].strip() and not lines[j].startswith("*"):
+            _seen_significant = j
+
     def _next_line_is_operator_continuation(start_idx: int) -> bool:
         """Look ahead past blank and column-1-comment lines: does the next
         significant line begin with a binary operator (``+ - * /``)?
@@ -2532,16 +2544,14 @@ def join_multiline_assignments(source: str) -> str:
         paren/`=`-based heuristic alone would treat it as complete and the
         ``* (...)`` factors would be lost (camcge ``qd``).  An *indented* ``*``
         is multiplication, not a comment (a comment needs ``*`` in column 1).
+
+        Uses the precomputed ``next_significant`` lookup (O(1) per call).
         """
-        for j in range(start_idx + 1, len(lines)):
-            nxt = lines[j]
-            nxt_stripped = nxt.strip()
-            if not nxt_stripped:
-                continue
-            if nxt.startswith("*"):  # column-1 comment — skip, keep looking
-                continue
-            return nxt_stripped[0] in "+-*/" and not nxt_stripped.startswith("//")
-        return False
+        j = next_significant[start_idx]
+        if j == -1:
+            return False
+        nxt_stripped = lines[j].strip()
+        return nxt_stripped[0] in "+-*/" and not nxt_stripped.startswith("//")
 
     for idx, line in enumerate(lines):
         stripped = line.strip()
