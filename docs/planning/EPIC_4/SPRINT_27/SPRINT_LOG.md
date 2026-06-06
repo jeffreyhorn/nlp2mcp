@@ -251,37 +251,62 @@ path_syntax_error (`$141`×2 + `$257`). The #1398 (Phase A) gate does NOT fire (
 
 ## Day 5 — Checkpoint 1: Pipeline Retest + Priority 5 start + Priority 3 first sub-priority
 
-**Date:** TBD
-**Status:** 🔵 NOT STARTED
+**Date:** 2026-06-06
+**Status:** 🟡 CHECKPOINT MISS (Solve 105 < 106, Match 61 < 62) — both shortfalls traced to **camcge = model_infeasible** (known singular-Jacobian CGE degeneracy from Day 4), NOT a P1 #1398 regression (qdemo7 recovered). Branch `planning/sprint27-day5-checkpoint1`.
 **Hours budgeted:** ≤ 10
-**Hours actual:** —
 
-### Checkpoint 1 metrics (from full pipeline retest)
-| Metric | Day 0 | Day 5 | Δ |
-|---|---|---|---|
-| Solve | 103 | TBD | TBD |
-| Match | 59 | TBD | TBD |
-| path_syntax_error | 14 | TBD | TBD |
-| Translate | 131 | TBD | TBD |
-| Tests | 4,737 | TBD | TBD |
+### Checkpoint 1 metrics (from full pipeline retest, anchor 148662a5 → HEAD)
+| Metric | Day 0 | Day 5 | Δ | Checkpoint target |
+|---|---|---|---|---|
+| Solve | 103 | **105** | +2 | ≥ 106 ❌ (miss 1) |
+| Match | 59 | **61** | +2 | ≥ 62 ❌ (miss 1) |
+| path_syntax_error | 14 | **9** | −5 | (improving) |
+| Translate | 131 | **132** | +1 | — |
+| Tests | 4,737 | **4,758** | +21 | green (4,754 Day-4 merge + 4 comp_up Day-5) |
+
+Solve breakdown: 132 translate-success → 105 solve-success; failures = model_infeasible 5, path_syntax_error 9, path_solve_terminated 5, path_solve_license 8.
+
+### Checkpoint verdict — the +1 shortfall is camcge, NOT qdemo7
+The criterion warned "Solve = 105 indicates qdemo7 did not recover." **That is NOT what happened.** Per-model truth from `gamslib_status.json`:
+- **qdemo7** → solve=model_optimal, **compare_objective_match** ✅ (P1 #1398 gain HELD: +1 Solve, +1 Match).
+- **cesam2** → solve=model_optimal, **compare_objective_match** ✅ (P2 Day-4 gain: +1 Solve, +1 Match).
+- **camcge** → solve=**model_infeasible** ✗ — translates `action=c`-clean but the MCP is infeasible (singular-Jacobian CGE degeneracy; documented Day 4 as separate from Pattern C). **This is the missing +1 on BOTH Solve and Match.** Not a regression — camcge's Pattern-C emit is correct; the infeasibility is a distinct CGE-degeneracy issue → Sprint 28 candidate.
+
+So the realized gains are P1 qdemo7 (+1/+1) + P2 cesam2 (+1/+1) = +2/+2; camcge's projected +1/+1 did not land. The checkpoint formula (which assumed camcge would solve) misses by exactly that 1.
 
 ### PR22 audit-script Day 5 output
-_(paste `/tmp/sprint27_day5_retest.md` here)_
+Full output: `/tmp/sprint27_day5_retest_audit.md` (`changed_emit_artifacts.py --since-commit 148662a5 --mode retest`). Range `148662a5..HEAD`, 7 commits, 49 emit changes (34 unique paths). Confirms the expected artifacts: **cesam2 + cesam + ganges + gangesx** (Day-4 cesam2 bug-class), **camcge** (Pattern-C B-1/B-2/B-3 + `$141` + `*`-continuation), the **#1398 cohort** (dinam/egypt/fawley/ferts/ganges/gangesx/qdemo7/shale/srpchase), and the B-1 plain-alias canary set (abel/quocge/korcge/iobalance/…). ✅ all expected P1 #1398 + P2 #1381 artifacts present.
 
 ### Bucket-provenance updates (per PR17)
-_(table: model → Day 0 bucket → Day 5 bucket; rationale)_
+| Model | Day 0 bucket | Day 5 bucket | Rationale |
+|---|---|---|---|
+| qdemo7 | path_solve (#1398-affected) | **compare_match** | P1 #1398 gate fix (merged Day 3) — recovered + matches |
+| cesam2 | path_syntax_error | **compare_match** | P2 Day-4 KKT bug class (#1 objgrad + #2 dual dim-mismatch + #3 scalar sign) — solves to NLP optimum 0.50796 |
+| camcge | path_syntax_error | **model_infeasible** | P2 Pattern-C B-1/B-2 unblocked the `$141`/syntax → compiles clean; MCP infeasible from singular-Jacobian CGE degeneracy (separate issue → Sprint 28) |
+| fawley | path_syntax_error | **model_infeasible** | P5 #1356 comp_up narrowing (Day 5) cleared the `$171`; cold MCP locally infeasible (needs further work) |
+| otpop | path_syntax_error | **model_infeasible** | P5 #1357 comp_up narrowing (Day 5) cleared the `$171`; locally infeasible — **confirms it additionally needs #1393+#1335** (deferred to Sprint 28) |
+| kand | compare_mismatch | **compare_mismatch** (unchanged) | #1390 re-scoped Phase 0 = re-REPLAN; the phantom-term collapse is solution-equivalent (MCP 195.0 unchanged ≠ NLP 2613.0) — not the mismatch cause |
 
 ### Tasks completed
-- _(to be filled in)_
+- **PR22 audit script** run + captured (artifacts confirmed). ✅
+- **Full pipeline retest** (142 models): Solve 105 / Match 61 / Translate 132 / path_syntax_error 9. ✅
+- **P5 #1356 fawley + #1357 otpop** comp_up subset/superset narrowing (`src/kkt/complementarity.py`, Option a single-file). Both clear `$171` → leave path_syntax_error; blast radius = fawley+otpop only; 4 new unit tests; committed `05589235`. ✅ (first prototype = the committed fix)
+- **#1390 re-scoped Phase 0** on the `stationarity.py` offset layer: env-guarded prototype confirmed the 22→1 predicate-Sum collapse compiles clean but is **solution-equivalent** (MCP stays 195.0 ≠ NLP 2613.0) → **binding re-REPLAN** recorded in `PRIORITY_3_RISK_ASSESSMENT.md` §3.5; prototype reverted (zero `src/` diff). ✅
+- **otpop ↔ #1393+#1335 interaction verified**: comp_up fix alone leaves otpop locally infeasible → deferring #1393+#1335 defers the #1357 Solve gain (PLAN §2 risk realized). ✅
 
 ### Deliverables
-- _(to be filled in)_
+- `src/kkt/complementarity.py` comp_up subset-narrowing + `tests/unit/kkt/test_comp_up_subset_narrowing.py` (committed `05589235`); regenerated `fawley_mcp.gms` + `otpop_mcp.gms`.
+- `PRIORITY_3_RISK_ASSESSMENT.md` §3.5 Day-5 re-scoped binding verdict (re-REPLAN).
+- Day-5 retest baseline (`gamslib_status.json`) + this SPRINT_LOG entry.
 
 ### KUs verified
-- _(to be filled in)_
+- **KU 5.1** (#1356 fawley comp_up fix surface) → ✅ VERIFIED end-to-end (Option a narrowing emits the expected shape, zero `$171`).
+- **#1390 re-scoped Phase 0** → binding **re-REPLAN** signal recorded (the §3.5 redirected surface is correct, but the documented fix is insufficient).
 
 ### Carryforward to Day 6
-- _(to be filled in)_
+- **#1390 → Sprint 28** (re-diagnose the true kand mismatch source; the `tree`-predicate collapse is NOT it). Days 6–7 freed → redirect per Option 1 §6.4 (P7/P4 or #1385 translate-time short-circuit). **Sprint 27 Match target → 65** (record Day 13 §17).
+- **fawley/otpop**: `$171` cleared but locally infeasible — fawley needs further investigation; otpop needs #1393+#1335 (Sprint 28). The #1356/#1357 firm Solve gains do NOT land this sprint as projected.
+- **camcge**: model_infeasible (singular-Jacobian CGE degeneracy) → Sprint 28 candidate; not a Pattern-C regression.
 
 ---
 

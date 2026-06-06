@@ -34,7 +34,12 @@ from src.kkt.naming import (
     create_bound_up_multiplier_name,
     create_ineq_multiplier_name,
 )
-from src.kkt.partition import BoundDef, partition_constraints
+from src.kkt.partition import (
+    BoundDef,
+    is_subset_or_alias_of,
+    partition_constraints,
+    substitute_symbol_in_expr,
+)
 from src.kkt.reformulation import MINMAX_MAX_CONSTRAINT_PREFIX
 
 
@@ -54,6 +59,87 @@ def _bound_expr(bound_def: BoundDef) -> Expr:
             return expr.rhs
         return expr
     return Const(bound_def.value)
+
+
+def _is_single_parent_subset(set_name: str, model_ir) -> bool:
+    """Return True iff ``set_name`` is a STRICT single-parent subset set (a
+    1-D ``SetDef`` whose domain is one parent set) and not a pure alias.
+
+    Sprint 27 #1356/#1357: used to recognise a bound parameter declared over a
+    subset (fawley ``crdat(cr,*)`` with ``cr(c)``; otpop ``xb(t)`` with ``t(tt)``).
+    """
+    if model_ir is None or set_name.lower() in model_ir.aliases:
+        return False
+    sdef = model_ir.sets.get(set_name)
+    if sdef is None:
+        return False
+    dom = getattr(sdef, "domain", None)
+    if not dom or len(dom) != 1:
+        return False
+    return isinstance(dom[0], str)
+
+
+def _extract_subset_predicate(
+    condition: Expr,
+    var_domain: tuple[str, ...],
+    model_ir,
+) -> tuple[str, str] | None:
+    """If ``condition`` is a single subset-membership predicate ``subset(parent)``
+    where ``subset`` is a strict subset of ``parent`` and ``parent`` is one of
+    ``var_domain``, return ``(subset, parent)``; otherwise ``None``.
+
+    Sprint 27 #1356/#1357: detects the comp_up subset guard that ``partition.py``
+    folds in for a bound assigned over a subset of the variable's domain
+    (fawley ``u.up(cr)`` → guard ``cr(c)``; otpop ``x.up(t)`` → ``t(tt)``). The
+    flat-conjunction guard ``cr(c) and crdat(c,"supply") < inf`` triggers ``$171``
+    because GAMS evaluates the parameter lookup for every ``c`` (including
+    ``c ∉ cr``); the caller uses this to narrow the equation domain to the subset
+    instead.
+    """
+    if not isinstance(condition, SetMembershipTest) or len(condition.indices) != 1:
+        return None
+    idx = condition.indices[0]
+    if isinstance(idx, SymbolRef):
+        parent = idx.name
+    elif isinstance(idx, str):
+        parent = idx
+    else:
+        return None
+    subset = condition.set_name
+    if not any(parent.lower() == d.lower() for d in var_domain):
+        return None
+    # partition.py only emits the SetMembershipTest for a STRICT subset, but
+    # verify defensively (pure aliases share members and need no narrowing).
+    if not _is_single_parent_subset(subset, model_ir):
+        return None
+    if not is_subset_or_alias_of(subset, parent, model_ir):
+        return None
+    return (subset, parent)
+
+
+def _bound_expr_subset_dependency(bound_expr: Expr, model_ir) -> str | None:
+    """If ``bound_expr`` references a parameter whose DECLARED domain includes a
+    strict single-parent subset set, return that subset name; otherwise ``None``.
+
+    Sprint 27 #1356/#1357: fawley's ``crdat`` is declared over ``(cr,*)`` (``cr ⊂ c``)
+    and otpop's ``xb`` over ``(t)`` (``t ⊂ tt``). Confirms the bound RHS genuinely
+    depends on a subset-restricted parameter (the source of the ``$171`` at
+    non-subset elements), so the narrowing only fires for the real bug shape.
+    """
+    found: list[str] = []
+
+    def _walk(e: Expr) -> None:
+        if isinstance(e, ParamRef):
+            pdef = model_ir.params.get(e.name) if model_ir is not None else None
+            if pdef is not None:
+                for d in getattr(pdef, "domain", ()):  # declared domain
+                    if isinstance(d, str) and _is_single_parent_subset(d, model_ir):
+                        found.append(d)
+        for c in e.children():
+            _walk(c)
+
+    _walk(bound_expr)
+    return found[0] if found else None
 
 
 def build_complementarity_pairs(
@@ -471,23 +557,68 @@ def build_complementarity_pairs(
             # them and avoid degenerate complementarity equations.
             # Applies to both indexed and scalar variables.
             up_guard: Expr | None = None
+            # Sprint 27 #1356/#1357: when the bound is assigned over a STRICT
+            # subset of the variable's domain (fawley ``u.up(cr)`` over ``u(c)``,
+            # otpop ``x.up(t)`` over ``x(tt)``) AND the bound RHS reads a
+            # parameter declared over that same subset, the flat-conjunction
+            # guard ``subset(parent) and param(parent,...) < inf`` makes GAMS
+            # evaluate the parameter lookup for every parent element — including
+            # ``parent ∉ subset`` — triggering ``$171``. Narrow the equation
+            # domain to the subset and reindex the body ``parent → subset`` so
+            # the lookup only happens within the subset. The multiplier ``piU``
+            # stays declared over the full domain; its ``.fx(parent)$(not
+            # subset(parent)) = 0`` fixup (emitted elsewhere) covers the rest.
+            narrowed_domain: tuple[str, ...] | None = None
+            reindex: dict[str, str] | None = None
             if bound_def.expr is not None:
                 guard_expr = bound_def.expr
                 if isinstance(guard_expr, LhsConditionalAssign):
-                    # Preserve the assignment condition: only generate
-                    # complementarity equations where the conditional
-                    # assignment is active and the resulting bound is < INF.
-                    rhs_guard = Binary("<", guard_expr.rhs, Const(float("inf")))
-                    up_guard = Binary("and", guard_expr.condition, rhs_guard)
+                    sub_pred = _extract_subset_predicate(
+                        guard_expr.condition, var_domain, kkt.model_ir
+                    )
+                    rhs_sub = _bound_expr_subset_dependency(guard_expr.rhs, kkt.model_ir)
+                    if (
+                        sub_pred is not None
+                        and rhs_sub is not None
+                        and sub_pred[0].lower() == rhs_sub.lower()
+                        # Restrict to the safe 1-D case where the subset's parent
+                        # is the SOLE domain index (fawley u(c), otpop x(tt)).
+                        # For a multi-D variable (e.g. x(i,j) with a subset guard
+                        # on i) ``narrowed_domain = (subset,)`` would silently drop
+                        # the other dimensions → invalid equation/multiplier
+                        # pairing (PR #1418 review); fall back to the standard
+                        # flat-guard path there.
+                        and len(var_domain) == 1
+                    ):
+                        subset, parent = sub_pred
+                        reindex = {parent.lower(): subset}
+                        narrowed_domain = (subset,)
+                        up_guard = Binary(
+                            "<",
+                            substitute_symbol_in_expr(guard_expr.rhs, reindex),
+                            Const(float("inf")),
+                        )
+                    else:
+                        # Preserve the assignment condition: only generate
+                        # complementarity equations where the conditional
+                        # assignment is active and the resulting bound is < INF.
+                        rhs_guard = Binary("<", guard_expr.rhs, Const(float("inf")))
+                        up_guard = Binary("and", guard_expr.condition, rhs_guard)
                 else:
                     up_guard = Binary("<", guard_expr, Const(float("inf")))
 
             if var_domain:
                 # Indexed variable: create indexed equation comp_up_x(i).. up - x(i) =G= 0
-                F_piU = Binary("-", _bound_expr(bound_def), VarRef(var_name, var_domain))
+                eq_domain = narrowed_domain if narrowed_domain is not None else var_domain
+                bound_body = _bound_expr(bound_def)
+                var_ref_domain = var_domain
+                if reindex is not None:
+                    bound_body = substitute_symbol_in_expr(bound_body, reindex)
+                    var_ref_domain = eq_domain
+                F_piU = Binary("-", bound_body, VarRef(var_name, var_ref_domain))
                 comp_eq = EquationDef(
                     name=f"comp_up_{var_name}",
-                    domain=var_domain,
+                    domain=eq_domain,
                     relation=Rel.GE,
                     lhs_rhs=(F_piU, Const(0.0)),
                     condition=up_guard,

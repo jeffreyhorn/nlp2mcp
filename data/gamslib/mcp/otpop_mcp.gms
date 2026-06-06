@@ -181,7 +181,7 @@ Equations
     stat_z
     comp_lo_p(tt)
     comp_lo_x(tt)
-    comp_up_x(tt)
+    comp_up_x(t)
     adef(tt)
     dem(t)
     kdef
@@ -214,7 +214,7 @@ comp_lo_p(tt).. p(tt) - 1 =G= 0;
 comp_lo_x(tt).. x(tt) - 0 =G= 0;
 
 * Upper bound complementarity equations
-comp_up_x(tt)$(t(tt) and xb(tt) < inf).. xb(tt) - x(tt) =G= 0;
+comp_up_x(t)$(xb(t) < inf).. xb(t) - x(t) =G= 0;
 
 * Original equality equations
 dem(t).. d(t) =E= db(t) * p(t) ** ((-1) * a);
@@ -244,7 +244,7 @@ piL_x.fx(tt)$(not (x.up(tt) - x.lo(tt) > 1e-10)) = 0;
 piU_x.fx(tt)$(not (x.up(tt) - x.lo(tt) > 1e-10)) = 0;
 as.fx(tt)$(not (ord(tt) > 4)) = 0;
 d.fx(tt)$(not (ord(tt) > 4)) = 0;
-piU_x.fx(tt)$(not (t(tt) and xb(tt) < inf)) = 0;
+piU_x.fx(t)$(not (xb(t) < inf)) = 0;
 nu_adef.fx(tt)$(not (tp(tt))) = 0;
 nu_dem.fx(tt)$(not (t(tt))) = 0;
 nu_sup.fx(tt)$(not (t(tt))) = 0;

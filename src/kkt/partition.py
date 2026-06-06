@@ -417,7 +417,7 @@ def _check_covers_all_instances(var_def, bound_map: dict, model_ir: ModelIR) -> 
         return False
 
 
-def _is_subset_or_alias_of(candidate: str, parent: str, model_ir: ModelIR | None) -> bool:
+def is_subset_or_alias_of(candidate: str, parent: str, model_ir: ModelIR | None) -> bool:
     """Check whether `candidate` is a subset or alias resolving to `parent`.
 
     Used to accept up_expr_map / lo_expr_map keys that use a subset name
@@ -455,7 +455,7 @@ def _is_subset_or_alias_of(candidate: str, parent: str, model_ir: ModelIR | None
     return False
 
 
-def _substitute_symbol_in_expr(expr: Expr, mapping: dict[str, str]) -> Expr:
+def substitute_symbol_in_expr(expr: Expr, mapping: dict[str, str]) -> Expr:
     """Rename free SymbolRef / VarRef / ParamRef / IndexOffset bases using `mapping`.
 
     Used to rewrite bound expressions when up_expr_map keys use subset names
@@ -572,7 +572,7 @@ def _process_expr_map_bound(
         idx_str = str(idx)
         if idx_str.lower() == dom.lower():
             continue
-        if _is_subset_or_alias_of(idx_str, dom, model_ir):
+        if is_subset_or_alias_of(idx_str, dom, model_ir):
             rename_map[idx_str] = dom
             # Add SetMembershipTest only if the key is a strict subset of
             # the parent (i.e., would actually filter the index space).
@@ -592,7 +592,7 @@ def _process_expr_map_bound(
         return
 
     if rename_map:
-        expr = _substitute_symbol_in_expr(expr, rename_map)
+        expr = substitute_symbol_in_expr(expr, rename_map)
 
     if subset_guards:
         guard_condition: Expr = subset_guards[0]
