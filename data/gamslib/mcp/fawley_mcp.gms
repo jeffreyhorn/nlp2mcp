@@ -218,7 +218,7 @@ Equations
     comp_lo_u(c)
     comp_lo_z(p)
     comp_up_cap(k)
-    comp_up_u(c)
+    comp_up_u(cr)
     dbal(cf)
     doper
     dprof
@@ -270,7 +270,7 @@ comp_lo_z(p).. z(p) - 0 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_cap(k)$(kp(k) < inf).. kp(k) - cap(k) =G= 0;
-comp_up_u(c)$(cr(c) and crdat(c,"supply") < inf).. crdat(c,"supply") - u(c) =G= 0;
+comp_up_u(cr)$(crdat(cr,"supply") < inf).. crdat(cr,"supply") - u(cr) =G= 0;
 
 * Original equality equations
 mbal(c).. u(c)$(cr(c)) + sum(p, ap(c,p) * z(p)) + sum(tr, at(c,tr) * trans(tr)) + import(c)$(ci(c)) =E= sum(cfq$(bposs(cfq,c)), bq(c,cfq)) + invent(c) + sum((cfr,r), recipes(cfr,c,r) * rb(cfr,r));
@@ -312,7 +312,7 @@ u.fx(c)$(not (u.up(c) - u.lo(c) > 1e-10)) = u.lo(c);
 piL_u.fx(c)$(not (u.up(c) - u.lo(c) > 1e-10)) = 0;
 piU_u.fx(c)$(not (u.up(c) - u.lo(c) > 1e-10)) = 0;
 piU_cap.fx(k)$(not (kp(k) < inf)) = 0;
-piU_u.fx(c)$(not (cr(c) and crdat(c,"supply") < inf)) = 0;
+piU_u.fx(cr)$(not (crdat(cr,"supply") < inf)) = 0;
 nu_pbal.fx(cf,m)$(not (cfq(cf))) = 0;
 nu_qsb.fx(cf,l,s)$(not (cfq(cf))) = 0;
 
