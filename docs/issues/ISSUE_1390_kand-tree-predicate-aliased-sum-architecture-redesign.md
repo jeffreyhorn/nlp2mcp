@@ -1,7 +1,7 @@
 # kand: alias-AD per-instance enumeration produces 22 phantom-offset cross-terms in stat_y (tree-predicate-aliased Sum architecture redesign)
 
 **GitHub Issue:** [#1390](https://github.com/jeffreyhorn/nlp2mcp/issues/1390)
-**Status:** OPEN — **DEFERRED to Sprint 28** (Sprint 27 Day 5 re-scoped Phase 0 = re-REPLAN; the documented fix premise is disproven — see "Sprint 28 carryforward" below).
+**Status:** DEFERRED to Sprint 28 (Sprint 27 Day 5 re-scoped Phase 0 = re-REPLAN; the documented fix premise is disproven — see "Sprint 28 carryforward" below). The linked GitHub issue remains open.
 **Severity:** Medium — produces a valid MCP solve that converges to Optimal but with ~92.5% rel_diff vs the NLP optimum; not a localized AD-helper bug but an architecture-level reclassification.
 **Date:** 2026-05-12
 **Last Updated:** 2026-06-06
@@ -24,6 +24,8 @@ Sprint 27 Day 0 disproved the originally-documented AD patch site (`constraint_j
   - #1381 (Pattern C Phase B redesign — Sprint 26 Day 3 reclassification).
   - #1385 (Option 1 short-circuit redesign — Sprint 26 Day 4 reclassification).
 - Reclassification source: [docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md](../planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md) §"Issue #1141" (original keep-open rationale; superseded by Day 7 intractability discovery).
+
+> ⚠️ **HISTORICAL (superseded by the Day-5 re-REPLAN above).** Everything from here down is the original Sprint-26 framing, which assumed the 22 phantom-offset terms are the *root cause* of the kand mismatch. The Sprint 27 Day 5 re-scoped Phase 0 **disproved that premise** (collapsing the terms is solution-equivalent; MCP stays 195.0 ≠ NLP 2613.0). The Sprint 28 re-diagnosis must look elsewhere (see the carryforward above). Read the sections below as background on the phantom-term *symptom* only — NOT as the fix direction.
 
 ## Problem Summary
 
