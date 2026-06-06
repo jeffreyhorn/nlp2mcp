@@ -36,9 +36,9 @@ from src.kkt.naming import (
 )
 from src.kkt.partition import (
     BoundDef,
-    _is_subset_or_alias_of,
-    _substitute_symbol_in_expr,
+    is_subset_or_alias_of,
     partition_constraints,
+    substitute_symbol_in_expr,
 )
 from src.kkt.reformulation import MINMAX_MAX_CONSTRAINT_PREFIX
 
@@ -112,7 +112,7 @@ def _extract_subset_predicate(
     # verify defensively (pure aliases share members and need no narrowing).
     if not _is_single_parent_subset(subset, model_ir):
         return None
-    if not _is_subset_or_alias_of(subset, parent, model_ir):
+    if not is_subset_or_alias_of(subset, parent, model_ir):
         return None
     return (subset, parent)
 
@@ -581,13 +581,21 @@ def build_complementarity_pairs(
                         sub_pred is not None
                         and rhs_sub is not None
                         and sub_pred[0].lower() == rhs_sub.lower()
+                        # Restrict to the safe 1-D case where the subset's parent
+                        # is the SOLE domain index (fawley u(c), otpop x(tt)).
+                        # For a multi-D variable (e.g. x(i,j) with a subset guard
+                        # on i) ``narrowed_domain = (subset,)`` would silently drop
+                        # the other dimensions → invalid equation/multiplier
+                        # pairing (PR #1418 review); fall back to the standard
+                        # flat-guard path there.
+                        and len(var_domain) == 1
                     ):
                         subset, parent = sub_pred
                         reindex = {parent.lower(): subset}
                         narrowed_domain = (subset,)
                         up_guard = Binary(
                             "<",
-                            _substitute_symbol_in_expr(guard_expr.rhs, reindex),
+                            substitute_symbol_in_expr(guard_expr.rhs, reindex),
                             Const(float("inf")),
                         )
                     else:
@@ -605,7 +613,7 @@ def build_complementarity_pairs(
                 bound_body = _bound_expr(bound_def)
                 var_ref_domain = var_domain
                 if reindex is not None:
-                    bound_body = _substitute_symbol_in_expr(bound_body, reindex)
+                    bound_body = substitute_symbol_in_expr(bound_body, reindex)
                     var_ref_domain = eq_domain
                 F_piU = Binary("-", bound_body, VarRef(var_name, var_ref_domain))
                 comp_eq = EquationDef(
