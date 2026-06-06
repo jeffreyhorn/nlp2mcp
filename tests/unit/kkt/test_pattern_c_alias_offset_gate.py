@@ -711,3 +711,87 @@ def test_b3_multiplier_ref_validity_guard():
     assert _b3_multiplier_ref_is_valid("j", ("istat",), ir) is False
     # non-1-D declared domain → invalid (defensive)
     assert _b3_multiplier_ref_is_valid("j", ("i", "j"), ir) is False
+
+
+@pytest.mark.unit
+def test_dual_dim_mismatch_binds_lower_dim_var(tmp_path):
+    """Sprint 27 #1381 follow-up — the DUAL of B-3 (cesam2 ``stat_y``).
+
+    A constraint with MORE indices than the variable references it directly at
+    one coordinate: ``SAMCOEF(ii,jj).. tsam(ii,jj) =e= a(ii,jj)*y(jj)``.  The
+    variable ``y`` is 1-D; ``y(jj)`` binds the constraint's ``jj`` coordinate.
+    The aliased domain (``ii``/``jj`` both canonical ``i``) makes the coordinates
+    look name-disjoint from ``y``'s ``i``, so the standard path summed the
+    multiplier over BOTH coordinates (``sum((ii,jj), -a(ii,jj)*nu_samcoef(ii,jj))``)
+    — the same value for every ``i``.  The fix BINDS ``jj→i`` and sums over only
+    the remaining coordinate: ``sum(ii, -a(ii,i)*nu_samcoef(ii,i))``.
+    """
+    import re
+
+    gams = """\
+Set i / total, a1, a2 /;
+Set ii(i); ii(i) = yes; ii("total") = no;
+Alias (i,j), (ii,jj);
+Variable a(i,j), tsam(i,j), y(i), z;
+Equation samcoef(ii,jj), zdef;
+samcoef(ii,jj).. tsam(ii,jj) =e= a(ii,jj)*y(jj);
+zdef.. z =e= sum((i,j), tsam(i,j)) + sum((i,j), a(i,j)) + sum(i, y(i));
+Model m / samcoef, zdef /;
+solve m using nlp minimizing z;
+"""
+    output = _emit_mini_mcp(tmp_path, gams, "mini_cesam2_dual.gms")
+    stat_lines = [ln for ln in output.splitlines() if ln.startswith("stat_y(")]
+    assert stat_lines, f"Expected a stat_y line. Output:\n{output[:1200]}"
+    line = stat_lines[0]
+
+    # The SAMCOEF multiplier must bind the variable's stationarity index (i) at
+    # the coordinate ``y(jj)`` occupied (position 1), NOT be summed over.
+    refs = re.findall(r"nu_samcoef\((\w+),\s*(\w+)\)", line)
+    assert refs, f"Expected an nu_samcoef(...) reference. Full:\n{line}"
+    for first, second in refs:
+        assert second == "i", (
+            f"nu_samcoef second coordinate must bind to the stationarity index "
+            f"'i', got nu_samcoef({first},{second}). Full:\n{line}"
+        )
+
+    # Exactly one reducing sum index (over the free coordinate), NOT a two-index
+    # sum over both constraint coordinates.
+    assert "sum((" not in line, (
+        f"Found a multi-index sum — the binding coordinate must NOT be summed. " f"Full:\n{line}"
+    )
+
+
+@pytest.mark.unit
+def test_scalar_constraint_mixed_sign_derivatives_split(tmp_path):
+    """Sprint 27 #1381 follow-up — cesam2 ``stat_tsam`` GDPDEF sign collapse.
+
+    A SCALAR constraint can reference an indexed variable at multiple cells with
+    DIFFERENT derivative signs: ``gdpdef.. w =e= x("a1") - x("a2")``.  The
+    residual ``w - x(a1) + x(a2)`` gives ``∂/∂x(a1) = -1`` but ``∂/∂x(a2) = +1``.
+    Emitting one term from a single representative cell collapses both onto one
+    sign.  The fix groups by derivative structure and emits one guarded term per
+    sign: ``(-1)*nu_gdpdef$(sameas(i,'a1')) + nu_gdpdef$(sameas(i,'a2'))``.
+    """
+    gams = """\
+Set i / a1, a2, a3 /;
+Variable x(i), w, z;
+Equation gdpdef, wdef, zdef;
+gdpdef.. w =e= x("a1") - x("a2");
+wdef.. w =e= 5;
+zdef.. z =e= sum(i, x(i)*x(i)) + w;
+Model m / gdpdef, wdef, zdef /;
+solve m using nlp minimizing z;
+"""
+    output = _emit_mini_mcp(tmp_path, gams, "mini_gdpdef.gms")
+    stat_lines = [ln for ln in output.splitlines() if ln.startswith("stat_x(")]
+    assert stat_lines, f"Expected a stat_x line. Output:\n{output[:1200]}"
+    line = stat_lines[0].lower()
+
+    # The a1 cell (derivative -1) and the a2 cell (derivative +1) must appear as
+    # SEPARATE terms with OPPOSITE signs, each guarded by its own sameas.
+    assert (
+        "(-1) * nu_gdpdef)$(sameas(i, 'a1')" in line
+    ), f"Expected the negative-sign GDPDEF term for cell a1. Full:\n{line}"
+    assert (
+        "nu_gdpdef$(sameas(i, 'a2')" in line
+    ), f"Expected the positive-sign GDPDEF term for cell a2. Full:\n{line}"

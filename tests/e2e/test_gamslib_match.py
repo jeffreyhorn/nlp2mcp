@@ -95,6 +95,7 @@ def _do_pipeline_and_solve(model_id: str, gms_file: Path) -> float:
 _NLP_REFERENCES: dict[str, float] = {
     "ajax": 441003.5953,
     "blend": 4.98,
+    "cesam2": 0.507960424824,
     "chem": -47.7065,
     "demo1": 1898.52,
     "dispatch": 7.9546,

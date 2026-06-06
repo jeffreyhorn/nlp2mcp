@@ -1149,6 +1149,86 @@ def _build_pattern_c_dim_mismatch_term(
     return term
 
 
+def _collect_varrefs_arity(expr: Expr, var_name: str, arity: int) -> list[VarRef]:
+    """Return ALL ``VarRef`` nodes to ``var_name`` with exactly ``arity`` indices."""
+    out: list[VarRef] = []
+    if (
+        isinstance(expr, VarRef)
+        and expr.name.lower() == var_name.lower()
+        and len(expr.indices) == arity
+    ):
+        out.append(expr)
+    for child in expr.children():
+        out.extend(_collect_varrefs_arity(child, var_name, arity))
+    return out
+
+
+def _dual_binding_map(
+    eq_def: EquationDef | None,
+    var_name: str,
+    var_domain: tuple[str, ...],
+    mult_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> dict[str, str] | None:
+    """Sprint 27 #1381 follow-up — the DUAL of Phase B-3 (cesam2 ``stat_y``).
+
+    A constraint whose domain has MORE indices than the variable references the
+    variable DIRECTLY (not inside an inner reducing sum) at one of its
+    coordinates, e.g. ``SAMCOEF(ii,jj)$NONZERO.. TSAM(ii,jj) =e= A(ii,jj)*Y(jj)``
+    — ``Y`` is 1-D, the constraint is 2-D, and ``Y(jj)`` binds the constraint's
+    ``jj`` coordinate.
+
+    The standard disjoint-sum path sums the multiplier over BOTH constraint
+    coordinates (``sum((ii,jj), -A(ii,jj)*nu_SAMCOEF(ii,jj))``) because the
+    aliased domain (``ii``/``jj`` both resolve to canonical ``i``) makes the
+    coordinates look name-disjoint from the variable's ``i``.  The correct term
+    BINDS the matched coordinate to the stationarity index and sums over only the
+    remaining coordinate(s): ``sum(ii, -A(ii,i)*nu_SAMCOEF(ii,i))``.
+
+    Returns a rename map ``{mult_idx_lower: var_domain_idx}`` for the bound
+    coordinates, or ``None`` when this aliased dim-mismatch signature is absent
+    (so the caller keeps the existing sum-over-all behaviour).
+    """
+    if eq_def is None:
+        return None
+    if not (0 < len(var_domain) < len(mult_domain)):
+        return None
+    mult_lower = {d.lower() for d in mult_domain if isinstance(d, str)}
+    binding: dict[str, str] = {}
+    found_ref = False
+    for side in eq_def.lhs_rhs:
+        for vref in _collect_varrefs_arity(side, var_name, len(var_domain)):
+            found_ref = True
+            local: dict[str, str] = {}
+            for k, ix in enumerate(vref.indices):
+                if not isinstance(ix, str):
+                    return None  # offset index — out of scope
+                if ix.lower() in mult_lower:
+                    local[ix.lower()] = var_domain[k]
+            if not local:
+                # The variable's coordinate is not one of the constraint's own
+                # domain indices (e.g. it appears inside an inner sum) — the
+                # sum-over-all behaviour is correct, leave it alone.
+                return None
+            for key, val in local.items():
+                if key in binding and binding[key] != val:
+                    return None  # inconsistent binding across references
+                binding[key] = val
+    if not found_ref or not binding:
+        return None
+    # Aliased-ambiguity gate: at least one SUMMED constraint coordinate must
+    # share a canonical set with a BOUND coordinate — the exact signature where
+    # name-matching mis-binds (cesam2: summed ``ii`` and bound ``jj`` both
+    # canonical ``i``).  When the summed and bound coordinates are genuinely
+    # different sets the standard path already binds correctly; leave it alone to
+    # contain the blast radius.
+    bound_canons = {_resolve_alias_target(k, model_ir) for k in binding}
+    summed = [d for d in mult_domain if isinstance(d, str) and d.lower() not in binding]
+    if not any(_resolve_alias_target(d, model_ir) in bound_canons for d in summed):
+        return None
+    return binding
+
+
 def _build_lead_lag_condition_expr(
     lead_offsets: dict[str, int],
     lag_offsets: dict[str, int],
@@ -2484,6 +2564,83 @@ def _group_variables_by_name(
     return groups
 
 
+def _objective_varref_positional_rename(
+    model_ir: ModelIR, var_name: str, domain: tuple[str, ...]
+) -> dict[str, str]:
+    """Positional index rename from the OBJECTIVE's reference of ``var_name`` to
+    the variable's own domain (#1381 follow-up: aliased multi-D objective gradient).
+
+    When the objective sums a variable over SUBSET indices that share a common
+    parent set — e.g. cesam2's ``sum((ii,jj,jwt3)$nonzero(ii,jj),
+    W3(ii,jj,jwt3)*…)`` where ``ii(i)`` and ``jj`` (alias of ``ii``) are BOTH
+    dynamic subsets of the same root set ``i`` — the gradient term carries the
+    objective's domain condition ``$nonzero(ii,jj)`` with those subset symbols.
+    ``_replace_indices_in_expr`` only rewrites element labels, so the subset set
+    names survive and become "uncontrolled"; the superset-finding wrap then binds
+    EVERY such index to the FIRST domain superset (``i``), COLLAPSING the guard to
+    ``nonzero(i,i)`` (diagonal) and dropping the gradient on every off-diagonal
+    cell.
+
+    The fix is narrow and COLLISION-driven: an objective index is renamed to its
+    positional domain coordinate (``ii→i`` at position 0, ``jj→j`` at position 1)
+    ONLY when another objective index shares the same root set but maps to a
+    DIFFERENT domain coordinate — i.e. exactly the multi-index collapse above.
+
+    A LONE subset index is deliberately left untouched so its load-bearing
+    ``sum(l__$sameas(l__,n), …)`` self-sum survives.  That self-sum maps the
+    parent stationarity index back onto a valid subset member, which is required
+    whenever the gradient references a subset-domain symbol — e.g. harker's
+    ``coefs(l,*)`` with ``l ⊂ n`` (renaming ``l→n`` would emit ``coefs(n,*)`` →
+    GAMS ``$171`` domain violation), or cesam2's own ``jwt3 ⊂ jwt`` dimension
+    (no collision, so untouched).  Returns the rename map (only entries that
+    actually change), or ``{}``.
+    """
+    if model_ir.objective is None or model_ir.objective.expr is None or not domain:
+        return {}
+    n = len(domain)
+    result: list[dict[str, str] | None] = [None]
+
+    def _root(s: str) -> str:
+        """Resolve ``s`` to its ultimate parent set: alias target, then the
+        single parent of a 1-D (dynamic) subset, then alias-resolve again."""
+        canon = _resolve_alias_target(s, model_ir)
+        sdef = model_ir.sets.get(canon)
+        if sdef is not None and getattr(sdef, "domain", None) and len(sdef.domain) == 1:
+            return _resolve_alias_target(str(sdef.domain[0]), model_ir)
+        return canon
+
+    def _walk(e: Expr) -> None:
+        if result[0] is not None:
+            return
+        if (
+            isinstance(e, VarRef)
+            and e.name.lower() == var_name.lower()
+            and len(e.indices) == n
+            and all(isinstance(ix, str) for ix in e.indices)
+        ):
+            idxs = [str(ix) for ix in e.indices]
+            roots = [_root(ix) for ix in idxs]
+            rename: dict[str, str] = {}
+            for k, ix in enumerate(idxs):
+                if ix.lower() == domain[k].lower():
+                    continue
+                # Rename only to break a same-root collision across positions
+                # that target DISTINCT domain coordinates (the collapse bug).
+                colliding = any(
+                    kk != k and roots[kk] == roots[k] and domain[kk].lower() != domain[k].lower()
+                    for kk in range(n)
+                )
+                if colliding:
+                    rename[ix.lower()] = domain[k]
+            result[0] = rename
+            return
+        for ch in e.children():
+            _walk(ch)
+
+    _walk(model_ir.objective.expr)
+    return result[0] or {}
+
+
 def _build_indexed_stationarity_expr(
     kkt: KKTSystem,
     var_name: str,
@@ -2509,6 +2666,16 @@ def _build_indexed_stationarity_expr(
     # Build gradient term: ∂f/∂x(i)
     # We use VarRef with domain indices instead of element labels
     expr = _build_indexed_gradient_term(kkt, var_name, domain, instances)
+
+    # #1381 follow-up: map the objective reference's SUBSET indices to the
+    # variable's domain coordinates POSITIONALLY (ii→i, jj→j) BEFORE the
+    # superset-wrap below.  Otherwise an objective domain guard like
+    # ``$nonzero(ii,jj)`` carried on the gradient has both ii and jj bound to the
+    # first superset (``i``), collapsing to ``nonzero(i,i)`` and dropping the
+    # gradient on off-diagonal cells of an aliased 2-D variable (cesam2 stat_w3).
+    obj_rename = _objective_varref_positional_rename(kkt.model_ir, var_name, domain)
+    if obj_rename:
+        expr = _rewrite_subset_to_superset(expr, obj_rename)
 
     # Issue #949 / #1010: The gradient term may contain free indices not in
     # the variable domain (e.g. subset index 't' when domain uses 'tt').
@@ -6235,9 +6402,33 @@ def _add_indexed_jacobian_terms(
                             # No sum needed - the i index is shared
                             pass
                         elif not mult_domain_set.intersection(var_domain_set):
-                            # Truly disjoint: constraint has indices independent
-                            # of variable. Need to sum over the constraint's domain.
-                            term = Sum(mult_domain, term)
+                            # Truly disjoint by NAME: constraint has indices that
+                            # look independent of the variable. Usually we sum over
+                            # the constraint's whole domain. But an aliased
+                            # higher-dim constraint may BIND the variable to a
+                            # specific coordinate via its body — cesam2 stat_y:
+                            # SAMCOEF(ii,jj).. ... =e= A(ii,jj)*Y(jj) binds jj→i,
+                            # so only the remaining coordinate (ii) is summed. The
+                            # aliased domain (ii/jj both canonical i) hides this
+                            # from name-based matching (#1381 follow-up).
+                            dual_binding = _dual_binding_map(
+                                eq_def,
+                                var_name,
+                                var_domain,
+                                mult_domain,
+                                kkt.model_ir,
+                            )
+                            if dual_binding:
+                                term = _rewrite_subset_to_superset(term, dual_binding)
+                                reduced_sum_indices = tuple(
+                                    d
+                                    for d in mult_domain
+                                    if isinstance(d, str) and d.lower() not in dual_binding
+                                )
+                                if reduced_sum_indices:
+                                    term = Sum(reduced_sum_indices, term)
+                            else:
+                                term = Sum(mult_domain, term)
                         else:
                             # Partial overlap: domains share some indices but each has unique ones
                             # This happens when a constraint sums over a variable using different indices.
@@ -6337,34 +6528,62 @@ def _add_indexed_jacobian_terms(
             mult_name = name_func(eq_name_base)
 
             if mult_name in multipliers:
-                mult_ref = MultiplierRef(mult_name, ())
-                # Replace indices in derivative using element_to_set mapping
-                # Issue #620: Pass var_domain as equation_domain for subset substitution
-                indexed_deriv = _replace_indices_in_expr(
-                    derivative, var_domain, element_to_set, kkt.model_ir, equation_domain=var_domain
-                )
-                term = Binary("*", indexed_deriv, mult_ref)
-                # Issue #670: scalar constraints have no multiplier domain, so any
-                # index in the derivative that is not in var_domain is uncontrolled.
-                # Wrap such indices in a Sum to avoid GAMS Error 149.
-                free_in_deriv = _collect_free_indices(indexed_deriv, kkt.model_ir)
-                # Use lowercase comparison to match _collect_free_indices output,
-                # consistent with the indexed-constraint branch above.
-                uncontrolled = free_in_deriv - {d.lower() for d in var_domain}
-                if uncontrolled:
-                    sum_indices = tuple(sorted(uncontrolled))
-                    term = Sum(sum_indices, term)
+                # Issue #1381 follow-up (cesam2 GDPDEF / bug class): a scalar
+                # constraint can reference an indexed variable at multiple cells
+                # with DIFFERENT derivatives. GDPDEF's residual is
+                #   MACROV(gdp2) - TSAM(fac,act) - TSAM(gov,act)
+                #                + TSAM(act,gov) - TSAM(gov,com)
+                # so ∂/∂TSAM is -1 for (fac,act)/(gov,act)/(gov,com) but +1 for
+                # (act,gov). Emitting a single term from entries[0]'s derivative
+                # collapses these per-cell signs/coeffs onto one representative,
+                # corrupting stat_tsam for the cells whose sign was dropped.
+                # Group entries by derivative structure and emit one guarded term
+                # per group. When all entries share one structure (the common
+                # case) this reduces to the original single-term behavior.
+                deriv_groups: dict[str, list[tuple[int, int]]] = {}
+                for _rid, _cid in entries:
+                    _d = jacobian.get_derivative(_rid, _cid)
+                    deriv_groups.setdefault(_derivative_structure_key(_d), []).append((_rid, _cid))
 
-                # Issue #767 / #764: Guard multiplier terms with $(sameas(...))
-                # when only a subset of the indexed variable's instances have a
-                # nonzero Jacobian entry.  Handles both single-entry (.fx) and
-                # multi-entry (scalar equation summing over a subset) cases.
-                if var_domain and len(entries) < len(instances):
-                    sameas_guard = _build_sameas_guard(var_domain, instances, entries, kkt)
-                    if sameas_guard is not None:
-                        term = DollarConditional(value_expr=term, condition=sameas_guard)
+                for _grp_entries in deriv_groups.values():
+                    _grp_rid, _grp_cid = _grp_entries[0]
+                    _grp_deriv = jacobian.get_derivative(_grp_rid, _grp_cid)
+                    mult_ref = MultiplierRef(mult_name, ())
+                    # Replace indices in derivative using element_to_set mapping
+                    # Issue #620: Pass var_domain as equation_domain for subset
+                    # substitution
+                    indexed_deriv = _replace_indices_in_expr(
+                        _grp_deriv,
+                        var_domain,
+                        element_to_set,
+                        kkt.model_ir,
+                        equation_domain=var_domain,
+                    )
+                    term = Binary("*", indexed_deriv, mult_ref)
+                    # Issue #670: scalar constraints have no multiplier domain, so
+                    # any index in the derivative that is not in var_domain is
+                    # uncontrolled. Wrap such indices in a Sum to avoid GAMS Error
+                    # 149.
+                    free_in_deriv = _collect_free_indices(indexed_deriv, kkt.model_ir)
+                    # Use lowercase comparison to match _collect_free_indices
+                    # output, consistent with the indexed-constraint branch above.
+                    uncontrolled = free_in_deriv - {d.lower() for d in var_domain}
+                    if uncontrolled:
+                        sum_indices = tuple(sorted(uncontrolled))
+                        term = Sum(sum_indices, term)
 
-                expr = Binary("+", expr, term)
+                    # Issue #767 / #764: Guard multiplier terms with $(sameas(...))
+                    # when only a subset of the indexed variable's instances have a
+                    # nonzero Jacobian entry.  Handles both single-entry (.fx) and
+                    # multi-entry (scalar equation summing over a subset) cases.
+                    # With per-derivative grouping, each group restricts to its own
+                    # cells so signs stay separated.
+                    if var_domain and len(_grp_entries) < len(instances):
+                        sameas_guard = _build_sameas_guard(var_domain, instances, _grp_entries, kkt)
+                        if sameas_guard is not None:
+                            term = DollarConditional(value_expr=term, condition=sameas_guard)
+
+                    expr = Binary("+", expr, term)
 
     return expr
 
