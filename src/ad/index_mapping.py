@@ -374,6 +374,77 @@ def enumerate_variable_instances(var_def: VariableDef, model_ir: ModelIR) -> lis
     return instances
 
 
+def _condition_is_single_setmembership(condition) -> bool:
+    """Sprint 27 #1385: True iff ``condition`` is a single ``SetMembershipTest``,
+    optionally wrapped in one ``Unary('not', ...)`` (srpchase's ``leaf(srn)`` /
+    ``not leaf(srn)`` equation-domain conditions)."""
+    from ..ir.ast import SetMembershipTest, Unary
+
+    if isinstance(condition, Unary) and condition.op == "not":
+        return isinstance(condition.child, SetMembershipTest)
+    return isinstance(condition, SetMembershipTest)
+
+
+def _body_sums_over_2d_set(expr, model_ir) -> bool:
+    """Sprint 27 #1385: True iff ``expr`` contains a ``Sum`` whose condition is a
+    ``SetMembershipTest`` over a 2-D set (a Cartesian n×n membership filter —
+    srpchase's ``sum(ancestor(srn,n), ...)``). Differentiating the enumerated
+    Cartesian bodies is the >180s translate_timeout source."""
+    from ..ir.ast import SetMembershipTest, Sum
+
+    if isinstance(expr, Sum) and isinstance(expr.condition, SetMembershipTest):
+        sdef = model_ir.sets.get(expr.condition.set_name)
+        if sdef is not None and getattr(sdef, "domain", None) and len(sdef.domain) == 2:
+            return True
+    return any(_body_sums_over_2d_set(c, model_ir) for c in expr.children())
+
+
+def _is_blowup_dynamic_subset_equation(eq_name, eq_domain, condition, model_ir) -> bool:
+    """Sprint 27 #1385 (translate-time-only short-circuit): detect srpchase's
+    Option-B blow-up shape — an equation over a 1-D **dynamic** subset (0 static
+    members) of a **large** parent set, with a single (optionally negated)
+    ``SetMembershipTest`` domain condition, whose body sums over a **2-D set**
+    (a Cartesian membership filter).
+
+    Enumerating ~1000 parent instances and differentiating each n×n
+    ``sum(ancestor(srn,n), …)`` body is the >180s ``translate_timeout`` source
+    (the blow-up is in ``differentiate_expr``/``simplify``, per the Day-0
+    profiling). Returning ``[]`` here skips that AD work (translate 600s+ → ~6s).
+
+    SCOPE (per ISSUE_1385 / PRIORITY_3_RISK_ASSESSMENT §4.5 SCOPED-PROCEED): this
+    is translate-time only. The skipped equation's stationarity **cross-terms**
+    (``J_gᵀ·lam``) are **NOT** emitted — they are DEFERRED to Sprint 28. The gate
+    is deliberately narrow (dynamic-subset-of-large-parent domain + single
+    set-membership condition + 2-D-set Cartesian-sum body) so it fires only for
+    this blow-up shape; verified corpus-byte-stable (only srpchase changes).
+    """
+    if len(eq_domain) != 1 or condition is None:
+        return False
+    sub = eq_domain[0]
+    sdef = model_ir.sets.get(sub)
+    # Must be a 1-D dynamic subset: empty static members + a single parent set.
+    if (
+        sdef is None
+        or getattr(sdef, "members", None)
+        or not getattr(sdef, "domain", None)
+        or len(sdef.domain) != 1
+    ):
+        return False
+    if not _condition_is_single_setmembership(condition):
+        return False
+    try:
+        parent_members, _ = resolve_set_members(sub, model_ir)
+    except (ValueError, KeyError):
+        return False
+    if len(parent_members) < 100:
+        return False
+    eq_def = model_ir.equations.get(eq_name)
+    if eq_def is None:
+        return False
+    lhs, rhs = eq_def.lhs_rhs
+    return _body_sums_over_2d_set(lhs, model_ir) or _body_sums_over_2d_set(rhs, model_ir)
+
+
 def enumerate_equation_instances(
     eq_name: str, eq_domain: tuple[str, ...], model_ir: ModelIR, condition=None
 ) -> list[tuple[str, ...]]:
@@ -414,6 +485,23 @@ def enumerate_equation_instances(
             if not evaluate_condition(condition, (), (), model_ir):
                 return []  # Condition false, no instances
         return [()]
+
+    # Sprint 27 #1385: translate-time-only short-circuit for the srpchase
+    # dynamic-subset Cartesian blow-up shape (skip AD enumeration → ~6s vs >180s
+    # timeout). The skipped equation's stationarity cross-terms are DEFERRED to
+    # Sprint 28 (see ISSUE_1385); this yields a Translate-bucket gain, not Solve.
+    if condition is not None and _is_blowup_dynamic_subset_equation(
+        eq_name, eq_domain, condition, model_ir
+    ):
+        import warnings
+
+        warnings.warn(
+            f"Equation '{eq_name}': skipping AD enumeration of the #1385 "
+            f"dynamic-subset Cartesian blow-up shape (translate-time short-circuit; "
+            f"stationarity cross-terms deferred to Sprint 28 per ISSUE_1385).",
+            stacklevel=2,
+        )
+        return []
 
     # Get members for each index set (resolve aliases if needed)
     index_members_list: list[list[str]] = []

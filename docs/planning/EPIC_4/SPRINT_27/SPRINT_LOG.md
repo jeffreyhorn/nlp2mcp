@@ -341,27 +341,37 @@ Day 6 is **gated on the Day 5 #1390 re-scoped Phase 0**, which returned **re-REP
 
 ---
 
-## Day 7 — #1390 PR + Priority 3 #1385 srpchase + Priority 5 close
+## Day 7 — #1385 translate-time-only short-circuit (srpchase) + P5 close-out
 
-**Date:** TBD
-**Status:** 🔵 NOT STARTED
+**Date:** 2026-06-07
+**Status:** 🟢 DONE — #1385 translate-time short-circuit LANDED (cross-terms → Sprint 28); #1390 PR N/A (re-REPLAN'd Day 5/6); P5 already closed Day 5 (PR #1418), clearlak re-verified.
 **Hours budgeted:** ≤ 12
-**Hours actual:** —
+
+### Adjusted scope (vs the prompt)
+- **#1390 PR — N/A.** Day 5/6 re-scoped Phase 0 = re-REPLAN → deferred to Sprint 28; there is no #1390 implementation to PR.
+- **P5 close — already MERGED Day 5** (PR #1418): the comp_up subset/superset narrowing is one fix for both #1356 fawley and #1357 otpop. Day 7 re-runs the clearlak byte-stability check (KU 5.3).
 
 ### Tasks completed
-- _(to be filled in)_
+- **#1385 translate-time-only short-circuit — LANDED** (`src/ad/index_mapping.py`). Generalized the Day-0 model-name guard (`'purchase'`) to a tight STRUCTURAL gate `_is_blowup_dynamic_subset_equation`: a 1-D **dynamic** subset (0 static members) of a **large** parent (≥100), single (optionally negated) `SetMembershipTest` condition, body summing over a **2-D set** (`sum(ancestor(srn,n), …)`) → `enumerate_equation_instances` returns `[]`, skipping the `differentiate_expr` blow-up.
+  - **srpchase: 6.56s** (was >180s `translate_timeout`), GAMS `action=c`-clean, 0 quoted-literal set-name indices. **Translate-bucket gain, NOT Solve/Match** (slack/demand cross-terms deferred → srpchase does not reach `compare_match`).
+  - **Blast radius = srpchase ONLY** — full-corpus byte scan: 136 byte-identical (gate didn't fire), 7 pre-existing FAILs unchanged, parse-timeout models stay `translate_timeout` both sides (no bucket change; none are scenario-tree shapes). 5 new unit tests (`tests/unit/ad/test_blowup_enumeration_skip.py`).
+  - **Sprint 28 follow-on FILED** (`ISSUE_1385` updated): the runtime-guard equation-body re-emit (`src/kkt/stationarity.py`) + the `J_gᵀ·lam` cross-terms — coupled, must land together (re-emitting constraints without cross-terms = inconsistent MCP).
+- **P5 clearlak byte-stability (KU 5.3)** — re-verified clearlak byte-identical to HEAD (the #1385 gate does not fire for clearlak; the P5 comp_up change merged Day 5 left it byte-stable).
 
 ### Deliverables
-- _(to be filled in)_
+- `src/ad/index_mapping.py` #1385 gate + skip; `tests/unit/ad/test_blowup_enumeration_skip.py` (5 tests); regenerated `data/gamslib/mcp/srpchase_mcp.gms`.
+- `ISSUE_1385` updated (status PARTIALLY DONE; Sprint 28 deferred scope).
 
 ### KUs verified
-- _(target: KUs 3.2, 5.1, 5.2, 5.3)_
+- **KU 3.2** (#1385 short-circuit) → ✅ VERIFIED **as scoped (translate-time only)**: srpchase <10s + clean compile; cross-terms deferred to Sprint 28.
+- **KU 5.1 / 5.2 / 5.3** (#1356/#1357 comp_up) → ✅ VERIFIED (merged Day 5 PR #1418; clearlak byte-stable re-confirmed Day 7).
 
 ### Carryforward to Day 8
-- _(to be filled in)_
+- **#1385 Sprint 28 follow-on** (runtime-guard emit + cross-terms) + **#1390, #1393+#1335, #1387** → Sprint 28 carryforwards filed.
+- Per PLAN §8 Day 8: P7 #1387 was pulled forward but → Sprint 28 (Day 6 diagnosis); #1393+#1335 Sprint 28 carryforward filing.
 
 ### PRs opened
-- _(#1390 PR, P5 combined fawley+otpop PR)_
+- Day-7 PR (#1385 translate-time short-circuit). #1390 PR N/A; P5 PR already merged Day 5 (#1418).
 
 ---
 
