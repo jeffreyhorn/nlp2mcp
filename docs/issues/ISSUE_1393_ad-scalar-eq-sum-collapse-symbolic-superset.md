@@ -1,7 +1,7 @@
 # AD: scalar-constraint stationarity Sum body doesn't fully collapse when wrt-index is symbolic eq-domain superset of inner Sum's iteration subset
 
 **GitHub Issue:** [#1393](https://github.com/jeffreyhorn/nlp2mcp/issues/1393)
-**Status:** DEFERRED to Sprint 28 (Sprint 27 Day 0 binding verdict = REPLAN; Approach C disproven inert — see "Sprint 28 carryforward" below). The linked GitHub issue remains open.
+**Status:** DEFERRED to Sprint 28 (Sprint 27 Day 0 binding verdict = REPLAN; Approach C was shown to be inert — see "Sprint 28 carryforward" below). The linked GitHub issue remains open.
 **Severity:** Medium — produces an over-counted KKT Jacobian cross-term (off by factor |subset| = 17× for otpop). Differs from the NLP optimum.
 **Date:** 2026-05-12
 **Last Updated:** 2026-06-07 (Sprint 27 Day 8 — Sprint 28 carryforward filed; Day 0 Approach-C REPLAN recorded; now distinct from #1335)
