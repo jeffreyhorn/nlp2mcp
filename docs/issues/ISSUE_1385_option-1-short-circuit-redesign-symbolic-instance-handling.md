@@ -1,10 +1,24 @@
 # Translation Timeout Option 1 Short-Circuit Redesign — Symbolic-Instance Handling in AD/Emit Pipeline
 
 **GitHub Issue:** [#1385](https://github.com/jeffreyhorn/nlp2mcp/issues/1385)
-**Status:** OPEN (filed Sprint 26 Day 4, 2026-05-12 — after Day 4 Priority 4 rollback)
+**Status:** PARTIALLY DONE (Sprint 27 Day 7) — translate-time short-circuit LANDED; the runtime-guard equation-body re-emit + `J_gᵀ·lam` cross-terms are DEFERRED to Sprint 28. See "Sprint 27 Day 7" below.
 **Severity:** Medium — affects 5 GAMSlib `translate_timeout` models that Option 1 was meant to recover (srpchase, iswnm, sarf, mexls, nebrazil) plus blocks any downstream Solve / Match gain those models would have produced post-recovery.
 **Date:** 2026-05-12
-**Last Updated:** 2026-05-12
+**Last Updated:** 2026-06-07 (Sprint 27 Day 7 — translate-time-only short-circuit landed, scoped per SCOPED-PROCEED)
+
+## Sprint 27 Day 7 (2026-06-07) — translate-time-only short-circuit LANDED (cross-terms → Sprint 28)
+
+Per the Day-0 SCOPED-PROCEED verdict (`PRIORITY_3_RISK_ASSESSMENT.md` §4.5) and the Option 1 re-plan, Sprint 27 lands the **translate-time-only** half of Option B and **defers** the cross-term half to Sprint 28.
+
+**Landed (`src/ad/index_mapping.py`):** `enumerate_equation_instances` now skips AD enumeration for the srpchase **dynamic-subset Cartesian blow-up shape** — generalized from the Day-0 model-name guard (`'purchase'`) to a tight STRUCTURAL gate (`_is_blowup_dynamic_subset_equation`): a 1-D **dynamic** subset (0 static members) of a **large** parent set (≥100 members), with a single (optionally negated) `SetMembershipTest` domain condition, whose body sums over a **2-D set** (the `sum(ancestor(srn,n), …)` Cartesian filter). For that shape it returns `[]`, skipping the `differentiate_expr`/`simplify` blow-up (the real >180s cost per the Day-0 profiling).
+
+**Verification:** srpchase translate **6.56s** (was >180s `translate_timeout`); GAMS `action=c` compile-clean; 0 quoted-literal set-name indices. **Blast radius = srpchase ONLY** — full-corpus byte scan: 136 models byte-identical (gate didn't fire), the 7 pre-existing FAILs unchanged, and the parse-timeout models are `translate_timeout` both before and after (no bucket change). 5 new unit tests (`tests/unit/ad/test_blowup_enumeration_skip.py`). **This is a Translate-bucket gain** (srpchase: `translate_timeout` → translate-success), **NOT a Solve/Match gain** — iswnm/mexls/nebrazil/sarf do not reach `compare_match` this sprint.
+
+**DEFERRED to Sprint 28 (coupled — must land together):**
+1. The **runtime-guard equation-body re-emit** at `src/kkt/stationarity.py` — re-emit the skipped `slack`/`demand` as `sum(<bound>$(<predicate>), <body>)` runtime-guarded GAMS equations so the constraints appear in the MCP.
+2. The **`J_gᵀ·lam` cross-terms** — the skipped equations' contributions to every variable's stationarity (`∂slack/∂y · nu_slack`, etc.). The AD layer enumerates ZERO instances for the skipped equations, so these are absent.
+
+Re-emitting the constraints (1) WITHOUT the cross-terms (2) would create an inconsistent MCP (multipliers with no complementarity coupling), so both are deferred together. The current landed scope produces a smaller, internally-consistent (slack/demand-free) MCP that compiles — translate gain only.
 **Affected Models:** srpchase, iswnm, sarf, mexls, nebrazil (5 GAMSlib `translate_timeout` models that Option 1 was meant to recover; srpchase has no separate carryforward issue — it's the primary Option 1 target).
 **Related issues** (Sprint 26 `sprint-26` labeled, carrying forward to Sprint 27 alongside this redesign):
 - **#885** — sarf: Translation timeout from combinatorial explosion in variable instances

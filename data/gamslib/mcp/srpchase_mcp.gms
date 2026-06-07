@@ -26,7 +26,6 @@ Sets
 
 $onImplicitAssign
 * Populate empty dynamic subsets for stationarity conditions
-leaf(n) = yes;
 srn(n) = yes;
 $offImplicitAssign
 
@@ -80,13 +79,11 @@ prob(n)$(NOT (prob(n) > -inf and prob(n) < inf)) = 0;
 
 Variables
     cost
-    nu_slack(n)
 ;
 
 Positive Variables
     x(n)
     y(n)
-    lam_demand(n)
     piL_x(n)
     piL_y(n)
 ;
@@ -116,11 +113,9 @@ y.l(n) = min(y.l(n), y.up(n));
 Equations
     stat_x(n)
     stat_y(n)
-    comp_demand(n)
     comp_lo_x(n)
     comp_lo_y(n)
     objective
-    slack(n)
 ;
 
 * ============================================
@@ -128,11 +123,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(n).. (prob(n) * price(n) + (((-1) * nu_slack(n))$(srn(n)))$((not leaf(n))) + (((-1) * lam_demand(n))$(srn(n)))$(leaf(n)) - piL_x(n))$(srn(n)) =E= 0;
-stat_y(n).. ((((-1) * 1$(ancestor(n,n))) * nu_slack(n))$(srn(n)))$((not leaf(n))) + nu_slack(n)$(srn(n)) + ((((-1) * 1$(ancestor(n,n))) * lam_demand(n))$(srn(n)))$(leaf(n)) - piL_y(n) =E= 0;
+stat_x(n).. (prob(n) * price(n) - piL_x(n))$(srn(n)) =E= 0;
+stat_y(n).. ((-1) * piL_y(n)) =E= 0;
 
 * Inequality complementarity equations
-comp_demand(srn)$(leaf(srn)).. x(srn) + sum(n$(ancestor(srn,n)), y(n)) - 1 =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_x(n).. x(n) - 0 =G= 0;
@@ -140,7 +134,6 @@ comp_lo_y(n).. y(n) - 0 =G= 0;
 
 * Original equality equations
 objective.. cost =E= sum(srn, prob(srn) * price(srn) * x(srn));
-slack(srn)$((not leaf(srn))).. y(srn) =E= x(srn) + sum(n$(ancestor(srn,n)), y(n));
 
 
 * ============================================
@@ -152,9 +145,6 @@ slack(srn)$((not leaf(srn))).. y(srn) =E= x(srn) + sum(n$(ancestor(srn,n)), y(n)
 
 x.fx(n)$(not (srn(n))) = 0;
 piL_x.fx(n)$(not (srn(n))) = 0;
-lam_demand.fx(srn)$(not (leaf(srn))) = 0;
-nu_slack.fx(n)$(not (srn(n))) = 0;
-lam_demand.fx(n)$(not (srn(n))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -172,9 +162,7 @@ lam_demand.fx(n)$(not (srn(n))) = 0;
 Model mcp_model /
     stat_x.x,
     stat_y.y,
-    comp_demand.lam_demand,
     objective.cost,
-    slack.nu_slack,
     comp_lo_x.piL_x,
     comp_lo_y.piL_y
 /;
