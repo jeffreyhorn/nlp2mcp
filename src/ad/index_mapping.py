@@ -433,7 +433,11 @@ def _is_blowup_dynamic_subset_equation(eq_name, eq_domain, condition, model_ir) 
     if not _condition_is_single_setmembership(condition):
         return False
     try:
-        parent_members, _ = resolve_set_members(sub, model_ir)
+        # quiet=True: this is a size-check probe in a gate predicate; the
+        # dynamic-subset → parent fallback is expected here and the Issue #723
+        # warning would be noisy/duplicated (enumerate_equation_instances
+        # resolves the same set again when the gate returns False).
+        parent_members, _ = resolve_set_members(sub, model_ir, quiet=True)
     except (ValueError, KeyError):
         return False
     if len(parent_members) < 100:
