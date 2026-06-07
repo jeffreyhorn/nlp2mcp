@@ -1,18 +1,31 @@
 # kand: alias-AD per-instance enumeration produces 22 phantom-offset cross-terms in stat_y (tree-predicate-aliased Sum architecture redesign)
 
 **GitHub Issue:** [#1390](https://github.com/jeffreyhorn/nlp2mcp/issues/1390)
-**Status:** OPEN (filed Sprint 26 Day 7, 2026-05-12)
+**Status:** DEFERRED to Sprint 28 (Sprint 27 Day 5 re-scoped Phase 0 = re-REPLAN; the documented fix premise is disproven — see "Sprint 28 carryforward" below). The linked GitHub issue remains open.
 **Severity:** Medium — produces a valid MCP solve that converges to Optimal but with ~92.5% rel_diff vs the NLP optimum; not a localized AD-helper bug but an architecture-level reclassification.
 **Date:** 2026-05-12
-**Last Updated:** 2026-05-12
+**Last Updated:** 2026-06-06
 **Affected Models:** kand (target); likely affects other models with tree-predicate-aliased Sum bodies (stochastic-programming scenario-tree shapes).
-**Target Sprint:** Sprint 27 (10–16h across architectural change + integration tests + Tier 0/1 byte-stable regression).
+**Target Sprint:** ~~Sprint 27~~ → **Sprint 28** (re-diagnose the TRUE mismatch source — it is NOT the phantom-term enumeration; see below).
+
+## Sprint 28 carryforward — Sprint 27 Day 5 re-scoped Phase 0 result (2026-06-06): re-REPLAN
+
+Sprint 27 Day 0 disproved the originally-documented AD patch site (`constraint_jacobian.py:903/1027` — `_apply_offset_substitution` fires in `stationarity.py`, not there). The Option 1 re-plan redirected #1390 to the `stationarity.py` offset re-symbolization layer and scheduled a Day 5 re-scoped Phase 0. **That Phase 0 returned re-REPLAN** (full verdict: `docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_ASSESSMENT.md` §3.5, Day-5 binding block):
+
+- An env-guarded prototype on the redirected layer (post-Day-4 the functions are at `_apply_offset_substitution:3257` / `_apply_alias_offset_to_deriv:3088`) **successfully collapsed the 22 phantom `lam_dembalx(j,t+1,n±k)` terms into the hand-derived single predicate-guarded Sum** `(eps*sum(nn$(tree(n,nn)), lam_dembalx(j,t+1,nn)))$(ord(t) <= card(t)-1)` (with the diagonal `-lam_dembalx(j,t,n)` preserved), and it compiles `action=c`-clean. So the collapse **is achievable** at this layer.
+- **BUT the collapsed emit is solution-equivalent to the verbose 22-term enumeration: both solve to MCP `cost = 195.0`, unchanged, vs NLP/LP optimum `2613.0` (the ~92.5% rel_diff persists).** kand stays `compare_objective_mismatch` *with the collapse applied*.
+- **Conclusion: the phantom-term enumeration is NOT the root cause of the kand mismatch.** The back-link contribution is reproduced faithfully by the collapse (just verbosely), so collapsing it is a cosmetic/structural cleanup, not a correctness fix. The real defect lies elsewhere.
+- **Mechanism note for the re-diagnosis:** kand's back-link is `Sum(index_sets=('nn',), condition=SetMembershipTest(tree,(nn,n)), body=y(j,t-1,nn))` — a `tree(nn,n)`-conditioned alias-Sum on the `n`-axis COMBINED with a genuine `t-1` lag on a different axis. The Pattern-C gate bails because `_body_has_index_offset_on_sets` sees the `t` lag (the guard that protects real lead/lag canaries), so the `n`-axis predicate falls to offset-enumeration. That is why 22 terms appear — but it is not why the objective is wrong.
+
+**Sprint 28 re-diagnosis direction:** find the TRUE source of the 195.0 vs 2613.0 gap — candidate surfaces are the `bal(j,t,n)`/`x` stationarity, the `t-1`↔`t+1` lag duality, or the LP first-stage/recourse coupling — NOT the `tree`-predicate re-symbolization (now proven inert to the objective). The phantom-term collapse may still be done as a separate readability cleanup, but it does not deliver the +1 Match. **Sprint 27 Match target lowered 66 → 65** to reflect the lost #1390 Match gain (recorded in PLAN §17 / SPRINT_LOG Day 5).
 **Cross-references:**
 - Predecessor: #1141 (now CLOSED 2026-05-12 via Sprint 26 Day 7 — see [docs/issues/completed/ISSUE_1141_kand-alias-tree-mismatch.md](completed/ISSUE_1141_kand-alias-tree-mismatch.md)).
 - Sister Sprint 27 carryforwards (similar AD-architecture-level reclassifications):
   - #1381 (Pattern C Phase B redesign — Sprint 26 Day 3 reclassification).
   - #1385 (Option 1 short-circuit redesign — Sprint 26 Day 4 reclassification).
 - Reclassification source: [docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md](../planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md) §"Issue #1141" (original keep-open rationale; superseded by Day 7 intractability discovery).
+
+> ⚠️ **HISTORICAL (superseded by the Day-5 re-REPLAN above).** Everything from here down is the original Sprint-26 framing, which assumed the 22 phantom-offset terms are the *root cause* of the kand mismatch. The Sprint 27 Day 5 re-scoped Phase 0 **disproved that premise** (collapsing the terms is solution-equivalent; MCP stays 195.0 ≠ NLP 2613.0). The Sprint 28 re-diagnosis must look elsewhere (see the carryforward above). Read the sections below as background on the phantom-term *symptom* only — NOT as the fix direction.
 
 ## Problem Summary
 

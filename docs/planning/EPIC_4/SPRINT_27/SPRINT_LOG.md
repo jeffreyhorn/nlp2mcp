@@ -310,24 +310,34 @@ Full output: `/tmp/sprint27_day5_retest_audit.md` (`changed_emit_artifacts.py --
 
 ---
 
-## Day 6 — Priority 3 #1390 kand + parallel Priority 5 #1357 otpop
+## Day 6 — #1390 SKIP (re-REPLAN) + Sprint 28 carryforward + P5 #1357 confirmed + P7 #1387 implemented→reverted→Sprint 28
 
-**Date:** TBD
-**Status:** 🔵 NOT STARTED
+**Date:** 2026-06-06
+**Status:** 🟢 DONE (re-REPLAN branch) — #1390 implementation SKIPPED per the Day-5 re-scoped Phase 0 verdict; freed Day 6–7 budget redirected to P7 #1387, which was greenlit, implemented, and then REVERTED (re-symbolization-anchor blocker) → deferred to Sprint 28. See below.
 **Hours budgeted:** ≤ 12
-**Hours actual:** —
+
+### Gating decision
+Day 6 is **gated on the Day 5 #1390 re-scoped Phase 0**, which returned **re-REPLAN** (the 22→1 predicate-Sum collapse is achievable but solution-equivalent — MCP `cost` stays 195.0 ≠ NLP 2613.0; the phantom terms are NOT the mismatch cause). Per the Day 6 prompt + PLAN §8 "if it re-REPLAN'd": **skip the #1390 implementation rows, defer #1390 to Sprint 28, Match → 65, pull P7 #1387 / P4 forward into this slot.**
 
 ### Tasks completed
-- _(to be filled in)_
+- **#1390 Sprint 28 carryforward FILED** — `docs/issues/ISSUE_1390_*.md` status → DEFERRED to Sprint 28 with the Day-5 re-REPLAN evidence + re-diagnosis direction (true mismatch source is NOT the `tree`-predicate re-symbolization; candidates: `bal`/`x` stationarity, `t-1`↔`t+1` lag duality, LP first-stage/recourse coupling). `PRIORITY_3_RISK_ASSESSMENT.md` §3.5 (Day-5 binding block) + PLAN §17 risk row updated; **Match target 66 → 65** recorded. ✅
+- **P5 #1357 otpop — confirmed CLOSED (landed Day 5)**: the comp_up subset/superset narrowing committed Day 5 (`05589235`, merged PR #1418) is the same single fix for #1356 fawley AND #1357 otpop. `otpop_mcp.gms` on main carries `comp_up_x(t)$(xb(t) < inf).. xb(t) - x(t) =G= 0;` — `$171` cleared. Solve gap (locally infeasible) needs #1393+#1335 → Sprint 28. ✅
+- **P7 #1387 cclinpts redirect — diagnosed, implemented, REVERTED → Sprint 28** (full record in `docs/issues/ISSUE_1387_*.md`). Empirical diagnosis (residual check at the NLP optimum) CORRECTED the `PRIORITY_7_FIX_SURFACE.md` §3.1/§3.3 framing:
+  - **"Bug 1 (sign-flip)" is a MISDIAGNOSIS — do NOT touch the sign logic.** The outer `(-1)` in `stat_b`/`stat_fb` is the standard maximize negation (`src/ad/gradient.py:265-267`, applied to every MAX model); combined with the inner `(-1)` from `d(b_M − b_j)/db_j` it yields the CORRECT `T1 − T2` signs under the codebase's `stat = −∇f + Jᵀν = 0` convention. §3.1/§3.3 hand-derived the *un-negated* `∂ObjV` and so flagged a sign error that does not exist; changing the sign logic would break every maximize model.
+  - **Bug 2 (missing j+1 offset cross-terms) is REAL; the corrected form is residual-verified.** The per-instance objective gradient omits the `j+1`-offset contributions (where the wrt-variable appears as `fb((j+1)−1)`/`b((j+1)−1)` inside the sum). Hand-patching the missing negated terms makes the NLP optimum satisfy the eliminated KKT condition to **max|residual| = 5e-8**. Root site = `_diff_sum`'s collapse path in `src/ad/derivative_rules.py`.
+  - **Implementation attempt + revert.** Greenlit to implement; built the offset enumeration in `_diff_sum` (gated `_try_diff_sum_offset_crossterms`). The per-instance derivatives are mathematically correct, **but reverted:** the gradient→stationarity re-symbolization anchors a pure-offset term (the `δ=−1` term is pure-`fb`, with no `b` reference to anchor on) on the WRONG element (`s11` not the col `s10`), mapping `fb(s11)−fb(s10) → fb(j)−fb(j-1)` (offset 0) which CANCELS the diagonal → cclinpts *worse*. cclinpts ALSO needs a warm-start (non-convex: PATH cold-converges to a spurious degenerate KKT point b≈const). Three coupled changes (AD enumeration + re-symbolization anchor + warm-start) → **deferred to Sprint 28** (the §3.7 escalation). `_diff_sum` change reverted; cclinpts byte-identical to baseline.
 
 ### Deliverables
-- _(to be filled in)_
+- `docs/issues/ISSUE_1390_*.md` Sprint 28 carryforward section; Match→65 recorded in `PLAN.md` §17 (risk row) and `PRIORITY_3_RISK_ASSESSMENT.md` §3.5 (Day-5 binding block).
+- `docs/issues/ISSUE_1387_*.md` updated with the Day-6 diagnosis + implementation-attempt finding (the re-symbolization-anchor blocker) + the well-specified Sprint 28 scope.
+- This Day 6 SPRINT_LOG entry. No net `src/` changes Day 6 — the #1390 prototype was reverted Day 5, and the #1387 `_diff_sum` change was implemented and then reverted (re-symbolization-anchor blocker; cclinpts byte-identical to baseline).
 
 ### KUs verified
-- _(target: KU 3.1)_
+- **KU 3.1** (#1390 kand) → re-verified on the redirected `stationarity.py` layer as **re-REPLAN** (the collapse is achievable but inert to the objective); deferred to Sprint 28.
 
 ### Carryforward to Day 7
-- _(to be filled in)_
+- **P7 #1387** → **Sprint 28** (NOT awaiting greenlight — greenlight was given, the AD offset-enumeration was implemented and reverted; the remaining blockers are technical (re-symbolization anchoring + non-convex warm-start), well-specified in `ISSUE_1387`). Per PLAN §8, #1385 translate-time-only short-circuit is the Day-7 item.
+- #1390, #1393+#1335, #1387 → Sprint 28 carryforwards filed.
 
 ---
 

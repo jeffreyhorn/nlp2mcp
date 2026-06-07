@@ -1,12 +1,35 @@
 # cclinpts: stat_b / stat_fb condition-guard or sign bug producing ~70% rel_diff (post-Pattern-A reclassification)
 
 **GitHub Issue:** [#1387](https://github.com/jeffreyhorn/nlp2mcp/issues/1387)
-**Status:** OPEN (filed Sprint 26 Day 6, 2026-05-12)
-**Severity:** Medium — produces a valid MCP solve but with ~70% rel_diff vs the NLP optimum; not a Pattern A AD-layer bug.
+**Status:** OPEN — **Sprint 27 Day 6 diagnosis re-scopes this (the documented two-bug framing is partly wrong); see "Day 6 diagnosis" below.**
+**Severity:** Medium — MCP cold-solves to a spurious degenerate KKT point (ObjV≈0 vs NLP −3.0011); not a Pattern A AD-layer bug.
 **Date:** 2026-05-12
-**Last Updated:** 2026-05-27 (Sprint 27 Prep Task 2 — Phase 0 acceptance-gate section authored per PR20 codification)
+**Last Updated:** 2026-06-06 (Sprint 27 Day 6 — empirical diagnosis: sign "bug" is a misdiagnosis; cross-term form confirmed via residual check; non-convex warm-start need identified)
 **Affected Models:** cclinpts
-**Target Sprint:** Sprint 27 (3–6h investigation + fix)
+**Target Sprint:** ~~Sprint 27~~ → likely **Sprint 28** (the legitimate fix is a high-blast-radius AD change that, alone, does not deliver the match — non-convex warm-start also required; see Day 6 diagnosis).
+
+## Sprint 27 Day 6 diagnosis (2026-06-06) — empirical; re-scopes the §3.3 two-bug framing
+
+Implementation was greenlit Day 6. The **diagnosis phase below** traced the actual AD gradient + ran an eliminated-KKT residual check at the NLP optimum entirely on scratch copies (no `src/` edits during diagnosis). A subsequent **implementation attempt** then DID edit `src/ad/derivative_rules.py` and was reverted — see "Day 6 implementation ATTEMPT" further down. Net result: the working tree is clean (cclinpts byte-identical to baseline). Diagnosis findings:
+
+1. **Bug 1 (sign-flip) is a MISDIAGNOSIS.** The outer `(-1)` in `stat_b`/`stat_fb` is the **standard maximize negation** (`src/ad/gradient.py:265-267`, applied to every MAX model); combined with the inner `(-1)` from `d(b_M − b_j)/db_j` it yields the CORRECT `T1 − T2` signs under the codebase's `stat = −∇f + Jᵀν = 0` convention. `PRIORITY_7_FIX_SURFACE.md` §3.1/§3.3 hand-derived the **un-negated** `∂ObjV` and so flagged a sign error that does not exist. **Do NOT touch the sign logic — it would break every maximize model.**
+2. **Bug 2 (missing j+1 offset cross-terms) is REAL, and the corrected form is CONFIRMED.** The per-instance objective gradient omits the `j+1`-offset contributions (where the wrt-variable appears as `fb((j+1)−1)`/`b((j+1)−1)` inside the sum). Hand-patching the emit with the missing **negated** terms — `stat_b += 0.5*(fb(j+1)−fb(j))*1$(not first(j+1))`; `stat_fb += −(b('s30')−b(j))*1$(not last(j)) + (b('s30')−b(j+1))*1$(not last(j+1)) + 0.5*(b(j+1)−b(j))*1$(not first(j+1))` — makes the NLP optimum satisfy the eliminated KKT condition `objgrad_b(j) + b(j)^(−γ)·objgrad_fb(j) = 0` to **max|residual| = 5e-8**. So the cross-term form is correct.
+3. **BUT the cross-term fix does NOT make cclinpts MATCH in the cold pipeline.** cclinpts is **non-convex with a spurious degenerate KKT point** (b≈const ⇒ all difference-based gradient terms vanish ⇒ trivially stationary for ANY version of the stat equations, ObjV=0). PATH converges there from BOTH the cold `b=5` start AND a near-optimal ramp start. So §3.6 PROCEED criterion #5 ("MODEL STATUS 1, rel_diff < 1%") **cannot be met by the gradient fix alone** — cclinpts additionally needs an **nlp-presolve warm start** (start PATH at the NLP optimum, which the fix makes a valid KKT point).
+
+**Re-scoped verdict:** the legitimate fix is the **objective-gradient offset cross-term enumeration** (Bug 2) — a **high-blast-radius AD change** (affects every model with an offset-indexed sum in the objective; needs full-corpus byte-stability + re-solve verification) which **on its own does not deliver the cclinpts +1 Solve/Match** (the non-convex warm-start is also required). Recommend implementing the AD cross-term fix as its own focused, fully-verified PR and handling the cclinpts warm-start separately — likely **Sprint 28** given the combined blast radius + non-convexity. The Day-6 probe established the correct target shape + residual-verified acceptance, so the implementation is well-specified for that session.
+
+### Day 6 implementation ATTEMPT (2026-06-06) — AD enumeration done, reverted: hit the re-symbolization-anchor blocker (confirms Sprint 28)
+
+Per a follow-up greenlight, implemented the offset cross-term enumeration in `src/ad/derivative_rules.py` `_diff_sum`'s collapse path (new tightly-gated `_try_diff_sum_offset_crossterms` + `_distinct_var_offsets_in_body` + `_shift_concrete_element`): for a single-index collapsing `Sum` where the wrt-variable appears at ≥1 NON-zero offset of the sum index, sum the per-offset contributions `Σ_δ ∂body/∂var(j+δ)|_{j=W−δ}·c(W−δ)` instead of only the diagonal `δ=0` term. The per-instance derivatives produced are **mathematically correct** (e.g. for ∂/∂b of T2 it generates the `δ=0` term `+(fb(j)−fb(j-1))` and the `δ=−1` term at the shifted element `−(fb(s11)−fb(s10))` for col `b('s10')`).
+
+**Blocker (reverted):** the objective gradient is stored per concrete instance and re-symbolized to the stationarity index downstream by **anchoring on the element that maps to `j`**. The `δ=−1` term is **pure-`fb`** (the `b` dependence is differentiated away), so it contains NO reference to the col index `b('s10')` to anchor on. The re-symbolizer anchors it on `s11` instead of the col index `s10`, mapping `fb(s11)−fb(s10) → fb(j)−fb(j-1)` (offset 0) rather than the correct `fb(j+1)−fb(j)`. The mis-anchored `δ=−1` term then **cancels** the `δ=0` term to zero — leaving cclinpts *worse* than baseline. So the AD enumeration is **necessary but not sufficient**: it also needs a companion fix so the gradient→stationarity re-symbolization anchors a pure-offset term on the **differentiated variable instance's own index** (the col), not on an arbitrary element present in the term. That is a second, separate deep change in the (unexplored) objective-gradient re-symbolization path.
+
+**Decision:** reverted the `_diff_sum` change (tree clean; cclinpts byte-identical to baseline). #1387 → **Sprint 28**: it requires (1) the AD offset-enumeration (done, well-specified above), (2) the re-symbolization-anchor fix, AND (3) the non-convex warm-start — three coupled changes, well beyond the documented "condition-guard or sign bug." This is exactly the §3.7 escalation trigger ("Day-1 diagnosis reveals a broader AD-architecture issue").
+
+### (prior framing — superseded by the Day 6 diagnosis above)
+
+> ⚠️ **HISTORICAL (superseded by the Day-6 diagnosis above).** Everything from here down — including the title's "condition-guard or sign bug" wording and the "Problem Summary" below — is the original Sprint-26 framing. The Day-6 diagnosis **disproved the sign-flip premise** (it is a misdiagnosis; the maximize negation is correct — do NOT change the sign logic) and identified the real root cause as the objective-gradient **offset cross-term omission** plus a **re-symbolization-anchor** gap and a **non-convex warm-start** need. Read the sections below as background on the *symptom* only — NOT as the fix direction.
+
 **Cross-references:**
 - Predecessor: #1145 (now CLOSED 2026-05-12 via Sprint 26 Day 6 — see [docs/issues/completed/ISSUE_1145_cclinpts-alias-mismatch.md](completed/ISSUE_1145_cclinpts-alias-mismatch.md)).
 - Reclassification source: [docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md](../planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md) §"Issue #1145".
