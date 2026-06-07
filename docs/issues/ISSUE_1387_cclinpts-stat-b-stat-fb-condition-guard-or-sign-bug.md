@@ -1,12 +1,22 @@
 # cclinpts: stat_b / stat_fb condition-guard or sign bug producing ~70% rel_diff (post-Pattern-A reclassification)
 
 **GitHub Issue:** [#1387](https://github.com/jeffreyhorn/nlp2mcp/issues/1387)
-**Status:** OPEN — **Sprint 27 Day 6 diagnosis re-scopes this (the documented two-bug framing is partly wrong); see "Day 6 diagnosis" below.**
+**Status:** DEFERRED to Sprint 28 (Sprint 27 Day 6 diagnosis + reverted implementation attempt established three coupled changes beyond the documented "condition-guard or sign bug"; Day 8 files the carryforward — see "Day 6 diagnosis" below). The linked GitHub issue remains open.
 **Severity:** Medium — MCP cold-solves to a spurious degenerate KKT point (ObjV≈0 vs NLP −3.0011); not a Pattern A AD-layer bug.
 **Date:** 2026-05-12
-**Last Updated:** 2026-06-06 (Sprint 27 Day 6 — empirical diagnosis: sign "bug" is a misdiagnosis; cross-term form confirmed via residual check; non-convex warm-start need identified)
+**Last Updated:** 2026-06-07 (Sprint 27 Day 8 — Sprint 28 carryforward filed; Day 6 diagnosis + reverted attempt are the binding record)
 **Affected Models:** cclinpts
-**Target Sprint:** ~~Sprint 27~~ → likely **Sprint 28** (the legitimate fix is a high-blast-radius AD change that, alone, does not deliver the match — non-convex warm-start also required; see Day 6 diagnosis).
+**Target Sprint:** ~~Sprint 27~~ → **Sprint 28** (Day-8 binding deferral: the legitimate fix is THREE coupled changes — AD offset-enumeration + gradient→stationarity re-symbolization-anchor fix + non-convex warm-start; see Day 6 diagnosis).
+
+## Sprint 28 carryforward — Sprint 27 Day 8 filing (2026-06-07)
+
+Day 8's PLAN §8 pulled #1387 *forward* (from Day 10) to implement. **That implementation is NOT attempted** — Sprint 27 Day 6 already diagnosed AND attempted it, then reverted (working tree clean, cclinpts byte-identical to baseline). The Day 6 record below is the binding diagnosis; Day 8 only formalizes the Sprint 28 deferral. Summary of why it cannot land in Sprint 27:
+
+1. **"Bug 1 sign-flip" is a MISDIAGNOSIS** — the outer `(-1)` is the standard maximize negation (`src/ad/gradient.py:265-267`); the signs are correct. Do NOT touch the sign logic (would break every maximize model).
+2. **"Bug 2" (missing j+1 offset cross-terms) is REAL** and residual-verified at the NLP optimum (eliminated-KKT max|residual| = 5e-8), but the implemented `_diff_sum` offset-enumeration had to be **reverted**: the objective-gradient re-symbolization anchors the pure-offset (`δ=−1`, fb-only) term on the wrong element (`s11` not the col `s10`), cancelling the diagonal → cclinpts *worse*.
+3. **cclinpts also needs a non-convex warm-start** — PATH cold-converges to a spurious degenerate KKT point (`b≈const`) from both the cold and near-optimal starts; the gradient fix alone cannot deliver the Match.
+
+→ Three coupled changes (AD offset-enumeration + re-symbolization-anchor fix + warm-start) = the §3.7 escalation trigger. **Deferred to Sprint 28** as a focused, fully-verified standalone PR (the AD cross-term fix has high blast radius — every model with an offset-indexed objective sum — and needs full-corpus byte-stability + re-solve).
 
 ## Sprint 27 Day 6 diagnosis (2026-06-06) — empirical; re-scopes the §3.3 two-bug framing
 

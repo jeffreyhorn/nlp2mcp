@@ -1,19 +1,32 @@
 # AD: scalar-constraint stationarity Sum body doesn't fully collapse when wrt-index is symbolic eq-domain superset of inner Sum's iteration subset
 
 **GitHub Issue:** [#1393](https://github.com/jeffreyhorn/nlp2mcp/issues/1393)
-**Status:** OPEN (filed Sprint 26 Day 9, 2026-05-12)
+**Status:** DEFERRED to Sprint 28 (Sprint 27 Day 0 binding verdict = REPLAN; Approach C was shown to be inert — see "Sprint 28 carryforward" below). The linked GitHub issue remains open.
 **Severity:** Medium — produces an over-counted KKT Jacobian cross-term (off by factor |subset| = 17× for otpop). Differs from the NLP optimum.
 **Date:** 2026-05-12
-**Last Updated:** 2026-05-12
+**Last Updated:** 2026-06-07 (Sprint 27 Day 8 — Sprint 28 carryforward filed; Day 0 Approach-C REPLAN recorded; now distinct from #1335)
 **Affected Models:** otpop (confirmed; the `kdef` scalar equation with `sum(t, del(t)*p(t)*x(t))`). Likely affects other models with scalar-aggregation constraints over subset domains referenced by indexed stationarity equations.
-**Target Sprint:** Sprint 27 (10–16h across architectural change + integration tests + Tier 0/1 byte-stable regression).
+**Target Sprint:** ~~Sprint 27~~ → **Sprint 28** (redirect to the `stationarity.py` symbolic-collapse path; the documented Approach-C patch site never executes — see below).
 **Cross-references:**
 - Predecessor: #1334. Closure history: originally CLOSED on GitHub 2026-05-05 (unintentional auto-closure via PR #1359 — a docs-only PR whose body explicitly listed #1334 as supposed-to-stay-OPEN); REOPENED Sprint 26 Day 4 (PR #1384) during Priority 5 #1334 investigation; close-and-refiled to this Sprint 27 #1393 on Sprint 26 Day 9 (the Day 9 GitHub closure + ISSUE_1334 doc move to `docs/issues/completed/` reflects the carryforward, not a new fix landing). See [docs/issues/completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md](completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md) for the original 2026-05-02 framing.
-- Companion: #1335 — Day 9 fix attempt rolled back per PR #1394 review (math-correctness regression in the resulting cross-term shape); reopened in-place as a Sprint 27 carryforward (6–10h estimate, narrower scope than this issue's 10–16h architectural redesign). Same target model otpop; see `[docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md](ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md)` for the corrected fix-surface diagnosis with three competing Sprint 27 approaches.
+- Companion: #1335 — Day 9 fix attempt rolled back per PR #1394 review (math-correctness regression in the resulting cross-term shape); reopened in-place as a Sprint 27 carryforward (6–10h estimate, narrower scope than this issue's 10–16h architectural redesign). Same target model otpop; see [docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md](ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md) for the corrected fix-surface diagnosis with three competing Sprint 27 approaches.
 - Sister Sprint 27 carryforwards (AD-architecture-level reclassifications):
   - #1381 (Pattern C Phase B redesign — Sprint 26 Day 3).
   - #1385 (Option 1 short-circuit redesign — Sprint 26 Day 4).
   - #1390 (kand tree-predicate-aliased Sum redesign — Sprint 26 Day 7).
+
+## Sprint 28 carryforward — Sprint 27 Day 0 binding verdict (2026-06-01): REPLAN (Approach C disproven)
+
+Sprint 27 budgeted #1393 against **Approach C** (add a subset-relation strategy to `_is_concrete_instance_of` so `_sum_should_collapse` fires on otpop's `kdef` Sum body). **Day 0 execution empirically disproved the Approach-C root-cause hypothesis** (full binding block: `docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_ASSESSMENT.md` §5.6 🔴 BINDING VERDICT, anchor `148662a5`):
+
+- A trace over otpop's full constraint-Jacobian computation shows `_is_concrete_instance_of` is **never invoked** with the `(concrete='tt', symbolic='t')` pair (nor any `tt`/`t` pairing). The collapse decision for a symbolic-stationarity wrt-index does **not** route through `_is_concrete_instance_of`.
+- The Approach-C prototype (otpop-guarded symbolic-superset strategy at `derivative_rules.py:2607`; `model_name == 'otpop1'`, `SetDef.domain == ('tt',)` confirmed) regenerated `otpop_mcp.gms` **byte-identical to baseline** — the patch is **inert**. The #1393 over-count `sum(t__, del(t__) … * nu_kdef)` persists in both `stat_x(tt)` and `stat_p(tt)`. No `src/` diff (reverted).
+
+**Redirected fix surface (Sprint 28):** the over-counted Sum keeps the synthetic KKT alias `t__` as its bound index and differentiates w.r.t. the **symbolic** stationarity index `tt` (not a concrete element). The collapse is handled in the **KKT symbolic-collapse path** in `stationarity.py` (where `t → t__` aliasing occurs), NOT in `_is_concrete_instance_of`. A Sprint 28 Phase 0 must re-anchor the fix there per the established methodology (hand-derive `stat_x`/`stat_p` KKT against the prototype emit BEFORE committing budget).
+
+**#1393 and #1335 are now DISTINCT fixes.** Approach C does NOT subsume #1335 (the `nu_zdef` cross-term in `stat_p(tt)` requires a separate `card(t)-ord(t)` offset evaluator — see [ISSUE_1335](ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md)). The Sprint 27 §5.5 fallback rule (C → B → A → defer) terminated at **defer to Sprint 28** because Approach C's inertness reveals the wrong *layer* was specified, not merely the wrong strategy.
+
+> ⚠️ **HISTORICAL (superseded by the Day-0 REPLAN above).** The sections below — including the "Root cause (from Sprint 26 Day 9 trace analysis)" steps that route the fix through `_sum_should_collapse` → `_is_concrete_instance_of` — describe the **Approach-C framing that Day 0 disproved** (that call path is never reached for this case). Read them as background on the over-count *symptom* and the original Sprint-26 hypothesis only — NOT as the Sprint 28 fix direction (which is the `stationarity.py` symbolic-collapse path).
 
 ## Problem Summary
 

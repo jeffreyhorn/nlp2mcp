@@ -375,27 +375,36 @@ Day 6 is **gated on the Day 5 #1390 re-scoped Phase 0**, which returned **re-REP
 
 ---
 
-## Day 8 — #1385 PR + Priority 3 #1393+#1335 + Priority 7 #1387 start
+## Day 8 — #1385 PR merged + Sprint 28 carryforwards filed (#1393, #1335, #1387)
 
-**Date:** TBD
-**Status:** 🔵 NOT STARTED
+**Date:** 2026-06-07
+**Status:** 🟢 DONE — #1385 PR (#1420) merged to main; #1393, #1335, #1387 filed as Sprint 28 carryforwards (NONE implemented). P7 #1387 implementation NOT attempted (Day 6 already diagnosed + reverted → Sprint 28).
 **Hours budgeted:** ≤ 12
 **Hours actual:** —
 
+### Adjusted scope (vs the prompt)
+- **Task 1 (#1385 PR) — already complete.** PR #1420 opened + review-iterated (Copilot `quiet=True` fix, commit `dc95c703`) + **merged to main** (`59c22931`). The scoped/translate-only boundary + Sprint 28 cross-term follow-on are stated in `ISSUE_1385`.
+- **Task 3 (#1387 implement, pulled forward from Day 10) — NOT attempted.** The Day 8 prompt's premise is **superseded by Day 6**: #1387's "Bug 1 sign-flip" is a misdiagnosis (maximize negation is correct), the real "Bug 2" offset-enumeration was implemented AND reverted (re-symbolization-anchor blocker), and cclinpts additionally needs a non-convex warm-start. Three coupled changes → deferred to Sprint 28. Re-implementing per the stale prompt would re-derive a non-bug and re-apply a change Day 6 proved makes cclinpts worse. **User-confirmed** the adjusted plan (file as carryforward, skip implementation).
+
 ### Tasks completed
-- _(to be filled in)_
+- **#1393+#1335 Sprint 28 carryforward filed** (replaces the disproven Approach-C implementation):
+  - `ISSUE_1393` — Status → DEFERRED to Sprint 28; added "Sprint 28 carryforward" section with the Day 0 binding REPLAN evidence (Approach C inert — `_is_concrete_instance_of` never reached, `otpop_mcp.gms` byte-identical, no `src/` diff); redirected fix surface = the `stationarity.py` symbolic-collapse path; old Approach-C "Root cause" framing marked HISTORICAL.
+  - `ISSUE_1335` — Status → DEFERRED to Sprint 28; confirmed **now DISTINCT from #1393** (Approach C never subsumed it); Sprint 28 fix = Approach B (`_try_eval_offset` for `card(t)-ord(t)` symbolic resolution, no Sum expansion).
+- **#1387 Sprint 28 carryforward filed** — `ISSUE_1387` Status → DEFERRED to Sprint 28; added a Day-8 filing section formalizing the three-coupled-changes deferral (AD offset-enumeration + re-symbolization-anchor fix + non-convex warm-start) on top of the existing Day-6 binding diagnosis. No implementation; working tree carries no `src/` change.
 
 ### Deliverables
-- _(to be filled in)_
+- `docs/issues/ISSUE_1393_*.md`, `docs/issues/ISSUE_1335_*.md`, `docs/issues/ISSUE_1387_*.md` — Sprint 28 carryforward sections + status updates.
+- This SPRINT_LOG Day 8 entry. **Docs-only day** (no `src/` or test changes → no quality-gate run required).
 
 ### KUs verified
-- _(target: KU 3.3)_
+- **KU 3.3** (#1393+#1335 Sprint 28 carryforward) → ✅ reflects the Day 0 REPLAN + the now-distinct #1393/#1335 split (filed Day 8).
 
 ### Carryforward to Day 9
-- _(to be filled in)_
+- Sprint 28 carryforwards now filed: **#1390** (Day 6), **#1385** cross-terms (Day 7), **#1393**, **#1335**, **#1387** (Day 8). Match target → 65.
+- Per PLAN §9: Priority 3 close + Priority 4 (#1378) launch-numerics start.
 
 ### PRs opened
-- _(#1385 PR; #1387 Phase 0 in progress)_
+- None (docs-only). #1385 PR #1420 already merged to main (`59c22931`); a Day-8 docs PR will carry the carryforward filings.
 
 ---
 

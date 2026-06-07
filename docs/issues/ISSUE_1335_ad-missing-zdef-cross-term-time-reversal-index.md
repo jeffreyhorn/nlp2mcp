@@ -1,11 +1,24 @@
 # AD: Missing `∂zdef/∂p` Cross-Term in `stat_p` When `zdef` References `p` via Time-Reversal-Indexed Offset
 
 **GitHub Issue:** [#1335](https://github.com/jeffreyhorn/nlp2mcp/issues/1335)
-**Status:** OPEN — Sprint 26 Day 9 fix attempt rolled back per PR #1394 review; Sprint 27 carryforward.
+**Status:** DEFERRED to Sprint 28 (Sprint 27 Day 0 confirmed #1393's Approach C does NOT subsume #1335 — this is now a DISTINCT fix needing a `card(t)-ord(t)` offset evaluator; see "Sprint 28 carryforward" below). The linked GitHub issue remains open.
 **Severity:** Medium — Produces a valid local KKT point that differs from the NLP optimum; affects models that use `card`/`ord` arithmetic on sum index variables to construct time-reversal or end-of-horizon mappings.
 **Date:** 2026-05-02
-**Last Updated:** 2026-05-12 (Sprint 26 Day 9 — rolled-back fix-attempt diagnosis added; reopened post-PR-#1394-review).
+**Last Updated:** 2026-06-07 (Sprint 27 Day 8 — Sprint 28 carryforward filed; confirmed distinct from #1393 per Day 0 REPLAN).
 **Affected Models:** otpop (confirmed); any model using `var(t + (card(t) - ord(t)))` or similar non-trivial offset arithmetic to map sum iterates to a fixed boundary element.
+**Target Sprint:** ~~Sprint 27~~ → **Sprint 28** (Approach B — extend `_try_eval_offset` to resolve `card(t)-ord(t)` symbolically; independent of #1393).
+
+---
+
+## Sprint 28 carryforward — Sprint 27 Day 0 confirmation (2026-06-01) + Day 8 filing (2026-06-07): distinct fix confirmed, deferred
+
+Sprint 27 carried #1335 as a companion to #1393 under the hypothesis that #1393's Approach C *might* also fix #1335 (by letting `_sum_should_collapse` fire on the `zdef` sum body). **Day 0 disproved Approach C entirely for #1393** (it is inert — the `_is_concrete_instance_of` call path is never reached; see [ISSUE_1393](ISSUE_1393_ad-scalar-eq-sum-collapse-symbolic-superset.md) §"Sprint 28 carryforward" and `PRIORITY_3_RISK_ASSESSMENT.md` §5.6 binding verdict). Consequently:
+
+- **#1335 is now a DISTINCT fix from #1393** — it was never subsumed, and the shared-fix hypothesis is dead. The `nu_zdef` cross-term in `stat_p(tt)` requires resolving the time-reversal offset `card(t)-ord(t)` independently.
+- **Sprint 28 fix direction = Approach B** (per the "Corrected fix-surface diagnosis" below): extend `_try_eval_offset` to resolve symbolic-base `IndexOffset`s whose offset arithmetic is fully determined by the iteration set's cardinality (so AD's `_diff_sum` computes the `∂zdef/∂p('1990')` partial **without** Sum expansion — avoiding the |t|×-overcount + `x(t)→x(tt)` re-symbolization defects that sank the Day-9 Approach-A attempt).
+- **Estimated effort:** 6–10h + a Phase 0 acceptance gate (hand-derive `stat_p('1990')` KKT against the prototype emit BEFORE committing budget), per the established methodology.
+
+The detailed rolled-back-attempt diagnosis and the three competing approaches (A/B/C) remain valid below — Approach B is the recommended Sprint 28 path.
 
 ---
 
