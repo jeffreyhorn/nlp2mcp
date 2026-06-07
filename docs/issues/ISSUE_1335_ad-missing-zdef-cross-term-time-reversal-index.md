@@ -10,7 +10,7 @@
 
 ---
 
-## Sprint 28 carryforward — Sprint 27 Day 0/Day 8 (2026-06-07): distinct fix confirmed, deferred
+## Sprint 28 carryforward — Sprint 27 Day 0 confirmation (2026-06-01) + Day 8 filing (2026-06-07): distinct fix confirmed, deferred
 
 Sprint 27 carried #1335 as a companion to #1393 under the hypothesis that #1393's Approach C *might* also fix #1335 (by letting `_sum_should_collapse` fire on the `zdef` sum body). **Day 0 disproved Approach C entirely for #1393** (it is inert — the `_is_concrete_instance_of` call path is never reached; see [ISSUE_1393](ISSUE_1393_ad-scalar-eq-sum-collapse-symbolic-superset.md) §"Sprint 28 carryforward" and `PRIORITY_3_RISK_ASSESSMENT.md` §5.6 binding verdict). Consequently:
 

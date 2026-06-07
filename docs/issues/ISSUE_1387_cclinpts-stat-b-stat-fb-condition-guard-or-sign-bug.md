@@ -12,7 +12,7 @@
 
 Day 8's PLAN §8 pulled #1387 *forward* (from Day 10) to implement. **That implementation is NOT attempted** — Sprint 27 Day 6 already diagnosed AND attempted it, then reverted (working tree clean, cclinpts byte-identical to baseline). The Day 6 record below is the binding diagnosis; Day 8 only formalizes the Sprint 28 deferral. Summary of why it cannot land in Sprint 27:
 
-1. **"Bug 1 sign-flip" is a MISDIAGNOSIS** — the outer `(-1)` is the standard maximize negation (`gradient.py:265-267`); the signs are correct. Do NOT touch the sign logic (would break every maximize model).
+1. **"Bug 1 sign-flip" is a MISDIAGNOSIS** — the outer `(-1)` is the standard maximize negation (`src/ad/gradient.py:265-267`); the signs are correct. Do NOT touch the sign logic (would break every maximize model).
 2. **"Bug 2" (missing j+1 offset cross-terms) is REAL** and residual-verified at the NLP optimum (eliminated-KKT max|residual| = 5e-8), but the implemented `_diff_sum` offset-enumeration had to be **reverted**: the objective-gradient re-symbolization anchors the pure-offset (`δ=−1`, fb-only) term on the wrong element (`s11` not the col `s10`), cancelling the diagonal → cclinpts *worse*.
 3. **cclinpts also needs a non-convex warm-start** — PATH cold-converges to a spurious degenerate KKT point (`b≈const`) from both the cold and near-optimal starts; the gradient fix alone cannot deliver the Match.
 
