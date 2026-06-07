@@ -27,6 +27,9 @@ Per a follow-up greenlight, implemented the offset cross-term enumeration in `sr
 **Decision:** reverted the `_diff_sum` change (tree clean; cclinpts byte-identical to baseline). #1387 → **Sprint 28**: it requires (1) the AD offset-enumeration (done, well-specified above), (2) the re-symbolization-anchor fix, AND (3) the non-convex warm-start — three coupled changes, well beyond the documented "condition-guard or sign bug." This is exactly the §3.7 escalation trigger ("Day-1 diagnosis reveals a broader AD-architecture issue").
 
 ### (prior framing — superseded by the Day 6 diagnosis above)
+
+> ⚠️ **HISTORICAL (superseded by the Day-6 diagnosis above).** Everything from here down — including the title's "condition-guard or sign bug" wording and the "Problem Summary" below — is the original Sprint-26 framing. The Day-6 diagnosis **disproved the sign-flip premise** (it is a misdiagnosis; the maximize negation is correct — do NOT change the sign logic) and identified the real root cause as the objective-gradient **offset cross-term omission** plus a **re-symbolization-anchor** gap and a **non-convex warm-start** need. Read the sections below as background on the *symptom* only — NOT as the fix direction.
+
 **Cross-references:**
 - Predecessor: #1145 (now CLOSED 2026-05-12 via Sprint 26 Day 6 — see [docs/issues/completed/ISSUE_1145_cclinpts-alias-mismatch.md](completed/ISSUE_1145_cclinpts-alias-mismatch.md)).
 - Reclassification source: [docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md](../planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md) §"Issue #1145".
