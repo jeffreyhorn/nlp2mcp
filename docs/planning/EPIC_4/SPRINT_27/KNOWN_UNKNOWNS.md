@@ -853,7 +853,14 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Sprint 27 Day 9, 2026-06-07) — **solver-tuning (NLP-warm-start via `--nlp-presolve`) recovers launch to MODEL STATUS 1 with a MATCHING solution; NO `_apply_pattern_c_swap_to_term` sign/scaling change is needed.** The assumption named the right class of fix (solver-tuning), but the warm-start alone was insufficient until a separate presolve-emit bug was fixed.
+
+**Findings:**
+- **Baseline reproduced:** cold `launch_mcp.gms` → MODEL STATUS 5 Locally Infeasible, 6194 iters.
+- **`--nlp-presolve` warm-start** (already wired into `run_full_test.py`'s STATUS-5 retry + the committed `launch_mcp_presolve.gms`) recovers launch to MODEL STATUS 1 Optimal — the PATH-numerics IS solver-tunable (RQ1/RQ2 = yes). But it initially landed on a **non-matching local optimum** (cost 2604.01 vs NLP reference 2257.80, 13.3% rel_diff → `compare_objective_mismatch`).
+- **Root cause of the mismatch = a double-applied parameter assignment (NOT non-convexity, NOT sign/scaling).** launch.gms adjusts two coefficients in place (`pre2('stage-3') = pre2('stage-3')*10**pre3(...)`, same for `pre4`). The presolve emit re-emitted these assignments AND `$include`d launch.gms — so under `$onMultiR` the `/data/` re-declaration did NOT reset and the adjustment was applied **twice** (`pre2('stage-3')`: −0.001 → −3.95e-5; `pre4('stage-3')`: 52.5 → 165.3), corrupting the objective for both the embedded NLP pre-solve and the final MCP (2604.01 is the optimum of a *corrupted* model). Verified via `iterlim=0` start-point dumps (identical), identical model statistics, and a `Display pre2,pre4` probe showing the doubled values.
+- **Fix (RQ3 answer): NOT `_apply_pattern_c_swap_to_term`.** It is `skip_self_ref_presolve` in `emit_computed_parameter_assignments` (`src/emit/original_symbols.py`), threaded from `emit_gams.py`: under `--nlp-presolve`, skip self-referential source param assignments (the `$include` applies them once). With it, launch's embedded NLP and MCP both reach **2257.7976 = MATCH** (end-to-end `[COMPARE] MATCH`, rel_diff 0.0).
+- **RQ4 (transfer):** the fix is general (any presolve model with in-place `p = p*…` source assignments). True blast radius among presolve models: launch (→match) and cesam (model_infeasible → presolve emit made more correct, compiles clean); fawley/korcge golden diffs are pre-existing staleness, not this fix. The 7 currently-matching presolve models have no self-referential assignments → unaffected.
 
 ---
 
@@ -894,7 +901,9 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🟡 **Status:** PARTIALLY VERIFIED (anchor identified; Priority 4 emit-impact analysis deferred to Unknown 4.1)
+✅ **Status:** VERIFIED — anchor PRESERVED (Sprint 27 Day 9, 2026-06-07). The Priority 4 #1378 fix (`skip_self_ref_presolve`) is **presolve-only** — it changes `*_mcp_presolve.gms` emission, NOT the cold `*_mcp.gms` path, and does NOT touch `_apply_pattern_c_swap_to_term`. The cold `launch_mcp.gms` regenerates **byte-identical** to the committed golden (verified Day 9), so the Priority 1 launch byte-stability anchor is preserved — no anchor shift, no relaxation to semantic-stability. The first "solver-tuning only → byte-stability preserved" branch of the Day-0 decision below holds (with the refinement that the warm-start MCP variant `launch_mcp_presolve.gms` does change — it drops the 2 double-applied `pre2`/`pre4` lines — but that is the presolve artifact, not the byte-stability anchor).
+
+🟡 **(superseded) Status:** PARTIALLY VERIFIED (anchor identified; Priority 4 emit-impact analysis deferred to Unknown 4.1)
 **Verified by:** Task 4 (#1398 Widened-Scope Verification + Anchor Model Audit)
 **Date:** 2026-05-28
 

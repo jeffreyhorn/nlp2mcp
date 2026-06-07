@@ -1604,6 +1604,7 @@ def emit_computed_parameter_assignments(
     varref_filter: str = "all",
     only_params: set[str] | None = None,
     exclude_params: set[str] | None = None,
+    skip_self_ref_presolve: bool = False,
 ) -> str:
     """Emit computed parameter assignment statements.
 
@@ -1621,6 +1622,14 @@ def emit_computed_parameter_assignments(
             - ``"only_varref_attr"``: Only emit expressions containing VarRef with attribute
         only_params: If provided, only emit params whose lowercase name is in this set.
         exclude_params: If provided, skip params whose lowercase name is in this set.
+        skip_self_ref_presolve: Issue #1378. When True (set under ``--nlp-presolve``),
+            skip self-referential parameter assignments (e.g., ``pre2 = pre2*10**pre3``)
+            even when the parameter has prior ``/data/`` values. Under presolve the
+            emitted MCP ``$include``s the source model, which re-executes every source
+            parameter assignment exactly once; emitting a self-referential assignment
+            here as well would DOUBLE-APPLY it, corrupting the value for both the
+            embedded NLP pre-solve and the final MCP. The ``$include`` provides the
+            single correct application.
 
     Returns:
         GAMS assignment statements as string
@@ -1764,6 +1773,23 @@ def emit_computed_parameter_assignments(
                 logger.info(
                     "Skipping self-referencing expression for parameter '%s' "
                     "(no prior values — likely depends on dropped .l calibration)",
+                    param_name,
+                )
+                stmt_idx += 1
+                continue
+            # Issue #1378: under --nlp-presolve the emitted MCP `$include`s the
+            # source model, which re-executes every source parameter assignment
+            # once. A self-referential assignment (e.g. launch's
+            # `pre2('stage-3') = pre2('stage-3')*10**pre3('stage-3')`) emitted
+            # here too would be DOUBLE-APPLIED — corrupting the value for both
+            # the embedded NLP pre-solve and the final MCP (launch mismatched
+            # 2604.01 vs the NLP optimum 2257.80). Skip it; the `$include`
+            # provides the single correct application.
+            if is_self_ref and skip_self_ref_presolve:
+                logger.info(
+                    "Issue #1378: skipping self-referencing assignment for "
+                    "parameter '%s' under --nlp-presolve (the $include "
+                    "re-applies it once)",
                     param_name,
                 )
                 stmt_idx += 1

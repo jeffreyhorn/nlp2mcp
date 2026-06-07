@@ -1315,6 +1315,13 @@ def emit_gams_mcp(
         all_params_lower = {p.lower() for p in kkt.model_ir.params}
         non_model_params = all_params_lower - model_relevant_params
 
+    # Issue #1378: Whether the NLP pre-solve `$include` will actually be emitted.
+    # When it is, the `$include` re-executes every source parameter assignment
+    # once, so self-referential assignments (e.g. launch's `pre2 = pre2*10**pre3`)
+    # must NOT also be emitted in the MCP's own parameter section — else they are
+    # double-applied. Computed once here and reused by the var-init skip below.
+    presolve_will_emit = nlp_presolve and _will_emit_nlp_presolve(kkt, source_file)
+
     # Issue #860/#881: Emit set assignments and their dependent computed params
     # in interleaved order.  When set assignments have complex dependency chains
     # with computed parameters (e.g., T0 → red → redsam → T1 → Abar1 → nonzero),
@@ -1331,7 +1338,10 @@ def emit_gams_mcp(
         early_params = compute_set_assignment_param_deps(kkt.model_ir)
         if early_params:
             early_code = emit_computed_parameter_assignments(
-                kkt.model_ir, varref_filter="no_varref_attr", only_params=early_params
+                kkt.model_ir,
+                varref_filter="no_varref_attr",
+                only_params=early_params,
+                skip_self_ref_presolve=presolve_will_emit,
             )
             if early_code:
                 sections.append("$onImplicitAssign")
@@ -1391,6 +1401,7 @@ def emit_gams_mcp(
             early_params if early_params else None,
             non_model_params,
         ),
+        skip_self_ref_presolve=presolve_will_emit,
     )
     if computed_params_code:
         # Sprint 19 Day 3: If any computed parameter contains stochastic
@@ -1722,7 +1733,6 @@ def emit_gams_mcp(
     # skipping var-init would leave the MCP with no warm-start AND no
     # fallback init — reintroducing listing-time div-by-zero issues
     # the init pass was meant to prevent.
-    presolve_will_emit = nlp_presolve and _will_emit_nlp_presolve(kkt, source_file)
     # Issue #1243: FREE variables that appear in denominator (or log())
     # positions of stationarity equation bodies need a default .l = 1 to
     # avoid EXECERROR=1 from div-by-zero at GAMS model-listing time.
