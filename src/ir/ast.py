@@ -536,10 +536,12 @@ class IndexOffset(Expr):
                         return f"{self.base}+{int(offset_val)}"
                     else:
                         return f"{self.base}{int(offset_val)}"
-            elif isinstance(inner, (Call, Binary)):
+            elif isinstance(inner, (Call, Binary, ParamRef)):
                 # Sprint 20 Day 3: Handle Unary("-", Call(...)) and Unary("-", Binary(...)) patterns
                 # e.g., sparta: t-(ord(l)-1) → Unary("-", Binary("-", Call("ord", ...), Const(1)))
                 # e.g., tabora: t-ord(a) → Unary("-", Call("ord", ...))
+                # Issue #1224: also Unary("-", ParamRef(...)) — the parameter-valued
+                # LAG form, e.g. `i-li(k)` → Unary("-", ParamRef("li", ("k",))).
                 # Circular not supported for complex expressions
                 if self.circular:
                     raise NotImplementedError(
@@ -566,25 +568,17 @@ class IndexOffset(Expr):
             offset_str = self._offset_expr_to_string(self.offset)
             # Wrap complex offset in parentheses for clarity
             return f"{self.base}+({offset_str})"
-        elif isinstance(self.offset, Call):
-            # Sprint 20 Day 3: Handle Call(...) pattern (direct call without unary minus)
-            # e.g., t+ord(i)
-            if self.circular:
-                raise NotImplementedError(
-                    f"Circular lead/lag with Call offset not supported: {self.offset}"
-                )
-            offset_str = self._offset_expr_to_string(self.offset)
-            return f"{self.base}+{offset_str}"
-        elif isinstance(self.offset, ParamRef):
-            # Issue #1224: parameter-valued offset, e.g. mine's `i + li(k)` where
-            # `li(k)` is a parameter giving the lead amount per neighbor `k`.
-            # GAMS accepts a parameter expression as a lead/lag amount and
-            # evaluates it at runtime, so the equation domain index `k` can stay
-            # symbolic — render `base+li(k)` directly rather than requiring a
+        elif isinstance(self.offset, (Call, ParamRef)):
+            # Sprint 20 Day 3: Call(...) pattern (direct call without unary minus),
+            # e.g. t+ord(i). Issue #1224: ParamRef(...) pattern, e.g. mine's
+            # i+li(k) — GAMS accepts a parameter expression as a lead/lag amount
+            # and evaluates it at runtime, so the equation domain index `k` can
+            # stay symbolic; render `base+li(k)` directly rather than requiring a
             # constant integer offset.
             if self.circular:
                 raise NotImplementedError(
-                    f"Circular lead/lag with ParamRef offset not supported: {self.offset}"
+                    f"Circular lead/lag with {type(self.offset).__name__} offset "
+                    f"not supported: {self.offset}"
                 )
             offset_str = self._offset_expr_to_string(self.offset)
             return f"{self.base}+{offset_str}"

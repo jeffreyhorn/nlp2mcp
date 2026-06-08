@@ -41,6 +41,15 @@ def test_paramref_offset_renders():
     )
 
 
+def test_paramref_lag_offset_renders():
+    """#1224 (PR review): the LAG form `i-li(k)` is parsed as
+    `Unary('-', ParamRef(...))` and must render as `i-li(k)`, not raise."""
+    from src.ir.ast import Unary
+
+    lag = IndexOffset(base="i", offset=Unary("-", ParamRef("li", ("k",))), circular=False)
+    assert lag.to_gams_string() == "i-li(k)"
+
+
 def test_const_and_symbol_offsets_unchanged():
     """Regression: the existing Const/SymbolRef offset rendering is unchanged."""
     assert IndexOffset(base="t", offset=Const(1), circular=False).to_gams_string() == "t+1"
