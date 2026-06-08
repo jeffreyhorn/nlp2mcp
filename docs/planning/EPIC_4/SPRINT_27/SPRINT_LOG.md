@@ -28,12 +28,12 @@ Filled in at each checkpoint (Days 5, 10, 13). Track delta vs Day 0 baseline.
 
 | Metric | Day 0 baseline | Day 5 (Checkpoint 1) | Day 10 (Checkpoint 2) | Day 13 (Final) | Target |
 |---|---|---|---|---|---|
-| Parse success | 142/142 | TBD | TBD | TBD | ≥ 142/142 |
-| Translate success | 131/142 | TBD | TBD | TBD | ≥ 135/142 |
-| Solve success | 103/142 | TBD | TBD | TBD | ≥ 111/142 |
-| Solution match | 59/142 | TBD | TBD | TBD | ≥ 66/142 |
-| path_syntax_error | 14 | TBD | TBD | TBD | ≤ 6 |
-| path_solve_terminated | 5 | TBD | TBD | TBD | ≤ 5 (maintain) |
+| Parse success | 142/142 | 142/142 | 142/142 | TBD | ≥ 142/142 |
+| Translate success | 131/142 | 132/142 | 133/142 | TBD | ≥ 135/142 |
+| Solve success | 103/142 | 105/142 | 105/142 | TBD | ≥ 111/142 |
+| Solution match | 59/142 | 61/142 | 62/142 | TBD | ≥ 66/142 |
+| path_syntax_error | 14 | 9 | 7 | TBD | ≤ 6 |
+| path_solve_terminated | 5 | 5 | 5 | TBD | ≤ 5 (maintain) |
 | model_infeasible | 4 | TBD | TBD | TBD | ≤ 3 |
 | Tests passing | 4,737 | TBD | TBD | TBD | ≥ 4,750 |
 | Determinism (3 `PYTHONHASHSEED`) | n/a | n/a | n/a | TBD | byte-identical |
@@ -444,39 +444,60 @@ Day 6 is **gated on the Day 5 #1390 re-scoped Phase 0**, which returned **re-REP
 
 ---
 
-## Day 10 — Checkpoint 2: Pipeline Retest + Priority 4 close + Priority 7 #1387 implement
+## Day 10 — Checkpoint 2: full pipeline retest (Solve 105 / Match 62; no regression, gap = Sprint 28 deferrals)
 
-**Date:** TBD
-**Status:** 🔵 NOT STARTED
-**Hours budgeted:** ≤ 10
-**Hours actual:** —
+**Date:** 2026-06-08
+**Status:** 🟢 DONE — full 142-model retest complete. **Solve 105/142, Match 62/142**, both **below the optimistic targets (≥108 / ≥65) by exactly the Sprint 28 deferrals** (camcge, otpop, fawley — all `model_infeasible`). **No silent regression**: the Solve-success and Match sets are byte-identical to the committed (Day-9) DB.
 
-### Checkpoint 2 metrics (from full pipeline retest)
-| Metric | Day 0 | Day 5 | Day 10 | Δ Day 0 → Day 10 |
-|---|---|---|---|---|
-| Solve | 103 | TBD | TBD | TBD |
-| Match | 59 | TBD | TBD | TBD |
-| path_syntax_error | 14 | TBD | TBD | TBD |
-| Translate | 131 | TBD | TBD | TBD |
-| Tests | 4,737 | TBD | TBD | TBD |
+### Adjusted scope (vs the prompt)
+- **Task 4 (Priority 4 close) — done.** PR #1422 (launch #1378) merged.
+- **Task 5 (merge P7 #1387) — N/A.** #1387 was never implemented (Day 6 diagnosed + reverted → Sprint 28 carryforward, filed Day 8). No PR to merge.
+- Day 10 = PR22 audit + full pipeline retest + this checkpoint entry.
 
-### PR22 audit-script Day 10 output
-_(paste `/tmp/sprint27_day10_retest.md` here)_
+### Checkpoint 2 metrics (full pipeline retest, all 142 models)
+| Metric | Day 0 | Day 5 | Day 10 | CP2 target | Δ Day 0 → Day 10 |
+|---|---|---|---|---|---|
+| Parse | 142 | 142 | **142** | — | +0 |
+| Translate | 131 | 132 | **133** | — | +2 |
+| Solve | 103 | 105 | **105** | ≥ 108 | **+2** (miss −3) |
+| Match | 59 | 61 | **62** | ≥ 65 | **+3** (miss −3) |
+| path_syntax_error | 14 | 9 | **7** | ≤ 6 | −7 (miss −1) |
+| path_solve_terminated | 5 | 5 | **5** | ≤ 5 | +0 (met) |
 
-### Bucket-provenance updates
-_(table)_
+Solve-failure bucket reconciliation (133 translated = 105 solved + 28 failed): `path_solve_license` 9 · `model_infeasible` 7 · `path_syntax_error` 7 · `path_solve_terminated` 5.
+
+### No-regression verification (the prompt's "investigate if Match=62" gate)
+Compared the retest DB against the committed (Day-9) `gamslib_status.json`:
+- **Match set: identical** (62 = 62; 0 gained, 0 lost). **Solve-success set: identical** (0 gained, 0 lost).
+- The only deltas are **reclassifications within the failure set** (this is the first full re-solve since Day 5, refreshing stale buckets): `path_syntax_error` 9 → 7, `model_infeasible` 5 → 7, `path_solve_license` 8 → 9. None of these moved a model out of Solve/Match.
+- **Conclusion: the 62 is NOT a silent recovery failure.** The realized firm Match gains are exactly `qdemo7` (#1398, Day 5) + `cesam2` (#1381, Day 4) + `launch` (#1378, Day 9) = baseline 59 **+3 = 62**. The Day-0 "+6 firm" projection assumed `fawley` (#1356), `otpop` (#1357), and a second `#1381` model (`camcge`) would also deliver Match — but all three went **`model_infeasible`** (documented Days 4–5: forward bucket moves needing the deferred #1393+#1335 / the CGE singular-Jacobian degeneracy). Same story for Solve: realized firm gains = `qdemo7` + `cesam2` = +2 → 105; the other 3 projected solves are the deferred infeasibles.
+
+### Named non-success buckets (Day 10)
+- **Match (62):** baseline 59 + qdemo7 + cesam2 + launch.
+- **model_infeasible (7):** agreste, **camcge**, camshape, cesam, **fawley**, lnts, **otpop** — bold = Sprint 28 carryforward Solve/Match targets (#1393+#1335, CGE degeneracy).
+- **path_syntax_error (7):** clearlak, dinam, gangesx, indus, sample, turkey, turkpow — pre-existing (non-#1398; turkpow byte-identical to baseline per Day-5 notes).
+- **path_solve_license (9):** egypt, ferts, glider, robot, shale, sroute, srpchase, tabora, tfordy (license-limited, not a translation defect).
+- **path_solve_terminated (5):** dyncge, elec, maxmin, tricp, twocge.
+
+### PR22 audit-script Day 10 output (`scripts/sprint_audit/changed_emit_artifacts.py --since-commit 148662a5 --mode retest`)
+- **Range:** `148662a5cfba..HEAD` — **11 commits, 54 emit changes (36 unique `*_mcp.gms` paths).**
+- Changed emit artifacts (P1 #1398 + P2 #1381 + P5 #1356/#1357 + P4 #1378 sweep): abel, agreste(+presolve), camcge, cesam, cesam2, dinam, dyncge, egypt, fawley, feasopt1, ferts, ganges, gangesx, iobalance, irscge, korcge, **launch_mcp_presolve**, lrgcge, markov, meanvar, moncge, orani, otpop, ps10_s, ps2_f_s, ps2_s, ps3_s(+gic/mn/scp), qdemo7, quocge, shale, srpchase, stdcge. Full per-commit table: `/tmp/sprint27_day10_retest.md`.
 
 ### Tasks completed
-- _(to be filled in)_
+- Full 142-model pipeline retest (`run_full_test.py`) — refreshed `gamslib_status.json` (authoritative Checkpoint 2 state); determinism confirmed (Solve/Match sets byte-identical to committed).
+- PR22 audit-script invocation (above).
+- This checkpoint entry.
 
 ### Deliverables
-- _(to be filled in)_
+- `data/gamslib/gamslib_status.json` (refreshed Checkpoint 2 DB). Docs-only otherwise (no `src/` change → no quality-gate run; the retest IS the verification).
 
 ### KUs verified
-- _(to be filled in)_
+- Checkpoint 2 confirms the realized Solve/Match deltas (+2 / +3) match the landed work; the gap to target is the recorded Sprint 28 deferrals (#1390, #1393+#1335, #1387) — per PLAN §17, Match 62 (target-minus-3, all deferral-attributable) is recorded, not treated as a regression.
 
 ### Carryforward to Day 11
-- _(to be filled in)_
+- **Sprint 28 carryforwards (Solve/Match-bearing):** #1393+#1335 (otpop/camcge/cesam infeasible), #1390 (kand), #1387 (cclinpts), + camcge CGE singular-Jacobian degeneracy. These are the Solve 105→108 / Match 62→65 gap.
+- Per PLAN §11: Priority 7 #1388 discriminator + Priority 6 #1224 start. (#1387 already → Sprint 28.)
+- **Pre-existing `*_mcp_presolve.gms` golden staleness** (cesam/fawley/korcge) noted Day 9 — still candidate housekeeping, not gating.
 
 ---
 
