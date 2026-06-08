@@ -34,8 +34,8 @@ Filled in at each checkpoint (Days 5, 10, 13). Track delta vs Day 0 baseline.
 | Solution match | 59/142 | 61/142 | 62/142 | TBD | ≥ 66/142 |
 | path_syntax_error | 14 | 9 | 7 | TBD | ≤ 6 |
 | path_solve_terminated | 5 | 5 | 5 | TBD | ≤ 5 (maintain) |
-| model_infeasible | 4 | TBD | TBD | TBD | ≤ 3 |
-| Tests passing | 4,737 | TBD | TBD | TBD | ≥ 4,750 |
+| model_infeasible | 4 | 5 | 7 | TBD | ≤ 3 |
+| Tests passing | 4,737 | 4,758 | 4,768 | TBD | ≥ 4,750 |
 | Determinism (3 `PYTHONHASHSEED`) | n/a | n/a | n/a | TBD | byte-identical |
 
 ---
