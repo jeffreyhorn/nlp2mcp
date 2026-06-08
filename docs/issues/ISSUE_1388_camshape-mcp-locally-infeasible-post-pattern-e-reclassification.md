@@ -1,12 +1,24 @@
 # camshape: MCP solves to Locally Infeasible (post-Pattern-E reclassification)
 
 **GitHub Issue:** [#1388](https://github.com/jeffreyhorn/nlp2mcp/issues/1388)
-**Status:** OPEN (filed Sprint 26 Day 6, 2026-05-12)
+**Status:** DEFERRED to Sprint 28 (Sprint 27 Day 11 §4.6 discriminator run; multi-bug — see "Day 11 §4.6 result" below). The linked GitHub issue remains open.
 **Severity:** Medium — translate + compile clean but the PATH solve produces `Locally Infeasible (model_status = 5)` with obj=6.2 vs NLP obj=4.2841.
 **Date:** 2026-05-12
-**Last Updated:** 2026-05-27 (Sprint 27 Prep Task 2 — Phase 0 acceptance-gate section authored per PR20 codification)
+**Last Updated:** 2026-06-08 (Sprint 27 Day 11 — §4.6 3-way discriminator run; Case (b), multi-bug → Sprint 28)
 **Affected Models:** camshape
-**Target Sprint:** Sprint 27 (3–6h investigation + fix)
+**Target Sprint:** ~~Sprint 27~~ → **Sprint 28** (Case-(b) `stat_r` stationarity-emit divergence; the separable subset-corruption bug #1424 is fixed in Sprint 27).
+
+## Day 11 §4.6 result (2026-06-08) — Case (b), multi-bug → Sprint 28
+
+The Sprint 27 Day 11 §4.6 3-way discriminator (NLP-warm-start runtime test + per-term shape-divergence check) found camshape is a **multi-bug** model, not a clean a/b/c:
+
+1. **Subset-corruption emit bug (separable, FIXED in Sprint 27 as [#1424](ISSUE_1424_emit-dynamic-subset-defaults-corrupts-model-assigned-subsets.md)).** `_emit_dynamic_subset_defaults` blanket-populated `first/last/middle` (model-assigned element-wise), corrupting every constraint domain AND making the `--nlp-presolve` embedded NLP *infeasible* (area=5.009) instead of the true optimum (area=4.2841). This invalidated Approach A's warm-start. Removing the blanket restored `first={i1}`, `last={i100}`, `middle={i2..i99}` and a feasible embedded NLP (MS 2, area=4.2841). **This fix corrects camshape's emitted problem but does NOT recover its solve.**
+
+2. **Case (b) `stat_r` stationarity-emit divergence (→ Sprint 28).** With #1424 applied, the §4.6 discriminator was run with a **verified-complete** NLP-KKT warm-start (all 10 symbols confirmed loaded: `area`=4.284, `lam_convexity`≈194, `lam_convex_edge1(i1)`=198.17, `nu_eqrdiff`≈−0.94, `rdiff` loaded; `lam_convex_edge3/4`, `piL_r`, `piU_r` correctly 0 — those constraints/bounds inactive in the NLP). From this exact NLP KKT point, the MCP returns **MODEL STATUS 5 Locally Infeasible** with **`stat_r(i1)` INFES ≈ 396** (dominated by the `convex_edge1` cross-term `−2.0004·lam_convex_edge1(i1)` that nothing balances). Per §4.6, MS 5 from a complete warm-start + a **non-inert** shape divergence ⇒ **Case (b)** — an emit bug, NOT pure non-convexity (Case c).
+
+   The divergence is **non-inert** and distinct from the §4.3 boundary-guard form-mismatch (which §4.3 proved *inert* — the over-fired terms reference `lam_convexity` values fixed to 0). The true NLP KKT point not satisfying the emitted `stat_r` (residual ≈396 ≫ 0) means a balancing stationarity term is missing or mis-signed in the `stat_r` interior/edge cross-terms.
+
+**Sprint 28 fix direction:** per-term hand-derivation of `stat_r(i)` vs the emit (Phase 0 §4.1 target) to pin the missing/wrong term, then fix at the §4.4 candidate site (`src/kkt/stationarity.py:1835` `_build_indexed_stationarity_expr` or `src/ad/constraint_jacobian.py:903/1027`). camshape's +1 Solve requires BOTH #1424 (landed) AND this Case-(b) `stat_r` fix. Estimated ~4.5h (the §4.5 Case-(b) path) — deferred to Sprint 28 as a focused stationarity-emit diagnosis.
 **Cross-references:**
 - Predecessor: #1147 (now CLOSED 2026-05-12 via Sprint 26 Day 6 — see [docs/issues/completed/ISSUE_1147_camshape-alias-compilation-error.md](completed/ISSUE_1147_camshape-alias-compilation-error.md)).
 - Sibling (closed Sprint 25): #1160 ("camshape: MCP pairing error — stat_rdiff.rdiff unmatched equation (subset domain mismatch)") — fixed; current bug is distinct.

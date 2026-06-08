@@ -501,31 +501,43 @@ Compared the retest DB against the committed (Day-9) `gamslib_status.json`:
 
 ---
 
-## Day 11 — Priority 7 #1388 discriminator + #1387 close + Priority 6 #1224 start
+## Day 11 — Priority 7 #1388 §4.6 discriminator → #1424 subset-corruption fix LANDED + #1388 Case (b) → Sprint 28
 
-**Date:** TBD
-**Status:** 🔵 NOT STARTED
+**Date:** 2026-06-08
+**Status:** 🟢 DONE — §4.6 discriminator run; uncovered + shipped a separable emit bug (#1424); #1388 classified Case (b) (multi-bug) → Sprint 28 carryforward. #1224 not started (the §4.6 dive + #1424 fix consumed the day).
 **Hours budgeted:** ≤ 10
-**Hours actual:** —
+
+### Adjusted scope (vs the prompt)
+- Prompt context "#1387 implemented Day 8 + closed Day 9–10" is **stale** — #1387 was never implemented (Day 6 diagnosed + reverted → Sprint 28 carryforward, filed Day 8). Not a Day 11 task.
+- The §4.6 discriminator surfaced a **separable, previously-undiagnosed emit bug (#1424)** that had to be fixed before the discriminator was even valid; that + its 19-golden blast-radius verification consumed the day. **#1224 (Priority 6) deferred to Day 12.**
 
 ### #1388 §4.6 3-way discriminator result
-- **NLP-warm-start MODEL STATUS:** TBD
-- **All 10 warm-startable symbols verified loaded (3 primals + 7 multipliers):** TBD
-- **Per-term Phase 0 shape-divergence grep result (non-inert?):** TBD
-- **Case classification:** TBD (a / b / c)
-- **Action:** TBD (Sprint 27 fix OR Sprint 28 carryforward)
+- **NLP-warm-start MODEL STATUS:** 5 Locally Infeasible (from a verified-complete warm-start, after #1424).
+- **All 10 warm-startable symbols verified loaded:** ✅ (area=4.284, lam_convexity≈194, lam_convex_edge1(i1)=198.17, nu_eqrdiff≈−0.94, rdiff loaded; lam_convex_edge3/4, piL_r, piU_r correctly 0 — inactive in NLP).
+- **Per-term shape-divergence:** **non-inert** — `stat_r(i1)` INFES ≈ 396 at the NLP KKT point (dominated by the unbalanced `convex_edge1` cross-term); distinct from the §4.3 boundary-guard mismatch (proven *inert*).
+- **Case classification:** **(b)** — emit bug (structural `stat_r` divergence), NOT pure non-convexity.
+- **Action:** **Sprint 28 carryforward** (`ISSUE_1388` updated). camshape's +1 Solve needs BOTH #1424 (landed) AND the Case-(b) `stat_r` fix (~4.5h, per-term stationarity-emit diagnosis at `stationarity.py:1835`/`constraint_jacobian.py`).
+- **Note:** Approach A's warm-start was initially *invalid* — camshape's `--nlp-presolve` embedded NLP was MS 4 Infeasible (area=5.009) due to **#1424** (subset corruption). Fixing #1424 restored the embedded NLP to MS 2 / area=4.2841, enabling a valid discriminator.
 
-### Tasks completed
-- _(to be filled in)_
+### #1424 subset-corruption emit bug — FIXED (Sprint 27)
+- **Bug:** `_emit_dynamic_subset_defaults` blanket-populates `subset(parent)=yes` for dynamic subsets with no static members referenced in stationarity (#952). For subsets the model assigns **element-wise** (camshape `first('i1')=yes`; cclinpts `first/last`), the blanket runs first and isn't cleared → `first`/`last` become all-`i`, `middle(first)=no` empties `middle` → constraint domains corrupted (emit solves the wrong problem) + the `--nlp-presolve` warm-start broke.
+- **Fix:** `_emit_dynamic_subset_defaults` skips the blanket for any subset in `model_ir.set_assignments`. Genuinely-empty subsets (#952, e.g. nonsharp `acol`) keep the default.
+- **Blast radius:** 16 goldens change. camshape/cclinpts = real correction (element-wise). The other 14 (qdemo7, cesam2, korcge, qabel, srpchase, abel, …) reassign the subset **wholesale** (`cn(c)=yes$(...)`, `srn(n)=prob(n)`) which overrides the blanket at runtime → byte-only golden change, **solve-identical**. lmp2 unchanged (`n` not a set-assignment); decomp/nemhaus untouched (pre-existing translate failures, confirmed on main).
+- **Regression: NONE.** All 4 currently-matching affected models re-solved to the SAME objective (qdemo7 1589042.386, cesam2 0.508, qabel 46965.036, korcge 339.213) → all stay `compare_match`. #952 preserved (unit test).
+- **No Solve gain by itself** (camshape stays MS 5 — the Case-(b) `stat_r` bug remains).
 
 ### Deliverables
-- _(to be filled in)_
+- `src/emit/emit_gams.py` (`_emit_dynamic_subset_defaults` skip), 16 regenerated `*_mcp.gms` goldens.
+- `tests/integration/emit/test_dynamic_subset_default_skip.py` (2 tests: model-assigned → no blanket; genuinely-empty → blanket preserved).
+- `docs/issues/ISSUE_1424_*.md` (new, with Phase 0 acceptance gate); `docs/issues/ISSUE_1388_*.md` (Day-11 §4.6 result + Sprint 28 carryforward).
+- GitHub issue #1424 filed.
 
 ### KUs verified
-- _(target: KUs 7.1, 7.2, 7.3)_
+- **KU 7.2 / 7.3** (#1388 §4.6 discriminator) → ✅ run: Case (b), multi-bug; subset bug (#1424) split out and fixed, `stat_r` Case-(b) divergence → Sprint 28.
 
 ### Carryforward to Day 12
-- _(to be filled in)_
+- **#1224 (Priority 6, standalone)** — not started Day 11; → Day 12.
+- **Sprint 28:** #1388 (`stat_r` Case-(b) fix), plus the prior carryforwards (#1390, #1393+#1335, #1387, camcge CGE).
 
 ---
 

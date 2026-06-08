@@ -27,11 +27,6 @@ Sets
 Alias(n, np);
 Alias(m, mp);
 
-$onImplicitAssign
-* Populate empty dynamic subsets for stationarity conditions
-ku(k) = yes;
-$offImplicitAssign
-
 Parameters
     a(n,np) /consumpt.consumpt 0.914, consumpt.invest -0.016, invest.consumpt 0.097, invest.invest 0.424/
     b(n,m) /consumpt.'gov-expend' 0.305, consumpt.money 0.424, invest.'gov-expend' -0.101, invest.money 1.459/

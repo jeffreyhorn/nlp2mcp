@@ -274,19 +274,21 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 
 ---
 
-## 12. Day 12 — Priority 6 close + Priority 8 #1400 + Priority 9 #1374 (~10h)
+## 12. Day 12 — Priority 6 #1224 FULL (carried from Day 11) + Priority 8 #1400 + Priority 9 #1374 (~10h)
+
+> ⚠️ **Carryforward from Day 11 (2026-06-08):** #1224 was **NOT started** on Day 11 — that day was consumed by the #1388 §4.6 discriminator dive and the **#1424 subset-corruption emit bug** it surfaced (filed + fixed; PR #1425). So Day 12 must do **all of #1224 start-to-finish** (Phase 0 + implement + PR), not just "close." This makes Day 12 the tightest day of the sprint (full #1224 + #1400 + #1374). **If #1224 runs long, slip #1374 (and, if needed, #1400) to the Day 13 buffer** rather than rushing #1224 — #1224 is the +1 Translate (and conditional +1 Solve) deliverable.
 
 | Task | Effort | Notes |
 |---|---|---|
-| **#1224 mine close** — finish implementation + Phase 0 + PR | 4h | KU 6.1 + KU 6.2 ✅ VERIFIED; mine next failure mode recorded |
-| **Priority 8 #1400 pipeline absolute-path leak fix** at `scripts/gamslib/run_full_test.py:899` (`mcp_file_used` field) per `PROJECT_PLAN.md` Priority 8 | 2h | KU 8.1 ✅ VERIFIED at corrected scope (mcp_file_used only); KU 8.2 implementation choice (basename vs PROJECT_ROOT-relative) made here |
-| **Priority 9 #1374 emit duplicate-init audit** — corpus sweep + targeted fix in `src/emit/` for most common shapes | 3h | KU 9.4 🔍 INCOMPLETE → ✅ VERIFIED; remaining shapes deferred to Sprint 28 per `PROJECT_PLAN.md` Priority 9 |
-| Buffer | 1h | |
+| **#1224 mine — FULL implementation (carried from Day 11; NOT started there)**: Phase 0 acceptance gate + implement + PR | 5–6h | **Standalone** per Day-0 KU 6.1 — surface is `constraint_jacobian.py:_try_eval_offset:133` + `derivative_rules.py:2793` (the `IndexOffset(ParamRef)` shape); NO `index_mapping.py`/#1385 overlap; do NOT bundle with #1385. KU 6.1 + KU 6.2; record mine's next failure mode |
+| **Priority 8 #1400 pipeline absolute-path leak fix** at `scripts/gamslib/run_full_test.py:899` (`mcp_file_used` field) per `PROJECT_PLAN.md` Priority 8 | 2h | KU 8.1 ✅ VERIFIED at corrected scope (mcp_file_used only); KU 8.2 implementation choice (basename vs PROJECT_ROOT-relative) made here. Slippable to Day 13 if #1224 overruns |
+| **Priority 9 #1374 emit duplicate-init audit** — corpus sweep + targeted fix in `src/emit/` for most common shapes | 3h | KU 9.4 🔍 INCOMPLETE → ✅ VERIFIED; remaining shapes deferred to Sprint 28 per `PROJECT_PLAN.md` Priority 9. **First to slip to Day 13 buffer if #1224 overruns** |
+| Buffer | 0h | (consumed by the full-#1224 carryforward; Day 13 buffer absorbs overflow) |
 
 **P6/P8/P9 success criteria:**
-- [ ] mine translates from `translate_internal_error` to `translate_success` (+1 Translate; Solve gain conditional per KU 6.2).
-- [ ] Pipeline produces byte-identical `gamslib_status.json` across machines (modulo wall-time fields).
-- [ ] #1374 corpus sweep recorded; targeted fix landed for common shapes.
+- [ ] **#1224 mine implemented start-to-finish** (Phase 0 + impl + PR) — translates from `translate_internal_error` to `translate_success` (+1 Translate; Solve gain conditional per KU 6.2). **This is the non-negotiable Day-12 deliverable.**
+- [ ] Pipeline produces byte-identical `gamslib_status.json` across machines (modulo wall-time fields). _(May slip to Day 13 if #1224 overruns.)_
+- [ ] #1374 corpus sweep recorded; targeted fix landed for common shapes. _(First to slip to Day 13 if #1224 overruns.)_
 
 ---
 

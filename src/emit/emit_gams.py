@@ -168,6 +168,21 @@ def _emit_dynamic_subset_defaults(kkt: KKTSystem, sections: list[str]) -> None:
         lhs, _ = eq_def.lhs_rhs
         _collect_referenced_set_names(lhs, referenced_sets)
 
+    # Issue #1424: Subsets the model populates itself (via set assignments)
+    # must NOT get the blanket `subset(parent) = yes;` default. For a model
+    # that assigns a subset element-wise (e.g. camshape's
+    # `first('i1') = yes; last('i100') = yes; middle(i) = yes; middle(first) = no`),
+    # the blanket `first(parent) = yes;` runs first and is NOT cleared by the
+    # element assignment, so `first`/`last` become the whole parent set and
+    # `middle(first) = no` then empties `middle` — corrupting every constraint
+    # domain conditioned on these subsets. (For a model that reassigns the
+    # subset wholesale, e.g. srpchase's `srn(n) = prob(n)`, the blanket is
+    # merely redundant and overwritten — so skipping it is safe either way.)
+    # The blanket default is only needed for genuinely model-unpopulated
+    # dynamic subsets (the original Issue #952 case), which are NOT in
+    # `set_assignments` and so are preserved below.
+    model_assigned_sets = {sa.set_name.lower() for sa in model_ir.set_assignments}
+
     lines: list[str] = []
     for set_name, set_def in model_ir.sets.items():
         # Only process dynamic subsets (have domain, no members)
@@ -176,6 +191,8 @@ def _emit_dynamic_subset_defaults(kkt: KKTSystem, sections: list[str]) -> None:
         if hasattr(set_def, "members") and set_def.members:
             continue
         if set_name.lower() not in referenced_sets:
+            continue
+        if set_name.lower() in model_assigned_sets:
             continue
         if len(set_def.domain) == 1:
             parent = set_def.domain[0]

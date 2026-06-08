@@ -25,11 +25,6 @@ Sets
 
 Alias(i, j);
 
-$onImplicitAssign
-* Populate empty dynamic subsets for stationarity conditions
-it(i) = yes;
-$offImplicitAssign
-
 Parameters
     delta(i)
     ac(i)

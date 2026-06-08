@@ -23,12 +23,6 @@ Sets
 
 Alias(j, jj);
 
-$onImplicitAssign
-* Populate empty dynamic subsets for stationarity conditions
-first(j) = yes;
-last(j) = yes;
-$offImplicitAssign
-
 Scalars
     gamma /2/
     b0 /5/

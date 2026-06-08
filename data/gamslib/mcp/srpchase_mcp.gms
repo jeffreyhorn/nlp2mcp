@@ -24,11 +24,6 @@ Sets
     srn(n)
 ;
 
-$onImplicitAssign
-* Populate empty dynamic subsets for stationarity conditions
-srn(n) = yes;
-$offImplicitAssign
-
 Parameters
     price(n) /n0 1/
     prob(n) /n0 1/

@@ -39,11 +39,6 @@ Sets
     chk(child,parent)
 ;
 
-$onImplicitAssign
-* Populate empty dynamic subsets for stationarity conditions
-nn(n) = yes;
-$offImplicitAssign
-
 Parameters
     delta(w,p) /dry.low -50, dry.normal 100, dry.high 250, wet.low 50, wet.normal 150, wet.high 350/
     pr(p) /low 0.25, normal 0.5, high 0.25/
