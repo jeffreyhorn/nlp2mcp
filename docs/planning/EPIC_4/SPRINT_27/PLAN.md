@@ -292,12 +292,16 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 
 ---
 
-## 13. Day 13 — Final Pipeline Retest + SPRINT_LOG.md + SPRINT_RETROSPECTIVE.md (~8h)
+## 13. Day 13 — Slipped #1400/#1374 + Final Pipeline Retest + SPRINT_LOG.md + SPRINT_RETROSPECTIVE.md (~8h, tight)
 
-**Focus:** Final checkpoint; close Sprint 27; author retrospective; record carryforwards for Sprint 28.
+**Focus:** Land the Day-12 slips (#1400, #1374); final checkpoint; close Sprint 27; author retrospective; record carryforwards for Sprint 28.
+
+> ⚠️ **Carryforward from Day 12 (2026-06-08):** **#1400 (Priority 8) and #1374 (Priority 9) were NOT done on Day 12** — Day 12 was consumed by the full #1224 implementation (itself carried from Day 11). They slip here. Do them **before** the final retest (so the retest reflects them — #1374 changes emit goldens; #1400 is scripts-only). Day 13 is now overcommitted (slips + retest + retrospective ≈ 13h): if time runs out, **#1374 is the slip valve — defer its remaining/all shapes to Sprint 28** (the plan already allows "#1374 remaining shapes → Sprint 28"); #1400 is small (scripts-only) and should land. The final retest + retrospective + SPRINT_LOG are non-negotiable (they close the sprint).
 
 | Task | Effort | Notes |
 |---|---|---|
+| **#1400 (Priority 8, slipped from Day 12) — pipeline absolute-path leak fix** at `scripts/gamslib/run_full_test.py:899` (`mcp_file_used`) | 2h | Scripts-only; do before the final retest. KU 8.1/8.2. Per `PROJECT_PLAN.md` Priority 8 |
+| **#1374 (Priority 9, slipped from Day 12) — emit duplicate-init audit** + targeted `src/emit/` fix for the most common 1–2 shapes | 3h | Changes emit goldens → must precede the final retest. **Slip valve: defer to Sprint 28 if Day 13 overruns.** KU 9.4 |
 | **Run PR22 audit script** (`--since-commit <Day-0 SHA>`) → final retest comparison surface | 0.5h | |
 | **Final pipeline retest** under 3 `PYTHONHASHSEED` values (PR12 determinism guard) | 3h | Determinism acceptance criterion verification |
 | Author Sprint 27 SPRINT_LOG.md final-day entry: headline metrics, bucket-provenance Sprint 26 final → Sprint 27 final, per-priority deliverables | 2h | |
@@ -305,6 +309,8 @@ Per `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` §2 — Sprint 27 Day 0
 | Buffer / Sprint 28 carryforward filings (issues that REPLANned or didn't fit budget) | 0.5h | Includes: #1385 cross-terms + #1393+#1335 (P3 re-plan); **dinam/gangesx/turkpow residual non-#1398 path_syntax_error** (Day 2 finding — pre-existing GAMS errors in non-Pattern-C equations, model-dependent codes; #1398 emit is correct but these models carry independent errors) |
 
 **Day 13 success criteria:**
+- [ ] **#1400 (slipped from Day 12) landed** — pipeline `mcp_file_used` no longer leaks absolute paths; KU 8.1/8.2 ✅.
+- [ ] **#1374 (slipped from Day 12) landed OR formally deferred to Sprint 28** (the slip valve) — audit recorded either way; KU 9.4 ✅.
 - [ ] All Sprint 27 acceptance criteria met OR explicitly carried forward to Sprint 28 with formal Phase 0 filing.
 - [ ] Final metrics: Solve ≥ 111, Match ≥ 66, path_syntax_error ≤ 6, model_infeasible ≤ 3, Translate ≥ 135/142, Parse ≥ 142/142, Tests ≥ 4,750.
 - [ ] Determinism: byte-identical `gamslib_status.json` under ≥ 3 `PYTHONHASHSEED` values (modulo wall-time).
