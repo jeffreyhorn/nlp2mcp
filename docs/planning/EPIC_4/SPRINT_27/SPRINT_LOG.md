@@ -556,7 +556,7 @@ Compared the retest DB against the committed (Day-9) `gamslib_status.json`:
 
 ### Deliverables
 - `src/ir/ast.py` (`IndexOffset.to_gams_string()` ParamRef branch).
-- `tests/unit/ir/test_index_offset_paramref.py` (4 tests: ParamRef renders, Const/symbol unchanged, circular ParamRef rejected, mine translates end-to-end).
+- `tests/unit/ir/test_index_offset_paramref.py` (5 tests: ParamRef lead renders, ParamRef lag `i-li(k)` renders, Const/symbol unchanged, circular ParamRef rejected, mine translates end-to-end).
 - `docs/issues/ISSUE_1224_*.md` (resolution + Phase 0 section); KNOWN_UNKNOWNS KU 6.2 ✅.
 
 ### KUs verified
