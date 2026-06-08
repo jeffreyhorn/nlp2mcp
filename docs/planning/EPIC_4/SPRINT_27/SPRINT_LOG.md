@@ -547,7 +547,7 @@ Compared the retest DB against the committed (Day-9) `gamslib_status.json`:
 **Status:** 🟢 #1224 DONE (+1 Translate) — the non-negotiable Day-12 deliverable landed. **#1400 + #1374 slip to Day 13 buffer** per the PLAN §12 slip guidance (the #1224 carryforward consumed the day's budget).
 **Hours budgeted:** ≤ 10
 
-### #1224 mine — parameter-valued index offsets → +1 Translate (PR #TBD)
+### #1224 mine — parameter-valued index offsets → +1 Translate (PR #1426)
 - **Bug:** mine's `pr(k,l+1,i,j)$c(l,i,j).. x(l, i+li(k), j+lj(k)) =g= x(l+1,i,j)` uses parameter-valued offsets (`li(k)`/`lj(k)`). Translation aborted with `NotImplementedError: Complex offset expressions not yet supported: ParamRef(li(k))`.
 - **Corrected fix surface** (NOT the prep-doc guess `_try_eval_offset` / `derivative_rules.py:2793`): the `pr` complementarity is kept **symbolic over `k`**, so the offset can never reduce to a constant at emit; the hard error is in **`src/ir/ast.py` `IndexOffset.to_gams_string()`** (the emit phase, reached past AD). GAMS natively accepts a parameter lead/lag amount, so the fix adds a `ParamRef` branch rendering `base+li(k)` (mirrors the existing `Call` branch).
 - **Result: +1 Translate** — mine `translate_internal_error` → `translate_success`, **compiles clean** (`action=c`, 0 errors). **Additive / zero-regression** blast radius: the branch only fires where emit previously *raised*, so no currently-translating model is affected (none have parameter-valued offsets).
