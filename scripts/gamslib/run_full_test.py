@@ -65,6 +65,19 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+
+def _repo_relative_path(path: "Path | str") -> str:
+    """Issue #1400: render a path as a repo-relative POSIX string for the
+    recorded database (machine-portable). Paths under ``PROJECT_ROOT`` become
+    e.g. ``data/gamslib/mcp/launch_mcp_presolve.gms``; paths outside fall back
+    to their absolute string (unchanged) so nothing is silently corrupted.
+    """
+    p = Path(path)
+    try:
+        return p.resolve().relative_to(PROJECT_ROOT.resolve()).as_posix()
+    except ValueError:
+        return str(path)
+
 from scripts.gamslib.db_manager import (  # noqa: E402
     DATABASE_PATH,
     create_backup,
@@ -896,7 +909,11 @@ def run_pipeline(
                     if stats["solve_errors"]:
                         stats["solve_errors"].pop()
                     model["mcp_solve"]["presolve_required"] = True
-                    model["mcp_solve"]["mcp_file_used"] = str(presolve_path)
+                    # Issue #1400: store a repo-relative path so the recorded
+                    # database is machine-portable (the absolute PROJECT_ROOT
+                    # prefix would otherwise leak the runner's home directory and
+                    # break byte-identical comparison across machines).
+                    model["mcp_solve"]["mcp_file_used"] = _repo_relative_path(presolve_path)
                     model["mcp_solve"]["outcome_category"] = (
                         "model_optimal_presolve"
                     )

@@ -1,12 +1,26 @@
 # Emitter: Redundant Duplicate Variable Initializations in Regenerated MCP Artifacts
 
 **GitHub Issue:** [#1374](https://github.com/jeffreyhorn/nlp2mcp/issues/1374)
-**Status:** OPEN (filed during PR #1373 / Sprint 26 Prep Task 9)
+**Status:** PARTIALLY FIXED (Sprint 27 Day 13, 2026-06-08) — the dominant `.fx`-restore duplicate shape is fixed (otpop, dinam); the remaining `.l` denominator/override shape (robot) is deferred to Sprint 28. See "Sprint 27 Day 13 audit + fix" below.
 **Severity:** Low — functionally harmless at runtime (last-write-wins, same numeric value), but degrades the byte-stability surface and adds diff noise on regenerated artifacts. One sub-symptom (rocket clamp-clobber) was actually a latent silent-correctness bug; PR #1373's regeneration fortuitously fixed it via reordering.
 **Date:** 2026-05-09
-**Last Updated:** 2026-05-09
-**Affected Models:** stdcge, twocge (duplicate `pf.l` init); rocket (post-clamp boundary override readability — fortuitously correct after PR #1373's regeneration but emit structure is unclear)
-**Target Sprint:** Sprint 27 (alongside the planned PR12 byte-stability enforcement work)
+**Last Updated:** 2026-06-08 (Sprint 27 Day 13 — corpus audit + `.fx`-restore-shape fix; `.l` shape → Sprint 28)
+**Affected Models:** otpop, dinam (`.fx`-restore duplicate — FIXED); robot (`.l` denominator/override duplicate — Sprint 28). (Prior-doc stdcge/twocge `pf.l` no longer present in the current-emit audit.)
+**Target Sprint:** Sprint 27 (dominant shape) + Sprint 28 (remaining `.l` shape)
+
+## Sprint 27 Day 13 audit + fix (2026-06-08)
+
+**Corpus audit** (exact-byte-duplicate per-element init lines across all 153 cold `*_mcp.gms` goldens): **3 models**, 13 duplicate lines, in 2 shapes:
+
+| Model | dups | shape |
+|---|---|---|
+| otpop | 9 | `x.fx('1965') = 29.4;` … `'1973'` — **`.fx`-restore** |
+| dinam | 2 | `sav.fx('1968') = 52.1;`, `gdp.fx('1968') = 260.9;` — **`.fx`-restore** |
+| robot | 2 | `rho.l('h0') = 4.5;`, `rho.l('h50') = 4.5;` — **`.l` denominator/override** |
+
+**`.fx`-restore shape — FIXED** (`src/emit/emit_gams.py`). For a per-element `fx_map` entry whose `_fx_` equation is **suppressed** AND whose variable carries a stationarity condition, the value is emitted in BOTH the "Variable Bounds" section (line ~1726) AND the "Fix suppressed _fx_ equations" restore pass (line ~2825). The restore pass re-emits the value *after* the blanket `var.fx(...) = 0` from stationarity, so it is the single correct (blanket-surviving) emission; the Variable Bounds emission is a byte-identical duplicate. Fix: skip the Variable Bounds emission when `eq_name in suppressed_fx and var_name in kkt.stationarity_conditions`. otpop/dinam regenerated (otpop −9 lines, pure dedup; dinam −2 dedup lines, plus a pre-existing `comp_up_fdp(te)→(t)` staleness refresh that is independent of this fix). otpop still compiles clean + `model_infeasible` (unchanged); matching models (qdemo7/cesam2/korcge/launch) byte-identical.
+
+**`.l` denominator/override shape — Sprint 28.** robot's `rho.l('h0') = 4.5;` is emitted by both the denominator-init block (avoid div-by-zero; expands source `rho.l(h) = 4.5`) and the `fx_to_l_override` (from `rho.fx(firstlast) = 4.5`). This is a distinct mechanism (`.l`, not `.fx`-restore) and is **deferred to Sprint 28** per the Day-13 "most-common-1–2-shapes" scope. robot is `path_solve_license` (failing), so the duplicate has no Solve/Match impact.
 
 ---
 

@@ -790,7 +790,7 @@
         "iterations": 2554,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "/Users/jeff/experiments/nlp2mcp/data/gamslib/mcp/bearing_mcp_presolve.gms"
+        "mcp_file_used": "data/gamslib/mcp/bearing_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -1367,7 +1367,7 @@
         "iterations": 4,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "/Users/jeff/experiments/nlp2mcp/data/gamslib/mcp/chain_mcp_presolve.gms"
+        "mcp_file_used": "data/gamslib/mcp/chain_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -4963,7 +4963,7 @@
         "iterations": 673,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "/Users/jeff/experiments/nlp2mcp/data/gamslib/mcp/launch_mcp_presolve.gms"
+        "mcp_file_used": "data/gamslib/mcp/launch_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5796,7 +5796,7 @@
         "iterations": 3,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "/Users/jeff/experiments/nlp2mcp/data/gamslib/mcp/mathopt3_mcp_presolve.gms"
+        "mcp_file_used": "data/gamslib/mcp/mathopt3_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -10094,7 +10094,7 @@
         "iterations": 2228,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "/Users/jeff/experiments/nlp2mcp/data/gamslib/mcp/robustlp_mcp_presolve.gms"
+        "mcp_file_used": "data/gamslib/mcp/robustlp_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -10172,7 +10172,7 @@
         "iterations": 20,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "/Users/jeff/experiments/nlp2mcp/data/gamslib/mcp/rocket_mcp_presolve.gms"
+        "mcp_file_used": "data/gamslib/mcp/rocket_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
