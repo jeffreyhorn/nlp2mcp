@@ -29,6 +29,7 @@ import pytest
 from src.ir.ast import Const, IndexOffset, ParamRef, SymbolRef
 
 
+@pytest.mark.unit
 def test_paramref_offset_renders():
     """#1224: a ParamRef offset renders as `base+param(idx)` (GAMS-valid)."""
     assert (
@@ -41,6 +42,7 @@ def test_paramref_offset_renders():
     )
 
 
+@pytest.mark.unit
 def test_paramref_lag_offset_renders():
     """#1224 (PR review): the LAG form `i-li(k)` is parsed as
     `Unary('-', ParamRef(...))` and must render as `i-li(k)`, not raise."""
@@ -50,6 +52,7 @@ def test_paramref_lag_offset_renders():
     assert lag.to_gams_string() == "i-li(k)"
 
 
+@pytest.mark.unit
 def test_const_and_symbol_offsets_unchanged():
     """Regression: the existing Const/SymbolRef offset rendering is unchanged."""
     assert IndexOffset(base="t", offset=Const(1), circular=False).to_gams_string() == "t+1"
@@ -57,6 +60,7 @@ def test_const_and_symbol_offsets_unchanged():
     assert IndexOffset(base="i", offset=SymbolRef("j"), circular=False).to_gams_string() == "i+j"
 
 
+@pytest.mark.unit
 def test_circular_paramref_offset_unsupported():
     """Circular (`++`/`--`) lead/lag with a ParamRef offset is still rejected
     explicitly rather than silently mis-rendered."""
