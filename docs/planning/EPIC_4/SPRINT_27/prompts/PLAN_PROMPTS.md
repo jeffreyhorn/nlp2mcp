@@ -371,26 +371,26 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 ---
 
-## Day 12 Prompt — Priority 6 close + Priority 8 #1400 + Priority 9 #1374 (~10h)
+## Day 12 Prompt — Priority 6 #1224 FULL (carried from Day 11) + Priority 8 #1400 + Priority 9 #1374 (~10h)
 
-**Context:** Close #1224. Fix the pipeline absolute-path leak (#1400). Audit + targeted fix for #1374 emit duplicate-init bugs.
+**Context:** **Implement #1224 IN FULL — it was NOT started on Day 11** (Day 11 was consumed by the #1388 §4.6 discriminator dive + the #1424 subset-corruption emit bug it surfaced; fixed in PR #1425). So Day 12 does #1224 **start-to-finish** (Phase 0 + implement + PR), not just "close." Then fix the pipeline absolute-path leak (#1400) and audit + targeted-fix #1374 emit duplicate-init bugs. **Day 12 is the tightest day of the sprint** — if #1224 runs long, slip #1374 first (then #1400) to the Day 13 buffer; #1224 is the priority.
 
 **Read first:**
-- `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §12 "Day 12"
-- `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 27" §"Priority 8" (#1400 corrected scope — `scripts/gamslib/run_full_test.py:899` `mcp_file_used` only; no `solve_mcp.py`)
-- `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` Unknown 8.1, 8.2, 9.4
+- `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §12 "Day 12" (note the Day-11 carryforward callout)
+- `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 27" §"Priority 6" (#1224 mine) + §"Priority 8" (#1400 corrected scope — `scripts/gamslib/run_full_test.py:899` `mcp_file_used` only; no `solve_mcp.py`)
+- `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` Unknown 6.1 (#1224 STANDALONE), 6.2, 8.1, 8.2, 9.4
 
 **Tasks:**
 
-1. **#1224 mine close** — finish implementation + Phase 0 + PR. Document mine's next failure mode (KU 6.2): `path_syntax_error`, `model_infeasible`, `compare_match`, or other.
-2. **Priority 8 #1400 fix** at `scripts/gamslib/run_full_test.py:899`. Choose KU 8.2 implementation: basename only (always `data/gamslib/mcp/<model>_mcp_presolve.gms`) OR `PROJECT_ROOT`-relative. Run the audit grep against a recent pipeline JSON: `grep -oE '"[^"]+": "/[^"]+"' data/gamslib/gamslib_status.json | sort -u`. If `mcp_file_used` is the only leak field, KU 8.1 ✅ VERIFIED at corrected scope.
-3. **Priority 9 #1374 corpus sweep** — scan all 134 translating `*_mcp.gms` artifacts for duplicate `var.l(idx) = val` patterns. Document count + shapes in working notes. Apply targeted fix in `src/emit/` for the most common 1–2 shapes. Defer remaining to Sprint 28 per `PROJECT_PLAN.md` Priority 9. KU 9.4 ✅ VERIFIED.
+1. **#1224 mine — FULL implementation (carried from Day 11; NOT started there):** Phase 0 acceptance gate (PR20 — this touches `src/ad/`) **AND** implement **AND** PR. **STANDALONE** per Day-0 KU 6.1 — the `IndexOffset(ParamRef)` surface is `src/ad/constraint_jacobian.py:_try_eval_offset:133` + `src/ad/derivative_rules.py:2793`; NO `index_mapping.py`/#1385 overlap; do **NOT** bundle with #1385. Document mine's next failure mode (KU 6.2): `path_syntax_error`, `model_infeasible`, `compare_match`, or other.
+2. **Priority 8 #1400 fix** at `scripts/gamslib/run_full_test.py:899`. Choose KU 8.2 implementation: basename only (always `data/gamslib/mcp/<model>_mcp_presolve.gms`) OR `PROJECT_ROOT`-relative. Run the audit grep against a recent pipeline JSON: `grep -oE '"[^"]+": "/[^"]+"' data/gamslib/gamslib_status.json | sort -u`. If `mcp_file_used` is the only leak field, KU 8.1 ✅ VERIFIED at corrected scope. _(Slippable to Day 13 if #1224 overruns.)_
+3. **Priority 9 #1374 corpus sweep** — scan all 134 translating `*_mcp.gms` artifacts for duplicate `var.l(idx) = val` patterns. Document count + shapes in working notes. Apply targeted fix in `src/emit/` for the most common 1–2 shapes. Defer remaining to Sprint 28 per `PROJECT_PLAN.md` Priority 9. KU 9.4 ✅ VERIFIED. _(**First to slip to Day 13 buffer** if #1224 overruns.)_
 4. EOD quality gate + SPRINT_LOG.md.
 
 **Success criteria (Day 12):**
-- [ ] #1224 mine PR merged.
-- [ ] #1400 pipeline path leak fixed; `gamslib_status.json` produces byte-identical output across machines.
-- [ ] #1374 audit complete; targeted fix landed for most common shapes.
+- [ ] **#1224 mine implemented start-to-finish (Phase 0 + impl + PR)** — translates from `translate_internal_error` to `translate_success` (+1 Translate; Solve gain conditional per KU 6.2). **Non-negotiable Day-12 deliverable.**
+- [ ] #1400 pipeline path leak fixed; `gamslib_status.json` produces byte-identical output across machines. _(May slip to Day 13.)_
+- [ ] #1374 audit complete; targeted fix landed for most common shapes. _(First to slip to Day 13.)_
 - [ ] KUs 6.1, 6.2, 8.1, 8.2, 9.4 ✅ VERIFIED.
 
 ---
