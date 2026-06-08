@@ -24,13 +24,6 @@ Sets
 
 Alias(i, j);
 
-$onImplicitAssign
-* Populate empty dynamic subsets for stationarity conditions
-first(i) = yes;
-last(i) = yes;
-middle(i) = yes;
-$offImplicitAssign
-
 Scalars
     R_v /1/
     R_max /2/

@@ -35,12 +35,6 @@ Sets
     tr /'tr-1', 'tr-2'/
 ;
 
-$onImplicitAssign
-* Populate empty dynamic subsets for stationarity conditions
-cfq(cf) = yes;
-cfr(cf) = yes;
-$offImplicitAssign
-
 Parameters
     crdat(cr,*) /'arabian-l'.supply 110, 'arabian-l'.price 35, 'arabian-l'.transport 24.15, 'arabian-l'.gravity 0.858, 'arabian-h'.supply 165, 'arabian-h'.price 34, 'arabian-h'.transport 24.15, 'arabian-h'.gravity 0.886, brega.supply 80, brega.price 42, brega.transport 10.05, brega.gravity 0.823/
     ddat(cf,*) /'motor-gas'.demand 40, 'motor-gas'.price 430, 'jet-fuel'.demand 20, 'jet-fuel'.price 300, 'heat-oil'.demand 50, 'heat-oil'.price 315, 'fuel-oil'.demand 145, 'fuel-oil'.price 250/
