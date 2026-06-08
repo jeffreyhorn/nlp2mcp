@@ -395,16 +395,21 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 
 ---
 
-## Day 13 Prompt — Final Retest + SPRINT_LOG + SPRINT_RETROSPECTIVE (~8h)
+## Day 13 Prompt — Slipped #1400/#1374 + Final Retest + SPRINT_LOG + SPRINT_RETROSPECTIVE (~8h, tight)
 
-**Context:** Final pipeline retest under multiple `PYTHONHASHSEED` values. Author Sprint 27 SPRINT_LOG.md final-day entry + Sprint 27 SPRINT_RETROSPECTIVE.md. File Sprint 28 carryforwards.
+**Context:** **First land the Day-12 slips — #1400 (Priority 8) and #1374 (Priority 9), which were NOT done on Day 12** (Day 12 was consumed by the full #1224 carried from Day 11). Do them **before** the final retest (#1374 changes emit goldens; #1400 is scripts-only). Then run the final pipeline retest under multiple `PYTHONHASHSEED` values, author the Sprint 27 SPRINT_LOG.md final-day entry + SPRINT_RETROSPECTIVE.md, and file Sprint 28 carryforwards. **Day 13 is overcommitted** (slips + retest + retrospective ≈ 13h): if time runs out, **#1374 is the slip valve — formally defer its remaining/all shapes to Sprint 28**; #1400 is small and should land; the retest + retrospective + SPRINT_LOG close the sprint and are non-negotiable.
 
 **Read first:**
-- `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §13 "Day 13"
+- `docs/planning/EPIC_4/SPRINT_27/PLAN.md` §13 "Day 13" (note the Day-12 carryforward callout)
+- `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 27" §"Priority 8" (#1400 corrected scope — `scripts/gamslib/run_full_test.py:899` `mcp_file_used` only) + §"Priority 9" (#1374)
+- `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` Unknown 8.1, 8.2, 9.4
 - `docs/planning/EPIC_4/SPRINT_26/SPRINT_RETROSPECTIVE.md` (structural reference)
 - Sprint 27 SPRINT_LOG.md (cumulative entries from Days 0–12)
 
 **Tasks:**
+
+0a. **#1400 (Priority 8, slipped from Day 12) fix** at `scripts/gamslib/run_full_test.py:899`. Choose KU 8.2 implementation: basename only (always `data/gamslib/mcp/<model>_mcp_presolve.gms`) OR `PROJECT_ROOT`-relative. Run the audit grep against a recent pipeline JSON: `grep -oE '"[^"]+": "/[^"]+"' data/gamslib/gamslib_status.json | sort -u`. If `mcp_file_used` is the only leak field, KU 8.1 ✅ VERIFIED at corrected scope.
+0b. **#1374 (Priority 9, slipped from Day 12) corpus sweep** — scan all translating `*_mcp.gms` artifacts for duplicate `var.l(idx) = val` patterns. Document count + shapes. Apply targeted `src/emit/` fix for the most common 1–2 shapes (regenerate affected goldens **before** the retest). KU 9.4 ✅. **Slip valve: if Day 13 overruns, record the audit and formally defer the fix to Sprint 28.**
 
 1. **Final PR22 audit script:**
    ```bash
@@ -419,6 +424,8 @@ The prompts are designed for **direct invocation** — the engineer copies the d
 6. Final SPRINT_LOG.md commit.
 
 **Success criteria (Day 13):**
+- [ ] **#1400 (slipped from Day 12) landed** — `mcp_file_used` no longer leaks absolute paths (KU 8.1/8.2 ✅).
+- [ ] **#1374 (slipped from Day 12) landed OR formally deferred to Sprint 28** — audit recorded either way (KU 9.4 ✅).
 - [ ] Final metrics meet acceptance criteria: Solve ≥ 111, Match ≥ 66, path_syntax_error ≤ 6, model_infeasible ≤ 3, Translate ≥ 135/142, Parse ≥ 142/142, Tests ≥ 4,750.
 - [ ] Determinism: byte-identical `gamslib_status.json` under 3 `PYTHONHASHSEED` values.
 - [ ] All 28 Sprint 27 KUs ✅ VERIFIED.
