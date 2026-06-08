@@ -1202,7 +1202,9 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Sprint 27 Day 12, 2026-06-08) — **mine's next failure mode is `model_infeasible` (MODEL STATUS 4).**
+
+After the #1224 emit-render fix (`IndexOffset.to_gams_string()` renders parameter-valued offsets like `i+li(k)`), mine translates + compiles clean (**+1 Translate**) and solves to **MODEL STATUS 4 Infeasible**. Root cause of the infeasibility (the conditional Solve gain that does NOT land): the `stat_x` cross-term from the `pr` constraint does not invert the parameter-valued offset — it emits `sum(k, lam_pr(k,l,i,j))` instead of the correct `sum(k, lam_pr(k, l, i-li(k), j-lj(k)))`, and drops the `-sum(k, lam_pr(k, l-1, i, j))` term. Fixing the KKT cross-term for parameter-valued offsets (the AD/Jacobian path the prep doc named, `constraint_jacobian.py` / `derivative_rules.py:2793`) is **deferred to Sprint 28** (see ISSUE_1224 "Day 12 resolution"). The actual *translate* fix surface was `src/ir/ast.py` (emit render), NOT the AD layer the prep doc guessed.
 
 ---
 

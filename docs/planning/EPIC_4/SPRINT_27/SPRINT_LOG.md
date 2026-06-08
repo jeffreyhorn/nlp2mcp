@@ -541,32 +541,36 @@ Compared the retest DB against the committed (Day-9) `gamslib_status.json`:
 
 ---
 
-## Day 12 — Priority 6 close + Priority 8 #1400 + Priority 9 #1374
+## Day 12 — Priority 6 #1224 FULL (carried from Day 11): +1 Translate (mine); #1400/#1374 → Day 13
 
-**Date:** TBD
-**Status:** 🔵 NOT STARTED
+**Date:** 2026-06-08
+**Status:** 🟢 #1224 DONE (+1 Translate) — the non-negotiable Day-12 deliverable landed. **#1400 + #1374 slip to Day 13 buffer** per the PLAN §12 slip guidance (the #1224 carryforward consumed the day's budget).
 **Hours budgeted:** ≤ 10
-**Hours actual:** —
 
-### Tasks completed
-- _(to be filled in)_
+### #1224 mine — parameter-valued index offsets → +1 Translate (PR #TBD)
+- **Bug:** mine's `pr(k,l+1,i,j)$c(l,i,j).. x(l, i+li(k), j+lj(k)) =g= x(l+1,i,j)` uses parameter-valued offsets (`li(k)`/`lj(k)`). Translation aborted with `NotImplementedError: Complex offset expressions not yet supported: ParamRef(li(k))`.
+- **Corrected fix surface** (NOT the prep-doc guess `_try_eval_offset` / `derivative_rules.py:2793`): the `pr` complementarity is kept **symbolic over `k`**, so the offset can never reduce to a constant at emit; the hard error is in **`src/ir/ast.py` `IndexOffset.to_gams_string()`** (the emit phase, reached past AD). GAMS natively accepts a parameter lead/lag amount, so the fix adds a `ParamRef` branch rendering `base+li(k)` (mirrors the existing `Call` branch).
+- **Result: +1 Translate** — mine `translate_internal_error` → `translate_success`, **compiles clean** (`action=c`, 0 errors). **Additive / zero-regression** blast radius: the branch only fires where emit previously *raised*, so no currently-translating model is affected (none have parameter-valued offsets).
+- **KU 6.2 (next failure mode): `model_infeasible`.** The emitted MCP solves MS 4 Infeasible — `stat_x`'s `pr` cross-term doesn't invert the parameter-valued offset (`sum(k, lam_pr(k,l,i,j))` instead of `sum(k, lam_pr(k,l,i-li(k),j-lj(k)))`) and drops the `-sum(k, lam_pr(k,l-1,i,j))` term. The correct stationarity (the AD/Jacobian path the prep doc named) is the **conditional Solve gain → Sprint 28**.
+- KU 6.1 ✅ (STANDALONE confirmed — fix is `src/ir/ast.py`, no `index_mapping.py`/#1385 overlap). KU 6.2 ✅ VERIFIED (`model_infeasible`).
 
 ### Deliverables
-- _(to be filled in)_
+- `src/ir/ast.py` (`IndexOffset.to_gams_string()` ParamRef branch).
+- `tests/unit/ir/test_index_offset_paramref.py` (4 tests: ParamRef renders, Const/symbol unchanged, circular ParamRef rejected, mine translates end-to-end).
+- `docs/issues/ISSUE_1224_*.md` (resolution + Phase 0 section); KNOWN_UNKNOWNS KU 6.2 ✅.
 
 ### KUs verified
-- _(target: KUs 6.2, 8.1, 8.2, 9.4)_
+- **KU 6.1** ✅ (STANDALONE), **KU 6.2** ✅ (`model_infeasible` next failure mode).
 
 ### Carryforward to Day 13
-- _(to be filled in)_
+- **#1400 (Priority 8) + #1374 (Priority 9)** slip to Day 13 per the PLAN §12 slip guidance — Day 12 was the full-#1224 carryforward from Day 11.
+- **Sprint 28:** #1224 Solve (parameter-valued-offset KKT cross-term inversion), plus the prior carryforwards (#1390, #1393+#1335, #1387, #1388, camcge CGE).
 
 ### #1400 absolute-path-leak audit-grep result
-_(paste `grep -oE '"[^"]+": "/[^"]+"' data/gamslib/gamslib_status.json | sort -u` output)_
+_(deferred to Day 13)_
 
 ### #1374 corpus-sweep results
-- **Total models scanned:** TBD
-- **Models with duplicate-init pattern:** TBD
-- **Distinct shapes found:** TBD
+- _(deferred to Day 13)_
 - **Sprint 27 fix scope:** TBD shapes (most common)
 - **Sprint 28 carryforward:** TBD shapes
 

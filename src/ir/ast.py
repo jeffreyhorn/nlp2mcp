@@ -575,6 +575,19 @@ class IndexOffset(Expr):
                 )
             offset_str = self._offset_expr_to_string(self.offset)
             return f"{self.base}+{offset_str}"
+        elif isinstance(self.offset, ParamRef):
+            # Issue #1224: parameter-valued offset, e.g. mine's `i + li(k)` where
+            # `li(k)` is a parameter giving the lead amount per neighbor `k`.
+            # GAMS accepts a parameter expression as a lead/lag amount and
+            # evaluates it at runtime, so the equation domain index `k` can stay
+            # symbolic — render `base+li(k)` directly rather than requiring a
+            # constant integer offset.
+            if self.circular:
+                raise NotImplementedError(
+                    f"Circular lead/lag with ParamRef offset not supported: {self.offset}"
+                )
+            offset_str = self._offset_expr_to_string(self.offset)
+            return f"{self.base}+{offset_str}"
         else:
             # Complex expression - not supported
             raise NotImplementedError(

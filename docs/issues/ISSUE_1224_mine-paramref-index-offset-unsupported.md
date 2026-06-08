@@ -1,11 +1,58 @@
 # mine: Parameter-Valued Index Offsets Unsupported
 
 **GitHub Issue:** [#1224](https://github.com/jeffreyhorn/nlp2mcp/issues/1224)
-**Status:** OPEN — Translation failure (unsupported offset expression)
+**Status:** TRANSLATE FIXED (Sprint 27 Day 12, 2026-06-08) — mine now translates + compiles clean (+1 Translate). Correct SOLVE (the parameter-valued-offset KKT cross-term) is DEFERRED to Sprint 28; mine's next failure mode is `model_infeasible` (see below).
 **Severity:** Medium — Translation aborts with internal error
 **Date:** 2026-04-07
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-06-08 (Sprint 27 Day 12 — emit-render fix lands +1 Translate; Solve cross-term → Sprint 28)
 **Affected Models:** mine
+
+---
+
+## Sprint 27 Day 12 resolution (2026-06-08) — emit-render fix → +1 Translate; Solve → Sprint 28
+
+**Corrected fix surface (NOT the prep-doc guess).** The Day-11/Day-12 prompt + KU 6.1 anticipated the fix at `src/ad/constraint_jacobian.py:_try_eval_offset:133` + `src/ad/derivative_rules.py:2793` (the AD/Jacobian path, evaluating the offset to a constant). Empirically that is wrong for mine: the `pr` equation is kept **symbolic over `k`** in the MCP, so its complementarity `comp_pr(k,l,i,j)` is emitted with `k` unbound — the offset `li(k)` can NEVER be reduced to a constant at emit time. The hard error is raised in **`src/ir/ast.py` `IndexOffset.to_gams_string()`** (the `else` branch), NOT in the AD layer (translation reaches the emit phase before crashing).
+
+**Fix (Approach 2, minimal): render parameter-valued offsets.** GAMS natively accepts a parameter expression as a lead/lag amount and evaluates it at runtime (`x(l, i+li(k), j+lj(k))` is valid GAMS). So `IndexOffset.to_gams_string()` gains a `ParamRef` branch that renders `base+param(idx)` (mirroring the existing `Call` branch; `_offset_expr_to_string` already knew how to render a `ParamRef`). No enumeration/constant-evaluation needed; `k` stays symbolic.
+
+- **Result:** mine emits `comp_pr(k,l,i,j)$(...).. x(l,i+li(k),j+lj(k)) - x(l+1,i,j) =G= 0;`, translates, and **compiles clean** (`action=c`, 0 errors). **+1 Translate** (`translate_internal_error` → `translate_success`).
+- **Blast radius: additive / zero-regression.** The `ParamRef` branch only fires where `to_gams_string()` previously *raised*; any model that translates today has no parameter-valued offset (it would have crashed), so no translating model is affected.
+
+**KU 6.2 — mine's next failure mode: `model_infeasible`.** The emitted MCP solves to MODEL STATUS 4 Infeasible. The `stat_x(l,i,j)` cross-term from `pr` is incomplete: the Jacobian does not **invert** the parameter-valued offset (it emits `sum(k, lam_pr(k,l,i,j))` instead of `sum(k, lam_pr(k, l, i-li(k), j-lj(k)))`) and drops the `-sum(k, lam_pr(k, l-1, i, j))` contribution from the `-x(l+1,i,j)` term. Producing the correct stationarity for parameter-valued offsets requires the AD cross-term inversion at `src/ad/constraint_jacobian.py` / `src/ad/derivative_rules.py:2793` — the deeper change the prep doc named. **Deferred to Sprint 28** (the conditional Solve gain).
+
+## Phase 0: Acceptance Gate
+
+**Authored:** 2026-06-08 (Sprint 27 Day 12). The landed fix touches `src/ir/ast.py` only — outside the PR20-gated `src/{ad,kkt,emit}` set — so a Phase 0 gate is not strictly required, but recorded here for completeness.
+
+### Hand-Derived KKT Shape
+
+This fix is **emit-only** (string rendering); it does NOT change the KKT shape. The `pr` constraint `x(l, i+li(k), j+lj(k)) - x(l+1,i,j) ≥ 0 ⊥ lam_pr(k,l,i,j) ≥ 0` is preserved verbatim — only its GAMS *string* now renders the parameter-valued offset instead of crashing. (The *correct* `stat_x` cross-term — `sum(k, lam_pr(k,l,i-li(k),j-lj(k))) - sum(k, lam_pr(k,l-1,i,j))` — is the Sprint 28 Solve fix, NOT this PR.)
+
+### Expected Emit Pattern
+
+```gams
+comp_pr(k,l,i,j)$(...).. x(l,i+li(k),j+lj(k)) - x(l+1,i,j) =G= 0;
+```
+i.e. the lead/lag amount is the parameter expression `li(k)`/`lj(k)`, rendered as `base+param(idx)`. Constant offsets (`t+1`, `t-3`) and symbol offsets (`i+j`) render unchanged.
+
+### Verification Methodology
+
+```bash
+# 1. mine translates + compiles clean (was: "Complex offset expressions not yet supported").
+.venv/bin/python -m src.cli data/gamslib/raw/mine.gms -o /tmp/mine_mcp.gms --skip-convexity-check --quiet
+grep -E 'i\+li\(k\)|j\+lj\(k\)' /tmp/mine_mcp.gms            # expect: present in comp_pr
+gams /tmp/mine_mcp.gms a=c lo=2 | grep -cE '\*\*\*\* .*Error' # expect: 0
+
+# 2. Const/symbol offsets unchanged (unit test).
+.venv/bin/python -m pytest tests/unit/ir/test_index_offset_paramref.py -q
+
+# 3. mine's next failure mode (KU 6.2).
+gams /tmp/mine_mcp.gms lo=2 | grep 'MODEL STATUS'           # expect: 4 Infeasible (Sprint 28 Solve)
+```
+
+### PROCEED/REPLAN Signal
+
+**PROCEED** if: (a) mine translates + compiles clean (0 errors); (b) parameter-valued offsets render as `base+param(idx)`; (c) Const/symbol offset rendering unchanged (regression). **All met (Day 12).** **REPLAN** if any currently-translating model regresses (impossible by construction — the branch only fires where emit previously raised).
 
 ---
 
