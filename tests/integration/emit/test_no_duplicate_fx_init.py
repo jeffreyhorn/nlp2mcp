@@ -58,8 +58,7 @@ def test_otpop_no_duplicate_fx_literal_init():
     fx_inits = [ln for ln in lines if _FX_LITERAL_INIT.match(ln)]
     dups = {ln: n for ln, n in collections.Counter(fx_inits).items() if n > 1}
     assert not dups, (
-        "Found exact-duplicate `var.fx(literal) = val;` init line(s) in otpop "
-        f"(#1374): {dups}"
+        "Found exact-duplicate `var.fx(literal) = val;` init line(s) in otpop " f"(#1374): {dups}"
     )
     # Sanity: the fixings are still present (exactly once) — the dedup must not
     # drop them entirely (that would unfix the historical values).
