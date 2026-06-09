@@ -57,9 +57,10 @@ This prep plan focuses on:
 
 ## Task 1: Create Sprint 28 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
-**Estimated Time:** 3–4 hours
+**Estimated Time:** 3–4 hours (actual: ~3.5h)
+**Completed:** 2026-06-09
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
@@ -159,13 +160,13 @@ grep -oE '#1(224|388|393|335|387|390|374|400|385)' docs/planning/EPIC_4/SPRINT_2
 
 ### Acceptance Criteria
 
-- [ ] Document created with 25+ unknowns across 8+ categories
-- [ ] All unknowns have assumption, verification method, priority, risk-if-wrong
-- [ ] All Critical/High unknowns have a Day-0 trace or single-model hypothesis-validation as their verification
-- [ ] Carryforward fix-surfaces are framed as hypotheses per PR24 (not as established fact)
-- [ ] #1387/#1390/camcge flagged Critical (REPLAN-prone)
-- [ ] Infrastructure scope unknowns (P8–P10) captured
-- [ ] Update/resolution template defined
+- [x] Document created with 25+ unknowns across 8+ categories (29 unknowns across 10 categories)
+- [x] All unknowns have assumption, verification method, priority, risk-if-wrong
+- [x] All Critical/High unknowns have a Day-0 trace or single-model hypothesis-validation as their verification
+- [x] Carryforward fix-surfaces are framed as hypotheses per PR24 (not as established fact)
+- [x] #1387/#1390/camcge flagged Critical (REPLAN-prone) — Unknowns 4.1, 5.1, 6.1
+- [x] Infrastructure scope unknowns (P8–P10) captured (Categories 8, 9, 10)
+- [x] Update/resolution template defined (§"Template for New Unknowns")
 
 ---
 
@@ -177,6 +178,7 @@ grep -oE '#1(224|388|393|335|387|390|374|400|385)' docs/planning/EPIC_4/SPRINT_2
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
+**Unknowns Verified:** 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 6.2
 
 ### Objective
 
@@ -237,6 +239,7 @@ done
 - `docs/planning/EPIC_4/SPRINT_28/BASELINE_METRICS.md` — Day-0 counts + per-failing-model bucket provenance
 - PR25 projection table: each priority's delta labeled genuine-gain vs bucket-forward, with only genuine gains tallied toward targets
 - Scope-freeze note: in-target vs Sprint-29-deferred models + the committed Solve/Match regression-guard sets
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 6.2
 
 ### Acceptance Criteria
 
@@ -246,6 +249,7 @@ done
 - [ ] Only genuine gains tallied toward Solve ≥ 110 / Match ≥ 65
 - [ ] Scope-freeze note identifies in-target vs deferred models
 - [ ] Committed Solve/Match regression-guard sets recorded
+- [ ] Unknowns 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -257,6 +261,7 @@ done
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
+**Unknowns Verified:** 1.1, 2.1, 3.1, 4.1, 5.1
 
 ### Objective
 
@@ -313,6 +318,7 @@ grep -i 'kkt.residual\|kkt_residual' CONTRIBUTING.md
 - CONTRIBUTING.md updated with the PR24 (Day-0 traced fix-surface) hard rule
 - CONTRIBUTING.md updated with the PR25 (projection discipline) rule
 - Phase-0 template amended: "Traced Fix-Surface (Day-0)" requirement in PROCEED/REPLAN; KKT-residual harness referenced in Verification Methodology (PR27); golden-staleness check referenced (PR26)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 2.1, 3.1, 4.1, 5.1
 
 ### Acceptance Criteria
 
@@ -322,6 +328,7 @@ grep -i 'kkt.residual\|kkt_residual' CONTRIBUTING.md
 - [ ] Phase-0 Verification Methodology references the KKT-residual harness (PR27)
 - [ ] No contradiction with existing PR20–PR23 text
 - [ ] Rules land before Task 5 (Phase 0 gate authoring) begins
+- [ ] Unknowns 1.1, 2.1, 3.1, 4.1, 5.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -333,6 +340,7 @@ grep -i 'kkt.residual\|kkt_residual' CONTRIBUTING.md
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
+**Unknowns Verified:** 9.1, 9.2, 9.3, 1.3, 2.2, 5.1, 5.2
 
 ### Objective
 
@@ -391,6 +399,7 @@ grep -E 'mine|camshape|kand' docs/planning/EPIC_4/SPRINT_28/PRIORITY_9_KKT_RESID
 - `docs/planning/EPIC_4/SPRINT_28/PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md` — CLI interface, dual-transfer mechanism, Case-(a/b/c) verdict logic, output format
 - Worked invocation sketches for the three first consumers (mine/camshape/kand)
 - The exact Phase-0 "Verification Methodology" command string for Task 3/Task 5 to reference
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 9.1, 9.2, 9.3, 1.3, 2.2, 5.1, 5.2
 
 ### Acceptance Criteria
 
@@ -400,6 +409,7 @@ grep -E 'mine|camshape|kand' docs/planning/EPIC_4/SPRINT_28/PRIORITY_9_KKT_RESID
 - [ ] Machine-readable + human output format defined
 - [ ] First three consumers (mine/camshape/kand) have sketched invocations
 - [ ] The Phase-0 reference command string is finalized for Tasks 3 and 5
+- [ ] Unknowns 9.1, 9.2, 9.3, 1.3, 2.2, 5.1, 5.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -411,6 +421,7 @@ grep -E 'mine|camshape|kand' docs/planning/EPIC_4/SPRINT_28/PRIORITY_9_KKT_RESID
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 3, 4
+**Unknowns Verified:** 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.2
 
 ### Objective
 
@@ -478,6 +489,7 @@ grep -l 'kkt_residual' docs/issues/ISSUE_122*.md docs/issues/ISSUE_138*.md
 - A camcge Phase-0 gate (new issue doc if none exists)
 - Each gate references the KKT-residual harness (PR27) and the Day-0 traced-surface rule (PR24)
 - REPLAN exits to Sprint 29 explicitly named for #1387/#1390/camcge
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.2
 
 ### Acceptance Criteria
 
@@ -487,6 +499,7 @@ grep -l 'kkt_residual' docs/issues/ISSUE_122*.md docs/issues/ISSUE_138*.md
 - [ ] Verification Methodology cites the exact KKT-residual harness invocation + target solution (PR27)
 - [ ] PROCEED requires the traced surface; REPLAN exits named for the three diagnosis-heavy tracks
 - [ ] Each gate cross-linked to its KNOWN_UNKNOWNS category and BASELINE provenance row
+- [ ] Unknowns 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -498,6 +511,7 @@ grep -l 'kkt_residual' docs/issues/ISSUE_122*.md docs/issues/ISSUE_138*.md
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Development team
 **Dependencies:** Task 5
+**Unknowns Verified:** 4.1, 4.3, 5.1, 5.2, 5.3, 6.1, 6.2
 
 ### Objective
 
@@ -550,6 +564,7 @@ grep -Ei 'cclinpts|#1387|kand|#1390|camcge' docs/planning/EPIC_4/SPRINT_28/PRIOR
 - Single-model validation plan for each of #1387/#1390/camcge (the instrument, the signal, the decision)
 - Explicit Sprint 29 re-scope path per track
 - Budget-at-risk tally feeding Task 10's schedule (the lower-bound effort estimate assumes these three partially slip)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.1, 4.3, 5.1, 5.2, 5.3, 6.1, 6.2
 
 ### Acceptance Criteria
 
@@ -559,6 +574,7 @@ grep -Ei 'cclinpts|#1387|kand|#1390|camcge' docs/planning/EPIC_4/SPRINT_28/PRIOR
 - [ ] #1390's Day-0 trace plan uses the KKT-residual harness to localize the gap
 - [ ] camcge's singular-row identification plan + numéraire/Epic-5 fork documented
 - [ ] Sprint 29 re-scope path named for each track
+- [ ] Unknowns 4.1, 4.3, 5.1, 5.2, 5.3, 6.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -570,6 +586,7 @@ grep -Ei 'cclinpts|#1387|kand|#1390|camcge' docs/planning/EPIC_4/SPRINT_28/PRIOR
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Development team
 **Dependencies:** Task 2
+**Unknowns Verified:** 8.1, 8.2, 8.3
 
 ### Objective
 
@@ -626,6 +643,7 @@ grep -Ei 'allowlist|\.github/workflows|regen-goldens' docs/planning/EPIC_4/SPRIN
 - A drift inventory (model → drifted/clean → reason) sizing the one-time refresh
 - The allowlist of known-failing / non-deterministic models with reasons
 - `make regen-goldens` target design + CI job design
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 8.1, 8.2, 8.3
 
 ### Acceptance Criteria
 
@@ -635,6 +653,7 @@ grep -Ei 'allowlist|\.github/workflows|regen-goldens' docs/planning/EPIC_4/SPRIN
 - [ ] CI integration designed (trigger paths, runtime budget, failure-message format)
 - [ ] One-time corpus-refresh commit scope sized (which models)
 - [ ] Determinism-clean under the PR12 guard confirmed in the design
+- [ ] Unknowns 8.1, 8.2, 8.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -646,6 +665,7 @@ grep -Ei 'allowlist|\.github/workflows|regen-goldens' docs/planning/EPIC_4/SPRIN
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
+**Unknowns Verified:** 10.1, 10.2, 10.3
 
 ### Objective
 
@@ -698,6 +718,7 @@ grep -cE '^\s*[-*0-9].*offset|alias|parameter-valued|interior|edge|tree' docs/pl
 - Divergence-detector interface (embedded-vs-standalone objective comparison + allowlist)
 - ≥ 6 catalogued synthetic cross-term shapes, each with its hand-derived stationarity term
 - CI-wiring plan for both the detector and the property tests
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 10.1, 10.2, 10.3
 
 ### Acceptance Criteria
 
@@ -706,6 +727,7 @@ grep -cE '^\s*[-*0-9].*offset|alias|parameter-valued|interior|edge|tree' docs/pl
 - [ ] Property-test suite specified (location, assertion shape, CI wiring)
 - [ ] The #1224/#1388/#1390 defect shapes are explicitly represented in the catalog
 - [ ] Detector would have caught #1378 + #1424 (validated against those cases in the design)
+- [ ] Unknowns 10.1, 10.2, 10.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -717,6 +739,7 @@ grep -cE '^\s*[-*0-9].*offset|alias|parameter-valued|interior|edge|tree' docs/pl
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
+**Unknowns Verified:** 7.1, 7.2, 7.3
 
 ### Objective
 
@@ -767,6 +790,7 @@ grep -i 'hypothes\|Day-0 trace' docs/planning/EPIC_4/SPRINT_28/PRIORITY_7_CLEANU
 - `docs/planning/EPIC_4/SPRINT_28/PRIORITY_7_CLEANUPS_FIX_SURFACE.md` — candidate fix surfaces (as hypotheses), coupling risks, per-item estimates for #1374/#1400/#1385
 - Explicit note that #1385's cross-terms + re-emit are atomic
 - Confirmation that #1374's robot shape is/ isn't coupled to the Sprint 27 dominant-shape fix
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 7.1, 7.2, 7.3
 
 ### Acceptance Criteria
 
@@ -775,6 +799,7 @@ grep -i 'hypothes\|Day-0 trace' docs/planning/EPIC_4/SPRINT_28/PRIORITY_7_CLEANU
 - [ ] #1400 second-leak (warning-capture path) located
 - [ ] #1385 atomic-landing requirement documented
 - [ ] Per-item estimate recorded (feeding Task 10's schedule)
+- [ ] Unknowns 7.1, 7.2, 7.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -786,6 +811,7 @@ grep -i 'hypothes\|Day-0 trace' docs/planning/EPIC_4/SPRINT_28/PRIORITY_7_CLEANU
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1–9
+**Unknowns Verified:** (integrates all — Unknowns 1.1–10.3)
 
 ### Objective
 
@@ -843,6 +869,7 @@ grep -Ei 'Checkpoint|retest' docs/planning/EPIC_4/SPRINT_28/PLAN.md | head
 - `docs/planning/EPIC_4/SPRINT_28/prompts/PLAN_PROMPTS.md` — one prompt per day, no stale forward-looking claims
 - A schedule that front-loads the KKT-residual harness and gates the diagnosis-heavy tracks on their REPLAN signals
 - ≤ 12h/day verified; checkpoints (Day 5/10) + final retest (Day 13) with PR25 tally
+- KNOWN_UNKNOWNS.md fully reconciled — all Unknowns 1.1–10.3 carry a final status integrated into the schedule
 
 ### Acceptance Criteria
 
@@ -853,6 +880,7 @@ grep -Ei 'Checkpoint|retest' docs/planning/EPIC_4/SPRINT_28/PLAN.md | head
 - [ ] Two checkpoints (Day 5, Day 10) + final 3× determinism retest (Day 13) scheduled with the PR25 tally
 - [ ] ≤ 12h/day budget verified; no day over-packed
 - [ ] Cross-linked to KNOWN_UNKNOWNS, BASELINE_METRICS, Phase-0 gates, infra design docs
+- [ ] Unknowns 1.1–10.3 reconciled (integrated) in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -891,7 +919,7 @@ Execute in this logical order:
 Before Sprint 28 Day 1, verify:
 
 ### Critical (Must Complete)
-- [ ] Known unknowns list created (25+ unknowns, fix-surfaces framed as Day-0-trace hypotheses)
+- [x] Known unknowns list created (29 unknowns across 10 categories, fix-surfaces framed as Day-0-trace hypotheses) — `KNOWN_UNKNOWNS.md`, 2026-06-09
 - [ ] Day-0 baseline + PR25 projection table (genuine-gain vs bucket-forward) created
 - [ ] PR24 (traced fix-surface) + PR25 (projection discipline) codified in CONTRIBUTING.md
 - [ ] Phase 0 acceptance gates authored/refreshed for all six carryforwards
