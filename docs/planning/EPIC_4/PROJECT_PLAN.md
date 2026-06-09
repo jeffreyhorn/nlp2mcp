@@ -1127,11 +1127,118 @@ Three Sprint 26 reclassifications targeting different AD pipeline subsystems. **
 
 ---
 
-# Sprint 28 (Weeks 21–22): PATH Author Consultation & Solution Forcing
+# Sprint 28 (Weeks 21–22): Sprint 27 Carryforward — KKT Cross-Term Correctness, AD Architectural Fixes & Diagnostic/CI Tooling
+
+**Goal:** Land the Sprint 27 Solve/Match carryforwards — the AD/KKT cross-term and architectural fixes deferred from the alias-AD workstream (#1224, #1388, #1393+#1335, #1387, #1390, camcge) — and build the diagnostic + CI tooling the Sprint 27 retrospective recommended (golden-staleness CI check, KKT-residual verification harness, embedded-NLP-divergence detector, AD cross-term property tests) so the bug classes that recurred across Sprints 24–27 are caught systematically rather than re-diagnosed by hand each sprint. Finish the Sprint 27 lower-priority cleanups (#1374 `.l` shape, #1400 `message`-field leak, #1385 runtime-guard cross-terms). Push Solve from 105 to ≥ 110 and Match from 62 to ≥ 65. (See `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"Sprint 28 Recommendations" + §"What We'd Do Differently" for per-priority and per-process-rec rationale.)
+
+**Note:** All Priority-1–6 fixes carry forward from Sprint 27 with a documented Phase-0 diagnosis already in their `docs/issues/ISSUE_*.md` files — Sprint 28 starts from a known fix-surface for most, **except where Sprint 27 proved the prep-doc surface wrong** (see Process Recommendation §"PR24"). The single highest-leverage Solve workstream is **#1224 + #1388**: both are AD/KKT cross-term defects with a hand-derived target shape already recorded (+1 Solve each, firm). The PATH-author-consultation / solution-forcing / release work that previously occupied Sprint 28 moves to **Sprint 29** (and Sprints 30/31) — see the renumbered sections below.
+
+## Components
+
+### Priority 1: #1224 mine — Parameter-Valued-Offset KKT Cross-Term Inversion (~10–14h)
+- **mine now translates (Sprint 27 #1224) but is `model_infeasible`** because the `stat_x` cross-term from the `pr` constraint does not **invert** the parameter-valued offset: the emit produces `sum(k, lam_pr(k,l,i,j))` where the correct stationarity is `sum(k, lam_pr(k, l, i-li(k), j-lj(k))) - sum(k, lam_pr(k, l-1, i, j))`. The translate fix (Sprint 27, `src/ir/ast.py` emit render) is the prerequisite; this is the AD/Jacobian cross-term inversion the #1224 prep named (`src/ad/constraint_jacobian.py` / `src/ad/derivative_rules.py:2793`).
+- **Phase 0 acceptance gate (PR20):** hand-derive `stat_x(l,i,j)` for mine including the inverse-offset `lam_pr` term + the `l-1` term; verify the regenerated `mine_mcp.gms` matches byte-for-byte and the NLP KKT point satisfies the emitted `stat_x` (residual ≈ 0 via the Priority-9 KKT-residual harness).
+- **Deliverable:** mine → MODEL STATUS 1 with matching solution (or a documented residual proving the cross-term is now correct); #1224 closed. +1 Solve (firm), +1 Match (conditional on the solve matching the NLP optimum).
+
+### Priority 2: #1388 camshape — Case-(b) `stat_r` Stationarity-Emit Divergence (~6–10h)
+- **Sprint 27 Day 11 §4.6 discriminator classified camshape Case (b)** (non-inert emit bug, NOT non-convexity): from a verified-complete NLP-KKT warm-start the MCP returns MODEL STATUS 5 with `stat_r(i1)` INFES ≈ 396. The subset-corruption co-bug (#1424) already landed in Sprint 27; this is the remaining `stat_r` cross-term defect.
+- **Phase 0 acceptance gate (PR20):** per-term hand-derivation of `stat_r(i)` (interior + edge `lam_convex_edge*` cross-terms) vs the emit at `src/kkt/stationarity.py:1835` (`_build_indexed_stationarity_expr`) — pin the missing/mis-signed balancing term; verify with the KKT-residual harness (NLP KKT point residual ≈ 0 post-fix).
+- **Deliverable:** camshape → MODEL STATUS 1 (area ≈ 4.2841); #1388 closed. +1 Solve (firm).
+
+### Priority 3: #1393 + #1335 otpop — Scalar-Eq Sum-Collapse + `card(t)-ord(t)` Offset Evaluator (~12–16h combined)
+- **Now confirmed two distinct fixes** (Sprint 27 Day 0 proved #1393's Approach C inert). **#1393:** the over-counted `sum(t__, del(t__)…·nu_kdef)` cross-term in `stat_x(tt)`/`stat_p(tt)` must collapse — redirected to the **`stationarity.py` symbolic-collapse path** (where `t→t__` aliasing occurs), NOT `_is_concrete_instance_of`. **#1335:** the missing `nu_zdef` cross-term needs a `_try_eval_offset` extension that resolves symbolic-base `IndexOffset`s with `card(t)-ord(t)` arithmetic without Sum expansion (Approach B).
+- **Phase 0 acceptance gate (PR20):** hand-derived `stat_x('tt-elem')` + `stat_p('1990')` KKT vs the regenerated `otpop_mcp.gms`; PATH solve to `cost ≈ 4217.80` (NLP optimum).
+- **Deliverable:** otpop unblocked from `model_infeasible` → solve + match; #1393 + #1335 closed. +1 Solve, +1 Match (firm).
+
+### Priority 4: #1387 cclinpts — Three Coupled AD Changes (~12–18h)
+- Per the Sprint 27 Day-6 binding diagnosis, cclinpts needs **three coupled changes**: (1) the AD objective-gradient **offset-enumeration** in `_diff_sum` (the missing j+1 cross-terms; the per-instance math was residual-verified to 5e-8); (2) a **gradient→stationarity re-symbolization anchor fix** so a pure-offset term anchors on the differentiated variable's own column index (not an arbitrary element); (3) a **non-convex warm-start** (PATH cold-converges to a spurious degenerate KKT point `b≈const`). The "sign-flip" framing from the original filing is a **misdiagnosis** (the `(-1)` is the standard maximize negation — do NOT touch sign logic).
+- **Phase 0 acceptance gate (PR20):** the eliminated-KKT residual check at the NLP optimum (`objgrad_b(j) + b(j)^(−γ)·objgrad_fb(j) = 0`, max|r| ≤ 1e-6) on the regenerated emit; high-blast-radius AD change → full-corpus byte-stability + re-solve verification required.
+- **Deliverable:** cclinpts → MODEL STATUS 1 with `rel_diff < 1%`; #1387 closed. +1 Match (firm, contingent on all three changes landing together — REPLAN to Sprint 29 if the re-symbolization anchor fix proves architectural).
+
+### Priority 5: #1390 kand — Re-Diagnose the True Mismatch Source (~8–14h)
+- Sprint 27 **proved the phantom-term collapse is inert** (collapsing the 22 `lam_dembalx` terms is solution-equivalent; MCP stays `cost = 195.0` ≠ NLP `2613.0`). The real defect is elsewhere. **Re-diagnosis surfaces (per Sprint 27 Day 5):** the `bal(j,t,n)`/`x` stationarity, the `t-1`↔`t+1` lag duality, or the LP first-stage/recourse coupling.
+- **Phase 0 acceptance gate (PR20):** a fresh Day-0 trace (per PR24) to localize the 195-vs-2613 gap to a specific stationarity/complementarity row via the KKT-residual harness, BEFORE any src change; the phantom-term re-symbolization is explicitly out of scope (proven inert).
+- **Deliverable:** root cause localized + fixed (→ +1 Match) OR a re-scoped Phase-0 filing if the gap is a deeper LP-recourse-coupling architectural issue (→ Sprint 29 with the new diagnosis). Diagnosis-first: REPLAN-friendly.
+
+### Priority 6: camcge — Singular-Jacobian CGE Degeneracy (~8–14h)
+- camcge translates `action=c`-clean (Pattern C Phase B emit is correct) but the MCP is `model_infeasible` from a **singular-Jacobian CGE degeneracy** — distinct from Pattern C. Investigate: a redundant market-clearing / Walras-law row (one equation is linearly dependent), variable normalization (a price numéraire fix), or a PATH preprocessing/scaling option.
+- **Phase 0 acceptance gate (PR20):** identify the singular row(s) via the PATH listing's basis-singularity report + a Jacobian rank check at the NLP point; verify the proposed fix (numéraire fix / redundant-row drop) preserves the economic solution.
+- **Deliverable:** camcge → MODEL STATUS 1 OR a documented "inherent CGE degeneracy needs formulation change" finding (→ observation task / Epic 5). +1 Solve (conditional).
+
+### Priority 7: Sprint 27 Lower-Priority Cleanups (~8–12h)
+- **#1374 `.l` denominator/override dedup (robot)** — the second duplicate-init shape (robot's `rho.l('h0') = 4.5;` emitted by both the denominator-init block and the `fx_to_l_override`). Dedup at emit time; regenerate robot; KU follow-through.
+- **#1400 `message`-field captured-warning path relativization** — the second absolute-path leak (captured warning text containing `…/src/…py:NNN`). Relativize paths in the warning-capture path so `gamslib_status.json` is fully machine-portable (the Sprint 27 #1400 fix covered `mcp_file_used` only).
+- **#1385 runtime-guard cross-terms** — the deferred srpchase cross-term emit (`J_gᵀ·lam`) coupled with the runtime-guard equation-body re-emit (`src/kkt/stationarity.py`); must land together (re-emit without cross-terms = inconsistent MCP).
+- **Deliverable:** #1374 fully closed; #1400 fully closed; #1385 cross-terms landed or re-scoped.
+
+### Priority 8 (Infrastructure): Golden-Staleness Sweep + CI Check (~8–12h)
+- **Sprint 27 retrospective "What We'd Do Differently #3":** several `*_mcp.gms` / `*_mcp_presolve.gms` goldens (cesam/fawley/korcge/dinam) silently drifted from current emit, surfacing as noise in unrelated PRs (Days 9/10/13). Build a check that regenerates every translating model's golden and fails if it differs from the committed artifact (modulo a documented allowlist of known-failing/non-deterministic models).
+- **Components:** `scripts/sprint_audit/check_golden_staleness.py` (regenerate → diff → report); a CI job (`.github/workflows/`) running it on PRs that touch `src/{ad,kkt,emit,ir}/`; a `make regen-goldens` target to refresh in bulk.
+- **Deliverable:** golden-staleness check + CI integration; a one-time corpus refresh commit clearing the existing drift (cesam/fawley/korcge/dinam/…); CONTRIBUTING.md note.
+
+### Priority 9 (Infrastructure): KKT-Residual Verification Harness (~10–14h)
+- **Sprint 27 retrospective "What Went Well #2":** the GDX warm-from-good-optimum experiment (solve NLP → unload solution → load into the MCP → check whether the NLP KKT point satisfies the emitted stationarity) became the standard tool for distinguishing an **emit bug** (Case b — residual ≠ 0 at the NLP KKT point) from **non-convexity** (Case c — residual ≈ 0 but PATH diverges). Formalize it as reusable tooling — it directly supports Priorities 1, 2, 5.
+- **Components:** `scripts/diagnostics/kkt_residual.py` — given a model, solve the NLP (or load a provided GDX), warm-start the MCP from that solution + transferred duals, and report per-row stationarity/complementarity residuals + a Case-(a/b/c) verdict; integrate into the PR20 Phase-0 "Verification Methodology" template as a standard command.
+- **Deliverable:** the KKT-residual harness + docs; PR20 template updated to reference it; applied to ≥ 3 carryforward models (mine/camshape/kand) as its first consumers.
+
+### Priority 10 (Infrastructure): Embedded-NLP-Divergence Detector + AD Cross-Term Property Tests (~12–16h)
+- **Sprint 27 retrospective "What Went Well #2":** the "**embedded NLP pre-solve diverges from standalone**" bug class (the `$include` re-running source statements under `$onMultiR`) drove two of the sprint's wins (#1378 launch double-applied param; #1424 camshape subset corruption). Build a detector + a structural test class so this is caught automatically.
+- **Components:** (a) `scripts/diagnostics/check_presolve_divergence.py` — for each `--nlp-presolve` model, compare the embedded NLP objective to the standalone NLP objective and flag divergence (would have caught #1378 + #1424 at translate time); (b) AD cross-term **property tests** — generate small synthetic models with a known hand-derived KKT (offset sums, alias sums, parameter-valued offsets) and assert the emit's stationarity cross-terms match, systematically guarding the #1224/#1388/#1390 cross-term defect class.
+- **Deliverable:** presolve-divergence detector (CI-runnable on presolve models) + ≥ 6 AD cross-term property tests covering the recurring shapes; both wired into CI.
+
+### Pipeline Retest (~4h)
+- Full pipeline at each checkpoint (Day 5 + Day 10) and final (Day 13) per PR6; run the final retest under ≥ 3 `PYTHONHASHSEED` values (PR12 determinism guard).
+- Use the PR22 audit script (`changed_emit_artifacts.py --since-commit <Day-0 SHA>`) for the retest comparison surface; the new golden-staleness check (Priority 8) replaces the ad-hoc "measure, don't sweep" reconciliation from Sprint 27.
+- **Deliverable:** updated `gamslib_status.json` (machine-portable paths) + Sprint 26→27→28 metrics comparison; determinism verified.
+
+## Process Recommendations from Sprint 27
+
+Derived from `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently". (PR20–PR23 from Sprint 26 are already delivered and remain in force; these extend them.)
+
+- **PR24 — Day-0 fix-surface trace (~2–3h to codify):** prep-doc `file:line` fix surfaces were **wrong 4× in Sprint 27** (Days 0/6/11/12 — the real surfaces were `stationarity.py`, `src/ir/ast.py`, the emit restore pass, NOT the AD sites the prep named). Codify in CONTRIBUTING.md / the Phase-0 template a hard rule: **prep records the symptom + reproducer only; the fix surface is established by a Day-0 trace, never trusted from the prep doc.** Phase-0 PROCEED requires citing the *traced* surface.
+- **PR25 — Projection discipline (bucket-forward vs genuine gain) (~1–2h to codify):** the Day-0 "+6 firm Match" over-counted because it assumed `path_syntax_error → model_infeasible` **bucket-forward** moves (fawley/otpop/camcge) were Solve/Match gains. Codify: Solve/Match projections must label each delta as a genuine bucket-to-success transition vs a forward move within the failure set; only the former counts toward the target.
+- **PR26 — Golden-staleness CI check (Priority 8 above):** the recurring silent golden drift gets a CI gate (delivered as Priority 8).
+- **PR27 — KKT-residual harness as a standard Phase-0 tool (Priority 9 above):** the Case-(a/b/c) discriminator is mechanized and referenced from the Phase-0 "Verification Methodology" template (delivered as Priority 9).
+- **Deliverable:** CONTRIBUTING.md updated with PR24 + PR25 rules; the Phase-0 template references PR24 (traced surface) + PR27 (KKT-residual harness).
+
+## Deliverables
+- #1224 parameter-valued-offset KKT cross-term inversion (`src/ad/`) — mine solves (Priority 1)
+- #1388 camshape `stat_r` cross-term fix (`src/kkt/stationarity.py`) — camshape solves (Priority 2)
+- #1393 + #1335 otpop scalar-eq Sum-collapse + `card(t)-ord(t)` evaluator — otpop solves + matches (Priority 3)
+- #1387 cclinpts three coupled AD changes — cclinpts matches, OR re-scoped Phase-0 filing (Priority 4)
+- #1390 kand root-cause localization + fix OR re-scoped Phase-0 filing (Priority 5)
+- camcge singular-Jacobian fix OR documented inherent-degeneracy finding (Priority 6)
+- Sprint 27 lower-priority cleanups: #1374 `.l` shape, #1400 `message`-field leak, #1385 cross-terms (Priority 7)
+- `scripts/sprint_audit/check_golden_staleness.py` + CI job + `make regen-goldens` + one-time corpus refresh (Priority 8)
+- `scripts/diagnostics/kkt_residual.py` KKT-residual verification harness + Phase-0 template integration (Priority 9)
+- `scripts/diagnostics/check_presolve_divergence.py` + ≥ 6 AD cross-term property tests, both CI-wired (Priority 10)
+- CONTRIBUTING.md updated with PR24 (Day-0 traced fix-surface) + PR25 (projection discipline) rules
+- Updated pipeline metrics + Sprint 28 SPRINT_LOG.md + SPRINT_RETROSPECTIVE.md
+
+## Acceptance Criteria
+- **Solve:** ≥ 110 models solve (up from 105; +5 firm/conditional — #1224 [+1 firm] + #1388 [+1 firm] + #1393+#1335 otpop [+1 firm] + camcge [+1 conditional] + #1390 kand-as-solve [n/a, Match] — net +5 with cclinpts/kand contributing Match not Solve)
+- **Match:** ≥ 65 models match (up from 62; +3 — #1393+#1335 otpop [+1] + #1387 cclinpts [+1] + #1390 kand [+1]; #1224/#1388 contribute Solve and Match-conditional)
+- **path_syntax_error:** ≤ 6 (down from 8; the carryforward fixes drain otpop and reduce the bucket)
+- **path_solve_terminated:** maintain ≤ 5
+- **model_infeasible:** ≤ 5 (down from 8; −3 via camshape/otpop/mine recoveries; camcge conditional)
+- **Translate:** ≥ 135/142 (maintain; mine already counted in Sprint 27)
+- **Parse:** ≥ 142/142 (maintain)
+- **Tests:** ≥ 4,800 (up from 4,779; the property tests + harness tests add coverage)
+- **Determinism:** byte-identical pipeline output under ≥ 3 `PYTHONHASHSEED` values (PR12)
+- **Tooling (Infrastructure):** golden-staleness CI check live + existing drift cleared; KKT-residual harness landed + referenced in the Phase-0 template; presolve-divergence detector + AD cross-term property tests CI-wired
+- **Process recommendations:** PR24 (Day-0 traced fix-surface) + PR25 (projection discipline) codified in CONTRIBUTING.md
+- **Quality:** all quality gates pass; all fixes have regression tests; emit-touching PRs include regenerated `.gms` diffs (PR14) and pass the new golden-staleness check (PR26)
+
+**Estimated Effort:** 98–144 hours over a 14-day sprint (Day 0 + Days 1–13). At ≤ 12 hours/day this fits within the 168-hour budget (14 × 12 = 168) with slack. Per-priority budgets: P1 #1224 [10–14h] + P2 #1388 [6–10h] + P3 #1393+#1335 [12–16h] + P4 #1387 [12–18h] + P5 #1390 [8–14h] + P6 camcge [8–14h] + P7 cleanups [8–12h] + P8 golden-staleness CI [8–12h] + P9 KKT-residual harness [10–14h] + P10 divergence detector + property tests [12–16h] + process recs PR24/25 [3–5h] + pipeline retest [4h] = 101–149h work-item total, plus ~5–8h prep tasks (Phase-0 gates for the 6 carryforwards). The lower bound assumes Priorities 4–6 (#1387/#1390/camcge — the three diagnosis-heavy, REPLAN-prone tracks) partially slip to Sprint 29; the upper bound assumes all 10 priorities ship. The diagnostic tooling (P9 KKT-residual harness) is intentionally front-loaded (Days 1–3) so it accelerates the carryforward diagnoses (P1/P2/P5) that follow. Heaviest day budget: a ~11h day mid-sprint (P4 #1387's three-coupled-change verification + full-corpus byte-stability re-solve).
+**Risk Level:** HIGH — six of the ten priorities are AD/KKT-architecture carryforwards from the Sprint 24–27 alias-AD workstream, three of which (#1387, #1390, camcge) are diagnosis-heavy and REPLAN-prone (Sprint 27's pattern: deep AD fixes routinely prove multi-bug). The primary mitigations are (a) front-loading the KKT-residual harness (P9) so Case-(a/b/c) classification is mechanical, (b) the PR24 Day-0-traced-fix-surface rule (Sprint 27 proved the prep surfaces wrong 4×), and (c) generous REPLAN paths — #1387/#1390/camcge each have an explicit "re-scope to Sprint 29 with a Phase-0 filing" exit. The infrastructure priorities (P8–P10) are lower-risk and provide durable leverage against the recurring bug classes even if the hardest carryforwards slip.
+
+---
+
+# Sprint 29 (Weeks 23–24): PATH Author Consultation & Solution Forcing
 
 **Goal:** Prepare and submit PATH author consultation document. Implement solution forcing strategies. Address remaining solve and translate failures across all pipeline stages.
 
-**Note:** Case studies from Sprint 22; consultation submission now in Sprint 28.
+**Note:** Case studies from Sprint 22; consultation submission now in Sprint 29.
 
 ## Components
 
@@ -1175,13 +1282,13 @@ Three Sprint 26 reclassifications targeting different AD pipeline subsystems. **
 - **Final Translation Fixes (2-3h)**
   - Address remaining translation blockers
   - Handle newly-discovered patterns from late-arriving parsed models
-  - Target: translate rate ≥ 95% of parsed models (matches Sprint 28 Acceptance Criteria below; Sprint 29 steps up to ≥ 97%)
+  - Target: translate rate ≥ 95% of parsed models (matches Sprint 29 Acceptance Criteria below; Sprint 30 steps up to ≥ 97%)
   - **Deliverable:** Final translation fixes
 
 - **Final Solve Fixes (2h)**
   - Address any remaining solvable `path_syntax_error` or `path_solve_terminated` models
   - Apply solution forcing strategies to divergent models
-  - Target: solve rate ≥ 82% of translated models (matches Sprint 28 Acceptance Criteria below; modest +1pp bump on Sprint 27's ≥ 82% baseline if forcing strategies recover 1–2 divergent models)
+  - Target: solve rate ≥ 82% of translated models (matches Sprint 29 Acceptance Criteria below; modest +1pp bump on Sprint 28's ≥ 82% baseline if forcing strategies recover 1–2 divergent models)
   - **Deliverable:** Final solve fixes
 
 ### Pipeline Retest (~2h)
@@ -1199,10 +1306,10 @@ Three Sprint 26 reclassifications targeting different AD pipeline subsystems. **
 ## Acceptance Criteria
 - **PATH Consultation:** Document submitted to Ferris/Dirkse with reproducible cases
 - **Solution Forcing:** At least 2 strategies implemented and tested
-- **Parse Rate:** ≥ 100% of pipeline scope (maintain from Sprint 27)
-- **Translate Rate:** ≥ 95% of parsed models (maintain from Sprint 27; S29 steps up to ≥ 97% per Rolling KPIs)
-- **Solve Rate:** ≥ 82% of translated models (maintain Sprint 27's ≥ 82% baseline; modest stretch via forcing strategies recovering 1–2 divergent models; S29/S30 continue the ramp to ≥ 83% / ≥ 85%)
-- **Full Pipeline Match:** ≥ 46% of pipeline scope (maintain from Sprint 27)
+- **Parse Rate:** ≥ 100% of pipeline scope (maintain from Sprint 28)
+- **Translate Rate:** ≥ 95% of parsed models (maintain from Sprint 28; S30 steps up to ≥ 97% per Rolling KPIs)
+- **Solve Rate:** ≥ 82% of translated models (maintain Sprint 28's ≥ 82% baseline; modest stretch via forcing strategies recovering 1–2 divergent models; S30/S31 continue the ramp to ≥ 83% / ≥ 85%)
+- **Full Pipeline Match:** ≥ 46% of pipeline scope (maintain from Sprint 28)
 - **Quality:** All tests pass; all fixes have regression tests
 
 **Estimated Effort:** 22-28 hours
@@ -1210,11 +1317,11 @@ Three Sprint 26 reclassifications targeting different AD pipeline subsystems. **
 
 ---
 
-# Sprint 29 (Weeks 23–24): Quality, Performance & PATH Feedback Integration
+# Sprint 30 (Weeks 25–26): Quality, Performance & PATH Feedback Integration
 
 **Goal:** Stabilize performance benchmarks. Incorporate any PATH author feedback. Final comprehensive pipeline run. Begin documentation finalization.
 
-**Note:** PATH consultation submitted in Sprint 28; feedback integration now in Sprint 29.
+**Note:** PATH consultation submitted in Sprint 29; feedback integration now in Sprint 30.
 
 ## Components
 
@@ -1273,7 +1380,7 @@ Three Sprint 26 reclassifications targeting different AD pipeline subsystems. **
 ### Pipeline Retest (~2h)
 - Full pipeline run with PATH feedback integration
 - Record final metrics
-- **Deliverable:** Updated metrics; expected full pipeline match ≥ 48% (matches Sprint 29 Acceptance Criteria below; up from Sprint 28's ≥ 46%)
+- **Deliverable:** Updated metrics; expected full pipeline match ≥ 48% (matches Sprint 30 Acceptance Criteria below; up from Sprint 29's ≥ 46%)
 
 ## Deliverables
 - Regression-based performance benchmarks (replacing absolute thresholds)
@@ -1286,9 +1393,9 @@ Three Sprint 26 reclassifications targeting different AD pipeline subsystems. **
 ## Acceptance Criteria
 - **Performance Benchmarks:** No flaky CI failures from benchmark tests
 - **Final Parse Rate:** ≥ 100% of pipeline scope (maintain)
-- **Final Translate Rate:** ≥ 97% of parsed models (up from Sprint 28's ≥ 95%)
-- **Final Solve Rate:** ≥ 83% of translated models (up from Sprint 28's ≥ 82%)
-- **Full Pipeline Match:** ≥ 48% of pipeline scope (up from Sprint 28's ≥ 46%)
+- **Final Translate Rate:** ≥ 97% of parsed models (up from Sprint 29's ≥ 95%)
+- **Final Solve Rate:** ≥ 83% of translated models (up from Sprint 29's ≥ 82%)
+- **Full Pipeline Match:** ≥ 48% of pipeline scope (up from Sprint 29's ≥ 46%)
 - **Documentation:** Remaining failures documented; Epic 4 summary drafted
 - **Quality:** All quality gates pass
 
@@ -1297,11 +1404,11 @@ Three Sprint 26 reclassifications targeting different AD pipeline subsystems. **
 
 ---
 
-# Sprint 30 (Weeks 25–26): v2.0.0 Release & Epic 5 Planning
+# Sprint 31 (Weeks 27–28): v2.0.0 Release & Epic 5 Planning
 
 **Goal:** Complete Epic 4 with v2.0.0 release. Finalize all documentation. Plan Epic 5 based on remaining failures and new opportunities.
 
-**Note:** Performance benchmarks and PATH feedback integration completed in Sprint 29; Sprint 30 focuses on release and forward planning.
+**Note:** Performance benchmarks and PATH feedback integration completed in Sprint 30; Sprint 31 focuses on release and forward planning.
 
 ## Components
 
@@ -1346,7 +1453,7 @@ Three Sprint 26 reclassifications targeting different AD pipeline subsystems. **
 
 ### Epic 5 Planning (~6-8h)
 - **Backlog Prioritization (2-3h)**
-  - Review REMAINING_FAILURES.md from Sprint 29
+  - Review REMAINING_FAILURES.md from Sprint 30
   - Prioritize remaining parse/translate/solve issues
   - Identify quick wins vs. major undertakings
   - **Deliverable:** Prioritized Epic 5 backlog
@@ -1360,12 +1467,12 @@ Three Sprint 26 reclassifications targeting different AD pipeline subsystems. **
 - **Epic 5 Project Plan Draft (2-3h)**
   - Create initial `docs/planning/EPIC_5/PROJECT_PLAN.md`
   - Define Epic 5 goals and success criteria
-  - Outline Sprint 31-35 high-level scope
+  - Outline Sprint 32-36 high-level scope
   - **Deliverable:** Draft Epic 5 PROJECT_PLAN.md
 
 ### Sprint Retrospective (~2h)
 - **Epic 4 Retrospective (2h)**
-  - Document what worked well across Sprints 18-29
+  - Document what worked well across Sprints 18-30
   - Identify process improvements for Epic 5
   - Celebrate achievements
   - **Deliverable:** Epic 4 retrospective document
@@ -1382,10 +1489,10 @@ Three Sprint 26 reclassifications targeting different AD pipeline subsystems. **
 ## Acceptance Criteria
 - **Release:** v2.0.0 tagged, pushed, and GitHub release published
 - **Documentation:** All Epic 4 documentation complete and reviewed
-- **Final Parse Rate:** ≥ 100% of pipeline scope (confirmed from Sprint 29)
-- **Final Translate Rate:** ≥ 97% of parsed models (confirmed from Sprint 29)
-- **Final Solve Rate:** ≥ 85% of translated models (up from Sprint 29's ≥ 83%)
-- **Full Pipeline Match:** ≥ 52% of pipeline scope (up from Sprint 29's ≥ 48%)
+- **Final Parse Rate:** ≥ 100% of pipeline scope (confirmed from Sprint 30)
+- **Final Translate Rate:** ≥ 97% of parsed models (confirmed from Sprint 30)
+- **Final Solve Rate:** ≥ 85% of translated models (up from Sprint 30's ≥ 83%)
+- **Full Pipeline Match:** ≥ 52% of pipeline scope (up from Sprint 30's ≥ 48%)
 - **Epic 5 Ready:** Draft project plan created; backlog prioritized
 - **Quality:** All quality gates pass on final release
 
@@ -1398,20 +1505,20 @@ Three Sprint 26 reclassifications targeting different AD pipeline subsystems. **
 
 ### Sprint-Level KPIs
 
-| Metric | S18 | S19 | S20 | S21 (actual) | S22 (actual) | S23 (actual) | S24 (actual) | S25 (actual) | S26 | S27 | S28 | S29 | S30 |
-|--------|-----|-----|-----|--------------|--------------|--------------|--------------|--------------|-----|-----|-----|-----|-----|
-| Valid Corpus Defined | ✓ | — | — | — | — | — | — | — | — | — | — | — | — |
-| lexer_invalid_char | ~95 | <50 | 10 | **3** | **4** | **0**³ | **0** | **0** | **0** | 0 | 0 | 0 | 0 |
-| internal_error (parse) | ~23 | <15 | 7 | **0** | **0** | **0** | **0** | **0** | **0** | 0 | 0 | 0 | 0 |
-| path_syntax_error | ≤2 | ≤2 | 48 | **41** | **20** | **23** | **11**⁴ | **12**⁶ | **17**⁷ | ≤6 (−11 via #1398 + #1381 + carryforward) | maintain ≤6 | ≤5 | maintain ≤5 |
-| path_solve_terminated | 11 | 11 | 29 | **12** (29/29 classified) | **10** | **12** | **10** | **5** | **5** | maintain ≤5 | maintain ≤5 | ≤4 | ≤3 |
-| model_infeasible | 0 | 0 | 12 | **15** | **12**² | **11** | **8**⁵ | **4** | **4** | ≤3 | maintain ≤3 | maintain ≤4 | maintain ≤4 |
-| Parse Rate (pipeline scope) | ~41% | ≥55% | 82.5% | **98.1%** (154/157) | **97.5%** (156/160) | **100.0%** (147/147)³ | **100.0%** (143/143)⁴ | **100.0%** (142/142)⁶ | **100.0%** (142/142)⁷ | ≥100% | ≥100% | ≥100% | ≥100% |
-| Translate Rate (of parsed) | ~69% | ~72% | 90.9% | **89.0%** (137/154) | **90.4%** (141/156) | **95.2%** (140/147) | **94.4%** (135/143)⁴ | **93.7%** (133/142)⁶ | **94.4%** (134/142)⁷ | ≥95% (+1 via #1385) | maintain ≥95% (stretch ≥96% via forcing) | ≥97% | ≥97% |
-| Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | **63.1%** (89/141) | **61.4%** (86/140) | **73.3%** (99/135) | **78.2%** (104/133) | **76.9%** (103/134)⁷ | ≥82% | maintain ≥82% (stretch +1pp via forcing) | ≥83% | ≥85% |
-| Full Pipeline Match (pipeline scope) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | **29.4%** (47/160) | **33.3%** (49/147)³ | **37.8%** (54/143)⁴ | **42.3%** (60/142)⁶ | **41.5%** (59/142)⁷ | ≥46% | maintain ≥46% | ≥48% | ≥52% |
+| Metric | S18 | S19 | S20 | S21 (actual) | S22 (actual) | S23 (actual) | S24 (actual) | S25 (actual) | S26 | S27 | S28 | S29 | S30 | S31 |
+|--------|-----|-----|-----|--------------|--------------|--------------|--------------|--------------|-----|-----|-----|-----|-----|-----|
+| Valid Corpus Defined | ✓ | — | — | — | — | — | — | — | — | — | — | — | — | — |
+| lexer_invalid_char | ~95 | <50 | 10 | **3** | **4** | **0**³ | **0** | **0** | **0** | 0 | 0 | 0 | 0 | 0 |
+| internal_error (parse) | ~23 | <15 | 7 | **0** | **0** | **0** | **0** | **0** | **0** | 0 | 0 | 0 | 0 | 0 |
+| path_syntax_error | ≤2 | ≤2 | 48 | **41** | **20** | **23** | **11**⁴ | **12**⁶ | **17**⁷ | ≤6 (−11 via #1398 + #1381 + carryforward) | ≤6 | maintain ≤6 | ≤5 | maintain ≤5 |
+| path_solve_terminated | 11 | 11 | 29 | **12** (29/29 classified) | **10** | **12** | **10** | **5** | **5** | maintain ≤5 | maintain ≤5 | maintain ≤5 | ≤4 | ≤3 |
+| model_infeasible | 0 | 0 | 12 | **15** | **12**² | **11** | **8**⁵ | **4** | **4** | ≤3 | ≤5 | maintain ≤3 | maintain ≤4 | maintain ≤4 |
+| Parse Rate (pipeline scope) | ~41% | ≥55% | 82.5% | **98.1%** (154/157) | **97.5%** (156/160) | **100.0%** (147/147)³ | **100.0%** (143/143)⁴ | **100.0%** (142/142)⁶ | **100.0%** (142/142)⁷ | ≥100% | ≥100% | ≥100% | ≥100% | ≥100% |
+| Translate Rate (of parsed) | ~69% | ~72% | 90.9% | **89.0%** (137/154) | **90.4%** (141/156) | **95.2%** (140/147) | **94.4%** (135/143)⁴ | **93.7%** (133/142)⁶ | **94.4%** (134/142)⁷ | ≥95% (+1 via #1385) | ≥95% | maintain ≥95% (stretch ≥96% via forcing) | ≥97% | ≥97% |
+| Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | **63.1%** (89/141) | **61.4%** (86/140) | **73.3%** (99/135) | **78.2%** (104/133) | **76.9%** (103/134)⁷ | ≥82% | ≥81% | maintain ≥82% (stretch +1pp via forcing) | ≥83% | ≥85% |
+| Full Pipeline Match (pipeline scope) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | **29.4%** (47/160) | **33.3%** (49/147)³ | **37.8%** (54/143)⁴ | **42.3%** (60/142)⁶ | **41.5%** (59/142)⁷ | ≥46% | ≥45% | maintain ≥46% | ≥48% | ≥52% |
 
-² Sprint 22 `model_infeasible` is 15 total; 12 in-scope after excluding 3 permanently infeasible models (feasopt1, iobalance, orani). A 4th model (meanvar) was declared excluded on Day 7 but later achieved model_optimal, so only 3 remain in the infeasible count. S23–S30 targets are in-scope counts.
+² Sprint 22 `model_infeasible` is 15 total; 12 in-scope after excluding 3 permanently infeasible models (feasopt1, iobalance, orani). A 4th model (meanvar) was declared excluded on Day 7 but later achieved model_optimal, so only 3 remain in the infeasible count. S23–S31 targets are in-scope counts.
 
 ³ Sprint 23 pipeline scope changed from 160 to 147 models (13 MIP/other models excluded). Parse and match percentages are relative to the 147-run scope, so excluded models are not counted in that denominator. The `lexer_invalid_char` count dropping to 0 in Sprint 23 primarily reflects parse fixes on models that remained in scope, rather than all lexer failures being removed by scope exclusion.
 
@@ -1437,13 +1544,13 @@ Three Sprint 26 reclassifications targeting different AD pipeline subsystems. **
 | Risk | Impact | Probability | Sprints Affected | Mitigation |
 |------|--------|-------------|------------------|------------|
 | Grammar refactoring regressions | HIGH | HIGH | 20, 22 | 4,200+ test suite; golden files for 12 solving models; incremental changes |
-| Stacked blockers in models | HIGH | HIGH | 20-27 | Track blockers removed, not just models unblocked |
-| MCP-NLP solution divergence | HIGH | MEDIUM | 25-29 | PATH author consultation; multiple forcing strategies |
-| PATH author availability | MEDIUM | MEDIUM | 28-29 | Self-contained case studies; batch questions; literature fallback |
-| Diminishing returns on parse | MEDIUM | MEDIUM | 22-28 | Subcategorize before implementing; preprocessing fallback |
-| IndexOffset complexity | MEDIUM | MEDIUM | 20-21, 26-27 | Design first (S20), implement second (S21); spike validates feasibility; S26 #1224 ParamRef IndexOffset deferred until architectural extension scoped; S27 Priority 6 implements |
-| Infeasible MCP formulations | MEDIUM | LOW-MEDIUM | 24-29 | PATH consultation; document as inherent limitations |
-| Alias-AD architectural drift | HIGH | HIGH | 24-27 | Day 5 hypothesis-validation methodology (PR16) applied PRE-Sprint-0 from S26 onward; pre-merge solve-time validation (PR19) for emit-affecting changes; **PR20 Phase 0 acceptance gate (hand-derived KKT before src/ implementation) added in S27** after S26 carryforward identified 4 reclassifications + 1 in-place hand-derived-KKT-review catch |
+| Stacked blockers in models | HIGH | HIGH | 20-28 | Track blockers removed, not just models unblocked |
+| MCP-NLP solution divergence | HIGH | MEDIUM | 25-30 | PATH author consultation; multiple forcing strategies |
+| PATH author availability | MEDIUM | MEDIUM | 29-30 | Self-contained case studies; batch questions; literature fallback |
+| Diminishing returns on parse | MEDIUM | MEDIUM | 22-29 | Subcategorize before implementing; preprocessing fallback |
+| IndexOffset complexity | MEDIUM | MEDIUM | 20-21, 26-28 | Design first (S20), implement second (S21); spike validates feasibility; S26 #1224 ParamRef IndexOffset deferred until architectural extension scoped; S27 Priority 6 lands the translate; S28 Priority 1 lands the parameter-valued-offset KKT cross-term |
+| Infeasible MCP formulations | MEDIUM | LOW-MEDIUM | 24-30 | PATH consultation; document as inherent limitations |
+| Alias-AD architectural drift | HIGH | HIGH | 24-28 | Day 5 hypothesis-validation methodology (PR16) applied PRE-Sprint-0 from S26 onward; pre-merge solve-time validation (PR19) for emit-affecting changes; **PR20 Phase 0 acceptance gate (hand-derived KKT before src/ implementation) added in S27** after S26 carryforward identified 4 reclassifications + 1 in-place hand-derived-KKT-review catch |
 
 ---
 
@@ -1470,13 +1577,16 @@ Three Sprint 26 reclassifications targeting different AD pipeline subsystems. **
 - Sprint 25 depends on Sprint 24 (alias differentiation carryforward + emitter backlog from S24 retrospective)
 - Sprint 26 depends on Sprint 25 (Pattern C narrowing #1306 + Day 7 cohort sweep + KU-33/34/35/36 end-of-sprint discoveries from S25 retrospective)
 - Sprint 27 depends on Sprint 26 (Pattern C Phase B + Phase A gate tightening + AD architectural redesigns + comp_up subset/superset workstream from S26 retrospective; 14 issues labeled `sprint-27`)
-- Sprint 28 depends on Sprint 22 (case studies feed consultation document) and Sprint 27 (carryforward stabilization establishes baseline for PATH consultation work)
-- Sprint 29 depends on Sprint 28 (PATH feedback integration, performance benchmarks)
-- Sprint 30 depends on Sprint 29 (release preparation based on final metrics)
+- Sprint 28 depends on Sprint 27 (the alias-AD baseline + the Sprint 28 carryforwards filed in S27: #1224 KKT cross-term, #1388, #1393+#1335, #1387, #1390, camcge — all with a Phase-0 diagnosis already recorded)
+- Sprint 29 depends on Sprint 22 (case studies feed consultation document) and Sprint 28 (carryforward stabilization establishes the baseline for PATH consultation work)
+- Sprint 30 depends on Sprint 29 (PATH feedback integration, performance benchmarks)
+- Sprint 31 depends on Sprint 30 (release preparation based on final metrics)
 
 ---
 
 ## Changelog
+
+- **2026-06-09:** Inserted new Sprint 28 (Sprint 27 Carryforward — KKT Cross-Term Correctness, AD Architectural Fixes & Diagnostic/CI Tooling) based on `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"Sprint 28 Recommendations" (Priorities 1–6: #1224 parameter-valued-offset KKT cross-term, #1388 camshape `stat_r`, #1393+#1335 otpop scalar-eq Sum-collapse, #1387 cclinpts three-coupled-change, #1390 kand re-diagnosis, camcge CGE degeneracy) + Priority 7 Sprint-27 lower-priority cleanups (#1374 `.l` shape, #1400 `message`-field leak, #1385 cross-terms) + Priorities 8–10 infrastructure (golden-staleness CI check, KKT-residual verification harness, embedded-NLP-divergence detector + AD cross-term property tests) + Sprint 27 retrospective process recs PR24 (Day-0 traced fix-surface) + PR25 (projection discipline). 14-day sprint at ≤12h/day = 168h budget cap; estimated effort 98–144h total (101–149h work-items + ~5–8h prep) (upper bound assumes all 10 priorities ship; lower bound assumes Priorities 4–6 — #1387/#1390/camcge, the diagnosis-heavy REPLAN-prone tracks — partially slip to Sprint 29). Cascaded existing sprints forward: old S28 (PATH Author Consultation & Solution Forcing) → new S29 (Weeks 23–24); old S29 (Quality+Performance+PATH Feedback Integration) → new S30 (Weeks 25–26); old S30 (v2.0.0 Release + Epic 5 Planning) → new S31 (Weeks 27–28). Added S31 column to Rolling KPIs + inserted new S28 column with carryforward targets (Solve ≥81%, Match ≥45%, path_syntax_error ≤6, model_infeasible ≤5, Translate ≥95%). Updated sprint dependencies (S28 now depends on S27 alias-AD baseline + the filed Sprint-28 carryforwards; S29 dep on S22 case studies retained + new dep on S28 carryforward stabilization), risk table sprint-range references (Stacked blockers 20-27→20-28, MCP-NLP solution divergence 25-29→25-30, PATH author availability 28-29→29-30, Diminishing returns 22-28→22-29, IndexOffset 26-27→26-28, Infeasible MCP formulations 24-29→24-30, Alias-AD architectural drift 24-27→24-28), and inline "Sprint 31-35"→"Sprint 32-36" + "Sprints 18-29"→"Sprints 18-30" references inside the renamed Sprint 31 body. Footnote ² updated S23–S30 → S23–S31 targets are in-scope counts.
 
 - **2026-05-26:** Inserted new Sprint 27 (Sprint 26 Carryforward — Pattern C Phase B + Phase A Gate Tightening + AD Architectural Redesigns) based on `SPRINT_26/SPRINT_RETROSPECTIVE.md` §"Sprint 27 Recommendations" (Priorities 1–6: Pattern C Phase B redesign #1381, AD architectural redesigns #1390/#1385/#1393, #1335 scalar-eq cross-term reopen, launch PATH-numerics #1378, comp_up subset/superset #1356/#1357, mine ParamRef IndexOffset #1224) + new priorities for Sprint 26 carryforward additions (#1398 Phase A gate side-effect, #1387 cclinpts + #1388 camshape, #1400 pipeline absolute-path leak, #1374 emit duplicate-init) + Sprint 26 retrospective process recs PR20 (Phase 0 acceptance gate) + PR21 (prep-task end-to-end emit verification) + PR22 (Day-0 mid-sprint script) + PR23 (CI-workflow PR self-review checklist). 14-day sprint at ≤12h/day = 168h budget cap; estimated effort 97–157h total (91–147h work-items + 6–10h prep tasks) (range upper bound assumes all 9 priorities + 4 process recs ship; lower bound assumes Priorities 7–9 + some process recs slip to Sprint 28). Cascaded existing sprints forward: old S27 (PATH Author Consultation & Solution Forcing) → new S28 (Weeks 21–22); old S28 (Quality+Performance+PATH Feedback Integration) → new S29 (Weeks 23–24); old S29 (v2.0.0 Release + Epic 5 Planning) → new S30 (Weeks 25–26). Added S30 column to Rolling KPIs + inserted new S28 column with PATH Consultation maintain targets. Updated sprint dependencies (Sprint 27 now depends on Sprint 26 for the 14 sprint-27-labeled issues; Sprint 28 dep on Sprint 22 case studies retained + new dep on Sprint 27 carryforward stabilization), risk table sprint-range references (Stacked blockers 20-26→20-27, MCP-NLP solution divergence 25-28→25-29, PATH author availability 27-28→28-29, IndexOffset 20-21,26→20-21,26-27, Infeasible MCP formulations 24-28→24-29, Alias-AD architectural drift HIGH/MEDIUM→HIGH/HIGH with PR20 Phase 0 acceptance-gate mitigation note), External Dependencies "PATH author availability" Sprint 28 → 29, and inline "Sprint 30-34" + "Sprints 18-28" references inside the renamed Sprint 30 body. Footnote ² updated S23–S29 → S23–S30 targets are in-scope counts.
 - **2026-05-14:** Sprint 26 final metrics recorded (5/8 acceptance criteria met, 1 STRETCH on Translate +4 STRETCH ≥132 = 134/142). 3 MISS with **mixed attribution**: Solve (−1) and Match (−1) both single-root-caused by Phase A's Pattern C gate predicate firing too broadly on Sums whose body multipliers are already correctly alias-indexed (qdemo7 regression — filed as Sprint 27 #1398); path_syntax_error (+8) is **partially #1398** (4 Phase A side-effects: qdemo7/egypt/ferts/shale) **PLUS 4 translate recoveries cascading** from `translate_timeout` to `path_syntax_error` (clearlak/ganges/turkpow machine-variance churn-backs + srpchase chronic recovery via Day 13 faster runner). Updated Rolling KPIs row with S26 actuals + footnote ⁷ documenting the metric movement, the bucket-provenance analysis (4 Phase A side-effects + 3 machine-variance translate churn-backs + 1 chronic srpchase translate recovery), and the PR10 re-calibrated error-influx outcome (alias-AD 400% / 4 influx ÷ 1 fix [Phase A consolidated launch emit, PR #1379], above 30% budget; widened #1398 known-bug surface is 15 models at 1500% if measured against the widened surface — same failure-mode shape PR19 was designed to prevent, just at a broader emit-affected surface than PR19's initial target list). Sprint 26 absorbed 4 close-and-refile reclassifications + 1 in-place carryforward without sprint cancellation: Phase B → Sprint 27 #1381 (Day 3), Priority 4 Option 1 short-circuit → #1385 (Day 4), Priority 3 kand → #1390 (Day 7), Priority 5 #1334 → #1393 + #1335 in-place reopen (Day 9); plus PR19 CI extension shipped Day 11 (PR #1396 merged). New process recommendations from Sprint 26 retrospective: PR20 (Phase 0 acceptance gate — hand-derived KKT before src/ implementation effort), PR21 (prep-task end-to-end emit verification), PR22 (Day-0 / mid-sprint script auto-generating the Day 12 PR14 review list), PR23 (CI-workflow PR self-review checklist). **14 issues labeled `sprint-27` for Sprint 27 backlog** = 2 net-new from Day 13 (#1398 Phase A gate side-effect discovery + #1400 pipeline absolute-path leak in `gamslib_status.json`, surfaced by PR #1399 review) + 7 net-new from Sprint 26 reclassifications + close-and-refile across Days 1–9 (#1378 launch PATH numerics Day 1 + #1381 Pattern C Phase B Day 3 + #1385 Option 1 short-circuit Day 4 + #1387 cclinpts Day 6 + #1388 camshape Day 6 + #1390 kand AD-architecture Day 7 + #1393 scalar-eq Sum-collapse from #1334 Day 9) + 1 reopened in-place Day 13 (#1335 per Day 9 intent) + 4 pre-existing carryforward with sprint-26 label moved to sprint-27 Day 13 (#1224 mine ParamRef IndexOffset + #1356 fawley comp_up + #1357 otpop comp_up + #1374 emit duplicate-init bugs).
