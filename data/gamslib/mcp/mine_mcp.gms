@@ -62,6 +62,7 @@ Variables
 
 Positive Variables
     x(l,i,j)
+    lam_pr(k,l,i,j)
     piL_x(l,i,j)
     piU_x(l,i,j)
 ;
@@ -88,6 +89,7 @@ x.l(l,i,j) = min(x.l(l,i,j), x.up(l,i,j));
 
 Equations
     stat_x(l,i,j)
+    comp_pr(k,l,i,j)
     comp_lo_x(l,i,j)
     comp_up_x(l,i,j)
     def
@@ -98,9 +100,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(l,i,j).. (((-1) * ((conc(l,i,j) * value / 100 - cost(l)) * 1$(d(l,i,j)))) - piL_x(l,i,j) + piU_x(l,i,j))$(d(l,i,j)) =E= 0;
+stat_x(l,i,j).. (((-1) * ((conc(l,i,j) * value / 100 - cost(l)) * 1$(d(l,i,j)))) + sum(k, lam_pr(k,l,i,j)$(c(l,i,j))) - piL_x(l,i,j) + piU_x(l,i,j))$(d(l,i,j)) =E= 0;
 
 * Inequality complementarity equations
+comp_pr(k,l,i,j)$((c(l,i,j)) and (ord(l) <= card(l) - 1)).. x(l,i+li(k),j+lj(k)) - x(l+1,i,j) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_x(l,i,j).. x(l,i,j) - 0 =G= 0;
@@ -122,6 +125,8 @@ def.. profit =E= sum((l,i,j)$(d(l,i,j)), (conc(l,i,j) * value / 100 - cost(l)) *
 x.fx(l,i,j)$(not (d(l,i,j))) = 0;
 piL_x.fx(l,i,j)$(not (d(l,i,j))) = 0;
 piU_x.fx(l,i,j)$(not (d(l,i,j))) = 0;
+lam_pr.fx(k,l,i,j)$(not (c(l,i,j))) = 0;
+lam_pr.fx(k,l,i,j)$(not (ord(l) <= card(l) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -138,6 +143,7 @@ piU_x.fx(l,i,j)$(not (d(l,i,j))) = 0;
 
 Model mcp_model /
     stat_x.x,
+    comp_pr.lam_pr,
     def.profit,
     comp_lo_x.piL_x,
     comp_up_x.piU_x
