@@ -1723,6 +1723,17 @@ def emit_gams_mcp(
                         f"{var_name}.l({idx_str}) = {val_str};"
                     )
                     continue
+                # Issue #1374: avoid an exact-duplicate `var.fx(idx) = val` line.
+                # When the `_fx_` equation is suppressed AND the variable carries
+                # a stationarity condition, the suppressed-fx restore pass below
+                # (see "Fix suppressed _fx_ equations") re-emits this same value
+                # *after* the blanket `var.fx(...) = 0` from stationarity — that
+                # later emission is the correct, blanket-surviving one. Emitting it
+                # here too produces a byte-identical duplicate (e.g. otpop's
+                # `x.fx('1965') = 29.4;` appearing in both Variable Bounds and the
+                # restore pass). Skip it here; the restore pass provides the value.
+                if eq_name in suppressed_fx and var_name in kkt.stationarity_conditions:
+                    continue
                 bound_lines.append(f"{var_name}.fx({idx_str}) = {val_str};")
 
     if bound_lines:

@@ -1,12 +1,71 @@
 # Emitter: Redundant Duplicate Variable Initializations in Regenerated MCP Artifacts
 
 **GitHub Issue:** [#1374](https://github.com/jeffreyhorn/nlp2mcp/issues/1374)
-**Status:** OPEN (filed during PR #1373 / Sprint 26 Prep Task 9)
+**Status:** PARTIALLY FIXED (Sprint 27 Day 13, 2026-06-08) — the dominant `.fx`-restore duplicate shape is fixed (otpop, dinam); the remaining `.l` denominator/override shape (robot) is deferred to Sprint 28. See "Sprint 27 Day 13 audit + fix" below.
 **Severity:** Low — functionally harmless at runtime (last-write-wins, same numeric value), but degrades the byte-stability surface and adds diff noise on regenerated artifacts. One sub-symptom (rocket clamp-clobber) was actually a latent silent-correctness bug; PR #1373's regeneration fortuitously fixed it via reordering.
 **Date:** 2026-05-09
-**Last Updated:** 2026-05-09
-**Affected Models:** stdcge, twocge (duplicate `pf.l` init); rocket (post-clamp boundary override readability — fortuitously correct after PR #1373's regeneration but emit structure is unclear)
-**Target Sprint:** Sprint 27 (alongside the planned PR12 byte-stability enforcement work)
+**Last Updated:** 2026-06-08 (Sprint 27 Day 13 — corpus audit + `.fx`-restore-shape fix; `.l` shape → Sprint 28)
+**Affected Models:** otpop, dinam (`.fx`-restore duplicate — FIXED); robot (`.l` denominator/override duplicate — Sprint 28). (Prior-doc stdcge/twocge `pf.l` no longer present in the current-emit audit.)
+**Target Sprint:** Sprint 27 (dominant shape) + Sprint 28 (remaining `.l` shape)
+
+## Sprint 27 Day 13 audit + fix (2026-06-08)
+
+**Corpus audit** (exact-byte-duplicate per-element init lines across all 153 cold `*_mcp.gms` goldens): **3 models**, 13 duplicate lines, in 2 shapes:
+
+| Model | dups | shape |
+|---|---|---|
+| otpop | 9 | `x.fx('1965') = 29.4;` … `'1973'` — **`.fx`-restore** |
+| dinam | 2 | `sav.fx('1968') = 52.1;`, `gdp.fx('1968') = 260.9;` — **`.fx`-restore** |
+| robot | 2 | `rho.l('h0') = 4.5;`, `rho.l('h50') = 4.5;` — **`.l` denominator/override** |
+
+**`.fx`-restore shape — FIXED** (`src/emit/emit_gams.py`). For a per-element `fx_map` entry whose `_fx_` equation is **suppressed** AND whose variable carries a stationarity condition, the value is emitted in BOTH the "Variable Bounds" section (line ~1726) AND the "Fix suppressed _fx_ equations" restore pass (line ~2825). The restore pass re-emits the value *after* the blanket `var.fx(...) = 0` from stationarity, so it is the single correct (blanket-surviving) emission; the Variable Bounds emission is a byte-identical duplicate. Fix: skip the Variable Bounds emission when `eq_name in suppressed_fx and var_name in kkt.stationarity_conditions`. otpop/dinam regenerated (otpop −9 lines, pure dedup; dinam −2 dedup lines, plus a pre-existing `comp_up_fdp(te)→(t)` staleness refresh that is independent of this fix). otpop still compiles clean + `model_infeasible` (unchanged); matching models (qdemo7/cesam2/korcge/launch) byte-identical.
+
+**`.l` denominator/override shape — Sprint 28.** robot's `rho.l('h0') = 4.5;` is emitted by both the denominator-init block (avoid div-by-zero; expands source `rho.l(h) = 4.5`) and the `fx_to_l_override` (from `rho.fx(firstlast) = 4.5`). This is a distinct mechanism (`.l`, not `.fx`-restore) and is **deferred to Sprint 28** per the Day-13 "most-common-1–2-shapes" scope. robot is `path_solve_license` (failing), so the duplicate has no Solve/Match impact.
+
+## Phase 0: Acceptance Gate
+
+**Authored:** 2026-06-08 (Sprint 27 Day 13; per CONTRIBUTING PR20 — the `.fx`-shape fix touches `src/emit/emit_gams.py`).
+**Target surface:** the suppressed-`_fx_` variable-bounds emission in `emit_gams.py` (the `.fx`-restore duplicate). This is an **emit-dedup** change: it removes a byte-identical redundant `var.fx(literal) = val;` line. It does NOT change the KKT system or any solved value.
+
+### Hand-Derived KKT Shape
+
+The KKT shape is **unchanged**. GAMS `.fx`/`.l` assignments are last-write-wins; the duplicate and its surviving counterpart assign the **same** numeric value (`fx_val` from the same `fx_map` entry), so removing the earlier emission leaves the solved problem bit-for-bit identical. For each suppressed per-element fixing `var.fx('e') = v` (whose `_fx_` equation is dropped by the conflict suppressor and whose variable carries a stationarity condition), the correct surviving emission is the **restore pass** one — emitted *after* the blanket `var.fx(domain) = 0;` from stationarity, so it survives the blanket; the earlier Variable-Bounds emission would be clobbered by that blanket anyway (when the blanket clears the element) or is purely redundant (when it does not).
+
+### Expected Emit Pattern
+
+For a suppressed per-element fixing of a stationarity-condition variable, the value appears **exactly once**, in the restore pass, paired with the multiplier fix:
+
+```gams
+* (no earlier `x.fx('1965') = 29.4;` in the Variable Bounds section)
+...
+nu_x_fx_1965.fx = 0;
+x.fx('1965') = 29.4;        * restore pass — the single, blanket-surviving emission
+```
+
+Non-suppressed fixings, `var.fx(domain)$(cond)` conditional forms, and `.l`/`.lo`/`.up` inits are unchanged.
+
+### Verification Methodology
+
+```bash
+# 1. otpop: no exact-duplicate `var.fx(literal) = val;` line; fixings present once.
+.venv/bin/python -m src.cli data/gamslib/raw/otpop.gms -o /tmp/otpop.gms --skip-convexity-check --quiet
+grep -cE "^x\.fx\('1965'\) = 29.4;" /tmp/otpop.gms   # expect: 1 (was 2)
+gams /tmp/otpop.gms a=c lo=2 | grep -cE '\*\*\*\* .*Error'  # expect: 0 (compiles clean)
+gams /tmp/otpop.gms lo=2 | grep 'MODEL STATUS'        # expect: 5 Locally Infeasible (UNCHANGED)
+
+# 2. No regression: currently-matching models byte-identical.
+for m in qdemo7 cesam2 korcge launch; do
+  .venv/bin/python -m src.cli data/gamslib/raw/$m.gms -o /tmp/$m.gms --skip-convexity-check --quiet
+  diff -q /tmp/$m.gms data/gamslib/mcp/${m}_mcp.gms   # expect: identical
+done
+
+# 3. Regression test.
+.venv/bin/python -m pytest tests/integration/emit/test_no_duplicate_fx_init.py -q
+```
+
+### PROCEED/REPLAN Signal
+
+**PROCEED** if ALL of: (a) otpop emits each `x.fx('<year>') = 29.4;` exactly once and still compiles clean + `model_infeasible` (solve **unchanged**); (b) the fixings are still present (the dedup must not *drop* the value — that would unfix the variable); (c) currently-matching models (qdemo7/cesam2/korcge/launch) byte-identical. **All met (Day 13).** **REPLAN** if otpop's solve status or objective changes (would mean the surviving restore-pass emission does not actually fire — `var_name` / `stationarity_conditions` membership mismatch), or any matching model regresses.
 
 ---
 

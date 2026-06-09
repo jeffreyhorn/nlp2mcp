@@ -1441,7 +1441,7 @@ Sprint planning + tooling engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Sprint 27 Day 13, 2026-06-08) — the second absolute-path leak is the **`message` field** (captured warning text). When a model emits a Python warning whose text contains a `__file__` path (e.g. mine's `pr` SetMembershipTest warning -> `.../src/ad/index_mapping.py:648: UserWarning...`), the warning-capture stores that absolute path in `solution_comparison.message`/`mcp_translate` notes. It is captured-warning TEXT, NOT a structured path field, and is distinct from `mcp_file_used` (the Sprint 26 `warnings.formatwarning` attribution was indeed wrong). #1400's corrected scope fixes `mcp_file_used` only; relativizing absolute paths inside captured warning text is a separate, smaller follow-up (Sprint 28) and does not affect the same-machine PYTHONHASHSEED determinism guard.
 
 ---
 
@@ -1482,7 +1482,7 @@ Sprint planning + tooling engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Sprint 27 Day 13, 2026-06-08) — **PROJECT_ROOT-relative** (not basename-only). The `_repo_relative_path` helper (`scripts/gamslib/run_full_test.py`) returns `path.resolve().relative_to(PROJECT_ROOT.resolve()).as_posix()` -> e.g. `data/gamslib/mcp/launch_mcp_presolve.gms`, preserving the `data/gamslib/mcp/` prefix (more informative than a bare basename), with a graceful fallback to the original string for paths outside PROJECT_ROOT (never silently corrupts). The 6 existing absolute `mcp_file_used` entries in the committed DB were relativized; 0 absolute `mcp_file_used` remain.
 
 ---
 
@@ -1699,7 +1699,7 @@ Sprint planning + AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Sprint 27 Day 13, 2026-06-08) — **narrow: 3 models, 13 exact-duplicate init lines, 2 shapes.** Corpus audit of all 153 cold `*_mcp.gms` goldens for exact-byte-duplicate per-element init lines: otpop (9, `x.fx('1965')=29.4` ...), dinam (2, `sav.fx`/`gdp.fx`) — the **`.fx`-restore** shape, FIXED; robot (2, `rho.l('h0')=4.5`) — the **`.l` denominator/override** shape, deferred to Sprint 28 per the Day-13 most-common-shapes scope. The prior-doc stdcge/twocge `pf.l` duplicates are no longer present in the current emit. See ISSUE_1374 'Sprint 27 Day 13 audit + fix'.
 
 ---
 

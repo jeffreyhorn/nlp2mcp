@@ -318,8 +318,6 @@ e.up(im,t) = eup(im,t);
 zt.lo(t) = zlo(t);
 zt.up(t) = zup(t);
 fdp.up(t) = fdpup(t);
-sav.fx('1968') = 52.1;
-gdp.fx('1968') = 260.9;
 fc.fx(t) = pfc(t);
 
 * ============================================
@@ -424,7 +422,7 @@ Equations
     comp_lo_x(jd,te)
     comp_lo_zt(te)
     comp_up_e(i,te)
-    comp_up_fdp(te)
+    comp_up_fdp(t)
     comp_up_zt(te)
     con_fx_1968
     drql(s,te)
@@ -504,7 +502,7 @@ comp_lo_zt(te)$(t(te) and zlo(te) > -inf).. zt(te) - zlo(te) =G= 0;
 
 * Upper bound complementarity equations
 comp_up_e(i,te)$(im(i) and t(te) and eup(i,te) < inf).. eup(i,te) - e(i,te) =G= 0;
-comp_up_fdp(te)$(t(te) and fdpup(te) < inf).. fdpup(te) - fdp(te) =G= 0;
+comp_up_fdp(t)$(fdpup(t) < inf).. fdpup(t) - fdp(t) =G= 0;
 comp_up_zt(te)$(t(te) and zup(te) < inf).. zup(te) - zt(te) =G= 0;
 
 * Original equality equations
@@ -576,7 +574,7 @@ lam_tic.fx(i,te)$(not (ord(te) > 1)) = 0;
 piL_e.fx(i,te)$(not (im(i) and t(te) and elo(i,te) > -inf)) = 0;
 piL_zt.fx(te)$(not (t(te) and zlo(te) > -inf)) = 0;
 piU_e.fx(i,te)$(not (im(i) and t(te) and eup(i,te) < inf)) = 0;
-piU_fdp.fx(te)$(not (t(te) and fdpup(te) < inf)) = 0;
+piU_fdp.fx(t)$(not (fdpup(t) < inf)) = 0;
 piU_zt.fx(te)$(not (t(te) and zup(te) < inf)) = 0;
 nu_ginv.fx(te)$(not (ord(te) <= last)) = 0;
 nu_h.fx(te)$(not (t(te))) = 0;

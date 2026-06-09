@@ -28,15 +28,15 @@ Filled in at each checkpoint (Days 5, 10, 13). Track delta vs Day 0 baseline.
 
 | Metric | Day 0 baseline | Day 5 (Checkpoint 1) | Day 10 (Checkpoint 2) | Day 13 (Final) | Target |
 |---|---|---|---|---|---|
-| Parse success | 142/142 | 142/142 | 142/142 | TBD | ≥ 142/142 |
-| Translate success | 131/142 | 132/142 | 133/142 | TBD | ≥ 135/142 |
-| Solve success | 103/142 | 105/142 | 105/142 | TBD | ≥ 111/142 |
-| Solution match | 59/142 | 61/142 | 62/142 | TBD | ≥ 66/142 |
-| path_syntax_error | 14 | 9 | 7 | TBD | ≤ 6 |
-| path_solve_terminated | 5 | 5 | 5 | TBD | ≤ 5 (maintain) |
-| model_infeasible | 4 | 5 | 7 | TBD | ≤ 3 |
-| Tests passing | 4,737 | 4,758 | 4,768 | TBD | ≥ 4,750 |
-| Determinism (3 `PYTHONHASHSEED`) | n/a | n/a | n/a | TBD | byte-identical |
+| Parse success | 142/142 | 142/142 | 142/142 | 142/142 | ≥ 142/142 ✅ |
+| Translate success | 131/142 | 132/142 | 133/142 | 135/142 | ≥ 135/142 ✅ |
+| Solve success | 103/142 | 105/142 | 105/142 | 105/142 | ≥ 111/142 ❌ (S28) |
+| Solution match | 59/142 | 61/142 | 62/142 | 62/142 | ≥ 66/142 ❌ (S28) |
+| path_syntax_error | 14 | 9 | 7 | 8 | ≤ 6 ❌ |
+| path_solve_terminated | 5 | 5 | 5 | 5 | ≤ 5 (maintain) ✅ |
+| model_infeasible | 4 | 5 | 7 | 8 | ≤ 3 ❌ (fwd moves) |
+| Tests passing | 4,737 | 4,758 | 4,768 | 4,779 | ≥ 4,750 ✅ |
+| Determinism (3 `PYTHONHASHSEED`) | n/a | n/a | n/a | byte-identical ✅ | byte-identical ✅ |
 
 ---
 
@@ -576,45 +576,53 @@ _(deferred to Day 13)_
 
 ---
 
-## Day 13 — Final Pipeline Retest + SPRINT_LOG + SPRINT_RETROSPECTIVE
+## Day 13 — #1400 + #1374 (slipped) + Final Retest (deterministic) + closeout
 
-**Date:** TBD
-**Status:** 🔵 NOT STARTED
-**Hours budgeted:** ≤ 8
-**Hours actual:** —
+**Date:** 2026-06-08
+**Status:** 🟢 DONE — #1400 + #1374 landed; final 3× `PYTHONHASHSEED` retest **fully deterministic**; SPRINT_LOG final + SPRINT_RETROSPECTIVE authored. Final: **Translate 135 ✅ / Solve 105 / Match 62 / determinism ✅**; Solve/Match miss targets by the documented Sprint 28 deferrals.
 
-### Final pipeline retest under 3 `PYTHONHASHSEED` values
-| `PYTHONHASHSEED` | Solve | Match | path_syntax_error | Translate | Tests | `gamslib_status.json` SHA256 (modulo wall-time) |
-|---|---|---|---|---|---|---|
-| 0 | TBD | TBD | TBD | TBD | TBD | TBD |
-| 1 | TBD | TBD | TBD | TBD | TBD | TBD |
-| 42 | TBD | TBD | TBD | TBD | TBD | TBD |
+### #1400 (Priority 8) + #1374 (Priority 9) — slipped from Day 12, landed
+See PR #1427. #1400: `mcp_file_used` → repo-relative (`_repo_relative_path`); 6 DB entries cleaned (0 absolute remain); KU 8.1/8.2 ✅. #1374: `.fx`-restore duplicate shape fixed (otpop/dinam); `.l` shape (robot) → Sprint 28; KU 9.4 ✅. make test 4779.
+
+### Final pipeline retest under 3 `PYTHONHASHSEED` values — DETERMINISTIC ✅
+| `PYTHONHASHSEED` | Parse | Translate | Solve | Match | Mismatch |
+|---|---|---|---|---|---|
+| 0 | 142 | 135 | 105 | 62 | 37 |
+| 1 | 142 | 135 | 105 | 62 | 37 |
+| 42 | 142 | 135 | 105 | 62 | 37 |
+
+**Determinism: PASS** — the three `gamslib_status.json` outputs are **byte-identical modulo wall-time fields** (`seed0 == seed1 == seed42`, verified after stripping date/time/duration keys). The `mcp_file_used` path-relativization (#1400) holds across the retest (0 absolute paths).
 
 ### Final headline metrics
 | Metric | Day 0 baseline | Day 13 final | Δ | Target | Met? |
 |---|---|---|---|---|---|
-| Parse | 142/142 | TBD | TBD | ≥ 142/142 | TBD |
-| Translate | 131/142 | TBD | TBD | ≥ 135/142 | TBD |
-| Solve | 103/142 | TBD | TBD | ≥ 111/142 | TBD |
-| Match | 59/142 | TBD | TBD | ≥ 66/142 | TBD |
-| path_syntax_error | 14 | TBD | TBD | ≤ 6 | TBD |
-| path_solve_terminated | 5 | TBD | TBD | ≤ 5 | TBD |
-| model_infeasible | 4 | TBD | TBD | ≤ 3 | TBD |
-| Tests | 4,737 | TBD | TBD | ≥ 4,750 | TBD |
-| Determinism | n/a | TBD | n/a | byte-identical × 3 seeds | TBD |
+| Parse | 142/142 | **142/142** | +0 | ≥ 142/142 | ✅ |
+| Translate | 131/142 | **135/142** | +4 | ≥ 135/142 | ✅ |
+| Solve | 103/142 | **105/142** | +2 | ≥ 111/142 | ❌ (−6, all Sprint 28 deferrals) |
+| Match | 59/142 | **62/142** | +3 | ≥ 66/142 | ❌ (−4, all Sprint 28 deferrals) |
+| path_syntax_error | 14 | **8** | −6 | ≤ 6 | ❌ (−2; pre-existing non-#1398) |
+| path_solve_terminated | 5 | **5** | +0 | ≤ 5 | ✅ |
+| model_infeasible | 4 | **8** | +4 | ≤ 3 | ❌ (forward bucket moves: fawley/otpop/camshape/cesam/agreste/lnts + camcge + **mine** #1224) |
+| Tests | 4,737 | **4,779** | +42 | ≥ 4,750 | ✅ |
+| Determinism | n/a | **byte-identical ×3** | n/a | byte-identical × 3 seeds | ✅ |
 
-### PR22 audit-script Day 13 final output
-_(paste `/tmp/sprint27_day13_final.md` here)_
+**Realized vs target:** Parse / Translate / Tests / Determinism **met**; Solve / Match / path_syntax_error / model_infeasible **missed** — every miss is attributable to a documented **Sprint 28 carryforward** (not a regression). Translate +4 = #1381 Pattern-C unblocks + #1385 srpchase + **#1224 mine**. Solve +2 = qdemo7 (#1398) + cesam2 (#1381). Match +3 = qdemo7 + cesam2 + launch (#1378). model_infeasible rose because P5 (#1356/#1357) moved fawley/otpop **forward** from `path_syntax_error` to `model_infeasible`, and #1224 added mine (translates → infeasible; its Solve needs the Sprint 28 parameter-valued-offset KKT cross-term).
 
-### Sprint 28 carryforwards filed
-- _(list of issues + their Sprint 28 priority placement, e.g., "#1388 camshape Case (c) → Sprint 28 Priority TBD; #1374 deferred shapes → Sprint 28 observation task")_
+### Named non-success buckets (final)
+- **model_infeasible (8):** agreste, camcge, camshape, cesam, fawley, lnts, **mine**, otpop.
+- **path_syntax_error (8):** clearlak, dinam, ganges, gangesx, indus, sample, turkey, turkpow.
+- **path_solve_license (9):** egypt, ferts, glider, robot, shale, sroute, srpchase, tabora, tfordy.
+- **path_solve_terminated (5):** dyncge, elec, maxmin, tricp, twocge.
+
+### Sprint 28 carryforwards filed (in their `docs/issues/ISSUE_*.md`)
+- **#1390** kand tree-predicate Sum (re-diagnose true mismatch source) · **#1393 + #1335** otpop scalar-eq Sum-collapse (`stationarity.py` symbolic-collapse + `_try_eval_offset` `card(t)-ord(t)`) · **#1387** cclinpts (AD offset-enum + re-symbolization-anchor + non-convex warm-start) · **#1388** camshape Case-(b) `stat_r` divergence (`#1424` landed; `stat_r` fix remains) · **#1224** mine Solve (parameter-valued-offset KKT cross-term inversion) · **#1385** runtime-guard cross-terms · **#1374** `.l` denominator/override dedup shape (robot) · **#1400** `message`-field captured-warning path relativization · **camcge** singular-Jacobian CGE degeneracy.
 
 ### KUs verified (cumulative)
-- _(target: all 28 ✅ VERIFIED)_
+- All Sprint 27 KUs resolved across Days 0–13 (KU 8.1/8.2/9.4 closed Day 13; 6.1/6.2 Day 12; 4.1/4.2 Day 9; 3.x re-planned Day 0/5; 7.x Days 6/11; 5.x Day 5; 1.x Days 0–1).
 
 ### Deliverables
-- SPRINT_LOG.md final entry (this file)
-- SPRINT_RETROSPECTIVE.md (separate file)
+- `src/emit/emit_gams.py` (#1374), `scripts/gamslib/run_full_test.py` (#1400); regenerated otpop/dinam goldens + `mine_mcp.gms` (+Translate); cleaned `gamslib_status.json` (final metrics, relative paths); 2 new test files; ISSUE_1374/KNOWN_UNKNOWNS updates.
+- This final SPRINT_LOG entry + `SPRINT_RETROSPECTIVE.md`.
 
 ---
 
@@ -623,17 +631,20 @@ _(paste `/tmp/sprint27_day13_final.md` here)_
 ### Per-priority delivery status
 | Priority | Issue(s) | Status | Solve gain | Match gain | Notes |
 |---|---|---|---|---|---|
-| 1 | #1398 | TBD | TBD | TBD | TBD |
-| 2 | #1381 | TBD | TBD | TBD | TBD |
-| 3 | #1390 | TBD | TBD | TBD | TBD |
-| 3 | #1385 | TBD | TBD | TBD | TBD |
-| 3 | #1393+#1335 | TBD | TBD | TBD | TBD |
-| 4 | #1378 | TBD | TBD | TBD | TBD |
-| 5 | #1356 + #1357 | TBD | TBD | TBD | TBD |
-| 6 | #1224 | TBD | TBD | TBD | TBD |
-| 7 | #1387 + #1388 | TBD | TBD | TBD | TBD |
-| 8 | #1400 | TBD | n/a | n/a | TBD (pipeline-determinism only) |
-| 9 | #1374 | TBD | TBD | TBD | TBD |
+| 1 | #1398 | ✅ LANDED | +1 | +1 | qdemo7 → compare_match (Phase A cross-set alias-sum gate fix) |
+| 2 | #1381 | ✅ LANDED | +1 | +1 | cesam2 → match (Pattern C Phase B); camcge → model_infeasible (CGE degeneracy → S28) |
+| 3 | #1390 | ⏭ Sprint 28 | 0 | 0 | re-REPLAN'd (phantom-term collapse proven inert; re-diagnose true mismatch) |
+| 3 | #1385 | ✅ LANDED (translate-only) | 0 | 0 | srpchase translate <10s (was >180s); cross-terms → S28 |
+| 3 | #1393+#1335 | ⏭ Sprint 28 | 0 | 0 | Approach C disproven inert Day 0; now distinct fixes |
+| 4 | #1378 | ✅ LANDED | 0 | +1 | launch → match (double-applied self-ref param under --nlp-presolve) |
+| 5 | #1356 + #1357 | ✅ LANDED (forward move) | 0 | 0 | comp_up narrowing cleared $171; fawley/otpop → model_infeasible (need S28) |
+| 6 | #1224 | ✅ LANDED (translate-only) | 0 | 0 | mine +1 Translate; Solve (param-offset KKT cross-term) → S28 |
+| 7 | #1387 + #1388 | ⏭ Sprint 28 (#1424 landed) | 0 | 0 | both multi-bug; #1388's subset-corruption (#1424) fixed, stat_r → S28; #1387 → S28 |
+| 8 | #1400 | ✅ LANDED | n/a | n/a | mcp_file_used repo-relative; determinism ✅ |
+| 9 | #1374 | ✅ LANDED (.fx shape) | n/a | n/a | otpop/dinam deduped; .l shape (robot) → S28 |
+| — | #1424 (new, found Day 11) | ✅ LANDED | 0 | 0 | dynamic-subset blanket corruption; camshape/cclinpts domains corrected |
+
+**Net realized:** Translate **+4** (131→135), Solve **+2** (103→105), Match **+3** (59→62). Targets (Solve ≥111 / Match ≥66) missed by exactly the Sprint 28 deferrals (#1390, #1393+#1335, #1387, #1388 stat_r, camcge, #1224 Solve).
 
 ### Process recommendations delivery
 | Rec | Description | Status |
