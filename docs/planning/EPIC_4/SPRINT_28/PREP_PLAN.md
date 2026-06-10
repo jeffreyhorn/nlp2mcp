@@ -2,7 +2,7 @@
 
 **Purpose:** Complete critical preparation tasks before Sprint 28 begins
 **Timeline:** Complete before Sprint 28 Day 1
-**Goal:** Set up Sprint 28 for success — land the Sprint 27 Solve/Match carryforwards (#1224, #1388, #1393+#1335, #1387, #1390, camcge) and build the diagnostic + CI tooling the Sprint 27 retrospective recommended (golden-staleness CI check, KKT-residual harness, embedded-NLP-divergence detector, AD cross-term property tests). Targets: Solve 105 → ≥ 110; Match 62 → ≥ 65; path_syntax_error 8 → ≤ 6; model_infeasible 8 → ≤ 5; Tests 4,779 → ≥ 4,800.
+**Goal:** Set up Sprint 28 for success — land the Sprint 27 Solve/Match carryforwards (#1224, #1388, #1393+#1335, #1387, #1390, camcge) and build the diagnostic + CI tooling the Sprint 27 retrospective recommended (golden-staleness CI check, KKT-residual harness, embedded-NLP-divergence detector, AD cross-term property tests). Targets: Solve 105 → ≥ 110; Match 62 → ≥ 65; path_syntax_error maintain ≤ 8 (no Sprint 28 carryforward targets that bucket); model_infeasible 8 → ≤ 5; Tests 4,779 → ≥ 4,800.
 
 **Key Insight from Sprint 27:** Across Days 0/6/11/12/13 the prep-doc `file:line` fix surfaces were **wrong more often than right** — the real surfaces were `src/kkt/stationarity.py`, `src/ir/ast.py`, and the emit restore pass, NOT the AD `_try_eval_offset` / `constraint_jacobian` sites the prep named (Sprint 27 retro §"What We'd Do Differently #1"). The Phase 0 acceptance gate (PR20) repeatedly caught these mis-scopes *before* wasted implementation, turning them into cheap REPLANs. Sprint 28 prep MUST therefore (a) codify the new **PR24 rule** — prep records the *symptom + reproducer* only; the fix surface is established by a Day-0 trace and never trusted from the prep doc — and (b) front-load the **KKT-residual verification harness** (Sprint 27's GDX warm-from-good-optimum experiment, now formalized) so the Case-(a/b/c) emit-bug-vs-non-convexity discriminator is mechanical for the diagnosis-heavy carryforwards (#1387, #1390, camcge). A second Sprint 27 lesson — the Day-0 "+6 firm Match" projection over-counted because it conflated `path_syntax_error → model_infeasible` **bucket-forward** moves with genuine Solve/Match gains — drives **PR25 projection discipline**: every Day-0 projection must label each delta as a genuine bucket-to-success transition vs a forward move within the failure set.
 
@@ -144,8 +144,11 @@ test -f docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md && echo "KU file presen
 # At least 8 categories aligned to the PROJECT_PLAN priorities (expect 10)
 grep -c '^# Category ' docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md
 
-# Every Critical/High unknown has a verification method column populated
-grep -E 'Critical|High' docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md | grep -c 'Day '
+# Every unknown carries a "How to Verify" section (the doc uses headings, not a
+# table column), so the count of those sections should be >= the unknown count
+[ "$(grep -c '^### How to Verify' docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md)" \
+  -ge "$(grep -c '^## Unknown ' docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md)" ] \
+  && echo "all 30 unknowns have a verification method"
 
 # Carryforward issues are referenced
 grep -oE '#1(224|388|393|335|387|390|374|400|385)' docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md | sort -u
