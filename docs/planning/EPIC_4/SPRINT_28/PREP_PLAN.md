@@ -364,7 +364,7 @@ The Case-(a/b/c) discriminator — does the NLP KKT point satisfy the emitted st
 
 ### What Needs to Be Done
 
-1. **Specify the CLI interface** — `kkt_residual.py <model.gms> [--gdx <solution.gdx>] [--tol 1e-6]`: if no GDX, solve the NLP first; emit the MCP; warm-start it from the NLP primal + transferred duals; run `iterlim=0` (or a residual-only evaluation) and report per-row residuals.
+1. **Specify the CLI interface** — `.venv/bin/python scripts/diagnostics/kkt_residual.py <model.gms> [--gdx <solution.gdx>] [--tol 1e-6]`: if no GDX, solve the NLP first; emit the MCP; warm-start it from the NLP primal + transferred duals; run `iterlim=0` (or a residual-only evaluation) and report per-row residuals.
 
 2. **Specify the dual-transfer mechanism** — map each NLP constraint marginal to its MCP multiplier variable (nu_*/lam_*/piL_*/piU_*), including the inequality→`comp_*` case (generalize the Day-9 `pwl_m`/`pwu_m` parameter-load pattern). Document how bounds multipliers (piL/piU) are recovered from `.m` at the solution.
 
@@ -441,10 +441,10 @@ PR20's Phase 0 gate is the primary mitigation against the alias-AD architectural
 - Carryforward issue docs (each with a Sprint 27 Phase-0 diagnosis or re-scoped filing):
   - `docs/issues/ISSUE_1224_mine-paramref-index-offset-unsupported.md`
   - `docs/issues/ISSUE_1388_camshape-mcp-locally-infeasible-post-pattern-e-reclassification.md`
-  - `docs/issues/ISSUE_1393_ad-scalar-eq-sum-collapse-symbolic-superset.md` + `ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md`
+  - `docs/issues/ISSUE_1393_ad-scalar-eq-sum-collapse-symbolic-superset.md` + `docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md`
   - `docs/issues/ISSUE_1387_*.md` (cclinpts three coupled changes — Day-6 binding diagnosis)
   - `docs/issues/ISSUE_1390_kand-tree-predicate-aliased-sum-architecture-redesign.md`
-  - camcge (singular-Jacobian CGE degeneracy — may need a new issue doc if none exists)
+  - camcge (singular-Jacobian CGE degeneracy — `docs/issues/ISSUE_1330_camcge-model-infeasible-after-1245.md`, which already records the round-3 singular-Jacobian diagnosis; extend it rather than filing a new doc)
 - PROJECT_PLAN.md Sprint 28 Priorities 1–6 (each has a per-priority Phase-0 gate description + hand-derived target shape)
 - Sprint 27 PRIORITY_*.md fix-surface docs (`PRIORITY_3_RISK_ASSESSMENT.md`, etc.) for the prior diagnoses
 - CONTRIBUTING.md Phase-0 template (as amended by Task 3)
@@ -475,7 +475,8 @@ To be completed.
 
 ```bash
 # Each of the six issue docs has a Phase 0 Acceptance Gate with 4 subsections
-for f in 1224 1388 1393 1387 1390; do
+# (otpop is #1393 + #1335; camcge is checked separately below)
+for f in 1224 1388 1393 1335 1387 1390; do
   echo "=== ISSUE_$f ==="
   grep -l "Phase 0" docs/issues/ISSUE_${f}_*.md && \
   grep -cE '^### (Hand-Derived KKT Shape|Expected Emit Pattern|Verification Methodology|PROCEED)' docs/issues/ISSUE_${f}_*.md
@@ -491,7 +492,7 @@ grep -l 'kkt_residual' docs/issues/ISSUE_122*.md docs/issues/ISSUE_138*.md
 ### Deliverables
 
 - Refreshed Phase 0 acceptance gates (4 subsections each) on the six carryforward issue docs
-- A camcge Phase-0 gate (new issue doc if none exists)
+- A camcge Phase-0 gate (extending the existing `docs/issues/ISSUE_1330_camcge-model-infeasible-after-1245.md`)
 - Each gate references the KKT-residual harness (PR27) and the Day-0 traced-surface rule (PR24)
 - REPLAN exits to Sprint 29 explicitly named for #1387/#1390/camcge
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.2
@@ -945,8 +946,8 @@ Before Sprint 28 Day 1, verify:
 # All prep artifacts present
 ls docs/planning/EPIC_4/SPRINT_28/
 
-# Phase-0 gates on the six carryforwards
-for f in 1224 1388 1393 1387 1390; do grep -l "Phase 0" docs/issues/ISSUE_${f}_*.md; done
+# Phase-0 gates on the six carryforwards (otpop = #1393 + #1335; camcge = ISSUE_1330)
+for f in 1224 1388 1393 1335 1387 1390 1330; do grep -l "Phase 0" docs/issues/ISSUE_${f}_*.md; done
 
 # Process rules codified
 grep -E 'PR24|PR25' CONTRIBUTING.md

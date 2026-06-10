@@ -266,7 +266,7 @@ EOF
 
 **Tasks to Complete:**
 
-1. Specify the CLI interface — `kkt_residual.py <model.gms> [--gdx <solution.gdx>] [--tol 1e-6]`: no GDX ⇒ solve the NLP first; emit the MCP; warm-start from the NLP primal + transferred duals; run `iterlim=0` / residual-only; report per-row residuals.
+1. Specify the CLI interface — `.venv/bin/python scripts/diagnostics/kkt_residual.py <model.gms> [--gdx <solution.gdx>] [--tol 1e-6]`: no GDX ⇒ solve the NLP first; emit the MCP; warm-start from the NLP primal + transferred duals; run `iterlim=0` / residual-only; report per-row residuals.
 2. Specify the dual-transfer mechanism — map each NLP constraint marginal to its MCP multiplier (nu_*/lam_*/piL_*/piU_*), including the inequality→`comp_*` case (generalize the `pwl_m`/`pwu_m` parameter-load pattern); document piL/piU recovery from `.m`.
 3. Specify the Case-(a/b/c) verdict logic — Case a (match, residual ≈ 0, PATH converges); Case b (residual ≠ 0 at the NLP KKT point ⇒ **emit bug**); Case c (residual ≈ 0 but cold PATH diverges ⇒ **non-convexity**); output a per-row residual table + the verdict + the max-residual row.
 4. Specify the output format — machine-readable (JSON) + human summary; the standard Phase-0 "Verification Methodology" command.
@@ -372,7 +372,7 @@ EOF
   - `docs/issues/ISSUE_1388_camshape-mcp-locally-infeasible-post-pattern-e-reclassification.md`
   - `docs/issues/ISSUE_1393_ad-scalar-eq-sum-collapse-symbolic-superset.md` + `docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md`
   - `docs/issues/ISSUE_1387_*.md`, `docs/issues/ISSUE_1390_kand-tree-predicate-aliased-sum-architecture-redesign.md`
-  - camcge — create a new `docs/issues/ISSUE_<N>_camcge-singular-jacobian-cge-degeneracy.md` if none exists
+  - camcge — extend the existing `docs/issues/ISSUE_1330_camcge-model-infeasible-after-1245.md` (already records the round-3 singular-Jacobian diagnosis); do not file a duplicate
 - `docs/planning/EPIC_4/PROJECT_PLAN.md` Sprint 28 Priorities 1–6 (per-priority hand-derived target shapes) + `docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_ASSESSMENT.md`
 
 **Tasks to Complete:**
@@ -389,7 +389,7 @@ EOF
 **Deliverables:**
 
 - Refreshed Phase 0 acceptance gates (4 subsections each) on the six carryforward issue docs
-- A camcge Phase-0 gate (new issue doc if none exists)
+- A camcge Phase-0 gate (extending the existing `docs/issues/ISSUE_1330_camcge-model-infeasible-after-1245.md`)
 - Each gate references the KKT-residual harness (PR27) + the Day-0 traced-surface rule (PR24)
 - REPLAN exits to Sprint 29 explicitly named for #1387/#1390/camcge
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.2
@@ -413,7 +413,7 @@ In §Task 5: Status → ✅ COMPLETE; add `**Completed:** YYYY-MM-DD`; fill "Cha
 **CHANGELOG.md Update:**
 
 ```markdown
-- **Prep Task 5 COMPLETE (YYYY-MM-DD):** Authored/refreshed Phase 0 acceptance gates (4 `###` subsections each) on the six Sprint 28 carryforwards — #1224 mine, #1388 camshape, #1393+#1335 otpop, #1387 cclinpts, #1390 kand, camcge (new issue doc) — per PR20 + PR24. Each gate: hand-derived KKT shape (reused/cited from Sprint 27 where verified), Expected Emit Pattern labeled a hypothesis (PR24), Verification Methodology citing the KKT-residual harness invocation + target solution (PR27), PROCEED/REPLAN with the Day-0 traced-surface requirement. #1387/#1390/camcge flagged for the Task 6 REPLAN assessment with Sprint 29 exits. Verified Unknowns 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.2.
+- **Prep Task 5 COMPLETE (YYYY-MM-DD):** Authored/refreshed Phase 0 acceptance gates (4 `###` subsections each) on the six Sprint 28 carryforwards — #1224 mine, #1388 camshape, #1393+#1335 otpop, #1387 cclinpts, #1390 kand, camcge (extending the existing ISSUE_1330) — per PR20 + PR24. Each gate: hand-derived KKT shape (reused/cited from Sprint 27 where verified), Expected Emit Pattern labeled a hypothesis (PR24), Verification Methodology citing the KKT-residual harness invocation + target solution (PR27), PROCEED/REPLAN with the Day-0 traced-surface requirement. #1387/#1390/camcge flagged for the Task 6 REPLAN assessment with Sprint 29 exits. Verified Unknowns 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.2.
 ```
 
 **Quality Gate:**
