@@ -1216,7 +1216,7 @@ Derived from `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently". (
 - Updated pipeline metrics + Sprint 28 SPRINT_LOG.md + SPRINT_RETROSPECTIVE.md
 
 ## Acceptance Criteria
-- **Solve:** ≥ 110 models solve (up from 105; +5 firm/conditional — #1224 [+1 firm] + #1388 [+1 firm] + #1393+#1335 otpop [+1 firm] + camcge [+1 conditional] + #1390 kand-as-solve [n/a, Match] — net +5 with cclinpts/kand contributing Match not Solve)
+- **Solve:** ≥ 110 models solve (stretch; up from 105). +4 firm/conditional is backed by the named carryforwards — #1224 mine [+1 firm] + #1388 camshape [+1 firm] + #1393+#1335 otpop [+1 firm] + camcge [+1 conditional] — taking Solve to 109; the +5th to reach 110 is a stretch requiring one additional recovery (TBD at Day 0). cclinpts (#1387) and kand (#1390) already solve (`model_optimal`, currently mismatching), so they contribute Match, not Solve.
 - **Match:** ≥ 65 models match (up from 62; +3 — #1393+#1335 otpop [+1] + #1387 cclinpts [+1] + #1390 kand [+1]; #1224/#1388 contribute Solve and Match-conditional)
 - **path_syntax_error:** maintain ≤ 8 (no Sprint 28 carryforward targets this bucket directly — otpop/camshape/mine are `model_infeasible`, so their recoveries reduce `model_infeasible`, not `path_syntax_error`; the Solve/Match gains come from the model_infeasible and mismatch buckets)
 - **path_solve_terminated:** maintain ≤ 5
