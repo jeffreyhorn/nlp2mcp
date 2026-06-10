@@ -144,11 +144,13 @@ test -f docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md && echo "KU file presen
 # At least 8 categories aligned to the PROJECT_PLAN priorities (expect 10)
 grep -c '^# Category ' docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md
 
-# Every unknown carries a "How to Verify" section (the doc uses headings, not a
-# table column), so the count of those sections should be >= the unknown count
-[ "$(grep -c '^### How to Verify' docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md)" \
-  -ge "$(grep -c '^## Unknown ' docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md)" ] \
-  && echo "all 30 unknowns have a verification method"
+# Every numbered unknown carries a "How to Verify" section (the doc uses headings,
+# not a table column). Exclude the trailing "## Unknown X.Y" template block and
+# compute the counts dynamically rather than hard-coding them.
+n_unknowns=$(grep -cE '^## Unknown [0-9]' docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md)
+n_verify=$(awk '/^## Template for New Unknowns/{exit} /^### How to Verify/{c++} END{print c+0}' docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md)
+[ "$n_verify" -ge "$n_unknowns" ] \
+  && echo "all $n_unknowns unknowns have a verification method ($n_verify How-to-Verify sections)"
 
 # Carryforward issues are referenced
 grep -oE '#1(224|388|393|335|387|390|374|400|385)' docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md | sort -u
@@ -355,7 +357,7 @@ The Case-(a/b/c) discriminator — does the NLP KKT point satisfy the emitted st
 
 ### Background
 
-- Sprint 27 GDX warm-from-good-optimum experiments: `SPRINT_27/SPRINT_LOG.md` Days 9/11 + memory `project_*` entries (launch double-apply; camshape §4.6 discriminator)
+- Sprint 27 GDX warm-from-good-optimum experiments: `SPRINT_27/SPRINT_LOG.md` Days 9/11 + `SPRINT_27/PRIORITY_7_FIX_SURFACE.md` (the Case-(a/b/c) NLP-warm-start discriminator + GAMS warm-start mechanics) + `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What Went Well" #2 (launch double-apply; camshape §4.6 discriminator)
 - The Day-9 dual-transfer workaround: inequality multipliers that became `comp_*` equations were loaded via parameters `pwl_m`/`pwu_m` (the harness must generalize this — load `.m` marginals into the corresponding `comp_*` / multiplier variables)
 - Existing emit knows the multiplier↔equation correspondence (`src/kkt/`, `src/emit/emit_gams.py`) — the harness can reuse this mapping
 - PROJECT_PLAN.md Sprint 28 Priority 9 (harness spec) + PR27 (Phase-0 integration)
@@ -526,7 +528,7 @@ Sprint 27's pattern (retro §"What We'd Do Differently #4" + the deep-AD-fix his
 
 ### Background
 
-- #1387 Day-6 binding diagnosis: three coupled changes (AD offset-enumeration + gradient→stationarity re-symbolization anchor + non-convex warm-start); "sign-flip" is a misdiagnosis (`SPRINT_27/SPRINT_LOG.md` Day 6; memory `MEMORY.md` Day 6 entry)
+- #1387 Day-6 binding diagnosis: three coupled changes (AD offset-enumeration + gradient→stationarity re-symbolization anchor + non-convex warm-start); "sign-flip" is a misdiagnosis (`SPRINT_27/SPRINT_LOG.md` Day 6; `SPRINT_27/PRIORITY_7_FIX_SURFACE.md` #1387 cclinpts fix surface)
 - #1390 Day-5 re-REPLAN: phantom-term collapse proven inert (MCP stays 195.0 ≠ NLP 2613.0); re-diagnosis surfaces = bal/x stationarity, t-1↔t+1 lag duality, LP recourse coupling (`PRIORITY_3_RISK_ASSESSMENT.md` §3.5)
 - camcge: translates `action=c`-clean but model_infeasible from singular-Jacobian CGE degeneracy (distinct from Pattern C)
 - PR16 hypothesis-validation methodology (Sprint 26/27 prep: env-guarded prototype, zero src diff, single representative model)
@@ -676,7 +678,7 @@ Design the `scripts/diagnostics/check_presolve_divergence.py` detector (compare 
 
 ### Why This Matters
 
-The "embedded NLP pre-solve diverges from standalone" bug class (the `$include` re-running source statements under `$onMultiR`) drove two of Sprint 27's wins (#1378 launch double-applied param; #1424 camshape subset corruption) and is on the running list of recurring patterns (memory `MEMORY.md` Day 11 "Key reusable finding"). A detector that compares the two objectives at translate time would have caught both at Day 0 instead of mid-investigation. The AD cross-term property tests address the deeper recurrence: #1224/#1388/#1390 are all cross-term defects (offset/alias/parameter-valued-offset stationarity), and ad-hoc per-model goldens didn't catch them — synthetic models with a known hand-derived KKT, asserting the emit's cross-terms match, turn this defect class into a systematic guard.
+The "embedded NLP pre-solve diverges from standalone" bug class (the `$include` re-running source statements under `$onMultiR`) drove two of Sprint 27's wins (#1378 launch double-applied param; #1424 camshape subset corruption) and is on the running list of recurring patterns (`SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What Went Well" #2, which records this as a reusable bug class identified and exploited twice; `SPRINT_27/SPRINT_LOG.md` Day 11). A detector that compares the two objectives at translate time would have caught both at Day 0 instead of mid-investigation. The AD cross-term property tests address the deeper recurrence: #1224/#1388/#1390 are all cross-term defects (offset/alias/parameter-valued-offset stationarity), and ad-hoc per-model goldens didn't catch them — synthetic models with a known hand-derived KKT, asserting the emit's cross-terms match, turn this defect class into a systematic guard.
 
 ### Background
 
