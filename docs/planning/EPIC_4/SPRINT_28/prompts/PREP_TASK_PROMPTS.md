@@ -44,7 +44,7 @@ Tasks 2–10 are dispatchable in the following order per the dependency graph in
 - `docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md` §Unknowns 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 6.2 (the "is model X still in bucket Y at Day 0?" research questions)
 - `docs/planning/EPIC_4/SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently #2" (the over-optimistic projection lesson) + header final metrics (Solve 105 / Match 62)
 - `docs/planning/EPIC_4/SPRINT_27/SPRINT_LOG.md` Day-10 Checkpoint 2 full bucket membership + final-day entry
-- `data/gamslib/gamslib_status.json` (current pipeline DB, machine-portable paths after #1400)
+- `data/gamslib/gamslib_status.json` (current pipeline DB; `mcp_file_used` paths were relativized in Sprint 27 #1400, but the `message`-field absolute-path leak is still a Sprint 28 carryforward — Priority 7 — so the DB is not yet *fully* machine-portable)
 - `scripts/gamslib/run_full_test.py` (pipeline runner; full retest ~4h wall)
 
 **Tasks to Complete:**

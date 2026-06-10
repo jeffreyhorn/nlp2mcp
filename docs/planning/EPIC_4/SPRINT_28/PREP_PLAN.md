@@ -199,7 +199,7 @@ The bucket-provenance baseline also anchors the regression guard: Sprint 27's ch
 
 - Sprint 27 final metrics: Parse 142 · Translate 135 · Solve 105 · Match 62 (`SPRINT_27/SPRINT_RETROSPECTIVE.md` header + `SPRINT_LOG.md` final entry)
 - Sprint 27 Day-10 Checkpoint 2 full retest buckets: `SPRINT_LOG.md` Day 10 — model_infeasible(7): agreste, camcge, camshape, cesam, fawley, lnts, otpop; path_syntax_error(7): clearlak, dinam, gangesx, indus, sample, turkey, turkpow; path_solve_license(9): egypt, ferts, glider, robot, shale, sroute, srpchase, tabora, tfordy
-- Pipeline DB: `gamslib_status.json` (machine-portable paths after Sprint 27 #1400)
+- Pipeline DB: `gamslib_status.json` (`mcp_file_used` paths relativized in Sprint 27 #1400; the `message`-field warning-capture leak is still pending — Priority 7 — so the DB is not yet *fully* machine-portable)
 - Pipeline runner: `scripts/gamslib/run_full_test.py` (full retest ~4h wall for 142 models; ganges ~8min)
 - PR15 (bucket provenance) + PR17 (scope freeze) + PR25 (projection discipline) — Sprint 26/27 process recommendations
 
