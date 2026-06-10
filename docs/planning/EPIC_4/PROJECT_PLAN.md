@@ -1288,7 +1288,7 @@ Derived from `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently". (
 - **Final Solve Fixes (2h)**
   - Address any remaining solvable `path_syntax_error` or `path_solve_terminated` models
   - Apply solution forcing strategies to divergent models
-  - Target: solve rate ≥ 82% of translated models (matches Sprint 29 Acceptance Criteria below; modest +1pp bump on Sprint 28's ≥ 82% baseline if forcing strategies recover 1–2 divergent models)
+  - Target: solve rate ≥ 81% of translated models, stretch ≥ 82% (matches Sprint 29 Acceptance Criteria below; a modest +1pp bump on Sprint 28's ≥ 81% baseline if forcing strategies recover 1–2 divergent models)
   - **Deliverable:** Final solve fixes
 
 ### Pipeline Retest (~2h)
@@ -1308,8 +1308,8 @@ Derived from `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently". (
 - **Solution Forcing:** At least 2 strategies implemented and tested
 - **Parse Rate:** ≥ 100% of pipeline scope (maintain from Sprint 28)
 - **Translate Rate:** ≥ 95% of parsed models (maintain from Sprint 28; S30 steps up to ≥ 97% per Rolling KPIs)
-- **Solve Rate:** ≥ 82% of translated models (maintain Sprint 28's ≥ 82% baseline; modest stretch via forcing strategies recovering 1–2 divergent models; S30/S31 continue the ramp to ≥ 83% / ≥ 85%)
-- **Full Pipeline Match:** ≥ 46% of pipeline scope (maintain from Sprint 28)
+- **Solve Rate:** ≥ 81% of translated models (maintain Sprint 28's ≥ 81% baseline; modest stretch to ≥ 82% via forcing strategies recovering 1–2 divergent models; S30/S31 continue the ramp to ≥ 83% / ≥ 85%)
+- **Full Pipeline Match:** ≥ 45% of pipeline scope (maintain from Sprint 28)
 - **Quality:** All tests pass; all fixes have regression tests
 
 **Estimated Effort:** 22-28 hours
@@ -1380,7 +1380,7 @@ Derived from `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently". (
 ### Pipeline Retest (~2h)
 - Full pipeline run with PATH feedback integration
 - Record final metrics
-- **Deliverable:** Updated metrics; expected full pipeline match ≥ 48% (matches Sprint 30 Acceptance Criteria below; up from Sprint 29's ≥ 46%)
+- **Deliverable:** Updated metrics; expected full pipeline match ≥ 48% (matches Sprint 30 Acceptance Criteria below; up from Sprint 29's ≥ 45%)
 
 ## Deliverables
 - Regression-based performance benchmarks (replacing absolute thresholds)
@@ -1394,8 +1394,8 @@ Derived from `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently". (
 - **Performance Benchmarks:** No flaky CI failures from benchmark tests
 - **Final Parse Rate:** ≥ 100% of pipeline scope (maintain)
 - **Final Translate Rate:** ≥ 97% of parsed models (up from Sprint 29's ≥ 95%)
-- **Final Solve Rate:** ≥ 83% of translated models (up from Sprint 29's ≥ 82%)
-- **Full Pipeline Match:** ≥ 48% of pipeline scope (up from Sprint 29's ≥ 46%)
+- **Final Solve Rate:** ≥ 83% of translated models (up from Sprint 29's ≥ 81%)
+- **Full Pipeline Match:** ≥ 48% of pipeline scope (up from Sprint 29's ≥ 45%)
 - **Documentation:** Remaining failures documented; Epic 4 summary drafted
 - **Quality:** All quality gates pass
 
@@ -1515,8 +1515,8 @@ Derived from `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently". (
 | model_infeasible | 0 | 0 | 12 | **15** | **12**² | **11** | **8**⁵ | **4** | **4** | ≤3 | ≤5 | maintain ≤3 | maintain ≤4 | maintain ≤4 |
 | Parse Rate (pipeline scope) | ~41% | ≥55% | 82.5% | **98.1%** (154/157) | **97.5%** (156/160) | **100.0%** (147/147)³ | **100.0%** (143/143)⁴ | **100.0%** (142/142)⁶ | **100.0%** (142/142)⁷ | ≥100% | ≥100% | ≥100% | ≥100% | ≥100% |
 | Translate Rate (of parsed) | ~69% | ~72% | 90.9% | **89.0%** (137/154) | **90.4%** (141/156) | **95.2%** (140/147) | **94.4%** (135/143)⁴ | **93.7%** (133/142)⁶ | **94.4%** (134/142)⁷ | ≥95% (+1 via #1385) | ≥95% | maintain ≥95% (stretch ≥96% via forcing) | ≥97% | ≥97% |
-| Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | **63.1%** (89/141) | **61.4%** (86/140) | **73.3%** (99/135) | **78.2%** (104/133) | **76.9%** (103/134)⁷ | ≥82% | ≥81% | maintain ≥82% (stretch +1pp via forcing) | ≥83% | ≥85% |
-| Full Pipeline Match (pipeline scope) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | **29.4%** (47/160) | **33.3%** (49/147)³ | **37.8%** (54/143)⁴ | **42.3%** (60/142)⁶ | **41.5%** (59/142)⁷ | ≥46% | ≥45% | maintain ≥46% | ≥48% | ≥52% |
+| Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | **63.1%** (89/141) | **61.4%** (86/140) | **73.3%** (99/135) | **78.2%** (104/133) | **76.9%** (103/134)⁷ | ≥82% | ≥81% | maintain ≥81% (stretch ≥82% via forcing) | ≥83% | ≥85% |
+| Full Pipeline Match (pipeline scope) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | **29.4%** (47/160) | **33.3%** (49/147)³ | **37.8%** (54/143)⁴ | **42.3%** (60/142)⁶ | **41.5%** (59/142)⁷ | ≥46% | ≥45% | maintain ≥45% | ≥48% | ≥52% |
 
 ² Sprint 22 `model_infeasible` is 15 total; 12 in-scope after excluding 3 permanently infeasible models (feasopt1, iobalance, orani). A 4th model (meanvar) was declared excluded on Day 7 but later achieved model_optimal, so only 3 remain in the infeasible count. S23–S31 targets are in-scope counts.
 

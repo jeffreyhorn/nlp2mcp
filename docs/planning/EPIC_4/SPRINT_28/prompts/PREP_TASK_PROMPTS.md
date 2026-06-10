@@ -94,7 +94,7 @@ Under `[Unreleased]` → `### Sprint 28 Preparation`, prepend:
 **Quality Gate:**
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
 Docs-only task — no Python expected. Run the gate regardless; do NOT commit until all pass.
@@ -128,7 +128,7 @@ gh pr create --title "Complete Sprint 28 Prep Task 2: Bucket-Provenance Baseline
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (docs-only)
 - [x] BASELINE_METRICS.md records Day-0 counts + per-failing-model buckets
 - [x] PR25 projection table distinguishes genuine gains from bucket-forward moves
 - [x] Unknowns 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 6.2 verified in KNOWN_UNKNOWNS.md
@@ -199,7 +199,7 @@ In §Task 3: Status → ✅ COMPLETE; add `**Completed:** YYYY-MM-DD`; fill "Cha
 **Quality Gate:**
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
 Docs-only — run regardless; do NOT commit until all pass.
@@ -233,7 +233,7 @@ gh pr create --title "Complete Sprint 28 Prep Task 3: Codify PR24 (Day-0 Traced 
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (docs-only)
 - [x] CONTRIBUTING.md contains PR24 + PR25 + amended Phase-0 template (traced surface, PR26/PR27 references)
 - [x] No contradiction with existing PR20–PR23 text
 - [x] Unknowns 1.1, 2.1, 3.1, 4.1, 5.1 verified in KNOWN_UNKNOWNS.md
@@ -304,7 +304,7 @@ In §Task 4: Status → ✅ COMPLETE; add `**Completed:** YYYY-MM-DD`; fill "Cha
 **Quality Gate:**
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
 Design-doc only (the harness is *built* in-sprint, not here) — run regardless; do NOT commit until all pass.
@@ -337,7 +337,7 @@ gh pr create --title "Complete Sprint 28 Prep Task 4: Design the KKT-Residual Ve
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (design-doc only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (design-doc only)
 - [x] Design spec covers CLI, dual-transfer (incl. inequality→comp_*), Case-(a/b/c) verdict, output format
 - [x] mine/camshape/kand invocations sketched; Phase-0 command string finalized
 - [x] Unknowns 9.1, 9.2, 9.3, 1.3, 2.2, 5.1, 5.2 verified in KNOWN_UNKNOWNS.md
@@ -419,7 +419,7 @@ In §Task 5: Status → ✅ COMPLETE; add `**Completed:** YYYY-MM-DD`; fill "Cha
 **Quality Gate:**
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
 Docs-only (issue docs + KNOWN_UNKNOWNS/PREP_PLAN/CHANGELOG) — run regardless; do NOT commit until all pass.
@@ -453,7 +453,7 @@ gh pr create --title "Complete Sprint 28 Prep Task 5: Author/Refresh Phase 0 Acc
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (docs-only)
 - [x] All six carryforwards have a Phase 0 gate with the four `###` subsections
 - [x] Expected Emit Pattern labeled a hypothesis; Verification Methodology cites kkt_residual.py
 - [x] REPLAN exits named for #1387/#1390/camcge
@@ -526,7 +526,7 @@ In §Task 6: Status → ✅ COMPLETE; add `**Completed:** YYYY-MM-DD`; fill "Cha
 **Quality Gate:**
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
 Docs-only — run regardless; do NOT commit until all pass.
@@ -559,7 +559,7 @@ gh pr create --title "Complete Sprint 28 Prep Task 6: Diagnosis-Heavy Track REPL
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (docs-only)
 - [x] All three tracks have a single-model hypothesis-validation + PROCEED/REPLAN recommendation
 - [x] Sprint 29 re-scope path named per track; budget-at-risk tallied
 - [x] Unknowns 4.1, 4.3, 5.1, 5.2, 5.3, 6.1, 6.2 verified in KNOWN_UNKNOWNS.md
@@ -631,7 +631,7 @@ In §Task 7: Status → ✅ COMPLETE; add `**Completed:** YYYY-MM-DD`; fill "Cha
 **Quality Gate:**
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
 The audit *runs* the existing emit but the deliverable is a design doc (the check is built in-sprint). Run the gate regardless; do NOT commit until all pass. If you committed a refresh of drifted goldens, confirm they are byte-stable under the PR12 guard.
@@ -664,7 +664,7 @@ gh pr create --title "Complete Sprint 28 Prep Task 7: Golden-Staleness Drift Aud
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS
+- [x] `make typecheck && make format && make lint && make test` all PASS
 - [x] Drift inventory + allowlist documented; CI trigger paths + runtime budget designed
 - [x] check_golden_staleness.py interface + make regen-goldens designed; refresh-commit scope sized
 - [x] Unknowns 8.1, 8.2, 8.3 verified in KNOWN_UNKNOWNS.md
@@ -736,7 +736,7 @@ In §Task 8: Status → ✅ COMPLETE; add `**Completed:** YYYY-MM-DD`; fill "Cha
 **Quality Gate:**
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
 Design-doc only (the detector + tests are built in-sprint) — run regardless; do NOT commit until all pass.
@@ -769,7 +769,7 @@ gh pr create --title "Complete Sprint 28 Prep Task 8: Divergence Detector + AD C
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (design-doc only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (design-doc only)
 - [x] Detector interface designed; would have flagged #1378 + #1424
 - [x] >=6 cross-term shapes catalogued with hand-derived terms; property-test CI wiring specified
 - [x] Unknowns 10.1, 10.2, 10.3 verified in KNOWN_UNKNOWNS.md
@@ -841,7 +841,7 @@ In §Task 9: Status → ✅ COMPLETE; add `**Completed:** YYYY-MM-DD`; fill "Cha
 **Quality Gate:**
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
 Docs-only — run regardless; do NOT commit until all pass.
@@ -874,7 +874,7 @@ gh pr create --title "Complete Sprint 28 Prep Task 9: Lower-Priority Cleanups Fi
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (docs-only)
 - [x] All three cleanups have a candidate fix surface (Day-0-trace hypothesis) + coupling risk + estimate
 - [x] #1374 coupling assessed; #1400 second leak located; #1385 atomic-landing documented
 - [x] Unknowns 7.1, 7.2, 7.3 verified in KNOWN_UNKNOWNS.md
@@ -943,7 +943,7 @@ In §Task 10: Status → ✅ COMPLETE; add `**Completed:** YYYY-MM-DD`; fill "Ch
 **Quality Gate:**
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
 Docs-only — run regardless; do NOT commit until all pass.
@@ -976,7 +976,7 @@ gh pr create --title "Complete Sprint 28 Prep Task 10: Plan Sprint 28 Detailed S
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (docs-only)
 - [x] PLAN.md covers Day 0 + Days 1–13 (risks, estimates, checkpoints, acceptance, contingency)
 - [x] PLAN_PROMPTS.md has one prompt per day with no stale forward-looking claims
 - [x] Harness front-loaded; diagnosis-heavy tracks gated on Task-6 REPLAN signals; ≤ 12h/day verified
