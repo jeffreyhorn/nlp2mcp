@@ -141,8 +141,8 @@ To be completed.
 # Document exists and has the expected structure
 test -f docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md && echo "KU file present"
 
-# At least 8 categories aligned to the PROJECT_PLAN priorities
-grep -c '^## ' docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md
+# At least 8 categories aligned to the PROJECT_PLAN priorities (expect 10)
+grep -c '^# Category ' docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md
 
 # Every Critical/High unknown has a verification method column populated
 grep -E 'Critical|High' docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md | grep -c 'Day '
