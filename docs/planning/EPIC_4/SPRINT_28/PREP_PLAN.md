@@ -80,7 +80,7 @@ The three diagnosis-heavy tracks (#1387 cclinpts three-coupled-change, #1390 kan
 - Sprint 27 Retrospective: `docs/planning/EPIC_4/SPRINT_27/SPRINT_RETROSPECTIVE.md` (§"Sprint 28 Recommendations" Priorities 1–7; §"What We'd Do Differently" #1–#4; §"What Went Well" #1–#5; §"KU Coverage Summary")
 - Sprint 27 Known Unknowns: `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` (Cat 1–9, all resolved Days 0–13 — review for any open/end-of-sprint items)
 - Sprint 28 scope: `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 28 (Weeks 21–22)" (Priorities 1–10 + Process Recommendations PR24/PR25)
-- Carryforward issues: `docs/issues/ISSUE_{1224,1388,1393,1335,1387,1390,1374,1400,1385}_*.md` (each has a Phase-0 diagnosis or a re-scoped filing)
+- Carryforward issues: `docs/issues/ISSUE_{1224,1388,1393,1335,1387,1390,1374,1385}_*.md` (each has a Phase-0 diagnosis or a re-scoped filing). Note: #1400 has **no** dedicated issue doc — it is a scripts-only pipeline fix tracked in `scripts/gamslib/run_full_test.py` (the Sprint 27 `mcp_file_used` relativization; the `message`-field second leak is the Sprint 28 carryforward).
 - #1424 context (the subset-corruption co-bug that landed in Sprint 27 but unblocks #1388 warm-start): `docs/issues/ISSUE_1424_*.md`
 
 ### What Needs to Be Done
