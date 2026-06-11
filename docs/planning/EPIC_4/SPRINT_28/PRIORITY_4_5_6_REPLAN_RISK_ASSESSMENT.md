@@ -12,7 +12,7 @@
 
 **Decision pivot (Unknown 4.1):** is the gradient→stationarity **re-symbolization anchor** fix architectural (touches all re-symbolization callers) or local (gateable to the pure-offset case)?
 
-**Binding Sprint 27 Day-6 record:** the fix is **three coupled changes**, not one — (1) AD `_diff_sum` offset-enumeration (the `j+1` cross-terms; **done + residual-verified**, max|r| = 5e-8 at the NLP optimum), (2) the re-symbolization-anchor fix (the **revert blocker**: a pure-offset `δ=−1` term, having no reference to the column index, was anchored on the wrong element `s11` not `s10`, cancelling the diagonal → cclinpts *worse*), (3) a non-convex warm-start. The "sign-flip" framing is a **MISDIAGNOSIS** (the outer `(-1)` is the standard maximize negation, `src/ad/gradient.py:265`) — do **not** touch sign logic.
+**Binding Sprint 27 Day-6 record:** the fix is **three coupled changes**, not one — (1) AD `_diff_sum` offset-enumeration (the `j+1` cross-terms; **done + residual-verified**, max|r| = 5e-8 at the NLP optimum), (2) the re-symbolization-anchor fix (the **revert blocker**: a pure-offset `δ=-1` term, having no reference to the column index, was anchored on the wrong element `s11` not `s10`, cancelling the diagonal → cclinpts *worse*), (3) a non-convex warm-start. The "sign-flip" framing is a **MISDIAGNOSIS** (the outer `(-1)` is the standard maximize negation, `src/ad/gradient.py:265`) — do **not** touch sign logic.
 
 ### Single-model validation design (PR16 — do not implement)
 
@@ -20,7 +20,7 @@
 |---|---|---|
 | A1 | Re-run the Day-6 `_diff_sum` offset-enumeration prototype on current `main` (env-guarded, zero `src/` diff) | confirm the anchor blocker still reproduces (cclinpts byte-identical / worse) |
 | A2 | **Trace the re-symbolization callers** — how many call sites would a correct anchor change touch? Can the anchor be selected from the *differentiated variable's own column index* in a gated branch, or is it chosen upstream of any per-term context (Unknown 4.1 Q1/Q2)? | a caller count + a gateable/not-gateable verdict |
-| A3 | KKT-residual harness eliminated-KKT check (`objgrad_b(j) + b(j)^(−γ)·objgrad_fb(j) = 0`, max|r| ≤ 1e-6) on the prototype | re-confirm the cross-term shape (Case c expected: residual clean, cold PATH diverges → warm-start needed) |
+| A3 | KKT-residual harness eliminated-KKT check (`objgrad_b(j) + b(j)^(-γ)*objgrad_fb(j) = 0`, max|r| <= 1e-6) on the prototype | re-confirm the cross-term shape (Case c expected: residual clean, cold PATH diverges → warm-start needed) |
 
 ### Recommendation: **PROCEED-with-condition**
 
@@ -61,7 +61,7 @@
 
 **Decision pivot (Unknown 6.1):** is the singular Jacobian a fixable **Walras-law redundancy** (price-numéraire / redundant-row drop that preserves the economic solution → PROCEED), or **inherent CGE degeneracy** (formulation change → Epic 5 observation, REPLAN)?
 
-**Binding Sprint 27 record:** camcge translates `action=c`-clean and the **KKT system is structurally correct** — the warm-start is a valid KKT point (all primal + stationarity equations ≈ 0 at machine precision, e.g. `gdp_check ≈ −4.83e-10`). The infeasibility is **PATH numerical convergence at a singular/ill-conditioned Jacobian, not an emit/AD bug** (`ISSUE_1330` round-3). **Day-0 bucket is `model_infeasible` (Unknown 6.2 — confirmed from the committed DB).**
+**Binding Sprint 27 record:** camcge translates `action=c`-clean and the **KKT system is structurally correct** — the warm-start is a valid KKT point (all primal + stationarity equations ≈ 0 at machine precision, e.g. `gdp_check ≈ -4.83e-10`). The infeasibility is **PATH numerical convergence at a singular/ill-conditioned Jacobian, not an emit/AD bug** (`ISSUE_1330` round-3). **Day-0 bucket is `model_infeasible` (Unknown 6.2 — confirmed from the committed DB).**
 
 ### Single-model validation design (PR16 — do not implement)
 

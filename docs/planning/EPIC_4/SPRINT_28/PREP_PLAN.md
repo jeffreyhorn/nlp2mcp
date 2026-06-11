@@ -611,7 +611,7 @@ grep -Ei 'cclinpts|#1387|kand|#1390|camcge' docs/planning/EPIC_4/SPRINT_28/PRIOR
 - [x] #1390's Day-0 trace plan uses the KKT-residual harness to localize the gap
 - [x] camcge's singular-row identification plan + numéraire/Epic-5 fork documented
 - [x] Sprint 29 re-scope path named for each track
-- [x] Unknowns 4.1, 4.3, 5.1, 5.2, 5.3, 6.1, 6.2 updated in KNOWN_UNKNOWNS.md to 🟡 PARTIALLY VERIFIED (design scope; 6.2 Day-0 bucket reconfirmed) — binding verdicts are the in-sprint Day-0 runs
+- [x] Unknowns 4.1, 4.3, 5.1, 5.2, 5.3, 6.1 updated in KNOWN_UNKNOWNS.md to 🟡 PARTIALLY VERIFIED (design scope) — binding verdicts are the in-sprint Day-0 runs; Unknown 6.2 stays ✅ VERIFIED (Task 2 baseline), reconfirmed by Task 6 (no downgrade)
 
 ---
 
