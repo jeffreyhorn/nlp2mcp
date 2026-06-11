@@ -537,9 +537,10 @@ grep -l 'kkt_residual' docs/issues/ISSUE_122*.md docs/issues/ISSUE_138*.md
 
 ## Task 6: Diagnosis-Heavy Track REPLAN Risk Assessment (#1387, #1390, camcge; PR16)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
 **Estimated Time:** 4–6 hours
+**Completed:** 2026-06-11
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Development team
 **Dependencies:** Task 5
@@ -573,11 +574,15 @@ Sprint 27's pattern (retro §"What We'd Do Differently #4" + the deep-AD-fix his
 
 ### Changes
 
-To be completed.
+- Authored `docs/planning/EPIC_4/SPRINT_28/PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md`: a per-track PR16 single-model hypothesis-validation design (instrument + steps + deciding signal) and a PROCEED/REPLAN recommendation for #1387 (Track A), #1390 (Track B), camcge (Track C), plus a budget-at-risk tally.
+- Updated KNOWN_UNKNOWNS.md Unknowns 4.1/4.3/5.1/5.2/5.3/6.1 to 🟡 PARTIALLY VERIFIED (design scope) and reconfirmed 6.2 (Day-0 bucket) — the validations are designed; the binding verdict is the in-sprint Day-0 run.
 
 ### Result
 
-To be completed.
+- **#1387 cclinpts — PROCEED-with-condition:** proceed if the Day-0 caller trace shows the re-symbolization anchor fix is **local** (gateable to the differentiated variable's column index); **REPLAN to Sprint 29** if **architectural** (touches all re-symbolization callers). All three coupled changes land together; sign-flip stays a misdiagnosis. Budget at risk ~12–18h.
+- **#1390 kand — diagnosis-first / conditional (REPLAN-aware):** PROCEED only if the harness reports **Case b** (a localizable `bal`/`x` / lag-duality row); **REPLAN to Sprint 29** on **Case c** (LP first-stage/recourse coupling). Phantom-term collapse out of scope (inert). Budget at risk ~8–14h.
+- **camcge — conditional:** PROCEED to a numéraire / redundant-row fix if a **single redundant Walras row** is confirmed **and** the fix preserves the economic solution; otherwise **REPLAN to an Epic 5 observation** ("inherent CGE degeneracy needs a formulation change"). Budget at risk ~8–14h.
+- **Budget-at-risk: ~28–46h combined** — Task 10's schedule lower bound assumes all three may partially slip; the at-risk Match contributions are cclinpts (Track A) and kand (Track B).
 
 ### Verification
 
@@ -600,13 +605,13 @@ grep -Ei 'cclinpts|#1387|kand|#1390|camcge' docs/planning/EPIC_4/SPRINT_28/PRIOR
 
 ### Acceptance Criteria
 
-- [ ] All three diagnosis-heavy tracks have a single-model hypothesis-validation design
-- [ ] Each has a PROCEED/REPLAN recommendation with the deciding signal stated
-- [ ] #1387's architectural-vs-local anchor question is the explicit decision pivot
-- [ ] #1390's Day-0 trace plan uses the KKT-residual harness to localize the gap
-- [ ] camcge's singular-row identification plan + numéraire/Epic-5 fork documented
-- [ ] Sprint 29 re-scope path named for each track
-- [ ] Unknowns 4.1, 4.3, 5.1, 5.2, 5.3, 6.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All three diagnosis-heavy tracks have a single-model hypothesis-validation design
+- [x] Each has a PROCEED/REPLAN recommendation with the deciding signal stated
+- [x] #1387's architectural-vs-local anchor question is the explicit decision pivot
+- [x] #1390's Day-0 trace plan uses the KKT-residual harness to localize the gap
+- [x] camcge's singular-row identification plan + numéraire/Epic-5 fork documented
+- [x] Sprint 29 re-scope path named for each track
+- [x] Unknowns 4.1, 4.3, 5.1, 5.2, 5.3, 6.1, 6.2 updated in KNOWN_UNKNOWNS.md to 🟡 PARTIALLY VERIFIED (design scope; 6.2 Day-0 bucket reconfirmed) — binding verdicts are the in-sprint Day-0 runs
 
 ---
 
