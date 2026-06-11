@@ -4,7 +4,7 @@
 **Status:** OPEN — THREE partial fixes landed 2026-04-30 (`_preferred_decl_domain` arity-guard drop round 1, `_diff_prod` collapse fix round 2, var-init-skip-under-presolve round 3). Residuals reduced 3× under `--nlp-presolve` (24.76 → 8.58). The remaining infeasibility was diagnosed (round 3) as a PATH numerical-convergence issue at a singular Jacobian, NOT an emit / AD bug. The warm-start IS a valid KKT point (all primal & stationarity equations evaluate to ~0 at machine precision); PATH cannot navigate from it. See §"Investigation 2026-04-30 (round 3)" below.
 **Severity:** Medium — model compiles and PATH runs but returns INFEASIBLE; users get no usable solution
 **Date:** 2026-04-30
-**Last Updated:** 2026-04-30
+**Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 acceptance gate authored (extending existing doc); prior: 2026-04-30)
 **Affected Models:** camcge
 **Predecessors:**
 - [#1245](https://github.com/jeffreyhorn/nlp2mcp/issues/1245) (CLOSED, PR #1329) — wrapped traded-only multiplier terms in `stat_pd` / `stat_xxd` with `$(it(i))` to remove EXECERROR=4 from `1/gamma(in) = 1/0` and `0**negative`.

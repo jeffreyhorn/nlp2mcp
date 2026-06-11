@@ -4,7 +4,7 @@
 **Status:** DEFERRED to Sprint 28 (Sprint 27 Day 11 §4.6 discriminator run; multi-bug — see "Day 11 §4.6 result" below). The linked GitHub issue remains open.
 **Severity:** Medium — translate + compile clean but the PATH solve produces `Locally Infeasible (model_status = 5)` with obj=6.2 vs NLP obj=4.2841.
 **Date:** 2026-05-12
-**Last Updated:** 2026-06-08 (Sprint 27 Day 11 — §4.6 3-way discriminator run; Case (b), multi-bug → Sprint 28)
+**Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 Refresh added; prior: Sprint 27 Day 11 — §4.6 3-way discriminator run; Case (b), multi-bug → Sprint 28)
 **Affected Models:** camshape
 **Target Sprint:** ~~Sprint 27~~ → **Sprint 28** (Case-(b) `stat_r` stationarity-emit divergence; the separable subset-corruption bug #1424 is fixed in Sprint 27).
 

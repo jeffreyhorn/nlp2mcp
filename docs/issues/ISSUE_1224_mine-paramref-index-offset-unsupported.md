@@ -4,7 +4,7 @@
 **Status:** TRANSLATE FIXED (Sprint 27 Day 12, 2026-06-08) — mine now translates + compiles clean (+1 Translate). Correct SOLVE (the parameter-valued-offset KKT cross-term) is DEFERRED to Sprint 28; mine's next failure mode is `model_infeasible` (see below).
 **Severity:** Medium — Translation aborts with internal error
 **Date:** 2026-04-07
-**Last Updated:** 2026-06-08 (Sprint 27 Day 12 — emit-render fix lands +1 Translate; Solve cross-term → Sprint 28)
+**Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 Refresh — Sprint 28 Solve gate added; prior: Sprint 27 Day 12 — emit-render fix lands +1 Translate; Solve cross-term → Sprint 28)
 **Affected Models:** mine
 
 ---

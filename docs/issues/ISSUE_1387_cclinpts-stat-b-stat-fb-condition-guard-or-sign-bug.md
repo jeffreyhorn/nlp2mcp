@@ -4,7 +4,7 @@
 **Status:** DEFERRED to Sprint 28 (Sprint 27 Day 6 diagnosis + reverted implementation attempt established three coupled changes beyond the documented "condition-guard or sign bug"; Day 8 files the carryforward — see "Day 6 diagnosis" below). The linked GitHub issue remains open.
 **Severity:** Medium — MCP cold-solves to a spurious degenerate KKT point (ObjV≈0 vs NLP −3.0011); not a Pattern A AD-layer bug.
 **Date:** 2026-05-12
-**Last Updated:** 2026-06-07 (Sprint 27 Day 8 — Sprint 28 carryforward filed; Day 6 diagnosis + reverted attempt are the binding record)
+**Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 Refresh added; prior: Sprint 27 Day 8 — Sprint 28 carryforward filed; Day 6 diagnosis + reverted attempt are the binding record)
 **Affected Models:** cclinpts
 **Target Sprint:** ~~Sprint 27~~ → **Sprint 28** (Day-8 binding deferral: the legitimate fix is THREE coupled changes — AD offset-enumeration + gradient→stationarity re-symbolization-anchor fix + non-convex warm-start; see Day 6 diagnosis).
 

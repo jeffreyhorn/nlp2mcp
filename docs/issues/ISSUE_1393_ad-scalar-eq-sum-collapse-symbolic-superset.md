@@ -4,7 +4,7 @@
 **Status:** DEFERRED to Sprint 28 (Sprint 27 Day 0 binding verdict = REPLAN; Approach C was shown to be inert — see "Sprint 28 carryforward" below). The linked GitHub issue remains open.
 **Severity:** Medium — produces an over-counted KKT Jacobian cross-term (off by factor |subset| = 17× for otpop). Differs from the NLP optimum.
 **Date:** 2026-05-12
-**Last Updated:** 2026-06-07 (Sprint 27 Day 8 — Sprint 28 carryforward filed; Day 0 Approach-C REPLAN recorded; now distinct from #1335)
+**Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 acceptance gate authored; prior: Sprint 27 Day 8 — Sprint 28 carryforward filed; Day 0 Approach-C REPLAN recorded; now distinct from #1335)
 **Affected Models:** otpop (confirmed; the `kdef` scalar equation with `sum(t, del(t)*p(t)*x(t))`). Likely affects other models with scalar-aggregation constraints over subset domains referenced by indexed stationarity equations.
 **Target Sprint:** ~~Sprint 27~~ → **Sprint 28** (redirect to the `stationarity.py` symbolic-collapse path; the documented Approach-C patch site never executes — see below).
 **Cross-references:**

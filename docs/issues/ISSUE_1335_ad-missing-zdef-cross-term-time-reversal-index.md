@@ -4,7 +4,7 @@
 **Status:** DEFERRED to Sprint 28 (Sprint 27 Day 0 confirmed #1393's Approach C does NOT subsume #1335 — this is now a DISTINCT fix needing a `card(t)-ord(t)` offset evaluator; see "Sprint 28 carryforward" below). The linked GitHub issue remains open.
 **Severity:** Medium — Produces a valid local KKT point that differs from the NLP optimum; affects models that use `card`/`ord` arithmetic on sum index variables to construct time-reversal or end-of-horizon mappings.
 **Date:** 2026-05-02
-**Last Updated:** 2026-06-07 (Sprint 27 Day 8 — Sprint 28 carryforward filed; confirmed distinct from #1393 per Day 0 REPLAN).
+**Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 acceptance gate authored; prior: Sprint 27 Day 8 — Sprint 28 carryforward filed; confirmed distinct from #1393 per Day 0 REPLAN)
 **Affected Models:** otpop (confirmed); any model using `var(t + (card(t) - ord(t)))` or similar non-trivial offset arithmetic to map sum iterates to a fixed boundary element.
 **Target Sprint:** ~~Sprint 27~~ → **Sprint 28** (Approach B — extend `_try_eval_offset` to resolve `card(t)-ord(t)` symbolically; independent of #1393).
 

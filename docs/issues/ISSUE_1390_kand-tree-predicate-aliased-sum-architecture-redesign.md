@@ -4,7 +4,7 @@
 **Status:** DEFERRED to Sprint 28 (Sprint 27 Day 5 re-scoped Phase 0 = re-REPLAN; the documented fix premise is disproven — see "Sprint 28 carryforward" below). The linked GitHub issue remains open.
 **Severity:** Medium — produces a valid MCP solve that converges to Optimal but with ~92.5% rel_diff vs the NLP optimum; not a localized AD-helper bug but an architecture-level reclassification.
 **Date:** 2026-05-12
-**Last Updated:** 2026-06-06
+**Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 acceptance gate authored; prior: 2026-06-06)
 **Affected Models:** kand (target); likely affects other models with tree-predicate-aliased Sum bodies (stochastic-programming scenario-tree shapes).
 **Target Sprint:** ~~Sprint 27~~ → **Sprint 28** (re-diagnose the TRUE mismatch source — it is NOT the phantom-term enumeration; see below).
 
