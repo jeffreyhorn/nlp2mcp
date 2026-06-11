@@ -170,7 +170,7 @@ AD/KKT engineer
 
 **— Task 3 (PR24/PR25 codification — fix-surface-as-hypothesis framing):**
 
-- **Status:** ✅ VERIFIED (framing aspect)
+- **Task 3 outcome:** ✅ VERIFIED (framing aspect)
 - **Verified by:** Task 3 (Codify PR24 + PR25)
 - **Date:** 2026-06-11
 - **Findings:** This fix surface (the AD/Jacobian layer vs `src/kkt/stationarity.py` vs the `src/ir/ast.py` emit render) is now governed by the codified **PR24** rule — the prep-doc/issue-doc `### Expected Emit Pattern` is a *hypothesis*; the actual `file:line` is established by a Day-0 trace, and a Phase-0 PROCEED must cite the *traced* surface (never the prep-doc guess).
@@ -316,7 +316,7 @@ AD/KKT engineer
 
 **— Task 3 (PR24/PR25 codification — fix-surface-as-hypothesis framing):**
 
-- **Status:** ✅ VERIFIED (framing aspect)
+- **Task 3 outcome:** ✅ VERIFIED (framing aspect)
 - **Verified by:** Task 3 (Codify PR24 + PR25)
 - **Date:** 2026-06-11
 - **Findings:** This fix surface (the interior `stat_r(i)` vs edge `lam_convex_edge*` cross-terms (prep names `stationarity.py:1835`)) is now governed by the codified **PR24** rule — the prep-doc/issue-doc `### Expected Emit Pattern` is a *hypothesis*; the actual `file:line` is established by a Day-0 trace, and a Phase-0 PROCEED must cite the *traced* surface (never the prep-doc guess).
@@ -456,7 +456,7 @@ AD/KKT engineer
 
 **— Task 3 (PR24/PR25 codification — fix-surface-as-hypothesis framing):**
 
-- **Status:** ✅ VERIFIED (framing aspect)
+- **Task 3 outcome:** ✅ VERIFIED (framing aspect)
 - **Verified by:** Task 3 (Codify PR24 + PR25)
 - **Date:** 2026-06-11
 - **Findings:** This fix surface (which `stationarity.py` symbolic-collapse path the `t→t__` aliasing flows through) is now governed by the codified **PR24** rule — the prep-doc/issue-doc `### Expected Emit Pattern` is a *hypothesis*; the actual `file:line` is established by a Day-0 trace, and a Phase-0 PROCEED must cite the *traced* surface (never the prep-doc guess).
@@ -596,7 +596,7 @@ AD/KKT engineer
 
 **— Task 3 (PR24/PR25 codification — fix-surface-as-hypothesis framing):**
 
-- **Status:** ✅ VERIFIED (framing aspect)
+- **Task 3 outcome:** ✅ VERIFIED (framing aspect)
 - **Verified by:** Task 3 (Codify PR24 + PR25)
 - **Date:** 2026-06-11
 - **Findings:** This fix surface (whether the gradient→stationarity re-symbolization anchor fix is architectural or local) is now governed by the codified **PR24** rule — the prep-doc/issue-doc `### Expected Emit Pattern` is a *hypothesis*; the actual `file:line` is established by a Day-0 trace, and a Phase-0 PROCEED must cite the *traced* surface (never the prep-doc guess).
@@ -736,7 +736,7 @@ AD/KKT engineer
 
 **— Task 3 (PR24/PR25 codification — fix-surface-as-hypothesis framing):**
 
-- **Status:** ✅ VERIFIED (framing aspect)
+- **Task 3 outcome:** ✅ VERIFIED (framing aspect)
 - **Verified by:** Task 3 (Codify PR24 + PR25)
 - **Date:** 2026-06-11
 - **Findings:** This fix surface (a localizable stationarity/complementarity row vs LP first-stage/recourse-coupling architecture) is now governed by the codified **PR24** rule — the prep-doc/issue-doc `### Expected Emit Pattern` is a *hypothesis*; the actual `file:line` is established by a Day-0 trace, and a Phase-0 PROCEED must cite the *traced* surface (never the prep-doc guess).
