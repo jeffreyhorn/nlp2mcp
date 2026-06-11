@@ -248,3 +248,19 @@ print(f\"rel_diff: {m.get('solution_comparison', {}).get('rel_diff')}\")
 - (b) The bug is upstream of stat_b/stat_fb emit (e.g., AD layer's handling of indexed-sum partial derivatives w.r.t. an index-bound variable) — Priority 7 effort estimate may need adjustment + bundle with Priority 3 (AD redesigns)
 - (c) PATH solve reaches MODEL STATUS 1 but rel_diff still > 5% — investigate whether the bug is a complementarity sign issue (piL_b / piU_b) rather than a gradient term-omission
 
+### Phase 0 Refresh (Sprint 28 Prep Task 5 — PR24 + PR27)
+
+This gate predates the Sprint 27 Day-6 binding diagnosis and PR24/PR27. **Two corrections from Day 6:** (1) the original "sign-flip" framing is a **MISDIAGNOSIS** — the outer `(-1)` is the standard maximize negation (`gradient.py:265`); do NOT touch sign logic. (2) The real fix is **three coupled changes**, so this is a diagnosis-heavy / REPLAN-prone track.
+
+- **Hand-Derived KKT Shape (confirmed Day 6):** the missing `j+1`-offset cross-terms in `stat_b(j)`/`stat_fb(j)` were residual-verified at the NLP optimum (eliminated-KKT `objgrad_b(j) + b(j)^(−γ)·objgrad_fb(j) = 0`, max|r| = **5e-8**). Reuse this; do not re-derive.
+- **Expected Emit Pattern is a hypothesis (PR24):** the three candidate surfaces — (1) AD `_diff_sum` offset-enumeration (`src/ad/derivative_rules.py`, missing `j+1` cross-terms); (2) the gradient→stationarity **re-symbolization anchor** fix (the Sprint 27 blocker: a pure-offset term anchored on the wrong element); (3) a non-convex **warm-start** (PATH cold-converges to a spurious degenerate `b≈const`) — are hypotheses; each `file:line` is set by a Day-0 trace.
+- **Verification Methodology (PR27):**
+  ```bash
+  .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/cclinpts.gms --gdx cclinpts_nlp.gdx --tol 1e-6 --json phase0_cclinpts.json
+  ```
+  Target: cclinpts **rel_diff < 1%**, MODEL STATUS 1 (was 69.9%). The harness should report **Case c** from a *cold* start (residual ≈ 5e-8 clean, but cold PATH diverges to the degenerate point) — which is exactly why the non-convex warm-start (change 3) is required, not just the AD fix.
+- **Traced Fix-Surface (Day-0):** _TBD at sprint Day 0 — the three coupled surfaces are hypotheses (PR24); the re-symbolization-anchor surface in particular must be traced, as it was the Sprint 27 revert blocker._
+- **REPLAN exit → Sprint 29 (explicit):** if the Day-0 trace / Task 6 hypothesis-validation shows the re-symbolization-anchor fix is **architectural** (touches all re-symbolization callers, not a local cclinpts change), file a re-scoped Phase-0 successor and defer to Sprint 29 — do NOT spend Priority-4 `src/` budget against an architectural change.
+- **Task 6 precondition:** one of the three diagnosis-heavy carryforwards (#1387/#1390/camcge); its REPLAN risk is assessed in Task 6 (PR16) **before** any `src/` effort. All three coupled changes must land together (a partial fix = no Match gain).
+- **Cross-links:** KNOWN_UNKNOWNS Category 4 (Unknowns 4.1, 4.2, 4.3); BASELINE_METRICS §2 cclinpts provenance row (`model_optimal`/mismatch −9.975 vs −3.0011; Match-only, 0 Solve credit).
+

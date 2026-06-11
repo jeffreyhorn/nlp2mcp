@@ -222,3 +222,16 @@ gams /tmp/camshape_mcp.gms lo=2 | grep -E 'MODEL STATUS|SOLVER STATUS|OBJECTIVE'
 
 - (c) The bug requires AD-pipeline changes (e.g., wrong handling of `r(i)`'s appearance in multiple convexity equations at offset indices i-1, i+1) → bundle with Priority 3 (AD architectural redesigns) rather than treat as standalone Priority 7 work
 
+### Phase 0 Refresh (Sprint 28 Prep Task 5 — PR24 + PR27)
+
+The hand-derived `stat_r(i)` shape above is retained; this refresh adds the Sprint 28 process requirements (the gate predates PR24/PR27). The Sprint 27 Day-11 §4.6 discriminator already returned the **Case (b)** verdict (`stat_r(i1)` INFES ≈ 396 from a verified NLP-KKT warm-start, post-#1424) — a non-inert emit bug, NOT non-convexity — so this is a Sprint 28 in-sprint fix, not a carryforward-to-defer.
+
+- **Expected Emit Pattern is a hypothesis (PR24):** the candidate surface `src/kkt/stationarity.py:1835` (`_build_indexed_stationarity_expr`, the looser-vs-canonical `middle(i±1)` guard) is a *hypothesis*; the actual `file:line` is set by a Day-0 trace, never trusted from this doc.
+- **Verification Methodology (PR27):**
+  ```bash
+  .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/camshape.gms --gdx camshape_nlp.gdx --tol 1e-6 --json phase0_camshape.json
+  ```
+  Target: camshape **area ≈ 4.2841**, MODEL STATUS 1. Expect **Case b** with `stat_r('i1')` ≈ 396 as the max-residual row (reproducing the Day-11 manual classification); the per-term guard fix drives it → 0. Blast-radius of the fix is enumerated by the Task 7 golden-staleness check, not here (Unknown 2.2).
+- **Traced Fix-Surface (Day-0):** _TBD at sprint Day 0 — `stationarity.py:1835` is the hypothesis (PR24); confirm by trace + harness residual before any `src/` change._
+- **Cross-links:** KNOWN_UNKNOWNS Category 2 (Unknowns 2.1, 2.2, 2.3); BASELINE_METRICS §2 camshape provenance row (`model_infeasible` throughout S27; #1424 landed; +1 Solve firm).
+

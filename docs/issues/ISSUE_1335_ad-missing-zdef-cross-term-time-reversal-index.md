@@ -10,6 +10,44 @@
 
 ---
 
+## Phase 0: Acceptance Gate (Sprint 28 Prep Task 5)
+
+**Authored:** 2026-06-11 (Sprint 28 Prep Task 5 per PR20 + PR24).
+**Target equation(s):** `stat_p(tt)` for otpop, from `zdef.. z =e= v*sum(t, 0.365*(xb(t)-x(t))*p(t + (card(t)-ord(t))))`.
+**Cross-links:** KNOWN_UNKNOWNS Category 3 (Unknowns 3.1, 3.2, 3.3); BASELINE_METRICS §2 otpop provenance row; harness design `docs/planning/EPIC_4/SPRINT_28/PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md`. Companion: #1393 (the `kdef` Sum-collapse); otpop's +1 Solve/+1 Match needs **both**, landed in sequence.
+
+### Hand-Derived KKT Shape
+
+The time-reversal offset `p(t + (card(t)-ord(t)))` maps every `t` to the last element, so `∂zdef/∂p(tt)` is non-zero only at that boundary element. The missing `stat_p(tt)` cross-term is:
+
+```
+stat_p(tt) ← ((-1) * v * sum(t, 0.365*(xb(t)-x(t)))) * nu_zdef $ (sameas(tt, '1990'))
+```
+
+The current emit **drops this term entirely** because the AD layer cannot evaluate the `card(t)-ord(t)` offset, so `nu_zdef` never appears in `stat_p`.
+
+### Expected Emit Pattern (hypothesis — PR24)
+
+`otpop_mcp.gms` `stat_p` should contain a `nu_zdef` term guarded by `sameas(tt,'1990')` (the last-element image of the time-reversal map). **This is the prep hypothesis; the fix surface is established by the Day-0 trace, not trusted from this doc.** Prep names Approach B — extend `_try_eval_offset` (`src/ad/constraint_jacobian.py:133–260`) to resolve `card(t)-ord(t)` **symbolically** (no Sum expansion) — as the hypothesis.
+
+### Verification Methodology (PR27)
+
+```bash
+.venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/otpop.gms --gdx otpop_nlp.gdx --tol 1e-6 --json phase0_otpop.json
+# Structural check: nu_zdef appears in stat_p with the last-element guard
+grep -E 'nu_zdef' data/gamslib/mcp/otpop_mcp.gms | grep -E "stat_p|sameas\(.*,'1990'\)"   # expect: present
+```
+
+Target: otpop `cost ≈ 4217.80`, MODEL STATUS 1. Before the fix the harness reports **Case b** with `stat_p(tt)` (at the last element) as the max-residual row — the missing `nu_zdef` term; after Approach B lands, that residual → 0.
+
+### PROCEED/REPLAN Signal
+
+**PROCEED** when: (a) a Day-0 trace confirms the `card(t)-ord(t)` offset is the reason `nu_zdef` is dropped and localizes the evaluator gap to a concrete `file:line` (the **Traced Fix-Surface (Day-0)**, PR24); (b) the harness reports Case b with the missing-`nu_zdef` `stat_p` row as max-residual; (c) the symbolic `card(t)-ord(t)` extension restores the term and drives the residual → 0 **without** regressing other models' offset handling. **REPLAN** if the symbolic evaluator would require Sum expansion (the rolled-back Sprint 27 Day-9 approach) — re-scope to Sprint 29.
+
+**Traced Fix-Surface (Day-0):** _TBD at sprint Day 0 — prep names `_try_eval_offset` (`src/ad/constraint_jacobian.py:133–260`, Approach B) as the hypothesis (PR24); confirm by trace + harness residual before any `src/` change._
+
+---
+
 ## Sprint 28 carryforward — Sprint 27 Day 0 confirmation (2026-06-01) + Day 8 filing (2026-06-07): distinct fix confirmed, deferred
 
 Sprint 27 carried #1335 as a companion to #1393 under the hypothesis that #1393's Approach C *might* also fix #1335 (by letting `_sum_should_collapse` fire on the `zdef` sum body). **Day 0 disproved Approach C entirely for #1393** (it is inert — the `_is_concrete_instance_of` call path is never reached; see [ISSUE_1393](ISSUE_1393_ad-scalar-eq-sum-collapse-symbolic-superset.md) §"Sprint 28 carryforward" and `PRIORITY_3_RISK_ASSESSMENT.md` §5.6 binding verdict). Consequently:

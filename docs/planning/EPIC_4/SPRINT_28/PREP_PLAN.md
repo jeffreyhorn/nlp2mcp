@@ -436,9 +436,10 @@ grep -E 'mine|camshape|kand' docs/planning/EPIC_4/SPRINT_28/PRIORITY_9_KKT_RESID
 
 ## Task 5: Author / Refresh Phase 0 Acceptance Gates for the Six Carryforwards (PR20 + PR24)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
 **Estimated Time:** 5–7 hours
+**Completed:** 2026-06-11
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 3, 4
@@ -481,11 +482,20 @@ PR20's Phase 0 gate is the primary mitigation against the alias-AD architectural
 
 ### Changes
 
-To be completed.
+- **Authored 4 new Phase-0 gates** (the docs had none): `ISSUE_1393` (otpop `kdef` Sum-collapse) + `ISSUE_1335` (otpop `zdef` missing `nu_zdef` cross-term) + `ISSUE_1390` (kand re-diagnosis) + `ISSUE_1330` (camcge singular-Jacobian, extending the existing doc — no duplicate). Each has the four `###` subsections + the harness Verification Methodology + a `Traced Fix-Surface (Day-0)` PROCEED line.
+- **Refreshed 3 existing gates** (predated PR24/PR27): `ISSUE_1224` (added the Sprint 28 **Solve** gate — the inverted `stat_x` shape — on top of the Sprint 27 translate gate), `ISSUE_1388`, `ISSUE_1387` — each gained a `### Phase 0 Refresh` adding the hypothesis label (PR24), the `kkt_residual.py` invocation (PR27), the traced-surface line, and KNOWN_UNKNOWNS/BASELINE cross-links.
+- **Flagged the diagnosis-heavy three** (#1387/#1390/camcge) with an explicit Sprint 29 REPLAN exit + a Task 6 hypothesis-validation precondition before any `src/` budget.
+- Updated KNOWN_UNKNOWNS.md Unknowns 1.1/1.2/1.3/2.1/2.2/2.3/3.1/3.2/3.3/4.2 to 🟡 PARTIALLY VERIFIED (design scope) — the Phase-0 gate + hand-derived shape are authored; the fix surface stays a Day-0-trace hypothesis (PR24).
 
 ### Result
 
-To be completed.
+- All six carryforwards now have a Phase-0 gate with the four subsections; each cites the KKT-residual harness (PR27) and requires the Day-0 traced surface on PROCEED (PR24). Per-carryforward PROCEED/REPLAN outcomes:
+  - **#1224 mine** — PROCEED to the `stat_x` offset-inversion Solve fix once the Day-0 trace + harness Case-b confirm the surface (+1 Solve firm).
+  - **#1388 camshape** — PROCEED to the per-term `stat_r` fix (Sprint 27 §4.6 already gave the Case-b verdict; +1 Solve firm).
+  - **#1393 + #1335 otpop** — PROCEED to the `kdef` Sum-collapse + `zdef` `card(t)-ord(t)` cross-term, sequenced; both gate +1 Solve/+1 Match.
+  - **#1387 cclinpts** — REPLAN-prone (three coupled changes; change-1 reuses the 5e-8 Sprint 27 residual); Sprint 29 exit if the re-symbolization anchor proves architectural.
+  - **#1390 kand** — diagnosis-first; PROCEED only on a Case-b localization, REPLAN to Sprint 29 on Case-c (LP-recourse coupling).
+  - **camcge** — conditional; harness expected to confirm Case-c (singular Jacobian), PROCEED to a PATH-side lever or REPLAN to an inherent-degeneracy finding.
 
 ### Verification
 
@@ -515,13 +525,13 @@ grep -l 'kkt_residual' docs/issues/ISSUE_122*.md docs/issues/ISSUE_138*.md
 
 ### Acceptance Criteria
 
-- [ ] All six carryforwards have a Phase 0 Acceptance Gate with the four required subsections
-- [ ] Hand-derived KKT shapes recorded (reused/cited from Sprint 27 where already verified)
-- [ ] Expected Emit Pattern labeled as a hypothesis pending Day-0 trace (PR24)
-- [ ] Verification Methodology cites the exact KKT-residual harness invocation + target solution (PR27)
-- [ ] PROCEED requires the traced surface; REPLAN exits named for the three diagnosis-heavy tracks
-- [ ] Each gate cross-linked to its KNOWN_UNKNOWNS category and BASELINE provenance row
-- [ ] Unknowns 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All six carryforwards have a Phase 0 Acceptance Gate with the four required subsections
+- [x] Hand-derived KKT shapes recorded (reused/cited from Sprint 27 where already verified)
+- [x] Expected Emit Pattern labeled as a hypothesis pending Day-0 trace (PR24)
+- [x] Verification Methodology cites the exact KKT-residual harness invocation + target solution (PR27)
+- [x] PROCEED requires the traced surface; REPLAN exits named for the three diagnosis-heavy tracks
+- [x] Each gate cross-linked to its KNOWN_UNKNOWNS category and BASELINE provenance row
+- [x] Unknowns 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.2 updated in KNOWN_UNKNOWNS.md to 🟡 PARTIALLY VERIFIED (design scope) — fix surfaces remain Day-0-trace hypotheses (PR24)
 
 ---
 
