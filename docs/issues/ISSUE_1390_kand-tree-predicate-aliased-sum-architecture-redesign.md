@@ -29,6 +29,7 @@
 ### Verification Methodology (PR27)
 
 ```bash
+# NOTE: scripts/diagnostics/kkt_residual.py is a forthcoming Sprint 28 Priority 9 deliverable (PR27) — not yet in the repo; this is the in-sprint Phase-0 command, not runnable on current main.
 .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/kand.gms --gdx kand_nlp.gdx --tol 1e-6 --json phase0_kand.json
 ```
 

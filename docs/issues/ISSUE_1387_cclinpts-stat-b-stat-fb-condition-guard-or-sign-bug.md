@@ -256,6 +256,7 @@ This gate predates the Sprint 27 Day-6 binding diagnosis and PR24/PR27. **Two co
 - **Expected Emit Pattern is a hypothesis (PR24):** the three candidate surfaces — (1) AD `_diff_sum` offset-enumeration (`src/ad/derivative_rules.py`, missing `j+1` cross-terms); (2) the gradient→stationarity **re-symbolization anchor** fix (the Sprint 27 blocker: a pure-offset term anchored on the wrong element); (3) a non-convex **warm-start** (PATH cold-converges to a spurious degenerate `b≈const`) — are hypotheses; each `file:line` is set by a Day-0 trace.
 - **Verification Methodology (PR27):**
   ```bash
+  # NOTE: scripts/diagnostics/kkt_residual.py is a forthcoming Sprint 28 Priority 9 deliverable (PR27) — not yet in the repo; this is the in-sprint Phase-0 command, not runnable on current main.
   .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/cclinpts.gms --gdx cclinpts_nlp.gdx --tol 1e-6 --json phase0_cclinpts.json
   ```
   Target: cclinpts **rel_diff < 1%**, MODEL STATUS 1 (was 69.9%). The harness should report **Case c** from a *cold* start (residual ≈ 5e-8 clean, but cold PATH diverges to the degenerate point) — which is exactly why the non-convex warm-start (change 3) is required, not just the AD fix.

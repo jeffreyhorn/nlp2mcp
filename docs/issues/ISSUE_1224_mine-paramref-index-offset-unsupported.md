@@ -62,6 +62,7 @@ The gate above covered the Sprint 27 **translate** fix (emit-only string render,
 - **Expected Emit Pattern is a hypothesis (PR24):** prep names the AD/Jacobian inversion (`src/ad/constraint_jacobian.py` cross-term build / `src/ad/derivative_rules.py:2793`) as the candidate surface — but it may instead be `src/kkt/stationarity.py` (cross-term assembly) or the same `src/ir/ast.py` render layer; established by the Day-0 trace, not trusted from this doc.
 - **Verification Methodology (PR27):**
   ```bash
+  # NOTE: scripts/diagnostics/kkt_residual.py is a forthcoming Sprint 28 Priority 9 deliverable (PR27) — not yet in the repo; this is the in-sprint Phase-0 command, not runnable on current main.
   .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/mine.gms --gdx mine_nlp.gdx --tol 1e-6 --json phase0_mine.json
   ```
   Target: mine **MODEL STATUS 1**. Expect **Case b** with `stat_x(l,i,j)` (the non-inverted `lam_pr` row) as the max-residual before the fix; the inverted shape drives that residual → 0. Also check boundary cells (Unknown 1.3): a residual non-zero *only* where `i-li(k)`/`j-lj(k)` lands out of domain ⇒ a domain-guard need, not the inversion.

@@ -229,6 +229,7 @@ The hand-derived `stat_r(i)` shape above is retained; this refresh adds the Spri
 - **Expected Emit Pattern is a hypothesis (PR24):** the candidate surface `src/kkt/stationarity.py:1835` (`_build_indexed_stationarity_expr`, the looser-vs-canonical `middle(i±1)` guard) is a *hypothesis*; the actual `file:line` is set by a Day-0 trace, never trusted from this doc.
 - **Verification Methodology (PR27):**
   ```bash
+  # NOTE: scripts/diagnostics/kkt_residual.py is a forthcoming Sprint 28 Priority 9 deliverable (PR27) — not yet in the repo; this is the in-sprint Phase-0 command, not runnable on current main.
   .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/camshape.gms --gdx camshape_nlp.gdx --tol 1e-6 --json phase0_camshape.json
   ```
   Target: camshape **area ≈ 4.2841**, MODEL STATUS 1. Expect **Case b** with `stat_r('i1')` ≈ 396 as the max-residual row (reproducing the Day-11 manual classification); the per-term guard fix drives it → 0. Blast-radius of the fix is enumerated by the Task 7 golden-staleness check, not here (Unknown 2.2).

@@ -33,6 +33,7 @@ The current emit **drops this term entirely** because the AD layer cannot evalua
 ### Verification Methodology (PR27)
 
 ```bash
+# NOTE: scripts/diagnostics/kkt_residual.py is a forthcoming Sprint 28 Priority 9 deliverable (PR27) — not yet in the repo; this is the in-sprint Phase-0 command, not runnable on current main.
 .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/otpop.gms --gdx otpop_nlp.gdx --tol 1e-6 --json phase0_otpop.json
 # Structural check: nu_zdef appears in stat_p with the last-element guard
 grep -E 'nu_zdef' data/gamslib/mcp/otpop_mcp.gms | grep -E "stat_p|sameas\(.*,'1990'\)"   # expect: present
