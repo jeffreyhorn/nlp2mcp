@@ -394,13 +394,13 @@ The Case-(a/b/c) discriminator — does the NLP KKT point satisfy the emitted st
 
 - Authored `docs/planning/EPIC_4/SPRINT_28/PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md`: §1 CLI interface (`<model.gms> [--gdx] [--tol] [--json]`); §2 dual-transfer mechanism (nu/lam/piL/piU + the inequality→`comp_*` generalization of the Day-9 `pwl_m`/`pwu_m` pattern, driven from `build_complementarity_pairs`; constraint-row consistency self-check); §3 Case-(a/b/c) verdict logic + `tol=1e-6` calibration; §4 JSON + human output; §5 the Phase-0 command string; §6 mine/camshape/kand invocation sketches; §7 validation-against-known-cases (launch a / camshape b / cclinpts c); §8 runtime / `--gdx` mitigation.
 - Grounded the multiplier-naming in `src/kkt/naming.py` (`nu_`/`lam_`/`piL_`/`piU_`) and the complementarity structure in `src/kkt/complementarity.py` (`comp_ineq`/`comp_bounds_lo`/`comp_bounds_up`), and the primal warm-start reuse in `_emit_nlp_presolve`.
-- Verified Unknowns 9.1/9.2/9.3 (harness design) + 1.3/2.2/5.2 (harness-as-instrument) and appended a Task 4 instrument entry to 5.1 in `KNOWN_UNKNOWNS.md`.
+- Advanced Unknowns 9.1/9.2/9.3 (harness design) + 1.3/2.2/5.2 (harness-as-instrument) to 🟡 **PARTIALLY VERIFIED (design scope)** in `KNOWN_UNKNOWNS.md` — the design answers the *how*, but the implementation-time measurements (runtime, residual parity, kand dual-transfer correctness) and Day-0 probes (GAMS clip/wrap) remain pending the in-sprint build; appended a Task 4 instrument entry to 5.1.
 
 ### Result
 
 - The harness spec is the standard Phase-0 "Verification Methodology" command (PR27), already referenced from the CONTRIBUTING.md template (Task 3). Tasks 5/6 cite `kkt_residual.py --gdx … --json phase0_<model>.json` and read `verdict` + `max_residual_row` as the traced fix-surface evidence (PR24).
 - The dual-transfer consistency self-check (constraint rows ≈ 0 before any stationarity verdict) is the load-bearing guard — a bad transfer reports `dual_transfer_inconsistent`, never a false Case-b. This is what makes the kand tree-conditioned-dual verdict (5.2 → 5.1) trustworthy.
-- Case calibration is pinned to Sprint 27 ground truth: camshape `stat_r('i1')`≈396 (Case b) vs cclinpts max|r|=5e-8 (Case c), cleanly separated by `tol=1e-6`.
+- Case-calibration *targets* are pinned to Sprint 27 ground truth — camshape `stat_r('i1')`≈396 (Case b) vs cclinpts max|r|=5e-8 (Case c), which `tol=1e-6` would cleanly separate — to be confirmed empirically when the harness is built and run in-sprint (this is design, not a measured result).
 
 ### Verification
 
@@ -430,7 +430,7 @@ grep -E 'mine|camshape|kand' docs/planning/EPIC_4/SPRINT_28/PRIORITY_9_KKT_RESID
 - [x] Machine-readable + human output format defined
 - [x] First three consumers (mine/camshape/kand) have sketched invocations
 - [x] The Phase-0 reference command string is finalized for Tasks 3 and 5
-- [x] Unknowns 9.1, 9.2, 9.3, 1.3, 2.2, 5.1, 5.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Unknowns 9.1, 9.2, 9.3, 1.3, 2.2, 5.1, 5.2 updated in KNOWN_UNKNOWNS.md to 🟡 PARTIALLY VERIFIED (design scope) — empirical/Day-0 verification pending the in-sprint build
 
 ---
 

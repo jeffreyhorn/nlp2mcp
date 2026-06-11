@@ -259,7 +259,7 @@ AD/KKT engineer
 
 ### Verification Results
 
-✅ **Status:** VERIFIED
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the harness is *designed* to detect boundary-cell residuals, but the GAMS clip-vs-wrap semantics probe remains a Day-0 task; the unknown's core question is not empirically answered here.
 
 **Verified by:** Task 4 (Design the KKT-Residual Verification Harness)
 **Date:** 2026-06-11
@@ -367,7 +367,7 @@ AD/KKT engineer
 
 ### Verification Results
 
-✅ **Status:** VERIFIED
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the harness pins the fix target, but the blast-radius *enumeration* is owned by Task 7's golden-staleness check (run after a prototype fix); not answered here.
 
 **Verified by:** Task 4 (Design the KKT-Residual Verification Harness)
 **Date:** 2026-06-11
@@ -758,7 +758,7 @@ AD/KKT engineer
 
 **— Task 4 (KKT-residual harness as the verification instrument):**
 
-- **Task 4 outcome:** ✅ VERIFIED (verification-instrument aspect)
+- **Task 4 outcome:** 🟡 PARTIALLY VERIFIED (design scope) — the harness is *designed* as the Case-(b/c) instrument; the empirical verdict comes from the in-sprint run.
 - **Verified by:** Task 4 (Design the KKT-Residual Verification Harness)
 - **Date:** 2026-06-11
 - **Findings:** The harness provides the Case-(b/c) split that drives the kand REPLAN decision: dual transfer consistent + `max|r|≤tol` ⇒ **Case c** (the 195-vs-2613 gap is non-convexity / LP first-stage-recourse coupling → Sprint 29 REPLAN); a `stat` row `> tol` ⇒ **Case b** (a localizable emit row, in-sprint fix). The actual gap localization is the Day-0 trace (Tasks 5/6) *using* this harness.
@@ -802,7 +802,7 @@ AD/KKT engineer
 
 ### Verification Results
 
-✅ **Status:** VERIFIED
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the dual-transfer for the tree-conditioned duals + the consistency self-check are *designed*; correctness is observed only when the harness is built and run on kand in-sprint.
 
 **Verified by:** Task 4 (Design the KKT-Residual Verification Harness)
 **Date:** 2026-06-11
@@ -1228,13 +1228,13 @@ AD/KKT + diagnostics engineer
 
 ### Verification Results
 
-✅ **Status:** VERIFIED
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the dual-transfer mechanism is fully *designed*; empirical validation on launch/camshape runs when the harness is built in-sprint.
 
 **Verified by:** Task 4 (Design the KKT-Residual Verification Harness)
 **Date:** 2026-06-11
 **Findings:** Designed the dual transfer (DESIGN §2): `nu_<eq>` ← NLP `eq.m` (free); `lam_<eq>` ← `eq.m` sign-normalized to the emitted `=g=`/`=l=` orientation (paired with `comp_ineq`); `piL_<v>`/`piU_<v>` ← `v.m` at active bounds (`v.l≈v.lo`/`v.l≈v.up`). The inequality→`comp_*` case generalizes the Sprint 27 Day-9 `pwl_m`/`pwu_m` parameter-load by driving it from `build_complementarity_pairs` (`comp_ineq` keyed by eq, `comp_bounds_lo`/`_up` keyed by `(var,indices)`). A constraint-row consistency self-check runs first — a non-zero *constraint* residual reports `dual_transfer_inconsistent`, never a false Case-b.
 **Evidence:** DESIGN §2 (Dual-Transfer Mechanism) + the reuse of `src/kkt/naming.py` + `src/kkt/complementarity.py` + the `_emit_nlp_presolve` primal warm-start.
-**Decision:** The harness drives the transfer from the emitter's own multiplier↔equation map; validated against launch (Case a) + camshape (Case b) known-good cases (DESIGN §7).
+**Decision:** The harness drives the transfer from the emitter's own multiplier↔equation map; a validation-against-known-cases *plan* (launch Case a + camshape Case b, DESIGN §7) runs when the harness is built.
 
 ---
 
@@ -1273,7 +1273,7 @@ AD/KKT + diagnostics engineer
 
 ### Verification Results
 
-✅ **Status:** VERIFIED
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the verdict logic + `tol=1e-6` are *designed*; threshold calibration on the Sprint 27 cases runs when the harness is built in-sprint.
 
 **Verified by:** Task 4 (Design the KKT-Residual Verification Harness)
 **Date:** 2026-06-11
@@ -1318,7 +1318,7 @@ AD/KKT + diagnostics engineer
 
 ### Verification Results
 
-✅ **Status:** VERIFIED
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the `--gdx` design answers the runtime concern, but the runtime + residual-parity *measurements* are an in-sprint acceptance check, not performed here.
 
 **Verified by:** Task 4 (Design the KKT-Residual Verification Harness)
 **Date:** 2026-06-11
