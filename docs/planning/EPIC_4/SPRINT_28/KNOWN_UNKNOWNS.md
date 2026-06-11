@@ -177,6 +177,16 @@ AD/KKT engineer
 - **Evidence:** CONTRIBUTING.md §"Day-0 Traced Fix-Surface (PR24) + Projection Discipline (PR25)" + the amended Phase-0 4-subsection template (`### Expected Emit Pattern` hypothesis note; `### PROCEED/REPLAN Signal` `Traced Fix-Surface (Day-0)` line).
 - **Decision:** Phase-0 PROCEED for this unknown now requires the traced surface; Task 5 applies PR24 when authoring the gate.
 
+
+**— Task 5 (Phase-0 acceptance gate authored):**
+
+- **Task 5 outcome:** 🟡 PARTIALLY VERIFIED (design scope)
+- **Verified by:** Task 5 (Author/Refresh Phase 0 Acceptance Gates)
+- **Date:** 2026-06-11
+- **Findings:** ISSUE_1224 gained a Phase-0 **Solve** gate (the prior gate covered the Sprint 27 translate fix): the inverted `stat_x` hand-derived shape, the harness Verification Methodology (target mine MS 1), and a `Traced Fix-Surface (Day-0)` PROCEED naming AD/Jacobian vs `stationarity.py` vs `ast.py` as the hypothesis (PR24).
+- **Evidence:** `docs/issues/ISSUE_1224_*.md` §"Phase 0 Refresh (Sprint 28 … Solve fix)".
+- **Decision:** The fix surface stays a Day-0-trace hypothesis; the gate's residual confirmation is the PROCEED gate.
+
 ---
 
 ## Unknown 1.2: Does the inverse-offset `lam_pr` term need the `l-1` companion term emitted in the same pass?
@@ -215,7 +225,13 @@ AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the Phase-0 gate + hand-derived shape are authored; the fix surface is a Day-0-trace hypothesis (PR24) and the residual confirmation is in-sprint.
+
+**Verified by:** Task 5 (Author/Refresh Phase 0 Acceptance Gates)
+**Date:** 2026-06-11
+**Findings:** The ISSUE_1224 Phase-0 Refresh hand-derives `stat_x(l,i,j)` with BOTH the inverse-offset `sum(k, lam_pr(k,l,i-li(k),j-lj(k)))` AND its `- sum(k, lam_pr(k,l-1,i,j))` companion lag term. Whether the two are emitted in one AD pass or two is a Day-0-trace question; the gate's PROCEED requires the harness residual → 0 with **both** present, so a one-term-only emit fails the gate.
+**Evidence:** `docs/issues/ISSUE_1224_*.md` §"Phase 0 Refresh" (hand-derived shape + harness Verification Methodology).
+**Decision:** Both terms are in the acceptance shape; the emit pass-structure is established by the Day-0 trace, not assumed.
 
 ---
 
@@ -266,6 +282,16 @@ AD/KKT engineer
 **Findings:** The harness is *designed* as the residual instrument for the boundary question: the mine sketch (DESIGN §6) would check the emitted `stat_x` residual ≈ 0 at *boundary* cells, not just interior cells — distinguishing a genuine cross-term inversion from an offset-out-of-domain clip that would need an explicit `$(...)` domain guard. (The GAMS clip-vs-wrap probe itself remains a Day-0 task; the harness would report whether the residual vanishes at the boundary once built.)
 **Evidence:** DESIGN §6 (mine invocation sketch — boundary-cell residual check) + the concrete forward-render artifact `IndexOffset.to_gams_string()` (`src/ir/ast.py:470`), specifically the `Call`/`ParamRef` offset branch (`src/ir/ast.py:572`, the Sprint 27 #1224 fix) that renders `base+li(k)` directly — the inverse `i-li(k)` form renders symmetrically through that same branch with a negated offset.
 **Decision:** The harness verdict for mine explicitly inspects boundary-cell residuals, so Unknown 1.3's clip/wrap risk surfaces as a Case-b-at-boundary signal rather than a silent infeasibility.
+
+
+**— Task 5 (Phase-0 acceptance gate authored):**
+
+- **Task 5 outcome:** 🟡 PARTIALLY VERIFIED (design scope)
+- **Verified by:** Task 5 (Author/Refresh Phase 0 Acceptance Gates)
+- **Date:** 2026-06-11
+- **Findings:** The ISSUE_1224 gate's Verification Methodology folds in the boundary-cell residual check (the Task-4 instrument): a residual non-zero *only* at offset-out-of-domain cells ⇒ a domain-guard need, not the inversion. The GAMS clip/wrap probe itself stays a Day-0 task.
+- **Evidence:** `docs/issues/ISSUE_1224_*.md` §"Phase 0 Refresh" (boundary-cell check).
+- **Decision:** Boundary behaviour is checked by the gate's harness step; the clip/wrap probe is Day-0.
 
 ---
 
@@ -329,6 +355,16 @@ AD/KKT engineer
 - **Evidence:** CONTRIBUTING.md §"Day-0 Traced Fix-Surface (PR24) + Projection Discipline (PR25)" + the amended Phase-0 4-subsection template (`### Expected Emit Pattern` hypothesis note; `### PROCEED/REPLAN Signal` `Traced Fix-Surface (Day-0)` line).
 - **Decision:** Phase-0 PROCEED for this unknown now requires the traced surface; Task 5 applies PR24 when authoring the gate.
 
+
+**— Task 5 (Phase-0 acceptance gate authored):**
+
+- **Task 5 outcome:** 🟡 PARTIALLY VERIFIED (design scope)
+- **Verified by:** Task 5 (Author/Refresh Phase 0 Acceptance Gates)
+- **Date:** 2026-06-11
+- **Findings:** ISSUE_1388's gate (refreshed) hand-derives the interior `stat_r(i)` cross-terms + the canonical `middle(i±1)` guards (vs the looser emitted guards) and the edge `convex_edge*` terms; surface `stationarity.py:1835` is named as the hypothesis (PR24).
+- **Evidence:** `docs/issues/ISSUE_1388_*.md` §"Hand-Derived KKT Shape" + §"Phase 0 Refresh".
+- **Decision:** Whether the missing/mis-signed term is interior or edge is pinned by the harness max-residual row at Day 0.
+
 ---
 
 ## Unknown 2.2: Does fixing `stat_r` risk the same multi-model blast radius as the Sprint 27 cesam2 bug-class fixes?
@@ -375,6 +411,16 @@ AD/KKT engineer
 **Evidence:** DESIGN §6 (camshape sketch) + the Task 7 golden-staleness cross-reference.
 **Decision:** The harness confirms *what* to fix (the max-residual `stat_r` term); Task 7 measures *how wide* the fix's byte-diff reaches — the 2.2 blast-radius concern is owned by Task 7, instrumented by this harness.
 
+
+**— Task 5 (Phase-0 acceptance gate authored):**
+
+- **Task 5 outcome:** 🟡 PARTIALLY VERIFIED (design scope)
+- **Verified by:** Task 5 (Author/Refresh Phase 0 Acceptance Gates)
+- **Date:** 2026-06-11
+- **Findings:** The ISSUE_1388 gate is *designed to* pin `stat_r('i1')`≈396 as the fix target; the blast-radius enumeration is explicitly deferred to the Task 7 golden-staleness check (run after a prototype fix), not asserted in the gate.
+- **Evidence:** `docs/issues/ISSUE_1388_*.md` §"Phase 0 Refresh" (blast-radius → Task 7).
+- **Decision:** Gate pins the fix target; Task 7 measures blast radius — complementary, not duplicated.
+
 ---
 
 ## Unknown 2.3: Does the #1424 subset-default fix (Sprint 27) fully validate the camshape warm-start, or are residual warm-start gaps possible?
@@ -412,7 +458,13 @@ AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the Phase-0 gate + hand-derived shape are authored; the fix surface is a Day-0-trace hypothesis (PR24) and the residual confirmation is in-sprint.
+
+**Verified by:** Task 5 (Author/Refresh Phase 0 Acceptance Gates)
+**Date:** 2026-06-11
+**Findings:** The ISSUE_1388 Phase-0 Refresh records the Sprint 27 Day-11 §4.6 verdict: post-#1424 the 10-symbol warm-start IS valid (embedded NLP reaches MS2 area=4.2841), yet the MCP stays MS5 with `stat_r(i1)` INFES≈396 — a **non-inert per-term emit divergence**, not a warm-start gap. So #1424 validated the warm-start; the residual gap is the remaining `stat_r` fix the gate targets.
+**Evidence:** `docs/issues/ISSUE_1388_*.md` §"Phase 0 Refresh" + §4.6 discriminator; BASELINE_METRICS §2 camshape row.
+**Decision:** The warm-start is sound (Case b, not a gap); the in-sprint fix is the per-term `stat_r` guard/coefficient, confirmed by the harness residual.
 
 ---
 
@@ -475,6 +527,16 @@ AD/KKT engineer
 - **Evidence:** CONTRIBUTING.md §"Day-0 Traced Fix-Surface (PR24) + Projection Discipline (PR25)" + the amended Phase-0 4-subsection template (`### Expected Emit Pattern` hypothesis note; `### PROCEED/REPLAN Signal` `Traced Fix-Surface (Day-0)` line).
 - **Decision:** Phase-0 PROCEED for this unknown now requires the traced surface; Task 5 applies PR24 when authoring the gate.
 
+
+**— Task 5 (Phase-0 acceptance gate authored):**
+
+- **Task 5 outcome:** 🟡 PARTIALLY VERIFIED (design scope)
+- **Verified by:** Task 5 (Author/Refresh Phase 0 Acceptance Gates)
+- **Date:** 2026-06-11
+- **Findings:** ISSUE_1393 gained a Phase-0 gate recording the `t→t__` aliasing redirect onto the `stationarity.py` symbolic-collapse path (the AD `_is_concrete_instance_of` surface was proven inert in Sprint 27); the single-guarded `stat_x`/`stat_p` shape is hand-derived, surface a Day-0 hypothesis (PR24).
+- **Evidence:** `docs/issues/ISSUE_1393_*.md` §"Phase 0: Acceptance Gate".
+- **Decision:** Which `stationarity.py` code path the aliasing flows through is established by the Day-0 trace, not the prep doc.
+
 ---
 
 ## Unknown 3.2: Does the `_try_eval_offset` `card(t)-ord(t)` extension (#1335, Approach B) interact with the #1393 collapse?
@@ -512,7 +574,13 @@ AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the Phase-0 gate + hand-derived shape are authored; the fix surface is a Day-0-trace hypothesis (PR24) and the residual confirmation is in-sprint.
+
+**Verified by:** Task 5 (Author/Refresh Phase 0 Acceptance Gates)
+**Date:** 2026-06-11
+**Findings:** The ISSUE_1335 and ISSUE_1393 gates record that otpop's +1 Solve/+1 Match needs **both** fixes — #1393 (the scalar `kdef` Sum-collapse in `stat_x`/`stat_p`) and #1335 (the missing `zdef` `nu_zdef` cross-term via the `card(t)-ord(t)` evaluator). They are sequenced and co-gated by the same harness run + the `cost ≈ 4217.80` target; the `_try_eval_offset` extension is independent of the #1393 collapse path but both must land.
+**Evidence:** `docs/issues/ISSUE_1393_*.md` + `docs/issues/ISSUE_1335_*.md` §"Phase 0: Acceptance Gate" (companion cross-links).
+**Decision:** otpop is gated on both #1393 and #1335; the Day-0 trace confirms whether they are independent edits or must be sequenced.
 
 ---
 
@@ -551,7 +619,13 @@ AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the Phase-0 gate + hand-derived shape are authored; the fix surface is a Day-0-trace hypothesis (PR24) and the residual confirmation is in-sprint.
+
+**Verified by:** Task 5 (Author/Refresh Phase 0 Acceptance Gates)
+**Date:** 2026-06-11
+**Findings:** The ISSUE_1335 gate's PROCEED requires the symbolic `card(t)-ord(t)` extension to restore `nu_zdef` **without** regressing other models' offset handling. Whether it regresses is an implementation-time check (the Task 7 golden-staleness enumeration over the corpus), gated here as a PROCEED precondition rather than asserted now.
+**Evidence:** `docs/issues/ISSUE_1335_*.md` §"PROCEED/REPLAN Signal" (no-regression precondition); Task 7 golden-staleness check.
+**Decision:** The no-regression requirement is a gate precondition verified at implementation, not by this docs-only task.
 
 ---
 
@@ -652,7 +726,13 @@ AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the Phase-0 gate + hand-derived shape are authored; the fix surface is a Day-0-trace hypothesis (PR24) and the residual confirmation is in-sprint.
+
+**Verified by:** Task 5 (Author/Refresh Phase 0 Acceptance Gates)
+**Date:** 2026-06-11
+**Findings:** The ISSUE_1387 Phase-0 Refresh records that change-1 (the AD `_diff_sum` `j+1`-offset cross-terms) was **residual-verified in Sprint 27** — eliminated-KKT max|r| = 5e-8 at the NLP optimum — so the gate REUSES that verification rather than re-deriving. The open risk is changes 2 (re-symbolization anchor) and 3 (non-convex warm-start), assessed in Task 6; all three must land together.
+**Evidence:** `docs/issues/ISSUE_1387_*.md` §"Phase 0 Refresh" (5e-8 residual reuse) + Hand-Derived KKT Shape.
+**Decision:** Change-1 cross-terms are accepted as Sprint-27-verified; the Match gain is contingent on changes 2/3, which carry the REPLAN risk (Task 6).
 
 ---
 

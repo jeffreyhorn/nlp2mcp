@@ -4,7 +4,7 @@
 **Status:** TRANSLATE FIXED (Sprint 27 Day 12, 2026-06-08) — mine now translates + compiles clean (+1 Translate). Correct SOLVE (the parameter-valued-offset KKT cross-term) is DEFERRED to Sprint 28; mine's next failure mode is `model_infeasible` (see below).
 **Severity:** Medium — Translation aborts with internal error
 **Date:** 2026-04-07
-**Last Updated:** 2026-06-08 (Sprint 27 Day 12 — emit-render fix lands +1 Translate; Solve cross-term → Sprint 28)
+**Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 Refresh — Sprint 28 Solve gate added; prior: Sprint 27 Day 12 — emit-render fix lands +1 Translate; Solve cross-term → Sprint 28)
 **Affected Models:** mine
 
 ---
@@ -53,6 +53,21 @@ gams /tmp/mine_mcp.gms lo=2 | grep 'MODEL STATUS'           # expect: 4 Infeasib
 ### PROCEED/REPLAN Signal
 
 **PROCEED** if: (a) mine translates + compiles clean (0 errors); (b) parameter-valued offsets render as `base+param(idx)`; (c) Const/symbol offset rendering unchanged (regression). **All met (Day 12).** **REPLAN** if any currently-translating model regresses (impossible by construction — the branch only fires where emit previously raised).
+
+### Phase 0 Refresh (Sprint 28 Prep Task 5 — Solve fix, PR24 + PR27)
+
+The gate above covered the Sprint 27 **translate** fix (emit-only string render, landed). This refresh is the Sprint 28 **Solve** gate — the `stat_x` cross-term that must invert the parameter-valued offset.
+
+- **Hand-Derived KKT Shape (Solve):** `stat_x(l,i,j)` ← `sum(k, lam_pr(k,l,i-li(k),j-lj(k))) - sum(k, lam_pr(k,l-1,i,j))` (the offset is *inverted* `i-li(k)`/`j-lj(k)` relative to the forward constraint `pr.. x(l,i+li(k),j+lj(k))`, plus the `l-1` lag). The emit currently produces the non-inverted `sum(k, lam_pr(k,l,i,j))` → `model_infeasible`.
+- **Expected Emit Pattern is a hypothesis (PR24):** prep names the AD/Jacobian inversion (`src/ad/constraint_jacobian.py` cross-term build / `src/ad/derivative_rules.py:2793`) as the candidate surface — but it may instead be `src/kkt/stationarity.py` (cross-term assembly) or the same `src/ir/ast.py` render layer; established by the Day-0 trace, not trusted from this doc.
+- **Verification Methodology (PR27):**
+  ```bash
+  # NOTE: scripts/diagnostics/kkt_residual.py is a forthcoming Sprint 28 Priority 9 deliverable (PR27) — not yet in the repo; this is the in-sprint Phase-0 command, not runnable on current main.
+  .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/mine.gms --gdx mine_nlp.gdx --tol 1e-6 --json phase0_mine.json
+  ```
+  Target: mine **MODEL STATUS 1**. Expect **Case b** with `stat_x(l,i,j)` (the non-inverted `lam_pr` row) as the max-residual before the fix; the inverted shape drives that residual → 0. Also check boundary cells (Unknown 1.3): a residual non-zero *only* where `i-li(k)`/`j-lj(k)` lands out of domain ⇒ a domain-guard need, not the inversion.
+- **Traced Fix-Surface (Day-0):** _TBD at sprint Day 0 — AD/Jacobian vs `stationarity.py` vs `ast.py` is a hypothesis (PR24); confirm by trace + harness residual before any `src/` change._
+- **Cross-links:** KNOWN_UNKNOWNS Category 1 (Unknowns 1.1, 1.2, 1.3); BASELINE_METRICS §2 mine provenance row (S27 +1 Translate; Solve carried to S28, +1 firm).
 
 ---
 

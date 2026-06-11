@@ -4,11 +4,44 @@
 **Status:** OPEN — THREE partial fixes landed 2026-04-30 (`_preferred_decl_domain` arity-guard drop round 1, `_diff_prod` collapse fix round 2, var-init-skip-under-presolve round 3). Residuals reduced 3× under `--nlp-presolve` (24.76 → 8.58). The remaining infeasibility was diagnosed (round 3) as a PATH numerical-convergence issue at a singular Jacobian, NOT an emit / AD bug. The warm-start IS a valid KKT point (all primal & stationarity equations evaluate to ~0 at machine precision); PATH cannot navigate from it. See §"Investigation 2026-04-30 (round 3)" below.
 **Severity:** Medium — model compiles and PATH runs but returns INFEASIBLE; users get no usable solution
 **Date:** 2026-04-30
-**Last Updated:** 2026-04-30
+**Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 acceptance gate authored (extending existing doc); prior: 2026-04-30)
 **Affected Models:** camcge
 **Predecessors:**
 - [#1245](https://github.com/jeffreyhorn/nlp2mcp/issues/1245) (CLOSED, PR #1329) — wrapped traded-only multiplier terms in `stat_pd` / `stat_xxd` with `$(it(i))` to remove EXECERROR=4 from `1/gamma(in) = 1/0` and `0**negative`.
 - [#1327](https://github.com/jeffreyhorn/nlp2mcp/issues/1327) (CLOSED, PR #1328) — `declaration_domain` machinery used by #1245.
+
+---
+
+## Phase 0: Acceptance Gate (Sprint 28 Prep Task 5 — Priority 6 camcge)
+
+**Authored:** 2026-06-11 (Sprint 28 Prep Task 5 per PR20 + PR24). **Diagnosis-heavy / conditional track** — extends this existing ISSUE_1330 (no duplicate filed). See the Task 6 precondition below.
+**Target:** camcge → MODEL STATUS 1 (currently MODEL STATUS 4 Infeasible). **Unusual gate:** the three Sprint 27 investigation rounds proved the KKT system is *structurally correct* — the warm-start is a valid KKT point (all primal + stationarity equations ≈ 0 at machine precision, e.g. `gdp_check ≈ −4.83e-10`, `stat_cd_check ≈ 1e-7`). The remaining infeasibility is **PATH numerical convergence at a singular/ill-conditioned Jacobian, not an emit/AD bug.**
+**Cross-links:** KNOWN_UNKNOWNS Category 6 (Unknowns 6.1, 6.2); BASELINE_METRICS §2 camcge provenance row (`path_syntax_error` → `model_infeasible`, Sprint 27 #1381 bucket-forward; Solve **conditional**); harness design `docs/planning/EPIC_4/SPRINT_28/PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md`.
+
+### Hand-Derived KKT Shape
+
+Already established and verified in Sprint 27 (§"Investigation 2026-04-30 (round 3)" below): the full CGE stationarity + market-clearing system evaluates to ≈ 0 at the NLP solution. No per-term emit shape is in dispute — this gate's job is to confirm (via the harness) that the residual is clean and the failure is PATH-side, then decide between a PATH-side fix and an inherent-degeneracy finding.
+
+### Expected Emit Pattern (hypothesis — PR24)
+
+**No emit-change hypothesis.** The emit is believed correct; if the Day-0 harness run instead shows a non-zero stationarity residual (Case b), that would overturn the Sprint 27 finding and redirect to an emit fix — so the harness run is the gate, not an assumed surface.
+
+### Verification Methodology (PR27)
+
+```bash
+# NOTE: scripts/diagnostics/kkt_residual.py is a forthcoming Sprint 28 Priority 9 deliverable (PR27) — not yet in the repo; this is the in-sprint Phase-0 command, not runnable on current main.
+.venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/camcge.gms --gdx camcge_nlp.gdx --tol 1e-6 --json phase0_camcge.json
+```
+
+Expected per the Sprint 27 finding: dual transfer **consistent**, all stationarity residuals ≈ 0, but a cold-start PATH solve diverges → **Case c (non-convexity / singular-Jacobian degeneracy)**. Target on success: camcge MODEL STATUS 1. Candidate PATH-side levers to try once Case c is confirmed: Jacobian scaling (`--scale`), bound-multiplier (piL/piU) warm-start initialization, or a numéraire/price-normalization fix.
+
+### PROCEED/REPLAN Signal
+
+**PROCEED to a PATH-side fix** if the harness confirms **Case c** AND a Day-0 trace finds a concrete lever (scaling option / redundant market-clearing row / numéraire fix) that lets PATH navigate from the valid KKT point — the **Traced Fix-Surface (Day-0)** is that lever (PR24). **PROCEED to an emit fix** only if the harness unexpectedly reports **Case b** (overturning the Sprint 27 finding). **REPLAN to an inherent-degeneracy finding** (an Epic 5 observation task, not a Sprint 28 Solve) if Case c holds and no PATH-side lever resolves the singular Jacobian — camcge's +1 Solve is **conditional** on this.
+
+**Task 6 precondition:** one of the three diagnosis-heavy carryforwards (#1387/#1390/camcge); its REPLAN risk (inherent CGE degeneracy) is assessed in Task 6 (PR16) **before** Priority-6 `src/` or PATH-tuning budget is spent.
+
+**Traced Fix-Surface (Day-0):** _TBD at sprint Day 0 — the Sprint 27 finding says PATH-side (scaling / bound-init / numéraire), not emit; confirm via the harness Case-c verdict before any change (PR24)._
 
 ---
 

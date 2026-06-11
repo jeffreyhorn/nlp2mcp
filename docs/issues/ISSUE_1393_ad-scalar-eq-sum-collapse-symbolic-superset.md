@@ -4,7 +4,7 @@
 **Status:** DEFERRED to Sprint 28 (Sprint 27 Day 0 binding verdict = REPLAN; Approach C was shown to be inert — see "Sprint 28 carryforward" below). The linked GitHub issue remains open.
 **Severity:** Medium — produces an over-counted KKT Jacobian cross-term (off by factor |subset| = 17× for otpop). Differs from the NLP optimum.
 **Date:** 2026-05-12
-**Last Updated:** 2026-06-07 (Sprint 27 Day 8 — Sprint 28 carryforward filed; Day 0 Approach-C REPLAN recorded; now distinct from #1335)
+**Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 acceptance gate authored; prior: Sprint 27 Day 8 — Sprint 28 carryforward filed; Day 0 Approach-C REPLAN recorded; now distinct from #1335)
 **Affected Models:** otpop (confirmed; the `kdef` scalar equation with `sum(t, del(t)*p(t)*x(t))`). Likely affects other models with scalar-aggregation constraints over subset domains referenced by indexed stationarity equations.
 **Target Sprint:** ~~Sprint 27~~ → **Sprint 28** (redirect to the `stationarity.py` symbolic-collapse path; the documented Approach-C patch site never executes — see below).
 **Cross-references:**
@@ -14,6 +14,47 @@
   - #1381 (Pattern C Phase B redesign — Sprint 26 Day 3).
   - #1385 (Option 1 short-circuit redesign — Sprint 26 Day 4).
   - #1390 (kand tree-predicate-aliased Sum redesign — Sprint 26 Day 7).
+
+## Phase 0: Acceptance Gate (Sprint 28 Prep Task 5)
+
+**Authored:** 2026-06-11 (Sprint 28 Prep Task 5 per PR20 + PR24).
+**Target equation(s):** `stat_x(tt)` + `stat_p(tt)` for otpop, from the scalar `kdef.. k =e= sum(t, del(t)*p(t)*x(t))` where `t ⊂ tt`.
+**Cross-links:** KNOWN_UNKNOWNS Category 3 (Unknowns 3.1, 3.2, 3.3); BASELINE_METRICS §2 otpop provenance row (`path_syntax_error` → `model_infeasible`, a Sprint 27 P5 bucket-forward move); harness design `docs/planning/EPIC_4/SPRINT_28/PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md`. Companion: #1335 (the `zdef` cross-term); otpop's +1 Solve/+1 Match needs **both**.
+
+### Hand-Derived KKT Shape
+
+`kdef` is a scalar equality; its cross-term into the indexed `stat_x(tt)`/`stat_p(tt)` is a SINGLE guarded term, not a Sum over the inner subset `t`:
+
+- `stat_x(tt)` ← `(del(tt)*0.365*(1-c)*p(tt))$(t(tt)) * nu_kdef`
+- `stat_p(tt)` ← `(del(tt)*0.365*(1-c)*x(tt))$(t(tt)) * nu_kdef`
+
+The emitted (buggy) form over-counts by enumerating the inner subset: `sum(t__, (-1)*(del(t__)*0.365*(1-c)*p(tt)) * nu_kdef)$(t(tt))` — off by factor |t| = 17×.
+
+### Expected Emit Pattern (hypothesis — PR24)
+
+`otpop_mcp.gms` should emit, in `stat_x`/`stat_p`, the single `$(t(tt))`-guarded coefficient × `nu_kdef` with **no** `sum(t__, …)` wrapper. **This is the prep hypothesis; the actual collapse site is established by the Day-0 trace, not trusted from this doc.** The Sprint 27 Day-0 verdict already REDIRECTED the surface off the AD `_is_concrete_instance_of` (proven inert) onto the `stationarity.py` symbolic-collapse path where the `t→t__` aliasing occurs — re-confirm at Day 0.
+
+### Verification Methodology (PR27)
+
+```bash
+# NOTE: scripts/diagnostics/kkt_residual.py is a forthcoming Sprint 28 Priority 9 deliverable (PR27) — not yet in the repo; this is the in-sprint Phase-0 command, not runnable on current main.
+.venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/otpop.gms --gdx otpop_nlp.gdx --tol 1e-6 --json phase0_otpop.json
+# Structural check: regenerate the MCP to a temp path first (do NOT grep the
+# committed data/gamslib/mcp/otpop_mcp.gms — it may be stale), then assert no
+# over-counted Sum survives in the kdef cross-term
+.venv/bin/python -m src.cli data/gamslib/raw/otpop.gms -o /tmp/otpop_mcp.gms --skip-convexity-check --quiet
+grep -cE 'sum\(t__, .*\* *nu_kdef' /tmp/otpop_mcp.gms     # expect: 0
+```
+
+Target: otpop `cost ≈ 4217.80` (NLP optimum), MODEL STATUS 1. Before the fix the harness should report **Case b** with the over-counted `stat_x(tt)`/`stat_p(tt)` row as the max-residual; after the single-guarded shape lands, those residuals → 0 at the NLP KKT point.
+
+### PROCEED/REPLAN Signal
+
+**PROCEED** when: (a) a Day-0 trace localizes the `t→t__` aliasing to a concrete `file:line` in `stationarity.py` (the **Traced Fix-Surface (Day-0)** — do NOT trust the prep surface, PR24); (b) the harness reports Case b with the over-counted `stat_x`/`stat_p` row as max-residual; (c) the hand-derived single-guarded shape drives that residual → 0. **REPLAN** if the Day-0 trace shows the collapse is not localizable to a single emit site (couple with #1335 or re-scope to Sprint 29).
+
+**Traced Fix-Surface (Day-0):** _TBD at sprint Day 0 — prep names the `stationarity.py` symbolic-collapse path as the hypothesis (PR24); confirm by trace + harness residual before any `src/` change._
+
+---
 
 ## Sprint 28 carryforward — Sprint 27 Day 0 binding verdict (2026-06-01): REPLAN (Approach C disproven)
 

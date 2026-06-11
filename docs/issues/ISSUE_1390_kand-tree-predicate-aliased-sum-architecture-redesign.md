@@ -4,9 +4,46 @@
 **Status:** DEFERRED to Sprint 28 (Sprint 27 Day 5 re-scoped Phase 0 = re-REPLAN; the documented fix premise is disproven — see "Sprint 28 carryforward" below). The linked GitHub issue remains open.
 **Severity:** Medium — produces a valid MCP solve that converges to Optimal but with ~92.5% rel_diff vs the NLP optimum; not a localized AD-helper bug but an architecture-level reclassification.
 **Date:** 2026-05-12
-**Last Updated:** 2026-06-06
+**Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 acceptance gate authored; prior: 2026-06-06)
 **Affected Models:** kand (target); likely affects other models with tree-predicate-aliased Sum bodies (stochastic-programming scenario-tree shapes).
 **Target Sprint:** ~~Sprint 27~~ → **Sprint 28** (re-diagnose the TRUE mismatch source — it is NOT the phantom-term enumeration; see below).
+
+## Phase 0: Acceptance Gate (Sprint 28 Prep Task 5)
+
+**Authored:** 2026-06-11 (Sprint 28 Prep Task 5 per PR20 + PR24). **Diagnosis-heavy / REPLAN-prone track** — see the Task 6 precondition below.
+**Target:** re-diagnose the TRUE 195.0-vs-2613.0 gap (kand `cost` MCP 195.0 vs NLP/LP 2613.0). **The phantom-term enumeration in `stat_y` is proven inert (Sprint 27 Day 5) and is explicitly OUT OF SCOPE.**
+**Cross-links:** KNOWN_UNKNOWNS Category 5 (Unknowns 5.1, 5.2); BASELINE_METRICS §2 kand provenance row (`model_optimal`/mismatch; Match-only, 0 Solve credit); harness design `docs/planning/EPIC_4/SPRINT_28/PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md`; Sprint 27 re-REPLAN evidence `docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_ASSESSMENT.md` §3.5.
+
+### Hand-Derived KKT Shape
+
+**Not yet hand-derivable** — that is the point of this gate. The Sprint 27 Day-5 prototype proved the documented shape (the `tree(nn,n)`-predicate-conditioned aliased-Sum collapse in `stat_y`) is **inert**: the collapsed emit still solves to `195.0 ≠ 2613.0`. The true defect is therefore elsewhere; the candidate stationarity targets to hand-derive at Day 0 are:
+
+- `stat_y(j,t,n)` / `bal(j,t,n)` stationarity (the back-link `Sum(nn$tree(nn,n), y(j,t-1,nn))`);
+- the `t-1` ↔ `t+1` lag duality (whether the emitted lag direction matches the NLP's);
+- the LP first-stage / recourse coupling (a structural, not per-term, divergence).
+
+### Expected Emit Pattern (hypothesis — PR24)
+
+**No emit-pattern hypothesis is asserted** — per PR24 and the Sprint 27 re-REPLAN, the fix surface is unknown until a fresh Day-0 trace localizes the 195-vs-2613 gap. The prior `stationarity.py:3257`/`:3088` offset-re-symbolization surface is recorded as **disproven** (collapse achievable there but solution-inert), NOT as the surface.
+
+### Verification Methodology (PR27)
+
+```bash
+# NOTE: scripts/diagnostics/kkt_residual.py is a forthcoming Sprint 28 Priority 9 deliverable (PR27) — not yet in the repo; this is the in-sprint Phase-0 command, not runnable on current main.
+.venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/kand.gms --gdx kand_nlp.gdx --tol 1e-6 --json phase0_kand.json
+```
+
+The harness is the **localization instrument**. The dual-transfer consistency self-check must pass first (kand's `lam_dembalx` are `tree(nn,n)`-conditioned; Unknown 5.2). Then: **Case b** (a `stat`/`comp` row exceeds tol) ⇒ a localizable emit row → in-sprint fix; **Case c** (all residuals ≈ 0 but cold PATH lands at 195.0) ⇒ the gap is non-convexity / LP-recourse coupling, not an emit bug. Target on success: kand `cost = 2613.0` (Match).
+
+### PROCEED/REPLAN Signal
+
+**PROCEED to a `src/` fix** ONLY if: (a) the Task 6 hypothesis-validation (below) plus a Day-0 trace localize the gap to a concrete stationarity/complementarity `file:line` (the **Traced Fix-Surface (Day-0)**, PR24); AND (b) the harness reports **Case b** with that row as max-residual. **REPLAN to Sprint 29** (explicit exit) if the harness reports **Case c** (residuals clean, gap is LP first-stage/recourse-coupling architecture) — file a re-scoped Phase-0 successor; do NOT commit `src/` against a Case-c verdict.
+
+**Task 6 precondition:** this track is one of the three diagnosis-heavy carryforwards (#1387/#1390/camcge). Its REPLAN risk is assessed in Task 6 (PR16 hypothesis-validation) **before** any Priority-5 `src/` budget is spent.
+
+**Traced Fix-Surface (Day-0):** _TBD at sprint Day 0 — no prep surface is trusted (the prior one is disproven, PR24); the harness Case-(b/c) verdict + Day-0 trace establish it._
+
+---
 
 ## Sprint 28 carryforward — Sprint 27 Day 5 re-scoped Phase 0 result (2026-06-06): re-REPLAN
 
