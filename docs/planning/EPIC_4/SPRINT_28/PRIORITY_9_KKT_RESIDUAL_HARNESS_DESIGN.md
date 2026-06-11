@@ -10,7 +10,7 @@
 ## 1. CLI Interface
 
 ```bash
-.venv/bin/python scripts/diagnostics/kkt_residual.py <model.gms> [--gdx <solution.gdx>] [--tol 1e-6] [--json <out.json>] [--nlp-solver <name>]
+.venv/bin/python scripts/diagnostics/kkt_residual.py <model.gms> [--gdx <solution.gdx>] [--tol 1e-6] [--json <out.json>] [--nlp-solver <name>] [--no-cold-start]
 ```
 
 | Argument | Required | Meaning |
@@ -20,6 +20,7 @@
 | `--tol <float>` | no (default `1e-6`) | Per-row residual tolerance separating Case b from Case c. |
 | `--json <out.json>` | no | Write the machine-readable report to this path (human summary always goes to stdout). |
 | `--nlp-solver <name>` | no (default `CONOPT`) | NLP solver for the no-`--gdx` path. |
+| `--no-cold-start` | no (flag) | Skip the optional cold-start MCP solve used to split Case a from Case c (§3); report the residual + Case b/guard only. Use when only the stationarity residual is wanted (faster). |
 
 **Pipeline (no `--gdx`):**
 
@@ -91,7 +92,7 @@ Before trusting any *stationarity* residual, the harness verifies the **constrai
 
 `tol = 1e-6` cleanly separates the camshape Case-b (≈ 396) from the cclinpts Case-c (5e-8); it is `--tol`-tunable for models with looser numerics.
 
-**Case-c detection (Unknown 9.2 Q2):** distinguishing Case c from Case a requires the cold-start comparison — the harness optionally runs a second MCP solve from the *default* start (not warm-started) and checks whether PATH still reaches the NLP optimum. If `max|r| ≤ tol` but cold PATH diverges, it is Case c. (Skippable via a flag when only the residual is wanted.)
+**Case-c detection (Unknown 9.2 Q2):** distinguishing Case c from Case a requires the cold-start comparison — the harness optionally runs a second MCP solve from the *default* start (not warm-started) and checks whether PATH still reaches the NLP optimum. If `max|r| ≤ tol` but cold PATH diverges, it is Case c. (Skippable via `--no-cold-start` when only the residual is wanted — the harness then reports the residual + Case b / `dual_transfer_inconsistent` only, leaving the a-vs-c split unresolved.)
 
 ---
 
