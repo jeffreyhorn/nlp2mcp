@@ -617,9 +617,10 @@ grep -Ei 'cclinpts|#1387|kand|#1390|camcge' docs/planning/EPIC_4/SPRINT_28/PRIOR
 
 ## Task 7: Golden-Staleness Drift Audit + CI-Check Design (PR26 / Priority 8)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
 **Estimated Time:** 3–4 hours
+**Completed:** 2026-06-11
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Development team
 **Dependencies:** Task 2
@@ -655,11 +656,17 @@ Sprint 27 retro §"What We'd Do Differently #3": several goldens (cesam/fawley/k
 
 ### Changes
 
-To be completed.
+- Ran a full drift audit over all 164 committed goldens (regenerate via the pipeline emit `python -m src.cli <raw> -o <out> --quiet` [+`--nlp-presolve`], byte-diff against committed).
+- Authored `docs/planning/EPIC_4/SPRINT_28/PRIORITY_8_GOLDEN_STALENESS_DESIGN.md`: §1 drift inventory, §2 allowlist, §3 determinism, §4 `check_golden_staleness.py [--fix]` interface + `make regen-goldens`, §5 CI integration, §6 one-time refresh-commit scope.
+- Updated KNOWN_UNKNOWNS.md: 8.1 ✅ VERIFIED (drift measured), 8.3 ✅ VERIFIED (determinism measured), 8.2 🟡 PARTIALLY VERIFIED (CI runtime designed; in-sprint measurement pending).
 
 ### Result
 
-To be completed.
+- **Drift inventory: 154 CLEAN / 4 DRIFTED / 6 allowlist.** The 4 drifted are **all presolve variants** — `camshape`/`cesam`/`fawley`/`korcge` `_mcp_presolve.gms` (7/128/22/247 changed lines) — Sprint 27 deliberately didn't sweep these; the 153 plain `*_mcp.gms` goldens are 100% clean/allowlisted.
+- **Allowlist: 6 out-of-scope models** (danwolfe/decomp/saras multi-solve drivers + nemhaus/nonsharp/trnspwl discrete MIP) with committed goldens that emit no longer produces. No non-deterministic models.
+- **Determinism-clean** under PR12 (8/8 spot-check byte-identical at `PYTHONHASHSEED` 0 vs 42).
+- **Check + CI designed:** `check_golden_staleness.py [--fix]` (regenerate→diff→report, exit non-zero on unexpected drift) + a `.github/workflows/golden-staleness.yml` job on `src/{ad,kkt,emit,ir}/` PRs + `make regen-goldens`. Runtime mitigation: parallel regen + changed-emit subset fallback + nightly sweep (8 slow-emit models drive the >5-min concern).
+- **One-time refresh commit = 4 files** (the drifted presolve goldens), landed Day 0/1 separate from any fix.
 
 ### Verification
 
@@ -684,13 +691,13 @@ grep -Ei 'allowlist|\.github/workflows|regen-goldens' docs/planning/EPIC_4/SPRIN
 
 ### Acceptance Criteria
 
-- [ ] Drift audit run; current drift inventory documented
-- [ ] Allowlist defined with a reason per entry
-- [ ] Check interface (`check_golden_staleness.py [--fix]`) designed with exit-code semantics
-- [ ] CI integration designed (trigger paths, runtime budget, failure-message format)
-- [ ] One-time corpus-refresh commit scope sized (which models)
-- [ ] Determinism-clean under the PR12 guard confirmed in the design
-- [ ] Unknowns 8.1, 8.2, 8.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Drift audit run; current drift inventory documented (154 clean / 4 drifted / 6 allowlist)
+- [x] Allowlist defined with a reason per entry (6 out-of-scope models)
+- [x] Check interface (`check_golden_staleness.py [--fix]`) designed with exit-code semantics
+- [x] CI integration designed (trigger paths, runtime budget, failure-message format)
+- [x] One-time corpus-refresh commit scope sized (4 drifted presolve goldens)
+- [x] Determinism-clean under the PR12 guard confirmed (8/8 spot-check byte-identical)
+- [x] Unknowns 8.1, 8.2, 8.3 updated in KNOWN_UNKNOWNS.md (8.1/8.3 ✅ VERIFIED, 8.2 🟡 design scope)
 
 ---
 
