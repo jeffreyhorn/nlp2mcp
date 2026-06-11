@@ -1248,7 +1248,13 @@ Pipeline/CI engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Verified by:** Task 7 (Golden-Staleness Drift Audit + CI-Check Design)
+**Date:** 2026-06-11
+**Findings:** Drift audit run over all 164 committed goldens (regenerate via the pipeline emit `python -m src.cli <raw> -o <out> --quiet` [+`--nlp-presolve`], byte-diff). **Result: 154 CLEAN, 4 DRIFTED, 6 allowlist.** The 4 drifted are **all presolve variants** — `camshape`/`cesam`/`fawley`/`korcge` `_mcp_presolve.gms` (Sprint 27 deliberately didn't sweep them); the 153 plain `*_mcp.gms` goldens are 100% clean/allowlisted. The allowlist is 6 out-of-scope models (3 multi-solve drivers danwolfe/decomp/saras + 3 discrete MIP nemhaus/nonsharp/trnspwl).
+**Evidence:** PRIORITY_8_GOLDEN_STALENESS_DESIGN.md §1 (drift inventory) + §2 (allowlist).
+**Decision:** One-time refresh commit = the 4 drifted presolve goldens only (small, bounded); allowlist seeded with the 6 out-of-scope models.
 
 ---
 
@@ -1287,7 +1293,13 @@ Pipeline/CI engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (design scope)
+
+**Verified by:** Task 7 (Golden-Staleness Drift Audit + CI-Check Design)
+**Date:** 2026-06-11
+**Findings:** CI trigger paths designed (`src/{ad,kkt,emit,ir}/**` + the check/allowlist/workflow files), modeled on `pr19-emit-solve-validation.yml`. Runtime: the local audit found **8 slow-emit models** (clearlak/dinam/ferts/ganges/gangesx/indus/tabora/turkpow, >240 s each; ganges/gangesx ~minutes) that dominate a full-corpus regen — serially this exceeds the 5-min friction threshold. Mitigation designed: parallel regen (≈6 workers, wall-clock ≈ slowest single model) + a changed-emit-subset fallback on PRs with a nightly full sweep. The CI-environment timing itself is an in-sprint measurement.
+**Evidence:** PRIORITY_8_GOLDEN_STALENESS_DESIGN.md §4 (interface) + §5 (CI integration); §1 slow-emit list.
+**Decision:** CI runs report-mode in parallel on `src/{ad,kkt,emit,ir}/` PRs; fall back to the changed-emit subset + nightly sweep if the parallel full regen nears 5 min (confirm timing in-sprint).
 
 ---
 
@@ -1325,7 +1337,13 @@ Pipeline/CI engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Verified by:** Task 7 (Golden-Staleness Drift Audit + CI-Check Design)
+**Date:** 2026-06-11
+**Findings:** Regeneration is determinism-clean. Spot-check: 8 representative models (abel, trnsport, launch, qdemo7, cesam2, korcge, mine, camshape) regenerated under `PYTHONHASHSEED=0` vs `42` → **byte-identical for all 8**, matching the Sprint 27 Day-13 full-pipeline PR12 result (byte-identical ×3 seeds).
+**Evidence:** PRIORITY_8_GOLDEN_STALENESS_DESIGN.md §3 (determinism).
+**Decision:** The check treats any regen≠committed diff as genuine drift, not seed noise; `--fix` re-emits twice and asserts byte-identity before overwriting.
 
 ---
 
