@@ -35,8 +35,11 @@ The current emit **drops this term entirely** because the AD layer cannot evalua
 ```bash
 # NOTE: scripts/diagnostics/kkt_residual.py is a forthcoming Sprint 28 Priority 9 deliverable (PR27) — not yet in the repo; this is the in-sprint Phase-0 command, not runnable on current main.
 .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/otpop.gms --gdx otpop_nlp.gdx --tol 1e-6 --json phase0_otpop.json
-# Structural check: nu_zdef appears in stat_p with the last-element guard
-grep -E 'nu_zdef' data/gamslib/mcp/otpop_mcp.gms | grep -E "stat_p|sameas\(.*,'1990'\)"   # expect: present
+# Structural check: regenerate the MCP to a temp path first (do NOT grep the
+# committed data/gamslib/mcp/otpop_mcp.gms — it may be stale), then assert
+# nu_zdef appears in stat_p with the last-element guard
+.venv/bin/python -m src.cli data/gamslib/raw/otpop.gms -o /tmp/otpop_mcp.gms --skip-convexity-check --quiet
+grep -E 'nu_zdef' /tmp/otpop_mcp.gms | grep -E "stat_p|sameas\(.*,'1990'\)"   # expect: present
 ```
 
 Target: otpop `cost ≈ 4217.80`, MODEL STATUS 1. Before the fix the harness reports **Case b** with `stat_p(tt)` (at the last element) as the max-residual row — the missing `nu_zdef` term; after Approach B lands, that residual → 0.

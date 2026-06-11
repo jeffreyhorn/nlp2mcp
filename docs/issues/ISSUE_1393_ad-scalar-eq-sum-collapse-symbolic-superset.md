@@ -39,8 +39,11 @@ The emitted (buggy) form over-counts by enumerating the inner subset: `sum(t__, 
 ```bash
 # NOTE: scripts/diagnostics/kkt_residual.py is a forthcoming Sprint 28 Priority 9 deliverable (PR27) — not yet in the repo; this is the in-sprint Phase-0 command, not runnable on current main.
 .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/otpop.gms --gdx otpop_nlp.gdx --tol 1e-6 --json phase0_otpop.json
-# Structural check: no over-counted Sum survives in the kdef cross-term
-grep -cE 'sum\(t__, .*\* *nu_kdef' data/gamslib/mcp/otpop_mcp.gms     # expect: 0
+# Structural check: regenerate the MCP to a temp path first (do NOT grep the
+# committed data/gamslib/mcp/otpop_mcp.gms — it may be stale), then assert no
+# over-counted Sum survives in the kdef cross-term
+.venv/bin/python -m src.cli data/gamslib/raw/otpop.gms -o /tmp/otpop_mcp.gms --skip-convexity-check --quiet
+grep -cE 'sum\(t__, .*\* *nu_kdef' /tmp/otpop_mcp.gms     # expect: 0
 ```
 
 Target: otpop `cost ≈ 4217.80` (NLP optimum), MODEL STATUS 1. Before the fix the harness should report **Case b** with the over-counted `stat_x(tt)`/`stat_p(tt)` row as the max-residual; after the single-guarded shape lands, those residuals → 0 at the NLP KKT point.
