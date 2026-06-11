@@ -14,7 +14,7 @@ This document identifies all assumptions and unknowns for Sprint 28 features **b
 
 **Sprint 28 Scope** (per `docs/planning/EPIC_4/PROJECT_PLAN.md` Sprint 28 entry, Weeks 21–22, 14-day sprint at ≤ 12h/day):
 
-1. **Priority 1: #1224 mine — Parameter-Valued-Offset KKT Cross-Term Inversion** — `stat_x` must invert the parameter-valued offset (`sum(k, lam_pr(k,l,i-li(k),j-lj(k)))` − the `l-1` term)
+1. **Priority 1: #1224 mine — Parameter-Valued-Offset KKT Cross-Term Inversion** — `stat_x` must invert the parameter-valued offset (`sum(k, lam_pr(k,l,i-li(k),j-lj(k)))` - the `l-1` term)
 2. **Priority 2: #1388 camshape — Case-(b) `stat_r` Stationarity-Emit Divergence** — per-term hand-derivation vs the emit; #1424 subset co-bug already landed (Sprint 27)
 3. **Priority 3: #1393 + #1335 otpop — Scalar-Eq Sum-Collapse + `card(t)-ord(t)` Offset Evaluator** — two confirmed-distinct fixes (Approach C proven inert)
 4. **Priority 4: #1387 cclinpts — Three Coupled AD Changes** — offset-enumeration + re-symbolization anchor + non-convex warm-start; "sign-flip" is a misdiagnosis
@@ -173,7 +173,7 @@ AD/KKT engineer
 
 ### Priority
 
-**High** — If the two terms (`sum(k, lam_pr(k,l,i-li(k),j-lj(k)))` and `−sum(k, lam_pr(k,l-1,i,j))`) are assembled in different passes, a partial fix emits an inconsistent `stat_x` (one term present, one missing) → still infeasible, and the Phase 0 residual check fails ambiguously.
+**High** — If the two terms (`sum(k, lam_pr(k,l,i-li(k),j-lj(k)))` and `-sum(k, lam_pr(k,l-1,i,j))`) are assembled in different passes, a partial fix emits an inconsistent `stat_x` (one term present, one missing) → still infeasible, and the Phase 0 residual check fails ambiguously.
 
 ### Assumption
 
@@ -183,7 +183,7 @@ Both the inverse-offset term and the `l-1` companion term are produced by the sa
 
 1. Are the `i,j` spatial-offset cross-term and the `l` temporal-offset cross-term built by the same code path, or separately?
 2. Does the `l-1` term arise from a different constraint instance (the lead/lag duality) that must be enumerated independently?
-3. Would emitting only the inverse-offset term (without `−sum(k, lam_pr(k,l-1,i,j))`) leave mine infeasible in a way the harness residual can distinguish?
+3. Would emitting only the inverse-offset term (without `-sum(k, lam_pr(k,l-1,i,j))`) leave mine infeasible in a way the harness residual can distinguish?
 
 ### How to Verify
 
@@ -538,7 +538,7 @@ The re-symbolization anchor fix can be made local — gated so a pure-offset ter
 
 1. Re-run the Sprint 27 Day-6 prototype on current main; confirm the anchor blocker.
 2. Trace the re-symbolization callers; classify the anchor fix architectural vs local (Task 6 hypothesis-validation).
-3. KKT-residual harness: eliminated-KKT residual check at the NLP optimum (`objgrad_b(j) + b(j)^(−γ)·objgrad_fb(j) = 0`, max|r| ≤ 1e-6) on a single-model prototype.
+3. KKT-residual harness: eliminated-KKT residual check at the NLP optimum (`objgrad_b(j) + b(j)^(-γ)·objgrad_fb(j) = 0`, max|r| ≤ 1e-6) on a single-model prototype.
 
 ### Risk if Wrong
 
@@ -559,7 +559,7 @@ AD/KKT engineer
 
 **Verified by:** Task 2 (Bucket-Provenance Baseline + Projection Discipline)
 **Date:** 2026-06-10
-**Findings:** cclinpts is `model_optimal` / mismatch at Sprint 28 Day 0 (already solves; obj −9.975 vs NLP −3.0011, rel 0.70). The projected #1387 delta is a **genuine** solve→match gain (Match +1) — it is **NOT** a Solve gain.
+**Findings:** cclinpts is `model_optimal` / mismatch at Sprint 28 Day 0 (already solves; obj -9.975 vs NLP -3.0011, rel 0.70). The projected #1387 delta is a **genuine** solve→match gain (Match +1) — it is **NOT** a Solve gain.
 **Evidence:** committed Day-13 `gamslib_status.json` (`cclinpts` model_optimal, `solution_comparison.comparison_result = compare_objective_mismatch`); BASELINE_METRICS.md §2 row + §3 row P4.
 **Decision:** +1 Match tallied (firm); 0 Solve credit. Whether the re-symbolization-anchor fix is architectural (→ Sprint 29 REPLAN) is the Task-6 hypothesis-validation, not a Task-2 baseline question.
 
