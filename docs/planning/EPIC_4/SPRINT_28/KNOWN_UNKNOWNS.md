@@ -689,6 +689,16 @@ AD/KKT engineer
 - **Evidence:** CONTRIBUTING.md §"Day-0 Traced Fix-Surface (PR24) + Projection Discipline (PR25)" + the amended Phase-0 4-subsection template (`### Expected Emit Pattern` hypothesis note; `### PROCEED/REPLAN Signal` `Traced Fix-Surface (Day-0)` line).
 - **Decision:** Phase-0 PROCEED for this unknown now requires the traced surface; Task 5 applies PR24 when authoring the gate.
 
+
+**— Task 6 (REPLAN risk assessment — PR16):**
+
+- **Task 6 outcome:** 🟡 PARTIALLY VERIFIED (design scope)
+- **Verified by:** Task 6 (Diagnosis-Heavy Track REPLAN Risk Assessment)
+- **Date:** 2026-06-11
+- **Findings:** Track A makes the **architectural-vs-local anchor** question the explicit Priority-4 decision pivot. Validation design: (A1) re-run the Day-6 `_diff_sum` prototype on current main to re-confirm the anchor blocker; (A2) **trace the re-symbolization callers** to classify the anchor fix local (gateable to the differentiated variable's column index) vs architectural (chosen upstream / all callers); (A3) harness eliminated-KKT residual (5e-8) re-check. Sign-flip stays a misdiagnosis.
+- **Evidence:** PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md Track A.
+- **Decision:** **PROCEED** if A2 shows local; **REPLAN to Sprint 29** if architectural. All three coupled changes land together. Budget at risk ~12–18h.
+
 ---
 
 ## Unknown 4.2: Are the AD offset-enumeration cross-terms (change 1) correct as residual-verified in Sprint 27?
@@ -771,7 +781,13 @@ AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the single-model validation + PROCEED/REPLAN recommendation are designed; the binding verdict comes from the in-sprint Day-0 run.
+
+**Verified by:** Task 6 (Diagnosis-Heavy Track REPLAN Risk Assessment)
+**Date:** 2026-06-11
+**Findings:** The cclinpts non-convex warm-start (change 3) is assessed as **model-specific** — Track A's validation design delivers it via the existing `--nlp-presolve` machinery (a per-model initial point, not a default-cold-start change), so it does not alter any other model's emit. It is only effective once changes 1–2 (AD enumeration + anchor) are correct, so it is gated on them.
+**Evidence:** PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md Track A (A3 + the three-coupled-change dependency).
+**Decision:** Warm-start is cclinpts-specific via presolve; a byte-stability check on other models' emit is part of the in-sprint validation (no leak).
 
 ---
 
@@ -845,6 +861,16 @@ AD/KKT engineer
 - **Evidence:** `PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md` §6 (kand sketch) + §3 (verdict logic).
 - **Decision:** The kand Phase-0 gate (Task 5) runs the harness first; its Case-b-vs-Case-c verdict is the binding input to the #1390 PROCEED/REPLAN signal.
 
+
+**— Task 6 (REPLAN risk assessment — PR16):**
+
+- **Task 6 outcome:** 🟡 PARTIALLY VERIFIED (design scope)
+- **Verified by:** Task 6 (Diagnosis-Heavy Track REPLAN Risk Assessment)
+- **Date:** 2026-06-11
+- **Findings:** Track B's Day-0 trace plan uses the KKT-residual harness to localize the 195-vs-2613 gap: dual-transfer self-check (B1) first, then Case-(b/c) (B2). **Case b** (a `bal`/`x` stationarity or lag-duality row > tol) ⇒ localizable → PROCEED; **Case c** (residuals clean, cold PATH at 195) ⇒ LP-recourse coupling → REPLAN. Phantom-term collapse stays out of scope (inert).
+- **Evidence:** PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md Track B.
+- **Decision:** Harness Case-(b/c) verdict is the binding signal; lean REPLAN-aware (first hypothesis already inert). Budget at risk ~8–14h.
+
 ---
 
 ## Unknown 5.2: Does the KKT-residual harness correctly transfer kand's tree-predicate-conditioned aliased-Sum duals?
@@ -890,6 +916,16 @@ AD/KKT engineer
 **Evidence:** DESIGN §2 (consistency self-check) + §6 (kand invocation sketch) — design, not a run result.
 **Decision:** kand's Case-(a/b/c) verdict (Unknown 5.1) is to be consumed only after the dual-transfer self-check passes — the tree-conditioned transfer will be confirmed by constraint-row residual ≈ 0 when the harness runs in-sprint.
 
+
+**— Task 6 (REPLAN risk assessment — PR16):**
+
+- **Task 6 outcome:** 🟡 PARTIALLY VERIFIED (design scope)
+- **Verified by:** Task 6 (Diagnosis-Heavy Track REPLAN Risk Assessment)
+- **Date:** 2026-06-11
+- **Findings:** Track B step B1 makes the dual-transfer consistency self-check the **gating precondition** for the kand verdict: the `tree(nn,n)`-conditioned `lam_dembalx` marginals must transfer so the *constraint* rows ≈ 0 before any Case-(b/c) verdict is trusted; a bad transfer reports `dual_transfer_inconsistent`, not a false Case-b.
+- **Evidence:** PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md Track B (B1); harness design §2 self-check.
+- **Decision:** The 5.1 verdict is consumed only after B1 passes; designed, confirmed in-sprint.
+
 ---
 
 ## Unknown 5.3: Is kand's NLP reference optimum (2613.0) itself reliable as the warm-start target?
@@ -926,7 +962,13 @@ AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the single-model validation + PROCEED/REPLAN recommendation are designed; the binding verdict comes from the in-sprint Day-0 run.
+
+**Verified by:** Task 6 (Diagnosis-Heavy Track REPLAN Risk Assessment)
+**Date:** 2026-06-11
+**Findings:** kand's NLP reference 2613.0 is the harness warm-start target; Track B step B0 designs the reliability check — a standalone deterministic NLP solve + a global-vs-local check (multiple optima?). If 2613.0 proves a local optimum, the residual comparison target is re-established before the Case-(b/c) verdict.
+**Evidence:** PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md Track B (B0); harness design §6 (kand target 2613.0).
+**Decision:** The NLP-reference check is a Day-0 precondition of the kand verdict; designed, run in-sprint.
 
 ---
 
@@ -980,6 +1022,16 @@ AD/KKT engineer + CGE-modeling reference
 **Evidence:** committed Day-13 `gamslib_status.json` (`camcge.mcp_solve.outcome_category = model_infeasible`); `docs/issues/ISSUE_1330` round-3 singular-Jacobian diagnosis; BASELINE_METRICS.md §2 row + §3 row P6.
 **Decision:** camcge Solve carried as **conditional** (not tallied as firm); if it stays infeasible it is bucket-forward progress, not target credit. Whether the singularity is fixable in-sprint is the Task-6 hypothesis-validation.
 
+
+**— Task 6 (REPLAN risk assessment — PR16):**
+
+- **Task 6 outcome:** 🟡 PARTIALLY VERIFIED (design scope)
+- **Verified by:** Task 6 (Diagnosis-Heavy Track REPLAN Risk Assessment)
+- **Date:** 2026-06-11
+- **Findings:** Track C designs the singular-row identification: (C1) PATH listing basis-singularity report; (C2) Jacobian rank check at the NLP point (single redundant Walras row vs higher-dimensional degeneracy); (C3) prototype a price-numéraire / redundant-row fix and check MS 1 **+ economic-solution preservation**; (C4) generality on korcge/quocge. Sprint 27 already found the KKT structurally correct (residual ≈ 0) and the failure PATH-side.
+- **Evidence:** PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md Track C; ISSUE_1330 round-3.
+- **Decision:** **PROCEED** if a single redundant row + a solution-preserving numéraire fix; **REPLAN to an Epic 5 observation** otherwise. camcge +1 Solve conditional. Budget at risk ~8–14h.
+
 ---
 
 ## Unknown 6.2: Is camcge still `model_infeasible` at Sprint 28 Day 0 (not self-recovered or re-bucketed)?
@@ -1023,6 +1075,16 @@ Sprint planning
 **Findings:** Confirmed: camcge is `model_infeasible` at Sprint 28 Day 0, matching the Sprint 27 Day-10/Day-13 retest buckets — no self-recovery or re-bucketing. No Sprint 27 closeout change shifted its emit (no `src/`/`scripts/` diff since the Day-13 close `68be9cca`).
 **Evidence:** committed Day-13 `gamslib_status.json` (`camcge.mcp_solve.outcome_category = model_infeasible`); `git diff 68be9cca..HEAD -- src/ scripts/` empty; BASELINE_METRICS.md §2 row.
 **Decision:** Priority-6 scope is unchanged — camcge stays the Priority-6 target. Fully resolved by Task 2 (pure baseline question).
+
+
+**— Task 6 (REPLAN risk assessment — PR16):**
+
+- **Task 6 outcome:** ✅ VERIFIED
+- **Verified by:** Task 6 (Diagnosis-Heavy Track REPLAN Risk Assessment)
+- **Date:** 2026-06-11
+- **Findings:** Re-confirmed for the assessment: camcge is `model_infeasible` at Sprint 28 Day 0 (Task 2 baseline holds; no `src/`/`scripts/` change since the Day-13 close). Priority-6 scope is unchanged; the *fixability* (not the bucket) is the open 6.1 question that Track C decides.
+- **Evidence:** Task 2 baseline (committed DB) + PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md Track C.
+- **Decision:** Day-0 bucket confirmed (the empirical part); the PROCEED/REPLAN fork is owned by 6.1/Track C.
 
 ---
 
