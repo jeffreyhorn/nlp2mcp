@@ -264,7 +264,7 @@ AD/KKT engineer
 **Verified by:** Task 4 (Design the KKT-Residual Verification Harness)
 **Date:** 2026-06-11
 **Findings:** The harness is *designed* as the residual instrument for the boundary question: the mine sketch (DESIGN §6) would check the emitted `stat_x` residual ≈ 0 at *boundary* cells, not just interior cells — distinguishing a genuine cross-term inversion from an offset-out-of-domain clip that would need an explicit `$(...)` domain guard. (The GAMS clip-vs-wrap probe itself remains a Day-0 task; the harness would report whether the residual vanishes at the boundary once built.)
-**Evidence:** DESIGN §6 (mine invocation sketch — boundary-cell residual check) + the cross-reference to the `src/ir/ast.py` forward-render symmetry.
+**Evidence:** DESIGN §6 (mine invocation sketch — boundary-cell residual check) + the concrete forward-render artifact `IndexOffset.to_gams_string()` (`src/ir/ast.py:470`), specifically the `Call`/`ParamRef` offset branch (`src/ir/ast.py:572`, the Sprint 27 #1224 fix) that renders `base+li(k)` directly — the inverse `i-li(k)` form renders symmetrically through that same branch with a negated offset.
 **Decision:** The harness verdict for mine explicitly inspects boundary-cell residuals, so Unknown 1.3's clip/wrap risk surfaces as a Case-b-at-boundary signal rather than a silent infeasibility.
 
 ---
