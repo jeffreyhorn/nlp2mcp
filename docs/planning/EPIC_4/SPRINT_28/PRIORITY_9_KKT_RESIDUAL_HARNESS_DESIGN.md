@@ -45,7 +45,7 @@ The harness transfers each NLP constraint/bound marginal into the corresponding 
 | NLP object | MCP multiplier | Sign / pairing | Transfer source |
 |---|---|---|---|
 | Equality constraint `eq` | `nu_<eq>` (free) | paired as the equality row | NLP `eq.m` |
-| Inequality constraint `eq` | `lam_<eq>` (≥ 0) | paired with a `comp_ineq` complementarity row | NLP `eq.m` (abs value; sign normalized to the emitted `=g=`/`=l=` orientation) |
+| Inequality constraint `eq` | `lam_<eq>` (≥ 0) | paired with a `comp_ineq` complementarity row | NLP `eq.m`, signed so the loaded `lam_<eq>` satisfies `lam ≥ 0` for the emitted `=g=`/`=l=` orientation |
 | Lower bound on `v` | `piL_<v>` / `piL_<v>_<idx>` (≥ 0) | paired with `comp_bounds_lo` | NLP `v.m` where `v.l ≈ v.lo` |
 | Upper bound on `v` | `piU_<v>` / `piU_<v>_<idx>` (≥ 0) | paired with `comp_bounds_up` | NLP `v.m` where `v.l ≈ v.up` |
 

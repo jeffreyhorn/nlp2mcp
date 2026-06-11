@@ -780,7 +780,7 @@ The harness dual-transfer (Category 9) handles tree-conditioned aliased-Sum mult
 ### Research Questions
 
 1. How are kand's `lam_dembalx` (tree-conditioned) multipliers represented in the emitted MCP?
-2. Can the harness map the NLP `dembalx` marginals onto them, respecting the `tree(n,nn)` condition?
+2. Can the harness map the NLP `dembalx` marginals onto them, respecting the `tree(nn,n)` condition (the argument order the emitted `kand_mcp.gms` uses)?
 3. Does an incorrect dual transfer produce a false Case-(b) residual?
 
 ### How to Verify
