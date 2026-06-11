@@ -159,7 +159,13 @@ AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (baseline / bucket-provenance aspect only — the fix-surface aspect is owned by Tasks 5/6)
+
+**Verified by:** Task 2 (Bucket-Provenance Baseline + Projection Discipline)
+**Date:** 2026-06-10
+**Findings:** mine is `model_infeasible` at Sprint 28 Day 0 (S27 Day-0 `translate_internal_error` → +1 Translate via #1224 `IndexOffset(ParamRef)` render, Day 12 → `model_infeasible`). The projected #1224 Solve delta is a **genuine** bucket-to-success gain (model_infeasible → solve, +1 firm); the follow-on Match is conditional on solving first.
+**Evidence:** committed Day-13 `gamslib_status.json` (`mine.mcp_solve.outcome_category = model_infeasible`); BASELINE_METRICS.md §2 provenance row + §3 projection row P1.
+**Decision:** +1 Solve tallied toward the ≥110 stretch; mine Match held conditional (not tallied). Fix-surface (AD/Jacobian vs `stationarity.py` vs `ast.py`) remains a Day-0 hypothesis for Tasks 5/6.
 
 ---
 
@@ -289,7 +295,13 @@ AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (baseline / bucket-provenance aspect only — the fix-surface aspect is owned by Tasks 5/6)
+
+**Verified by:** Task 2 (Bucket-Provenance Baseline + Projection Discipline)
+**Date:** 2026-06-10
+**Findings:** camshape is `model_infeasible` at Sprint 28 Day 0 (unchanged across Sprint 27; #1424 subset-corruption landed Day 11 but the MCP stays MS5). The projected #1388 Solve delta is a **genuine** bucket-to-success gain (model_infeasible → solve, +1 firm); Match is conditional on solving first.
+**Evidence:** committed Day-13 `gamslib_status.json` (`camshape.mcp_solve.outcome_category = model_infeasible`); BASELINE_METRICS.md §2 row + §3 row P2.
+**Decision:** +1 Solve tallied toward the ≥110 stretch; camshape Match held conditional. The interior-`stat_r` vs edge-`lam_convex_edge` term localization is a Task-5/6 fix-surface question.
 
 ---
 
@@ -413,7 +425,13 @@ AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (baseline / bucket-provenance aspect only — the fix-surface aspect is owned by Tasks 5/6)
+
+**Verified by:** Task 2 (Bucket-Provenance Baseline + Projection Discipline)
+**Date:** 2026-06-10
+**Findings:** otpop is `model_infeasible` at Sprint 28 Day 0 — a **bucket-forward** move already banked in Sprint 27 (S27 Day-0 `path_syntax_error` → P5 #1356/#1357 cleared `$171` → Locally Infeasible). The projected #1393+#1335 delta is a **genuine** Solve +1 firm AND Match +1 firm.
+**Evidence:** committed Day-13 `gamslib_status.json` (`otpop.mcp_solve.outcome_category = model_infeasible`); BASELINE_METRICS.md §2 row + §3 row P3.
+**Decision:** +1 Solve and +1 Match tallied (firm). The prior `path_syntax_error → model_infeasible` move is NOT re-counted (PR25). Which `stationarity.py` collapse path the `t→t__` aliasing flows through stays a Task-5/6 question.
 
 ---
 
@@ -537,7 +555,13 @@ AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (baseline / bucket-provenance aspect only — the fix-surface aspect is owned by Tasks 5/6)
+
+**Verified by:** Task 2 (Bucket-Provenance Baseline + Projection Discipline)
+**Date:** 2026-06-10
+**Findings:** cclinpts is `model_optimal` / mismatch at Sprint 28 Day 0 (already solves; obj −9.975 vs NLP −3.0011, rel 0.70). The projected #1387 delta is a **genuine** solve→match gain (Match +1) — it is **NOT** a Solve gain.
+**Evidence:** committed Day-13 `gamslib_status.json` (`cclinpts` model_optimal, `solution_comparison.comparison_result = compare_objective_mismatch`); BASELINE_METRICS.md §2 row + §3 row P4.
+**Decision:** +1 Match tallied (firm); 0 Solve credit. Whether the re-symbolization-anchor fix is architectural (→ Sprint 29 REPLAN) is the Task-6 hypothesis-validation, not a Task-2 baseline question.
 
 ---
 
@@ -661,7 +685,13 @@ AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (baseline / bucket-provenance aspect only — the fix-surface aspect is owned by Tasks 5/6)
+
+**Verified by:** Task 2 (Bucket-Provenance Baseline + Projection Discipline)
+**Date:** 2026-06-10
+**Findings:** kand is `model_optimal` / mismatch at Sprint 28 Day 0 (already solves; obj 195.0 vs NLP 2613.0, rel 0.93). The projected #1390 delta is a **genuine** solve→match gain (Match +1) — **NOT** a Solve gain.
+**Evidence:** committed Day-13 `gamslib_status.json` (`kand` model_optimal, `solution_comparison.comparison_result = compare_objective_mismatch`); BASELINE_METRICS.md §2 row + §3 row P5.
+**Decision:** +1 Match tallied (firm); 0 Solve credit. Whether the 195-vs-2613 gap is a localizable row vs LP-recourse-coupling architecture (→ Sprint 29 REPLAN) is the Task-6 question.
 
 ---
 
@@ -784,7 +814,13 @@ AD/KKT engineer + CGE-modeling reference
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (baseline / bucket-provenance aspect only — the fix-surface aspect is owned by Tasks 5/6)
+
+**Verified by:** Task 2 (Bucket-Provenance Baseline + Projection Discipline)
+**Date:** 2026-06-10
+**Findings:** camcge is `model_infeasible` at Sprint 28 Day 0 — a **bucket-forward** move banked in Sprint 27 (S27 Day-0 `path_syntax_error` → #1381 Pattern C Phase B cleared the syntax error → Locally Infeasible / singular Jacobian). The projected Priority-6 Solve delta is **conditional** (may be inherent CGE degeneracy).
+**Evidence:** committed Day-13 `gamslib_status.json` (`camcge.mcp_solve.outcome_category = model_infeasible`); `docs/issues/ISSUE_1330` round-3 singular-Jacobian diagnosis; BASELINE_METRICS.md §2 row + §3 row P6.
+**Decision:** camcge Solve carried as **conditional** (not tallied as firm); if it stays infeasible it is bucket-forward progress, not target credit. Whether the singularity is fixable in-sprint is the Task-6 hypothesis-validation.
 
 ---
 
@@ -822,7 +858,13 @@ Sprint planning
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — camcge Day-0 bucket confirmed
+
+**Verified by:** Task 2 (Bucket-Provenance Baseline + Projection Discipline)
+**Date:** 2026-06-10
+**Findings:** Confirmed: camcge is `model_infeasible` at Sprint 28 Day 0, matching the Sprint 27 Day-10/Day-13 retest buckets — no self-recovery or re-bucketing. No Sprint 27 closeout change shifted its emit (no `src/`/`scripts/` diff since the Day-13 close `68be9cca`).
+**Evidence:** committed Day-13 `gamslib_status.json` (`camcge.mcp_solve.outcome_category = model_infeasible`); `git diff 68be9cca..HEAD -- src/ scripts/` empty; BASELINE_METRICS.md §2 row.
+**Decision:** Priority-6 scope is unchanged — camcge stays the Priority-6 target. Fully resolved by Task 2 (pure baseline question).
 
 ---
 

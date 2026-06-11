@@ -177,9 +177,10 @@ grep -oE '#1(224|388|393|335|387|390|374|400|385)' docs/planning/EPIC_4/SPRINT_2
 
 ## Task 2: Sprint 27 → Sprint 28 Bucket-Provenance Baseline + Projection Discipline (PR15 + PR17 + PR25)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
 **Estimated Time:** 4–5 hours
+**Completed:** 2026-06-10
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
@@ -218,11 +219,16 @@ The bucket-provenance baseline also anchors the regression guard: Sprint 27's ch
 
 ### Changes
 
-To be completed.
+- Authored `docs/planning/EPIC_4/SPRINT_28/BASELINE_METRICS.md`: §1 Day-0 headline counts + frozen failure-bucket membership; §2 bucket-provenance table for the six carryforward models (S27 Day-0 → S28 Day-0 + gating issue); §3 PR25 projection table (genuine-gain vs bucket-forward, with only genuine gains tallied); §4 scope freeze (in-target / Sprint-29 REPLAN exits / committed regression-guard sets).
+- Reused the committed Sprint 27 final DB (`gamslib_status.json` @ `c6199d66`) as Sprint 28 Day 0 — verified applicable (`git diff 68be9cca..HEAD -- src/ scripts/` empty; only Sprint 28 planning docs landed since the Sprint 27 close). No fresh ~4h retest needed.
+- Verified the baseline aspect of Unknowns 1.1, 2.1, 3.1, 4.1, 5.1, 6.1 and the full Unknown 6.2 in `KNOWN_UNKNOWNS.md` (Verification Results sections updated).
 
 ### Result
 
-To be completed.
+- **Day-0 baseline (142 corpus):** Parse 142 · Translate 135 · Solve 105 · Match 62 · Mismatch 37 · model_infeasible 8 · path_syntax_error 8 · path_solve_terminated 5 · path_solve_license 9 · translate-fail 7.
+- **PR25 genuine-gain tally:** Solve +3 firm (mine/camshape/otpop) → 108, +1 conditional (camcge) → **109** (≥ 110 is an explicit stretch needing a 5th recovery not in the carryforward set); Match +3 firm (otpop/cclinpts/kand) → **65** (meets ≥ 65), with mine/camshape Match held conditional. cclinpts and kand already solve → Match-only, zero Solve credit.
+- **Bucket-forward (not credited):** otpop and camcge already banked `path_syntax_error → model_infeasible` in Sprint 27 — not re-counted (the exact over-counting the Sprint 27 retro flagged).
+- **Scope freeze:** six model targets + three cleanups in-target; #1387/#1390/camcge carry explicit Sprint-29 REPLAN exits; the committed 105-model Solve set and 62-model Match set are the regression-guard reference.
 
 ### Verification
 
@@ -248,13 +254,13 @@ done
 
 ### Acceptance Criteria
 
-- [ ] Day-0 baseline counts recorded (Parse/Translate/Solve/Match + all failure buckets with membership)
-- [ ] Bucket-provenance table for the six carryforward target models
-- [ ] PR25 projection table distinguishes genuine gains from bucket-forward moves
-- [ ] Only genuine gains tallied toward Solve ≥ 110 / Match ≥ 65
-- [ ] Scope-freeze note identifies in-target vs deferred models
-- [ ] Committed Solve/Match regression-guard sets recorded
-- [ ] Unknowns 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Day-0 baseline counts recorded (Parse/Translate/Solve/Match + all failure buckets with membership)
+- [x] Bucket-provenance table for the six carryforward target models
+- [x] PR25 projection table distinguishes genuine gains from bucket-forward moves
+- [x] Only genuine gains tallied toward Solve ≥ 110 / Match ≥ 65
+- [x] Scope-freeze note identifies in-target vs deferred models
+- [x] Committed Solve/Match regression-guard sets recorded
+- [x] Unknowns 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
