@@ -263,7 +263,7 @@ AD/KKT engineer
 
 **Verified by:** Task 4 (Design the KKT-Residual Verification Harness)
 **Date:** 2026-06-11
-**Findings:** The harness is the residual instrument for the boundary question: the mine sketch (DESIGN §6) checks the emitted `stat_x` residual ≈ 0 at *boundary* cells, not just interior cells — distinguishing a genuine cross-term inversion from an offset-out-of-domain clip that would need an explicit `$(...)` domain guard. (The GAMS clip-vs-wrap probe itself remains a Day-0 task; the harness reports whether the residual vanishes at the boundary.)
+**Findings:** The harness is *designed* as the residual instrument for the boundary question: the mine sketch (DESIGN §6) would check the emitted `stat_x` residual ≈ 0 at *boundary* cells, not just interior cells — distinguishing a genuine cross-term inversion from an offset-out-of-domain clip that would need an explicit `$(...)` domain guard. (The GAMS clip-vs-wrap probe itself remains a Day-0 task; the harness would report whether the residual vanishes at the boundary once built.)
 **Evidence:** DESIGN §6 (mine invocation sketch — boundary-cell residual check) + the cross-reference to the `src/ir/ast.py` forward-render symmetry.
 **Decision:** The harness verdict for mine explicitly inspects boundary-cell residuals, so Unknown 1.3's clip/wrap risk surfaces as a Case-b-at-boundary signal rather than a silent infeasibility.
 
@@ -371,7 +371,7 @@ AD/KKT engineer
 
 **Verified by:** Task 4 (Design the KKT-Residual Verification Harness)
 **Date:** 2026-06-11
-**Findings:** The harness pins camshape's Case-b max-residual row (`stat_r('i1')`≈396, DESIGN §6) as the fix target; the blast-radius enumeration itself is the **golden-staleness check (Task 7 / Category 8)**, run after a prototype fix — the harness and the staleness check are complementary (residual = correctness target, staleness = blast radius).
+**Findings:** The harness is *designed to* pin camshape's Case-b max-residual row (`stat_r('i1')`≈396, DESIGN §6) as the fix target; the blast-radius enumeration itself is the **golden-staleness check (Task 7 / Category 8)**, run after a prototype fix — the harness and the staleness check are complementary (residual = correctness target, staleness = blast radius).
 **Evidence:** DESIGN §6 (camshape sketch) + the Task 7 golden-staleness cross-reference.
 **Decision:** The harness confirms *what* to fix (the max-residual `stat_r` term); Task 7 measures *how wide* the fix's byte-diff reaches — the 2.2 blast-radius concern is owned by Task 7, instrumented by this harness.
 
@@ -761,7 +761,7 @@ AD/KKT engineer
 - **Task 4 outcome:** 🟡 PARTIALLY VERIFIED (design scope) — the harness is *designed* as the Case-(b/c) instrument; the empirical verdict comes from the in-sprint run.
 - **Verified by:** Task 4 (Design the KKT-Residual Verification Harness)
 - **Date:** 2026-06-11
-- **Findings:** The harness provides the Case-(b/c) split that drives the kand REPLAN decision: dual transfer consistent + `max|r|≤tol` ⇒ **Case c** (the 195-vs-2613 gap is non-convexity / LP first-stage-recourse coupling → Sprint 29 REPLAN); a `stat` row `> tol` ⇒ **Case b** (a localizable emit row, in-sprint fix). The actual gap localization is the Day-0 trace (Tasks 5/6) *using* this harness.
+- **Findings:** The harness is *designed to* provide the Case-(b/c) split that would drive the kand REPLAN decision: dual transfer consistent + `max|r|≤tol` ⇒ **Case c** (the 195-vs-2613 gap is non-convexity / LP first-stage-recourse coupling → Sprint 29 REPLAN); a `stat` row `> tol` ⇒ **Case b** (a localizable emit row, in-sprint fix). The actual gap localization is the Day-0 trace (Tasks 5/6) *using* this harness once built.
 - **Evidence:** `PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md` §6 (kand sketch) + §3 (verdict logic).
 - **Decision:** The kand Phase-0 gate (Task 5) runs the harness first; its Case-b-vs-Case-c verdict is the binding input to the #1390 PROCEED/REPLAN signal.
 
@@ -1232,7 +1232,7 @@ AD/KKT + diagnostics engineer
 
 **Verified by:** Task 4 (Design the KKT-Residual Verification Harness)
 **Date:** 2026-06-11
-**Findings:** Designed the dual transfer (DESIGN §2): `nu_<eq>` ← NLP `eq.m` (free); `lam_<eq>` ← `eq.m` sign-normalized to the emitted `=g=`/`=l=` orientation (paired with `comp_ineq`); `piL_<v>`/`piU_<v>` ← `v.m` at active bounds (`v.l≈v.lo`/`v.l≈v.up`). The inequality→`comp_*` case generalizes the Sprint 27 Day-9 `pwl_m`/`pwu_m` parameter-load by driving it from `build_complementarity_pairs` (`comp_ineq` keyed by eq, `comp_bounds_lo`/`_up` keyed by `(var,indices)`). A constraint-row consistency self-check runs first — a non-zero *constraint* residual reports `dual_transfer_inconsistent`, never a false Case-b.
+**Findings:** Designed the dual transfer (DESIGN §2): `nu_<eq>` ← NLP `eq.m` (free); `lam_<eq>` ← `eq.m` sign-normalized to the emitted `=g=`/`=l=` orientation (paired with `comp_ineq`); `piL_<v>`/`piU_<v>` ← `v.m` at active bounds (`v.l≈v.lo`/`v.l≈v.up`). The inequality→`comp_*` case generalizes the Sprint 27 Day-9 `pwl_m`/`pwu_m` parameter-load by driving it from `build_complementarity_pairs` (`comp_ineq` keyed by eq, `comp_bounds_lo`/`_up` keyed by `(var,indices)`). A constraint-row consistency self-check is designed to run first — a non-zero *constraint* residual would report `dual_transfer_inconsistent`, never a false Case-b.
 **Evidence:** DESIGN §2 (Dual-Transfer Mechanism) + the reuse of `src/kkt/naming.py` + `src/kkt/complementarity.py` + the `_emit_nlp_presolve` primal warm-start.
 **Decision:** The harness drives the transfer from the emitter's own multiplier↔equation map; a validation-against-known-cases *plan* (launch Case a + camshape Case b, DESIGN §7) runs when the harness is built.
 
@@ -1277,7 +1277,7 @@ AD/KKT + diagnostics engineer
 
 **Verified by:** Task 4 (Design the KKT-Residual Verification Harness)
 **Date:** 2026-06-11
-**Findings:** Verdict logic (DESIGN §3): **Case a** = `max|r|≤tol` AND cold PATH reaches the NLP optimum; **Case b** = `max|r|>tol` (emit bug; the max-residual row is the prime-suspect term); **Case c** = `max|r|≤tol` but cold PATH diverges (non-convexity → warm-start, not an emit fix). Default `tol=1e-6`, `--tol`-tunable, calibrated on Sprint 27 cases: camshape `stat_r('i1')`≈396 ≫ tol (b) vs cclinpts max|r|=5e-8 (c). Case-c detection needs the cold-start comparison.
+**Findings:** Verdict logic (DESIGN §3): **Case a** = `max|r|≤tol` AND cold PATH reaches the NLP optimum; **Case b** = `max|r|>tol` (emit bug; the max-residual row is the prime-suspect term); **Case c** = `max|r|≤tol` but cold PATH diverges (non-convexity → warm-start, not an emit fix). Default `tol=1e-6`, `--tol`-tunable, with calibration *targets* from Sprint 27 ground truth (to be reproduced when the harness runs): camshape `stat_r('i1')`≈396 ≫ tol (b) vs cclinpts max|r|=5e-8 (c). Case-c detection needs the cold-start comparison.
 **Evidence:** DESIGN §3 (verdict table + threshold calibration) + §7 (launch a / camshape b / cclinpts c validation plan).
 **Decision:** Output is a per-row residual table + verdict + max-residual row; `tol=1e-6` cleanly separates the camshape-b from the cclinpts-c calibration points.
 
