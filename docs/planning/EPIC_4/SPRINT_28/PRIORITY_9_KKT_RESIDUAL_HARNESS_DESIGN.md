@@ -74,7 +74,7 @@ Before trusting any *stationarity* residual, the harness verifies the **constrai
 
 ## 3. Case-(a/b/c) Verdict Logic (Unknown 9.2)
 
-Evaluate every stationarity row (`stat_*`) and complementarity row at the transferred NLP KKT point. Let `max|r|` be the largest absolute residual and `tol` the threshold (default `1e-6`).
+**First** run the §2 dual-transfer self-check; only if it passes (all constraint / complementarity rows ≈ 0) does the verdict proceed. Then evaluate the **stationarity rows** (`stat_*`) at the transferred NLP KKT point. Let `max|r|` be the largest absolute **stationarity** residual and `tol` the threshold (default `1e-6`). Complementarity / constraint rows are **not** part of `max|r|` — they are the §2 consistency guard; if any exceeds `tol`, the harness returns `dual_transfer_inconsistent` instead of a Case verdict. So Case b is triggered by a stationarity violation only.
 
 | Verdict | Condition | Meaning | Fix path |
 |---|---|---|---|
@@ -83,7 +83,7 @@ Evaluate every stationarity row (`stat_*`) and complementarity row at the transf
 | **Case c** | `max|r| ≤ tol` BUT a cold-start MCP solve **diverges** (MS 5 / no convergence) | **Non-convexity** — the KKT point is valid but PATH can't reach it cold | warm-start (or solver change), **not** an emit fix |
 | **(guard)** | a *constraint* row exceeds `tol` | dual transfer inconsistent (§2) | fix the transfer, re-run — not a model verdict |
 
-**Threshold calibration (Unknown 9.2 Q1, validated against Sprint 27 cases):**
+**Threshold calibration (Unknown 9.2 Q1) — calibration *targets* grounded in Sprint 27 ground truth, to be reproduced when the harness is built (the residual figures below are the Sprint 27 historical measurements, not a run of this harness):**
 
 - camshape — Sprint 27 `stat_r(i1)` INFES ≈ 396 ≫ `1e-6` → **Case b** (matches the Day-11 manual classification).
 - launch — Sprint 27 proved 2257.80 a valid KKT point (residual ≈ 0) → **Case a** (after the #1378 double-apply fix) / the pre-fix corrupted objective showed a non-zero residual → **Case b** before the fix.

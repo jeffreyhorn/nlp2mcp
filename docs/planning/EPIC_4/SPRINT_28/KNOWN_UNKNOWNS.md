@@ -806,9 +806,9 @@ AD/KKT engineer
 
 **Verified by:** Task 4 (Design the KKT-Residual Verification Harness)
 **Date:** 2026-06-11
-**Findings:** kand's `lam_dembalx` multipliers are `tree(nn,n)`-conditioned aliased Sums; the harness loads the NLP `dembalx` marginals into them respecting the tree predicate, and the **constraint-row consistency self-check is the gating step** (DESIGN §2 + §6 kand): the *constraint* rows must be ≈ 0 before any stationarity verdict is trusted. A bad transfer reports `dual_transfer_inconsistent` rather than a false Case-b, so the 5.1 verdict cannot be corrupted by a mis-transferred tree-conditioned dual.
-**Evidence:** DESIGN §2 (consistency self-check) + §6 (kand invocation sketch).
-**Decision:** kand's Case-(a/b/c) verdict (Unknown 5.1) is only consumed after the dual-transfer self-check passes — the tree-conditioned transfer is validated by constraint-row residual ≈ 0.
+**Findings:** kand's `lam_dembalx` multipliers are `tree(nn,n)`-conditioned aliased Sums; the harness is *designed* to load the NLP `dembalx` marginals into them respecting the tree predicate, with the **constraint-row consistency self-check as the gating step** (DESIGN §2 + §6 kand): the *constraint* rows must be ≈ 0 before any stationarity verdict is trusted. By design a bad transfer would report `dual_transfer_inconsistent` rather than a false Case-b, so the 5.1 verdict cannot be corrupted by a mis-transferred tree-conditioned dual once the harness is built and run.
+**Evidence:** DESIGN §2 (consistency self-check) + §6 (kand invocation sketch) — design, not a run result.
+**Decision:** kand's Case-(a/b/c) verdict (Unknown 5.1) is to be consumed only after the dual-transfer self-check passes — the tree-conditioned transfer will be confirmed by constraint-row residual ≈ 0 when the harness runs in-sprint.
 
 ---
 
