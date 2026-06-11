@@ -394,9 +394,9 @@ Paste `/tmp/sprint_retest_surface.md` into the retest entry in `SPRINT_LOG.md`. 
 The Phase 0 section must contain exactly these 4 subsections, each rendered as a markdown `###` heading (do NOT use bold text or `####` — verification grep matches the literal `### <name>` form):
 
 - `### Hand-Derived KKT Shape` — formal Lagrangian + stationarity / primal-feasibility / complementarity equations for the target equation(s)
-- `### Expected Emit Pattern` — what the regenerated `<model>_mcp.gms` should contain (by equation name + index pattern)
-- `### Verification Methodology` — explicit byte-comparison or pattern-match command(s) to run against the regenerated emit
-- `### PROCEED/REPLAN Signal` — binary criteria for whether Phase 1 `src/` implementation may begin
+- `### Expected Emit Pattern` — what the regenerated `<model>_mcp.gms` should contain (by equation name + index pattern). **This is the prep-doc *hypothesis*, not an established fix surface** — under PR24 (below) the actual `file:line` surface is established by a Day-0 trace and confirmed before any `src/` change.
+- `### Verification Methodology` — explicit byte-comparison or pattern-match command(s) to run against the regenerated emit. **The standard Case-(a/b/c) emit-bug-vs-non-convexity discriminator is the KKT-residual harness — `.venv/bin/python scripts/diagnostics/kkt_residual.py <model.gms>` (PR27).** Emit-touching PRs must also pass the golden-staleness check (PR26).
+- `### PROCEED/REPLAN Signal` — binary criteria for whether Phase 1 `src/` implementation may begin. **Must include a `Traced Fix-Surface (Day-0)` line** citing the `file:line` surface established by the Day-0 trace plus the trace command/evidence (PR24); a PROCEED that cites only the prep-doc surface is invalid.
 
 ### Why this exists
 
@@ -441,6 +441,36 @@ A PR missing Phase 0 should be blocked by the reviewer until Phase 0 is authored
 
 - Sprint 26 retrospective §"What We'd Do Differently" PR20 codification rationale: `docs/planning/EPIC_4/SPRINT_26/SPRINT_RETROSPECTIVE.md`
 - Sprint 27 Prep Task 2 (the codification of this rule): `docs/planning/EPIC_4/SPRINT_27/PREP_PLAN.md` §Task 2
+
+---
+
+## Day-0 Traced Fix-Surface (PR24) + Projection Discipline (PR25) (Sprint 28 Prep Task 3)
+
+These two rules **extend** the Phase 0 Acceptance Gate (PR20) and the PR14/PR19/PR22 emit-artifact discipline; they do not replace them. They were codified after Sprint 27, where the prep-doc fix surface was **wrong 4×** (Days 0/6/11/12 — the real surfaces were `src/kkt/stationarity.py`, `src/ir/ast.py`, and the emit restore pass, NOT the AD sites the prep named) and the Day-0 "+6 firm Match" projection over-counted three `path_syntax_error → model_infeasible` bucket-forward moves (fawley/otpop/camcge) as Solve/Match gains.
+
+### PR24 — Day-0 Traced Fix-Surface (hard rule)
+
+**The prep doc records the symptom and a minimal reproducer. The fix surface (`file:line`) is established by a Day-0 trace at sprint start and is NEVER carried as fact from the prep doc. A Phase-0 PROCEED signal MUST cite the *traced* surface, with the trace command/evidence recorded.**
+
+- The prep-doc / issue-doc `### Expected Emit Pattern` is a **hypothesis**, not an established surface.
+- At sprint Day 0, run a trace to establish the actual `file:line`: instrument the candidate code paths, emit the target `<model>_mcp.gms`, locate the offending row, and identify which code path builds it. The KKT-residual harness (PR27) is the standard tool for confirming the offending residual.
+- The Phase-0 `### PROCEED/REPLAN Signal` subsection MUST contain a **`Traced Fix-Surface (Day-0)`** line: the confirmed `file:line` + the trace command + the evidence (KKT-residual harness output or instrumented-log excerpt). A PROCEED that cites only the prep-doc surface is invalid and must be blocked by the reviewer.
+- This **strengthens** PR20 rather than replacing it: PR20 still requires the hand-derived KKT shape and the 4-subsection gate; PR24 only adds that the surface named in the gate is the *traced* one (not the prep-doc guess).
+
+### PR25 — Projection Discipline (genuine gain vs bucket-forward)
+
+**Every Solve/Match projection — Day-0 and at every checkpoint — labels each delta as a genuine bucket-to-success transition or a bucket-forward move within the failure set; only genuine gains count toward sprint targets. Projections must show both tallies.**
+
+- **Genuine gain** = a bucket-to-success transition: a failure bucket → `model_optimal` (Solve credit), or `model_optimal`/mismatch → match (Match credit).
+- **Bucket-forward** = a move within the failure set (e.g., `path_syntax_error → model_infeasible`): real progress, but **not** target credit.
+- Only genuine gains are tallied toward the Solve / Match targets; bucket-forward moves are reported separately as "progress, not target credit."
+- **Rationale:** the Sprint 27 Day-0 "+6 firm Match" over-counted fawley/otpop/camcge, which only moved `path_syntax_error → model_infeasible` (bucket-forward) and yielded no Solve/Match. The canonical Sprint 28 application is `docs/planning/EPIC_4/SPRINT_28/BASELINE_METRICS.md` §3 (PR25 projection table).
+
+### Related
+
+- Sprint 27 retrospective §"What We'd Do Differently" #1 (fix surfaces) + #2 (projections): `docs/planning/EPIC_4/SPRINT_27/SPRINT_RETROSPECTIVE.md`
+- Sprint 28 Prep Task 3 (the codification of these rules): `docs/planning/EPIC_4/SPRINT_28/PREP_PLAN.md` §Task 3
+- PR26 (golden-staleness CI check) + PR27 (KKT-residual harness) — delivered as Sprint 28 Priorities 8 and 9; referenced from the Phase-0 `### Verification Methodology` template above.
 
 ---
 
