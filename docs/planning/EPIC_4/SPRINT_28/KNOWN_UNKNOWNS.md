@@ -367,7 +367,7 @@ AD/KKT engineer
 
 ### Verification Results
 
-🟡 **Status:** PARTIALLY VERIFIED (design scope) — the harness pins the fix target, but the blast-radius *enumeration* is owned by Task 7's golden-staleness check (run after a prototype fix); not answered here.
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the harness is *designed to* pin the fix target, but the blast-radius *enumeration* is owned by Task 7's golden-staleness check (run after a prototype fix); not answered here.
 
 **Verified by:** Task 4 (Design the KKT-Residual Verification Harness)
 **Date:** 2026-06-11
