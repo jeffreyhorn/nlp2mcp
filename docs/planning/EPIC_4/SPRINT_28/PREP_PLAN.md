@@ -526,7 +526,7 @@ grep -l 'kkt_residual' docs/issues/ISSUE_122*.md docs/issues/ISSUE_138*.md
 ### Acceptance Criteria
 
 - [x] All six carryforwards have a Phase 0 Acceptance Gate with the four required subsections
-- [x] Hand-derived KKT shapes recorded (reused/cited from Sprint 27 where already verified)
+- [x] Hand-derived KKT shapes recorded where available (reused/cited from Sprint 27 where verified — e.g. #1387's 5e-8 residual, #1224's inverse-offset shape); **kand (#1390) is diagnosis-first** — its gate explicitly records the shape as "not yet hand-derivable" (the prior shape was proven inert), pending a Day-0 trace
 - [x] Expected Emit Pattern labeled as a hypothesis pending Day-0 trace (PR24)
 - [x] Verification Methodology cites the exact KKT-residual harness invocation + target solution (PR27)
 - [x] PROCEED requires the traced surface; REPLAN exits named for the three diagnosis-heavy tracks
