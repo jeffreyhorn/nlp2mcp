@@ -14,13 +14,13 @@ Authoritative figures from the Sprint 27 Day-13 deterministic retest (`SPRINT_27
 |---|---|---|---|
 | Parse | **142** / 142 | ≥ 142 | met |
 | Translate | **135** / 142 | ≥ 135 | met (maintain) |
-| Solve (`model_optimal`) | **105** / 142 | ≥ 110 (stretch) | −5 to stretch |
-| Match | **62** / 142 | ≥ 65 | −3 |
+| Solve (`model_optimal`) | **105** / 142 | ≥ 110 (stretch) | -5 to stretch |
+| Match | **62** / 142 | ≥ 65 | -3 |
 | Mismatch | **37** | — | (solved-but-diverging) |
 | path_syntax_error | **8** | maintain ≤ 8 | met |
 | path_solve_terminated | **5** | maintain ≤ 5 | met |
-| model_infeasible | **8** | ≤ 5 | −3 |
-| Tests | **4,779** | ≥ 4,800 | −21 |
+| model_infeasible | **8** | ≤ 5 | -3 |
+| Tests | **4,779** | ≥ 4,800 | -21 |
 
 Of the 105 solved models, 62 match their NLP reference, 37 mismatch, and 6 are uncompared (`compare_multi_solve_skip` — no single-solve NLP reference).
 
@@ -46,10 +46,10 @@ Per-model trajectory: Sprint 27 Day-0 → Sprint 27 final (= Sprint 28 Day-0), w
 
 | Model | S27 Day-0 bucket | S28 Day-0 bucket (= S27 final) | Movement across Sprint 27 | Gating issue (Sprint 28) |
 |---|---|---|---|---|
-| **mine** | `translate_internal_error` | `model_infeasible` | translate-fail → infeasible (**S27 +1 Translate** via #1224 `IndexOffset(ParamRef)` render, Day 12) | **#1224** — Solve: `stat_x` must invert the parameter-valued offset (`sum(k, lam_pr(k,l,i-li(k),j-lj(k)))` − the `l-1` term) |
+| **mine** | `translate_internal_error` | `model_infeasible` | translate-fail → infeasible (**S27 +1 Translate** via #1224 `IndexOffset(ParamRef)` render, Day 12) | **#1224** — Solve: `stat_x` must invert the parameter-valued offset (`sum(k, lam_pr(k,l,i-li(k),j-lj(k)))` - the `l-1` term) |
 | **camshape** | `model_infeasible` | `model_infeasible` | unchanged (#1424 subset-corruption landed Day 11 but MCP stays MS5) | **#1388** — Case-(b) `stat_r` per-term divergence (`stationarity.py:1835`) |
-| **otpop** | `path_syntax_error` | `model_infeasible` | **moved forward** (P5 #1356/#1357 comp_up subset/superset cleared `$171` → Locally Infeasible) | **#1393 + #1335** — scalar-eq Sum-collapse (`stationarity.py`) + `_try_eval_offset` `card(t)−ord(t)` |
-| **cclinpts** | `model_optimal` / mismatch | `model_optimal` / mismatch | unchanged (solves; obj −9.975 vs NLP −3.0011, rel 0.70) | **#1387** — three coupled AD changes (offset-enum + re-symbolization anchor + non-convex warm-start) |
+| **otpop** | `path_syntax_error` | `model_infeasible` | **moved forward** (P5 #1356/#1357 comp_up subset/superset cleared `$171` → Locally Infeasible) | **#1393 + #1335** — scalar-eq Sum-collapse (`stationarity.py`) + `_try_eval_offset` `card(t)-ord(t)` |
+| **cclinpts** | `model_optimal` / mismatch | `model_optimal` / mismatch | unchanged (solves; obj -9.975 vs NLP -3.0011, rel 0.70) | **#1387** — three coupled AD changes (offset-enum + re-symbolization anchor + non-convex warm-start) |
 | **kand** | `model_optimal` / mismatch | `model_optimal` / mismatch | unchanged (solves; obj 195.0 vs NLP 2613.0, rel 0.93) | **#1390** — re-diagnose the true mismatch source (tree-predicate collapse proven inert) |
 | **camcge** | `path_syntax_error` | `model_infeasible` | **moved forward** (#1381 Pattern C Phase B cleared the syntax error → Locally Infeasible / singular Jacobian) | **camcge** singular-Jacobian CGE degeneracy (`docs/issues/ISSUE_1330_camcge-model-infeasible-after-1245.md`) |
 
