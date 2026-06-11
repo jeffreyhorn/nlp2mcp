@@ -266,9 +266,10 @@ done
 
 ## Task 3: Codify Process Recommendations PR24 (Day-0 Traced Fix-Surface) + PR25 (Projection Discipline)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
 **Estimated Time:** 2–3 hours
+**Completed:** 2026-06-11
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
@@ -305,11 +306,15 @@ The prep-doc fix surface was wrong 4× in Sprint 27 (Days 0/6/11/12) — the rea
 
 ### Changes
 
-To be completed.
+- **CONTRIBUTING.md** — added a new `## Day-0 Traced Fix-Surface (PR24) + Projection Discipline (PR25)` section after the Phase 0 Acceptance Gates section: PR24 hard rule (prep records symptom+reproducer; surface established by a Day-0 trace; PROCEED cites the *traced* surface) + PR25 rule (genuine bucket-to-success vs bucket-forward; only genuine gains count; both tallies shown). Each rule notes it *strengthens* PR20, not replaces it.
+- **CONTRIBUTING.md** — amended the Phase-0 4-subsection template in place: `### Expected Emit Pattern` now flagged as the prep-doc *hypothesis*; `### Verification Methodology` now references the KKT-residual harness (`scripts/diagnostics/kkt_residual.py`, PR27) as the Case-(a/b/c) discriminator + the golden-staleness check (PR26); `### PROCEED/REPLAN Signal` now requires a `Traced Fix-Surface (Day-0)` line citing the traced `file:line` + evidence.
+- **KNOWN_UNKNOWNS.md** — appended a Task 3 verification sub-entry (fix-surface-as-hypothesis framing) to Unknowns 1.1/2.1/3.1/4.1/5.1, alongside their existing Task 2 baseline entries.
 
 ### Result
 
-To be completed.
+- PR24 + PR25 are codified Phase-0 requirements; the four-subsection gate template now bakes in the traced-surface rule and the PR26/PR27 tooling references — so Task 5 authors each carryforward gate with the traced surface, not the prep-doc guess.
+- Self-consistency check passed: PR24 explicitly strengthens PR20 (still requires the hand-derived KKT shape + 4-subsection gate); no contradiction with PR14/PR19/PR22/PR23.
+- Lands before Task 5 (Phase-0 gate authoring), as required by the dependency chain.
 
 ### Verification
 
@@ -333,13 +338,13 @@ grep -i 'kkt.residual\|kkt_residual' CONTRIBUTING.md
 
 ### Acceptance Criteria
 
-- [ ] PR24 rule codified in CONTRIBUTING.md as a hard Phase-0 requirement
-- [ ] PR25 rule codified in CONTRIBUTING.md
-- [ ] Phase-0 template requires citing the traced (not prep-doc) surface on PROCEED
-- [ ] Phase-0 Verification Methodology references the KKT-residual harness (PR27)
-- [ ] No contradiction with existing PR20–PR23 text
-- [ ] Rules land before Task 5 (Phase 0 gate authoring) begins
-- [ ] Unknowns 1.1, 2.1, 3.1, 4.1, 5.1 verified and updated in KNOWN_UNKNOWNS.md
+- [x] PR24 rule codified in CONTRIBUTING.md as a hard Phase-0 requirement
+- [x] PR25 rule codified in CONTRIBUTING.md
+- [x] Phase-0 template requires citing the traced (not prep-doc) surface on PROCEED
+- [x] Phase-0 Verification Methodology references the KKT-residual harness (PR27)
+- [x] No contradiction with existing PR20–PR23 text
+- [x] Rules land before Task 5 (Phase 0 gate authoring) begins
+- [x] Unknowns 1.1, 2.1, 3.1, 4.1, 5.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

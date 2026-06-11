@@ -167,6 +167,16 @@ AD/KKT engineer
 **Evidence:** committed Day-13 `gamslib_status.json` (`mine.mcp_solve.outcome_category = model_infeasible`); BASELINE_METRICS.md §2 provenance row + §3 projection row P1.
 **Decision:** +1 Solve tallied toward the ≥110 stretch; mine Match held conditional (not tallied). Fix-surface (AD/Jacobian vs `stationarity.py` vs `ast.py`) remains a Day-0 hypothesis for Tasks 5/6.
 
+
+**— Task 3 (PR24/PR25 codification — fix-surface-as-hypothesis framing):**
+
+- **Task 3 outcome:** ✅ VERIFIED (framing aspect)
+- **Verified by:** Task 3 (Codify PR24 + PR25)
+- **Date:** 2026-06-11
+- **Findings:** This fix surface (the AD/Jacobian layer vs `src/kkt/stationarity.py` vs the `src/ir/ast.py` emit render) is now governed by the codified **PR24** rule — the prep-doc/issue-doc `### Expected Emit Pattern` is a *hypothesis*; the actual `file:line` is established by a Day-0 trace, and a Phase-0 PROCEED must cite the *traced* surface (never the prep-doc guess).
+- **Evidence:** CONTRIBUTING.md §"Day-0 Traced Fix-Surface (PR24) + Projection Discipline (PR25)" + the amended Phase-0 4-subsection template (`### Expected Emit Pattern` hypothesis note; `### PROCEED/REPLAN Signal` `Traced Fix-Surface (Day-0)` line).
+- **Decision:** Phase-0 PROCEED for this unknown now requires the traced surface; Task 5 applies PR24 when authoring the gate.
+
 ---
 
 ## Unknown 1.2: Does the inverse-offset `lam_pr` term need the `l-1` companion term emitted in the same pass?
@@ -303,6 +313,16 @@ AD/KKT engineer
 **Evidence:** committed Day-13 `gamslib_status.json` (`camshape.mcp_solve.outcome_category = model_infeasible`); BASELINE_METRICS.md §2 row + §3 row P2.
 **Decision:** +1 Solve tallied toward the ≥110 stretch; camshape Match held conditional. The interior-`stat_r` vs edge-`lam_convex_edge` term localization is a Task-5/6 fix-surface question.
 
+
+**— Task 3 (PR24/PR25 codification — fix-surface-as-hypothesis framing):**
+
+- **Task 3 outcome:** ✅ VERIFIED (framing aspect)
+- **Verified by:** Task 3 (Codify PR24 + PR25)
+- **Date:** 2026-06-11
+- **Findings:** This fix surface (the interior `stat_r(i)` vs edge `lam_convex_edge*` cross-terms (prep names `stationarity.py:1835`)) is now governed by the codified **PR24** rule — the prep-doc/issue-doc `### Expected Emit Pattern` is a *hypothesis*; the actual `file:line` is established by a Day-0 trace, and a Phase-0 PROCEED must cite the *traced* surface (never the prep-doc guess).
+- **Evidence:** CONTRIBUTING.md §"Day-0 Traced Fix-Surface (PR24) + Projection Discipline (PR25)" + the amended Phase-0 4-subsection template (`### Expected Emit Pattern` hypothesis note; `### PROCEED/REPLAN Signal` `Traced Fix-Surface (Day-0)` line).
+- **Decision:** Phase-0 PROCEED for this unknown now requires the traced surface; Task 5 applies PR24 when authoring the gate.
+
 ---
 
 ## Unknown 2.2: Does fixing `stat_r` risk the same multi-model blast radius as the Sprint 27 cesam2 bug-class fixes?
@@ -432,6 +452,16 @@ AD/KKT engineer
 **Findings:** otpop is `model_infeasible` at Sprint 28 Day 0 — a **bucket-forward** move already banked in Sprint 27 (S27 Day-0 `path_syntax_error` → P5 #1356/#1357 cleared `$171` → Locally Infeasible). The projected #1393+#1335 delta is a **genuine** Solve +1 firm AND Match +1 firm.
 **Evidence:** committed Day-13 `gamslib_status.json` (`otpop.mcp_solve.outcome_category = model_infeasible`); BASELINE_METRICS.md §2 row + §3 row P3.
 **Decision:** +1 Solve and +1 Match tallied (firm). The prior `path_syntax_error → model_infeasible` move is NOT re-counted (PR25). Which `stationarity.py` collapse path the `t→t__` aliasing flows through stays a Task-5/6 question.
+
+
+**— Task 3 (PR24/PR25 codification — fix-surface-as-hypothesis framing):**
+
+- **Task 3 outcome:** ✅ VERIFIED (framing aspect)
+- **Verified by:** Task 3 (Codify PR24 + PR25)
+- **Date:** 2026-06-11
+- **Findings:** This fix surface (which `stationarity.py` symbolic-collapse path the `t→t__` aliasing flows through) is now governed by the codified **PR24** rule — the prep-doc/issue-doc `### Expected Emit Pattern` is a *hypothesis*; the actual `file:line` is established by a Day-0 trace, and a Phase-0 PROCEED must cite the *traced* surface (never the prep-doc guess).
+- **Evidence:** CONTRIBUTING.md §"Day-0 Traced Fix-Surface (PR24) + Projection Discipline (PR25)" + the amended Phase-0 4-subsection template (`### Expected Emit Pattern` hypothesis note; `### PROCEED/REPLAN Signal` `Traced Fix-Surface (Day-0)` line).
+- **Decision:** Phase-0 PROCEED for this unknown now requires the traced surface; Task 5 applies PR24 when authoring the gate.
 
 ---
 
@@ -563,6 +593,16 @@ AD/KKT engineer
 **Evidence:** committed Day-13 `gamslib_status.json` (`cclinpts` model_optimal, `solution_comparison.comparison_result = compare_objective_mismatch`); BASELINE_METRICS.md §2 row + §3 row P4.
 **Decision:** +1 Match tallied (firm); 0 Solve credit. Whether the re-symbolization-anchor fix is architectural (→ Sprint 29 REPLAN) is the Task-6 hypothesis-validation, not a Task-2 baseline question.
 
+
+**— Task 3 (PR24/PR25 codification — fix-surface-as-hypothesis framing):**
+
+- **Task 3 outcome:** ✅ VERIFIED (framing aspect)
+- **Verified by:** Task 3 (Codify PR24 + PR25)
+- **Date:** 2026-06-11
+- **Findings:** This fix surface (whether the gradient→stationarity re-symbolization anchor fix is architectural or local) is now governed by the codified **PR24** rule — the prep-doc/issue-doc `### Expected Emit Pattern` is a *hypothesis*; the actual `file:line` is established by a Day-0 trace, and a Phase-0 PROCEED must cite the *traced* surface (never the prep-doc guess).
+- **Evidence:** CONTRIBUTING.md §"Day-0 Traced Fix-Surface (PR24) + Projection Discipline (PR25)" + the amended Phase-0 4-subsection template (`### Expected Emit Pattern` hypothesis note; `### PROCEED/REPLAN Signal` `Traced Fix-Surface (Day-0)` line).
+- **Decision:** Phase-0 PROCEED for this unknown now requires the traced surface; Task 5 applies PR24 when authoring the gate.
+
 ---
 
 ## Unknown 4.2: Are the AD offset-enumeration cross-terms (change 1) correct as residual-verified in Sprint 27?
@@ -692,6 +732,16 @@ AD/KKT engineer
 **Findings:** kand is `model_optimal` / mismatch at Sprint 28 Day 0 (already solves; obj 195.0 vs NLP 2613.0, rel 0.93). The projected #1390 delta is a **genuine** solve→match gain (Match +1) — **NOT** a Solve gain.
 **Evidence:** committed Day-13 `gamslib_status.json` (`kand` model_optimal, `solution_comparison.comparison_result = compare_objective_mismatch`); BASELINE_METRICS.md §2 row + §3 row P5.
 **Decision:** +1 Match tallied (firm); 0 Solve credit. Whether the 195-vs-2613 gap is a localizable row vs LP-recourse-coupling architecture (→ Sprint 29 REPLAN) is the Task-6 question.
+
+
+**— Task 3 (PR24/PR25 codification — fix-surface-as-hypothesis framing):**
+
+- **Task 3 outcome:** ✅ VERIFIED (framing aspect)
+- **Verified by:** Task 3 (Codify PR24 + PR25)
+- **Date:** 2026-06-11
+- **Findings:** This fix surface (a localizable stationarity/complementarity row vs LP first-stage/recourse-coupling architecture) is now governed by the codified **PR24** rule — the prep-doc/issue-doc `### Expected Emit Pattern` is a *hypothesis*; the actual `file:line` is established by a Day-0 trace, and a Phase-0 PROCEED must cite the *traced* surface (never the prep-doc guess).
+- **Evidence:** CONTRIBUTING.md §"Day-0 Traced Fix-Surface (PR24) + Projection Discipline (PR25)" + the amended Phase-0 4-subsection template (`### Expected Emit Pattern` hypothesis note; `### PROCEED/REPLAN Signal` `Traced Fix-Surface (Day-0)` line).
+- **Decision:** Phase-0 PROCEED for this unknown now requires the traced surface; Task 5 applies PR24 when authoring the gate.
 
 ---
 
