@@ -1127,7 +1127,13 @@ Emit engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the determination is made; the candidate fix surface is a Day-0-trace hypothesis (PR24) and the fix is implemented in-sprint.
+
+**Verified by:** Task 9 (Lower-Priority Cleanups Fix-Surface Analysis)
+**Date:** 2026-06-11
+**Findings:** **Isolatable — YES.** robot's `rho.l('h0')=4.5;` is emitted twice — by the denominator-init block (expands source `rho.l(h)=4.5`) and by the `fx_to_l_override` (from `rho.fx(firstlast)=4.5`). This is a **distinct mechanism** from the Sprint 27 `.fx`-restore fix (Variable Bounds ~1726 + suppressed-fx restore ~2825), so the dedup is isolated — no shared code path, no otpop/dinam regression risk. robot is `path_solve_license` (failing) → byte-stability only, no Solve/Match impact.
+**Evidence:** robot_mcp.gms `rho.l('h0..h9')=4.5` emissions; ISSUE_1374 §audit; PRIORITY_7_CLEANUPS_FIX_SURFACE.md §#1374.
+**Decision:** Candidate surface (hypothesis): `emit_gams.py` `fx_to_l_overrides_by_var` integration — suppress the override when it matches the denominator-init `.l`. ~1–2h, LOW coupling.
 
 ---
 
@@ -1166,7 +1172,13 @@ Pipeline/scripts engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the determination is made; the candidate fix surface is a Day-0-trace hypothesis (PR24) and the fix is implemented in-sprint.
+
+**Verified by:** Task 9 (Lower-Priority Cleanups Fix-Surface Analysis)
+**Date:** 2026-06-11
+**Findings:** **Located.** The second leak is the free-text `message` field populated from a captured subprocess **stderr**: `batch_translate.py:279` (`error_msg = stderr`) → `~:286` (`"message": error_msg[:500]`). Python's default warning formatter writes `<abspath>:<lineno>: UserWarning: …` to stderr (from `src` `warnings.warn`, e.g. `index_mapping.py:502`), so an absolute `/Users/.../src/…py:NNN` lands in the DB whenever a model warns AND fails translate (same shape on the solve path, `run_full_test.py:550`). **DB audit: the current committed DB is clean (0 abs-path substrings)** — the leak is transient (warn-then-fail-specific), a latent portability defect, not a present corruption.
+**Evidence:** PRIORITY_7_CLEANUPS_FIX_SURFACE.md §#1400; DB audit (0 `/Users/`|`src/…py:` substrings); `batch_translate.py:~279–286`.
+**Decision:** Candidate surface (hypothesis): relativize abs-path substrings in `error_msg` at the capture sites, OR a repo-relative `warnings.formatwarning` in `src/cli.py` (cleaner, fixes all consumers). ~1–2h, LOW coupling.
 
 ---
 
@@ -1205,7 +1217,13 @@ AD/KKT engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (design scope) — the determination is made; the candidate fix surface is a Day-0-trace hypothesis (PR24) and the fix is implemented in-sprint.
+
+**Verified by:** Task 9 (Lower-Priority Cleanups Fix-Surface Analysis)
+**Date:** 2026-06-11
+**Findings:** **Atomic — YES.** The runtime-guard equation-body re-emit (`stationarity.py`, re-emit skipped `slack`/`demand` as `sum(<bound>$(<predicate>), <body>)`) and the `J_gᵀ·lam` cross-terms (`∂slack/∂y·nu_slack`, etc.) MUST land together — ISSUE_1385 states re-emitting (1) without (2) creates an inconsistent MCP (multipliers with no complementarity coupling). The Day-4 reverted impl is the evidence: `nu_slack("srn")`/`lam_demand("srn")` (srn a set name, not an element) + dropped `J_gᵀ·lam_demand` cross-terms (Jacobian vanished on symbolic indices in `_diff_varref`).
+**Evidence:** ISSUE_1385 §"Sprint 27 Day 7" (atomic statement) + §"Symptom" (Day-4 broken emit); PRIORITY_7_CLEANUPS_FIX_SURFACE.md §#1385.
+**Decision:** Candidate surface (hypothesis): `stationarity.py` re-emit **+** `constraint_jacobian.py`/`_diff_varref` symbolic-instance cross-terms (atomic). **Re-scope candidate** — larger than a cleanup (~6–10h, HIGH coupling); translate-only, no firm Solve/Match → may sequence separately or defer to Sprint 29.
 
 ---
 
