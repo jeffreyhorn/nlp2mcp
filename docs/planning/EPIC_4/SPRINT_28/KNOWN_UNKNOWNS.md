@@ -1529,7 +1529,13 @@ Diagnostics/CI engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (design scope)
+
+**Verified by:** Task 8 (Divergence Detector + AD Cross-Term Property-Test Catalog Design)
+**Date:** 2026-06-11
+**Findings:** Detector designed: it extracts the **embedded** NLP objective via a probe that assigns to a uniquely-named scalar and displays it (`Scalar embedded_nlp_obj_PROBE; embedded_nlp_obj_PROBE = <objvar>.l; Display embedded_nlp_obj_PROBE;`, parsed by the unique name) inserted right after the `$offMulti` that closes the source `$include` (anchored on the `$offMulti` after `$include "…/<model>.gms"`, since presolve files have more than one; post-include, pre-dual-transfer, pre-MCP-Solve), and the **standalone** NLP objective from a direct `gams <raw>.gms` solve; flags when the relative objective gap > `tol` (default 1e-4) or the embedded model status is worse (infeasible). Validated *by design* against the past wins: #1378 launch (embedded 2604.01 vs standalone 2257.80 ≈ 13% → FLAG) and #1424 camshape (embedded infeasible/area 5.009 vs standalone 4.2841 MS 2, locally optimal → model-status FLAG). The pre-fix-replay confirmation is the in-sprint acceptance test.
+**Evidence:** PRIORITY_10_DIVERGENCE_PROPERTY_TESTS_DESIGN.md Part 1 (interface + extraction + validation table).
+**Decision:** Detector + allowlist + CI gate on the presolve emit path designed; the #1378/#1424 replay is the in-sprint acceptance run.
 
 ---
 
@@ -1569,7 +1575,13 @@ AD/KKT + diagnostics engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIALLY VERIFIED (design scope)
+
+**Verified by:** Task 8 (Divergence Detector + AD Cross-Term Property-Test Catalog Design)
+**Date:** 2026-06-11
+**Findings:** Cataloged **6 cross-term shapes**, each with a minimal synthetic model + hand-derived `stat_*` cross-term: (1) single-axis offset Sum, (2) self-alias Sum, (3) cross-set alias Sum (#1398), (4) parameter-valued offset (#1224), (5) interior+edge convex-combination (#1388), (6) tree-predicate-conditioned aliased Sum (#1390). Shapes 4/5/6 are the literal #1224/#1388/#1390 defect shapes; 1/2/3 are the foundational offset/alias/cross-set recurrences. Shape 1 was prototyped — the emit produced the hand-derived inverted-offset form exactly.
+**Evidence:** PRIORITY_10_DIVERGENCE_PROPERTY_TESTS_DESIGN.md Part 2 (catalog table) + the shape-1 prototype.
+**Decision:** The catalog covers the #1224/#1388/#1390 defect class; additional shapes (e.g. #1335 `card(t)-ord(t)`) appendable in-sprint.
 
 ---
 
@@ -1608,7 +1620,13 @@ AD/KKT + diagnostics engineer
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Verified by:** Task 8 (Divergence Detector + AD Cross-Term Property-Test Catalog Design)
+**Date:** 2026-06-11
+**Findings:** Property tests are byte-stable and fast. Prototyped shape 1 (a tiny synthetic offset-Sum model): emit is **byte-identical on re-emit** (PR12-clean), and the per-model emit is sub-second in-process (the 4.38 s measured for a `python -m src.cli` subprocess is interpreter+import startup, which the in-process emit API the test suite already uses avoids). The 6-test suite adds negligible CI time and runs inside the existing `make test` on every PR; committed fixtures run in `--fast` CI too.
+**Evidence:** PRIORITY_10_DIVERGENCE_PROPERTY_TESTS_DESIGN.md Part 2 (property-test spec) + the shape-1 timing/byte-stability prototype.
+**Decision:** Property tests live in `tests/integration/emit/` with committed synthetic fixtures, use in-process emit + pattern-match assertions, and wire into `make test` (no separate workflow).
 
 ---
 
