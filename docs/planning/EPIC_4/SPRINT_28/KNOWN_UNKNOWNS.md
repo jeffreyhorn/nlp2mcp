@@ -117,6 +117,33 @@ This document identifies all assumptions and unknowns for Sprint 28 features **b
 
 ---
 
+## Sprint 28 Day-0 Reconciliation (Task 10 — integration)
+
+**Verified by:** Task 10 (Plan Sprint 28 Detailed Schedule) — integration. **Date:** 2026-06-11.
+
+At Sprint 28 Day-0 entry, every unknown carries a status from its owning prep task (Tasks 2–9) — **none is stuck 🔍 INCOMPLETE**:
+
+- **10 ✅ VERIFIED (resolved pre-sprint):** 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 6.2, 8.1, 8.3, 10.3 — these are the empirically-settled baseline/bucket-provenance, drift-measurement, determinism, and property-test-speed results.
+- **19 🟡 PARTIALLY VERIFIED (design scope):** 1.2, 1.3, 2.2, 2.3, 3.2, 3.3, 4.2, 4.3, 5.2, 5.3, 7.1, 7.2, 7.3, 8.2, 9.1, 9.2, 9.3, 10.1, 10.2 — the determinations are made and the candidate fix surfaces are **Day-0-trace hypotheses (PR24)**; each VERIFIES in-sprint on a scheduled day.
+
+**In-sprint VERIFICATION day** (mirrors `PLAN.md` §16):
+
+| Unknowns | Owning priority | VERIFY day |
+|---|---|---|
+| 9.1, 9.2, 9.3 | P9 harness | Days 1–3 |
+| 1.2, 1.3 | P1 mine | Day 4 |
+| 2.2, 2.3 | P2 camshape | Day 5 |
+| 3.2, 3.3 | P3 otpop | Days 6–7 |
+| 4.2, 4.3 | P4 cclinpts | Days 8–9 (or REPLAN) |
+| 5.2, 5.3 | P5 kand | Day 10 (or REPLAN) |
+| 7.1, 7.2, 7.3 | P7 cleanups | Day 11 |
+| 8.2 | P8 golden-staleness | Day 12 |
+| 10.1, 10.2 | P10 detector/tests | Day 12 |
+
+**Decision:** the day-by-day schedule (`PLAN.md`) honors every PROCEED/REPLAN signal — the diagnosis-heavy tracks (#1387/#1390/camcge → Unknowns 4.x/5.x/6.x) are gated on their Task-6 verdicts with explicit Sprint 29 exits. **Sprint 28 is GO for Day 0.**
+
+---
+
 # Category 1: #1224 mine — Parameter-Valued-Offset KKT Cross-Term Inversion
 
 Priority 1 workstream — the highest-leverage Solve carryforward. mine translates (Sprint 27 #1224, `src/ir/ast.py` emit render) but is `model_infeasible` because the `stat_x` cross-term from the `pr` constraint does not invert the parameter-valued offset. Hand-derived target shape recorded in `PROJECT_PLAN.md` Priority 1 + `ISSUE_1224_*.md`.
