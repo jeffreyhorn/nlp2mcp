@@ -1176,8 +1176,8 @@ Pipeline/scripts engineer
 
 **Verified by:** Task 9 (Lower-Priority Cleanups Fix-Surface Analysis)
 **Date:** 2026-06-11
-**Findings:** **Located.** The second leak is the free-text `message` field populated from a captured subprocess **stderr**: `batch_translate.py:279` (`error_msg = stderr`) → `:285` (`"message": error_msg[:500]`). Python's default warning formatter writes `<abspath>:<lineno>: UserWarning: …` to stderr (from `src` `warnings.warn`, e.g. `index_mapping.py:502`), so an absolute `/Users/.../src/…py:NNN` lands in the DB whenever a model warns AND fails translate (same shape on the solve path, `run_full_test.py:550`). **DB audit: the current committed DB is clean (0 abs-path substrings)** — the leak is transient (warn-then-fail-specific), a latent portability defect, not a present corruption.
-**Evidence:** PRIORITY_7_CLEANUPS_FIX_SURFACE.md §#1400; DB audit (0 `/Users/`|`src/…py:` substrings); `batch_translate.py:279–285`.
+**Findings:** **Located.** The second leak is the free-text `message` field populated from a captured subprocess **stderr**: `batch_translate.py:279` (`error_msg = stderr`) → `~:286` (`"message": error_msg[:500]`). Python's default warning formatter writes `<abspath>:<lineno>: UserWarning: …` to stderr (from `src` `warnings.warn`, e.g. `index_mapping.py:502`), so an absolute `/Users/.../src/…py:NNN` lands in the DB whenever a model warns AND fails translate (same shape on the solve path, `run_full_test.py:550`). **DB audit: the current committed DB is clean (0 abs-path substrings)** — the leak is transient (warn-then-fail-specific), a latent portability defect, not a present corruption.
+**Evidence:** PRIORITY_7_CLEANUPS_FIX_SURFACE.md §#1400; DB audit (0 `/Users/`|`src/…py:` substrings); `batch_translate.py:~279–286`.
 **Decision:** Candidate surface (hypothesis): relativize abs-path substrings in `error_msg` at the capture sites, OR a repo-relative `warnings.formatwarning` in `src/cli.py` (cleaner, fixes all consumers). ~1–2h, LOW coupling.
 
 ---

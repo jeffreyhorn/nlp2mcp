@@ -35,7 +35,7 @@ The Sprint 27 Day-13 fix handled the **`.fx`-restore** shape (otpop/dinam): a su
 The Sprint 27 #1400 fix relativized the **`mcp_file_used`** field (a single path) via `_repo_relative_path` in `run_full_test.py`. The **second** leak is the free-text **`message`** field, populated from a captured subprocess **stderr**:
 
 - `scripts/gamslib/batch_translate.py:279` — on a failed translate, `error_msg = stderr if stderr else stdout`;
-- `:285` — `"message": error_msg[:500]` is stored into `gamslib_status.json`.
+- `~:286` — `"message": error_msg[:500]` is stored into `gamslib_status.json` (the exception-path capture has the same shape at `~:313`).
 
 When `src` emits a `warnings.warn(...)` (e.g. `src/ad/index_mapping.py:502/544/559`, `src/kkt/stationarity.py:5694`), Python's **default warning formatter** writes `<absolute-path>:<lineno>: UserWarning: <message>` to stderr — so an absolute `/Users/.../src/…py:NNN` lands in the DB `message` whenever a model **emits a warning AND fails translate** in the same run. The same capture shape exists on the solve path (`run_full_test.py:550`, `"message": result.get("error", …)`).
 
@@ -46,7 +46,7 @@ The **current committed `gamslib_status.json` is clean** — 0 absolute-path sub
 ### Candidate fix surface (Day-0-trace hypothesis)
 
 Two candidates (the Day-0 trace picks one):
-- **(a) at the capture site** — relativize abs-path substrings in `error_msg` before storing (a regex strip of the `_REPO_ROOT` prefix applied to the *text*, broader than the single-path `_repo_relative_path`); applied at `batch_translate.py:279–285` **and** the solve-path `run_full_test.py:550`.
+- **(a) at the capture site** — relativize abs-path substrings in `error_msg` before storing (a regex strip of the `_REPO_ROOT` prefix applied to the *text*, broader than the single-path `_repo_relative_path`); applied at `batch_translate.py:~279–286` **and** the solve-path `run_full_test.py:550`.
 - **(b) at the source (cleaner)** — install a repo-relative `warnings.formatwarning` (or set `PYTHONWARNINGS`) in `src/cli.py` so emitted warnings never contain the absolute path; this fixes every downstream consumer at once.
 
 **Estimate:** ~1–2h (scripts-only for (a); (b) touches `src/cli.py`). **Coupling risk: LOW.** To reproduce the leak for the acceptance test, force a warn-then-fail model and assert no `/Users/` substring in the captured `message`.
@@ -78,7 +78,7 @@ This is the deferred *redesign* half of #1385, not a small dedup like #1374/#140
 | Item | Candidate surface (hypothesis) | Coupling risk | Estimate | Solve/Match impact |
 |---|---|---|---|---|
 | **#1374** robot `.l` dedup | `emit_gams.py` `fx_to_l_overrides_by_var` integration (suppress override when it matches the denominator-init `.l`) | LOW — isolatable from the Sprint 27 `.fx`-restore fix | ~1–2h | none (byte-stability only; robot stays `path_solve_license`) |
-| **#1400** message path leak | `batch_translate.py:279–285` (+ `run_full_test.py:550`) relativize stderr text, OR a repo-relative `warnings.formatwarning` in `src/cli.py` | LOW | ~1–2h | none (machine-portability) |
+| **#1400** message path leak | `batch_translate.py:~279–286` (+ `run_full_test.py:550`) relativize stderr text, OR a repo-relative `warnings.formatwarning` in `src/cli.py` | LOW | ~1–2h | none (machine-portability) |
 | **#1385** runtime-guard re-emit + cross-terms | `stationarity.py` re-emit **+** `constraint_jacobian.py`/`_diff_varref` cross-terms — **atomic** | HIGH — atomic; symbolic-instance AD rework (Day-4 revert blocker) | ~6–10h | translate-only (no firm Solve/Match); **re-scope candidate** |
 
 ## Verification
