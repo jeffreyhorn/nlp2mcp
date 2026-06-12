@@ -87,7 +87,7 @@ Shapes 4/5/6 are the literal #1224/#1388/#1390 defect shapes (Acceptance Criteri
 
 ### Property-test spec (Unknown 10.3)
 
-- **Location:** `tests/integration/emit/test_ad_crossterm_shapes.py` (alongside the existing emit integration tests), `@pytest.mark.unit` where the model is tiny.
+- **Location:** `tests/integration/emit/test_ad_crossterm_shapes.py` (alongside the existing emit integration tests), marked **`@pytest.mark.integration`** — the tests read fixture `.gms` files and run the cross-module emit pipeline (I/O + cross-module), which matches the repo's `integration` marker, not `unit` ("Fast unit tests with no I/O"). They are still tiny and sub-second despite the marker.
 - **Fixtures:** the 6 synthetic `.gms` models committed under `tests/fixtures/crossterm_shapes/` (small, hand-checkable, always-run — not gitignored like the GAMSlib corpus).
 - **Assertion form:** emit the synthetic model **in-process** (the same emit API the existing emit tests use — not a subprocess), extract the target `stat_*` row, and **pattern-match** the hand-derived cross-term (normalize whitespace; assert the key sub-expression is present — e.g. `lam_link(tt)` guarded by `ord(t) = ord(tt) + 1`), robust to incidental re-parenthesization/reordering.
 - **Speed (Unknown 10.3 Q1):** in-process emit of a tiny synthetic model is **sub-second** (the 4.38 s measured for a `python -m src.cli` subprocess is interpreter+import startup, not the emit; the in-process path the test suite already uses avoids it). The 6-test suite adds negligible CI time.
