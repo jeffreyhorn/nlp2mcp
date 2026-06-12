@@ -52,4 +52,11 @@
 - `Traced Fix-Surface (Day-0)` filled in `ISSUE_{1224,1388,1393,1335,1387,1390,1330}_*.md` (candidate surfaces).
 - This Day-0 SPRINT_LOG entry.
 
+### Day-0 addendum — golden-refresh review investigation (presolve emit)
+
+The PR #1438 review (Copilot) raised two `--nlp-presolve` concerns on the refreshed goldens. Both **investigated empirically** (full GAMS solve): **neither is a sprint blocker**, and the refresh introduced neither (faithful regen; old goldens had the same patterns).
+
+- **korcge ordering — REAL latent emit bug, filed #1439.** The `--nlp-presolve` variant aborts (EXECERROR=5): `it(i)=yes$(e.l or m.l)` + the `.fx` fixups run **before** the `$include` with `.l=0`, so `it` is empty and vars fix to 0 → `1/xxd(i)`/`m(i)**(-rhoc)` div-by-zero. **Not blocking:** korcge solves **MODEL STATUS 1 Optimal** via the non-presolve file (`mcp_file_used = None`); the presolve variant is unused for its metrics; old golden was already broken (Locally Infeasible). Filed `ISSUE_1439_*.md` + GitHub #1439, wired into `PLAN.md`/`PLAN_PROMPTS.md` Day 0 + Day 12 (Priority 10 divergence detector). The reviewer correctly identified the mechanism.
+- **cesam empty `nu_*` transfer — BENIGN, no issue filed.** Despite the empty equality-multiplier warm-start, cesam's presolve MCP solves to **MODEL STATUS 1 Optimal** (primal + `piL_*`/`piU_*` bound-multiplier transfer suffices). Side-finding: cesam solves under presolve but is Infeasible under non-presolve (its pipeline path) — possibly recoverable via presolve; noted for the Priority 2/3 cesam2 work.
+
 ### Next: Day 1 — begin building the KKT-residual harness (Priority 9, front-loaded Days 1–3).

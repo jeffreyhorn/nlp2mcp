@@ -34,7 +34,7 @@ Land the Sprint 27 Solve/Match carryforwards and build the diagnostic + CI tooli
 ## 4. Day 0 — Sprint Kickoff + Day-0 Traces (≤ 8 h)
 
 - Confirm the Day-0 baseline = Sprint 27 final (`BASELINE_METRICS.md`; reuse the committed DB — no fresh 4 h retest unless `main` changed).
-- **One-time golden refresh (Task 7):** `make regen-goldens` → commit the 4 drifted presolve goldens (camshape/cesam/fawley/korcge) as a single reviewable commit, separate from any fix.
+- **One-time golden refresh (Task 7):** `make regen-goldens` → commit the 4 drifted presolve goldens (camshape/cesam/fawley/korcge) as a single reviewable commit, separate from any fix. **Note (#1439):** the refreshed `korcge_mcp_presolve.gms` faithfully reproduces a current-emit bug — its `--nlp-presolve` variant aborts (EXECERROR=5) from an it/in + `.fx`-before-`$include` ordering bug. This is **not a blocker** (korcge solves Optimal via the non-presolve file, `mcp_file_used = None`) and **not a refresh regression** (the old golden was already broken); tracked in `docs/issues/ISSUE_1439_*.md` for the Priority 10 divergence work.
 - **Day-0 traces (PR24)** for the firm carryforwards (mine/camshape/otpop) and the diagnosis-heavy three (cclinpts/kand/camcge): instrument the candidate surfaces, emit each `<model>_mcp.gms`, locate the offending row; record the **traced** `file:line` in each Phase-0 gate's `Traced Fix-Surface (Day-0)` line.
 - **PR25 Day-0 projection tally:** restate the firm Solve/Match deltas (genuine vs bucket-forward) as the sprint's reference.
 - **Est:** ~8 h. **Risk:** the prep-doc surfaces may be wrong (Sprint 27: 4×) — the traces are why Day 0 exists.
@@ -88,7 +88,7 @@ Build `scripts/diagnostics/kkt_residual.py` per `PRIORITY_9_KKT_RESIDUAL_HARNESS
 ## 12. Day 12 — Priority 8 (golden-staleness CI) + Priority 10 (divergence + property tests) (~10 h)
 
 - **P8 (Task 7):** build `scripts/sprint_audit/check_golden_staleness.py [--fix]` + `.github/workflows/golden-staleness.yml` (parallel regen, `src/{ad,kkt,emit,ir}/` trigger) + `make regen-goldens` (the Day-0 refresh already cleared the drift). **Verifies:** 8.1, 8.2, 8.3.
-- **P10 (Task 8):** build `scripts/diagnostics/check_presolve_divergence.py` (replay #1378 + #1424 as the acceptance test) + the 6 AD cross-term property tests (`tests/integration/emit/`, `@pytest.mark.integration`). **Verifies:** 10.1, 10.2, 10.3.
+- **P10 (Task 8):** build `scripts/diagnostics/check_presolve_divergence.py` (replay #1378 + #1424 as the acceptance test; **also exercise korcge #1439** — its `--nlp-presolve` variant aborts EXECERROR=5 from the it/in + `.fx`-before-`$include` ordering bug, a concrete divergence-class case the detector should catch) + the 6 AD cross-term property tests (`tests/integration/emit/`, `@pytest.mark.integration`). **Verifies:** 10.1, 10.2, 10.3. See `docs/issues/ISSUE_1439_*.md`.
 
 ## 13. Day 13 — Final Retest + Closeout (~8 h, tight)
 
