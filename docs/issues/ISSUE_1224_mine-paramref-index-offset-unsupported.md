@@ -66,7 +66,7 @@ The gate above covered the Sprint 27 **translate** fix (emit-only string render,
   .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/mine.gms --gdx mine_nlp.gdx --tol 1e-6 --json phase0_mine.json
   ```
   Target: mine **MODEL STATUS 1**. Expect **Case b** with `stat_x(l,i,j)` (the non-inverted `lam_pr` row) as the max-residual before the fix; the inverted shape drives that residual → 0. Also check boundary cells (Unknown 1.3): a residual non-zero *only* where `i-li(k)`/`j-lj(k)` lands out of domain ⇒ a domain-guard need, not the inversion.
-- **Traced Fix-Surface (Day-0):** _TBD at sprint Day 0 — AD/Jacobian vs `stationarity.py` vs `ast.py` is a hypothesis (PR24); confirm by trace + harness residual before any `src/` change._
+- **Traced Fix-Surface (Day-0):** **Candidate (structural localization, 2026-06-12; harness-residual confirmation pending Day 4).** Confirmed the defect manifests in `mine_mcp.gms:103` `stat_x(l,i,j)` — the cross-term is the **non-inverted** `sum(k, lam_pr(k,l,i,j)$(c(l,i,j)))`, with no offset inversion and no `l-1` companion term. The surface that *builds* this `lam_pr` cross-term (AD/Jacobian vs `stationarity.py` assembly) is still to be pinned by the instrumented trace + harness Case-b residual on Day 4 (PR24) — the structural localization confirms the row, not yet the build site.
 - **Cross-links:** KNOWN_UNKNOWNS Category 1 (Unknowns 1.1, 1.2, 1.3); BASELINE_METRICS §2 mine provenance row (S27 +1 Translate; Solve carried to S28, +1 firm).
 
 ---
