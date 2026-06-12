@@ -64,7 +64,7 @@ A model legitimately differs only if its source NLP is genuinely non-idempotent 
 | Case | Pre-fix embedded obj | Standalone obj | Detector verdict |
 |---|---|---|---|
 | #1378 launch | 2604.01 | 2257.80 (~13% gap) | **FLAG** (relative gap ≫ tol) |
-| #1424 camshape | infeasible (area=5.009 / MS≠1) | 4.2841 (MS 1) | **FLAG** (model-status divergence) |
+| #1424 camshape | infeasible (area=5.009 / MS≠2) | 4.2841 (MS 2, locally optimal) | **FLAG** (model-status divergence) |
 
 Replaying the pre-fix emit for each (revert the #1378 `skip_self_ref_presolve` / the #1424 subset-default skip) must reproduce these flags — the in-sprint acceptance test.
 
