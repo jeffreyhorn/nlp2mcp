@@ -323,10 +323,10 @@ The prep-doc fix surface was wrong 4× in Sprint 27 (Days 0/6/11/12) — the rea
 grep -E 'PR24|PR25' CONTRIBUTING.md
 
 # Phase-0 template references the traced fix-surface rule
-grep -i 'traced fix-surface\|Day-0 trace' CONTRIBUTING.md
+grep -iE 'traced fix-surface|Day-0 trace' CONTRIBUTING.md
 
 # Phase-0 verification-methodology references the KKT-residual harness (PR27)
-grep -i 'kkt.residual\|kkt_residual' CONTRIBUTING.md
+grep -iE 'kkt.residual|kkt_residual' CONTRIBUTING.md
 ```
 
 ### Deliverables
@@ -836,7 +836,7 @@ test -f docs/planning/EPIC_4/SPRINT_28/PRIORITY_7_CLEANUPS_FIX_SURFACE.md && ech
 grep -Ei '#1374|#1400|#1385|robot|message|srpchase' docs/planning/EPIC_4/SPRINT_28/PRIORITY_7_CLEANUPS_FIX_SURFACE.md | head
 
 # Candidate surfaces flagged as hypotheses (PR24)
-grep -i 'hypothes\|Day-0 trace' docs/planning/EPIC_4/SPRINT_28/PRIORITY_7_CLEANUPS_FIX_SURFACE.md
+grep -iE 'hypothes|Day-0 trace' docs/planning/EPIC_4/SPRINT_28/PRIORITY_7_CLEANUPS_FIX_SURFACE.md
 ```
 
 ### Deliverables

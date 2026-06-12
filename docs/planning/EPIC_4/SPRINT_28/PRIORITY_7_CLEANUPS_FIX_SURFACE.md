@@ -86,5 +86,5 @@ This is the deferred *redesign* half of #1385, not a small dedup like #1374/#140
 ```bash
 test -f docs/planning/EPIC_4/SPRINT_28/PRIORITY_7_CLEANUPS_FIX_SURFACE.md && echo present
 grep -Ei '#1374|#1400|#1385|robot|message|srpchase' docs/planning/EPIC_4/SPRINT_28/PRIORITY_7_CLEANUPS_FIX_SURFACE.md | head
-grep -i 'hypothes\|Day-0 trace' docs/planning/EPIC_4/SPRINT_28/PRIORITY_7_CLEANUPS_FIX_SURFACE.md
+grep -iE 'hypothes|Day-0 trace' docs/planning/EPIC_4/SPRINT_28/PRIORITY_7_CLEANUPS_FIX_SURFACE.md
 ```
