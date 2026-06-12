@@ -25,7 +25,15 @@ Both were found mid-investigation; a translate-time detector would have flagged 
 The presolve emit already sets the objective variable `.l` from the `$include`d NLP solve (e.g. `cost.l` in `launch_mcp_presolve.gms`, captured later as `nlp2mcp_obj_val = cost.l`). The detector:
 
 1. **Standalone NLP objective** — solve `data/gamslib/raw/<model>.gms` directly (or reuse the committed `_NLP_REFERENCES` value); read the objective-variable `.l` from the listing.
-2. **Embedded NLP objective** — emit the model with `--nlp-presolve`, then insert a probe `Display <objvar>.l;` (tagged, e.g. `EMBEDDED_NLP_OBJ`) **immediately after the `$offMulti`** that closes the `$include` block (post-include, *before* the dual transfer + the MCP `Solve`), run GAMS, and parse the tagged value from the listing. (Equivalently: run the presolve emit with the MCP `Solve` short-circuited and read `<objvar>.l`.)
+2. **Embedded NLP objective** — emit the model with `--nlp-presolve`, then insert a probe that **assigns the embedded objective to a uniquely-named scalar and displays that scalar** (so parsing keys off the unique name, not a bare `<objvar>.l`):
+
+   ```gams
+   Scalar embedded_nlp_obj_PROBE;
+   embedded_nlp_obj_PROBE = <objvar>.l;
+   Display embedded_nlp_obj_PROBE;
+   ```
+
+   Insert it **immediately after the `$offMulti` that closes the source `$include`** — disambiguate by locating the `$offMulti` on the line *right after* `$include "data/gamslib/raw/<model>.gms"` (presolve files contain more than one `$offMulti`, e.g. `agreste_mcp_presolve.gms` closes the include at line 155 and a later block at 298 — anchor on the include, not the first/any `$offMulti`). This is post-include and *before* the dual transfer + the MCP `Solve`. Run GAMS and parse `embedded_nlp_obj_PROBE` from the listing. (Equivalently: run the presolve emit with the MCP `Solve` short-circuited and read `<objvar>.l`.)
 3. **Compare** — flag when `|embedded − standalone| / max(1, |standalone|) > tol`, or when the embedded solve reports a worse model status (infeasible) than the standalone (the camshape case).
 
 ### Interface
