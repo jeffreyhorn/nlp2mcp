@@ -1,7 +1,7 @@
 # Sprint 28 Detailed Schedule (Day 0 + Days 1–13)
 
 **Sprint:** 28 (Sprint 27 Carryforward — KKT Cross-Term Correctness, AD Architectural Fixes & Diagnostic/CI Tooling)
-**Budget:** ≤ 12 h/day × 14 days = 168 h cap; estimated work 101–149 h (lower bound assumes the diagnosis-heavy tracks P4/P5/P6 partially slip).
+**Budget:** ≤ 12 h/day × 14 days = 168 h cap; estimated work ~109–149 h (per the §14 budget table — ~109 h lower bound, ~149 h upper if P4/P5/P6/#1385 all land; the lower bound assumes the diagnosis-heavy tracks P4/P5/P6 partially slip).
 **Risk:** HIGH (three REPLAN-prone diagnosis tracks).
 **Authored:** Sprint 28 Prep Task 10, integrating Tasks 1–9.
 
