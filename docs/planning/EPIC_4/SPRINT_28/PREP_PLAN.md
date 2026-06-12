@@ -859,9 +859,10 @@ grep -iE 'hypothes|Day-0 trace' docs/planning/EPIC_4/SPRINT_28/PRIORITY_7_CLEANU
 
 ## Task 10: Plan Sprint 28 Detailed Schedule
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
+**Completed:** 2026-06-11
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1–9
@@ -895,11 +896,14 @@ Sprint 27's schedule had two failure modes the Sprint 28 plan must avoid: Day 12
 
 ### Changes
 
-To be completed.
+- Authored `docs/planning/EPIC_4/SPRINT_28/PLAN.md` (Day 0 + Days 1–13: goals, acceptance criteria, sequencing constraints, day-by-day plan, budget summary, Phase-0 coverage audit, Known-Unknowns snapshot + VERIFY-day map, risk register) and `prompts/PLAN_PROMPTS.md` (one prompt per day, cross-cutting rules, retest cadence).
+- Added a "Sprint 28 Day-0 Reconciliation (Task 10)" section to KNOWN_UNKNOWNS.md confirming all 29 unknowns are statused (10 ✅ / 19 🟡 design-scope; none 🔍 INCOMPLETE) with the in-sprint VERIFY-day mapping.
 
 ### Result
 
-To be completed.
+- **14-day schedule** front-loads the KKT-residual harness (Days 1–3), then the firm carryforwards (P1 mine Day 4, P2 camshape Day 5, P3 otpop Days 6–7), the REPLAN-gated diagnosis-heavy tracks (P4 cclinpts Days 8–9, P5 kand Day 10, P6 camcge Day 11) each with an explicit Sprint 29 exit, and the infra fill (P8/P10 Day 12) + P7 cleanups (Day 11). Checkpoints Day 5/Day 10 + final 3× `PYTHONHASHSEED` retest Day 13, each with the PR25 tally.
+- **Budget: ~109 h lower bound** (assumes P4/P5/P6 partially slip) / **~149 h upper** — within the 168 h cap; **no day > 12 h** (heaviest ~11 h, Day 8).
+- **All Unknowns 1.1–10.3 reconciled** — resolved pre-sprint (10 ✅) or scheduled for in-sprint VERIFICATION (19 🟡, with the day mapping). **Sprint 28 GO for Day 0.**
 
 ### Verification
 
@@ -927,14 +931,14 @@ grep -Ei 'Checkpoint|retest' docs/planning/EPIC_4/SPRINT_28/PLAN.md | head
 
 ### Acceptance Criteria
 
-- [ ] `PLAN.md` created with all required sections (Goals, Days 0–13, risks, estimates, checkpoints, acceptance, contingency)
-- [ ] `prompts/PLAN_PROMPTS.md` created with one prompt per day, no stale forward-looking claims
-- [ ] KKT-residual harness front-loaded (Days 1–3)
-- [ ] Diagnosis-heavy tracks (#1387/#1390/camcge) gated on Task-6 REPLAN signals
-- [ ] Two checkpoints (Day 5, Day 10) + final 3× determinism retest (Day 13) scheduled with the PR25 tally
-- [ ] ≤ 12h/day budget verified; no day over-packed
-- [ ] Cross-linked to KNOWN_UNKNOWNS, BASELINE_METRICS, Phase-0 gates, infra design docs
-- [ ] Unknowns 1.1–10.3 reconciled (integrated) in KNOWN_UNKNOWNS.md
+- [x] `PLAN.md` created with all required sections (Goals, Days 0–13, risks, estimates, checkpoints, acceptance, contingency)
+- [x] `prompts/PLAN_PROMPTS.md` created with one prompt per day, no stale forward-looking claims
+- [x] KKT-residual harness front-loaded (Days 1–3)
+- [x] Diagnosis-heavy tracks (#1387/#1390/camcge) gated on Task-6 REPLAN signals
+- [x] Two checkpoints (Day 5, Day 10) + final 3× determinism retest (Day 13) scheduled with the PR25 tally
+- [x] ≤ 12h/day budget verified; no day over-packed (heaviest ~11 h, Day 8)
+- [x] Cross-linked to KNOWN_UNKNOWNS, BASELINE_METRICS, Phase-0 gates, infra design docs
+- [x] Unknowns 1.1–10.3 reconciled (integrated) in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -974,19 +978,38 @@ Before Sprint 28 Day 1, verify:
 
 ### Critical (Must Complete)
 - [x] Known unknowns list created (29 unknowns across 10 categories, fix-surfaces framed as Day-0-trace hypotheses) — `KNOWN_UNKNOWNS.md`, 2026-06-09
-- [ ] Day-0 baseline + PR25 projection table (genuine-gain vs bucket-forward) created
-- [ ] PR24 (traced fix-surface) + PR25 (projection discipline) codified in CONTRIBUTING.md
-- [ ] Phase 0 acceptance gates authored/refreshed for all six carryforwards
-- [ ] Sprint 28 detailed schedule + day-by-day prompts created (≤ 12h/day)
+- [x] Day-0 baseline + PR25 projection table (genuine-gain vs bucket-forward) created — `BASELINE_METRICS.md` (Task 2)
+- [x] PR24 (traced fix-surface) + PR25 (projection discipline) codified in CONTRIBUTING.md (Task 3)
+- [x] Phase 0 acceptance gates authored/refreshed for all six carryforwards (Task 5)
+- [x] Sprint 28 detailed schedule + day-by-day prompts created (≤ 12h/day) — `PLAN.md` + `prompts/PLAN_PROMPTS.md` (Task 10)
 
 ### High Priority (Should Complete)
-- [ ] KKT-residual harness design spec complete (referenced by the Phase-0 gates)
-- [ ] Diagnosis-heavy REPLAN risk assessment (#1387/#1390/camcge) with PROCEED/REPLAN recommendations
-- [ ] Golden-staleness drift audit + CI-check design complete
+- [x] KKT-residual harness design spec complete (referenced by the Phase-0 gates) — `PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md` (Task 4)
+- [x] Diagnosis-heavy REPLAN risk assessment (#1387/#1390/camcge) with PROCEED/REPLAN recommendations — `PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md` (Task 6)
+- [x] Golden-staleness drift audit + CI-check design complete — `PRIORITY_8_GOLDEN_STALENESS_DESIGN.md` (Task 7)
 
 ### Medium Priority (Can Complete Early in Sprint 28)
-- [ ] Divergence detector + AD cross-term property-test catalog design
-- [ ] Lower-priority cleanups fix-surface analysis (#1374/#1400/#1385)
+- [x] Divergence detector + AD cross-term property-test catalog design — `PRIORITY_10_DIVERGENCE_PROPERTY_TESTS_DESIGN.md` (Task 8)
+- [x] Lower-priority cleanups fix-surface analysis (#1374/#1400/#1385) — `PRIORITY_7_CLEANUPS_FIX_SURFACE.md` (Task 9)
+
+### Final Prep-Task Status
+
+All 10 prep tasks ✅ COMPLETE.
+
+| # | Task | PR | Status |
+|---|---|---|---|
+| 1 | Known Unknowns List | #1428 | ✅ |
+| 2 | Bucket-Provenance Baseline + Projection Discipline | #1429 | ✅ |
+| 3 | Codify PR24 + PR25 | #1430 | ✅ |
+| 4 | KKT-Residual Harness design | #1431 | ✅ |
+| 5 | Phase 0 Acceptance Gates (six carryforwards) | #1432 | ✅ |
+| 6 | Diagnosis-Heavy REPLAN Risk Assessment | #1433 | ✅ |
+| 7 | Golden-Staleness Drift Audit + CI design | #1434 | ✅ |
+| 8 | Divergence Detector + Property-Test Catalog | #1435 | ✅ |
+| 9 | Lower-Priority Cleanups Fix-Surface Analysis | #1436 | ✅ |
+| 10 | Sprint 28 Detailed Schedule | (this PR) | ✅ |
+
+**Total prep effort ≈ 33–43 h** (within the 32–44 h estimate). **Sprint 28 is GO for Day 0.**
 
 ### Verification
 
