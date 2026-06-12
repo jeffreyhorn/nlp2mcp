@@ -782,9 +782,10 @@ grep -cE '^\s*[-*0-9].*offset|alias|parameter-valued|interior|edge|tree' docs/pl
 
 ## Task 9: Lower-Priority Cleanups Fix-Surface Analysis (#1374, #1400, #1385)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Medium
 **Estimated Time:** 2–3 hours
+**Completed:** 2026-06-11
 **Deadline:** Before Sprint 28 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
@@ -817,11 +818,15 @@ These three are small, well-understood cleanups that round out Sprint 27's defer
 
 ### Changes
 
-To be completed.
+- Authored `docs/planning/EPIC_4/SPRINT_28/PRIORITY_7_CLEANUPS_FIX_SURFACE.md`: per-item fix-surface analysis (candidate surfaces as Day-0-trace hypotheses, coupling risk, estimate) for #1374/#1400/#1385 + a summary table.
+- Ran the #1400 DB audit (0 abs-path substrings in the committed `gamslib_status.json` — the leak is transient) and traced the capture path; located the #1374 double-emission mechanism and the #1385 atomic coupling from the issue docs + golden.
+- Updated KNOWN_UNKNOWNS.md 7.1/7.2/7.3 → 🟡 PARTIALLY VERIFIED (design scope) with the firm determinations (isolatable / leak-located / atomic).
 
 ### Result
 
-To be completed.
+- **#1374 robot `.l` dedup — ISOLATABLE** from the Sprint 27 `.fx`-restore fix (distinct mechanism: denominator-init block + `fx_to_l_override`, not the Variable-Bounds/restore passes). Candidate surface: the `emit_gams.py` `fx_to_l_overrides_by_var` integration. ~1–2h, LOW coupling, no Solve/Match impact (robot is `path_solve_license`).
+- **#1400 second leak — LOCATED** in the warning-capture path: `batch_translate.py:279→285` stores subprocess `stderr` (which carries Python's default `<abspath>:<lineno>: UserWarning` format) into the `message` field; same shape on the solve path (`run_full_test.py:550`). **DB audit: current DB clean (0 leaks)** — transient defect. Candidate surface: relativize the captured text, or a repo-relative `warnings.formatwarning` in `src/cli.py`. ~1–2h, LOW coupling.
+- **#1385 — ATOMIC confirmed** (re-emit without cross-terms = inconsistent MCP, per ISSUE_1385 + the Day-4 revert evidence). Candidate surface: `stationarity.py` re-emit **+** `constraint_jacobian.py`/`_diff_varref` symbolic-instance cross-terms. **Re-scope candidate** — larger than a cleanup (~6–10h, HIGH coupling, translate-only/no firm Solve-Match); may sequence separately or defer to Sprint 29.
 
 ### Verification
 
@@ -843,12 +848,12 @@ grep -i 'hypothes\|Day-0 trace' docs/planning/EPIC_4/SPRINT_28/PRIORITY_7_CLEANU
 
 ### Acceptance Criteria
 
-- [ ] All three cleanups have a candidate fix surface (flagged as a Day-0-trace hypothesis)
-- [ ] #1374 robot-shape coupling to the Sprint 27 fix assessed
-- [ ] #1400 second-leak (warning-capture path) located
-- [ ] #1385 atomic-landing requirement documented
-- [ ] Per-item estimate recorded (feeding Task 10's schedule)
-- [ ] Unknowns 7.1, 7.2, 7.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All three cleanups have a candidate fix surface (flagged as a Day-0-trace hypothesis)
+- [x] #1374 robot-shape coupling to the Sprint 27 fix assessed (ISOLATABLE)
+- [x] #1400 second-leak (warning-capture path) located (`batch_translate.py` stderr capture; DB-audited clean)
+- [x] #1385 atomic-landing requirement documented (atomic; flagged re-scope candidate)
+- [x] Per-item estimate recorded (#1374 ~1–2h / #1400 ~1–2h / #1385 ~6–10h) — feeds Task 10's schedule
+- [x] Unknowns 7.1, 7.2, 7.3 updated in KNOWN_UNKNOWNS.md (🟡 design scope)
 
 ---
 
