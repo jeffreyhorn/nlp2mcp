@@ -41,7 +41,7 @@ Expected per the Sprint 27 finding: dual transfer **consistent**, all stationari
 
 **Task 6 precondition:** one of the three diagnosis-heavy carryforwards (#1387/#1390/camcge); its REPLAN risk (inherent CGE degeneracy) is assessed in Task 6 (PR16) **before** Priority-6 `src/` or PATH-tuning budget is spent.
 
-**Traced Fix-Surface (Day-0):** _TBD at sprint Day 0 — the Sprint 27 finding says PATH-side (scaling / bound-init / numéraire), not emit; confirm via the harness Case-c verdict before any change (PR24)._
+**Traced Fix-Surface (Day-0):** **No emit surface (structural localization, 2026-06-12; harness Case-c verdict pending Day 11).** `camcge_mcp.gms` emits a structurally complete KKT system — 37 `stat_*` rows + 10 `comp_*` rows, no obviously-missing stationarity/complementarity row — consistent with the Sprint 27 finding that the KKT is structurally correct (warm-start residual ≈ 0) and the infeasibility is **PATH-side** (singular Jacobian), not an emit defect. So there is no emit `file:line` to trace; the Day-0 structural pass confirms the gate premise. The actual lever (scaling / bound-init / numéraire vs inherent degeneracy) is decided by the harness Case-c verdict + PATH basis-singularity report on Day 11 (PR24).
 
 ---
 

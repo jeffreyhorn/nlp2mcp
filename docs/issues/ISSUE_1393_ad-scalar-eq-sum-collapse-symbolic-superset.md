@@ -52,7 +52,7 @@ Target: otpop `cost ≈ 4217.80` (NLP optimum), MODEL STATUS 1. Before the fix t
 
 **PROCEED** when: (a) a Day-0 trace localizes the `t→t__` aliasing to a concrete `file:line` in `stationarity.py` (the **Traced Fix-Surface (Day-0)** — do NOT trust the prep surface, PR24); (b) the harness reports Case b with the over-counted `stat_x`/`stat_p` row as max-residual; (c) the hand-derived single-guarded shape drives that residual → 0. **REPLAN** if the Day-0 trace shows the collapse is not localizable to a single emit site (couple with #1335 or re-scope to Sprint 29).
 
-**Traced Fix-Surface (Day-0):** _TBD at sprint Day 0 — prep names the `stationarity.py` symbolic-collapse path as the hypothesis (PR24); confirm by trace + harness residual before any `src/` change._
+**Traced Fix-Surface (Day-0):** **Candidate (structural localization, 2026-06-12; harness-residual confirmation pending Days 6–7).** Confirmed the over-count in `otpop_mcp.gms`: `stat_p(tt)` (line ~198) and `stat_x(tt)` (line ~200) both carry `sum(t__, ((-1) * (del(t__) * … )) * nu_kdef)$(t(tt))` — the inner `t__` enumeration that should collapse to the single `$(t(tt))`-guarded term. The `t→t__` aliasing site on the `stationarity.py` symbolic-collapse path is to be pinned by the instrumented trace + harness Case-b residual on Days 6–7 (PR24).
 
 ---
 

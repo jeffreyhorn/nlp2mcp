@@ -41,7 +41,7 @@ The harness is the **localization instrument**. The dual-transfer consistency se
 
 **Task 6 precondition:** this track is one of the three diagnosis-heavy carryforwards (#1387/#1390/camcge). Its REPLAN risk is assessed in Task 6 (PR16 hypothesis-validation) **before** any Priority-5 `src/` budget is spent.
 
-**Traced Fix-Surface (Day-0):** _TBD at sprint Day 0 — no prep surface is trusted (the prior one is disproven, PR24); the harness Case-(b/c) verdict + Day-0 trace establish it._
+**Traced Fix-Surface (Day-0):** **No emit surface localized (structural localization, 2026-06-12; harness Case-(b/c) verdict pending Day 10).** Confirmed the 21 phantom-offset `lam_dembalx` cross-terms are present in `kand_mcp.gms` `stat_y` (`lam_dembalx(j,t+1,n±k)`, offsets n+3..n+11 etc.) — but per Sprint 27 these are **proven inert** (collapsing them leaves the MCP at 195.0 ≠ 2613.0), so this is **not** the surface. No alternative emit surface is structurally evident at Day 0; the true 195-vs-2613 gap requires the harness Case-(b/c) verdict on Day 10 (Case b ⇒ a localizable `bal`/`x`/lag-duality row; Case c ⇒ LP-recourse coupling → REPLAN to Sprint 29). Phantom-term collapse stays out of scope (PR24).
 
 ---
 

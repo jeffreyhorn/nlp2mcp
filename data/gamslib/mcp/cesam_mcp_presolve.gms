@@ -45,7 +45,7 @@ Parameters
     Target0(i)
     vbar1(i,jwt)
     vbar2(macro,jwt)
-    wbar1(i,jwt)
+    wbar1(i,jwt) /ACT.'1' 0.013888888888888888, COM.'1' 0.013888888888888888, FAC.'1' 0.013888888888888888, ENT.'1' 0.013888888888888888, HOU.'1' 0.013888888888888888, GRE.'1' 0.013888888888888888, GIN.'1' 0.013888888888888888, CAP.'1' 0.013888888888888888, ROW.'1' 0.013888888888888888, ACT.'2' 0.375, COM.'2' 0.375, FAC.'2' 0.375, ENT.'2' 0.375, HOU.'2' 0.375, GRE.'2' 0.375, GIN.'2' 0.375, CAP.'2' 0.375, ROW.'2' 0.375, ACT.'3' 0.2222222222222222, COM.'3' 0.2222222222222222, FAC.'3' 0.2222222222222222, ENT.'3' 0.2222222222222222, HOU.'3' 0.2222222222222222, GRE.'3' 0.2222222222222222, GIN.'3' 0.2222222222222222, CAP.'3' 0.2222222222222222, ROW.'3' 0.2222222222222222, ACT.'4' 0.375, COM.'4' 0.375, FAC.'4' 0.375, ENT.'4' 0.375, HOU.'4' 0.375, GRE.'4' 0.375, GIN.'4' 0.375, CAP.'4' 0.375, ROW.'4' 0.375, ACT.'5' 0.013888888888888888, COM.'5' 0.013888888888888888, FAC.'5' 0.013888888888888888, ENT.'5' 0.013888888888888888, HOU.'5' 0.013888888888888888, GRE.'5' 0.013888888888888888, GIN.'5' 0.013888888888888888, CAP.'5' 0.013888888888888888, ROW.'5' 0.013888888888888888/
     wbar2(macro,jwt) /gdpfc2.'1' 0.013888888888888888, gdp2.'1' 0.013888888888888888, gdpfc2.'2' 0.375, gdp2.'2' 0.375, gdpfc2.'3' 0.2222222222222222, gdp2.'3' 0.2222222222222222, gdpfc2.'4' 0.375, gdp2.'4' 0.375, gdpfc2.'5' 0.013888888888888888, gdp2.'5' 0.013888888888888888/
     sigmay1(i)
     sigmay2(macro)
@@ -89,29 +89,15 @@ red(ii,jj) = yes$(T0(ii,jj) < 0);
 NONZERO(ii,jj) = yes$(Abar1(ii,jj));
 $offImplicitAssign
 
-vbar1(ii,'3') = 0;
-wbar1(ii,'1') = 0.013888888888888888;
-wbar1(ii,'2') = 0.375;
-wbar1(ii,'3') = 0.2222222222222222;
-wbar1(ii,'4') = 0.375;
-wbar1(ii,'5') = 0.013888888888888888;
-redsam(ii,jj) = 0;
-
 T0(ii,jj) = SAM(ii,jj);
 T0("TOTAL",jj) = sum(ii, SAM(ii,jj));
 T0(ii,"TOTAL") = sum(jj, SAM(ii,jj));
 Target0(ii) = (sam(ii,"total") + sam("total",ii)) / 2;
 T1(ii,jj) = T0(ii,jj) - redsam(ii,jj);
-T1("Total",jj) = sum(ii, T1(ii,jj));
-T1(ii,"Total") = sum(jj, T1(ii,jj));
 sigmay1(ii) = 0.05 * target0(ii);
 redsam(ii,jj)$(red(ii,jj)) = T0(ii,jj);
 redsam(jj,ii)$(red(ii,jj)) = T0(ii,jj);
-redsam("total",jj) = sum(ii, redsam(ii,jj));
-redsam(ii,"total") = sum(jj, redsam(ii,jj));
 Abar1(ii,jj) = T1(ii,jj) / sam("total",jj);
-Abar1("total",jj) = sum(ii, ABAR1(ii,jj));
-Abar1(ii,"total") = sum(jj, ABAR1(ii,jj));
 vbar1(ii,"1") = (-3) * sigmay1(ii);
 vbar1(ii,"2") = (-1) * sigmay1(ii);
 vbar1(ii,"4") = 1 * sigmay1(ii);
@@ -119,13 +105,21 @@ vbar1(ii,"5") = 3 * sigmay1(ii);
 gdp0 = T1("fac","act") + T1("gre","act") - T1("act","gre") + T1("gre","com");
 gdpfc0 = T1("fac","act");
 sigmay2("gdpfc2") = 0.05 * gdpfc0;
-sigmay2("gdp2") = 0.05 * gdp0;
 vbar2(macro,"1") = (-3) * sigmay2(macro);
 vbar2(macro,"2") = (-1) * sigmay2(macro);
 vbar2(macro,"4") = 1 * sigmay2(macro);
 vbar2(macro,"5") = 3 * sigmay2(macro);
+sigmay2("gdp2") = 0.05 * gdp0;
 
 execError = 0;
+
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+Abar1(i,j)$(NOT (Abar1(i,j) > -inf and Abar1(i,j) < inf)) = 0;
+SAM(i,j)$(NOT (SAM(i,j) > -inf and SAM(i,j) < inf)) = 0;
+Target0(i)$(NOT (Target0(i) > -inf and Target0(i) < inf)) = 0;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -150,12 +144,12 @@ Variables
     DENTROPY
     GDPFC
     GDP
-    nu_SAMEQ(ii)
-    nu_SAMMAKE(ii,jj)
-    nu_ERROR1EQ(ii)
-    nu_SUMW1(ii)
-    nu_ROWSUM(ii)
-    nu_COLSUM(ii)
+    nu_SAMEQ(i)
+    nu_SAMMAKE(i,j)
+    nu_ERROR1EQ(i)
+    nu_SUMW1(i)
+    nu_ROWSUM(i)
+    nu_COLSUM(j)
     nu_GDPFCDEF
     nu_GDPDEF
     nu_ERROR2EQ(macro)
@@ -185,33 +179,23 @@ GDPFC.fx = GDPFC0;
 GDP.fx = GDP0;
 
 * ============================================
-* Variable Initialization
+* NLP Pre-Solve (warm-start for MCP duals)
 * ============================================
 
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
+$onMultiR
+$include "data/gamslib/raw/cesam.gms"
+$offMulti
 
-A.l(ii,jj) = Abar1(ii,jj);
-TSAM.l(ii,jj) = T1(ii,jj);
-Y.l(ii) = target0(ii);
-X.l(ii) = target0(ii);
-ERR1.l('ACT') = 0.0;
-ERR1.l('COM') = 0.0;
-ERR1.l('FAC') = 0.0;
-ERR1.l('ENT') = 0.0;
-ERR1.l('HOU') = 0.0;
-ERR1.l('GRE') = 0.0;
-ERR1.l('GIN') = 0.0;
-ERR1.l('CAP') = 0.0;
-ERR1.l('ROW') = 0.0;
-ERR2.l('gdpfc2') = 0.0;
-ERR2.l('gdp2') = 0.0;
-W1.l(ii,jwt) = wbar1(ii,jwt);
-W2.l(macro,jwt) = wbar2(macro,jwt);
-DENTROPY.l = 0.0;
-GDPFC.l = gdpfc0;
-GDP.l = gdp0;
+* Transfer NLP duals to MCP multiplier initialization
+
+* Transfer variable marginals to bound multipliers
+piL_a.l(ii,jj)$(abs(a.l(ii,jj) - a.lo(ii,jj)) < 1e-6 and a.m(ii,jj) > 0) = a.m(ii,jj);
+piL_tsam.l(ii,jj)$(abs(tsam.l(ii,jj) - tsam.lo(ii,jj)) < 1e-6 and tsam.m(ii,jj) > 0) = tsam.m(ii,jj);
+piL_w1.l(ii,jwt)$(abs(w1.l(ii,jwt) - w1.lo(ii,jwt)) < 1e-6 and w1.m(ii,jwt) > 0) = w1.m(ii,jwt);
+piL_w2.l(macro,jwt)$(abs(w2.l(macro,jwt) - w2.lo(macro,jwt)) < 1e-6 and w2.m(macro,jwt) > 0) = w2.m(macro,jwt);
+piU_a.l(ii,jj)$(abs(a.l(ii,jj) - a.up(ii,jj)) < 1e-6 and a.m(ii,jj) < 0) = -(a.m(ii,jj));
+piU_w1.l(ii,jwt)$(abs(w1.l(ii,jwt) - w1.up(ii,jwt)) < 1e-6 and w1.m(ii,jwt) < 0) = -(w1.m(ii,jwt));
+piU_w2.l(macro,jwt)$(abs(w2.l(macro,jwt) - w2.up(macro,jwt)) < 1e-6 and w2.m(macro,jwt) < 0) = -(w2.m(macro,jwt));
 
 * ============================================
 * Equations
@@ -239,16 +223,16 @@ Equations
     comp_up_a(ii,jj)
     comp_up_w1(ii,jwt)
     comp_up_w2(macro,jwt)
-    COLSUM(jj)
+    COLSUM(j)
     ENTROPY
-    ERROR1EQ(ii)
+    ERROR1EQ(i)
     ERROR2EQ(macro)
     GDPDEF
     GDPFCDEF
-    ROWSUM(ii)
-    SAMEQ(ii)
-    SAMMAKE(ii,jj)
-    SUMW1(ii)
+    ROWSUM(i)
+    SAMEQ(i)
+    SAMMAKE(i,j)
+    SUMW1(i)
     SUMW2(macro)
 ;
 
@@ -256,17 +240,18 @@ Equations
 * Equation Definitions
 * ============================================
 
+$onMultiR
 * Stationarity equations
-stat_a(ii,jj).. (log(a(ii,jj) + epsilon) - log(Abar1(ii,ii) + epsilon) + a(ii,jj) * 1 / (a(ii,jj) + epsilon)) * 1$(nonzero(ii,jj)) + (((-1) * (x(jj) + err1(jj))) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj)) - piL_a(ii,jj) + piU_a(ii,jj) =E= 0;
-stat_err1(ii).. ((-1) * nu_SAMEQ(ii)) + sum(jj, (((-1) * a(jj,jj)) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj))) + nu_ERROR1EQ(ii) - nu_COLSUM(ii) =E= 0;
+stat_a(ii,jj).. (log(a(ii,jj) + epsilon) - log(Abar1(ii,ii) + epsilon) + a(ii,jj) * 1 / (a(ii,jj) + epsilon)) * 1$(nonzero(ii,jj)) + ((((-1) * (x(jj) + err1(jj))) * nu_SAMMAKE(ii,jj))$(ii(ii) and jj(jj)))$(nonzero(ii,jj)) - piL_a(ii,jj) + piU_a(ii,jj) =E= 0;
+stat_err1(ii).. ((-1) * nu_SAMEQ(ii)$(ii(ii))) + sum(jj, ((((-1) * a(ii+7,jj)) * nu_SAMMAKE(ii,jj))$(ii(ii) and jj(jj)))$(nonzero(ii,jj))) + nu_ERROR1EQ(ii)$(ii(ii)) - nu_COLSUM(ii)$(jj(ii)) =E= 0;
 stat_err2(macro).. ((-1) * nu_GDPDEF)$(sameas(macro, 'gdp2')) + nu_ERROR2EQ(macro) + ((-1) * nu_GDPFCDEF)$(sameas(macro, 'gdpfc2')) =E= 0;
 stat_gdp.. nu_GDPDEF =E= 0;
 stat_gdpfc.. nu_GDPFCDEF =E= 0;
-stat_tsam(ii,jj).. nu_SAMMAKE(ii,jj)$(nonzero(ii,jj)) + nu_ROWSUM(ii)$((not sameas(ii, "ROW"))) + nu_COLSUM(ii)$(sameas(ii, 'ACT') and sameas(jj, 'ACT') or sameas(ii, 'CAP') and sameas(jj, 'CAP') or sameas(ii, 'COM') and sameas(jj, 'COM') or sameas(ii, 'ENT') and sameas(jj, 'ENT') or sameas(ii, 'FAC') and sameas(jj, 'FAC') or sameas(ii, 'GIN') and sameas(jj, 'GIN') or sameas(ii, 'GRE') and sameas(jj, 'GRE') or sameas(ii, 'HOU') and sameas(jj, 'HOU') or sameas(ii, 'ROW') and sameas(jj, 'ROW')) + (nu_COLSUM(ii)$(ord(ii) = 7))$((sameas(ii, 'ACT') or sameas(ii, 'COM')) and (sameas(jj, 'CAP') or sameas(jj, 'ROW'))) + (nu_COLSUM(ii)$(ord(ii) = 1))$((sameas(ii, 'ACT') or sameas(ii, 'CAP') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU')) and (sameas(jj, 'CAP') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU') or sameas(jj, 'ROW'))) + (nu_COLSUM(ii)$(ord(ii) = 3))$((sameas(ii, 'ACT') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'GRE') or sameas(ii, 'HOU')) and (sameas(jj, 'CAP') or sameas(jj, 'ENT') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU') or sameas(jj, 'ROW'))) + (nu_COLSUM(ii)$(ord(ii) = 2))$((sameas(ii, 'ACT') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU')) and (sameas(jj, 'CAP') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU') or sameas(jj, 'ROW'))) + (nu_COLSUM(ii)$(ord(ii) = 6))$((sameas(ii, 'ACT') or sameas(ii, 'COM') or sameas(ii, 'FAC')) and (sameas(jj, 'CAP') or sameas(jj, 'GIN') or sameas(jj, 'ROW'))) + (nu_COLSUM(ii)$(ord(ii) = 5))$((sameas(ii, 'ACT') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC')) and (sameas(jj, 'CAP') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'ROW'))) + (nu_COLSUM(ii)$(ord(ii) = 4))$((sameas(ii, 'ACT') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'HOU')) and (sameas(jj, 'CAP') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU') or sameas(jj, 'ROW'))) + (nu_COLSUM(ii)$(ord(ii) = 8))$(sameas(ii, 'ACT') and sameas(jj, 'ROW')) + (nu_COLSUM(ii)$(ord(ii) = 7))$((sameas(ii, 'CAP') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM'))) + (nu_COLSUM(ii)$(ord(ii) = 6))$((sameas(ii, 'CAP') or sameas(ii, 'GIN') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'FAC'))) + (nu_COLSUM(ii)$(ord(ii) = 4))$((sameas(ii, 'CAP') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'HOU'))) + (nu_COLSUM(ii)$(ord(ii) = 5))$((sameas(ii, 'CAP') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC'))) + (nu_COLSUM(ii)$(ord(ii) = 1))$((sameas(ii, 'CAP') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'CAP') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU'))) + (nu_COLSUM(ii)$(ord(ii) = 2))$((sameas(ii, 'CAP') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU'))) + (nu_COLSUM(ii)$(ord(ii) = 3))$((sameas(ii, 'CAP') or sameas(ii, 'ENT') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'GRE') or sameas(jj, 'HOU'))) + (nu_COLSUM(ii)$(ord(ii) = 8))$(sameas(ii, 'ROW') and sameas(jj, 'ACT')) + nu_GDPDEF$((sameas(ii, 'ACT') or sameas(ii, 'FAC') or sameas(ii, 'GRE')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'GRE'))) + ((-1) * nu_GDPFCDEF)$(sameas(ii, 'FAC') and sameas(jj, 'ACT')) - piL_tsam(ii,jj) =E= 0;
-stat_w1(ii,jwt).. log(w1(ii,jwt) + epsilon) - log(wbar1(ii,jwt) + epsilon) + w1(ii,jwt) * 1 / (w1(ii,jwt) + epsilon) + ((-1) * vbar1(ii,jwt)) * nu_ERROR1EQ(ii) + nu_SUMW1(ii) - piL_w1(ii,jwt) + piU_w1(ii,jwt) =E= 0;
+stat_tsam(ii,jj).. (nu_SAMMAKE(ii,jj)$(ii(ii) and jj(jj)))$(nonzero(ii,jj)) + (nu_ROWSUM(ii)$(ii(ii)))$((not sameas(ii, "ROW"))) + nu_COLSUM(jj)$(jj(jj)) + nu_GDPDEF$(sameas(ii, 'ACT') and sameas(jj, 'GRE')) + ((-1) * nu_GDPDEF)$(sameas(ii, 'FAC') and sameas(jj, 'ACT') or sameas(ii, 'GRE') and sameas(jj, 'ACT') or sameas(ii, 'GRE') and sameas(jj, 'COM')) + ((-1) * nu_GDPFCDEF)$(sameas(ii, 'FAC') and sameas(jj, 'ACT')) - piL_tsam(ii,jj) =E= 0;
+stat_w1(ii,jwt).. log(w1(ii,jwt) + epsilon) - log(wbar1(ii,jwt) + epsilon) + w1(ii,jwt) * 1 / (w1(ii,jwt) + epsilon) + (((-1) * vbar1(ii,jwt)) * nu_ERROR1EQ(ii))$(ii(ii)) + nu_SUMW1(ii)$(ii(ii)) - piL_w1(ii,jwt) + piU_w1(ii,jwt) =E= 0;
 stat_w2(macro,jwt).. log(w2(macro,jwt) + epsilon) - log(wbar2(macro,jwt) + epsilon) + w2(macro,jwt) * 1 / (w2(macro,jwt) + epsilon) + ((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro) + nu_SUMW2(macro) - piL_w2(macro,jwt) + piU_w2(macro,jwt) =E= 0;
-stat_x(ii).. ((-1) * nu_SAMEQ(ii)) + sum(jj, (((-1) * a(jj,jj)) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj))) - nu_COLSUM(ii) =E= 0;
-stat_y(ii).. nu_SAMEQ(ii) + ((-1) * nu_ROWSUM(ii))$((not sameas(ii, "ROW"))) =E= 0;
+stat_x(ii).. ((-1) * nu_SAMEQ(ii)$(ii(ii))) + sum(jj, ((((-1) * a(ii+7,jj)) * nu_SAMMAKE(ii,jj))$(ii(ii) and jj(jj)))$(nonzero(ii,jj))) - nu_COLSUM(ii)$(jj(ii)) =E= 0;
+stat_y(ii).. nu_SAMEQ(ii)$(ii(ii)) + (((-1) * nu_ROWSUM(ii))$(ii(ii)))$((not sameas(ii, "ROW"))) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_a(ii,jj)$(nonzero(ii,jj) and 0 > -inf).. a(ii,jj) - 0 =G= 0;
@@ -284,7 +269,7 @@ SAMEQ(ii).. y(ii) =E= x(ii) + err1(ii);
 SAMMAKE(ii,jj)$(nonzero(ii,jj)).. tsam(ii,jj) =E= a(ii,jj) * (x(jj) + err1(jj));
 ERROR1EQ(ii).. err1(ii) =E= sum(jwt, w1(ii,jwt) * vbar1(ii,jwt));
 SUMW1(ii).. sum(jwt, w1(ii,jwt)) =E= 1;
-ENTROPY.. dentropy =E= sum((ii,jj)$(nonzero(ii,jj)), a(ii,jj) * (log(a(ii,jj) + epsilon) - log(Abar1(ii,jj) + epsilon))) + sum((ii,jwt), w1(ii,jwt) * (log(w1(ii,jwt) + epsilon) - log(wbar1(ii,jwt) + epsilon))) + sum((macro,jwt), w2(macro,jwt) * (log(w2(macro,jwt) + epsilon) - log(wbar2(macro,jwt) + epsilon)));
+ENTROPY.. dentropy =E= sum((ii,jj)$(nonzero(ii,jj) and Abar1(ii,jj) <> 0), a(ii,jj) * (log(a(ii,jj) + epsilon) - log(Abar1(ii,jj) + epsilon))) + sum((ii,jwt)$(wbar1(ii,jwt) <> 0), w1(ii,jwt) * (log(w1(ii,jwt) + epsilon) - log(wbar1(ii,jwt) + epsilon))) + sum((macro,jwt)$(wbar2(macro,jwt) <> 0), w2(macro,jwt) * (log(w2(macro,jwt) + epsilon) - log(wbar2(macro,jwt) + epsilon)));
 ROWSUM(ii)$((not sameas(ii, "ROW"))).. sum(jj, tsam(ii,jj)) =E= y(ii);
 COLSUM(jj).. sum(ii, tsam(ii,jj)) =E= x(jj) + err1(jj);
 GDPFCDEF.. gdpfc =E= tsam("fac","act") + err2("gdpfc2");
@@ -292,6 +277,7 @@ GDPDEF.. gdp =E= tsam("fac","act") + tsam("gre","act") - tsam("act","gre") + tsa
 ERROR2EQ(macro).. err2(macro) =E= sum(jwt, w2(macro,jwt) * vbar2(macro,jwt));
 SUMW2(macro).. sum(jwt, w2(macro,jwt)) =E= 1;
 
+$offMulti
 
 * ============================================
 * Fix inactive variable instances
@@ -304,6 +290,11 @@ piL_a.fx(ii,jj)$(not (nonzero(ii,jj) and 0 > -inf)) = 0;
 piU_a.fx(ii,jj)$(not (nonzero(ii,jj) and 1 < inf)) = 0;
 nu_ROWSUM.fx(ii)$(not ((not sameas(ii, "ROW")))) = 0;
 nu_SAMMAKE.fx(ii,jj)$(not (nonzero(ii,jj))) = 0;
+nu_ERROR1EQ.fx(i)$(not (ii(i))) = 0;
+nu_ROWSUM.fx(i)$(not (ii(i))) = 0;
+nu_SAMEQ.fx(i)$(not (ii(i))) = 0;
+nu_SAMMAKE.fx(i,j)$(not (ii(i))) = 0;
+nu_SUMW1.fx(i)$(not (ii(i))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -348,25 +339,6 @@ Model mcp_model /
     comp_up_w1.piU_w1,
     comp_up_w2.piU_w2
 /;
-
-* ============================================
-* NLP Pre-Solve (warm-start for MCP duals)
-* ============================================
-
-$onMultiR
-$include /Users/jeff/experiments/nlp2mcp/data/gamslib/raw/cesam.gms
-$offMulti
-
-* Transfer NLP duals to MCP multiplier initialization
-
-* Transfer variable marginals to bound multipliers
-piL_a.l(ii,jj)$(abs(a.l(ii,jj) - a.lo(ii,jj)) < 1e-6 and a.m(ii,jj) > 0) = a.m(ii,jj);
-piL_tsam.l(ii,jj)$(abs(tsam.l(ii,jj) - tsam.lo(ii,jj)) < 1e-6 and tsam.m(ii,jj) > 0) = tsam.m(ii,jj);
-piL_w1.l(ii,jwt)$(abs(w1.l(ii,jwt) - w1.lo(ii,jwt)) < 1e-6 and w1.m(ii,jwt) > 0) = w1.m(ii,jwt);
-piL_w2.l(macro,jwt)$(abs(w2.l(macro,jwt) - w2.lo(macro,jwt)) < 1e-6 and w2.m(macro,jwt) > 0) = w2.m(macro,jwt);
-piU_a.l(ii,jj)$(abs(a.l(ii,jj) - a.up(ii,jj)) < 1e-6 and a.m(ii,jj) < 0) = -(a.m(ii,jj));
-piU_w1.l(ii,jwt)$(abs(w1.l(ii,jwt) - w1.up(ii,jwt)) < 1e-6 and w1.m(ii,jwt) < 0) = -(w1.m(ii,jwt));
-piU_w2.l(macro,jwt)$(abs(w2.l(macro,jwt) - w2.up(macro,jwt)) < 1e-6 and w2.m(macro,jwt) < 0) = -(w2.m(macro,jwt));
 
 * ============================================
 * Solve Statement
