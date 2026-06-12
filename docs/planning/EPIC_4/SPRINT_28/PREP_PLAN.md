@@ -746,9 +746,9 @@ The "embedded NLP pre-solve diverges from standalone" bug class (the `$include` 
 
 ### Result
 
-- **Detector** extracts the embedded NLP objective via a probe `Display <objvar>.l` after the `$offMulti` (post-`$include`, pre-MCP-Solve) and the standalone via a direct solve; flags relative-objective gaps > `tol` (1e-4) or worse embedded model status. **By design it flags both past wins** — #1378 launch (2604.01 vs 2257.80) and #1424 camshape (infeasible vs MS 1); the pre-fix replay is the in-sprint acceptance run.
+- **Detector** (to be built in-sprint) is *designed to* extract the embedded NLP objective via a probe `Display <objvar>.l` after the `$offMulti` (post-`$include`, pre-MCP-Solve) and the standalone via a direct solve, and to flag relative-objective gaps > `tol` (1e-4) or worse embedded model status. **By design it would flag both past wins** — #1378 launch (2604.01 vs 2257.80) and #1424 camshape (infeasible vs MS 1); the pre-fix replay is the in-sprint acceptance run.
 - **Catalog of 6 shapes:** single-axis offset Sum, self-alias Sum, cross-set alias Sum (#1398), parameter-valued offset (#1224), interior+edge convex-combination (#1388), tree-predicate-conditioned aliased Sum (#1390) — shapes 4/5/6 are the literal #1224/#1388/#1390 defect shapes.
-- **Property tests** live in `tests/integration/emit/` with committed synthetic fixtures, use in-process emit + pattern-match assertions (sub-second, byte-stable), and wire into the existing `make test` (no separate workflow).
+- **Property tests** (to be built in `tests/integration/emit/`, `@pytest.mark.integration`) *will* use committed synthetic fixtures, in-process emit + pattern-match assertions (sub-second, byte-stable per the shape-1 prototype), and wire into the existing `make test` (no separate workflow).
 
 ### Verification
 
