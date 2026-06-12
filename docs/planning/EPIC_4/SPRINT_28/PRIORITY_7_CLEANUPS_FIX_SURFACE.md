@@ -47,7 +47,7 @@ The **current committed `gamslib_status.json` is clean** — 0 absolute-path sub
 
 Two candidates (the Day-0 trace picks one):
 - **(a) at the capture site** — relativize abs-path substrings in `error_msg` before storing (a regex strip of the `_REPO_ROOT` prefix applied to the *text*, broader than the single-path `_repo_relative_path`); applied at `batch_translate.py:~279–286` **and** the solve-path `run_full_test.py:550`.
-- **(b) at the source (cleaner)** — install a repo-relative `warnings.formatwarning` (or set `PYTHONWARNINGS`) in `src/cli.py` so emitted warnings never contain the absolute path; this fixes every downstream consumer at once.
+- **(b) at the source (cleaner)** — override `warnings.formatwarning` (or `warnings.showwarning`) with a repo-relative hook in `src/cli.py` so the emitted warning *text* uses a repo-relative path; this fixes every downstream consumer at once. (Note: `PYTHONWARNINGS` controls warning *filtering*, not the format, so it would not strip the absolute path — it is not a fix here.)
 
 **Estimate:** ~1–2h (scripts-only for (a); (b) touches `src/cli.py`). **Coupling risk: LOW.** To reproduce the leak for the acceptance test, force a warn-then-fail model and assert no `/Users/` substring in the captured `message`.
 
