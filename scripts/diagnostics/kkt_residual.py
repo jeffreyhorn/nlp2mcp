@@ -170,13 +170,19 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "--tol",
         type=float,
         default=None,
-        help=f"per-row residual tolerance (Day-2/3 verdict; default {TOL_DEFAULT})",
+        help=(
+            f"per-row residual tolerance for the Day-2/3 verdict (will default to "
+            f"{TOL_DEFAULT} once implemented; not honored in the Day-1 build)"
+        ),
     )
     parser.add_argument("--json", metavar="OUT.json", help="write the machine-readable report here")
     parser.add_argument(
         "--nlp-solver",
         default=None,
-        help=f"NLP solver for the path that solves the NLP when --gdx is not supplied (default {DEFAULT_NLP_SOLVER})",
+        help=(
+            "NLP solver for the path that solves the NLP when --gdx is not supplied "
+            f"(will default to {DEFAULT_NLP_SOLVER} once implemented; not honored in the Day-1 build)"
+        ),
     )
     parser.add_argument(
         "--no-cold-start",
@@ -217,8 +223,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: model not found: {model_path}", file=sys.stderr)
         return 2
 
-    # Write to a scratch directory — never the committed golden dir.
-    scratch = Path(tempfile.mkdtemp(prefix=f"kkt_residual_{model_path.stem}_"))
+    # Write to a scratch directory under PROJECT_ROOT/output (gitignored) — never
+    # the committed golden dir, and never outside the repo: translate_single_model
+    # reports output_path.relative_to(PROJECT_ROOT), so a /tmp path would raise.
+    scratch_root = PROJECT_ROOT / "output"
+    scratch_root.mkdir(exist_ok=True)
+    scratch = Path(tempfile.mkdtemp(prefix=f"kkt_residual_{model_path.stem}_", dir=scratch_root))
     presolve_path = scratch / f"{model_path.stem}_mcp_presolve.gms"
     print(f"[kkt-residual] {model_path.name} — emitting warm-started MCP (--nlp-presolve)…")
     result = emit_warmstarted_mcp(model_path, presolve_path)

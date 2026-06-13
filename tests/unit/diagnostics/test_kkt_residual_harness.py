@@ -160,6 +160,13 @@ class TestCliFailFast:
         help_text = build_arg_parser().format_help()
         assert "no---gdx" not in help_text
 
+    def test_deferred_flag_help_does_not_claim_an_active_default(self) -> None:
+        # --tol/--nlp-solver argparse-default to None (sentinels) in Day 1, so the
+        # help must not imply the documented value is the *current* default.
+        # Collapse argparse's line-wrapping before matching the phrase.
+        help_text = " ".join(build_arg_parser().format_help().split())
+        assert help_text.count("not honored in the Day-1 build") >= 2
+
 
 def test_no_args_defaults_are_inert_sentinels() -> None:
     # tol/nlp-solver default to None (sentinels) so an explicit value is detectable.
