@@ -187,3 +187,19 @@ def test_no_args_defaults_are_inert_sentinels() -> None:
     assert args.gdx is None
     assert args.json is None
     assert args.no_cold_start is False
+
+
+class TestKeepFiles:
+    def test_default_is_cleanup(self) -> None:
+        assert build_arg_parser().parse_args(["model.gms"]).keep_files is False
+
+    def test_flag_sets_keep(self) -> None:
+        assert build_arg_parser().parse_args(["model.gms", "--keep-files"]).keep_files is True
+
+    def test_keep_files_is_an_active_day1_flag(self) -> None:
+        # --keep-files controls cleanup *now* — it must NOT be a deferred flag, so
+        # its help must not carry the "not honored in the Day-1 build" disclaimer,
+        # and passing it alone must not trip the fail-fast path.
+        help_text = " ".join(build_arg_parser().format_help().split())
+        keep_help = help_text.split("--keep-files")[1].split("--")[0]
+        assert "not honored in the Day-1 build" not in keep_help

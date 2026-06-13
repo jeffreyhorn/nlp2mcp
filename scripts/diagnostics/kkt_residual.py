@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import math
 import re
+import shutil
 import sys
 import tempfile
 from dataclasses import dataclass, field
@@ -206,6 +207,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
             "(residual + Case b/guard only; not honored in the Day-1 build)"
         ),
     )
+    parser.add_argument(
+        "--keep-files",
+        action="store_true",
+        help="keep the generated scratch MCP files (default: delete the scratch dir on exit)",
+    )
     return parser
 
 
@@ -243,41 +249,51 @@ def main(argv: list[str] | None = None) -> int:
     # Write to a scratch directory under PROJECT_ROOT/output (gitignored) — never
     # the committed golden dir, and never outside the repo: translate_single_model
     # reports output_path.relative_to(PROJECT_ROOT), so a /tmp path would raise.
+    # The scratch dir is deleted on exit unless --keep-files (cf. check_convexity.py).
     scratch_root = PROJECT_ROOT / "output"
     scratch_root.mkdir(exist_ok=True)
     scratch = Path(tempfile.mkdtemp(prefix=f"kkt_residual_{model_path.stem}_", dir=scratch_root))
-    presolve_path = scratch / f"{model_path.stem}_mcp_presolve.gms"
-    print(f"[kkt-residual] {model_path.name} — emitting warm-started MCP (--nlp-presolve)…")
-    result = emit_warmstarted_mcp(model_path, presolve_path)
-    if result.get("status") != "success":
-        err = result.get("error")
-        print(f"error: warm-started MCP emit failed: {err}", file=sys.stderr)
-        return 1
+    try:
+        presolve_path = scratch / f"{model_path.stem}_mcp_presolve.gms"
+        print(f"[kkt-residual] {model_path.name} — emitting warm-started MCP (--nlp-presolve)…")
+        result = emit_warmstarted_mcp(model_path, presolve_path)
+        if result.get("status") != "success":
+            err = result.get("error")
+            print(f"error: warm-started MCP emit failed: {err}", file=sys.stderr)
+            return 1
 
-    mcp_text = presolve_path.read_text(encoding="utf-8")
-    transfer = extract_dual_transfer(mcp_text)
-    print(f"[kkt-residual] dual transfer (reused from --nlp-presolve): {transfer.summary()}")
-    if transfer.is_empty:
+        mcp_text = presolve_path.read_text(encoding="utf-8")
+        transfer = extract_dual_transfer(mcp_text)
+        print(f"[kkt-residual] dual transfer (reused from --nlp-presolve): {transfer.summary()}")
+        if transfer.is_empty:
+            print(
+                "[kkt-residual] WARNING: empty dual transfer — the presolve emit produced "
+                "no multiplier warm-start; the self-check will gate any verdict.",
+                file=sys.stderr,
+            )
+
+        # Residual-only variant (iterlim=0) — the input to the Day-2 GAMS evaluation.
+        residual_path = scratch / f"{model_path.stem}_mcp_presolve_residual.gms"
+        residual_path.write_text(make_residual_only(mcp_text), encoding="utf-8")
+
+        if args.keep_files:
+            print(f"[kkt-residual] warm-started MCP:  {presolve_path}")
+            print(f"[kkt-residual] residual-only MCP: {residual_path}")
+        else:
+            print(
+                "[kkt-residual] scratch MCP files written + verified (use --keep-files to retain)"
+            )
+        # Days 2–3: run GAMS at iterlim=0 on the residual-only MCP, parse per-row
+        # residuals, run the consistency self-check (classify_consistency) + the
+        # Case-(a/b/c) verdict, and emit the JSON/human report.
         print(
-            "[kkt-residual] WARNING: empty dual transfer — the presolve emit produced "
-            "no multiplier warm-start; the self-check will gate any verdict.",
-            file=sys.stderr,
+            "[kkt-residual] Day-1 build: emit + dual-transfer reuse/extraction + "
+            "residual-only rewrite + self-check ready. Verdict + run land Days 2–3."
         )
-
-    # Residual-only variant (iterlim=0) — the input to the Day-2 GAMS evaluation.
-    residual_path = scratch / f"{model_path.stem}_mcp_presolve_residual.gms"
-    residual_path.write_text(make_residual_only(mcp_text), encoding="utf-8")
-
-    print(f"[kkt-residual] warm-started MCP:  {presolve_path}")
-    print(f"[kkt-residual] residual-only MCP: {residual_path}")
-    # Days 2–3: run GAMS at iterlim=0 on the residual-only MCP, parse per-row
-    # residuals, run the consistency self-check (classify_consistency) + the
-    # Case-(a/b/c) verdict, and emit the JSON/human report.
-    print(
-        "[kkt-residual] Day-1 build: emit + dual-transfer reuse/extraction + "
-        "residual-only rewrite + self-check ready. Verdict + run land Days 2–3."
-    )
-    return 0
+        return 0
+    finally:
+        if not args.keep_files:
+            shutil.rmtree(scratch, ignore_errors=True)
 
 
 if __name__ == "__main__":
