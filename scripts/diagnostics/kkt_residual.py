@@ -22,6 +22,7 @@ verdict + JSON/human output land on Days 2–3.
 from __future__ import annotations
 
 import argparse
+import math
 import re
 import sys
 import tempfile
@@ -135,8 +136,14 @@ def classify_consistency(
     wrong (not the emit): return ``"dual_transfer_inconsistent"`` so a bad
     transfer never masquerades as a Case-b emit bug. Returns ``None`` when the
     self-check passes (the stationarity verdict may proceed).
+
+    Fails **closed** on non-finite residuals: a ``NaN``/``inf`` row (e.g. from a
+    div-by-zero during residual evaluation, cf. korcge #1439) is offending —
+    ``abs(nan) > tol`` is ``False``, so it would otherwise slip through.
     """
-    offending = {k: v for k, v in constraint_residuals.items() if abs(v) > tol}
+    offending = {
+        k: v for k, v in constraint_residuals.items() if not math.isfinite(v) or abs(v) > tol
+    }
     return "dual_transfer_inconsistent" if offending else None
 
 
@@ -164,7 +171,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--gdx",
         metavar="SOLUTION.gdx",
-        help="pre-solved NLP solution (primals + marginals); if omitted, solve the NLP first",
+        help=(
+            "pre-solved NLP solution (primals + marginals); if omitted, solve the NLP "
+            "first (not honored in the Day-1 build)"
+        ),
     )
     parser.add_argument(
         "--tol",
@@ -175,7 +185,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
             f"{TOL_DEFAULT} once implemented; not honored in the Day-1 build)"
         ),
     )
-    parser.add_argument("--json", metavar="OUT.json", help="write the machine-readable report here")
+    parser.add_argument(
+        "--json",
+        metavar="OUT.json",
+        help="write the machine-readable report here (not honored in the Day-1 build)",
+    )
     parser.add_argument(
         "--nlp-solver",
         default=None,
@@ -187,7 +201,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--no-cold-start",
         action="store_true",
-        help="skip the cold-start MCP solve used to split Case a from Case c (residual + Case b/guard only)",
+        help=(
+            "skip the cold-start MCP solve used to split Case a from Case c "
+            "(residual + Case b/guard only; not honored in the Day-1 build)"
+        ),
     )
     return parser
 

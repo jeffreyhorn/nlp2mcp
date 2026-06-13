@@ -130,6 +130,15 @@ class TestClassifyConsistency:
     def test_empty_residuals_pass(self) -> None:
         assert classify_consistency({}) is None
 
+    @pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf")])
+    def test_non_finite_residuals_fail_closed(self, bad: float) -> None:
+        # abs(nan) > tol is False — a NaN/inf row must still be treated as
+        # offending (fail closed), not silently pass the self-check.
+        assert classify_consistency({"stat_x": bad}) == "dual_transfer_inconsistent"
+
+    def test_finite_within_tol_still_passes_alongside_nothing(self) -> None:
+        assert classify_consistency({"eq1": 0.0, "eq2": 1e-9}) is None
+
 
 def test_dual_transfer_dataclass_summary() -> None:
     transfer = DualTransfer(nu=["a"], lam=["b", "c"], piL=[], piU=["d"])
@@ -163,9 +172,11 @@ class TestCliFailFast:
     def test_deferred_flag_help_does_not_claim_an_active_default(self) -> None:
         # --tol/--nlp-solver argparse-default to None (sentinels) in Day 1, so the
         # help must not imply the documented value is the *current* default.
-        # Collapse argparse's line-wrapping before matching the phrase.
+        # Collapse argparse's line-wrapping before matching the phrase. Every
+        # fail-fast flag (--gdx/--json/--tol/--nlp-solver/--no-cold-start) must
+        # say so in its help, so the docs match main()'s behavior.
         help_text = " ".join(build_arg_parser().format_help().split())
-        assert help_text.count("not honored in the Day-1 build") >= 2
+        assert help_text.count("not honored in the Day-1 build") >= 5
 
 
 def test_no_args_defaults_are_inert_sentinels() -> None:
