@@ -59,4 +59,20 @@ The PR #1438 review (Copilot) raised two `--nlp-presolve` concerns on the refres
 - **korcge ordering — REAL latent emit bug, filed #1439.** The `--nlp-presolve` variant aborts (EXECERROR=5): `it(i)=yes$(e.l or m.l)` + the `.fx` fixups run **before** the `$include` with `.l=0`, so `it` is empty and vars fix to 0 → `1/xxd(i)`/`m(i)**(-rhoc)` div-by-zero. **Not blocking:** korcge solves **MODEL STATUS 1 Optimal** via the non-presolve file (`mcp_file_used = None`); the presolve variant is unused for its metrics; old golden was already broken (Locally Infeasible). Filed `ISSUE_1439_*.md` + GitHub #1439, wired into `PLAN.md`/`PLAN_PROMPTS.md` Day 0 + Day 12 (Priority 10 divergence detector). The reviewer correctly identified the mechanism.
 - **cesam empty `nu_*` transfer — BENIGN, no issue filed.** Despite the empty equality-multiplier warm-start, cesam's presolve MCP solves to **MODEL STATUS 1 Optimal** (primal + `piL_*`/`piU_*` bound-multiplier transfer suffices). Side-finding: cesam solves under presolve but is Infeasible under non-presolve (its pipeline path) — possibly recoverable via presolve; noted for the Priority 2/3 cesam2 work.
 
-### Next: Day 1 — begin building the KKT-residual harness (Priority 9, front-loaded Days 1–3).
+---
+
+## Day 1 — KKT-Residual Harness build (start) (2026-06-12)
+
+**Status:** 🟢 DONE — CLI + dual-transfer reuse/extraction + residual-only rewrite + consistency self-check landed (`scripts/diagnostics/kkt_residual.py`) with 16 unit tests; `make test` 4,795 passed (+16).
+
+### Architecture decision: **A — reuse the `--nlp-presolve` emit** (design §2.66 corrected, PR24)
+
+The design's §2.66 premise — *"presolve does not load `.m` into the multipliers"* — is **empirically false**: `_emit_nlp_presolve` (`src/emit/emit_gams.py:1067–1130`) already generates the complete dual transfer (`nu_<eq>.l = eq.m`, `lam_<eq>.l = abs(eq.m)`, `piL_*`/`piU_*` from variable marginals), confirmed in `launch_mcp_presolve.gms`. So the harness **reuses** the production transfer rather than re-deriving it via `build_complementarity_pairs` — simpler, DRY, production-aligned, and the consistency self-check catches any transfer gaps (e.g. cesam's empty `nu_*`, korcge #1439). User approved A. Design doc §2 annotated with the correction.
+
+### Built (Day 1)
+
+- `scripts/diagnostics/kkt_residual.py` — the CLI (`<model.gms> [--gdx] [--tol 1e-6] [--json] [--nlp-solver] [--no-cold-start]`); `emit_warmstarted_mcp` (reuse `translate_single_model(..., nlp_presolve=True)`); `extract_dual_transfer` (parse the four multiplier classes from the emit); `make_residual_only` (insert `mcp_model.iterlim = 0;` before the `Solve` → residual-only evaluation); `classify_consistency` (the §2 self-check → `dual_transfer_inconsistent`).
+- `tests/unit/diagnostics/test_kkt_residual_harness.py` — 16 unit tests. The **dual transfer on launch** check uses the committed `launch_mcp_presolve.gms` golden (no GAMS): extracts **nu=8, lam=2, piL=13, piU=6** (all four classes; `lam_*` use `abs()`).
+- `make typecheck`/`format`/`lint` clean (harness file ruff/black/mypy-clean; the only mypy notes are pre-existing in transitively-imported `scripts/gamslib/db_manager.py`, outside the gate scope).
+
+### Next: Day 2 — Case-(a/b/c) verdict + JSON/human output (run the residual-only MCP via GAMS, parse per-row residuals, apply the self-check then the verdict).
