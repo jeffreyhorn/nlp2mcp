@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """KKT-residual verification harness (Sprint 28 Priority 9 / PR27).
 
 Formalizes Sprint 27's GDX warm-from-good-optimum experiment into the standard
