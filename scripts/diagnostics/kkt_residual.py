@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -168,14 +169,14 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--tol",
         type=float,
-        default=TOL_DEFAULT,
-        help=f"per-row residual tolerance (default {TOL_DEFAULT})",
+        default=None,
+        help=f"per-row residual tolerance (Day-2/3 verdict; default {TOL_DEFAULT})",
     )
     parser.add_argument("--json", metavar="OUT.json", help="write the machine-readable report here")
     parser.add_argument(
         "--nlp-solver",
-        default=DEFAULT_NLP_SOLVER,
-        help=f"NLP solver for the no---gdx path (default {DEFAULT_NLP_SOLVER})",
+        default=None,
+        help=f"NLP solver for the path that solves the NLP when --gdx is not supplied (default {DEFAULT_NLP_SOLVER})",
     )
     parser.add_argument(
         "--no-cold-start",
@@ -187,20 +188,46 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_arg_parser().parse_args(argv)
+
+    # Day-1 scope is emit + dual-transfer extraction + the residual-only rewrite.
+    # The flags that drive the GAMS run / verdict / report are NOT honored yet —
+    # fail fast rather than silently ignore them (they land Days 2–3).
+    pending = [
+        name
+        for name, used in (
+            ("--gdx", args.gdx is not None),
+            ("--json", args.json is not None),
+            ("--tol", args.tol is not None),
+            ("--nlp-solver", args.nlp_solver is not None),
+            ("--no-cold-start", args.no_cold_start),
+        )
+        if used
+    ]
+    if pending:
+        print(
+            "error: the Day-1 build only emits the warm-started MCP + the "
+            "residual-only variant; these options are not implemented yet "
+            f"(land Days 2–3): {', '.join(pending)}",
+            file=sys.stderr,
+        )
+        return 2
+
     model_path = Path(args.model)
     if not model_path.exists():
         print(f"error: model not found: {model_path}", file=sys.stderr)
         return 2
 
-    out_path = PROJECT_ROOT / "data" / "gamslib" / "mcp" / f"{model_path.stem}_mcp_presolve.gms"
+    # Write to a scratch directory — never the committed golden dir.
+    scratch = Path(tempfile.mkdtemp(prefix=f"kkt_residual_{model_path.stem}_"))
+    presolve_path = scratch / f"{model_path.stem}_mcp_presolve.gms"
     print(f"[kkt-residual] {model_path.name} — emitting warm-started MCP (--nlp-presolve)…")
-    result = emit_warmstarted_mcp(model_path, out_path)
+    result = emit_warmstarted_mcp(model_path, presolve_path)
     if result.get("status") != "success":
         err = result.get("error")
         print(f"error: warm-started MCP emit failed: {err}", file=sys.stderr)
         return 1
 
-    mcp_text = out_path.read_text(encoding="utf-8")
+    mcp_text = presolve_path.read_text(encoding="utf-8")
     transfer = extract_dual_transfer(mcp_text)
     print(f"[kkt-residual] dual transfer (reused from --nlp-presolve): {transfer.summary()}")
     if transfer.is_empty:
@@ -211,13 +238,16 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     # Residual-only variant (iterlim=0) — the input to the Day-2 GAMS evaluation.
-    make_residual_only(mcp_text)
+    residual_path = scratch / f"{model_path.stem}_mcp_presolve_residual.gms"
+    residual_path.write_text(make_residual_only(mcp_text), encoding="utf-8")
 
-    # Days 2–3: run GAMS at iterlim=0, parse per-row residuals, run the
-    # consistency self-check (classify_consistency) + the Case-(a/b/c) verdict,
-    # and emit the JSON/human report.
+    print(f"[kkt-residual] warm-started MCP:  {presolve_path}")
+    print(f"[kkt-residual] residual-only MCP: {residual_path}")
+    # Days 2–3: run GAMS at iterlim=0 on the residual-only MCP, parse per-row
+    # residuals, run the consistency self-check (classify_consistency) + the
+    # Case-(a/b/c) verdict, and emit the JSON/human report.
     print(
-        "[kkt-residual] Day-1 build: CLI + dual-transfer reuse/extraction + "
+        "[kkt-residual] Day-1 build: emit + dual-transfer reuse/extraction + "
         "residual-only rewrite + self-check ready. Verdict + run land Days 2–3."
     )
     return 0

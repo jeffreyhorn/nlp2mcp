@@ -20,8 +20,10 @@ sys.path.insert(0, str(PROJECT_ROOT / "scripts" / "diagnostics"))
 
 from kkt_residual import (  # noqa: E402  (path set above)
     DualTransfer,
+    build_arg_parser,
     classify_consistency,
     extract_dual_transfer,
+    main,
     make_residual_only,
 )
 
@@ -134,3 +136,36 @@ def test_dual_transfer_dataclass_summary() -> None:
     assert transfer.total == 4
     assert not transfer.is_empty
     assert "total 4" in transfer.summary()
+
+
+class TestCliFailFast:
+    """Day-1 `main()` must fail fast (not silently ignore) on the flags whose
+    behavior lands Days 2–3 — these checks run before any emit/GAMS work."""
+
+    @pytest.mark.parametrize(
+        "extra",
+        [
+            ["--gdx", "sol.gdx"],
+            ["--json", "out.json"],
+            ["--tol", "1e-4"],
+            ["--nlp-solver", "CONOPT"],
+            ["--no-cold-start"],
+        ],
+    )
+    def test_unimplemented_flags_fail_fast(self, extra: list[str]) -> None:
+        # Returns non-zero before touching the (nonexistent) model file or GAMS.
+        assert main(["does_not_exist.gms", *extra]) == 2
+
+    def test_help_text_has_no_typo(self) -> None:
+        help_text = build_arg_parser().format_help()
+        assert "no---gdx" not in help_text
+
+
+def test_no_args_defaults_are_inert_sentinels() -> None:
+    # tol/nlp-solver default to None (sentinels) so an explicit value is detectable.
+    args = build_arg_parser().parse_args(["model.gms"])
+    assert args.tol is None
+    assert args.nlp_solver is None
+    assert args.gdx is None
+    assert args.json is None
+    assert args.no_cold_start is False
