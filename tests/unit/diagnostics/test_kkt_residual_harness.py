@@ -626,3 +626,30 @@ class TestPrimalScale:
     def test_floors_at_one(self) -> None:
         assert primal_scale([]) == 1.0
         assert primal_scale([RowResidual.equality("dweight", (), 0.0)]) == 1.0
+
+
+class TestReviewFixes:
+    """PR #1441 review fixes: strict JSON + single-include guard."""
+
+    def test_format_json_sanitizes_non_finite_to_null(self) -> None:
+        import json as _json
+
+        verdict = Verdict("dual_transfer_inconsistent", math.nan, None, 1.0, "non_finite")
+        transfer = TransferCheck(False, "non_finite", math.inf, math.inf)
+        rows = [RowResidual.equality("stat_x", (), math.nan)]
+        rep = build_report("m", 1e-3, verdict, transfer, rows)
+        text = format_json(rep)
+        # Strict JSON: no NaN/Infinity tokens, parses, non-finite -> null.
+        assert "NaN" not in text and "Infinity" not in text
+        parsed = _json.loads(text)  # would raise on NaN/Infinity
+        assert parsed["dual_transfer"]["max_comp_infeasibility"] is None
+        assert parsed["rows"][0]["residual"] is None
+
+    def test_build_gdx_skip_variant_rejects_multiple_includes(self) -> None:
+        text = (
+            '$include "data/gamslib/raw/launch.gms"\n'
+            "Display x;\n"
+            '$include "other/launch.gms"\n'
+        )
+        with pytest.raises(ValueError, match="exactly one"):
+            build_gdx_skip_variant(text, "launch.gms", "/n.gms", "/s.gdx")

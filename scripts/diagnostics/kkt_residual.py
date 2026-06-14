@@ -399,8 +399,9 @@ class TransferCheck:
 
     consistent: bool
     reason: str | None  # why it failed (None when consistent)
-    max_comp_infeasibility: float  # max(0, -F) over comp rows — the guard signal
-    max_equality_residual: float  # max |F| over equality rows — informational only
+    # max relative bound-violation (infeasibility / primal_scale) over comp rows — the guard signal
+    max_comp_infeasibility: float
+    max_equality_residual: float  # max |val - bound| over equality rows — informational only
 
 
 def primal_scale(rows: list[RowResidual]) -> float:
@@ -553,9 +554,23 @@ def build_report(
     }
 
 
+def _json_sanitize(obj: object) -> object:
+    """Recursively replace non-finite floats (``NaN``/``±Inf``) with ``None`` so the
+    ``--json`` report is valid JSON for strict consumers (the harness emits non-finite
+    residuals for div-by-zero rows, cf. korcge #1439)."""
+    if isinstance(obj, float):
+        return obj if math.isfinite(obj) else None
+    if isinstance(obj, dict):
+        return {k: _json_sanitize(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_json_sanitize(v) for v in obj]
+    return obj
+
+
 def format_json(report: dict[str, object]) -> str:
-    """Render the report as indented JSON (design §4)."""
-    return json.dumps(report, indent=2, allow_nan=True)
+    """Render the report as strict, indented JSON (design §4) — non-finite floats are
+    sanitized to ``null`` so the machine-readable evidence is always valid JSON."""
+    return json.dumps(_json_sanitize(report), indent=2, allow_nan=False)
 
 
 def format_human(report: dict[str, object]) -> str:
@@ -689,6 +704,11 @@ def build_gdx_skip_variant(
             f"no `$include` of the source model ({source_basename}) found to rewrite "
             "for the --gdx load-point path"
         )
+    if n > 1:
+        raise ValueError(
+            f"expected exactly one `$include` of the source model ({source_basename}), "
+            f"found {n} — refusing to inject multiple `execute_loadpoint` statements"
+        )
     return new_text
 
 
@@ -719,9 +739,15 @@ def find_gams_tools() -> tuple[str, str] | None:
 def run_gams(gms_path: Path, scratch: Path, gams_exe: str, timeout: int = 120) -> Path:
     """Run GAMS on ``gms_path`` from ``PROJECT_ROOT`` (so the repo-relative
     ``$include`` resolves, cf. test_solve #1275). Scratch/listing land in
-    ``scratch``. Returns the ``.lst`` path. Raises on missing GAMS output."""
+    ``scratch``. Returns the ``.lst`` path.
+
+    Raises ``RuntimeError`` on a non-zero GAMS exit (a compile/execution error —
+    e.g. the korcge #1439 presolve abort) with the stderr/listing tail so the
+    failure is actionable, or on a missing listing. A normal ``iterlim=0`` run
+    returns 0 (the MCP solve interrupts at iteration 0 but executes cleanly), so
+    this does not false-positive on the residual-only evaluation."""
     lst_path = scratch / f"{gms_path.stem}.lst"
-    subprocess.run(
+    proc = subprocess.run(
         [
             gams_exe,
             str(gms_path),
@@ -735,6 +761,20 @@ def run_gams(gms_path: Path, scratch: Path, gams_exe: str, timeout: int = 120) -
         timeout=timeout + 30,
         cwd=str(PROJECT_ROOT),
     )
+    if proc.returncode != 0:
+        detail = (proc.stderr or proc.stdout or "").strip()[-1500:]
+        lst_errors = ""
+        if lst_path.exists():
+            lst_errors = "\n".join(
+                ln
+                for ln in lst_path.read_text(errors="replace").splitlines()
+                if ln.startswith("****")
+            )[-1500:]
+        raise RuntimeError(
+            f"GAMS exited {proc.returncode} on {gms_path.name}"
+            + (f"\nstderr/stdout: {detail}" if detail else "")
+            + (f"\nlisting errors:\n{lst_errors}" if lst_errors else "")
+        )
     if not lst_path.exists():
         raise RuntimeError(f"GAMS produced no listing for {gms_path}")
     return lst_path
@@ -1013,6 +1053,7 @@ def main(argv: list[str] | None = None) -> int:
     scratch_root = PROJECT_ROOT / "output"
     scratch_root.mkdir(exist_ok=True)
     scratch = Path(tempfile.mkdtemp(prefix=f"kkt_residual_{model_path.stem}_", dir=scratch_root))
+    failed = False
     try:
         report = run_harness(
             model_path,
@@ -1023,16 +1064,21 @@ def main(argv: list[str] | None = None) -> int:
             gams_tools=gams_tools,
         )
     except subprocess.TimeoutExpired as exc:
+        failed = True
         print(f"error: GAMS timed out: {exc}", file=sys.stderr)
         return 1
     except (RuntimeError, ValueError) as exc:
+        failed = True
         print(f"error: {exc}", file=sys.stderr)
         return 1
     finally:
-        if not args.keep_files:
+        # Retain scratch (the .gms + .lst) on failure so "check the listing" is
+        # actionable, or whenever --keep-files is set; delete on clean success.
+        if args.keep_files or failed:
+            if scratch.exists():
+                print(f"[kkt-residual] scratch retained: {scratch}", file=sys.stderr)
+        else:
             shutil.rmtree(scratch, ignore_errors=True)
-        elif scratch.exists():
-            print(f"[kkt-residual] scratch retained: {scratch}")
 
     print(format_human(report))
     if args.json:
