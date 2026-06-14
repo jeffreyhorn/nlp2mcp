@@ -76,3 +76,26 @@ The design's §2.66 premise — *"presolve does not load `.m` into the multiplie
 - `make typecheck`/`format`/`lint` clean (harness file ruff/black/mypy-clean; the only mypy notes are pre-existing in transitively-imported `scripts/gamslib/db_manager.py`, outside the gate scope).
 
 ### Next: Day 2 — Case-(a/b/c) verdict + JSON/human output (run the residual-only MCP via GAMS, parse per-row residuals, apply the self-check then the verdict).
+
+---
+
+## Day 2 — KKT-Residual Harness build (verdict + output) (2026-06-13)
+
+**Status:** 🟢 DONE — full pipeline (GAMS run + gdxdump parse + §2 self-check + relative-residual Case-(a/b/c) verdict + JSON/human output + `--gdx`) landed in `scripts/diagnostics/kkt_residual.py`; 71 new unit tests (87 total) + 1 GAMS-gated e2e; end-to-end self-validated on launch. **Four empirical findings (PR24) reshaped the build before any code — verified with real GAMS runs, not assumed.**
+
+### PR24 findings (design §2/§3/§7 corrected; user approved the relative-residual approach)
+
+1. **`nu` sign flip (🔴 architectural).** Architecture A's premise — that reusing the `--nlp-presolve` warm-start puts the MCP at a KKT zero — is **false**: the production `nu_<eq>.l = eq.m` is sign-flipped vs the emitted stationarity convention. launch `stat_aweight.L = 16.09 = 2·|eq.m|`; `nu = -eq.m` drops every stationarity residual to ~1e-12. Fix: `apply_residual_sign_correction` negates `nu_*` for the residual-only variant (`lam`/`piL`/`piU` load as non-negative magnitudes, untouched). Not a production bug (PATH iterates past it).
+2. **Relative residual (🟡, the verdict core).** After the `nu` fix, launch is clean except `stat_ethrust ≈ 7.9e-3` — the embedded NLP's gradient-optimality tolerance (ethrust≈747). A fixed absolute `tol=1e-6` mis-flags launch as Case b. Adopted a **relative** residual `|F|/dual_scale` (`dual_scale = max(1, max|multiplier|)`, IPOPT-style); default **`tol=1e-3`** (was `1e-6` absolute). Separates the cases by orders of magnitude.
+3. **Val-vs-bounds residual (🔴 correctness).** The raw equation `.L` is the *activity*, not the residual — GAMS moves a constraint's constant to the `.LO`/`.UP` bound (`comp_up_vt`: `50000 - vt =G= 0` → Val=−vt, Lower=−50000 → feasible). Reading only `.L` falsely flagged `comp_up_vt` and the apparent `costdef`/`dweight` "discrepancies" (Finding-3-from-Day-0 **dissolved**: Val==Lower==Upper → residual 0). Fix: extract via `gdxdump … CSVAllFields` and compute residual/infeasibility from `Val` vs `[Lower, Upper]`; the complementarity guard is **relative** (`infeasibility/primal_scale`).
+4. **launch is Case c, not Case a (🟡 calibration).** End-to-end: launch residual ≈ 0 (max rel ~1.4e-16), self-check CONSISTENT — **but the cold non-presolve `launch_mcp.gms` solves MODEL STATUS 5 Locally Infeasible** (obj 526, not 2257.80), so cold PATH can't reach the valid KKT point → **Case c** by the §3 definition. The §7 table conflated "residual ≈ 0" with Case a; corrected. A clean Case-a calibration model still needs picking on Day 3; launch is a *second* Case-c example.
+
+### Built (Day 2)
+
+- Residual extraction: `apply_residual_sign_correction`, `inject_residual_unload` (`execute_unload` after the `iterlim=0` Solve), `parse_gdxdump_allfields` (Val/Lower/Upper), `RowResidual` (Val-vs-bounds `signed_residual`/`infeasibility`), `dual_scale`/`primal_scale`/`relative_residual`.
+- Verdict + output: `check_dual_transfer` (fail-closed on NaN/inf + relative gross-infeasibility guard; equality residuals informational), `classify_verdict` (relative residual; cold-start `optimal`/`diverged`/`unavailable` → Case a/c/`case_a_or_c`), `build_report`/`format_json`/`format_human`.
+- GAMS orchestration: `find_gams_tools`, `run_gams` (from `PROJECT_ROOT`), `gdxdump_equation`/`gdxdump_symbol`, `collect_residuals`/`collect_multiplier_values`, `cold_start_status` (reuses `solve_mcp`), `run_harness`, rewritten `main()` (only `--nlp-solver` still deferred).
+- `--gdx`: `neutralize_nlp_solve` + `build_gdx_skip_variant` (repoint `$include` at a neutralized source + `execute_loadpoint`) → skips the embedded NLP solve (design §8). Text transforms unit-tested; real-GDX correctness validated Day 3+.
+- Tests: 87 unit (`tests/unit/diagnostics/test_kkt_residual_harness.py`) + 1 GAMS-gated e2e (`tests/integration/diagnostics/test_kkt_residual_e2e.py`, skips without GAMS/raw launch). Self-validated: launch → CONSISTENT, stationarity rel ~1e-16, verdict Case c.
+
+### Next: Day 3 — validate launch/camshape/cclinpts (camshape → Case b `stat_r('i1')`; cclinpts → Case c; pick a clean Case-a model), wire the Phase-0 `### Verification Methodology` command, open the P9 PR.
