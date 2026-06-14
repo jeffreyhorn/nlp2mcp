@@ -65,7 +65,9 @@ In Sprint 27 (Day 9, launch) inequality/bound marginals were transferred by hand
 
 ### Reuse of the `--nlp-presolve` machinery (Unknown 9.1 Q4)
 
-The existing `_emit_nlp_presolve` path (`src/emit/emit_gams.py`) already `$include`s the source NLP and warm-starts the MCP **primals**. The harness reuses that for primal transfer and adds the **dual** transfer above (presolve does not load `.m` into the multipliers). This keeps the harness aligned with the production emit rather than maintaining a parallel warm-start.
+> **Day-1 correction (PR24, 2026-06-12):** this paragraph's original claim — "presolve does not load `.m` into the multipliers" — is **empirically false**. `_emit_nlp_presolve` (`src/emit/emit_gams.py:1067–1130`) **already** generates the full dual transfer (`nu_<eq>.l = eq.m`, `lam_<eq>.l = abs(eq.m)`, `piL_*`/`piU_*` from variable marginals), confirmed in `launch_mcp_presolve.gms` (nu=8, lam=2, piL=13, piU=6). **Architecture A (chosen, user-approved):** the harness **reuses the production `--nlp-presolve` emit for both primal *and* dual warm-start** — it does not re-derive the transfer via `build_complementarity_pairs`. The harness's dual-transfer layer (`extract_dual_transfer`) *verifies* the production transfer is present; the §"Consistency self-check" below catches any gap (e.g. cesam's empty `nu_*`, korcge #1439). The `build_complementarity_pairs`-driven description in this §2 is retained as the conceptual mapping but is **not reimplemented** by the harness.
+
+The existing `_emit_nlp_presolve` path (`src/emit/emit_gams.py`) `$include`s the source NLP and warm-starts the MCP **primals and duals**. The harness reuses that whole transfer, keeping it aligned with the production emit rather than maintaining a parallel warm-start.
 
 ### Consistency self-check (the dual-transfer's own validity)
 
