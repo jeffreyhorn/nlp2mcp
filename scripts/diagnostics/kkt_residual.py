@@ -20,13 +20,16 @@ residual-only variant (``nu`` sign-corrected, ``iterlim=0``, ``execute_unload``)
 runs it through GAMS, reads per-row residuals via ``gdxdump``, runs the §2
 self-check + the §3 Case-(a/b/c) verdict (relative residual; optional cold-start
 for the a-vs-c split), and writes the human + ``--json`` report. ``--gdx`` skips
-the embedded NLP solve via ``execute_loadpoint``. Day-3 validates the three known
-cases (launch → a, camshape → b, cclinpts → c).
+the embedded NLP solve via ``execute_loadpoint``. Day-2 self-validation found
+launch is **Case c** (residual ≈ 0 but the cold non-presolve MCP is Locally
+Infeasible), not Case a as the design's §7 table assumed; Day-3 validates camshape
+→ Case b and cclinpts → Case c and picks a clean Case-a model.
 """
 
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import math
 import re
@@ -342,15 +345,13 @@ def parse_gdxdump_allfields(csv_text: str) -> dict[tuple[str, ...], tuple[float,
 
 
 def _split_csv_row(line: str) -> list[str]:
-    """Split a gdxdump CSV row into fields, stripping the double-quotes gdxdump
-    puts around index labels (numeric values are unquoted)."""
-    fields = []
-    for raw in line.split(","):
-        tok = raw.strip()
-        if len(tok) >= 2 and tok[0] == '"' and tok[-1] == '"':
-            tok = tok[1:-1]
-        fields.append(tok)
-    return fields
+    """Split a gdxdump CSV row into fields using the standard CSV dialect, so quoted
+    GAMS index labels containing commas or escaped quotes parse correctly (gdxdump
+    quotes index labels and leaves numeric values unquoted)."""
+    try:
+        return next(csv.reader([line]))
+    except StopIteration:
+        return []
 
 
 def _gams_number(token: str) -> float | None:
@@ -433,7 +434,11 @@ def check_dual_transfer(
     residuals (``|val - bound|``) are reported (informational) but do **not** block.
     """
     for r in rows:
-        if not math.isfinite(r.val):
+        # Fail closed on a NaN/Inf activity OR a NaN bound (corrupted gdxdump, e.g.
+        # NA/UNDF). A ±Inf *bound* is legitimate (a one-sided =g=/=l= constraint), so
+        # only NaN bounds are corruption — `infeasibility` would otherwise treat a
+        # non-finite bound as "no bound" and silently ignore it.
+        if not math.isfinite(r.val) or math.isnan(r.lower) or math.isnan(r.upper):
             return TransferCheck(False, f"non_finite_residual:{r.label}", math.inf, math.inf)
 
     scale = primal_scale(rows)

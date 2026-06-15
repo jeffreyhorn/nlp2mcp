@@ -653,3 +653,28 @@ class TestReviewFixes:
         )
         with pytest.raises(ValueError, match="exactly one"):
             build_gdx_skip_variant(text, "launch.gms", "/n.gms", "/s.gdx")
+
+
+class TestReviewFixesRound2:
+    """PR #1441 review round 2: NaN-bound fail-closed + RFC CSV parsing."""
+
+    def test_check_dual_transfer_fails_closed_on_nan_bound(self) -> None:
+        # Finite val but a NaN bound (corrupted NA/UNDF gdxdump) must fail closed —
+        # infeasibility would otherwise treat the non-finite bound as "no bound".
+        rows = [RowResidual.from_fields("comp_lo_x", ("a",), 5.0, math.nan, math.inf)]
+        chk = check_dual_transfer(rows)
+        assert not chk.consistent and "non_finite" in str(chk.reason)
+
+    def test_check_dual_transfer_inf_bound_is_legitimate(self) -> None:
+        # A +Inf upper bound is a normal one-sided constraint, not corruption.
+        rows = [RowResidual.from_fields("comp_lo_x", ("a",), 5.0, 1.0, math.inf)]
+        assert check_dual_transfer(rows).consistent
+
+    def test_parse_gdxdump_csv_handles_quoted_comma_label(self) -> None:
+        # A GAMS label containing a comma stays one field under RFC CSV parsing.
+        out = parse_gdxdump_csv('"s","Val"\n"a,b",1.5\n')
+        assert out == {("a,b",): 1.5}
+
+    def test_parse_gdxdump_allfields_handles_quoted_comma_label(self) -> None:
+        csv_text = '"s","Val","Marginal","Lower","Upper","Scale"\n"a,b",1.5,0,1,+Inf,1\n'
+        assert parse_gdxdump_allfields(csv_text) == {("a,b",): (1.5, 1.0, math.inf)}
