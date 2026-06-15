@@ -877,7 +877,11 @@ def build_residual_only_mcp(
     residual GDX."""
     text = mcp_text
     if gdx is not None:
-        assert neutralized_include is not None and source_basename is not None
+        if neutralized_include is None or source_basename is None:
+            raise ValueError(
+                "build_residual_only_mcp: gdx set but source_basename/neutralized_include "
+                "missing (both are required to wire the --gdx load-point)"
+            )
         text = build_gdx_skip_variant(text, source_basename, neutralized_include, gdx)
     text = apply_residual_sign_correction(text)
     text = make_residual_only(text)

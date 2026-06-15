@@ -678,3 +678,24 @@ class TestReviewFixesRound2:
     def test_parse_gdxdump_allfields_handles_quoted_comma_label(self) -> None:
         csv_text = '"s","Val","Marginal","Lower","Upper","Scale"\n"a,b",1.5,0,1,+Inf,1\n'
         assert parse_gdxdump_allfields(csv_text) == {("a,b",): (1.5, 1.0, math.inf)}
+
+
+class TestReviewFixesRound3:
+    """PR #1441 review round 3: explicit ValueError (not assert) for the --gdx
+    precondition, so it is deterministic under `python -O` and caught by main()."""
+
+    def test_gdx_without_source_basename_raises_valueerror(self) -> None:
+        with pytest.raises(ValueError, match="source_basename/neutralized_include"):
+            build_residual_only_mcp(
+                "x", "/tmp/k.gdx", gdx="/s/sol.gdx", source_basename=None, neutralized_include="/n"
+            )
+
+    def test_gdx_without_neutralized_include_raises_valueerror(self) -> None:
+        with pytest.raises(ValueError, match="source_basename/neutralized_include"):
+            build_residual_only_mcp(
+                "x",
+                "/tmp/k.gdx",
+                gdx="/s/sol.gdx",
+                source_basename="m.gms",
+                neutralized_include=None,
+            )
