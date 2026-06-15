@@ -50,7 +50,9 @@ FEAS_TOL_DEFAULT = 1e-4  # gross-infeasibility floor for the complementarity gua
 DEFAULT_NLP_SOLVER = "CONOPT"
 MCP_MODEL_NAME = "mcp_model"
 
-# Row-name prefixes the emitter uses (src/kkt/naming.py).
+# Equation-row name prefixes the KKT builders emit: `stat_<var>` from
+# src/kkt/stationarity.py, `comp_<constraint>` from src/kkt/complementarity.py.
+# (src/kkt/naming.py covers the *multiplier* variable names, not these row prefixes.)
 STAT_PREFIX = "stat_"
 COMP_PREFIX = "comp_"
 
@@ -281,7 +283,9 @@ class RowResidual:
 
 
 def row_kind(name: str) -> str:
-    """Classify an equation row by its emitted name prefix (src/kkt/naming.py)."""
+    """Classify an equation row by its emitted name prefix: ``stat_`` (from
+    src/kkt/stationarity.py), ``comp_`` (from src/kkt/complementarity.py), else an
+    original equality constraint."""
     if name.startswith(STAT_PREFIX):
         return "stationarity"
     if name.startswith(COMP_PREFIX):
