@@ -32,20 +32,22 @@ def gams_tools():
 
 
 @pytest.mark.skipif(not LAUNCH.exists(), reason="raw launch.gms not present (gitignored corpus)")
-def test_launch_residual_is_clean_and_self_check_consistent(gams_tools, tmp_path) -> None:
+def test_launch_residual_is_clean_and_self_check_consistent(gams_tools) -> None:
     # --no-cold-start: one solve. The dual transfer must be CONSISTENT and the
     # stationarity residual ~machine-zero after the nu sign correction (Day-2 finding).
-    scratch = PROJECT_ROOT / "output"
-    scratch.mkdir(exist_ok=True)
-    work = Path(scratch / f"e2e_{tmp_path.name}")
-    work.mkdir(exist_ok=True)
+    # Unique scratch under output/ (run_harness requires a path inside PROJECT_ROOT);
+    # mkdtemp avoids xdist worker collisions on a shared dir name.
+    import shutil
+    import tempfile
+
+    scratch_root = PROJECT_ROOT / "output"
+    scratch_root.mkdir(exist_ok=True)
+    work = Path(tempfile.mkdtemp(prefix="e2e_kkt_", dir=scratch_root))
     try:
         report = run_harness(
             LAUNCH, work, tol=1e-3, gdx=None, no_cold_start=True, gams_tools=gams_tools
         )
     finally:
-        import shutil
-
         shutil.rmtree(work, ignore_errors=True)
 
     assert report["dual_transfer"]["consistent"] is True

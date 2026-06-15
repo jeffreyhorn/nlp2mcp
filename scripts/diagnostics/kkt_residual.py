@@ -846,9 +846,10 @@ def collect_multiplier_values(
     return values
 
 
-def cold_start_status(model_path: Path, scratch: Path, gams_exe: str, timeout: int = 120) -> str:
+def cold_start_status(model_path: Path, scratch: Path, timeout: int = 120) -> str:
     """Cold-start MCP solve (design §3, Case-a-vs-c split): emit the *non-presolve*
-    MCP and solve it from the default start.
+    MCP and solve it from the default start. (Uses ``solve_mcp``, which performs its
+    own GAMS discovery — no ``gams_exe`` argument needed.)
 
     Returns ``"optimal"`` if PATH reaches a (locally) optimal model status (1/2),
     ``"diverged"`` if it reaches an infeasible / non-converged status, or
@@ -967,7 +968,7 @@ def run_harness(
     cold = None
     if transfer.consistent and not no_cold_start:
         print("[kkt-residual] cold-start MCP solve (Case a-vs-c split)…")
-        cold = cold_start_status(model_path, scratch, gams_exe, timeout=timeout)
+        cold = cold_start_status(model_path, scratch, timeout=timeout)
 
     verdict = classify_verdict(stat_rows, scale, transfer, tol=tol, cold_start_status=cold)
     return build_report(model_path.stem, tol, verdict, transfer, stat_rows)
