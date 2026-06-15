@@ -699,3 +699,30 @@ class TestReviewFixesRound3:
                 source_basename="m.gms",
                 neutralized_include=None,
             )
+
+
+class TestFindGamsToolsWindows:
+    """PR #1441 review round 4: the gdxdump sibling may be `gdxdump.exe` (Windows)."""
+
+    def test_finds_exe_sibling(self, monkeypatch, tmp_path) -> None:
+        import kkt_residual as kr
+
+        gams = tmp_path / "gams.exe"
+        gams.write_text("")
+        (tmp_path / "gdxdump.exe").write_text("")  # only the .exe sibling exists
+        monkeypatch.setattr(kr, "_GAMS_CANDIDATES", ())  # force the which() path
+        monkeypatch.setattr(kr.shutil, "which", lambda n: str(gams) if n == "gams" else None)
+
+        tools = kr.find_gams_tools()
+        assert tools is not None
+        assert tools[0] == str(gams)
+        assert tools[1].endswith("gdxdump.exe")
+
+    def test_none_when_no_gdxdump(self, monkeypatch, tmp_path) -> None:
+        import kkt_residual as kr
+
+        gams = tmp_path / "gams"
+        gams.write_text("")  # gams present, no gdxdump sibling, none on PATH
+        monkeypatch.setattr(kr, "_GAMS_CANDIDATES", ())
+        monkeypatch.setattr(kr.shutil, "which", lambda n: str(gams) if n == "gams" else None)
+        assert kr.find_gams_tools() is None

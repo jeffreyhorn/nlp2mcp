@@ -730,12 +730,21 @@ _GAMS_CANDIDATES = (
 def find_gams_tools() -> tuple[str, str] | None:
     """Locate the ``gams`` and (sibling) ``gdxdump`` executables, mirroring
     ``scripts/gamslib/test_solve.py``. Returns ``(gams, gdxdump)`` or ``None`` if
-    GAMS is unavailable (the GAMS-run paths then no-op / skip)."""
+    GAMS is unavailable (the GAMS-run paths then no-op / skip). Checks both the
+    bare and ``.exe`` sibling names so it works on Windows (``gdxdump.exe`` next to
+    ``gams.exe``) as well as POSIX."""
     gams = next((p for p in _GAMS_CANDIDATES if Path(p).exists()), None) or shutil.which("gams")
     if not gams:
         return None
-    sibling = Path(gams).with_name("gdxdump")
-    gdxdump = str(sibling) if sibling.exists() else shutil.which("gdxdump")
+    sibling = next(
+        (
+            str(s)
+            for name in ("gdxdump", "gdxdump.exe")
+            if (s := Path(gams).with_name(name)).exists()
+        ),
+        None,
+    )
+    gdxdump = sibling or shutil.which("gdxdump")
     if not gdxdump:
         return None
     return gams, gdxdump
@@ -1091,7 +1100,11 @@ def main(argv: list[str] | None = None) -> int:
 
     print(format_human(report))
     if args.json:
-        Path(args.json).write_text(format_json(report) + "\n", encoding="utf-8")
+        try:
+            Path(args.json).write_text(format_json(report) + "\n", encoding="utf-8")
+        except OSError as exc:
+            print(f"error: could not write JSON report to {args.json}: {exc}", file=sys.stderr)
+            return 1
         print(f"[kkt-residual] JSON report written: {args.json}")
     return 0
 
