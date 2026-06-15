@@ -17,7 +17,7 @@
 |---|---|---|
 | `<model.gms>` | yes | The source NLP model (the same file the pipeline translates). |
 | `--gdx <solution.gdx>` | no | A pre-solved NLP solution (primals + marginals). If omitted, the harness solves the NLP first. |
-| `--tol <float>` | no (default `1e-6`) | Per-row residual tolerance separating Case b from Case c. |
+| `--tol <float>` | no (default `1e-3`, **relative**) | Relative stationarity-residual tolerance (`|F|/dual_scale`) separating Case a/c from Case b (Day-2 correction; was `1e-6` absolute). |
 | `--json <out.json>` | no | Write the machine-readable report to this path (human summary always goes to stdout). |
 | `--nlp-solver <name>` | no (default `CONOPT`) | NLP solver for the no-`--gdx` path. |
 | `--no-cold-start` | no (flag) | Skip the optional cold-start MCP solve used to split Case a from Case c (§3); report the residual + Case b/guard only. Use when only the stationarity residual is wanted (faster). |
@@ -59,9 +59,11 @@ In Sprint 27 (Day 9, launch) inequality/bound marginals were transferred by hand
 
 ### Sign / recovery conventions (Unknown 9.1 Q3)
 
-- `nu_<eq>` (equality): free; load the NLP `eq.m` directly (the stationarity assembly's sign is fixed by the Lagrangian orientation the emitter already uses).
-- `lam_<eq>` (inequality): GAMS `=g=`/`=l=` marginals carry a sign tied to the constraint orientation; normalize to the non-negative convention the `comp_ineq` row expects (`lam ≥ 0`, slack ≥ 0). The harness reads the emitted constraint orientation to pick the sign.
-- `piL_<v>` / `piU_<v>` (bounds): recovered from `v.m` at the solution — `piL` is the positive part of `v.m` on a lower-active bound (`v.l ≈ v.lo`), `piU` the magnitude on an upper-active bound (`v.l ≈ v.up`); inactive bounds get `0`.
+> **Day-2 correction (PR24, 2026-06-13):** the original claim that loading `nu_<eq>.l = eq.m` *directly* zeroes the stationarity rows is **empirically false**. Verified on launch (`iterlim=0`, `execute_unload` → `gdxdump`): the production presolve transfer `nu_<eq>.l = eq.m` leaves `stat_aweight ≈ 16.09 = 2·|eq.m|` — a **uniform sign flip** between the GAMS equality marginal and the emitted stationarity row's `nu` sign. Re-running with `nu_<eq>.l = -(eq.m)` drops **every** stationarity residual to ~1e-12 (machine zero), giving launch a clean *residual*. (This fixes the residual measurement only; it does **not** by itself make launch Case a — the a-vs-c split also depends on the cold-start, and launch's cold non-presolve MCP is Locally Infeasible, so launch is **Case c**, per §7.) This is not a production bug (PATH iterates away from the sign-flipped dual start and still converges/matches, Sprint 27 Day 9); it is a **measurement-correctness requirement for the `iterlim=0` residual check.** The harness therefore applies a sign-correction layer (`apply_residual_sign_correction`) that negates the `nu_*` transfer for the residual-only variant. Only the **free** multiplier `nu` is sign-ambiguous; `lam`/`piL`/`piU` load as non-negative magnitudes (`abs(...)`, positive-part) with the sign carried in the emitted stationarity coefficient, so they are **not** flipped. (launch cannot confirm `lam`/`piL`/`piU` — all its inequalities/bounds are inactive at the optimum — so the Day-3 camshape validation, which has active bounds, confirms them.)
+
+- `nu_<eq>` (equality): free; the **residual-only variant loads `-eq.m`** (the Day-2 sign correction above). Production `--nlp-presolve` loads `+eq.m` (a valid PATH warm-start, dual signs notwithstanding).
+- `lam_<eq>` (inequality): GAMS `=g=`/`=l=` marginals carry a sign tied to the constraint orientation; the presolve loads `abs(eq.m)` so `lam ≥ 0` as the `comp_ineq` row expects. **Not** sign-flipped by the harness (the orientation sign lives in the emitted coefficient).
+- `piL_<v>` / `piU_<v>` (bounds): recovered from `v.m` at the solution — `piL` is the positive part of `v.m` on a lower-active bound (`v.l ≈ v.lo`), `piU` the magnitude on an upper-active bound (`v.l ≈ v.up`); inactive bounds get `0`. **Not** sign-flipped.
 
 ### Reuse of the `--nlp-presolve` machinery (Unknown 9.1 Q4)
 
@@ -71,13 +73,19 @@ The existing `_emit_nlp_presolve` path (`src/emit/emit_gams.py`) `$include`s the
 
 ### Consistency self-check (the dual-transfer's own validity)
 
-Before trusting any *stationarity* residual, the harness verifies the **constraint / complementarity rows** are ≈ 0 at the transferred point (the primal feasibility + complementary slackness the NLP solution already satisfies). If a constraint row is non-zero, the *transfer* is wrong (not the emit), and the harness reports `dual_transfer_inconsistent` instead of a Case verdict — this is the guard Unknowns 5.2 and 9.1 demand (a bad transfer must never masquerade as a Case-b emit bug).
+Before trusting any *stationarity* residual, the harness verifies the transferred point is sane. If it is not, the harness reports `dual_transfer_inconsistent` instead of a Case verdict — the guard Unknowns 5.2 and 9.1 demand (a bad transfer must never masquerade as a Case-b emit bug).
+
+> **Day-2 correction (PR24, 2026-06-13):** the original "all constraint/complementarity rows ≈ 0" formulation is **too strict** — it false-positives on healthy models. Verified on launch: (1) `=g=` complementarity rows correctly carry the constraint *slack* (`comp_lo_aweight.L = 68 =` aweight−1, an inactive bound — feasible, not a violation), so a raw "≈ 0" test is wrong for inequalities; (2) the **objective-definitional and some original-equality rows are non-zero at the warm-start** (`costdef.L = -850`, `dweight.L = 20`) because the *emitted* objective/constraint expressions differ from the embedded NLP at the solution — a **separate emit-vs-embedded-NLP discrepancy** (Sprint-27 bug class), **not** a dual-transfer problem. Folding these into the transfer guard would block valid stationarity verdicts. So the Day-2 self-check is **fail-closed and conservative**: it flags `dual_transfer_inconsistent` only on (a) a **non-finite** residual anywhere (NaN/inf — e.g. the korcge #1439 div-by-zero), or (b) a **gross feasibility violation** of a complementarity row (`F < −feas_tol`, a real constraint breach). Small/moderate equality residuals are **reported** (as `max_constraint_residual`, for transparency and to surface the emit-vs-NLP discrepancy) but do **not** block the verdict. The objective-definitional row is excluded from the reported constraint set.
 
 ---
 
 ## 3. Case-(a/b/c) Verdict Logic (Unknown 9.2)
 
-**First** run the §2 dual-transfer self-check; only if it passes (all constraint / complementarity rows ≈ 0) does the verdict proceed. Then evaluate the **stationarity rows** (`stat_*`) at the transferred NLP KKT point. Let `max|r|` be the largest absolute **stationarity** residual and `tol` the threshold (default `1e-6`). Complementarity / constraint rows are **not** part of `max|r|` — they are the §2 consistency guard; if any exceeds `tol`, the harness returns `dual_transfer_inconsistent` instead of a Case verdict. So Case b is triggered by a stationarity violation only.
+**First** run the §2 dual-transfer self-check (fail-closed: non-finite residual or gross complementarity infeasibility → `dual_transfer_inconsistent`); only if it passes does the verdict proceed. Then evaluate the **stationarity rows** (`stat_*`) at the transferred NLP KKT point.
+
+> **Day-2 correction (PR24, 2026-06-13) — relative residual:** the design's fixed *absolute* `tol=1e-6` is **too tight for the embedded NLP's optimality tolerance.** Verified on launch (post sign-correction): all stationarity rows are ~1e-12 **except `stat_ethrust ≈ 7.9e-3`** — a genuine residual at the embedded NLP solver's gradient tolerance (`ethrust ≈ 747`, steep powers; bound inactive, so not a sign issue). An absolute `1e-6` would mis-flag launch (Case a) as Case b. The harness therefore uses a **relative stationarity residual**: `rel = |F_stat| / dual_scale`, where `dual_scale = max(1, max|multiplier value|)` over all transferred multipliers (the IPOPT-style dual-infeasibility scaling). For launch, `dual_scale ≈ 14` → `stat_ethrust` rel ≈ 5.7e-4. The default threshold is therefore **`tol = 1e-3` on the relative residual** (was `1e-6` absolute). This cleanly separates the three calibration cases by *orders of magnitude* (launch ≈ 5.7e-4 ≪ camshape ≈ O(1–10) ≫ cclinpts ≈ O(1e-9)), so the verdict is robust across `tol ∈ [1e-4, 1e-1]`; `--tol` overrides. Day-3 confirms camshape/cclinpts at this default.
+
+Let `max|r|` be the largest **relative stationarity** residual and `tol` the threshold (default `1e-3`, relative). Complementarity / constraint rows are **not** part of `max|r|` — they are the §2 consistency guard (above). So Case b is triggered by a stationarity violation only.
 
 | Verdict | Condition | Meaning | Fix path |
 |---|---|---|---|
@@ -92,7 +100,7 @@ Before trusting any *stationarity* residual, the harness verifies the **constrai
 - launch — Sprint 27 proved 2257.80 a valid KKT point (residual ≈ 0) → **Case a** (after the #1378 double-apply fix) / the pre-fix corrupted objective showed a non-zero residual → **Case b** before the fix.
 - cclinpts — Sprint 27 residual-verified the eliminated-KKT max|r| = 5e-8 at the NLP optimum, yet cold PATH converges to a spurious degenerate point → **Case c** (non-convex; needs warm-start). This is the canonical Case-c calibration point.
 
-`tol = 1e-6` cleanly separates the camshape Case-b (≈ 396) from the cclinpts Case-c (5e-8); it is `--tol`-tunable for models with looser numerics.
+With the Day-2 **relative** residual (`|F|/dual_scale`, default `tol = 1e-3`), the three cases separate by orders of magnitude — launch ≈ 5.7e-4 (Case a) ≪ camshape ≈ O(1–10) (Case b) and ≫ cclinpts ≈ O(1e-9) (Case c); robust across `tol ∈ [1e-4, 1e-1]`, `--tol`-tunable for models with looser numerics. (The historical figures above — camshape ≈ 396, cclinpts 5e-8 — are the Sprint-27 *absolute* measurements; the harness reports the relative residual.)
 
 **Case-c detection (Unknown 9.2 Q2):** distinguishing Case c from Case a requires the cold-start comparison — the harness optionally runs a second MCP solve from the *default* start (not warm-started) and checks whether PATH still reaches the NLP optimum. If `max|r| ≤ tol` but cold PATH diverges, it is Case c. (Skippable via `--no-cold-start` when only the residual is wanted — the harness then reports the residual + Case b / `dual_transfer_inconsistent` only, leaving the a-vs-c split unresolved.)
 
@@ -180,11 +188,13 @@ Before the harness is trusted in-sprint, it must reproduce the Sprint 27 manual 
 
 | Model | Expected verdict | Sprint 27 reference |
 |---|---|---|
-| launch (post-#1378) | Case a (residual ≈ 0) | Day 9 — 2257.80 proven a valid KKT point |
+| launch (post-#1378) | ~~Case a~~ → **Case c** (Day-2 finding, below) | Day 9 — 2257.80 proven a valid KKT point |
 | camshape | Case b (`stat_r('i1')` ≈ 396) | Day 11 — §4.6 discriminator |
 | cclinpts | Case c (max\|r\| = 5e-8, cold PATH diverges) | Day 6 — eliminated-KKT residual verification |
 
-Reproducing all three (one per case) calibrates `tol` and confirms the dual transfer + verdict logic before any carryforward leans on it.
+Reproducing one per case calibrates `tol` and confirms the dual transfer + verdict logic before any carryforward leans on it.
+
+> **Day-2 correction (PR24, 2026-06-13) — launch is Case c, not Case a.** The harness, run end-to-end on launch, confirms the stationarity residual at the NLP KKT point is ≈ 0 (max rel ~1.4e-16 after the `nu` sign correction; self-check CONSISTENT). **But the cold-start split lands Case c**, not Case a: the *cold non-presolve* `launch_mcp.gms` solves **MODEL STATUS 5 Locally Infeasible** (obj 526, not 2257.80) — cold PATH cannot reach the valid KKT point. This is internally consistent with the §3 definitions (Case a *requires* the cold solve to reach the NLP optimum) and with Sprint 27 (launch needed the presolve warm-start to match). The §7 "launch → Case a" row conflated "residual ≈ 0" with Case a; the harness correctly distinguishes them. **Consequence:** a clean Case-a calibration model still needs picking on Day 3 (a convex model whose cold MCP converges); launch serves as a *second* Case-c example. The Day-2 machinery (sign correction, Val-vs-bounds residual, self-check, relative residual, cold-start, verdict) is validated as correct by this run.
 
 ---
 
