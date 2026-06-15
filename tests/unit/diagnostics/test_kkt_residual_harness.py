@@ -726,3 +726,40 @@ class TestFindGamsToolsWindows:
         monkeypatch.setattr(kr, "_GAMS_CANDIDATES", ())
         monkeypatch.setattr(kr.shutil, "which", lambda n: str(gams) if n == "gams" else None)
         assert kr.find_gams_tools() is None
+
+
+class TestGdxdumpFailClosed:
+    """PR #1441 review round 6: gdxdump wrappers fail closed on a non-zero exit
+    (bad GDX / symbol-not-found) instead of silently returning {} and corrupting
+    the verdict; an empty symbol (exit 0, header only) still yields {}."""
+
+    def _proc(self, returncode, stdout):
+        import subprocess as _sp
+
+        return _sp.CompletedProcess(args=[], returncode=returncode, stdout=stdout, stderr="")
+
+    def test_symbol_raises_on_nonzero_exit(self, monkeypatch) -> None:
+        import kkt_residual as kr
+
+        monkeypatch.setattr(
+            kr.subprocess, "run", lambda *a, **k: self._proc(2, "GDX file not found: x.gdx")
+        )
+        with pytest.raises(RuntimeError, match="gdxdump exited 2"):
+            kr.gdxdump_symbol(Path("x.gdx"), "nu_eq", "gdxdump")
+
+    def test_equation_raises_on_symbol_not_found(self, monkeypatch) -> None:
+        import kkt_residual as kr
+
+        monkeypatch.setattr(
+            kr.subprocess, "run", lambda *a, **k: self._proc(6, "Symbol not found: zzz")
+        )
+        with pytest.raises(RuntimeError, match="gdxdump exited 6.*Symbol not found"):
+            kr.gdxdump_equation(Path("x.gdx"), "zzz", "gdxdump")
+
+    def test_empty_symbol_exit0_yields_empty_dict(self, monkeypatch) -> None:
+        import kkt_residual as kr
+
+        # An empty equation is exit-0 with a header-only body -> {} (not a failure).
+        header = '"i","Val","Marginal","Lower","Upper","Scale"\n'
+        monkeypatch.setattr(kr.subprocess, "run", lambda *a, **k: self._proc(0, header))
+        assert kr.gdxdump_equation(Path("x.gdx"), "eemp", "gdxdump") == {}

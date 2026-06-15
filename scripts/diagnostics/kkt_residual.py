@@ -798,34 +798,47 @@ def run_gams(gms_path: Path, scratch: Path, gams_exe: str, timeout: int = 120) -
     return lst_path
 
 
-def gdxdump_symbol(gdx_path: Path, symbol: str, gdxdump_exe: str) -> dict[tuple[str, ...], float]:
-    """Dump one symbol's ``Val`` field from a GDX as CSV (``{index: value}``) — used
-    for multiplier *variables* (``dual_scale``). Absent/empty symbol → ``{}``."""
+def _run_gdxdump(gdx_path: Path, args: list[str], gdxdump_exe: str) -> str:
+    """Run ``gdxdump`` and return its stdout, **failing closed** on a non-zero exit.
+
+    gdxdump returns 0 for a present symbol (an empty symbol still yields a
+    header-only stdout, parsed as ``{}``), but non-zero for a real failure — exit 2
+    (``GDX file not found`` / unreadable) or exit 6 (``Symbol not found``, a
+    name/GDX mismatch). Those must raise rather than silently return ``{}``, which
+    would drop residual rows or fall ``dual_scale`` back to 1.0 and corrupt the
+    verdict. (Empty-domain equations are exit-0 header-only, so this does not
+    false-positive on them.) gdxdump writes its error message to stdout."""
     proc = subprocess.run(
-        [gdxdump_exe, str(gdx_path), f"symb={symbol}", "format=csv"],
+        [gdxdump_exe, str(gdx_path), *args],
         capture_output=True,
         text=True,
         timeout=60,
     )
     if proc.returncode != 0:
-        return {}
-    return parse_gdxdump_csv(proc.stdout)
+        detail = (proc.stdout or proc.stderr or "").strip()[:500]
+        raise RuntimeError(
+            f"gdxdump exited {proc.returncode} for {' '.join(args)} on {gdx_path.name}"
+            + (f": {detail}" if detail else "")
+        )
+    return proc.stdout
+
+
+def gdxdump_symbol(gdx_path: Path, symbol: str, gdxdump_exe: str) -> dict[tuple[str, ...], float]:
+    """Dump one symbol's ``Val`` field from a GDX as CSV (``{index: value}``) — used
+    for multiplier *variables* (``dual_scale``). Empty symbol → ``{}``; raises (fails
+    closed) if gdxdump errors (see :func:`_run_gdxdump`)."""
+    return parse_gdxdump_csv(_run_gdxdump(gdx_path, [f"symb={symbol}", "format=csv"], gdxdump_exe))
 
 
 def gdxdump_equation(
     gdx_path: Path, symbol: str, gdxdump_exe: str
 ) -> dict[tuple[str, ...], tuple[float, float, float]]:
     """Dump one equation symbol's ``Val``/``Lower``/``Upper`` fields (CSVAllFields) —
-    needed because a constraint's constant lives in the bound, not ``Val``."""
-    proc = subprocess.run(
-        [gdxdump_exe, str(gdx_path), f"symb={symbol}", "format=csv", "CSVAllFields"],
-        capture_output=True,
-        text=True,
-        timeout=60,
+    needed because a constraint's constant lives in the bound, not ``Val``. Empty
+    symbol → ``{}``; raises (fails closed) if gdxdump errors."""
+    return parse_gdxdump_allfields(
+        _run_gdxdump(gdx_path, [f"symb={symbol}", "format=csv", "CSVAllFields"], gdxdump_exe)
     )
-    if proc.returncode != 0:
-        return {}
-    return parse_gdxdump_allfields(proc.stdout)
 
 
 def collect_residuals(
