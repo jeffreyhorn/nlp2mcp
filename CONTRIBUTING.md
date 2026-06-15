@@ -398,7 +398,7 @@ The Phase 0 section must contain exactly these 4 subsections, each rendered as a
 - `### Verification Methodology` — explicit byte-comparison or pattern-match command(s) to run against the regenerated emit, **plus** the standard Case-(a/b/c) emit-bug-vs-non-convexity discriminator: the **KKT-residual harness** (Sprint 28 Priority 9 / PR27, landed and validated 2026-06-15):
 
   ```bash
-  .venv/bin/python scripts/diagnostics/kkt_residual.py <model.gms> [--gdx <nlp_solution.gdx>] [--tol 1e-3] [--json phase0_<model>.json]
+  .venv/bin/python scripts/diagnostics/kkt_residual.py MODEL.gms [--gdx NLP_SOLUTION.gdx] [--tol 1e-3] [--json phase0_MODEL.json]
   ```
 
   It warm-starts the MCP from the NLP KKT point (reusing `--nlp-presolve`), evaluates the per-row residuals at `iterlim=0`, and classifies: **Case a** (clean residual + cold PATH converges — healthy); **Case b** (a stationarity row's *relative* residual `|F|/dual_scale` exceeds `tol` — **emit bug**; the `max_residual_row` is the prime-suspect surface); **Case c** (clean residual but cold PATH diverges — **non-convexity**, needs a warm-start, *not* an emit fix); or `dual_transfer_inconsistent` (the §2 self-check fails — fix the transfer, re-run). A PROCEED cites the `verdict` + `max_residual_row` as the traced fix-surface evidence: **Case b ⇒ proceed** with the emit fix at that row; **Case c ⇒ REPLAN** toward warm-start. (Validated against trnsport → a, camshape → b `stat_r('i1')`≈396, cclinpts → b `stat_fb`, launch → c.) Once the **golden-staleness check** ships (**forthcoming Sprint 28 Priority 8, PR26**), emit-touching PRs must also pass it.
