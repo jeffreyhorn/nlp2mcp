@@ -395,7 +395,13 @@ The Phase 0 section must contain exactly these 4 subsections, each rendered as a
 
 - `### Hand-Derived KKT Shape` — formal Lagrangian + stationarity / primal-feasibility / complementarity equations for the target equation(s)
 - `### Expected Emit Pattern` — what the regenerated `<model>_mcp.gms` should contain (by equation name + index pattern). **This is the prep-doc *hypothesis*, not an established fix surface** — under PR24 (below) the actual `file:line` surface is established by a Day-0 trace and confirmed before any `src/` change.
-- `### Verification Methodology` — explicit byte-comparison or pattern-match command(s) to run against the regenerated emit. Once it ships, the standard Case-(a/b/c) emit-bug-vs-non-convexity discriminator will be the **KKT-residual harness** (`.venv/bin/python scripts/diagnostics/kkt_residual.py <model.gms>`), a **forthcoming Sprint 28 Priority 9 deliverable (PR27)** — it does not exist yet, so until it lands rely on the byte-comparison / pattern-match command(s) you write in this subsection. Once the **golden-staleness check** ships (**forthcoming Sprint 28 Priority 8, PR26**), emit-touching PRs must also pass it.
+- `### Verification Methodology` — explicit byte-comparison or pattern-match command(s) to run against the regenerated emit, **plus** the standard Case-(a/b/c) emit-bug-vs-non-convexity discriminator: the **KKT-residual harness** (Sprint 28 Priority 9 / PR27, landed and validated 2026-06-15):
+
+  ```bash
+  .venv/bin/python scripts/diagnostics/kkt_residual.py <model.gms> [--gdx <nlp_solution.gdx>] [--tol 1e-3] [--json phase0_<model>.json]
+  ```
+
+  It warm-starts the MCP from the NLP KKT point (reusing `--nlp-presolve`), evaluates the per-row residuals at `iterlim=0`, and classifies: **Case a** (clean residual + cold PATH converges — healthy); **Case b** (a stationarity row's *relative* residual `|F|/dual_scale` exceeds `tol` — **emit bug**; the `max_residual_row` is the prime-suspect surface); **Case c** (clean residual but cold PATH diverges — **non-convexity**, needs a warm-start, *not* an emit fix); or `dual_transfer_inconsistent` (the §2 self-check fails — fix the transfer, re-run). A PROCEED cites the `verdict` + `max_residual_row` as the traced fix-surface evidence: **Case b ⇒ proceed** with the emit fix at that row; **Case c ⇒ REPLAN** toward warm-start. (Validated against trnsport → a, camshape → b `stat_r('i1')`≈396, cclinpts → b `stat_fb`, launch → c.) Once the **golden-staleness check** ships (**forthcoming Sprint 28 Priority 8, PR26**), emit-touching PRs must also pass it.
 - `### PROCEED/REPLAN Signal` — binary criteria for whether Phase 1 `src/` implementation may begin. **Must include a `Traced Fix-Surface (Day-0)` line** citing the `file:line` surface established by the Day-0 trace plus the trace command/evidence (PR24); a PROCEED that cites only the prep-doc surface is invalid.
 
 ### Why this exists
@@ -470,7 +476,7 @@ These two rules **extend** the Phase 0 Acceptance Gate (PR20) and the PR14/PR19/
 
 - Sprint 27 retrospective §"What We'd Do Differently" #1 (fix surfaces) + #2 (projections): `docs/planning/EPIC_4/SPRINT_27/SPRINT_RETROSPECTIVE.md`
 - Sprint 28 Prep Task 3 (the codification of these rules): `docs/planning/EPIC_4/SPRINT_28/PREP_PLAN.md` §Task 3
-- PR26 (golden-staleness CI check) + PR27 (KKT-residual harness) — **to be delivered** as Sprint 28 Priorities 8 and 9 (`scripts/sprint_audit/check_golden_staleness.py` and `scripts/diagnostics/kkt_residual.py` do not exist yet); referenced ahead of time from the Phase-0 `### Verification Methodology` template above so the gate picks them up automatically once they land.
+- PR27 (KKT-residual harness, `scripts/diagnostics/kkt_residual.py`) — **landed** (Sprint 28 Priority 9, Days 1–3); the Phase-0 `### Verification Methodology` template above references it as the Case-(a/b/c) discriminator. PR26 (golden-staleness CI check, `scripts/sprint_audit/check_golden_staleness.py`) — **to be delivered** as Sprint 28 Priority 8 (does not exist yet); referenced ahead of time so the gate picks it up once it lands.
 
 ---
 
