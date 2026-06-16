@@ -46,6 +46,10 @@ Time-boxed probe to decide go/no-go on fixing this in the remaining Day-4 budget
 
 **Verdict:** the root cause is a genuine **head-domain-offset index-correspondence** problem between the NLP's `l+1`-shifted dual instances and the MCP's normalized `comp_pr`/`lam_pr`/`stat_x` indexing. The duals are present but mis-aligned, and a single sign/alignment tweak does **not** resolve it — the fix needs a careful, coordinated re-derivation of the head-offset index map across **three** emit sites (`comp_pr` emission, the `--nlp-presolve` dual transfer, and the `stat_x` cross-term), plus the cold-start LCP consistency. This was **not** crackable in the probe time-box and is **not** a confident ≤8h fix. **Confirmed Sprint 29.** (Also revisit whether `lam_pr.l = abs(pr.m)` has a sign issue — the `abs()` may be the Day-2 `nu`-class sign-flip.)
 
+### Pushed-further check (post-time-box, 2026-06-16) — confirms SYSTEMIC, no clean fix
+
+Continued past the time-box (maintainer-approved) to attempt a fix. With the principled `l+1` alignment (`lam_pr.l(k,l,i,j) = abs(pr.m(k,l+1,i,j))`), the `stat_x` residual is **systemic, not boundary**: **22 of 30** `stat_x` cells exceed 1e-3 (residuals 1000–14500, all "round" multiples of ~500 — the fingerprint of sign-flipped / mis-aligned dual contributions, not numerical noise). The `stat_x` cross-term *formula* was re-derived and confirmed correct against `comp_pr`'s body; so the systemic imbalance is in the **dual values reaching the wrong indices/sign**, coupled across the transfer + the bound multipliers (`piU_x` likely never set if the MCP leaves `x.up = +inf` and routes the upper bound through `comp_up_x`). Because no single change zeroes the residual and the correct fix is a multi-site re-derivation, **there is no safe code change to land** — pushing further only sharpened the Sprint-29 scope (it did not produce a fix). **No `src/` change committed.**
+
 ## Acceptance
 
 mine cold MCP → MODEL STATUS 1 with objective matching the NLP (`compare_objective_match`). Requires resolving both head-domain-offset sub-issues above.
