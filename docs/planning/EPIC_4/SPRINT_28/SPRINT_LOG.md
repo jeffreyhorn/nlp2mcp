@@ -99,3 +99,27 @@ The design's §2.66 premise — *"presolve does not load `.m` into the multiplie
 - Tests: 87 unit (`tests/unit/diagnostics/test_kkt_residual_harness.py`) + 1 GAMS-gated e2e (`tests/integration/diagnostics/test_kkt_residual_e2e.py`, skips without GAMS/raw launch). Self-validated: launch → CONSISTENT, stationarity rel ~1e-16, verdict Case c.
 
 ### Next: Day 3 — validate launch/camshape/cclinpts (camshape → Case b `stat_r('i1')`; cclinpts → Case c; pick a clean Case-a model), wire the Phase-0 `### Verification Methodology` command, open the P9 PR.
+
+---
+
+## Day 3 — KKT-Residual Harness validate + land (2026-06-15)
+
+**Status:** 🟢 DONE — harness validated end-to-end against all three cases (real GAMS runs); Phase-0 `### Verification Methodology` template wired with the concrete command + Case interpretation; P9 PR opened. Verifies Unknowns 9.1/9.2/9.3.
+
+### Validation results (one per case; the prompt's "launch → Case a" is stale — corrected Day 2)
+
+| Model | Verdict | Evidence | vs design |
+|---|---|---|---|
+| **trnsport** | **Case a** | all `stat_*` rel 0.0; self-check CONSISTENT; cold MCP MS 1 → converges | NEW clean Case-a model (launch is Case c, so the design's Case-a slot was empty) |
+| **camshape** | **Case b** | `stat_r('i1')` raw **−396** (rel 2.0, dual_scale 198); self-check CONSISTENT | ✅ matches Sprint-27 §4.6 (`stat_r('i1')` INFES ≈ 396) |
+| **cclinpts** | **Case b** | `stat_fb('s30')` raw **−4.91** (rel 4.91, dual_scale 1); self-check CONSISTENT | **CORRECTS** design "Case c" — the current emit has the #1387 bug (stat_fb missing 3/4 cross-terms); the 5e-8 "Case c" residual was the *hand-corrected eliminated-KKT* form, not the pipeline emit. The harness pins `stat_fb` = the #1387 fix surface (pre-validates Day 8). |
+| **launch** | **Case c** | residual ~1e-16 (clean), self-check CONSISTENT, cold non-presolve MCP **MS 5 Locally Infeasible** | Day-2 finding (cold PATH can't reach the valid KKT point) |
+
+**Headline:** the discriminator works exactly as designed — it separates "the emit is wrong" (camshape/cclinpts, Case b, with the prime-suspect row pinned) from "the emit is right but PATH can't get there cold" (launch, Case c) from "healthy" (trnsport, Case a). Two PR24 doc corrections surfaced: **cclinpts is Case b not Case c** (current emit ≠ corrected form), and the Case-a slot needed a fresh model (trnsport). Runtime (Unknown 9.3): all four ran via the no-`--gdx` embedded-NLP path in seconds (trnsport/camshape/cclinpts) to ~30 s (launch); the `--gdx` skip path is wired but unexercised here (fast models don't need it).
+
+### Deliverables
+- Validation evidence: `output/phase0_{trnsport,camshape,cclinpts,launch}.json` (gitignored scratch; not committed).
+- `CONTRIBUTING.md` §"Verification Methodology" template: replaced the "forthcoming / does not exist yet" note with the concrete `kkt_residual.py` command + the Case-(a/b/c)/`dual_transfer_inconsistent` interpretation + PROCEED/REPLAN mapping + the validation summary; updated the PR27 status line to "landed".
+- This Day-3 SPRINT_LOG entry. P9 PR opened.
+
+### Next: Day 4 — Priority 1 #1224 mine. Clear the ISSUE_1224 Phase-0 gate with `kkt_residual.py data/gamslib/raw/mine.gms` → confirm Case b with `stat_x(l,i,j)` as the max-residual row, then implement the inverted parameter-valued offset at the traced surface (+1 Solve target).
