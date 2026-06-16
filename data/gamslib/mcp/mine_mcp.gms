@@ -100,7 +100,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(l,i,j).. (((-1) * ((conc(l,i,j) * value / 100 - cost(l)) * 1$(d(l,i,j)))) + sum(k, lam_pr(k,l,i,j)$(c(l,i,j))) - piL_x(l,i,j) + piU_x(l,i,j))$(d(l,i,j)) =E= 0;
+stat_x(l,i,j).. (((-1) * ((conc(l,i,j) * value / 100 - cost(l)) * 1$(d(l,i,j)))) + sum(k, lam_pr(k,l,i-li(k),j-lj(k)) - lam_pr(k,l-1,i,j)) - piL_x(l,i,j) + piU_x(l,i,j))$(d(l,i,j)) =E= 0;
 
 * Inequality complementarity equations
 comp_pr(k,l,i,j)$((c(l,i,j)) and (ord(l) <= card(l) - 1)).. x(l,i+li(k),j+lj(k)) - x(l+1,i,j) =G= 0;

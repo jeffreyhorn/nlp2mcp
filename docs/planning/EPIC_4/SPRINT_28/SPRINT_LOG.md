@@ -123,3 +123,27 @@ The design's §2.66 premise — *"presolve does not load `.m` into the multiplie
 - This Day-3 SPRINT_LOG entry. P9 PR opened.
 
 ### Next: Day 4 — Priority 1 #1224 mine. Clear the ISSUE_1224 Phase-0 gate with `kkt_residual.py data/gamslib/raw/mine.gms` → confirm Case b with `stat_x(l,i,j)` as the max-residual row, then implement the inverted parameter-valued offset at the traced surface (+1 Solve target).
+
+---
+
+## Day 4 — Priority 1: #1224 mine (2026-06-16)
+
+**Status:** 🟡 PARTIAL — the `stat_x` parameter-valued-offset cross-term inversion landed (correct, tightly gated, harness-traced); but +1 Solve **REPLAN'd to #1443 (Sprint 29)** because the bug is deeper than the gate scoped. Per PR25: **bucket-forward (stationarity-shape correction), NOT a genuine Solve gain.**
+
+### Phase-0 gate cleared (PR24, harness + instrumentation)
+- `kkt_residual.py data/gamslib/raw/mine.gms` → **Case b**, max-residual `stat_x(2,2,1)` (raw 1.35e4, rel 1.0), self-check CONSISTENT — exactly the gate's prediction.
+- **Traced the build site** (the gate left it pending): instrumented the symbolic stationarity build — the `pr` cross-term was one non-inverted `MultiplierRef(lam_pr, (k,l,i,j))`, missing the 2nd var-ref. **Build site = `src/kkt/stationarity.py`** (the prep doc's AD/Jacobian guess was wrong — PR24): mine's per-`k` integer offsets are consolidated to zero by the launch-style Pattern-C path, so the variable falls through to the non-inverted `else`.
+
+### What landed (A) — verified correct
+- New `_try_build_param_offset_crossterm` in `stationarity.py` (+ helpers `_collect_signed_varrefs`, `_negate_index_offset_expr`, `_expr_mentions_var`), injected at the top of the indexed-Jacobian constraint loop. **Tightly gated:** fires only when a var-ref of the variable carries a **non-`Const` `IndexOffset`** (parameter/symbolic offset = mine only); returns `None` for every other shape, so constant-offset models keep the existing path.
+- Emitted `stat_x` now matches the hand-derived shape exactly: `sum(k, lam_pr(k,l,i-li(k),j-lj(k)) - lam_pr(k,l-1,i,j))` (was the non-inverted `sum(k, lam_pr(k,l,i,j))`).
+- **Blast radius = `mine_mcp.gms` `stat_x` line only** (launch/camshape/otpop/trnsport regen byte-identical; gate is exclusive by construction).
+
+### Why +1 Solve REPLAN'd → #1443
+mine is a **convex LP** (`solve … using lp`, `Positive Variable x`, `x.up=1`), so a correct MCP is a well-posed LCP that PATH must solve cold. After the `stat_x` fix the cold MCP is still **MS 5 Locally Infeasible**, with `x → 4e10` (despite `x.up=1`) and **49 INFES** across `comp_pr`/`comp_lo_x`/`comp_up_x`/`stat_x`/`def`. Root cause is the `pr(k,l+1,i,j)` **head-domain-offset** mis-emitting the broader KKT — a presolve dual-transfer misalignment (`lam_pr.l = abs(pr.m(k,l,i,j))` should read `pr.m` at `l+1`) **plus** a deeper cold-infeasible complementarity/bound coupling. The gate's "stat_x inversion ⇒ +1 Solve" hypothesis was **incomplete** (PR24). User-approved: keep (A) staged + file the re-scoped successor.
+- **Filed #1443** (`docs/issues/ISSUE_1443_*.md`) — Sprint 29, the remaining head-domain-offset MCP correctness. ISSUE_1224 updated with the Day-4 outcome.
+
+### PR25 tally update
+- Solve: **no genuine gain** this day (mine stays `model_infeasible`; +1 Solve carried to #1443). The Day-0 firm projection (mine +1 → Solve 108) now depends on #1443 (Sprint 29), not Day 4.
+
+### Next: Day 5 — Checkpoint 1 + Priority 2 #1388 camshape (harness already pre-confirmed Case b `stat_r('i1')` ≈ 396 on Day 3).

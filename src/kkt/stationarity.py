@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from collections import ChainMap
 from collections.abc import Mapping
+from typing import Any
 
 from src.ad.ad_core import apply_simplification, get_simplification_mode
 from src.config import Config
@@ -5273,6 +5274,158 @@ def _filter_boundary_singleton_offset_groups(
     return offset_groups
 
 
+def _expr_mentions_var(e: Expr, var_name: str) -> bool:
+    """True if a ``VarRef`` to *var_name* appears anywhere under *e*."""
+    from ..ir.ast import VarRef
+
+    if isinstance(e, VarRef) and e.name == var_name:
+        return True
+    return any(_expr_mentions_var(c, var_name) for c in e.children())
+
+
+def _collect_signed_varrefs(expr: Expr, sign: int, var_name: str) -> list[tuple[int, Any]] | None:
+    """Collect ``(sign, VarRef)`` for each occurrence of *var_name* in *expr*,
+    tracking the sign through ``+``/``-``/unary-minus.
+
+    Returns ``None`` if *var_name* appears under any other structure (e.g. inside a
+    product or function call) — the Issue #1224 symbolic-offset path only handles the
+    bare ``±x(...)`` shape, so the caller then falls back to the generic builder.
+    """
+    from ..ir.ast import Binary as _B
+    from ..ir.ast import Unary as _U
+    from ..ir.ast import VarRef as _VR
+
+    out: list[tuple[int, Any]] = []
+
+    def walk(e: Expr, s: int) -> bool:
+        if isinstance(e, _VR):
+            if e.name == var_name:
+                out.append((s, e))
+            return True
+        if isinstance(e, _U) and e.op == "-":
+            return walk(e.child, -s)
+        if isinstance(e, _B) and e.op in ("+", "-"):
+            left_ok = walk(e.left, s)
+            right_ok = walk(e.right, s if e.op == "+" else -s)
+            return left_ok and right_ok
+        # Any other node is acceptable only if it does NOT mention the variable.
+        return not _expr_mentions_var(e, var_name)
+
+    return out if walk(expr, sign) else None
+
+
+def _negate_index_offset_expr(offset: Expr) -> Expr:
+    """Negate an offset expression for stationarity inversion: ``+O`` → ``-O``.
+
+    ``Const(v)`` → ``Const(-v)`` (so ``IndexOffset(l, Const(1))`` ⇒ ``l-1``);
+    ``Unary('-', X)`` → ``X``; otherwise wrap in unary minus (so ``li(k)`` ⇒
+    ``-li(k)``, rendering ``i-li(k)``).
+    """
+    from ..ir.ast import Const as _C
+    from ..ir.ast import Unary as _U
+
+    if isinstance(offset, _C):
+        return _C(-offset.value)
+    if isinstance(offset, _U) and offset.op == "-":
+        return offset.child
+    return _U("-", offset)
+
+
+def _try_build_param_offset_crossterm(
+    kkt: KKTSystem,
+    eq_name_base: str,
+    var_name: str,
+    var_domain: tuple[str, ...],
+    name_func,
+) -> Expr | None:
+    """Issue #1224: build the stationarity cross-term for a variable that appears in
+    an inequality body with a **parameter-valued** index offset, inverting the offset
+    symbolically.
+
+    The integer ``offset_key`` path (``_compute_index_offset_key`` →
+    ``_build_offset_multiplier``) only handles offsets that reduce to a single integer
+    per index; mine's ``pr.. x(l,i+li(k),j+lj(k)) - x(l+1,i,j)`` has an offset that
+    varies with the summed index ``k`` (``li(k)``/``lj(k)`` are parameters), so the
+    per-``k`` integer offsets get consolidated to zero — dropping the inversion and
+    the second var-ref entirely. This builds the correct symbolic form directly from
+    the constraint body: for each ``±x(...)`` occurrence, the multiplier is indexed
+    with each body offset **negated** (``i+li(k)`` ⇒ ``i-li(k)``; ``l+1`` ⇒ ``l-1``),
+    summed over the constraint's extra indices (e.g. ``k``):
+
+        stat_x(l,i,j) ← sum(k, lam_pr(k,l,i-li(k),j-lj(k)) - lam_pr(k,l-1,i,j))
+
+    GATE (tight): fires only when a var-ref of *var_name* in the body carries a
+    non-``Const`` ``IndexOffset`` — the parameter/symbolic-offset shape that the
+    integer path cannot represent (mine is the only corpus model with it). Returns
+    ``None`` (→ generic path) for every other shape, so constant-offset models are
+    untouched.
+    """
+    from ..ir.ast import Binary, Const, IndexOffset, MultiplierRef, Sum, Unary
+
+    eq_def = kkt.model_ir.equations.get(eq_name_base)
+    if eq_def is None or not eq_def.lhs_rhs or len(eq_def.lhs_rhs) != 2:
+        return None
+    lhs, rhs = eq_def.lhs_rhs
+    refs_lhs = _collect_signed_varrefs(lhs, 1, var_name)
+    refs_rhs = _collect_signed_varrefs(rhs, -1, var_name)
+    if refs_lhs is None or refs_rhs is None:
+        return None
+    refs = refs_lhs + refs_rhs
+    if not refs:
+        return None
+
+    def _has_param_offset(varref: Any) -> bool:
+        return any(
+            isinstance(idx, IndexOffset) and not isinstance(idx.offset, Const)
+            for idx in varref.indices
+        )
+
+    # GATE: only the parameter/symbolic-offset shape (mine). Everything else → None.
+    if not any(_has_param_offset(vr) for _, vr in refs):
+        return None
+
+    mult_domain = _get_constraint_domain(kkt, eq_name_base)
+    if not mult_domain:
+        return None
+    mult_base = name_func(eq_name_base)
+
+    # Indices the body's var-refs consume (mapped to a variable axis); the rest of
+    # the multiplier domain (e.g. k) are "extra" and summed over.
+    consumed: set[str] = set()
+    signed_mults: list[tuple[int, Expr]] = []
+    for sign, varref in refs:
+        if len(varref.indices) != len(var_domain):
+            return None  # arity mismatch — out of scope for this gated path
+        idx_map: dict[str, str | IndexOffset] = {}
+        for axis, arg in enumerate(varref.indices):
+            stat_idx = var_domain[axis]
+            if isinstance(arg, IndexOffset):
+                idx_map[arg.base] = IndexOffset(
+                    stat_idx, _negate_index_offset_expr(arg.offset), arg.circular
+                )
+                consumed.add(arg.base)
+            elif isinstance(arg, str):
+                idx_map[arg] = stat_idx
+                consumed.add(arg)
+            else:
+                return None  # unsupported index expression
+        mult_indices = tuple(idx_map.get(m, m) for m in mult_domain)
+        signed_mults.append((sign, MultiplierRef(mult_base, mult_indices)))
+
+    inner: Expr | None = None
+    for sign, mref in signed_mults:
+        if inner is None:
+            inner = mref if sign >= 0 else Unary("-", mref)
+        elif sign >= 0:
+            inner = Binary("+", inner, mref)
+        else:
+            inner = Binary("-", inner, mref)
+    assert inner is not None
+
+    extra = tuple(m for m in mult_domain if m not in consumed)
+    return Sum(extra, inner) if extra else inner
+
+
 def _add_indexed_jacobian_terms(
     expr: Expr,
     kkt: KKTSystem,
@@ -5323,6 +5476,20 @@ def _add_indexed_jacobian_terms(
         row_id, col_id = entries[0]
         derivative = jacobian.get_derivative(row_id, col_id)
         eq_name_base, eq_indices = jacobian.index_mapping.row_to_eq[row_id]
+
+        # Issue #1224 (mine): parameter-valued index offsets in an inequality body
+        # (e.g. ``pr.. x(l,i+li(k),j+lj(k)) - x(l+1,i,j)``) cannot be represented by
+        # the integer ``offset_key`` path — the per-``k`` offsets get consolidated to
+        # zero, dropping both the inversion and the second var-ref. Build the correct
+        # symbolic-offset-inverted cross-term directly from the body instead. Tightly
+        # gated (a non-Const ``IndexOffset`` on the variable): returns None for every
+        # other shape, so all constant-offset models keep the existing path.
+        param_offset_term = _try_build_param_offset_crossterm(
+            kkt, eq_name_base, var_name, var_domain, name_func
+        )
+        if param_offset_term is not None:
+            expr = Binary("+", expr, param_offset_term)
+            continue
 
         # Determine if constraint is indexed
         if eq_indices:
