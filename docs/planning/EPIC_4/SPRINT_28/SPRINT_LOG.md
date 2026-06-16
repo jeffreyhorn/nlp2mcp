@@ -144,6 +144,6 @@ mine is a **convex LP** (`solve … using lp`, `Positive Variable x`, `x.up=1`),
 - **Filed #1443** (`docs/issues/ISSUE_1443_*.md`) — Sprint 29, the remaining head-domain-offset MCP correctness. ISSUE_1224 updated with the Day-4 outcome.
 
 ### PR25 tally update
-- Solve: **no genuine gain** this day (mine stays `model_infeasible`; +1 Solve carried to #1443). The Day-0 firm projection (mine +1 → Solve 108) now depends on #1443 (Sprint 29), not Day 4.
+- Solve: **no genuine gain** this day (mine stays `model_infeasible`; +1 Solve carried to #1443). **Forecast revised (targets unchanged):** firm Solve path drops from 108 to **107** (camshape + otpop), **108** with camcge conditional → **Solve ≥ 109 firm at-risk; stretch 110 out of reach barring recovery.** Match ≥ 65 unchanged (mine's Match was conditional-on-solving, never firm); model_infeasible ≤ 5 now exactly-at-target (needs camshape + otpop + camcge). PLAN.md §1/§2/§3/§6 + PLAN_PROMPTS Day-4 annotated (PR #1445).
 
 ### Next: Day 5 — Checkpoint 1 + Priority 2 #1388 camshape (harness already pre-confirmed Case b `stat_r('i1')` ≈ 396 on Day 3).

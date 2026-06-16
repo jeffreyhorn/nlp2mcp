@@ -11,10 +11,12 @@
 
 Land the Sprint 27 Solve/Match carryforwards and build the diagnostic + CI tooling the Sprint 27 retrospective recommended. Push **Solve 105 → ≥ 110 (stretch; +4 firm/conditional → 109)** and **Match 62 → ≥ 65 (+3 firm)**. See `PROJECT_PLAN.md` §"Sprint 28".
 
+> **[Day-4 projection update — targets UNCHANGED, forecast revised (PR25)]** mine's **+1 Solve slipped to Sprint 29 (#1443)**: the `stat_x` parameter-valued-offset fix landed (PR #1444), but mine's MCP stays `model_infeasible` (a deeper head-domain-offset issue, #1443). Firm Solve path is now **107** (camshape + otpop), **108** with camcge conditional → **Solve ≥ 109 firm is at-risk; stretch 110 out of reach barring recovery.** **Match ≥ 65 unchanged** (mine's Match was always conditional-on-solving, never in the firm tally); **Translate unchanged** (mine's +1 Translate landed in Sprint 27); **model_infeasible ≤ 5 now exactly-at-target** (mine no longer leaves the bucket → needs camshape + otpop + camcge to all land). Targets held at the Day-0 bar (Day 4 of 14; 5 of 6 priorities unattempted) — the Day-5/10/13 PR25 tallies track attainment.
+
 ## 2. Acceptance Criteria (from `PROJECT_PLAN.md` §"Sprint 28")
 
-- **Solve** ≥ 110 (stretch; firm path to 109 = mine + camshape + otpop firm + camcge conditional); **Match** ≥ 65 (+3: otpop + cclinpts + kand).
-- **model_infeasible** ≤ 5 (−3 via camshape/otpop/mine); **path_syntax_error** maintain ≤ 8; **path_solve_terminated** ≤ 5; **Translate** ≥ 135; **Parse** ≥ 142.
+- **Solve** ≥ 110 (stretch; firm path to 109 = mine + camshape + otpop firm + camcge conditional); **Match** ≥ 65 (+3: otpop + cclinpts + kand). _[Day-4: mine's +1 Solve → Sprint 29 (#1443); firm path now camshape + otpop (107) + camcge conditional (108) — Solve ≥ 109 at-risk.]_
+- **model_infeasible** ≤ 5 (−3 via camshape/otpop/mine); **path_syntax_error** maintain ≤ 8; **path_solve_terminated** ≤ 5; **Translate** ≥ 135; **Parse** ≥ 142. _[Day-4: mine stays model_infeasible (#1443) → the −3 must now come from camshape + otpop + camcge; ≤ 5 is exactly-at-target, no buffer.]_
 - **Tests** ≥ 4,800; **Determinism** byte-identical under ≥ 3 `PYTHONHASHSEED` (PR12).
 - **Tooling:** golden-staleness CI live + drift cleared; KKT-residual harness landed + referenced in the Phase-0 template; divergence detector + AD cross-term property tests CI-wired.
 - **Process:** PR24 + PR25 codified (✅ landed in prep, Task 3).
@@ -25,7 +27,7 @@ Land the Sprint 27 Solve/Match carryforwards and build the diagnostic + CI tooli
 - **PR24 (Task 3):** every carryforward fix surface is a **Day-0-trace hypothesis** — established by a Day-0 trace, never trusted from the prep doc; Phase-0 PROCEED cites the *traced* surface.
 - **Front-load the KKT-residual harness (P9, Days 1–3, Task 4):** it is the Case-(a/b/c) instrument for P1/P2/P5 — build it before the diagnoses that consume it.
 - **Diagnosis-heavy tracks gated on Task-6 REPLAN signals (Task 6):** #1387 (anchor architectural⇒REPLAN), #1390 (Case-c⇒REPLAN), camcge (inherent-degeneracy⇒Epic-5). Each carries an explicit Sprint 29 exit so a slip is planned, not a surprise.
-- **PR25 projection discipline (Task 2):** only genuine bucket-to-success deltas count; the firm tally is Solve +3 (mine/camshape/otpop) + camcge conditional, Match +3 (otpop/cclinpts/kand).
+- **PR25 projection discipline (Task 2):** only genuine bucket-to-success deltas count; the firm tally is Solve +3 (mine/camshape/otpop) + camcge conditional, Match +3 (otpop/cclinpts/kand). _[Day-4 revision: mine's Solve slipped to Sprint 29 (#1443) → firm Solve tally now +2 (camshape/otpop) + camcge conditional; Match +3 unchanged.]_
 - **Golden refresh first (Task 7):** land the 4-file presolve-golden refresh at Day 0 so the new CI gate starts clean.
 - **Infra as lower-risk fill (P8/P10):** interleave after the firm carryforwards so the schedule has REPLAN slack.
 
@@ -52,6 +54,7 @@ Build `scripts/diagnostics/kkt_residual.py` per `PRIORITY_9_KKT_RESIDUAL_HARNESS
 
 - Phase-0 gate (`ISSUE_1224`): harness on mine → expect **Case b** at `stat_x(l,i,j)` (the non-inverted `lam_pr`); confirm the traced surface; implement the inverted-offset shape (`sum(k, lam_pr(k,l,i-li(k),j-lj(k))) − sum(k, lam_pr(k,l-1,i,j))`); check boundary cells (Unknown 1.3).
 - **Target:** mine → MODEL STATUS 1 (**+1 Solve firm**). PR + emit-`.gms` diff (PR14) + golden-staleness check (PR26).
+- **[Day-4 OUTCOME]** The `stat_x` inverted-offset cross-term **landed** (PR #1444, gated, byte-stable) and matches the hand-derived shape — but mine **did not** reach MS 1: it's a convex LP whose MCP stays infeasible (`x → 4e10`, 49 INFES) from a deeper **head-domain-offset** mis-emit (`pr(k,l+1,i,j)` → mis-aligned dual transfer + cold-infeasible KKT). A time-boxed Day-4 probe confirmed it's systemic (22/30 `stat_x` cells unbalanced even at the principled alignment) → **+1 Solve REPLAN'd to Sprint 29 (#1443)**; findings recorded (PR #1445). Per PR25: **bucket-forward, not a genuine Solve gain.**
 - **Verifies:** 1.1, 1.2, 1.3.
 
 ## 7. Day 5 — Checkpoint 1 + Priority 2: #1388 camshape (~10 h)
