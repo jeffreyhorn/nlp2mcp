@@ -5310,6 +5310,13 @@ def _collect_signed_varrefs(expr: Expr, sign: int, var_name: str) -> list[tuple[
 
     def walk(e: Expr, s: int) -> bool:
         if isinstance(e, _VR):
+            # var_name buried inside *this* ref's index expressions (e.g. z(i+x(k)),
+            # or a self-reference x(i+x(k))) is a nested occurrence the inversion
+            # cannot handle — bail so the caller falls back to the generic builder.
+            if any(
+                isinstance(idx, Expr) and _expr_mentions_var(idx, var_name) for idx in e.indices
+            ):
+                return False
             if e.name == var_name:
                 out.append((s, e))
             return True

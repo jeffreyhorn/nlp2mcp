@@ -68,6 +68,18 @@ class TestCollectSignedVarrefs:
         e = Binary("*", ParamRef("a", ()), ParamRef("b", ()))
         assert _collect_signed_varrefs(e, 1, "x") == []
 
+    def test_bails_on_var_buried_in_nontarget_varref_index(self) -> None:
+        # z(i + x(k)) — x (the target) is buried in a non-target var-ref's index;
+        # the inversion can't handle it → bail (None), not a false "safe" result.
+        e = VarRef("z", (IndexOffset("i", VarRef("x", ("k",)), False),))
+        assert _collect_signed_varrefs(e, 1, "x") is None
+
+    def test_target_with_param_offset_is_collected(self) -> None:
+        # x(l, i+li(k)) — the target with a parameter offset (no nested var) is fine.
+        e = VarRef("x", ("l", IndexOffset("i", ParamRef("li", ("k",)), False)))
+        refs = _collect_signed_varrefs(e, 1, "x")
+        assert refs is not None and len(refs) == 1 and refs[0][0] == 1
+
 
 class TestNegateIndexOffsetExpr:
     def test_const_negated(self) -> None:
