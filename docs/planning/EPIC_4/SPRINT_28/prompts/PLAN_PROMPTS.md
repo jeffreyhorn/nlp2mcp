@@ -36,6 +36,8 @@ Validate against the three known cases: launch → Case a; camshape → Case b (
 
 Clear the `ISSUE_1224` Phase-0 gate: run `kkt_residual.py data/gamslib/raw/mine.gms --gdx mine_nlp.gdx` → confirm **Case b** with `stat_x(l,i,j)` as the max-residual row. At the **traced** surface, implement the inverted parameter-valued offset (`sum(k, lam_pr(k,l,i-li(k),j-lj(k))) − sum(k, lam_pr(k,l-1,i,j))`); check boundary cells (clip vs guard, Unknown 1.3). Target: mine MODEL STATUS 1 (**+1 Solve**). Open the PR with the emit `.gms` diff + golden-staleness pass.
 
+> **[Day-4 outcome]** `stat_x` inverted-offset fix **landed** (PR #1444, gated, byte-stable). mine did **not** reach MS 1 — a deeper head-domain-offset mis-emit (`pr(k,l+1,i,j)`) leaves the convex-LP MCP infeasible; a time-boxed probe confirmed it's systemic → **+1 Solve REPLAN'd to Sprint 29 (#1443)** (findings: PR #1445). Solve forecast revised in `PLAN.md` §1 (Goal), §2 (Acceptance Criteria), §3 (PR25 discipline), §6 (Day-4) + `SPRINT_LOG.md` Day-4 (firm path now 107; 108 with camcge conditional; ≥ 109 at-risk); targets unchanged.
+
 ## Day 5 Prompt — Checkpoint 1 + Priority 2: #1388 camshape (~10 h)
 
 **Checkpoint 1:** pipeline retest (`changed_emit_artifacts.py --since-commit <Day-0 SHA>`) + golden-staleness check; report the PR25 tally (genuine gains so far). Then clear the `ISSUE_1388` gate: harness → Case b (`stat_r('i1')` ≈ 396, post-#1424 warm-start valid); implement the per-term `stat_r` fix at the traced surface. Target: camshape MS 1, area ≈ 4.2841 (**+1 Solve**).
