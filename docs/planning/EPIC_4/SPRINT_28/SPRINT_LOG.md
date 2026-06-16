@@ -147,3 +147,34 @@ mine is a **convex LP** (`solve … using lp`, `Positive Variable x`, `x.up=1`),
 - Solve: **no genuine gain** this day (mine stays `model_infeasible`; +1 Solve carried to #1443). **Forecast revised (targets unchanged):** firm Solve path drops from 108 to **107** (camshape + otpop), **108** with camcge conditional → **Solve ≥ 109 firm at-risk; stretch 110 out of reach barring recovery.** Match ≥ 65 unchanged (mine's Match was conditional-on-solving, never firm); model_infeasible ≤ 5 now exactly-at-target (needs camshape + otpop + camcge). PLAN.md §1/§2/§3/§6 + PLAN_PROMPTS Day-4 annotated (PR #1445).
 
 ### Next: Day 5 — Checkpoint 1 + Priority 2 #1388 camshape (harness already pre-confirmed Case b `stat_r('i1')` ≈ 396 on Day 3).
+
+---
+
+## Day 5 — Checkpoint 1 + Priority 2: #1388 camshape (2026-06-16)
+
+**Status:** 🟢 DONE — **camshape +1 Solve (MS 1, area 4.2841 = NLP match)**. Offset-cross-term condition-guard fix in `src/kkt/stationarity.py`; + bonus side effects (otpop/maxmin → MS 1, mismatch).
+
+### Checkpoint 1 (PR25 tally + golden-staleness)
+- `changed_emit_artifacts.py --since-commit 68be9cca`: only `mine_mcp.gms` (Day-4 #1224) + the 4 Day-0 presolve goldens changed. All 5 **re-emit byte-identical** (golden-staleness clean). mine stays `model_infeasible`.
+- **PR25 tally entering Day 5: 0 genuine Solve, 0 genuine Match** (mine's +1 → #1443) — Solve 105, Match 62, unchanged from Day 0.
+
+### #1388 camshape — FIXED
+- **Phase-0 gate (PR24):** harness → **Case b**, max-residual `stat_r(i1)` raw −396, self-check CONSISTENT (matches the Day-11 §4.6 / Day-3 pre-confirmation).
+- **Hand-derived root cause:** `stat_r(i)`'s **offset** cross-terms (neighbor constraints `convexity(i±1)`, `convex_edge1(i-1)`, `convex_edge3(i+1)`) were guarded by the equation membership condition at the **current** index (`$(middle(i))`/`$(first(i))`/`$(last(i))`) instead of the **offset (neighbor)** index. At `i1`, `middle(i1)=no` suppressed the `convexity(i2)` cross-term that balances the `convex_edge1(i1)` self-term → residual −396.
+- **Fix surface (traced):** the Issue #877 condition-propagation site in `_add_indexed_jacobian_terms` (`src/kkt/stationarity.py`). For an offset cross-term, shift the equation condition's domain indices by the same `offset_key` used for the multiplier (reusing `_reindex_condition_symbols` from #1224 Day-4). Emit now guards neighbor terms by `middle(i+1)`/`middle(i-1)`/`first(i-1)`/`last(i+1)`.
+- **Result:** camshape (warm-started/presolve) → **MS 1, obj 4.2841 = NLP match** (`+1 Solve firm`, genuine). (Harness still shows the `stat_r(i1)` residual at iterlim=0 — that's the `piU_r(i1)` warm-start gap at the active bound, which PATH recovers; the emit is correct.)
+
+### Blast radius (shared path) — 7 primary goldens changed, NO regression
+Regenerated all 153 `*_mcp.gms`; 7 changed (all the correct neighbor-index guard re-index). Before/after cold solve:
+- **camshape**: → MS 1 (match) — target. ✓
+- **kand**, **srkandw**: unchanged (still MS 1, obj 195.0 — their boundary multipliers were 0, so no solution change). No regression.
+- **clearlak**, **dinam**: unchanged (still `path_syntax_error` from a separate, unrelated cause). No regression.
+- **otpop** (Day-6/7 target): cold `model_infeasible` → **MS 1, obj 2307** — but **MISMATCH** (NLP target 4217.80; its #1393/#1335 cross-term bugs remain → Days 6–7).
+- **maxmin** (not a target): `path_solve_terminated` → **MS 1, obj 0.104** — but **MISMATCH** (harness: Case b, a separate `stat_mindist` emit bug; NEW finding).
+- **otpop + maxmin are Solve-bucket transitions, NOT genuine matches** — precise Solve/Match classification deferred to the Day-10 full retest (PR25 discipline: not firmly claimed now).
+- Goldens regenerated: 7 primary `_mcp.gms` + `camshape_mcp_presolve.gms`.
+
+### PR25 tally (Day 5)
+- **Genuine: Solve +1 (camshape, matches 4.2841).** Solve 105 → **106 (firm so far)**. Match 62 → **63** (camshape matches). otpop/maxmin's MS-1 transitions are bucket-forward (mismatch) — not counted as genuine until classified at Day 10.
+
+### Next: Day 6 — Priority 3a #1393 otpop kdef Sum-collapse (otpop now MS-1-mismatch; the #1393/#1335 fix targets the 4217.80 match).

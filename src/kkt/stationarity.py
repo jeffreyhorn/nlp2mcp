@@ -6474,6 +6474,24 @@ def _add_indexed_jacobian_terms(
                             kkt.model_ir,
                             equation_domain=var_domain,
                         )
+                        # Issue #1388: for an OFFSET cross-term the multiplier is the
+                        # *neighbor* instance (e.g. lam_convexity(i+1)), so its
+                        # membership guard must be the equation condition at the
+                        # OFFSET index — middle(i+1), not middle(i). Shift the
+                        # condition's domain indices by the same offset_key used to
+                        # build the multiplier (camshape edge cross-terms; #1388).
+                        if has_offset and not is_dim_mismatch:
+                            offset_name_map: dict[str, Any] = {}
+                            for pos, dom_idx in enumerate(var_domain):
+                                off = offset_key[pos] if pos < len(offset_key) else 0
+                                if off not in (0, _SENTINEL_UNMATCHED):
+                                    offset_name_map[dom_idx] = IndexOffset(
+                                        dom_idx, Const(float(off)), False
+                                    )
+                            if offset_name_map:
+                                indexed_condition = _reindex_condition_symbols(
+                                    indexed_condition, offset_name_map
+                                )
                         term = DollarConditional(value_expr=term, condition=indexed_condition)
 
                     # Determine if we need a sum or a direct term:
