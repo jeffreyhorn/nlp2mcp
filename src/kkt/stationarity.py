@@ -5275,11 +5275,22 @@ def _filter_boundary_singleton_offset_groups(
 
 
 def _expr_mentions_var(e: Expr, var_name: str) -> bool:
-    """True if a ``VarRef`` to *var_name* appears anywhere under *e*."""
-    from ..ir.ast import VarRef
+    """True if a ``VarRef`` to *var_name* appears anywhere under *e*, **including
+    inside index expressions** (e.g. an ``IndexOffset`` offset).
+
+    ``VarRef.children()`` (and ``ParamRef``/``MultiplierRef``) do **not** yield their
+    index expressions, so — like :func:`_collect_referenced_variable_names` — we walk
+    the indices explicitly; otherwise a variable buried in an index would be missed
+    and ``_collect_signed_varrefs`` could wrongly treat an unsupported shape as safe.
+    """
+    from ..ir.ast import MultiplierRef, ParamRef, VarRef
 
     if isinstance(e, VarRef) and e.name == var_name:
         return True
+    if isinstance(e, (VarRef, ParamRef, MultiplierRef)):
+        for idx in e.indices:
+            if isinstance(idx, Expr) and _expr_mentions_var(idx, var_name):
+                return True
     return any(_expr_mentions_var(c, var_name) for c in e.children())
 
 
@@ -5331,6 +5342,51 @@ def _negate_index_offset_expr(offset: Expr) -> Expr:
     return _U("-", offset)
 
 
+def _reindex_condition_symbols(expr: Expr, name_map: dict[str, Any]) -> Expr:
+    """Substitute equation-domain index symbols in a condition with each multiplier
+    instance's index expression, so the Issue #1224 cross-term carries the equation's
+    ``$`` condition re-indexed to that var-ref's inverted indices — e.g. ``c(l,i,j)``
+    → ``c(l,i-li(k),j-lj(k))`` for the lead term, ``c(l-1,i,j)`` for the lag term.
+
+    ``name_map`` maps an equation index name to its multiplier index value (``str`` →
+    a plain index; ``IndexOffset`` → an inverted lead/lag). Unmapped names (e.g. the
+    summed ``k``) are left untouched.
+    """
+    from ..ir.ast import (
+        Binary,
+        Call,
+        DollarConditional,
+        IndexOffset,
+        SetMembershipTest,
+        SymbolRef,
+        Unary,
+    )
+
+    def sub(e: Expr) -> Expr:
+        if isinstance(e, SymbolRef):
+            v = name_map.get(e.name)
+            if v is None:
+                return e
+            return SymbolRef(v) if isinstance(v, str) else v
+        if isinstance(e, SetMembershipTest):
+            return SetMembershipTest(e.set_name, tuple(sub(i) for i in e.indices))
+        if isinstance(e, Binary):
+            return Binary(e.op, sub(e.left), sub(e.right))
+        if isinstance(e, Unary):
+            return Unary(e.op, sub(e.child))
+        if isinstance(e, Call):
+            return Call(e.func, tuple(sub(a) for a in e.args))
+        if isinstance(e, DollarConditional):
+            return DollarConditional(sub(e.value_expr), sub(e.condition))
+        if isinstance(e, IndexOffset):
+            mapped_base = name_map.get(e.base)
+            base = mapped_base if isinstance(mapped_base, str) else e.base
+            return IndexOffset(base, sub(e.offset), e.circular)
+        return e  # Const / ParamRef / other literals unchanged
+
+    return sub(expr)
+
+
 def _try_build_param_offset_crossterm(
     kkt: KKTSystem,
     eq_name_base: str,
@@ -5360,7 +5416,7 @@ def _try_build_param_offset_crossterm(
     ``None`` (→ generic path) for every other shape, so constant-offset models are
     untouched.
     """
-    from ..ir.ast import Binary, Const, IndexOffset, MultiplierRef, Sum, Unary
+    from ..ir.ast import Binary, Const, DollarConditional, IndexOffset, MultiplierRef, Sum, Unary
 
     eq_def = kkt.model_ir.equations.get(eq_name_base)
     if eq_def is None or not eq_def.lhs_rhs or len(eq_def.lhs_rhs) != 2:
@@ -5410,7 +5466,17 @@ def _try_build_param_offset_crossterm(
             else:
                 return None  # unsupported index expression
         mult_indices = tuple(idx_map.get(m, m) for m in mult_domain)
-        signed_mults.append((sign, MultiplierRef(mult_base, mult_indices)))
+        mult_term: Expr = MultiplierRef(mult_base, mult_indices)
+        # Carry the equation's `$` condition, re-indexed to this var-ref's inverted
+        # indices (e.g. c(l,i,j) → c(l,i-li(k),j-lj(k))), matching the generic
+        # builder's condition propagation so the term only contributes where the
+        # corresponding constraint instance is generated.
+        if eq_def.condition is not None:
+            mult_term = DollarConditional(
+                value_expr=mult_term,
+                condition=_reindex_condition_symbols(eq_def.condition, idx_map),
+            )
+        signed_mults.append((sign, mult_term))
 
     inner: Expr | None = None
     for sign, mref in signed_mults:
