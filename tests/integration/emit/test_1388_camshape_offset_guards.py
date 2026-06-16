@@ -42,7 +42,9 @@ def test_camshape_offset_crossterm_guards_use_neighbor_index(tmp_path: Path) -> 
         text=True,
     )
     text = out.read_text(encoding="utf-8")
-    stat_r = next(ln for ln in text.splitlines() if ln.startswith("stat_r(i).."))
+    stat_r = next((ln for ln in text.splitlines() if ln.startswith("stat_r(i)..")), None)
+    if stat_r is None:
+        pytest.fail("no `stat_r(i)..` line found in the camshape emit (formatting changed?)")
 
     # Neighbor cross-terms must be guarded at the OFFSET index (the fix).
     assert "lam_convexity(i+1))$(ord(i) <= card(i) - 1))$(middle(i+1))" in stat_r
