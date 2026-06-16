@@ -5363,11 +5363,25 @@ def _reindex_condition_symbols(expr: Expr, name_map: dict[str, Any]) -> Expr:
         Binary,
         Call,
         DollarConditional,
+        EquationRef,
         IndexOffset,
+        MultiplierRef,
+        ParamRef,
         SetMembershipTest,
         SymbolRef,
         Unary,
+        VarRef,
     )
+
+    def remap_index(idx: str | IndexOffset) -> str | IndexOffset:
+        """Remap one reference index (str or IndexOffset) through ``name_map``."""
+        if isinstance(idx, str):
+            return name_map.get(idx, idx)
+        if isinstance(idx, IndexOffset):
+            mapped_base = name_map.get(idx.base)
+            base = mapped_base if isinstance(mapped_base, str) else idx.base
+            return IndexOffset(base, sub(idx.offset), idx.circular)
+        return idx
 
     def sub(e: Expr) -> Expr:
         if isinstance(e, SymbolRef):
@@ -5377,6 +5391,17 @@ def _reindex_condition_symbols(expr: Expr, name_map: dict[str, Any]) -> Expr:
             return SymbolRef(v) if isinstance(v, str) else v
         if isinstance(e, SetMembershipTest):
             return SetMembershipTest(e.set_name, tuple(sub(i) for i in e.indices))
+        # Reference-like nodes carry their indices outside .children(); remap those
+        # string/IndexOffset indices too, so a parameter/var/equation guard like
+        # `$a(l)` becomes `$a(l-1)` rather than staying at the wrong instance.
+        if isinstance(e, ParamRef):
+            return ParamRef(e.name, tuple(remap_index(i) for i in e.indices))
+        if isinstance(e, VarRef):
+            return VarRef(e.name, tuple(remap_index(i) for i in e.indices), e.attribute)
+        if isinstance(e, EquationRef):
+            return EquationRef(e.name, tuple(remap_index(i) for i in e.indices), e.attribute)
+        if isinstance(e, MultiplierRef):
+            return MultiplierRef(e.name, tuple(remap_index(i) for i in e.indices))
         if isinstance(e, Binary):
             return Binary(e.op, sub(e.left), sub(e.right))
         if isinstance(e, Unary):
@@ -5389,7 +5414,7 @@ def _reindex_condition_symbols(expr: Expr, name_map: dict[str, Any]) -> Expr:
             mapped_base = name_map.get(e.base)
             base = mapped_base if isinstance(mapped_base, str) else e.base
             return IndexOffset(base, sub(e.offset), e.circular)
-        return e  # Const / ParamRef / other literals unchanged
+        return e  # Const / other literals unchanged
 
     return sub(expr)
 

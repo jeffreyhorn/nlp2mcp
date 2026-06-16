@@ -123,3 +123,33 @@ class TestReindexConditionSymbols:
         cond = SetMembershipTest("c", (SymbolRef("k"),))
         out = _reindex_condition_symbols(cond, {"l": "l"})
         assert out.indices[0] == SymbolRef("k")
+
+    def test_paramref_guard_indices_remapped(self) -> None:
+        # `$a(l)` (a ParamRef guard) with the lag map {l: l-1} must become a(l-1) —
+        # ParamRef indices are not in .children(), so they need explicit remapping.
+        cond = ParamRef("a", ("l",))
+        out = _reindex_condition_symbols(cond, {"l": IndexOffset("l", Const(-1.0), False)})
+        assert isinstance(out, ParamRef) and out.name == "a"
+        assert out.indices == (IndexOffset("l", Const(-1.0), False),)
+
+    def test_paramref_guard_param_offset_remap(self) -> None:
+        # `$a(i)` with the lead map {i: i-li(k)} → a(i-li(k)).
+        cond = ParamRef("a", ("i",))
+        out = _reindex_condition_symbols(
+            cond, {"i": IndexOffset("i", Unary("-", ParamRef("li", ("k",))), False)}
+        )
+        assert out.indices == (IndexOffset("i", Unary("-", ParamRef("li", ("k",))), False),)
+
+    def test_varref_guard_indices_remapped(self) -> None:
+        # `$x(l)` (a VarRef guard, with attribute preserved) → x(l-1).
+        cond = VarRef("x", ("l",), "l")
+        out = _reindex_condition_symbols(cond, {"l": IndexOffset("l", Const(-1.0), False)})
+        assert isinstance(out, VarRef) and out.name == "x" and out.attribute == "l"
+        assert out.indices == (IndexOffset("l", Const(-1.0), False),)
+
+    def test_paramref_inside_binary_condition(self) -> None:
+        # `a(l) > 0` with {l: l-1} → a(l-1) > 0 (ParamRef nested under Binary).
+        cond = Binary(">", ParamRef("a", ("l",)), Const(0.0))
+        out = _reindex_condition_symbols(cond, {"l": IndexOffset("l", Const(-1.0), False)})
+        assert isinstance(out, Binary) and out.op == ">"
+        assert out.left == ParamRef("a", (IndexOffset("l", Const(-1.0), False),))
