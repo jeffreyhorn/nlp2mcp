@@ -15,7 +15,7 @@ Land the Sprint 27 Solve/Match carryforwards and build the diagnostic + CI tooli
 
 ## 2. Acceptance Criteria (from `PROJECT_PLAN.md` §"Sprint 28")
 
-- **Solve** ≥ 110 (stretch; firm path to 109 = mine + camshape + otpop firm + camcge conditional); **Match** ≥ 65 (+3: otpop + cclinpts + kand). _[Day-4: mine's +1 Solve → Sprint 29 (#1443); firm path now camshape + otpop (107) + camcge conditional (108) — Solve ≥ 109 at-risk.]_
+- **Solve** ≥ 110 (stretch; firm path to 109 = mine + camshape + otpop firm + camcge conditional); **Match** ≥ 65 (+3: otpop + cclinpts + kand). _[Day-4: mine's +1 Solve → Sprint 29 (#1443); firm path is now **107** (camshape + otpop); **108** with camcge conditional — Solve ≥ 109 firm at-risk.]_
 - **model_infeasible** ≤ 5 (−3 via camshape/otpop/mine); **path_syntax_error** maintain ≤ 8; **path_solve_terminated** ≤ 5; **Translate** ≥ 135; **Parse** ≥ 142. _[Day-4: mine stays model_infeasible (#1443) → the −3 must now come from camshape + otpop + camcge; ≤ 5 is exactly-at-target, no buffer.]_
 - **Tests** ≥ 4,800; **Determinism** byte-identical under ≥ 3 `PYTHONHASHSEED` (PR12).
 - **Tooling:** golden-staleness CI live + drift cleared; KKT-residual harness landed + referenced in the Phase-0 template; divergence detector + AD cross-term property tests CI-wired.
