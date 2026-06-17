@@ -6899,9 +6899,14 @@ def _add_indexed_jacobian_terms(
 def _subset_alias_superset_index(
     idx: str, var_domain: tuple[str, ...], model_ir: ModelIR
 ) -> str | None:
-    """Issue #1393: if *idx* is a (synthetic ``__``) alias of a set declared as a
-    **subset of a `var_domain` index's set**, return that `var_domain` index; else
-    ``None``.
+    """Issue #1393: if *idx* names a set declared as a **subset of a `var_domain`
+    index's set**, return that `var_domain` index; else ``None``.
+
+    *idx* may be either a synthetic ``__`` alias (e.g. ``t__``) or a bare subset
+    index (e.g. ``t``) — a trailing ``__`` is stripped first if present, then the
+    result is looked up as a set, so both forms are accepted. (In practice the
+    re-symbolized form ``t__`` is what reaches here, but the bare form is treated
+    identically rather than relied upon to be aliased.)
 
     e.g. otpop's ``kdef.. k =e= sum(t, del(t)*…*x(t))`` with ``Set t(tt)`` (t ⊂ tt):
     differentiating w.r.t. ``x(tt)`` re-symbolizes the subset param ``del`` to the
