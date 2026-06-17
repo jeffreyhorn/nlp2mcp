@@ -10,8 +10,9 @@ from __future__ import annotations
 
 import pytest
 
-from src.ad.derivative_rules import _try_resolve_cardinality_reversal
-from src.ir.ast import Binary, Call, Const, IndexOffset, SymbolRef
+from src.ad.derivative_rules import _diff_sum, _try_resolve_cardinality_reversal
+from src.config import Config
+from src.ir.ast import Binary, Call, Const, IndexOffset, ParamRef, Sum, SymbolRef, VarRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import SetDef
 
@@ -93,3 +94,19 @@ def test_rejects_dynamic_subset_without_static_members():
 def test_rejects_non_indexoffset():
     m = _model()
     assert _try_resolve_cardinality_reversal("t", "t", m) is None
+
+
+def test_diff_sum_fastpath_degrades_safely_for_non_1d_wrt_indices():
+    # The #1335 fast-path indexes wrt_indices[0]; the gate must require exactly
+    # one index so an empty/mismatched tuple degrades to the generic path
+    # instead of raising IndexError (review #1450).
+    m = _model()
+    cfg = Config(model_ir=m)
+    # sum(t, v * p(t+(card(t)-ord(t)))) — the otpop zdef shape
+    body = Binary(
+        "*", ParamRef("v"), VarRef("p", (IndexOffset("t", _card_minus_ord("t", "t"), False),))
+    )
+    sum_expr = Sum(("t",), body)
+    # Empty wrt_indices for a 1-D var must NOT raise (would IndexError pre-fix).
+    result = _diff_sum(sum_expr, "p", (), cfg)
+    assert result is not None

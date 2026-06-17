@@ -2035,6 +2035,7 @@ def _diff_sum(
     # / ∂v(last) = sum(t, c(t))`. Tightly gated to the exact idiom.
     if (
         wrt_indices is not None
+        and len(wrt_indices) == 1
         and config is not None
         and config.model_ir is not None
         and len(expr.index_sets) == 1
