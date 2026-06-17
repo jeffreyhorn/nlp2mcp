@@ -71,6 +71,14 @@ def test_rejects_plus_offset():
     assert _try_resolve_cardinality_reversal(idx, "t", m) is None
 
 
+def test_rejects_circular_offset():
+    m = _model()
+    # Circular (`++`/`--`) wrap-around offset must NOT resolve via the linear
+    # cancellation — its modular edge semantics differ (review #1450).
+    idx = IndexOffset("t", _card_minus_ord("t", "t"), True)
+    assert _try_resolve_cardinality_reversal(idx, "t", m) is None
+
+
 def test_rejects_non_indexoffset():
     m = _model()
     assert _try_resolve_cardinality_reversal("t", "t", m) is None

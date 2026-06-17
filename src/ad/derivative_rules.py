@@ -1858,6 +1858,13 @@ def _try_resolve_cardinality_reversal(idx: object, sum_idx: str, model_ir: Any) 
     """
     if not isinstance(idx, IndexOffset) or not isinstance(idx.base, str):
         return None
+    # Only the non-circular (linear `+`) idiom is handled: the cancellation
+    # `pos + card - ord = card - 1` assumes plain addition. Circular `++`/`--`
+    # offsets apply modular wrap-around, whose edge semantics differ — leave
+    # them to the generic path rather than silently resolving to the last
+    # element.
+    if idx.circular:
+        return None
     if idx.base.lower() != sum_idx.lower():
         return None
     off = idx.offset
