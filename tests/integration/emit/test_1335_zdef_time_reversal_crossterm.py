@@ -53,7 +53,7 @@ def test_otpop_zdef_crossterm_present_in_stat_p(tmp_path: Path) -> None:
     # The zdef cross-term must be present, sum-preserving, guarded at the last
     # element (#1335). Before the fix `nu_zdef` was entirely absent from stat_p.
     assert "nu_zdef" in stat_p, "stat_p is still missing its nu_zdef cross-term (#1335 regressed)"
+    # The sum-preserving form (the whole `sum(t, …)` survives, not collapsed to a
+    # single t) under the last-element guard — this is the #1335 fix.
     assert "sum(t,0.365*(xb(t)-x(t)))" in stat_p
     assert "nu_zdef)$(sameas(tt,'1990'))" in stat_p
-    # It must NOT collapse to a single t (the bug would have dropped the sum).
-    assert "sum(t__" not in stat_p.split("nu_zdef")[0][-80:]

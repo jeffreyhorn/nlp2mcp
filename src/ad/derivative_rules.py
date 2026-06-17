@@ -2052,8 +2052,17 @@ def _diff_sum(
         if _refs and all(e is not None for e in _resolved) and len(set(_resolved)) == 1:
             fixed_elem = _resolved[0]
             wrt0 = wrt_indices[0]
+            # The fast-path resolves a CONCRETE column. If wrt0 names a set/alias
+            # it is a SYMBOLIC index (e.g. ('t',) during a collapse flow), not a
+            # member — comparing it to the resolved last element would wrongly
+            # return Const(0.0). Leave symbolic indices to the generic path.
+            model_ir = config.model_ir
+            wrt0_is_symbol = isinstance(wrt0, str) and (
+                wrt0.lower() in {s.lower() for s in model_ir.sets}
+                or wrt0.lower() in {a.lower() for a in model_ir.aliases}
+            )
             wrt0_str = wrt0.strip("'\"").lower() if isinstance(wrt0, str) else None
-            if wrt0_str is not None and fixed_elem is not None:
+            if wrt0_str is not None and fixed_elem is not None and not wrt0_is_symbol:
                 if wrt0_str == fixed_elem.strip("'\"").lower():
                     resolved_body = _resolve_cardinality_reversal_in_expr(
                         expr.body, _s, config.model_ir

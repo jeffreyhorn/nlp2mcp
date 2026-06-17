@@ -96,6 +96,22 @@ def test_rejects_non_indexoffset():
     assert _try_resolve_cardinality_reversal("t", "t", m) is None
 
 
+def test_diff_sum_fastpath_skips_symbolic_wrt_index():
+    # When wrt_indices[0] names a SET (a symbolic index, e.g. ('t',) during a
+    # collapse flow) rather than a concrete member, the fast-path must NOT fire
+    # (it would wrongly return Const(0.0) since 't' != the resolved '1990'); it
+    # must fall through to the generic path (review #1450).
+    m = _model()
+    cfg = Config(model_ir=m)
+    body = Binary(
+        "*", ParamRef("v"), VarRef("p", (IndexOffset("t", _card_minus_ord("t", "t"), False),))
+    )
+    sum_expr = Sum(("t",), body)
+    result = _diff_sum(sum_expr, "p", ("t",), cfg)
+    # Generic path wraps in a Sum; the fast-path's bare `Const(0.0)` would not.
+    assert isinstance(result, Sum)
+
+
 def test_diff_sum_fastpath_degrades_safely_for_non_1d_wrt_indices():
     # The #1335 fast-path indexes wrt_indices[0]; the gate must require exactly
     # one index so an empty/mismatched tuple degrades to the generic path
