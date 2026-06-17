@@ -2056,10 +2056,11 @@ def _diff_sum(
             # it is a SYMBOLIC index (e.g. ('t',) during a collapse flow), not a
             # member — comparing it to the resolved last element would wrongly
             # return Const(0.0). Leave symbolic indices to the generic path.
+            # ModelIR.sets/aliases are CaseInsensitiveDict — use direct O(1)
+            # membership instead of rebuilding lowercased sets on every call.
             model_ir = config.model_ir
             wrt0_is_symbol = isinstance(wrt0, str) and (
-                wrt0.lower() in {s.lower() for s in model_ir.sets}
-                or wrt0.lower() in {a.lower() for a in model_ir.aliases}
+                wrt0 in model_ir.sets or wrt0 in model_ir.aliases
             )
             wrt0_str = wrt0.strip("'\"").lower() if isinstance(wrt0, str) else None
             if wrt0_str is not None and fixed_elem is not None and not wrt0_is_symbol:
