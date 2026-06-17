@@ -1886,7 +1886,29 @@ def _try_resolve_cardinality_reversal(idx: object, sum_idx: str, model_ir: Any) 
 
     from .index_mapping import resolve_set_members
 
-    members, _ = resolve_set_members(sum_idx, model_ir, quiet=True)
+    # Resolve sum_idx through any alias chain to the canonical set.
+    canon = sum_idx
+    seen: set[str] = set()
+    while canon in model_ir.aliases and canon.lower() not in seen:
+        seen.add(canon.lower())
+        alias_val = model_ir.aliases[canon]
+        canon = getattr(alias_val, "target", alias_val)
+    sdef = model_ir.sets.get(canon)
+    # A dynamic subset (explicit parent domain but NO static members of its own)
+    # makes resolve_set_members fall back to the PARENT's members (#723), so
+    # `members[-1]` would be the parent's last element, not the runtime-populated
+    # subset's — unsound for the time-reversal resolution, and it weakens the
+    # tight gating. Refuse and let _diff_sum use the generic path.
+    if sdef is not None and sdef.domain and not sdef.members:
+        return None
+
+    # resolve_set_members can raise (circular alias, missing set/alias); a
+    # tightly-gated optimization must degrade to the generic path, not hard-fail
+    # differentiation. Mirror _is_concrete_instance_of's ValueError handling.
+    try:
+        members, _ = resolve_set_members(sum_idx, model_ir, quiet=True)
+    except ValueError:
+        return None
     if not members:
         return None
     return members[-1]

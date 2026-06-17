@@ -79,6 +79,17 @@ def test_rejects_circular_offset():
     assert _try_resolve_cardinality_reversal(idx, "t", m) is None
 
 
+def test_rejects_dynamic_subset_without_static_members():
+    # A dynamic subset (explicit parent domain, NO static members of its own)
+    # would make resolve_set_members fall back to the PARENT's members, so
+    # `members[-1]` would be the parent's last element — unsound (review #1450).
+    m = ModelIR()
+    m.sets["k"] = SetDef(name="k", domain=(), members=["a", "b", "c"])
+    m.sets["ku"] = SetDef(name="ku", domain=("k",), members=[])  # populated at runtime
+    idx = IndexOffset("ku", _card_minus_ord("ku", "ku"), False)
+    assert _try_resolve_cardinality_reversal(idx, "ku", m) is None
+
+
 def test_rejects_non_indexoffset():
     m = _model()
     assert _try_resolve_cardinality_reversal("t", "t", m) is None
