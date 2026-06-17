@@ -1,7 +1,27 @@
 # AD: scalar-constraint stationarity Sum body doesn't fully collapse when wrt-index is symbolic eq-domain superset of inner Sum's iteration subset
 
 **GitHub Issue:** [#1393](https://github.com/jeffreyhorn/nlp2mcp/issues/1393)
-**Status:** DEFERRED to Sprint 28 (Sprint 27 Day 0 binding verdict = REPLAN; Approach C was shown to be inert — see "Sprint 28 carryforward" below). The linked GitHub issue remains open.
+**Status:** **RESOLVED — Sprint 28 Day 6 (2026-06-16).** Fixed at the `stationarity.py` symbolic-collapse path (NOT the AD `derivative_rules.py` site the prep doc named — see RESOLUTION). otpop's `kdef` over-count is gone (gate clean), otpop now solves MODEL STATUS 1 (was `solve=failure`); the full otpop +1 Match still needs the **#1335 `zdef`** companion (Day 7). Bonus: the shared fix also **corrects `chenery` to MATCH** the NLP reference (1058.9199). *(Prior: DEFERRED to Sprint 28; Sprint 27 Day 0 binding verdict = REPLAN; Approach C shown inert.)*
+
+## RESOLUTION (Sprint 28 Day 6, 2026-06-16)
+
+**Fix surface (confirms the prep-doc redirect):** `src/kkt/stationarity.py`, the **scalar-constraint branch of `_add_indexed_jacobian_terms`** — NOT the AD `_diff_sum`/`_sum_should_collapse` site. The per-cell numeric Jacobian is already correct (a single term `del(1974)*…*p(1974)` for `x(1974)`); the over-count is introduced *downstream* when the symbolic term is assembled.
+
+**Root cause:** `_replace_indices_in_expr` re-symbolizes the per-cell element to the variable's domain index for params declared over the **parent** (`p(tt)`) but to a synthetic `__` **alias** for params declared over the **subset** (`del` over `t ⊂ tt` → `del(t__)`). `_collect_free_indices` then flags `t__` as uncontrolled, and the old code wrapped the whole term in a **plain `Sum(t__, …)`** → the stationarity row is over-counted by `|t|` (17× for otpop).
+
+**Fix:** in the `if uncontrolled:` block, an uncontrolled index that is a synthetic alias of a subset of `var_domain` (detected by new helper `_subset_alias_superset_index`) is wrapped in a **sameas-guarded singleton sum** `sum(t__$(sameas(t__,tt)), …)` — mirroring the existing objective-gradient handling (#949/#1010, `_find_superset_in_domain`). This collapses to the single diagonal element and is **domain-safe whether the summed parameter is declared over the subset (`fawley pcr(cr)`) or the parent (`otpop del(tt)`)**. Genuinely-free indices keep the plain `Sum` (unchanged). The first iteration (a direct re-index of the alias to the parent index `c` + drop Sum) was **rejected**: it produced `pcr(c)` with `c` ranging over the parent → GAMS `$171 domain violation` for subset-declared params (fawley).
+
+**Blast radius (full 153-golden regen + diff, all GAMS-solved): 7 changed, ZERO regressions.** Every changed golden differs **exclusively** by the sameas-collapse pattern (`sum(x__,…)` → `sum(x__$(sameas(x__,c)),…)`; verified 0 non-collapse line changes per model).
+- **otpop** — `kdef` over-count gone; MCP now MODEL STATUS 1 (was `solve=failure`). `pi=2624.75` vs NLP `4217.80` — full match pends **#1335 `zdef`** (Day 7).
+- **chenery** — `tb` scalar constraint (`stat_e`/`stat_m`); MCP `td=1058.9199` = NLP reference → **MATCH** (was `solve=success, compare=None`; old emit gave the wrong `1005.18`). A genuine bonus from the shared fix.
+- **china** — `cdef` scalar constraint; `income` moves from `24782.88` toward NLP `40561.57` (now `44569.84` — closer, still mismatched by independent `crec`/`lam_mb` offset bugs). No regression (was `compare=None`).
+- **fawley** — `dpur`/`dtran` scalar constraints now domain-clean (previously its old emit also had the alias-sum form); MCP still MODEL STATUS 5 Locally Infeasible — **identical to the committed baseline** (the pre-existing #1356 deferral); no regression.
+- **tforss** — `asales` scalar constraint (`stat_x`); MCP MODEL STATUS 1 = baseline MS 1, solve-identical. No regression.
+- **ferts** — `ap`/`al`/`ai` scalar constraints (`stat_u`/`stat_vr`/`stat_xi`); solve byte-identical to the committed baseline (pre-existing empty-`comp_mb` failure, unrelated). No regression.
+- **turkey** — scalar constraint; MCP 8 compile errors = 8 errors (committed baseline), pre-existing failure, identical. No regression.
+- The 6 scan emit-fails (decomp, danwolfe, nemhaus, nonsharp, saras, trnspwl) all pre-record `translate=failure`/`None` and fail structurally before the KKT layer (e.g. saras = multi-solve-driver CLI guard) — **pre-existing**, unrelated.
+
+**Tests:** `tests/integration/emit/test_1393_scalar_subset_sum_collapse.py` (otpop/chenery/china, sameas-sum form, skip-if-corpus-absent).
 **Severity:** Medium — produces an over-counted KKT Jacobian cross-term (off by factor |subset| = 17× for otpop). Differs from the NLP optimum.
 **Date:** 2026-05-12
 **Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 acceptance gate authored; prior: Sprint 27 Day 8 — Sprint 28 carryforward filed; Day 0 Approach-C REPLAN recorded; now distinct from #1335)

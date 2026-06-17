@@ -178,3 +178,40 @@ Regenerated all 153 `*_mcp.gms`; 7 changed (all the correct neighbor-index guard
 - **Genuine: Solve +1 (camshape, matches 4.2841).** Solve 105 → **106 (firm so far)**. Match 62 → **63** (camshape matches). otpop/maxmin's MS-1 transitions are bucket-forward (mismatch) — not counted as genuine until classified at Day 10.
 
 ### Next: Day 6 — Priority 3a #1393 otpop kdef Sum-collapse (otpop now MS-1-mismatch; the #1393/#1335 fix targets the 4217.80 match).
+
+---
+
+## Day 6 — Priority 3a: #1393 otpop kdef scalar subset-sum over-count (2026-06-16)
+
+**Status:** 🟢 DONE — **#1393 fixed** (otpop `kdef` over-count gone; otpop → MS 1, was `solve=failure`). Full otpop +1 Match pends **#1335 `zdef`** (Day 7). **Bonus: chenery corrected to MATCH** (NLP `td=1058.9199`).
+
+### Phase-0 gate (PR24/PR27)
+- Harness errors on otpop's `--nlp-presolve` emit (GAMS exit 2, compile error — same class as korcge #1439), so verified via **structural grep + GAMS solve** instead of harness residual. Gate: `grep -cE 'sum\(t__, .*nu_kdef' /tmp/otpop_mcp.gms` → **0** (regenerate to /tmp first, never grep the committed golden).
+
+### Root cause (confirms the prep-doc redirect to `stationarity.py`, NOT the AD layer)
+- The per-cell numeric Jacobian is already correct (single term `del(1974)*…*p(1974)` for `x(1974)`). The over-count is introduced *downstream* in the **scalar-constraint branch of `_add_indexed_jacobian_terms`** (`src/kkt/stationarity.py`): `_replace_indices_in_expr` re-symbolizes the subset param `del` (declared over `t ⊂ tt`) to a synthetic `__` alias `del(t__)`; `_collect_free_indices` flags `t__` as uncontrolled; the old code wrapped the whole term in a **plain `Sum(t__, …)`** → stationarity row over-counted by `|t|` (17×).
+
+### Fix
+- In the `if uncontrolled:` block, a subset-alias uncontrolled index (detected by new helper `_subset_alias_superset_index`) is wrapped in a **sameas-guarded singleton sum** `sum(t__$(sameas(t__,tt)), …)` — mirroring the existing objective-gradient handling (#949/#1010, `_find_superset_in_domain`). **Domain-safe** whether the summed param is declared over the subset (`fawley pcr(cr)`) or the parent (`otpop del(tt)`). A first iteration (direct re-index alias→parent + drop Sum) was **rejected**: it produced `pcr(c)` with `c` over the parent → GAMS `$171 domain violation` (fawley).
+
+### Blast radius (full 153-golden regen + diff; all GAMS-solved) — 7 changed, NO regression
+All 7 changed goldens differ **exclusively** by the sameas-collapse pattern (`sum(x__, …)` → `sum(x__$(sameas(x__,c)), …)`); verified 0 non-collapse line changes per model.
+- **otpop** (target): `kdef` over-count gone; MCP **MODEL STATUS 1** (was `solve=failure`). `pi=2624.75` vs NLP `4217.80` — full match pends **#1335 `zdef`** (Day 7).
+- **chenery**: `tb` scalar constraint (`stat_e`/`stat_m`); MCP **`td=1058.9199` = NLP → MATCH** (old emit gave the wrong `1005.18`; was `solve=success, compare=None`). Genuine bonus.
+- **china**: `cdef` scalar constraint; `income` `24782.88 → 44569.84`, closer to NLP `40561.57` but still mismatched (independent `crec`/`lam_mb` offset bugs). No regression (`compare=None`).
+- **fawley**: `dpur`/`dtran` scalar constraints now domain-clean; MCP **MS 5 Locally Infeasible — identical to committed baseline** (pre-existing #1356 deferral). No regression.
+- **tforss**: `asales` scalar constraint (`stat_x`); MCP **MS 1 = MS 1** (old), solve-identical. No regression.
+- **ferts**: `ap`/`al`/`ai` scalar constraints (`stat_u`/`stat_vr`/`stat_xi`); solve byte-identical to baseline (pre-existing empty-`comp_mb` failure, unrelated). No regression.
+- **turkey**: scalar constraint; MCP **8 compile errors = 8 errors** (old) — pre-existing failure, identical. No regression.
+- The 6 scan emit-fails (decomp, danwolfe, nemhaus, nonsharp, saras, trnspwl) all pre-record `translate=failure`/`None` and fail structurally before the KKT layer (e.g. saras = multi-solve-driver CLI guard) — pre-existing, unrelated.
+
+### PR25 tally (Day 6)
+- **Genuine: Match +1 (chenery, 1058.9199).** Match 63 → **64**. Solve unchanged (otpop MS-1 transition is bucket-forward, mismatched until #1335 — classified at the Day-10 retest). Solve **106**, Match **64**.
+
+### Deliverables
+- `src/kkt/stationarity.py` (helper `_subset_alias_superset_index` + scalar-branch collapse).
+- `tests/integration/emit/test_1393_scalar_subset_sum_collapse.py` (3 tests: otpop/chenery/china).
+- Goldens regenerated: chenery/china/fawley/otpop/ferts/tforss/turkey `_mcp.gms` (7).
+- `docs/issues/ISSUE_1393_*.md` RESOLUTION; CHANGELOG.
+
+### Next: Day 7 — #1335 otpop `zdef` `card(t)-ord(t)` time-reversal cross-term (the companion that completes otpop's +1 Solve/+1 Match to `pi=4217.80`).

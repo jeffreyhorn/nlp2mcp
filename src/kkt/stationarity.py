@@ -6857,8 +6857,28 @@ def _add_indexed_jacobian_terms(
                     # output, consistent with the indexed-constraint branch above.
                     uncontrolled = free_in_deriv - {d.lower() for d in var_domain}
                     if uncontrolled:
-                        sum_indices = tuple(sorted(uncontrolled))
-                        term = Sum(sum_indices, term)
+                        # Issue #1393: an uncontrolled index that is a synthetic
+                        # alias of a SUBSET of the variable's domain (e.g. `t__`
+                        # from otpop's `kdef.. k =e= sum(t, del(t)*…*x(t))` with
+                        # `Set t(tt)`, differentiated w.r.t. x(tt)) is NOT a free
+                        # sum index: the per-cell derivative already collapsed to
+                        # the diagonal element. Summing over the whole alias
+                        # over-counts the stationarity row by |subset|. Mirror the
+                        # objective-gradient handling (#949/#1010): wrap in a
+                        # sameas-guarded singleton Sum `sum(t__$(sameas(t__,tt)),…)`
+                        # — domain-safe whether the summed parameter is declared
+                        # over the subset (fawley `pcr(cr)`) or the parent (otpop
+                        # `del(tt)`). Genuinely-free indices keep the plain Sum.
+                        genuine: list[str] = []
+                        for u in sorted(uncontrolled):
+                            sup = _subset_alias_superset_index(u, var_domain, kkt.model_ir)
+                            if sup is not None:
+                                sameas_cond: Expr = Call("sameas", (SymbolRef(u), SymbolRef(sup)))
+                                term = Sum((u,), term, condition=sameas_cond)
+                            else:
+                                genuine.append(u)
+                        if genuine:
+                            term = Sum(tuple(genuine), term)
 
                     # Issue #767 / #764: Guard multiplier terms with $(sameas(...))
                     # when only a subset of the indexed variable's instances have a
@@ -6874,6 +6894,39 @@ def _add_indexed_jacobian_terms(
                     expr = Binary("+", expr, term)
 
     return expr
+
+
+def _subset_alias_superset_index(
+    idx: str, var_domain: tuple[str, ...], model_ir: ModelIR
+) -> str | None:
+    """Issue #1393: if *idx* names a set declared as a **subset of a `var_domain`
+    index's set**, return that `var_domain` index; else ``None``.
+
+    *idx* may be either a synthetic ``__`` alias (e.g. ``t__``) or a bare subset
+    index (e.g. ``t``) — a trailing ``__`` is stripped first if present, then the
+    result is looked up as a set, so both forms are accepted. (In practice the
+    re-symbolized form ``t__`` is what reaches here, but the bare form is treated
+    identically rather than relied upon to be aliased.)
+
+    e.g. otpop's ``kdef.. k =e= sum(t, del(t)*…*x(t))`` with ``Set t(tt)`` (t ⊂ tt):
+    differentiating w.r.t. ``x(tt)`` re-symbolizes the subset param ``del`` to the
+    alias ``t__`` (``derivative_rules.py`` appends ``__``), which then looks like a
+    free index. It is **not** — the per-cell derivative already collapsed, so the
+    alias must fold back to the variable's domain index ``tt`` (guarded by the
+    subset membership), not be summed (which over-counts by ``|t|``).
+    """
+    # The synthetic alias appends exactly ``__`` (derivative_rules.py); strip that
+    # precisely so a legitimate set whose name ends in ``_`` is not mis-stripped.
+    base = idx[:-2] if idx.endswith("__") else idx
+    sdef = model_ir.sets.get(base) if base else None
+    if sdef is None or len(getattr(sdef, "domain", ()) or ()) != 1:
+        return None
+    parent = sdef.domain[0]
+    parent_canon = _resolve_alias_target(parent.lower(), model_ir)
+    for v in var_domain:
+        if _resolve_alias_target(v.lower(), model_ir) == parent_canon:
+            return v
+    return None
 
 
 def _get_constraint_domain(kkt: KKTSystem, eq_name: str) -> tuple[str, ...]:

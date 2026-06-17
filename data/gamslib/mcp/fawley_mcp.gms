@@ -247,7 +247,7 @@ stat_revenue.. -1 + nu_drev =E= 0;
 stat_sales(cf).. nu_dbal(cf) + ((-1) * ddat(cf,"price")) * nu_drev - piL_sales(cf) =E= 0;
 stat_trans(tr).. sum(c, at(c,tr) * nu_mbal(c)) - piL_trans(tr) =E= 0;
 stat_transport.. 1 + nu_dtran =E= 0;
-stat_u(c).. (1$(cr(c)) * nu_mbal(c) + sum(cr__, ((-1) * pcr(cr__)) * nu_dpur)$(cr(c)) + sum(cr__, ((-1) * crdat(cr__,"transport")) * nu_dtran)$(cr(c)) - piL_u(c) + piU_u(c))$(cr(c) and u.up(c) - u.lo(c) > 1e-10) =E= 0;
+stat_u(c).. (1$(cr(c)) * nu_mbal(c) + sum(cr__$(sameas(cr__, c)), ((-1) * pcr(cr__)) * nu_dpur)$(cr(c)) + sum(cr__$(sameas(cr__, c)), ((-1) * crdat(cr__,"transport")) * nu_dtran)$(cr(c)) - piL_u(c) + piU_u(c))$(cr(c) and u.up(c) - u.lo(c) > 1e-10) =E= 0;
 stat_z(p).. sum(c, ap(c,p) * nu_mbal(c)) + sum(k, ((-1) * bp(k,p)) * nu_kbal(k)) - piL_z(p) =E= 0;
 
 * Lower bound complementarity equations
