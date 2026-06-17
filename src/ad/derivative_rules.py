@@ -1844,6 +1844,98 @@ def _is_structurally_zero(expr: Expr) -> bool:
     return False
 
 
+def _try_resolve_cardinality_reversal(idx: object, sum_idx: str, model_ir: Any) -> str | None:
+    """Issue #1335: resolve a time-reversal index ``t + (card(t) - ord(t))`` to
+    the concrete LAST element of ``t``.
+
+    Inside ``sum(t, …)`` the offset ``card(t) - ord(t)`` added to the iterate
+    ``t`` lands on position ``(ord(t)-1) + (card(t) - ord(t)) = card(t) - 1`` —
+    the last member — for EVERY iterate, independent of which ``t``. So a
+    reference like ``v(t + (card(t) - ord(t)))`` is a **constant column** (the
+    last element). Returns that element name, or ``None`` if *idx* is not exactly
+    this pattern over ``sum_idx`` (``card(sum_idx) - ord(sum_idx)`` on base
+    ``sum_idx``). Tightly gated so it only fires on the time-reversal idiom.
+    """
+    if not isinstance(idx, IndexOffset) or not isinstance(idx.base, str):
+        return None
+    if idx.base.lower() != sum_idx.lower():
+        return None
+    off = idx.offset
+    if not (isinstance(off, Binary) and off.op == "-"):
+        return None
+    card_call, ord_call = off.left, off.right
+    if not (isinstance(card_call, Call) and card_call.func.lower() == "card"):
+        return None
+    if not (isinstance(ord_call, Call) and ord_call.func.lower() == "ord"):
+        return None
+
+    def _sole_symbol(call: Call) -> str | None:
+        if len(call.args) == 1 and isinstance(call.args[0], SymbolRef):
+            return call.args[0].name.lower()
+        return None
+
+    if _sole_symbol(card_call) != sum_idx.lower() or _sole_symbol(ord_call) != sum_idx.lower():
+        return None
+
+    from .index_mapping import resolve_set_members
+
+    members, _ = resolve_set_members(sum_idx, model_ir, quiet=True)
+    if not members:
+        return None
+    return members[-1]
+
+
+def _resolve_cardinality_reversal_in_expr(expr: Expr, sum_idx: str, model_ir: Any) -> Expr:
+    """Issue #1335: rewrite every ``t + (card(t) - ord(t))`` index in *expr* to
+    its resolved concrete element (see :func:`_try_resolve_cardinality_reversal`).
+
+    Only variable/parameter index positions are rewritten; the rest of the tree
+    is rebuilt structurally and left otherwise untouched.
+    """
+
+    def _fix_indices(indices: tuple[Any, ...]) -> tuple[Any, ...]:
+        out: list[Any] = []
+        for ix in indices:
+            resolved = _try_resolve_cardinality_reversal(ix, sum_idx, model_ir)
+            out.append(resolved if resolved is not None else ix)
+        return tuple(out)
+
+    if isinstance(expr, VarRef):
+        return VarRef(expr.name, _fix_indices(expr.indices), expr.attribute)
+    if isinstance(expr, ParamRef):
+        return ParamRef(expr.name, _fix_indices(expr.indices))
+    if isinstance(expr, Binary):
+        return Binary(
+            expr.op,
+            _resolve_cardinality_reversal_in_expr(expr.left, sum_idx, model_ir),
+            _resolve_cardinality_reversal_in_expr(expr.right, sum_idx, model_ir),
+        )
+    if isinstance(expr, Unary):
+        return Unary(expr.op, _resolve_cardinality_reversal_in_expr(expr.child, sum_idx, model_ir))
+    if isinstance(expr, Call):
+        return Call(
+            expr.func,
+            tuple(_resolve_cardinality_reversal_in_expr(a, sum_idx, model_ir) for a in expr.args),
+        )
+    if isinstance(expr, (Sum, Prod)):
+        new_cond = (
+            _resolve_cardinality_reversal_in_expr(expr.condition, sum_idx, model_ir)
+            if expr.condition is not None
+            else None
+        )
+        return type(expr)(
+            expr.index_sets,
+            _resolve_cardinality_reversal_in_expr(expr.body, sum_idx, model_ir),
+            new_cond,
+        )
+    if isinstance(expr, DollarConditional):
+        return DollarConditional(
+            value_expr=_resolve_cardinality_reversal_in_expr(expr.value_expr, sum_idx, model_ir),
+            condition=_resolve_cardinality_reversal_in_expr(expr.condition, sum_idx, model_ir),
+        )
+    return expr
+
+
 def _diff_sum(
     expr: Sum,
     wrt_var: str,
@@ -1903,6 +1995,50 @@ def _diff_sum(
         >>> result = _diff_sum(expr, "x", None)
         >>> # result is Sum(("i",), Binary("*", ParamRef("c"), Const(1.0)))
     """
+    # Issue #1335: time-reversal / cardinality-reversal offset. When the wrt
+    # variable appears in the body ONLY via `v(t + (card(t) - ord(t)))` — a
+    # column that is CONSTANT w.r.t. the sum index (always the last element of
+    # t), not the iterator itself — the generic collapse path below mishandles
+    # it: the IndexOffset never matches a concrete column, so `∂/∂v(last)` is
+    # dropped and the cross-term vanishes (otpop's `nu_zdef` missing from
+    # `stat_p`). Resolve the offset to its fixed element, then differentiate in
+    # SUM-PRESERVING mode so every iterate contributes: `∂ sum(t, c(t)*v(last))
+    # / ∂v(last) = sum(t, c(t))`. Tightly gated to the exact idiom.
+    if (
+        wrt_indices is not None
+        and config is not None
+        and config.model_ir is not None
+        and len(expr.index_sets) == 1
+    ):
+        _s = expr.index_sets[0]
+        _refs = _find_var_indices_in_body(expr.body, wrt_var)
+        # Every occurrence of the wrt var must be a 1-D cardinality-reversal
+        # reference resolving to the SAME fixed element (no bare-iterator
+        # references mixed in, which would also need the collapse term).
+        _resolved = [
+            _try_resolve_cardinality_reversal(r[0], _s, config.model_ir) if len(r) == 1 else None
+            for r in _refs
+        ]
+        if _refs and all(e is not None for e in _resolved) and len(set(_resolved)) == 1:
+            fixed_elem = _resolved[0]
+            wrt0 = wrt_indices[0]
+            wrt0_str = wrt0.strip("'\"").lower() if isinstance(wrt0, str) else None
+            if wrt0_str is not None and fixed_elem is not None:
+                if wrt0_str == fixed_elem.strip("'\"").lower():
+                    resolved_body = _resolve_cardinality_reversal_in_expr(
+                        expr.body, _s, config.model_ir
+                    )
+                    new_bound = bound_indices | frozenset(expr.index_sets)
+                    body_deriv = differentiate_expr(
+                        resolved_body, wrt_var, wrt_indices, config, bound_indices=new_bound
+                    )
+                    if _is_structurally_zero(body_deriv):
+                        return Const(0.0)
+                    return Sum(expr.index_sets, body_deriv, expr.condition)
+                # wrt is a different concrete column — the var only feeds the
+                # fixed (last) column, so this instance's derivative is zero.
+                return Const(0.0)
+
     # Check if sum should collapse (special case for index-aware differentiation)
     # When differentiating sum(i, x(i)) w.r.t. x(i1), the sum collapses because
     # only the term where i=i1 contributes, so result is just the collapsed expression
