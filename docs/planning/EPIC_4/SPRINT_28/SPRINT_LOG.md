@@ -215,3 +215,35 @@ All 7 changed goldens differ **exclusively** by the sameas-collapse pattern (`su
 - `docs/issues/ISSUE_1393_*.md` RESOLUTION; CHANGELOG.
 
 ### Next: Day 7 — #1335 otpop `zdef` `card(t)-ord(t)` time-reversal cross-term (the companion that completes otpop's +1 Solve/+1 Match to `pi=4217.80`).
+
+---
+
+## Day 7 — Priority 3b: #1335 otpop zdef time-reversal cross-term (2026-06-17)
+
+**Status:** 🟡 AD FIX LANDED (correct emit, hand-derivation-verified) — **otpop match NOT realized**: bucket-forward, blocked by **NEW #1449** (otpop `--nlp-presolve` `$184` compile failure) + cold non-convexity. Per-user decision: Option A (land the forward-progress fix, defer the match).
+
+### Phase-0 gate + fix surface (prep-doc redirect, AGAIN)
+- The prep named `_try_eval_offset` (`src/ad/constraint_jacobian.py`). **Wrong**: scalar `zdef` skips the `if eq_domain:` offset-resolution passes, so `_try_eval_offset` is never reached. Real surface = **`_diff_sum` in `src/ad/derivative_rules.py`**. Also: `_try_eval_offset` *can't* work — `card(t)-ord(t)` is not constant (depends on `ord(t)`); only the whole index `t+(card(t)-ord(t))` is constant (= last element).
+- **Root cause:** `p(t+(card(t)-ord(t)))` cancels to the LAST element for every `t` → a constant column `p('1990')`. The generic `_sum_should_collapse` path assumes the wrt var is indexed BY the iterator, so the `IndexOffset` never matched a concrete column → `∂/∂p('1990')` dropped → `nu_zdef` absent from `stat_p`.
+
+### Fix
+- Two tightly-gated helpers (`_try_resolve_cardinality_reversal`, `_resolve_cardinality_reversal_in_expr`) + one branch at the top of `_diff_sum`: when the wrt var appears ONLY via the time-reversal offset, resolve it to the fixed element and differentiate in **sum-preserving** mode. Emit now: `stat_p(tt).. … + (((-1)*(v*sum(t,0.365*(xb(t)-x(t)))))*nu_zdef)$(sameas(tt,'1990')) … ;` — **exactly** the Phase-0 hand-derivation (sign/guard/structure). 1 integration test.
+
+### Why the match is NOT realized (the NEW blocker)
+- **Cold** otpop → MS 5 Locally Infeasible (was MS 1 cold-MISMATCH after Day-6 #1393): the *correct* full KKT system is non-convex; PATH cold-diverges.
+- **Warm-start / presolve** (the only path to `pi=4217.80`) is blocked by **#1449**: otpop's `--nlp-presolve` fails to compile (`$184`) because the **mandatory** domain-widening (`db(tt)`/`del(tt)`, so `stat_p(tt)` can reference `db(tt)` without `$171`) conflicts with the `$include`d source's `db(t)`. `t`/`tt` can't coexist (verified under `$onMulti`/`$onMultiR`). Same class as #1439 (korcge).
+- The KKT-residual harness reuses the presolve emit → also blocked by #1449. So #1335 is **hand-derivation-verified, not residual-verified** (yet). Manual primal+dual warm-start (Architecture B) reached MS 1 at 3160, not 4217 — inconclusive (dual sign-mapping is the harness's job).
+
+### Decision (user)
+Considered Option B (fix the presolve `$184`) but it is **not narrow** — the "tt→t" premise was wrong (tt is required), and the real fix is architectural (separate companion symbol / stationarity restructure / Architecture B), each with corpus-wide regression surface. **Chose Option A:** land the #1335 AD fix as forward progress, file #1449, classify otpop bucket-forward, defer the match to a scoped #1449 follow-on.
+
+### PR25 tally (Day 7)
+- **No genuine Solve/Match this day.** otpop's emit is correct but cold-infeasible and presolve-blocked → bucket-forward, not counted. Solve **106**, Match **64** (unchanged from Day 6; chenery's Day-6 match stands).
+
+### Deliverables
+- `src/ad/derivative_rules.py` (helpers + `_diff_sum` branch).
+- `tests/integration/emit/test_1335_zdef_time_reversal_crossterm.py` (1 test).
+- `data/gamslib/mcp/otpop_mcp.gms` regenerated (cold; `nu_zdef` now in `stat_p`).
+- `docs/issues/ISSUE_1335_*.md` RESOLUTION; **NEW `docs/issues/ISSUE_1449_*.md`** (the presolve blocker); CHANGELOG.
+
+### Next: Day 8 per PLAN — #1449 is the scoped follow-on that realizes otpop's +1 Solve/+1 Match once the widening/`$include` tension is resolved.

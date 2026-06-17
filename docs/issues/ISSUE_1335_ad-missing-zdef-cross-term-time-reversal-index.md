@@ -1,7 +1,26 @@
 # AD: Missing `∂zdef/∂p` Cross-Term in `stat_p` When `zdef` References `p` via Time-Reversal-Indexed Offset
 
 **GitHub Issue:** [#1335](https://github.com/jeffreyhorn/nlp2mcp/issues/1335)
-**Status:** DEFERRED to Sprint 28 (Sprint 27 Day 0 confirmed #1393's Approach C does NOT subsume #1335 — this is now a DISTINCT fix needing a `card(t)-ord(t)` offset evaluator; see "Sprint 28 carryforward" below). The linked GitHub issue remains open.
+**Status:** **AD FIX LANDED — Sprint 28 Day 7 (2026-06-17).** The missing `∂zdef/∂p` cross-term is now emitted in `stat_p(tt)` with the exact hand-derived shape. **otpop's +1 Solve/+1 Match is NOT yet realized** — it is bucket-forward, blocked by **#1449** (otpop `--nlp-presolve` `$184` compile failure: domain-widened params conflict with the `$include` source declaration) plus cold non-convexity. See RESOLUTION below. *(Prior: DEFERRED to Sprint 28; distinct from #1393 per Day 0 REPLAN.)*
+
+## RESOLUTION (Sprint 28 Day 7, 2026-06-17) — AD fix landed; match blocked by #1449
+
+**Fix surface (corrects the prep-doc redirect AGAIN):** NOT `_try_eval_offset` in `src/ad/constraint_jacobian.py` — that is **never reached for the scalar `zdef`** (scalar equations skip the `if eq_domain:` offset-resolution/expansion passes at `_compute_equality_jacobian`). The real surface is **`_diff_sum` in `src/ad/derivative_rules.py`**.
+
+**Root cause:** differentiating `sum(t, c(t)*p(t+(card(t)-ord(t))))` w.r.t. `p('1990')`, the offset `t+(card(t)-ord(t))` cancels to the LAST element (position `ord(t)-1 + card(t)-ord(t) = card(t)-1`) for EVERY `t` — so `p(t+…)` is a **constant column** `p('1990')`, independent of the sum index. The generic collapse path (`_sum_should_collapse`) assumes the wrt var is indexed BY the sum iterator, so the `IndexOffset` never matches a concrete column and `∂/∂p('1990')` was dropped → `nu_zdef` entirely absent from `stat_p`. (The `∂zdef/∂x` term was fine because `x` appears as the bare iterator `x(t)`.)
+
+**Fix:** two tightly-gated helpers (`_try_resolve_cardinality_reversal`, `_resolve_cardinality_reversal_in_expr`) + one branch at the top of `_diff_sum`. When the wrt var appears in the body ONLY via `v(t+(card(t)-ord(t)))`, resolve that offset to the fixed element and differentiate in **sum-preserving** mode: `∂ sum(t, c(t)*v(last))/∂v(last) = sum(t, c(t))`. Emit now contains the exact hand-derived term:
+```
+stat_p(tt).. … + (((-1) * (v * sum(t, 0.365 * (xb(t) - x(t))))) * nu_zdef)$(sameas(tt, '1990')) - piL_p(tt) =E= 0;
+```
+matching the Phase-0 hand-derivation (sign, guard, structure). Verified the AD `_diff_sum` collapse path was the bug, NOT `_try_eval_offset`. The first prep approach (extend `_try_eval_offset`) is **invalid** — the offset `card(t)-ord(t)` is NOT a constant (it depends on `ord(t)`); only `t+(card(t)-ord(t))` is constant, so it must be resolved as a whole INDEX, not as an offset value.
+
+**Why otpop does not yet match (bucket-forward, see #1449):**
+- **Cold** otpop now goes MS 5 Locally Infeasible (was MS 1 cold-MISMATCH after Day-6 #1393) — the *correct* full KKT system is non-convex; PATH cold-diverges.
+- **Warm-start / presolve** (the path that would reach `pi=4217.80`) is blocked by **#1449**: otpop's `--nlp-presolve` emit fails to compile (`$184`) because the domain-widened params (`db(tt)`, `del(tt)`, required so `stat_p(tt)` can reference `db(tt)` without `$171`) conflict with the `$include`d source's `db(t)` declaration. `t`/`tt` cannot coexist (verified under both `$onMulti`/`$onMultiR`).
+- The KKT-residual harness reuses the presolve emit, so it is also blocked by #1449 — residual verification of #1335 is deferred until #1449 lands. The emit is verified by **hand-derivation match**, not residual (yet).
+
+**Blast radius:** the `_diff_sum` branch is tightly gated to the `card(S)-ord(v)` time-reversal idiom on the wrt var; corpus-wide regen + `make test` confirm otpop is the only changed model (see SPRINT_LOG Day 7).
 **Severity:** Medium — Produces a valid local KKT point that differs from the NLP optimum; affects models that use `card`/`ord` arithmetic on sum index variables to construct time-reversal or end-of-horizon mappings.
 **Date:** 2026-05-02
 **Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 acceptance gate authored; prior: Sprint 27 Day 8 — Sprint 28 carryforward filed; confirmed distinct from #1393 per Day 0 REPLAN)
