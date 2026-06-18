@@ -998,11 +998,14 @@ def _emit_widened_param_companions(
             continue
         widened = widenings[pname]
         source_domain = tuple(pdef.domain)
-        comp = f"{pname}{_PRESOLVE_WIDENED_SUFFIX}"
+        # Quote the symbol names too (Issue #665), not just the domains — a
+        # widened param could be a quoted identifier (e.g. containing '-').
+        qpname = _quote_symbol(pname)
+        qcomp = _quote_symbol(f"{pname}{_PRESOLVE_WIDENED_SUFFIX}")
         wdom = ",".join(_quote_symbol(d) for d in widened)
         sdom = ",".join(_quote_symbol(d) for d in source_domain)
-        lines.append(f"Parameter {comp}({wdom});")
-        lines.append(f"{comp}({sdom}) = {pname}({sdom});")
+        lines.append(f"Parameter {qcomp}({wdom});")
+        lines.append(f"{qcomp}({sdom}) = {qpname}({sdom});")
     if lines:
         lines.append("")
     return lines
@@ -1023,24 +1026,59 @@ def _rewrite_widened_param_refs(code: str, kkt: KKTSystem) -> tuple[str, set[str
     order) — so renaming ``db(t)`` there would make the embedded NLP's ``dem``
     use ``db__pw``, which is still 0 when the NLP solves, corrupting it. Renaming
     only the parent-index references keeps the original equations intact.
+
+    Robustness (PR #1451 review): the match is **case-insensitive** (GAMS symbol
+    names are case-insensitive; ``param_domain_widenings`` keys are lowercased
+    while the emitted body may preserve source casing), handles **quoted** symbol
+    names (Issue #665, e.g. ``'p-x'``), and uses the **actual** widened domain
+    position(s) rather than assuming dimension 0 (``_compute_widened_domain`` may
+    widen any position).
     """
     widenings = kkt.param_domain_widenings or {}
     renamed: set[str] = set()
     if not widenings or not code:
         return code, renamed
+
+    def _tok(name: str) -> str:
+        """Regex matching a symbol token in bare (``db``) or quoted (``'p-x'``)
+        emitted form, case-insensitively."""
+        esc = re.escape(name)
+        return rf"(?:\b{esc}\b|'{esc}')"
+
+    # One index slot in a GAMS arg list: text with at most one level of nested
+    # parens (covers offsets like ``tt+(card(tt)-ord(tt))``), no top-level comma.
+    _SLOT = r"(?:[^,()]|\([^()]*\))+"
+
     for pname, widened in widenings.items():
         if not widened:
             continue
-        comp = f"{pname}{_PRESOLVE_WIDENED_SUFFIX}"
-        # Only the parent-set index needs the companion. `widened[0]` is the
-        # widened (parent) set for the first dimension — the case in the corpus
-        # (1-D widened params: otpop db, fawley pcr). `\b<p>\(\s*<parent>\b`
-        # matches `db(tt)`, `db(tt+1)`, `db(tt+(…))` but NOT `db(t)`/`db(t__)`.
-        parent = widened[0]
-        pattern = rf"\b{re.escape(pname)}\(\s*{re.escape(parent)}\b"
-        new_code, n = re.subn(pattern, f"{comp}({parent}", code)
-        if n:
-            code = new_code
+        pdef = kkt.model_ir.params.get(pname)
+        source_domain = tuple(pdef.domain) if pdef is not None else ()
+        comp_form = _quote_symbol(f"{pname}{_PRESOLVE_WIDENED_SUFFIX}")
+        name_tok = _tok(pname)
+        # The widened positions are exactly those where the widened domain set
+        # differs from the source (subset) domain set (case-insensitive).
+        positions = [
+            i
+            for i, w in enumerate(widened)
+            if i >= len(source_domain) or w.lower() != source_domain[i].lower()
+        ]
+        if not positions and widened:
+            positions = [0]  # defensive: a widening with no detectable diff
+        hit = False
+        for pos in positions:
+            parent_tok = _tok(widened[pos])
+            # `<name>(<pos slots><parent>` — rewrite only the name; keep `(`+indices.
+            lead = rf"(?:{_SLOT},){{{pos}}}" if pos > 0 else ""
+            pattern = rf"({name_tok})(\(\s*{lead}\s*{parent_tok}\b)"
+            # Replace only the name (group 1) with the companion; keep `(`+indices
+            # (group 2) via a backreference. `comp_form` is a GAMS symbol name
+            # (optionally quoted) — no backslashes — so it is replacement-safe.
+            new_code, n = re.subn(pattern, comp_form + r"\g<2>", code, flags=re.IGNORECASE)
+            if n:
+                code = new_code
+                hit = True
+        if hit:
             renamed.add(pname)
     return code, renamed
 
