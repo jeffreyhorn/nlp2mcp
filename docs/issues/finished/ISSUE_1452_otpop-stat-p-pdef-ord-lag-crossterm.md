@@ -1,9 +1,19 @@
 # otpop `stat_p`: `pdef` `ord(n)-1` cross-term wrong — `sum(n,alpha(n))` instead of per-lead weight
 
 **GitHub Issue:** [#1452](https://github.com/jeffreyhorn/nlp2mcp/issues/1452)
-**Status:** OPEN — filed Sprint 28 Day 7 follow-on (2026-06-18). **The last gate to otpop's +1 Solve/+1 Match** (after #1393 kdef, #1335 zdef, #1449 presolve).
-**Severity:** Medium — produces a wrong KKT cross-term; otpop solves but mismatches (pi 3160.86 vs NLP 4217.7978).
+**Status:** **RESOLVED — Sprint 28 Day 7 follow-on (2026-06-18).** otpop now **MATCHES** (full-pipeline compare_match, MCP MS 1, pi = 4217.7978) — this completes otpop's **+1 Solve / +1 Match** (with #1393 + #1335 + #1449). *(Prior: OPEN — the last gate.)*
+**Severity:** Medium — produced a wrong KKT cross-term; otpop solved but mismatched (pi 3160.86 vs NLP 4217.7978).
 **Affected models:** otpop (confirmed); likely any model with `var(tt - (ord(n)-1))` adaptive-expectations / distributed-lag structure.
+
+## RESOLUTION (2026-06-18) — pin the offset-driving set's element (Approach A)
+
+`src/kkt/stationarity.py`, `_add_indexed_jacobian_terms`. New helpers `_offset_driving_sets(eq_def, var_name, model_ir)` + `_collect_ord_call_sets` detect the sets whose `ord(s)` drives an index offset of the differentiated variable in the **source** equation (otpop `pdef`: `p(tt-(ord(n)-1))` → `{n}`). For such sets, the `sum(n)` was already expanded into per-lead offset groups (#1081), so the per-group coefficient `alpha` is a *single* offset-determined element — NOT a free sum index. The fix builds a filtered `deriv_element_to_set` (the element→set map passed to `_replace_indices_in_expr` at ~line 6177) that **drops entries whose set is offset-driving**, so `alpha('1')`/`alpha('2')`/`alpha('3')` stay concrete and are not re-symbolized to `alpha(n)` + re-summed. Result: `stat_p(tt)` emits the per-lead weights `-(0.5·nu_pdef(tt) + 0.3·nu_pdef(tt+1)$… + 0.2·nu_pdef(tt+2)$…)`. Cached per `(equation, variable)`.
+
+**Why this gate (vs the `ord(e)-1 == offset_key` correlation the plan suggested):** keying off the source-equation structure (`var` referenced with an `ord(s)`-dependent offset) is tighter — it fires ONLY for genuine `ord`-driven lag/lead shapes and never disturbs a generic `sum(j, beta(j)*x(i))` whose `j` is a real free index (those equations have no `ord(j)` in the variable's offset, so `_offset_driving_sets` returns `∅` and the existing free-index path is untouched).
+
+**Verification:** `stat_p(tt)` per-lead weights correct (cold + presolve emit); otpop `--nlp-presolve` MCP solves **MS 1 Optimal in 0 PATH iterations** at the warm start; `run_full_test --model otpop` → **compare_match 1/1**. (The KKT-residual harness still prints CASE_B at the *boundary* rows `stat_p(1974)` / `stat_x(1990)` — a harness limitation: it does not transfer the active bound multipliers `piL_p`/`x_fx` that absorb those rows' residual at the boundary; the authoritative full-pipeline comparison and the 0-iteration MS-1 solve both confirm the match.)
+
+**Blast radius (full corpus regen + targeted re-translate of every model with an `ord`-near-offset idiom):** **two** cold goldens change — `otpop` (the target) and **`tabora`** — and both are *corrections*. tabora's `wb`/`lw`/`ttb` are distributed-lag constraints `…sum(a, yv(a)*v(t-ord(a)))` (and `v(t+(card(t)-ord(a)))`), the same shape as otpop's `pdef`; `stat_v` previously emitted `sum(a, yv(a)*mult(t±k))` (the *total* yield at every lead) and now emits the per-lead pinned `yv("a0k")*mult(t±k)` (the single element with `ord(a)=k`). tabora compiles clean (`a=c`, 0 errors); it is `path_solve_license` in CI so there is no Solve/Match metric change, but the emitted KKT is now correct. All other `ord`-idiom candidates (clearlak, dinam, hhfair, imsl, qabel, sparta, tfordy) regenerate byte-identical; sddp/torsion have no committed golden.
 
 ## How it surfaced
 

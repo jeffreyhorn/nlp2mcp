@@ -5524,6 +5524,50 @@ def _try_build_param_offset_crossterm(
     return Sum(extra, inner) if extra else inner
 
 
+def _collect_ord_call_sets(expr: Expr, out: set[str]) -> None:
+    """Collect set names ``s`` appearing as ``ord(s)`` anywhere in ``expr``."""
+    if isinstance(expr, Call) and expr.func.lower() == "ord":
+        for a in expr.args:
+            if isinstance(a, SymbolRef):
+                out.add(a.name.lower())
+    for c in expr.children():
+        _collect_ord_call_sets(c, out)
+
+
+def _offset_driving_sets(eq_def, var_name: str, model_ir) -> set[str]:
+    """Sets whose ``ord`` drives an index offset of ``var_name`` in ``eq_def``.
+
+    #1452: in ``pdef(tt).. pd(tt) =e= sum(n, alpha(n)*p(tt-(ord(n)-1)))`` the
+    variable ``p`` is referenced with an offset ``-(ord(n)-1)`` that is a
+    function of ``ord(n)``.  When the constraint Jacobian expands that ``sum(n)``
+    into per-lead offset groups (#1081), each group's coefficient ``alpha`` is
+    indexed by a *single* offset-determined element (``alpha('1')`` at lead 0,
+    ``alpha('2')`` at lead +1, …), NOT a free sum index.  Re-symbolizing that
+    concrete element back to the iterator ``n`` and re-summing (the generic
+    free-index path) double-counts and collapses all leads to one weight.  Such
+    sets must be *pinned* (left concrete) during re-symbolization.
+
+    Returns the set names (lower-cased) whose ``ord`` appears inside an
+    ``IndexOffset`` of a ``var_name`` reference in the equation body.
+    """
+    if eq_def is None:
+        return set()
+    lhs, rhs = eq_def.lhs_rhs
+    body = Binary("-", lhs, rhs)
+    found: set[str] = set()
+
+    def walk(e: Expr) -> None:
+        if isinstance(e, VarRef) and e.name.lower() == var_name.lower():
+            for idx in e.indices:
+                if isinstance(idx, IndexOffset):
+                    _collect_ord_call_sets(idx.offset, found)
+        for c in e.children():
+            walk(c)
+
+    walk(body)
+    return found
+
+
 def _add_indexed_jacobian_terms(
     expr: Expr,
     kkt: KKTSystem,
@@ -6172,12 +6216,41 @@ def _add_indexed_jacobian_terms(
                             kkt.model_ir,
                         )
 
+                    # Issue #1452: pin offset-determined coefficient elements.
+                    # When the variable's source offset is a function of ord(s)
+                    # (e.g. pdef's ``p(tt-(ord(n)-1))``), the sum over ``s`` was
+                    # already expanded into per-lead offset groups. The coeff
+                    # element in this group (alpha('1') etc.) is therefore a
+                    # single offset-determined element, NOT a free sum index, so
+                    # it must stay concrete: drop it from the element-to-set map
+                    # used to re-symbolize the coefficient (otherwise it is
+                    # mapped back to ``s`` and re-summed, collapsing all leads to
+                    # one weight). Cache per (equation, variable).
+                    if "_offset_driving_cache" not in locals():
+                        _offset_driving_cache: dict[tuple[str, str], set[str]] = {}
+                    _odc_key = (eq_name_base, var_name)
+                    _pinned_sets = _offset_driving_cache.get(_odc_key)
+                    if _pinned_sets is None:
+                        _pinned_sets = _offset_driving_sets(
+                            kkt.model_ir.equations.get(eq_name_base),
+                            var_name,
+                            kkt.model_ir,
+                        )
+                        _offset_driving_cache[_odc_key] = _pinned_sets
+                    deriv_element_to_set: Mapping[str, str] = constraint_element_to_set
+                    if _pinned_sets:
+                        deriv_element_to_set = {
+                            elem: setname
+                            for elem, setname in dict(constraint_element_to_set).items()
+                            if str(setname).lower() not in _pinned_sets
+                        }
+
                     # Replace indices in derivative expression using constraint-aware mapping
                     # Issue #620: Pass var_domain as equation_domain for subset substitution
                     indexed_deriv = _replace_indices_in_expr(
                         derivative,
                         var_domain,
-                        constraint_element_to_set,
+                        deriv_element_to_set,
                         kkt.model_ir,
                         equation_domain=var_domain,
                     )
