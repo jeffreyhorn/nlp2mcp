@@ -319,7 +319,7 @@ The AD Jacobian was already correct (per-lead `∂pdef/∂p` = `-alpha(1)/-alpha
 1. **AD `_diff_sum` offset-enum** (`derivative_rules.py`): the stored `∂obj/∂b('s10')` drops Term-2-at-j+1; `∂obj/∂fb('s10')` drops Term-1-at-j+1 + Term-2-at-j+1. Generate them (Day-6 residual-verified shape, max|r|=5e-8).
 2. **Local anchor pre-pass** in `_build_indexed_gradient_term` (validated Day 8).
 3. **`--nlp-presolve` warm-start** (cclinpts cold-diverges to the degenerate `b≈const`).
-- **NEW Day-8 finding (4th facet):** even a present term is dropped in re-symbolization — `stat_fb`'s representative instance is `('s1',)` (first), and its Term-1 `(b('s30')-b(j))$(not last(j))` is lost; Day 9 must select an interior representative / merge symbolic terms so boundary guards don't erase interior terms. Full detail in `docs/issues/ISSUE_1387_*.md` (Day-8 sections).
+- **NEW Day-8 finding → filed [#1455](https://github.com/jeffreyhorn/nlp2mcp/issues/1455) (4th facet):** `stat_fb`'s Term-1 `(b('s30')-b(j))$(not last(j))` is dropped. **Confirmed root cause:** `b('%last%')`→`b('s30')` (a FIXED boundary reference) is a member of set `j`, so it lands in `element_to_set` and `_replace_indices_in_expr` rewrites `b('s30')`→`b(j)`, collapsing `(b('s30')-b('s1'))`→`(b(j)-b(j))`=0. NOT representative-selection; the anchor pre-pass doesn't fix it (would map `s30`→`j+29`). Fix = keep the fixed boundary element literal. Fixed alongside #1387 (same path), tracked separately.
 
 ### Deliverables (Day 8 — docs-only)
 - `docs/issues/ISSUE_1387_*.md`: Status → IN PROGRESS / PROCEED; Day-8 gate decision + full bug-surface map + Day-9 ordered plan.
