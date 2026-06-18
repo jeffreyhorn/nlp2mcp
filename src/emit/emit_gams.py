@@ -1070,7 +1070,11 @@ def _rewrite_widened_param_refs(code: str, kkt: KKTSystem) -> tuple[str, set[str
             parent_tok = _tok(widened[pos])
             # `<name>(<pos slots><parent>` — rewrite only the name; keep `(`+indices.
             lead = rf"(?:{_SLOT},){{{pos}}}" if pos > 0 else ""
-            pattern = rf"({name_tok})(\(\s*{lead}\s*{parent_tok}\b)"
+            # No trailing `\b` after `parent_tok`: the bare alternative already
+            # carries its own `\b…\b`, and a `\b` cannot follow the quoted
+            # alternative's closing `'` (a non-word char), which would make the
+            # quoted set-name form unmatchable (Issue #665, PR #1451 review).
+            pattern = rf"({name_tok})(\(\s*{lead}\s*{parent_tok})"
             # Replace only the name (group 1) with the companion; keep `(`+indices
             # (group 2) via a backreference. `comp_form` is a GAMS symbol name
             # (optionally quoted) — no backslashes — so it is replacement-safe.
@@ -1100,12 +1104,22 @@ def _emit_presolve_fx_unfix(
     inert. Elements fixed by a direct `.fx` (no equation — outside the active
     stationarity domain) are intentionally left fixed.
     """
+    # Restore each variable's DECLARED-KIND natural bounds when unfixing — not a
+    # blanket `[lo=0|-inf, up=+inf]` (PR #1451 review): a NEGATIVE var must keep
+    # `up=0`, BINARY `[0,1]`, etc., so the relaxed bound doesn't widen the
+    # feasible region. The `_fx_` equation still pins the value within these.
+    _kind_bounds = {
+        VarKind.POSITIVE: ("0", "+inf"),
+        VarKind.NEGATIVE: ("-inf", "0"),
+        VarKind.BINARY: ("0", "1"),
+        VarKind.INTEGER: ("0", "+inf"),
+    }
     equalities_set = set(kkt.model_ir.equalities)
     lines: list[str] = []
     for var_name, var_def in kkt.model_ir.variables.items():
         if not var_def.fx_map:
             continue
-        lo = "0" if var_def.kind == VarKind.POSITIVE else "-inf"
+        lo, up = _kind_bounds.get(var_def.kind, ("-inf", "+inf"))
         for indices, _val in sorted(var_def.fx_map.items()):
             eq_name = _fx_eq_name(var_name, indices)
             mult_name = create_eq_multiplier_name(eq_name)
@@ -1118,7 +1132,7 @@ def _emit_presolve_fx_unfix(
                 continue
             idx_str = _format_map_indices(indices)
             lines.append(f"{var_name}.lo({idx_str}) = {lo};")
-            lines.append(f"{var_name}.up({idx_str}) = +inf;")
+            lines.append(f"{var_name}.up({idx_str}) = {up};")
     if not lines:
         return []
     if add_comments:
