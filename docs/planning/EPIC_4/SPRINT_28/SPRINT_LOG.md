@@ -247,3 +247,31 @@ Considered Option B (fix the presolve `$184`) but it is **not narrow** — the "
 - `docs/issues/ISSUE_1335_*.md` RESOLUTION; **NEW `docs/issues/ISSUE_1449_*.md`** (the presolve blocker); CHANGELOG.
 
 ### Next: Day 8 per PLAN — #1449 is the scoped follow-on that realizes otpop's +1 Solve/+1 Match once the widening/`$include` tension is resolved.
+
+---
+
+## Day 7 follow-on — #1449 presolve `$184` + otpop presolve SOLVES; #1452 filed (2026-06-18)
+
+**Status:** 🟢 #1449 RESOLVED — otpop `--nlp-presolve` **compiles and solves (MCP MS 1 Optimal)**, the KKT-residual harness now runs on otpop (#1449 had blocked it), and the harness pins the **last match gate** as a new AD bug **#1452** (the `pdef` cross-term). Bonus: repaired `rocket`'s broken presolve golden.
+
+> **Correction:** the prior revision of this entry (and ISSUE_1449) claimed the post-`$184` divergence was "CONOPT path-sensitivity, NOT a state leak." **Wrong.** The user's "is otpop non-convex?" question prompted a re-check: otpop is **convex** (DB `likely_convex`; standalone reaches 4217.7978 from all starting points). The divergence was a **real state leak — in this fix's own first revision** (over-rename, see below).
+
+### #1449 fix (3 coupled, presolve-only, `src/emit/emit_gams.py`)
+1. **Companions for `$184`:** declare widened source params at the **source domain** (agree with `$include`); emit `<p>__pw` companion at the widened domain after the `$include`. Only params referenced at the **parent-set index** (`db(tt)`) get a companion; over-widened subset-only params (`del`/`xb`/`pcr`) get none.
+2. **Parent-index-only rewrite (the real bug).** The first revision renamed *all* refs incl. the re-emitted ORIGINAL `dem(t).. … db(t)` → `db__pw(t)`. GAMS binds an equation's algebra to its **last `..` def globally**, so this switched the embedded NLP's `dem` to `db__pw` (= 0 at NLP-solve) → NLP to pi=−29.77, garbage warm-start. Restricting the rewrite to parent-index refs keeps `dem` intact; embedded NLP now hits 4217.7978.
+3. **Layer 4 — var-fix leak (`_emit_presolve_fx_unfix`).** The `$include`'s `var.fx(idx)=val` fixes columns the MCP fixes via an active `_fx_` equation (otpop's `x('1974')`), orphaning the row → EXECERROR. Unfix those after the `$include` (the `_fx_` equation pins the value). Also **repairs `rocket`'s presolve golden** (committed with this EXECERROR).
+
+**Result:** otpop presolve compiles, embedded NLP = 4217.7978, **MCP solves MS 1**. Not a *match* yet (pi=3160.86) — the harness (now runnable) localizes the cause to **#1452** (`stat_p` `pdef` `ord(n)-1` cross-term: emits `sum(n,alpha(n))=1.0` per lead instead of per-lead weights 0.5/0.3/0.2; residual at `stat_p(1980–1984)`).
+
+**Blast radius:** cold emit byte-identical. 8/11 presolve goldens byte-identical; `chain` (objective unchanged 6.9590, only an internal `nu_x_fx` dual now properly matched), `fawley` (no companions; MS 5), `rocket` (EXECERROR → MS 5, repaired). No objective regressions.
+
+### PR25 tally (Day 7 follow-on)
+- **No genuine Solve/Match yet** — otpop solves MS 1 but mismatches (pi 3160.86) pending **#1452**. Solve **106**, Match **64** (unchanged). #1449 is real infra progress (presolve solves + harness unblocked).
+
+### Deliverables
+- `src/emit/emit_gams.py` (`_emit_widened_param_companions`, `_rewrite_widened_param_refs`, `_emit_presolve_fx_unfix`, presolve-gated wirings).
+- `tests/integration/emit/test_1449_presolve_widened_param_companions.py` (1 test, corrected).
+- `data/gamslib/mcp/{chain,fawley,rocket}_mcp_presolve.gms` regenerated.
+- `docs/issues/ISSUE_1449_*.md` RESOLUTION (corrected); **NEW `docs/issues/ISSUE_1452_*.md`**; CHANGELOG.
+
+### Next: #1452 — the `pdef` `ord(n)-1` cross-term, the LAST gate to otpop's +1 Solve/+1 Match (taken on next, this branch).

@@ -5,6 +5,7 @@ GAMS MCP file from a KKT system.
 """
 
 import math
+import re
 import warnings
 from collections import deque
 from itertools import combinations
@@ -962,6 +963,193 @@ def _will_emit_nlp_presolve(
     return True
 
 
+# Issue #1449: suffix for the presolve "widened companion" parameters. Under
+# --nlp-presolve the MCP body needs a domain-widened param (e.g. db(tt) so a
+# parent-domain stationarity row can reference it), but the $include'd source
+# re-declares it at its subset domain (db(t)) — GAMS rejects the two
+# coexisting declarations ($184). So under presolve we declare the source param
+# at its source domain (matching the include) and emit a `<p>__pw` companion at
+# the widened domain, populated from the source param, for the MCP body to use.
+_PRESOLVE_WIDENED_SUFFIX = "__pw"
+
+
+def _emit_widened_param_companions(
+    kkt: KKTSystem, add_comments: bool, only_params: set[str]
+) -> list[str]:
+    """Issue #1449: emit `<p>__pw(<widened>)` companion declarations + copy
+    assignments for the domain-widened params in *only_params* (those actually
+    referenced at their parent-set index — see `_rewrite_widened_param_refs`),
+    placed AFTER the presolve `$include`. Returns the GAMS lines (empty if
+    none)."""
+    widenings = kkt.param_domain_widenings or {}
+    targets = sorted(p for p in widenings if p in only_params)
+    if not targets:
+        return []
+    lines: list[str] = []
+    if add_comments:
+        lines.append("* ============================================")
+        lines.append("* #1449: presolve widened-param companions")
+        lines.append("* (avoid $184: source $include declares these at their")
+        lines.append("*  subset domain; the MCP stationarity uses the companion)")
+        lines.append("* ============================================")
+    for pname in targets:
+        pdef = kkt.model_ir.params.get(pname)
+        if pdef is None:
+            continue
+        widened = widenings[pname]
+        source_domain = tuple(pdef.domain)
+        # Quote the symbol names too (Issue #665), not just the domains — a
+        # widened param could be a quoted identifier (e.g. containing '-').
+        qpname = _quote_symbol(pname)
+        qcomp = _quote_symbol(f"{pname}{_PRESOLVE_WIDENED_SUFFIX}")
+        wdom = ",".join(_quote_symbol(d) for d in widened)
+        sdom = ",".join(_quote_symbol(d) for d in source_domain)
+        lines.append(f"Parameter {qcomp}({wdom});")
+        lines.append(f"{qcomp}({sdom}) = {qpname}({sdom});")
+    if lines:
+        lines.append("")
+    return lines
+
+
+def _rewrite_widened_param_refs(code: str, kkt: KKTSystem) -> tuple[str, set[str]]:
+    """Issue #1449: rewrite the domain-widened-param references that genuinely
+    need the widened companion — those at the **parent-set index** (e.g.
+    ``db(tt)`` in a stationarity row) — to ``<p>__pw`` (presolve only). Returns
+    the rewritten code and the set of params actually rewritten, so the caller
+    emits a companion for exactly those.
+
+    Crucially, **subset-index** references (``db(t)``, ``db(t__)``) are left
+    alone: they are valid against the source-domain declaration AND they appear
+    in the re-emitted ORIGINAL equations (``dem(t).. … db(t) …``). Those same
+    equations are solved by the embedded ``$include`` NLP, and GAMS binds an
+    equation's algebra to its LAST ``..`` definition globally (not by execution
+    order) — so renaming ``db(t)`` there would make the embedded NLP's ``dem``
+    use ``db__pw``, which is still 0 when the NLP solves, corrupting it. Renaming
+    only the parent-index references keeps the original equations intact.
+
+    Robustness (PR #1451 review): the match is **case-insensitive** (GAMS symbol
+    names are case-insensitive; ``param_domain_widenings`` keys are lowercased
+    while the emitted body may preserve source casing), handles **quoted** symbol
+    names (Issue #665, e.g. ``'p-x'``), and uses the **actual** widened domain
+    position(s) rather than assuming dimension 0 (``_compute_widened_domain`` may
+    widen any position).
+    """
+    widenings = kkt.param_domain_widenings or {}
+    renamed: set[str] = set()
+    if not widenings or not code:
+        return code, renamed
+
+    def _tok(name: str) -> str:
+        """Regex matching a symbol token in bare (``db``) or quoted (``'p-x'``)
+        emitted form, case-insensitively."""
+        esc = re.escape(name)
+        return rf"(?:\b{esc}\b|'{esc}')"
+
+    # One index slot in a GAMS arg list: text with at most one level of nested
+    # parens (covers offsets like ``tt+(card(tt)-ord(tt))``), no top-level comma.
+    _SLOT = r"(?:[^,()]|\([^()]*\))+"
+
+    for pname, widened in widenings.items():
+        if not widened:
+            continue
+        pdef = kkt.model_ir.params.get(pname)
+        source_domain = tuple(pdef.domain) if pdef is not None else ()
+        comp_form = _quote_symbol(f"{pname}{_PRESOLVE_WIDENED_SUFFIX}")
+        name_tok = _tok(pname)
+        # The widened positions are exactly those where the widened domain set
+        # differs from the source (subset) domain set (case-insensitive).
+        positions = [
+            i
+            for i, w in enumerate(widened)
+            if i >= len(source_domain) or w.lower() != source_domain[i].lower()
+        ]
+        if not positions and widened:
+            positions = [0]  # defensive: a widening with no detectable diff
+        hit = False
+        for pos in positions:
+            parent_tok = _tok(widened[pos])
+            # `<name>(<pos slots><parent>` — rewrite only the name; keep `(`+indices.
+            lead = rf"(?:{_SLOT},){{{pos}}}" if pos > 0 else ""
+            # No trailing `\b` after `parent_tok`: the bare alternative already
+            # carries its own `\b…\b`, and a `\b` cannot follow the quoted
+            # alternative's closing `'` (a non-word char), which would make the
+            # quoted set-name form unmatchable (Issue #665, PR #1451 review).
+            pattern = rf"({name_tok})(\(\s*{lead}\s*{parent_tok})"
+            # Replace only the name (group 1) with the companion; keep `(`+indices
+            # (group 2) via a backreference. `comp_form` is a GAMS symbol name
+            # (optionally quoted) — no backslashes — so it is replacement-safe.
+            new_code, n = re.subn(pattern, comp_form + r"\g<2>", code, flags=re.IGNORECASE)
+            if n:
+                code = new_code
+                hit = True
+        if hit:
+            renamed.add(pname)
+    return code, renamed
+
+
+def _emit_presolve_fx_unfix(
+    kkt: KKTSystem, suppressed_fx: set[str], add_comments: bool
+) -> list[str]:
+    """Issue #1449 (Layer 4): after the presolve `$include`, undo the source's
+    `var.fx(idx)=val` for exactly the elements whose fix is enforced by an
+    ACTIVE `_fx_` complementarity equation in the MCP.
+
+    The `$include` (run to warm-start the NLP) executes the source's
+    `var.fx(idx)=val`, which fixes those columns. PATH then eliminates the fixed
+    columns and the paired `_fx_` equation is left unmatched → the MCP solve
+    aborts (EXECERROR). Those same elements are NOT `.fx`'d in the MCP itself
+    (the `eq_paired_in_mcp` gate in the Variable-Bounds pass emits a `.l` init
+    instead and lets the `_fx_` equation fix the value) — so here we restore them
+    to a free bound. The `_fx_` equation pins the value, so the relaxed bound is
+    inert. Elements fixed by a direct `.fx` (no equation — outside the active
+    stationarity domain) are intentionally left fixed.
+    """
+    # Restore each variable's DECLARED-KIND natural bounds when unfixing — not a
+    # blanket `[lo=0|-inf, up=+inf]` (PR #1451 review): a NEGATIVE var must keep
+    # `up=0`, BINARY `[0,1]`, etc., so the relaxed bound doesn't widen the
+    # feasible region. The `_fx_` equation still pins the value within these.
+    _kind_bounds = {
+        VarKind.POSITIVE: ("0", "+inf"),
+        VarKind.NEGATIVE: ("-inf", "0"),
+        VarKind.BINARY: ("0", "1"),
+        VarKind.INTEGER: ("0", "+inf"),
+    }
+    equalities_set = set(kkt.model_ir.equalities)
+    lines: list[str] = []
+    for var_name, var_def in kkt.model_ir.variables.items():
+        if not var_def.fx_map:
+            continue
+        lo, up = _kind_bounds.get(var_def.kind, ("-inf", "+inf"))
+        for indices, _val in sorted(var_def.fx_map.items()):
+            eq_name = _fx_eq_name(var_name, indices)
+            mult_name = create_eq_multiplier_name(eq_name)
+            eq_paired_in_mcp = (
+                eq_name in equalities_set
+                and eq_name not in suppressed_fx
+                and (kkt.referenced_multipliers is None or mult_name in kkt.referenced_multipliers)
+            )
+            if not eq_paired_in_mcp:
+                continue
+            idx_str = _format_map_indices(indices)
+            # Quote the variable name (Issue #665) — a fixed variable could be a
+            # quoted identifier (e.g. containing '-').
+            qvar = _quote_symbol(var_name)
+            lines.append(f"{qvar}.lo({idx_str}) = {lo};")
+            lines.append(f"{qvar}.up({idx_str}) = {up};")
+    if not lines:
+        return []
+    if add_comments:
+        lines = [
+            "* ============================================",
+            "* #1449 (Layer 4): unfix elements fixed by the source $include but",
+            "* enforced in the MCP via an active _fx_ complementarity equation",
+            "* (else PATH drops the fixed column, leaving the _fx_ row unmatched).",
+            "* ============================================",
+        ] + lines
+    lines.append("")
+    return lines
+
+
 def _emit_nlp_presolve(
     sections: list[str],
     kkt: KKTSystem,
@@ -1273,9 +1461,16 @@ def emit_gams_mcp(
     # lmp2's `Parameter A(mm,nn);` etc. were emitted twice (once here,
     # once in the pre-solve block) and triggered a GAMS
     # symbol-redefinition compile error.
+    # Issue #1449: under --nlp-presolve, declaring domain-widened params at the
+    # widened (parent) domain collides with the $include source's subset
+    # declaration ($184 Domain list redefined). Declare them at SOURCE domain
+    # (matching the include); the MCP body is rewired to `<p>__pw` companions
+    # emitted at the widened domain after the include (see below).
+    _presolve_will_emit_early = nlp_presolve and _will_emit_nlp_presolve(kkt, source_file)
+    _param_widenings_for_decl = {} if _presolve_will_emit_early else kkt.param_domain_widenings
     _params_result = emit_original_parameters(
         kkt.model_ir,
-        kkt.param_domain_widenings,
+        _param_widenings_for_decl,
         model_relevant_params,
         return_declared_names=True,
     )
@@ -2164,6 +2359,18 @@ def emit_gams_mcp(
     if nlp_presolve:
         presolve_include_emitted = _emit_nlp_presolve(sections, kkt, add_comments, source_file)
 
+    # Issue #1449 (Layer 4): the $include executed the source's `var.fx(idx)=val`,
+    # fixing columns that the MCP instead fixes via an active `_fx_`
+    # complementarity equation. Restore those to a free bound so PATH can match
+    # the `_fx_` rows (the equations pin the values).
+    if presolve_include_emitted:
+        sections.extend(_emit_presolve_fx_unfix(kkt, suppressed_fx, add_comments))
+
+    # Issue #1449: companions go here (right after the $include re-declared the
+    # source params at their subset domain), but which params need one is only
+    # known after rewriting the equation bodies below. Reserve the slot now.
+    _companion_insert_idx = len(sections)
+
     # Issue #1289: post-initial-solve calibration assignments that read
     # `.l` values must come AFTER the presolve (which populates `.l`)
     # and BEFORE MCP equation definitions (which may use the calibrated
@@ -2215,6 +2422,19 @@ def emit_gams_mcp(
     eq_defs_code, index_aliases = emit_equation_definitions(
         kkt, suppressed_fx_equations=suppressed_fx
     )
+
+    # Issue #1449: under presolve, rewrite the PARENT-index widened-param
+    # references in the MCP equation bodies to their `<p>__pw` companions
+    # (declared at the widened domain after the $include); the source param stays
+    # at its subset domain to agree with the include, and subset-index references
+    # (incl. the re-emitted original equations) are left intact so the embedded
+    # NLP is not corrupted. Companions are inserted at the reserved slot for
+    # exactly the params that were rewritten.
+    if presolve_include_emitted:
+        eq_defs_code, _renamed_widened = _rewrite_widened_param_refs(eq_defs_code, kkt)
+        if _renamed_widened:
+            _companion_lines = _emit_widened_param_companions(kkt, add_comments, _renamed_widened)
+            sections[_companion_insert_idx:_companion_insert_idx] = _companion_lines
 
     # Emit index aliases if any are needed (to avoid GAMS Error 125)
     # These must be declared before the equation definitions that use them
