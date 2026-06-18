@@ -275,3 +275,32 @@ Considered Option B (fix the presolve `$184`) but it is **not narrow** — the "
 - `docs/issues/ISSUE_1449_*.md` RESOLUTION (corrected); **NEW `docs/issues/ISSUE_1452_*.md`**; CHANGELOG.
 
 ### Next: #1452 — the `pdef` `ord(n)-1` cross-term, the LAST gate to otpop's +1 Solve/+1 Match (taken on next, this branch).
+
+---
+
+## Day 7 follow-on — #1452 `pdef` `ord(n)-1` cross-term; **otpop MATCHES** (2026-06-18)
+
+**Status:** 🟢 #1452 RESOLVED — **otpop MATCHES** (full-pipeline `compare_match`, MCP MS 1 Optimal in 0 PATH iterations from the warm start, pi = 4217.7978). With #1393 + #1335 + #1449, this realizes otpop's **+1 Solve / +1 Match**.
+
+### #1452 fix (`src/kkt/stationarity.py`, `_add_indexed_jacobian_terms`)
+The AD Jacobian was already correct (per-lead `∂pdef/∂p` = `-alpha(1)/-alpha(2)/-alpha(3)`). The bug was the stationarity re-symbolization: each per-lead offset group's concrete coefficient element (`alpha('1')` at lead 0, etc.) was mapped back to the iterator `n` and re-summed → all three leads collapsed to the identical `sum(n, (-alpha(n))*nu_pdef(tt+k))` (total weight 1.0 each).
+
+**Fix (Approach A — pin the offset-driving set's element):** new helpers `_offset_driving_sets` + `_collect_ord_call_sets` detect sets whose `ord(s)` drives an index offset of the differentiated variable in the **source** equation (otpop `pdef`: `p(tt-(ord(n)-1))` → `{n}`). For such sets the `sum(n)` was already expanded into the per-lead groups (#1081), so their elements are pinned — dropped from the element→set map passed to `_replace_indices_in_expr` (~line 6177) — and stay concrete. Result: `stat_p(tt).. ((-1)*alpha("1"))*nu_pdef(tt) + ((-1)*alpha("2"))*nu_pdef(tt+1)$(…) + ((-1)*alpha("3"))*nu_pdef(tt+2)$(…) + …`. Cached per `(equation, variable)`.
+
+**Why this gate** (vs the `ord(e)-1==offset_key` correlation the plan suggested): keying off the source-equation `ord`-offset structure is tighter — a generic `sum(j, beta(j)*x(i))` (real free index `j`, no `ord(j)` in the variable's offset) returns `∅` and the existing free-index sum path is untouched.
+
+**Harness note:** the KKT-residual harness still prints CASE_B at the *boundary* rows `stat_p(1974)` / `stat_x(1990)` — a harness limitation (it doesn't transfer the active bound multipliers `piL_p`/`x_fx` that absorb those rows at the boundary). The authoritative `run_full_test --model otpop` compare_match (1/1) and the 0-iteration MS-1 presolve solve both confirm the match.
+
+### PR25 tally (Day 7 follow-on — #1452)
+- **+1 Solve / +1 Match (otpop, genuine).** Solve **106 → 107**, Match **64 → 65**.
+
+### Blast radius
+- Full corpus regen + targeted re-translate of every `ord`-near-offset model: **two cold goldens change, both corrections** — `otpop` (target) and **`tabora`**. tabora's `wb`/`lw`/`ttb` are the same distributed-lag shape (`sum(a, yv(a)*v(t-ord(a)))`); `stat_v` now emits per-lead `yv("a0k")` instead of the buggy `sum(a, yv(a))` at every lead. tabora compiles clean (`a=c`); `path_solve_license` in CI → no metric change, but emit now correct. All other `ord`-idiom candidates (clearlak, dinam, hhfair, imsl, qabel, sparta, tfordy) byte-identical; sddp/torsion no golden. `make test` + `make typecheck/format/lint` green.
+
+### Deliverables
+- `src/kkt/stationarity.py` (`_offset_driving_sets`, `_collect_ord_call_sets`, filtered `deriv_element_to_set`).
+- `tests/integration/emit/test_1452_pdef_ord_lag_crossterm.py` (1 test).
+- `data/gamslib/mcp/otpop_mcp.gms` + `data/gamslib/mcp/tabora_mcp.gms` regenerated; `data/gamslib/mcp/otpop_mcp_presolve.gms` added.
+- `docs/issues/ISSUE_1452_*.md` RESOLUTION; CHANGELOG.
+
+### Next: otpop's 4-fix arc (#1393 kdef, #1335 zdef, #1449 presolve, #1452 pdef) is COMPLETE — otpop matches. Resume Sprint 28 PLAN.

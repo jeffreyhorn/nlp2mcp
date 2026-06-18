@@ -24,10 +24,10 @@ Sets
 ;
 
 Parameters
-    db(tt)
-    xb(tt)
+    db(t)
+    xb(t)
     rd(t)
-    del(tt)
+    del(t)
     alpha(n) /'1' 0.5, '2' 0.3, '3' 0.2/
     phis(tt) /'1965' 3.5, '1966' 3.5, '1967' 3.5, '1968' 3.5, '1969' 3.5, '1970' 3.5, '1971' 3.5, '1972' 4, '1973' 7, '1974' 10/
     y(tt)
@@ -116,43 +116,41 @@ x.up(t) = xb(t);
 p.fx(th) = phis(th);
 
 * ============================================
-* Variable Initialization
+* NLP Pre-Solve (warm-start for MCP duals)
 * ============================================
 
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
-* POSITIVE variables are set to 1.
+$onMultiR
+$include "data/gamslib/raw/otpop.gms"
+$offMulti
 
-x.l(tt) = 1;
-x.l(tt) = min(x.l(tt), x.up(tt));
-x.l('1974') = 29.4;
-p.l('1965') = 1.0;
-p.l('1966') = 1.0;
-p.l('1967') = 1.0;
-p.l('1968') = 1.0;
-p.l('1969') = 1.0;
-p.l('1970') = 1.0;
-p.l('1971') = 1.0;
-p.l('1972') = 1.0;
-p.l('1973') = 1.0;
-p.l('1974') = 1.0;
-p.l('1975') = 1.0;
-p.l('1976') = 1.0;
-p.l('1977') = 1.0;
-p.l('1978') = 1.0;
-p.l('1979') = 1.0;
-p.l('1980') = 1.0;
-p.l('1981') = 1.0;
-p.l('1982') = 1.0;
-p.l('1983') = 1.0;
-p.l('1984') = 1.0;
-p.l('1985') = 1.0;
-p.l('1986') = 1.0;
-p.l('1987') = 1.0;
-p.l('1988') = 1.0;
-p.l('1989') = 1.0;
-p.l('1990') = 1.0;
+* Transfer NLP duals to MCP multiplier initialization
+nu_dem.l(t) = dem.m(t);
+nu_sup.l(t) = sup.m(t);
+nu_adef.l(tt) = adef.m(tt);
+nu_pdef.l(tt) = pdef.m(tt);
+nu_kdef.l = kdef.m;
+nu_zdef.l = zdef.m;
+
+* Transfer variable marginals to bound multipliers
+piL_x.l(tt)$(abs(x.l(tt) - x.lo(tt)) < 1e-6 and x.m(tt) > 0) = x.m(tt);
+piL_p.l(tt)$(abs(p.l(tt) - p.lo(tt)) < 1e-6 and p.m(tt) > 0) = p.m(tt);
+piU_x.l(tt)$(abs(x.l(tt) - x.up(tt)) < 1e-6 and x.m(tt) < 0) = -(x.m(tt));
+
+* ============================================
+* #1449 (Layer 4): unfix elements fixed by the source $include but
+* enforced in the MCP via an active _fx_ complementarity equation
+* (else PATH drops the fixed column, leaving the _fx_ row unmatched).
+* ============================================
+x.lo('1974') = 0;
+x.up('1974') = +inf;
+
+* ============================================
+* #1449: presolve widened-param companions
+* (avoid $184: source $include declares these at their
+*  subset domain; the MCP stationarity uses the companion)
+* ============================================
+Parameter db__pw(tt);
+db__pw(t) = db(t);
 
 * ============================================
 * Equations
@@ -191,11 +189,12 @@ Equations
 * (GAMS Error 125 when equation domain index is reused in sum)
 Alias(t, t__);
 
+$onMultiR
 * Stationarity equations
 stat_as(tt).. ((p(tt) ** b * nu_sup(tt))$(t(tt)) + (((-1) * nu_adef(tt+1))$(ord(tt) <= card(tt) - 1))$(tp(tt+1)) + nu_adef(tt)$(tp(tt)))$(t(tt)) =E= 0;
 stat_d(tt).. (nu_dem(tt)$(t(tt)) - nu_sup(tt)$(t(tt)) + ((((-1) * ((pd(tt-3) - ph) * con)) * nu_adef(tt+1))$(ord(tt) <= card(tt) - 1))$(tp(tt+1)))$(t(tt)) =E= 0;
 stat_k.. -1 + nu_kdef =E= 0;
-stat_p(tt).. ((-1) * alpha("1")) * nu_pdef(tt) + (((-1) * alpha("2")) * nu_pdef(tt+1))$(ord(tt) <= card(tt) - 1) + (((-1) * alpha("3")) * nu_pdef(tt+2))$(ord(tt) <= card(tt) - 2) + (((-1) * (db(tt) * p(tt) ** ((-1) * a) * ((-1) * a) / p(tt))) * nu_dem(tt))$(t(tt)) + (as(tt) * p(tt) ** b * b / p(tt) * nu_sup(tt))$(t(tt)) + sum(t__$(sameas(t__, tt)), ((-1) * (del(t__) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$(t(tt)) + (((-1) * (v * sum(t, 0.365 * (xb(t) - x(t))))) * nu_zdef)$(sameas(tt, '1990')) - piL_p(tt) =E= 0;
+stat_p(tt).. ((-1) * alpha("1")) * nu_pdef(tt) + (((-1) * alpha("2")) * nu_pdef(tt+1))$(ord(tt) <= card(tt) - 1) + (((-1) * alpha("3")) * nu_pdef(tt+2))$(ord(tt) <= card(tt) - 2) + (((-1) * (db__pw(tt) * p(tt) ** ((-1) * a) * ((-1) * a) / p(tt))) * nu_dem(tt))$(t(tt)) + (as(tt) * p(tt) ** b * b / p(tt) * nu_sup(tt))$(t(tt)) + sum(t__$(sameas(t__, tt)), ((-1) * (del(t__) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$(t(tt)) + (((-1) * (v * sum(t, 0.365 * (xb(t) - x(t))))) * nu_zdef)$(sameas(tt, '1990')) - piL_p(tt) =E= 0;
 stat_pd(tt).. nu_pdef(tt) + ((((-1) * (con * d(tt+3))) * nu_adef(tt+4))$(ord(tt) <= card(tt) - 4))$(tp(tt+4)) =E= 0;
 stat_x(tt).. (nu_x_fx_1965$(sameas(tt, '1965')) + nu_x_fx_1966$(sameas(tt, '1966')) + nu_x_fx_1967$(sameas(tt, '1967')) + nu_x_fx_1968$(sameas(tt, '1968')) + nu_x_fx_1969$(sameas(tt, '1969')) + nu_x_fx_1970$(sameas(tt, '1970')) + nu_x_fx_1971$(sameas(tt, '1971')) + nu_x_fx_1972$(sameas(tt, '1972')) + nu_x_fx_1973$(sameas(tt, '1973')) + nu_sup(tt)$(t(tt)) + sum(t__$(sameas(t__, tt)), ((-1) * (del(t__) * 0.365 * (1 - c) * p(tt))) * nu_kdef)$(t(tt)) + (((-1) * (v * p(tt+(card(tt)-ord(tt))) * (-0.365))) * nu_zdef)$(t(tt)) + nu_x_fx_1974$(sameas(tt, '1974')) - piL_x(tt) + piU_x(tt))$(t(tt) and x.up(tt) - x.lo(tt) > 1e-10) =E= 0;
 stat_z.. -1 + nu_zdef =E= 0;
@@ -217,6 +216,7 @@ zdef.. z =E= v * sum(t, 0.365 * (xb(t) - x(t)) * p(t+(card(t)-ord(t))));
 obj.. pi =E= k + z;
 x_fx_1974.. x("1974") - 29.4 =E= 0;
 
+$offMulti
 
 * ============================================
 * Fix inactive variable instances
