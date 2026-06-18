@@ -1,10 +1,46 @@
 # cclinpts: stat_b / stat_fb condition-guard or sign bug producing ~70% rel_diff (post-Pattern-A reclassification)
 
 **GitHub Issue:** [#1387](https://github.com/jeffreyhorn/nlp2mcp/issues/1387)
-**Status:** DEFERRED to Sprint 28 (Sprint 27 Day 6 diagnosis + reverted implementation attempt established three coupled changes beyond the documented "condition-guard or sign bug"; Day 8 files the carryforward — see "Day 6 diagnosis" below). The linked GitHub issue remains open.
+**Status:** **IN PROGRESS — Sprint 28 Day 8 Task-6 gate → PROCEED (2026-06-18).** The anchor blocker is **LOCAL** (gateable to the differentiated variable's column index), so the three coupled changes are greenlit; implementation begun Day 8, lands Day 9. *(Prior: DEFERRED to Sprint 28 — Sprint 27 Day 6 diagnosis + reverted attempt established three coupled changes beyond the documented "condition-guard or sign bug.")* The linked GitHub issue remains open.
+
+## Sprint 28 Day 8 — Task-6 gate decision: **PROCEED** (anchor fix is LOCAL) (2026-06-18)
+
+Re-confirmed the Day-6 anchor blocker on current `main` (`e9696570`) and traced the re-symbolization callers. **Decision: PROCEED.**
+
+**Empirical re-confirmation (the blocker is real and unchanged):** the objective-gradient re-symbolization is `_build_indexed_gradient_term` → `_replace_indices_in_expr` (`src/kkt/stationarity.py:2816`). `_replace_indices_in_expr` maps *every* concrete element of a domain set to the bare set index via `element_to_set` (no anchor concept), so a cross-term `fb('s11') - fb('s10')` collapses to `fb(j) - fb(j)` = **0** — the cancellation that makes cclinpts worse. Verified directly:
+```
+(a) CURRENT  _replace_indices_in_expr(fb('s11')-fb('s10'))  ->  fb(j) - fb(j)     # the blocker
+```
+
+**The anchor fix is LOCAL (PROCEED criterion met):** `_build_indexed_gradient_term` *already holds the anchor* — `col_id, var_indices = …`, where `var_indices` is the differentiated column's concrete index (e.g. `('s10',)`). A **pre-pass gated to the gradient path** that rewrites each same-set concrete element `e` in the per-instance gradient to `IndexOffset(base=anchor_elem, offset=ord(e)-ord(anchor_elem))` (offset 0 → keep the anchor element) lets the **existing #1162 IndexOffset machinery** in `_replace_indices_in_expr` map it correctly. Verified directly:
+```
+(b) after local anchor pre-pass (anchor=s10):  fb(IndexOffset(base='s10', offset=1)) - fb('s10')
+(b) _replace_indices_in_expr(...)            ->  fb(j+1) - fb(j)                   # CORRECT
+```
+This pre-pass touches only `_build_indexed_gradient_term`; it does **not** change `_replace_indices_in_expr`'s shared semantics, so constraint-Jacobian callers (e.g. #1452/#1335/#1393) are unaffected. → **not architectural → PROCEED.**
+
+**The three coupled changes (land together, Day 8–9):**
+1. **AD `_diff_sum` offset-enumeration** (`src/ad/derivative_rules.py`) — generate the per-instance objective-gradient offset cross-terms (the Day-6 prototype: for a single-index collapsing `Sum` where the wrt-variable appears at ≥1 non-zero offset of the sum index, sum `Σ_δ ∂body/∂var(j+δ)|_{j=W−δ}·c(W−δ)`).
+2. **Re-symbolization anchor fix** (`_build_indexed_gradient_term`, `src/kkt/stationarity.py`) — the LOCAL pre-pass above, anchored on `var_indices`.
+3. **Non-convex warm-start** — cclinpts cold-diverges to the spurious degenerate KKT point (`b≈const`); needs `--nlp-presolve` (the AD fix makes the NLP optimum a valid KKT point).
+
+Sign-flip remains a MISDIAGNOSIS (do not touch the maximize negation). Blast-radius gate: change 1 is tightly gated to the offset-indexed-objective-sum idiom; full-corpus byte-stability + re-solve required before the PR (Day 9).
+
+### Day 8 — full bug surface mapped at the gradient layer (for the Day-9 implementation)
+
+Inspected `compute_objective_gradient`'s stored components (`src/ad/gradient.py`) + the emit, anchored on the source objective:
+```
+object.. ObjV =e=    sum(j$(not last(j)),  [b('s30') - b(j)]*[fb(j) - fb(j-1)])      (Term 1)
+              +  0.5*sum(j$(not first(j)), [b(j) - b(j-1)]*[fb(j) - fb(j-1)]);       (Term 2)
+```
+- **Stored `∂obj/∂b('s10')`** = `(-1)*[ (-1)*(fb(s10)-fb(s10-1))$(not last) + 0.5*(fb(s10)-fb(s10-1))$(not first) ]` — has Term-1-at-j and Term-2-at-j but **DROPS Term-2-at-j+1** (`-0.5*(fb(s11)-fb(s10))$(not first(s11))`, from `b(j-1)` in Term 2 at `j=s11`). → **change 1** (AD offset-enum) generates this.
+- **Stored `∂obj/∂fb('s10')`** = `(-1)*[ (b('s30')-b(s10))$(not last) + 0.5*(b(s10)-b(s10-1))$(not first) ]` — has Term-1-at-j and Term-2-at-j but **DROPS Term-1-at-j+1** (`-(b('s30')-b(s11))$(not last(s11))`) and **Term-2-at-j+1** (`-0.5*(b(s11)-b(s10))$(not first(s11))`, both from `fb(j-1)`). → **change 1**.
+- **Additional re-symbolization drop (NEW Day-8 finding → filed as [#1455](https://github.com/jeffreyhorn/nlp2mcp/issues/1455), 4th facet):** the emitted `stat_fb(j)` carries **only** the Term-2 piece (`0.5*(b(j)-b(j-1))$(not first(j))`); the Term-1 `(b('s30')-b(j))$(not last(j))` is **lost**. **Confirmed root cause (NOT representative selection):** the `fb('s1')` representative's *raw* gradient has BOTH terms, but `b('%last%')`→`b('s30')` (a FIXED boundary reference, constant `b(last)`) is a member of set `j`, so `_build_element_to_set_mapping` puts it in `element_to_set` and `_replace_indices_in_expr` rewrites `b('s30')`→`b(j)`, collapsing `(b('s30')-b('s1'))`→`(b(j)-b(j))` = 0. The #1387 anchor pre-pass does NOT fix this (it would map `s30`→`j+29`, wrong — out of range at interior `j`); the fixed boundary element must be kept **literal**. See `docs/issues/ISSUE_1455_*.md`. To be fixed alongside #1387 (same `stat_fb` correctness fix, same code path) on Day 9, tracked separately.
+
+**Day-9 ordered plan (FOUR facets — all land together):** (1) AD `_diff_sum` offset-enum so the stored `∂obj/∂{b,fb}('s10')` contain all hand-derived per-offset `j+1` terms (residual-verified shape, max|r|=5e-8 from Day 6); (2) the LOCAL anchor pre-pass in `_build_indexed_gradient_term` (validated Day 8) so cross-terms re-symbolize to `j±k` not `j`; (3) **[#1455]** preserve the fixed boundary element `b('%last%')`→`b('s30')` as a literal (exclude it from `element_to_set`) so Term-1 survives; (4) `--nlp-presolve` warm-start; then per-term grep (Phase-0 §"Verification Methodology"), harness Case-a, cclinpts MS 1 rel_diff<1%, full-153-golden byte-stability + re-solve, quality gate, PR.
 **Severity:** Medium — MCP cold-solves to a spurious degenerate KKT point (ObjV≈0 vs NLP −3.0011); not a Pattern A AD-layer bug.
 **Date:** 2026-05-12
-**Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 Refresh added; prior: Sprint 27 Day 8 — Sprint 28 carryforward filed; Day 6 diagnosis + reverted attempt are the binding record)
+**Last Updated:** 2026-06-18 (Sprint 28 Day 8 — Task-6 gate → PROCEED + full bug-surface map + #1455 filed; prior: 2026-06-11 Sprint 28 Prep Task 5 Phase 0 Refresh; Sprint 27 Day 8 carryforward; Day 6 diagnosis + reverted attempt are the binding record)
 **Affected Models:** cclinpts
 **Target Sprint:** ~~Sprint 27~~ → **Sprint 28** (Day-8 binding deferral: the legitimate fix is THREE coupled changes — AD offset-enumeration + gradient→stationarity re-symbolization-anchor fix + non-convex warm-start; see Day 6 diagnosis).
 

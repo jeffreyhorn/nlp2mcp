@@ -304,3 +304,26 @@ The AD Jacobian was already correct (per-lead `∂pdef/∂p` = `-alpha(1)/-alpha
 - `docs/issues/ISSUE_1452_*.md` RESOLUTION; CHANGELOG.
 
 ### Next: otpop's 4-fix arc (#1393 kdef, #1335 zdef, #1449 presolve, #1452 pdef) is COMPLETE — otpop matches. Resume Sprint 28 PLAN.
+
+---
+
+## Day 8 — Priority 4: #1387 cclinpts — Task-6 gate → **PROCEED** (anchor fix is LOCAL) (2026-06-18)
+
+**Status:** 🟢 Task-6 gate decision: **PROCEED.** Re-confirmed the Day-6 anchor blocker on current `main` (`e9696570`) and traced the re-symbolization callers; the anchor fix is **LOCAL** (gateable to the differentiated variable's column index), not architectural → the three coupled changes are greenlit. Implementation **begun** Day 8 (working tree / scoping); lands Day 9 as one verified PR ("they land together"; high-blast-radius AD change needs full-corpus regression). **No `src/` committed Day 8** (docs-only gate deliverable).
+
+### Gate evidence (empirical, on main)
+- **Blocker re-confirmed:** `_build_indexed_gradient_term` → `_replace_indices_in_expr` (`src/kkt/stationarity.py:2816`) maps every same-set concrete element to the bare set index, so a gradient cross-term `fb('s11')-fb('s10')` collapses to `fb(j)-fb(j)` = 0 (the cancellation that makes cclinpts worse).
+- **Anchor fix is LOCAL:** `_build_indexed_gradient_term` already holds the anchor (`var_indices` = the column's concrete-index tuple; the element is `anchor_elem = var_indices[d]`, a string). A pre-pass rewriting same-set elements to `IndexOffset(base=anchor_elem, offset=ord(e)-ord(anchor_elem))` (base is a string, per the AST) lets the existing #1162 machinery emit `fb(j+1)-fb(j)` — verified directly. Touches only the gradient path; `_replace_indices_in_expr` semantics unchanged → constraint-Jacobian callers (#1452/#1335/#1393) unaffected. Sign-flip stays a misdiagnosis.
+
+### The three coupled changes (land together, Day 9)
+1. **AD `_diff_sum` offset-enum** (`derivative_rules.py`): the stored `∂obj/∂b('s10')` drops Term-2-at-j+1; `∂obj/∂fb('s10')` drops Term-1-at-j+1 + Term-2-at-j+1. Generate them (Day-6 residual-verified shape, max|r|=5e-8).
+2. **Local anchor pre-pass** in `_build_indexed_gradient_term` (validated Day 8).
+3. **`--nlp-presolve` warm-start** (cclinpts cold-diverges to the degenerate `b≈const`).
+
+**NEW Day-8 finding → filed [#1455](https://github.com/jeffreyhorn/nlp2mcp/issues/1455) (4th facet, separate from the three above):** `stat_fb`'s Term-1 `(b('s30')-b(j))$(not last(j))` is dropped. **Confirmed root cause:** `b('%last%')`→`b('s30')` (a FIXED boundary reference) is a member of set `j`, so it lands in `element_to_set` and `_replace_indices_in_expr` rewrites `b('s30')`→`b(j)`, collapsing `(b('s30')-b('s1'))`→`(b(j)-b(j))`=0. NOT representative-selection; the anchor pre-pass doesn't fix it (would map `s30`→`j+29`). Fix = keep the fixed boundary element literal. To be fixed alongside #1387 (same path) on Day 9, tracked separately.
+
+### Deliverables (Day 8 — docs-only)
+- `docs/issues/ISSUE_1387_*.md`: Status → IN PROGRESS / PROCEED; Day-8 gate decision + full bug-surface map + Day-9 ordered plan.
+- This SPRINT_LOG Day-8 entry. **No metric change** (no `src/`; Solve 107, Match 65 stand).
+
+### Next: Day 9 — finish the three coupled changes; per-term grep + harness Case-a + cclinpts MS 1 rel_diff<1% (+1 Match); full-corpus byte-stability + re-solve; open the #1387 PR.

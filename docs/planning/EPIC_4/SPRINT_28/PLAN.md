@@ -71,10 +71,11 @@ Build `scripts/diagnostics/kkt_residual.py` per `PRIORITY_9_KKT_RESIDUAL_HARNESS
 
 ## 9. Days 8–9 — Priority 4: #1387 cclinpts (REPLAN-gated) (~12–18 h; heaviest, ~11 h Day 8)
 
-- **Task-6 gate (decision pivot, Unknown 4.1):** re-run the Day-6 `_diff_sum` prototype on current `main`; trace the re-symbolization callers — **local ⇒ PROCEED; architectural ⇒ REPLAN to Sprint 29** (file a re-scoped Phase-0 successor). Sign-flip stays a misdiagnosis.
-- If PROCEED: the three coupled changes land together (AD offset-enum + anchor fix + non-convex warm-start). **Target:** cclinpts rel_diff < 1% (**+1 Match firm-if-PROCEED**).
-- **Per-day:** Day 8 — Task-6 decision pivot (re-run the prototype + caller trace) + (if PROCEED) start the three coupled changes; Day 9 — close (harness re-check + full-corpus byte-stability + PR), or complete the Sprint 29 REPLAN filing.
-- **Verifies:** 4.1, 4.2, 4.3. **REPLAN exit explicit.**
+- **Task-6 gate (decision pivot, Unknown 4.1) — DONE Day 8: PROCEED.** Re-ran the blocker check on `main` (`e9696570`) + traced the re-symbolization callers; the anchor fix is **LOCAL** (gateable to the differentiated column's `var_indices`, using the existing #1162 machinery; does not touch `_replace_indices_in_expr`) → PROCEED (PR #1454, docs-only). Sign-flip stays a misdiagnosis.
+- **Day-8 also found a 4th facet → filed [#1455](https://github.com/jeffreyhorn/nlp2mcp/issues/1455):** the fixed boundary element `b('%last%')`→`b('s30')` collapses to `b(j)` in re-symbolization (`b('s30')-b(j)`→`b(j)-b(j)`=0), dropping `stat_fb` Term-1. Distinct from the anchor fix; to be fixed alongside #1387 (Day 9).
+- **Day 9 (PROCEED): FOUR coupled facets land together** — (1) AD `_diff_sum` offset-enum (the missing `j+1` cross-terms); (2) local anchor pre-pass in `_build_indexed_gradient_term`; (3) **#1455** fixed-boundary-element literal; (4) `--nlp-presolve` warm-start. **Target:** cclinpts rel_diff < 1% (**+1 Match**). A partial fix = no Match gain.
+- **Per-day:** Day 8 — Task-6 gate → **PROCEED** + full bug-surface map + #1455 filed (DONE); Day 9 — implement the four facets, per-term grep + harness Case-a + full-corpus byte-stability/re-solve + PR (#1387 + #1455).
+- **Verifies:** 4.1, 4.2, 4.3. **REPLAN exit explicit** (if any facet proves architectural, REPLAN that facet to Sprint 29, keep the rest).
 
 ## 10. Day 10 — Checkpoint 2 + Priority 5: #1390 kand (REPLAN-gated) (~10 h)
 

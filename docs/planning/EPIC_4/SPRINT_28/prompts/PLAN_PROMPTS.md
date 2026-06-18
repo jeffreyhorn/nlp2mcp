@@ -54,9 +54,15 @@ Clear the `ISSUE_1335` gate. Extend `_try_eval_offset` (Approach B) to resolve `
 
 **Task-6 decision pivot first (Unknown 4.1):** re-run the Day-6 `_diff_sum` offset-enum prototype on current `main` to re-confirm the anchor blocker; trace the re-symbolization callers. **If the anchor fix is local (gateable to the differentiated variable's column index) → PROCEED.** **If architectural (touches all callers) → REPLAN to Sprint 29:** file a re-scoped Phase-0 successor, do NOT commit `src/`, and skip to Day 10's work. Sign-flip stays a misdiagnosis. If PROCEED, begin the three coupled changes (AD offset-enum + anchor fix + non-convex warm-start) — they land together.
 
-## Day 9 Prompt — Priority 4: #1387 cclinpts close (or REPLAN closeout) (~7 h)
+## Day 9 Prompt — Priority 4: #1387 cclinpts close (~7 h)
 
-If Day 8 PROCEED'd: finish the three coupled changes; harness re-check; target cclinpts rel_diff < 1% (**+1 Match**); open the PR (full-corpus byte-stability + golden-staleness). If Day 8 REPLAN'd: confirm the Sprint 29 re-scoped filing is complete and the tree is clean; reallocate the freed time to Day 10/11 slack.
+**Day 8 PROCEED'd** (Task-6 gate: the anchor fix is LOCAL — PR #1454). Finish **FOUR coupled facets** (all land together; a partial fix = no Match gain):
+1. **AD `_diff_sum` offset-enum** (`src/ad/derivative_rules.py`) — generate the missing `j+1` objective-gradient cross-terms (stored `∂obj/∂b('s10')` drops Term-2-at-j+1; `∂obj/∂fb('s10')` drops Term-1-at-j+1 + Term-2-at-j+1). Day-6 residual-verified shape (max|r|=5e-8).
+2. **Local anchor pre-pass** in `_build_indexed_gradient_term` (`src/kkt/stationarity.py`) — let `anchor_elem = var_indices[d]` (the column's concrete element string for the differentiated dimension `d`); rewrite each same-set element `e` to `IndexOffset(base=anchor_elem, offset=ord(e)-ord(anchor_elem))` (base is a string, per the AST) so cross-terms re-symbolize to `j±k` (validated Day 8); gated to the gradient path (does NOT touch `_replace_indices_in_expr` — keeps #1452/#1335/#1393 byte-stable).
+3. **[#1455] fixed boundary-element literal** — `b('%last%')`→`b('s30')` (constant `b(last)`) must NOT re-symbolize to `b(j)` (it currently collapses `b('s30')-b(j)`→`b(j)-b(j)`=0, dropping `stat_fb` Term-1). Exclude the fixed boundary element from `element_to_set`; keep it literal. (The anchor pre-pass does NOT fix this — it would map `s30`→`j+29`.)
+4. **`--nlp-presolve` warm-start** — cclinpts cold-diverges to the spurious degenerate `b≈const`; the AD fix makes the NLP optimum a valid KKT point.
+
+Verify: per-term grep on `stat_b`/`stat_fb` (ISSUE_1387 §"Verification Methodology"); harness Case-a (residual→0); cclinpts MS 1 rel_diff < 1% (**+1 Match**); **full-153-golden byte-stability + re-solve** of any changed model (the AD + re-symbolization paths are shared — high blast radius); quality gate. Open the combined #1387 + #1455 PR (golden-staleness). Sign-flip stays a misdiagnosis. If any facet proves architectural after all → REPLAN that facet to Sprint 29, keep the rest, and document.
 
 ## Day 10 Prompt — Checkpoint 2 + Priority 5: #1390 kand — Task-6 gate (~10 h)
 
