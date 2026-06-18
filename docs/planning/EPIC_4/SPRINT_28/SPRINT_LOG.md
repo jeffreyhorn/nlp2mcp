@@ -313,7 +313,7 @@ The AD Jacobian was already correct (per-lead `∂pdef/∂p` = `-alpha(1)/-alpha
 
 ### Gate evidence (empirical, on main)
 - **Blocker re-confirmed:** `_build_indexed_gradient_term` → `_replace_indices_in_expr` (`src/kkt/stationarity.py:2816`) maps every same-set concrete element to the bare set index, so a gradient cross-term `fb('s11')-fb('s10')` collapses to `fb(j)-fb(j)` = 0 (the cancellation that makes cclinpts worse).
-- **Anchor fix is LOCAL:** `_build_indexed_gradient_term` already holds the anchor (`var_indices` = the column's concrete index). A pre-pass rewriting same-set elements to `IndexOffset(base=anchor, offset=ord(e)-ord(anchor))` lets the existing #1162 machinery emit `fb(j+1)-fb(j)` — verified directly. Touches only the gradient path; `_replace_indices_in_expr` semantics unchanged → constraint-Jacobian callers (#1452/#1335/#1393) unaffected. Sign-flip stays a misdiagnosis.
+- **Anchor fix is LOCAL:** `_build_indexed_gradient_term` already holds the anchor (`var_indices` = the column's concrete-index tuple; the element is `anchor_elem = var_indices[d]`, a string). A pre-pass rewriting same-set elements to `IndexOffset(base=anchor_elem, offset=ord(e)-ord(anchor_elem))` (base is a string, per the AST) lets the existing #1162 machinery emit `fb(j+1)-fb(j)` — verified directly. Touches only the gradient path; `_replace_indices_in_expr` semantics unchanged → constraint-Jacobian callers (#1452/#1335/#1393) unaffected. Sign-flip stays a misdiagnosis.
 
 ### The three coupled changes (land together, Day 9)
 1. **AD `_diff_sum` offset-enum** (`derivative_rules.py`): the stored `∂obj/∂b('s10')` drops Term-2-at-j+1; `∂obj/∂fb('s10')` drops Term-1-at-j+1 + Term-2-at-j+1. Generate them (Day-6 residual-verified shape, max|r|=5e-8).
