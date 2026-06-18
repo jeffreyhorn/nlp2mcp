@@ -72,6 +72,16 @@ nu_length_eqn.l = length_eqn.m;
 * Transfer variable marginals to bound multipliers
 
 * ============================================
+* #1449 (Layer 4): unfix elements fixed by the source $include but
+* enforced in the MCP via an active _fx_ complementarity equation
+* (else PATH drops the fixed column, leaving the _fx_ row unmatched).
+* ============================================
+x.lo('i0') = -inf;
+x.up('i0') = +inf;
+x.lo('i50') = -inf;
+x.up('i50') = +inf;
+
+* ============================================
 * Equations
 * ============================================
 

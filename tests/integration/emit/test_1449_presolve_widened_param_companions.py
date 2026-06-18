@@ -46,18 +46,40 @@ def test_otpop_presolve_emits_widened_companions(tmp_path: Path) -> None:
         text=True,
     )
     text = out.read_text(encoding="utf-8")
+    include_pos = text.index("$include")
 
-    # db is widened (db(tt) in stat_p). Under presolve it must be declared at its
-    # SOURCE domain db(t) (matching the include), with a db__pw(tt) companion.
+    # db is referenced at its PARENT index `db(tt)` in stat_p, so it needs a
+    # widened companion: declared at the source domain `db(t)` (to agree with the
+    # $include) with a `db__pw(tt)` companion, emitted AFTER the $include.
     assert "Parameter db__pw(tt);" in text
     assert "db__pw(t) = db(t);" in text
-    # The companion must be declared AFTER the $include (so the source owns db(t)).
-    include_pos = text.index("$include")
     assert text.index("Parameter db__pw(tt);") > include_pos
-    # The MCP body must reference the companion, not the (now subset-domain) db
-    # at the widened index — i.e. no bare `db(tt)` survives in the stationarity.
+
+    # stat_p references the companion at the parent index; the bare `db(tt)` is
+    # gone (rewritten).
     stat_p = re.search(r"stat_p\(tt\)\.\..*?;", text, re.DOTALL)
     assert stat_p is not None
     stat_p_nz = re.sub(r"\s+", "", stat_p.group(0))
     assert "db__pw(tt)" in stat_p_nz
-    assert "db(tt)" not in stat_p_nz  # the widened reference was rewritten
+    assert "db(tt)" not in stat_p_nz
+
+    # Over-rename guard (the original-equation corruption fixed here): the
+    # re-emitted ORIGINAL `dem` equation must keep the SUBSET-index `db(t)` — NOT
+    # the companion. Renaming it would override the source's `dem` algebra
+    # globally (GAMS binds equation algebra to its last `..`), corrupting the
+    # embedded NLP (db__pw is 0 when the NLP solves).
+    dem = re.search(r"\bdem\(t\)\.\..*?;", text, re.DOTALL)
+    assert dem is not None
+    dem_nz = re.sub(r"\s+", "", dem.group(0))
+    assert "db(t)" in dem_nz
+    assert "db__pw" not in dem_nz
+
+    # Over-widened params referenced only at the subset index (del/xb) get NO
+    # companion (they stay at their source domain, valid against the include).
+    assert "del__pw" not in text
+    assert "xb__pw" not in text
+
+    # Layer-4: the source $include's `x.fx(th)` fixes x('1974'), which the MCP
+    # instead fixes via the active `x_fx_1974` equation — so it is unfixed here.
+    assert "x.lo('1974')" in text
+    assert "x.up('1974')" in text

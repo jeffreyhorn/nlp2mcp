@@ -250,26 +250,28 @@ Considered Option B (fix the presolve `$184`) but it is **not narrow** — the "
 
 ---
 
-## Day 7 follow-on — #1449 presolve `$184` fix + #1439 embedded-NLP finding (2026-06-17)
+## Day 7 follow-on — #1449 presolve `$184` + otpop presolve SOLVES; #1452 filed (2026-06-18)
 
-**Status:** 🟡 `$184` FIXED (otpop presolve compiles); **otpop match still NOT realized** — uncovered a *second*, distinct blocker (embedded-NLP convergence divergence, #1439 class) that is **not a state leak**. Per-user: land the `$184` fix + document the #1439 finding.
+**Status:** 🟢 #1449 RESOLVED — otpop `--nlp-presolve` **compiles and solves (MCP MS 1 Optimal)**, the KKT-residual harness now runs on otpop (#1449 had blocked it), and the harness pins the **last match gate** as a new AD bug **#1452** (the `pdef` cross-term). Bonus: repaired `rocket`'s broken presolve golden.
 
-### Layer 1 — param-widening `$184` FIXED (`src/emit/emit_gams.py`, presolve-only)
-- Companion approach: under `--nlp-presolve`, declare domain-widened source params at their **source domain** (matching the `$include`, no `$184`), emit `<p>__pw` **companions** at the widened domain after the `$include` (`db__pw(t)=db(t)`), and rewrite the MCP equation bodies to reference the companion (`db(tt)`→`db__pw(tt)`). Cold emit unchanged.
-- **Blast radius tiny:** 10/11 presolve goldens byte-identical; only `fawley` changes (companions) — still MS 5 (pre-existing, no regression). Cold otpop byte-identical. otpop `--nlp-presolve` compiles clean. (Layer 1b var-`$184` **not needed** — the earlier "var $184" was a `/tmp` include-not-found artifact; fawley compiles with the param fix alone.)
+> **Correction:** the prior revision of this entry (and ISSUE_1449) claimed the post-`$184` divergence was "CONOPT path-sensitivity, NOT a state leak." **Wrong.** The user's "is otpop non-convex?" question prompted a re-check: otpop is **convex** (DB `likely_convex`; standalone reaches 4217.7978 from all starting points). The divergence was a **real state leak — in this fix's own first revision** (over-rename, see below).
 
-### Layer 2/3 — #1439 embedded-NLP divergence: root-caused as NOT a state leak
-- With `$184` gone, otpop's presolve compiles but the embedded `$include`d NLP converges to a **wrong local optimum** (pi −29.77/48059 vs standalone **4217.80**; `x` interior 18.55 vs at-bound; `p` at floor vs interior).
-- **Exhaustive diff (embedded vs standalone NLP): everything is byte-identical** — all data params/scalars, all sets (`t`/`tt`/`th`/`tp`), all var bounds (`.lo`/`.up`), the starting point (`x.l`=0, `p.l`=1 before the first solve), and the solver (both CONOPT). So there is **no gateable pre-`$include` state leak**; it is **CONOPT path-sensitivity** in the non-convex model triggered by the larger `$onMultiR $include` context.
-- **Realistic fixes are different in kind** (warm-start the embedded NLP via the model's unused `xtr`/`ptr`; deterministic/global solver options; or Architecture B GDX `loadpoint`) — all uncertain and not "gate out the leak". Documented in ISSUE_1449.
+### #1449 fix (3 coupled, presolve-only, `src/emit/emit_gams.py`)
+1. **Companions for `$184`:** declare widened source params at the **source domain** (agree with `$include`); emit `<p>__pw` companion at the widened domain after the `$include`. Only params referenced at the **parent-set index** (`db(tt)`) get a companion; over-widened subset-only params (`del`/`xb`/`pcr`) get none.
+2. **Parent-index-only rewrite (the real bug).** The first revision renamed *all* refs incl. the re-emitted ORIGINAL `dem(t).. … db(t)` → `db__pw(t)`. GAMS binds an equation's algebra to its **last `..` def globally**, so this switched the embedded NLP's `dem` to `db__pw` (= 0 at NLP-solve) → NLP to pi=−29.77, garbage warm-start. Restricting the rewrite to parent-index refs keeps `dem` intact; embedded NLP now hits 4217.7978.
+3. **Layer 4 — var-fix leak (`_emit_presolve_fx_unfix`).** The `$include`'s `var.fx(idx)=val` fixes columns the MCP fixes via an active `_fx_` equation (otpop's `x('1974')`), orphaning the row → EXECERROR. Unfix those after the `$include` (the `_fx_` equation pins the value). Also **repairs `rocket`'s presolve golden** (committed with this EXECERROR).
+
+**Result:** otpop presolve compiles, embedded NLP = 4217.7978, **MCP solves MS 1**. Not a *match* yet (pi=3160.86) — the harness (now runnable) localizes the cause to **#1452** (`stat_p` `pdef` `ord(n)-1` cross-term: emits `sum(n,alpha(n))=1.0` per lead instead of per-lead weights 0.5/0.3/0.2; residual at `stat_p(1980–1984)`).
+
+**Blast radius:** cold emit byte-identical. 8/11 presolve goldens byte-identical; `chain` (objective unchanged 6.9590, only an internal `nu_x_fx` dual now properly matched), `fawley` (no companions; MS 5), `rocket` (EXECERROR → MS 5, repaired). No objective regressions.
 
 ### PR25 tally (Day 7 follow-on)
-- **No genuine Solve/Match.** otpop's emit is correct + presolve now compiles, but the embedded NLP diverges → still bucket-forward. Solve **106**, Match **64** (unchanged).
+- **No genuine Solve/Match yet** — otpop solves MS 1 but mismatches (pi 3160.86) pending **#1452**. Solve **106**, Match **64** (unchanged). #1449 is real infra progress (presolve solves + harness unblocked).
 
 ### Deliverables
-- `src/emit/emit_gams.py` (`_emit_widened_param_companions`, `_rename_widened_params_to_companions`, presolve-gated wirings).
-- `tests/integration/emit/test_1449_presolve_widened_param_companions.py` (1 test).
-- `data/gamslib/mcp/fawley_mcp_presolve.gms` regenerated (companions).
-- `docs/issues/ISSUE_1449_*.md` RESOLUTION + #1439 finding; CHANGELOG.
+- `src/emit/emit_gams.py` (`_emit_widened_param_companions`, `_rewrite_widened_param_refs`, `_emit_presolve_fx_unfix`, presolve-gated wirings).
+- `tests/integration/emit/test_1449_presolve_widened_param_companions.py` (1 test, corrected).
+- `data/gamslib/mcp/{chain,fawley,rocket}_mcp_presolve.gms` regenerated.
+- `docs/issues/ISSUE_1449_*.md` RESOLUTION (corrected); **NEW `docs/issues/ISSUE_1452_*.md`**; CHANGELOG.
 
-### Next: the otpop match is gated on the #1439 embedded-NLP-divergence (warm-start / Architecture-B), a separate deeper task — NOT a state-leak gate-out.
+### Next: #1452 — the `pdef` `ord(n)-1` cross-term, the LAST gate to otpop's +1 Solve/+1 Match (taken on next, this branch).

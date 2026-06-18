@@ -117,6 +117,18 @@ piU_m.l(h)$(abs(m.l(h) - m.up(h)) < 1e-6 and m.m(h) < 0) = -(m.m(h));
 piU_t.l(h)$(abs(t.l(h) - t.up(h)) < 1e-6 and t.m(h) < 0) = -(t.m(h));
 
 * ============================================
+* #1449 (Layer 4): unfix elements fixed by the source $include but
+* enforced in the MCP via an active _fx_ complementarity equation
+* (else PATH drops the fixed column, leaving the _fx_ row unmatched).
+* ============================================
+v.lo('h0') = 0;
+v.up('h0') = +inf;
+ht.lo('h0') = 0;
+ht.up('h0') = +inf;
+m.lo('h0') = 0;
+m.up('h0') = +inf;
+
+* ============================================
 * Equations
 * ============================================
 

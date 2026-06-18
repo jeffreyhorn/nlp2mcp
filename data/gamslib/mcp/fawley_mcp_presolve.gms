@@ -182,14 +182,6 @@ piU_u.l(c)$(abs(u.l(c) - u.up(c)) < 1e-6 and u.m(c) < 0) = -(u.m(c));
 piU_cap.l(k)$(abs(cap.l(k) - cap.up(k)) < 1e-6 and cap.m(k) < 0) = -(cap.m(k));
 
 * ============================================
-* #1449: presolve widened-param companions
-* (avoid $184: source $include declares these at their
-*  subset domain; the MCP body uses the widened companion)
-* ============================================
-Parameter pcr__pw(c);
-pcr__pw(cr) = pcr(cr);
-
-* ============================================
 * Equations
 * ============================================
 
@@ -259,7 +251,7 @@ stat_revenue.. -1 + nu_drev =E= 0;
 stat_sales(cf).. nu_dbal(cf) + ((-1) * ddat(cf,"price")) * nu_drev - piL_sales(cf) =E= 0;
 stat_trans(tr).. sum(c, at(c,tr) * nu_mbal(c)) - piL_trans(tr) =E= 0;
 stat_transport.. 1 + nu_dtran =E= 0;
-stat_u(c).. (1$(cr(c)) * nu_mbal(c) + sum(cr__$(sameas(cr__, c)), ((-1) * pcr__pw(cr__)) * nu_dpur)$(cr(c)) + sum(cr__$(sameas(cr__, c)), ((-1) * crdat(cr__,"transport")) * nu_dtran)$(cr(c)) - piL_u(c) + piU_u(c))$(cr(c) and u.up(c) - u.lo(c) > 1e-10) =E= 0;
+stat_u(c).. (1$(cr(c)) * nu_mbal(c) + sum(cr__$(sameas(cr__, c)), ((-1) * pcr(cr__)) * nu_dpur)$(cr(c)) + sum(cr__$(sameas(cr__, c)), ((-1) * crdat(cr__,"transport")) * nu_dtran)$(cr(c)) - piL_u(c) + piU_u(c))$(cr(c) and u.up(c) - u.lo(c) > 1e-10) =E= 0;
 stat_z(p).. sum(c, ap(c,p) * nu_mbal(c)) + sum(k, ((-1) * bp(k,p)) * nu_kbal(k)) - piL_z(p) =E= 0;
 
 * Lower bound complementarity equations
@@ -286,7 +278,7 @@ qsb(cfq,l,s)$(specs(cfq,l,s)).. sum(c$(bposs(cfq,c)), prop(c,s) * sum(m$(ms(m,s)
 pbal(cfq,m)$(cfm(cfq,m)).. q(cfq,m) =E= sum(c$(bposs(cfq,c)), char(c,m) * bq(c,cfq));
 drev.. revenue =E= sum(cf, ddat(cf,"price") * sales(cf));
 doper.. recurrent =E= sum(k, oc(k) * cap(k)) + ocpb * q("motor-gas","volume");
-dpur.. purchase =E= sum(cr, pcr__pw(cr) * u(cr)) + sum(ci, pimp(ci) * import(ci));
+dpur.. purchase =E= sum(cr, pcr(cr) * u(cr)) + sum(ci, pimp(ci) * import(ci));
 dtran.. transport =E= sum(cr, crdat(cr,"transport") * u(cr));
 dprof.. profit =E= revenue - recurrent - purchase - transport;
 
