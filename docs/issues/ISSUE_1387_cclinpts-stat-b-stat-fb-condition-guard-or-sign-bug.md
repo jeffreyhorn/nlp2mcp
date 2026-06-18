@@ -14,7 +14,7 @@ Re-confirmed the Day-6 anchor blocker on current `main` (`e9696570`) and traced 
 
 **The anchor fix is LOCAL (PROCEED criterion met):** `_build_indexed_gradient_term` *already holds the anchor* — `col_id, var_indices = …`, where `var_indices` is the differentiated column's concrete index (e.g. `('s10',)`). A **pre-pass gated to the gradient path** that rewrites each same-set concrete element `e` in the per-instance gradient to `IndexOffset(base=anchor_elem, offset=ord(e)-ord(anchor_elem))` (offset 0 → keep the anchor element) lets the **existing #1162 IndexOffset machinery** in `_replace_indices_in_expr` map it correctly. Verified directly:
 ```
-(b) after local anchor pre-pass (anchor=s10):  fb('s10'+1) - fb('s10')
+(b) after local anchor pre-pass (anchor=s10):  fb(IndexOffset(base='s10', offset=1)) - fb('s10')
 (b) _replace_indices_in_expr(...)            ->  fb(j+1) - fb(j)                   # CORRECT
 ```
 This pre-pass touches only `_build_indexed_gradient_term`; it does **not** change `_replace_indices_in_expr`'s shared semantics, so constraint-Jacobian callers (e.g. #1452/#1335/#1393) are unaffected. → **not architectural → PROCEED.**
@@ -40,7 +40,7 @@ object.. ObjV =e=    sum(j$(not last(j)),  [b('s30') - b(j)]*[fb(j) - fb(j-1)]) 
 **Day-9 ordered plan (FOUR facets — all land together):** (1) AD `_diff_sum` offset-enum so the stored `∂obj/∂{b,fb}('s10')` contain all hand-derived per-offset `j+1` terms (residual-verified shape, max|r|=5e-8 from Day 6); (2) the LOCAL anchor pre-pass in `_build_indexed_gradient_term` (validated Day 8) so cross-terms re-symbolize to `j±k` not `j`; (3) **[#1455]** preserve the fixed boundary element `b('%last%')`→`b('s30')` as a literal (exclude it from `element_to_set`) so Term-1 survives; (4) `--nlp-presolve` warm-start; then per-term grep (Phase-0 §"Verification Methodology"), harness Case-a, cclinpts MS 1 rel_diff<1%, full-153-golden byte-stability + re-solve, quality gate, PR.
 **Severity:** Medium — MCP cold-solves to a spurious degenerate KKT point (ObjV≈0 vs NLP −3.0011); not a Pattern A AD-layer bug.
 **Date:** 2026-05-12
-**Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 Refresh added; prior: Sprint 27 Day 8 — Sprint 28 carryforward filed; Day 6 diagnosis + reverted attempt are the binding record)
+**Last Updated:** 2026-06-18 (Sprint 28 Day 8 — Task-6 gate → PROCEED + full bug-surface map + #1455 filed; prior: 2026-06-11 Sprint 28 Prep Task 5 Phase 0 Refresh; Sprint 27 Day 8 carryforward; Day 6 diagnosis + reverted attempt are the binding record)
 **Affected Models:** cclinpts
 **Target Sprint:** ~~Sprint 27~~ → **Sprint 28** (Day-8 binding deferral: the legitimate fix is THREE coupled changes — AD offset-enumeration + gradient→stationarity re-symbolization-anchor fix + non-convex warm-start; see Day 6 diagnosis).
 
