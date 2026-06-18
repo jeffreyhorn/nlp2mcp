@@ -35,9 +35,27 @@ sum(n, ((-1)*alpha(n)) * nu_pdef(tt))
 ```
 = `sum(n, alpha(n)) = 1.0` applied to **each** lead — the `n`-sum is mixed with the lead offset, so every lead gets the *total* weight (1.0) instead of its *specific* weight `alpha(n)`.
 
-## The AD bug
+## Localization (2026-06-18) — the AD is correct; the bug is the stationarity re-symbolization
 
-Differentiating `sum(n, alpha(n)·p(tt-(ord(n)-1)))` w.r.t. `p` must invert the `ord(n)-1` offset **per `n`**, mapping each `n` to lead `nu_pdef(tt+(ord(n)-1))` with coefficient `alpha(n)`. Instead the cross-term sums `alpha(n)` over `n` at each fixed lead. Same family as the offset-handling work in [[ISSUE_1393]] / [[ISSUE_1335]] / [[ISSUE_1224]], but for an `ord(<sum-index>)-1` offset in an indexed equality.
+The constraint Jacobian is **right**:
+```
+∂pdef('1983')/∂p('1983') = -alpha(1)   (lead 0)
+∂pdef('1984')/∂p('1983') = -alpha(2)   (lead +1)
+∂pdef('1985')/∂p('1983') = -alpha(3)   (lead +2)
+```
+So #1081 expansion + AD produce the correct per-instance derivatives — the specific element `alpha('1')`/`alpha('2')`/`alpha('3')` at each lead.
+
+The bug is in **`_add_indexed_jacobian_terms`** (`src/kkt/stationarity.py`), which groups the per-instance entries by lead offset (`_compute_index_offset_key` → offsets 0/+1/+2 — correct) and then **re-symbolizes the per-group coefficient wrongly**: the offset-0 group has the constant coefficient `alpha('1')`, but the re-symbolization treats the alpha-domain element `'1'` as an *uncontrolled index*, maps it to the symbolic `n`, and wraps it in `sum(n, …)` → `sum(n, alpha(n))` (= 1.0). Same mechanism as [[ISSUE_1393]] (a concrete index wrongly summed), but in the **indexed-constraint branch** rather than the scalar branch.
+
+**Correct re-symbolization** — either keep the per-group constant element (`-alpha('1')·nu_pdef(tt)`, `-alpha('2')·nu_pdef(tt+1)`, `-alpha('3')·nu_pdef(tt+2)`), or, equivalently, a single `sum(n, (-1)·alpha(n)·nu_pdef(tt+(ord(n)-1)))`. The offset (lead) determines the alpha element; it must not be summed over.
+
+### Exact fix surface (2026-06-18)
+
+`src/kkt/stationarity.py`, in `_add_indexed_jacobian_terms`, the offset-group re-symbolization at **`indexed_deriv = _replace_indices_in_expr(derivative, var_domain, constraint_element_to_set, …)` (~line 6177)**. For the offset-0 group `derivative = -alpha('1')`; `constraint_element_to_set` maps the alpha-domain element `'1'` → its set `n`, so `alpha('1')` → `alpha(n)`, and downstream the now-uncontrolled `n` is wrapped in `sum(n, …)`. The element `'1'` is **offset-determined** (the group's `offset_key` is 0 and `ord('1')-1 = 0`), so it must be pinned, not re-symbolized to the iterator. A correct, tightly-gated fix must detect that a coefficient's param-index element correlates with the group's `offset_key` (via `ord(elem)-1 == offset`) and keep the concrete element (or emit the single `sum(n, alpha(n)·nu(tt+(ord(n)-1)))` form), **without** disturbing genuine uncontrolled-index sums.
+
+**Risk:** `_replace_indices_in_expr` / `_add_indexed_jacobian_terms` is the shared cross-term path for every model — the fix needs a tight gate + full-corpus golden regression. Recommended as a focused task (this is the 4th distinct otpop AD bug, comparable in depth to #1393/#1335).
+
+Same family as the offset-handling work in [[ISSUE_1393]] / [[ISSUE_1335]] / [[ISSUE_1224]], for an `ord(<sum-index>)-1` offset in an indexed equality.
 
 ## Acceptance
 
