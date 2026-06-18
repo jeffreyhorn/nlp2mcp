@@ -2753,6 +2753,103 @@ def _build_indexed_stationarity_expr(
     return expr
 
 
+def _grad_has_concrete_base_offset(
+    expr: Expr, element_to_set: Mapping[str, str], domain: tuple[str, ...]
+) -> bool:
+    """#1387: detect the offset cross-term signature in an objective gradient —
+    a non-circular ``IndexOffset`` whose base is a *concrete element* of a
+    domain set (e.g. ``IndexOffset('s10', 1)`` where ``s10 ∈ j``). This is the
+    fingerprint of the #1387 AD offset enumeration (offset refs anchored on the
+    column element); its presence gates the literal-preserving ``element_to_set``
+    restriction in :func:`_build_indexed_gradient_term`.
+    """
+    domain_lc = {d.lower() for d in domain}
+
+    def walk(e: Expr) -> bool:
+        if isinstance(e, IndexOffset) and not e.circular and isinstance(e.base, str):
+            mapped = element_to_set.get(e.base)
+            if mapped is not None and mapped.lower() in domain_lc:
+                return True
+        for c in e.children():
+            if walk(c):
+                return True
+        return False
+
+    return walk(expr)
+
+
+def _resymbolize_offset_gradient(
+    expr: Expr,
+    col_elem: str,
+    dom_idx: str,
+    element_to_set: Mapping[str, str],
+    domain: tuple[str, ...],
+) -> Expr:
+    """#1387 / #1455: re-symbolize an objective gradient that carries offset
+    cross-terms over a 1-D domain.
+
+    The representative column's own element ``col_elem`` is the iterate, so it
+    (and ``IndexOffset(col_elem, ±k)``) maps to the domain index ``dom_idx``
+    (``j`` / ``j±k``). Every OTHER bare concrete element of the domain set is a
+    FIXED reference (e.g. ``b('%last%')`` → ``b('s30')``) and is preserved
+    verbatim — the generic re-symbolizer would collapse it to ``j``. Concrete
+    elements of OTHER sets fall back to their ``element_to_set`` mapping; all
+    other indices pass through. Conditions (``first``/``last`` membership tests)
+    are re-symbolized the same way so per-offset guards become ``first(j±k)`` /
+    ``last(j±k)``.
+    """
+    col_lc = col_elem.lower()
+    domain_lc = {d.lower() for d in domain}
+
+    def map_index(idx: str | IndexOffset) -> str | IndexOffset:
+        if isinstance(idx, str):
+            if idx.lower() == col_lc:
+                return dom_idx
+            mapped = element_to_set.get(idx)
+            if mapped is not None and mapped.lower() in domain_lc:
+                return idx  # fixed same-set literal — preserve verbatim (#1455)
+            if mapped is not None:
+                return mapped  # element of another set → its set name
+            return idx
+        if isinstance(idx, IndexOffset) and not idx.circular and isinstance(idx.base, str):
+            if idx.base.lower() == col_lc:
+                return IndexOffset(dom_idx, idx.offset, idx.circular)
+            return idx
+        return idx
+
+    def walk(e: Expr) -> Expr:
+        if isinstance(e, VarRef):
+            return VarRef(e.name, tuple(map_index(i) for i in e.indices), e.attribute)
+        if isinstance(e, ParamRef):
+            return ParamRef(e.name, tuple(map_index(i) for i in e.indices))
+        if isinstance(e, SetMembershipTest):
+            new_args: list[Expr] = []
+            for a in e.indices:
+                if isinstance(a, SymbolRef):
+                    m = map_index(a.name)
+                    new_args.append(SymbolRef(m) if isinstance(m, str) else m)
+                elif isinstance(a, IndexOffset):
+                    m2 = map_index(a)
+                    new_args.append(m2 if isinstance(m2, IndexOffset) else SymbolRef(str(m2)))
+                else:
+                    new_args.append(walk(a))
+            return SetMembershipTest(e.set_name, tuple(new_args))
+        if isinstance(e, Binary):
+            return Binary(e.op, walk(e.left), walk(e.right))
+        if isinstance(e, Unary):
+            return Unary(e.op, walk(e.child))
+        if isinstance(e, Call):
+            return Call(e.func, tuple(walk(a) for a in e.args))
+        if isinstance(e, (Sum, Prod)):
+            new_cond = walk(e.condition) if e.condition is not None else None
+            return type(e)(e.index_sets, walk(e.body), new_cond)
+        if isinstance(e, DollarConditional):
+            return DollarConditional(value_expr=walk(e.value_expr), condition=walk(e.condition))
+        return e
+
+    return walk(expr)
+
+
 def _build_indexed_gradient_term(
     kkt: KKTSystem,
     var_name: str,
@@ -2784,6 +2881,7 @@ def _build_indexed_gradient_term(
     nonzero_instances: list[tuple[int, tuple[str, ...]]] = []
     seen_nz: set[tuple[int, tuple[str, ...]]] = set()
     col_id, var_indices = instances[0]
+    rep_var_indices = var_indices  # indices of the representative (matches col_id)
     grad_component = kkt.gradient.get_derivative(col_id)
 
     if grad_component is not None and not (
@@ -2800,6 +2898,7 @@ def _build_indexed_gradient_term(
             if grad_component is None:
                 col_id = c_id
                 grad_component = gc
+                rep_var_indices = v_idx
             if (c_id, v_idx) not in seen_nz:
                 nonzero_instances.append((c_id, v_idx))
                 seen_nz.add((c_id, v_idx))
@@ -2811,11 +2910,28 @@ def _build_indexed_gradient_term(
     # This maps each element label to its corresponding set name
     element_to_set = _build_element_to_set_mapping(kkt.model_ir, domain, instances)
 
-    # Replace element-specific indices with domain indices in the gradient
-    # Issue #620: Pass domain as equation_domain for subset/superset substitution
-    expr = _replace_indices_in_expr(
-        grad_component, domain, element_to_set, kkt.model_ir, equation_domain=domain
-    )
+    # Issue #1387 / #1455: when the objective gradient carries offset cross-terms
+    # (the #1387 AD enumeration), the only domain-set element that represents the
+    # iterate ``j`` is the representative column's OWN element; every other
+    # same-set bare concrete element is a FIXED reference (e.g. ``b('%last%')`` →
+    # ``b('s30')``) that must be preserved verbatim — mapping it to ``j`` collapses
+    # cross-terms like ``b('s30')-b(j)`` to ``b(j)-b(j)`` = 0 (#1455). The generic
+    # ``_replace_indices_in_expr`` cannot express this (its declared/equation-domain
+    # logic maps every same-set element to the index), so use a dedicated
+    # re-symbolization: column element → ``j``, ``IndexOffset(col, ±k)`` → ``j±k``,
+    # fixed same-set literals preserved, conditions shifted. Tightly gated: only the
+    # offset signature (an IndexOffset on a concrete domain-set element) over a 1-D
+    # domain; everything else uses the unchanged generic path.
+    if len(domain) == 1 and _grad_has_concrete_base_offset(grad_component, element_to_set, domain):
+        expr = _resymbolize_offset_gradient(
+            grad_component, rep_var_indices[0], domain[0], element_to_set, domain
+        )
+    else:
+        # Replace element-specific indices with domain indices in the gradient
+        # Issue #620: Pass domain as equation_domain for subset/superset substitution
+        expr = _replace_indices_in_expr(
+            grad_component, domain, element_to_set, kkt.model_ir, equation_domain=domain
+        )
 
     # Issue #1131: If only a strict subset of instances have non-zero
     # gradients, guard with sameas() so the gradient applies only to those.

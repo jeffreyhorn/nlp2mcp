@@ -1,7 +1,11 @@
 # Objective-gradient re-symbolization collapses a fixed boundary-element reference (`b('%last%')`) to the iterator index
 
 **GitHub Issue:** [#1455](https://github.com/jeffreyhorn/nlp2mcp/issues/1455)
-**Status:** OPEN — filed Sprint 28 Day 8 (2026-06-18), discovered during [#1387](https://github.com/jeffreyhorn/nlp2mcp/issues/1387) (cclinpts). Distinct root cause; **to be fixed alongside #1387** (same `stat_fb` correctness fix, same code path) on Day 9, tracked separately.
+**Status:** **RESOLVED — Sprint 28 Day 9 (2026-06-18), with [#1387](https://github.com/jeffreyhorn/nlp2mcp/issues/1387).** The fixed boundary element `b('%last%')`→`b('s30')` is now preserved verbatim in `stat_fb` (no longer collapsed to `b(j)`), as part of the offset-aware gradient re-symbolization. *(Prior: OPEN — filed Day 8.)*
+
+## RESOLUTION (Sprint 28 Day 9, 2026-06-18)
+
+Fixed within `_resymbolize_offset_gradient` (`src/kkt/stationarity.py`), the dedicated offset-crossterm re-symbolization added for [#1387](https://github.com/jeffreyhorn/nlp2mcp/issues/1387). For the 1-D objective gradient, only the representative column's own element maps to the iterate `j` (and `IndexOffset(col, ±k)` → `j±k`); every OTHER same-set bare concrete element — the `%last%`/`first`/`last` fixed boundary references — is preserved verbatim instead of being mapped to `j` by the generic `_replace_indices_in_expr` (whose declared/equation-domain logic maps every same-set element to the index). cclinpts `stat_fb(j)` now emits `(b('s30') - b(j))$(not last(j))` (literal `b('s30')`) and the `j+1` cross-term `(b('s30') - b(j+1))$(not last(j+1))`, instead of the collapsed `b(j)-b(j)`=0. Gated by `_grad_has_concrete_base_offset` (only fires when the #1387 offset signature is present), so non-offset gradients are unchanged. Verified by the cclinpts integration test + the full-153-golden regen (only cclinpts + chakra change, both → match).
 **Severity:** Medium — silently drops an objective-gradient term from a stationarity equation (cclinpts `stat_fb` Term-1).
 **Affected models:** cclinpts (confirmed); potentially any model whose objective references a fixed boundary element (`x('first')`, `v('%last%')`, `b(last)`) alongside the iterate.
 
