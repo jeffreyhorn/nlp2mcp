@@ -33,7 +33,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 CCLINPTS = PROJECT_ROOT / "data" / "gamslib" / "raw" / "cclinpts.gms"
 
 
-@pytest.mark.skipif(not CCLINPTS.exists(), reason="raw cclinpts.gms not present (gitignored corpus)")
+@pytest.mark.skipif(
+    not CCLINPTS.exists(), reason="raw cclinpts.gms not present (gitignored corpus)"
+)
 def test_cclinpts_stat_b_stat_fb_offset_crossterms(tmp_path: Path) -> None:
     out = tmp_path / "cclinpts_mcp.gms"
     subprocess.run(
@@ -53,8 +55,10 @@ def test_cclinpts_stat_b_stat_fb_offset_crossterms(tmp_path: Path) -> None:
         text=True,
     )
     text = out.read_text(encoding="utf-8")
-    stat_b_m = re.search(r"^stat_b\(j\)\.\..*?;", text, re.MULTILINE)
-    stat_fb_m = re.search(r"^stat_fb\(j\)\.\..*?;", text, re.MULTILINE)
+    # re.DOTALL so the match spans a multi-line equation (mirrors the other emit
+    # regression tests, e.g. test_1335_zdef_time_reversal_crossterm.py).
+    stat_b_m = re.search(r"stat_b\(j\)\.\..*?;", text, re.DOTALL)
+    stat_fb_m = re.search(r"stat_fb\(j\)\.\..*?;", text, re.DOTALL)
     assert stat_b_m is not None, "stat_b(j) not found"
     assert stat_fb_m is not None, "stat_fb(j) not found"
     stat_b = re.sub(r"\s+", "", stat_b_m.group(0))

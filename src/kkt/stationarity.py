@@ -2765,10 +2765,21 @@ def _grad_has_concrete_base_offset(
     """
     domain_lc = {d.lower() for d in domain}
 
+    def is_sig(idx: object) -> bool:
+        if isinstance(idx, IndexOffset) and not idx.circular and isinstance(idx.base, str):
+            mapped = element_to_set.get(idx.base)
+            return mapped is not None and mapped.lower() in domain_lc
+        return False
+
     def walk(e: Expr) -> bool:
-        if isinstance(e, IndexOffset) and not e.circular and isinstance(e.base, str):
-            mapped = element_to_set.get(e.base)
-            if mapped is not None and mapped.lower() in domain_lc:
+        if is_sig(e):
+            return True
+        # IndexOffset indices live in VarRef/ParamRef.indices, NOT in .children()
+        # (the AST excludes index expressions from children()), so scan them here —
+        # otherwise the gate misses the offset signature for a gradient whose only
+        # cross-terms are variable/param references with no first/last conditions.
+        if isinstance(e, (VarRef, ParamRef)):
+            if any(is_sig(i) for i in e.indices):
                 return True
         for c in e.children():
             if walk(c):
