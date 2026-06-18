@@ -247,3 +247,29 @@ Considered Option B (fix the presolve `$184`) but it is **not narrow** — the "
 - `docs/issues/ISSUE_1335_*.md` RESOLUTION; **NEW `docs/issues/ISSUE_1449_*.md`** (the presolve blocker); CHANGELOG.
 
 ### Next: Day 8 per PLAN — #1449 is the scoped follow-on that realizes otpop's +1 Solve/+1 Match once the widening/`$include` tension is resolved.
+
+---
+
+## Day 7 follow-on — #1449 presolve `$184` fix + #1439 embedded-NLP finding (2026-06-17)
+
+**Status:** 🟡 `$184` FIXED (otpop presolve compiles); **otpop match still NOT realized** — uncovered a *second*, distinct blocker (embedded-NLP convergence divergence, #1439 class) that is **not a state leak**. Per-user: land the `$184` fix + document the #1439 finding.
+
+### Layer 1 — param-widening `$184` FIXED (`src/emit/emit_gams.py`, presolve-only)
+- Companion approach: under `--nlp-presolve`, declare domain-widened source params at their **source domain** (matching the `$include`, no `$184`), emit `<p>__pw` **companions** at the widened domain after the `$include` (`db__pw(t)=db(t)`), and rewrite the MCP equation bodies to reference the companion (`db(tt)`→`db__pw(tt)`). Cold emit unchanged.
+- **Blast radius tiny:** 10/11 presolve goldens byte-identical; only `fawley` changes (companions) — still MS 5 (pre-existing, no regression). Cold otpop byte-identical. otpop `--nlp-presolve` compiles clean. (Layer 1b var-`$184` **not needed** — the earlier "var $184" was a `/tmp` include-not-found artifact; fawley compiles with the param fix alone.)
+
+### Layer 2/3 — #1439 embedded-NLP divergence: root-caused as NOT a state leak
+- With `$184` gone, otpop's presolve compiles but the embedded `$include`d NLP converges to a **wrong local optimum** (pi −29.77/48059 vs standalone **4217.80**; `x` interior 18.55 vs at-bound; `p` at floor vs interior).
+- **Exhaustive diff (embedded vs standalone NLP): everything is byte-identical** — all data params/scalars, all sets (`t`/`tt`/`th`/`tp`), all var bounds (`.lo`/`.up`), the starting point (`x.l`=0, `p.l`=1 before the first solve), and the solver (both CONOPT). So there is **no gateable pre-`$include` state leak**; it is **CONOPT path-sensitivity** in the non-convex model triggered by the larger `$onMultiR $include` context.
+- **Realistic fixes are different in kind** (warm-start the embedded NLP via the model's unused `xtr`/`ptr`; deterministic/global solver options; or Architecture B GDX `loadpoint`) — all uncertain and not "gate out the leak". Documented in ISSUE_1449.
+
+### PR25 tally (Day 7 follow-on)
+- **No genuine Solve/Match.** otpop's emit is correct + presolve now compiles, but the embedded NLP diverges → still bucket-forward. Solve **106**, Match **64** (unchanged).
+
+### Deliverables
+- `src/emit/emit_gams.py` (`_emit_widened_param_companions`, `_rename_widened_params_to_companions`, presolve-gated wirings).
+- `tests/integration/emit/test_1449_presolve_widened_param_companions.py` (1 test).
+- `data/gamslib/mcp/fawley_mcp_presolve.gms` regenerated (companions).
+- `docs/issues/ISSUE_1449_*.md` RESOLUTION + #1439 finding; CHANGELOG.
+
+### Next: the otpop match is gated on the #1439 embedded-NLP-divergence (warm-start / Architecture-B), a separate deeper task — NOT a state-leak gate-out.

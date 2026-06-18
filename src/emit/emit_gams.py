@@ -5,6 +5,7 @@ GAMS MCP file from a KKT system.
 """
 
 import math
+import re
 import warnings
 from collections import deque
 from itertools import combinations
@@ -962,6 +963,62 @@ def _will_emit_nlp_presolve(
     return True
 
 
+# Issue #1449: suffix for the presolve "widened companion" parameters. Under
+# --nlp-presolve the MCP body needs a domain-widened param (e.g. db(tt) so a
+# parent-domain stationarity row can reference it), but the $include'd source
+# re-declares it at its subset domain (db(t)) — GAMS rejects the two
+# coexisting declarations ($184). So under presolve we declare the source param
+# at its source domain (matching the include) and emit a `<p>__pw` companion at
+# the widened domain, populated from the source param, for the MCP body to use.
+_PRESOLVE_WIDENED_SUFFIX = "__pw"
+
+
+def _emit_widened_param_companions(kkt: KKTSystem, add_comments: bool) -> list[str]:
+    """Issue #1449: emit `<p>__pw(<widened>)` companion declarations + copy
+    assignments for every domain-widened param, to be placed AFTER the presolve
+    `$include`. Returns the GAMS lines (empty if there are no widenings)."""
+    widenings = kkt.param_domain_widenings or {}
+    if not widenings:
+        return []
+    lines: list[str] = []
+    if add_comments:
+        lines.append("* ============================================")
+        lines.append("* #1449: presolve widened-param companions")
+        lines.append("* (avoid $184: source $include declares these at their")
+        lines.append("*  subset domain; the MCP body uses the widened companion)")
+        lines.append("* ============================================")
+    for pname in sorted(widenings):
+        pdef = kkt.model_ir.params.get(pname)
+        if pdef is None:
+            continue
+        widened = widenings[pname]
+        source_domain = tuple(pdef.domain)
+        comp = f"{pname}{_PRESOLVE_WIDENED_SUFFIX}"
+        wdom = ",".join(_quote_symbol(d) for d in widened)
+        sdom = ",".join(_quote_symbol(d) for d in source_domain)
+        lines.append(f"Parameter {comp}({wdom});")
+        lines.append(f"{comp}({sdom}) = {pname}({sdom});")
+    if lines:
+        lines.append("")
+    return lines
+
+
+def _rename_widened_params_to_companions(code: str, kkt: KKTSystem) -> str:
+    """Issue #1449: rewrite references to domain-widened params in the MCP
+    equation-definition text to their `<p>__pw` companion (presolve only). Only
+    a `<name>(` reference (a parameter usage) is rewritten; assignments to the
+    source param elsewhere are untouched."""
+    widenings = kkt.param_domain_widenings or {}
+    if not widenings or not code:
+        return code
+    for pname in widenings:
+        comp = f"{pname}{_PRESOLVE_WIDENED_SUFFIX}"
+        # `\b<name>\(` — a word-boundary-anchored parameter reference. Param
+        # names are unique identifiers, so this won't collide with other symbols.
+        code = re.sub(rf"\b{re.escape(pname)}\(", f"{comp}(", code)
+    return code
+
+
 def _emit_nlp_presolve(
     sections: list[str],
     kkt: KKTSystem,
@@ -1273,9 +1330,16 @@ def emit_gams_mcp(
     # lmp2's `Parameter A(mm,nn);` etc. were emitted twice (once here,
     # once in the pre-solve block) and triggered a GAMS
     # symbol-redefinition compile error.
+    # Issue #1449: under --nlp-presolve, declaring domain-widened params at the
+    # widened (parent) domain collides with the $include source's subset
+    # declaration ($184 Domain list redefined). Declare them at SOURCE domain
+    # (matching the include); the MCP body is rewired to `<p>__pw` companions
+    # emitted at the widened domain after the include (see below).
+    _presolve_will_emit_early = nlp_presolve and _will_emit_nlp_presolve(kkt, source_file)
+    _param_widenings_for_decl = {} if _presolve_will_emit_early else kkt.param_domain_widenings
     _params_result = emit_original_parameters(
         kkt.model_ir,
-        kkt.param_domain_widenings,
+        _param_widenings_for_decl,
         model_relevant_params,
         return_declared_names=True,
     )
@@ -2164,6 +2228,11 @@ def emit_gams_mcp(
     if nlp_presolve:
         presolve_include_emitted = _emit_nlp_presolve(sections, kkt, add_comments, source_file)
 
+    # Issue #1449: now that the $include has re-declared the source params at
+    # their subset domain, emit the widened companions the MCP body will use.
+    if presolve_include_emitted:
+        sections.extend(_emit_widened_param_companions(kkt, add_comments))
+
     # Issue #1289: post-initial-solve calibration assignments that read
     # `.l` values must come AFTER the presolve (which populates `.l`)
     # and BEFORE MCP equation definitions (which may use the calibrated
@@ -2215,6 +2284,13 @@ def emit_gams_mcp(
     eq_defs_code, index_aliases = emit_equation_definitions(
         kkt, suppressed_fx_equations=suppressed_fx
     )
+
+    # Issue #1449: under presolve, rewrite widened-param references in the MCP
+    # equation bodies to their `<p>__pw` companions (declared at the widened
+    # domain after the $include); the source param itself stays at its subset
+    # domain to agree with the include.
+    if presolve_include_emitted:
+        eq_defs_code = _rename_widened_params_to_companions(eq_defs_code, kkt)
 
     # Emit index aliases if any are needed (to avoid GAMS Error 125)
     # These must be declared before the equation definitions that use them
