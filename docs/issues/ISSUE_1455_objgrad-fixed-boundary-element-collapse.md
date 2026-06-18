@@ -1,7 +1,7 @@
 # Objective-gradient re-symbolization collapses a fixed boundary-element reference (`b('%last%')`) to the iterator index
 
 **GitHub Issue:** [#1455](https://github.com/jeffreyhorn/nlp2mcp/issues/1455)
-**Status:** OPEN — filed Sprint 28 Day 8 (2026-06-18), discovered during [#1387](https://github.com/jeffreyhorn/nlp2mcp/issues/1387) (cclinpts). Distinct root cause; **fixed alongside #1387** (same `stat_fb` correctness fix, same code path), tracked separately.
+**Status:** OPEN — filed Sprint 28 Day 8 (2026-06-18), discovered during [#1387](https://github.com/jeffreyhorn/nlp2mcp/issues/1387) (cclinpts). Distinct root cause; **to be fixed alongside #1387** (same `stat_fb` correctness fix, same code path) on Day 9, tracked separately.
 **Severity:** Medium — silently drops an objective-gradient term from a stationarity equation (cclinpts `stat_fb` Term-1).
 **Affected models:** cclinpts (confirmed); potentially any model whose objective references a fixed boundary element (`x('first')`, `v('%last%')`, `b(last)`) alongside the iterate.
 
@@ -13,12 +13,11 @@ In objective-gradient re-symbolization, a **fixed boundary-element reference** (
 
 ```python
 from src.ir.parser import parse_model_file
-from src.ir.normalize import normalize_model
 from src.ad.gradient import compute_objective_gradient
 from src.config import Config
 from src.emit.expr_to_gams import expr_to_gams
 from src.kkt import stationarity as S
-m = parse_model_file("data/gamslib/raw/cclinpts.gms"); ne,_ = normalize_model(m)
+m = parse_model_file("data/gamslib/raw/cclinpts.gms")  # normalize_model not needed for this repro
 grad = compute_objective_gradient(m, Config()); im = grad.index_mapping
 cid = next(c for c in range(grad.num_cols) if im.col_to_var[c]==("fb",("s1",)))
 d = grad.get_derivative(cid)
