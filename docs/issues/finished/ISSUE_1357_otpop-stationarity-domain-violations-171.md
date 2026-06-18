@@ -1,7 +1,7 @@
 # otpop: PATH $171 Domain Violations in Stationarity (Sprint 25 Bucket Transfer)
 
 **GitHub Issue:** [#1357](https://github.com/jeffreyhorn/nlp2mcp/issues/1357)
-**Status:** OPEN — Sprint 27 carryforward (filed Sprint 25 Day 13). Comparison target for Sprint 27 [#1393](https://github.com/jeffreyhorn/nlp2mcp/issues/1393) (the close-and-refile successor of #1334 after Sprint 26 Day 9 reclassification).
+**Status:** **RESOLVED — Sprint 28 Day 7 (2026-06-18).** The `$171` stationarity domain violations are gone and **otpop now MATCHES** (MCP MS 1 Optimal, pi = 4217.7978). The fix was the otpop four-fix arc: the comp_up subset/superset narrowing (PR #1418, Sprint 27 Day 5) cleared the original `$171`, and the remaining stationarity cross-term + presolve bugs were fixed by [#1393](https://github.com/jeffreyhorn/nlp2mcp/issues/1393) (kdef), [#1335](https://github.com/jeffreyhorn/nlp2mcp/issues/1335) (zdef), [#1449](https://github.com/jeffreyhorn/nlp2mcp/issues/1449) (presolve `$184`), and [#1452](https://github.com/jeffreyhorn/nlp2mcp/issues/1452) (pdef `ord(n)-1` cross-term, PR #1453 — the final gate). *(Prior: OPEN — Sprint 27 carryforward, filed Sprint 25 Day 13; comparison target for #1393.)*
 **Severity:** Medium — model translates cleanly but PATH compilation fails with multiple `$171` errors
 **Date:** 2026-05-05
 **Last Updated:** 2026-05-27 (Sprint 27 Prep Task 2 — Phase 0 acceptance-gate section authored per PR20 codification; previous update 2026-05-13 Sprint 26 Day 9 — subsumption reference re-routed from #1334 to its Sprint 27 successor #1393; see §"Where to Investigate" step 3 for the close-and-refile rationale).
