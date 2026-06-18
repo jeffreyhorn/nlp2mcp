@@ -1131,8 +1131,11 @@ def _emit_presolve_fx_unfix(
             if not eq_paired_in_mcp:
                 continue
             idx_str = _format_map_indices(indices)
-            lines.append(f"{var_name}.lo({idx_str}) = {lo};")
-            lines.append(f"{var_name}.up({idx_str}) = {up};")
+            # Quote the variable name (Issue #665) — a fixed variable could be a
+            # quoted identifier (e.g. containing '-').
+            qvar = _quote_symbol(var_name)
+            lines.append(f"{qvar}.lo({idx_str}) = {lo};")
+            lines.append(f"{qvar}.up({idx_str}) = {up};")
     if not lines:
         return []
     if add_comments:
