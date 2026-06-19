@@ -2033,8 +2033,14 @@ def _shift_to_offset_form(expr: Expr, sum_idx: str, col_elem: str, delta: int) -
         if isinstance(e, SetMembershipTest):
             new_args: list[Expr] = []
             for a in e.indices:
+                # Shift both bare-iterator (first(j)) and offset-iterator
+                # (first(j+1)) membership-test args the same way as the body, so
+                # the per-offset guard is anchored on the column, not the iterator.
                 if isinstance(a, SymbolRef):
                     shifted = shift_index(a.name)
+                    new_args.append(SymbolRef(shifted) if isinstance(shifted, str) else shifted)
+                elif isinstance(a, IndexOffset):
+                    shifted = shift_index(a)
                     new_args.append(SymbolRef(shifted) if isinstance(shifted, str) else shifted)
                 else:
                     new_args.append(walk(a))
