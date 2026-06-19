@@ -1,7 +1,7 @@
 # camshape: MCP solves to Locally Infeasible (post-Pattern-E reclassification)
 
 **GitHub Issue:** [#1388](https://github.com/jeffreyhorn/nlp2mcp/issues/1388)
-**Status:** DEFERRED to Sprint 28 (Sprint 27 Day 11 §4.6 discriminator run; multi-bug — see "Day 11 §4.6 result" below). The linked GitHub issue remains open.
+**Status:** **RESOLVED — Sprint 28 Day 5 (2026-06-15).** camshape now **MATCHES** (run_full_test compare_match, MCP MODEL STATUS 1 at area ≈ 4.2841, was Locally Infeasible at 6.2) — **+1 Solve**. The Day-11 §4.6 discriminator (below) localized the bug to the `stat_r` offset-cross-term condition guard: the convexity cross-terms `lam_convexity(i±1)` were guarded by `middle(i)` plus the looser `ord(i)>1`/`ord(i)<=card(i)-1` instead of the canonical `middle(i±1)`, so the per-instance guard fired on the wrong elements. Fixed at the traced `stationarity.py` surface (Day-5 commit "offset-cross-term condition guard"); the separable subset-corruption precursor #1424 landed Sprint 27. *(Prior: DEFERRED to Sprint 28 — Day-11 §4.6 multi-bug analysis.)*
 **Severity:** Medium — translate + compile clean but the PATH solve produces `Locally Infeasible (model_status = 5)` with obj=6.2 vs NLP obj=4.2841.
 **Date:** 2026-05-12
 **Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 Refresh added; prior: Sprint 27 Day 11 — §4.6 3-way discriminator run; Case (b), multi-bug → Sprint 28)

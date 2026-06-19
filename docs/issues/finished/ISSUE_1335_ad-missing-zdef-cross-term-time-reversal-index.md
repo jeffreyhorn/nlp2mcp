@@ -1,7 +1,7 @@
 # AD: Missing `∂zdef/∂p` Cross-Term in `stat_p` When `zdef` References `p` via Time-Reversal-Indexed Offset
 
 **GitHub Issue:** [#1335](https://github.com/jeffreyhorn/nlp2mcp/issues/1335)
-**Status:** **AD FIX LANDED — Sprint 28 Day 7 (2026-06-17).** The missing `∂zdef/∂p` cross-term is now emitted in `stat_p(tt)` with the exact hand-derived shape. **otpop's +1 Solve/+1 Match is NOT yet realized** — it is bucket-forward, blocked by **#1449** (otpop `--nlp-presolve` `$184` compile failure: domain-widened params conflict with the `$include` source declaration) plus cold non-convexity. See RESOLUTION below. *(Prior: DEFERRED to Sprint 28; distinct from #1393 per Day 0 REPLAN.)*
+**Status:** **RESOLVED — Sprint 28 Day 7 (AD fix) + completed via the Day-7 follow-on (2026-06-18).** The missing `∂zdef/∂p` cross-term is emitted in `stat_p(tt)` with the exact hand-derived shape, and **otpop now MATCHES** (MCP MS 1, pi = 4217.7978): the +1 Solve/+1 Match is realized via otpop's four-fix arc — this issue (#1335 zdef) + #1393 (kdef) + #1449 (presolve `$184`) + #1452 (pdef `ord(n)-1` cross-term). When this AD fix first landed it was bucket-forward (blocked by #1449); #1449 and #1452 subsequently landed and otpop matches. See RESOLUTION below. *(Prior: AD FIX LANDED, match blocked by #1449; distinct from #1393 per Day 0 REPLAN.)*
 
 ## RESOLUTION (Sprint 28 Day 7, 2026-06-17) — AD fix landed; match blocked by #1449
 
