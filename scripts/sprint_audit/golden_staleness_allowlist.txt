@@ -1,0 +1,14 @@
+# Golden-staleness allowlist (Sprint 28 Priority 8).
+# Models whose committed goldens are historical artifacts: the current emit no
+# longer produces them (the model is out of scope), so a regen→diff is
+# meaningless. One model id per line; '#' comments allowed.
+#
+# Multi-solve driver scripts (out of scope): emit aborts
+#   "Model is a multi-solve driver script and is out of scope for nlp2mcp"
+danwolfe
+decomp
+saras
+# Discrete (MIP/MINLP) models (out of scope): emit aborts "... is discrete ..."
+nemhaus
+nonsharp
+trnspwl

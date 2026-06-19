@@ -1,0 +1,70 @@
+name: Golden Staleness Check
+
+# Sprint 28 Priority 8: regenerate every committed MCP golden via the canonical
+# emit and fail the PR if any non-allowlisted golden drifted, so silent golden
+# drift (the cesam/fawley/korcge/dinam noise that recurred across Sprint 27) is
+# caught at review time. Triggered only on emit-affecting source paths.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/ad/**/*.py"
+      - "src/kkt/**/*.py"
+      - "src/emit/**/*.py"
+      - "src/ir/**/*.py"
+      - "scripts/sprint_audit/check_golden_staleness.py"
+      - "scripts/sprint_audit/golden_staleness_allowlist.txt"
+      - ".github/workflows/golden-staleness.yml"
+
+# A later push to the same PR cancels the in-flight run.
+concurrency:
+  group: golden-staleness-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  golden-staleness:
+    name: Golden staleness (emit regen + byte-diff)
+    runs-on: ubuntu-latest
+    # Emit-only regen (no GAMS solve); dominated by ~8 slow-emit models
+    # (ganges/gangesx ~minutes each), parallelized to ~6 workers so wall-clock
+    # is bounded by the slowest single model. Generous ceiling.
+    timeout-minutes: 25
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Check skip label
+        id: skip
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request?.labels?.map(l => l.name) || [];
+            core.setOutput('skip', labels.includes('skip-golden-staleness') ? 'true' : 'false');
+
+      - name: Checkout
+        if: steps.skip.outputs.skip != 'true'
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        if: steps.skip.outputs.skip != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        if: steps.skip.outputs.skip != 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      # The GAMSLib raw corpus is gitignored; the check skips any golden whose
+      # raw source is absent, so CI must have the corpus available. If it is not
+      # present in this environment, the step is a no-op (0 goldens checked) —
+      # see the design doc for the corpus-availability prerequisite.
+      - name: Run golden-staleness check
+        if: steps.skip.outputs.skip != 'true'
+        run: |
+          python scripts/sprint_audit/check_golden_staleness.py --json golden-staleness.json

@@ -1,0 +1,5 @@
+# Presolve-divergence allowlist (Sprint 28 Priority 10).
+# Models whose source NLP is genuinely non-idempotent BY DESIGN, so the embedded
+# ($include, re-run under $onMultiR) NLP legitimately differs from standalone.
+# One model id per line; '#' comments allowed. Expected empty/near-empty.
+# (korcge #1439 is a real divergence and is intentionally NOT allowlisted.)

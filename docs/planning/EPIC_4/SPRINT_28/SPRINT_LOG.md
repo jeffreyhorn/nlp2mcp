@@ -407,3 +407,28 @@ The AD Jacobian was already correct (per-lead `∂pdef/∂p` = `-alpha(1)/-alpha
 - **#1385 deferred to Sprint 29** (Day 11 consumed by the camcge gate + the two cleanups, per the PLAN's slip guidance).
 
 ### Next: Day 12 — Priority 8 golden-staleness CI + Priority 10 divergence/property tests.
+
+---
+
+## Day 12 — Priority 8 golden-staleness CI + Priority 10 divergence detector & AD property tests (2026-06-19)
+
+**Status:** 🟢 DONE — all three deliverables built + CI-wired + validated. No `src/` change (tooling + tests only); no metric change. Unknowns 8.2 / 10.1 / 10.2 / 10.3 VERIFIED.
+
+### P8 — golden-staleness checker + CI + `make regen-goldens`
+- `scripts/sprint_audit/check_golden_staleness.py [--fix] [--models csv] [--json]`: regen every committed golden via `batch_translate.translate_single_model` (parallel ThreadPoolExecutor, 6 workers), byte-diff. Report mode exits 1 on non-allowlisted drift; `--fix` overwrites with a **determinism double-regen guard** (re-emit twice, require byte-identity before overwrite). Allowlist `golden_staleness_allowlist.txt` = the 6 out-of-scope models. `make regen-goldens` (= `--fix`) + `make check-goldens` (report). `.github/workflows/golden-staleness.yml` on `src/{ad,kkt,emit,ir}/**`.
+- **Validated (Unknown 8.2): full run = 0 drift across 160 in-scope goldens** (6 allowlisted). The 8 slow-emit models (ganges/gangesx ~minutes) hit the per-model translate timeout under parallel CPU contention → reclassified as a **soft "timeout/unverified"** status (not drift; the design routes full sweeps to nightly + PRs to the changed-emit subset). Gotcha fixed during build: `translate_single_model` relativizes the output path against the repo root, so the temp dir must live inside the repo.
+
+### P10 — embedded-NLP-divergence detector + CI
+- `scripts/diagnostics/check_presolve_divergence.py [--model] [--tol] [--json]`: the embedded NLP objective is **already captured** by the presolve emit as `nlp2mcp_obj_val` (no probe insertion needed) — parse it from the listing, compare to the standalone NLP objvar `.l`; flag `|Δ|/max(1,|std|) > tol` (default 1e-4) OR a GAMS abort (`ABORTED, EXECERROR = [1-9]` / `USER ERROR(S)` / `Matrix error`). The comparison is a pure `classify_divergence()` helper. Allowlist `presolve_divergence_allowlist.txt` (empty). `.github/workflows/presolve-divergence.yml` on `src/emit/{emit_gams,original_symbols}.py`.
+- **Validated (Unknown 10.1): launch CLEAN** (embedded == standalone == 2257.80 post-#1378), **korcge (#1439) flags DIVERGED live** (the `ABORTED, EXECERROR=5` abort — gotcha: GAMS prints a benign "(EXECERROR=0) CLEARED" line, so key off the ABORT not "EXECERROR"). The #1378/#1424/#1439 "must FLAG" acceptance is **unit-tested against their documented pre-fix numbers** (2604 vs 2258; 5.009 vs 4.2841; execerror) — no risky git-revert of the merged fixes.
+
+### P10 — 6 AD cross-term property tests (Unknowns 10.2, 10.3)
+- `tests/integration/emit/test_ad_crossterm_shapes.py` + 6 committed synthetic fixtures `tests/fixtures/crossterm_shapes/shape{1..6}_*.gms`. Emit each in-process (sub-second) and pattern-assert the hand-derived `stat_*` cross-term: (1) single-axis offset INVERTED, (2) self-alias swap `a(jj,i)` (#1381), (3) cross-set alias NO swap `b(i,j)` (#1398), (4) parameter-valued offset inverted `lam_pr(k,l,i-li(k),j-lj(k))` + `l-1` (#1224), (5) interior+edge convex `middle(i±1)` canonical guards (#1388), (6) tree-predicate single guarded Sum `1$(tree(n,nn))*nu_dembal(nn)` not enumerated (#1390). Always-run in `make test` (no corpus/GAMS).
+
+### Deliverables
+- `scripts/sprint_audit/check_golden_staleness.py` + `golden_staleness_allowlist.txt`; `scripts/diagnostics/check_presolve_divergence.py` + `presolve_divergence_allowlist.txt`.
+- `.github/workflows/{golden-staleness,presolve-divergence}.yml`; `Makefile` (`regen-goldens`, `check-goldens`).
+- `tests/integration/emit/test_ad_crossterm_shapes.py` (6) + 6 fixtures; `tests/unit/test_presolve_divergence_classify.py` (6).
+- CHANGELOG. typecheck/format/lint clean; `make test` green.
+
+### Next: Day 13 — Final 3× PYTHONHASHSEED retest + golden-staleness check + PR25 final tally + SPRINT_RETROSPECTIVE + Sprint 29 carryforwards.

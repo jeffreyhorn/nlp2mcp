@@ -64,6 +64,17 @@ coverage:
 	@echo "Running tests with coverage..."
 	$(PYTHON) -m pytest --cov=src tests/
 
+# Regenerate any drifted MCP goldens in place (Sprint 28 Priority 8).
+# Wraps the golden-staleness checker's --fix mode (regenerate -> determinism
+# double-check -> overwrite). Run after any intentional emit change, then commit
+# the refreshed goldens.
+regen-goldens:
+	$(PYTHON) scripts/sprint_audit/check_golden_staleness.py --fix
+
+# Report-only golden-staleness check (the CI gate uses this; exit 1 on drift).
+check-goldens:
+	$(PYTHON) scripts/sprint_audit/check_golden_staleness.py
+
 # Run GAMSLib ingestion pipeline
 ingest-gamslib:
 	@echo "Starting GAMSLib ingestion pipeline..."

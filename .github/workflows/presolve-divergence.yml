@@ -1,0 +1,67 @@
+name: Presolve Divergence Check
+
+# Sprint 28 Priority 10: under --nlp-presolve the emitted MCP $include's the
+# source NLP under $onMultiR and solves it; because $onMultiR re-runs source
+# statements, a non-idempotent statement can make the embedded NLP diverge from
+# standalone (the #1378 / #1424 / korcge-#1439 bug class). This job compares the
+# embedded vs standalone NLP objective on every presolve model and fails the PR
+# on any non-allowlisted divergence. Triggered on the presolve-emit source paths.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/emit/emit_gams.py"
+      - "src/emit/original_symbols.py"
+      - "scripts/diagnostics/check_presolve_divergence.py"
+      - "scripts/diagnostics/presolve_divergence_allowlist.txt"
+      - ".github/workflows/presolve-divergence.yml"
+
+concurrency:
+  group: presolve-divergence-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  presolve-divergence:
+    name: Presolve divergence (embedded vs standalone NLP)
+    runs-on: ubuntu-latest
+    # 11 presolve models, NLP solve only (no MCP solve) — small runtime; the
+    # generous ceiling covers GAMS install + the slowest CGE NLP.
+    timeout-minutes: 20
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Check skip label
+        id: skip
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request?.labels?.map(l => l.name) || [];
+            core.setOutput('skip', labels.includes('skip-presolve-divergence') ? 'true' : 'false');
+
+      - name: Checkout
+        if: steps.skip.outputs.skip != 'true'
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        if: steps.skip.outputs.skip != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        if: steps.skip.outputs.skip != 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      # Requires GAMS + the gitignored GAMSLib corpus; the detector skips any
+      # model whose raw source is absent (a no-op in environments without the
+      # corpus) — see the design doc for the prerequisite.
+      - name: Run presolve-divergence check
+        if: steps.skip.outputs.skip != 'true'
+        run: |
+          python scripts/diagnostics/check_presolve_divergence.py --json presolve-divergence.json
