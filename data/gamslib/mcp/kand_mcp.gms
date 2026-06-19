@@ -111,7 +111,7 @@ stat_y(j,t,n).. (prob(n) * f(j,t) * 1$(tn(t,n)) + ((-1) * lam_dembalx(j,t,n))$(t
 
 * Inequality complementarity equations
 comp_bal.. ((-1) * (sum((i,t), x(i,t)) - b)) =G= 0;
-comp_dembalx(j,t,n)$((tn(t,n)) and (ord(t) > 1)).. sum(i, a(j,i) * x(i,t)) + y(j,t,n) - (dem(n,j) + eps * sum(nn$(tree(nn,n)), y(j,t-1,nn))) =G= 0;
+comp_dembalx(j,t,n)$(tn(t,n)).. sum(i, a(j,i) * x(i,t)) + y(j,t,n) - (dem(n,j) + eps * sum(nn$(tree(nn,n)), y(j,t-1,nn))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_x(i,t).. x(i,t) - 0 =G= 0;
@@ -131,7 +131,6 @@ obj.. cost =E= sum((i,t), c(i) * x(i,t)) + sum((j,t,n)$(tn(t,n)), prob(n) * f(j,
 y.fx(j,t,n)$(not (tn(t,n))) = 0;
 piL_y.fx(j,t,n)$(not (tn(t,n))) = 0;
 lam_dembalx.fx(j,t,n)$(not (tn(t,n))) = 0;
-lam_dembalx.fx(j,t,n)$(not (ord(t) > 1)) = 0;
 
 * ============================================
 * Model MCP Declaration

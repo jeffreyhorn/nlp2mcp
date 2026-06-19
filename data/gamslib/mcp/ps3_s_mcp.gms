@@ -107,7 +107,7 @@ stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) - lam_licd(i) + lam_licd(i-1)$(or
 stat_x(i).. ((-1) * (0.5 * x(i) ** (-0.5))) * nu_rev(i) + theta(i) * lam_pc(i) + theta(i) * lam_licd(i) + (((-1) * theta(i-1)) * lam_licd(i-1))$(ord(i) > 1) - piL_x(i) =E= 0;
 
 * Inequality complementarity equations
-comp_licd(i)$(ord(i) <= card(i) - 1).. w(i) - theta(i) * x(i) - (w(i+1) - theta(i) * x(i+1)) =G= 0;
+comp_licd(i).. w(i) - theta(i) * x(i) - (w(i+1) - theta(i) * x(i+1)) =G= 0;
 comp_pc(i).. w(i) - theta(i) * x(i) - ru =G= 0;
 
 * Lower bound complementarity equations
@@ -119,15 +119,6 @@ comp_lo_x(i).. x(i) - 0.0001 =G= 0;
 obj.. util =E= sum(i, p(i) * (b(i) - w(i)));
 rev(i).. b(i) =E= x(i) ** 0.5;
 
-
-* ============================================
-* Fix inactive variable instances
-* ============================================
-
-* Variables whose paired MCP equation is conditioned must be
-* fixed for excluded instances to satisfy MCP matching.
-
-lam_licd.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration

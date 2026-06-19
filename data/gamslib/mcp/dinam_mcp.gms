@@ -475,11 +475,11 @@ stat_zt(te).. (((-1) * nu_fexch(te)$(t(te))) + sum((i,t__), (apz(i,t__) * lam_mb
 
 * Inequality complementarity equations
 comp_cap(j,t).. ((-1) * (x(j,t) - (x0(j) + interval * sum(te$(ts2(t,te)), v(j,te))))) =G= 0;
-comp_dsc(te)$((t(te)) and (ord(te) > 1)).. ((-1) * (sav(te) - sav(te-1) - mps * (gdp(te) - gdp(te-1)))) =G= 0;
+comp_dsc(te)$(t(te)).. ((-1) * (sav(te) - sav(te-1) - mps * (gdp(te) - gdp(te-1)))) =G= 0;
 comp_ffdp.. ((-1) * (sum(t, fdp(t)) - cfdp)) =G= 0;
 comp_ldsc(s,te)$(ord(te) > initial).. ((-1) * (rql(s,te) - (ls(te,s) + sum(sp, ldg(s,sp) * ld(sp,te) + lugt(s,sp,te) * ul(sp,te)) + sum((tep,sp,l)$((ord(tep) + ord(l) - 1 > length(sp))$(ts(te,tep))), sf("change",s,l,sp) * ed(sp,tep+(ord(l)-1))) + sum((sp,l)$(ord(te) + ord(l) - 1 > length(sp)), sf("input",s,l,sp) * ed(sp,te+(ord(l)-1)))))) =G= 0;
 comp_mb(i,t).. ((-1) * (sum(j, a(i,j,t) * x(j,t) + b(i,j,t) * v(j,t)) + bk(i,"agri",t) * ka(t) + apc(i,t) * con(t) + apz(i,t) * zt(t) + es(i) * sum(tep$(ts(t,tep)), zmi(t,tep) * em(tep)) + e(i,t)$(im(i)) + csm(i) * ea(t) + sum(s, ssr(i,s) * ul(s,t)))) =G= 0;
-comp_tic(i,te)$((ord(te) > last) and (ord(te) > 1)).. ((-1) * (apc(i,te-1) * (con(te) - con(te-1)) + gv3 * sum(j, b(i,j,te-1) * v(j,te-1)) + deltae(i) + deltaz(i) - interval * sum(j, ((-1) * a(i,j,te-1)) * v(j,te-1)))) =G= 0;
+comp_tic(i,te)$(ord(te) > last).. ((-1) * (apc(i,te-1) * (con(te) - con(te-1)) + gv3 * sum(j, b(i,j,te-1) * v(j,te-1)) + deltae(i) + deltaz(i) - interval * sum(j, ((-1) * a(i,j,te-1)) * v(j,te-1)))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_con(te).. con(te) - 0 =G= 0;
@@ -569,8 +569,6 @@ rql.fx(s,te)$(not (ord(te) > 1)) = 0;
 lam_dsc.fx(te)$(not (t(te))) = 0;
 lam_ldsc.fx(s,te)$(not (ord(te) > initial)) = 0;
 lam_tic.fx(i,te)$(not (ord(te) > last)) = 0;
-lam_dsc.fx(te)$(not (ord(te) > 1)) = 0;
-lam_tic.fx(i,te)$(not (ord(te) > 1)) = 0;
 piL_e.fx(i,te)$(not (im(i) and t(te) and elo(i,te) > -inf)) = 0;
 piL_zt.fx(te)$(not (t(te) and zlo(te) > -inf)) = 0;
 piU_e.fx(i,te)$(not (im(i) and t(te) and eup(i,te) < inf)) = 0;

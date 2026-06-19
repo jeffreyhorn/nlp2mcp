@@ -2688,6 +2688,16 @@ def emit_gams_mcp(
         if ref_mults is not None and comp_pair.variable not in ref_mults:
             continue
         eq_def = comp_pair.equation
+        # Issue #1390: only fix the multiplier for a HEAD-domain offset (the
+        # equation is genuinely undefined for excluded instances, e.g.
+        # ode1(nh(i+1))..). A BODY offset (kand's dembalx eps*sum(tree,y(t-1)))
+        # leaves the constraint defined at all domain elements — GAMS suppresses
+        # the out-of-range lag — so fixing lam to 0 at the first period drops the
+        # first-period demand constraint (the stat_x residual). Mirrors the
+        # equality path (the inferred-lead/lag .fx was removed for body offsets;
+        # section 3a keeps it only for has_head_domain_offset).
+        if not eq_def.has_head_domain_offset:
+            continue
         inferred_cond = infer_lead_lag_condition(eq_def)
         if inferred_cond is None:
             continue

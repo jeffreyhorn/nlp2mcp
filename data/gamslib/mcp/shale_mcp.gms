@@ -359,7 +359,7 @@ stat_z(p,tf).. sum((crs,t), (a(crs,p) * nu_msu(crs,t))$(crs(crs) and t(t))) + su
 * Inequality complementarity equations
 comp_cae(er,t).. ((-1) * (ebm * sum(p, a(er,p) * z(p,t)) + bc(er) - esa(er))) =G= 0;
 comp_cdc(cc).. ((-1) * (theta * sum((p,t), a(cc,p) * z(p,t)) - bd(cc))) =G= 0;
-comp_cind(t)$(ord(t) > 1).. ((-1) * (x("syncrude",t) - (x("syncrude",t-1) + newcap(t)))) =G= 0;
+comp_cind(t).. ((-1) * (x("syncrude",t) - (x("syncrude",t-1) + newcap(t)))) =G= 0;
 comp_cpu(m,t).. ((-1) * (sum(p, b(m,p) * z(p,t)) - sum(tf$(ts(t,tf)), h(m,tf)))) =G= 0;
 comp_cs(crs).. ((-1) * (theta * sum(t, us(crs,t)) - bs(crs))) =G= 0;
 comp_mmr3.. ((-1) * (sum(pdu, z(pdu,"2000-04")) - 0.413 * sum(pmu, z(pmu,"1990-94")))) =G= 0;
@@ -431,7 +431,6 @@ piU_uug.fx(c,i)$(not (uug.up(c,i) - uug.lo(c,i) > 1e-10)) = 0;
 uur.fx(c,i,tf)$(not (uur.up(c,i,tf) - uur.lo(c,i,tf) > 1e-10)) = uur.lo(c,i,tf);
 piL_uur.fx(c,i,tf)$(not (uur.up(c,i,tf) - uur.lo(c,i,tf) > 1e-10)) = 0;
 piU_uur.fx(c,i,tf)$(not (uur.up(c,i,tf) - uur.lo(c,i,tf) > 1e-10)) = 0;
-lam_cind.fx(t)$(not (ord(t) > 1)) = 0;
 piU_uug.fx(c,i)$(not (crg(c) and bbg(c) < inf)) = 0;
 piU_uur.fx(c,i,tf)$(not (crr(c) and t(tf) and bbr(c) < inf)) = 0;
 lam_cae.fx(c,tf)$(not (er(c) and t(tf))) = 0;
