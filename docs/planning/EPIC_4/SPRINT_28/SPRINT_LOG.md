@@ -381,3 +381,29 @@ The AD Jacobian was already correct (per-lead `∂pdef/∂p` = `-alpha(1)/-alpha
 - `docs/issues/ISSUE_1390_*.md` RESOLUTION; CHANGELOG. `make test` 4917 passed; typecheck/format/lint clean.
 
 ### Next: Day 11 — camcge Task-6 gate + P7 cleanups (#1374 robot `.l` dedup, #1400 message-field relativization).
+
+---
+
+## Day 11 — Priority 6 camcge Task-6 gate → REPLAN; Priority 7 cleanups #1374 + #1400 (2026-06-19)
+
+### camcge (Task-6 gate) → **REPLAN to Sprint 29 / Epic 5 inherent-degeneracy**
+- Harness (NLP ref 191.7346): `dual transfer CONSISTENT`, verdict **CASE_B**, max-residual `stat_mps` (rel 1.05, raw −210), then `stat_tm`/`stat_pwm` (0.04–0.08). **But the prompt's Case-c premise holds:** the `stat_mps` CASE_B is a **fix-multiplier-transfer artifact** — `mps` is a fixed variable, `stat_mps` (`sum(i,y·cles(i)·nu_cdeq(i)) − y·nu_hhsaveq + nu_mps_fx`) hand-derives **correct**, and the synthetic `mps_fx` equation has no NLP marginal so `nu_mps_fx` is un-warm-started → residual = −gradient (−210). Cold MCP **MS 4 Infeasible at iteration 0** (`stat_cd` rows INFES at a uniform −0.2022) = singular-system signature.
+- **Root cause = CGE Walras-law degeneracy** (`equil(i)` goods + `lmequil(lc)` labor market-clearing linearly dependent given budget balance; no price numéraire). PROCEED criterion ("single redundant Walras row + numéraire fix preserving the economic solution as a general emit change") **not met** — that is a CGE-domain structural transformation = Epic 5. Confirms the ISSUE_1330 round-3 diagnosis. **No `src/`; camcge stays model_infeasible.** ISSUE_1330 updated with the gate result.
+
+### P7 #1374 — robot `.l` denominator/override dedup → **RESOLVED**
+- `src/emit/emit_gams.py`: when merging `.fx → .l` per-instance overrides into a var's init group, skip an override that exactly duplicates a denominator-guard bulk-init line (same element, same value). robot's `rho.fx(firstlast)=4.5` → `rho.l('h0')/('h50')=4.5` was emitted twice (the divisor-guard init already set them). **Blast radius: robot only** (1 golden, the 2 dup lines removed); solve-equivalent (byte-only); robot compiles clean. Completes #1374 (the `.fx`-restore shape landed Sprint 27 Day 13). 1 integration test.
+
+### P7 #1400 — repo-relative warning paths → **RESOLVED**
+- `src/cli.py`: `_install_repo_relative_formatwarning()` (in `main()`) wraps `warnings.formatwarning` so in-repo `UserWarning` filenames are emitted relative to the repo root. Batch tooling subprocesses the CLI and captures stderr into the gamslib DB `message` field, where the default absolute path leaked the home dir (e.g. mine's `pr` warning). Verified: mine warnings now `src/ad/index_mapping.py:648` (0 abs paths, was 4). Completes #1400 (the `mcp_file_used` leak landed Sprint 27 Day 13). 3 unit tests.
+
+### PR25 tally (Day 11)
+- **No metric change** (camcge REPLAN'd → stays model_infeasible; #1374/#1400 are byte-only/portability). Solve 107, Match 69 stand.
+
+### Deliverables
+- `src/emit/emit_gams.py` (#1374), `src/cli.py` (#1400).
+- `tests/integration/emit/test_1374_robot_l_init_dedup.py`; `tests/unit/test_cli_repo_relative_warnings.py` (3).
+- `data/gamslib/mcp/robot_mcp.gms` regenerated (dedup).
+- `docs/issues/ISSUE_1330_*.md` REPLAN, `ISSUE_1374_*.md` RESOLVED, new `ISSUE_1400_*.md`; CHANGELOG. `make test` 4921 passed; typecheck/format/lint clean.
+- **#1385 deferred to Sprint 29** (Day 11 consumed by the camcge gate + the two cleanups, per the PLAN's slip guidance).
+
+### Next: Day 12 — Priority 8 golden-staleness CI + Priority 10 divergence/property tests.

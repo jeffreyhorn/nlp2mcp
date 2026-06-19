@@ -5,7 +5,9 @@ by deriving KKT (Karush-Kuhn-Tucker) conditions.
 """
 
 import logging
+import os
 import sys
+import warnings
 from pathlib import Path
 
 import click
@@ -43,6 +45,40 @@ from src.validation.numerical import validate_jacobian_entries, validate_paramet
 # Distinct exit code so callers (CI, batch scripts) can distinguish
 # "model is out of scope" from generic translation failures.
 EXIT_MINLP_OUT_OF_SCOPE = 3
+
+# Repo root, for relativizing warning paths (Issue #1400).
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _install_repo_relative_formatwarning() -> None:
+    """Issue #1400: render warning filenames repo-relative.
+
+    Batch tooling (`scripts/gamslib/batch_translate.py`) runs the CLI as a
+    subprocess and captures its stderr — including ``UserWarning`` text — into
+    the ``gamslib_status.json`` ``message`` field. The default
+    ``warnings.formatwarning`` embeds the ABSOLUTE source filename
+    (``/Users/<user>/…/src/ad/index_mapping.py:648``), which leaks the runner's
+    home directory and breaks byte-identical cross-machine DBs. Wrap
+    ``formatwarning`` so in-repo filenames are emitted relative to the repo root
+    (out-of-repo paths, e.g. site-packages, are left absolute). Idempotent.
+    """
+    base = warnings.formatwarning
+    if getattr(base, "_repo_relative", False):
+        return
+
+    def _fmt(message, category, filename, lineno, line=None):  # type: ignore[no-untyped-def]
+        try:
+            rel = os.path.relpath(filename, _PROJECT_ROOT)
+            if not rel.startswith(".."):
+                filename = rel
+        except (ValueError, OSError):
+            pass
+        return base(message, category, filename, lineno, line)
+
+    _fmt._repo_relative = True  # type: ignore[attr-defined]
+    warnings.formatwarning = _fmt
+
+
 EXIT_MULTI_SOLVE_OUT_OF_SCOPE = 4
 
 
@@ -218,6 +254,10 @@ def main(
     required_limit = 50000
     if required_limit > original_limit:
         sys.setrecursionlimit(required_limit)
+
+    # Issue #1400: relativize warning filenames so captured stderr (into the
+    # gamslib DB `message` field) doesn't leak the runner's absolute home path.
+    _install_repo_relative_formatwarning()
 
     # Initialize diagnostic report if requested
     diag_report = None

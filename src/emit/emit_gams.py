@@ -2138,7 +2138,16 @@ def emit_gams_mcp(
     if not presolve_will_emit and fx_to_l_overrides_by_var:
         for vname, override_lines in fx_to_l_overrides_by_var.items():
             if vname in var_init_groups:
-                var_init_groups[vname].extend(override_lines)
+                # Issue #1374: skip a `.fx → .l` override that exactly duplicates
+                # a bulk-init line already emitted for this variable (same element,
+                # same value) — e.g. robot's `rho.fx(firstlast)=4.5` → `rho.l('h0')
+                # =4.5`/`rho.l('h50')=4.5` when the denominator-guard init already
+                # set `rho.l('h0')=4.5`/`rho.l('h50')=4.5`. An override with a
+                # DIFFERENT value (or for an element the bulk init did not cover)
+                # is not a duplicate and is kept.
+                existing_init = set(var_init_groups[vname])
+                deduped = [ln for ln in override_lines if ln not in existing_init]
+                var_init_groups[vname].extend(deduped)
             else:
                 var_init_groups[vname] = list(override_lines)
                 var_init_order.append(vname)
