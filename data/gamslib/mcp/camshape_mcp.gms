@@ -422,10 +422,10 @@ stat_r(i).. (((-1) * (pi * R_v / 100)) + nu_eqrdiff(i)$(j(i)) + (((-1) * nu_eqrd
 stat_rdiff(i).. (nu_eqrdiff(i)$(j(i)))$(j(i) and rdiff.up(i) - rdiff.lo(i) > 1e-10) =E= 0;
 
 * Inequality complementarity equations
-comp_convex_edge1(i)$((first(i)) and (ord(i) <= card(i) - 1)).. ((-1) * (((-1) * R_min) * r(i) - r(i) * r(i+1) + 2 * R_min * r(i+1) * cos(d_theta))) =G= 0;
-comp_convex_edge3(i)$((last(i)) and (ord(i) > 1)).. ((-1) * (((-1) * r(i-1)) * r(i) - r(i) * R_max + 2 * r(i-1) * R_max * cos(d_theta))) =G= 0;
+comp_convex_edge1(i)$(first(i)).. ((-1) * (((-1) * R_min) * r(i) - r(i) * r(i+1) + 2 * R_min * r(i+1) * cos(d_theta))) =G= 0;
+comp_convex_edge3(i)$(last(i)).. ((-1) * (((-1) * r(i-1)) * r(i) - r(i) * R_max + 2 * r(i-1) * R_max * cos(d_theta))) =G= 0;
 comp_convex_edge4(i)$(last(i)).. ((-1) * ((-2) * R_max * r(i) + 2 * sqr(r(i)) * cos(d_theta))) =G= 0;
-comp_convexity(i)$((middle(i)) and ((ord(i) <= card(i) - 1) and (ord(i) > 1))).. ((-1) * (((-1) * r(i-1)) * r(i) - r(i) * r(i+1) + 2 * r(i-1) * r(i+1) * cos(d_theta))) =G= 0;
+comp_convexity(i)$(middle(i)).. ((-1) * (((-1) * r(i-1)) * r(i) - r(i) * r(i+1) + 2 * r(i-1) * r(i+1) * cos(d_theta))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_r(i).. r(i) - 1 =G= 0;
@@ -455,9 +455,6 @@ lam_convex_edge1.fx(i)$(not (first(i))) = 0;
 lam_convex_edge3.fx(i)$(not (last(i))) = 0;
 lam_convex_edge4.fx(i)$(not (last(i))) = 0;
 lam_convexity.fx(i)$(not (middle(i))) = 0;
-lam_convex_edge1.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
-lam_convex_edge3.fx(i)$(not (ord(i) > 1)) = 0;
-lam_convexity.fx(i)$(not ((ord(i) <= card(i) - 1) and (ord(i) > 1))) = 0;
 nu_eqrdiff.fx(i)$(not (j(i))) = 0;
 nu_eqrdiff.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 

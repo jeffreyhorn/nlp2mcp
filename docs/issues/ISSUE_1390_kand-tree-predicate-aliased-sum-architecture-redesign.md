@@ -1,7 +1,23 @@
 # kand: alias-AD per-instance enumeration produces 22 phantom-offset cross-terms in stat_y (tree-predicate-aliased Sum architecture redesign)
 
 **GitHub Issue:** [#1390](https://github.com/jeffreyhorn/nlp2mcp/issues/1390)
-**Status:** DEFERRED to Sprint 28 (Sprint 27 Day 5 re-scoped Phase 0 = re-REPLAN; the documented fix premise is disproven — see "Sprint 28 carryforward" below). The linked GitHub issue remains open.
+**Status:** **RESOLVED — Sprint 28 Day 10 (2026-06-18).** **kand MATCHES** (run_full_test compare_match, MCP MS 1 at cost = 2613.0; harness CASE_A healthy). The true defect was NOT the phantom-term enumeration (proven inert in Sprint 27) — it was the complementarity domain of the `dembalx` inequality being wrongly restricted to `ord(t)>1` (and `lam_dembalx` fixed to 0 at the first period) by the inferred BODY lead/lag bound, which dropped the first-period demand constraint and corrupted `stat_x`. *(Prior: DEFERRED — Sprint 27 re-REPLAN.)*
+
+## RESOLUTION — Day-10 Task-6 gate → PROCEED + fix (Sprint 28 Day 10, 2026-06-18)
+
+**Gate (Task 6):** confirmed LP reference 2613.0; the KKT-residual harness reported **CASE_B (emit_bug)** with the dual-transfer self-check CONSISTENT and max-residual row **`stat_x(raw-2,time-1)`** (rel 1.04) — a localizable first-stage `x` stationarity row → **PROCEED** (not the Case-c LP-recourse-coupling REPLAN).
+
+**Root cause:** the `dembalx(j,tn(t,n))` inequality has the lag `y(j,t-1,nn)` in its **body** (its head domain `(j,tn(t,n))` has NO offset — `has_head_domain_offset=False`). GAMS evaluates the out-of-range lag at the first period as 0, so the constraint is defined at ALL `tn(t,n)`. But the emit applied the inferred lead/lag bound `ord(t)>1` to the **inequality complementarity** — restricting `comp_dembalx` to `ord(t)>1` and fixing `lam_dembalx=0` at the first period — which dropped the first-period demand constraint. `stat_x(i,time-1)` then lost its `lam_dembalx(j,time-1,n)` contribution (the 82.8 residual), and the MCP cold-solved to a spurious 195.0. This is the SAME class of bug that was already removed for **equalities** (the inferred body-lead/lag `.fx` generation), but it was still firing for inequalities.
+
+**Fix (2 sites, mirror the equality path):**
+- `src/emit/equations.py` (inequality complementarity emit, ~line 1092): pass `skip_lead_lag_inference=not comp_pair.equation.has_head_domain_offset` (the equality emit already does this at line 1161), so a BODY offset no longer ANDs `ord(t)>1` into the comp domain.
+- `src/emit/emit_gams.py` (section 2b, #943 inequality multiplier fixing): gate on `eq_def.has_head_domain_offset` (only a HEAD-domain offset — e.g. `ode1(nh(i+1))..` — genuinely restricts the domain and warrants fixing the multiplier; mirrors equality section 3a's #1084 gate).
+
+**Result:** `comp_dembalx(j,t,n)$(tn(t,n))` (no `ord(t)>1`), no spurious `lam_dembalx` fixing; kand MCP solves **MS 1 at 2613.0** = LP optimum (was 195.0). Harness → CASE_A (max-residual `stat_x` 1.3e-16). **+1 Match.** The 22 phantom-offset `lam_dembalx` cross-terms in `stat_y` REMAIN (proven inert in Sprint 27; out of scope) — they do not affect the objective.
+
+**Blast radius (full 153-golden regen):** 9 cold goldens change — kand (mismatch→match), camshape (solve-equivalent: the redundant body-lag guard was already covered by the explicit `first/last/middle(i)` condition), and dinam + ps{10_s,10_s_mn,3_s,3_s_mn,3_s_scp,5_s_mn} (body-offset comp domains corrected — `licd`/`mn`-style body-lead incentive-compatibility constraints now span the full domain; status unchanged, still mismatch/skipped for unrelated reasons, all compile clean). **Head-offset** models (pak `conl/invl/invu(te+1)`, polygon `ordered`) are byte-identical to baseline — the refined gate (preserving `has_head_domain_offset` on the comp equation, `src/kkt/complementarity.py`) keeps their genuine restriction, so the first-cut regressions (pak match→fail, polygon solve→fail) are avoided. **+1 Match (kand), no regressions.** This supersedes #943's body-offset inequality restriction (binding-and-wrong in kand; non-binding-but-incorrect in ps*); the 3 `TestLeadLagComplementarityFix` tests were updated to assert the corrected full-domain behavior.
+
+**Verification:** `tests/integration/emit/test_1390_kand_body_lag_constraint_domain.py` (asserts comp_dembalx not domain-restricted + lam not body-lag-fixed); run_full_test compare_match; harness CASE_A; `make test` 4917 passed.
 **Severity:** Medium — produces a valid MCP solve that converges to Optimal but with ~92.5% rel_diff vs the NLP optimum; not a localized AD-helper bug but an architecture-level reclassification.
 **Date:** 2026-05-12
 **Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 acceptance gate authored; prior: 2026-06-06)

@@ -1089,7 +1089,19 @@ def emit_equation_definitions(
             comp_pair = kkt.complementarity_ineq[eq_name]
             if ref_mults is not None and comp_pair.variable not in ref_mults:
                 continue
-            eq_str, aliases = emit_equation_def(comp_pair.equation.name, comp_pair.equation)
+            # Issue #1390: only restrict the complementarity domain with the
+            # inferred lead/lag bound when the offset is in the equation HEAD
+            # (e.g. ode1(nh(i+1))..). For a BODY offset (e.g. kand's dembalx with
+            # eps*sum(tree, y(j,t-1,nn))), the constraint is defined at ALL domain
+            # elements — GAMS evaluates the out-of-range lag as 0 — so restricting
+            # it to ord(t)>1 drops the first-period demand constraint and corrupts
+            # stat_x. Mirrors the equality path (skip_lead_lag_inference at the
+            # original-equality emit and section 3a's head-domain-offset gate).
+            eq_str, aliases = emit_equation_def(
+                comp_pair.equation.name,
+                comp_pair.equation,
+                skip_lead_lag_inference=not comp_pair.equation.has_head_domain_offset,
+            )
             lines.append(eq_str)
             _merge_alias_dicts(all_aliases, aliases)
         lines.append("")

@@ -211,7 +211,7 @@ stat_w(t,i).. ((-1) * labw(i)) * nu_lw(t) + ((-1) * (1000 * tr * yw * dist(i) / 
 stat_x(t,c).. ((-1) * (1000 * cr(c) / 1000000)) * nu_rd(t) + ((-1) * (1000 * cc(c) / 1000000)) * nu_cd(t) + sum(m, ld(c,m) * lam_lb(t,m)) + (((-1) * yc(c)) * lam_mm(t))$(sameas(c, 'maize')) + ((-1) * lam_matd2(t))$(sameas(c, 'maize')) + (wrc * lam_wb(t))$(sameas(c, 'tobacco')) + ((((-1) * lam_matd1(t+1))$(ord(t) <= card(t) - 1))$(ord(c) = 1))$((sameas(t, 'y01') or sameas(t, 'y02') or sameas(t, 'y03') or sameas(t, 'y04') or sameas(t, 'y05') or sameas(t, 'y06') or sameas(t, 'y07') or sameas(t, 'y08') or sameas(t, 'y09') or sameas(t, 'y10') or sameas(t, 'y11') or sameas(t, 'y12') or sameas(t, 'y13') or sameas(t, 'y14') or sameas(t, 'y15') or sameas(t, 'y16') or sameas(t, 'y17') or sameas(t, 'y18') or sameas(t, 'y19') or sameas(t, 'y20') or sameas(t, 'y21') or sameas(t, 'y22') or sameas(t, 'y23') or sameas(t, 'y24') or sameas(t, 'y25') or sameas(t, 'y26') or sameas(t, 'y27') or sameas(t, 'y28') or sameas(t, 'y29')) and sameas(c, 'tobacco')) - piL_x(t,c) =E= 0;
 
 * Inequality complementarity equations
-comp_lb(t,m)$(ord(t) > 1).. ((-1) * (ld("timber-1",m) * v(t) + ld("timber-2",m) * v(t-1) + sum(c, ld(c,m) * x(t,c)) + lc(t,m)$(mc(m)) - labor(m))) =G= 0;
+comp_lb(t,m).. ((-1) * (ld("timber-1",m) * v(t) + ld("timber-2",m) * v(t-1) + sum(c, ld(c,m) * x(t,c)) + lc(t,m)$(mc(m)) - labor(m))) =G= 0;
 comp_matd1(t)$(ord(t) > 1).. ((-1) * (mat(t) - x(t-1,"tobacco"))) =G= 0;
 comp_matd2(t).. ((-1) * (mat(t) - x(t,"maize"))) =G= 0;
 comp_mm(t).. yc("maize") * (x(t,"maize") + matr * mat(t)) - dmaize =G= 0;
@@ -245,7 +245,6 @@ od.. income =E= sum(t, delt(t) * (rev(t) - cost(t) + vr(t) * v(t) / 1000));
 
 lc.fx(t,m)$(not (mc(m))) = 0;
 piL_lc.fx(t,m)$(not (mc(m))) = 0;
-lam_lb.fx(t,m)$(not (ord(t) > 1)) = 0;
 lam_matd1.fx(t)$(not (ord(t) > 1)) = 0;
 piU_mat.fx(t)$(not has_mat_up(t)) = 0;
 

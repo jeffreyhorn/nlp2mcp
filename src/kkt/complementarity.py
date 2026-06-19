@@ -246,6 +246,14 @@ def build_complementarity_pairs(
             relation=Rel.GE,
             lhs_rhs=(F_lam, Const(0.0)),
             declaration_domain=comp_decl_domain,
+            # Issue #1390: preserve the original constraint's head-domain-offset
+            # flag. The comp equation normalizes a head offset (e.g. conl(te+1))
+            # into the body (c(te+1)), so without this it would look like a BODY
+            # offset and the emit would drop the genuine domain restriction.
+            # The flag lets the inequality-comp emit keep the lead/lag restriction
+            # for head offsets (pak conl/invl/invu) while dropping it for true
+            # body offsets (kand dembalx with eps*sum(tree,y(t-1))).
+            has_head_domain_offset=eq_def.has_head_domain_offset,
         )
 
         # Check if this is a max constraint from reformulation

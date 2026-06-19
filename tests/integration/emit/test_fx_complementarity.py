@@ -89,23 +89,34 @@ class TestDiagonalComplementarityFix:
 
 @pytest.mark.integration
 class TestLeadLagComplementarityFix:
-    """Issue #943: Fix multipliers for excluded terminal indices from lead/lag."""
+    """Issue #943 / #1390: an inequality constraint with a BODY lead/lag offset
+    (e.g. ps's ``licd(i).. w(i)-theta(i)*x(i) =g= w(i+1)-theta(i)*x(i+1)``) is
+    defined at ALL domain elements — GAMS evaluates the out-of-range terminal
+    lead as 0. So the complementarity must span the full domain and the
+    multiplier must NOT be fixed at the terminal index by the inferred body-lag
+    bound. (#943 originally restricted it to ``ord(i)<=card(i)-1``; #1390 found
+    that this drops a genuine constraint — binding in kand's dembalx, harmless
+    but still incorrect here — and removed it for body offsets, mirroring the
+    equality path. A head-domain offset like ``conl(te+1)..`` still IS restricted.)
+    """
 
-    def test_ps3_s_leadlag_fx_emitted(self):
-        """ps3_s: lam_licd.fx(i)$(not (ord(i) <= card(i) - 1)) = 0 must appear."""
+    def test_ps3_s_leadlag_not_domain_restricted(self):
+        """ps3_s: comp_licd spans all i; lam_licd not body-lag-fixed (#1390)."""
         result = _generate_mcp("ps3_s")
-        assert "lam_licd.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;" in result
+        assert "comp_licd(i).." in result
+        assert "lam_licd.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;" not in result
 
-    def test_ps3_s_mn_leadlag_fx_emitted(self):
-        """ps3_s_mn: lam_licd and lam_mn .fx must appear."""
+    def test_ps3_s_mn_leadlag_not_domain_restricted(self):
+        """ps3_s_mn: neither licd nor mn body-lag-restricted (#1390)."""
         result = _generate_mcp("ps3_s_mn")
-        assert "lam_licd.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;" in result
-        assert "lam_mn.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;" in result
+        assert "lam_licd.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;" not in result
+        assert "lam_mn.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;" not in result
 
-    def test_ps10_s_leadlag_fx_emitted(self):
-        """ps10_s: lam_licd.fx(i)$(not (ord(i) <= card(i) - 1)) = 0 must appear."""
+    def test_ps10_s_leadlag_not_domain_restricted(self):
+        """ps10_s: comp_licd spans all i; lam_licd not body-lag-fixed (#1390)."""
         result = _generate_mcp("ps10_s")
-        assert "lam_licd.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;" in result
+        assert "comp_licd(i).." in result
+        assert "lam_licd.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;" not in result
 
 
 @pytest.mark.integration

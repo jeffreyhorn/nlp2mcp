@@ -353,3 +353,31 @@ The AD Jacobian was already correct (per-lead `∂pdef/∂p` = `-alpha(1)/-alpha
 - `docs/issues/ISSUE_1387_*.md` + `ISSUE_1455_*.md` RESOLUTION; CHANGELOG.
 
 ### Next: resume Sprint 28 PLAN (Day 10 — Checkpoint 2 + #1390 kand Task-6 gate).
+
+---
+
+## Day 10 — Checkpoint 2 + Priority 5: #1390 kand Task-6 gate → **PROCEED** + fix → kand MATCHES (2026-06-18)
+
+### Checkpoint 2
+- **Golden-staleness CLEAN:** all 13 tracked presolve goldens re-emit byte-identical; cold goldens clean (Day-9 full regen). `changed_emit_artifacts.py --since-commit 68be9cca` = the expected per-PR golden set.
+- **PR25 tally entering Day 10: Solve 107, Match 67** (Day-0 baseline Solve 105/Match 62 + camshape Solve, otpop Solve/Match, chenery/cclinpts/chakra Match). Match target ≥65 **exceeded**; Solve ≥110 is 3 short (the deferred camcge/otpop-class).
+
+### #1390 kand — Task-6 gate → PROCEED (Case B)
+- LP reference **2613.0** confirmed. Harness verdict **CASE_B (emit_bug)**, dual-transfer self-check **CONSISTENT**, max-residual row **`stat_x(raw-2,time-1)`** (rel 1.04) → localizable → **PROCEED** (not the Case-c LP-recourse-coupling REPLAN). Phantom `stat_y` terms confirmed inert (out of scope).
+- **Root cause:** `dembalx(j,tn(t,n))` has the lag `y(j,t-1,nn)` in its **body** (head has no offset). GAMS evaluates the out-of-range first-period lag as 0, so the constraint is defined at ALL `tn(t,n)`. The emit applied the inferred lead/lag bound `ord(t)>1` to the **inequality** complementarity (restricting `comp_dembalx`, fixing `lam_dembalx=0` at the first period) — dropping the first-period demand constraint and corrupting `stat_x`; the MCP cold-solved to a spurious 195.0. Same class already removed for **equalities**, still firing for inequalities.
+- **Fix (3 sites, mirror the equality path):** `src/emit/equations.py` (inequality comp emit passes `skip_lead_lag_inference=not has_head_domain_offset`); `src/emit/emit_gams.py` §2b (gate the #943 multiplier fix on `has_head_domain_offset`); `src/kkt/complementarity.py` (**preserve `has_head_domain_offset` on the comp equation** — it normalizes a head offset into the body; without this, head-offset models pak/polygon would lose their genuine restriction).
+- **kand MATCHES** (run_full_test compare_match, MCP MS 1 at cost = 2613.0; harness now **CASE_A** healthy, residual 1.3e-16).
+
+### PR25 tally (Day 10)
+- **+2 Match (kand, srkandw — genuine, both cold-match at 2613.0 via the #1390 body-offset fix; no presolve retry).** Match **67 → 69**. Solve 107 (both already solved cold; the change is match). *(Separately: like — a kand-family sibling — also matches, but via the Day-9 facet-4 presolve-retry with a byte-identical cold golden, i.e. already realizable on `main`; recorded at the Day-13 retest, not attributed to #1390.)*
+
+### Blast radius (full 153-golden regen)
+- **12 cold goldens change, no regressions:** kand + srkandw (→match), camshape (solve-equivalent — redundant guard removed, explicit first/last/middle condition already covered it; still matches), dinam + ps{10_s,10_s_mn,3_s,3_s_mn,3_s_scp,5_s_mn} + shale + tabora (body-offset comp domains corrected; status unchanged — mismatch/skipped/license for unrelated reasons; all compile clean). **Head-offset models (pak/polygon/invu-type) byte-identical to baseline** — the `has_head_domain_offset`-preservation gate avoided the first-cut regressions (pak match→fail, polygon solve→fail), both verified solving MS 1. Supersedes #943's body-offset restriction.
+
+### Deliverables
+- `src/emit/equations.py`, `src/emit/emit_gams.py`, `src/kkt/complementarity.py`.
+- `tests/integration/emit/test_1390_kand_body_lag_constraint_domain.py` (1 test); 3 `TestLeadLagComplementarityFix` tests updated to the corrected full-domain behavior.
+- `data/gamslib/mcp/{kand,srkandw,camshape,dinam,ps10_s,ps10_s_mn,ps3_s,ps3_s_mn,ps3_s_scp,ps5_s_mn,shale,tabora}_mcp.gms` regenerated.
+- `docs/issues/ISSUE_1390_*.md` RESOLUTION; CHANGELOG. `make test` 4917 passed; typecheck/format/lint clean.
+
+### Next: Day 11 — camcge Task-6 gate + P7 cleanups (#1374 robot `.l` dedup, #1400 message-field relativization).
