@@ -127,6 +127,33 @@ def get_compare_function():
     return compare_solutions
 
 
+def _cold_objective_mismatches_nlp(
+    model: dict[str, Any], cold_result: dict[str, Any]
+) -> bool:
+    """#1387: True when the cold MCP solve SUCCEEDED but its objective does not
+    match the NLP reference.
+
+    This is a non-convex model that cold-converged to a *spurious* KKT point
+    (e.g. cclinpts: cold MS 1 at ObjV 15.34 vs the NLP optimum −3.0011). Such a
+    model warrants the ``--nlp-presolve`` warm-start retry just like a STATUS-5
+    cold failure (otpop) — the warm start lands PATH at the NLP's KKT point.
+    Uses the same objective tolerance as the comparison stage.
+    """
+    if cold_result.get("status") != "success":
+        return False
+    from scripts.gamslib.test_solve import DEFAULT_ATOL, DEFAULT_RTOL, objectives_match
+
+    conv = model.get("convexity", {})
+    if not (conv.get("solver_status") == 1 and conv.get("model_status") in (1, 2)):
+        return False
+    nlp_obj = conv.get("objective_value")
+    mcp_obj = cold_result.get("objective_value")
+    if nlp_obj is None or mcp_obj is None:
+        return False
+    match, _ = objectives_match(nlp_obj, mcp_obj, DEFAULT_RTOL, DEFAULT_ATOL)
+    return not match
+
+
 # =============================================================================
 # Filter Validation
 # =============================================================================
@@ -864,18 +891,24 @@ def run_pipeline(
         cold_result = result  # Preserve for convexity check before retry overwrites
         warm_retry_result = None  # Set if presolve retry succeeds
 
-        # Two-pass retry: if STATUS 5 (Locally Infeasible), re-translate
-        # with --nlp-presolve and re-solve.  This warm-starts MCP dual
-        # variables from an NLP pre-solve, which helps non-convex models.
-        if (
-            result["status"] != "success"
-            and result.get("model_status") == 5
-            and not getattr(args, "no_presolve_retry", False)
+        # Two-pass retry: re-translate with --nlp-presolve and re-solve when the
+        # cold solve either (a) returns STATUS 5 (Locally Infeasible, e.g. otpop)
+        # or (b) succeeds but converges to a SPURIOUS KKT point whose objective
+        # mismatches the NLP reference (#1387 cclinpts: cold MS 1 at 15.34 vs NLP
+        # −3.0011). Both are non-convex cases the NLP warm-start fixes by landing
+        # PATH at the NLP's KKT point.
+        cold_failed_ms5 = (
+            result["status"] != "success" and result.get("model_status") == 5
+        )
+        cold_spurious = _cold_objective_mismatches_nlp(model, cold_result)
+        if (cold_failed_ms5 or cold_spurious) and not getattr(
+            args, "no_presolve_retry", False
         ):
             stats["presolve_retry_attempted"] += 1
             if args.verbose:
+                _why = "STATUS 5" if cold_failed_ms5 else "spurious-KKT mismatch"
                 logger.info(
-                    "    [RETRY] STATUS 5 — retrying with --nlp-presolve..."
+                    f"    [RETRY] {_why} — retrying with --nlp-presolve..."
                 )
 
             # Re-translate with --nlp-presolve
@@ -901,13 +934,17 @@ def run_pipeline(
 
                 if retry_result["status"] == "success":
                     stats["presolve_retry_success"] += 1
-                    # Correct the double-count: the initial fail already
-                    # incremented solve_failure, and the retry success
-                    # incremented solve_success.  Undo the initial failure
-                    # so the model counts as one success, not both.
-                    stats["solve_failure"] -= 1
-                    if stats["solve_errors"]:
-                        stats["solve_errors"].pop()
+                    # Correct the double-count from running solve twice. For a
+                    # STATUS-5 cold (failure), the cold incremented solve_failure
+                    # and pushed an error — undo both. For a spurious-KKT cold
+                    # (success), the cold incremented solve_success (no error) —
+                    # undo that instead, so the model counts as one success.
+                    if cold_failed_ms5:
+                        stats["solve_failure"] -= 1
+                        if stats["solve_errors"]:
+                            stats["solve_errors"].pop()
+                    else:
+                        stats["solve_success"] -= 1
                     model["mcp_solve"]["presolve_required"] = True
                     # Issue #1400: store a repo-relative path so the recorded
                     # database is machine-portable (the absolute PROJECT_ROOT

@@ -60,45 +60,28 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Initialization
+* NLP Pre-Solve (warm-start for MCP duals)
 * ============================================
 
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
+$onMultiR
+$include "data/gamslib/raw/cclinpts.gms"
+$offMulti
 
-b.l('s1') = 5.0;
-b.l('s2') = 5.0;
-b.l('s3') = 5.0;
-b.l('s4') = 5.0;
-b.l('s5') = 5.0;
-b.l('s6') = 5.0;
-b.l('s7') = 5.0;
-b.l('s8') = 5.0;
-b.l('s9') = 5.0;
-b.l('s10') = 5.0;
-b.l('s11') = 5.0;
-b.l('s12') = 5.0;
-b.l('s13') = 5.0;
-b.l('s14') = 5.0;
-b.l('s15') = 5.0;
-b.l('s16') = 5.0;
-b.l('s17') = 5.0;
-b.l('s18') = 5.0;
-b.l('s19') = 5.0;
-b.l('s20') = 5.0;
-b.l('s21') = 5.0;
-b.l('s22') = 5.0;
-b.l('s23') = 5.0;
-b.l('s24') = 5.0;
-b.l('s25') = 5.0;
-b.l('s26') = 5.0;
-b.l('s27') = 5.0;
-b.l('s28') = 5.0;
-b.l('s29') = 5.0;
-b.l('s30') = 5.0;
-b.l('s1') = 5;
-b.l('s30') = 100;
+* Transfer NLP duals to MCP multiplier initialization
+
+* Transfer variable marginals to bound multipliers
+piL_b.l(j)$(abs(b.l(j) - b.lo(j)) < 1e-6 and b.m(j) > 0) = b.m(j);
+piU_b.l(j)$(abs(b.l(j) - b.up(j)) < 1e-6 and b.m(j) < 0) = -(b.m(j));
+
+* ============================================
+* #1449 (Layer 4): unfix elements fixed by the source $include but
+* enforced in the MCP via an active _fx_ complementarity equation
+* (else PATH drops the fixed column, leaving the _fx_ row unmatched).
+* ============================================
+b.lo('s1') = -inf;
+b.up('s1') = +inf;
+b.lo('s30') = -inf;
+b.up('s30') = +inf;
 
 * ============================================
 * Equations
@@ -123,6 +106,7 @@ Equations
 * Equation Definitions
 * ============================================
 
+$onMultiR
 * Stationarity equations
 stat_b(j).. ((-1) * (((-1) * ((fb(j) - fb(j-1)) * 1$((not last(j))))) + 0.5 * (((-1) * ((fb(j+1) - fb(j)) * 1$((not first(j+1))))) + (fb(j) - fb(j-1)) * 1$((not first(j)))))) + ((-1) * ((1 - gamma) * b(j) ** (1 - gamma) * (1 - gamma) / b(j) / sqr(1 - gamma))) * nu_FBCalc(j) + nu_b_fx_s1$(sameas(j, 's1')) + nu_b_fx_s30$(sameas(j, 's30')) - piL_b(j) + piU_b(j) =E= 0;
 stat_fb(j).. ((-1) * (((-1) * ((b("s30") - b(j+1)) * 1$((not last(j+1))))) + (b("s30") - b(j)) * 1$((not last(j))) + 0.5 * (((-1) * ((b(j+1) - b(j)) * 1$((not first(j+1))))) + (b(j) - b(j-1)) * 1$((not first(j)))))) + nu_FBCalc(j) =E= 0;
@@ -139,6 +123,7 @@ FBCalc(j).. fb(j) =E= b(j) ** (1 - gamma) / (1 - gamma);
 b_fx_s1.. b("s1") - 5 =E= 0;
 b_fx_s30.. b("s30") - 100 =E= 0;
 
+$offMulti
 
 * ============================================
 * Model MCP Declaration

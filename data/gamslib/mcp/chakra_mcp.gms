@@ -192,7 +192,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_c(t).. nu_kb(t) - piL_c(t) =E= 0;
+stat_c(t).. (((-1) * (dis(t) * c(t) ** (1 - eta) * (1 - eta) / c(t))))$(sameas(t, '0') or sameas(t, '1') or sameas(t, '10') or sameas(t, '11') or sameas(t, '12') or sameas(t, '13') or sameas(t, '14') or sameas(t, '15') or sameas(t, '16') or sameas(t, '17') or sameas(t, '18') or sameas(t, '19') or sameas(t, '2') or sameas(t, '3') or sameas(t, '4') or sameas(t, '5') or sameas(t, '6') or sameas(t, '7') or sameas(t, '8') or sameas(t, '9')) + nu_kb(t) - piL_c(t) =E= 0;
 stat_k(t).. ((-1) * (alpha(t) * k(t) ** beta * beta / k(t))) * nu_yd(t) + ((-1) * (1 - delt)) * nu_kb(t) + nu_kb(t-1)$(ord(t) > 1) - piL_k(t) =E= 0;
 stat_y(t).. nu_yd(t) - nu_kb(t) - piL_y(t) =E= 0;
 

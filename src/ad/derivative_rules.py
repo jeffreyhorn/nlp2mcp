@@ -1965,6 +1965,197 @@ def _resolve_cardinality_reversal_in_expr(expr: Expr, sum_idx: str, model_ir: An
     return expr
 
 
+def _distinct_var_offsets_in_body(body: Expr, wrt_var: str, sum_idx: str) -> set[int] | None:
+    """#1387: collect the distinct linear offsets ``δ`` at which ``wrt_var``
+    appears relative to the single sum index ``sum_idx`` in ``body``.
+
+    ``var(j)`` contributes ``δ=0``; ``var(j-1)`` contributes ``δ=-1``; etc.
+    Returns ``None`` (bail to the generic path) if any ``wrt_var`` reference is
+    multi-dimensional, circular-offset, or otherwise not a plain linear offset
+    of ``sum_idx`` — except a *fixed concrete-element literal* (e.g. ``b('s30')``
+    from a ``%last%`` macro), which is NOT an offset of the iterator and is
+    simply ignored here (it is a constant column, handled by the literal-
+    preserving re-symbolization, not by offset enumeration).
+    """
+    offsets: set[int] = set()
+    for idxs in _find_var_indices_in_body(body, wrt_var):
+        if len(idxs) != 1:
+            return None
+        idx = idxs[0]
+        if isinstance(idx, str):
+            if idx.lower() == sum_idx.lower():
+                offsets.add(0)
+            # else: a fixed concrete-element literal — not an iterator offset.
+        elif isinstance(idx, IndexOffset) and not idx.circular and isinstance(idx.base, str):
+            if idx.base.lower() != sum_idx.lower() or not isinstance(idx.offset, Const):
+                return None
+            offsets.add(int(idx.offset.value))
+        else:
+            return None
+    return offsets
+
+
+def _shift_to_offset_form(expr: Expr, sum_idx: str, col_elem: str, delta: int) -> Expr:
+    """#1387: substitute the sum index ``sum_idx`` by the concrete column
+    ``col_elem`` shifted so that ``var(j+δ)`` lands on the column, expressing
+    every ``sum_idx``-derived reference as an ``IndexOffset`` relative to
+    ``col_elem`` and leaving fixed literals untouched.
+
+    For an offset-group contribution at offset ``δ`` (the wrt-var appeared as
+    ``var(j+δ)``), the contributing sum term is ``j = W − δ`` (``W`` = column).
+    A body reference ``var(j+ε)`` therefore becomes ``var(W + (ε−δ))`` →
+    ``IndexOffset(col_elem, ε−δ)`` (or bare ``col_elem`` when ``ε−δ = 0``). A
+    bare ``sum_idx`` is ``ε=0``. Concrete-element literals and other-set indices
+    pass through unchanged, so the downstream literal-preserving re-symbolization
+    can keep them verbatim (e.g. ``b('s30')``). Conditions that test the iterator
+    (``first(j)``/``last(j)``) are shifted the same way so the per-offset guard
+    re-symbolizes to ``first(j-δ)``/``last(j-δ)``.
+    """
+
+    def shift_index(idx: str | IndexOffset) -> str | IndexOffset:
+        if isinstance(idx, str):
+            if idx.lower() == sum_idx.lower():
+                return (
+                    col_elem if delta == 0 else IndexOffset(col_elem, Const(float(-delta)), False)
+                )
+            return idx
+        if isinstance(idx, IndexOffset) and not idx.circular and isinstance(idx.base, str):
+            if idx.base.lower() == sum_idx.lower() and isinstance(idx.offset, Const):
+                net = int(idx.offset.value) - delta
+                return col_elem if net == 0 else IndexOffset(col_elem, Const(float(net)), False)
+        return idx
+
+    def walk(e: Expr) -> Expr:
+        if isinstance(e, VarRef):
+            return VarRef(e.name, tuple(shift_index(i) for i in e.indices), e.attribute)
+        if isinstance(e, ParamRef):
+            return ParamRef(e.name, tuple(shift_index(i) for i in e.indices))
+        if isinstance(e, SetMembershipTest):
+            new_args: list[Expr] = []
+            for a in e.indices:
+                # Shift both bare-iterator (first(j)) and offset-iterator
+                # (first(j+1)) membership-test args the same way as the body, so
+                # the per-offset guard is anchored on the column, not the iterator.
+                if isinstance(a, SymbolRef):
+                    shifted = shift_index(a.name)
+                    new_args.append(SymbolRef(shifted) if isinstance(shifted, str) else shifted)
+                elif isinstance(a, IndexOffset):
+                    shifted = shift_index(a)
+                    new_args.append(SymbolRef(shifted) if isinstance(shifted, str) else shifted)
+                else:
+                    new_args.append(walk(a))
+            return SetMembershipTest(e.set_name, tuple(new_args))
+        if isinstance(e, Binary):
+            return Binary(e.op, walk(e.left), walk(e.right))
+        if isinstance(e, Unary):
+            return Unary(e.op, walk(e.child))
+        if isinstance(e, Call):
+            return Call(e.func, tuple(walk(a) for a in e.args))
+        if isinstance(e, (Sum, Prod)):
+            new_cond = walk(e.condition) if e.condition is not None else None
+            return type(e)(e.index_sets, walk(e.body), new_cond)
+        if isinstance(e, DollarConditional):
+            return DollarConditional(value_expr=walk(e.value_expr), condition=walk(e.condition))
+        return e
+
+    return walk(expr)
+
+
+def _try_diff_sum_offset_crossterms(
+    expr: Sum,
+    wrt_var: str,
+    wrt_indices: tuple[str | IndexOffset, ...],
+    config: Config | None,
+    bound_indices: frozenset[str],
+) -> Expr | None:
+    """#1387: differentiate a single-index collapsing ``Sum`` w.r.t. a concrete
+    column ``W`` when ``wrt_var`` appears at one or more NON-ZERO offsets of the
+    sum index — the generic collapse path computes only the ``δ=0`` (diagonal)
+    contribution and silently drops the off-diagonal ones.
+
+    The complete gradient is ``Σ_δ ∂body/∂var(j+δ)|_{j=W−δ} · cond(W−δ)`` over
+    every distinct offset ``δ`` (including 0). Each contribution is shifted into
+    ``IndexOffset(W, ·)`` form (via :func:`_shift_to_offset_form`) so the
+    downstream re-symbolization maps it to ``var(j±k)`` and preserves fixed
+    literals. Returns ``None`` (fall through to the generic path) unless there is
+    a genuine non-zero offset to enumerate.
+    """
+    if not (
+        len(expr.index_sets) == 1
+        and wrt_indices is not None
+        and len(wrt_indices) == 1
+        and config is not None
+        and config.model_ir is not None
+    ):
+        return None
+    col = wrt_indices[0]
+    if not isinstance(col, str):
+        return None
+    sum_idx = expr.index_sets[0]
+    # Gate to the cclinpts-class structure: the wrt-variable must be declared
+    # over EXACTLY the single sum index set (e.g. b(j)/fb(j) with sum(j, …)). When
+    # the variable is over a SUBSET of the sum index (e.g. catmix's u(nh) with
+    # sum{nh(i+1), …}), the offset terms are correct here but the downstream
+    # subset re-symbolization in _build_indexed_gradient_term cannot place them, so
+    # the enumeration is unsafe — bail and leave the generic path. (The variable's
+    # own offset references still go through the existing constraint-Jacobian /
+    # #1081 machinery for those models.)
+    var_def = config.model_ir.variables.get(wrt_var)
+    if var_def is None or tuple(d.lower() for d in var_def.domain) != (sum_idx.lower(),):
+        return None
+    offsets = _distinct_var_offsets_in_body(expr.body, wrt_var, sum_idx)
+    if offsets is None or not any(o != 0 for o in offsets):
+        return None
+
+    from .index_mapping import resolve_set_members
+
+    # Resolve sum_idx to its canonical set's ordered members.
+    canon = sum_idx
+    seen: set[str] = set()
+    while canon in config.model_ir.aliases and canon.lower() not in seen:
+        seen.add(canon.lower())
+        canon = getattr(config.model_ir.aliases[canon], "target", config.model_ir.aliases[canon])
+    members, _ = resolve_set_members(canon, config.model_ir)
+    if not members:
+        return None
+    ord_map = {m.lower(): i for i, m in enumerate(members)}
+    if col.lower() not in ord_map:
+        return None
+    col_pos = ord_map[col.lower()]
+
+    new_bound = bound_indices | frozenset(expr.index_sets)
+    terms: list[Expr] = []
+    for delta in sorted(offsets):
+        sym_wrt: str | IndexOffset = (
+            sum_idx if delta == 0 else IndexOffset(sum_idx, Const(float(delta)), False)
+        )
+        body_deriv = differentiate_expr(
+            expr.body, wrt_var, (sym_wrt,), config, bound_indices=new_bound
+        )
+        if _is_structurally_zero(body_deriv):
+            continue
+        # The contributing sum term is j = W − δ; skip if that element is out
+        # of range (the boundary is also covered by the $ guard, but the shifted
+        # element must exist for the contribution to be non-empty).
+        shifted_pos = col_pos - delta
+        if shifted_pos < 0 or shifted_pos >= len(members):
+            continue
+        # Express the contribution in IndexOffset-relative-to-W form, anchored on
+        # the COLUMN W (not the shifted element): a body ref var(j+ε) → var(W+(ε−δ)).
+        term = _shift_to_offset_form(body_deriv, sum_idx, col, delta)
+        if expr.condition is not None:
+            cond = _shift_to_offset_form(expr.condition, sum_idx, col, delta)
+            term = Binary("*", term, _ensure_numeric_condition(cond))
+        terms.append(term)
+
+    if not terms:
+        return Const(0.0)
+    result = terms[0]
+    for t in terms[1:]:
+        result = Binary("+", result, t)
+    return result
+
+
 def _diff_sum(
     expr: Sum,
     wrt_var: str,
@@ -2078,6 +2269,30 @@ def _diff_sum(
                 # wrt is a different concrete column — the var only feeds the
                 # fixed (last) column, so this instance's derivative is zero.
                 return Const(0.0)
+
+    # Issue #1387: offset cross-term enumeration. When the wrt-variable appears
+    # in a single-index collapsing Sum at one or more NON-ZERO offsets of the
+    # sum index (e.g. b(j-1) in sum(j, [b(j)-b(j-1)]*…)), the generic collapse
+    # below computes only the δ=0 (diagonal) contribution and DROPS the
+    # off-diagonal ones. Enumerate every offset and sum the per-offset
+    # contributions, expressed in IndexOffset-relative-to-column form so the
+    # downstream re-symbolization maps them to var(j±k). Gated tightly: only
+    # fires (a) while differentiating the OBJECTIVE (the flag is set only by
+    # compute_objective_gradient — constraint-Jacobian offset handling is done
+    # elsewhere and the gradient re-symbolization that consumes these cross-terms
+    # lives only in _build_indexed_gradient_term), and (b) when there is a genuine
+    # non-zero offset of the sum index.
+    if (
+        wrt_indices is not None
+        and config is not None
+        and getattr(config, "enable_obj_offset_crossterms", False)
+        and _sum_should_collapse(expr.index_sets, wrt_indices, config)
+    ):
+        _crossterms = _try_diff_sum_offset_crossterms(
+            expr, wrt_var, wrt_indices, config, bound_indices
+        )
+        if _crossterms is not None:
+            return _crossterms
 
     # Check if sum should collapse (special case for index-aware differentiation)
     # When differentiating sum(i, x(i)) w.r.t. x(i1), the sum collapses because

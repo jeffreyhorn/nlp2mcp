@@ -244,39 +244,51 @@ def compute_objective_gradient(model_ir: ModelIR, config: Config | None = None) 
 
     config = ensure_config_with_model_ir(config, model_ir)
 
-    # Differentiate objective w.r.t. each variable
-    for var_name in sorted(model_ir.variables.keys()):
-        var_def = model_ir.variables[var_name]
+    # Issue #1387: enable the objective-gradient offset cross-term enumeration in
+    # _diff_sum ONLY while differentiating the OBJECTIVE. _diff_sum is shared with
+    # constraint-Jacobian differentiation, whose offset handling is done elsewhere
+    # (the #1081 index-mapping expansion + the stationarity re-symbolization) and
+    # would be corrupted by this enumeration; the gradient re-symbolization that
+    # consumes the enumerated cross-terms lives only in _build_indexed_gradient_term.
+    # Scope the flag tightly and always restore it.
+    prev_flag = getattr(config, "enable_obj_offset_crossterms", False)
+    config.enable_obj_offset_crossterms = True
+    try:
+        # Differentiate objective w.r.t. each variable
+        for var_name in sorted(model_ir.variables.keys()):
+            var_def = model_ir.variables[var_name]
 
-        # Enumerate all instances of this variable
-        instances = enumerate_variable_instances(var_def, model_ir)
+            # Enumerate all instances of this variable
+            instances = enumerate_variable_instances(var_def, model_ir)
 
-        for indices in instances:
-            # Get column ID for this variable instance
-            col_id = index_mapping.get_col_id(var_name, indices)
-            if col_id is None:
-                continue
+            for indices in instances:
+                # Get column ID for this variable instance
+                col_id = index_mapping.get_col_id(var_name, indices)
+                if col_id is None:
+                    continue
 
-            # Differentiate objective w.r.t. this specific variable instance
-            # Index-aware differentiation: pass indices to distinguish x(i1) from x(i2)
-            derivative = differentiate_expr(obj_expr, var_name, indices, config)
+                # Differentiate objective w.r.t. this specific variable instance
+                # Index-aware differentiation: pass indices to distinguish x(i1) from x(i2)
+                derivative = differentiate_expr(obj_expr, var_name, indices, config)
 
-            # Apply objective sense
-            if sense == ObjSense.MAX:
-                # max f(x) = min -f(x), so gradient is -∇f
-                derivative = Unary("-", derivative)
+                # Apply objective sense
+                if sense == ObjSense.MAX:
+                    # max f(x) = min -f(x), so gradient is -∇f
+                    derivative = Unary("-", derivative)
 
-            # LP fast path: cap simplification at basic (identity/zero
-            # elimination) instead of expensive advanced simplification,
-            # but still respect an explicit "none" mode from config.
-            is_lp = model_ir.solve_type is not None and model_ir.solve_type.upper() == "LP"
-            mode = get_simplification_mode(config)
-            if is_lp and mode != "none":
-                mode = "basic"
-            derivative = apply_simplification(derivative, mode)
+                # LP fast path: cap simplification at basic (identity/zero
+                # elimination) instead of expensive advanced simplification,
+                # but still respect an explicit "none" mode from config.
+                is_lp = model_ir.solve_type is not None and model_ir.solve_type.upper() == "LP"
+                mode = get_simplification_mode(config)
+                if is_lp and mode != "none":
+                    mode = "basic"
+                derivative = apply_simplification(derivative, mode)
 
-            # Store in gradient vector
-            gradient.set_derivative(col_id, derivative)
+                # Store in gradient vector
+                gradient.set_derivative(col_id, derivative)
+    finally:
+        config.enable_obj_offset_crossterms = prev_flag
 
     return gradient
 

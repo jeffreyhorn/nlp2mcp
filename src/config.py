@@ -38,6 +38,10 @@ class Config:
     scale: str = "none"
     simplification: str = "advanced"
     model_ir: Any = field(default=None, repr=False)  # Type is ModelIR but use Any to avoid cycles
+    # Issue #1387: internal flag — enable the objective-gradient offset cross-term
+    # enumeration in _diff_sum. Set ONLY by compute_objective_gradient (scoped),
+    # so the shared _diff_sum does not apply it during constraint differentiation.
+    enable_obj_offset_crossterms: bool = field(default=False, repr=False)
 
     def __post_init__(self):
         """Validate configuration values."""

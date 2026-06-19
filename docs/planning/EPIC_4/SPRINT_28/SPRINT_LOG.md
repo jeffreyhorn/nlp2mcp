@@ -327,3 +327,29 @@ The AD Jacobian was already correct (per-lead `∂pdef/∂p` = `-alpha(1)/-alpha
 - This SPRINT_LOG Day-8 entry. **No metric change** (no `src/`; Solve 107, Match 65 stand).
 
 ### Next: Day 9 — finish the three coupled changes; per-term grep + harness Case-a + cclinpts MS 1 rel_diff<1% (+1 Match); full-corpus byte-stability + re-solve; open the #1387 PR.
+
+---
+
+## Day 9 — Priority 4: #1387 + #1455 cclinpts offset cross-terms → **cclinpts + chakra MATCH** (2026-06-18)
+
+**Status:** 🟢 #1387 + #1455 RESOLVED — **cclinpts MATCHES** (compare_match, MCP MS 1 at ObjV −3.0011 via `--nlp-presolve` warm-start). **Bonus: chakra recovered to MATCH** (179.134) — the AD fix supplied its missing `∂obj/∂c` cross-term. **+2 Match (genuine), no regressions.**
+
+### Four coupled facets (all landed together)
+1. **AD `_diff_sum` offset-enum** (`src/ad/derivative_rules.py`): `_try_diff_sum_offset_crossterms` + `_distinct_var_offsets_in_body` + `_shift_to_offset_form`. Sum `Σ_δ ∂body/∂var(j+δ)|_{j=W−δ}·cond(W−δ)` over every offset, in `IndexOffset(col, ε−δ)` form. **Two gates** (the blast-radius containment): (a) OBJECTIVE-only via a scoped `config.enable_obj_offset_crossterms` set solely by `compute_objective_gradient` — `_diff_sum` is shared with constraint Jacobians, which corrupted chain's `length_eqn` until gated; (b) wrt-variable declared over EXACTLY the sum index set — excludes catmix's `u(nh)` over a subset (whose downstream subset re-symbolization dropped the `δ=+1` term).
+2. **Offset-aware gradient re-symbolization** (`src/kkt/stationarity.py`, `_resymbolize_offset_gradient` + `_grad_has_concrete_base_offset` gate): col → `j`, `IndexOffset(col,±k)` → `j±k`, conditions `first/last(j±k)`. The generic `_replace_indices_in_expr` can't express this (its declared/equation-domain logic maps every same-set element to `j`).
+3. **[#1455] fixed boundary literal**: `b('%last%')`→`b('s30')` preserved verbatim (else `b('s30')-b(j)`→`b(j)-b(j)`=0). Done inside `_resymbolize_offset_gradient`.
+4. **Non-convex warm-start** (`scripts/gamslib/run_full_test.py`, `_cold_objective_mismatches_nlp`): extended the presolve retry to also fire when the cold solve SUCCEEDS but mismatches the NLP ref (cclinpts cold MS 1 at 15.34, a spurious KKT point). The warm start lands PATH at −3.0011. Sign-flip stays a misdiagnosis.
+
+### PR25 tally (Day 9)
+- **+2 Match (cclinpts + chakra, genuine).** Match **65 → 67**. Solve 107 (cclinpts/chakra already solved cold; the change is match, not solve).
+
+### Blast radius (full 153-golden regen)
+- **Exactly 2 cold goldens change: cclinpts + chakra — both mismatch → match.** 151 byte-identical. catmix (subset-domain) + chain (constraint-Jacobian) reverted to baseline via the two gates. `make typecheck/format/lint` clean.
+
+### Deliverables
+- `src/ad/derivative_rules.py`, `src/ad/gradient.py`, `src/config.py` (scoped flag), `src/kkt/stationarity.py`, `scripts/gamslib/run_full_test.py`.
+- `tests/integration/emit/test_1387_cclinpts_offset_crossterms.py` (1 test).
+- `data/gamslib/mcp/{cclinpts,chakra}_mcp.gms` regenerated; `cclinpts_mcp_presolve.gms` added.
+- `docs/issues/ISSUE_1387_*.md` + `ISSUE_1455_*.md` RESOLUTION; CHANGELOG.
+
+### Next: resume Sprint 28 PLAN (Day 10 — Checkpoint 2 + #1390 kand Task-6 gate).

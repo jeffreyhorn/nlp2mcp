@@ -1,7 +1,22 @@
 # cclinpts: stat_b / stat_fb condition-guard or sign bug producing ~70% rel_diff (post-Pattern-A reclassification)
 
 **GitHub Issue:** [#1387](https://github.com/jeffreyhorn/nlp2mcp/issues/1387)
-**Status:** **IN PROGRESS — Sprint 28 Day 8 Task-6 gate → PROCEED (2026-06-18).** The anchor blocker is **LOCAL** (gateable to the differentiated variable's column index), so the three coupled changes are greenlit; implementation begun Day 8, lands Day 9. *(Prior: DEFERRED to Sprint 28 — Sprint 27 Day 6 diagnosis + reverted attempt established three coupled changes beyond the documented "condition-guard or sign bug.")* The linked GitHub issue remains open.
+**Status:** **RESOLVED — Sprint 28 Day 9 (2026-06-18).** **cclinpts MATCHES** (run_full_test compare_match, MCP MS 1 Optimal at ObjV = −3.0011 via the `--nlp-presolve` warm-start). **Bonus: chakra also recovered to MATCH** (179.134, the AD fix supplied its missing objective-gradient cross-term). *(Prior: IN PROGRESS — Day 8 Task-6 gate → PROCEED; DEFERRED Sprint 27.)*
+
+## RESOLUTION — four coupled facets (Sprint 28 Day 9, 2026-06-18)
+
+cclinpts's objective is an offset-indexed trapezoid sum (`b`/`fb` appear at `j-1` offsets; `b('%last%')` is a fixed boundary literal). The match required four coupled changes, landed together:
+
+1. **AD `_diff_sum` offset-enumeration** (`src/ad/derivative_rules.py`, `_try_diff_sum_offset_crossterms` + `_distinct_var_offsets_in_body` + `_shift_to_offset_form`). For a single-index collapsing `Sum` where the wrt-variable appears at one or more NON-ZERO offsets `δ` of the sum index, the generic collapse computes only the `δ=0` (diagonal) term and drops the off-diagonal ones. Enumerate every `δ` and sum `Σ_δ ∂body/∂var(j+δ)|_{j=W−δ}·cond(W−δ)`, expressing each `j`-derived reference as `IndexOffset(col_elem, ε−δ)` and preserving fixed literals. **Gated**: fires only (a) while differentiating the OBJECTIVE (a scoped `config.enable_obj_offset_crossterms` flag set solely by `compute_objective_gradient` — `_diff_sum` is shared with constraint-Jacobian differentiation), and (b) when the wrt-variable is declared over EXACTLY the single sum index set (the cclinpts-class `b(j)`/`fb(j)` with `sum(j, …)`; excludes catmix-style `u(nh)` over a subset of the sum index, whose downstream re-symbolization differs).
+2. **Offset-aware gradient re-symbolization** (`src/kkt/stationarity.py`, `_resymbolize_offset_gradient` + the `_grad_has_concrete_base_offset` gate). When the per-instance gradient carries the offset signature (an `IndexOffset` on a concrete domain-set element), re-symbolize the 1-D objective gradient directly: the representative column's element → `j`, `IndexOffset(col, ±k)` → `j±k`, and (3) below; conditions (`first`/`last`) shifted to `first(j±k)`/`last(j±k)`. The generic `_replace_indices_in_expr` cannot express this.
+3. **[#1455] fixed boundary-element literal** — within `_resymbolize_offset_gradient`, a same-set bare concrete element that is NOT the column (e.g. `b('%last%')`→`b('s30')`) is preserved verbatim, not mapped to `j` (which collapses `b('s30')-b(j)`→`b(j)-b(j)`=0).
+4. **Non-convex warm-start** (`scripts/gamslib/run_full_test.py`, `_cold_objective_mismatches_nlp`). cclinpts cold-solves to a SPURIOUS KKT point (MS 1 at ObjV 15.34 ≠ NLP −3.0011), so the existing STATUS-5 presolve retry (otpop's trigger) never fired. Extended the presolve-retry trigger to also fire when the cold solve SUCCEEDS but its objective mismatches the NLP reference; the `--nlp-presolve` warm-start then lands PATH at the NLP's KKT point (−3.0011). The AD fix (1–3) is what makes the NLP optimum a valid MCP KKT point.
+
+**Sign-flip remained a MISDIAGNOSIS** (untouched; the outer `(-1)` is the maximize negation).
+
+**Verification:** per-term grep on `stat_b`/`stat_fb` (all hand-derived terms present, `b('s30')` literal preserved); cclinpts run_full_test → compare_match (cold 15.34 → spurious-KKT retry → −3.0011); 1 integration test (`tests/integration/emit/test_1387_cclinpts_offset_crossterms.py`).
+
+**Blast radius (full 153-golden regen):** exactly **two** cold goldens change — cclinpts and **chakra** — and BOTH go mismatch → match. chakra (`c(t)`/`sum(t, dis(t-1)*c(t-1)^(1-eta))`, same cclinpts-class) was missing its entire `∂obj/∂c` cross-term in `stat_c`; the AD fix supplies it and chakra cold-matches at 179.134. All 151 other goldens byte-identical. catmix/chain (constraint-Jacobian or subset-domain offset cases) revert to baseline via the gates. **+2 Match (cclinpts + chakra), no regressions.**
 
 ## Sprint 28 Day 8 — Task-6 gate decision: **PROCEED** (anchor fix is LOCAL) (2026-06-18)
 
