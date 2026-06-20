@@ -1,0 +1,120 @@
+name: Presolve Divergence Check
+
+# Sprint 28 Priority 10: under --nlp-presolve the emitted MCP $include's the
+# source NLP under $onMultiR and solves it; because $onMultiR re-runs source
+# statements, a non-idempotent statement can make the embedded NLP diverge from
+# standalone (the #1378 / #1424 / korcge-#1439 bug class). This job compares the
+# embedded NLP against the canonical standalone-NLP objective from the pipeline DB
+# and HARD-FAILS the PR only on unambiguous corruption — a GAMS abort or an
+# embedded NLP that is infeasible while the reference solves. A bare objective gap
+# is reported informationally (not failed): for a non-convex model the embedded
+# solve may reach a benign different local optimum. Triggered on the presolve-emit
+# source paths.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/emit/emit_gams.py"
+      - "src/emit/original_symbols.py"
+      - "scripts/diagnostics/check_presolve_divergence.py"
+      - "scripts/diagnostics/presolve_divergence_allowlist.txt"
+      - ".github/workflows/presolve-divergence.yml"
+
+concurrency:
+  group: presolve-divergence-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  presolve-divergence:
+    name: Presolve divergence (embedded vs standalone NLP)
+    runs-on: ubuntu-latest
+    # One run per committed *_mcp_presolve.gms golden (the detector discovers them
+    # at runtime — no hardcoded count). Each runs the generated wrapper, which
+    # contains BOTH the embedded NLP pre-solve ($include under $onMultiR) AND the
+    # MCP solve — so a CONOPT/NLP + PATH/MCP capable GAMS is required. The generous
+    # ceiling covers GAMS install + the slowest CGE model.
+    timeout-minutes: 20
+
+    permissions:
+      contents: read
+      # Least privilege: the job only reads PR labels and runs the detector.
+      pull-requests: read
+
+    steps:
+      - name: Check skip label
+        id: skip
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request?.labels?.map(l => l.name) || [];
+            core.setOutput('skip', labels.includes('skip-presolve-divergence') ? 'true' : 'false');
+
+      - name: Checkout
+        if: steps.skip.outputs.skip != 'true'
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        if: steps.skip.outputs.skip != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        if: steps.skip.outputs.skip != 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Install GAMS demo
+        if: steps.skip.outputs.skip != 'true'
+        env:
+          # Pinned installer URL + SHA256 (supply-chain guard) — mirrors
+          # pr19-emit-solve-validation.yml. Bumping the GAMS version requires
+          # updating BOTH the URL and the checksum.
+          GAMS_INSTALLER_URL: "https://d37drm4t2jghv5.cloudfront.net/distributions/53.1.0/linux/linux_x64_64_sfx.exe"
+          GAMS_INSTALLER_SHA256: "8a82c82e257e54afc0d18c144957a862edae4e75020b81eed1950d93cb447b1a"
+        run: |
+          curl -fSL -o /tmp/gams-installer.exe "$GAMS_INSTALLER_URL"
+          ACTUAL_SHA256=$(sha256sum /tmp/gams-installer.exe | awk '{print $1}')
+          echo "Actual SHA256:  $ACTUAL_SHA256"
+          echo "Pinned SHA256:  $GAMS_INSTALLER_SHA256"
+          if [ "$ACTUAL_SHA256" != "$GAMS_INSTALLER_SHA256" ]; then
+            echo "ERROR: SHA256 mismatch — refusing to run the installer."; exit 1
+          fi
+          chmod +x /tmp/gams-installer.exe
+          mkdir -p $HOME/gams
+          /tmp/gams-installer.exe -q -d $HOME/gams
+          echo "$HOME/gams/gams53.1_linux_x64_64_sfx" >> $GITHUB_PATH
+
+      - name: Verify GAMS on PATH
+        if: steps.skip.outputs.skip != 'true'
+        run: gams audit lo=2
+
+      # The gitignored GAMSLib corpus must be present (the detector skips any
+      # model whose raw source is absent). Provision the in-scope models so the
+      # gate is NOT a silent no-op.
+      - name: Download GAMSLib raw corpus
+        if: steps.skip.outputs.skip != 'true'
+        # download_gamslib_raw.sh exits non-zero if ANY model fails to download;
+        # warn-and-continue on partial failures (mirrors nightly.yml) so a
+        # transient gams.com/network hiccup doesn't fail the gate — the next step
+        # still fails fast if ZERO models were provisioned.
+        run: |
+          if ! ./scripts/download_gamslib_raw.sh; then
+            echo "::warning::download_gamslib_raw.sh reported one or more download failures; continuing with whatever was fetched."
+          fi
+
+      - name: Fail if corpus missing (guard against a silent no-op gate)
+        if: steps.skip.outputs.skip != 'true'
+        run: |
+          n=$(ls data/gamslib/raw/*.gms 2>/dev/null | wc -l)
+          echo "Provisioned $n raw model(s)."
+          test "$n" -gt 0 || { echo "ERROR: no raw corpus — the divergence gate would be a no-op."; exit 1; }
+
+      - name: Run presolve-divergence check
+        if: steps.skip.outputs.skip != 'true'
+        # Pass --tol explicitly so the CI gate's behavior is pinned here and does
+        # not change silently if the script's DEFAULT_TOL is adjusted later.
+        run: |
+          python scripts/diagnostics/check_presolve_divergence.py --tol 1e-3 --json presolve-divergence.json

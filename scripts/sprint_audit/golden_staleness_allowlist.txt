@@ -1,0 +1,27 @@
+# Golden-staleness allowlist (Sprint 28 Priority 8).
+# Models excluded from the regen→byte-diff gate, in two categories:
+#   (1) OUT-OF-SCOPE historical artifacts — the current emit no longer produces
+#       the committed golden (multi-solve drivers, discrete models), so a diff is
+#       meaningless; and
+#   (2) CROSS-ENVIRONMENT non-determinism — the emit is stable per-platform but
+#       differs byte-for-byte across platforms (indus; see #1461), so the gate
+#       would flap.
+# One model id per line; '#' comments allowed.
+#
+# Multi-solve driver scripts (out of scope): emit aborts
+#   "Model is a multi-solve driver script and is out of scope for nlp2mcp"
+danwolfe
+decomp
+saras
+# Discrete (MIP/MINLP) models (out of scope): emit aborts "... is discrete ..."
+nemhaus
+nonsharp
+trnspwl
+# Cross-environment byte non-determinism (Unknown 8.3): the emit is hash-seed-
+# stable on macOS (local regen == committed golden, ×PYTHONHASHSEED) but the
+# ubuntu CI emit differs by ~45 bytes — a platform-specific difference (most
+# likely float formatting in this large dynamic model), NOT a stale golden or an
+# emit change. Allowlisted so the gate does not flap; a future emit *change* on
+# indus would still surface (as a drift WARNING on the allowlisted entry). A
+# root-cause determinism investigation: #1461.
+indus
