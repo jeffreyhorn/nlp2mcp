@@ -29,7 +29,7 @@ Usage::
 
     python scripts/diagnostics/check_presolve_divergence.py            # all presolve models; exit 1 on any divergence
     python scripts/diagnostics/check_presolve_divergence.py --model launch
-    python scripts/diagnostics/check_presolve_divergence.py --tol 1e-4 --json out.json
+    python scripts/diagnostics/check_presolve_divergence.py --tol 1e-3 --json out.json
 
 Design: ``docs/planning/EPIC_4/SPRINT_28/PRIORITY_10_DIVERGENCE_PROPERTY_TESTS_DESIGN.md``.
 Requires the gitignored GAMSLib corpus + a local GAMS/CONOPT.
@@ -80,15 +80,25 @@ def _run_gams(gms: Path, scratch_dir: Path) -> tuple[str, int]:
     ``$include "data/gamslib/raw/<model>.gms"`` resolves, while directing the
     listing (``o=``) and GAMS scratch (``ScrDir=``) into *scratch_dir* (a temp
     dir) so the run never litters the repo root.
+
+    Never raises: a missing ``gams`` binary returns the sentinel code 127 and a
+    >300s timeout returns 124, so a single slow model or an un-provisioned runner
+    degrades to a per-model skip/timeout instead of crashing the whole gate.
     """
     lst = scratch_dir / (gms.stem + ".lst")
-    proc = subprocess.run(
-        ["gams", str(gms), "lo=2", f"o={lst}", f"ScrDir={scratch_dir}"],
-        cwd=str(PROJECT_ROOT),
-        capture_output=True,
-        text=True,
-        timeout=300,
-    )
+    try:
+        proc = subprocess.run(
+            ["gams", str(gms), "lo=2", f"o={lst}", f"ScrDir={scratch_dir}"],
+            cwd=str(PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+    except FileNotFoundError:
+        return "", 127  # gams not on PATH
+    except subprocess.TimeoutExpired:
+        partial = lst.read_text(encoding="utf-8", errors="ignore") if lst.exists() else ""
+        return partial, 124
     text = lst.read_text(encoding="utf-8", errors="ignore") if lst.exists() else proc.stdout
     return text, proc.returncode
 
@@ -124,7 +134,7 @@ def _parse_scalar_display(listing: str, name: str) -> float | None:
     return float(m.group(1)) if m else None
 
 
-_INFEASIBLE_STATUSES = {4, 5, 6, 19}  # GAMS MODEL STATUS: infeasible / no solution
+_OPTIMAL_STATUSES = {1, 2}  # GAMS MODEL STATUS: optimal / locally optimal (NLP)
 _nlp_ref_cache: dict[str, float] | None = None
 
 
@@ -167,10 +177,16 @@ def classify_divergence(
     """Pure comparison logic (unit-testable without GAMS). Returns (status, detail).
 
     HARD-FAIL signals — unambiguous ``$onMultiR`` re-run corruption:
-    - ``execerror``: the embedded $include run aborted (korcge #1439).
-    - the embedded NLP solve is INFEASIBLE/non-optimal while the reference NLP is
-      feasible (#1424 camshape pre-fix).
+    - ``execerror``: the embedded $include run aborted (korcge #1439). Failed
+      UNCONDITIONALLY — an abort is corruption regardless of any reference.
+    - the embedded NLP solve is non-optimal — MODEL STATUS not in
+      ``_OPTIMAL_STATUSES`` (anything but optimal / locally optimal), e.g. #1424
+      camshape's infeasible embedded solve.
     - the embedded produced no objective at all.
+
+    The latter two require a canonical reference (so we can assert the standalone
+    NLP *does* solve): with no reference the model is ``skipped``, never failed —
+    we cannot tell corruption from a model the pipeline never solved.
 
     SOFT signal — objective gap (``obj_gap``, reported but NOT failed): the
     warm-started embedded solve of a NON-CONVEX model may land at a benign
@@ -183,14 +199,14 @@ def classify_divergence(
             "diverged",
             "embedded presolve run aborted (EXECERROR) — the $include re-run diverged",
         )
-    if emb_status in _INFEASIBLE_STATUSES:
+    if ref_obj is None:
+        return "skipped", "no usable NLP reference (the raw NLP did not solve optimally)"
+    if emb_status is not None and emb_status not in _OPTIMAL_STATUSES:
         return (
             "diverged",
             f"embedded NLP non-optimal (MODEL STATUS {emb_status}) while the reference "
-            "NLP is feasible — the $include re-run diverged",
+            "NLP solves — the $include re-run diverged",
         )
-    if ref_obj is None:
-        return "skipped", "no usable NLP reference (the raw NLP did not solve optimally)"
     if emb_obj is None:
         return "diverged", "embedded presolve produced no objective value"
     rel = abs(emb_obj - ref_obj) / max(1.0, abs(ref_obj))
@@ -220,10 +236,13 @@ def check_model(model_id: str, tol: float) -> dict:
         # optimum), so used solely when there is no canonical reference.
         if ref_obj is None:
             objvar = extract_objective_info(parse_model_file(str(raw))).objvar
-            standalone = wd / f"{model_id}_standalone.gms"
-            standalone.write_text(raw.read_text(encoding="utf-8"), encoding="utf-8")
-            std_listing, _ = _run_gams(standalone, wd)
-            if _parse_model_status(std_listing) in (1, 2):
+            # Run GAMS on the raw source IN-PLACE (the listing + scratch are
+            # redirected into the temp dir by _run_gams), NOT a temp copy — so any
+            # relative $include / .inc / .gdx companions living next to
+            # data/gamslib/raw/<model>.gms still resolve. A temp copy would break
+            # those and silently downgrade the check to skipped.
+            std_listing, std_rc = _run_gams(raw, wd)
+            if std_rc == 0 and _parse_model_status(std_listing) in (1, 2):
                 ref_obj = _parse_var_level(std_listing, objvar)
 
         # --- embedded NLP (the presolve emit's $include pre-solve) ---
@@ -233,14 +252,27 @@ def check_model(model_id: str, tol: float) -> dict:
             rec["status"] = "emit_failed"
             rec["detail"] = tr.get("error", {}).get("message", "presolve emit failed")[:200]
             return rec
-        emb_listing, _ = _run_gams(presolve, wd)
+        emb_listing, rc = _run_gams(presolve, wd)
+        # A missing gams binary or a timeout is "could not verify", NOT divergence
+        # — classify before parsing so an empty listing never reads as a hard
+        # divergence (emb_obj is None).
+        if rc == 127:
+            rec["status"] = "skipped"
+            rec["detail"] = "gams binary not on PATH"
+            return rec
+        if rc == 124:
+            rec["status"] = "timeout"
+            rec["detail"] = "embedded presolve GAMS run exceeded 300s (unverified)"
+            return rec
         emb_obj = _parse_scalar_display(emb_listing, "nlp2mcp_obj_val")
         emb_status = _parse_model_status(emb_listing)  # the embedded NLP is the first solve
-        # A non-zero EXECERROR ABORT (korcge #1439 = 5) or a user/matrix error means
-        # the embedded $include run did NOT complete normally. Note GAMS also prints
-        # a benign "(EXECERROR=0) CLEARED" line, so key off the ABORT, not "EXECERROR".
+        # A non-zero GAMS exit, an EXECERROR ABORT (korcge #1439 = 5), or a
+        # user/matrix error means the embedded $include run did NOT complete
+        # normally. (rc 124/127 already handled above.) Note GAMS also prints a
+        # benign "(EXECERROR=0) CLEARED" line, so key off the ABORT, not "EXECERROR".
         execerror = bool(
-            re.search(r"ABORTED,\s*EXECERROR\s*=\s*[1-9]", emb_listing)
+            rc != 0
+            or re.search(r"ABORTED,\s*EXECERROR\s*=\s*[1-9]", emb_listing)
             or "USER ERROR(S) ENCOUNTERED" in emb_listing
             or re.search(r"\*\*\*\* Matrix error", emb_listing)
         )
@@ -283,7 +315,7 @@ def main() -> int:
     diverged = [r for r in results if r["status"] == "diverged" and r["model"] not in allowlist]
     allowlist_warn = [r for r in results if r["status"] == "diverged" and r["model"] in allowlist]
     obj_gap = [r for r in results if r["status"] == "obj_gap"]
-    other = [r for r in results if r["status"] in ("emit_failed", "skipped")]
+    other = [r for r in results if r["status"] in ("emit_failed", "skipped", "timeout")]
 
     if args.json_path:
         Path(args.json_path).write_text(

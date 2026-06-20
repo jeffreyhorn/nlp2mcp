@@ -29,13 +29,16 @@ jobs:
   presolve-divergence:
     name: Presolve divergence (embedded vs standalone NLP)
     runs-on: ubuntu-latest
-    # 11 presolve models, NLP solve only (no MCP solve) — small runtime; the
-    # generous ceiling covers GAMS install + the slowest CGE NLP.
+    # 11 presolve models. Each runs the generated *_mcp_presolve.gms, whose
+    # wrapper contains BOTH the embedded NLP pre-solve ($include under $onMultiR)
+    # AND the MCP solve — so a CONOPT/NLP + PATH/MCP capable GAMS is required. The
+    # generous ceiling covers GAMS install + the slowest CGE model.
     timeout-minutes: 20
 
     permissions:
       contents: read
-      pull-requests: write
+      # Least privilege: the job only reads PR labels and runs the detector.
+      pull-requests: read
 
     steps:
       - name: Check skip label
@@ -103,5 +106,7 @@ jobs:
 
       - name: Run presolve-divergence check
         if: steps.skip.outputs.skip != 'true'
+        # Pass --tol explicitly so the CI gate's behavior is pinned here and does
+        # not change silently if the script's DEFAULT_TOL is adjusted later.
         run: |
-          python scripts/diagnostics/check_presolve_divergence.py --json presolve-divergence.json
+          python scripts/diagnostics/check_presolve_divergence.py --tol 1e-3 --json presolve-divergence.json

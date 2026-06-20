@@ -68,6 +68,7 @@ coverage:
 # Wraps the golden-staleness checker's --fix mode (regenerate -> determinism
 # double-check -> overwrite). Run after any intentional emit change, then commit
 # the refreshed goldens.
+.PHONY: regen-goldens check-goldens
 regen-goldens:
 	$(PYTHON) scripts/sprint_audit/check_golden_staleness.py --fix
 
