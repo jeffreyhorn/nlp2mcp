@@ -29,10 +29,11 @@ jobs:
   presolve-divergence:
     name: Presolve divergence (embedded vs standalone NLP)
     runs-on: ubuntu-latest
-    # 11 presolve models. Each runs the generated *_mcp_presolve.gms, whose
-    # wrapper contains BOTH the embedded NLP pre-solve ($include under $onMultiR)
-    # AND the MCP solve — so a CONOPT/NLP + PATH/MCP capable GAMS is required. The
-    # generous ceiling covers GAMS install + the slowest CGE model.
+    # One run per committed *_mcp_presolve.gms golden (the detector discovers them
+    # at runtime — no hardcoded count). Each runs the generated wrapper, which
+    # contains BOTH the embedded NLP pre-solve ($include under $onMultiR) AND the
+    # MCP solve — so a CONOPT/NLP + PATH/MCP capable GAMS is required. The generous
+    # ceiling covers GAMS install + the slowest CGE model.
     timeout-minutes: 20
 
     permissions:
