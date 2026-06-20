@@ -61,9 +61,20 @@ jobs:
           pip install -e .
 
       # The GAMSLib raw corpus is gitignored; the check skips any golden whose
-      # raw source is absent, so CI must have the corpus available. If it is not
-      # present in this environment, the step is a no-op (0 goldens checked) —
-      # see the design doc for the corpus-availability prerequisite.
+      # raw source is absent. Provision it (the in-scope convex models that have
+      # committed goldens) so the gate is NOT a silent no-op. No GAMS needed —
+      # this is emit-only (no solve).
+      - name: Download GAMSLib raw corpus
+        if: steps.skip.outputs.skip != 'true'
+        run: ./scripts/download_gamslib_raw.sh
+
+      - name: Fail if corpus missing (guard against a silent no-op gate)
+        if: steps.skip.outputs.skip != 'true'
+        run: |
+          n=$(ls data/gamslib/raw/*.gms 2>/dev/null | wc -l)
+          echo "Provisioned $n raw model(s)."
+          test "$n" -gt 0 || { echo "ERROR: no raw corpus — the staleness gate would be a no-op."; exit 1; }
+
       - name: Run golden-staleness check
         if: steps.skip.outputs.skip != 'true'
         run: |

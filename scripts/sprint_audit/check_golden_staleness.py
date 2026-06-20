@@ -143,31 +143,47 @@ def main() -> int:
             if r["status"] == "drifted":
                 allowlist_warnings.append(r)
 
-    drifted = sorted([r for r in results if r["status"] in ("drifted", "fixed")], key=lambda r: r["golden"])
-    failed = sorted([r for r in results if r["status"] in ("emit_failed", "nondeterministic")], key=lambda r: r["golden"])
+    drifted = sorted(
+        [r for r in results if r["status"] in ("drifted", "fixed")], key=lambda r: r["golden"]
+    )
+    failed = sorted(
+        [r for r in results if r["status"] in ("emit_failed", "nondeterministic")],
+        key=lambda r: r["golden"],
+    )
     timed_out = sorted([r for r in results if r["status"] == "timeout"], key=lambda r: r["golden"])
 
     if args.json_path:
         Path(args.json_path).write_text(
             json.dumps(
-                {"checked": len(results), "drifted": drifted, "failed": failed, "allowlist_warnings": allowlist_warnings},
+                {
+                    "checked": len(results),
+                    "drifted": drifted,
+                    "failed": failed,
+                    "allowlist_warnings": allowlist_warnings,
+                },
                 indent=2,
             ),
             encoding="utf-8",
         )
 
-    print(f"Golden staleness: checked {len(results)} in-scope golden(s) "
-          f"({len(allowlisted)} allowlisted, {MAX_WORKERS} workers).")
+    print(
+        f"Golden staleness: checked {len(results)} in-scope golden(s) "
+        f"({len(allowlisted)} allowlisted, {MAX_WORKERS} workers)."
+    )
     for r in allowlist_warnings:
         print(f"  WARN allowlisted-but-emits-and-drifts: {r['golden']} (allowlist may be stale)")
     for r in timed_out:
-        print(f"  TIMEOUT (unverified, soft): {r['golden']} — slow-emit model; run nightly/longer budget")
+        print(
+            f"  TIMEOUT (unverified, soft): {r['golden']} — slow-emit model; run nightly/longer budget"
+        )
     for r in failed:
         print(f"  {r['status'].upper()}: {r['golden']} — {r.get('detail', '')}")
 
     if not drifted and not failed:
-        print("  All in-scope goldens clean"
-              + (f" ({len(timed_out)} slow-emit timeout(s), unverified)." if timed_out else "."))
+        print(
+            "  All in-scope goldens clean"
+            + (f" ({len(timed_out)} slow-emit timeout(s), unverified)." if timed_out else ".")
+        )
         return 0
 
     if args.fix:
@@ -181,8 +197,10 @@ def main() -> int:
     print(f"  {len(drifted)} golden(s) drifted from the current emit:")
     for r in drifted:
         print(f"    DRIFTED: {r['golden']} ({r.get('delta_bytes', 0):+d} bytes)")
-    print("  Run `make regen-goldens` and commit the refreshed goldens "
-          "(or, if unintended, fix the emit).")
+    print(
+        "  Run `make regen-goldens` and commit the refreshed goldens "
+        "(or, if unintended, fix the emit)."
+    )
     return 1
 
 

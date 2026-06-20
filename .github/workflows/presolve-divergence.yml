@@ -58,9 +58,45 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .
 
-      # Requires GAMS + the gitignored GAMSLib corpus; the detector skips any
-      # model whose raw source is absent (a no-op in environments without the
-      # corpus) — see the design doc for the prerequisite.
+      - name: Install GAMS demo
+        if: steps.skip.outputs.skip != 'true'
+        env:
+          # Pinned installer URL + SHA256 (supply-chain guard) — mirrors
+          # pr19-emit-solve-validation.yml. Bumping the GAMS version requires
+          # updating BOTH the URL and the checksum.
+          GAMS_INSTALLER_URL: "https://d37drm4t2jghv5.cloudfront.net/distributions/53.1.0/linux/linux_x64_64_sfx.exe"
+          GAMS_INSTALLER_SHA256: "8a82c82e257e54afc0d18c144957a862edae4e75020b81eed1950d93cb447b1a"
+        run: |
+          curl -fSL -o /tmp/gams-installer.exe "$GAMS_INSTALLER_URL"
+          ACTUAL_SHA256=$(sha256sum /tmp/gams-installer.exe | awk '{print $1}')
+          echo "Actual SHA256:  $ACTUAL_SHA256"
+          echo "Pinned SHA256:  $GAMS_INSTALLER_SHA256"
+          if [ "$ACTUAL_SHA256" != "$GAMS_INSTALLER_SHA256" ]; then
+            echo "ERROR: SHA256 mismatch — refusing to run the installer."; exit 1
+          fi
+          chmod +x /tmp/gams-installer.exe
+          mkdir -p $HOME/gams
+          /tmp/gams-installer.exe -q -d $HOME/gams
+          echo "$HOME/gams/gams53.1_linux_x64_64_sfx" >> $GITHUB_PATH
+
+      - name: Verify GAMS on PATH
+        if: steps.skip.outputs.skip != 'true'
+        run: gams audit lo=2
+
+      # The gitignored GAMSLib corpus must be present (the detector skips any
+      # model whose raw source is absent). Provision the in-scope models so the
+      # gate is NOT a silent no-op.
+      - name: Download GAMSLib raw corpus
+        if: steps.skip.outputs.skip != 'true'
+        run: ./scripts/download_gamslib_raw.sh
+
+      - name: Fail if corpus missing (guard against a silent no-op gate)
+        if: steps.skip.outputs.skip != 'true'
+        run: |
+          n=$(ls data/gamslib/raw/*.gms 2>/dev/null | wc -l)
+          echo "Provisioned $n raw model(s)."
+          test "$n" -gt 0 || { echo "ERROR: no raw corpus — the divergence gate would be a no-op."; exit 1; }
+
       - name: Run presolve-divergence check
         if: steps.skip.outputs.skip != 'true'
         run: |

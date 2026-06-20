@@ -58,12 +58,18 @@ def load_allowlist() -> set[str]:
     return out
 
 
-def _run_gams(gms: Path, workdir: Path) -> tuple[str, int]:
-    """Run GAMS on *gms* (lo=2), return (listing_text, returncode)."""
-    lst = workdir / (gms.stem + ".lst")
+def _run_gams(gms: Path, scratch_dir: Path) -> tuple[str, int]:
+    """Run GAMS on *gms* (lo=2), return (listing_text, returncode).
+
+    Runs with ``cwd=PROJECT_ROOT`` so the presolve emit's
+    ``$include "data/gamslib/raw/<model>.gms"`` resolves, while directing the
+    listing (``o=``) and GAMS scratch (``ScrDir=``) into *scratch_dir* (a temp
+    dir) so the run never litters the repo root.
+    """
+    lst = scratch_dir / (gms.stem + ".lst")
     proc = subprocess.run(
-        ["gams", str(gms), "lo=2", f"o={lst}"],
-        cwd=str(workdir),
+        ["gams", str(gms), "lo=2", f"o={lst}", f"ScrDir={scratch_dir}"],
+        cwd=str(PROJECT_ROOT),
         capture_output=True,
         text=True,
         timeout=300,
@@ -73,19 +79,22 @@ def _run_gams(gms: Path, workdir: Path) -> tuple[str, int]:
 
 
 def _parse_var_level(listing: str, var: str) -> float | None:
-    """Parse a scalar variable's LEVEL from a ``---- VAR <var>`` block."""
-    m = re.search(rf"----\s+VAR\s+{re.escape(var)}\b[^\n]*\n?[^\n]*?"
-                  rf"(?:-?\d|\.)", listing)
-    # Robust line-based parse: find the VAR header, take the first numeric on it.
+    """Parse a scalar variable's LEVEL from a ``---- VAR <var>`` row.
+
+    A scalar prints ``---- VAR <name>  <LOWER>  <LEVEL>  <UPPER>  <MARGINAL>``
+    where each column is a number, ``.`` (blank), or ``-INF``/``+INF``/``EPS``.
+    Parse by COLUMN POSITION (LEVEL is the 2nd) — NOT by filtering the numeric
+    tokens, which silently returns UPPER when LOWER is printed as ``.``.
+    """
     for line in listing.splitlines():
         ms = re.match(rf"----\s+VAR\s+{re.escape(var)}\b\s+(.*)", line)
         if ms:
-            nums = re.findall(r"-?\d+\.?\d*(?:[eE][+-]?\d+)?", ms.group(1))
-            # columns: LOWER LEVEL UPPER MARGINAL — LEVEL is the 2nd, but LOWER
-            # may be "." (printed blank); take the first finite number that is
-            # the level. Simplest: scalar VAR prints "LOWER LEVEL UPPER MARGINAL".
-            if nums:
-                return float(nums[1]) if len(nums) >= 2 else float(nums[0])
+            cols = ms.group(1).split()
+            if len(cols) >= 2:
+                try:
+                    return float(cols[1])  # LEVEL
+                except ValueError:
+                    return None  # '.', 'INF', 'EPS' — level not a finite number
     return None
 
 
@@ -114,12 +123,21 @@ def classify_divergence(
       camshape's infeasible embedded objective ≠ standalone) → diverged.
     """
     if execerror:
-        return "diverged", "embedded presolve run aborted (EXECERROR) — the $include re-run diverged"
+        return (
+            "diverged",
+            "embedded presolve run aborted (EXECERROR) — the $include re-run diverged",
+        )
     if std_obj is None or emb_obj is None:
-        return "indeterminate", f"could not parse objective (standalone={std_obj}, embedded={emb_obj})"
+        return (
+            "indeterminate",
+            f"could not parse objective (standalone={std_obj}, embedded={emb_obj})",
+        )
     rel = abs(emb_obj - std_obj) / max(1.0, abs(std_obj))
     if rel > tol:
-        return "diverged", f"embedded {emb_obj:.6g} vs standalone {std_obj:.6g} (rel {rel:.3g} > tol {tol:g})"
+        return (
+            "diverged",
+            f"embedded {emb_obj:.6g} vs standalone {std_obj:.6g} (rel {rel:.3g} > tol {tol:g})",
+        )
     return "clean", ""
 
 
@@ -138,7 +156,9 @@ def check_model(model_id: str, tol: float) -> dict:
         # --- standalone NLP ---
         standalone = wd / f"{model_id}_standalone.gms"
         standalone.write_text(raw.read_text(encoding="utf-8"), encoding="utf-8")
-        std_listing, _ = _run_gams(standalone, PROJECT_ROOT)  # cwd=root so $include/data paths resolve
+        std_listing, _ = _run_gams(
+            standalone, wd
+        )  # scratch into the temp dir; cwd=root inside _run_gams
         std_obj = _parse_var_level(std_listing, objvar)
         std_status = _parse_model_status(std_listing)
 
@@ -149,7 +169,7 @@ def check_model(model_id: str, tol: float) -> dict:
             rec["status"] = "emit_failed"
             rec["detail"] = tr.get("error", {}).get("message", "presolve emit failed")[:200]
             return rec
-        emb_listing, rc = _run_gams(presolve, PROJECT_ROOT)
+        emb_listing, rc = _run_gams(presolve, wd)
         emb_obj = _parse_scalar_display(emb_listing, "nlp2mcp_obj_val")
         # A non-zero EXECERROR ABORT (korcge #1439 = 5) or a user-error / matrix
         # error means the embedded $include run did NOT complete normally — a
@@ -161,13 +181,15 @@ def check_model(model_id: str, tol: float) -> dict:
             or re.search(r"\*\*\*\* Matrix error", emb_listing)
         )
 
-    rec.update({
-        "objvar": objvar,
-        "standalone_obj": std_obj,
-        "standalone_status": std_status,
-        "embedded_obj": emb_obj,
-        "tol": tol,
-    })
+    rec.update(
+        {
+            "objvar": objvar,
+            "standalone_obj": std_obj,
+            "standalone_status": std_status,
+            "embedded_obj": emb_obj,
+            "tol": tol,
+        }
+    )
     if std_obj is not None and emb_obj is not None:
         rec["rel_diff"] = abs(emb_obj - std_obj) / max(1.0, abs(std_obj))
     rec["status"], rec["detail"] = classify_divergence(std_obj, emb_obj, execerror, tol)
@@ -177,7 +199,12 @@ def check_model(model_id: str, tol: float) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description="Embedded-NLP-divergence detector (Priority 10).")
     ap.add_argument("--model", help="check a single model id")
-    ap.add_argument("--tol", type=float, default=DEFAULT_TOL, help=f"relative obj tolerance (default {DEFAULT_TOL})")
+    ap.add_argument(
+        "--tol",
+        type=float,
+        default=DEFAULT_TOL,
+        help=f"relative obj tolerance (default {DEFAULT_TOL})",
+    )
     ap.add_argument("--json", dest="json_path", help="write a machine-readable report")
     args = ap.parse_args()
 
@@ -186,8 +213,7 @@ def main() -> int:
         models = [args.model]
     else:
         models = sorted(
-            p.name[: -len("_mcp_presolve.gms")]
-            for p in MCP_DIR.glob("*_mcp_presolve.gms")
+            p.name[: -len("_mcp_presolve.gms")] for p in MCP_DIR.glob("*_mcp_presolve.gms")
         )
 
     results = [check_model(m, args.tol) for m in models]
@@ -196,7 +222,9 @@ def main() -> int:
     other = [r for r in results if r["status"] in ("emit_failed", "indeterminate")]
 
     if args.json_path:
-        Path(args.json_path).write_text(json.dumps({"results": results}, indent=2), encoding="utf-8")
+        Path(args.json_path).write_text(
+            json.dumps({"results": results}, indent=2), encoding="utf-8"
+        )
 
     print(f"Presolve divergence: checked {len(results)} model(s) (tol {args.tol:g}).")
     for r in allowlist_warn:
@@ -208,7 +236,9 @@ def main() -> int:
     if not diverged:
         print("  No (non-allowlisted) embedded-NLP divergence.")
         return 0
-    print(f"  {len(diverged)} model(s) diverged: the embedded $include NLP differs from standalone.")
+    print(
+        f"  {len(diverged)} model(s) diverged: the embedded $include NLP differs from standalone."
+    )
     return 1
 
 
