@@ -12,3 +12,11 @@ saras
 nemhaus
 nonsharp
 trnspwl
+# Cross-environment byte non-determinism (Unknown 8.3): the emit is hash-seed-
+# stable on macOS (local regen == committed golden, ×PYTHONHASHSEED) but the
+# ubuntu CI emit differs by ~45 bytes — a platform-specific difference (most
+# likely float formatting in this large dynamic model), NOT a stale golden or an
+# emit change. Allowlisted so the gate does not flap; a future emit *change* on
+# indus would still surface (as a drift WARNING on the allowlisted entry). A
+# root-cause determinism investigation: #1461.
+indus
