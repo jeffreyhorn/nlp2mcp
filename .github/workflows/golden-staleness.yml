@@ -67,7 +67,14 @@ jobs:
       # this is emit-only (no solve).
       - name: Download GAMSLib raw corpus
         if: steps.skip.outputs.skip != 'true'
-        run: ./scripts/download_gamslib_raw.sh
+        # download_gamslib_raw.sh exits non-zero if ANY model fails to download;
+        # warn-and-continue on partial failures (mirrors nightly.yml) so a
+        # transient gams.com/network hiccup doesn't fail the gate — the next step
+        # still fails fast if ZERO models were provisioned.
+        run: |
+          if ! ./scripts/download_gamslib_raw.sh; then
+            echo "::warning::download_gamslib_raw.sh reported one or more download failures; continuing with whatever was fetched."
+          fi
 
       - name: Fail if corpus missing (guard against a silent no-op gate)
         if: steps.skip.outputs.skip != 'true'

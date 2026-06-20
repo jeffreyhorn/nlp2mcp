@@ -17,6 +17,7 @@ indistinguishable from a real obj corruption without convexity context.
 from __future__ import annotations
 
 import importlib.util
+import sys
 from pathlib import Path
 
 # The detector lives under scripts/ (not an importable package); load it directly.
@@ -29,7 +30,14 @@ _SPEC = importlib.util.spec_from_file_location(
 )
 assert _SPEC and _SPEC.loader
 _mod = importlib.util.module_from_spec(_SPEC)
-_SPEC.loader.exec_module(_mod)
+# The module mutates global process state on import (sys.path.insert for its own
+# `src`/`scripts` imports). Snapshot/restore sys.path so this dynamic load does
+# not leak import-resolution order into the rest of the pytest run.
+_saved_sys_path = list(sys.path)
+try:
+    _SPEC.loader.exec_module(_mod)
+finally:
+    sys.path[:] = _saved_sys_path
 classify_divergence = _mod.classify_divergence
 
 TOL = 1e-4
