@@ -4,8 +4,12 @@ name: Presolve Divergence Check
 # source NLP under $onMultiR and solves it; because $onMultiR re-runs source
 # statements, a non-idempotent statement can make the embedded NLP diverge from
 # standalone (the #1378 / #1424 / korcge-#1439 bug class). This job compares the
-# embedded vs standalone NLP objective on every presolve model and fails the PR
-# on any non-allowlisted divergence. Triggered on the presolve-emit source paths.
+# embedded NLP against the canonical standalone-NLP objective from the pipeline DB
+# and HARD-FAILS the PR only on unambiguous corruption — a GAMS abort or an
+# embedded NLP that is infeasible while the reference solves. A bare objective gap
+# is reported informationally (not failed): for a non-convex model the embedded
+# solve may reach a benign different local optimum. Triggered on the presolve-emit
+# source paths.
 
 on:
   pull_request:

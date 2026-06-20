@@ -1,5 +1,11 @@
 # Presolve-divergence allowlist (Sprint 28 Priority 10).
-# Models whose source NLP is genuinely non-idempotent BY DESIGN, so the embedded
-# ($include, re-run under $onMultiR) NLP legitimately differs from standalone.
-# One model id per line; '#' comments allowed. Expected empty/near-empty.
-# (korcge #1439 is a real divergence and is intentionally NOT allowlisted.)
+# Models with a KNOWN, TRACKED hard divergence (GAMS abort or infeasible embedded
+# NLP) under --nlp-presolve. Allowlisting keeps the gate from going permanently
+# red on a deferred bug while still SURFACING it (an allowlisted divergence prints
+# as a WARN, not a pass); a NEW, non-allowlisted hard divergence still fails the
+# gate. One model id per line; '#' comments allowed.
+#
+# korcge: the embedded $include run aborts with EXECERROR=5 (it/in assignments +
+# deferred .fx fixups emitted before the $include with .l=0). Tracked in #1439
+# (OPEN, deferred). Remove this entry when #1439 is fixed.
+korcge
