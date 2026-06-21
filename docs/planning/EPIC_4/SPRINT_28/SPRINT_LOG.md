@@ -446,7 +446,7 @@ The AD Jacobian was already correct (per-lead `∂pdef/∂p` = `-alpha(1)/-alpha
 |---|---|---|---|---|
 | Parse | 142 | **142** | ≥142 | met |
 | Translate | 135 | **135** | ≥135 | met |
-| Solve (`model_optimal[_presolve]`) | 105 | **107** | ≥110 stretch / 109 firm | **miss −2** |
+| Solve (`model_optimal[_presolve]`) | 105 | **107** | ≥110 stretch / 109 firm | **miss −3 vs stretch, −2 vs firm** |
 | Match | 62 | **92** | ≥65 | **EXCEEDED +27** |
 | Mismatch | 37 | **9** | — | — |
 | model_infeasible | 8 | **7** | ≤5 | miss +2 |
@@ -455,7 +455,7 @@ The AD Jacobian was already correct (per-lead `∂pdef/∂p` = `-alpha(1)/-alpha
 
 ### PR25 final tally — genuine vs methodology vs bucket-forward vs regression
 
-**Solve 105 → 107 (+2).** New `model_optimal`: **camshape** (#1388, genuine), **otpop** (#1393/#1335/#1449/#1452, genuine), **maxmin** (side-effect of camshape's guard fix + the broadened retry). Lost: **rocket** (stale-baseline correction, #1462 — not a Sprint-28 regression). Net +2. Misses the firm-109 / stretch-110 target by exactly the two REPLAN'd tracks (**mine #1443**, **camcge #1330**) plus the rocket stale-baseline correction.
+**Solve 105 → 107 (+2).** New `model_optimal`: **camshape** (#1388, genuine), **otpop** (#1393/#1335/#1449/#1452, genuine), **maxmin** (side-effect of camshape's guard fix + the broadened retry). Lost: **rocket** (stale-baseline correction, #1462 — not a Sprint-28 regression). Net +2. The **firm-109 Solve miss (−2)** is exactly the two REPLAN'd Solve gains that didn't land (**mine #1443**, **camcge #1330**); **rocket's −1 is offset by maxmin's +1**, so it is net-neutral on the Solve count (it does change `model_infeasible`). The **stretch-110 miss (−3)** adds one further gain with no carryforward backing.
 
 **Match 62 → 92 (+30 net = +31 new − 1 regression).** Decomposition (validated by diffing the fresh DB against the pre-retest snapshot + cross-referencing the changed-golden set):
 - **7 genuine cross-term-fix matches** (documented, harness-verified during the sprint): camshape, otpop, cclinpts, chakra, chenery, kand, srkandw.
@@ -476,4 +476,4 @@ The AD Jacobian was already correct (per-lead `∂pdef/∂p` = `-alpha(1)/-alpha
 - Committed the fresh pipeline DB (`gamslib_status.json`).
 
 ### Headline
-**Match target ≥65 exceeded → 92** (genuine cross-term contribution +7, zero regressions; the rest is the Day-9 presolve-retry broadening validating already-correct non-convex emits). **Solve missed** (107 vs 109/110) and **model_infeasible missed** (7 vs ≤5) by exactly the two formally-REPLAN'd tracks (mine #1443, camcge #1330) plus the rocket stale-baseline correction (#1462 — not a Sprint-28 regression; rocket was already broken at Sprint-27 close). Four diagnostic/CI guards shipped (KKT-residual harness, golden-staleness gate, divergence detector, AD property tests). **Sprint 28 CLOSED.**
+**Match target ≥65 exceeded → 92** (genuine cross-term contribution +7, zero regressions; the rest is the Day-9 presolve-retry broadening validating already-correct non-convex emits). **Solve missed** (−2 vs firm 109 = the two formally-REPLAN'd tracks mine #1443 + camcge #1330; rocket's −1 is offset by maxmin's +1, so it is net-neutral on Solve) and **model_infeasible missed** (7 vs ≤5 = mine + camcge not cleared, **plus** rocket entering as a stale-baseline correction, #1462 — not a Sprint-28 regression; rocket was already broken at Sprint-27 close). Four diagnostic/CI guards shipped (KKT-residual harness, golden-staleness gate, divergence detector, AD property tests). **Sprint 28 CLOSED.**
