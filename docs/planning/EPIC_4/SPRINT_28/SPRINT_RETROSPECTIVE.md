@@ -3,7 +3,7 @@
 **Sprint window:** 2026-06-12 (Day 0) → 2026-06-20 (Day 13)
 **Day-0 baseline SHA:** `68be9cca` (Sprint 27 final; `git diff 68be9cca..HEAD -- src/ scripts/` was empty at Day 0, so Sprint 28 Day 0 = Sprint 27 final — no fresh baseline retest required).
 **Final metrics (142-model GAMSlib corpus, Day-13 full retest):** Parse **142** · Translate **135** · Solve **107** (+2) · Match **92** (+30) · model_infeasible **7** · Tests **~4,935** · Determinism **byte-identical ×3 seeds** ✅
-**Headline outcome:** **Match target ≥65 EXCEEDED → 92.** The +30 decomposes as **+7 genuine cross-term-fix matches** (camshape, otpop, cclinpts, chakra, chenery, kand, srkandw — documented + harness-verified), **~+24 methodology-driven** (the Day-9 #1387 PR broadened the presolve-retry to fire on cold-*mismatch*, not just STATUS-5; this warm-start-validates non-convex models that were *already emit-correct* — 22 of them byte-identical to Day-0), and **−1 stale-baseline correction** (rocket #1462, **not a regression** — see below). Genuine cross-term contribution = **+7, zero regressions**. **Solve missed** (stretch ≥110 / firm 109 → **107**, −2) and **model_infeasible missed** (≤5 → **7**, +2) — by exactly the two tracks REPLAN'd at their Task-6 gates (**mine #1443** deeper cold-infeasible LCP coupling; **camcge #1330** Epic-5 CGE Walras degeneracy) plus the rocket stale-baseline correction. Tests / Parse / Translate / Determinism **met**. **The Day-13 full retest revealed a stale Sprint-27 baseline (rocket #1462)** — a reminder that per-PR golden-stability checks don't substitute for a re-solve. Shipped four diagnostic/CI guards (KKT-residual harness, golden-staleness gate, embedded-NLP-divergence detector, AD cross-term property tests).
+**Headline outcome:** **Match target ≥65 EXCEEDED → 92.** The +30 decomposes as **+7 genuine cross-term-fix matches** (camshape, otpop, cclinpts, chakra, chenery, kand, srkandw — documented + harness-verified), **~+24 methodology-driven** (the Day-9 #1387 PR broadened the presolve-retry to fire on cold-*mismatch*, not just STATUS-5; this warm-start-validates non-convex models that were *already emit-correct* — 22 of them byte-identical to Day-0), and **−1 stale-baseline correction** (rocket #1462, **not a regression** — see below). Genuine cross-term contribution = **+7, zero regressions**. **Solve missed** (**107**: −3 vs stretch ≥110, −2 vs firm 109) and **model_infeasible missed** (≤5 → **7**, +2) — by exactly the two tracks REPLAN'd at their Task-6 gates (**mine #1443** deeper cold-infeasible LCP coupling; **camcge #1330** Epic-5 CGE Walras degeneracy) plus the rocket stale-baseline correction. Tests / Parse / Translate / Determinism **met**. **The Day-13 full retest revealed a stale Sprint-27 baseline (rocket #1462)** — a reminder that per-PR golden-stability checks don't substitute for a re-solve. Shipped four diagnostic/CI guards (KKT-residual harness, golden-staleness gate, embedded-NLP-divergence detector, AD cross-term property tests).
 
 ---
 
@@ -19,7 +19,7 @@
 
 5. **The two systematic CI guards (Priority 8 + 10) proved their value immediately.** The golden-staleness gate caught a real **cross-platform byte non-determinism on indus** (macOS-stable but ubuntu-divergent, #1461) that the local run could not see; the embedded-NLP-divergence detector correctly flags the **korcge #1439** abort and was hardened (during PR review) from a noisy fresh-re-solve comparison into a DB-reference, hard-fail/soft-`obj_gap` design that doesn't false-flag non-convex local optima.
 
-6. **Determinism held end-to-end.** The Day-13 3× `PYTHONHASHSEED` retest was byte-identical modulo wall-time, and #1400 (Sprint 11) removed the last machine-portability leak (repo-relative warning paths in the captured `message` field).
+6. **Determinism held end-to-end.** The Day-13 3× `PYTHONHASHSEED` retest was byte-identical modulo wall-time, and #1400 (Sprint 28 Day 11) removed the last machine-portability leak (repo-relative warning paths in the captured `message` field).
 
 ## What We'd Do Differently
 
@@ -57,4 +57,4 @@ All 🟡 design-scope Known Unknowns verified on their owning priority days: **9
 
 - `PLAN.md`, `BASELINE_METRICS.md`, `SPRINT_LOG.md`, `KNOWN_UNKNOWNS.md`
 - Resolved (CLOSED): #1387, #1455, #1390, #1393, #1335, #1449, #1452, #1388, #1374, #1400
-- Carryforwards (OPEN): #1443 (mine), #1330 (camcge → Epic 5), #1385 (translation timeout); new: #1462 (rocket presolve regression), #1461 (indus cross-platform emit determinism)
+- Carryforwards (OPEN): #1443 (mine), #1330 (camcge → Epic 5), #1385 (translation timeout); new: #1462 (rocket presolve stale-baseline / non-convex), #1461 (indus cross-platform emit determinism)

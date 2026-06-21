@@ -9,7 +9,7 @@
 
 | Metric | Day 0 | Day 5 (CP1) | Day 10 (CP2) | Day 13 (final, **measured**) | Target |
 |---|---|---|---|---|---|
-| Solve | 105 | 106 | 107 | **107** (+2) | ≥ 110 (stretch) — **miss −3** |
+| Solve | 105 | 106 | 107 | **107** (+2) | ≥ 110 stretch / 109 firm — **miss −3 vs stretch, −2 vs firm** |
 | Match | 62 | 63 | 67 | **92** (+30) | ≥ 65 — **EXCEEDED +27** |
 | model_infeasible | 8 | 7 | 6¹ | **7** | ≤ 5 — miss +2 |
 | Tests | 4,779 | ~4,795 | 4,917 | **~4,935** | ≥ 4,800 — **met** |
@@ -439,7 +439,7 @@ The AD Jacobian was already correct (per-lead `∂pdef/∂p` = `-alpha(1)/-alpha
 
 ## Day 13 — Final Retest + Closeout (2026-06-20)
 
-**Status:** 🟢 DONE — full 142-model pipeline retest (re-solve, the committed DB was stale; the per-priority PRs changed `src/`+goldens but never re-ran the pipeline), 3× `PYTHONHASHSEED` determinism check, PR25 final tally, retrospective, Sprint 29 carryforwards. **One regression found and filed (rocket #1462).**
+**Status:** 🟢 DONE — full 142-model pipeline retest (re-solve, the committed DB was stale; the per-priority PRs changed `src/`+goldens but never re-ran the pipeline), 3× `PYTHONHASHSEED` determinism check, PR25 final tally, retrospective, Sprint 29 carryforwards. **One stale-baseline correction found and filed (rocket #1462 — NOT a Sprint-28 regression; see the PR25 tally below).**
 
 ### Final headline metrics (142-model GAMSlib corpus, `run_full_test.py` summary)
 | Metric | Day 0 | Day 13 | Target | Verdict |
@@ -455,7 +455,7 @@ The AD Jacobian was already correct (per-lead `∂pdef/∂p` = `-alpha(1)/-alpha
 
 ### PR25 final tally — genuine vs methodology vs bucket-forward vs regression
 
-**Solve 105 → 107 (+2).** New `model_optimal`: **camshape** (#1388, genuine), **otpop** (#1393/#1335/#1449/#1452, genuine), **maxmin** (side-effect of camshape's guard fix + the broadened retry). Lost: **rocket** (regression, #1462). Net +2. Misses the firm-109 / stretch-110 target by exactly the two REPLAN'd tracks (**mine #1443**, **camcge #1330**) minus the rocket regression.
+**Solve 105 → 107 (+2).** New `model_optimal`: **camshape** (#1388, genuine), **otpop** (#1393/#1335/#1449/#1452, genuine), **maxmin** (side-effect of camshape's guard fix + the broadened retry). Lost: **rocket** (stale-baseline correction, #1462 — not a Sprint-28 regression). Net +2. Misses the firm-109 / stretch-110 target by exactly the two REPLAN'd tracks (**mine #1443**, **camcge #1330**) plus the rocket stale-baseline correction.
 
 **Match 62 → 92 (+30 net = +31 new − 1 regression).** Decomposition (validated by diffing the fresh DB against the pre-retest snapshot + cross-referencing the changed-golden set):
 - **7 genuine cross-term-fix matches** (documented, harness-verified during the sprint): camshape, otpop, cclinpts, chakra, chenery, kand, srkandw.
@@ -471,7 +471,7 @@ The AD Jacobian was already correct (per-lead `∂pdef/∂p` = `-alpha(1)/-alpha
 
 ### Closeout deliverables
 - `SPRINT_RETROSPECTIVE.md` authored; cumulative tracker filled; this Day-13 entry.
-- Sprint 29 carryforwards: **#1443** (mine, head-domain-offset MCP infeasibility), **#1330** (camcge → Epic 5 CGE Walras degeneracy), **#1385** (translation-timeout cross-terms, re-deferred), **#1462** (rocket presolve regression, NEW), **#1461** (indus cross-platform emit determinism, NEW).
+- Sprint 29 carryforwards: **#1443** (mine, head-domain-offset MCP infeasibility), **#1330** (camcge → Epic 5 CGE Walras degeneracy), **#1385** (translation-timeout cross-terms, re-deferred), **#1462** (rocket presolve `nu_*_fx_h0` warm-start / non-convex — stale-baseline, not a regression, NEW), **#1461** (indus cross-platform emit determinism, NEW).
 - Resolved + CLOSED this sprint: #1387, #1455, #1390, #1393, #1335, #1449, #1452, #1388, #1374, #1400.
 - Committed the fresh pipeline DB (`gamslib_status.json`).
 
