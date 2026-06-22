@@ -1,10 +1,10 @@
 # Translation Timeout Option 1 Short-Circuit Redesign — Symbolic-Instance Handling in AD/Emit Pipeline
 
 **GitHub Issue:** [#1385](https://github.com/jeffreyhorn/nlp2mcp/issues/1385)
-**Status:** PARTIALLY DONE (Sprint 27 Day 7) — translate-time short-circuit LANDED; the runtime-guard equation-body re-emit + `J_gᵀ·lam` cross-terms are DEFERRED to Sprint 28. See "Sprint 27 Day 7" below.
+**Status:** PARTIALLY DONE (Sprint 27 Day 7) — translate-time short-circuit LANDED; the runtime-guard equation-body re-emit + `J_gᵀ·lam` cross-terms are **DEFERRED → Sprint 29** (re-deferred at Sprint 28 Day 11 — the day was consumed by the camcge Task-6 gate + the #1374/#1400 cleanups, per the PLAN slip guidance). See "Sprint 27 Day 7" below.
 **Severity:** Medium — affects 5 GAMSlib `translate_timeout` models that Option 1 was meant to recover (srpchase, iswnm, sarf, mexls, nebrazil) plus blocks any downstream Solve / Match gain those models would have produced post-recovery.
 **Date:** 2026-05-12
-**Last Updated:** 2026-06-07 (Sprint 27 Day 7 — translate-time-only short-circuit landed, scoped per SCOPED-PROCEED)
+**Last Updated:** 2026-06-20 (Sprint 28 Day 13 closeout — re-deferred to Sprint 29; the cross-term half remains the atomic re-emit + `J_gᵀ·lam` work, unchanged in scope)
 
 ## Sprint 27 Day 7 (2026-06-07) — translate-time-only short-circuit LANDED (cross-terms → Sprint 28)
 

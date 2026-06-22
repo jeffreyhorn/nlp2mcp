@@ -7,12 +7,14 @@
 
 ## Cumulative Metrics Tracker
 
-| Metric | Day 0 | Day 5 (CP1) | Day 10 (CP2) | Day 13 (final) | Target |
+| Metric | Day 0 | Day 5 (CP1) | Day 10 (CP2) | Day 13 (final, **measured**) | Target |
 |---|---|---|---|---|---|
-| Solve | 105 | — | — | — | ≥ 110 (stretch) |
-| Match | 62 | — | — | — | ≥ 65 |
-| model_infeasible | 8 | — | — | — | ≤ 5 |
-| Tests | 4,779 | — | — | — | ≥ 4,800 |
+| Solve | 105 | 106 | 107 | **107** (+2) | ≥ 110 stretch / 109 firm — **miss −3 vs stretch, −2 vs firm** |
+| Match | 62 | 63 | 67 | **92** (+30) | ≥ 65 — **EXCEEDED +27** |
+| model_infeasible | 8 | 7 | 6¹ | **7** | ≤ 5 — miss +2 |
+| Tests | 4,779 | ~4,795 | 4,917 | **~4,935** | ≥ 4,800 — **met** |
+
+¹ CP1/CP2 columns are the per-day **genuine-gain projections** vs the as-measured Day-0 baseline (62) — they exclude the methodology-driven matches. The Day-13 **full retest** (the authoritative measurement) also captured **+24 non-convex models recovered by the Day-9 broadening of the presolve-retry to cold-*mismatch*** (`_cold_objective_mismatches_nlp`, #1387 PR) — mostly byte-identical emit (always correct, now warm-start-validated), which a fairer Day-0 baseline would also have counted. Net of methodology, the sprint's genuine cross-term contribution is **+7 fixes, zero regressions** (rocket #1462 is a *stale-baseline correction* — its Sprint-27 match was stale and the Sprint-27 golden aborts on current `main`, so the true Day-0 Match baseline was 61, not 62). See the Day-13 entry for the full decomposition.
 
 ---
 
@@ -432,3 +434,46 @@ The AD Jacobian was already correct (per-lead `∂pdef/∂p` = `-alpha(1)/-alpha
 - CHANGELOG. typecheck/format/lint clean; `make test` green.
 
 ### Next: Day 13 — Final 3× PYTHONHASHSEED retest + golden-staleness check + PR25 final tally + SPRINT_RETROSPECTIVE + Sprint 29 carryforwards.
+
+---
+
+## Day 13 — Final Retest + Closeout (2026-06-20)
+
+**Status:** 🟢 DONE — full 142-model pipeline retest (re-solve, the committed DB was stale; the per-priority PRs changed `src/`+goldens but never re-ran the pipeline), 3× `PYTHONHASHSEED` determinism check, PR25 final tally, retrospective, Sprint 29 carryforwards. **One stale-baseline correction found and filed (rocket #1462 — NOT a Sprint-28 regression; see the PR25 tally below).**
+
+### Final headline metrics (142-model GAMSlib corpus, `run_full_test.py` summary)
+| Metric | Day 0 | Day 13 | Target | Verdict |
+|---|---|---|---|---|
+| Parse | 142 | **142** | ≥142 | met |
+| Translate | 135 | **135** | ≥135 | met |
+| Solve (`model_optimal[_presolve]`) | 105 | **107** | ≥110 stretch / 109 firm | **miss −3 vs stretch, −2 vs firm** |
+| Match | 62 | **92** | ≥65 | **EXCEEDED +27** |
+| Mismatch | 37 | **9** | — | — |
+| model_infeasible | 8 | **7** | ≤5 | miss +2 |
+| Tests | 4,779 | **~4,935** | ≥4,800 | met |
+| Determinism (3× `PYTHONHASHSEED`) | ✅ | **✅ 0 drift ×{0,1,42}** | ×3 seeds | met |
+
+### PR25 final tally — genuine vs methodology vs bucket-forward vs regression
+
+**Solve 105 → 107 (+2).** New `model_optimal`: **camshape** (#1388, genuine), **otpop** (#1393/#1335/#1449/#1452, genuine), **maxmin** (side-effect of camshape's guard fix + the broadened retry). Lost: **rocket** (stale-baseline correction, #1462 — not a Sprint-28 regression). Net +2. The **firm-109 Solve miss (−2)** is exactly the two REPLAN'd Solve gains that didn't land (**mine #1443**, **camcge #1330**); **rocket's −1 is offset by maxmin's +1**, so it is net-neutral on the Solve count (it does change `model_infeasible`). The **stretch-110 miss (−3)** adds one further gain with no carryforward backing.
+
+**Match 62 → 92 (+30 net = +31 new − 1 regression).** Decomposition (validated by diffing the fresh DB against the pre-retest snapshot + cross-referencing the changed-golden set):
+- **7 genuine cross-term-fix matches** (documented, harness-verified during the sprint): camshape, otpop, cclinpts, chakra, chenery, kand, srkandw.
+- **~24 methodology-driven matches** from the **Day-9 #1387 PR broadening the presolve-retry to also fire on cold-*mismatch*** (`_cold_objective_mismatches_nlp`), not just STATUS-5 cold failures. These are non-convex models that cold-converge to a *spurious* KKT point but warm-start to the NLP optimum (catmix, himmel16, weapons, harker, polygon, sambal, markov, worst, the CGE family irscge/lrgcge/moncge/stdcge, like, robert, mathopt1/4, mingamma, paperco, qsambal, marco, etamac, cpack, maxmin, tforss, …). **22 of these have byte-identical emit to Day-0** — they were always emit-correct; the broadened retry now *validates* them. A fairer Day-0 baseline (with the broadened retry) would have been ~86, so the sprint's genuine cross-term contribution is **+7 (zero regressions — see rocket below)**.
+- **−1 stale-baseline correction: rocket** (#1462) — **NOT a Sprint-28 regression.** The Sprint-27 DB recorded `model_optimal_presolve` + match (1.0128), but the **actual Sprint-27 golden aborts (`EXECERROR=1`) on current `main`** (the otpop fixed-column / unmatched-`_fx_`-row pathology), so that match was stale and does not reproduce. The only Sprint-28 change to rocket's presolve is the #1449 unfix, which moved it **abort → MS5-infeasible** (a *forward* step). Root cause localized (the `nu_*_fx_h0` `_fx_`-multipliers aren't warm-started → nonzero `stat_v('h0')` residual; injecting `nu_*_fx_h0.l = <var>.m('h0')` moves the objective to 1.016 but MS5 persists — a deep non-convex case). Carried to Sprint 29 (no new `src/` in Day 13). So the genuine Day-0 Match baseline should have been **61**.
+
+**model_infeasible 8 → 7.** Left: camshape, otpop (the two genuine solves). Entered: rocket (#1462 — a stale-baseline correction; rocket was already broken at Sprint-27 close, the unfix moved it abort→infeasible). Miss vs ≤5 = mine (#1443) + camcge (#1330) + rocket.
+
+### Validation method (PR25 / PR12 discipline)
+- The committed DB was the **stale Sprint-27-final** measurement (otpop=failure, cclinpts/kand=old mismatch objectives), so a fresh re-solve was genuinely required — not a re-measurement of already-updated rows.
+- Diffed the fresh retest DB against the pre-retest snapshot (`archive/20260620_204913`): **31 new matches, 1 lost (rocket), 3 new `model_optimal`, 1 lost (rocket)** — every delta accounted for above; cross-referenced against the 33-golden changed set (`git diff 68be9cca..HEAD -- data/gamslib/mcp/`) to separate emit-changed (fix-driven) from byte-identical (methodology-driven) matches.
+- **Determinism:** `check_golden_staleness.py` under `PYTHONHASHSEED` ∈ {0, 1, 42} = **0 drift each** (slow-emit models soft-timeout; `indus` allowlisted #1461) → emit is seed-invariant.
+
+### Closeout deliverables
+- `SPRINT_RETROSPECTIVE.md` authored; cumulative tracker filled; this Day-13 entry.
+- Sprint 29 carryforwards: **#1443** (mine, head-domain-offset MCP infeasibility), **#1330** (camcge → Epic 5 CGE Walras degeneracy), **#1385** (translation-timeout cross-terms, re-deferred), **#1462** (rocket presolve `nu_*_fx_h0` warm-start / non-convex — stale-baseline, not a regression, NEW), **#1461** (indus cross-platform emit determinism, NEW).
+- Resolved + CLOSED this sprint: #1387, #1455, #1390, #1393, #1335, #1449, #1452, #1388, #1374, #1400.
+- Committed the fresh pipeline DB (`gamslib_status.json`).
+
+### Headline
+**Match target ≥65 exceeded → 92** (genuine cross-term contribution +7, zero regressions; the rest is the Day-9 presolve-retry broadening validating already-correct non-convex emits). **Solve missed** (−2 vs firm 109 = the two formally-REPLAN'd tracks mine #1443 + camcge #1330; rocket's −1 is offset by maxmin's +1, so it is net-neutral on Solve) and **model_infeasible missed** (7 vs ≤5 = mine + camcge not cleared, **plus** rocket entering as a stale-baseline correction, #1462 — not a Sprint-28 regression; rocket was already broken at Sprint-27 close). Four diagnostic/CI guards shipped (KKT-residual harness, golden-staleness gate, divergence detector, AD property tests). **Sprint 28 CLOSED.**
