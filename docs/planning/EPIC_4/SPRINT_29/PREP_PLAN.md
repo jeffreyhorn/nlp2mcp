@@ -57,9 +57,10 @@ This prep plan focuses on:
 
 ## Task 1: Create Sprint 29 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
-**Estimated Time:** 3–4 hours
+**Estimated Time:** 3–4 hours (actual: ~3.5h)
+**Completed:** 2026-06-23
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
@@ -131,11 +132,14 @@ The largest single unknown is the **cold-convex cohort partition size** (Unknown
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_29/KNOWN_UNKNOWNS.md` (28 unknowns across 8 categories aligned to the Sprint 29 priorities).
+- Added the `## Appendix: Task-to-Unknown Mapping` table assigning every unknown to its verifying prep task (Tasks 2–10).
 
 ### Result
 
-To be completed.
+- **28 unknowns** authored: 7 Critical / 11 High / 6 Medium / 4 Low (~34h research time, parallelized across Tasks 2–10).
+- Every carryforward/backlog fix-surface framed as a Day-0 `kkt_residual.py` hypothesis (PR24); the three REPLAN-prone Criticals (1.1 mine, 2.2 rocket residual, 7.2 offset-alias) and the cold-convex partition (4.1) flagged.
+- The Task-to-Unknown mapping is the source for the "Unknowns Verified" metadata now added to Tasks 2–10 below.
 
 ### Verification
 
@@ -165,13 +169,13 @@ grep -oE '#1(443|462|385|330|447|332|247|239|236|146|143|112|111)' docs/planning
 
 ### Acceptance Criteria
 
-- [ ] Document created with 25+ unknowns across 8+ categories
-- [ ] All unknowns have assumption, verification method, priority, risk-if-wrong
-- [ ] All Critical/High unknowns have a Day-0 `kkt_residual.py` trace or single-model hypothesis-validation as their verification
-- [ ] Carryforward/backlog fix-surfaces framed as hypotheses per PR24 (not as established fact)
-- [ ] #1443, #1462-residual, #1111/#1112 flagged Critical (REPLAN-prone)
-- [ ] Cold-convex cohort partition flagged as the largest scope unknown, routed to Task 3
-- [ ] Update/resolution template defined (§"Template for New Unknowns")
+- [x] Document created with 25+ unknowns across 8+ categories (28 unknowns across 8 categories)
+- [x] All unknowns have assumption, verification method, priority, risk-if-wrong (all 8 fields per unknown)
+- [x] All Critical/High unknowns have a Day-0 `kkt_residual.py` trace or single-model hypothesis-validation as their verification
+- [x] Carryforward/backlog fix-surfaces framed as hypotheses per PR24 (not as established fact)
+- [x] #1443 (1.1), #1462-residual (2.2), #1111/#1112 (7.2) flagged Critical (REPLAN-prone)
+- [x] Cold-convex cohort partition flagged as the largest scope unknown (Unknown 4.1), routed to Task 3
+- [x] Update/resolution template defined (§"Template for New Unknowns")
 
 ---
 
@@ -183,6 +187,7 @@ grep -oE '#1(443|462|385|330|447|332|247|239|236|146|143|112|111)' docs/planning
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
+**Unknowns Verified:** 8.2, 8.3 (contributes to 1.1, 2.1, 4.1, 6.1 bucket confirmation)
 
 ### Objective
 
@@ -246,6 +251,7 @@ grep -iE 'methodology|genuine' docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.m
 - The Match baseline split into genuine (≈68) vs methodology (≈24) with the model lists
 - Day-0 = Sprint 28 final confirmation (no fresh retest required)
 - Per-priority projection labeling each delta genuine vs methodology/bucket-forward
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 8.2, 8.3
 
 ### Acceptance Criteria
 
@@ -254,6 +260,7 @@ grep -iE 'methodology|genuine' docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.m
 - [ ] Day-0 = Sprint 28 final confirmed (git diff empty, no retest)
 - [ ] Every Sprint 29 projected Solve/Match delta labeled genuine vs methodology/bucket-forward
 - [ ] Sprint 29 targets (Solve ≥ 109 / Match ≥ 92 maintain, ≥ 96 stretch / model_infeasible ≤ 5) traced to specific model transitions
+- [ ] Unknowns 8.2, 8.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -265,6 +272,7 @@ grep -iE 'methodology|genuine' docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.m
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 4.1, 4.2, 4.3, 4.4
 
 ### Objective
 
@@ -330,6 +338,7 @@ grep -i 'maxmin' docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md | h
 - The Case-b (Sprint-29-fixable) vs Case-c (Sprint-30 hand-off) partition with counts
 - #1447 maxmin confirmed as the lead Case-b target + ≥1 additional Case-b candidate identified
 - The partition size fed to Task 4 (gates) and Task 10 (P4 budget allocation)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.1, 4.2, 4.3, 4.4
 
 ### Acceptance Criteria
 
@@ -339,6 +348,7 @@ grep -i 'maxmin' docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md | h
 - [ ] Case-b / Case-c partition produced with counts and a Sprint-29-fixable ranked list
 - [ ] #1447 maxmin + ≥1 more Case-b candidate confirmed
 - [ ] Partition size handed to Tasks 4 and 10
+- [ ] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -350,6 +360,7 @@ grep -i 'maxmin' docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md | h
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1, 3
+**Unknowns Verified:** 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.2, 6.1, 7.1, 7.2
 
 ### Objective
 
@@ -406,6 +417,7 @@ grep -liE 'REPLAN|Sprint 30|Case[- ]?c' docs/issues/ISSUE_{1443,1462,1146,1143}_
 - Each gate cites the exact `kkt_residual.py` command + PROCEED verdict + Case-c REPLAN exit
 - #1462's gate frames the residual `piL/piU`-at-`h0` question as the hypothesis (warm-start known)
 - The cold-convex Case-b leads (from Task 3) gated for Priority 4
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.2, 6.1, 7.1, 7.2
 
 ### Acceptance Criteria
 
@@ -415,6 +427,7 @@ grep -liE 'REPLAN|Sprint 30|Case[- ]?c' docs/issues/ISSUE_{1443,1462,1146,1143}_
 - [ ] Each REPLAN-prone gate (#1443, #1462-residual, #1146/#1143) has an explicit Sprint-30 exit
 - [ ] #1462's gate distinguishes the known warm-start from the residual non-convex question
 - [ ] Cohort gates pull the Case-b leads from the Task-3 partition
+- [ ] Unknowns 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.2, 6.1, 7.1, 7.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -426,6 +439,7 @@ grep -liE 'REPLAN|Sprint 30|Case[- ]?c' docs/issues/ISSUE_{1443,1462,1146,1143}_
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 4
+**Unknowns Verified:** 1.1, 2.2, 7.2, 7.4
 
 ### Objective
 
@@ -442,7 +456,7 @@ Sprint 28's lower-effort bound assumed the diagnosis-heavy tracks partially slip
 - PR16 hypothesis-validation: `SPRINT_28/PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md` (the Sprint 28 analog — #1387/#1390/camcge) as the structural template
 - #1443 deeper coupling evidence: `SPRINT_28/SPRINT_LOG.md` §"Day 4 — #1224" (mine cold MS-5, `x → 4e10`, 49 INFES) + issue #1443
 - #1462 residual non-convexity: `SPRINT_28/SPRINT_LOG.md` §"Day 13" (warm-start 1.137 → 1.016, MS 5 persists) + issue #1462
-- #1111/#1112 AD-engine architecture: `docs/issues/ISSUE_1111_*.md`, `ISSUE_1112_*.md`, `ISSUE_1146_*.md`, `ISSUE_1143_*.md`
+- #1111/#1112 AD-engine architecture: GitHub #1111 / #1112 (no local doc) + `docs/issues/ISSUE_1146_*.md`, `ISSUE_1143_*.md`
 - The harness Case-c verdict as the REPLAN trigger: `scripts/diagnostics/kkt_residual.py`
 
 ### What Needs to Be Done
@@ -482,6 +496,7 @@ grep -iE 'Sprint 30|budget reallocat|absorb' docs/planning/EPIC_4/SPRINT_29/REPL
 - `docs/planning/EPIC_4/SPRINT_29/REPLAN_RISK_ASSESSMENT.md` with per-track hypothesis, validation experiment, PROCEED/REPLAN signals, Sprint 30 exit
 - A budget-reallocation plan for each possible REPLAN (which priority absorbs the freed hours)
 - The three Critical REPLAN-prone unknowns (Task 1) resolved into scheduled decisions
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 2.2, 7.2, 7.4
 
 ### Acceptance Criteria
 
@@ -491,6 +506,7 @@ grep -iE 'Sprint 30|budget reallocat|absorb' docs/planning/EPIC_4/SPRINT_29/REPL
 - [ ] Each track has a Sprint 30 exit scope (the re-scoped filing)
 - [ ] Budget-reallocation plan specified per REPLAN
 - [ ] Feeds the Task-10 schedule's slack allocation and fallback ordering
+- [ ] Unknowns 1.1, 2.2, 7.2, 7.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -502,6 +518,7 @@ grep -iE 'Sprint 30|budget reallocat|absorb' docs/planning/EPIC_4/SPRINT_29/REPL
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
+**Unknowns Verified:** 1.2, 2.4, 4.4, 8.4
 
 ### Objective
 
@@ -558,6 +575,7 @@ grep -iE 'extension|no extensions|gap' docs/planning/EPIC_4/SPRINT_29/TOOLING_RE
 - A scoped gap list (Day-0 extensions ≤ 1h each) or a "no extensions needed" confirmation
 - Confirmation the changed-golden-set diff is the right Task-8 checkpoint re-solve input
 - Confirmation the divergence detector won't false-hard-fail the cold-convex cohort
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.2, 2.4, 4.4, 8.4
 
 ### Acceptance Criteria
 
@@ -567,6 +585,7 @@ grep -iE 'extension|no extensions|gap' docs/planning/EPIC_4/SPRINT_29/TOOLING_RE
 - [ ] Golden-staleness allowlist confirmed current; changed-golden-set diff confirmed as Task-8 input
 - [ ] Gap list produced (each extension ≤ 1h) or "no extensions needed"
 - [ ] Feeds Tasks 8 (checkpoint re-solve) and 9 (property-test reuse)
+- [ ] Unknowns 1.2, 2.4, 4.4, 8.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -578,6 +597,7 @@ grep -iE 'extension|no extensions|gap' docs/planning/EPIC_4/SPRINT_29/TOOLING_RE
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
+**Unknowns Verified:** 5.1, 5.2, 5.3
 
 ### Objective
 
@@ -628,6 +648,7 @@ grep -iE 'walras|numéraire|numeraire|redundant.*row|singular' docs/planning/EPI
 - A shared-vs-distinct degeneracy classification across #1354/#1355/#1317/#1331/#1251
 - A paper argument that the proposed numéraire-fix transformation preserves the economic solution
 - Priority 5 reduced to a write-up-only in-sprint task (no `src/`)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 5.1, 5.2, 5.3
 
 ### Acceptance Criteria
 
@@ -636,6 +657,7 @@ grep -iE 'walras|numéraire|numeraire|redundant.*row|singular' docs/planning/EPI
 - [ ] Proposed transformation named with a solution-preservation argument
 - [ ] #1330 confirmed moved to Epic 5 (no Sprint-29 `src/`)
 - [ ] In-sprint Priority 5 scoped to write-up only
+- [ ] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -647,6 +669,7 @@ grep -iE 'walras|numéraire|numeraire|redundant.*row|singular' docs/planning/EPI
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 2, 6
+**Unknowns Verified:** 8.1, 8.2
 
 ### Objective
 
@@ -699,6 +722,7 @@ grep -iE 're-baseline|methodology' docs/planning/EPIC_4/SPRINT_29/PRIORITY_8_CHE
 - The at-risk-list source confirmed (`changed_emit_artifacts.py` diff) + the checkpoint wall-clock budget
 - The GO/NO-GO criterion (any changed-golden model regressed → investigate)
 - The PR25 re-baseline template addition specified
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 8.1, 8.2
 
 ### Acceptance Criteria
 
@@ -707,6 +731,7 @@ grep -iE 're-baseline|methodology' docs/planning/EPIC_4/SPRINT_29/PRIORITY_8_CHE
 - [ ] Re-baseline step specified as a PR25 template addition
 - [ ] Wired into the Day-5 / Day-10 checkpoint cadence with a GO/NO-GO criterion
 - [ ] Implements both Sprint-28 Day-13 lessons (#4 re-solve, #5 re-baseline)
+- [ ] Unknowns 8.1, 8.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -718,6 +743,7 @@ grep -iE 're-baseline|methodology' docs/planning/EPIC_4/SPRINT_29/PRIORITY_8_CHE
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1, 3, 6
+**Unknowns Verified:** 6.1, 6.2, 6.3, 7.1, 7.3, 7.4
 
 ### Objective
 
@@ -730,7 +756,7 @@ Priorities 6 and 7 are the "fill the 14-day budget" backlog beyond the retrospec
 ### Background
 
 - Objective-mismatch cohort: `docs/issues/ISSUE_{1332,1247,1239,1236}_*.md` (quocge 25.683 vs 25.5085; prolog −73.5 vs −0.0; sambal/qsambal 1028 vs 3.97; hhfair 54.9 vs 87.2)
-- Offset-alias gradient: `docs/issues/ISSUE_{1146,1143}_*.md` (himmel16 cyclic 43%; polygon 100%) + the AD-engine `ISSUE_{1112,1111}_*.md` (dollar-condition propagation; alias-aware differentiation)
+- Offset-alias gradient: `docs/issues/ISSUE_{1146,1143}_*.md` (himmel16 cyclic 43%; polygon 100%) + the AD-engine GitHub #1112 / #1111 (no local doc; dollar-condition propagation; alias-aware differentiation)
 - The Sprint-28 property-test catalog: `tests/integration/emit/test_ad_crossterm_shapes.py` + `tests/fixtures/crossterm_shapes/shape{1..6}_*.gms` (extend with the offset-alias shape)
 - The harness for per-model verdicts: `scripts/diagnostics/kkt_residual.py`
 - The cold-convex partition (Task 3) — cross-check for shared root causes
@@ -770,6 +796,7 @@ grep -iE 'consolidat|one fix|two models|shared root' docs/planning/EPIC_4/SPRINT
 - The himmel16/polygon shared-root-cause determination + the localized-vs-architectural split (Task-5 trigger)
 - A property-test fixture plan extending `test_ad_crossterm_shapes.py`
 - A consolidation map (which fixes land multiple models)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 6.1, 6.2, 6.3, 7.1, 7.3, 7.4
 
 ### Acceptance Criteria
 
@@ -779,6 +806,7 @@ grep -iE 'consolidat|one fix|two models|shared root' docs/planning/EPIC_4/SPRINT
 - [ ] Property-test fixture plan specified (shape7+ offset-alias)
 - [ ] Consolidation map produced (multi-model fixes identified)
 - [ ] Shared root causes with the cold-convex cohort (Task 3) cross-checked
+- [ ] Unknowns 6.1, 6.2, 6.3, 7.1, 7.3, 7.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -790,6 +818,7 @@ grep -iE 'consolidat|one fix|two models|shared root' docs/planning/EPIC_4/SPRINT
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1–9
+**Unknowns Verified:** (integrates all 28 — see §"Appendix: Task-to-Unknown Mapping" in KNOWN_UNKNOWNS.md)
 
 ### Objective
 
@@ -846,6 +875,7 @@ grep -iE 'Day [0-9].*1[3-9]h|~1[3-9] ?h' docs/planning/EPIC_4/SPRINT_29/PLAN.md 
 - The Day-5/Day-10 checkpoint re-solve embedded (Task 8)
 - The REPLAN slack + fallback ordering (Task 5) reflected in the schedule
 - The prep-task → PR mapping summary table
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns (all 28 — see the Task-to-Unknown Mapping)
 
 ### Acceptance Criteria
 
@@ -856,6 +886,7 @@ grep -iE 'Day [0-9].*1[3-9]h|~1[3-9] ?h' docs/planning/EPIC_4/SPRINT_29/PLAN.md 
 - [ ] Day-5/Day-10 checkpoints run the changed-golden re-solve + golden-staleness + PR25 tally
 - [ ] Day-13 full 3× `PYTHONHASHSEED` retest + closeout scheduled
 - [ ] Prep-task → PR mapping table included
+- [ ] Unknowns (all 28 — see the Task-to-Unknown Mapping) verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -928,12 +959,12 @@ This prep plan succeeds if Sprint 29 starts with:
 
 ### Carryforward + Backlog Issues (Phase-0 gate targets)
 - `docs/issues/ISSUE_1443_*.md` (P1 — mine head-domain-offset MCP infeasibility)
-- `docs/issues/ISSUE_1462_*.md` (P2 — rocket presolve `_fx_`-multiplier warm-start + non-convex convergence; root cause localized Day-13)
+- GitHub #1462 (P2 — rocket presolve `_fx_`-multiplier warm-start + non-convex convergence; no local doc — root cause localized in `SPRINT_28/SPRINT_LOG.md` §"Day 13")
 - `docs/issues/ISSUE_1385_*.md` (P3 — translation-timeout Option-1 runtime-guard cross-terms)
 - `docs/issues/ISSUE_1447_*.md` (P4 — maxmin `stat_mindist` cold-emit Case-b lead)
 - `docs/issues/ISSUE_1330_*.md` (P5 — camcge → Epic 5 CGE Walras degeneracy)
 - `docs/issues/ISSUE_{1332,1247,1239,1236}_*.md` (P6 — objective-mismatch cohort: quocge / prolog / sambal-qsambal / hhfair)
-- `docs/issues/ISSUE_{1146,1143,1112,1111}_*.md` (P7 — offset-alias gradient + dollar-condition / alias-aware AD architecture)
+- `docs/issues/ISSUE_{1146,1143}_*.md` + GitHub #1112 / #1111 (P7 — offset-alias gradient + dollar-condition / alias-aware AD architecture)
 - `docs/issues/ISSUE_{1354,1355,1317,1331,1251,1070}_*.md` (CGE cohort context for Task 7)
 - `docs/issues/ISSUE_1461_*.md` (indus cross-platform emit determinism — golden-staleness allowlist context for Task 6)
 
