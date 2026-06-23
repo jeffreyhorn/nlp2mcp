@@ -147,8 +147,19 @@ module = "lark.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = "numpy.*"
+# Cover the top-level `numpy` package (where __init__.pyi lives) AND submodules.
+module = ["numpy", "numpy.*"]
 ignore_missing_imports = true
+# Recent numpy ships stubs using PEP 695 `type X = ...` statements (3.12+ syntax).
+# mypy targets python_version 3.11 (requires-python >=3.11), so following those
+# stubs fails parsing numpy/__init__.pyi ("Type statement is only supported in
+# Python 3.12 and greater"). Skip following numpy so mypy treats it as Any
+# (already effectively untyped here) instead of parsing its stubs.
+# NOTE: `follow_imports = skip` alone does NOT skip .pyi stub files — by default
+# mypy still follows stubs. `follow_imports_for_stubs = true` is required so the
+# skip also applies to numpy's bundled stubs (verified against numpy 2.5.0).
+follow_imports = "skip"
+follow_imports_for_stubs = true
 
 [[tool.mypy.overrides]]
 module = "tabulate.*"
