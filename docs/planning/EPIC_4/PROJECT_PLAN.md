@@ -1587,7 +1587,7 @@ Derived from `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently". (
 
 ### Sprint-Level KPIs
 
-| Metric | S18 | S19 | S20 | S21 (actual) | S22 (actual) | S23 (actual) | S24 (actual) | S25 (actual) | S26 | S27 | S28 | S29 | S30 | S31 | S32 |
+| Metric | S18 | S19 | S20 | S21 (actual) | S22 (actual) | S23 (actual) | S24 (actual) | S25 (actual) | S26 (actual) | S27 | S28 | S29 | S30 | S31 | S32 |
 |--------|-----|-----|-----|--------------|--------------|--------------|--------------|--------------|-----|-----|-----|-----|-----|-----|-----|
 | Valid Corpus Defined | ✓ | — | — | — | — | — | — | — | — | — | — | — | — | — | — |
 | lexer_invalid_char | ~95 | <50 | 10 | **3** | **4** | **0**³ | **0** | **0** | **0** | 0 | 0 | 0 | 0 | 0 | 0 |
