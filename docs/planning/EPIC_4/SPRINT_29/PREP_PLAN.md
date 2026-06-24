@@ -181,7 +181,8 @@ grep -oE '#1(443|462|385|330|447|332|247|239|236|146|143|112|111)' docs/planning
 
 ## Task 2: Sprint 28 → Sprint 29 Bucket-Provenance Baseline + Re-Baseline Discipline (PR15 + PR17 + PR25)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-06-24
 **Priority:** Critical
 **Estimated Time:** 4–5 hours
 **Deadline:** Before Sprint 29 Day 1
@@ -217,11 +218,14 @@ The committed DB is already fresh — the Sprint 28 Day-13 retest committed `gam
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.md` (§1 headline counts, §2 genuine-vs-methodology Match split, §3 per-failing-model bucket provenance + PR25 projection, §4 scope freeze).
+- Updated `KNOWN_UNKNOWNS.md` Unknowns 8.2 + 8.3 → ✅ VERIFIED and recorded the Day-0-bucket aspect of 1.1, 2.1, 4.1, 6.1.
 
 ### Result
 
-To be completed.
+- **Day-0 = Sprint 28 final confirmed:** `git diff 803a259a..HEAD -- src/ scripts/` empty; DB recomputes to **Solve 107 / Match 92 / model_infeasible 7** (canonical 142 scope); 0 absolute-path leaks. No fresh retest.
+- **Re-baseline (Sprint-28 §5):** Match 92 = **genuine 68** + **~24 methodology** (the Day-9 presolve-retry-on-cold-mismatch broadening). Sprint 29 genuine floor = 68; as-measured maintain target = 92.
+- **Major PR25 scope finding:** the objective-mismatch cohort (P6) has **largely already resolved** — quocge / prolog / sambal / qsambal all match on the Day-0 DB (the PROJECT_PLAN used stale pre-Sprint-28 objective values); only **hhfair (#1236)** still mismatches, so P6's live target is ≤ +1 Match. Priorities 4/7 (maxmin, himmel16, polygon) already match via warm-start — their fixes are **cold-robustness** (raise the genuine floor), not headline +Match. The only headline-moving genuine transitions are mine (#1443) + rocket (#1462), both `model_infeasible` (→ Solve ≥ 109, REPLAN-gated).
 
 ### Verification
 
@@ -255,12 +259,12 @@ grep -iE 'methodology|genuine' docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.m
 
 ### Acceptance Criteria
 
-- [ ] Baseline doc created with headline counts, bucket provenance, and PR25 projection
-- [ ] Match baseline split genuine vs methodology with explicit model lists
-- [ ] Day-0 = Sprint 28 final confirmed (git diff empty, no retest)
-- [ ] Every Sprint 29 projected Solve/Match delta labeled genuine vs methodology/bucket-forward
-- [ ] Sprint 29 targets (Solve ≥ 109 / Match ≥ 92 maintain, ≥ 96 stretch / model_infeasible ≤ 5) traced to specific model transitions
-- [ ] Unknowns 8.2, 8.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Baseline doc created with headline counts, bucket provenance, and PR25 projection
+- [x] Match baseline split genuine vs methodology with explicit model lists (genuine 68 / methodology ~24)
+- [x] Day-0 = Sprint 28 final confirmed (git diff empty, no retest)
+- [x] Every Sprint 29 projected Solve/Match delta labeled genuine vs methodology/bucket-forward
+- [x] Sprint 29 targets (Solve ≥ 109 / Match ≥ 92 maintain, ≥ 96 stretch / model_infeasible ≤ 5) traced to specific model transitions
+- [x] Unknowns 8.2, 8.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
