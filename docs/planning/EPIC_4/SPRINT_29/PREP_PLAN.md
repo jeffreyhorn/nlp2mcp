@@ -147,7 +147,7 @@ The largest single unknown is the **cold-convex cohort partition size** (Unknown
 # Document exists
 test -f docs/planning/EPIC_4/SPRINT_29/KNOWN_UNKNOWNS.md && echo "KU file present"
 
-# At least 8 categories aligned to the PROJECT_PLAN priorities (expect ~9)
+# 8 categories aligned to the PROJECT_PLAN priorities (expect 8)
 grep -c '^# Category ' docs/planning/EPIC_4/SPRINT_29/KNOWN_UNKNOWNS.md
 
 # Every numbered unknown carries a "How to Verify" section
