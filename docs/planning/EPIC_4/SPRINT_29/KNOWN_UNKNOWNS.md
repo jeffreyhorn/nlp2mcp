@@ -73,7 +73,7 @@ This document identifies all assumptions and unknowns for the Sprint 29 implemen
 - Category 7 (offset-alias gradient + dollar-condition AD): 4 unknowns
 - Category 8 (infrastructure — checkpoint re-solve + re-baseline): 4 unknowns
 
-**Estimated Research Time:** 28–36 hours (the per-unknown estimates below sum to ~34h, but many unknowns are verified in parallel within a single prep task — see §"Appendix: Task-to-Unknown Mapping". The authoritative scheduling budget is the per-task total in `SPRINT_29/PREP_PLAN.md`: 35–48h across Tasks 1–10.)
+**Estimated Research Time:** 28–36 hours (the per-unknown estimates below sum to ~34h, but many unknowns are verified in parallel within a single prep task — see §"Appendix: Task-to-Unknown Mapping". The authoritative scheduling budget is the per-task total in `docs/planning/EPIC_4/SPRINT_29/PREP_PLAN.md`: 35–48h across Tasks 1–10.)
 
 ---
 

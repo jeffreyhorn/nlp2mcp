@@ -11,7 +11,7 @@ Self-contained prompts for Sprint 29 Prep Tasks 2–10. Each prompt can be copy-
 
 Task 1 (Create Sprint 29 Known Unknowns List) is already ✅ COMPLETE — no prompt needed.
 
-Tasks 2–10 are dispatchable in the following order per the dependency graph in `docs/planning/EPIC_4/SPRINT_29/PREP_PLAN.md` (Task 1 is done, so its direct dependents are immediately dispatchable):
+Tasks 2–10 are dispatchable in the following order per the dependency graph in `docs/planning/EPIC_4/SPRINT_29/PREP_PLAN.md` (Task 1 is done, so the tasks that depend only on it — or on nothing — are immediately dispatchable):
 
 - **Immediately dispatchable:** Task 2 (no dependencies), Tasks 6 + 7 (need only the completed Task 1)
 - **After Task 2:** Task 3 (cold-convex survey reuses the Day-0 baseline) and Task 8 (with Task 6)
@@ -724,7 +724,7 @@ EOF
 
 - `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 29 (Weeks 23–24)" (Priorities 1–8 + pipeline retest; 96–134h; ≤ 12h/day; Risk HIGH)
 - `docs/planning/EPIC_4/SPRINT_28/PLAN.md` + `docs/planning/EPIC_4/SPRINT_28/prompts/PLAN_PROMPTS.md` (the day-by-day schedule + prompts format/template)
-- All Task 2–9 outputs: `BASELINE_METRICS.md`, `COLD_CONVEX_COHORT_SURVEY.md`, the Phase-0 gates, `REPLAN_RISK_ASSESSMENT.md`, `TOOLING_READINESS_AUDIT.md`, `EPIC_5/CGE_DEGENERACY_SCOPING.md`, `PRIORITY_8_CHECKPOINT_RESOLVE_DESIGN.md`, `BACKLOG_FIX_SURFACE_ANALYSIS.md`
+- All Task 2–9 outputs: `BASELINE_METRICS.md`, `COLD_CONVEX_COHORT_SURVEY.md`, the Phase-0 gates, `REPLAN_RISK_ASSESSMENT.md`, `TOOLING_READINESS_AUDIT.md`, `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md`, `PRIORITY_8_CHECKPOINT_RESOLVE_DESIGN.md`, `BACKLOG_FIX_SURFACE_ANALYSIS.md`
 - `docs/planning/EPIC_4/SPRINT_29/KNOWN_UNKNOWNS.md` (all 28 + the Task-to-Unknown mapping)
 
 **Tasks to Complete:**

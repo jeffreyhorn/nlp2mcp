@@ -897,16 +897,16 @@ grep -iE 'Day [0-9].*1[3-9]h|~1[3-9] ?h' docs/planning/EPIC_4/SPRINT_29/PLAN.md 
 
 | # | Task | Deliverable | Status |
 |---|------|-------------|--------|
-| 1 | Known Unknowns List | `SPRINT_29/KNOWN_UNKNOWNS.md` | ✅ |
-| 2 | Bucket-Provenance Baseline + Re-Baseline | `SPRINT_29/BASELINE_METRICS.md` | 🔵 |
-| 3 | Cold-Convex Cohort Survey + Partition | `SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md` | 🔵 |
+| 1 | Known Unknowns List | `docs/planning/EPIC_4/SPRINT_29/KNOWN_UNKNOWNS.md` | ✅ |
+| 2 | Bucket-Provenance Baseline + Re-Baseline | `docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.md` | 🔵 |
+| 3 | Cold-Convex Cohort Survey + Partition | `docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md` | 🔵 |
 | 4 | Phase 0 Acceptance Gates (10 tracks) | `docs/issues/ISSUE_*.md` Phase-0 sections | 🔵 |
-| 5 | REPLAN Risk Assessment | `SPRINT_29/REPLAN_RISK_ASSESSMENT.md` | 🔵 |
-| 6 | Reusable-Tooling Readiness Audit | `SPRINT_29/TOOLING_READINESS_AUDIT.md` | 🔵 |
-| 7 | camcge → Epic 5 Scoping Pre-Work | `EPIC_5/CGE_DEGENERACY_SCOPING.md` (stub) | 🔵 |
-| 8 | Checkpoint Re-Solve + Re-Baseline Design | `SPRINT_29/PRIORITY_8_CHECKPOINT_RESOLVE_DESIGN.md` | 🔵 |
-| 9 | Backlog Fix-Surface Analysis | `SPRINT_29/BACKLOG_FIX_SURFACE_ANALYSIS.md` | 🔵 |
-| 10 | Sprint 29 Detailed Schedule | `SPRINT_29/PLAN.md` + `prompts/PLAN_PROMPTS.md` | 🔵 |
+| 5 | REPLAN Risk Assessment | `docs/planning/EPIC_4/SPRINT_29/REPLAN_RISK_ASSESSMENT.md` | 🔵 |
+| 6 | Reusable-Tooling Readiness Audit | `docs/planning/EPIC_4/SPRINT_29/TOOLING_READINESS_AUDIT.md` | 🔵 |
+| 7 | camcge → Epic 5 Scoping Pre-Work | `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` (stub) | 🔵 |
+| 8 | Checkpoint Re-Solve + Re-Baseline Design | `docs/planning/EPIC_4/SPRINT_29/PRIORITY_8_CHECKPOINT_RESOLVE_DESIGN.md` | 🔵 |
+| 9 | Backlog Fix-Surface Analysis | `docs/planning/EPIC_4/SPRINT_29/BACKLOG_FIX_SURFACE_ANALYSIS.md` | 🔵 |
+| 10 | Sprint 29 Detailed Schedule | `docs/planning/EPIC_4/SPRINT_29/PLAN.md` + `prompts/PLAN_PROMPTS.md` | 🔵 |
 
 **Total prep effort ≈ 35–48 h** (~4.5–6 working days).
 
