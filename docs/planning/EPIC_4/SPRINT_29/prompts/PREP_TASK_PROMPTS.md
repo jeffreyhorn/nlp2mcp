@@ -46,7 +46,7 @@ Tasks 2–10 are dispatchable in the following order per the dependency graph in
 - `docs/planning/EPIC_4/SPRINT_29/PREP_PLAN.md` §Task 2
 - `docs/planning/EPIC_4/SPRINT_29/KNOWN_UNKNOWNS.md` §Unknowns 8.2 (re-baseline representation), 8.3 (Day-0 = Sprint 28 final)
 - `docs/planning/EPIC_4/SPRINT_28/SPRINT_RETROSPECTIVE.md` header + §"What We'd Do Differently #5" (the methodology-lift / re-baseline lesson) + §"Day 13" Match decomposition
-- `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" (the +7 genuine / ~+24 methodology / −1 rocket split; the ~24 presolve-recovered model list) + `SPRINT_28/BASELINE_METRICS.md` (the bucket-provenance template)
+- `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" (the +7 genuine / ~+24 methodology / −1 rocket split; the ~24 presolve-recovered model list) + `docs/planning/EPIC_4/SPRINT_28/BASELINE_METRICS.md` (the bucket-provenance template)
 - `data/gamslib/gamslib_status.json` (fresh Day-13 retest DB: Solve 107 / Match 92 / model_infeasible 7) + `scripts/gamslib/run_full_test.py` `_cold_objective_mismatches_nlp` (the methodology source)
 
 **Tasks to Complete:**
@@ -218,9 +218,9 @@ EOF
 **Prerequisites (read before starting):**
 
 - `docs/planning/EPIC_4/SPRINT_29/PREP_PLAN.md` §Task 4; `KNOWN_UNKNOWNS.md` §Unknowns 1.1–1.3, 2.1–2.3, 3.1–3.3, 4.2, 6.1, 7.1, 7.2; `COLD_CONVEX_COHORT_SURVEY.md` (Task 3 output — the Case-b leads)
-- `CONTRIBUTING.md` §"Phase 0 Acceptance Gate" (PR20 + PR24 template); `scripts/diagnostics/kkt_residual.py` + `SPRINT_28/PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md`
-- Target issue docs: `docs/issues/ISSUE_{1443,1385,1447,1332,1247,1239,1236,1146,1143}_*.md` (local) + GitHub #1462 (no local doc — root cause localized in `SPRINT_28/SPRINT_LOG.md` §"Day 13"); for #1462 author the Phase 0 gate in the GitHub issue or create a local `docs/issues/ISSUE_1462_*.md`
-- `SPRINT_28/SPRINT_LOG.md` §"Day 4" (mine cold MS-5), §"Day 13" (rocket warm-start 1.137 → 1.016)
+- `CONTRIBUTING.md` §"Phase 0 Acceptance Gate" (PR20 + PR24 template); `scripts/diagnostics/kkt_residual.py` + `docs/planning/EPIC_4/SPRINT_28/PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md`
+- Target issue docs: `docs/issues/ISSUE_{1443,1385,1447,1332,1247,1239,1236,1146,1143}_*.md` (local) + GitHub #1462 (no local doc — root cause localized in `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13"); for #1462 author the Phase 0 gate in the GitHub issue or create a local `docs/issues/ISSUE_1462_*.md`
+- `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 4" (mine cold MS-5), §"Day 13" (rocket warm-start 1.137 → 1.016)
 
 **Tasks to Complete:**
 
@@ -304,7 +304,7 @@ EOF
 
 - `docs/planning/EPIC_4/SPRINT_29/PREP_PLAN.md` §Task 5; `KNOWN_UNKNOWNS.md` §Unknowns 1.1, 2.2, 7.2, 7.4; the Phase 0 gates from Task 4
 - `docs/planning/EPIC_4/SPRINT_28/PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md` (the Sprint 28 analog — structural template)
-- `SPRINT_28/SPRINT_LOG.md` §"Day 4" (mine cold MS-5) + §"Day 13" (rocket warm-start residual); GitHub #1111 / #1112 (AD-engine architecture, no local doc) + `docs/issues/ISSUE_{1146,1143}_*.md`
+- `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 4" (mine cold MS-5) + §"Day 13" (rocket warm-start residual); GitHub #1111 / #1112 (AD-engine architecture, no local doc) + `docs/issues/ISSUE_{1146,1143}_*.md`
 - `scripts/diagnostics/kkt_residual.py` (the Case-c verdict = the REPLAN trigger)
 
 **Tasks to Complete:**
@@ -386,7 +386,7 @@ EOF
 **Prerequisites (read before starting):**
 
 - `docs/planning/EPIC_4/SPRINT_29/PREP_PLAN.md` §Task 6; `KNOWN_UNKNOWNS.md` §Unknowns 1.2, 2.4, 4.4, 8.4
-- `scripts/diagnostics/kkt_residual.py` + `SPRINT_28/PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md`; `scripts/diagnostics/check_presolve_divergence.py` + `.github/workflows/presolve-divergence.yml`; `scripts/sprint_audit/check_golden_staleness.py` + `scripts/sprint_audit/golden_staleness_allowlist.txt` + `scripts/sprint_audit/changed_emit_artifacts.py`
+- `scripts/diagnostics/kkt_residual.py` + `docs/planning/EPIC_4/SPRINT_28/PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md`; `scripts/diagnostics/check_presolve_divergence.py` + `.github/workflows/presolve-divergence.yml`; `scripts/sprint_audit/check_golden_staleness.py` + `scripts/sprint_audit/golden_staleness_allowlist.txt` + `scripts/sprint_audit/changed_emit_artifacts.py`
 - `scripts/diagnostics/presolve_divergence_allowlist.txt` (korcge #1439) + GitHub #1461 (indus cross-platform determinism)
 
 **Tasks to Complete:**
@@ -470,9 +470,9 @@ EOF
 **Prerequisites (read before starting):**
 
 - `docs/planning/EPIC_4/SPRINT_29/PREP_PLAN.md` §Task 7; `KNOWN_UNKNOWNS.md` §Category 5 (Unknowns 5.1, 5.2, 5.3)
-- `SPRINT_28/SPRINT_LOG.md` §"Day 11" (the camcge Walras-degeneracy diagnosis) + `docs/issues/ISSUE_1330_*.md` (REPLAN → Epic 5)
+- `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 11" (the camcge Walras-degeneracy diagnosis) + `docs/issues/ISSUE_1330_*.md` (REPLAN → Epic 5)
 - `docs/issues/ISSUE_{1354,1355,1317,1331,1251,1070}_*.md` (the CGE cohort)
-- `SPRINT_28/PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md` (the Task-6-gate methodology)
+- `docs/planning/EPIC_4/SPRINT_28/PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md` (the Task-6-gate methodology)
 
 **Tasks to Complete:**
 
@@ -555,9 +555,9 @@ EOF
 **Prerequisites (read before starting):**
 
 - `docs/planning/EPIC_4/SPRINT_29/PREP_PLAN.md` §Task 8; `KNOWN_UNKNOWNS.md` §Unknowns 8.1, 8.2; `BASELINE_METRICS.md` (Task 2) + `TOOLING_READINESS_AUDIT.md` (Task 6)
-- `SPRINT_28/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently" #4 (re-solve the changed-golden set) + #5 (re-baseline)
+- `docs/planning/EPIC_4/SPRINT_28/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently" #4 (re-solve the changed-golden set) + #5 (re-baseline)
 - `scripts/sprint_audit/changed_emit_artifacts.py` (the at-risk-list input) + `scripts/gamslib/run_full_test.py` (`--model` per-model re-solve)
-- `SPRINT_28/PLAN.md` §"Pipeline Retest Cadence" (Day 5 / Day 10 / Day 13) + `CONTRIBUTING.md` §"Projection Discipline" (PR25)
+- `docs/planning/EPIC_4/SPRINT_28/PLAN.md` §"Pipeline Retest Cadence" (Day 5 / Day 10 / Day 13) + `CONTRIBUTING.md` §"Projection Discipline" (PR25)
 
 **Tasks to Complete:**
 
@@ -723,7 +723,7 @@ EOF
 **Prerequisites (read before starting):**
 
 - `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 29 (Weeks 23–24)" (Priorities 1–8 + pipeline retest; 96–134h; ≤ 12h/day; Risk HIGH)
-- `docs/planning/EPIC_4/SPRINT_28/PLAN.md` + `SPRINT_28/prompts/PLAN_PROMPTS.md` (the day-by-day schedule + prompts format/template)
+- `docs/planning/EPIC_4/SPRINT_28/PLAN.md` + `docs/planning/EPIC_4/SPRINT_28/prompts/PLAN_PROMPTS.md` (the day-by-day schedule + prompts format/template)
 - All Task 2–9 outputs: `BASELINE_METRICS.md`, `COLD_CONVEX_COHORT_SURVEY.md`, the Phase-0 gates, `REPLAN_RISK_ASSESSMENT.md`, `TOOLING_READINESS_AUDIT.md`, `EPIC_5/CGE_DEGENERACY_SCOPING.md`, `PRIORITY_8_CHECKPOINT_RESOLVE_DESIGN.md`, `BACKLOG_FIX_SURFACE_ANALYSIS.md`
 - `docs/planning/EPIC_4/SPRINT_29/KNOWN_UNKNOWNS.md` (all 28 + the Task-to-Unknown mapping)
 

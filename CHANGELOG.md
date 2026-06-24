@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Priority distribution: **7 Critical / 11 High / 6 Medium / 4 Low** (~34h research time, parallelized across prep Tasks 2–10). Each unknown carries Assumption / Research Questions / How to Verify / Risk if Wrong / Estimated Research Time / Owner / Verification Results (🔍 INCOMPLETE).
   - Every carryforward/backlog fix-surface framed as a Day-0 `kkt_residual.py` hypothesis (PR24); the three REPLAN-prone Criticals (1.1 mine Case-b/c, 2.2 rocket residual non-convergence, 7.2 offset-alias localized-vs-architectural) and the cold-convex partition (4.1, the largest scope unknown) flagged. Built on the Sprint-28 retrospective lessons #4 (golden-stability ≠ correct solving → checkpoint re-solve) and #5 (re-baseline after a pipeline-methodology change → genuine-vs-methodology Match split).
   - Added the `## Appendix: Task-to-Unknown Mapping` table (Tasks 2–10 → unknowns), and propagated "Unknowns Verified" metadata + Deliverables + Acceptance-Criteria lines into `SPRINT_29/PREP_PLAN.md` Tasks 2–10. PREP_PLAN Task 1 marked ✅ COMPLETE with all acceptance criteria checked.
-  - Docs-only (no `src/` change); no quality gate required.
+  - Docs-only (no `src/` change); the standard pre-commit checks were run per CONTRIBUTING.md and no Python source was affected.
 
 ### Sprint 28 Execution
 

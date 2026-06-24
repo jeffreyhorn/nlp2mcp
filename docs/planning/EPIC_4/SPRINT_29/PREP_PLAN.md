@@ -896,7 +896,7 @@ grep -iE 'Day [0-9].*1[3-9]h|~1[3-9] ?h' docs/planning/EPIC_4/SPRINT_29/PLAN.md 
 
 | # | Task | Deliverable | Status |
 |---|------|-------------|--------|
-| 1 | Known Unknowns List | `SPRINT_29/KNOWN_UNKNOWNS.md` | 🔵 |
+| 1 | Known Unknowns List | `SPRINT_29/KNOWN_UNKNOWNS.md` | ✅ |
 | 2 | Bucket-Provenance Baseline + Re-Baseline | `SPRINT_29/BASELINE_METRICS.md` | 🔵 |
 | 3 | Cold-Convex Cohort Survey + Partition | `SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md` | 🔵 |
 | 4 | Phase 0 Acceptance Gates (10 tracks) | `docs/issues/ISSUE_*.md` Phase-0 sections | 🔵 |
