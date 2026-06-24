@@ -8,7 +8,7 @@
 
 ## 1. Day-0 Headline Counts (142-model GAMSlib corpus)
 
-Authoritative figures from the Sprint 28 Day-13 deterministic retest (`SPRINT_28/SPRINT_LOG.md` §"Day 13" + `SPRINT_28/SPRINT_RETROSPECTIVE.md` header). Byte-identical across `PYTHONHASHSEED` 0/1/42.
+Authoritative figures from the Sprint 28 Day-13 deterministic retest (`docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" + `docs/planning/EPIC_4/SPRINT_28/SPRINT_RETROSPECTIVE.md` header). Byte-identical across `PYTHONHASHSEED` 0/1/42.
 
 | Metric | Sprint 29 Day 0 | Sprint 29 Target | Gap |
 |---|---|---|---|
@@ -28,7 +28,7 @@ Of the 107 solved models, 92 match their NLP reference, 9 mismatch (`compare_obj
 
 ### Failure-bucket membership (frozen Day-0 reference)
 
-From the Day-13 retest DB (cross-checked against `SPRINT_28/SPRINT_LOG.md`):
+From the Day-13 retest DB (cross-checked against `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md`):
 
 - **Translate failures (7):** `danwolfe`, `decomp`, `iswnm`, `mexls`, `nebrazil`, `saras`, `sarf`.
 - **model_infeasible (7):** `agreste`, `camcge`, `cesam`, `fawley`, `lnts`, **`mine`**, **`rocket`**.
@@ -43,7 +43,7 @@ The Sprint 29 target models are highlighted: **mine** + **rocket** (model_infeas
 
 ## 2. Re-Baseline: Genuine vs Methodology Match Split (Sprint-28 §5)
 
-The Sprint 28 headline Match jumped 62 → 92 (+30), but the decomposition (`SPRINT_28/SPRINT_LOG.md` §"Day 13" PR25 tally) is **+7 genuine + ~24 methodology − 1 stale-baseline**. Sprint 29's targets must therefore be set against the **genuine** baseline, not the methodology-inflated 92.
+The Sprint 28 headline Match jumped 62 → 92 (+30), but the decomposition (`docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" PR25 tally) is **+7 genuine + ~24 methodology − 1 stale-baseline**. Sprint 29's targets must therefore be set against the **genuine** baseline, not the methodology-inflated 92.
 
 | Component | Count | Models |
 |---|---|---|
