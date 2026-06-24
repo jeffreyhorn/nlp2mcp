@@ -149,8 +149,11 @@ The fix surface is the presolve dual-transfer (`lam_pr.l = abs(pr.m(k,l,i,j))` s
 
 ### How to Verify
 ```bash
-# Inspect the presolve golden's dual-transfer line for pr
-grep -n "lam_pr\|pr.m" data/gamslib/mcp/mine_mcp_presolve.gms 2>/dev/null | head
+# Inspect the presolve dual-transfer line for pr. mine has NO committed presolve
+# golden (only data/gamslib/mcp/mine_mcp.gms) — emit it on-demand, as the
+# --nlp-presolve retry does, then grep the fresh emit:
+.venv/bin/python -m src.cli data/gamslib/raw/mine.gms -o /tmp/mine_presolve.gms --quiet --nlp-presolve \
+  && grep -n "lam_pr\|pr.m" /tmp/mine_presolve.gms | head
 # Compare the cold stat_x emit vs the hand-derived head-offset cross-term
 grep -n "stat_x" data/gamslib/mcp/mine_mcp.gms | head
 ```
