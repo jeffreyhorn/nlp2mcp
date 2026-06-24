@@ -22,12 +22,12 @@ This document identifies all assumptions and unknowns for the Sprint 29 implemen
 
 **Reference:** `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 29" (Priorities 1–8 + Acceptance Criteria + Estimated Effort 96–134h + Risk HIGH + footnote ⁸ re-baseline note); prep tasks: `docs/planning/EPIC_4/SPRINT_29/PREP_PLAN.md`.
 
-**Lessons from Sprint 28** (`SPRINT_28/SPRINT_RETROSPECTIVE.md`):
+**Lessons from Sprint 28** (`docs/planning/EPIC_4/SPRINT_28/SPRINT_RETROSPECTIVE.md`):
 - §"What We'd Do Differently" **#4** — *golden-stability does not catch a broken solve*: the rocket #1462 regression hid behind passing golden-staleness byte-checks until the Day-13 full retest. → Category 8 (checkpoint re-solve).
 - §"What We'd Do Differently" **#5** — *re-baseline after a pipeline-methodology change*: the Match 62→92 jump was +24 methodology (the Day-9 presolve-retry-on-cold-mismatch broadening) vs only +7 genuine. → Unknown 8.2/8.3.
 - §"What We'd Do Differently" **#1/#3** — PR24 traced-fix-surface + convexity-naive-tooling: every fix surface below is a Day-0 hypothesis, and the cold-convex cohort must be partitioned by convexity, not assumed.
 
-**Deferred unknowns carried from Sprint 28:** all 29 Sprint 28 prep unknowns were resolved or converted to the Sprint 29 carryforwards (`SPRINT_28/SPRINT_RETROSPECTIVE.md` §"KU Coverage Summary"). The Sprint 29 unknowns are net-new, derived from the five carryforwards + the three backlog priorities; the cold-convex partition (Category 4) and the camcge Epic-5 boundary (Category 5) are the direct descendants of the Sprint-28 §"Sprint 29 Recommendations / Carryforwards" items.
+**Deferred unknowns carried from Sprint 28:** all 29 Sprint 28 prep unknowns were resolved or converted to the Sprint 29 carryforwards (`docs/planning/EPIC_4/SPRINT_28/SPRINT_RETROSPECTIVE.md` §"KU Coverage Summary"). The Sprint 29 unknowns are net-new, derived from the five carryforwards + the three backlog priorities; the cold-convex partition (Category 4) and the camcge Epic-5 boundary (Category 5) are the direct descendants of the Sprint-28 §"Sprint 29 Recommendations / Carryforwards" items.
 
 ---
 
@@ -978,7 +978,7 @@ The committed `gamslib_status.json` is the fresh Sprint-28 Day-13 retest (Solve 
 
 ### How to Verify
 ```bash
-git diff --stat "$(git log --oneline --grep='Sprint 28' -1 --format=%H)"..HEAD -- src/ scripts/ | tail -1
+git diff --stat <S28-close-SHA>..HEAD -- src/ scripts/ | tail -1   # <S28-close-SHA> = the Sprint 28 closeout merge SHA
 grep -c "/Users/" data/gamslib/gamslib_status.json   # expect 0 (repo-relative paths)
 ```
 
@@ -1107,7 +1107,7 @@ This table shows which Sprint 29 prep tasks verify which unknowns. Prep Task 10 
 **Coverage:** All 28 Sprint 29 prep-time unknowns are assigned to at least one prep task. Each Critical and High-priority unknown is assigned to the task that will act on its findings (e.g., Task 5 verifies the diagnosis-heavy Category 1/2/7 Criticals AND its findings drive Task 10's schedule allocation + the Sprint 30 REPLAN exits).
 
 **Carryforward from Sprint 28** (now informing Sprint 29 prep):
-- All 29 Sprint 28 prep unknowns were resolved (see `SPRINT_28/SPRINT_RETROSPECTIVE.md` §"KU Coverage Summary"). The Sprint 29 unknowns are net-new, derived from the §"Sprint 29 Recommendations / Carryforwards" (Categories 1–5) + the additional backlog priorities (Categories 6–7) + the two Day-13 process lessons (Category 8).
+- All 29 Sprint 28 prep unknowns were resolved (see `docs/planning/EPIC_4/SPRINT_28/SPRINT_RETROSPECTIVE.md` §"KU Coverage Summary"). The Sprint 29 unknowns are net-new, derived from the §"Sprint 29 Recommendations / Carryforwards" (Categories 1–5) + the additional backlog priorities (Categories 6–7) + the two Day-13 process lessons (Category 8).
 
 ---
 

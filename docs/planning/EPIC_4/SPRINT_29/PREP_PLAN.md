@@ -67,7 +67,7 @@ This prep plan focuses on:
 
 ### Objective
 
-Create a proactive list of assumptions and unknowns for Sprint 29 to prevent late discoveries during implementation. This is the first task because it surfaces risks that inform every other prep task — particularly the cold-convex cohort survey (Task 3), the Phase-0 gates (Task 4), the REPLAN assessment (Task 5), and the reusable-tooling readiness audit (Task 6). It also carries forward the end-of-sprint unknowns from Sprint 28 (the §"KU Coverage Summary" in `SPRINT_28/SPRINT_RETROSPECTIVE.md` plus any open items in `SPRINT_28/KNOWN_UNKNOWNS.md`).
+Create a proactive list of assumptions and unknowns for Sprint 29 to prevent late discoveries during implementation. This is the first task because it surfaces risks that inform every other prep task — particularly the cold-convex cohort survey (Task 3), the Phase-0 gates (Task 4), the REPLAN assessment (Task 5), and the reusable-tooling readiness audit (Task 6). It also carries forward the end-of-sprint unknowns from Sprint 28 (the §"KU Coverage Summary" in `docs/planning/EPIC_4/SPRINT_28/SPRINT_RETROSPECTIVE.md` plus any open items in `docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md`).
 
 ### Why This Matters
 
@@ -80,12 +80,12 @@ The largest single unknown is the **cold-convex cohort partition size** (Unknown
 - Sprint 28 Retrospective: `docs/planning/EPIC_4/SPRINT_28/SPRINT_RETROSPECTIVE.md` (§"Sprint 29 Recommendations / Carryforwards" Priorities 1–5; §"What We'd Do Differently" #1–#5 → PR24/PR25 + the re-solve and re-baseline lessons; §"What Went Well" #1–#6; §"KU Coverage Summary")
 - Sprint 28 Known Unknowns: `docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md` (Cat 1–10 — review for any open/end-of-sprint items)
 - Sprint 29 scope: `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 29 (Weeks 23–24)" (Priorities 1–8 + Acceptance Criteria + Estimated Effort + Risk Level)
-- Carryforward + backlog issues: `docs/issues/ISSUE_{1443,1462,1385,1330}_*.md` (the five retrospective carryforwards) and the open backlog #1447, #1332, #1247, #1239, #1236, #1146, #1143, #1112, #1111. **Note:** #1462's root cause is already localized (the `nu_*_fx_h0` `_fx_`-multipliers are not warm-started) — its unknown is whether the warm-start is *sufficient* (Day-13 showed it is necessary-but-not-sufficient: objective 1.137 → 1.016, MS 5 persists).
+- Carryforward + backlog issues: `docs/issues/ISSUE_{1443,1385,1330}_*.md` (local) + GitHub #1462 (no local doc) — the five retrospective carryforwards — and the open backlog #1447, #1332, #1247, #1239, #1236, #1146, #1143, #1112, #1111. **Note:** #1462's root cause is already localized (the `nu_*_fx_h0` `_fx_`-multipliers are not warm-started) — its unknown is whether the warm-start is *sufficient* (Day-13 showed it is necessary-but-not-sufficient: objective 1.137 → 1.016, MS 5 persists).
 - Sprint-28 diagnostic tooling that Sprint 29 reuses: `scripts/diagnostics/kkt_residual.py`, `scripts/diagnostics/check_presolve_divergence.py`, `scripts/sprint_audit/check_golden_staleness.py`
 
 ### What Needs to Be Done
 
-1. **Review Sprint 28 carryforward / end-of-sprint KUs.** Migrate any open items from `SPRINT_28/KNOWN_UNKNOWNS.md` and the retro KU-coverage summary into Sprint 29 numbering with full text and forward-links to the Sprint 29 categories they drive.
+1. **Review Sprint 28 carryforward / end-of-sprint KUs.** Migrate any open items from `docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md` and the retro KU-coverage summary into Sprint 29 numbering with full text and forward-links to the Sprint 29 categories they drive.
 
 2. **For each Priority area, brainstorm unknowns** (assumption / how-to-verify / priority / risk-if-wrong), organized by category aligned to the PROJECT_PLAN priorities:
 
@@ -128,7 +128,7 @@ The largest single unknown is the **cold-convex cohort partition size** (Unknown
 
 3. **Categorize, prioritize by risk, define a testable verification method and a verification deadline (Day 0 / Day N)** for each unknown — Critical/High unknowns get a Day-0 `kkt_residual.py` trace or single-model hypothesis-validation.
 
-4. **Write the document** with all categories, the priority-definition legend, and the update/resolution template (matching the `SPRINT_28/KNOWN_UNKNOWNS.md` structure).
+4. **Write the document** with all categories, the priority-definition legend, and the update/resolution template (matching the `docs/planning/EPIC_4/SPRINT_28/KNOWN_UNKNOWNS.md` structure).
 
 ### Changes
 
@@ -201,9 +201,9 @@ The committed DB is already fresh — the Sprint 28 Day-13 retest committed `gam
 
 ### Background
 
-- Sprint 28 final metrics + the genuine-vs-methodology decomposition: `SPRINT_28/SPRINT_LOG.md` §"Day 13" (Match 62→92 = +7 genuine + ~24 methodology − 1 rocket; Solve 105→107) + `SPRINT_28/SPRINT_RETROSPECTIVE.md` header + §"What We'd Do Differently" #5
+- Sprint 28 final metrics + the genuine-vs-methodology decomposition: `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" (Match 62→92 = +7 genuine + ~24 methodology − 1 rocket; Solve 105→107) + `docs/planning/EPIC_4/SPRINT_28/SPRINT_RETROSPECTIVE.md` header + §"What We'd Do Differently" #5
 - The committed pipeline DB: `data/gamslib/gamslib_status.json` (Solve 107, Match 92, model_infeasible 7 — fresh from the Day-13 retest)
-- Bucket-provenance template: `SPRINT_28/BASELINE_METRICS.md` (the Sprint 28 §1 headline + §2 carryforward provenance table + §3 PR25 projection table)
+- Bucket-provenance template: `docs/planning/EPIC_4/SPRINT_28/BASELINE_METRICS.md` (the Sprint 28 §1 headline + §2 carryforward provenance table + §3 PR25 projection table)
 - The methodology source: `scripts/gamslib/run_full_test.py` `_cold_objective_mismatches_nlp` (the Day-9 #1387 PR broadening — the +24 driver)
 - PR25 projection discipline: `CONTRIBUTING.md` §"Projection Discipline" (Sprint 28 Task 3)
 
@@ -230,7 +230,7 @@ To be completed.
 test -f docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.md && echo "baseline present"
 
 # Day-0 = Sprint 28 final assertion (src/scripts unchanged since the S28 close)
-git diff --stat "$(git log --oneline --grep='Sprint 28' -1 --format=%H)"..HEAD -- src/ scripts/ | tail -1
+git diff --stat <S28-close-SHA>..HEAD -- src/ scripts/ | tail -1   # <S28-close-SHA> = the Sprint 28 closeout merge SHA
 
 # DB headline counts recomputed (canonical scope)
 .venv/bin/python - <<'PY'
@@ -286,7 +286,7 @@ The cohort is also where the Sprint 28 Match number is most fragile: these are t
 
 ### Background
 
-- The cohort source: `SPRINT_28/SPRINT_LOG.md` §"Day 13" (the ~24 methodology-recovered models: catmix, himmel16, weapons, harker, polygon, sambal, markov, worst, irscge, lrgcge, moncge, stdcge, like, robert, mathopt1/4, mingamma, paperco, qsambal, marco, etamac, cpack, maxmin, tforss + otpop/cclinpts/camshape)
+- The cohort source: `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" (the ~24 methodology-recovered models: catmix, himmel16, weapons, harker, polygon, sambal, markov, worst, irscge, lrgcge, moncge, stdcge, like, robert, mathopt1/4, mingamma, paperco, qsambal, marco, etamac, cpack, maxmin, tforss + otpop/cclinpts/camshape)
 - #1447 maxmin (the first concrete Case-b target): `docs/issues/ISSUE_1447_*.md` (`stat_mindist` missing the objective-variable cross-term — Case b, harness-localized in Sprint 28)
 - The harness: `scripts/diagnostics/kkt_residual.py` (Case-(a/b/c) verdict + dual-transfer self-check)
 - The convexity DB classification (heuristic cross-check): `data/gamslib/gamslib_status.json` `convexity.classification`
@@ -375,10 +375,10 @@ For #1462 specifically, the gate is unusual: the fix is *already known* (the `nu
 ### Background
 
 - The Phase-0 gate template (PR20 + PR24 amendments): `CONTRIBUTING.md` §"Phase 0 Acceptance Gate" (authored in Sprint 28 prep)
-- The harness as verification (PR27): `scripts/diagnostics/kkt_residual.py` + its `SPRINT_28/PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md`
-- Target issue docs: `docs/issues/ISSUE_{1443,1462,1385,1447,1332,1247,1239,1236,1146,1143}_*.md`
+- The harness as verification (PR27): `scripts/diagnostics/kkt_residual.py` + its `docs/planning/EPIC_4/SPRINT_28/PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md`
+- Target issue docs: `docs/issues/ISSUE_{1443,1385,1447,1332,1247,1239,1236,1146,1143}_*.md` (local) + GitHub #1462 (no local doc — author the gate in the GitHub issue or create `docs/issues/ISSUE_1462_*.md` in Task 4)
 - The cold-convex partition (Task 3 output) — supplies the Case-b lead list for the cohort gates
-- Sprint 28 Day-13 rocket diagnosis (already-localized root cause): `SPRINT_28/SPRINT_LOG.md` §"Day 13" + issue #1462
+- Sprint 28 Day-13 rocket diagnosis (already-localized root cause): `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" + issue #1462
 
 ### What Needs to Be Done
 
@@ -399,16 +399,17 @@ To be completed.
 ### Verification
 
 ```bash
-# Phase 0 gate present in each target issue doc
-for f in 1443 1462 1385 1447 1332 1247 1239 1236 1146 1143; do
+# Phase 0 gate present in each local target issue doc (#1462 is GitHub-only —
+# check its Phase-0 gate manually, or after Task 4 creates docs/issues/ISSUE_1462_*.md)
+for f in 1443 1385 1447 1332 1247 1239 1236 1146 1143; do
   grep -l "Phase 0" docs/issues/ISSUE_${f}_*.md 2>/dev/null || echo "MISSING: $f"
 done
 
 # Each gate cites the kkt_residual harness as its verification method
-grep -lE 'kkt_residual\.py' docs/issues/ISSUE_{1443,1462,1385,1447}_*.md 2>/dev/null
+grep -lE 'kkt_residual\.py' docs/issues/ISSUE_{1443,1385,1447}_*.md 2>/dev/null  # (+ check GitHub #1462 manually)
 
 # Each gate has an explicit Case-c / Sprint-30 REPLAN exit
-grep -liE 'REPLAN|Sprint 30|Case[- ]?c' docs/issues/ISSUE_{1443,1462,1146,1143}_*.md 2>/dev/null
+grep -liE 'REPLAN|Sprint 30|Case[- ]?c' docs/issues/ISSUE_{1443,1146,1143}_*.md 2>/dev/null  # (+ check GitHub #1462 manually)
 ```
 
 ### Deliverables
@@ -453,9 +454,9 @@ Sprint 28's lower-effort bound assumed the diagnosis-heavy tracks partially slip
 
 ### Background
 
-- PR16 hypothesis-validation: `SPRINT_28/PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md` (the Sprint 28 analog — #1387/#1390/camcge) as the structural template
-- #1443 deeper coupling evidence: `SPRINT_28/SPRINT_LOG.md` §"Day 4 — #1224" (mine cold MS-5, `x → 4e10`, 49 INFES) + issue #1443
-- #1462 residual non-convexity: `SPRINT_28/SPRINT_LOG.md` §"Day 13" (warm-start 1.137 → 1.016, MS 5 persists) + issue #1462
+- PR16 hypothesis-validation: `docs/planning/EPIC_4/SPRINT_28/PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md` (the Sprint 28 analog — #1387/#1390/camcge) as the structural template
+- #1443 deeper coupling evidence: `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 4 — #1224" (mine cold MS-5, `x → 4e10`, 49 INFES) + issue #1443
+- #1462 residual non-convexity: `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" (warm-start 1.137 → 1.016, MS 5 persists) + issue #1462
 - #1111/#1112 AD-engine architecture: GitHub #1111 / #1112 (no local doc) + `docs/issues/ISSUE_1146_*.md`, `ISSUE_1143_*.md`
 - The harness Case-c verdict as the REPLAN trigger: `scripts/diagnostics/kkt_residual.py`
 
@@ -530,7 +531,7 @@ Sprint 29's effort estimate (96–134h, lower than Sprint 28's because the tooli
 
 ### Background
 
-- KKT-residual harness: `scripts/diagnostics/kkt_residual.py` + `SPRINT_28/PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md` (Case-(a/b/c) verdict, dual-transfer self-check)
+- KKT-residual harness: `scripts/diagnostics/kkt_residual.py` + `docs/planning/EPIC_4/SPRINT_28/PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md` (Case-(a/b/c) verdict, dual-transfer self-check)
 - Presolve-divergence detector: `scripts/diagnostics/check_presolve_divergence.py` (DB-reference comparison, hard-fail on abort/infeasible, soft `obj_gap` for non-convex local optima) + `.github/workflows/presolve-divergence.yml`
 - Golden-staleness gate: `scripts/sprint_audit/check_golden_staleness.py` + the allowlist (6 out-of-scope + indus #1461) + `.github/workflows/golden-staleness.yml`
 - The new model classes: rocket `_fx_` multipliers (#1462), mine head-domain-offset (#1443), the cold-convex cohort (Task 3), offset-alias gradients (#1146/#1143)
@@ -609,9 +610,9 @@ Priority 5 is explicitly a *no-`src/`* Epic-5 hand-off — the Sprint 28 Day-11 
 
 ### Background
 
-- The camcge Walras-degeneracy diagnosis: `SPRINT_28/SPRINT_LOG.md` §"Day 11" (CASE_B `stat_mps` = fix-multiplier-transfer artifact; cold MCP MS-4 singular at iteration 0; `equil(i)` + `lmequil(lc)` linearly dependent given budget balance, no numéraire) + `docs/issues/ISSUE_1330_*.md` (REPLAN → Epic 5)
+- The camcge Walras-degeneracy diagnosis: `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 11" (CASE_B `stat_mps` = fix-multiplier-transfer artifact; cold MCP MS-4 singular at iteration 0; `equil(i)` + `lmequil(lc)` linearly dependent given budget balance, no numéraire) + `docs/issues/ISSUE_1330_*.md` (REPLAN → Epic 5)
 - The CGE cohort: `docs/issues/ISSUE_{1354,1355,1317,1331,1251}_*.md` (camcge/cesam2/twocge family) + `ISSUE_1070_*.md` (prolog CES singular Jacobian)
-- The Task-6 gate methodology: `SPRINT_28/PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md`
+- The Task-6 gate methodology: `docs/planning/EPIC_4/SPRINT_28/PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md`
 - Epic 5 destination: `docs/planning/EPIC_5/` (create the dir + scoping doc skeleton)
 
 ### What Needs to Be Done
@@ -681,9 +682,9 @@ The rocket #1462 stale baseline cost Sprint 28 a full sprint of an undetected br
 
 ### Background
 
-- The Sprint 28 lessons: `SPRINT_28/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently" #4 (golden-stability ≠ correct solving — re-solve the changed-golden set) + #5 (re-baseline after a methodology change)
+- The Sprint 28 lessons: `docs/planning/EPIC_4/SPRINT_28/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently" #4 (golden-stability ≠ correct solving — re-solve the changed-golden set) + #5 (re-baseline after a methodology change)
 - The changed-golden-set diff: `scripts/sprint_audit/changed_emit_artifacts.py` (PR22; the at-risk list input)
-- The checkpoint flow: `SPRINT_28/PLAN.md` §"Pipeline Retest Cadence" (Day 5 / Day 10 / Day 13)
+- The checkpoint flow: `docs/planning/EPIC_4/SPRINT_28/PLAN.md` §"Pipeline Retest Cadence" (Day 5 / Day 10 / Day 13)
 - The PR25 projection template: `CONTRIBUTING.md` §"Projection Discipline"
 - The re-solve mechanism: `scripts/gamslib/run_full_test.py` (per-model `--model` re-solve)
 
@@ -831,7 +832,7 @@ The schedule is the synthesis of every prior prep task: the Known Unknowns (Task
 ### Background
 
 - Sprint 29 scope + effort: `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 29 (Weeks 23–24)" (Priorities 1–8 + pipeline retest; 96–134h; ≤ 12h/day; Risk HIGH)
-- Structural template: `SPRINT_28/PLAN.md` + `SPRINT_28/prompts/PLAN_PROMPTS.md` (the day-by-day schedule + prompts format)
+- Structural template: `docs/planning/EPIC_4/SPRINT_28/PLAN.md` + `docs/planning/EPIC_4/SPRINT_28/prompts/PLAN_PROMPTS.md` (the day-by-day schedule + prompts format)
 - The prep outputs (Tasks 1–9): KNOWN_UNKNOWNS, BASELINE_METRICS, COLD_CONVEX_COHORT_SURVEY, the Phase-0 gates, REPLAN_RISK_ASSESSMENT, TOOLING_READINESS_AUDIT, the Epic-5 stub, the P8 design, the backlog analysis
 - The checkpoint cadence: Day 5 (Checkpoint 1) + Day 10 (Checkpoint 2) + Day 13 (final retest) with the new Task-8 changed-golden re-solve
 
@@ -916,7 +917,7 @@ grep -iE 'Day [0-9].*1[3-9]h|~1[3-9] ?h' docs/planning/EPIC_4/SPRINT_29/PLAN.md 
 ls docs/planning/EPIC_4/SPRINT_29/
 
 # Phase-0 gates on the Sprint 29 tracks
-for f in 1443 1462 1385 1447 1332 1247 1239 1236 1146 1143; do grep -l "Phase 0" docs/issues/ISSUE_${f}_*.md 2>/dev/null; done
+for f in 1443 1385 1447 1332 1247 1239 1236 1146 1143; do grep -l "Phase 0" docs/issues/ISSUE_${f}_*.md 2>/dev/null; done  # #1462 GitHub-only
 
 # Epic 5 hand-off stub
 test -f docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md && echo "Epic 5 stub present"
@@ -959,7 +960,7 @@ This prep plan succeeds if Sprint 29 starts with:
 
 ### Carryforward + Backlog Issues (Phase-0 gate targets)
 - `docs/issues/ISSUE_1443_*.md` (P1 — mine head-domain-offset MCP infeasibility)
-- GitHub #1462 (P2 — rocket presolve `_fx_`-multiplier warm-start + non-convex convergence; no local doc — root cause localized in `SPRINT_28/SPRINT_LOG.md` §"Day 13")
+- GitHub #1462 (P2 — rocket presolve `_fx_`-multiplier warm-start + non-convex convergence; no local doc — root cause localized in `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13")
 - `docs/issues/ISSUE_1385_*.md` (P3 — translation-timeout Option-1 runtime-guard cross-terms)
 - `docs/issues/ISSUE_1447_*.md` (P4 — maxmin `stat_mindist` cold-emit Case-b lead)
 - `docs/issues/ISSUE_1330_*.md` (P5 — camcge → Epic 5 CGE Walras degeneracy)

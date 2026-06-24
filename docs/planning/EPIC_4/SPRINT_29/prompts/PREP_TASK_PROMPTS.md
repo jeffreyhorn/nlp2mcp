@@ -13,7 +13,7 @@ Task 1 (Create Sprint 29 Known Unknowns List) is already ✅ COMPLETE — no pro
 
 Tasks 2–10 are dispatchable in the following order per the dependency graph in `docs/planning/EPIC_4/SPRINT_29/PREP_PLAN.md` (Task 1 is done, so its direct dependents are immediately dispatchable):
 
-- **Parallel kickoff (need only the completed Task 1):** Tasks 2, 6, 7
+- **Immediately dispatchable:** Task 2 (no dependencies), Tasks 6 + 7 (need only the completed Task 1)
 - **After Task 2:** Task 3 (cold-convex survey reuses the Day-0 baseline) and Task 8 (with Task 6)
 - **After Task 3:** Task 4 (Phase 0 gates need the cold-convex Case-b leads) and Task 9 (with Task 6)
 - **After Task 4:** Task 5 (REPLAN assessment consumes the Phase 0 gates)
@@ -802,7 +802,7 @@ EOF
 
 | Prep Task | Branch | Unknowns Verified | Depends On |
 |-----------|--------|-------------------|------------|
-| Task 2: Bucket-Provenance Baseline + Re-Baseline | `planning/sprint29-task2` | 8.2, 8.3 | Task 1 |
+| Task 2: Bucket-Provenance Baseline + Re-Baseline | `planning/sprint29-task2` | 8.2, 8.3 | None |
 | Task 3: Cold-Convex Cohort Survey + Partition | `planning/sprint29-task3` | 4.1, 4.2, 4.3, 4.4 | Tasks 1, 2 |
 | Task 4: Author Phase 0 Acceptance Gates | `planning/sprint29-task4` | 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.2, 6.1, 7.1, 7.2 | Tasks 1, 3 |
 | Task 5: REPLAN-Prone Track Risk Assessment | `planning/sprint29-task5` | 1.1, 2.2, 7.2, 7.4 | Task 4 |
