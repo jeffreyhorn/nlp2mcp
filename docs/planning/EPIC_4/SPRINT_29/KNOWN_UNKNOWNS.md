@@ -153,7 +153,7 @@ The fix surface is the presolve dual-transfer (`lam_pr.l = abs(pr.m(k,l,i,j))` s
 # golden (only data/gamslib/mcp/mine_mcp.gms) — emit it on-demand, as the
 # --nlp-presolve retry does, then grep the fresh emit:
 .venv/bin/python -m src.cli data/gamslib/raw/mine.gms -o /tmp/mine_presolve.gms --quiet --nlp-presolve \
-  && grep -n "lam_pr\|pr.m" /tmp/mine_presolve.gms | head
+  && grep -nF -e "lam_pr" -e "pr.m" /tmp/mine_presolve.gms | head
 # Compare the cold stat_x emit vs the hand-derived head-offset cross-term
 grep -n "stat_x" data/gamslib/mcp/mine_mcp.gms | head
 ```
@@ -259,7 +259,7 @@ After the `_fx_` warm-start, the residual MS-5 is caused by the `piL/piU` bound-
 ```bash
 .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/rocket.gms
 # Probe: emit rocket presolve with the degenerate-bound Layer-4 unfix suppressed; solve; check MS
-grep -n "Layer 4\|\.lo('h0')\|piL_v\|comp_lo_v" data/gamslib/mcp/rocket_mcp_presolve.gms | head
+grep -nF -e "Layer 4" -e ".lo('h0')" -e "piL_v" -e "comp_lo_v" data/gamslib/mcp/rocket_mcp_presolve.gms | head
 ```
 
 ### Risk if Wrong
@@ -855,7 +855,7 @@ The Sprint-28 `tests/integration/emit/test_ad_crossterm_shapes.py` catalog (shap
 ### How to Verify
 ```bash
 ls tests/fixtures/crossterm_shapes/
-grep -l "offset.alias\|cyclic" tests/fixtures/crossterm_shapes/*.gms 2>/dev/null || echo "no offset-alias fixture yet"
+grep -lF -e "offset_alias" -e "offset-alias" -e "cyclic" tests/fixtures/crossterm_shapes/*.gms 2>/dev/null || echo "no offset-alias fixture yet"
 ```
 
 ### Risk if Wrong
