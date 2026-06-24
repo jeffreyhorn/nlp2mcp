@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 29 Prep
+
+- **Prep Task 1 — Create Sprint 29 Known Unknowns List (2026-06-23).**
+  - Authored `docs/planning/EPIC_4/SPRINT_29/KNOWN_UNKNOWNS.md` — **28 unknowns across 8 categories** aligned to the Sprint 29 priorities (#1443 mine head-domain-offset; #1462 rocket `_fx_`-multiplier warm-start + non-convex convergence; #1385 translation-timeout cross-terms; cold-convex robustness; camcge → Epic 5 scoping; objective-mismatch cohort #1332/#1247/#1239/#1236; offset-alias gradient + dollar-condition AD #1146/#1143/#1112/#1111; checkpoint re-solve + post-methodology re-baseline infrastructure).
+  - Priority distribution: **7 Critical / 11 High / 6 Medium / 4 Low** (~34h research time, parallelized across prep Tasks 2–10). Each unknown carries Assumption / Research Questions / How to Verify / Risk if Wrong / Estimated Research Time / Owner / Verification Results (🔍 INCOMPLETE).
+  - Every carryforward/backlog fix-surface framed as a Day-0 `kkt_residual.py` hypothesis (PR24); the three REPLAN-prone Criticals (1.1 mine Case-b/c, 2.2 rocket residual non-convergence, 7.2 offset-alias localized-vs-architectural) and the cold-convex partition (4.1, the largest scope unknown) flagged. Built on the Sprint-28 retrospective lessons #4 (golden-stability ≠ correct solving → checkpoint re-solve) and #5 (re-baseline after a pipeline-methodology change → genuine-vs-methodology Match split).
+  - Added the `## Appendix: Task-to-Unknown Mapping` table (Tasks 2–10 → unknowns), and propagated "Unknowns Verified" metadata + Deliverables + Acceptance-Criteria lines into `docs/planning/EPIC_4/SPRINT_29/PREP_PLAN.md` Tasks 2–10. PREP_PLAN Task 1 marked ✅ COMPLETE with all acceptance criteria checked.
+  - Docs-only (no `src/` change); the standard pre-commit checks were run per CONTRIBUTING.md and no Python source was affected.
+
 ### Sprint 28 Execution
 
 - **Day 13 — Final retest + closeout (2026-06-20). Sprint 28 CLOSED.**
