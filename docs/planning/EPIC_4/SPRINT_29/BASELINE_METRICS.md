@@ -47,7 +47,7 @@ The Sprint 28 headline Match jumped 62 → 92 (+30), but the decomposition (`SPR
 
 | Component | Count | Models |
 |---|---|---|
-| **Genuine, stable** (the re-baseline floor) | **68** | the 62 cold matches + the genuine/pre-existing presolve matches (camshape, otpop, cclinpts + bearing/launch/mathopt3/robustlp) |
+| **Genuine, stable** (the re-baseline floor) | **68** | the 62 cold matches (which include the genuine cross-term fixes otpop/chakra/chenery/kand/srkandw that now solve **cold**) + the 6 non-methodology presolve matches (camshape, cclinpts + the pre-existing bearing/launch/mathopt3/robustlp) — 62 + 6 = 68 |
 | **Methodology-recovered** (Day-9 presolve-retry-on-cold-mismatch broadening, `_cold_objective_mismatches_nlp`) | **~24** | catmix, himmel16, weapons, harker, polygon, sambal, markov, worst, irscge, lrgcge, moncge, stdcge, like, robert, mathopt1, mathopt4, mingamma, paperco, qsambal, marco, etamac, cpack, maxmin, tforss |
 | **As-measured total** | **92** | — |
 

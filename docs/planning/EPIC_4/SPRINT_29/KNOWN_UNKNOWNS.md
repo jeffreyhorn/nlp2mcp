@@ -478,7 +478,7 @@ Development team (AD/KKT specialist)
 
 ### Verification Results
 🔍 **Status:** INCOMPLETE (cohort enumerated by Task 2; the Case-b/c partition is Task 3)
-**Partial findings (Task 2, 2026-06-24):** the warm-start-only cohort is enumerated — **30** models are `model_optimal_presolve` + match, of which **~24** are the methodology-recovered set (the rest are pre-existing presolve matches + the genuine fixes camshape/otpop/cclinpts). The Case-b (cold-emit bug) vs Case-c (inherent non-convexity) partition of the ~24 is the Task-3 harness survey.
+**Partial findings (Task 2, 2026-06-24):** the warm-start-only cohort is enumerated — **30** models are `model_optimal_presolve` + match, of which **~24** are the methodology-recovered set (the rest are the pre-existing presolve matches bearing/launch/mathopt3/robustlp + the genuine fixes camshape/cclinpts; note **otpop/chakra/chenery/kand/srkandw match cold (`model_optimal`), not via presolve**). The Case-b (cold-emit bug) vs Case-c (inherent non-convexity) partition of the ~24 is the Task-3 harness survey.
 
 ---
 
