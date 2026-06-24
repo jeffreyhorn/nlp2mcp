@@ -16,15 +16,15 @@ Authoritative figures from the Sprint 28 Day-13 deterministic retest (`SPRINT_28
 | Translate | **135** / 142 | ≥ 135 | met (maintain) |
 | Solve (`model_optimal[_presolve]`) | **107** / 142 | ≥ 109 (firm) | −2 |
 | Match | **92** / 142 | maintain ≥ 92 / stretch ≥ 96 | met / −4 to stretch |
-| Mismatch | **17** | — | (solved-but-diverging) |
+| Mismatch | **9** | — | (solved-but-diverging, `compare_objective_mismatch`) |
 | path_syntax_error | **8** | maintain ≤ 8 | met |
 | path_solve_terminated | **4** | maintain ≤ 5 | met |
 | model_infeasible | **7** | ≤ 5 | −2 |
 | Tests | **~4,935** | ≥ 4,960 | −25 |
 
-Of the 107 solved models, 92 match their NLP reference, 17 mismatch (`compare_mismatch`), and 6 are uncompared (`compare_multi_solve_skip` — no single-solve NLP reference).
+Of the 107 solved models, 92 match their NLP reference, 9 mismatch (`compare_objective_mismatch`), and 6 are uncompared (`compare_multi_solve_skip` — no single-solve NLP reference).
 
-> **Scope note.** A naive recompute over every translate-success row in the raw DB returns 115 solve / 92 match — it includes 8 out-of-scope models (non-NLP/QCP corpus). The authoritative figures above are the committed Day-13 retest **summary** (142-model pipeline scope): Solve 107, Match 92. The raw DB is used below only to confirm per-model buckets, which match the committed bucket lists exactly.
+> **Scope note.** A naive recompute over every translate-success row in the raw DB returns 115 solve / 92 match / 17 mismatch — it includes 8 out-of-scope models (non-NLP/QCP corpus). The authoritative figures above are the committed Day-13 retest **summary** (142-model pipeline scope): Solve 107, Match 92. The raw DB is used below only to confirm per-model buckets, which match the committed bucket lists exactly.
 
 ### Failure-bucket membership (frozen Day-0 reference)
 
@@ -35,7 +35,7 @@ From the Day-13 retest DB (cross-checked against `SPRINT_28/SPRINT_LOG.md`):
 - **path_syntax_error (8):** `clearlak`, `dinam`, `ganges`, `gangesx`, `indus`, `sample`, `turkey`, `turkpow`.
 - **path_solve_license (9):** `egypt`, `ferts`, `glider`, `robot`, `shale`, `sroute`, `srpchase`, `tabora`, `tfordy`.
 - **path_solve_terminated (4):** `dyncge`, `elec`, `tricp`, `twocge`.
-- **mismatch (17):** `abel`, `chain`, `china`, `circle`, **`hhfair`**, `imsl`, `lmp2`, `prodsp2`, `ps10_s`, `ps2_f_s`, `ps2_s`, `ps3_s`, `ps3_s_gic`, `ps3_s_mn`, `ps3_s_scp`, `spatequ`, `trig`.
+- **mismatch (9, 142-scope):** `chain`, `china`, `circle`, **`hhfair`**, `imsl`, `lmp2`, `prodsp2`, `spatequ`, `trig`. *(A raw recompute over all translate-success rows returns 17, but `abel` + the 7 `ps*` models — ps10_s/ps2_f_s/ps2_s/ps3_s/ps3_s_gic/ps3_s_mn/ps3_s_scp — are the 8 out-of-scope models excluded from the 142-model pipeline, the same 8 that make the raw Solve 115 vs the canonical 107.)*
 
 The Sprint 29 target models are highlighted: **mine** + **rocket** (model_infeasible), **hhfair** (the only objective-mismatch-cohort member still mismatching — see §3).
 
