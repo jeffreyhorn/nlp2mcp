@@ -967,7 +967,7 @@ This prep plan succeeds if Sprint 29 starts with:
 - `docs/issues/ISSUE_{1332,1247,1239,1236}_*.md` (P6 — objective-mismatch cohort: quocge / prolog / sambal-qsambal / hhfair)
 - `docs/issues/ISSUE_{1146,1143}_*.md` + GitHub #1112 / #1111 (P7 — offset-alias gradient + dollar-condition / alias-aware AD architecture)
 - `docs/issues/ISSUE_{1354,1355,1317,1331,1251,1070}_*.md` (CGE cohort context for Task 7)
-- `docs/issues/ISSUE_1461_*.md` (indus cross-platform emit determinism — golden-staleness allowlist context for Task 6)
+- GitHub #1461 (indus cross-platform emit determinism — no local doc; tracked in `scripts/sprint_audit/golden_staleness_allowlist.txt`; golden-staleness allowlist context for Task 6)
 
 ### Related Research / Tooling
 - `scripts/diagnostics/kkt_residual.py` (KKT-residual Case-(a/b/c) harness — Tasks 3, 4, 5, 6)
