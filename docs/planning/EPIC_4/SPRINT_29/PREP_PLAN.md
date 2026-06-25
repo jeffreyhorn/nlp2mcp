@@ -270,9 +270,10 @@ grep -iE 'methodology|genuine' docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.m
 
 ## Task 3: Cold-Convex Cohort Survey + Case-(b/c) Partition (Priority 4 Foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
 **Estimated Time:** 5–7 hours
+**Completed:** 2026-06-24
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1, 2
@@ -306,11 +307,12 @@ The cohort is also where the Sprint 28 Match number is most fragile: these are t
 
 ### Changes
 
-To be completed.
+- Authored `docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md` — the 30-model cohort enumeration, per-model `kkt_residual.py` verdict + max-residual table, the Case-(b/c) partition, the three-fix-class shared-shape analysis, the Sprint-29-fixable ranked list, the convexity-seed audit, the detector soft-classification, and the Task-4/Task-10 budget implication.
+- Filled KNOWN_UNKNOWNS.md Unknowns 4.1/4.2/4.3/4.4 Verification Results (all ✅ VERIFIED).
 
 ### Result
 
-To be completed.
+**The partition INVERTS the assumption: 21 Case b / 4 Case c / 3 Case a / 2 inconclusive** (of 30). Priority 4 is target-rich, not collapsing — the "mostly Case-c → free budget" path is refuted. **But all 21 Case-b already match warm**, so the fixes are Match-neutral cold-robustness (genuine floor 68 → up to ~89), not headline +Match. #1447 maxmin confirmed as the lead Case-b (`stat_mindist` rel = 1.0); the maxmin shape recurs (integer-residual objective/defining cross-term) across himmel16/like/catmix/polygon + the CGE `stat_pz` cluster → one shared `stationarity.py` Class-A fix plausibly lands ~6–8. The 5 CGE-family Class-B models (irscge/lrgcge/moncge/stdcge/marco) are gated to Task 4 (likely camcge #1330 / Epic 5). DB convexity is a non-signal (all 30 labeled convex); harness verdict authoritative. Detector soft-classifies the cohort (no false hard-fails).
 
 ### Verification
 
@@ -346,13 +348,13 @@ grep -i 'maxmin' docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md | h
 
 ### Acceptance Criteria
 
-- [ ] Cohort enumerated from the Day-13 DB (the ~24 presolve-recovered matches + otpop/cclinpts/camshape)
-- [ ] `kkt_residual.py` run on each; Case-(a/b/c) verdict + max-residual row recorded
-- [ ] Convexity cross-check applied (convex-cold-fail ⇒ Case-b signal)
-- [ ] Case-b / Case-c partition produced with counts and a Sprint-29-fixable ranked list
-- [ ] #1447 maxmin + ≥1 more Case-b candidate confirmed
-- [ ] Partition size handed to Tasks 4 and 10
-- [ ] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Cohort enumerated from the Day-13 DB (30 `model_optimal_presolve` + match; note otpop/cclinpts/camshape — otpop matches **cold**, only cclinpts/camshape are in the presolve cohort)
+- [x] `kkt_residual.py` run on each; Case-(a/b/c) verdict + max-residual row recorded
+- [x] Convexity cross-check applied (DB convexity found to be a non-signal — all 30 labeled convex; harness authoritative)
+- [x] Case-b / Case-c partition produced with counts (21/4/3/2) and a Sprint-29-fixable ranked list
+- [x] #1447 maxmin + ≥1 more Case-b candidate confirmed (himmel16/like/catmix/polygon + 16 more)
+- [x] Partition size handed to Tasks 4 and 10 (budget implication §8)
+- [x] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
