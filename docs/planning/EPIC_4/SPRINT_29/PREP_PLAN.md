@@ -291,7 +291,7 @@ The cohort is also where the Sprint 28 Match number is most fragile: these are t
 
 ### Background
 
-- The cohort source: `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" (the ~24 methodology-recovered models: catmix, himmel16, weapons, harker, polygon, sambal, markov, worst, irscge, lrgcge, moncge, stdcge, like, robert, mathopt1/4, mingamma, paperco, qsambal, marco, etamac, cpack, maxmin, tforss + otpop/cclinpts/camshape)
+- The cohort source: `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" (the ~24 methodology-recovered models: catmix, himmel16, weapons, harker, polygon, sambal, markov, worst, irscge, lrgcge, moncge, stdcge, like, robert, mathopt1/4, mingamma, paperco, qsambal, marco, etamac, cpack, maxmin, tforss + the genuine presolve fixes cclinpts/camshape). **Note:** `otpop` is *not* in the presolve-only cohort — Task 3 confirmed it matches **cold** (`model_optimal`), so it is excluded from the 30-model survey (per the acceptance criteria below).
 - #1447 maxmin (the first concrete Case-b target): `docs/issues/ISSUE_1447_*.md` (`stat_mindist` missing the objective-variable cross-term — Case b, harness-localized in Sprint 28)
 - The harness: `scripts/diagnostics/kkt_residual.py` (Case-(a/b/c) verdict + dual-transfer self-check)
 - The convexity DB status (heuristic cross-check): `data/gamslib/gamslib_status.json` `convexity.status` (Task 3 verified the field is `convexity.status`, not `convexity.classification`)

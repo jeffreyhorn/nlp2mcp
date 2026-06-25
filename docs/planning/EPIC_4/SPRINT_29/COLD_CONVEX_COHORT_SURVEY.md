@@ -10,7 +10,7 @@
 
 ## 1. Objective + Method
 
-Survey the warm-start-only cohort — the non-convex-*labeled* models that match **only** via the `--nlp-presolve` warm-start — and partition them into:
+Survey the warm-start-only cohort — the models that match **only** via the `--nlp-presolve` warm-start (their cold MCP fails or mismatches, so they *behave* non-convexly even though the DB convexity status labels all 30 as `likely_convex`/`verified_convex` — see §6) — and partition them into:
 
 - **Case b** — a genuine **cold-emit bug** the warm-start masks (a localizable stationarity/complementarity residual at the NLP KKT point) → **fixable in Sprint 29**.
 - **Case c** — **inherent non-convexity** (the emit is correct; the cold MCP is Locally Infeasible / converges to a different local optimum) → cold infeasibility is *expected* → Sprint 30 forcing strategies.
