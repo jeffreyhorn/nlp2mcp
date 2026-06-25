@@ -40,9 +40,13 @@ At the NLP optimum the marginal `v.m('h0')` carries the dual of the fixed condit
 
 ```bash
 .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/rocket.gms --json /tmp/phase0_rocket.json
-# Warm-start sufficiency probe (inject the _fx_-at-h0 duals, re-solve, read MODEL STATUS + objective):
+# Baseline reproduction: the CURRENT --nlp-presolve emit (it does NOT yet warm-start
+# the _fx_-at-h0 duals — that injection is the proposed fix below; currently MS 5):
 .venv/bin/python -m src.cli data/gamslib/raw/rocket.gms --nlp-presolve -o /tmp/rocket_mcp_presolve.gms --quiet
 ( cd /tmp && gams rocket_mcp_presolve.gms lo=0 )   # subshell — currently MS 5; keeps cwd at repo root for the repo-relative greps below
+# Warm-start sufficiency probe (the FIX): add `nu_<var>_fx_h0.l = <var>.m('h0')` for
+# ht/v/m to the presolve emit (src/emit/, or hand-edit /tmp/rocket_mcp_presolve.gms),
+# then re-run the GAMS solve above and read MODEL STATUS + objective (Day-13: 1.137 -> 1.016, MS 5 persists).
 # Regression guard — enumerate the Layer-4-unfix presolve models programmatically
 # (the set may change; do not hard-code it):
 LAYER4=$( { grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms 2>/dev/null || true; } \
