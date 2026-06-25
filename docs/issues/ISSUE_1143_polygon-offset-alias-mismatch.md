@@ -93,10 +93,10 @@ Translates but MCP compilation fails with $120/$149/$171 errors. Stationarity eq
 
 ### Hand-Derived KKT Shape
 
-polygon (Largest Small Polygon) optimizes over the angle variables `theta(i)` and radii `r(i)` with offset-alias constraints of the form `… sum(j$(ord(j) = ord(i)+1), expr(i,j)) …` (`j` = alias of `i`, successor element). The angle-variable stationarity must carry, for each constraint `g` in which `theta(i)` (and its offset image `theta(i+1)`) appears, the Jacobian-transpose term `∂g/∂theta(i) · nu_g` summed with the **offset-shifted** contribution from the `i−1`-indexed instance (where `theta(i)` appears as the `j=i` successor of row `i−1`):
+polygon (Largest Small Polygon) optimizes over the angle variables `theta(i)` and radii `r(i)` with offset-alias constraints of the form `… sum(j$(ord(j) = ord(i)+1), expr(i,j)) …` (`j` = alias of `i`, successor element). The angle-variable stationarity must carry, for each constraint `g` in which `theta(i)` (and its offset image `theta(i+1)`) appears, the Jacobian-transpose term `∂g/∂theta(i) · nu_g` summed with the **offset-shifted** contribution from the `i-1`-indexed instance (where `theta(i)` appears as the `j=i` successor of row `i-1`):
 
 ```
-stat_theta(i)..  ∂obj/∂theta(i) + sum(g, ∂g/∂theta(i)·nu_g)  +  [offset-image cross-term from row i−1]  =E= 0
+stat_theta(i)..  ∂obj/∂theta(i) + sum(g, ∂g/∂theta(i)·nu_g)  +  [offset-image cross-term from row i-1]  =E= 0
 ```
 
 A **non-integer** residual (0.492) indicates a *partial* / mis-scaled offset-alias cross-term (an offset image dropped or mis-weighted), not a cleanly missing unit term — consistent with the offset-alias AD composing the successor selection incorrectly.

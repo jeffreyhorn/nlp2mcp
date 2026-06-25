@@ -85,19 +85,19 @@ Translates and solves to Optimal but objective does not match the NLP reference.
 ### Hand-Derived KKT Shape
 
 himmel16 maximizes `totarea` with `obj2..  totarea =e= sum(i, area(i))` and the cyclic-offset defining constraint
-`areadef(i)..  area(i) =e= 0.5*(x(i)*y(i++1) − y(i)*x(i++1))` (`i++1` = circular successor).
+`areadef(i)..  area(i) =e= 0.5*(x(i)*y(i++1) - y(i)*x(i++1))` (`i++1` = circular successor).
 
 The intermediate-variable `area(i)` appears in exactly two equations — the defining `areadef(i)` (coefficient `+1`) and the objective sum `obj2` (coefficient `+1`):
 
 ```
-stat_area(i)..  nu_areadef(i) − nu_obj2  =E= 0
+stat_area(i)..  nu_areadef(i) - nu_obj2  =E= 0
 ```
 
-(The cyclic `i++1` offset enters the **`x`/`y`** stationarity rows via the `areadef` Jacobian-transpose with a wrapped index, `nu_areadef(i−−1)` aliased back — that is where the offset-alias AD must compose `circular=True` with the alias. A `stat_area` residual of exactly **2.000** is the fingerprint of a missing/sign-flipped unit-coefficient cross-term in the intermediate-var row.)
+(The cyclic `i++1` offset enters the **`x`/`y`** stationarity rows via the `areadef` Jacobian-transpose with a wrapped index, `nu_areadef(i--1)` aliased back — that is where the offset-alias AD must compose `circular=True` with the alias. A `stat_area` residual of exactly **2.000** is the fingerprint of a missing/sign-flipped unit-coefficient cross-term in the intermediate-var row.)
 
 ### Expected Emit Pattern
 
-`himmel16_mcp.gms` `stat_area(i)` should contain both unit-coefficient multiplier terms (`nu_areadef(i)` and `−nu_obj2`), and the `stat_x`/`stat_y` rows should carry the **wrapped** `areadef` cross-terms at `i++1`/`i−−1` (cyclic). (Hypothesis — the actual builder `file:line` confirmed by the Day-0 trace.)
+`himmel16_mcp.gms` `stat_area(i)` should contain both unit-coefficient multiplier terms (`nu_areadef(i)` and `-nu_obj2`), and the `stat_x`/`stat_y` rows should carry the **wrapped** `areadef` cross-terms at `i++1`/`i--1` (cyclic). (Hypothesis — the actual builder `file:line` confirmed by the Day-0 trace.)
 
 ### Verification Methodology
 

@@ -45,15 +45,15 @@ A residual of **exactly 1.0** = the bare objective gradient (`-1`) with **nothin
 maxmin maximizes the scalar objective variable `mindist` subject to the pairwise lower-bounding constraints
 `mindist1a(low(n,nn))..  mindist =l= sqrt(sum(d, sqr(point(n,d) - point(nn,d))))`.
 
-Lagrangian (max → gradient sign `−1` on the objective variable; `=l=` multipliers `lam_mindist1a ≥ 0`):
+Lagrangian (max → gradient sign `-1` on the objective variable; `=l=` multipliers `lam_mindist1a ≥ 0`):
 
 ```
-L = mindist − sum(low, lam_mindist1a(low) · (mindist − rhs(low)))
-∂L/∂mindist = −1 − sum(low, lam_mindist1a(low)) · (−1) = 0
-⇒  stat_mindist..  (−1) + sum(low, lam_mindist1a(low))  =E= 0
+L = mindist - sum(low, lam_mindist1a(low) · (mindist - rhs(low)))
+∂L/∂mindist = -1 - sum(low, lam_mindist1a(low)) · (-1) = 0
+⇒  stat_mindist..  (-1) + sum(low, lam_mindist1a(low))  =E= 0
 ```
 
-The objective-variable stationarity must carry the **`sum(low, lam_mindist1a)` constraint-multiplier cross-term**. A residual of exactly **1.0** = the bare objective gradient (`−1`) with that cross-term **absent** (scalar objvar ← 2-D subset-domain `=l=` constraint Jacobian-transpose path).
+The objective-variable stationarity must carry the **`sum(low, lam_mindist1a)` constraint-multiplier cross-term**. A residual of exactly **1.0** = the bare objective gradient (`-1`) with that cross-term **absent** (scalar objvar ← 2-D subset-domain `=l=` constraint Jacobian-transpose path).
 
 ### Expected Emit Pattern
 

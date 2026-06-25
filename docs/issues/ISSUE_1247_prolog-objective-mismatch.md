@@ -83,11 +83,11 @@ gams /tmp/prolog_mcp.gms lo=0
 
 ## Phase 0: Acceptance Gate
 
-> **Day-0 status (Sprint 29 Prep Task 2/4, 2026-06-25):** the MCP=−73.5 vs NLP=−0.0 mismatch above is **stale**. On the current Day-0 DB prolog **already MATCHES** (`model_optimal` cold, ≈ −0.0 ≈ −0.0) and the harness verdict is **Case a** (`healthy (KKT correct, PATH converges)`, `max_residual_row = stat_p`, rel = **5.7e-14** ≈ 0). **No Sprint-29 +Match is available — REMOVE prolog from the P6 projection** (per `docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.md` §3).
+> **Day-0 status (Sprint 29 Prep Task 2/4, 2026-06-25):** the MCP=-73.5 vs NLP=-0.0 mismatch above is **stale**. On the current Day-0 DB prolog **already MATCHES** (`model_optimal` cold, ≈ -0.0 ≈ -0.0) and the harness verdict is **Case a** (`healthy (KKT correct, PATH converges)`, `max_residual_row = stat_p`, rel = **5.7e-14** ≈ 0). **No Sprint-29 +Match is available — REMOVE prolog from the P6 projection** (per `docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.md` §3).
 
 ### Hand-Derived KKT Shape
 
-Not required — the harness confirms the emitted MCP is **KKT-correct** (Case a: clean residual at the NLP point *and* cold PATH converges to the matching objective). The earlier −73.5 figure reflected a pre-#1227 state; with the multiplier-dimension fix landed, prolog's KKT system reproduces the NLP optimum.
+Not required — the harness confirms the emitted MCP is **KKT-correct** (Case a: clean residual at the NLP point *and* cold PATH converges to the matching objective). The earlier -73.5 figure reflected a pre-#1227 state; with the multiplier-dimension fix landed, prolog's KKT system reproduces the NLP optimum.
 
 ### Expected Emit Pattern
 

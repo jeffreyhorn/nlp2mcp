@@ -112,12 +112,12 @@ Same for qsambal.
 ### Hand-Derived KKT Shape
 
 The objective minimizes squared SAM deviations:
-`devsqr..  dev =e= sum((i,j)$xw(i,j), xw(i,j)*sqr(xb(i,j)−x(i,j))/xb(i,j)) + sum(i$tw(i), tw(i)*sqr(tb(i)−t(i))/tb(i))`.
+`devsqr..  dev =e= sum((i,j)$xw(i,j), xw(i,j)*sqr(xb(i,j)-x(i,j))/xb(i,j)) + sum(i$tw(i), tw(i)*sqr(tb(i)-t(i))/tb(i))`.
 
-For a flow variable `x(i,j)` (where `xw(i,j)` holds), the objective gradient is `−2·xw(i,j)·(xb(i,j)−x(i,j))/xb(i,j)`, and `stat_x(i,j)` must add the constraint Jacobian-transpose from the balance rows (`rbal`/`cbal`) in which `x(i,j)` appears:
+For a flow variable `x(i,j)` (where `xw(i,j)` holds), the objective gradient is `-2·xw(i,j)·(xb(i,j)-x(i,j))/xb(i,j)`, and `stat_x(i,j)` must add the constraint Jacobian-transpose from the balance rows (`rbal`/`cbal`) in which `x(i,j)` appears:
 
 ```
-stat_x(i,j)$xw(i,j)..  −2·xw(i,j)·(xb(i,j)−x(i,j))/xb(i,j) + sum(g∈{rbal,cbal}, ∂g/∂x(i,j)·nu_g)  =E= 0
+stat_x(i,j)$xw(i,j)..  -2·xw(i,j)·(xb(i,j)-x(i,j))/xb(i,j) + sum(g∈{rbal,cbal}, ∂g/∂x(i,j)·nu_g)  =E= 0
 ```
 
 A `stat_x` residual of **0.780** (identical for sambal/qsambal) indicates a dropped/mis-conditioned term — most likely the `$xw(i,j)` dollar-condition not fully propagated to all derivative terms, or an `rbal`/`cbal` cross-term omitted where `x` has unconditioned access.

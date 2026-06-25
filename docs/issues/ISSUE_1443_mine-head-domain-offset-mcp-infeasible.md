@@ -60,12 +60,12 @@ mine cold MCP → MODEL STATUS 1 with objective matching the NLP (`compare_objec
 
 ### Hand-Derived KKT Shape
 
-The head-domain-offset constraint `pr(k,l+1,i,j)$c(l,i,j)..  x(l,i+li(k),j+lj(k)) =g= x(l+1,i,j)` (`li`/`lj` parameter offsets) couples three normalized emit sites. With `comp_pr(k,l,i,j)` body `x(l,i+li(k),j+lj(k)) − x(l+1,i,j)` paired with `lam_pr ≥ 0`, the `x`-stationarity must invert the parameter offset on the head term and the `l+1` shift on the tail:
+The head-domain-offset constraint `pr(k,l+1,i,j)$c(l,i,j)..  x(l,i+li(k),j+lj(k)) =g= x(l+1,i,j)` (`li`/`lj` parameter offsets) couples three normalized emit sites. With `comp_pr(k,l,i,j)` body `x(l,i+li(k),j+lj(k)) - x(l+1,i,j)` paired with `lam_pr ≥ 0`, the `x`-stationarity must invert the parameter offset on the head term and the `l+1` shift on the tail:
 
 ```
 stat_x(l,i,j)$d(l,i,j)..  ∂profit/∂x(l,i,j)
-   + sum(k, lam_pr(k, l, i−li(k), j−lj(k)) − lam_pr(k, l−1, i, j))
-   − piL_x(l,i,j) + piU_x(l,i,j)   =E= 0
+   + sum(k, lam_pr(k, l, i-li(k), j-lj(k)) - lam_pr(k, l-1, i, j))
+   - piL_x(l,i,j) + piU_x(l,i,j)   =E= 0
 ```
 
 The `stat_x` cross-term formula landed (Sprint 28 Day 4) and is correct against `comp_pr`'s body. The residual persists because the **dual values reach the wrong indices/sign**: the NLP stores `pr.m` at the `l+1`-shifted instances (`pr` declared `pr(k,l+1,i,j)`), so the presolve transfer `lam_pr.l(k,l,i,j)=abs(pr.m(k,l,i,j))` reads the wrong instance, and the upper bound is likely routed through `comp_up_x` with `piU_x` never set.
