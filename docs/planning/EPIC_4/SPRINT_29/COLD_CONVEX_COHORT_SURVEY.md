@@ -18,7 +18,7 @@ Survey the warm-start-only cohort — the models that match **only** via the `--
 **Cohort definition (from the Day-0 DB `data/gamslib/gamslib_status.json`):**
 `mcp_solve.outcome_category = model_optimal_presolve` **AND** `solution_comparison.comparison_status = match` → **30 models**, all in canonical scope (0 out-of-scope `ps*`/`abel`). This is the BASELINE_METRICS §2 set (the 24 "methodology-recovered" + the 6 non-methodology presolve matches camshape/cclinpts/bearing/launch/mathopt3/robustlp). `otpop/chakra/chenery/kand/srkandw` are correctly **excluded** — they match **cold** (`model_optimal`), not via presolve.
 
-**Tool:** `scripts/diagnostics/kkt_residual.py <model>.gms --json` (Sprint-28 KKT-residual harness). It warm-starts the MCP from the NLP optimum (primal + dual transfer), runs an `iterlim=0` residual evaluation, and emits the Case-(a/b/c) verdict + per-row residuals + a `--no-cold-start`-free Case-a-vs-c split. Verdicts:
+**Tool:** `scripts/diagnostics/kkt_residual.py <model>.gms --json OUT.json` (Sprint-28 KKT-residual harness; `--json` takes the report path — the human summary always also goes to stdout, so `--json` may be omitted entirely). It warm-starts the MCP from the NLP optimum (primal + dual transfer), runs an `iterlim=0` residual evaluation, and emits the Case-(a/b/c) verdict + per-row residuals + a `--no-cold-start`-free Case-a-vs-c split. Verdicts:
 
 | Verdict | Meaning | Disposition |
 |---|---|---|
@@ -165,18 +165,20 @@ Ranked for the Task-10 schedule: shared-shape + clean integer residual first (be
 ## Appendix — Reproduction
 
 ```bash
-# Enumerate the cohort
-.venv/bin/python - <<'PY'
+# Enumerate the cohort into a space-separated shell variable
+COHORT=$(.venv/bin/python - <<'PY'
 import json
 db=json.load(open("data/gamslib/gamslib_status.json"))
 coh=[m["model_id"] for m in db["models"]
      if (m.get("mcp_solve") or {}).get("outcome_category")=="model_optimal_presolve"
      and (m.get("solution_comparison") or {}).get("comparison_status")=="match"]
-print(len(coh), sorted(coh))
+print(" ".join(sorted(coh)))
 PY
+)
+echo "cohort ($(echo $COHORT | wc -w) models): $COHORT"
 
 # Per-model harness verdict (Case a/b/c + max-residual row)
-for m in <cohort>; do
+for m in $COHORT; do
   .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/$m.gms --json /tmp/$m.json
 done
 ```
