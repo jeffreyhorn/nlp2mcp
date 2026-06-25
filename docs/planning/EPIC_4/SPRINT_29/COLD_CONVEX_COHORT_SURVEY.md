@@ -139,7 +139,7 @@ Ranked for the Task-10 schedule: shared-shape + clean integer residual first (be
 - **The DB field is `convexity.status`, not `convexity.classification`** (the Unknown 4.3 assumption + its verification snippet name `classification`, which does not exist on the records).
 - **Every one of the 30 cohort members is labeled convex** — 24 `likely_convex` + 6 `verified_convex`, **zero `non_convex`** — yet 4 are harness-**Case c** (genuine non-convexity) and 3 are borderline Case a. → **the DB convexity status cannot even flag the Case-c models**, so it is **useless as a Case-b/c seed for this cohort**.
 - The "`verified_convex` that cold-fails ⇒ strong Case-b" heuristic holds *directionally* (of the 6 verified_convex: tforss/markov/robert/marco = Case b, paperco = inconclusive, **robustlp = Case c**) but is **not decisive** — robustlp is `verified_convex` yet Case c.
-- **Conclusion:** the **harness Case-(a/b/c) verdict is authoritative**; the DB classification is a non-signal here and must be overridden by the harness whenever they disagree (which is essentially always — the DB labels all 30 convex).
+- **Conclusion:** the **harness Case-(a/b/c) verdict is authoritative**; the DB convexity status is a non-signal here and must be overridden by the harness whenever they disagree (which is essentially always — the DB labels all 30 convex).
 
 ---
 

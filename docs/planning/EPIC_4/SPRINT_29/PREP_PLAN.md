@@ -281,7 +281,7 @@ grep -iE 'methodology|genuine' docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.m
 
 ### Objective
 
-Survey the ~24 non-convex models that match ONLY via the `--nlp-presolve` warm-start (the cold-convex cohort), and partition them into Case-b (a genuine cold-emit bug that the warm-start masks → fixable in Sprint 29) and Case-c (inherent non-convexity → cold infeasibility expected → Sprint 30 forcing strategies), using the Sprint-28 KKT-residual harness. This is a **survey/catalog task that must precede the Phase-0 gates (Task 4) and the schedule (Task 10)** because the Case-b count determines how much of Priority 4 is achievable.
+Survey the 30-model warm-start-only cohort — the models that match ONLY via the `--nlp-presolve` warm-start (their cold MCP fails/mismatches, so they *behave* non-convexly, though the DB convexity status labels all 30 convex) — and partition them into Case-b (a genuine cold-emit bug that the warm-start masks → fixable in Sprint 29) and Case-c (inherent non-convexity → cold infeasibility expected → Sprint 30 forcing strategies), using the Sprint-28 KKT-residual harness. This is a **survey/catalog task that must precede the Phase-0 gates (Task 4) and the schedule (Task 10)** because the Case-b count determines how much of Priority 4 is achievable.
 
 ### Why This Matters
 
