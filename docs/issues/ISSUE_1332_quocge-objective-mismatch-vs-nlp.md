@@ -165,3 +165,30 @@ Cost: depends on AD bug nature, likely 6–12 hours.
   / stdcge — possibly applies here too).
 - **#1192** — gtm warm-start pattern (related: gtm needs
   `--nlp-presolve` for objective match).
+
+## Phase 0: Acceptance Gate
+
+> **Day-0 status (Sprint 29 Prep Task 2/4, 2026-06-25):** the +0.68% mismatch above is **stale**. On the current Day-0 DB quocge **already MATCHES** (`model_optimal` cold, 25.683 ≈ 25.6834 — the NLP reference was 25.5085 in the stale PROJECT_PLAN, now 25.6834). **No Sprint-29 +Match is available — REMOVE quocge from the P6 projection** (per `docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.md` §3). The harness verdict is nonetheless **Case b**, `max_residual_row = stat_pz`, rel = **1.000** — but quocge converges to the correct objective *anyway*: `stat_pz` is the **CGE price/numéraire row** whose residual is absorbed by the Walras-law normalization (the same `stat_pz`-1.0 signature as the Class-B CGE cohort irscge/lrgcge/moncge — see COLD_CONVEX_COHORT_SURVEY §4).
+
+### Hand-Derived KKT Shape
+
+quocge is a CGE model maximizing welfare `UU` with a CES production/utility nest. The price-level variable `pz(j)` enters the zero-profit / price-definition rows (`eqpzs(j)..  pz(j) =e= ay(j)·py(j) + sum(i, ax(i,j)·pq(i)) + …`). Because CGE closures fix a numéraire, the price-block Jacobian is **rank-deficient by one** (Walras' law) — `stat_pz` carries a structurally redundant row whose residual at the NLP point need not vanish without the numéraire normalization.
+
+### Expected Emit Pattern
+
+No emit change is targeted for Sprint 29 (quocge already matches). If pursued, the `stat_pz` residual would be addressed by the **CGE numéraire-fix transformation** scoped to Epic 5 with camcge #1330 — not a per-row cross-term fix. (Hypothesis — Epic-5 scope.)
+
+### Verification Methodology
+
+```bash
+.venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/quocge.gms --json /tmp/phase0_quocge.json
+# Cross-check the already-matching objective:
+.venv/bin/python -m src.cli data/gamslib/raw/quocge.gms -o /tmp/quocge_mcp.gms --quiet && cd /tmp && gams quocge_mcp.gms lo=0
+```
+
+- The harness reports **Case b** (`stat_pz` rel 1.0) — but this is the **CGE numéraire artifact**, not a +Match opportunity; the cold objective already matches (25.6834).
+
+### PROCEED/REPLAN Signal
+
+- **NO-OP / already-banked** — quocge matches cold; remove from the P6 +Match projection. **No Sprint-29 `src/` change.**
+- **Traced Fix-Surface (Day-0):** N/A for Sprint 29. The `stat_pz`-1.0 residual is the **CGE Walras/numéraire degeneracy** (shared with camcge #1330 and the Class-B cohort) → **Epic 5** numéraire-fix scoping (Task 7), not a Sprint-29 emit fix.

@@ -80,3 +80,29 @@ gams /tmp/prolog_mcp.gms lo=0
 
 - #1227 (FIXED) — Multiplier dimension mismatch
 - #1070 — Originally described as CES singular Jacobian (superseded by #1227)
+
+## Phase 0: Acceptance Gate
+
+> **Day-0 status (Sprint 29 Prep Task 2/4, 2026-06-25):** the MCP=−73.5 vs NLP=−0.0 mismatch above is **stale**. On the current Day-0 DB prolog **already MATCHES** (`model_optimal` cold, ≈ −0.0 ≈ −0.0) and the harness verdict is **Case a** (`healthy (KKT correct, PATH converges)`, `max_residual_row = stat_p`, rel = **5.7e-14** ≈ 0). **No Sprint-29 +Match is available — REMOVE prolog from the P6 projection** (per `docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.md` §3).
+
+### Hand-Derived KKT Shape
+
+Not required — the harness confirms the emitted MCP is **KKT-correct** (Case a: clean residual at the NLP point *and* cold PATH converges to the matching objective). The earlier −73.5 figure reflected a pre-#1227 state; with the multiplier-dimension fix landed, prolog's KKT system reproduces the NLP optimum.
+
+### Expected Emit Pattern
+
+No emit change targeted — `prolog_mcp.gms` is emit-correct as-is (Case a).
+
+### Verification Methodology
+
+```bash
+.venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/prolog.gms --json /tmp/phase0_prolog.json
+# Expect: verdict case_a (healthy), max stationarity residual ≈ 0.
+```
+
+- **Case a** confirmed Day-0 (residual ≈ 5.7e-14). The cold objective already matches.
+
+### PROCEED/REPLAN Signal
+
+- **NO-OP / already-banked** — prolog matches cold and the emit is Case-a-healthy; remove from the P6 +Match projection. **No Sprint-29 `src/` change.**
+- **Traced Fix-Surface (Day-0):** N/A — no emit bug (Case a). Re-open only if a future regression moves the harness off Case a.

@@ -36,6 +36,47 @@ Re-emitting the constraints (1) WITHOUT the cross-terms (2) would create an inco
 
 ---
 
+## Phase 0: Acceptance Gate
+
+> **Day-0 status (Sprint 29 Prep Task 4, 2026-06-25):** unlike the other Sprint-29 tracks, #1385 is **not** a standard `kkt_residual.py` target at Day-0 — the timeout models do not yet emit a *complete* MCP (the skipped `slack`/`demand` constraints and their `J_gᵀ·lam` cross-terms are absent by design after the Sprint-27 translate-time short-circuit), so there is no warm-startable MCP to read a residual from. The gate is therefore **structural** (hand-derived runtime-guard `stat_*` cross-terms) with an **atomic-landing** requirement; the harness becomes the post-fix verifier once the cross-terms exist.
+
+### Hand-Derived KKT Shape
+
+For each short-circuited constraint `g` (e.g. srpchase `slack(srn)`/`demand(srn)` re-emitted as a runtime-guarded `sum(<bound>$(<predicate>), <body>)`), every primal variable `y` it touches must gain the Jacobian-transpose cross-term in its stationarity:
+
+```
+stat_y(...)..  ∂obj/∂y + sum(g, ∂g/∂y · nu_g)  =E= 0      (nu_g for =e=,  lam_g≥0 for =l=/=g=)
+```
+
+The re-emitted constraint row and its multiplier coupling must land **together** — re-emitting `g` (so the constraint appears) **without** the `∂g/∂y·nu_g` cross-terms (2) produces an **inconsistent MCP** (a multiplier with no complementarity coupling). This is the load-bearing atomicity constraint.
+
+### Expected Emit Pattern
+
+`<model>_mcp.gms` should contain (1) the runtime-guarded re-emitted constraint `g.. sum(<bound>$(<predicate>), <body>) …` and (2) the matching `+ sum(g, ∂g/∂y·nu_g)` term in **every** `stat_y` that `g` touches — with **no** quoted-set-name multiplier indices (the Day-4 `nu_slack("srn")` bug). (Hypothesis — confirmed by the Day-0 trace on the chosen smallest target.)
+
+### Verification Methodology
+
+```bash
+# Pick the smallest viable timeout target (Unknown 3.2 — fewest skipped-constraint instances):
+for m in iswnm sarf mexls nebrazil; do
+  echo "== $m =="; timeout 200 .venv/bin/python -m src.cli data/gamslib/raw/$m.gms -o /tmp/${m}_mcp.gms --quiet && wc -l /tmp/${m}_mcp.gms
+done
+# After the runtime-guard re-emit + cross-terms land, the harness becomes the verifier:
+.venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/<smallest>.gms --json /tmp/phase0_1385.json
+# Structural check: no quoted-set-name multiplier indices
+grep -E 'nu_\w+\("|lam_\w+\("' /tmp/<smallest>_mcp.gms && echo "BUG: set-name index" || echo "clean"
+```
+
+- **PROCEED (Case b / structural):** the smallest target's hand-derived `stat_*` cross-terms are tractable and the re-emit + cross-terms can land atomically; post-fix harness residual → 0 (Case a).
+- **REPLAN:** if even the smallest target's cross-terms are intractable in the budget (the combinatorial instance count remains too large), keep the translate-only short-circuit and re-defer the cross-term half.
+
+### PROCEED/REPLAN Signal
+
+- **Translate gain only is already banked** (srpchase translate-time short-circuit landed Sprint 27). The Sprint-29 gate is the **cross-term half**: PROCEED only if a smallest-target (`iswnm`/`sarf`/`mexls`/`nebrazil`) has hand-derivable runtime-guard `stat_*` cross-terms that land **atomically** with the constraint re-emit; otherwise re-defer.
+- **Traced Fix-Surface (Day-0):** **to be confirmed by the Day-0 trace** — the runtime-guard equation-body re-emit in `src/kkt/stationarity.py` and the `J_gᵀ·lam` cross-term assembly for the short-circuited equations (the AD layer enumerates zero instances for them — `src/ad/index_mapping.py` `enumerate_equation_instances` / `_is_blowup_dynamic_subset_equation`). Trace command: pick the smallest target, hand-derive its skipped-constraint cross-terms, and cite the `file:line` where the re-emit + cross-term must be injected. **Note (Task 5):** the smallest-target selection + the PROCEED/REPLAN decision is finalized by Task 5.
+
+---
+
 ## Problem Summary
 
 Sprint 26 Day 4 attempted to implement the Option 1 short-circuit per Task 6 design ([`DESIGN_OPTION_1_SHORT_CIRCUIT.md`](../planning/EPIC_4/SPRINT_26/DESIGN_OPTION_1_SHORT_CIRCUIT.md)). The translate-time savings were achieved (srpchase 846s → 5.7s; iswnm 61.1s recovered) **but the resulting MCP emit was structurally wrong** — the Copilot reviewer caught broken multiplier references like `nu_slack("srn")` and `lam_demand("srn")` where `srn` is a SET NAME (subset of `n`), not a valid element of `n` (which has elements `n0..n1000`). The KKT system was missing entire `J_g^T·lam_demand` cross-terms because Jacobian entries were dropped when the placeholder index didn't match concrete elements during AD differentiation.

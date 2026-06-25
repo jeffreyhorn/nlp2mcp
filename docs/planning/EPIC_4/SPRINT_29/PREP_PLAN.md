@@ -360,9 +360,10 @@ grep -i 'maxmin' docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md | h
 
 ## Task 4: Author Phase 0 Acceptance Gates for the Carryforward + Backlog Tracks (PR20 + PR24 + PR27)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
 **Estimated Time:** 5–7 hours
+**Completed:** 2026-06-25
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1, 3
@@ -396,11 +397,13 @@ For #1462 specifically, the gate is unusual: the fix is *already known* (the `nu
 
 ### Changes
 
-To be completed.
+- Authored `## Phase 0: Acceptance Gate` (4 `###` subsections + a `Traced Fix-Surface (Day-0)` line) in all 10 tracks: `docs/issues/ISSUE_{1443,1385,1447,1332,1247,1239,1146,1143,1236}_*.md` (9 existing) + a **new** `docs/issues/ISSUE_1462_rocket-fx-multiplier-warmstart-nonconvex.md` (rocket had no local doc).
+- Ran `kkt_residual.py` on the tracks lacking a Day-0 verdict (mine, rocket, hhfair, quocge, prolog) to anchor each gate's PROCEED condition.
+- Verified KNOWN_UNKNOWNS Unknowns 1.1/1.2/1.3, 2.1/2.2/2.3, 3.1/3.2/3.3, 6.1, 7.1, 7.2 (4.2 was verified by Task 3).
 
 ### Result
 
-To be completed.
+**Day-0 harness verdicts:** mine **Case b** `stat_x` 1.33 (convex LP → no Case-c escape → genuine +1 Solve); rocket **Case b** `stat_step` 0.497 (`_fx_` warm-start necessary-but-insufficient, 1.137→1.016, MS5 persists → conditional, Task-5 decision); maxmin **Case b** `stat_mindist` 1.0, himmel16 `stat_area` 2.0, polygon `stat_theta` 0.49 (cold-robustness, Match-neutral). **Cohort sharpened:** quocge **Case b** `stat_pz` 1.0 *but matches cold* (CGE numéraire → Epic 5), prolog **Case a** (healthy, matches), sambal/qsambal **Case b** `stat_x` 0.78 (match warm), **hhfair harness-ERROR** (`$141`/`$257` — residual MCP won't compile; the **only** live +1 Match, verdict gated on the compile fix). #1385 gate is structural (atomic re-emit + cross-terms; no Day-0 harness target). Each gate frames its `file:line` fix-surface as a Day-0 hypothesis (PR24) with an explicit Case-c Sprint-30 REPLAN exit.
 
 ### Verification
 
@@ -428,13 +431,13 @@ grep -liE 'REPLAN|Sprint 30|Case[- ]?c' docs/issues/ISSUE_{1443,1146,1143}_*.md 
 
 ### Acceptance Criteria
 
-- [ ] Phase 0 gate present in all ten target issue docs
-- [ ] Each gate's fix-surface framed as a Day-0 hypothesis (PR24), not established fact
-- [ ] Each gate cites `kkt_residual.py` as the verification method (PR27)
-- [ ] Each REPLAN-prone gate (#1443, #1462-residual, #1146/#1143) has an explicit Sprint-30 exit
-- [ ] #1462's gate distinguishes the known warm-start from the residual non-convex question
-- [ ] Cohort gates pull the Case-b leads from the Task-3 partition
-- [ ] Unknowns 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.2, 6.1, 7.1, 7.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Phase 0 gate present in all ten target issue docs (9 existing + new ISSUE_1462)
+- [x] Each gate's fix-surface framed as a Day-0 hypothesis (PR24), not established fact
+- [x] Each gate cites `kkt_residual.py` as the verification method (PR27) — except #1385 (structural; no Day-0 MCP to warm-start), which names the harness as the post-fix verifier
+- [x] Each REPLAN-prone gate (#1443, #1462-residual, #1146/#1143) has an explicit Sprint-30 exit
+- [x] #1462's gate distinguishes the known warm-start from the residual non-convex question
+- [x] Cohort gates pull the Case-b leads from the Task-3 partition
+- [x] Unknowns 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.2, 6.1, 7.1, 7.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

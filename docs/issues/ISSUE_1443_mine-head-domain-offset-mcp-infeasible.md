@@ -54,6 +54,43 @@ Continued past the time-box (maintainer-approved) to attempt a fix. With the pri
 
 mine cold MCP → MODEL STATUS 1 with objective matching the NLP (`compare_objective_match`). Requires resolving both head-domain-offset sub-issues above.
 
+## Phase 0: Acceptance Gate
+
+> **Day-0 status (Sprint 29 Prep Task 4, 2026-06-25):** harness verdict **Case b**, `max_residual_row = stat_x('4','1','1')`, rel = **1.333**, dual-transfer consistent. **PROCEED.** Critically, **mine is a convex LP** (Unknown 1.2): its MCP is a well-posed LCP with a **unique** KKT point, so a correct emit MUST cold-solve — there is **no warm-start escape** and **no Case-c exit** (cold infeasibility here *is* the emit bug, not non-convexity). This makes mine a **genuine +1 Solve** target (`model_infeasible → model_optimal`), unlike the non-convex cold-convex cohort.
+
+### Hand-Derived KKT Shape
+
+The head-domain-offset constraint `pr(k,l+1,i,j)$c(l,i,j)..  x(l,i+li(k),j+lj(k)) =g= x(l+1,i,j)` (`li`/`lj` parameter offsets) couples three normalized emit sites. With `comp_pr(k,l,i,j)` body `x(l,i+li(k),j+lj(k)) − x(l+1,i,j)` paired with `lam_pr ≥ 0`, the `x`-stationarity must invert the parameter offset on the head term and the `l+1` shift on the tail:
+
+```
+stat_x(l,i,j)$d(l,i,j)..  ∂profit/∂x(l,i,j)
+   + sum(k, lam_pr(k, l, i−li(k), j−lj(k)) − lam_pr(k, l−1, i, j))
+   − piL_x(l,i,j) + piU_x(l,i,j)   =E= 0
+```
+
+The `stat_x` cross-term formula landed (Sprint 28 Day 4) and is correct against `comp_pr`'s body. The residual persists because the **dual values reach the wrong indices/sign**: the NLP stores `pr.m` at the `l+1`-shifted instances (`pr` declared `pr(k,l+1,i,j)`), so the presolve transfer `lam_pr.l(k,l,i,j)=abs(pr.m(k,l,i,j))` reads the wrong instance, and the upper bound is likely routed through `comp_up_x` with `piU_x` never set.
+
+### Expected Emit Pattern
+
+A consistent head-offset index map across **three** sites: (1) `comp_pr` emission, (2) the `--nlp-presolve` dual transfer `lam_pr.l = … pr.m(k,l+1,…)` (head-offset-aligned, sign-checked vs the `nu`-class flip), (3) the `stat_x` cross-term (landed). All three must agree on the `l+1`/`±li`/`±lj` correspondence, and the cold LCP must be feasible (`x ≤ x.up=1`, no `x→4e10` blowup). (Hypothesis — confirmed by the Day-0 trace.)
+
+### Verification Methodology
+
+```bash
+.venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/mine.gms --json /tmp/phase0_mine.json
+# Cold-solve feasibility check (must reach MODEL STATUS 1, x bounded by x.up=1):
+.venv/bin/python -m src.cli data/gamslib/raw/mine.gms -o /tmp/mine_mcp.gms --quiet && cd /tmp && gams mine_mcp.gms lo=0
+```
+
+- **PROCEED (Case b):** `max_residual_row = stat_x(...)`, rel ≈ 1.33 (✅ Day-0); the residual localizes to the head-offset dual-transfer/bound coupling. Because mine is **convex**, Case b is the expected verdict and there is no Case-c alternative.
+- **REPLAN (Case c):** would require mine to be non-convex with multiple optima — **ruled out** (convex LP). If, after the 3-site fix, the cold LCP is still infeasible, the failure is a residual **emit/index-map** bug (still Case b), not non-convexity → continue the trace, do **not** REPLAN to warm-start.
+- Acceptance: cold MCP → MODEL STATUS 1 with `compare_objective_match` to the NLP.
+
+### PROCEED/REPLAN Signal
+
+- **PROCEED** — Day-0 Case b on `stat_x`, rel ≈ 1.33 (✅), convex LP ⇒ no Case-c escape ⇒ genuine +1 Solve.
+- **Traced Fix-Surface (Day-0):** **to be confirmed by the Day-0 trace** — the head-offset dual transfer in `src/emit/original_symbols.py` (the `--nlp-presolve` `lam_pr.l = abs(pr.m(...))` instance/sign), the `comp_pr` emission, and the bound complementarity (`comp_up_x ⊥ piU_x`). The Day-4 probe (this doc) localized the symptom: 22/30 `stat_x` cells systemic, "round" residuals = mis-aligned dual contributions. Trace command: `--keep-files` the residual scratch + dump `pr.m`/`lam_pr.l`/`piU_x.l` at the NLP point; cite the `file:line` where the `l+1`/`±li`/`±lj` index correspondence is built. **Note (Task 5):** the PROCEED/REPLAN *decision* (is the 3-site re-derivation an ≤8h fix?) is finalized by Task 5 — the Day-4 time-box flagged it as multi-site and not a confident ≤8h fix.
+
 ## Provenance
 
 - #1224 translate fix (Sprint 27 Day 12) — landed (mine translates + compiles).

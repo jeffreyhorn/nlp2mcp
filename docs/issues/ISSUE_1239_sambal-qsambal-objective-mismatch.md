@@ -104,3 +104,41 @@ Same for qsambal.
 
 - #1195 (FIXED) — NA values in stationarity equations
 - #862 (FIXED) — Dollar condition + wrong index reference
+
+## Phase 0: Acceptance Gate
+
+> **Day-0 status (Sprint 29 Prep Task 3/4, 2026-06-25):** the MCP=1028 vs NLP=3.97 mismatch above is **stale**. On the current Day-0 DB both sambal and qsambal **match warm** (`model_optimal_presolve`, 3.9682 ≈ 3.9682) and the harness verdict is **Case b**, `max_residual_row = stat_x`, rel = **0.780** (identical signature for both), dual-transfer consistent → **PROCEED**. Because they already match *warm*, the fix is **cold-robustness**, not headline +Match — **REMOVE from the P6 +Match projection** (methodology-already-banked, per `docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.md` §3; Class A in COLD_CONVEX_COHORT_SURVEY).
+
+### Hand-Derived KKT Shape
+
+The objective minimizes squared SAM deviations:
+`devsqr..  dev =e= sum((i,j)$xw(i,j), xw(i,j)*sqr(xb(i,j)−x(i,j))/xb(i,j)) + sum(i$tw(i), tw(i)*sqr(tb(i)−t(i))/tb(i))`.
+
+For a flow variable `x(i,j)` (where `xw(i,j)` holds), the objective gradient is `−2·xw(i,j)·(xb(i,j)−x(i,j))/xb(i,j)`, and `stat_x(i,j)` must add the constraint Jacobian-transpose from the balance rows (`rbal`/`cbal`) in which `x(i,j)` appears:
+
+```
+stat_x(i,j)$xw(i,j)..  −2·xw(i,j)·(xb(i,j)−x(i,j))/xb(i,j) + sum(g∈{rbal,cbal}, ∂g/∂x(i,j)·nu_g)  =E= 0
+```
+
+A `stat_x` residual of **0.780** (identical for sambal/qsambal) indicates a dropped/mis-conditioned term — most likely the `$xw(i,j)` dollar-condition not fully propagated to all derivative terms, or an `rbal`/`cbal` cross-term omitted where `x` has unconditioned access.
+
+### Expected Emit Pattern
+
+`sambal_mcp.gms` / `qsambal_mcp.gms` `stat_x(i,j)` should carry the conditioned quadratic gradient **and** the full `rbal`/`cbal` Jacobian-transpose terms, with the `$xw(i,j)` condition preserved on every term. (Hypothesis — confirmed by the Day-0 trace.)
+
+### Verification Methodology
+
+```bash
+for m in sambal qsambal; do
+  .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/$m.gms --json /tmp/phase0_$m.json
+done
+```
+
+- **PROCEED (Case b):** `max_residual_row = stat_x`, rel ≈ 0.78 (both). ✅ confirmed Day-0.
+- **REPLAN (Case c):** clean residual but cold PATH diverges → Sprint 30. (Not the case here.)
+- Post-fix: residual → 0 (Case a) and `compare_objective_match` on the **cold** solve for both models.
+
+### PROCEED/REPLAN Signal
+
+- **PROCEED (cold-robustness)** — Day-0 Case b on `stat_x`, rel ≈ 0.78 for both (✅). Not a +Match; lifts the genuine floor.
+- **Traced Fix-Surface (Day-0):** **to be confirmed by the Day-0 trace** — the dollar-condition propagation in the AD layer (`src/ad/derivative_rules.py`) and/or the conditioned-sum gradient in `src/kkt/stationarity.py`. Trace command: regenerate `sambal_mcp.gms`, grep `stat_x`, and confirm which term is dropped/mis-conditioned vs the hand-derived shape; cite the `file:line`.

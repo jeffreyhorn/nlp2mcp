@@ -130,7 +130,11 @@ Cross-check the cold solve INFES rows against the localized row.
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE (Day-0 bucket recorded by Task 2; the Case-b/c fix-surface verdict pends the Day-0 `kkt_residual.py` trace in Tasks 4/5)
+✅ **Status:** VERIFIED (fix-surface framed as a Day-0 hypothesis; PROCEED/REPLAN *decision* finalized by Task 5)
+**Verified by:** Task 4 (Phase 0 gates) — Date 2026-06-25
+**Findings:** harness verdict **Case b**, `max_residual_row = stat_x('4','1','1')`, rel = **1.333**, dual-transfer consistent. The residual localizes to the **head-domain-offset dual-transfer** (the `pr.m`-at-`l+1` instance + the `±li/±lj` parameter-offset inversion + the bound complementarity), a 3-site emit problem. Because mine is a **convex LP** (Unknown 1.3) there is **no Case-c exit** — cold infeasibility *is* the emit bug.
+**Evidence:** `docs/issues/ISSUE_1443_*.md` §"Phase 0: Acceptance Gate".
+**Decision:** **PROCEED** (genuine +1 Solve, `model_infeasible → model_optimal`). The ≤8h-feasibility of the 3-site re-derivation is finalized by Task 5 (the Day-4 time-box flagged it multi-site).
 **Partial findings (Task 2, 2026-06-24):** mine is **`model_infeasible`** (compare `not_tested`) at Day 0 — confirmed still in its gating bucket. The Case-b (head-offset dual-transfer) vs Case-c (deeper coupling) verdict is the Task-4/5 harness trace.
 
 ---
@@ -170,7 +174,11 @@ Confirm via the harness which row the residual lands on (presolve dual-transfer 
 Development team (Emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (candidate surface framed as a Day-0 hypothesis)
+**Verified by:** Task 4 — Date 2026-06-25
+**Findings:** the Sprint-28 Day-4 probe showed **no single `lam_pr` sign×alignment variant zeroes the residual** (best 1.6e4); the `l+1`-aligned transfer is **necessary but not the whole fix** — it must land coherently with the `comp_pr` emission and the (already-landed) `stat_x` cross-term. So the `pr.m`-at-`l+1` transfer is *a* surface, not *the* sole surface.
+**Evidence:** `docs/issues/ISSUE_1443_*.md` §"Phase 0" + §"Day-4 root-cause probe".
+**Decision:** candidate `file:line` = `src/emit/original_symbols.py` (the `--nlp-presolve` `lam_pr.l = abs(pr.m(...))` instance/sign) — **confirmed by the Day-0 trace** across all three sites (PR24).
 
 ---
 
@@ -203,7 +211,11 @@ grep -iE "using (lp|nlp)|Positive Variable|\.up" data/gamslib/raw/mine.gms | hea
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — yes
+**Verified by:** Task 4 — Date 2026-06-25
+**Findings:** mine is a **convex LP** (`maximizing profit using lp`, `Positive Variable x`, `x.up=1`), so its MCP is a well-posed LCP with a **unique** KKT point. A correct emit therefore **must cold-solve** — there is **no warm-start escape and no Case-c exit**. This distinguishes mine from the non-convex cold-convex cohort and makes it a **genuine +1 Solve** target.
+**Evidence:** `docs/issues/ISSUE_1443_*.md` §"Phase 0" (the convexity note).
+**Decision:** the cold infeasibility is an **emit bug** (Case b), not non-convexity → PROCEED; if the cold LCP stays infeasible after the 3-site fix, continue the trace (still Case b), do **not** REPLAN to warm-start.
 
 ---
 
@@ -239,7 +251,11 @@ Adding the general `_fx_`-multiplier warm-start (`nu_<var>_fx_<idx>.l = <var>.m(
 Development team (Emit / presolve specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE (Day-0 bucket recorded by Task 2; warm-start sufficiency pends Tasks 4/5)
+✅ **Status:** VERIFIED — NOT sufficient (necessary-but-insufficient)
+**Verified by:** Task 4 — Date 2026-06-25
+**Findings:** warm-starting the `nu_*_fx_h0` `_fx_`-multipliers moves rocket's objective **1.137 → 1.016** but **MS 5 persists**. harness verdict **Case b**, `max_residual_row = stat_step`, rel = **0.497**, dual-transfer consistent. So the warm-start is necessary but does not clear the infeasibility — the remaining gap is the `piL/piU`-at-`h0` question (Unknown 2.2).
+**Evidence:** `docs/issues/ISSUE_1462_*.md` §"Phase 0" + `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13".
+**Decision:** **CONDITIONAL** — warm-start lands first (known); the residual MS-5 disposition (Case b vs Case c) is Unknown 2.2; the final PROCEED/REPLAN is Task 5.
 **Partial findings (Task 2, 2026-06-24):** rocket is **`model_infeasible`** (compare `not_tested`) at Day 0 — confirmed still in its gating bucket. Whether the `nu_*_fx_h0` warm-start is sufficient (vs the residual `piL/piU`-at-`h0` non-convergence) is the Task-4/5 trace.
 
 ---
@@ -274,7 +290,11 @@ grep -nF -e "Layer 4" -e ".lo('h0')" -e "piL_v" -e "comp_lo_v" data/gamslib/mcp/
 Development team (Emit / presolve specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (framed as a Day-0 hypothesis; decision finalized by Task 5)
+**Verified by:** Task 4 — Date 2026-06-25
+**Findings:** harness **Case b** on `stat_step` (0.497) ⇒ an emit-side residual exists, consistent with the `piL/piU`-at-`h0` bound-complementarity introduced by the #1449 Layer-4 unfix. But rocket is **non-convex**, so the Case-c exit (intrinsic non-convergence beyond the warm-start) is live and cannot be ruled out at Day-0.
+**Evidence:** `docs/issues/ISSUE_1462_*.md` §"Phase 0".
+**Decision:** **CONDITIONAL PROCEED** — PROCEED if the residual MS-5 resolves to the localizable `piL/piU`-at-`h0` emit/warm-start fix; **REPLAN to Sprint 30 forcing** if MS-5 persists with a clean residual after a complete `_fx_` warm-start + bound fix. Finalized by Task 5.
 
 ---
 
@@ -307,7 +327,11 @@ grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms
 Development team (Emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (regression guard encoded; run at Sprint-29 Day-0)
+**Verified by:** Task 4 — Date 2026-06-25
+**Findings:** the ISSUE_1462 Phase-0 gate makes the **13-presolve-model byte + solve regression check a hard requirement** of the `nu_<var>_fx_<idx>.l = <var>.m(<idx>)` warm-start (catmix/himmel16/polygon/bearing/launch/mathopt3/robustlp/…). The check is specified in the gate's Verification Methodology; it is **not yet run** (Sprint-29 Day-0 work).
+**Evidence:** `docs/issues/ISSUE_1462_*.md` §"Phase 0" (Verification Methodology + the "Hard requirement" line).
+**Decision:** the general `_fx_` warm-start may land **only** if byte + solve stability holds across the 13 Layer-4-unfix models; a regression blocks it.
 
 ---
 
@@ -371,7 +395,11 @@ Hand-derive the re-emitted equation body + its `J_gᵀ·lam` cross-term for one 
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — YES, atomic
+**Verified by:** Task 4 — Date 2026-06-25
+**Findings:** re-emitting a short-circuited constraint `g` **without** its `J_gᵀ·lam` cross-terms produces an **inconsistent MCP** — a multiplier `nu_g`/`lam_g` with no complementarity coupling. So the runtime-guard equation-body re-emit (1) and the cross-terms (2) **must land together**.
+**Evidence:** `docs/issues/ISSUE_1385_*.md` §"Phase 0" (the atomicity constraint) + §"Sprint 27 Day 7".
+**Decision:** the Sprint-29 #1385 fix is the **atomic** re-emit + cross-term pair; landing only one is invalid.
 
 ---
 
@@ -405,7 +433,11 @@ done
 Development team (Sprint planning)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (selection framed as a Day-0 probe; finalized by Task 5)
+**Verified by:** Task 4 — Date 2026-06-25
+**Findings:** the viable smallest-target candidates are **iswnm / sarf / mexls / nebrazil** (srpchase's translate-time short-circuit already landed Sprint 27). The ISSUE_1385 gate specifies an emit-size probe (`timeout 200 cli -o … && wc -l`) to pick the one with the fewest skipped-constraint instances / most tractable hand-derived cross-terms.
+**Evidence:** `docs/issues/ISSUE_1385_*.md` §"Phase 0" (Verification Methodology).
+**Decision:** smallest-target selection + PROCEED/REPLAN is finalized by **Task 5** (the budget-aware pick).
 
 ---
 
@@ -435,7 +467,11 @@ Hand-derive against the Lagrangian for the Phase-0 target; cross-check against t
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — hand-derived
+**Verified by:** Task 4 — Date 2026-06-25
+**Findings:** for each runtime-guarded re-emitted constraint `g`, every primal `y` it touches gains `+ sum(g, ∂g/∂y·nu_g)` in `stat_y` (`nu_g` for `=e=`, `lam_g≥0` for `=l=`/`=g=`), with the constraint re-emitted as `g.. sum(<bound>$(<predicate>), <body>)` — and **no quoted-set-name multiplier indices** (the Day-4 `nu_slack("srn")` bug, where `srn` is a set not an element).
+**Evidence:** `docs/issues/ISSUE_1385_*.md` §"Phase 0" (Hand-Derived KKT Shape + Expected Emit Pattern).
+**Decision:** the shape is the `J_gᵀ·lam` cross-term; the exact builder `file:line` (`src/kkt/stationarity.py` + `src/ad/index_mapping.py`) is confirmed by the Day-0 trace.
 
 ---
 
@@ -728,7 +764,11 @@ done
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE (Day-0 buckets recorded by Task 2 — a major scope finding; the per-model Case-b/c verdict is Task 4/9)
+✅ **Status:** VERIFIED — per-model verdicts obtained
+**Verified by:** Task 4 (harness per model) — Date 2026-06-25
+**Findings:** **quocge** → Case b `stat_pz` 1.0 **but already matches cold** (CGE numéraire degeneracy, Epic-5 family — no +Match); **prolog** → **Case a** (healthy, already matches — no action); **sambal/qsambal** → Case b `stat_x` 0.78, **match warm** (cold-robustness, not +Match); **hhfair** → harness **ERROR** (residual MCP won't compile, `$141`/`$257` from the domain-widened `n(tl)`) — the **only live mismatch** (72.147 vs 87.159) and the **only +1 Match opportunity**, but its verdict is **gated on first fixing the residual-emit compile**.
+**Evidence:** the Phase-0 gates in `docs/issues/ISSUE_{1332,1247,1239,1236}_*.md`.
+**Decision:** P6 live +Match = **hhfair only** (firm if Case b *after* the compile fix); quocge/prolog/sambal/qsambal **removed from the +Match projection**. Per-model Case-b/c detail is finalized by **Task 9**.
 **Partial findings (Task 2, 2026-06-24) — THIS SUPERSEDES THE ASSUMPTION ABOVE:** **the objective-mismatch cohort has largely already resolved** — on the Day-0 DB, **quocge (25.683≈25.6834), prolog (≈−0.0), sambal and qsambal (3.9682) all MATCH**; only **hhfair (72.147 vs 87.159) still mismatches**. The Assumption's four-active-mismatch list and its objective deltas are the **stale pre-Sprint-28 PROJECT_PLAN values** ("+2 Match (#1332/#1247/#1239/#1236)") and should not be treated as current. **Priority 6's live target is hhfair (#1236) only** (≤ +1 Match); the freed budget should pre-allocate per the Task-5 REPLAN reallocation. hhfair's Case-b/c verdict is the Task-4/9 trace.
 
 ---
@@ -826,7 +866,11 @@ done
 Development team (AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — yes, shared offset-alias class
+**Verified by:** Task 4 — Date 2026-06-25
+**Findings:** both are **Case b** (himmel16 `stat_area` rel 2.0 cyclic `i++1`; polygon `stat_theta` rel 0.49, `ord(j)=ord(i)+1` successor), both match warm, and both route through the **same** code — `src/ad/derivative_rules.py` (`_partial_collapse_sum`, `_diff_varref`) + `src/kkt/stationarity.py` (`_replace_indices_in_expr`). A shared offset-alias-AD fix plausibly lands both.
+**Evidence:** the Phase-0 gates in `docs/issues/ISSUE_{1146,1143}_*.md`.
+**Decision:** treat as a shared Class-A offset-alias fix; per-model cross-term detail is finalized by **Task 9**.
 
 ---
 
@@ -856,7 +900,11 @@ Prototype-then-revert a localized cross-term correction; if it fixes himmel16/po
 Development team (AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (framed; decision finalized by Task 5)
+**Verified by:** Task 4 — Date 2026-06-25
+**Findings:** the harness localizes both himmel16 and polygon to a **single `stat_*` row** (Case b, integer/partial residual), which suggests a **localized cross-term correction** is viable rather than a full #1111/#1112 AD-engine redesign. Whether that localized fix **generalizes** to the broader offset-alias-AD architecture (#1111/#1112) is the open question; a **property-test fixture** for the offset-alias shape is required either way.
+**Evidence:** the Phase-0 gates in `docs/issues/ISSUE_{1146,1143}_*.md` (the property-test-fixture requirement).
+**Decision:** attempt the localized cross-term fix first; the localized-vs-architecture call is finalized by **Task 5**.
 
 ---
 
