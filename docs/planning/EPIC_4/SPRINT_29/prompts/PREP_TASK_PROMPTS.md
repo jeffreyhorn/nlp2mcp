@@ -141,7 +141,7 @@ EOF
 
 1. Enumerate the cohort from the Day-13 DB (`outcome_category = model_optimal_presolve` + `comparison_status = match`, where the cold solve failed/mismatched).
 2. Run `kkt_residual.py` on each at its NLP KKT point; record the Case-(a/b/c) verdict, the max-residual row, and the dual-transfer self-check.
-3. Cross-check convexity: a *verified_convex* model that cold-fails is a strong Case-b signal; a *non-convex* cold-fail is expected Case-c. Use the harness verdict as the tie-breaker when it disagrees with the DB classification.
+3. Cross-check convexity: a *verified_convex* model that cold-fails is a strong Case-b signal; a *non-convex* cold-fail is expected Case-c. Use the harness verdict as the tie-breaker when it disagrees with the DB `convexity.status` value.
 4. Partition + size: the Case-b list (Sprint-29-fixable, ranked by residual-localizability) and the Case-c list (Sprint-30 hand-off); confirm #1447 maxmin as the lead Case-b + ≥1 more.
 5. Confirm `check_presolve_divergence.py` soft-classifies the cohort (no false hard-fails). Feed the partition size to Task 4 (gates) and Task 10 (P4 budget).
 
