@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 29 Prep
 
+- **Prep Task 2 COMPLETE (2026-06-24) — Sprint 29 Day-0 bucket-provenance baseline.** Full narrative in `docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.md`.
+  - **Baseline = Sprint 28 final** (Solve 107 / Match 92 / model_infeasible 7); `git diff 803a259a..HEAD -- src/ scripts/` empty, 0 path leaks — no fresh retest.
+  - **Match split:** genuine **68** vs **~24 methodology** (the Day-9 presolve-retry-on-cold-mismatch broadening), per the Sprint-28 §5 re-baseline lesson.
+  - **Major PR25 scope finding:** the objective-mismatch cohort (P6 #1332/#1247/#1239/#1236) has largely already resolved — quocge/prolog/sambal/qsambal all match on the Day-0 DB (the PROJECT_PLAN used stale pre-Sprint-28 objective values); only hhfair (#1236) still mismatches.
+  - Priorities 4/7 (maxmin/himmel16/polygon) already match via warm-start — their fixes are cold-robustness, not headline +Match. The only headline-moving genuine transitions are mine (#1443) + rocket (#1462).
+  - Unknowns 8.2, 8.3 verified (+ Day-0-bucket aspect of 1.1, 2.1, 4.1, 6.1).
+
 - **Prep Task 1 — Create Sprint 29 Known Unknowns List (2026-06-23).**
   - Authored `docs/planning/EPIC_4/SPRINT_29/KNOWN_UNKNOWNS.md` — **28 unknowns across 8 categories** aligned to the Sprint 29 priorities (#1443 mine head-domain-offset; #1462 rocket `_fx_`-multiplier warm-start + non-convex convergence; #1385 translation-timeout cross-terms; cold-convex robustness; camcge → Epic 5 scoping; objective-mismatch cohort #1332/#1247/#1239/#1236; offset-alias gradient + dollar-condition AD #1146/#1143/#1112/#1111; checkpoint re-solve + post-methodology re-baseline infrastructure).
   - Priority distribution: **7 Critical / 11 High / 6 Medium / 4 Low** (~34h research time, parallelized across prep Tasks 2–10). Each unknown carries Assumption / Research Questions / How to Verify / Risk if Wrong / Estimated Research Time / Owner / Verification Results (🔍 INCOMPLETE).

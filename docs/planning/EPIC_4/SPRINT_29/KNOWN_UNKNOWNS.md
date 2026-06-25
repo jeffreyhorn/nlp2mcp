@@ -130,7 +130,8 @@ Cross-check the cold solve INFES rows against the localized row.
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔍 **Status:** INCOMPLETE (Day-0 bucket recorded by Task 2; the Case-b/c fix-surface verdict pends the Day-0 `kkt_residual.py` trace in Tasks 4/5)
+**Partial findings (Task 2, 2026-06-24):** mine is **`model_infeasible`** (compare `not_tested`) at Day 0 — confirmed still in its gating bucket. The Case-b (head-offset dual-transfer) vs Case-c (deeper coupling) verdict is the Task-4/5 harness trace.
 
 ---
 
@@ -238,7 +239,8 @@ Adding the general `_fx_`-multiplier warm-start (`nu_<var>_fx_<idx>.l = <var>.m(
 Development team (Emit / presolve specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔍 **Status:** INCOMPLETE (Day-0 bucket recorded by Task 2; warm-start sufficiency pends Tasks 4/5)
+**Partial findings (Task 2, 2026-06-24):** rocket is **`model_infeasible`** (compare `not_tested`) at Day 0 — confirmed still in its gating bucket. Whether the `nu_*_fx_h0` warm-start is sufficient (vs the residual `piL/piU`-at-`h0` non-convergence) is the Task-4/5 trace.
 
 ---
 
@@ -475,7 +477,8 @@ PY
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔍 **Status:** INCOMPLETE (cohort enumerated by Task 2; the Case-b/c partition is Task 3)
+**Partial findings (Task 2, 2026-06-24):** the warm-start-only cohort is enumerated — **30** models are `model_optimal_presolve` + match, of which **~24** are the methodology-recovered set (the rest are the pre-existing presolve matches bearing/launch/mathopt3/robustlp + the genuine fixes camshape/cclinpts; note **otpop/chakra/chenery/kand/srkandw match cold (`model_optimal`), not via presolve**). The Case-b (cold-emit bug) vs Case-c (inherent non-convexity) partition of the ~24 is the Task-3 harness survey.
 
 ---
 
@@ -684,6 +687,8 @@ Development team (Epic-5 scoping)
 **Critical** — gates whether Priority 6 yields any Match; each Case-b is a +1 Match, each Case-c is a Sprint-30 hand-off.
 
 ### Assumption
+> **⚠️ SUPERSEDED by the Task-2 Verification Results below (2026-06-24).** The four-active-mismatch framing and the objective deltas in this Assumption are the **stale pre-Sprint-28 PROJECT_PLAN values** — on the Day-0 DB, quocge/prolog/sambal/qsambal already match and only hhfair remains. Read the Assumption as the original hypothesis, not current state.
+
 At least 2 of the objective-mismatch cohort — #1332 quocge (25.683 vs 25.5085), #1247 prolog (−73.5 vs −0.0), #1239 sambal/qsambal (1028 vs 3.97), #1236 hhfair (54.9 vs 87.2) — are Case-b localizable emit bugs the harness can pin to a stationarity/complementarity row.
 
 ### Research Questions
@@ -708,7 +713,8 @@ done
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔍 **Status:** INCOMPLETE (Day-0 buckets recorded by Task 2 — a major scope finding; the per-model Case-b/c verdict is Task 4/9)
+**Partial findings (Task 2, 2026-06-24) — THIS SUPERSEDES THE ASSUMPTION ABOVE:** **the objective-mismatch cohort has largely already resolved** — on the Day-0 DB, **quocge (25.683≈25.6834), prolog (≈−0.0), sambal and qsambal (3.9682) all MATCH**; only **hhfair (72.147 vs 87.159) still mismatches**. The Assumption's four-active-mismatch list and its objective deltas are the **stale pre-Sprint-28 PROJECT_PLAN values** ("+2 Match (#1332/#1247/#1239/#1236)") and should not be treated as current. **Priority 6's live target is hhfair (#1236) only** (≤ +1 Match); the freed budget should pre-allocate per the Task-5 REPLAN reallocation. hhfair's Case-b/c verdict is the Task-4/9 trace.
 
 ---
 
@@ -962,7 +968,12 @@ Reproduce the Sprint-28 Day-13 partition (the +24 byte-identical-emit presolve-r
 Development team (Sprint planning)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Bucket-Provenance Baseline + Re-Baseline Discipline)
+**Date:** 2026-06-24
+**Findings:** Match 92 decomposes as **genuine 68** (the 62 cold matches — which already include the genuine cross-term fixes otpop/chakra/chenery/kand/srkandw that now solve **cold** — plus the 6 non-methodology presolve matches camshape/cclinpts + the pre-existing bearing/launch/mathopt3/robustlp; 62 + 6 = 68) + **~24 methodology** (the Day-9 presolve-retry-on-cold-mismatch broadening, `_cold_objective_mismatches_nlp`). Operational definition of the methodology set: `model_optimal_presolve` + `match` whose cold MCP failed/mismatched (warm-start required) and whose cold emit is byte-identical to its pre-Day-9 state.
+**Evidence:** `docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.md` §2 + `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" PR25 tally.
+**Decision:** the **re-baseline rule** (for Task 8 to codify): after any pipeline-methodology change, recompute the genuine-vs-methodology split and report the headline Match delta as genuine (cross-term transitions) separately from methodology (validation of already-correct emits). Sprint 29 genuine floor = **68**; as-measured maintain target = **92**.
 
 ---
 
@@ -995,7 +1006,12 @@ grep -c "/Users/" data/gamslib/gamslib_status.json   # expect 0 (repo-relative p
 Development team (Sprint planning)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Bucket-Provenance Baseline + Re-Baseline Discipline)
+**Date:** 2026-06-24
+**Findings:** `git diff 803a259a..HEAD -- src/ scripts/` is **empty** (only Sprint 29 planning docs landed since the Sprint 28 close, PR #1465). The committed DB recomputes to the canonical **Solve 107 / Match 92 / model_infeasible 7** (raw 115 solve − 8 out-of-scope), and has **0** absolute-path leaks (`grep -c /Users/ … = 0`, the #1400 relativization holds).
+**Evidence:** `docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.md` §"Baseline source" + §1.
+**Decision:** Sprint 29 Day 0 = Sprint 28 final; reuse the committed DB — **no fresh ~4 h retest required.** (803a259a = the PR #1463 Sprint-28-close merge.)
 
 ---
 
