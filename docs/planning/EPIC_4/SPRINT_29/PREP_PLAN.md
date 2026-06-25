@@ -104,7 +104,7 @@ The largest single unknown is the **cold-convex cohort partition size** (Unknown
    **Category 4 (cold-convex robustness — the ~24 warm-start-only cohort):**
    - **What is the Case-b (fixable cold-emit bug) vs Case-c (inherent non-convexity) partition of the cohort?** **(Critical — sizes all of Priority 4; resolved by Task 3's harness survey.)**
    - Is #1447 maxmin's `stat_mindist` objective-variable cross-term defect representative of a shared Case-b shape across the cohort, or model-specific?
-   - Which cohort members are convex (cold *should* solve → genuine emit bug) vs genuinely non-convex (cold infeasibility is expected → Sprint 30)? (The convexity DB `classification` field is heuristic — cross-check with the harness verdict.)
+   - Which cohort members are convex (cold *should* solve → genuine emit bug) vs genuinely non-convex (cold infeasibility is expected → Sprint 30)? (The convexity DB `status` field is heuristic — cross-check with the harness verdict.)
 
    **Category 5 (camcge — Epic 5 CGE-degeneracy scoping):**
    - Is the camcge Walras-law singularity shared verbatim by the rest of the CGE cohort (#1354/#1355/#1317/#1331/#1251), or do they have distinct degeneracies? **(Determines whether the Epic-5 scoping doc covers one transformation or several.)**
@@ -294,14 +294,14 @@ The cohort is also where the Sprint 28 Match number is most fragile: these are t
 - The cohort source: `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" (the ~24 methodology-recovered models: catmix, himmel16, weapons, harker, polygon, sambal, markov, worst, irscge, lrgcge, moncge, stdcge, like, robert, mathopt1/4, mingamma, paperco, qsambal, marco, etamac, cpack, maxmin, tforss + otpop/cclinpts/camshape)
 - #1447 maxmin (the first concrete Case-b target): `docs/issues/ISSUE_1447_*.md` (`stat_mindist` missing the objective-variable cross-term — Case b, harness-localized in Sprint 28)
 - The harness: `scripts/diagnostics/kkt_residual.py` (Case-(a/b/c) verdict + dual-transfer self-check)
-- The convexity DB classification (heuristic cross-check): `data/gamslib/gamslib_status.json` `convexity.classification`
+- The convexity DB status (heuristic cross-check): `data/gamslib/gamslib_status.json` `convexity.status` (Task 3 verified the field is `convexity.status`, not `convexity.classification`)
 - The presolve-retry mechanism that recovers them: `scripts/gamslib/run_full_test.py` `_cold_objective_mismatches_nlp`
 
 ### What Needs to Be Done
 
 1. **Enumerate the cohort** from the Day-13 retest DB: models with `outcome_category = model_optimal_presolve` + `comparison_status = match` whose **cold** solve failed/mismatched (the warm-start was required).
 2. **Run `kkt_residual.py` on each** at its NLP KKT point; record the Case-(a/b/c) verdict, the max-residual row, and the dual-transfer self-check result.
-3. **Cross-check convexity:** for each model, compare the harness verdict to the DB `convexity.classification` and the cold model status — a *convex* model that cold-fails is a strong Case-b signal (the cold MCP should solve), while a *non-convex* model cold-failing is expected Case-c.
+3. **Cross-check convexity:** for each model, compare the harness verdict to the DB `convexity.status` and the cold model status — a *convex* model that cold-fails is a strong Case-b signal (the cold MCP should solve), while a *non-convex* model cold-failing is expected Case-c. (Task 3 found the field is `convexity.status`, not `convexity.classification`, and that it labels all 30 cohort members convex — so the harness verdict, not the DB status, is authoritative.)
 4. **Partition + size:** produce the Case-b list (Sprint-29-fixable, ranked by residual-localizability) and the Case-c list (Sprint-30 forcing-strategy hand-off), with #1447 maxmin confirmed as the lead Case-b target.
 5. **Feed forward:** flag any Case-b shapes shared with the objective-mismatch cohort (Task 9) or the offset-alias gradient class (P7), and record the partition size for the Task-10 schedule (P4 budget allocation).
 

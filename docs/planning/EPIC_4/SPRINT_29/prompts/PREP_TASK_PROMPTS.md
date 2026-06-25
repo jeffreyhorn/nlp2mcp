@@ -135,7 +135,7 @@ EOF
 - `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" (the ~24 methodology-recovered model list)
 - GitHub #1447 maxmin (`stat_mindist` cold-emit Case-b lead; harness-localized in Sprint 28) — there is a local `docs/issues/ISSUE_1447_*.md`
 - `scripts/diagnostics/kkt_residual.py` (Case-(a/b/c) verdict + dual-transfer self-check) and `scripts/diagnostics/check_presolve_divergence.py`
-- `data/gamslib/gamslib_status.json` `convexity.classification` (heuristic cross-check) + `scripts/gamslib/run_full_test.py` `_cold_objective_mismatches_nlp`
+- `data/gamslib/gamslib_status.json` `convexity.status` (heuristic cross-check; the field is `convexity.status`, not `convexity.classification`) + `scripts/gamslib/run_full_test.py` `_cold_objective_mismatches_nlp`
 
 **Tasks to Complete:**
 

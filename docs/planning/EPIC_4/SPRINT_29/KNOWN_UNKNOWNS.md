@@ -543,7 +543,7 @@ items=list(d["models"].values()) if isinstance(d.get("models"),dict) else d["mod
 for m in items:
     c=(m.get("convexity") or {})
     if (m.get("mcp_solve") or {}).get("outcome_category")=="model_optimal_presolve":
-        print(m["model_id"], c.get("classification"))
+        print(m["model_id"], c.get("status"))  # NB: the DB field is `status`, not `classification` (Task 3 finding)
 PY
 ```
 
