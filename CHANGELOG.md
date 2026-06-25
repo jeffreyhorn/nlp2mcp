@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 29 Prep
 
+- **Prep Task 3 COMPLETE (2026-06-24):** Cold-convex cohort survey — **30** models (`model_optimal_presolve` + match) partitioned via `kkt_residual.py` into **21 Case b** (Sprint-29-fixable cold-emit bug, #1447 maxmin lead) / **4 Case c** (inherent non-convex → Sprint-30) / **3 Case a** (already cold-robust) / **2 inconclusive**. The partition **inverts** the assumption (mostly Case b, not Case c) — but the 21 Case-b already match warm, so the fixes are Match-neutral cold-robustness (genuine floor 68 → up to ~89), not headline +Match. Shared "objective/defining cross-term" shape (integer residuals 1.0/2.0 on maxmin/himmel16/like/catmix/polygon + the CGE `stat_pz` cluster) → one shared `stationarity.py` fix lands ~6–8; the 5 CGE-family models gated to Task 4 (likely camcge #1330 / Epic 5). DB convexity found a non-signal (all 30 labeled convex). `docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md` authored; Verified Unknowns 4.1–4.4.
+
 - **Prep Task 2 COMPLETE (2026-06-24) — Sprint 29 Day-0 bucket-provenance baseline.** Full narrative in `docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.md`.
   - **Baseline = Sprint 28 final** (Solve 107 / Match 92 / model_infeasible 7); `git diff 803a259a..HEAD -- src/ scripts/` empty, 0 path leaks — no fresh retest.
   - **Match split:** genuine **68** vs **~24 methodology** (the Day-9 presolve-retry-on-cold-mismatch broadening), per the Sprint-28 §5 re-baseline lesson.

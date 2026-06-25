@@ -135,13 +135,13 @@ EOF
 - `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" (the ~24 methodology-recovered model list)
 - GitHub #1447 maxmin (`stat_mindist` cold-emit Case-b lead; harness-localized in Sprint 28) — there is a local `docs/issues/ISSUE_1447_*.md`
 - `scripts/diagnostics/kkt_residual.py` (Case-(a/b/c) verdict + dual-transfer self-check) and `scripts/diagnostics/check_presolve_divergence.py`
-- `data/gamslib/gamslib_status.json` `convexity.classification` (heuristic cross-check) + `scripts/gamslib/run_full_test.py` `_cold_objective_mismatches_nlp`
+- `data/gamslib/gamslib_status.json` `convexity.status` (heuristic cross-check; the field is `convexity.status`, not `convexity.classification`) + `scripts/gamslib/run_full_test.py` `_cold_objective_mismatches_nlp`
 
 **Tasks to Complete:**
 
 1. Enumerate the cohort from the Day-13 DB (`outcome_category = model_optimal_presolve` + `comparison_status = match`, where the cold solve failed/mismatched).
 2. Run `kkt_residual.py` on each at its NLP KKT point; record the Case-(a/b/c) verdict, the max-residual row, and the dual-transfer self-check.
-3. Cross-check convexity: a *verified_convex* model that cold-fails is a strong Case-b signal; a *non-convex* cold-fail is expected Case-c. Use the harness verdict as the tie-breaker when it disagrees with the DB classification.
+3. Cross-check convexity: a *verified_convex* model that cold-fails is a strong Case-b signal; a *non-convex* cold-fail is expected Case-c. Use the harness verdict as the tie-breaker when it disagrees with the DB `convexity.status` value.
 4. Partition + size: the Case-b list (Sprint-29-fixable, ranked by residual-localizability) and the Case-c list (Sprint-30 hand-off); confirm #1447 maxmin as the lead Case-b + ≥1 more.
 5. Confirm `check_presolve_divergence.py` soft-classifies the cohort (no false hard-fails). Feed the partition size to Task 4 (gates) and Task 10 (P4 budget).
 

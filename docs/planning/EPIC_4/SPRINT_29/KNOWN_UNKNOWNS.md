@@ -477,8 +477,11 @@ PY
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE (cohort enumerated by Task 2; the Case-b/c partition is Task 3)
-**Partial findings (Task 2, 2026-06-24):** the warm-start-only cohort is enumerated — **30** models are `model_optimal_presolve` + match, of which **~24** are the methodology-recovered set (the rest are the pre-existing presolve matches bearing/launch/mathopt3/robustlp + the genuine fixes camshape/cclinpts; note **otpop/chakra/chenery/kand/srkandw match cold (`model_optimal`), not via presolve**). The Case-b (cold-emit bug) vs Case-c (inherent non-convexity) partition of the ~24 is the Task-3 harness survey.
+✅ **Status:** VERIFIED — but the assumption **INVERTED** (mostly Case b, not mostly Case c)
+**Verified by:** Task 3 (Cold-Convex Cohort Survey)
+**Date:** 2026-06-24
+**Findings:** the 30-model cohort partitions as **21 Case b / 4 Case c / 3 Case a / 2 inconclusive** (full table: `docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md`). The assumption ("≥2–4 Case b, *the rest* Case c") is **inverted**: 21 of 30 are Case-b cold-emit bugs (residuals 0.07–2052, cleanly separated from the ≤8e-6 Case-a/c residuals), only 4 are Case c (bearing, launch, mathopt3, robustlp). The 3 Case a (mingamma, mathopt1, mathopt4) are already cold-robust; the 2 inconclusive (paperco dual-transfer-infeasible, weapons harness GAMS abort) need a Task-4/9 trace.
+**Decision:** Priority 4 is **target-rich, not collapsing** — the "mostly Case-c → free budget for P6/P7" path is **refuted**; do not reallocate P4 budget on that basis. **Crucial caveat:** all 21 Case-b *already match warm*, so fixing them is **Match-neutral cold robustness** that lifts the genuine floor (68 → up to ~89), **not** headline +Match (see COLD_CONVEX_COHORT_SURVEY §3b + §8). Size P4 by genuine-floor ROI: fund the shared **Class-A** objective/defining-cross-term fix-class first (one `stationarity.py` correction plausibly clears ~6–8), **gate the 5 CGE-family Class-B models (irscge/lrgcge/moncge/stdcge/marco) to the Task-4 gate** (likely camcge #1330 / Epic 5). This also corrects BASELINE_METRICS §2's "always emit-correct" framing for the methodology set → feed back to Task 8 re-baseline.
 
 ---
 
@@ -511,7 +514,11 @@ Development team (AD/KKT specialist)
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — shared shape confirmed (and broader than just the objective-variable)
+**Verified by:** Task 3 (Cold-Convex Cohort Survey)
+**Date:** 2026-06-24
+**Findings:** maxmin's `stat_mindist` residual is **exactly 1.0** (the bare `max mindist` gradient `−1` with the `∑ lam_mindist1a` constraint cross-term missing) — confirming the missing-objective-variable-cross-term root cause. The shape **recurs**: the exact-integer residuals (1.0/2.0) on `stat_area` (himmel16), `stat_p` (like), `stat_x1` (catmix), `stat_theta` (polygon), `stat_pz` (irscge/lrgcge/moncge), `stat_epsilon` (stdcge) are the same fingerprint — a scalar/intermediate variable whose stationarity drops the defining-`=e=`/objective Jacobian-transpose cross-term. **Three fix-classes** (COLD_CONVEX_COHORT_SURVEY §4): Class A (objective/defining cross-term — maxmin/himmel16/like/catmix/polygon/camshape/qsambal/sambal, one shared `src/kkt/stationarity.py` fix), Class B (CGE price/numéraire family — gate to Task 4), Class C (model-specific large-residual).
+**Decision:** maxmin is the **lead** + himmel16/like/catmix/polygon are clean confirmatory Class-A cases; a single `stationarity.py` correction plausibly lands the whole Class-A batch (~6–8 models for ~one fix's effort) — the highest-ROI Priority-4 work. Per-model only for Class C.
 
 ---
 
@@ -536,7 +543,7 @@ items=list(d["models"].values()) if isinstance(d.get("models"),dict) else d["mod
 for m in items:
     c=(m.get("convexity") or {})
     if (m.get("mcp_solve") or {}).get("outcome_category")=="model_optimal_presolve":
-        print(m["model_id"], c.get("classification"))
+        print(m["model_id"], c.get("status"))  # NB: the DB field is `status`, not `classification` (Task 3 finding)
 PY
 ```
 
@@ -550,7 +557,11 @@ PY
 Development team (Tooling)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the DB convexity field is a **non-signal**; harness is authoritative
+**Verified by:** Task 3 (Cold-Convex Cohort Survey)
+**Date:** 2026-06-24
+**Findings:** (1) the DB field is **`convexity.status`, not `convexity.classification`** (the assumption + verification snippet name a field that does not exist on the records). (2) **All 30 cohort members are labeled convex** — 24 `likely_convex` + 6 `verified_convex`, **zero `non_convex`** — yet 4 are harness-**Case c** and 3 borderline Case a, so the DB status **cannot even flag the Case-c models**. (3) The "`verified_convex` cold-fail ⇒ Case b" heuristic holds *directionally* (4 of 6 verified_convex are Case b) but is **not decisive** — **robustlp is `verified_convex` yet Case c**.
+**Decision:** the DB convexity status is **useless as a Case-b/c seed** for this cohort; the **harness Case-(a/b/c) verdict is authoritative** and overrides the DB classification whenever they disagree (essentially always). Confirms the prompt's tie-breaker ordering.
 
 ---
 
@@ -584,7 +595,11 @@ done
 Development team (Tooling)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — soft-classifies correctly (no false hard-fails)
+**Verified by:** Task 3 (Cold-Convex Cohort Survey)
+**Date:** 2026-06-24
+**Findings:** `check_presolve_divergence.py --model <m>` on the sample (maxmin, catmix, himmel16, polygon): **no hard embedded-NLP divergence** (no abort / infeasible-embedded) on any. Only informational `OBJ-GAP` flags — himmel16 (embedded 0.674 vs ref 0.675, rel 0.001) + polygon (0.516 vs 0.7797, rel 0.264), both labeled "possibly a benign non-convex local optimum; review", **not** hard-fail.
+**Decision:** the detector correctly **soft-classifies** the cold-convex cohort — it will **not flood** the Day-5/Day-10 checkpoints with false hard-fails. No allowlist extension or tolerance tweak needed for the sampled models.
 
 ---
 

@@ -104,7 +104,7 @@ The largest single unknown is the **cold-convex cohort partition size** (Unknown
    **Category 4 (cold-convex robustness — the ~24 warm-start-only cohort):**
    - **What is the Case-b (fixable cold-emit bug) vs Case-c (inherent non-convexity) partition of the cohort?** **(Critical — sizes all of Priority 4; resolved by Task 3's harness survey.)**
    - Is #1447 maxmin's `stat_mindist` objective-variable cross-term defect representative of a shared Case-b shape across the cohort, or model-specific?
-   - Which cohort members are convex (cold *should* solve → genuine emit bug) vs genuinely non-convex (cold infeasibility is expected → Sprint 30)? (The convexity DB `classification` field is heuristic — cross-check with the harness verdict.)
+   - Which cohort members are convex (cold *should* solve → genuine emit bug) vs genuinely non-convex (cold infeasibility is expected → Sprint 30)? (The convexity DB `status` field is heuristic — cross-check with the harness verdict.)
 
    **Category 5 (camcge — Epic 5 CGE-degeneracy scoping):**
    - Is the camcge Walras-law singularity shared verbatim by the rest of the CGE cohort (#1354/#1355/#1317/#1331/#1251), or do they have distinct degeneracies? **(Determines whether the Epic-5 scoping doc covers one transformation or several.)**
@@ -270,9 +270,10 @@ grep -iE 'methodology|genuine' docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.m
 
 ## Task 3: Cold-Convex Cohort Survey + Case-(b/c) Partition (Priority 4 Foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
 **Estimated Time:** 5–7 hours
+**Completed:** 2026-06-24
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1, 2
@@ -280,37 +281,38 @@ grep -iE 'methodology|genuine' docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.m
 
 ### Objective
 
-Survey the ~24 non-convex models that match ONLY via the `--nlp-presolve` warm-start (the cold-convex cohort), and partition them into Case-b (a genuine cold-emit bug that the warm-start masks → fixable in Sprint 29) and Case-c (inherent non-convexity → cold infeasibility expected → Sprint 30 forcing strategies), using the Sprint-28 KKT-residual harness. This is a **survey/catalog task that must precede the Phase-0 gates (Task 4) and the schedule (Task 10)** because the Case-b count determines how much of Priority 4 is achievable.
+Survey the 30-model warm-start-only cohort — the models that match ONLY via the `--nlp-presolve` warm-start (their cold MCP fails/mismatches, so they *behave* non-convexly, though the DB convexity status labels all 30 convex) — and partition them into Case-b (a genuine cold-emit bug that the warm-start masks → fixable in Sprint 29) and Case-c (inherent non-convexity → cold infeasibility expected → Sprint 30 forcing strategies), using the Sprint-28 KKT-residual harness. This is a **survey/catalog task that must precede the Phase-0 gates (Task 4) and the schedule (Task 10)** because the Case-b count determines how much of Priority 4 is achievable.
 
 ### Why This Matters
 
-Priority 4 (cold-convex robustness, 12–18h) is the single largest *NEW* Sprint 29 workstream, and its achievable scope is unknown until the cohort is partitioned. If most of the cohort is Case-c (genuinely non-convex — cold infeasibility is correct, not a bug), Priority 4 collapses to a documentation + Sprint-30 hand-off and ~10h of budget frees up for Priorities 6/7. If a meaningful subset is Case-b (the cold emit is *wrong*, like #1447 maxmin's missing `stat_mindist` cross-term, and the warm-start merely hides it), those are genuine +Match/+Solve fixes. Resolving this in prep — rather than discovering it on Day 6 — is exactly the "survey before committing the schedule" discipline.
+Priority 4 (cold-convex robustness, 12–18h) is the single largest *NEW* Sprint 29 workstream, and its achievable scope is unknown until the cohort is partitioned. If most of the cohort is Case-c (genuinely non-convex — cold infeasibility is correct, not a bug), Priority 4 collapses to a documentation + Sprint-30 hand-off and ~10h of budget frees up for Priorities 6/7. If a meaningful subset is Case-b (the cold emit is *wrong*, like #1447 maxmin's missing `stat_mindist` cross-term, and the warm-start merely hides it), those are genuine emit-correctness fixes. **(Result update — see below: the survey found these Case-b models *already match warm*, so the fixes are Match-neutral cold-robustness that lift the genuine floor, NOT headline +Match/+Solve; the "+Match/+Solve" framing in this paragraph was the pre-survey expectation and is superseded by the Result.)** Resolving this in prep — rather than discovering it on Day 6 — is exactly the "survey before committing the schedule" discipline.
 
 The cohort is also where the Sprint 28 Match number is most fragile: these are the +24 methodology-recovered models. A Case-b fix here is a *genuine* gain that survives any future methodology change, so partitioning them sharpens the PR25 genuine-vs-methodology accounting (Task 2).
 
 ### Background
 
-- The cohort source: `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" (the ~24 methodology-recovered models: catmix, himmel16, weapons, harker, polygon, sambal, markov, worst, irscge, lrgcge, moncge, stdcge, like, robert, mathopt1/4, mingamma, paperco, qsambal, marco, etamac, cpack, maxmin, tforss + otpop/cclinpts/camshape)
+- The cohort source: `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" (the ~24 methodology-recovered models: catmix, himmel16, weapons, harker, polygon, sambal, markov, worst, irscge, lrgcge, moncge, stdcge, like, robert, mathopt1/4, mingamma, paperco, qsambal, marco, etamac, cpack, maxmin, tforss + the genuine presolve fixes cclinpts/camshape). **Note:** `otpop` is *not* in the presolve-only cohort — Task 3 confirmed it matches **cold** (`model_optimal`), so it is excluded from the 30-model survey (per the acceptance criteria below).
 - #1447 maxmin (the first concrete Case-b target): `docs/issues/ISSUE_1447_*.md` (`stat_mindist` missing the objective-variable cross-term — Case b, harness-localized in Sprint 28)
 - The harness: `scripts/diagnostics/kkt_residual.py` (Case-(a/b/c) verdict + dual-transfer self-check)
-- The convexity DB classification (heuristic cross-check): `data/gamslib/gamslib_status.json` `convexity.classification`
+- The convexity DB status (heuristic cross-check): `data/gamslib/gamslib_status.json` `convexity.status` (Task 3 verified the field is `convexity.status`, not `convexity.classification`)
 - The presolve-retry mechanism that recovers them: `scripts/gamslib/run_full_test.py` `_cold_objective_mismatches_nlp`
 
 ### What Needs to Be Done
 
 1. **Enumerate the cohort** from the Day-13 retest DB: models with `outcome_category = model_optimal_presolve` + `comparison_status = match` whose **cold** solve failed/mismatched (the warm-start was required).
 2. **Run `kkt_residual.py` on each** at its NLP KKT point; record the Case-(a/b/c) verdict, the max-residual row, and the dual-transfer self-check result.
-3. **Cross-check convexity:** for each model, compare the harness verdict to the DB `convexity.classification` and the cold model status — a *convex* model that cold-fails is a strong Case-b signal (the cold MCP should solve), while a *non-convex* model cold-failing is expected Case-c.
+3. **Cross-check convexity:** for each model, compare the harness verdict to the DB `convexity.status` and the cold model status — a *convex* model that cold-fails is a strong Case-b signal (the cold MCP should solve), while a *non-convex* model cold-failing is expected Case-c. (Task 3 found the field is `convexity.status`, not `convexity.classification`, and that it labels all 30 cohort members convex — so the harness verdict, not the DB status, is authoritative.)
 4. **Partition + size:** produce the Case-b list (Sprint-29-fixable, ranked by residual-localizability) and the Case-c list (Sprint-30 forcing-strategy hand-off), with #1447 maxmin confirmed as the lead Case-b target.
 5. **Feed forward:** flag any Case-b shapes shared with the objective-mismatch cohort (Task 9) or the offset-alias gradient class (P7), and record the partition size for the Task-10 schedule (P4 budget allocation).
 
 ### Changes
 
-To be completed.
+- Authored `docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md` — the 30-model cohort enumeration, per-model `kkt_residual.py` verdict + max-residual table, the Case-(b/c) partition, the three-fix-class shared-shape analysis, the Sprint-29-fixable ranked list, the convexity-seed audit, the detector soft-classification, and the Task-4/Task-10 budget implication.
+- Filled KNOWN_UNKNOWNS.md Unknowns 4.1/4.2/4.3/4.4 Verification Results (all ✅ VERIFIED).
 
 ### Result
 
-To be completed.
+**The partition INVERTS the assumption: 21 Case b / 4 Case c / 3 Case a / 2 inconclusive** (of 30). Priority 4 is target-rich, not collapsing — the "mostly Case-c → free budget" path is refuted. **But all 21 Case-b already match warm**, so the fixes are Match-neutral cold-robustness (genuine floor 68 → up to ~89), not headline +Match. #1447 maxmin confirmed as the lead Case-b (`stat_mindist` rel = 1.0); the maxmin shape recurs (integer-residual objective/defining cross-term) across himmel16/like/catmix/polygon + the CGE `stat_pz` cluster → one shared `stationarity.py` Class-A fix plausibly lands ~6–8. The 5 CGE-family Class-B models (irscge/lrgcge/moncge/stdcge/marco) are gated to Task 4 (likely camcge #1330 / Epic 5). DB convexity is a non-signal (all 30 labeled convex); harness verdict authoritative. Detector soft-classifies the cohort (no false hard-fails).
 
 ### Verification
 
@@ -346,13 +348,13 @@ grep -i 'maxmin' docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md | h
 
 ### Acceptance Criteria
 
-- [ ] Cohort enumerated from the Day-13 DB (the ~24 presolve-recovered matches + otpop/cclinpts/camshape)
-- [ ] `kkt_residual.py` run on each; Case-(a/b/c) verdict + max-residual row recorded
-- [ ] Convexity cross-check applied (convex-cold-fail ⇒ Case-b signal)
-- [ ] Case-b / Case-c partition produced with counts and a Sprint-29-fixable ranked list
-- [ ] #1447 maxmin + ≥1 more Case-b candidate confirmed
-- [ ] Partition size handed to Tasks 4 and 10
-- [ ] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Cohort enumerated from the Day-13 DB: **30 models** with `model_optimal_presolve` + match. cclinpts and camshape **are** in this cohort; otpop is **excluded** (it matches **cold** as `model_optimal`, not via presolve).
+- [x] `kkt_residual.py` run on each; Case-(a/b/c) verdict + max-residual row recorded
+- [x] Convexity cross-check applied (DB convexity found to be a non-signal — all 30 labeled convex; harness authoritative)
+- [x] Case-b / Case-c partition produced with counts (21/4/3/2) and a Sprint-29-fixable ranked list
+- [x] #1447 maxmin + ≥1 more Case-b candidate confirmed (himmel16/like/catmix/polygon + 16 more)
+- [x] Partition size handed to Tasks 4 and 10 (budget implication §8)
+- [x] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
