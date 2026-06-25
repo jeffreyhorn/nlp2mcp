@@ -348,7 +348,7 @@ grep -i 'maxmin' docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md | h
 
 ### Acceptance Criteria
 
-- [x] Cohort enumerated from the Day-13 DB (30 `model_optimal_presolve` + match; note otpop/cclinpts/camshape — otpop matches **cold**, only cclinpts/camshape are in the presolve cohort)
+- [x] Cohort enumerated from the Day-13 DB: **30 models** with `model_optimal_presolve` + match. cclinpts and camshape **are** in this cohort; otpop is **excluded** (it matches **cold** as `model_optimal`, not via presolve).
 - [x] `kkt_residual.py` run on each; Case-(a/b/c) verdict + max-residual row recorded
 - [x] Convexity cross-check applied (DB convexity found to be a non-signal — all 30 labeled convex; harness authoritative)
 - [x] Case-b / Case-c partition produced with counts (21/4/3/2) and a Sprint-29-fixable ranked list
