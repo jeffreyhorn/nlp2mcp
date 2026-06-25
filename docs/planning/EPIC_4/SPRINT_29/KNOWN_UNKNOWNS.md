@@ -969,7 +969,7 @@ Development team (Sprint planning)
 ✅ **Status:** VERIFIED
 **Verified by:** Task 2 (Bucket-Provenance Baseline + Re-Baseline Discipline)
 **Date:** 2026-06-24
-**Findings:** Match 92 decomposes as **genuine 68** (the 62 cold matches + camshape/otpop/cclinpts + the pre-existing presolve matches bearing/launch/mathopt3/robustlp) + **~24 methodology** (the Day-9 presolve-retry-on-cold-mismatch broadening, `_cold_objective_mismatches_nlp`). Operational definition of the methodology set: `model_optimal_presolve` + `match` whose cold MCP failed/mismatched (warm-start required) and whose cold emit is byte-identical to its pre-Day-9 state.
+**Findings:** Match 92 decomposes as **genuine 68** (the 62 cold matches — which already include the genuine cross-term fixes otpop/chakra/chenery/kand/srkandw that now solve **cold** — plus the 6 non-methodology presolve matches camshape/cclinpts + the pre-existing bearing/launch/mathopt3/robustlp; 62 + 6 = 68) + **~24 methodology** (the Day-9 presolve-retry-on-cold-mismatch broadening, `_cold_objective_mismatches_nlp`). Operational definition of the methodology set: `model_optimal_presolve` + `match` whose cold MCP failed/mismatched (warm-start required) and whose cold emit is byte-identical to its pre-Day-9 state.
 **Evidence:** `docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.md` §2 + `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" PR25 tally.
 **Decision:** the **re-baseline rule** (for Task 8 to codify): after any pipeline-methodology change, recompute the genuine-vs-methodology split and report the headline Match delta as genuine (cross-term transitions) separately from methodology (validation of already-correct emits). Sprint 29 genuine floor = **68**; as-measured maintain target = **92**.
 
