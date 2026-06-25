@@ -414,9 +414,11 @@ for f in 1443 1462 1385 1447 1332 1247 1239 1236 1146 1143; do
   grep -l "Phase 0" docs/issues/ISSUE_${f}_*.md 2>/dev/null || echo "MISSING: $f"
 done
 
-# Each gate cites the kkt_residual harness as its verification method
-# (#1385 names it as the post-fix verifier — structural gate, no Day-0 MCP)
-grep -lE 'kkt_residual\.py' docs/issues/ISSUE_{1443,1462,1385,1447}_*.md 2>/dev/null
+# Each gate cites the kkt_residual harness as its verification method, across ALL
+# 10 Task-4 targets (#1385 names it as the post-fix verifier — structural gate)
+for f in 1443 1462 1385 1447 1332 1247 1239 1236 1146 1143; do
+  grep -lE 'kkt_residual\.py' docs/issues/ISSUE_${f}_*.md 2>/dev/null || echo "MISSING harness ref: $f"
+done
 
 # Each gate has an explicit Case-c / Sprint-30 REPLAN exit
 grep -liE 'REPLAN|Sprint 30|Case[- ]?c' docs/issues/ISSUE_{1443,1462,1146,1143}_*.md 2>/dev/null

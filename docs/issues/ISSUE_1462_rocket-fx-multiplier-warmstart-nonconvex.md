@@ -27,7 +27,7 @@ The Sprint-27 DB recorded rocket as `model_optimal_presolve` + match (1.0128), b
 The initial conditions are emitted as `_fx_` equations `ht_fx_h0.. ht('h0') =e= h_0` (likewise `v`, `m`), each pinned by a free multiplier `nu_*_fx_h0`. The stationarity of a state variable at `h0` must read its objective/dynamics gradient **plus** the `_fx_` multiplier:
 
 ```
-stat_v('h0')..  ∂(dynamics)/∂v('h0') + nu_v_fx_h0  (− piL_v('h0') + piU_v('h0'))  =E= 0
+stat_v('h0')..  ∂(dynamics)/∂v('h0') + nu_v_fx_h0 − piL_v('h0') + piU_v('h0')  =E= 0
 ```
 
 At the NLP optimum the marginal `v.m('h0')` carries the dual of the fixed condition, so a correct warm-start sets `nu_v_fx_h0.l = v.m('h0')`. The **`step` (time-step) stationarity** `stat_step` couples every interval's dynamics constraint (`step` scales each `h→h+1` integration step), so its residual (0.497) reflects an aggregate dual imbalance across the horizon — the prime emit-residual suspect.
@@ -46,7 +46,7 @@ cd /tmp && gams rocket_mcp_presolve.gms lo=0   # currently MS 5
 # Regression guard — enumerate the Layer-4-unfix presolve models programmatically
 # (the set may change; do not hard-code it):
 LAYER4=$(grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms 2>/dev/null \
-         | xargs -n1 basename | sed 's/_mcp_presolve.gms//')
+         | sed 's|.*/||; s/_mcp_presolve\.gms$//')   # single sed pass; safe on empty set
 echo "Layer-4-unfix models: $LAYER4"   # currently: otpop chain cclinpts rocket
 for m in $LAYER4; do
   .venv/bin/python -m src.cli data/gamslib/raw/$m.gms --nlp-presolve -o /tmp/${m}_p.gms --quiet
