@@ -63,8 +63,16 @@ for m in iswnm sarf mexls nebrazil; do
 done
 # After the runtime-guard re-emit + cross-terms land, the harness becomes the verifier:
 .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/<smallest>.gms --json /tmp/phase0_1385.json
-# Structural check: no quoted-set-name multiplier indices
-grep -E 'nu_\w+\("|lam_\w+\("' /tmp/<smallest>_mcp.gms && echo "BUG: set-name index" || echo "clean"
+# Structural check: no quoted-set-name multiplier indices (fail loudly if the
+# emit is missing — don't let a missing file masquerade as "clean"):
+out=/tmp/<smallest>_mcp.gms
+if [ ! -f "$out" ]; then
+  echo "ERROR: $out not emitted (translate failed?)" >&2
+elif grep -E 'nu_\w+\("|lam_\w+\("' "$out"; then
+  echo "BUG: set-name multiplier index emitted"
+else
+  echo "clean: no set-name multiplier indices"
+fi
 ```
 
 - **PROCEED (Case b / structural):** the smallest target's hand-derived `stat_*` cross-terms are tractable and the re-emit + cross-terms can land atomically; post-fix harness residual → 0 (Case a).
