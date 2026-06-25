@@ -383,7 +383,7 @@ For #1462 specifically, the gate is unusual: the fix is *already known* (the `nu
 
 - The Phase-0 gate template (PR20 + PR24 amendments): `CONTRIBUTING.md` §"Phase 0 Acceptance Gate" (authored in Sprint 28 prep)
 - The harness as verification (PR27): `scripts/diagnostics/kkt_residual.py` + its `docs/planning/EPIC_4/SPRINT_28/PRIORITY_9_KKT_RESIDUAL_HARNESS_DESIGN.md`
-- Target issue docs: `docs/issues/ISSUE_{1443,1385,1447,1332,1247,1239,1236,1146,1143}_*.md` (local) + GitHub #1462 (no local doc — author the gate in the GitHub issue or create `docs/issues/ISSUE_1462_*.md` in Task 4)
+- Target issue docs: `docs/issues/ISSUE_{1443,1385,1447,1332,1247,1239,1236,1146,1143}_*.md` (local) + `docs/issues/ISSUE_1462_rocket-fx-multiplier-warmstart-nonconvex.md` (created by Task 4 — rocket previously had no local doc)
 - The cold-convex partition (Task 3 output) — supplies the Case-b lead list for the cohort gates
 - Sprint 28 Day-13 rocket diagnosis (already-localized root cause): `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13" + issue #1462
 
@@ -408,17 +408,18 @@ For #1462 specifically, the gate is unusual: the fix is *already known* (the `nu
 ### Verification
 
 ```bash
-# Phase 0 gate present in each local target issue doc (#1462 is GitHub-only —
-# check its Phase-0 gate manually, or after Task 4 creates docs/issues/ISSUE_1462_*.md)
-for f in 1443 1385 1447 1332 1247 1239 1236 1146 1143; do
+# Phase 0 gate present in each local target issue doc (Task 4 created the local
+# ISSUE_1462 doc, so #1462 is now included in the local loop)
+for f in 1443 1462 1385 1447 1332 1247 1239 1236 1146 1143; do
   grep -l "Phase 0" docs/issues/ISSUE_${f}_*.md 2>/dev/null || echo "MISSING: $f"
 done
 
 # Each gate cites the kkt_residual harness as its verification method
-grep -lE 'kkt_residual\.py' docs/issues/ISSUE_{1443,1385,1447}_*.md 2>/dev/null  # (+ check GitHub #1462 manually)
+# (#1385 names it as the post-fix verifier — structural gate, no Day-0 MCP)
+grep -lE 'kkt_residual\.py' docs/issues/ISSUE_{1443,1462,1385,1447}_*.md 2>/dev/null
 
 # Each gate has an explicit Case-c / Sprint-30 REPLAN exit
-grep -liE 'REPLAN|Sprint 30|Case[- ]?c' docs/issues/ISSUE_{1443,1146,1143}_*.md 2>/dev/null  # (+ check GitHub #1462 manually)
+grep -liE 'REPLAN|Sprint 30|Case[- ]?c' docs/issues/ISSUE_{1443,1462,1146,1143}_*.md 2>/dev/null
 ```
 
 ### Deliverables
@@ -969,7 +970,7 @@ This prep plan succeeds if Sprint 29 starts with:
 
 ### Carryforward + Backlog Issues (Phase-0 gate targets)
 - `docs/issues/ISSUE_1443_*.md` (P1 — mine head-domain-offset MCP infeasibility)
-- GitHub #1462 (P2 — rocket presolve `_fx_`-multiplier warm-start + non-convex convergence; no local doc — root cause localized in `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13")
+- #1462 (P2 — rocket presolve `_fx_`-multiplier warm-start + non-convex convergence; local doc `docs/issues/ISSUE_1462_rocket-fx-multiplier-warmstart-nonconvex.md` created by Task 4 — root cause localized in `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 13")
 - `docs/issues/ISSUE_1385_*.md` (P3 — translation-timeout Option-1 runtime-guard cross-terms)
 - `docs/issues/ISSUE_1447_*.md` (P4 — maxmin `stat_mindist` cold-emit Case-b lead)
 - `docs/issues/ISSUE_1330_*.md` (P5 — camcge → Epic 5 CGE Walras degeneracy)
