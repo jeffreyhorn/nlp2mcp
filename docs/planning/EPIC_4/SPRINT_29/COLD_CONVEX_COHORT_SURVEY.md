@@ -25,7 +25,7 @@ Survey the warm-start-only cohort — the models that match **only** via the `--
 | **Case b** — JSON `verdict: case_b`, label `emit_bug` | localizable non-zero stationarity residual at the NLP KKT point | **Sprint-29-fixable cold-emit bug** |
 | **Case c** — JSON `verdict: case_c`, label `non_convexity (warm-start, not an emit fix)` | residual ≈ 0 **but** the cold (non-presolve) MCP is Locally Infeasible | emit correct → Sprint 30 forcing |
 | **Case a** — JSON `verdict: case_a`, label `healthy (KKT correct, PATH converges)` | residual ≈ 0 **and** the cold MCP converges | emit correct, already cold-robust — no action |
-| JSON `verdict: dual_transfer_inconsistent` (label `… (fix the transfer, re-run)`) / harness GAMS abort | the warm-start transfer or residual MCP itself fails to build | **inconclusive** — needs a deeper trace (Task 4/9) |
+| JSON `verdict: dual_transfer_inconsistent`, label `dual_transfer_inconsistent (fix the transfer, re-run)` / harness GAMS abort | the warm-start transfer or residual MCP itself fails to build | **inconclusive** — needs a deeper trace (Task 4/9) |
 
 Per-model JSON evidence: `/tmp/task3_kkt/<model>.json` (regenerable; not committed — analysis scratch).
 
@@ -178,7 +178,8 @@ PY
 echo "cohort ($(echo $COHORT | wc -w) models): $COHORT"
 
 # Per-model harness verdict (Case a/b/c + max-residual row)
+mkdir -p /tmp/task3_kkt
 for m in $COHORT; do
-  .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/$m.gms --json /tmp/$m.json
+  .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/$m.gms --json /tmp/task3_kkt/$m.json
 done
 ```
