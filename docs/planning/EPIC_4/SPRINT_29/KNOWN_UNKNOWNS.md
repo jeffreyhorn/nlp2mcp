@@ -687,6 +687,8 @@ Development team (Epic-5 scoping)
 **Critical** — gates whether Priority 6 yields any Match; each Case-b is a +1 Match, each Case-c is a Sprint-30 hand-off.
 
 ### Assumption
+> **⚠️ SUPERSEDED by the Task-2 Verification Results below (2026-06-24).** The four-active-mismatch framing and the objective deltas in this Assumption are the **stale pre-Sprint-28 PROJECT_PLAN values** — on the Day-0 DB, quocge/prolog/sambal/qsambal already match and only hhfair remains. Read the Assumption as the original hypothesis, not current state.
+
 At least 2 of the objective-mismatch cohort — #1332 quocge (25.683 vs 25.5085), #1247 prolog (−73.5 vs −0.0), #1239 sambal/qsambal (1028 vs 3.97), #1236 hhfair (54.9 vs 87.2) — are Case-b localizable emit bugs the harness can pin to a stationarity/complementarity row.
 
 ### Research Questions
@@ -712,7 +714,7 @@ Development team (AD/KKT specialist)
 
 ### Verification Results
 🔍 **Status:** INCOMPLETE (Day-0 buckets recorded by Task 2 — a major scope finding; the per-model Case-b/c verdict is Task 4/9)
-**Partial findings (Task 2, 2026-06-24):** **the objective-mismatch cohort has largely already resolved** — on the Day-0 DB, **quocge (25.683≈25.6834), prolog (≈−0.0), sambal and qsambal (3.9682) all MATCH**; only **hhfair (72.147 vs 87.159) still mismatches**. The PROJECT_PLAN's "+2 Match (#1332/#1247/#1239/#1236)" used stale pre-Sprint-28 objective values. **Priority 6's live target is hhfair (#1236) only** (≤ +1 Match); the freed budget should pre-allocate per the Task-5 REPLAN reallocation. hhfair's Case-b/c verdict is the Task-4/9 trace.
+**Partial findings (Task 2, 2026-06-24) — THIS SUPERSEDES THE ASSUMPTION ABOVE:** **the objective-mismatch cohort has largely already resolved** — on the Day-0 DB, **quocge (25.683≈25.6834), prolog (≈−0.0), sambal and qsambal (3.9682) all MATCH**; only **hhfair (72.147 vs 87.159) still mismatches**. The Assumption's four-active-mismatch list and its objective deltas are the **stale pre-Sprint-28 PROJECT_PLAN values** ("+2 Match (#1332/#1247/#1239/#1236)") and should not be treated as current. **Priority 6's live target is hhfair (#1236) only** (≤ +1 Match); the freed budget should pre-allocate per the Task-5 REPLAN reallocation. hhfair's Case-b/c verdict is the Task-4/9 trace.
 
 ---
 
