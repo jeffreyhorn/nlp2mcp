@@ -108,7 +108,7 @@ The corrected mine MCP cold-fails (MS 5, `x → 4e10` despite `x.up=1`, 49 INFES
 2. Is the dominant row a `pr`/`stat_x` dual-transfer row (Case b) or a bound-complementarity row (Case c)?
 3. Does the dual-transfer self-check report CONSISTENT (Case-b-localizable) or INCONSISTENT (deeper coupling)?
 4. At the NLP KKT point, is the residual ~0 (emit correct, PATH non-convex/cold issue) or ≠0 (genuine emit bug)?
-5. Is mine, a convex LP, expected to cold-solve at all (a unique KKT point), making any cold failure a genuine emit bug rather than non-convexity?
+5. Is mine, a convex LP, expected to cold-solve at all (its KKT system is a monotone LCP — no spurious local optima), making any cold failure a genuine emit bug rather than non-convexity?
 
 ### How to Verify
 Run the harness at the NLP KKT point and read the verdict + max-residual row:
@@ -182,13 +182,13 @@ Development team (Emit specialist)
 
 ---
 
-## Unknown 1.3: Does mine's convex-LP unique KKT mean a correct emit MUST cold-solve (no warm-start escape)?
+## Unknown 1.3: Does mine's convex-LP KKT system (a monotone LCP) mean a correct emit MUST cold-solve (no warm-start escape)?
 
 ### Priority
 **Medium** — frames whether the `--nlp-presolve` warm-start is even an option for mine, or whether the cold MCP must solve.
 
 ### Assumption
-mine is a convex LP (`solve … using lp`, `Positive Variable x`, `x.up=1`) with a unique KKT point, so — unlike the non-convex cold-convex cohort (Category 4) — a *correct* MCP must cold-solve; the warm-start cannot mask a genuine emit bug here.
+mine is a convex LP (`solve … using lp`, `Positive Variable x`, `x.up=1`) whose KKT system is a monotone LCP (no spurious local optima — a degenerate, non-unique optimum is fine since all LP optima share the same objective), so — unlike the non-convex cold-convex cohort (Category 4) — a *correct* MCP must cold-solve; the warm-start cannot mask a genuine emit bug here.
 
 ### Research Questions
 1. Is mine's NLP model type LP/convex (cross-check the source + the convexity DB)?
@@ -213,7 +213,7 @@ Development team (AD/KKT specialist)
 ### Verification Results
 ✅ **Status:** VERIFIED — yes
 **Verified by:** Task 4 — Date 2026-06-25
-**Findings:** mine is a **convex LP** (`maximizing profit using lp`, `Positive Variable x`, `x.up=1`), so its MCP is a well-posed LCP with a **unique** KKT point. A correct emit therefore **must cold-solve** — there is **no warm-start escape and no Case-c exit**. This distinguishes mine from the non-convex cold-convex cohort and makes it a **genuine +1 Solve** target.
+**Findings:** mine is a **convex LP** (`maximizing profit using lp`, `Positive Variable x`, `x.up=1`), so its MCP is a **monotone** LCP — it has **no spurious local solutions** (the optimum may be degenerate/non-unique, but every LP optimum shares the same objective, so `compare_objective_match` still holds). A correct emit therefore **must cold-solve** — there is **no warm-start escape and no Case-c exit**. This distinguishes mine from the non-convex cold-convex cohort and makes it a **genuine +1 Solve** target.
 **Evidence:** `docs/issues/ISSUE_1443_*.md` §"Phase 0" (the convexity note).
 **Decision:** the cold infeasibility is an **emit bug** (Case b), not non-convexity → PROCEED; if the cold LCP stays infeasible after the 3-site fix, continue the trace (still Case b), do **not** REPLAN to warm-start.
 
