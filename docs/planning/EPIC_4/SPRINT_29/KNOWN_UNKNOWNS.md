@@ -178,7 +178,7 @@ Development team (Emit specialist)
 **Verified by:** Task 4 — Date 2026-06-25
 **Findings:** the Sprint-28 Day-4 probe showed **no single `lam_pr` sign×alignment variant zeroes the residual** (best 1.6e4); the `l+1`-aligned transfer is **necessary but not the whole fix** — it must land coherently with the `comp_pr` emission and the (already-landed) `stat_x` cross-term. So the `pr.m`-at-`l+1` transfer is *a* surface, not *the* sole surface.
 **Evidence:** `docs/issues/ISSUE_1443_*.md` §"Phase 0" + §"Day-4 root-cause probe".
-**Decision:** candidate `file:line` = `src/emit/original_symbols.py` (the `--nlp-presolve` `lam_pr.l = abs(pr.m(...))` instance/sign) — **confirmed by the Day-0 trace** across all three sites (PR24).
+**Decision:** candidate `file:line` = `src/emit/original_symbols.py` (the `--nlp-presolve` `lam_pr.l = abs(pr.m(...))` instance/sign) — **to be confirmed by the Day-0 trace** across all three sites (PR24).
 
 ---
 
@@ -471,7 +471,7 @@ Development team (AD/KKT specialist)
 **Verified by:** Task 4 — Date 2026-06-25
 **Findings:** for each runtime-guarded re-emitted constraint `g`, every primal `y` it touches gains `+ sum(g, ∂g/∂y·nu_g)` in `stat_y` (`nu_g` for `=e=`, `lam_g≥0` for `=l=`/`=g=`), with the constraint re-emitted as `g.. sum(<bound>$(<predicate>), <body>)` — and **no quoted-set-name multiplier indices** (the Day-4 `nu_slack("srn")` bug, where `srn` is a set not an element).
 **Evidence:** `docs/issues/ISSUE_1385_*.md` §"Phase 0" (Hand-Derived KKT Shape + Expected Emit Pattern).
-**Decision:** the shape is the `J_gᵀ·lam` cross-term; the exact builder `file:line` (`src/kkt/stationarity.py` + `src/ad/index_mapping.py`) is confirmed by the Day-0 trace.
+**Decision:** the shape is the `J_gᵀ·lam` cross-term; the exact builder `file:line` (`src/kkt/stationarity.py` + `src/ad/index_mapping.py`) is **to be confirmed by the Day-0 trace**.
 
 ---
 
