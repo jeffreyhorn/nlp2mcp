@@ -44,8 +44,8 @@ grep -E "MODEL STATUS|nlp2mcp_obj_val" /tmp/quocge_mcp.lst
 # **** MODEL STATUS      1 Optimal
 # ----    643 PARAMETER nlp2mcp_obj_val      =       25.683
 
-# Compare with NLP:
-gams /Users/jeff/experiments/nlp2mcp/data/gamslib/raw/quocge.gms lo=0
+# Compare with NLP (repo-relative path; listing -> /tmp):
+gams data/gamslib/raw/quocge.gms lo=0 o=/tmp/quocge_nlp.lst ScrDir=/tmp
 # **** MODEL STATUS      2 Locally Optimal
 # **** OBJECTIVE VALUE               25.5085
 ```
