@@ -301,7 +301,7 @@ Development team (Emit / presolve specialist)
 ## Unknown 2.3: Does the general `_fx_`-multiplier warm-start regress any of the Layer-4-unfix presolve models?
 
 ### Priority
-**High** — a sprint-wide presolve-emit change must not regress the presolve models that use the #1449 Layer-4 unfix. **Enumerate that set programmatically** (it may change): `grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms` — currently **otpop/chain/cclinpts/rocket**. (An earlier "13-model" estimate was superseded by this Day-0 grep, which finds the 4 carrying the explicit Layer-4 marker; the regression check additionally covers the full presolve golden set.)
+**High** — a sprint-wide presolve-emit change must not regress the presolve models that use the #1449 Layer-4 unfix. **Enumerate that set programmatically** (it may change): `grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms 2>/dev/null || true` (the `|| true` keeps it empty-set-safe under `set -e`/`pipefail`) — currently **otpop/chain/cclinpts/rocket**. (An earlier "13-model" estimate was superseded by this Day-0 grep, which finds the 4 carrying the explicit Layer-4 marker; the regression check additionally covers the full presolve golden set.)
 
 ### Assumption
 Adding `nu_<var>_fx_<idx>.l = <var>.m(<idx>)` to the presolve emit is byte-stable and solve-stable for the Layer-4-unfix models — the grep-enumerated set above (currently otpop/chain/cclinpts/rocket) plus the full presolve golden set — because it only adds a warm-start that the `_fx_` equation already pins.
@@ -313,7 +313,7 @@ Adding `nu_<var>_fx_<idx>.l = <var>.m(<idx>)` to the presolve emit is byte-stabl
 
 ### How to Verify
 ```bash
-grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms   # the regression-test set (currently otpop/chain/cclinpts/rocket)
+{ grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms 2>/dev/null || true; }   # the regression-test set (currently otpop/chain/cclinpts/rocket); || true = empty-set-safe under set -e/pipefail
 # After the fix: regen all presolve goldens + re-solve the enumerated set; expect byte-stable + solve-stable
 ```
 

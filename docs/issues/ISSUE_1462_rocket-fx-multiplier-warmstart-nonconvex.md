@@ -53,8 +53,9 @@ LAYER4=$( { grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms 2>/dev
           | sed 's|.*/||; s/_mcp_presolve\.gms$//')   # || true + single sed pass; safe under set -e/pipefail and on an empty set
 echo "Layer-4-unfix models: $LAYER4"   # currently: otpop chain cclinpts rocket
 for m in $LAYER4; do
-  .venv/bin/python -m src.cli data/gamslib/raw/$m.gms --nlp-presolve -o /tmp/${m}_p.gms --quiet
-done   # byte/solve-stability must hold across this set (and the full presolve golden set)
+  .venv/bin/python -m src.cli data/gamslib/raw/$m.gms --nlp-presolve -o /tmp/${m}_p.gms --quiet   # re-emit (byte-stability)
+  ( cd /tmp && gams ${m}_p.gms lo=0 )                                                              # re-solve (solve-stability)
+done   # both byte- and solve-stability must hold across this set (and the full presolve golden set)
 ```
 
 - **PROCEED (Case b):** the residual MS 5 is localizable to the `_fx_`-at-`h0` warm-start + the `piL/piU`-at-`h0` bound-complementarity (the #1449 unfix). `max_residual_row = stat_step` rel ≈ 0.5 supports an emit-side residual.

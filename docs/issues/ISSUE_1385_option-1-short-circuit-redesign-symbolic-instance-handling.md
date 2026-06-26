@@ -68,7 +68,7 @@ done
 out=/tmp/<smallest>_mcp.gms
 if [ ! -f "$out" ]; then
   echo "ERROR: $out not emitted (translate failed?)" >&2
-elif grep -E 'nu_\w+\("|lam_\w+\("' "$out"; then
+elif grep -qE 'nu_[[:alnum:]_]+\("|lam_[[:alnum:]_]+\("' "$out"; then
   echo "BUG: set-name multiplier index emitted"
 else
   echo "clean: no set-name multiplier indices"
