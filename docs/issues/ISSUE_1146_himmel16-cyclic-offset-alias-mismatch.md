@@ -97,7 +97,7 @@ stat_area(i)..  nu_areadef(i) - nu_obj2  =E= 0
 
 ### Expected Emit Pattern
 
-`himmel16_mcp.gms` `stat_area(i)` should contain both unit-coefficient multiplier terms (`nu_areadef(i)` and `-nu_obj2`), and the `stat_x`/`stat_y` rows should carry the **wrapped** `areadef` cross-terms at `i++1`/`i--1` (cyclic). (Hypothesis — the actual builder `file:line` confirmed by the Day-0 trace.)
+`himmel16_mcp.gms` `stat_area(i)` should contain both unit-coefficient multiplier terms (`nu_areadef(i)` and `-nu_obj2`), and the `stat_x`/`stat_y` rows should carry the **wrapped** `areadef` cross-terms at `i++1`/`i--1` (cyclic). (Hypothesis — the actual builder `file:line` to be confirmed by the Day-0 trace.)
 
 ### Verification Methodology
 

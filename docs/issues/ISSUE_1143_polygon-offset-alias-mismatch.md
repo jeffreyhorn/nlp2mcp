@@ -103,7 +103,7 @@ A **non-integer** residual (0.492) indicates a *partial* / mis-scaled offset-ali
 
 ### Expected Emit Pattern
 
-`polygon_mcp.gms` `stat_theta(i)` should contain the direct `∂g/∂theta(i)·nu_g` terms **and** the offset-image cross-term contributed by the `ord(j)=ord(i)+1` selection at the predecessor row (the `theta(i)`-as-successor term). (Hypothesis — the actual builder `file:line` confirmed by the Day-0 trace.)
+`polygon_mcp.gms` `stat_theta(i)` should contain the direct `∂g/∂theta(i)·nu_g` terms **and** the offset-image cross-term contributed by the `ord(j)=ord(i)+1` selection at the predecessor row (the `theta(i)`-as-successor term). (Hypothesis — the actual builder `file:line` to be confirmed by the Day-0 trace.)
 
 ### Verification Methodology
 

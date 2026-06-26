@@ -115,7 +115,7 @@ and `stat_c(t)`/`stat_l(t)`/`stat_n(t)` carry the chain-rule through the `(-a2)`
 
 ### Expected Emit Pattern
 
-`hhfair_mcp.gms` `stat_u`/`stat_c`/`stat_l`/`stat_n` should carry the log-derivative product gradient + the CES chain-rule terms, with the `n(tl)` widening confined to `n(0)=0` and **no** spurious unconditioned `n(0)`/`tl`-domain term in the `t`-domain rows. (Hypothesis — confirmed by the Day-0 trace, **after** the residual-emit compile is fixed.)
+`hhfair_mcp.gms` `stat_u`/`stat_c`/`stat_l`/`stat_n` should carry the log-derivative product gradient + the CES chain-rule terms, with the `n(tl)` widening confined to `n(0)=0` and **no** spurious unconditioned `n(0)`/`tl`-domain term in the `t`-domain rows. (Hypothesis — to be confirmed by the Day-0 trace, **after** the residual-emit compile is fixed.)
 
 ### Verification Methodology
 

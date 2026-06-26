@@ -34,7 +34,7 @@ At the NLP optimum the marginal `v.m('h0')` carries the dual of the fixed condit
 
 ### Expected Emit Pattern
 
-`rocket_mcp_presolve.gms` should (1) warm-start **all** `_fx_`-at-`h0` multipliers (`nu_ht_fx_h0.l = ht.m('h0')`, etc.), and (2) **not** leave a `piL/piU` bound-complementarity active at `h0` after the #1449 unfix re-frees the column (the bound dual must transfer or the row be dropped). The `stat_step` row must carry the full per-interval dynamics Jacobian-transpose. (Hypothesis — confirmed by the Day-0 trace.)
+`rocket_mcp_presolve.gms` should (1) warm-start **all** `_fx_`-at-`h0` multipliers (`nu_ht_fx_h0.l = ht.m('h0')`, etc.), and (2) **not** leave a `piL/piU` bound-complementarity active at `h0` after the #1449 unfix re-frees the column (the bound dual must transfer or the row be dropped). The `stat_step` row must carry the full per-interval dynamics Jacobian-transpose. (Hypothesis — to be confirmed by the Day-0 trace.)
 
 ### Verification Methodology
 
@@ -43,7 +43,7 @@ At the NLP optimum the marginal `v.m('h0')` carries the dual of the fixed condit
 # Baseline reproduction: the CURRENT --nlp-presolve emit (it does NOT yet warm-start
 # the _fx_-at-h0 duals — that injection is the proposed fix below; currently MS 5):
 .venv/bin/python -m src.cli data/gamslib/raw/rocket.gms --nlp-presolve -o /tmp/rocket_mcp_presolve.gms --quiet
-( cd /tmp && gams rocket_mcp_presolve.gms lo=0 )   # subshell — currently MS 5; keeps cwd at repo root for the repo-relative greps below
+( cd /tmp && gams rocket_mcp_presolve.gms lo=0 )   # subshell: runs GAMS *from /tmp* (currently MS 5) without changing the outer shell's cwd, so the repo-relative greps below still resolve
 # Warm-start sufficiency probe (the FIX): add `nu_<var>_fx_h0.l = <var>.m('h0')` for
 # ht/v/m to the presolve emit (src/emit/, or hand-edit /tmp/rocket_mcp_presolve.gms),
 # then re-run the GAMS solve above and read MODEL STATUS + objective (Day-13: 1.137 -> 1.016, MS 5 persists).

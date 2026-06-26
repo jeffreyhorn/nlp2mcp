@@ -124,7 +124,7 @@ A `stat_x` residual of **0.780** (identical for sambal/qsambal) indicates a drop
 
 ### Expected Emit Pattern
 
-`sambal_mcp.gms` / `qsambal_mcp.gms` `stat_x(i,j)` should carry the conditioned quadratic gradient **and** the full `rbal`/`cbal` Jacobian-transpose terms, with the `$xw(i,j)` condition preserved on every term. (Hypothesis — confirmed by the Day-0 trace.)
+`sambal_mcp.gms` / `qsambal_mcp.gms` `stat_x(i,j)` should carry the conditioned quadratic gradient **and** the full `rbal`/`cbal` Jacobian-transpose terms, with the `$xw(i,j)` condition preserved on every term. (Hypothesis — to be confirmed by the Day-0 trace.)
 
 ### Verification Methodology
 

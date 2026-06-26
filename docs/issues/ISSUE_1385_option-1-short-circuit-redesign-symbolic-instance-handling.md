@@ -52,7 +52,7 @@ The re-emitted constraint row and its multiplier coupling must land **together**
 
 ### Expected Emit Pattern
 
-`<model>_mcp.gms` should contain (1) the runtime-guarded re-emitted constraint `g.. sum(<bound>$(<predicate>), <body>) …` and (2) the matching `+ sum(g, ∂g/∂y·nu_g)` term in **every** `stat_y` that `g` touches — with **no** quoted-set-name multiplier indices (the Day-4 `nu_slack("srn")` bug). (Hypothesis — confirmed by the Day-0 trace on the chosen smallest target.)
+`<model>_mcp.gms` should contain (1) the runtime-guarded re-emitted constraint `g.. sum(<bound>$(<predicate>), <body>) …` and (2) the matching `+ sum(g, ∂g/∂y·nu_g)` term in **every** `stat_y` that `g` touches — with **no** quoted-set-name multiplier indices (the Day-4 `nu_slack("srn")` bug). (Hypothesis — to be confirmed by the Day-0 trace on the chosen smallest target.)
 
 ### Verification Methodology
 

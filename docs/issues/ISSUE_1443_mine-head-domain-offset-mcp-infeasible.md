@@ -72,7 +72,7 @@ The `stat_x` cross-term formula landed (Sprint 28 Day 4) and is correct against 
 
 ### Expected Emit Pattern
 
-A consistent head-offset index map across **three** sites: (1) `comp_pr` emission, (2) the `--nlp-presolve` dual transfer `lam_pr.l = … pr.m(k,l+1,…)` (head-offset-aligned, sign-checked vs the `nu`-class flip), (3) the `stat_x` cross-term (landed). All three must agree on the `l+1`/`±li`/`±lj` correspondence, and the cold LCP must be feasible (`x ≤ x.up=1`, no `x→4e10` blowup). (Hypothesis — confirmed by the Day-0 trace.)
+A consistent head-offset index map across **three** sites: (1) `comp_pr` emission, (2) the `--nlp-presolve` dual transfer `lam_pr.l = … pr.m(k,l+1,…)` (head-offset-aligned, sign-checked vs the `nu`-class flip), (3) the `stat_x` cross-term (landed). All three must agree on the `l+1`/`±li`/`±lj` correspondence, and the cold LCP must be feasible (`x ≤ x.up=1`, no `x→4e10` blowup). (Hypothesis — to be confirmed by the Day-0 trace.)
 
 ### Verification Methodology
 

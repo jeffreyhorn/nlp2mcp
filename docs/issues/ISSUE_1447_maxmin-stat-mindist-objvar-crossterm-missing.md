@@ -63,7 +63,7 @@ The objective-variable stationarity must carry the **`sum(low, lam_mindist1a)` c
 stat_mindist..  -1 + sum(low(n,nn), lam_mindist1a(n,nn))  =E= 0 ;
 ```
 
-i.e. the bare `-1` gradient **plus** the full `sum(low, lam_mindist1a(low))` term. (Hypothesis — the actual builder `file:line` is confirmed by the Day-0 trace.)
+i.e. the bare `-1` gradient **plus** the full `sum(low, lam_mindist1a(low))` term. (Hypothesis — the actual builder `file:line` is to be confirmed by the Day-0 trace.)
 
 ### Verification Methodology
 
