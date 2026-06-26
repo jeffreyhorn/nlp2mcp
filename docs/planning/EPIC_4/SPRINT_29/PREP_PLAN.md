@@ -403,7 +403,7 @@ For #1462 specifically, the gate is unusual: the fix is *already known* (the `nu
 
 ### Result
 
-**Day-0 harness verdicts:** mine **Case b** `stat_x` 1.33 (convex LP → no Case-c escape → genuine +1 Solve); rocket **Case b** `stat_step` 0.497 (`_fx_` warm-start necessary-but-insufficient, 1.137→1.016, MS5 persists → conditional, Task-5 decision); maxmin **Case b** `stat_mindist` 1.0, himmel16 `stat_area` 2.0, polygon `stat_theta` 0.49 (cold-robustness, Match-neutral). **Cohort sharpened:** quocge **Case b** `stat_pz` 1.0 *but matches cold* (CGE numéraire → Epic 5), prolog **Case a** (healthy, matches), sambal/qsambal **Case b** `stat_x` 0.78 (match warm), **hhfair harness-ERROR** (`$141`/`$257` — residual MCP won't compile; the **only** live +1 Match, verdict gated on the compile fix). #1385 gate is structural (atomic re-emit + cross-terms; no Day-0 harness target). Each gate frames its `file:line` fix-surface as a Day-0 hypothesis (PR24); the REPLAN-prone tracks (#1443, #1462, #1146/#1143) carry an explicit Case-c Sprint-30 REPLAN exit, while the NO-OP / Case-a gates (quocge/prolog/sambal/qsambal) have none by design.
+**Day-0 harness verdicts:** mine **Case b** `stat_x` 1.33 (convex LP → no Case-c escape → genuine +1 Solve); rocket **Case b** `stat_step` 0.497 (`_fx_` warm-start necessary-but-insufficient, 1.137→1.016, MS5 persists → conditional, Task-5 decision); maxmin **Case b** `stat_mindist` 1.0, himmel16 `stat_area` 2.0, polygon `stat_theta` 0.49 (cold-robustness, Match-neutral). **Cohort sharpened:** quocge **Case b** `stat_pz` 1.0 *but matches cold* (CGE numéraire → Epic 5), prolog **Case a** (healthy, matches), sambal/qsambal **Case b** `stat_x` 0.78 (match warm), **hhfair harness-ERROR** (`$141`/`$257` — residual MCP won't compile; the **only** live +1 Match, verdict gated on the compile fix). #1385 gate is structural (atomic re-emit + cross-terms; no Day-0 harness target). Each gate frames its `file:line` fix-surface as a Day-0 hypothesis (PR24); the non-convex / offset-alias tracks #1462 and #1146/#1143 carry an explicit Case-c → Sprint-30 REPLAN exit, **mine (#1443) is a convex LP with no Case-c escape** (its only REPLAN is the Task-5 ≤8h-feasibility call, not a non-convexity branch), and the NO-OP / Case-a gates (quocge/prolog/sambal/qsambal) have none by design.
 
 ### Verification
 
@@ -420,8 +420,10 @@ for f in 1443 1462 1385 1447 1332 1247 1239 1236 1146 1143; do
   grep -lE 'kkt_residual\.py' docs/issues/ISSUE_${f}_*.md 2>/dev/null || echo "MISSING harness ref: $f"
 done
 
-# Each REPLAN-PRONE gate has an explicit Case-c / Sprint-30 REPLAN exit
-# (the NO-OP / Case-a gates — quocge/prolog/sambal/qsambal — have no REPLAN branch by design)
+# Each gate engages the Case-c / Sprint-30 REPLAN framework: #1462 + #1146/#1143
+# carry a live Case-c exit; #1443 (mine) engages it to RULE IT OUT (convex LP, no
+# Case-c escape) + has the Task-5 ≤8h-feasibility REPLAN. The NO-OP / Case-a gates
+# (quocge/prolog/sambal/qsambal) have no REPLAN branch by design.
 grep -liE 'REPLAN|Sprint 30|Case[- ]?c' docs/issues/ISSUE_{1443,1462,1146,1143}_*.md 2>/dev/null
 ```
 

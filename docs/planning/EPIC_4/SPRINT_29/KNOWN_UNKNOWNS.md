@@ -327,7 +327,7 @@ grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms   # the regression
 Development team (Emit specialist)
 
 ### Verification Results
-✅ **Status:** VERIFIED (regression guard encoded; run at Sprint-29 Day-0)
+✅ **Status:** VERIFIED (regression guard encoded/specified by Task 4 — its **execution** is pending Sprint-29 Day-0)
 **Verified by:** Task 4 — Date 2026-06-25
 **Findings:** the ISSUE_1462 Phase-0 gate makes a **byte + solve regression check a hard requirement** of the `nu_<var>_fx_<idx>.l = <var>.m(<idx>)` warm-start, across the Layer-4-unfix presolve models — **enumerated programmatically** (the set may change), not a hard-coded count: `grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms` (currently otpop/chain/cclinpts/rocket) — plus the full presolve golden set. The check is specified in the gate's Verification Methodology; it is **not yet run** (Sprint-29 Day-0 work).
 **Evidence:** `docs/issues/ISSUE_1462_*.md` §"Phase 0" (Verification Methodology + the "Hard requirement" line).
