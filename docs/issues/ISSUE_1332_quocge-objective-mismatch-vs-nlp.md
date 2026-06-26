@@ -39,7 +39,7 @@ but the converged point is not the same as the NLP's local optimum.
 
 ```bash
 .venv/bin/python -m src.cli data/gamslib/raw/quocge.gms -o /tmp/quocge_mcp.gms --quiet
-cd /tmp && gams quocge_mcp.gms lo=0
+gams /tmp/quocge_mcp.gms lo=0 o=/tmp/quocge_mcp.lst   # run from the repo root (emits may $include repo-relative paths); o= -> /tmp
 grep -E "MODEL STATUS|nlp2mcp_obj_val" /tmp/quocge_mcp.lst
 # **** MODEL STATUS      1 Optimal
 # ----    643 PARAMETER nlp2mcp_obj_val      =       25.683
@@ -183,7 +183,7 @@ No emit change is targeted for Sprint 29 (quocge already matches). If pursued, t
 ```bash
 .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/quocge.gms --json /tmp/phase0_quocge.json
 # Cross-check the already-matching objective:
-.venv/bin/python -m src.cli data/gamslib/raw/quocge.gms -o /tmp/quocge_mcp.gms --quiet && cd /tmp && gams quocge_mcp.gms lo=0
+.venv/bin/python -m src.cli data/gamslib/raw/quocge.gms -o /tmp/quocge_mcp.gms --quiet && gams /tmp/quocge_mcp.gms lo=0 o=/tmp/quocge_mcp.lst   # run from the repo root (emits may $include repo-relative paths); o= -> /tmp
 ```
 
 - The harness reports **Case b** (`stat_pz` rel 1.0) — but this is the **CGE numéraire artifact**, not a +Match opportunity; the cold objective already matches (25.6834).

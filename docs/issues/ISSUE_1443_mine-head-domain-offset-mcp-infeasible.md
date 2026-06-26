@@ -79,7 +79,7 @@ A consistent head-offset index map across **three** sites: (1) `comp_pr` emissio
 ```bash
 .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/mine.gms --json /tmp/phase0_mine.json
 # Cold-solve feasibility check (must reach MODEL STATUS 1, x bounded by x.up=1):
-.venv/bin/python -m src.cli data/gamslib/raw/mine.gms -o /tmp/mine_mcp.gms --quiet && cd /tmp && gams mine_mcp.gms lo=0
+.venv/bin/python -m src.cli data/gamslib/raw/mine.gms -o /tmp/mine_mcp.gms --quiet && gams /tmp/mine_mcp.gms lo=0 o=/tmp/mine_mcp.lst   # run from the repo root (emits may $include repo-relative paths); o= -> /tmp
 ```
 
 - **PROCEED (Case b):** `max_residual_row = stat_x(...)`, rel ≈ 1.33 (✅ Day-0); the residual localizes to the head-offset dual-transfer/bound coupling. Because mine is **convex**, Case b is the expected verdict and there is no Case-c alternative.

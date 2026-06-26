@@ -125,7 +125,7 @@ and `stat_c(t)`/`stat_l(t)`/`stat_n(t)` carry the chain-rule through the `(-a2)`
 # 2) If the residual MCP won't compile, warm-start from a pre-solved NLP GDX instead:
 #    gams hhfair.gms gdx=/tmp/hhfair_nlp.gdx ; kkt_residual.py ... --gdx /tmp/hhfair_nlp.gdx
 # 3) Compare the cold MCP objective to the NLP reference (87.159):
-.venv/bin/python -m src.cli data/gamslib/raw/hhfair.gms -o /tmp/hhfair_mcp.gms --quiet && cd /tmp && gams hhfair_mcp.gms lo=0
+.venv/bin/python -m src.cli data/gamslib/raw/hhfair.gms -o /tmp/hhfair_mcp.gms --quiet && gams /tmp/hhfair_mcp.gms lo=0 o=/tmp/hhfair_mcp.lst   # run from the repo root (emits may $include repo-relative paths); o= -> /tmp
 ```
 
 - **PROCEED (Case b):** once the residual MCP compiles, a localizable `stat_*` residual (likely on the CES/product rows) → emit fix.
