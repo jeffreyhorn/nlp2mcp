@@ -43,7 +43,7 @@ At the NLP optimum the marginal `v.m('h0')` carries the dual of the fixed condit
 # Baseline reproduction: the CURRENT --nlp-presolve emit (it does NOT yet warm-start
 # the _fx_-at-h0 duals — that injection is the proposed fix below; currently MS 5):
 .venv/bin/python -m src.cli data/gamslib/raw/rocket.gms --nlp-presolve -o /tmp/rocket_mcp_presolve.gms --quiet
-gams /tmp/rocket_mcp_presolve.gms lo=0 o=/tmp/rocket_mcp_presolve.lst   # run from the REPO ROOT (currently MS 5): the emit's `$include "data/gamslib/raw/rocket.gms"` is repo-relative, so do NOT cd to /tmp; o= puts the listing in /tmp
+gams /tmp/rocket_mcp_presolve.gms lo=0 o=/tmp/rocket_mcp_presolve.lst ScrDir=/tmp   # run from the REPO ROOT (currently MS 5): the emit's `$include "data/gamslib/raw/rocket.gms"` is repo-relative, so do NOT cd to /tmp; o= puts the listing in /tmp
 # Warm-start sufficiency probe (the FIX): add `nu_<var>_fx_h0.l = <var>.m('h0')` for
 # ht/v/m to the presolve emit (src/emit/, or hand-edit /tmp/rocket_mcp_presolve.gms),
 # then re-run the GAMS solve above and read MODEL STATUS + objective (Day-13: 1.137 -> 1.016, MS 5 persists).
@@ -54,7 +54,7 @@ LAYER4=$( { grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms 2>/dev
 echo "Layer-4-unfix models: $LAYER4"   # currently: otpop chain cclinpts rocket
 for m in $LAYER4; do
   .venv/bin/python -m src.cli data/gamslib/raw/$m.gms --nlp-presolve -o /tmp/${m}_p.gms --quiet   # re-emit (byte-stability)
-  gams /tmp/${m}_p.gms lo=0 o=/tmp/${m}_p.lst                                                      # re-solve from REPO ROOT (repo-relative $include); o= -> /tmp
+  gams /tmp/${m}_p.gms lo=0 o=/tmp/${m}_p.lst ScrDir=/tmp                                                      # re-solve from REPO ROOT (repo-relative $include); o= -> /tmp
 done   # both byte- and solve-stability must hold across this set (and the full presolve golden set)
 ```
 
