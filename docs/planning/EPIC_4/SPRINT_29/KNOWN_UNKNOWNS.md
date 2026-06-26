@@ -178,7 +178,7 @@ Development team (Emit specialist)
 **Verified by:** Task 4 — Date 2026-06-25
 **Findings:** the Sprint-28 Day-4 probe showed **no single `lam_pr` sign×alignment variant zeroes the residual** (best 1.6e4); the `l+1`-aligned transfer is **necessary but not the whole fix** — it must land coherently with the `comp_pr` emission and the (already-landed) `stat_x` cross-term. So the `pr.m`-at-`l+1` transfer is *a* surface, not *the* sole surface.
 **Evidence:** `docs/issues/ISSUE_1443_*.md` §"Phase 0" + §"Day-4 root-cause probe".
-**Decision:** candidate `file:line` = `src/emit/original_symbols.py` (the `--nlp-presolve` `lam_pr.l = abs(pr.m(...))` instance/sign) — **to be confirmed by the Day-0 trace** across all three sites (PR24).
+**Decision:** candidate `file:line` = `src/emit/emit_gams.py` `_emit_nlp_presolve` (~line 1281, the `lam_<eq>.l = abs(<eq>.m)` inequality-dual transfer; the `piL/piU` bound-complementarity inits are ~1297/1310) — the instance/sign for `lam_pr` — **to be confirmed by the Day-0 trace** across all three sites (PR24).
 
 ---
 
