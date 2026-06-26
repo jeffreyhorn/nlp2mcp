@@ -420,7 +420,8 @@ for f in 1443 1462 1385 1447 1332 1247 1239 1236 1146 1143; do
   grep -lE 'kkt_residual\.py' docs/issues/ISSUE_${f}_*.md 2>/dev/null || echo "MISSING harness ref: $f"
 done
 
-# Each gate has an explicit Case-c / Sprint-30 REPLAN exit
+# Each REPLAN-PRONE gate has an explicit Case-c / Sprint-30 REPLAN exit
+# (the NO-OP / Case-a gates — quocge/prolog/sambal/qsambal — have no REPLAN branch by design)
 grep -liE 'REPLAN|Sprint 30|Case[- ]?c' docs/issues/ISSUE_{1443,1462,1146,1143}_*.md 2>/dev/null
 ```
 

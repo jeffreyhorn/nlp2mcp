@@ -56,7 +56,7 @@ mine cold MCP → MODEL STATUS 1 with objective matching the NLP (`compare_objec
 
 ## Phase 0: Acceptance Gate
 
-> **Day-0 status (Sprint 29 Prep Task 4, 2026-06-25):** harness verdict **Case b**, `max_residual_row = stat_x('4','1','1')`, rel = **1.333**, dual-transfer consistent. **PROCEED.** Critically, **mine is a convex LP** (Unknown 1.2): its MCP is a well-posed LCP with a **unique** KKT point, so a correct emit MUST cold-solve — there is **no warm-start escape** and **no Case-c exit** (cold infeasibility here *is* the emit bug, not non-convexity). This makes mine a **genuine +1 Solve** target (`model_infeasible → model_optimal`), unlike the non-convex cold-convex cohort.
+> **Day-0 status (Sprint 29 Prep Task 4, 2026-06-25):** harness verdict **Case b**, `max_residual_row = stat_x('4','1','1')`, rel = **1.333**, dual-transfer consistent. **PROCEED.** Critically, **mine is a convex LP** (Unknown 1.3): its MCP is a well-posed LCP with a **unique** KKT point, so a correct emit MUST cold-solve — there is **no warm-start escape** and **no Case-c exit** (cold infeasibility here *is* the emit bug, not non-convexity). This makes mine a **genuine +1 Solve** target (`model_infeasible → model_optimal`), unlike the non-convex cold-convex cohort.
 
 ### Hand-Derived KKT Shape
 
