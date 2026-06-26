@@ -298,30 +298,30 @@ Development team (Emit / presolve specialist)
 
 ---
 
-## Unknown 2.3: Does the general `_fx_`-multiplier warm-start regress any of the 13 Layer-4-unfix presolve models?
+## Unknown 2.3: Does the general `_fx_`-multiplier warm-start regress any of the Layer-4-unfix presolve models?
 
 ### Priority
-**High** — a sprint-wide presolve-emit change must not regress the 13 models that currently use the #1449 Layer-4 unfix.
+**High** — a sprint-wide presolve-emit change must not regress the presolve models that use the #1449 Layer-4 unfix. **Enumerate that set programmatically** (it may change): `grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms` — currently **otpop/chain/cclinpts/rocket**. (An earlier "13-model" estimate was superseded by this Day-0 grep, which finds the 4 carrying the explicit Layer-4 marker; the regression check additionally covers the full presolve golden set.)
 
 ### Assumption
-Adding `nu_<var>_fx_<idx>.l = <var>.m(<idx>)` to the presolve emit is byte-stable and solve-stable for the 13 Layer-4-unfix models (catmix, chain, cclinpts, himmel16, irscge, maxmin, lrgcge, polygon, otpop, moncge, rocket, hhfair, stdcge) — it only adds a warm-start that the `_fx_` equation already pins.
+Adding `nu_<var>_fx_<idx>.l = <var>.m(<idx>)` to the presolve emit is byte-stable and solve-stable for the Layer-4-unfix models — the grep-enumerated set above (currently otpop/chain/cclinpts/rocket) plus the full presolve golden set — because it only adds a warm-start that the `_fx_` equation already pins.
 
 ### Research Questions
-1. Which 13 presolve models carry the Layer-4 unfix block (the regression-test set)?
+1. Which presolve models carry the Layer-4 unfix block (the regression-test set)? — derive from the `grep -l "#1449 (Layer 4)"` enumeration, not a hard-coded roster.
 2. Does the new warm-start change their presolve goldens (byte-diff) or their solve buckets?
 3. Are there `_fx_`-bearing models *outside* the Layer-4 set that also gain the warm-start (broader blast radius)?
 
 ### How to Verify
 ```bash
-grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms
-# After the fix: regen all presolve goldens + re-solve the 13; expect byte-stable + solve-stable
+grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms   # the regression-test set (currently otpop/chain/cclinpts/rocket)
+# After the fix: regen all presolve goldens + re-solve the enumerated set; expect byte-stable + solve-stable
 ```
 
 ### Risk if Wrong
-- A regression in any of the 13 is a net-negative; the change must gate to `_fx_` elements only and preserve the existing pin semantics.
+- A regression in any model in the enumerated Layer-4 set (or the wider presolve golden set) is a net-negative; the change must gate to `_fx_` elements only and preserve the existing pin semantics.
 
 ### Estimated Research Time
-1.5 hours (enumerate the 13 + design the byte/solve regression check)
+1.5 hours (enumerate the set via the grep + design the byte/solve regression check)
 
 ### Owner
 Development team (Emit specialist)
