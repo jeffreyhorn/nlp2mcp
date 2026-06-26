@@ -440,7 +440,7 @@ grep -liE 'REPLAN|Sprint 30|Case[- ]?c' docs/issues/ISSUE_{1443,1462,1146,1143}_
 - [x] Phase 0 gate present in all ten target issue docs (9 existing + new ISSUE_1462)
 - [x] Each gate's fix-surface framed as a Day-0 hypothesis (PR24), not established fact
 - [x] Each gate cites `kkt_residual.py` as the verification method (PR27) — except #1385 (structural; no Day-0 MCP to warm-start), which names the harness as the post-fix verifier
-- [x] Each REPLAN-prone gate (#1443, #1462-residual, #1146/#1143) has an explicit Sprint-30 exit
+- [x] Each REPLAN-prone gate (#1462-residual, #1146/#1143) has an explicit Sprint-30 exit; #1443 (mine, convex) rules out Case c and carries only the Task-5 ≤8h-feasibility call (no Sprint-30 branch)
 - [x] #1462's gate distinguishes the known warm-start from the residual non-convex question
 - [x] Cohort gates pull the Case-b leads from the Task-3 partition
 - [x] Unknowns 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.2, 6.1, 7.1, 7.2 verified and updated in KNOWN_UNKNOWNS.md
