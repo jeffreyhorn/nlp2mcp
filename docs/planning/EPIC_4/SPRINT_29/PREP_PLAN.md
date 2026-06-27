@@ -460,7 +460,7 @@ grep -liE 'REPLAN|Sprint 30|Case[- ]?c' docs/issues/ISSUE_{1443,1462,1146,1143}_
 
 ### Objective
 
-Apply the PR16 hypothesis-validation methodology to the three Sprint 29 tracks most likely to prove multi-bug or architectural — #1443 mine (deeper cold-infeasible complementarity/bound coupling beyond the head-offset dual-transfer), #1462 rocket (residual non-convex convergence beyond the `_fx_` warm-start), and Priority 7's AD-engine #1111/#1112 (offset-alias gradient possibly requiring an alias-aware-differentiation redesign) — and pin an explicit PROCEED/REPLAN signal and Sprint 30 exit for each.
+Apply the PR16 hypothesis-validation methodology to the three Sprint 29 tracks most likely to prove multi-bug or architectural — #1443 mine (a distributed multi-site head-offset re-derivation beyond the single dual-transfer surface — architectural, **not** non-convex, since mine is a convex LP), #1462 rocket (residual non-convex convergence beyond the `_fx_` warm-start), and Priority 7's AD-engine #1111/#1112 (offset-alias gradient possibly requiring an alias-aware-differentiation redesign) — and pin an explicit PROCEED/REPLAN signal and Sprint 30 exit for each.
 
 ### Why This Matters
 
@@ -479,7 +479,7 @@ Sprint 28's lower-effort bound assumed the diagnosis-heavy tracks partially slip
 ### What Needs to Be Done
 
 1. **For each of the three tracks**, state the architectural hypothesis, the single-model validation experiment (the Day-0 `kkt_residual.py` trace + any quick prototype-then-revert probe), the PROCEED signal, the REPLAN signal, and the Sprint 30 exit scope.
-2. **#1443:** PROCEED if the max-residual row is the head-offset dual-transfer (localizable, Case b); REPLAN to Sprint 30 if the residual is distributed across `comp_*`/bound rows (deeper coupling, Case c) — file the re-scoped diagnosis.
+2. **#1443:** PROCEED if the cold-INFES is dominated by the head-offset dual-transfer / `stat_x` rows (localizable, single-site); REPLAN to Sprint 30 if it is distributed across `comp_*`/bound rows (a **distributed multi-site head-offset re-derivation — architectural, NOT non-convex Case-c, since mine is a convex LP / monotone LCP with no Case-c escape**) — file the re-scoped diagnosis.
 3. **#1462:** PROCEED if, after the `nu_*_fx_h0` warm-start, the residual MS-5 is the localizable `piL/piU`-at-`h0` activation; REPLAN if the non-convex convergence is intrinsic (warm-start lands near-optimal but PATH still diverges) — hand to Sprint 30 forcing strategies.
 4. **#1111/#1112 (P7):** PROCEED if himmel16/polygon offset-alias gradients are a localized AD cross-term correction (property-test-guardable); REPLAN if the fix requires the alias-aware-differentiation / dollar-condition-propagation redesign (architectural) — file the Sprint-30 AD-engine track.
 5. **Budget reallocation plan:** for each REPLAN, specify which lower-risk priority absorbs the freed budget (e.g., #1443 REPLAN → more cold-convex Case-b fixes; P7 REPLAN → objective-mismatch cohort depth).
