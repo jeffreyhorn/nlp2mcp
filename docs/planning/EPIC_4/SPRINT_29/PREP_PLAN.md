@@ -449,9 +449,10 @@ grep -liE 'REPLAN|Sprint 30|Case[- ]?c' docs/issues/ISSUE_{1443,1462,1146,1143}_
 
 ## Task 5: Diagnosis-Heavy / REPLAN-Prone Track Risk Assessment (#1443, #1462, #1111/#1112; PR16)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
 **Estimated Time:** 3–5 hours
+**Completed:** 2026-06-26
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 4
@@ -485,11 +486,12 @@ Sprint 28's lower-effort bound assumed the diagnosis-heavy tracks partially slip
 
 ### Changes
 
-To be completed.
+- Authored `docs/planning/EPIC_4/SPRINT_29/REPLAN_RISK_ASSESSMENT.md` — 3 tracks (mine #1443, rocket #1462, offset-alias #1111/#1112), each with the decision pivot, a Day-0 single-model validation design (PR16, zero `src/` diff), PROCEED/REPLAN signals, a Sprint-30 exit, and a budget-reallocation plan; plus a Budget-at-Risk tally and verification block (mirrors the Sprint-28 `PRIORITY_4_5_6_REPLAN_RISK_ASSESSMENT.md` template).
+- Finalized KNOWN_UNKNOWNS Unknowns 1.1, 2.2, 7.2 (Task-4 "decision finalized by Task 5" → pinned Task-5 decision) and resolved 7.4 (the #1111/#1112 footprint survey).
 
 ### Result
 
-To be completed.
+**All three REPLAN-prone tracks pinned:** **#1443 mine** — conditional, *lean REPLAN-aware* (convex ⇒ no Case-c; the question is single-site vs distributed multi-site head-offset re-derivation; Day-4's 49-INFES/22-of-30-systemic evidence leans REPLAN → frees ~10–16h to Priority-4). **#1462 rocket** — conditional, *lean REPLAN-aware* (the general `_fx_` warm-start lands either way as presolve robustness; only rocket's +1 Solve/+1 Match is at risk on the intrinsic-non-convergence Case-c → frees ~4–8h to Priority-6 hhfair). **#1111/#1112 offset-alias** — PROCEED-with-condition, *lean PROCEED* (single-row integer-residual signature is localizable; needs a new property-test fixture; REPLAN only if the fix must thread the alias-aware-AD core → frees ~12–18h). **Budget-at-risk ≈ 30–48h; Solve ≥ 109 is the most REPLAN-sensitive KPI (needs both mine + rocket PROCEED); Match ≥ 92 is robust (the cold-convex/offset-alias work is genuine-floor, not as-measured Match).** #1111/#1112 footprint is small (3 open issues: #1146/#1143/#1162) → Sprint-30 candidate, not Epic-5.
 
 ### Verification
 
@@ -516,13 +518,13 @@ grep -iE 'Sprint 30|budget reallocat|absorb' docs/planning/EPIC_4/SPRINT_29/REPL
 
 ### Acceptance Criteria
 
-- [ ] Risk assessment created covering #1443, #1462, #1111/#1112
-- [ ] Each track has an architectural hypothesis + single-model validation experiment
-- [ ] Each track has explicit PROCEED and REPLAN signals tied to the harness verdict
-- [ ] Each track has a Sprint 30 exit scope (the re-scoped filing)
-- [ ] Budget-reallocation plan specified per REPLAN
-- [ ] Feeds the Task-10 schedule's slack allocation and fallback ordering
-- [ ] Unknowns 1.1, 2.2, 7.2, 7.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Risk assessment created covering #1443, #1462, #1111/#1112
+- [x] Each track has an architectural hypothesis + single-model validation experiment
+- [x] Each track has explicit PROCEED and REPLAN signals tied to the harness verdict
+- [x] Each track has a Sprint 30 exit scope (the re-scoped filing)
+- [x] Budget-reallocation plan specified per REPLAN
+- [x] Feeds the Task-10 schedule's slack allocation and fallback ordering (the Budget-at-Risk tally)
+- [x] Unknowns 1.1, 2.2, 7.2, 7.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
