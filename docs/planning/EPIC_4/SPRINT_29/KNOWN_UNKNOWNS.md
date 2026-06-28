@@ -1023,7 +1023,11 @@ test -f scripts/sprint_audit/changed_emit_artifacts.py && echo "diff tool presen
 Development team (Tooling / sprint planning)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — minutes, not hours (fits the checkpoint budget)
+**Verified by:** Task 8 (Checkpoint Re-Solve design) — Date 2026-06-27
+**Findings:** the MCP-solve wall-clock (committed DB `mcp_solve.solve_time_seconds`, 115 solved models) is **median 0.71 s / mean 1.88 s**, and a **full re-solve of all 115 models is 216 s (3.6 min)**. No in-scope model's MCP solve exceeds ~14 s (lmp2 14.2 s is the slowest; the only >30 s entries are out-of-scope `ps*`). A typical emit-change PR touches a handful of goldens (Sprint-28 blast radii 1–16), so the changed-set re-solve is **~10–20 s typical, ~140 s worst-case (16 slowest in-scope)**. The "ganges ~8 min / clearlak slow" concern is **translate/parse** time, **not** the MCP solve — `--resolve-changed` re-solves the committed golden (solve-only), sidestepping it.
+**Evidence:** `docs/planning/EPIC_4/SPRINT_29/PRIORITY_8_CHECKPOINT_RESOLVE_DESIGN.md` §A.3 (the per-model timing table + the reproduce snippet).
+**Decision:** the checkpoint re-solve **fits the Day-5/Day-10 budget with no backgrounding**. `--resolve-changed --since-commit <Day-0 SHA>` (at-risk list = `changed_emit_artifacts.py`) with the GO/NO-GO criterion (any changed-golden model regressed → investigate) — see §A.4.
 
 ---
 
