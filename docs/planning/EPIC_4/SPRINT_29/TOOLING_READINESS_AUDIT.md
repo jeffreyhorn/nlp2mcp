@@ -51,7 +51,7 @@ The detector's DB-reference + hard-fail-only-on-abort/infeasible-embedded logic 
 - **Golden-staleness allowlist** (`scripts/sprint_audit/golden_staleness_allowlist.txt`): **7 entries, all still valid** — 3 multi-solve drivers (danwolfe, decomp, saras) + 3 discrete MIP/MINLP (nemhaus, nonsharp, trnspwl) + **indus** (cross-platform byte non-determinism, #1461). Matches the "6 out-of-scope + indus" expectation; no Sprint-28 fix made any of them in-scope again.
 - **Presolve-divergence allowlist** (`scripts/diagnostics/presolve_divergence_allowlist.txt`): **1 entry — korcge** (#1439, embedded `$include` `EXECERROR=5`).
 - **Issue states:** **#1439 (korcge) OPEN** and **#1461 (indus) OPEN** — both allowlist entries are still tracking live deferred bugs, so neither should be removed.
-- **`changed_emit_artifacts.py`** is the **right Task-8 checkpoint re-solve input:** `--since-commit <Sprint-29-Day-0-SHA>` groups every changed `*_mcp.gms` / `*_mcp_presolve.gms` by triggering commit (with `--format json`/`markdown` for downstream tooling) — exactly the at-risk-golden list the Day-5/Day-10 re-solve consumes.
+- **`changed_emit_artifacts.py`** is the **right Task-8 checkpoint re-solve input:** `--since-commit <Day-0 SHA>` groups every changed `*_mcp.gms` / `*_mcp_presolve.gms` by triggering commit (with `--format json`/`markdown` for downstream tooling) — exactly the at-risk-golden list the Day-5/Day-10 re-solve consumes.
 
 **Readiness: ✅ READY — no extension.** Allowlists current; the changed-golden diff is the Task-8 input.
 
