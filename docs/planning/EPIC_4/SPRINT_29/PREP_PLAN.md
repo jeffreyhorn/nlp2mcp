@@ -611,9 +611,10 @@ grep -iE 'extension|no extensions|gap' docs/planning/EPIC_4/SPRINT_29/TOOLING_RE
 
 ## Task 7: camcge → Epic 5 Scoping Pre-Work (Priority 5)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Medium
 **Estimated Time:** 3–4 hours
+**Completed:** 2026-06-27
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
@@ -643,11 +644,12 @@ Priority 5 is explicitly a *no-`src/`* Epic-5 hand-off — the Sprint 28 Day-11 
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_5/` + stubbed `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` — the camcge Walras-degeneracy diagnosis (§1), the CGE-cohort shared-vs-distinct survey (§2), the named numéraire-fix + redundant-row transformation with a solution-preservation argument (§3), the nlp2mcp/Epic-5 scope boundary (§4), and open questions (§5).
+- Verified KNOWN_UNKNOWNS Unknowns 5.1, 5.2, 5.3 (all INCOMPLETE → VERIFIED).
 
 ### Result
 
-To be completed.
+**Key finding — the CGE-cohort assumption is INVERTED (distinct, not shared), which narrows the Epic-5 scope to a single transformation.** Only **#1330 camcge** is the inherent structural Walras singularity (`equil`+`lmequil` linearly dependent given budget balance, no price numéraire → singular Jacobian, MS-4 at iteration 0); the other "cohort" issues are **distinct, ordinary emit bugs** that stay in nlp2mcp backlog — #1354/#1355 (phantom-IndexOffset `$141`), #1317 (Pattern-C alias sum), #1331/#1251 (empty-equation MCP pairing). The named transformation (drop one redundant market-clearing row + fix a price numéraire) is **solution-preserving on paper** (Walras' law makes one row redundant; price homogeneity makes the numéraire a free selection → reproduces camcge's NLP optimum 191.7346), though the row/numéraire choice is per-model. **#1330 → Epic 5; Priority 5 = write-up only, no Sprint-29 `src/`.**
 
 ### Verification
 
@@ -672,12 +674,12 @@ grep -iE 'walras|numéraire|numeraire|redundant.*row|singular' docs/planning/EPI
 
 ### Acceptance Criteria
 
-- [ ] Epic 5 scoping doc stub created with the camcge Walras-degeneracy diagnosis
-- [ ] CGE cohort surveyed (shared vs distinct degeneracies)
-- [ ] Proposed transformation named with a solution-preservation argument
-- [ ] #1330 confirmed moved to Epic 5 (no Sprint-29 `src/`)
-- [ ] In-sprint Priority 5 scoped to write-up only
-- [ ] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Epic 5 scoping doc stub created with the camcge Walras-degeneracy diagnosis
+- [x] CGE cohort surveyed (shared vs distinct degeneracies)
+- [x] Proposed transformation named with a solution-preservation argument
+- [x] #1330 confirmed moved to Epic 5 (no Sprint-29 `src/`)
+- [x] In-sprint Priority 5 scoped to write-up only
+- [x] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
