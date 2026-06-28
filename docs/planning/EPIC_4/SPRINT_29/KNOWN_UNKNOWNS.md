@@ -179,6 +179,7 @@ Development team (Emit specialist)
 **Findings:** the Sprint-28 Day-4 probe showed **no single `lam_pr` sign×alignment variant zeroes the residual** (best 1.6e4); the `l+1`-aligned transfer is **necessary but not the whole fix** — it must land coherently with the `comp_pr` emission and the (already-landed) `stat_x` cross-term. So the `pr.m`-at-`l+1` transfer is *a* surface, not *the* sole surface.
 **Evidence:** `docs/issues/ISSUE_1443_*.md` §"Phase 0" + §"Day-4 root-cause probe".
 **Decision:** candidate `file:line` = `src/emit/emit_gams.py` `_emit_nlp_presolve` (~line 1281, the `lam_<eq>.l = abs(<eq>.m)` inequality-dual transfer; the `piL/piU` bound-complementarity inits are ~1297/1310) — the instance/sign for `lam_pr` — **to be confirmed by the Day-0 trace** across all three sites (PR24).
+**Task-6 tooling confirmation (2026-06-27):** the harness reads mine's `lam_pr` transfer as **CONSISTENT** (the head-offset multiplier needs no harness special-casing — Unknown 2.4), so the Day-0 trace runs on a reliable instrument. See `docs/planning/EPIC_4/SPRINT_29/TOOLING_READINESS_AUDIT.md` Tool 1.
 
 ---
 
@@ -363,7 +364,11 @@ The Sprint-28 KKT-residual harness's dual-transfer self-check, validated on the 
 Development team (Tooling)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — handled correctly, no extension
+**Verified by:** Task 6 (Tooling Readiness Audit) — Date 2026-06-27
+**Findings:** the harness dual-transfer self-check reports **CONSISTENT** on both new-multiplier-class carryforwards — **rocket** (presolve `_fx_` multipliers `nu_<var>_fx_<idx>`) and **mine** (head-domain-offset `lam_pr` at the `l+1` lead). The `--nlp-presolve` emit loads all multiplier classes into the MCP warm-start uniformly (the `_fx_` equations are ordinary equality rows from the harness's view), so no special-casing is needed; the per-row residuals the harness reads are trustworthy. Same answer for the head-offset case (Q3 / Unknown 1.2).
+**Evidence:** `kkt_residual.py data/gamslib/raw/{rocket,mine}.gms` → `dual transfer: CONSISTENT`; `docs/planning/EPIC_4/SPRINT_29/TOOLING_READINESS_AUDIT.md` Tool 1.
+**Decision:** **no Day-0 harness extension needed** — the Category 1/2 Day-0 verdicts are reliable.
 
 ---
 
@@ -636,6 +641,7 @@ Development team (Tooling)
 **Date:** 2026-06-24
 **Findings:** `check_presolve_divergence.py --model <m>` on the sample (maxmin, catmix, himmel16, polygon): **no hard embedded-NLP divergence** (no abort / infeasible-embedded) on any. Only informational `OBJ-GAP` flags — himmel16 (embedded 0.674 vs ref 0.675, rel 0.001) + polygon (0.516 vs 0.7797, rel 0.264), both labeled "possibly a benign non-convex local optimum; review", **not** hard-fail.
 **Decision:** the detector correctly **soft-classifies** the cold-convex cohort — it will **not flood** the Day-5/Day-10 checkpoints with false hard-fails. No allowlist extension or tolerance tweak needed for the sampled models.
+**Task-6 re-confirmation (2026-06-27):** re-ran the detector on maxmin + catmix (cohort) + **rocket** (#1462) — all soft (rocket = informational `obj_gap`, embedded 1.0 vs ref 1.0128; **no hard-fail, no allowlist entry needed** since the embedded NLP solves and only the MCP is MS-5). See `docs/planning/EPIC_4/SPRINT_29/TOOLING_READINESS_AUDIT.md` Tool 2.
 
 ---
 
@@ -1111,7 +1117,11 @@ cat scripts/diagnostics/presolve_divergence_allowlist.txt
 Development team (Tooling)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — both allowlists current
+**Verified by:** Task 6 (Tooling Readiness Audit) — Date 2026-06-27
+**Findings:** the **golden-staleness allowlist** has exactly **7 entries, all still valid** — 3 multi-solve drivers (danwolfe, decomp, saras) + 3 discrete MIP/MINLP (nemhaus, nonsharp, trnspwl) + **indus** (#1461 cross-platform non-determinism) = the "6 out-of-scope + indus" set; no Sprint-28 fix made any in-scope again. The **presolve-divergence allowlist** is **1 entry — korcge** (#1439). Both tracking issues are still **OPEN** (#1439 korcge `EXECERROR=5`; #1461 indus cross-platform byte-diff), so neither entry should be removed.
+**Evidence:** `cat scripts/sprint_audit/golden_staleness_allowlist.txt` (7 ids) + `cat scripts/diagnostics/presolve_divergence_allowlist.txt` (korcge); `gh issue view 1439/1461` → both OPEN; `TOOLING_READINESS_AUDIT.md` Tool 3.
+**Decision:** **no allowlist edit needed at Day 0.** `changed_emit_artifacts.py --since-commit <Day-0 SHA>` is confirmed as the Task-8 checkpoint re-solve input.
 
 ---
 
