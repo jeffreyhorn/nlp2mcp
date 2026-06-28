@@ -673,7 +673,11 @@ For each cohort model, read the PATH basis-singularity report + the harness Case
 Development team (CGE / Epic-5 scoping)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — assumption **INVERTED** (distinct, not shared)
+**Verified by:** Task 7 (camcge → Epic 5 scoping) — Date 2026-06-27
+**Findings:** the cohort does **not** uniformly share camcge's Walras degeneracy. Only **#1330 camcge** is the inherent structural Walras singularity (`equil`+`lmequil` linearly dependent, no numéraire → singular Jacobian, MS-4 at iter 0). The rest are **distinct, ordinary emit/AD bugs**: #1354 camcge + #1355 cesam2 = phantom-IndexOffset `$141` compile errors (Pattern-C family); #1317 twocge = Pattern-C alias-sum mis-emit; #1331 + #1251 twocge = empty-equation MCP pairing (`$(ord(r)<>ord(rr))` → `0=0` self-region, multipliers not fixed, EXECERROR=8); #1070 prolog = CES singular-Jacobian conditioning (largely resolved — prolog now matches, Case-a).
+**Evidence:** the per-issue diagnoses in `docs/issues/ISSUE_{1330,1354,1355,1331,1251,1070}_*.md` + #1317 GitHub; `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` §2.
+**Decision:** the Epic-5 scoping doc covers **one** transformation (the camcge Walras redundancy + numéraire), **not several** — the scope is *narrower* than assumed. The distinct emit bugs (#1354/#1355/#1317/#1331/#1251) stay in nlp2mcp backlog as ordinary emit fixes.
 
 ---
 
@@ -703,7 +707,11 @@ Paper derivation against camcge's NLP optimum (191.7346) — show the dropped ro
 Development team (CGE / Epic-5 scoping)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — solution-preserving on paper (camcge)
+**Verified by:** Task 7 (camcge → Epic 5 scoping) — Date 2026-06-27
+**Findings:** the transformation preserves the economic solution by two standard CGE arguments. **(1) Redundancy:** by Walras' law `∑_i p_i·g_i + w·h ≡ B` (market-clearing weighted by prices ≡ budget balance), so given `B=0` and all-but-one market clearing, the dropped row (`lmequil` or one `equil`) follows automatically — dropping it loses no constraint and removes the rank-deficiency. **(2) Numéraire:** CGE conditions are homogeneous of degree 0 in prices, so equilibria form a ray `{λ·p*}` with identical real quantities; fixing one price selects a representative without perturbing the allocation. Choosing the numéraire consistent with camcge's NLP optimum reproduces obj **191.7346** exactly (a *selection*, not a *perturbation*).
+**Evidence:** `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` §3 (paper derivation).
+**Decision:** the transformation is solution-preserving on paper; **which row is redundant + which price is numéraire is per-model** (not a single hard-coded rule). Empirical confirmation (drop-`lmequil` + fix-`cpi=1` → MS-1 at 191.7346 in GAMS) is an Epic-5 open question (§5 Q3).
 
 ---
 
@@ -732,7 +740,11 @@ Document the boundary in the Epic-5 scoping doc with the rationale (Sprint 28 Da
 Development team (Epic-5 scoping)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — boundary set, with a sliver kept in nlp2mcp
+**Verified by:** Task 7 (camcge → Epic 5 scoping) — Date 2026-06-27
+**Findings:** the boundary is *faithful KKT emission of the user's model* = **nlp2mcp** vs *recognising + resolving an inherent economic-equilibrium rank-deficiency* = **Epic 5**. The Walras-redundancy elimination + numéraire selection requires model-class awareness (market-clearing/budget structure, redundant-row choice, numéraire pick) — Epic-5 CGE-aware preprocessing, invoked only for Walras-degenerate models (nlp2mcp must **not** silently drop a user equation or fix a price, which would change a non-degenerate problem). **Sliver kept in nlp2mcp (Q1 — yes, a general improvement exists):** the *distinct* cohort emit bugs — phantom-IndexOffset `$141` (#1354/#1355), Pattern-C alias-sum (#1317), and **empty-equation multiplier pairing** (#1331/#1251, fixing the multiplier of a structurally-empty `$`-conditioned equation) — are general nlp2mcp emit fixes, not Epic 5.
+**Evidence:** `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` §4; the Sprint-28 Day-11 Task-6 gate ("no general emit fix exists" for camcge's singularity).
+**Decision:** **#1330 camcge → Epic 5** (structural transformation, no Sprint-29 `src/`); Priority 5 = the scoping write-up only. The empty-equation/phantom-offset emit bugs stay in nlp2mcp backlog.
 
 ---
 
