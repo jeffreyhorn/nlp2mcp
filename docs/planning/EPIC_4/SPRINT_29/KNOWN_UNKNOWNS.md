@@ -130,11 +130,11 @@ Cross-check the cold solve INFES rows against the localized row.
 Development team (AD/KKT specialist)
 
 ### Verification Results
-✅ **Status:** VERIFIED (fix-surface framed as a Day-0 hypothesis; PROCEED/REPLAN *decision* finalized by Task 5)
-**Verified by:** Task 4 (Phase 0 gates) — Date 2026-06-25
-**Findings:** harness verdict **Case b**, `max_residual_row = stat_x('4','1','1')`, rel = **1.333**, dual-transfer consistent. The residual localizes to the **head-domain-offset dual-transfer** (the `pr.m`-at-`l+1` instance + the `±li/±lj` parameter-offset inversion + the bound complementarity), a 3-site emit problem. Because mine is a **convex LP** (Unknown 1.3) there is **no Case-c exit** — cold infeasibility *is* the emit bug.
-**Evidence:** `docs/issues/ISSUE_1443_*.md` §"Phase 0: Acceptance Gate".
-**Decision:** **PROCEED** (genuine +1 Solve, `model_infeasible → model_optimal`). The ≤8h-feasibility of the 3-site re-derivation is finalized by Task 5 (the Day-4 time-box flagged it multi-site).
+✅ **Status:** VERIFIED — Task-5 REPLAN decision pinned
+**Verified by:** Task 4 (Phase 0 gates, 2026-06-25) + Task 5 (REPLAN risk assessment, 2026-06-26)
+**Findings:** harness verdict **Case b**, `max_residual_row = stat_x('4','1','1')`, rel = **1.333**, dual-transfer consistent. The residual localizes to the **head-domain-offset dual-transfer** (the `pr.m`-at-`l+1` instance + the `±li/±lj` parameter-offset inversion + the bound complementarity), a 3-site emit problem. Because mine is a **convex LP** (Unknown 1.3) there is **no Case-c exit** — cold infeasibility *is* the emit bug; the REPLAN question is **budget/architecture (single-site vs distributed multi-site re-derivation)**, not Case-b-vs-Case-c.
+**Evidence:** `docs/issues/ISSUE_1443_*.md` §"Phase 0: Acceptance Gate"; `docs/planning/EPIC_4/SPRINT_29/REPLAN_RISK_ASSESSMENT.md` Track A.
+**Decision (Task 5, 2026-06-26):** **conditional — lean REPLAN-aware.** PROCEED to the Sprint-29 fix only if the Day-0 cold-INFES is `stat_x`/`pr`-dominated **and** a coordinated 3-site index-map drives the cold LCP to MS-1 within ~10–16h; **REPLAN to Sprint 30** (a head-domain-offset emit-architecture workstream) if the 49 INFES are distributed across `comp_*`/bound rows or each fixed site only exposes the next. Prior leans REPLAN (Day-4: 49 INFES/5 row types, 22/30 `stat_x` systemic, no single-tweak fix). REPLAN frees ~10–16h → Priority-4 cold-convex Case-b.
 **Partial findings (Task 2, 2026-06-24):** mine is **`model_infeasible`** (compare `not_tested`) at Day 0 — confirmed still in its gating bucket. The Case-b (head-offset dual-transfer) vs Case-c (deeper coupling) verdict is the Task-4/5 harness trace.
 
 ---
@@ -290,11 +290,11 @@ grep -nF -e "Layer 4" -e ".lo('h0')" -e "piL_v" -e "comp_lo_v" data/gamslib/mcp/
 Development team (Emit / presolve specialist)
 
 ### Verification Results
-✅ **Status:** VERIFIED (framed as a Day-0 hypothesis; decision finalized by Task 5)
-**Verified by:** Task 4 — Date 2026-06-25
+✅ **Status:** VERIFIED — Task-5 REPLAN decision pinned
+**Verified by:** Task 4 (2026-06-25) + Task 5 (2026-06-26)
 **Findings:** harness **Case b** on `stat_step` (0.497) ⇒ an emit-side residual exists, consistent with the `piL/piU`-at-`h0` bound-complementarity introduced by the #1449 Layer-4 unfix. But rocket is **non-convex**, so the Case-c exit (intrinsic non-convergence beyond the warm-start) is live and cannot be ruled out at Day-0.
-**Evidence:** `docs/issues/ISSUE_1462_*.md` §"Phase 0".
-**Decision:** **CONDITIONAL PROCEED** — PROCEED if the residual MS-5 resolves to the localizable `piL/piU`-at-`h0` emit/warm-start fix; **REPLAN to Sprint 30 forcing** if MS-5 persists with a clean residual after a complete `_fx_` warm-start + bound fix. Finalized by Task 5.
+**Evidence:** `docs/issues/ISSUE_1462_*.md` §"Phase 0"; `docs/planning/EPIC_4/SPRINT_29/REPLAN_RISK_ASSESSMENT.md` Track B.
+**Decision (Task 5, 2026-06-26):** **conditional — lean REPLAN-aware.** Validation = complete the `_fx_` warm-start for all of ht/v/m (B2) **and** suppress the degenerate-bound Layer-4 unfix where the fixed value equals the relaxed bound (B3). **PROCEED** if B2+B3 reach MS-1 with `compare_objective_match`; **REPLAN to Sprint 30 forcing** (trust-region / homotopy / multi-start) if MS-5 persists with a clean residual. **The general `_fx_`-multiplier warm-start (sprint-wide presolve robustness) lands either way — only rocket's +1 Solve/+1 Match is at risk.** REPLAN frees ~4–8h → Priority-6 hhfair.
 
 ---
 
@@ -900,11 +900,11 @@ Prototype-then-revert a localized cross-term correction; if it fixes himmel16/po
 Development team (AD specialist)
 
 ### Verification Results
-✅ **Status:** VERIFIED (framed; decision finalized by Task 5)
-**Verified by:** Task 4 — Date 2026-06-25
-**Findings:** the harness localizes both himmel16 and polygon to a **single `stat_*` row** (Case b, integer/partial residual), which suggests a **localized cross-term correction** is viable rather than a full #1111/#1112 AD-engine redesign. Whether that localized fix **generalizes** to the broader offset-alias-AD architecture (#1111/#1112) is the open question; a **property-test fixture** for the offset-alias shape is required either way.
-**Evidence:** the Phase-0 gates in `docs/issues/ISSUE_{1146,1143}_*.md` (the property-test-fixture requirement).
-**Decision:** attempt the localized cross-term fix first; the localized-vs-architecture call is finalized by **Task 5**.
+✅ **Status:** VERIFIED — Task-5 REPLAN decision pinned
+**Verified by:** Task 4 (2026-06-25) + Task 5 (2026-06-26)
+**Findings:** the harness localizes both himmel16 and polygon to a **single `stat_*` row** (Case b — himmel16 `stat_area` rel **2.000**, polygon `stat_theta` rel **0.492**), and the integer residual (2.0) is the fingerprint of a *missing unit-coefficient cross-term* — a **localizable** signature. Both route through `src/ad/derivative_rules.py` (`_partial_collapse_sum`, `_diff_varref` `circular=True`) + `src/kkt/stationarity.py` (`_replace_indices_in_expr`). The fix is **Match-neutral cold-robustness** (both already match warm) → genuine-floor lift, not headline Match.
+**Evidence:** the Phase-0 gates in `docs/issues/ISSUE_{1146,1143}_*.md`; `docs/planning/EPIC_4/SPRINT_29/REPLAN_RISK_ASSESSMENT.md` Track C.
+**Decision (Task 5, 2026-06-26):** **PROCEED-with-condition (lean PROCEED).** Validation = a prototype-then-revert localized cross-term correction for the cyclic/successor shape only. **PROCEED** if it drives himmel16+polygon residual→0 **without** touching the #1111 alias-aware-differentiation core or requiring #1112 dollar-condition propagation, with a contained blast radius — **requires a new offset-alias property-test fixture (Unknown 7.3)**. **REPLAN to Sprint 30 / Epic 5** (the AD-engine architecture track) if the correction must thread the #1111/#1112 core. REPLAN frees ~12–18h → Priority-6 cohort + Priority-4 Case-b.
 
 ---
 
@@ -966,7 +966,11 @@ Survey the open AD/KKT cross-term issues for #1111/#1112 dependencies; record in
 Development team (AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — #1111/#1112 footprint is small and contained
+**Verified by:** Task 5 (issue-dependency survey) — Date 2026-06-26
+**Findings:** the AD-engine architectural backstop has a **small, contained footprint**: **3 open issues trace to #1111** (alias-aware differentiation) — **#1146 himmel16, #1143 polygon, #1162** — and **#1112** (dollar-condition propagation) backs the conditioned-sum cases (e.g. sambal/qsambal #1239's `$xw(i,j)`; the qabel/abel #1137 alias family is the historical relative). It is **not** a sprawling Epic-5 necessity.
+**Evidence:** `grep -rlE "#111[12]" docs/issues/ISSUE_*.md` → #1146, #1143 (both #1111+#1112), #1162 (#1111); `docs/planning/EPIC_4/SPRINT_29/REPLAN_RISK_ASSESSMENT.md` Track C.
+**Decision:** the #1111/#1112 redesign is a **Sprint-30 candidate, not an Epic-5 item**, scoped *only if* the Unknown-7.2 localized fix fails. Because the offset-alias residuals are single-row integer-signature (localizable), PROCEED is the more likely outcome and the architecture track likely stays a forward-scoped backlog item.
 
 ---
 
