@@ -685,9 +685,10 @@ grep -iE 'walras|numéraire|numeraire|redundant.*row|singular' docs/planning/EPI
 
 ## Task 8: Checkpoint Re-Solve + Post-Methodology Re-Baseline Tooling Design (Priority 8)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Medium
 **Estimated Time:** 3–4 hours
+**Completed:** 2026-06-27
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 2, 6
@@ -718,11 +719,12 @@ The rocket #1462 stale baseline cost Sprint 28 a full sprint of an undetected br
 
 ### Changes
 
-To be completed.
+- Authored `docs/planning/EPIC_4/SPRINT_29/PRIORITY_8_CHECKPOINT_RESOLVE_DESIGN.md` — Part A (`--resolve-changed` checkpoint mode: gap, interface, at-risk-list source, measured wall-clock budget, GO/NO-GO), Part B (the PR25 post-methodology re-baseline step), Part C (cadence wiring into Day-5/Day-10), + a verification block.
+- Verified KNOWN_UNKNOWNS Unknown 8.1 (8.2 was verified by Task 2).
 
 ### Result
 
-To be completed.
+**Both Sprint-28 Day-13 lessons designed into the checkpoint.** **Part A** (`--resolve-changed --since-commit <Day-0 SHA>`) re-solves only the changed-golden set (at-risk list = `changed_emit_artifacts.py`) and diffs each model's solve/compare bucket vs the committed DB — closing the exact gap that hid the rocket #1462 stale baseline (golden byte-stable, solve broken). **Measured budget (Unknown 8.1):** MCP solve median **0.71 s**, full 115-model re-solve **3.6 min**, no in-scope model > ~14 s — so a typical changed set (1–16 goldens) re-solves in **seconds to ~2 min**; it fits the checkpoint with no backgrounding (the "ganges 8 min" concern is translate time, not solve). **GO/NO-GO:** any changed-golden model that moved *backward* (`match→mismatch`, `model_optimal→model_infeasible`, presolve-match→abort) → investigate mid-sprint. **Part B** codifies the PR25 re-baseline (genuine 68 vs ~24 methodology, recomputed after any retry-trigger/comparison-logic/scope change) as a standing template addition.
 
 ### Verification
 
@@ -748,12 +750,12 @@ grep -iE 're-baseline|methodology' docs/planning/EPIC_4/SPRINT_29/PRIORITY_8_CHE
 
 ### Acceptance Criteria
 
-- [ ] Priority 8 design doc created
-- [ ] `--resolve-changed` checkpoint mode specified (interface, at-risk-list source, budget)
-- [ ] Re-baseline step specified as a PR25 template addition
-- [ ] Wired into the Day-5 / Day-10 checkpoint cadence with a GO/NO-GO criterion
-- [ ] Implements both Sprint-28 Day-13 lessons (#4 re-solve, #5 re-baseline)
-- [ ] Unknowns 8.1, 8.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Priority 8 design doc created
+- [x] `--resolve-changed` checkpoint mode specified (interface, at-risk-list source, budget)
+- [x] Re-baseline step specified as a PR25 template addition
+- [x] Wired into the Day-5 / Day-10 checkpoint cadence with a GO/NO-GO criterion
+- [x] Implements both Sprint-28 Day-13 lessons (#4 re-solve, #5 re-baseline)
+- [x] Unknowns 8.1, 8.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
