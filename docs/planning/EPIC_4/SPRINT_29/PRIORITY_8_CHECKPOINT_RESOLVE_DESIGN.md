@@ -23,10 +23,16 @@ A new mode on the pipeline test driver (built in-sprint; `scripts/gamslib/run_fu
 # diff each one's solve/compare bucket against the committed DB.
 python scripts/gamslib/run_full_test.py --resolve-changed --since-commit <Day-0 SHA>
 
-# Equivalent explicit form (the at-risk list is just changed_emit_artifacts' output):
+# Derive the at-risk model list (the `--resolve-changed` mode consumes exactly this):
+# changed_emit_artifacts --format json emits {commits:[{files:[<path>...]}...]};
+# map each changed `*_mcp[_presolve].gms` path to its model id.
 python scripts/sprint_audit/changed_emit_artifacts.py --since-commit <Day-0 SHA> --format json \
-  | jq -r '.[].models[]' \
-  | xargs -I{} python scripts/gamslib/run_full_test.py --model {} --compare-only
+  | jq -r '.commits[].files[]' \
+  | sed -E 's|.*/||; s/_mcp_presolve\.gms$//; s/_mcp\.gms$//' | sort -u
+# -> the new --resolve-changed mode (built in-sprint) re-solves each of these and
+#    bucket-diffs vs the committed DB. (run_full_test's existing --model path is the
+#    per-model executor it reuses; there is no `--compare-only` flag yet — the
+#    bucket-diff-vs-committed-DB comparison is part of the new --resolve-changed mode.)
 ```
 
 - **At-risk-list source (confirmed Task 6):** `changed_emit_artifacts.py --since-commit <Day-0 SHA> --format json` — it groups every changed `*_mcp.gms` / `*_mcp_presolve.gms` by triggering commit. That golden diff **is** the at-risk list (the exact set whose solve could have silently changed).
