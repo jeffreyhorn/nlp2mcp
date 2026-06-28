@@ -1,4 +1,4 @@
-# Epic 5 Scoping — CGE Walras-Law Degeneracy (camcge #1330)
+# Epic 5 Scoping — CGE Walras' Law Degeneracy (camcge #1330)
 
 **Status:** STUB / scoping observation (authored Sprint 29 Prep Task 7, 2026-06-27). Not an Epic-5 implementation plan — the structure + evidence so the in-sprint Priority-5 task is a write-up only (no `src/`).
 **Origin:** #1330 camcge, REPLAN'd to Epic 5 at the Sprint 28 Day-11 Task-6 gate (2026-06-19) — see `docs/issues/ISSUE_1330_*.md` + `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 11".
@@ -60,7 +60,7 @@ camcge translates and compiles cleanly (post-#1245), and the **emitted KKT syste
 ## 5. Open questions for the Epic-5 task
 
 1. **Numéraire-selection rule.** Is there a robust automatic rule (e.g. fix the price of the SAM's largest sector, or a CPI aggregate), or must each CGE model declare its numéraire?
-2. **Degeneracy detection.** How does the preprocessing layer *detect* Walras-degeneracy (PATH basis-singularity report? a rank check on the market-clearing block? a model-structure heuristic?) without false-positiving a well-posed model?
+2. **Degeneracy detection.** How does the preprocessing layer *detect* Walras-degeneracy (PATH basis-singularity report? a rank check on the market-clearing block? a model-structure heuristic?) without falsely flagging a well-posed model?
 3. **Empirical confirmation.** Does drop-`lmequil` + fix-`cpi=1` actually drive camcge to MODEL STATUS 1 at 191.7346 (the §3 paper argument verified in GAMS)?
 4. **Cohort generality.** Does the same transformation (with a per-model row/numéraire) recover any *other* genuinely Walras-degenerate model, or is camcge the only one in the corpus? (The §2 survey suggests camcge is currently the sole inherent case.)
 5. **CES conditioning (#1070 family).** Is the CES singular-Jacobian-near-bounds conditioning a separate Epic-5 sub-topic (scaling / bound-init), or fully resolved now that prolog matches?
