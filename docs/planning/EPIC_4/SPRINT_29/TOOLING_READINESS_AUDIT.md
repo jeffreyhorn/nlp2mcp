@@ -76,6 +76,6 @@ for m in rocket mine; do .venv/bin/python scripts/diagnostics/kkt_residual.py da
 # Detector soft-classifies rocket + a cohort sample (no hard-fail):
 for m in rocket maxmin catmix; do .venv/bin/python scripts/diagnostics/check_presolve_divergence.py --model $m 2>&1 | tail -1; done
 # Allowlists current:
-grep -cvE '^\s*#|^\s*$' scripts/sprint_audit/golden_staleness_allowlist.txt   # 7 (6 OOS + indus)
-grep -cvE '^\s*#|^\s*$' scripts/diagnostics/presolve_divergence_allowlist.txt # 1 (korcge)
+grep -cvE '^[[:space:]]*(#|$)' scripts/sprint_audit/golden_staleness_allowlist.txt   # 7 (6 OOS + indus)
+grep -cvE '^[[:space:]]*(#|$)' scripts/diagnostics/presolve_divergence_allowlist.txt # 1 (korcge)
 ```
