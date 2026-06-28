@@ -817,7 +817,11 @@ Cross-reference the Task-3 (cold-convex) and Category-7 (offset-alias) residual 
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — one cross-Category consolidation found
+**Verified by:** Task 9 (Backlog Fix-Surface Analysis) — Date 2026-06-27
+**Findings:** **sambal/qsambal (#1239) consolidate with the offset-alias class via #1112** — their Case-b `stat_x` 0.78 residual is the `$xw(i,j)` **dollar-condition not fully propagated** through the conditioned-quadratic-sum gradient, i.e. the **same #1112 dollar-condition-propagation backstop** that the offset-alias pair (himmel16/polygon, #1111/#1112) routes through. So a P7 fix that addresses #1112 may resolve sambal/qsambal as a side-effect. The other cohort members do **not** consolidate with P7: quocge (`stat_pz` 1.0) is the CGE-numéraire/Walras family (camcge / Epic 5), hhfair (product/CES) is distinct, prolog is resolved.
+**Evidence:** `docs/planning/EPIC_4/SPRINT_29/BACKLOG_FIX_SURFACE_ANALYSIS.md` Part D (consolidation map).
+**Decision:** consolidation map = {himmel16+polygon (one offset-alias-AD fix); sambal/qsambal + offset-alias via #1112 dollar-condition; quocge↔camcge via Epic 5}. Check the sambal/qsambal↔offset-alias #1112 overlap empirically in-sprint.
 
 ---
 
@@ -848,7 +852,11 @@ prolog's NLP reference objective (−0.0, vs MCP −73.5) is a genuine optimum, 
 Development team (Sprint planning)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — valid reference, prolog resolved
+**Verified by:** Task 9 (Backlog Fix-Surface Analysis) — Date 2026-06-27
+**Findings:** the DB shows prolog `likely_convex`, `model_optimal`, **comparison_status = match**, `nlp_objective = -0.0`, `mcp_objective = -6.25e-13` (≈ −0.0). So the NLP −0.0 reference is a **genuine near-zero optimum** and the MCP **now reproduces it** (the −73.5 mismatch was pre-#1227, stale). prolog is **Case-a healthy**, *not* inherently Case-c — the historical #1070 "CES singular Jacobian" framing is superseded (it solves cleanly cold).
+**Evidence:** `data/gamslib/gamslib_status.json` (prolog row); `docs/planning/EPIC_4/SPRINT_29/BACKLOG_FIX_SURFACE_ANALYSIS.md` §6.3.
+**Decision:** prolog **leaves the Priority-6 mismatch cohort** (already matches) and does **not** move to Category 5 / Epic 5 — it is resolved, not CGE-degenerate.
 
 ---
 
@@ -955,7 +963,11 @@ grep -lF -e "offset_alias" -e "offset-alias" -e "cyclic" tests/fixtures/crosster
 Development team (Test infrastructure)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — new fixture(s) needed; two planned
+**Verified by:** Task 9 (Backlog Fix-Surface Analysis) — Date 2026-06-27
+**Findings:** shapes 1–6 do **not** cover the offset-alias gradient shape. The closest, **shape6** (`tree(n,nn)=yes$(ord(nn)=ord(n)+1)` + `sum(nn$tree(nn,n), y(nn))`), is a *tree-predicate-conditioned* aliased sum (the #1390 kand shape) — it tests a predicate-filtered alias sum, not the offset-image cross-term, and has **no circular (`++`) offset**. So new fixtures are required. **Two are planned** (himmel16 and polygon are distinct code paths): `shape7_offset_alias_cyclic.gms` (himmel16 circular `i++1` lead + intermediate-var cross-term, integer-residual 2.0) and `shape8_offset_alias_successor.gms` (polygon `ord(j)=ord(i)+1` acyclic-successor offset-image, partial-residual 0.49). Both follow the shapes-1–6 in-process `_emit()`/`_stat_row()` pattern (sub-second, always-run).
+**Evidence:** `ls tests/fixtures/crossterm_shapes/` (shape1–6, no offset-alias); `docs/planning/EPIC_4/SPRINT_29/BACKLOG_FIX_SURFACE_ANALYSIS.md` Part C (fixture plan table).
+**Decision:** add `shape7_offset_alias_cyclic.gms` + `shape8_offset_alias_successor.gms` in-sprint to guard the P7 fix; cyclic vs successor are distinct shapes (circular-lead vs ordinal-predicate paths), so two fixtures, not one.
 
 ---
 
