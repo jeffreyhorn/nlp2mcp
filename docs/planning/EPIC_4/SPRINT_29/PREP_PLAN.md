@@ -530,9 +530,10 @@ grep -iE 'Sprint 30|budget reallocat|absorb' docs/planning/EPIC_4/SPRINT_29/REPL
 
 ## Task 6: Reusable-Tooling Readiness Audit (KKT-Residual Harness, Divergence Detector, Golden-Staleness Gate)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
 **Estimated Time:** 3–4 hours
+**Completed:** 2026-06-27
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
@@ -562,11 +563,12 @@ Sprint 29's effort estimate (96–134h, lower than Sprint 28's because the tooli
 
 ### Changes
 
-To be completed.
+- Authored `docs/planning/EPIC_4/SPRINT_29/TOOLING_READINESS_AUDIT.md` — per-tool readiness verdict (kkt_residual.py / check_presolve_divergence.py / check_golden_staleness.py + changed_emit_artifacts.py), a gap-list table, and a verification block.
+- Verified KNOWN_UNKNOWNS Unknowns 2.4 + 8.4 (INCOMPLETE → VERIFIED) and added Task-6 confirmations to 1.2 + 4.4.
 
 ### Result
 
-To be completed.
+**All three Sprint-28 tools are ready — gap list = NONE; no Day-0 extension needed.** (1) **kkt_residual.py** dual-transfer reports **CONSISTENT** on both new-multiplier-class carryforwards — rocket (`_fx_` multipliers) + mine (head-domain-offset `lam_pr`@`l+1`) — so no harness index-mapping change is required and the Category-1/2 Day-0 verdicts are reliable. (2) **check_presolve_divergence.py** **soft-classifies** the cold-convex cohort (maxmin/catmix: no divergence) **and rocket** (informational `obj_gap`, not a hard-fail — no allowlist entry needed since the embedded NLP solves and only the MCP is MS-5), so the Day-5/Day-10 checkpoints won't flood. (3) **check_golden_staleness.py** allowlists are **current** — 7 golden-staleness entries (6 out-of-scope + indus #1461) + 1 divergence entry (korcge #1439); both tracking issues OPEN, no removal due. `changed_emit_artifacts.py --since-commit <Day-0 SHA>` confirmed as the Task-8 checkpoint re-solve input.
 
 ### Verification
 
@@ -597,13 +599,13 @@ grep -iE 'extension|no extensions|gap' docs/planning/EPIC_4/SPRINT_29/TOOLING_RE
 
 ### Acceptance Criteria
 
-- [ ] Audit created covering all three Sprint-28 tools
-- [ ] KKT-residual harness validated on rocket (`_fx_`) + mine (head-offset) dual transfer
-- [ ] Presolve-divergence detector confirmed to soft-classify the cold-convex cohort (no false hard-fails)
-- [ ] Golden-staleness allowlist confirmed current; changed-golden-set diff confirmed as Task-8 input
-- [ ] Gap list produced (each extension ≤ 1h) or "no extensions needed"
-- [ ] Feeds Tasks 8 (checkpoint re-solve) and 9 (property-test reuse)
-- [ ] Unknowns 1.2, 2.4, 4.4, 8.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Audit created covering all three Sprint-28 tools
+- [x] KKT-residual harness validated on rocket (`_fx_`) + mine (head-offset) dual transfer
+- [x] Presolve-divergence detector confirmed to soft-classify the cold-convex cohort (no false hard-fails)
+- [x] Golden-staleness allowlist confirmed current; changed-golden-set diff confirmed as Task-8 input
+- [x] Gap list produced (each extension ≤ 1h) or "no extensions needed"
+- [x] Feeds Tasks 8 (checkpoint re-solve) and 9 (property-test reuse)
+- [x] Unknowns 1.2, 2.4, 4.4, 8.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
