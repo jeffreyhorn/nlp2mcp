@@ -46,7 +46,7 @@ Clear the `ISSUE_1443` gate (harness Case b `stat_x` 1.33; **mine is a convex LP
 
 ## Day 7 Prompt — Priority 1: #1443 mine close-or-REPLAN (~7 h)
 
-If the coordinated 3-site fix drives mine's cold MCP to MODEL STATUS 1 with `compare_objective_match` → **+1 Solve firm (genuine** `model_infeasible → model_optimal`), open the PR. **REPLAN to Sprint 30** (a head-domain-offset emit-architecture workstream — still Case b, just multi-site) if the INFES stays distributed across `comp_*`/bound rows or each fixed site only exposes the next (the Day-4 evidence — 22/30 `stat_x` systemic — leans REPLAN). File the Sprint-30 carryforward if REPLAN; freed ~10–16 h → Day-12 Class-C cold-convex.
+If the coordinated 3-site fix drives mine's cold MCP to MODEL STATUS 1 with `compare_objective_match` → **+1 Solve firm** (genuine `model_infeasible → model_optimal`), open the PR. **REPLAN to Sprint 30** (a head-domain-offset emit-architecture workstream — still Case b, just multi-site) if the INFES stays distributed across `comp_*`/bound rows or each fixed site only exposes the next (the Day-4 evidence — 22/30 `stat_x` systemic — leans REPLAN). File the Sprint-30 carryforward if REPLAN; freed ~10–16 h → Day-12 Class-C cold-convex.
 
 ## Day 8 Prompt — Priority 6: #1236 hhfair (the only live +Match) (~10 h)
 
@@ -54,7 +54,7 @@ hhfair is the **only live P6 +Match** (Task 9 — quocge is Epic 5, prolog resol
 
 ## Day 9 Prompt — Priority 3: #1385 translation-timeout cross-terms (~7 h)
 
-Pick the smallest viable timeout target (iswnm/sarf/mexls/nebrazil — Unknown 3.2, via the emit-size probe in the `ISSUE_1385` gate). Hand-derive its runtime-guard `stat_*` cross-terms, then land the **atomic** pair: the runtime-guard equation-body re-emit (`src/kkt/stationarity.py`) **and** the `J_gᵀ·lam` cross-terms together (a re-emit without cross-terms = an inconsistent MCP, Unknown 3.1). Structural check: **no quoted-set-name multiplier indices** (`grep -qE 'nu_[[:alnum:]_]+\("|lam_[[:alnum:]_]+\("'` — the Day-4 `nu_slack("srn")` bug). Target: the smallest target → translate-success (**+Translate**).
+Pick the smallest viable timeout target (iswnm/sarf/mexls/nebrazil — Unknown 3.2, via the emit-size probe in the `ISSUE_1385` gate). Hand-derive its runtime-guard `stat_*` cross-terms, then land the **atomic** pair: the runtime-guard equation-body re-emit (`src/kkt/stationarity.py`) **and** the `J_gᵀ·lam` cross-terms together (a re-emit without cross-terms = an inconsistent MCP, Unknown 3.1). Structural check on the emitted `<model>_mcp.gms`: **no quoted-set-name multiplier indices** (`grep -nE 'nu_[[:alnum:]_]+\("|lam_[[:alnum:]_]+\("' <model>_mcp.gms && echo "BUG: quoted-set-name multiplier index" || echo OK` — the Day-4 `nu_slack("srn")` bug). Target: the smallest target → translate-success (**+Translate**).
 
 ## Day 10 Prompt — Checkpoint 2 + Priority 3 close (~6 h)
 
