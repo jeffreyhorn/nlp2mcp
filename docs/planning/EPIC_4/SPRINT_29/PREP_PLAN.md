@@ -838,9 +838,10 @@ grep -iE 'consolidat|one fix|two models|shared root' docs/planning/EPIC_4/SPRINT
 
 ## Task 10: Plan Sprint 29 Detailed Schedule
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
+**Completed:** 2026-06-28
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1–9
@@ -871,11 +872,13 @@ The schedule is the synthesis of every prior prep task: the Known Unknowns (Task
 
 ### Changes
 
-To be completed.
+- Authored `docs/planning/EPIC_4/SPRINT_29/PLAN.md` — the 14-day schedule (Day 0 + Days 1–13, ≤ 12 h/day) mirroring the Sprint-28 18-section format: Goal, Acceptance, Sequencing constraints, per-day sections, Budget summary, Phase-0 coverage audit, Unknowns snapshot, Risk register, the prep-task → PR mapping table, Related docs.
+- Authored `docs/planning/EPIC_4/SPRINT_29/prompts/PLAN_PROMPTS.md` — one self-contained execution prompt per day (cross-cutting rules + Days 0–13 + the checkpoint cadence).
+- KNOWN_UNKNOWNS §"Next Steps": added the prep-phase-complete closing note (all 28 verified, three INVERTED assumptions integrated, GO for Day 0).
 
 ### Result
 
-To be completed.
+**Sprint 29 is GO for Day 0.** The schedule front-loads the highest-confidence work — **#1462 rocket** `_fx_` warm-start (Days 1–2; the warm-start is sprint-wide presolve robustness regardless of rocket's REPLAN outcome) and the **cold-convex Class-A + offset-alias shared fix** (Days 3–4; one `stationarity.py`/`derivative_rules.py` correction lands maxmin/himmel16/polygon/like/catmix — P4 and P7 are the *same* fix). The REPLAN-prone tracks carry explicit Sprint-30 exits + budget reallocation per Task 5: **#1443 mine** (Days 6–7, lean-REPLAN, convex ⇒ no Case-c, frees ~10–16 h → P4), **#1462 residual** (Day 2, frees ~4–8 h → hhfair), **P7 #1111/#1112** (lean-PROCEED). **#1236 hhfair** is the only live +Match (Day 8, gated on its compile fix). **camcge → Epic 5 write-up** (Day 11, no `src/`) + the **P8 `--resolve-changed` + re-baseline build** (Day 11). The **Day-5/Day-10 checkpoints** embed the changed-golden re-solve + the PR25 re-baseline (the rocket #1462 + Day-9 methodology lessons). **Budget ~105 h mid-estimate (~96–134 h), ≥ 34 h slack, no day > ~10 h.** All 28 prep unknowns integrated (PLAN §16).
 
 ### Verification
 
@@ -905,14 +908,14 @@ grep -iE 'Day [0-9].*1[3-9]h|~1[3-9] ?h' docs/planning/EPIC_4/SPRINT_29/PLAN.md 
 
 ### Acceptance Criteria
 
-- [ ] `PLAN.md` covers Day 0 + Days 1–13 with per-day budgets ≤ 12h
-- [ ] `prompts/PLAN_PROMPTS.md` has a prompt per execution day
-- [ ] Day-0 traces scheduled for all Critical unknowns before any `src/`
-- [ ] Diagnosis-heavy tracks (#1443, #1462-residual, P7) scheduled with their REPLAN gates + exits
-- [ ] Day-5/Day-10 checkpoints run the changed-golden re-solve + golden-staleness + PR25 tally
-- [ ] Day-13 full 3× `PYTHONHASHSEED` retest + closeout scheduled
-- [ ] Prep-task → PR mapping table included
-- [ ] Unknowns (all 28 — see the Task-to-Unknown Mapping) verified and updated in KNOWN_UNKNOWNS.md
+- [x] `PLAN.md` covers Day 0 + Days 1–13 with per-day budgets ≤ 12h
+- [x] `prompts/PLAN_PROMPTS.md` has a prompt per execution day
+- [x] Day-0 traces scheduled for all Critical unknowns before any `src/`
+- [x] Diagnosis-heavy tracks (#1443, #1462-residual, P7) scheduled with their REPLAN gates + exits
+- [x] Day-5/Day-10 checkpoints run the changed-golden re-solve + golden-staleness + PR25 tally
+- [x] Day-13 full 3× `PYTHONHASHSEED` retest + closeout scheduled
+- [x] Prep-task → PR mapping table included
+- [x] Unknowns (all 28 — see the Task-to-Unknown Mapping) verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -920,18 +923,21 @@ grep -iE 'Day [0-9].*1[3-9]h|~1[3-9] ?h' docs/planning/EPIC_4/SPRINT_29/PLAN.md 
 
 ### Prep Task → Deliverable Map
 
-| # | Task | Deliverable | Status |
-|---|------|-------------|--------|
-| 1 | Known Unknowns List | `docs/planning/EPIC_4/SPRINT_29/KNOWN_UNKNOWNS.md` | ✅ |
-| 2 | Bucket-Provenance Baseline + Re-Baseline | `docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.md` | 🔵 |
-| 3 | Cold-Convex Cohort Survey + Partition | `docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md` | 🔵 |
-| 4 | Phase 0 Acceptance Gates (10 tracks) | `docs/issues/ISSUE_*.md` Phase-0 sections | 🔵 |
-| 5 | REPLAN Risk Assessment | `docs/planning/EPIC_4/SPRINT_29/REPLAN_RISK_ASSESSMENT.md` | 🔵 |
-| 6 | Reusable-Tooling Readiness Audit | `docs/planning/EPIC_4/SPRINT_29/TOOLING_READINESS_AUDIT.md` | 🔵 |
-| 7 | camcge → Epic 5 Scoping Pre-Work | `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` (stub) | 🔵 |
-| 8 | Checkpoint Re-Solve + Re-Baseline Design | `docs/planning/EPIC_4/SPRINT_29/PRIORITY_8_CHECKPOINT_RESOLVE_DESIGN.md` | 🔵 |
-| 9 | Backlog Fix-Surface Analysis | `docs/planning/EPIC_4/SPRINT_29/BACKLOG_FIX_SURFACE_ANALYSIS.md` | 🔵 |
-| 10 | Sprint 29 Detailed Schedule | `docs/planning/EPIC_4/SPRINT_29/PLAN.md` + `prompts/PLAN_PROMPTS.md` | 🔵 |
+| # | Task | Deliverable | PR | Status |
+|---|------|-------------|----|--------|
+| — | PROJECT_PLAN Sprint 29 insertion | `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 29" | #1464 | ✅ |
+| 1 | Known Unknowns List | `docs/planning/EPIC_4/SPRINT_29/KNOWN_UNKNOWNS.md` | #1465 | ✅ |
+| 2 | Bucket-Provenance Baseline + Re-Baseline | `docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.md` | #1466 | ✅ |
+| 3 | Cold-Convex Cohort Survey + Partition | `docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md` | #1467 | ✅ |
+| 4 | Phase 0 Acceptance Gates (10 tracks) | `docs/issues/ISSUE_*.md` Phase-0 sections + new ISSUE_1462 | #1468 | ✅ |
+| 5 | REPLAN Risk Assessment | `docs/planning/EPIC_4/SPRINT_29/REPLAN_RISK_ASSESSMENT.md` | #1469 | ✅ |
+| 6 | Reusable-Tooling Readiness Audit | `docs/planning/EPIC_4/SPRINT_29/TOOLING_READINESS_AUDIT.md` | #1470 | ✅ |
+| 7 | camcge → Epic 5 Scoping Pre-Work | `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` (stub) | #1471 | ✅ |
+| 8 | Checkpoint Re-Solve + Re-Baseline Design | `docs/planning/EPIC_4/SPRINT_29/PRIORITY_8_CHECKPOINT_RESOLVE_DESIGN.md` | #1472 | ✅ |
+| 9 | Backlog Fix-Surface Analysis | `docs/planning/EPIC_4/SPRINT_29/BACKLOG_FIX_SURFACE_ANALYSIS.md` | #1473 | ✅ |
+| 10 | Sprint 29 Detailed Schedule | `docs/planning/EPIC_4/SPRINT_29/PLAN.md` + `docs/planning/EPIC_4/SPRINT_29/prompts/PLAN_PROMPTS.md` | #1474 | ✅ |
+
+**Prep phase COMPLETE (2026-06-28).** All 10 tasks landed; all 28 prep-time unknowns VERIFIED; Sprint 29 is GO for Day 0 (`PLAN.md`).
 
 **Total prep effort ≈ 35–48 h** (~4.5–6 working days).
 
@@ -942,7 +948,7 @@ grep -iE 'Day [0-9].*1[3-9]h|~1[3-9] ?h' docs/planning/EPIC_4/SPRINT_29/PLAN.md 
 ls docs/planning/EPIC_4/SPRINT_29/
 
 # Phase-0 gates on the Sprint 29 tracks
-for f in 1443 1385 1447 1332 1247 1239 1236 1146 1143; do grep -l "Phase 0" docs/issues/ISSUE_${f}_*.md 2>/dev/null; done  # #1462 GitHub-only
+for f in 1443 1462 1385 1447 1332 1247 1239 1236 1146 1143; do grep -l "Phase 0" docs/issues/ISSUE_${f}_*.md 2>/dev/null || echo "MISSING: $f"; done  # 1462 now has a local doc (created by Task 4)
 
 # Epic 5 hand-off stub
 test -f docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md && echo "Epic 5 stub present"
