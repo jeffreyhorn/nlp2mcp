@@ -2817,6 +2817,13 @@ def _distinct_base_offsets(
                 found.add(idx.offset.value)
 
     def walk(e: Expr) -> None:
+        # Treat IndexOffset as a first-class node (mirrors
+        # `_grad_has_concrete_base_offset`): an offset signature can appear inside a
+        # condition tree — e.g. `SetMembershipTest(j, (IndexOffset(i, -1)))` from the
+        # shifted `$(j(i-1))` guard — reached via `.children()`, not only in
+        # VarRef/ParamRef indices. Missing those would under-count the offset set and
+        # reintroduce the boundary-representative selection bug this helper prevents.
+        consider(e)
         if isinstance(e, (VarRef, ParamRef)):
             for i in e.indices:
                 consider(i)
