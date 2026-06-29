@@ -73,6 +73,10 @@ $offMulti
 piL_b.l(j)$(abs(b.l(j) - b.lo(j)) < 1e-6 and b.m(j) > 0) = b.m(j);
 piU_b.l(j)$(abs(b.l(j) - b.up(j)) < 1e-6 and b.m(j) < 0) = -(b.m(j));
 
+* Transfer fixed-variable marginals to _fx_ multipliers (#1462)
+nu_b_fx_s1.l = b.m('s1');
+nu_b_fx_s30.l = b.m('s30');
+
 * ============================================
 * #1449 (Layer 4): unfix elements fixed by the source $include but
 * enforced in the MCP via an active _fx_ complementarity equation

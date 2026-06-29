@@ -116,6 +116,11 @@ piL_d.l(h)$(abs(d.l(h) - d.lo(h)) < 1e-6 and d.m(h) > 0) = d.m(h);
 piU_m.l(h)$(abs(m.l(h) - m.up(h)) < 1e-6 and m.m(h) < 0) = -(m.m(h));
 piU_t.l(h)$(abs(t.l(h) - t.up(h)) < 1e-6 and t.m(h) < 0) = -(t.m(h));
 
+* Transfer fixed-variable marginals to _fx_ multipliers (#1462)
+nu_v_fx_h0.l = v.m('h0');
+nu_ht_fx_h0.l = ht.m('h0');
+nu_m_fx_h0.l = m.m('h0');
+
 * ============================================
 * #1449 (Layer 4): unfix elements fixed by the source $include but
 * enforced in the MCP via an active _fx_ complementarity equation
