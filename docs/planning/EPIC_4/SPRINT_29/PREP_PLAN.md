@@ -761,9 +761,10 @@ grep -iE 're-baseline|methodology' docs/planning/EPIC_4/SPRINT_29/PRIORITY_8_CHE
 
 ## Task 9: Backlog Fix-Surface Analysis (#1332/#1247/#1239/#1236; #1146/#1143/#1112/#1111)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Medium
 **Estimated Time:** 3–4 hours
+**Completed:** 2026-06-27
 **Deadline:** Before Sprint 29 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1, 3, 6
@@ -794,11 +795,12 @@ Priorities 6 and 7 are the "fill the 14-day budget" backlog beyond the retrospec
 
 ### Changes
 
-To be completed.
+- Authored `docs/planning/EPIC_4/SPRINT_29/BACKLOG_FIX_SURFACE_ANALYSIS.md` — Part A (cohort per-model Case verdicts + Day-0 fix-surface hypotheses + the prolog reference check), Part B (offset-alias shared root cause + localized-vs-architectural split), Part C (the shape7/shape8 property-test fixture plan), Part D (consolidation map).
+- Verified KNOWN_UNKNOWNS Unknowns 6.2, 6.3, 7.3 (INCOMPLETE → VERIFIED); 6.1/7.1/7.4 were verified by Tasks 4/5.
 
 ### Result
 
-To be completed.
+**Per-model fix-surfaces framed (PR24) + the cohort collapses to one live +Match.** quocge = CGE-numéraire artifact (Epic 5, no +Match); **prolog = resolved** (matches, `mcp -6.25e-13 ≈ nlp -0.0` — valid reference, not CGE-degenerate); sambal/qsambal = Match-neutral cold-robustness whose `$xw` dollar-condition defect is the **#1112 class**; **hhfair = the only live P6 +Match** (gated on the residual-emit compile fix). **Offset-alias (P7):** himmel16 + polygon share one offset-alias-AD fix (Task-5 confirmed), localized signature (REPLAN only if it threads #1111/#1112). **Fixture plan:** shapes 1–6 don't cover offset-alias (shape6 is a tree-predicate sum, no `++`) → add `shape7_offset_alias_cyclic` (himmel16) + `shape8_offset_alias_successor` (polygon). **Consolidation map:** {himmel16+polygon}; {sambal/qsambal + offset-alias via #1112 dollar-condition — a cross-Category 6↔7 link}; {quocge↔camcge via Epic 5}.
 
 ### Verification
 
@@ -824,13 +826,13 @@ grep -iE 'consolidat|one fix|two models|shared root' docs/planning/EPIC_4/SPRINT
 
 ### Acceptance Criteria
 
-- [ ] Analysis doc created covering all eight backlog issues
-- [ ] Each fix-surface framed as a Day-0 hypothesis (PR24), not established fact
-- [ ] himmel16/polygon shared-root-cause determined; localized-vs-architectural split recorded
-- [ ] Property-test fixture plan specified (shape7+ offset-alias)
-- [ ] Consolidation map produced (multi-model fixes identified)
-- [ ] Shared root causes with the cold-convex cohort (Task 3) cross-checked
-- [ ] Unknowns 6.1, 6.2, 6.3, 7.1, 7.3, 7.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Analysis doc created covering all eight backlog issues
+- [x] Each fix-surface framed as a Day-0 hypothesis (PR24), not established fact
+- [x] himmel16/polygon shared-root-cause determined; localized-vs-architectural split recorded
+- [x] Property-test fixture plan specified (two offset-alias fixtures: `shape7_offset_alias_cyclic` + `shape8_offset_alias_successor`)
+- [x] Consolidation map produced (multi-model fixes identified)
+- [x] Shared root causes with the cold-convex cohort (Task 3) cross-checked
+- [x] Unknowns 6.1, 6.2, 6.3, 7.1, 7.3, 7.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
