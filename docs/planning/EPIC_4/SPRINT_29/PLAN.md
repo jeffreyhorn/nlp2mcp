@@ -16,7 +16,7 @@ Land the Sprint 28 Solve/Match carryforwards the Day-13 retest deferred (#1443 m
 ## 2. Acceptance Criteria (from `PROJECT_PLAN.md` §"Sprint 29")
 
 - **Solve** ≥ 109 (= 107 + mine #1443 + rocket #1462 — **both firm only if Case b PROCEED**; REPLAN-gated per Task 5, so ≥ 109 is at-risk and the lower bound is 107–108).
-- **Match** maintain ≥ 92 (the re-baselined Rolling-KPI floor; genuine floor 68); **stretch ≥ 96** (+rocket +1, +hhfair +1 if Case b, + ≥ 2 cold-only recoveries from the Task-3 Case-b partition).
+- **Match** maintain ≥ 92 (the re-baselined Rolling-KPI floor); the **genuine floor** rises 68 → ~89 via the cold-convex Case-b work, but per §1 that is **Match-neutral on the as-measured KPI** (the Case-b models already match warm), so it lifts the genuine floor, **not** the as-measured 92. **Stretch ≥ 96** is the `PROJECT_PLAN` target, but the only as-measured headline-movers are rocket (+1) + hhfair (+1, if Case b) → 94; reaching 96 needs additional genuine `mismatch → match` conversions beyond the scoped set (or a methodology change) — the cold-only recoveries do **not** count toward the as-measured KPI under the current methodology.
 - **model_infeasible** ≤ 5 (-2 via mine + rocket; camcge stays infeasible → Epic 5).
 - **Translate** ≥ 135 (maintain; +Translate if a #1385 timeout target recovers); **Parse** ≥ 142.
 - **Tests** ≥ 4,960; **Determinism** byte-identical under 3× `PYTHONHASHSEED` (PR12).
