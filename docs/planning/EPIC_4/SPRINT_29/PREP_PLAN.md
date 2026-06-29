@@ -935,7 +935,7 @@ grep -iE 'Day [0-9].*1[3-9]h|~1[3-9] ?h' docs/planning/EPIC_4/SPRINT_29/PLAN.md 
 | 7 | camcge → Epic 5 Scoping Pre-Work | `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` (stub) | #1471 | ✅ |
 | 8 | Checkpoint Re-Solve + Re-Baseline Design | `docs/planning/EPIC_4/SPRINT_29/PRIORITY_8_CHECKPOINT_RESOLVE_DESIGN.md` | #1472 | ✅ |
 | 9 | Backlog Fix-Surface Analysis | `docs/planning/EPIC_4/SPRINT_29/BACKLOG_FIX_SURFACE_ANALYSIS.md` | #1473 | ✅ |
-| 10 | Sprint 29 Detailed Schedule | `docs/planning/EPIC_4/SPRINT_29/PLAN.md` + `prompts/PLAN_PROMPTS.md` | #1474 | ✅ |
+| 10 | Sprint 29 Detailed Schedule | `docs/planning/EPIC_4/SPRINT_29/PLAN.md` + `docs/planning/EPIC_4/SPRINT_29/prompts/PLAN_PROMPTS.md` | #1474 | ✅ |
 
 **Prep phase COMPLETE (2026-06-28).** All 10 tasks landed; all 28 prep-time unknowns VERIFIED; Sprint 29 is GO for Day 0 (`PLAN.md`).
 
