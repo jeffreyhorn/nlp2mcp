@@ -71,7 +71,7 @@ if TYPE_CHECKING:
     from ..ir.model_ir import ModelIR
 
 from ..ir.ast import Binary, Const, DollarConditional, Unary
-from ..ir.symbols import ObjSense
+from ..ir.symbols import ObjSense, Rel
 from .ad_core import apply_simplification, get_simplification_mode
 from .derivative_rules import differentiate_expr
 from .index_mapping import build_index_mapping, enumerate_variable_instances
@@ -127,10 +127,35 @@ def find_objective_expression(model_ir: ModelIR) -> Expr:
     # Case 2: Find defining equation
     objvar = objective.objvar
 
+    # Issue #1447: restrict the defining-equation search to the SOLVED model's
+    # equations. A source file may declare several models that share an objvar
+    # but define it differently — e.g. maxmin has `maxmin1a / mindist1a /`
+    # (`mindist =l= sqrt(...)`, a constraint, objective is the bare `mindist`)
+    # alongside `maxmin2 / ..., mindist2 /` (`mindist =e= smin(low, dist)`).
+    # Scanning ALL equations would pick up `mindist2`'s `=e=` definition even
+    # when the solved model is maxmin1a, differentiating `smin(low, dist)` (which
+    # has no `mindist`) and silently dropping the objvar's own `-1` gradient. When
+    # no model is named (single anonymous model) the set is None → search all.
+    solved_eqs = model_ir.get_solved_model_equations()
+    solved_eq_set = {e.lower() for e in solved_eqs} if solved_eqs else None
+
     # Search through equations for one that defines objvar
     for _eq_name, eq_def in model_ir.equations.items():
+        # Only consider equations that belong to the solved model (#1447).
+        if solved_eq_set is not None and _eq_name.lower() not in solved_eq_set:
+            continue
+
         # Skip indexed equations (objective must be scalar)
         if eq_def.domain:
+            continue
+
+        # Only an equality defines the objvar. A scalar `=l=`/`=g=` that mentions
+        # the objvar (e.g. `z =l= f(x)`) is a CONSTRAINT, not a definition —
+        # treating it as one would return `f(x)` as the objective and drop the
+        # objvar's own gradient. Mirrors the KKT objective detection in
+        # `src/kkt/objective.py` (which also requires `Rel.EQ`); non-EQ relations
+        # fall through to Case 3 (the bare objvar).
+        if eq_def.relation != Rel.EQ:
             continue
 
         # Check if this equation defines the objective variable

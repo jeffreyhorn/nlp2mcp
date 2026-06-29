@@ -1,7 +1,7 @@
 # maxmin: stat_mindist stationarity residual (Case b) — objective-variable cross-term missing
 
 **GitHub:** #1447
-**Status:** DEFERRED → Sprint 29
+**Status:** **Sprint 29 Day 3 (2026-06-29): objvar multi-model-scoping fix LANDED** (`gradient.py`; `stat_mindist` gains the `-1`, residual 1.0→0, maxmin-only blast radius). **Remaining `stat_point` 0.31 offset-alias residual → Day 4** (with himmel16/polygon). _(was: DEFERRED → Sprint 29)_
 **Filed:** Sprint 28 Day 5 (2026-06-16)
 
 ## Summary
@@ -77,7 +77,10 @@ i.e. the bare `-1` gradient **plus** the full `sum(low, lam_mindist1a(low))` ter
 
 ### PROCEED/REPLAN Signal
 
-- **PROCEED** — Day-0 Case b on `stat_mindist`, rel ≈ 1.0 (✅ confirmed).
+> **🟡 PARTIAL FIX LANDED — Sprint 29 Day 3 (2026-06-29).** The Day-0 root was refined again: the dropped `-1` is a **multi-model objective-scoping bug**, not a stationarity-assembly omission. maxmin declares 4 models sharing objvar `mindist`; the solved model `maxmin1a / mindist1a /` has only the indexed `=l=` constraint `mindist1a`, so the objective is the **bare objvar** `mindist` (gradient `-1` after MAX→min). But `find_objective_expression` (`src/ad/gradient.py`) scanned **all** equations and matched `mindist2.. mindist =e= smin(low, dist)` (from the *unsolved* `maxmin2`), differentiating `smin(low, dist)` (no `mindist`) → the `-1` vanished. **Fix:** scope the defining-equation search to `get_solved_model_equations()` (`gradient.py`, #1447). `stat_mindist` now emits `-1 + sum(low, lam_mindist1a) = 0` ✅; harness `stat_mindist` residual 1.0 → 0. **Blast radius: maxmin golden ONLY** (+5 bytes, the `-1 +`; 159 goldens checked, 0 others drifted, 0 failed). 2 unit tests.
+>   **Not yet Case a:** the fix exposed a **second** maxmin residual — `stat_point(p6,x)` rel **0.312** — the offset-alias cross-term enumeration over the `low(n,nn)` pair subset (the same `_diff_sum`/`_try_diff_sum_offset_crossterms` class as himmel16/polygon). That is the **Day-4 offset-alias work** (Unknown 7.2 REPLAN gate). maxmin reaches Case a only after BOTH the objvar-scoping fix (landed) and the offset-alias fix (Day 4).
+
+- **PROCEED** — Day-0 Case b on `stat_mindist`, rel ≈ 1.0 (✅ confirmed). _[Day-3: objvar half landed via the gradient-scoping fix; the residual `stat_point` 0.31 offset-alias term → Day 4.]_
 - **Traced Fix-Surface (Day-0) — CONFIRMED + hypothesis CORRECTED (Sprint 29 Day 0, 2026-06-29):** harness re-confirmed **Case b**, `max_residual_row = stat_mindist`, rel = **1.00** (raw 1.00), dual transfer **CONSISTENT** (`/tmp/day0_maxmin.json`). **⚠️ The prep hypothesis named the wrong dropped term (PR24 catch).** The regenerated `maxmin_mcp.gms:98` emits `stat_mindist.. sum((n,nn)$(low(n,nn)), lam_mindist1a(n,nn)$(nn(nn))) =E= 0` — the constraint sum **is present**; what is dropped is the **objective-gradient term**. maxmin **maximizes `mindist`**, so its stationarity must read `-1 + sum((n,nn)$low, lam_mindist1a) = 0`; the emitted row omits the leading `-1` → residual exactly **1.0** (= |objective gradient|). So the bug is the **missing objective-gradient coefficient on the objvar's own stationarity row**, not a dropped constraint cross-term. **Surface:** the objective-variable stationarity assembly in `src/kkt/stationarity.py` — `build_stationarity_equations` (:2090, the `should_skip_objvar` branch at :2129 correctly keeps mindist's row because it appears in constraints) → `_build_indexed_stationarity_expr` (:2650) / the objective-gradient merge at :2222 — which omits the objvar's own objective-gradient contribution when the objvar *also* carries a stationarity row. Trace command: `kkt_residual.py data/gamslib/raw/maxmin.gms --json /tmp/day0_maxmin.json` + `grep stat_mindist maxmin_mcp.gms`. The exact integer residual (1.0) shared with himmel16 (`stat_area` 2.0) / like (`stat_p` 2.0) supports a **shared Class-A fix** (COLD_CONVEX_COHORT_SURVEY §4) — though note himmel16/polygon route additionally through the offset-alias AD (#1146/#1143), so "shared" = the objvar/defining-row gradient assembly, not necessarily a single line.
 
 ## Provenance

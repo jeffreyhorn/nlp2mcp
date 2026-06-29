@@ -18,6 +18,27 @@
 
 ---
 
+## Day 3 — Priority 4/7: cold-convex Class-A — maxmin objvar multi-model scoping fix (#1447) (2026-06-29)
+
+**Scope:** start the cold-convex Class-A + offset-alias shared fix. Landed the maxmin objvar half; the offset-alias half (himmel16/polygon + maxmin's residual) is Day-4 continuation.
+
+### Root cause refined (a 2nd PR24-style correction)
+The Day-0 trace corrected the prep hypothesis (dropped term = objective gradient `-1`, not the constraint sum). Day-3 refined it further: the `-1` is a **multi-model objective-scoping bug**. maxmin declares 4 models sharing objvar `mindist`; the solved model `maxmin1a / mindist1a /` has only the indexed `=l=` constraint, so the objective is the **bare objvar** `mindist` (gradient `-1`). But `find_objective_expression` (`src/ad/gradient.py`) scanned **all** equations and matched `mindist2.. mindist =e= smin(low, dist)` from the *unsolved* `maxmin2`, differentiating `smin(low, dist)` (no `mindist`) → the `-1` vanished.
+
+### Fix — `src/ad/gradient.py` (#1447)
+`find_objective_expression`'s Case-2 defining-equation search is now scoped to `model_ir.get_solved_model_equations()` (None → search all, the single-anonymous-model fallback). `stat_mindist` now emits `-1 + sum(low, lam_mindist1a) = 0`; harness `stat_mindist` residual **1.0 → 0**.
+
+### Blast radius — maxmin golden ONLY
+Golden-staleness over **159 goldens**: exactly **1 drifted — `maxmin_mcp.gms` (+5 bytes**, the `-1 +`), 0 others, 0 failed. Surgical. maxmin matches warm → **Match-neutral genuine-floor lift**. 2 unit tests (`tests/unit/ad/test_objective_expr_model_scoping.py`: scoped-to-solved-model returns bare objvar; control where the `=e=` def IS in the solved model still uses it).
+
+### Not yet Case a — 2nd residual exposed → Day 4
+Clearing `stat_mindist` exposed `stat_point(p6,x)` rel **0.312** — the offset-alias cross-term enumeration over the `low(n,nn)` pair subset (the `_diff_sum`/`_try_diff_sum_offset_crossterms` class shared with himmel16 `stat_area` 2.0 / polygon `stat_theta` 0.49). **himmel16/polygon are unchanged** by today's fix (confirmed) — their bug is purely offset-alias. That fix threads the #1387/#1111/#1112 AD core → **Day-4 work under the Unknown 7.2 REPLAN gate**.
+
+### Decision
+Day-3 lands the maxmin objvar-scoping fix (correct, isolated, verified). The offset-alias fix (maxmin `stat_point` + himmel16 + polygon) is the substantive **Day-4** deliverable, where the PROCEED/REPLAN call on threading the alias-AD core is made. **No metric change** (all Class-A models match warm).
+
+---
+
 ## Day 2 — Priority 2 #1462: rocket residual → **REPLAN to Sprint 30** (2026-06-29)
 
 **Scope:** resolve the residual MS-5 question (Unknown 2.2) — is the post-warm-start MS 5 a localizable emit/warm-start fix (PROCEED) or intrinsic non-convexity (REPLAN)? **No `src/` change** (the warm-start landed Day 1; the Day-2 probe was a diagnostic that didn't pan out, so nothing new is landed). Docs-only.
