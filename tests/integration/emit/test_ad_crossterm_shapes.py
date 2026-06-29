@@ -102,12 +102,7 @@ def test_shape6_tree_predicate_aliased_sum() -> None:
 
 
 @pytest.mark.xfail(
-    reason="#1143: the boundary-representative-selection fix was REVERTED in "
-    "Sprint 29 Day 5 (Checkpoint 1) — it made polygon's objective gradient correct "
-    "but regressed polygon's solve match (the now-complete gradient + the still-"
-    "unfixed distance-constraint-Jacobian symmetry admits a spurious 0.0 optimum). "
-    "polygon's offset-alias is re-deferred to Sprint 30 to land COUPLED with the "
-    "distance-Jacobian fix. The fixture + this xfail are the catalog guard.",
+    reason="#1143/#1447: reverted; pending coupled distance-Jacobian fix (Sprint 30)",
     strict=True,
 )
 def test_shape8_offset_alias_successor() -> None:
