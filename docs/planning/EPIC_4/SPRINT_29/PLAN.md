@@ -45,7 +45,7 @@ Land the Sprint 28 Solve/Match carryforwards the Day-13 retest deferred (#1443 m
 
 ## 5. Days 1–2 — Priority 2: #1462 rocket — `_fx_`-multiplier warm-start + residual (front-loaded) (~8–14 h)
 
-- **Front-loaded because the root cause is known** (Task 5 Track B). **Day 1:** land the general `nu_<var>_fx_<idx>.l = <var>.m(<idx>)` `_fx_`-multiplier warm-start in the presolve emit — **sprint-wide presolve robustness, firm regardless of rocket** — and verify **zero regression** across the Layer-4-unfix set (`grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms` → otpop/chain/cclinpts/rocket) + the full presolve golden set.
+- **Front-loaded because the root cause is known** (Task 5 Track B). **Day 1:** land the general `nu_<var>_fx_<idx>.l = <var>.m(<idx>)` `_fx_`-multiplier warm-start in the presolve emit — **sprint-wide presolve robustness, firm regardless of rocket** — and verify **zero regression** across the Layer-4-unfix set (enumerate it at run time with `grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms` — rely on whatever it lists) + the full presolve golden set.
 - **Day 2 (REPLAN-gated, Unknown 2.2):** complete the `_fx_`-at-`h0` warm-start for all of ht/v/m + the degenerate-bound suppression probe. **PROCEED** if rocket → MS 1 / `compare_objective_match` (**+1 Solve / +1 Match**); **REPLAN to Sprint 30 forcing** if MS-5 persists with a clean residual (intrinsic non-convergence). REPLAN frees ~4–8h → Priority-6 hhfair.
 - **Verifies:** 2.1, 2.2, 2.3. **REPLAN exit explicit.**
 

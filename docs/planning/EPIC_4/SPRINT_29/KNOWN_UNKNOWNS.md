@@ -1191,7 +1191,7 @@ Development team (Tooling)
 
 > **✅ PREP PHASE COMPLETE (2026-06-28, Task 10).** All **28** prep-time unknowns are **VERIFIED** (none INCOMPLETE — the lone remaining `🔍 INCOMPLETE` marker is the blank "Template for New Unknowns" boilerplate, not a real unknown). The findings are integrated into the 14-day Sprint 29 schedule (`PLAN.md` §16 maps each unknown to its in-sprint confirm/decide day). No assumption returned ❌ WRONG outright, but **three** assumptions **INVERTED** and drove a scope adjustment, all reflected in the schedule: **Unknown 4.1** (cold-convex is mostly Case-b, not Case-c → P4 is target-rich but Match-neutral), **Unknown 5.1** (the CGE cohort has *distinct* degeneracies, not a shared Walras one → Epic-5 scope is one transformation, narrower), and the **Priority-6 collapse** (6.1/6.3: quocge → Epic 5, prolog resolved, sambal/qsambal Match-neutral → hhfair is the only live +Match). **Sprint 29 is GO for Day 0.**
 
-**Before Sprint 29 Day 1:**
+**Before Sprint 29 Day 1** *(all steps below were completed during the prep phase — see the PREP PHASE COMPLETE note above; retained as the process record):*
 1. Review all Critical and High priority unknowns (18 total: 7 Critical + 11 High).
 2. Execute verification tests for the top unknowns via prep Tasks 2–10 (see §"Appendix: Task-to-Unknown Mapping").
 3. Update this document with findings (🔍 INCOMPLETE → ✅ VERIFIED or ❌ WRONG).
