@@ -101,11 +101,21 @@ def test_shape6_tree_predicate_aliased_sum() -> None:
     assert not re.search(r"nu_dembal\(n[+-]\d", row), f"phantom-offset enumeration (#1390): {row}"
 
 
+@pytest.mark.xfail(
+    reason="#1143: the boundary-representative-selection fix was REVERTED in "
+    "Sprint 29 Day 5 (Checkpoint 1) — it made polygon's objective gradient correct "
+    "but regressed polygon's solve match (the now-complete gradient + the still-"
+    "unfixed distance-constraint-Jacobian symmetry admits a spurious 0.0 optimum). "
+    "polygon's offset-alias is re-deferred to Sprint 30 to land COUPLED with the "
+    "distance-Jacobian fix. The fixture + this xfail are the catalog guard.",
+    strict=True,
+)
 def test_shape8_offset_alias_successor() -> None:
     """#1143/#1447: successor offset-alias objective cross-term. x(i) appears in
     the sum body at offset 0 AND +1, so stat_x(i) must carry BOTH the own-row
     successor and the predecessor term — the representative-instance selection
-    must pick an INTERIOR column (not a boundary one missing the predecessor)."""
+    must pick an INTERIOR column (not a boundary one missing the predecessor).
+    Currently the predecessor term is dropped (the fix was reverted, #1143)."""
     row = _stat_row(_emit("shape8_offset_alias_successor.gms"), "stat_x(i)")
     # Own-row successor term and the predecessor cross-term, each subset-guarded.
     assert "x(i+1)*1$(j(i))" in row, row

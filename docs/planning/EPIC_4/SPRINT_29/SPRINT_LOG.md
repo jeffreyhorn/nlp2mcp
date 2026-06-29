@@ -18,6 +18,33 @@
 
 ---
 
+## Day 5 — Checkpoint 1: re-solve caught a polygon regression → Day-4 fix REVERTED (2026-06-29)
+
+**Scope:** Checkpoint 1 (re-solve the changed-golden set, bucket-diff vs the committed DB, GO/NO-GO) + PR25 re-baseline tally. (`--resolve-changed` mode is the Day-11 P8 build; done manually here via `changed_emit_artifacts.py` + `run_full_test.py --model`.)
+
+### Re-solve of the 6 changed goldens (since Day-0 `38ac7a20`)
+`changed_emit_artifacts.py` → cclinpts/chain/maxmin/otpop/polygon/rocket. Re-solved each vs the **true git-HEAD DB baseline** (run_full_test mutates the DB in-tree — restored after each measurement):
+
+| Model | Baseline | Re-solve | Verdict |
+|---|---|---|---|
+| maxmin | match (cold) | **match** (presolve-retry) | OK — path shift, no Match loss |
+| cclinpts | match | match | OK |
+| otpop | match | match | OK |
+| chain | mismatch | mismatch | OK (unchanged) |
+| rocket | not_tested | not solved | OK (Day-2 REPLAN) |
+| **polygon** | **match (0.7797)** | **MISMATCH (0.0)** | **🔴 REGRESSION** |
+
+### 🔴 polygon regression — Day-4 #1143 fix REVERTED
+Checkpoint 1 caught what Day-4's verification missed: Day 4 relied on golden-staleness + harness-residual (0.49→0) but **never re-solved polygon** — the "Match-neutral" claim was unverified. The full-pipeline solve shows polygon went **match (0.7797) → mismatch (spurious 0.0 optimum)**. Root cause: the Day-4 fix made polygon's *objective gradient* correct, but polygon has a SECOND independent bug — the `distance(i,j)` **constraint-Jacobian symmetry** (`stat_r` drops the second-index `r(j)` term; "Multi-pattern Jacobian: skipping correction" warning). The now-complete gradient + the inconsistent KKT admits a degenerate solution. This breaks the **Match ≥ 92 maintain floor** → NO-GO. **Per the user's call, the Day-4 fix was REVERTED** (representative-selection + `_distinct_base_offsets` removed from `stationarity.py`; polygon golden restored byte-identical to pre-Day-4; `shape8` test → strict xfail). polygon re-solves to **match** again ✓. Re-deferred to Sprint 30 **coupled** with the distance-Jacobian fix (`ISSUE_1143`). **This is the rocket-#1462 lesson in action: golden-stability does not catch a broken solve — only the checkpoint re-solve does.**
+
+### Checkpoint outcome
+**GO** after the revert — all 6 changed models at-or-above baseline (maxmin path-shifted cold→presolve but still match; polygon restored). Sprint-29 metrics intact: Solve 107, Match 92 (maintain floor held). **Genuine-floor net Days 3–4 revised: +1** (maxmin objvar `-1` + catmix recovery; **polygon reverted**, so its +1 floor is withdrawn until Sprint 30). PR25: no methodology change landed Days 1–5 that shifts the genuine/methodology split (the Day-3/4 fixes were cold-correctness, Match-neutral); the re-baseline stays genuine 68 / methodology ~24.
+
+### Class-C cold-convex
+Not started — the Checkpoint-1 investigation + the polygon revert consumed the Day-5 budget. Class-C (tforss/markov/robert/harker) carries to a later slack day.
+
+---
+
 ## Day 4 — Priority 4/7: offset-alias successor cross-term (#1143 polygon) + fixtures (2026-06-29)
 
 **Scope:** extend the Class-A work to the offset-alias cross-term; add the shape7/shape8 property-test fixtures. Decision under Unknown 7.2 (local vs alias-AD core).
