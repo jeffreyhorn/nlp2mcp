@@ -284,6 +284,8 @@ grep -nF -e "Layer 4" -e ".lo('h0')" -e "piL_v" -e "comp_lo_v" data/gamslib/mcp/
 ### Risk if Wrong
 - **Case c (intrinsic):** Priority 2 lands only the warm-start (general presolve robustness, no rocket recovery) and REPLANs the rocket match to Sprint 30. −1 of the projected +1 Solve/+1 Match.
 
+> **✅ RESOLVED — Case c, REPLAN to Sprint 30 (Sprint 29 Day 2, 2026-06-29).** Answer to RQ1/RQ2/RQ3: **(2)/(3) NO** — the `v('h0')=0` degeneracy is **not** the MS-5 driver. Suppressing the redundant `v_fx_h0` `_fx_` equation and pinning v('h0')=0 by bound left rocket at **MS 5**, identical `EXIT - other error`. **(1)** the residual is **not cleanable by warm-start value** (it moves between `stat_step` 0.497 / `stat_ht(h0)` 1.00 with `nu_*_fx`=0/var.m; negating only flips the sign) → the transferred NLP duals don't make the NLP point an exact MCP KKT point. With the embedded NLP converging (obj 1.004 ≈ ref 1.0128) but PATH failing at the **initial Jacobian** of a heavily-nonlinear MCP (1307 elements, 903 nonlinear; bilinear + division-by-variable + nonlinear-equality), this is **intrinsic non-convergence = Case c**. The Day-1 `_fx_` warm-start landed as firm presolve robustness (PR #1476); rocket's +1 Solve/+1 Match → **DEFERRED to Sprint 30** forcing (`ISSUE_1462`). Realized: as predicted by "Risk if Wrong" (-1 Solve/-1 Match vs the projected +1).
+
 ### Estimated Research Time
 2.5 hours (harness localization + degenerate-bound suppression probe)
 

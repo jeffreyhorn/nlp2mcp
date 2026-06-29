@@ -18,6 +18,20 @@
 
 ---
 
+## Day 2 — Priority 2 #1462: rocket residual → **REPLAN to Sprint 30** (2026-06-29)
+
+**Scope:** resolve the residual MS-5 question (Unknown 2.2) — is the post-warm-start MS 5 a localizable emit/warm-start fix (PROCEED) or intrinsic non-convexity (REPLAN)? **No `src/` change** (the warm-start landed Day 1; the Day-2 probe was a diagnostic that didn't pan out, so nothing new is landed). Docs-only.
+
+### Experiments
+- **Complete `_fx_`-at-`h0` warm-start (already in from Day 1 — all ht/v/m):** solving `rocket_mcp_presolve.gms` → embedded NLP **MS 2** (obj **1.00412** ≈ NLP ref 1.0128) but the MCP `mcp_model` → **MS 5 (Locally Infeasible)**, PATH `** EXIT - other error` at the **initial Jacobian** (1307 elements, 903 nonlinear).
+- **Degenerate-bound suppression probe (the prescribed Day-2 experiment):** the lone degenerate fix is **v('h0')=0** (fixed value = relaxed lower bound 0; ht/m fix to 1 ≠ bound 0). Suppressing the redundant `v_fx_h0` `_fx_` equation + pinning v('h0')=0 by bound → **still MS 5**, identical `EXIT - other error`, identical NLP obj. **The degeneracy is not the MS-5 driver.**
+- **Residual not cleanable by warm-start value:** the harness residual moves with the warm-start value (`nu_*_fx=0` → `stat_step` 0.497; `=var.m` → `stat_ht(h0)` 1.00; negating only flips the sign) — the transferred NLP duals don't make the NLP point an exact MCP KKT point (the **Case-c boundary** for this non-convex model: bilinear + division-by-variable + nonlinear-equality). Converging NLP + non-converging MCP-from-warm-point = **intrinsic non-convergence**.
+
+### Decision — REPLAN to Sprint 30
+Both prescribed interventions (complete warm-start + degenerate-bound suppression) leave rocket at **MS 5**; the operational gate (PROCEED iff MS 1) is not met. **REPLAN to Sprint 30 forcing** (trust-region / homotopy / perturbed-restart). The Day-1 `_fx_` warm-start **stays** as firm presolve robustness; rocket's **+1 Solve / +1 Match is DEFERRED to Sprint 30** (`ISSUE_1462` → REPLAN-DEFERRED). **Freed ~4–8 h → Day-8 hhfair (Priority 6).** Unknown 2.2 resolved. **No metric change** (rocket was already `not_tested`/MS 5).
+
+---
+
 ## Day 1 — Priority 2 #1462: `_fx_`-multiplier presolve warm-start (2026-06-29)
 
 **Scope:** land the **general** `nu_<var>_fx_<idx>.l = <var>.m(<idx>)` `_fx_`-multiplier warm-start in the presolve dual transfer — sprint-wide presolve robustness, firm regardless of rocket's Day-2 outcome.
