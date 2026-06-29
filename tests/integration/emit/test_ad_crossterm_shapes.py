@@ -99,3 +99,31 @@ def test_shape6_tree_predicate_aliased_sum() -> None:
     assert "sum(nn," in row and "1$(tree(n,nn))" in row and "nu_dembal(nn)" in row, row
     # No per-element offset enumeration of the multiplier (the #1390 defect).
     assert not re.search(r"nu_dembal\(n[+-]\d", row), f"phantom-offset enumeration (#1390): {row}"
+
+
+def test_shape8_offset_alias_successor() -> None:
+    """#1143/#1447: successor offset-alias objective cross-term. x(i) appears in
+    the sum body at offset 0 AND +1, so stat_x(i) must carry BOTH the own-row
+    successor and the predecessor term — the representative-instance selection
+    must pick an INTERIOR column (not a boundary one missing the predecessor)."""
+    row = _stat_row(_emit("shape8_offset_alias_successor.gms"), "stat_x(i)")
+    # Own-row successor term and the predecessor cross-term, each subset-guarded.
+    assert "x(i+1)*1$(j(i))" in row, row
+    assert "x(i-1)*1$(j(i-1))" in row, f"predecessor cross-term dropped (#1143): {row}"
+
+
+def test_shape7_offset_alias_cyclic() -> None:
+    """#1146: circular `i++1` offset-alias (himmel16). The cyclic lead decomposes
+    into the linear predecessor `i-1`$(ord>1) plus the boundary wrap
+    `i+(card-1)`$(ord<=1) — this asserts that decomposition is structurally
+    present (the catalog guard for the shape).
+
+    NOTE: the himmel16 `stat_area` residual (2.0) is a *numeric*/sign defect in the
+    objvar-defining-gradient interaction, not a missing structural term — that is
+    the remaining #1146 work, tracked separately (it is not assertable here without
+    a GAMS residual evaluation), and is NOT addressed by the #1143 non-circular
+    representative-selection fix."""
+    row = _stat_row(_emit("shape7_offset_alias_cyclic.gms"), "stat_x(i)")
+    # The circular predecessor decomposition: linear `i-1` + boundary wrap `i+5`.
+    assert "nu_areadef(i-1))$(ord(i)>1)" in row, row
+    assert re.search(r"nu_areadef\(i\+\d\)\)\$\(ord\(i\)<=card\(i\)-\d\)", row), row

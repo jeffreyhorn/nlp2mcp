@@ -18,6 +18,32 @@
 
 ---
 
+## Day 4 — Priority 4/7: offset-alias successor cross-term (#1143 polygon) + fixtures (2026-06-29)
+
+**Scope:** extend the Class-A work to the offset-alias cross-term; add the shape7/shape8 property-test fixtures. Decision under Unknown 7.2 (local vs alias-AD core).
+
+### catmix RECOVERED for free (Day-3 side-effect)
+Re-checking the cohort on `main` (post Day-3): **catmix is now Case A** (healthy, residual 1.45e-7) — the Day-3 multi-model objective-scoping fix (#1447) cleared it too. **Genuine-floor +1.** (like remains Case b — a *separate* objective-gradient bug in the nested `log-sum-exp`, not offset-alias; deferred.)
+
+### #1143 polygon — successor-offset objective cross-term FIXED (PROCEED, not REPLAN)
+Diagnosed precisely: the AD enumeration (`_try_diff_sum_offset_crossterms`) and re-symbolization (`_resymbolize_offset_gradient`) **both already work** — the drop was purely **representative-instance selection** in `src/kkt/stationarity.py` `_build_indexed_gradient_term`. It used the first nonzero instance — polygon's `theta('i1')`, a **boundary** column whose predecessor row is out of range, so its gradient holds only the `+1` offset (interior columns hold `{-1,+1}`) — and generalized that incomplete gradient to every interior row. **Fix:** when the gradient carries the offset signature, re-select the representative as the nonzero instance with the **maximal distinct-offset set** (new `_distinct_base_offsets` helper). `stat_theta(i)` + `stat_r(i)` now carry BOTH the successor `$(j(i))` and predecessor `$(j(i-1))` cross-terms; harness `stat_theta` residual **0.49 → 0**. **This is PROCEED under Unknown 7.2 — no alias-AD-core threading** (the AD/re-symbolization were correct; only the representative pick was wrong).
+
+### Blast radius — polygon only
+Targeted golden-staleness over the 12 offset-bearing-objective candidates (chain/cclinpts/catmix/himmel16/dinam/polygon/maxmin/like/robot/otpop/mine/kand): **exactly 1 drifted — `polygon_mcp.gms` (+117 bytes**, the added predecessor cross-terms), 0 others. **cclinpts BYTE-IDENTICAL** (the existing #1387 model — no regression). ganges/gangesx confirmed unaffected (objective has no offset signature). Match-neutral (polygon matches warm — genuine-floor robustness).
+
+### Honest scoping — what did NOT land
+- **polygon not full Case a:** residual moved `stat_theta` 0.49 → `stat_r(i14)` **0.12** — a **separate** `distance(i,j)` constraint-Jacobian symmetry bug (`r(i)` as both indices, only one direction summed; the "Multi-pattern Jacobian: skipping correction" warning). Distinct from the objective-gradient fix; remaining polygon work.
+- **himmel16 (#1146) unchanged** (`stat_area` 2.0): confirmed **NOT a missing term** — the circular `i++1` decomposition (`nu_areadef(i-1)$(ord>1)` + `nu_areadef(i+5)$(ord<=card-5)`) is structurally present. The 2.0 is a **numeric/sign** defect in the objvar-gradient interaction (Day-0 candidate b), deferred (`ISSUE_1146`).
+- **maxmin `stat_point` 0.31** unchanged: a 2-D `low(n,nn)` pair-subset offset, different shape; deferred.
+
+### Fixtures (Task 9 Part C)
+Added `tests/fixtures/crossterm_shapes/shape8_offset_alias_successor.gms` (passing — asserts both successor + predecessor terms, the #1143 regression guard) + `shape7_offset_alias_cyclic.gms` (passing structural smoke test — asserts the circular decomposition is present; the numeric #1146 correctness is documented as deferred). 8 crossterm-shape tests pass.
+
+### Net Day 4
+**genuine-floor +2** (catmix Case A from Day-3 + polygon objective-gradient correct). Match-neutral (both match warm). Deferred: polygon distance-Jacobian, himmel16 numeric/sign (#1146), maxmin 2-D subset, like nested-gradient.
+
+---
+
 ## Day 3 — Priority 4/7: cold-convex Class-A — maxmin objvar multi-model scoping fix (#1447) (2026-06-29)
 
 **Scope:** start the cold-convex Class-A + offset-alias shared fix. Landed the maxmin objvar half; the offset-alias half (himmel16/polygon + maxmin's residual) is Day-4 continuation.

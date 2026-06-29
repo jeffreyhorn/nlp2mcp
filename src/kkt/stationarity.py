@@ -2789,6 +2789,44 @@ def _grad_has_concrete_base_offset(
     return walk(expr)
 
 
+def _distinct_base_offsets(
+    expr: Expr, element_to_set: Mapping[str, str], domain: tuple[str, ...]
+) -> frozenset[float]:
+    """#1143/#1447: collect the distinct non-circular ``IndexOffset`` deltas on
+    concrete domain-set elements in ``expr`` (the #1387 offset signature).
+
+    Used by :func:`_build_indexed_gradient_term` to pick the representative
+    instance whose gradient carries the COMPLETE offset cross-term set. A BOUNDARY
+    column (e.g. polygon's ``theta('i1')``) is missing the cross-term whose
+    contributing row is out of range, so its distinct-offset set is a strict
+    subset of an interior column's — choosing the max-cardinality representative
+    avoids generalizing an incomplete gradient.
+    """
+    domain_lc = {d.lower() for d in domain}
+    found: set[float] = set()
+
+    def consider(idx: object) -> None:
+        if (
+            isinstance(idx, IndexOffset)
+            and not idx.circular
+            and isinstance(idx.base, str)
+            and isinstance(idx.offset, Const)
+        ):
+            mapped = element_to_set.get(idx.base)
+            if mapped is not None and mapped.lower() in domain_lc:
+                found.add(idx.offset.value)
+
+    def walk(e: Expr) -> None:
+        if isinstance(e, (VarRef, ParamRef)):
+            for i in e.indices:
+                consider(i)
+        for c in e.children():
+            walk(c)
+
+    walk(expr)
+    return frozenset(found)
+
+
 def _resymbolize_offset_gradient(
     expr: Expr,
     col_elem: str,
@@ -2920,6 +2958,24 @@ def _build_indexed_gradient_term(
     # Build element-to-set mapping from all instances
     # This maps each element label to its corresponding set name
     element_to_set = _build_element_to_set_mapping(kkt.model_ir, domain, instances)
+
+    # Issue #1143/#1447: when the gradient carries offset cross-terms, the
+    # representative must be an INTERIOR element whose gradient holds the COMPLETE
+    # offset set. The first nonzero instance can be a BOUNDARY element (e.g.
+    # polygon's theta('i1'), whose predecessor row is out of range) with a strict
+    # subset of offsets; generalizing it drops the missing cross-term for every
+    # interior row. Re-select the nonzero instance with the maximal distinct-offset
+    # set (stable: first wins ties, so non-offset models are unaffected).
+    if len(domain) == 1 and _grad_has_concrete_base_offset(grad_component, element_to_set, domain):
+        best_n = len(_distinct_base_offsets(grad_component, element_to_set, domain))
+        for c_id, v_idx in nonzero_instances:
+            gc = kkt.gradient.get_derivative(c_id)
+            if gc is None:
+                continue
+            n = len(_distinct_base_offsets(gc, element_to_set, domain))
+            if n > best_n:
+                best_n = n
+                col_id, rep_var_indices, grad_component = c_id, v_idx, gc
 
     # Issue #1387 / #1455: when the objective gradient carries offset cross-terms
     # (the #1387 AD enumeration), the only domain-set element that represents the
