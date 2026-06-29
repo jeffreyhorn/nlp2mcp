@@ -1150,6 +1150,53 @@ def _emit_presolve_fx_unfix(
     return lines
 
 
+def _emit_presolve_fx_warmstart(
+    kkt: KKTSystem, suppressed_fx: set[str], add_comments: bool
+) -> list[str]:
+    """Issue #1462: warm-start the per-element `_fx_` equation multipliers in the
+    presolve dual transfer.
+
+    Each `_fx_` complementarity equation (`var(idx) =e= val`) carries an equality
+    multiplier `nu_<var>_fx_<idx>` that appears in the fixed element's
+    stationarity row. The general dual-transfer pass (`nu_<eq>.l = <eq>.m`) skips
+    these because the `_fx_` equations are NOT among the original NLP equations
+    (`nlp_eqs`): the NLP fixes the column via `.fx`, so the fix dual surfaces as
+    the *variable* marginal `var.m(idx)`, not an equation marginal. Left at the
+    default `.l = 0`, those multipliers leave a nonzero stationarity residual at
+    the fixed element (rocket: `stat_step` rel 0.497) and PATH diverges on the
+    non-convex model. This is sprint-wide presolve robustness, not rocket-only.
+
+    Mirrors `_emit_presolve_fx_unfix`'s `eq_paired_in_mcp` gate so the transfer
+    fires for exactly the active `_fx_` multipliers (the same Layer-4 cohort that
+    gets unfixed), and never for a suppressed or unreferenced one.
+    """
+    equalities_set = set(kkt.model_ir.equalities)
+    lines: list[str] = []
+    for var_name, var_def in kkt.model_ir.variables.items():
+        if not var_def.fx_map:
+            continue
+        for indices, _val in sorted(var_def.fx_map.items()):
+            eq_name = _fx_eq_name(var_name, indices)
+            mult_name = create_eq_multiplier_name(eq_name)
+            eq_paired_in_mcp = (
+                eq_name in equalities_set
+                and eq_name not in suppressed_fx
+                and (kkt.referenced_multipliers is None or mult_name in kkt.referenced_multipliers)
+            )
+            if not eq_paired_in_mcp:
+                continue
+            idx_str = _format_map_indices(indices)
+            qvar = _quote_symbol(var_name)
+            qm = _quote_symbol(mult_name)
+            # The `_fx_` equation `var(idx) - val =e= 0` has Jacobian +1 w.r.t.
+            # var(idx); its multiplier mirrors the equality transfer using the
+            # fixed variable's own marginal (the NLP reports the fix dual there).
+            lines.append(f"{qm}.l = {qvar}.m({idx_str});")
+    if lines and add_comments:
+        lines = ["* Transfer fixed-variable marginals to _fx_ multipliers (#1462)"] + lines
+    return lines
+
+
 def _emit_nlp_presolve(
     sections: list[str],
     kkt: KKTSystem,
@@ -1310,6 +1357,16 @@ def _emit_nlp_presolve(
             f"{qm}.l{domain_str}$(abs({qv}.l{domain_str} - {qv}.up{domain_str}) < 1e-6 and {qv}.m{domain_str} < 0)"
             f" = -({qv}.m{domain_str});"
         )
+
+    # Issue #1462: warm-start the per-element `_fx_` equation multipliers from the
+    # fixed variables' marginals (the general dual-transfer loop above skips them
+    # because the `_fx_` equations are not original NLP equations).
+    fx_ws_lines = _emit_presolve_fx_warmstart(
+        kkt, _compute_suppressed_fx_equations(kkt), add_comments
+    )
+    if fx_ws_lines:
+        sections.append("")
+        sections.extend(fx_ws_lines)
 
     sections.append("")
     return True

@@ -71,6 +71,10 @@ nu_length_eqn.l = length_eqn.m;
 
 * Transfer variable marginals to bound multipliers
 
+* Transfer fixed-variable marginals to _fx_ multipliers (#1462)
+nu_x_fx_i0.l = x.m('i0');
+nu_x_fx_i50.l = x.m('i50');
+
 * ============================================
 * #1449 (Layer 4): unfix elements fixed by the source $include but
 * enforced in the MCP via an active _fx_ complementarity equation

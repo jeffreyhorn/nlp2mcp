@@ -18,6 +18,26 @@
 
 ---
 
+## Day 1 — Priority 2 #1462: `_fx_`-multiplier presolve warm-start (2026-06-29)
+
+**Scope:** land the **general** `nu_<var>_fx_<idx>.l = <var>.m(<idx>)` `_fx_`-multiplier warm-start in the presolve dual transfer — sprint-wide presolve robustness, firm regardless of rocket's Day-2 outcome.
+
+### Implementation
+`src/emit/emit_gams.py`: new `_emit_presolve_fx_warmstart(kkt, suppressed_fx, add_comments)` helper, called at the end of `_emit_nlp_presolve`'s dual-transfer block. It iterates `var_def.fx_map` and emits `nu_<var>_fx_<idx>.l = <var>.m(<idx>);` for exactly the active `_fx_` multipliers, mirroring `_emit_presolve_fx_unfix`'s `eq_paired_in_mcp` gate (`in equalities` ∧ not suppressed ∧ referenced). The general transfer loop skipped these because the `_fx_` equations are not original NLP equations — the NLP fixes the column via `.fx`, so the fix dual surfaces as the *variable* marginal, not an equation marginal.
+
+### Blast radius — exactly the 4 Layer-4-unfix models, additive-only
+`grep -l "#1449 (Layer 4)" data/gamslib/mcp/*_mcp_presolve.gms` → **chain / cclinpts / otpop / rocket** (the only presolve goldens with `_fx_` multipliers). Each golden diff is purely additive (the new warm-start block): chain `nu_x_fx_i0/i50`, cclinpts `nu_b_fx_s1/s30`, otpop `nu_x_fx_1974`, rocket `nu_v_fx_h0/nu_ht_fx_h0/nu_m_fx_h0` — **16 inserted lines, nothing else changed.**
+
+### Zero regression — proven
+- **Cold MCP files BYTE-IDENTICAL** for all 4 (the change is inside `_emit_nlp_presolve`, presolve-only). The committed DB solves these via the **cold** file (`mcp_file_used=None`: otpop/cclinpts match, chain mismatch, rocket not_tested), so the DB Solve/Match results are unaffected by construction.
+- **All 4 presolve goldens compile clean** (`gams action=c`, 0 errors); rocket + otpop also solve via the harness without abort.
+
+### Rocket residual — necessary-but-insufficient (Day-2 question), as the gate predicted
+Harness on rocket *with* the warm-start: the max-residual row **moved** from `stat_step` rel 0.497 → `stat_ht(h0)` rel 1.00 (a `_fx_` element row). Negating the transfer only flips the sign of the same magnitude, so this is **not** a sign error — the `_fx_` warm-start alone leaves a residual at the fixed element, exactly the **necessary-but-insufficient** finding from the Sprint-28 Day-13 diagnosis (obj 1.137 → 1.016, MS 5 persists). The residual `piL/piU`-at-`h0` interaction is the **Day-2 PROCEED/REPLAN question** (Unknown 2.2). Day-1 does **not** claim rocket is fixed.
+
+### Tests + gate
+3 new unit tests (`tests/unit/emit/test_presolve_fx_warmstart.py`: helper emits the line for a fixed boundary element; empty for a fix-free model; appears in the full `--nlp-presolve` emit). Goldens regen'd; golden-staleness + quality gate green. **No Solve/Match metric change** (firm robustness landed; rocket's +1 is the Day-2 decision).
+
 ## Day 0 — Kickoff + Day-0 Traces (2026-06-29)
 
 **Scope:** baseline confirmation + Day-0 `kkt_residual.py` traces (PR24) for the REPLAN-prone + lead tracks; fill each Phase-0 gate's `Traced Fix-Surface (Day-0)` line. **No `src/` change** (per the Day-0 prompt). Docs-only.
