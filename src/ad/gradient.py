@@ -71,7 +71,7 @@ if TYPE_CHECKING:
     from ..ir.model_ir import ModelIR
 
 from ..ir.ast import Binary, Const, DollarConditional, Unary
-from ..ir.symbols import ObjSense
+from ..ir.symbols import ObjSense, Rel
 from .ad_core import apply_simplification, get_simplification_mode
 from .derivative_rules import differentiate_expr
 from .index_mapping import build_index_mapping, enumerate_variable_instances
@@ -147,6 +147,15 @@ def find_objective_expression(model_ir: ModelIR) -> Expr:
 
         # Skip indexed equations (objective must be scalar)
         if eq_def.domain:
+            continue
+
+        # Only an equality defines the objvar. A scalar `=l=`/`=g=` that mentions
+        # the objvar (e.g. `z =l= f(x)`) is a CONSTRAINT, not a definition —
+        # treating it as one would return `f(x)` as the objective and drop the
+        # objvar's own gradient. Mirrors the KKT objective detection in
+        # `src/kkt/objective.py` (which also requires `Rel.EQ`); non-EQ relations
+        # fall through to Case 3 (the bare objvar).
+        if eq_def.relation != Rel.EQ:
             continue
 
         # Check if this equation defines the objective variable

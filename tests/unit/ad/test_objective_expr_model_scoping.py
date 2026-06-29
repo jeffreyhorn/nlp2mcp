@@ -73,6 +73,41 @@ def test_objective_scoped_to_solved_model_uses_bare_objvar():
 
 
 @pytest.mark.unit
+def test_case2_skips_scalar_inequality_mentioning_objvar():
+    """Case-2 only treats an EQUALITY as the objvar's defining equation (#1478
+    review). A scalar `=l=`/`=g=` that mentions the objvar is a CONSTRAINT — it
+    must be skipped, mirroring the KKT objective detection in
+    `src/kkt/objective.py` (which requires `Rel.EQ`).
+
+    Parsed models reach `find_objective_expression`'s Case 2 only when the
+    normalizer left `objective.expr` unset (e.g. maxmin's indexed-only solved
+    model), so this exercises Case 2 on a directly-built ModelIR: a scalar `=l=`
+    mentioning the objvar appears *before* the genuine `=e=` definition. Without
+    the `Rel.EQ` filter the `=l=` would match first and return its RHS; with the
+    filter the `=e=` definition wins.
+    """
+    from src.ad.gradient import find_objective_expression
+    from src.ir.ast import Const, Sum, VarRef
+    from src.ir.model_ir import ModelIR, ObjectiveIR
+    from src.ir.symbols import EquationDef, ObjSense, Rel
+
+    m = ModelIR()
+    m.objective = ObjectiveIR(sense=ObjSense.MAX, objvar="z", expr=None)
+    # `=l=` constraint mentioning z comes FIRST; the genuine `=e=` def comes after.
+    m.equations["capz"] = EquationDef(
+        "capz", (), Rel.LE, (VarRef("z", ()), Sum(("i",), VarRef("x", ("i",))))
+    )
+    m.equations["zdef"] = EquationDef("zdef", (), Rel.EQ, (VarRef("z", ()), Const(5.0)))
+
+    obj_expr = find_objective_expression(m)
+    # The `=l=` `capz` must be skipped; the `=e=` `zdef` defines the objective.
+    assert obj_expr == Const(5.0), (
+        f"Expected the `=e=` definition (Const(5.0)); a scalar `=l=` mentioning the "
+        f"objvar must not be used as its definition. Got: {obj_expr!r}"
+    )
+
+
+@pytest.mark.unit
 def test_objective_uses_defining_eq_when_in_solved_model():
     """Control: when the objvar's `=e=` definition IS in the solved model, it is
     still used (the scoping doesn't break the normal case)."""
