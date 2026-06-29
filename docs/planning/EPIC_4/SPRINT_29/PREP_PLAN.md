@@ -948,7 +948,7 @@ grep -iE 'Day [0-9].*1[3-9]h|~1[3-9] ?h' docs/planning/EPIC_4/SPRINT_29/PLAN.md 
 ls docs/planning/EPIC_4/SPRINT_29/
 
 # Phase-0 gates on the Sprint 29 tracks
-for f in 1443 1462 1385 1447 1332 1247 1239 1236 1146 1143; do grep -l "Phase 0" docs/issues/ISSUE_${f}_*.md 2>/dev/null || echo "MISSING: $f"; done  # #1462 now has a local doc (created by Task 4)
+for f in 1443 1462 1385 1447 1332 1247 1239 1236 1146 1143; do grep -l "Phase 0" docs/issues/ISSUE_${f}_*.md 2>/dev/null || echo "MISSING: $f"; done  # 1462 now has a local doc (created by Task 4)
 
 # Epic 5 hand-off stub
 test -f docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md && echo "Epic 5 stub present"

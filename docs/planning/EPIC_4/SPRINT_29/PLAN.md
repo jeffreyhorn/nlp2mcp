@@ -38,7 +38,7 @@ Land the Sprint 28 Solve/Match carryforwards the Day-13 retest deferred (#1443 m
 
 ## 4. Day 0 — Kickoff + Day-0 Traces (≤ 6 h)
 
-- Confirm the Day-0 baseline = Sprint 28 final (`BASELINE_METRICS.md`; the committed DB recomputes to Solve 107 / Match 92 / model_infeasible 7 — no fresh retest, `git diff 803a259a..HEAD -- src/ scripts/` empty per Unknown 8.3).
+- Confirm the Day-0 baseline = Sprint 28 final (`BASELINE_METRICS.md`; the committed DB recomputes to Solve 107 / Match 92 / model_infeasible 7). **Verify** `git diff 803a259a..HEAD -- src/ scripts/` is empty before skipping the retest (expected empty per Unknown 8.3); if non-empty, run a fresh retest.
 - **Day-0 traces (PR24)** for the REPLAN-prone + lead tracks: mine (#1443, 3-site head-offset), rocket (#1462, `_fx_`-at-`h0`), the cold-convex Class-A leads (maxmin/himmel16/like/catmix/polygon), and hhfair (#1236 — first reproduce the `$141`/`$257` residual-emit-compile blocker). Instrument the candidate surfaces, emit each `<model>_mcp.gms`, locate the offending row, and **fill the `Traced Fix-Surface (Day-0)` `file:line`** in each Phase-0 gate.
 - **PR25 Day-0 tally + re-baseline floor:** restate genuine 68 / methodology ~24; firm headline path = mine + rocket (REPLAN-gated).
 - **Est:** ~6 h (lighter than Sprint 28 — the harness already exists). **Risk:** the prep-doc surfaces are hypotheses (Sprint 27: 4× wrong) — the traces are why Day 0 exists.
