@@ -829,7 +829,7 @@ grep -iE 'consolidat|one fix|two models|shared root' docs/planning/EPIC_4/SPRINT
 - [x] Analysis doc created covering all eight backlog issues
 - [x] Each fix-surface framed as a Day-0 hypothesis (PR24), not established fact
 - [x] himmel16/polygon shared-root-cause determined; localized-vs-architectural split recorded
-- [x] Property-test fixture plan specified (shape7+ offset-alias)
+- [x] Property-test fixture plan specified (two offset-alias fixtures: `shape7_offset_alias_cyclic` + `shape8_offset_alias_successor`)
 - [x] Consolidation map produced (multi-model fixes identified)
 - [x] Shared root causes with the cold-convex cohort (Task 3) cross-checked
 - [x] Unknowns 6.1, 6.2, 6.3, 7.1, 7.3, 7.4 verified and updated in KNOWN_UNKNOWNS.md
