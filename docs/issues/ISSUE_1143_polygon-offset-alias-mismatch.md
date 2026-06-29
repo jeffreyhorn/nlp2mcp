@@ -2,7 +2,7 @@
 
 **GitHub Issue:** [#1143](https://github.com/jeffreyhorn/nlp2mcp/issues/1143)
 **Status:** **Sprint 29 Day 5: Day-4 fix REVERTED (Checkpoint-1 caught a match→mismatch regression) → re-deferred to Sprint 30, COUPLED with the distance-constraint-Jacobian symmetry fix** (the objective-gradient cross-term + the distance-Jacobian must land together; neither alone matches). _(was: OPEN)_
-**Severity:** Critical — MCP compilation failure (was objective mismatch, now compile errors)
+**Severity:** Medium — **solve mismatch / KKT inconsistency** (objective-gradient cross-term + the `distance(i,j)` constraint-Jacobian symmetry must both be fixed for polygon to match; matches warm today). _(The old "MCP compilation failure / compile errors" framing was stale — confirmed at Day 0: polygon translates + compiles cleanly and matches warm; the live issue is the cold-solve KKT inconsistency.)_
 **Date:** 2026-03-23
 **Parent Issue:** #1111 (Alias-Aware Differentiation)
 **Affected Models:** polygon
