@@ -34,7 +34,7 @@ Clear the `ISSUE_1447` / `ISSUE_1146` / `ISSUE_1143` gates (all harness Case b �
 
 ## Day 4 Prompt — Priority 4 + 7: extend + property-test fixtures + PR (~7 h)
 
-Extend the Day-3 fix to like (`stat_p` 2.0) + catmix (`stat_x1` 0.95). Add the two property-test fixtures (Task 9 Part C): `tests/fixtures/crossterm_shapes/shape7_offset_alias_cyclic.gms` (himmel16 circular `i++1`) + `shape8_offset_alias_successor.gms` (polygon `ord(j)=ord(i)+1`), wired into `tests/integration/emit/test_ad_crossterm_shapes.py` (in-process `_emit()`/`_stat_row()` pattern). Full-corpus byte-stability + re-solve; open the combined P4-Class-A / P7 PR. Report the genuine-floor lift (number of Case-b cold-recoveries).
+Extend the Day-3 fix to like (`stat_p` 2.0) + catmix (`stat_x1` 0.95). Add the two property-test fixtures (Task 9 Part C): `tests/fixtures/crossterm_shapes/shape7_offset_alias_cyclic.gms` (himmel16 circular `i++1`) + `tests/fixtures/crossterm_shapes/shape8_offset_alias_successor.gms` (polygon `ord(j)=ord(i)+1`), wired into `tests/integration/emit/test_ad_crossterm_shapes.py` (in-process `_emit()`/`_stat_row()` pattern). Full-corpus byte-stability + re-solve; open the combined P4-Class-A / P7 PR. Report the genuine-floor lift (number of Case-b cold-recoveries).
 
 ## Day 5 Prompt — Checkpoint 1 + Priority 4 Class-C (~10 h)
 
