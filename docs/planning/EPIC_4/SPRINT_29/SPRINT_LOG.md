@@ -27,12 +27,12 @@ Harness Case b `stat_x(4,1,1)` 1.33, dual-transfer CONSISTENT. Cold solve = **MS
 
 ### The head-offset (3-site)
 IR: `pr.has_head_domain_offset=True`, domain stored as base `(k,l,i,j)`, body `x(l,i+li(k),j+lj(k)) ⊥ x(l+1,i,j)`.
-- **Site 1 — `comp_pr`:** `comp_pr(k,l,i,j)$(c(l,i,j) and ord(l)<=card-1).. x(l,i+li,j+lj) - x(l+1,i,j) =G= 0` (base-`l`).
+- **Site 1 — `comp_pr`:** `comp_pr(k,l,i,j)$((c(l,i,j)) and (ord(l) <= card(l) - 1)).. x(l,i+li(k),j+lj(k)) - x(l+1,i,j) =G= 0` (base-`l`).
 - **Site 2 — dual transfer (CONFIRMED wrong):** `lam_pr.l(k,l,i,j) = abs(pr.m(k,l,i,j))` reads `pr.m` at the **base** `l`, but `pr.m` is keyed at the **head** `l+1` (`pr.m(k,1,·)=0`). Correct = `pr.m(k,l+1,i,j)`.
 - **Site 3 — `stat_x` (#1224 landed):** `sum(k, lam_pr(k,l,i-li,j-lj) - lam_pr(k,l-1,i,j))` (base-`l`).
 
 ### Decisive experiment — Site 2 alone is INSUFFICIENT (structural, not warm-start)
-Hand-edited the presolve dual transfer to `lam_pr.l(k,l,i,j)$(ord(l)<=card-1) = abs(pr.m(k,l+1,i,j))` and solved the MCP **warm-started from the NLP optimum** → **still MS5.** So the NLP optimum is NOT a solution of the emitted cold LCP even with corrected duals → the head-offset bug is in the **LCP structure** (the base-`l` vs head-`l+1` mismatch pairs `lam_pr(k,l,·)` with the wrong precedence row across all three sites), not just the warm-start.
+Hand-edited the presolve dual transfer to `lam_pr.l(k,l,i,j)$(ord(l) <= card(l) - 1) = abs(pr.m(k,l+1,i,j))` and solved the MCP **warm-started from the NLP optimum** → **still MS5.** So the NLP optimum is NOT a solution of the emitted cold LCP even with corrected duals → the head-offset bug is in the **LCP structure** (the base-`l` vs head-`l+1` mismatch pairs `lam_pr(k,l,·)` with the wrong precedence row across all three sites), not just the warm-start.
 
 ### Day-7 lean: REPLAN
 This is a coordinated multi-site re-derivation of the head-domain-offset emit (the IR collapses the `l+1` head to the base domain + a bool flag, so comp_pr / the dual transfer / stat_x must each independently re-apply the lost offset — and they currently disagree). Not an ≤8h single-site fix (Task-5 lean-REPLAN confirmed; the Sprint-28 Day-4 "22/30 stat_x systemic" probe corroborates). **No metric change** (mine stays `model_infeasible`). Day 7 formalizes the PROCEED/REPLAN decision.
