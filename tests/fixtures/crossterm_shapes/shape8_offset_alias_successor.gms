@@ -11,8 +11,6 @@ $title Shape 8 - successor offset-alias objective cross-term (#1143 polygon)
 
 Set i /i1*i5/;
 Alias(i,j);
-Set succ(i);
-succ(i) = yes$(ord(i) > 1);
 
 Variable x(i), tot;
 x.lo(i) = 0.1;
