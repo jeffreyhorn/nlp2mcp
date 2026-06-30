@@ -120,8 +120,10 @@ Run the harness at the NLP KKT point and read the verdict + max-residual row:
 Cross-check the cold solve INFES rows against the localized row.
 
 ### Risk if Wrong
-- **Case-c (distributed coupling):** Priority 1 yields no Solve in Sprint 29; budget re-allocates to cold-convex Case-b fixes (Task 5 reallocation plan). −1 Solve vs target.
+- **Case-c (distributed coupling):** Priority 1 yields no Solve in Sprint 29; budget re-allocates to cold-convex Case-b fixes (Task 5 reallocation plan). -1 Solve vs target.
 - **Mis-localized surface (PR24):** implementing the head-offset fix when the real surface is elsewhere wastes the P1 budget — the Day-0 trace prevents this.
+
+> **✅ RESOLVED — distributed (multi-site), REPLAN to Sprint 30 (Sprint 29 Days 6–7, 2026-06-29).** mine is a convex LP (no Case-c-as-non-convexity), so the question was single-site vs distributed multi-site. **Answer: distributed.** Day-6 mapped 49 INFES (the `comp_pr` precedence rows by direction k + `def`, all from the `pr(k,l+1,i,j)` head-offset; `x.up=1` emitted, so the 4e10 is the comp_pr LCP residual). Day-7 sharpened it: hand-fixing **Site 2** (dual transfer → `pr.m(k,l+1,i,j)`) and evaluating at the NLP optimum (`iterlim=0`) clears the **`nw`** direction (`li=lj=0`) but leaves **`ne`/`se`/`sw`** (`li(k)`/`lj(k)` active) at **~1e10** — so the bug is the **`l+1` head-offset × `li(k)`/`lj(k)` parameter-offset coupling** in `comp_pr`, an emit-architecture re-derivation, not an ≤8h single-site fix. mine does NOT reach MS 1 even warm-started from the NLP optimum → REPLAN (`ISSUE_1443`). Realized the "Risk if Wrong" path: -1 Solve vs target; freed ~10–16h → Day-12 Class-C cold-convex.
 
 ### Estimated Research Time
 2.5 hours (Day-0 `kkt_residual.py` trace + cold-INFES cross-check + Case-b/c decision)

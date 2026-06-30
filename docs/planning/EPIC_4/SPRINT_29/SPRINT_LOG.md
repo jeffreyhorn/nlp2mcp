@@ -18,6 +18,25 @@
 
 ---
 
+## Day 7 — Priority 1 #1443 mine: close-or-REPLAN → **REPLAN to Sprint 30** (2026-06-29)
+
+**Scope:** the close-or-REPLAN decision. **No `src/` change** (REPLAN; the Site-2 experiment was a hand-edit probe). Docs-only.
+
+### The decisive experiment (sharpens Day 6)
+Hand-fixed **Site 2** (`lam_pr.l(k,l,i,j)$(ord(l) <= card(l) - 1) = abs(pr.m(k,l+1,i,j))`) and evaluated the MCP at the NLP optimum (`iterlim=0`):
+- **`nw` direction** (`li=lj=0`, no parameter offset) → **clears** (residuals 0.0001–0.5).
+- **`ne`/`se`/`sw` directions** (`li(k)`/`lj(k)` active) → **still ~1e10** comp_pr infeasibility (e.g. `se.1.2.1` 1.715e10).
+
+So the bug is the **coupling of the `l+1` head-offset with the `i+li(k)`/`j+lj(k)` parameter offsets** in `comp_pr` — a coordinated multi-site index map, not a single-site dual-transfer fix. Even warm-started from the NLP optimum with corrected duals, mine does NOT reach MS 1 → the PROCEED criterion (`MS 1 + compare_objective_match`) is not met.
+
+### Decision — REPLAN to Sprint 30
+This is an emit-architecture re-derivation of the head-domain-offset (the IR collapses the `l+1` head to the base domain + a bool flag, so `comp_pr` / the dual transfer / `stat_x` must each re-apply it consistently *together with* the `li(k)`/`lj(k)` offsets). Not an ≤8h fix. **REPLAN** (`ISSUE_1443` → Sprint 30; Unknown 1.1 RESOLVED = distributed). mine stays `model_infeasible` — **realizes the "Risk if Wrong" -1 Solve** (the firm Solve path is now 107, with both headline movers mine + rocket REPLAN'd). **Freed ~10–16 h → Day-12 Class-C cold-convex** (per the plan). Sharper-than-Day-6 Sprint-30 starting point: Site 2 (`pr.m` head index) confirmed; the remaining work is the `comp_pr` head×parameter-offset index map + `stat_x` consistency.
+
+### Honest correction
+The Day-6 entry framed this as "grossly distributed/systemic"; Day-7's precise residual measurement refined that — the head-offset *dual transfer* (Site 2) is a real, isolable sub-fix (clears `nw`), and the residual gates specifically on the **offset-bearing directions**. The conclusion (REPLAN, multi-site) is unchanged, but Sprint 30 inherits a much sharper surface.
+
+---
+
 ## Day 6 — Priority 1 #1443 mine: head-offset diagnosis (start) → leans REPLAN (2026-06-29)
 
 **Scope:** clear the `ISSUE_1443` gate, map the cold-INFES by row-type, attempt the coordinated 3-site head-offset index map, drive toward feasibility. **No `src/` change** (diagnosis day; the Site-2 experiment was a hand-edit probe) — docs plus one CI-config edit: the fast-test perf-budget bumped 45s→50s (`.github/workflows/performance-check.yml`, after the count grew with the sprint's new tests/fixtures).
