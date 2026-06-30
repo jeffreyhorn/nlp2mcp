@@ -18,6 +18,26 @@
 
 ---
 
+## Day 8 — Priority 6 #1236 hhfair (the only live +Match): blocker root-cause → **REPLAN to Sprint 30** (2026-06-30)
+
+**Goal:** fix the residual-emit compile blocker (`$184` first error → `$257`/`$141` cascade), read the CES/`prod` verdict, PROCEED (Case b, +1 Match) or REPLAN (Case c). **Outcome: REPLAN.**
+
+**Root-cause refined the Day-0 attribution.** The Day-0 trace pinned the `$141` (dual-transfer over the widened `tl` domain) as the surface — but a full-execution run shows the **first** error is **`$184` at `hhfair.gms(43)`** under the `$onMultiR $include`, which cascades to `$257` (solve skipped) → the `$141` (marginals never assigned). The `$141` was a *downstream symptom*, not the root.
+
+**The `$184` is the #1449 widened-symbol conflict, but for a VARIABLE.** Source declares `n(t)` (line 43); the MCP widens it to `n(tl)` (`var_domain_widenings={'n':('tl',)}`) because `n` appears in `stat_m(tl)`/`stat_c`/`stat_n` over `tl` — from the bilinear `timemoney(t).. n(t)*(m(t)-gamma1*p*c(t)) =e= gamma2` (∂/∂m = n). The `$include` re-declaring `n(t)` collides with the widened `n(tl)` under `$onMultiR`.
+
+**Why it's not an ≤8h fix.** The #1449 param fix declares the widened param at source domain + a `<p>__pw` companion at the widened domain post-include. **That does NOT transfer to `n`** — `n` is a *live nonlinear-stat coefficient* (it's optimized via `stat_n` AND used as a coefficient in `stat_m`), not a value-copy, so it needs a companion *variable* + value-coupling (an emit-architecture workstream). **`--gdx` does not bypass it** either: the residual MCP `$include`s the source for *declarations*, not just the solve, so `$184` fires regardless.
+
+**The +Match needs the warm-start anyway (so the blocker is the gate).** The **cold** MCP compiles + solves to MS-1 but **mismatches** (72.1 vs NLP 87.2) — hhfair is non-convex (W301 nonlinear-equality on `utility` and `timemoney`; W303 bilinear on `timemoney`; plus the CES `prod(t,u(t)**ufact(t))` objective nest), so PATH cold-converges to a spurious KKT point. Recovering the match requires warm-starting from the NLP optimum — exactly what the `$184` presolve `$include` would provide, and exactly what it blocks. So **the CES `stat_*` verdict (Case b/c) is unreadable until the #1449 widened-variable fix lands.**
+
+**Decision: REPLAN to Sprint 30.** File the #1449-widened-variable presolve fix as the prerequisite carryforward (`ISSUE_1236`, Unknown 6.1 resolved). **hhfair Match stays mismatched — no headline +Match this sprint** (it was the only live P6 +Match). **Match holds 92.**
+
+**Unknown 6.2 (sambal/qsambal #1112 consolidation check):** both **match cold** already (Match-neutral, confirming Task 9). `xw(i,j)` is a *parameter* (cell weights: `xw(i,j) = 1$xb(i,j)`), not a constraint dollar-condition routing through the offset-alias #1112 → **no #1112 consolidation needed; no overlap.**
+
+**Docs-only** (the experiments were probes — cold-MCP compile check, NLP→GDX solve, manual residual attempt; no `src/`/golden/DB changes).
+
+---
+
 ## Day 7 — Priority 1 #1443 mine: close-or-REPLAN → **REPLAN to Sprint 30** (2026-06-29)
 
 **Scope:** the close-or-REPLAN decision. **No `src/` change** (REPLAN; the Site-2 experiment was a hand-edit probe). Docs-only.
