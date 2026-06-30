@@ -18,6 +18,27 @@
 
 ---
 
+## Day 6 — Priority 1 #1443 mine: head-offset diagnosis (start) → leans REPLAN (2026-06-29)
+
+**Scope:** clear the `ISSUE_1443` gate, map the cold-INFES by row-type, attempt the coordinated 3-site head-offset index map, drive toward feasibility. **No `src/` change** (diagnosis day; the Site-2 experiment was a hand-edit probe) — docs plus one CI-config edit: the fast-test perf-budget bumped 45s→50s (`.github/workflows/performance-check.yml`, after the count grew with the sprint's new tests/fixtures).
+
+### Confirmed + mapped
+Harness Case b `stat_x(4,1,1)` 1.33, dual-transfer CONSISTENT. Cold solve = **MS5, 49 INFES + 10 REDEF**. The 49 INFES are the **`comp_pr` precedence rows by direction `k`** (nw 6 / ne 9 / se 12 / sw 11 = 38) + the `def` objective row + bound rows — **all from the `pr(k,l+1,i,j)$c(l,i,j)` head-domain-offset**. `x.up=1` is emitted, so the 4.07e10 is the **comp_pr LCP residual** (the precedence complementarity can't be satisfied with the mis-indexed `lam_pr`), not an x blowup.
+
+### The head-offset (3-site)
+IR: `pr.has_head_domain_offset=True`, domain stored as base `(k,l,i,j)`, body `x(l,i+li(k),j+lj(k)) ⊥ x(l+1,i,j)`.
+- **Site 1 — `comp_pr`:** `comp_pr(k,l,i,j)$((c(l,i,j)) and (ord(l) <= card(l) - 1)).. x(l,i+li(k),j+lj(k)) - x(l+1,i,j) =G= 0` (base-`l`).
+- **Site 2 — dual transfer (CONFIRMED wrong):** `lam_pr.l(k,l,i,j) = abs(pr.m(k,l,i,j))` reads `pr.m` at the **base** `l`, but `pr.m` is keyed at the **head** `l+1` (`pr.m(k,1,·)=0`). Correct = `pr.m(k,l+1,i,j)`.
+- **Site 3 — `stat_x` (#1224 landed):** `sum(k, lam_pr(k,l,i-li(k),j-lj(k)) - lam_pr(k,l-1,i,j))` (base-`l`).
+
+### Decisive experiment — Site 2 alone is INSUFFICIENT (structural, not warm-start)
+Hand-edited the presolve dual transfer to `lam_pr.l(k,l,i,j)$(ord(l) <= card(l) - 1) = abs(pr.m(k,l+1,i,j))` and solved the MCP **warm-started from the NLP optimum** → **still MS5.** So the NLP optimum is NOT a solution of the emitted cold LCP even with corrected duals → the head-offset bug is in the **LCP structure** (the base-`l` vs head-`l+1` mismatch pairs `lam_pr(k,l,·)` with the wrong precedence row across all three sites), not just the warm-start.
+
+### Day-7 lean: REPLAN
+This is a coordinated multi-site re-derivation of the head-domain-offset emit (the IR collapses the `l+1` head to the base domain + a bool flag, so comp_pr / the dual transfer / stat_x must each independently re-apply the lost offset — and they currently disagree). Not an ≤8h single-site fix (Task-5 lean-REPLAN confirmed; the Sprint-28 Day-4 "22/30 stat_x systemic" probe corroborates). **No metric change** (mine stays `model_infeasible`). Day 7 formalizes the PROCEED/REPLAN decision.
+
+---
+
 ## Day 5 — Checkpoint 1: re-solve caught a polygon regression → Day-4 fix REVERTED (2026-06-29)
 
 **Scope:** Checkpoint 1 (re-solve the changed-golden set, bucket-diff vs the committed DB, GO/NO-GO) + PR25 re-baseline tally. (`--resolve-changed` mode is the Day-11 P8 build; done manually here via `changed_emit_artifacts.py` + `run_full_test.py --model`.)
