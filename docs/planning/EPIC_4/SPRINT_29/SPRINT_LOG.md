@@ -20,7 +20,7 @@
 
 ## Day 8 — Priority 6 #1236 hhfair (the only live +Match): blocker root-cause → **REPLAN to Sprint 30** (2026-06-30)
 
-**Goal:** fix the residual-emit compile blocker (`$141`/`$257`), read the CES/`prod` verdict, PROCEED (Case b, +1 Match) or REPLAN (Case c). **Outcome: REPLAN.**
+**Goal:** fix the residual-emit compile blocker (`$184` first error → `$257`/`$141` cascade), read the CES/`prod` verdict, PROCEED (Case b, +1 Match) or REPLAN (Case c). **Outcome: REPLAN.**
 
 **Root-cause refined the Day-0 attribution.** The Day-0 trace pinned the `$141` (dual-transfer over the widened `tl` domain) as the surface — but a full-execution run shows the **first** error is **`$184` at `hhfair.gms(43)`** under the `$onMultiR $include`, which cascades to `$257` (solve skipped) → the `$141` (marginals never assigned). The `$141` was a *downstream symptom*, not the root.
 
