@@ -35,10 +35,10 @@ jobs:
           # Budget raised from 45s→50s in Sprint 29: fast-test count grew
           # 4,435→~4,940 (+11%) from the carryforward unit tests + the
           # crossterm-shape fixtures; the 45s gate began tripping on CI variance.
-          if [ $duration -gt 50 ]; then
+          if [ "$duration" -gt 50 ]; then
             echo "❌ BUDGET EXCEEDED: Fast tests took ${duration}s (budget: 50s)"
             exit 1
-          elif [ $duration -gt 47 ]; then
+          elif [ "$duration" -gt 47 ]; then
             echo "⚠️  WARNING: Fast tests took ${duration}s (approaching 50s budget)"
             exit 0
           else

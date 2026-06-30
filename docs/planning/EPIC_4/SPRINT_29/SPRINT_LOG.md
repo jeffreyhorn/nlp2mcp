@@ -20,7 +20,7 @@
 
 ## Day 6 — Priority 1 #1443 mine: head-offset diagnosis (start) → leans REPLAN (2026-06-29)
 
-**Scope:** clear the `ISSUE_1443` gate, map the cold-INFES by row-type, attempt the coordinated 3-site head-offset index map, drive toward feasibility. **No `src/` change** (diagnosis day; the Site-2 experiment was a hand-edit probe). Docs-only.
+**Scope:** clear the `ISSUE_1443` gate, map the cold-INFES by row-type, attempt the coordinated 3-site head-offset index map, drive toward feasibility. **No `src/` change** (diagnosis day; the Site-2 experiment was a hand-edit probe) — docs plus one CI-config edit: the fast-test perf-budget bumped 45s→50s (`.github/workflows/performance-check.yml`, after the count grew with the sprint's new tests/fixtures).
 
 ### Confirmed + mapped
 Harness Case b `stat_x(4,1,1)` 1.33, dual-transfer CONSISTENT. Cold solve = **MS5, 49 INFES + 10 REDEF**. The 49 INFES are the **`comp_pr` precedence rows by direction `k`** (nw 6 / ne 9 / se 12 / sw 11 = 38) + the `def` objective row + bound rows — **all from the `pr(k,l+1,i,j)$c(l,i,j)` head-domain-offset**. `x.up=1` is emitted, so the 4.07e10 is the **comp_pr LCP residual** (the precedence complementarity can't be satisfied with the mis-indexed `lam_pr`), not an x blowup.
