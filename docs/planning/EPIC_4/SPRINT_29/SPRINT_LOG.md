@@ -16,7 +16,7 @@
 | Translate | 135 | 135 | 135 | — | ≥ 135 |
 | Tests | ~4,935 | ~4,941 | ~4,941 | — | ≥ 4,960 |
 
-**CP2 note:** metrics unchanged CP1→CP2 — Days 6–10 landed **no `src/` change** (all four tracks — mine #1443, hhfair #1236, #1385 sarf — REPLAN'd docs-only; Day-10 is measurement-only). The CP2 re-solve of all 5 changed goldens **held every bucket** (no silent regression). Solve ≥ 109 and Match stretch 96 are out of reach this sprint (the three headline movers rocket/mine/hhfair all REPLAN'd); genuine-floor 68 → 69 (Days 3–4: maxmin `-1` + catmix, polygon withdrawn) is the sprint's realized cold-robustness gain.
+**CP2 note:** metrics unchanged CP1→CP2 — Days 6–10 landed **no `src/` change** (the three Days-6–9 REPLANs — mine #1443, hhfair #1236, #1385 sarf — were docs-only; Day-10 is measurement-only). The CP2 re-solve of all 5 changed goldens **held every bucket** (no silent regression). Solve ≥ 109 and Match stretch 96 are out of reach this sprint (the three headline movers rocket/mine/hhfair all REPLAN'd); genuine-floor 68 → 69 (Days 3–4: maxmin `-1` + catmix, polygon withdrawn) is the sprint's realized cold-robustness gain.
 
 ---
 
@@ -40,7 +40,7 @@
 
 All 5 re-solved to the **same bucket + same objective** as the committed DB → **no silent regression**. (`run_full_test.py` mutates `gamslib_status.json` in-tree; restored via `git checkout HEAD --` after reading. The transient generated `maxmin_mcp_presolve.gms` — never a committed golden — was removed; the checkpoint measures, it doesn't add goldens.)
 
-**PR25 re-baseline tally.** As-measured **Solve 107 · Match 92** held (the CP2 re-solve confirms the split is intact). Genuine cold-robustness floor **68 → 69** (Days 3–4: maxmin objvar `-1` + catmix Case-A recovery; polygon's +1 withdrawn Day 5). The genuine/methodology split of the as-measured 92 is unchanged (**68 genuine + ~24 methodology**) — Days 1–3 fixes were cold-correctness (Match-neutral), and Days 6–10 landed no `src/`. **Days 6–10 are four REPLANs** (mine #1443 Solve, hhfair #1236 Match, #1385 sarf Translate — plus rocket #1462 on Day 2) → the three headline movers are all deferred, so Solve ≥ 109 / Match stretch 96 are out of reach; the sprint's realized gains are the Day-1 `_fx_` presolve robustness + the genuine-floor +1.
+**PR25 re-baseline tally.** As-measured **Solve 107 · Match 92** held (the CP2 re-solve confirms the split is intact). Genuine cold-robustness floor **68 → 69** (Days 3–4: maxmin objvar `-1` + catmix Case-A recovery; polygon's +1 withdrawn Day 5). The genuine/methodology split of the as-measured 92 is unchanged (**68 genuine + ~24 methodology**) — Days 1–3 fixes were cold-correctness (Match-neutral), and Days 6–10 landed no `src/`. **By Day 10, four tracks have REPLAN'd** (rocket #1462 Day 2, mine #1443 Day 7 Solve, hhfair #1236 Day 8 Match, #1385 sarf Day 9 Translate) → the three headline movers are all deferred, so Solve ≥ 109 / Match stretch 96 are out of reach; the sprint's realized gains are the Day-1 `_fx_` presolve robustness + the genuine-floor +1.
 
 **Priority 3 close:** #1385 was **re-deferred to Sprint 30 on Day 9** (sarf's atomic symbolic-emit intractable in budget — the Sprint-26-Day-4-failed architecture); the translate-only srpchase short-circuit stays as-is. Nothing to open here — the Day-9 PR (#1484) carries the close.
 
