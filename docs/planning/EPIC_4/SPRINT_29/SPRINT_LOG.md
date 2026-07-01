@@ -9,14 +9,53 @@
 
 | Metric | Day 0 | Day 5 (CP1) | Day 10 (CP2) | Day 13 (final) | Target |
 |---|---|---|---|---|---|
-| Solve | 107 | 107 | 107 | — | ≥ 109 |
-| Match (as-measured) | 92 | 92 | 92 | — | ≥ 92 / stretch 96 |
-| Match (genuine floor) | 68 | 69 | 69 | — | 68 → up (cold-robustness) |
-| model_infeasible | 7 | 7 | 7 | — | ≤ 5 |
-| Translate | 135 | 135 | 135 | — | ≥ 135 |
-| Tests | ~4,935 | ~4,941 | ~4,941 | — | ≥ 4,960 |
+| Solve | 107 | 107 | 107 | **107** | ≥ 109 ✗ |
+| Match (as-measured) | 92 | 92 | 92 | **92** | ≥ 92 ✓ / stretch 96 ✗ |
+| Match (genuine floor) | 68 | 69 | 69 | **69** | 68 → up ✓ |
+| model_infeasible | 7 | 7 | 7 | **7** | ≤ 5 ✗ |
+| Translate | 135 | 135 | 135 | **135** | ≥ 135 ✓ |
+| Tests | ~4,935 | ~4,941 | ~4,941 | **4,971** | ≥ 4,960 ✓ |
+
+**Determinism ×3 seeds ✓** (Day 13). Parse 142.
 
 **CP2 note:** metrics unchanged CP1→CP2 — Days 6–10 landed **no `src/` change** (the three Days-6–9 REPLANs — mine #1443, hhfair #1236, #1385 sarf — were docs-only; Day-10 is measurement-only). The CP2 re-solve of all 5 changed goldens **held every bucket** (no silent regression). Solve ≥ 109 and Match stretch 96 are out of reach this sprint (the three headline movers rocket/mine/hhfair all REPLAN'd); genuine-floor 68 → 69 (Days 3–4: maxmin `-1` + catmix, polygon withdrawn) is the sprint's realized cold-robustness gain.
+
+---
+
+## Day 13 — Final retest + closeout — **SPRINT 29 CLOSED** (2026-07-01)
+
+**Final metrics (canonical 142 corpus): Parse 142 · Translate 135 · Solve 107 · Match 92 · model_infeasible 7 · Tests 4,971 · determinism ✅ ×3 seeds.**
+
+**Authoritative measurement — justified without the full 12h solve-retest.** The rigorous 3× full-142 solve-retest is redundant here: **zero `src/` emit change landed since Checkpoint 2 (Day 10)** — the only sprint `src/` commits were Day 1 (#1462 `_fx_`), Day 3 (#1447 maxmin objvar), and Day 4 (#1143 polygon, *reverted* Day 5) — so the emit is byte-identical to the CP2 state, and PATH is deterministic given the emit. The final numbers are therefore CP2's, re-confirmed three ways today:
+- **Determinism ✅:** emit byte-identical across `PYTHONHASHSEED` {0, 1, 42} on 5 representative models spanning the dict-order-sensitive classes (cesam2 CGE, otpop dynamic-subset, stdcge CGE price-block, robert head-offset, launch presolve-self-ref).
+- **`--resolve-changed` GO:** the Day-11 checkpoint gate re-solved all 5 changed goldens (maxmin/rocket/cclinpts/chain/otpop) → every bucket held vs the committed DB (no silent regression).
+- **Bucket tally** recomputed from the committed DB via `get_candidate_models` (canonical 142): Solve 107 (71 cold + 36 presolve), Match 92, model_infeasible 7.
+
+**PR25 final tally (genuine vs methodology) — vs targets:**
+
+| Metric | Day-0 | Final | Target | Verdict |
+|---|---|---|---|---|
+| Solve | 107 | 107 | ≥ 109 | ✗ (needs mine + rocket PROCEED — both REPLAN'd) |
+| Match (as-measured) | 92 | 92 | ≥ 92 | ✓ (stretch 96 ✗) |
+| Match (genuine floor) | 68 | 69 | 68 → up | ✓ (+1: maxmin `-1` + catmix Case-A; polygon's +1 withdrawn Day 5) |
+| model_infeasible | 7 | 7 | ≤ 5 | ✗ (the deferred mine/camcge/… infeasibles) |
+| Translate | 135 | 135 | ≥ 135 | ✓ |
+| Tests | ~4,935 | 4,971 | ≥ 4,960 | ✓ |
+| Determinism | — | ✅ ×3 | ×3 seeds | ✓ |
+
+Match 92 splits **genuine 68 + ~24 methodology** — unchanged, because **no pipeline-methodology change landed this sprint** (the retry/comparison logic was untouched; the Day-1/3 fixes were cold-correctness, Match-neutral). The one realized headline-adjacent gain is the **genuine cold-robustness floor 68 → 69**. As-measured Solve/Match did not move: **the two Solve movers (mine #1443, rocket #1462) and the one live +Match (hhfair #1236) all REPLAN'd**, exactly the Task-5 "Risk if Wrong" path.
+
+**What shipped firm:** (1) **#1462 `_fx_`-multiplier presolve warm-start** — sprint-wide presolve robustness (Day 1, PR #1476); (2) **#1447 maxmin objvar multi-model objective-scoping fix** + the catmix Case-A recovery it triggered — the genuine-floor +1 (Day 3); (3) **the `--resolve-changed` checkpoint re-solve gate + PR25 re-baseline discipline** (Day 11, PR #1486) — a tested, reusable regression-surfacing tool that retires Sprint-28 retrospective action items #4/#5.
+
+**Closeout done:** `SPRINT_RETROSPECTIVE.md` authored; carryforward ISSUE headers synced (`ISSUE_1443` +robert, `ISSUE_1385` → Sprint 30, `ISSUE_1236` → Sprint 30); Sprint-30 backlog below. **No DB/golden/src change** in this closeout (measurement + docs only). **SPRINT 29 CLOSED.**
+
+**Sprint-30 carryforwards (all REPLAN'd tracks, sharply scoped):**
+- **Head-domain-offset emit-architecture** (`ISSUE_1443`) — now covers **mine (Solve)** *and* **robert (genuine-floor)**; robert is the minimal pure-constant-offset reproduction, mine the full `l+1 × li(k)/lj(k)` multi-site case.
+- **rocket #1462 non-convex forcing** — trust-region / homotopy / multi-start (the `_fx_` warm-start already landed; the residual is intrinsic non-convergence).
+- **hhfair #1236 widened-VARIABLE presolve fix** (`ISSUE_1236`) — the `$184` #1449-for-a-live-nonlinear-stat-variable; prerequisite to reading the CES verdict.
+- **#1385 symbolic runtime-guard cross-term emit** — sarf reference target, cross-terms hand-derived + banked; the Sprint-26-Day-4-failed architecture.
+- **Offset-alias cross-terms #1111/#1112** — polygon successor-offset (reverted Day 5, coupled with the distance-Jacobian); no issue doc yet — file in Sprint 30.
+- **camcge #1330 → Epic 5** — Walras drop-row + fix-numéraire (`CGE_DEGENERACY_SCOPING.md`, finalized Day 11); the Class-B CGE `stat_pz` coefficient item is a *separate* general-emit backlog item (confirmed NOT Walras, Day 12).
 
 ---
 
