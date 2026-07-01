@@ -20,6 +20,30 @@
 
 ---
 
+## Day 12 — Priority 4 Class-B CGE / inconclusive harness-trace + REPLAN-slack disposition (2026-07-01)
+
+**Harness-trace day — disposition only, no wins** (as the prompt anticipated: "do not count as wins without the trace"). All 10 traced models already **match via presolve** (`model_optimal_presolve`) → no losses; the question was genuine-floor (cold) disposition. Metrics hold: Solve 107 · Match 92 · genuine floor 69.
+
+**Class-B CGE family — Case-b localizable, NOT the camcge Walras family (→ NOT Epic 5), but no conversion:**
+- **irscge / lrgcge / moncge:** `kkt_residual` **CASE_B**, `stat_pz(...)` rel **exactly 1.00**, dual transfer **CONSISTENT** (so not the camcge fix-multiplier artifact). But all four `pz`-referencing source equations (`eqpzs`/`eqTz`/`eqE`/`eqDs`) **already emit their cross-term in `stat_pz`** — nothing is missing → the residual is a **coefficient/scaling discrepancy in the CES price-block stationarity**, not a maxmin-style dropped term. And these are heavily **non-convex** (irscge: 31 W301/W303/W304) → even a corrected emit won't cold-converge (they need the presolve warm-start they already use, like hhfair). **→ general emit-quality backlog, NOT Epic 5, NO genuine-floor conversion.**
+- **stdcge:** CASE_B, `stat_epsilon` rel 2.03 (+ `stat_pz` ~0.9) — same family.
+- **marco:** CASE_B, `stat_w(...)` rel 3.34 — model-specific (non-CGE), distinct.
+
+**The 2 inconclusive — remain harness-blocked (both match via presolve, no loss):**
+- **paperco:** `DUAL_TRANSFER_INCONSISTENT` (`comp_up_sales(pulp-2)` gross infeasibility) — the harness warm-start of an upper-bound complementarity is inconsistent, so no clean Case-b/c verdict is readable; needs a dual-transfer fix first.
+- **weapons:** harness abort (GAMS exit 3 on the residual MCP) — verdict unobtainable.
+
+**REPLAN-slack Class-C cold-convex (tforss/markov/robert — convex, match only via presolve):** all **CASE_B**, dual transfer CONSISTENT, but **large model-specific residuals**, not shared quick wins:
+- **robert (KEY FINDING):** `stat_x` rel 7.2 = a **head-domain-offset cross-term bug, the mine #1443 class.** The stock-balance equation `sb` (declared over `(r,tt)`) has a head-offset defining statement `sb(r,tt+1).. … - sum(p, a(r,p)*x(p,tt))` — so the equation instance `sb(r,tt+1)` is the one in which `x(p,tt)` appears. Its stationarity cross-term must therefore be `sum(r, a(r,p)*nu_sb(r,tt+1))`, but the emit produces `nu_sb(r,tt)` (the head offset is not inverted onto the multiplier index). **→ folds into the Sprint-30 head-domain-offset workstream (`ISSUE_1443`), which now converts robert too, not just mine — increased payoff.** Not started here (deliberately-REPLAN'd architecture; end-of-sprint timing).
+- **markov:** `stat_z` rel 13 — no lead/lag offset; distinct large-residual, deferred.
+- **tforss:** `stat_v` rel 2050 — forestry age-class model, large residual, distinct, deferred.
+
+**sambal/qsambal #1112:** already dispositioned Day 8 (both match cold; `xw` is a parameter, no #1112 consolidation) — no further work.
+
+**Net Day 12:** thorough disposition; **no Sprint-29 wins** (all Case-b are either non-convex-no-conversion, harness-blocked, or the deferred head-offset architecture). Valuable carryforward: **robert extends the mine #1443 head-offset workstream**; Class-B CGE **confirmed NOT Walras** (removes them from any Epic-5 expansion). **Docs-only** (read-only harness probes; no `src/`/golden/DB changes).
+
+---
+
 ## Day 11 — Priority 5 (camcge → Epic 5 write-up) + Priority 8 (`--resolve-changed` infra build) (2026-06-30)
 
 **P5 (docs-only) — DONE.** Finalized `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md`: Status STUB → **FINALIZED**, added the Day-11 Priority-5 confirmation block. Re-confirmed the Sprint-28 Task-6 gate with **no new `src/` attempt** — camcge #1330's MS-4-at-iteration-0 is an **inherent Walras-law rank-deficiency** (singular KKT Jacobian: a linearly-dependent market-clearing row + no price numéraire), not a localizable emit bug; the fix is a CGE-domain drop-row + fix-numéraire preprocessing transformation → **Epic 5**. The distinct cohort emit bugs (#1354/#1355/#1317/#1331/#1251) stay in the nlp2mcp backlog. Priority 5 = write-up only, zero `src/`.
