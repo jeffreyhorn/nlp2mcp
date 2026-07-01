@@ -1180,21 +1180,33 @@ def run_resolve_changed(args: argparse.Namespace) -> dict[str, Any]:
 
     db_rel = DATABASE_PATH.relative_to(PROJECT_ROOT).as_posix()
 
-    # Committed baseline buckets from the git-HEAD DB (authoritative; a dirty working
-    # copy must not be able to mask a regression).
-    committed_raw = subprocess.run(
-        ["git", "show", f"HEAD:{db_rel}"],
-        capture_output=True,
-        text=True,
-        cwd=str(PROJECT_ROOT),
-        check=True,
-    ).stdout
-    committed_buckets = {
-        m["model_id"]: _extract_bucket(m)
-        for m in json.loads(committed_raw).get("models", [])
-    }
-
-    model_ids = _changed_golden_model_ids(since)
+    # Fetch the committed baseline buckets (git-HEAD DB — authoritative; a dirty
+    # working copy must not mask a regression) and the changed-golden model set.
+    # Both are git-dependent: a bad --since-commit, a missing HEAD, or no git in
+    # PATH must fail with a clean structured error, not a top-level traceback.
+    try:
+        committed_raw = subprocess.run(
+            ["git", "show", f"HEAD:{db_rel}"],
+            capture_output=True,
+            text=True,
+            cwd=str(PROJECT_ROOT),
+            check=True,
+        ).stdout
+        committed_buckets = {
+            m["model_id"]: _extract_bucket(m)
+            for m in json.loads(committed_raw).get("models", [])
+        }
+        model_ids = _changed_golden_model_ids(since)
+    except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+        return {
+            "error": f"--resolve-changed: git lookup failed (invalid --since-commit "
+            f"{since!r}, missing HEAD, or not a git checkout): {exc}"
+        }
+    except json.JSONDecodeError as exc:
+        return {
+            "error": f"--resolve-changed: committed DB at HEAD:{db_rel} is not valid "
+            f"JSON: {exc}"
+        }
     if not model_ids:
         result = {
             "mode": "resolve-changed",
