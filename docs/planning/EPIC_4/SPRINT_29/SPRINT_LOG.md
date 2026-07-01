@@ -34,7 +34,7 @@
 - **weapons:** harness abort (GAMS exit 3 on the residual MCP) — verdict unobtainable.
 
 **REPLAN-slack Class-C cold-convex (tforss/markov/robert — convex, match only via presolve):** all **CASE_B**, dual transfer CONSISTENT, but **large model-specific residuals**, not shared quick wins:
-- **robert (KEY FINDING):** `stat_x` rel 7.2 = a **head-domain-offset cross-term bug, the mine #1443 class.** `sb(r,tt)` is defined as `sb(r,tt+1).. … - sum(p, a(r,p)*x(p,tt))`, so `x(p,tt)`'s stationarity cross-term must be `sum(r, a(r,p)*nu_sb(r,tt+1))` — but the emit produces `nu_sb(r,tt)` (the head offset is not inverted onto the multiplier). **→ folds into the Sprint-30 head-domain-offset workstream (`ISSUE_1443`), which now converts robert too, not just mine — increased payoff.** Not started here (deliberately-REPLAN'd architecture; end-of-sprint timing).
+- **robert (KEY FINDING):** `stat_x` rel 7.2 = a **head-domain-offset cross-term bug, the mine #1443 class.** The stock-balance equation `sb` (declared over `(r,tt)`) has a head-offset defining statement `sb(r,tt+1).. … - sum(p, a(r,p)*x(p,tt))` — so the equation instance `sb(r,tt+1)` is the one in which `x(p,tt)` appears. Its stationarity cross-term must therefore be `sum(r, a(r,p)*nu_sb(r,tt+1))`, but the emit produces `nu_sb(r,tt)` (the head offset is not inverted onto the multiplier index). **→ folds into the Sprint-30 head-domain-offset workstream (`ISSUE_1443`), which now converts robert too, not just mine — increased payoff.** Not started here (deliberately-REPLAN'd architecture; end-of-sprint timing).
 - **markov:** `stat_z` rel 13 — no lead/lag offset; distinct large-residual, deferred.
 - **tforss:** `stat_v` rel 2050 — forestry age-class model, large residual, distinct, deferred.
 
