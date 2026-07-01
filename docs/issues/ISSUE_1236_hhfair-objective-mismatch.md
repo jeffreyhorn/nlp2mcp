@@ -4,7 +4,7 @@
 **Status:** **REPLAN → Sprint 30** (Sprint 29 Day 8, 2026-06-30) — the compile blocker's first error is `$184` (the #1449 widened-symbol conflict for the VARIABLE `n`, source `n(t)` vs MCP-widened `n(tl)`), not the Day-0-attributed `$141`; the `__pw`-companion fix doesn't transfer (n is a live nonlinear-stat coefficient), and the +Match needs a warm-start the non-convex cold MCP can't reach. Prerequisite = the #1449 widened-variable presolve fix. See the Day-8 decision block in §"PROCEED/REPLAN Signal" below. _(was: OPEN)_
 **Severity:** Medium — Model solves optimally but objective differs from NLP
 **Date:** 2026-04-09
-**Last Updated:** 2026-04-09
+**Last Updated:** 2026-06-30 (Sprint 29 Day 8 — REPLAN → Sprint 30; the `$184` #1449 widened-VARIABLE blocker)
 **Affected Models:** hhfair
 
 ---
