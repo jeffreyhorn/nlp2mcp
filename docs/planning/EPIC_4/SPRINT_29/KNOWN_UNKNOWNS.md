@@ -284,7 +284,7 @@ grep -nF -e "Layer 4" -e ".lo('h0')" -e "piL_v" -e "comp_lo_v" data/gamslib/mcp/
 ```
 
 ### Risk if Wrong
-- **Case c (intrinsic):** Priority 2 lands only the warm-start (general presolve robustness, no rocket recovery) and REPLANs the rocket match to Sprint 30. −1 of the projected +1 Solve/+1 Match.
+- **Case c (intrinsic):** Priority 2 lands only the warm-start (general presolve robustness, no rocket recovery) and REPLANs the rocket match to Sprint 30. -1 of the projected +1 Solve/+1 Match.
 
 > **✅ RESOLVED — Case c, REPLAN to Sprint 30 (Sprint 29 Day 2, 2026-06-29).** Answer to RQ1/RQ2/RQ3: **(2)/(3) NO** — the `v('h0')=0` degeneracy is **not** the MS-5 driver. Suppressing the redundant `v_fx_h0` `_fx_` equation and pinning v('h0')=0 by bound left rocket at **MS 5**, identical `EXIT - other error`. **(1)** the residual is **not cleanable by warm-start value** (it moves between `stat_step` 0.497 / `stat_ht(h0)` 1.00 with `nu_*_fx`=0/var.m; negating only flips the sign) → the transferred NLP duals don't make the NLP point an exact MCP KKT point. With the embedded NLP converging (obj 1.004 ≈ ref 1.0128) but PATH failing at the **initial Jacobian** of a heavily-nonlinear MCP (1307 elements, 903 nonlinear; bilinear + division-by-variable + nonlinear-equality), this is **intrinsic non-convergence = Case c**. The Day-1 `_fx_` warm-start landed as firm presolve robustness (PR #1476); rocket's +1 Solve/+1 Match → **DEFERRED to Sprint 30** forcing (`ISSUE_1462`). Realized: as predicted by "Risk if Wrong" (-1 Solve/-1 Match vs the projected +1).
 
@@ -410,6 +410,8 @@ Development team (AD/KKT specialist)
 **Evidence:** `docs/issues/ISSUE_1385_*.md` §"Phase 0" (the atomicity constraint) + §"Sprint 27 Day 7".
 **Decision:** the Sprint-29 #1385 fix is the **atomic** re-emit + cross-term pair; landing only one is invalid.
 
+> **✅ RESOLVED — atomicity holds → REPLAN (Sprint 29 Day 9, 2026-06-30).** Confirmed: a translate-only landing (short-circuit without cross-terms) is the forbidden inconsistent MCP, so there is **no safe partial**. For the smallest target (sarf), the cross-terms were hand-derived (tractable — see Unknown 3.3 / `ISSUE_1385`) but the atomic symbolic-emit implementation is the Sprint-26-Day-4-failed architecture (`nu_slack("srn")` set-name-index bug, reverted) and is intractable to de-risk in the ~7h budget → **REPLAN to Sprint 30** as a dedicated symbolic-emit workstream. sarf stays `translate_timeout`; no +Translate this sprint.
+
 ---
 
 ## Unknown 3.2: Which translation-timeout model is the smallest viable Phase-0 target?
@@ -481,6 +483,8 @@ Development team (AD/KKT specialist)
 **Findings:** for each runtime-guarded re-emitted constraint `g`, every primal `y` it touches gains `+ sum(g, ∂g/∂y·nu_g)` in `stat_y` (`nu_g` for `=e=`, `lam_g≥0` for `=l=`/`=g=`), with the constraint re-emitted as `g.. sum(<bound>$(<predicate>), <body>)` — and **no quoted-set-name multiplier indices** (the Day-4 `nu_slack("srn")` bug, where `srn` is a set not an element).
 **Evidence:** `docs/issues/ISSUE_1385_*.md` §"Phase 0" (Hand-Derived KKT Shape + Expected Emit Pattern).
 **Decision:** the shape is the `J_gᵀ·lam` cross-term; the exact builder `file:line` (`src/kkt/stationarity.py` + `src/ad/index_mapping.py`) is **to be confirmed by the Day-0 trace**.
+
+> **✅ RESOLVED — concrete shape derived for sarf (Sprint 29 Day 9, 2026-06-30).** The smallest target sarf was traced and its full cross-term shape derived. The main 4-D `task(g,t,mn,mn)` is touched by 5 guarded constraints (tbal/labor/equipb1/equipb2/acost3); `stat_task(g,t,m,n)$taskposs(g,t)` = `-(nu_tbal(g,t))$tech(g,m,n) + tech(g,m,n)*lam_labor(t) + (tech(g,m,n)*lam_equipb1(m,t))$equipposs(m,t) + (tech(g,m,n)*lam_equipb2(n,t))$equipposs(n,t) + oc(g,m,n)*nu_acost3` + the `tadj`-special `harvest-c`/`cotton-p`/`self-prop` term - `piL_task`, all sum-indexed by the stat domain `(g,t,m,n)` (no quoted-set-name indices). **Builder file:line: the AD short-circuit `src/ad/index_mapping.py` `_is_blowup_dynamic_subset_equation` is 1-D-only and must extend to the 2-D dynamic-subset shape; the symbolic cross-term emit must be added in `src/kkt/stationarity.py` (zero enumerated instances → differentiate each body parametrically).** Implementation = the Sprint-26-Day-4-failed architecture → REPLAN to Sprint 30 (see Unknown 3.1 / `ISSUE_1385`).
 
 ---
 
@@ -562,7 +566,7 @@ Development team (AD/KKT specialist)
 ✅ **Status:** VERIFIED — shared shape confirmed (and broader than just the objective-variable)
 **Verified by:** Task 3 (Cold-Convex Cohort Survey)
 **Date:** 2026-06-24
-**Findings:** maxmin's `stat_mindist` residual is **exactly 1.0** (the bare `max mindist` gradient `−1` with the `∑ lam_mindist1a` constraint cross-term missing) — confirming the missing-objective-variable-cross-term root cause. The shape **recurs**: the exact-integer residuals (1.0/2.0) on `stat_area` (himmel16), `stat_p` (like), `stat_x1` (catmix), `stat_theta` (polygon), `stat_pz` (irscge/lrgcge/moncge), `stat_epsilon` (stdcge) are the same fingerprint — a scalar/intermediate variable whose stationarity drops the defining-`=e=`/objective Jacobian-transpose cross-term. **Three fix-classes** (COLD_CONVEX_COHORT_SURVEY §4): Class A (objective/defining cross-term — maxmin/himmel16/like/catmix/polygon/camshape/qsambal/sambal, one shared `src/kkt/stationarity.py` fix), Class B (CGE price/numéraire family — gate to Task 4), Class C (model-specific large-residual).
+**Findings:** maxmin's `stat_mindist` residual is **exactly 1.0** (the bare `max mindist` gradient `-1` with the `∑ lam_mindist1a` constraint cross-term missing) — confirming the missing-objective-variable-cross-term root cause. The shape **recurs**: the exact-integer residuals (1.0/2.0) on `stat_area` (himmel16), `stat_p` (like), `stat_x1` (catmix), `stat_theta` (polygon), `stat_pz` (irscge/lrgcge/moncge), `stat_epsilon` (stdcge) are the same fingerprint — a scalar/intermediate variable whose stationarity drops the defining-`=e=`/objective Jacobian-transpose cross-term. **Three fix-classes** (COLD_CONVEX_COHORT_SURVEY §4): Class A (objective/defining cross-term — maxmin/himmel16/like/catmix/polygon/camshape/qsambal/sambal, one shared `src/kkt/stationarity.py` fix), Class B (CGE price/numéraire family — gate to Task 4), Class C (model-specific large-residual).
 **Decision:** maxmin is the **lead** + himmel16/like/catmix/polygon are clean confirmatory Class-A cases; a single `stationarity.py` correction plausibly lands the whole Class-A batch (~6–8 models for ~one fix's effort) — the highest-ROI Priority-4 work. Per-model only for Class C.
 
 ---
@@ -762,12 +766,12 @@ Development team (Epic-5 scoping)
 ### Assumption
 > **⚠️ SUPERSEDED by the Task-2 Verification Results below (2026-06-24).** The four-active-mismatch framing and the objective deltas in this Assumption are the **stale pre-Sprint-28 PROJECT_PLAN values** — on the Day-0 DB, quocge/prolog/sambal/qsambal already match and only hhfair remains. Read the Assumption as the original hypothesis, not current state.
 
-At least 2 of the objective-mismatch cohort — #1332 quocge (25.683 vs 25.5085), #1247 prolog (−73.5 vs −0.0), #1239 sambal/qsambal (1028 vs 3.97), #1236 hhfair (54.9 vs 87.2) — are Case-b localizable emit bugs the harness can pin to a stationarity/complementarity row.
+At least 2 of the objective-mismatch cohort — #1332 quocge (25.683 vs 25.5085), #1247 prolog (-73.5 vs -0.0), #1239 sambal/qsambal (1028 vs 3.97), #1236 hhfair (54.9 vs 87.2) — are Case-b localizable emit bugs the harness can pin to a stationarity/complementarity row.
 
 ### Research Questions
 1. What is each model's `kkt_residual.py` Case-(a/b/c) verdict at the NLP KKT point?
 2. For the Case-b ones, what is the max-residual row (the fix surface hypothesis, PR24)?
-3. Is the large-gap pair (sambal 1028 vs 3.97; prolog −73.5 vs −0.0) a Case-b sign/scale bug or a Case-c spurious local optimum?
+3. Is the large-gap pair (sambal 1028 vs 3.97; prolog -73.5 vs -0.0) a Case-b sign/scale bug or a Case-c spurious local optimum?
 
 ### How to Verify
 ```bash
@@ -793,7 +797,7 @@ Development team (AD/KKT specialist)
 **Decision:** P6 live +Match = **hhfair only** (firm if Case b *after* the compile fix); quocge/prolog/sambal/qsambal **removed from the +Match projection**. Per-model Case-b/c detail is finalized by **Task 9**.
 
 > **✅ RESOLVED — hhfair REPLAN to Sprint 30 (Sprint 29 Day 8, 2026-06-30).** The Day-8 root-cause refined the compile-blocker: the residual emit's **first** error is **`$184` at `hhfair.gms(43)`** (under the `$onMultiR $include`) → `$257` (solve skipped) → the `$141` cascade. **`$184` = the #1449 widened-symbol conflict, for a VARIABLE:** source declares `n(t)`, the MCP widens it to `n(tl)` (because `n` appears in `stat_m(tl)`/`stat_c`/`stat_n` over `tl`, from the bilinear `timemoney(t).. n(t)*(m(t)-…)`), and the `$include` re-declaring `n(t)` collides under `$onMultiR`. The **#1449 param `__pw`-companion fix does NOT transfer** (n is a *live nonlinear-stat coefficient*, not a value-copy → needs a companion *variable* + value-coupling = an emit-architecture workstream). **`--gdx` does NOT bypass it** (the `$include` provides declarations, not just the solve). And the +Match needs the warm-start anyway: the cold MCP reaches MS-1 but **mismatches** (72.1 vs 87.2) — non-convex (W301 nonlinear-equality on `utility` and `timemoney`; W303 bilinear on `timemoney`; plus the CES `prod(t,u(t)**ufact(t))` objective nest), so it cold-converges to a spurious KKT point; recovering the match requires warm-starting from the NLP optimum — exactly what `$184` blocks. **→ REPLAN to Sprint 30** (the #1449 widened-variable presolve fix is the prerequisite; CES verdict unreadable until it lands). **No headline +Match this sprint** (Match holds 92). **Unknown 6.2 (sambal/qsambal #1112):** both **match cold** already (Match-neutral); `xw(i,j)` is a parameter (cell weights), not a constraint dollar-condition routing through the offset-alias #1112 → **no #1112 consolidation needed.**
-**Partial findings (Task 2, 2026-06-24) — THIS SUPERSEDES THE ASSUMPTION ABOVE:** **the objective-mismatch cohort has largely already resolved** — on the Day-0 DB, **quocge (25.683≈25.6834), prolog (≈−0.0), sambal and qsambal (3.9682) all MATCH**; only **hhfair (72.147 vs 87.159) still mismatches**. The Assumption's four-active-mismatch list and its objective deltas are the **stale pre-Sprint-28 PROJECT_PLAN values** ("+2 Match (#1332/#1247/#1239/#1236)") and should not be treated as current. **Priority 6's live target is hhfair (#1236) only** (≤ +1 Match); the freed budget should pre-allocate per the Task-5 REPLAN reallocation. hhfair's Case-b/c verdict is the Task-4/9 trace.
+**Partial findings (Task 2, 2026-06-24) — THIS SUPERSEDES THE ASSUMPTION ABOVE:** **the objective-mismatch cohort has largely already resolved** — on the Day-0 DB, **quocge (25.683≈25.6834), prolog (≈-0.0), sambal and qsambal (3.9682) all MATCH**; only **hhfair (72.147 vs 87.159) still mismatches**. The Assumption's four-active-mismatch list and its objective deltas are the **stale pre-Sprint-28 PROJECT_PLAN values** ("+2 Match (#1332/#1247/#1239/#1236)") and should not be treated as current. **Priority 6's live target is hhfair (#1236) only** (≤ +1 Match); the freed budget should pre-allocate per the Task-5 REPLAN reallocation. hhfair's Case-b/c verdict is the Task-4/9 trace.
 
 ---
 
@@ -831,16 +835,16 @@ Development team (AD/KKT specialist)
 
 ---
 
-## Unknown 6.3: Is prolog's NLP reference (−0.0) a valid comparison target?
+## Unknown 6.3: Is prolog's NLP reference (-0.0) a valid comparison target?
 
 ### Priority
 **Low** — a data-validity question affecting only whether prolog is a meaningful Case-b target.
 
 ### Assumption
-prolog's NLP reference objective (−0.0, vs MCP −73.5) is a genuine optimum, not a degenerate/zero-objective artifact or a recording error — so the mismatch is a real bug worth fixing.
+prolog's NLP reference objective (-0.0, vs MCP -73.5) is a genuine optimum, not a degenerate/zero-objective artifact or a recording error — so the mismatch is a real bug worth fixing.
 
 ### Research Questions
-1. Is prolog's NLP −0.0 a true optimum or a near-zero/degenerate objective?
+1. Is prolog's NLP -0.0 a true optimum or a near-zero/degenerate objective?
 2. Does prolog's CES demand singular Jacobian (#1070) make it inherently Case-c (a CGE-cohort member, → Category 5)?
 
 ### How to Verify
@@ -860,7 +864,7 @@ Development team (Sprint planning)
 ### Verification Results
 ✅ **Status:** VERIFIED — valid reference, prolog resolved
 **Verified by:** Task 9 (Backlog Fix-Surface Analysis) — Date 2026-06-27
-**Findings:** the DB shows prolog `likely_convex`, `model_optimal`, **comparison_status = match**, `nlp_objective = -0.0`, `mcp_objective = -6.25e-13` (≈ −0.0). So the NLP −0.0 reference is a **genuine near-zero optimum** and the MCP **now reproduces it** (the −73.5 mismatch was pre-#1227, stale). prolog is **Case-a healthy**, *not* inherently Case-c — the historical #1070 "CES singular Jacobian" framing is superseded (it solves cleanly cold).
+**Findings:** the DB shows prolog `likely_convex`, `model_optimal`, **comparison_status = match**, `nlp_objective = -0.0`, `mcp_objective = -6.25e-13` (≈ -0.0). So the NLP -0.0 reference is a **genuine near-zero optimum** and the MCP **now reproduces it** (the -73.5 mismatch was pre-#1227, stale). prolog is **Case-a healthy**, *not* inherently Case-c — the historical #1070 "CES singular Jacobian" framing is superseded (it solves cleanly cold).
 **Evidence:** `data/gamslib/gamslib_status.json` (prolog row); `docs/planning/EPIC_4/SPRINT_29/BACKLOG_FIX_SURFACE_ANALYSIS.md` §6.3.
 **Decision:** prolog **leaves the Priority-6 mismatch cohort** (already matches) and does **not** move to Category 5 / Epic 5 — it is resolved, not CGE-degenerate.
 
@@ -923,7 +927,7 @@ The himmel16/polygon offset-alias gradient defect is a localized AD cross-term c
 Prototype-then-revert a localized cross-term correction; if it fixes himmel16/polygon without touching the alias-aware core, it's localized (PROCEED); if it requires #1111/#1112, REPLAN to Sprint 30 (file the AD-engine track).
 
 ### Risk if Wrong
-- **Architectural (Case c):** Priority 7 REPLANs to Sprint 30; −1–2 Match; budget re-allocates to the objective-mismatch cohort (Task 5 reallocation).
+- **Architectural (Case c):** Priority 7 REPLANs to Sprint 30; -1–2 Match; budget re-allocates to the objective-mismatch cohort (Task 5 reallocation).
 
 ### Estimated Research Time
 2 hours (localized-fix prototype-then-revert probe + blast-radius scan)
@@ -1116,7 +1120,7 @@ Development team (Sprint planning)
 ✅ **Status:** VERIFIED
 **Verified by:** Task 2 (Bucket-Provenance Baseline + Re-Baseline Discipline)
 **Date:** 2026-06-24
-**Findings:** `git diff 803a259a..HEAD -- src/ scripts/` is **empty** (only Sprint 29 planning docs landed since the Sprint 28 close, PR #1465). The committed DB recomputes to the canonical **Solve 107 / Match 92 / model_infeasible 7** (raw 115 solve − 8 out-of-scope), and has **0** absolute-path leaks (`grep -c /Users/ … = 0`, the #1400 relativization holds).
+**Findings:** `git diff 803a259a..HEAD -- src/ scripts/` is **empty** (only Sprint 29 planning docs landed since the Sprint 28 close, PR #1465). The committed DB recomputes to the canonical **Solve 107 / Match 92 / model_infeasible 7** (raw 115 solve - 8 out-of-scope), and has **0** absolute-path leaks (`grep -c /Users/ … = 0`, the #1400 relativization holds).
 **Evidence:** `docs/planning/EPIC_4/SPRINT_29/BASELINE_METRICS.md` §"Baseline source" + §1.
 **Decision:** Sprint 29 Day 0 = Sprint 28 final; reuse the committed DB — **no fresh ~4 h retest required.** (803a259a = the PR #1463 Sprint-28-close merge.)
 

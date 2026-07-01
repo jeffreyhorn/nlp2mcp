@@ -80,6 +80,25 @@ fi
 
 ### PROCEED/REPLAN Signal
 
+> **🔴 DECIDED — REPLAN to Sprint 30 (Sprint 29 Day 9, 2026-06-30).** Smallest target selected = **sarf** (471 lines, the smallest of iswnm 691 / nebrazil 1021 / mexls 1088). Day-9 trace pinned the blow-up and hand-derived the cross-terms, but the **atomic symbolic-emit implementation is intractable in the Day-9 budget** given the Sprint-26 precedent → re-defer the cross-term half.
+>
+> **Blow-up diagnosis (sarf).** Three constraints over **2-D dynamic-subset conditions** blow up the AD enumeration: `tbal(g,t)$taskposs(g,t)` (**384** instances), `equipb1(m,t)$equipposs(m,t)` (**648**), `equipb2(n,t)$equipposs(n,t)` (**120**). `taskposs`/`equipposs` are computed from `treq`/`tech` data (sarf.gms:371–384) so they have **zero concrete members at compile time** → `enumerate_equation_instances` includes the **full Cartesian** product ("Including unevaluable instances by default") → `differentiate_expr` blows up (>200s). **The existing srpchase short-circuit (`_is_blowup_dynamic_subset_equation`) is 1-D-only** (`len(eq_domain) != 1` bails) so it does **not** fire on sarf's 2-D shape — sarf currently `translate_timeout`s with no short-circuit.
+>
+> **Hand-derived cross-terms (the gate deliverable — TRACTABLE).** The main variable `task(g,t,mn,mn)` (4-D) is touched by five guarded constraints; its stationarity is:
+> ```
+> stat_task(g,t,m,n)$taskposs(g,t)..
+>     - (nu_tbal(g,t))$tech(g,m,n)                          [tbal RHS sum, normalized LHS-RHS]
+>     + (tadj(g)*nu_tbal(g,t))$(sameas(g,'harvest-c') and sameas(m,'cotton-p') and sameas(n,'self-prop'))
+>     + tech(g,m,n)*lam_labor(t)                             [labor]
+>     + (tech(g,m,n)*lam_equipb1(m,t))$equipposs(m,t)        [equipb1, m=implement]
+>     + (tech(g,m,n)*lam_equipb2(n,t))$equipposs(n,t)        [equipb2, n=power source]
+>     + oc(g,m,n)*nu_acost3                                  [acost3]
+>     - piL_task(g,t,m,n)  =E= 0;
+> ```
+> All terms carry the runtime `$taskposs(g,t)`/`$equipposs` guards; sum indices are the stat equation's own domain `(g,t,m,n)` — **no quoted-set-name multiplier indices** (the Day-4 `nu_slack("srn")` bug).
+>
+> **Why REPLAN (the implementation, not the derivation).** Landing this requires (a) extending the short-circuit gate to the **2-D** dynamic-subset shape AND (b) a **new symbolic runtime-guard cross-term emit path** in `stationarity.py` (the short-circuited equations enumerate **zero** instances, so the cross-terms can't be assembled from per-instance Jacobian entries — they must be built by symbolically differentiating each constraint body parametrically in `(g,t,m,n)`). **This is precisely the architecture that FAILED in Sprint 26 Day 4** (commit `243fe578`, reverted — the `nu_slack("srn")`/`lam_demand("srn")` set-name-literal-index bug + dropped `J_gᵀ·lam` cross-terms). sarf is **strictly harder than srpchase** (4-D `task` × 5 guarded constraints × **nested** `taskposs`/`equipposs` guards, vs srpchase's 1-D `slack`/`demand`). The **atomicity constraint** (Unknown 3.1) forbids banking translate-only (re-emit without correct cross-terms = inconsistent MCP), so there is **no safe partial landing** — it is all-or-nothing, and the "all" is a high-risk architectural rewrite the ~7h budget can't de-risk against the Sprint-26 failure mode. **→ REPLAN to Sprint 30** as a dedicated builder-pipeline-aware symbolic-emit workstream (sarf as the reference target; the hand-derivation above is the banked spec). **No +Translate this sprint** (sarf stays `translate_timeout`).
+
 - **Translate gain only is already banked** (srpchase translate-time short-circuit landed Sprint 27). The Sprint-29 gate is the **cross-term half**: PROCEED only if a smallest-target (`iswnm`/`sarf`/`mexls`/`nebrazil`) has hand-derivable runtime-guard `stat_*` cross-terms that land **atomically** with the constraint re-emit; otherwise re-defer.
 - **Traced Fix-Surface (Day-0):** **to be confirmed by the Day-0 trace** — the runtime-guard equation-body re-emit in `src/kkt/stationarity.py` and the `J_gᵀ·lam` cross-term assembly for the short-circuited equations (the AD layer enumerates zero instances for them — `src/ad/index_mapping.py` `enumerate_equation_instances` / `_is_blowup_dynamic_subset_equation`). Trace command: pick the smallest target, hand-derive its skipped-constraint cross-terms, and cite the `file:line` where the re-emit + cross-term must be injected. **Note (Task 5):** the smallest-target selection + the PROCEED/REPLAN decision is finalized by Task 5.
 

@@ -18,6 +18,24 @@
 
 ---
 
+## Day 9 — Priority 3 #1385 translation-timeout cross-terms: smallest-target trace → **REPLAN to Sprint 30** (2026-06-30)
+
+**Goal:** pick the smallest viable `translate_timeout` target, hand-derive its runtime-guard `stat_*` cross-terms, land the **atomic** pair (re-emit + `J_gᵀ·lam`). **Outcome: REPLAN** (hand-derivation tractable; atomic symbolic-emit implementation intractable in budget).
+
+**Smallest target = sarf** (471 lines, vs iswnm 691 / nebrazil 1021 / mexls 1088).
+
+**Blow-up diagnosis.** sarf times out (>200s) on **three 2-D dynamic-subset constraints**: `tbal(g,t)$taskposs(g,t)` (**384** instances), `equipb1(m,t)$equipposs(m,t)` (**648**), `equipb2(n,t)$equipposs(n,t)` (**120**). `taskposs`/`equipposs` are computed from `treq`/`tech` data (sarf.gms:371–384) → **zero concrete members at compile time** → `enumerate_equation_instances` includes the full Cartesian product → `differentiate_expr` blows up. **The existing srpchase short-circuit (`_is_blowup_dynamic_subset_equation`) is 1-D-only** (`len(eq_domain) != 1` bails) → it does **not** fire on sarf's 2-D shape, so sarf has no short-circuit at all.
+
+**Hand-derivation (the gate deliverable — DONE, tractable).** The 4-D `task(g,t,mn,mn)` is touched by five guarded constraints (tbal, labor, equipb1, equipb2, acost3) + the special `tadj("harvest-c","cotton-p","self-prop")` term. The complete `stat_task(g,t,m,n)$taskposs(g,t)` cross-term shape is banked in `ISSUE_1385` (5 terms + the tadj special term, all `$taskposs`/`$equipposs`-guarded, sum indices = the stat equation's own domain → **no quoted-set-name multiplier indices**, avoiding the Day-4 `nu_slack("srn")` bug).
+
+**Why REPLAN (the implementation, not the derivation).** Landing it needs (a) extending the short-circuit gate to the **2-D** shape AND (b) a **new symbolic runtime-guard cross-term emit path** in `stationarity.py` — because the short-circuited equations enumerate **zero** instances, the cross-terms must be built by symbolically differentiating each body parametrically in `(g,t,m,n)`, not assembled from per-instance Jacobian entries. **This is exactly the architecture that FAILED in Sprint 26 Day 4** (commit `243fe578`, reverted — the set-name-literal-index bug + dropped cross-terms). sarf is **strictly harder than srpchase** (4-D `task` × 5 guarded constraints × **nested** `taskposs`/`equipposs`). The **atomicity constraint** (Unknown 3.1) forbids a translate-only landing, so it's all-or-nothing — and the "all" is a high-risk architectural rewrite the ~7h budget can't de-risk against the Sprint-26 failure. **→ REPLAN to Sprint 30** as a dedicated builder-pipeline-aware symbolic-emit workstream (sarf = reference target; the hand-derivation = banked spec). **No +Translate this sprint** (sarf stays `translate_timeout`; Translate holds 135).
+
+**Unknowns resolved:** 3.2 (smallest target = sarf), 3.3 (cross-term shape hand-derived), 3.1 (atomicity holds → no partial landing → REPLAN).
+
+**Docs-only** (the diagnosis was probes — timeout reproduction, per-equation instance-count + blow-up profiling; no `src/`/golden/DB changes).
+
+---
+
 ## Day 8 — Priority 6 #1236 hhfair (the only live +Match): blocker root-cause → **REPLAN to Sprint 30** (2026-06-30)
 
 **Goal:** fix the residual-emit compile blocker (`$184` first error → `$257`/`$141` cascade), read the CES/`prod` verdict, PROCEED (Case b, +1 Match) or REPLAN (Case c). **Outcome: REPLAN.**
@@ -212,7 +230,7 @@ Every prep verdict held on current `main` — **no drift**. JSON reports in `/tm
 - **mine #1443:** three sites pinned — `stat_x` cross-term (landed #1224) `src/kkt/stationarity.py:5562-5570`; presolve dual transfer `src/emit/emit_gams.py:1281` (`lam_pr.l = abs(pr.m)`, same-index, sign-discarding); `comp_pr` head var `x(l+1,i,j)`. Residual is in the LP row despite consistent dual transfer → the `l+1`/`±li`/`±lj` correspondence is not aligned across the three sites (corroborates Task-5 lean-REPLAN).
 - **rocket #1462:** `nu_*_fx_h0` declared + used in `stat_ht/m/v` but the presolve dual-transfer block (`emit_gams.py:1281-1310`) emits **no `nu_*_fx_*` init** → starts at 0 → `stat_step` residual. Layer-4 unfix `_emit_presolve_fx_unfix` at `emit_gams.py:1090`.
 - **maxmin #1447 — ⚠️ prep hypothesis CORRECTED (PR24 catch):** the dropped term is the **objective gradient `-1`** (maxmin maximizes `mindist`), not the constraint sum (the `sum((n,nn)$low, lam_mindist1a)` **is** present). Surface: the objvar stationarity assembly in `src/kkt/stationarity.py` (`build_stationarity_equations`:2090 → `_build_indexed_stationarity_expr`:2650 / objective-gradient merge :2222).
-- **himmel16 #1146:** two candidate surfaces (root disambiguates Day 3) — (a) cyclic `i++1` decomposed into `i+5`$(ord≤card-5)+`i-1`$(ord>1) in `stat_x`/`stat_y` (`derivative_rules.py` circular branch ~:1866); (b) the `stat_area` `-1` objvar-defining gradient interacting with the signed `nu_areadef` transfer (raw −2.0). Integer 2.0 = 2× maxmin's 1.0.
+- **himmel16 #1146:** two candidate surfaces (root disambiguates Day 3) — (a) cyclic `i++1` decomposed into `i+5`$(ord≤card-5)+`i-1`$(ord>1) in `stat_x`/`stat_y` (`derivative_rules.py` circular branch ~:1866); (b) the `stat_area` `-1` objvar-defining gradient interacting with the signed `nu_areadef` transfer (raw -2.0). Integer 2.0 = 2× maxmin's 1.0.
 - **polygon #1143:** clean **dropped predecessor offset-image cross-term** — `stat_theta` has the own-row gradient but not the `+0.5*r(i)*r(i-1)*cos(...)` term from the `i-1` row (where `theta(i+1)` resolves to `theta(i)`). Surface: `derivative_rules.py` non-circular successor branch (~:1989/:2022) over `j(i+1)`.
 - **hhfair #1236:** `$141` blocker reproduced (13 errors); root = the dual-transfer block emits multiplier inits over the **widened `tl` domain** (`nu_budget.l(tl) = -(budget.m(tl))`) reading unpopulated `.m('0')` (set split `tl /'0'..'3'/` vs active `t /'1'..'3'/`, propagated by the domain-widened `n(tl)`). Fix surface = restrict the transfer to the active subset (`emit_gams.py:1281-1310`); verdict gated on the Day-8 compile fix.
 
