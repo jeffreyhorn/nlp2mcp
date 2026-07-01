@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from scripts.gamslib.run_full_test import (
     _bucket_severity,
+    _checkpoint_verdict,
     _classify_bucket_move,
     _extract_bucket,
     _model_id_from_golden_path,
@@ -119,5 +120,38 @@ class TestClassifyBucketMove:
         assert _classify_bucket_move(self.MATCH_OPT, self.MATCH_PRESOLVE) == "shift"
 
     def test_shift_is_not_backward(self):
-        # backward is the only NO-GO; a same-severity relabel must not be one.
+        # A same-severity relabel must never be a NO-GO.
         assert _classify_bucket_move(self.MATCH_PRESOLVE, self.MATCH_OPT) != "backward"
+
+
+class TestCheckpointVerdict:
+    def test_all_same_is_go(self):
+        rows = [{"model": "a", "move": "same"}, {"model": "b", "move": "shift"}]
+        assert _checkpoint_verdict(rows) == ("GO", [])
+
+    def test_forward_is_go(self):
+        rows = [{"model": "a", "move": "forward"}]
+        assert _checkpoint_verdict(rows) == ("GO", [])
+
+    def test_backward_is_nogo(self):
+        rows = [{"model": "a", "move": "same"}, {"model": "b", "move": "backward"}]
+        assert _checkpoint_verdict(rows) == ("NO-GO", ["b"])
+
+    def test_missing_is_nogo(self):
+        # A changed golden with no DB entry (added/renamed model) must block —
+        # a missing entry can mask a problem, so it cannot pass the gate.
+        rows = [{"model": "a", "move": "same"}, {"model": "gone", "move": "missing"}]
+        assert _checkpoint_verdict(rows) == ("NO-GO", ["gone"])
+
+    def test_backward_and_missing_both_reported(self):
+        rows = [
+            {"model": "a", "move": "backward"},
+            {"model": "b", "move": "missing"},
+            {"model": "c", "move": "same"},
+        ]
+        verdict, blocking = _checkpoint_verdict(rows)
+        assert verdict == "NO-GO"
+        assert blocking == ["a", "b"]
+
+    def test_empty_is_go(self):
+        assert _checkpoint_verdict([]) == ("GO", [])

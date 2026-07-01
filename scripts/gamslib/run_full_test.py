@@ -1139,6 +1139,17 @@ def _classify_bucket_move(
     return "shift"
 
 
+def _checkpoint_verdict(rows: list[dict[str, Any]]) -> tuple[str, list[str]]:
+    """GO/NO-GO for a set of re-solve rows.
+
+    ``backward`` (a bucket regression) and ``missing`` (a changed golden with no DB
+    entry — e.g. a newly added/renamed model) are both blocking: a missing entry
+    can mask a problem, so it must not pass the gate. Returns ``(verdict, blocking_ids)``.
+    """
+    blocking = [r["model"] for r in rows if r["move"] in ("backward", "missing")]
+    return ("NO-GO" if blocking else "GO"), blocking
+
+
 def run_resolve_changed(args: argparse.Namespace) -> dict[str, Any]:
     """Checkpoint re-solve: re-solve every model whose emit golden changed since
     ``--since-commit`` and diff each solve/compare bucket against the committed DB.
@@ -1195,7 +1206,11 @@ def run_resolve_changed(args: argparse.Namespace) -> dict[str, Any]:
     # mutation (run_pipeline saves the DB / may generate a presolve golden).
     db_bytes = DATABASE_PATH.read_bytes()
     mcp_dir = PROJECT_ROOT / "data" / "gamslib" / "mcp"
-    pre_existing = set(mcp_dir.glob("*.gms"))
+    # Snapshot golden *contents* (not just the file set): the translate stage
+    # rewrites `<model>_mcp.gms` and the presolve retry may rewrite
+    # `<model>_mcp_presolve.gms`, so a pre-existing golden can be overwritten —
+    # we must restore it byte-for-byte, not merely leave it in place.
+    pre_existing = {p: p.read_bytes() for p in mcp_dir.glob("*.gms")}
 
     database = load_database()
     by_id = {m.get("model_id"): m for m in database.get("models", [])}
@@ -1223,21 +1238,25 @@ def run_resolve_changed(args: argparse.Namespace) -> dict[str, Any]:
                 }
             )
     finally:
-        # Restore the working DB + remove any transiently-generated goldens.
+        # Restore the working DB, restore every pre-existing golden byte-for-byte
+        # (translate/presolve may have overwritten it), and remove only the
+        # genuinely-new files. The checkpoint measures — it never mutates the tree.
         DATABASE_PATH.write_bytes(db_bytes)
+        for path, original in pre_existing.items():
+            if not path.exists() or path.read_bytes() != original:
+                path.write_bytes(original)
         for path in mcp_dir.glob("*.gms"):
             if path not in pre_existing:
                 path.unlink()
 
-    backward = [r for r in rows if r["move"] == "backward"]
-    verdict = "NO-GO" if backward else "GO"
+    verdict, blocking = _checkpoint_verdict(rows)
     result = {
         "mode": "resolve-changed",
         "since_commit": since,
         "changed_models": model_ids,
         "rows": rows,
         "verdict": verdict,
-        "backward": [r["model"] for r in backward],
+        "blocking": blocking,
     }
 
     if args.json:
@@ -1256,10 +1275,10 @@ def run_resolve_changed(args: argparse.Namespace) -> dict[str, Any]:
                 f"  {r['model']:14} {str(r['before']):55} -> {str(r['after'])}{flag}"
             )
         logger.info("=" * 60)
-        if backward:
+        if blocking:
             logger.info(
-                f"NO-GO: {len(backward)} model(s) moved backward: "
-                f"{', '.join(r['model'] for r in backward)}"
+                f"NO-GO: {len(blocking)} model(s) regressed or missing from the DB: "
+                f"{', '.join(blocking)}"
             )
         else:
             logger.info(f"GO: all {len(model_ids)} changed-golden model(s) held their bucket")
