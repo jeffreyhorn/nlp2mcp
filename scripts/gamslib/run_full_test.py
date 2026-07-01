@@ -1248,15 +1248,28 @@ def run_resolve_changed(args: argparse.Namespace) -> dict[str, Any]:
             f"model(s) since {since}: {', '.join(model_ids)}"
         )
 
-    # Snapshot the working DB + the emit dir so the checkpoint never persists a
-    # mutation (run_pipeline saves the DB / may generate a presolve golden).
+    # Snapshot the working DB so the checkpoint never persists its mutation
+    # (run_pipeline saves the DB). Handle a missing working DB cleanly.
+    if not DATABASE_PATH.exists():
+        return {
+            "error": f"--resolve-changed: working DB not found at {DATABASE_PATH} "
+            f"(fresh checkout, partial clone, or misconfigured path)"
+        }
     db_bytes = DATABASE_PATH.read_bytes()
+
+    # Only a changed model's *own* goldens can be rewritten/created by
+    # run_pipeline (`<mid>_mcp.gms` from translate, `<mid>_mcp_presolve.gms` from
+    # the presolve retry) — so snapshot bytes for just those, not every golden in
+    # the directory. Restore overwritten pre-existing files byte-for-byte and
+    # delete only files that were genuinely absent before the run.
     mcp_dir = PROJECT_ROOT / "data" / "gamslib" / "mcp"
-    # Snapshot golden *contents* (not just the file set): the translate stage
-    # rewrites `<model>_mcp.gms` and the presolve retry may rewrite
-    # `<model>_mcp_presolve.gms`, so a pre-existing golden can be overwritten —
-    # we must restore it byte-for-byte, not merely leave it in place.
-    pre_existing = {p: p.read_bytes() for p in mcp_dir.glob("*.gms")}
+    touched = [
+        mcp_dir / f"{mid}{suffix}"
+        for mid in model_ids
+        for suffix in ("_mcp.gms", "_mcp_presolve.gms")
+    ]
+    pre_bytes = {p: p.read_bytes() for p in touched if p.exists()}
+    pre_absent = [p for p in touched if not p.exists()]
 
     database = load_database()
     by_id = {m.get("model_id"): m for m in database.get("models", [])}
@@ -1290,15 +1303,16 @@ def run_resolve_changed(args: argparse.Namespace) -> dict[str, Any]:
                 }
             )
     finally:
-        # Restore the working DB, restore every pre-existing golden byte-for-byte
-        # (translate/presolve may have overwritten it), and remove only the
-        # genuinely-new files. The checkpoint measures — it never mutates the tree.
+        # Restore the working DB, restore each touched pre-existing golden
+        # byte-for-byte (translate/presolve may have overwritten it), and remove
+        # only files that were genuinely absent before the run. The checkpoint
+        # measures — it never mutates the tree.
         DATABASE_PATH.write_bytes(db_bytes)
-        for path, original in pre_existing.items():
+        for path, original in pre_bytes.items():
             if not path.exists() or path.read_bytes() != original:
                 path.write_bytes(original)
-        for path in mcp_dir.glob("*.gms"):
-            if path not in pre_existing:
+        for path in pre_absent:
+            if path.exists():
                 path.unlink()
 
     verdict, blocking = _checkpoint_verdict(rows)
