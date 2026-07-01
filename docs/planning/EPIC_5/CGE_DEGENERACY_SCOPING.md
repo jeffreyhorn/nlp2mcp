@@ -1,7 +1,9 @@
 # Epic 5 Scoping — CGE Walras' Law Degeneracy (camcge #1330)
 
-**Status:** STUB / scoping observation (authored Sprint 29 Prep Task 7, 2026-06-27). Not an Epic-5 implementation plan — the structure + evidence so the in-sprint Priority-5 task is a write-up only (no `src/`).
+**Status:** FINALIZED scoping write-up (authored Sprint 29 Prep Task 7, 2026-06-27; **finalized Sprint 29 Day 11 Priority 5, 2026-06-30**). Not an Epic-5 implementation plan — the structure + evidence so the in-sprint Priority-5 task is a write-up only (no `src/`).
 **Origin:** #1330 camcge, REPLAN'd to Epic 5 at the Sprint 28 Day-11 Task-6 gate (2026-06-19) — see `docs/issues/ISSUE_1330_*.md` + `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 11".
+
+> **✅ Priority 5 CONFIRMED — camcge #1330 → Epic 5, write-up only (Sprint 29 Day 11, 2026-06-30).** The Day-11 review re-confirms the Sprint-28 Day-11 Task-6 gate finding with **no new `src/` attempt**: camcge's MCP MS-4-at-iteration-0 is an **inherent Walras-law rank-deficiency** (a linearly-dependent market-clearing row + an unfixed price numéraire → a singular KKT Jacobian), **not a localizable emit/AD bug** — the emitted KKT system is structurally correct at the NLP optimum (§1). The fix is a **CGE-domain structural preprocessing transformation** (drop-one-redundant-row + fix-one-numéraire, §3), which needs economic-model-class awareness and therefore belongs in **Epic 5**, not the general nlp2mcp emit path (§4). Sprint 29 spends **zero `src/` budget** on camcge. The distinct cohort emit bugs (#1354/#1355 phantom-offset `$141`, #1317 Pattern-C alias sum, #1331/#1251 empty-equation MCP pairing) stay in the nlp2mcp backlog — they are **not** Walras-singular (§2). This document is the Epic-5 handoff spec; the §5 open questions are the Epic-5 task's starting point.
 **One-line scope:** the CGE Walras-law redundancy (a linearly-dependent market-clearing row + an unfixed price numéraire) is a **domain-specific structural preprocessing transformation**, not a general nlp2mcp emit change — it belongs in Epic 5. **Sprint 29 spends no `src/` budget on camcge** (Priority 5 = this write-up only).
 
 ---

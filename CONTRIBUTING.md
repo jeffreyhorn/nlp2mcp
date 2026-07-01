@@ -474,6 +474,29 @@ These two rules **extend** the Phase 0 Acceptance Gate (PR20) and the PR14/PR19/
 - Only genuine gains are tallied toward the Solve / Match targets; bucket-forward moves are reported separately as "progress, not target credit."
 - **Rationale:** the Sprint 27 Day-0 "+6 firm Match" over-counted fawley/otpop/camcge, which only moved `path_syntax_error → model_infeasible` (bucket-forward) and yielded no Solve/Match. The canonical Sprint 28 application is `docs/planning/EPIC_4/SPRINT_28/BASELINE_METRICS.md` §3 (PR25 projection table).
 
+#### PR25 post-methodology re-baseline step (Sprint 29 Priority 8)
+
+**Whenever a pipeline-*methodology* change lands, immediately re-baseline the Match split so the headline delta stays attributable to genuine cross-term fixes — not the methodology lift.** A methodology change is any change to a **retry trigger** (`run_full_test.py` `_cold_objective_mismatches_nlp` / the presolve-retry condition), the **comparison logic** (objective-match tolerance, the `comparison_status` decision), or the **canonical scope** (which models count toward the 142). These can move Match with no emit fix — the Sprint-28 Day-9 presolve-retry broadening lifted Match 62→92 far beyond the genuine gains, and the headline conflated the two.
+
+Split every post-methodology Match projection into:
+
+| Match component | Definition |
+|---|---|
+| **Genuine** (the re-baseline floor) | cold matches + non-methodology presolve matches — repeatable cross-term-fix transitions |
+| **Methodology** | `model_optimal_presolve` matches whose cold MCP failed/mismatched **and** whose cold emit is byte-identical to its pre-change state (always-correct, now merely *validated* by the broadened retry) |
+
+Report both counts (e.g. "Match 92 = genuine 68 + methodology 24"); only the genuine floor moving counts as a sprint Match gain. Design + measured basis: `docs/planning/EPIC_4/SPRINT_29/PRIORITY_8_CHECKPOINT_RESOLVE_DESIGN.md` §B.
+
+#### Checkpoint re-solve gate (`--resolve-changed`, Sprint 29 Priority 8)
+
+**At every checkpoint (and before relying on a "Match-neutral" claim), re-solve the changed-golden set — a byte-stable golden can still hide a broken solve** (the #1462 rocket class: golden byte-identical, PATH aborted, DB stale-matched). The golden-staleness gate catches emit *drift*; it does **not** re-run the solve. Run:
+
+```bash
+python scripts/gamslib/run_full_test.py --resolve-changed --since-commit <sprint-day-0-SHA>
+```
+
+It re-solves every model whose `*_mcp[_presolve].gms` golden changed since the baseline commit, diffs each solve/compare bucket against the **committed** DB, and exits non-zero (**NO-GO**) on any backward move (`match → mismatch/abort`, `model_optimal → model_infeasible`, a presolve match that no longer solves). It never persists the DB mutation (the checkpoint measures — it does not sweep goldens). A *forward* move from a landed fix is expected, not a regression.
+
 ### Related
 
 - Sprint 27 retrospective §"What We'd Do Differently" #1 (fix surfaces) + #2 (projections): `docs/planning/EPIC_4/SPRINT_27/SPRINT_RETROSPECTIVE.md`
