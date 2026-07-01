@@ -20,6 +20,20 @@
 
 ---
 
+## Day 11 — Priority 5 (camcge → Epic 5 write-up) + Priority 8 (`--resolve-changed` infra build) (2026-06-30)
+
+**P5 (docs-only) — DONE.** Finalized `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md`: Status STUB → **FINALIZED**, added the Day-11 Priority-5 confirmation block. Re-confirmed the Sprint-28 Task-6 gate with **no new `src/` attempt** — camcge #1330's MS-4-at-iteration-0 is an **inherent Walras-law rank-deficiency** (singular KKT Jacobian: a linearly-dependent market-clearing row + no price numéraire), not a localizable emit bug; the fix is a CGE-domain drop-row + fix-numéraire preprocessing transformation → **Epic 5**. The distinct cohort emit bugs (#1354/#1355/#1317/#1331/#1251) stay in the nlp2mcp backlog. Priority 5 = write-up only, zero `src/`.
+
+**P8 (code) — DONE: `--resolve-changed` checkpoint re-solve + PR25 re-baseline step.** Automates exactly the Day-10 manual Checkpoint-2 flow, implementing the two Sprint-28 Day-13 lessons.
+- **`scripts/gamslib/run_full_test.py --resolve-changed --since-commit <SHA>`:** re-solves every model whose `*_mcp[_presolve].gms` golden changed since the baseline commit, diffs each solve/compare bucket vs the **committed** (git-HEAD) DB, and exits non-zero (**NO-GO**) on any backward move (`match → mismatch/abort`, `model_optimal → model_infeasible`, presolve-match → no-solve). **Never persists the DB mutation** — snapshots + restores the working DB and removes any transiently-generated presolve golden (the checkpoint measures, it does not sweep). Catches the #1462 rocket class (byte-stable golden, broken solve) that golden-staleness alone cannot.
+- **Pure, tested logic:** `_model_id_from_golden_path` (path→id, longest-suffix-first so `_mcp_presolve` wins), `_extract_bucket`, `_bucket_severity` (compare status dominates the solve outcome), `_classify_bucket_move` (same/shift/forward/**backward**). `shift` = equal-severity relabel (e.g. maxmin cold-match → presolve-match) — benign, not a NO-GO. 19 unit tests (`tests/gamslib/test_resolve_changed.py`). Refactored the batch stats-dict into a shared `_new_stats(total)`.
+- **Self-validated end-to-end:** `--resolve-changed --since-commit 9a86f8b4` derived exactly the 5 net-changed models (polygon correctly excluded — Day-4 add + Day-5 revert = net-unchanged), re-solved all 5 → **all held their bucket → GO (exit 0)**, tree auto-restored clean. Matches the Day-10 manual result.
+- **PR25 re-baseline step (`CONTRIBUTING.md` §"Projection Discipline"):** codified the post-methodology re-baseline (genuine floor vs methodology split, triggered by any retry/comparison/scope change) + the checkpoint re-solve gate, both referencing the P8 design doc.
+
+**Quality gate GREEN:** format ✅ · typecheck ✅ (98 files) · lint ✅ · **test ✅ 4961 passed** / 10 skipped / 2 xfailed — **Tests now meets the ≥ 4,960 target** (+20 from the P8 suite + refactor). Metrics otherwise unchanged (infra + docs, no emit change): Solve 107 · Match 92 · Translate 135.
+
+---
+
 ## Day 10 — Checkpoint 2 + Priority 3 close (measurement-only) — **GO, no regression** (2026-06-30)
 
 **Checkpoint 2 (Task 8): re-solve changed goldens + golden-staleness + PR25 re-baseline.** **Verdict: GO.**

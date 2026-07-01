@@ -999,6 +999,275 @@ def run_pipeline(
 
 
 # =============================================================================
+# Statistics
+# =============================================================================
+
+
+def _new_stats(total: int) -> dict[str, Any]:
+    """Fresh per-run statistics dict (shared by the batch run + --resolve-changed)."""
+    return {
+        "total": total,
+        "processed": 0,
+        "skipped": 0,
+        # Parse stats
+        "parse_success": 0,
+        "parse_failure": 0,
+        "parse_times": [],  # List of (model_id, time) for timing stats
+        "parse_errors": [],  # List of error categories
+        # Translate stats
+        "translate_success": 0,
+        "translate_failure": 0,
+        "translate_cascade_skip": 0,
+        "translate_times": [],
+        "translate_errors": [],
+        # Solve stats
+        "solve_success": 0,
+        "solve_failure": 0,
+        "solve_cascade_skip": 0,
+        "solve_times": [],
+        "solve_errors": [],
+        # Pre-solve retry stats
+        "presolve_retry_attempted": 0,
+        "presolve_retry_success": 0,
+        # Compare stats
+        "compare_match": 0,
+        "compare_mismatch": 0,
+        "compare_skipped": 0,
+        "compare_cascade_skip": 0,
+        # Timing
+        "start_time": time.perf_counter(),
+    }
+
+
+# =============================================================================
+# Priority 8: --resolve-changed checkpoint re-solve (Sprint 29)
+#
+# Implements the Sprint-28 Day-13 lesson (#1462 rocket): a golden can stay
+# byte-identical (passing the golden-staleness gate) while its *solve* silently
+# breaks. This mode re-solves every model whose emit golden changed since a
+# baseline commit and diffs each solve/compare bucket against the committed DB,
+# surfacing a backward move mid-sprint instead of at the final retest.
+# See docs/planning/EPIC_4/SPRINT_29/PRIORITY_8_CHECKPOINT_RESOLVE_DESIGN.md.
+# =============================================================================
+
+# Emit-golden filename suffixes, longest first so `_mcp_presolve` wins over `_mcp`.
+_GOLDEN_SUFFIXES = ("_mcp_presolve.gms", "_mcp.gms")
+
+# Bucket-health ranks (higher = healthier). `comparison_status` dominates the
+# solve `outcome_category`, so a *decrease* in the combined severity is an
+# unambiguous backward move (the checkpoint NO-GO).
+_COMPARE_RANK = {"match": 2, "mismatch": 1}
+_OUTCOME_RANK = {
+    "model_optimal": 2,
+    "model_optimal_presolve": 2,
+    "model_infeasible": 1,
+}
+
+
+def _model_id_from_golden_path(path: str) -> str | None:
+    """Map a ``data/gamslib/mcp/<id>_mcp[_presolve].gms`` path to its model id.
+
+    Returns ``None`` for any path that is not an emit golden.
+    """
+    name = Path(path).name
+    for suffix in _GOLDEN_SUFFIXES:
+        if name.endswith(suffix):
+            return name[: -len(suffix)]
+    return None
+
+
+def _changed_golden_model_ids(since_commit: str) -> list[str]:
+    """Model ids whose emit golden changed since ``since_commit`` (git diff, deduped)."""
+    import subprocess
+
+    proc = subprocess.run(
+        [
+            "git",
+            "diff",
+            "--name-only",
+            f"{since_commit}..HEAD",
+            "--",
+            "data/gamslib/mcp/",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=str(PROJECT_ROOT),
+        check=True,
+    )
+    seen: list[str] = []
+    for line in proc.stdout.splitlines():
+        mid = _model_id_from_golden_path(line.strip())
+        if mid and mid not in seen:
+            seen.append(mid)
+    return sorted(seen)
+
+
+def _extract_bucket(model: dict[str, Any]) -> dict[str, str | None]:
+    """The (solve outcome, compare) bucket used for the checkpoint diff."""
+    return {
+        "outcome_category": (model.get("mcp_solve") or {}).get("outcome_category"),
+        "comparison_status": (model.get("solution_comparison") or {}).get(
+            "comparison_status"
+        ),
+    }
+
+
+def _bucket_severity(bucket: dict[str, str | None]) -> int:
+    """Ordinal health of a bucket — compare status dominates, solve outcome breaks ties."""
+    cmp_rank = _COMPARE_RANK.get(bucket.get("comparison_status") or "", 0)
+    out_rank = _OUTCOME_RANK.get(bucket.get("outcome_category") or "", 0)
+    return cmp_rank * 10 + out_rank
+
+
+def _classify_bucket_move(
+    before: dict[str, str | None], after: dict[str, str | None]
+) -> str:
+    """Classify a bucket transition: ``same`` | ``shift`` | ``forward`` | ``backward``.
+
+    ``backward`` (severity dropped — e.g. match→mismatch, model_optimal→model_infeasible,
+    a presolve match that no longer solves) is the only checkpoint NO-GO. ``shift`` is an
+    equal-severity relabel (e.g. model_optimal↔model_optimal_presolve while still matching)
+    — benign. ``forward`` is an expected improvement from a landed fix.
+    """
+    if before == after:
+        return "same"
+    b, a = _bucket_severity(before), _bucket_severity(after)
+    if a < b:
+        return "backward"
+    if a > b:
+        return "forward"
+    return "shift"
+
+
+def run_resolve_changed(args: argparse.Namespace) -> dict[str, Any]:
+    """Checkpoint re-solve: re-solve every model whose emit golden changed since
+    ``--since-commit`` and diff each solve/compare bucket against the committed DB.
+
+    GO if no changed-golden model moved backward; NO-GO on any backward move. Never
+    persists the DB mutation (the checkpoint measures — it does not sweep goldens): the
+    working DB and any transiently-generated presolve golden are restored on exit.
+    """
+    import subprocess
+
+    since = args.since_commit
+    if not since:
+        return {"error": "--resolve-changed requires --since-commit <SHA>"}
+
+    db_rel = DATABASE_PATH.relative_to(PROJECT_ROOT).as_posix()
+
+    # Committed baseline buckets from the git-HEAD DB (authoritative; a dirty working
+    # copy must not be able to mask a regression).
+    committed_raw = subprocess.run(
+        ["git", "show", f"HEAD:{db_rel}"],
+        capture_output=True,
+        text=True,
+        cwd=str(PROJECT_ROOT),
+        check=True,
+    ).stdout
+    committed_buckets = {
+        m["model_id"]: _extract_bucket(m)
+        for m in json.loads(committed_raw).get("models", [])
+    }
+
+    model_ids = _changed_golden_model_ids(since)
+    if not model_ids:
+        result = {
+            "mode": "resolve-changed",
+            "since_commit": since,
+            "changed_models": [],
+            "rows": [],
+            "verdict": "GO",
+            "note": f"no emit goldens changed since {since}",
+        }
+        if args.json:
+            print(json.dumps(result, indent=2))
+        else:
+            logger.info(f"GO: no emit goldens changed since {since}")
+        return result
+
+    if not args.quiet:
+        logger.info(
+            f"[resolve-changed] re-solving {len(model_ids)} changed-golden "
+            f"model(s) since {since}: {', '.join(model_ids)}"
+        )
+
+    # Snapshot the working DB + the emit dir so the checkpoint never persists a
+    # mutation (run_pipeline saves the DB / may generate a presolve golden).
+    db_bytes = DATABASE_PATH.read_bytes()
+    mcp_dir = PROJECT_ROOT / "data" / "gamslib" / "mcp"
+    pre_existing = set(mcp_dir.glob("*.gms"))
+
+    database = load_database()
+    by_id = {m.get("model_id"): m for m in database.get("models", [])}
+    stats = _new_stats(len(model_ids))
+    rows: list[dict[str, Any]] = []
+    try:
+        for mid in model_ids:
+            before = committed_buckets.get(
+                mid, {"outcome_category": None, "comparison_status": None}
+            )
+            model = by_id.get(mid)
+            if model is None:
+                rows.append(
+                    {"model": mid, "before": before, "after": None, "move": "missing"}
+                )
+                continue
+            run_pipeline(model, database, args, stats)
+            after = _extract_bucket(model)
+            rows.append(
+                {
+                    "model": mid,
+                    "before": before,
+                    "after": after,
+                    "move": _classify_bucket_move(before, after),
+                }
+            )
+    finally:
+        # Restore the working DB + remove any transiently-generated goldens.
+        DATABASE_PATH.write_bytes(db_bytes)
+        for path in mcp_dir.glob("*.gms"):
+            if path not in pre_existing:
+                path.unlink()
+
+    backward = [r for r in rows if r["move"] == "backward"]
+    verdict = "NO-GO" if backward else "GO"
+    result = {
+        "mode": "resolve-changed",
+        "since_commit": since,
+        "changed_models": model_ids,
+        "rows": rows,
+        "verdict": verdict,
+        "backward": [r["model"] for r in backward],
+    }
+
+    if args.json:
+        print(json.dumps(result, indent=2))
+    else:
+        logger.info("=" * 60)
+        for r in rows:
+            flag = {
+                "backward": "  ⛔ BACKWARD",
+                "forward": "  ✅ forward",
+                "shift": "  ~ shift",
+                "same": "  = same",
+                "missing": "  ? missing from DB",
+            }[r["move"]]
+            logger.info(
+                f"  {r['model']:14} {str(r['before']):55} -> {str(r['after'])}{flag}"
+            )
+        logger.info("=" * 60)
+        if backward:
+            logger.info(
+                f"NO-GO: {len(backward)} model(s) moved backward: "
+                f"{', '.join(r['model'] for r in backward)}"
+            )
+        else:
+            logger.info(f"GO: all {len(model_ids)} changed-golden model(s) held their bucket")
+
+    return result
+
+
+# =============================================================================
 # Main Orchestration
 # =============================================================================
 
@@ -1012,6 +1281,11 @@ def run_full_test(args: argparse.Namespace) -> dict[str, Any]:
     Returns:
         Statistics dictionary
     """
+    # Priority 8 checkpoint re-solve: a self-contained mode (does not touch the
+    # batch-filter path below and never persists the DB).
+    if getattr(args, "resolve_changed", False):
+        return run_resolve_changed(args)
+
     # Validate filter arguments
     validate_filters(args)
 
@@ -1093,38 +1367,7 @@ def run_full_test(args: argparse.Namespace) -> dict[str, Any]:
         logger.info(f"Created backup: {backup_path}")
 
     # Initialize statistics
-    stats: dict[str, Any] = {
-        "total": len(filtered),
-        "processed": 0,
-        "skipped": 0,
-        # Parse stats
-        "parse_success": 0,
-        "parse_failure": 0,
-        "parse_times": [],  # List of (model_id, time) for timing stats
-        "parse_errors": [],  # List of error categories
-        # Translate stats
-        "translate_success": 0,
-        "translate_failure": 0,
-        "translate_cascade_skip": 0,
-        "translate_times": [],
-        "translate_errors": [],
-        # Solve stats
-        "solve_success": 0,
-        "solve_failure": 0,
-        "solve_cascade_skip": 0,
-        "solve_times": [],
-        "solve_errors": [],
-        # Pre-solve retry stats
-        "presolve_retry_attempted": 0,
-        "presolve_retry_success": 0,
-        # Compare stats
-        "compare_match": 0,
-        "compare_mismatch": 0,
-        "compare_skipped": 0,
-        "compare_cascade_skip": 0,
-        # Timing
-        "start_time": time.perf_counter(),
-    }
+    stats = _new_stats(len(filtered))
 
     # Determine active stages for progress reporting
     active_stages = [s.capitalize() for s in _determine_stages(args)]
@@ -1524,6 +1767,19 @@ def main() -> int:
         action="store_true",
         help="Shorthand for --limit=10",
     )
+    convenience_group.add_argument(
+        "--resolve-changed",
+        action="store_true",
+        help="Checkpoint re-solve: re-solve every model whose emit golden changed "
+        "since --since-commit and diff each bucket vs the committed DB "
+        "(GO/NO-GO; never persists the DB). Requires --since-commit.",
+    )
+    convenience_group.add_argument(
+        "--since-commit",
+        type=str,
+        default=None,
+        help="Baseline commit SHA for --resolve-changed (e.g. the sprint Day-0 SHA).",
+    )
 
     # Output
     output_group = parser.add_argument_group("Output")
@@ -1565,6 +1821,10 @@ def main() -> int:
             else:
                 logger.error(stats["error"])
             return 1
+        # --resolve-changed: its own GO/NO-GO summary was already printed; a
+        # backward move (NO-GO) is a nonzero exit for CI/checkpoint gating.
+        if stats.get("mode") == "resolve-changed":
+            return 1 if stats.get("verdict") == "NO-GO" else 0
         if not stats.get("dry_run"):
             if args.json:
                 print_json_summary(stats, args)
