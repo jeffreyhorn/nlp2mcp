@@ -76,12 +76,54 @@ class TestBucketSeverity:
         assert _bucket_severity(matched) > _bucket_severity(mismatched)
 
     def test_presolve_and_cold_optimal_rank_equal(self):
+        # The `_presolve` retry variant is normalized to its base category.
         cold = {"outcome_category": "model_optimal", "comparison_status": "match"}
         presolve = {
             "outcome_category": "model_optimal_presolve",
             "comparison_status": "match",
         }
         assert _bucket_severity(cold) == _bucket_severity(presolve)
+
+    def test_locally_optimal_ranks_as_optimal(self):
+        # GAMS model status 2 (locally optimal) is an optimal outcome, same tier
+        # as model status 1 — it must not rank below a degenerate infeasible.
+        cold = {"outcome_category": "model_optimal", "comparison_status": "match"}
+        local = {
+            "outcome_category": "model_locally_optimal",
+            "comparison_status": "match",
+        }
+        assert _bucket_severity(local) == _bucket_severity(cold)
+
+    def test_locally_optimal_match_healthier_than_infeasible_match(self):
+        # `comparison_status` can be `match` for both `model_locally_optimal` and
+        # a "both infeasible" comparison — the locally-optimal match must rank
+        # strictly healthier so a real regression can't read as forward/shift.
+        local_match = {
+            "outcome_category": "model_locally_optimal",
+            "comparison_status": "match",
+        }
+        infeasible_match = {
+            "outcome_category": "model_infeasible",
+            "comparison_status": "match",
+        }
+        assert _bucket_severity(local_match) > _bucket_severity(infeasible_match)
+
+    def test_locally_optimal_to_infeasible_match_is_backward(self):
+        # The guard the ranking exists for: same compare status, worse solve.
+        local_match = {
+            "outcome_category": "model_locally_optimal",
+            "comparison_status": "match",
+        }
+        infeasible_match = {
+            "outcome_category": "model_infeasible",
+            "comparison_status": "match",
+        }
+        assert _classify_bucket_move(local_match, infeasible_match) == "backward"
+
+    def test_unbounded_ranks_above_didnt_solve(self):
+        unbounded = {"outcome_category": "model_unbounded", "comparison_status": None}
+        failed = {"outcome_category": "path_syntax_error", "comparison_status": None}
+        assert _bucket_severity(unbounded) > _bucket_severity(failed)
 
     def test_failure_is_zero_ish(self):
         failed = {"outcome_category": "path_syntax_error", "comparison_status": None}

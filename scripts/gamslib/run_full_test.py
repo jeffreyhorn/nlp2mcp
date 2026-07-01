@@ -1055,13 +1055,21 @@ _GOLDEN_SUFFIXES = ("_mcp_presolve.gms", "_mcp.gms")
 
 # Bucket-health ranks (higher = healthier). `comparison_status` dominates the
 # solve `outcome_category`, so a *decrease* in the combined severity is an
-# unambiguous backward move (the checkpoint NO-GO).
+# unambiguous backward move (the checkpoint NO-GO). Keyed by the *base* outcome
+# category (the presolve-retry `<cat>_presolve` variant is normalized in
+# `_bucket_severity`). Optimal tier = GAMS model status {1, 2}
+# (`model_optimal` + `model_locally_optimal`, per `error_taxonomy`); the
+# solved-but-degenerate outcomes (`model_infeasible`/`model_unbounded`, which can
+# still read `match` via "both infeasible") rank below optimal but above the
+# didn't-solve `path_*`/None failures.
 _COMPARE_RANK = {"match": 2, "mismatch": 1}
 _OUTCOME_RANK = {
     "model_optimal": 2,
-    "model_optimal_presolve": 2,
+    "model_locally_optimal": 2,
     "model_infeasible": 1,
+    "model_unbounded": 1,
 }
+_PRESOLVE_SUFFIX = "_presolve"
 
 
 def _model_id_from_golden_path(path: str) -> str | None:
@@ -1115,7 +1123,15 @@ def _extract_bucket(model: dict[str, Any]) -> dict[str, str | None]:
 def _bucket_severity(bucket: dict[str, str | None]) -> int:
     """Ordinal health of a bucket — compare status dominates, solve outcome breaks ties."""
     cmp_rank = _COMPARE_RANK.get(bucket.get("comparison_status") or "", 0)
-    out_rank = _OUTCOME_RANK.get(bucket.get("outcome_category") or "", 0)
+    outcome = bucket.get("outcome_category") or ""
+    # Normalize the presolve-retry variant (`<cat>_presolve`) to its base category
+    # so e.g. `model_optimal_presolve` ranks like `model_optimal`.
+    base = (
+        outcome[: -len(_PRESOLVE_SUFFIX)]
+        if outcome.endswith(_PRESOLVE_SUFFIX)
+        else outcome
+    )
+    out_rank = _OUTCOME_RANK.get(base, 0)
     return cmp_rank * 10 + out_rank
 
 
