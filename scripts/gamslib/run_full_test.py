@@ -1164,6 +1164,20 @@ def run_resolve_changed(args: argparse.Namespace) -> dict[str, Any]:
     if not since:
         return {"error": "--resolve-changed requires --since-commit <SHA>"}
 
+    # The gate's whole point is to re-run the *solve + compare* on the changed
+    # goldens; a stage-limited run would return GO on stale buckets without ever
+    # re-solving. Reject the --only-* stage flags outright.
+    stage_only = [
+        f"--only-{f}"
+        for f in ("parse", "translate", "solve")
+        if getattr(args, f"only_{f}", False)
+    ]
+    if stage_only:
+        return {
+            "error": f"--resolve-changed runs the full re-solve pipeline and is "
+            f"incompatible with {', '.join(stage_only)}"
+        }
+
     db_rel = DATABASE_PATH.relative_to(PROJECT_ROOT).as_posix()
 
     # Committed baseline buckets from the git-HEAD DB (authoritative; a dirty working
@@ -1196,6 +1210,26 @@ def run_resolve_changed(args: argparse.Namespace) -> dict[str, Any]:
             logger.info(f"GO: no emit goldens changed since {since}")
         return result
 
+    if args.dry_run:
+        # Preview: report the at-risk model list without re-solving anything.
+        result = {
+            "mode": "resolve-changed",
+            "since_commit": since,
+            "changed_models": model_ids,
+            "rows": [],
+            "verdict": "GO",
+            "dry_run": True,
+            "note": f"[dry-run] would re-solve {len(model_ids)} model(s)",
+        }
+        if args.json:
+            print(json.dumps(result, indent=2))
+        else:
+            logger.info(
+                f"[dry-run] would re-solve {len(model_ids)} changed-golden "
+                f"model(s) since {since}: {', '.join(model_ids)}"
+            )
+        return result
+
     if not args.quiet:
         logger.info(
             f"[resolve-changed] re-solving {len(model_ids)} changed-golden "
@@ -1218,15 +1252,21 @@ def run_resolve_changed(args: argparse.Namespace) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     try:
         for mid in model_ids:
-            before = committed_buckets.get(
-                mid, {"outcome_category": None, "comparison_status": None}
-            )
             model = by_id.get(mid)
-            if model is None:
+            # A changed golden with no authoritative baseline — absent from the
+            # committed (git-HEAD) DB, or from the working DB candidate set — has
+            # nothing to diff against (renamed/added model, or a dirty DB). Block it.
+            if mid not in committed_buckets or model is None:
                 rows.append(
-                    {"model": mid, "before": before, "after": None, "move": "missing"}
+                    {
+                        "model": mid,
+                        "before": committed_buckets.get(mid),
+                        "after": _extract_bucket(model) if model is not None else None,
+                        "move": "missing",
+                    }
                 )
                 continue
+            before = committed_buckets[mid]
             run_pipeline(model, database, args, stats)
             after = _extract_bucket(model)
             rows.append(

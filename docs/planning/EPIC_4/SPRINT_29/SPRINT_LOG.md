@@ -30,7 +30,7 @@
 - **Self-validated end-to-end:** `--resolve-changed --since-commit 9a86f8b4` derived exactly the 5 net-changed models (polygon correctly excluded — Day-4 add + Day-5 revert = net-unchanged), re-solved all 5 → **all held their bucket → GO (exit 0)**, tree auto-restored clean. Matches the Day-10 manual result.
 - **PR25 re-baseline step (`CONTRIBUTING.md` §"Projection Discipline"):** codified the post-methodology re-baseline (genuine floor vs methodology split, triggered by any retry/comparison/scope change) + the checkpoint re-solve gate, both referencing the P8 design doc.
 
-**Quality gate GREEN:** format ✅ · typecheck ✅ (98 files) · lint ✅ · **test ✅ 4961 passed** / 10 skipped / 2 xfailed — **Tests now meets the ≥ 4,960 target** (+20 from the P8 suite + refactor). Metrics otherwise unchanged (infra + docs, no emit change): Solve 107 · Match 92 · Translate 135.
+**Quality gate GREEN:** format ✅ · typecheck ✅ (98 files) · lint ✅ · **test ✅ 4961 passed** / 10 skipped / 2 xfailed — **Tests now meet the ≥ 4,960 target** (+20 from the P8 suite + refactor). Metrics otherwise unchanged (infra + docs, no emit change): Solve 107 · Match 92 · Translate 135.
 
 ---
 
