@@ -57,9 +57,10 @@ This prep plan focuses on:
 
 ## Task 1: Create Sprint 30 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
-**Estimated Time:** 3–4 hours
+**Estimated Time:** 3–4 hours (actual: ~3.5h)
+**Completed:** 2026-07-04
 **Deadline:** Before Sprint 30 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
@@ -127,11 +128,11 @@ Sprint 30's central risk is inverted from Sprint 29's: it is **implementation-bo
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_30/KNOWN_UNKNOWNS.md` (25 unknowns across the 8 Sprint-30 priority categories) + the Task-to-Unknown mapping appendix; updated the "Unknowns Verified" metadata + Deliverables/Acceptance-Criteria lines on Tasks 2–10 below; CHANGELOG entry.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-04).** `KNOWN_UNKNOWNS.md` authored with **25 unknowns** (target 24–32) across **8 categories** aligned to the PROJECT_PLAN Sprint-30 priorities. Priority distribution: **6 Critical / 10 High / 7 Medium / 2 Low** (24% / 40% / 28% / 8%). Per-unknown research estimates sum to ~36h; the authoritative scheduling budget is the per-task 34–48h in this PREP_PLAN. Every unknown starts 🔍 INCOMPLETE and is assigned to a downstream prep task (2–10) in the mapping appendix. The three REPLAN-prone Criticals (1.1/1.2 head-offset multi-site, 2.1 rocket forcing, 6.1/6.2 camcge Epic-5) and the robert→mine generalization (1.1) + the camcge detection-heuristic false-positive (6.2) are captured as required.
 
 ### Verification
 
@@ -163,14 +164,14 @@ grep -oE "#(1443|1462|1236|1385|1146|1143|1330|1111|1112)" docs/planning/EPIC_4/
 
 ### Acceptance Criteria
 
-- [ ] KNOWN_UNKNOWNS.md created with 8 categories aligned to the Sprint-30 priorities
-- [ ] 24–32 unknowns, each with Priority / Assumption / How to Verify / Risk if Wrong / Owner
-- [ ] The three REPLAN-prone tracks (P1 multi-site, P2 forcing, P6 Epic-5) flagged Critical with a single-model validation
-- [ ] The robert-generalizes-to-mine Critical unknown is present (P1 de-risking hinges on it)
-- [ ] The camcge Walras detection-heuristic false-positive risk is captured (P6)
-- [ ] Sprint-29 open/carryforward KUs migrated with forward-links
-- [ ] Task-to-Unknown mapping appendix present
-- [ ] CHANGELOG updated
+- [x] KNOWN_UNKNOWNS.md created with 8 categories aligned to the Sprint-30 priorities
+- [x] 24–32 unknowns (25), each with Priority / Assumption / How to Verify / Risk if Wrong / Owner
+- [x] The three REPLAN-prone tracks (P1 multi-site, P2 forcing, P6 Epic-5) flagged Critical with a single-model validation
+- [x] The robert-generalizes-to-mine Critical unknown is present (P1 de-risking hinges on it — Unknown 1.1)
+- [x] The camcge Walras detection-heuristic false-positive risk is captured (P6 — Unknown 6.2)
+- [x] Sprint-29 open/carryforward KUs migrated with forward-links (the three INVERTED Sprint-29 unknowns → Categories 1/2/6-7)
+- [x] Task-to-Unknown mapping appendix present
+- [x] CHANGELOG updated
 
 ---
 
@@ -182,7 +183,7 @@ grep -oE "#(1443|1462|1236|1385|1146|1143|1330|1111|1112)" docs/planning/EPIC_4/
 **Deadline:** Before Sprint 30 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
-**Unknowns Verified:** the Day-0-baseline aspect of Categories 1–7
+**Unknowns Verified:** 8.2 (contributes the per-target Day-0 bucket to 1.1 / 2.1 / 3.1 / 6.1)
 
 ### Objective
 
@@ -234,7 +235,7 @@ grep -qi "genuine" docs/planning/EPIC_4/SPRINT_30/BASELINE_METRICS.md && grep -q
 
 - `docs/planning/EPIC_4/SPRINT_30/BASELINE_METRICS.md` — Day-0 = Sprint 29 final; canonical bucket tally; genuine-floor-69 carry-forward; per-Sprint-30-target bucket provenance with PR25 projection labels
 - Confirmation that no fresh retest is needed (no `src/` drift since the S29 close)
-- Updated KNOWN_UNKNOWNS.md Day-0-baseline verification note
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 8.2 (Day-0 baseline + genuine floor)
 
 ### Acceptance Criteria
 
@@ -243,6 +244,7 @@ grep -qi "genuine" docs/planning/EPIC_4/SPRINT_30/BASELINE_METRICS.md && grep -q
 - [ ] Genuine floor 69 carried forward with the genuine-floor → ≥ 72 conversion map
 - [ ] Per-Sprint-30-target Day-0 bucket + projected-delta table (mine/rocket/hhfair/robert/sarf/polygon/himmel16/camcge/Class-B CGE)
 - [ ] Each projected delta labeled genuine vs already-banked (PR25)
+- [ ] Unknown 8.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -254,7 +256,7 @@ grep -qi "genuine" docs/planning/EPIC_4/SPRINT_30/BASELINE_METRICS.md && grep -q
 **Deadline:** Before Sprint 30 Day 1
 **Owner:** Development team (AD/KKT specialist)
 **Dependencies:** Tasks 1, 2
-**Unknowns Verified:** Category 1 (1.1, 1.2, 1.3)
+**Unknowns Verified:** 1.1, 1.2, 1.3, 1.4
 
 ### Objective
 
@@ -308,6 +310,7 @@ for m in robert mine; do .venv/bin/python scripts/diagnostics/kkt_residual.py da
 - `docs/planning/EPIC_4/SPRINT_30/HEAD_OFFSET_ARCHITECTURE_DESIGN.md` — robert's hand-derived head-offset cross-term + dual-transfer index map (with the `kkt_residual.py` residual → 0 confirmation); the three-site index-map coordination design; the robert → mine generalization verdict; the cold-LCP-consistency finding
 - robert established as the P1 minimal reproduction; mine as the full multi-site case
 - The P1 budget sized (one shared fix vs robert-then-mine) feeding Task 5 + Task 10
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.3, 1.4
 
 ### Acceptance Criteria
 
@@ -317,6 +320,7 @@ for m in robert mine; do .venv/bin/python scripts/diagnostics/kkt_residual.py da
 - [ ] The robert → mine generalization verdict recorded (Unknown 1.1: does the constant-offset fix generalize to the parameter-offset case?)
 - [ ] The cold-LCP-consistency question resolved (does the head-offset fix alone clear mine's `x → 4e10`?)
 - [ ] The P1 budget re-sized on the generalization verdict; fed to Tasks 5 + 10
+- [ ] Unknowns 1.1, 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -328,7 +332,7 @@ for m in robert mine; do .venv/bin/python scripts/diagnostics/kkt_residual.py da
 **Deadline:** Before Sprint 30 Day 1
 **Owner:** Development team (numerics / solver-interface)
 **Dependencies:** Task 1
-**Unknowns Verified:** Category 2 (2.1, 2.2, 2.3)
+**Unknowns Verified:** 2.1, 2.2, 2.3, 7.2
 
 ### Objective
 
@@ -382,6 +386,7 @@ grep -qi "rocket" docs/planning/EPIC_4/SPRINT_30/NONCONVEX_FORCING_SURVEY.md && 
 - `docs/planning/EPIC_4/SPRINT_30/NONCONVEX_FORCING_SURVEY.md` — the forcing-lever enumeration (trust-region / homotopy / multi-start), the rocket prototype-probe result, the cold-convex Case-c shared-payoff check, and the nlp2mcp/PATH boundary
 - The chosen P2 forcing lever + the P8 forcing-scaffold entry point
 - The Sprint-31 PATH-consultation hand-off scope (the levers needing a PATH option)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.2, 2.3, 7.2
 
 ### Acceptance Criteria
 
@@ -390,6 +395,7 @@ grep -qi "rocket" docs/planning/EPIC_4/SPRINT_30/NONCONVEX_FORCING_SURVEY.md && 
 - [ ] One lever prototype-probed on rocket (env-guarded, zero `src/`); MODEL STATUS progression recorded
 - [ ] The cold-convex Case-c shared-payoff checked
 - [ ] The chosen P2 lever + the P8 scaffold entry point identified; the Sprint-31 PATH hand-off scoped
+- [ ] Unknowns 2.1, 2.2, 2.3, 7.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -401,7 +407,7 @@ grep -qi "rocket" docs/planning/EPIC_4/SPRINT_30/NONCONVEX_FORCING_SURVEY.md && 
 **Deadline:** Before Sprint 30 Day 1
 **Owner:** Development team (AD/KKT specialist)
 **Dependencies:** Tasks 1, 3
-**Unknowns Verified:** 1.2, 1.3, 2.2, 3.1, 3.2, 4.1, 5.1, 5.2, 6.1, 7.1
+**Unknowns Verified:** 1.2, 1.3, 2.2, 3.1, 3.2, 4.1, 5.2, 6.1, 7.1, 7.3
 
 ### Objective
 
@@ -458,6 +464,7 @@ for f in 1443 1462 1236 1385 1146 1143 1330; do grep -lE 'kkt_residual\.py' docs
 - A robert Phase-0 gate (in ISSUE_1443 or a new local doc)
 - A Class-B CGE `stat_pz` Phase-0 gate
 - Every gate cites `kkt_residual.py`; REPLAN-prone gates have an explicit Sprint-31 exit
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.2, 1.3, 2.2, 3.1, 3.2, 4.1, 5.2, 6.1, 7.1, 7.3
 
 ### Acceptance Criteria
 
@@ -467,6 +474,7 @@ for f in 1443 1462 1236 1385 1146 1143 1330; do grep -lE 'kkt_residual\.py' docs
 - [ ] hhfair gate corrected to the `$184` widened-VARIABLE blocker (not `$141`-only)
 - [ ] Every gate frames its fix-surface as a Day-0 hypothesis (PR24) + cites `kkt_residual.py` (PR27)
 - [ ] REPLAN-prone gates (P1/P2/P5/P6) have an explicit Sprint-31 exit
+- [ ] Unknowns 1.2, 1.3, 2.2, 3.1, 3.2, 4.1, 5.2, 6.1, 7.1, 7.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -478,7 +486,7 @@ for f in 1443 1462 1236 1385 1146 1143 1330; do grep -lE 'kkt_residual\.py' docs
 **Deadline:** Before Sprint 30 Day 1
 **Owner:** Development team (AD/KKT specialist)
 **Dependencies:** Tasks 3, 4, 5
-**Unknowns Verified:** 1.1, 2.1, 6.1, 6.2
+**Unknowns Verified:** 1.1, 1.2, 2.1, 2.2, 6.1, 6.2
 
 ### Why this is separate from Task 5
 
@@ -535,6 +543,7 @@ grep -qiE "Sprint 31|Sprint-31" docs/planning/EPIC_4/SPRINT_30/REPLAN_RISK_ASSES
 - `docs/planning/EPIC_4/SPRINT_30/REPLAN_RISK_ASSESSMENT.md` with per-track hypothesis, validation experiment, PROCEED/REPLAN signals, Sprint-31 exit
 - A budget-reallocation plan for each possible REPLAN
 - The three REPLAN-prone unknowns resolved into scheduled decisions (feeds Task 10's slack allocation + fallback ordering)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 2.1, 2.2, 6.1, 6.2
 
 ### Acceptance Criteria
 
@@ -544,6 +553,7 @@ grep -qiE "Sprint 31|Sprint-31" docs/planning/EPIC_4/SPRINT_30/REPLAN_RISK_ASSES
 - [ ] Each track has a Sprint-31 exit scope + the firm part that lands regardless (robert / scaffold / Class-B fix)
 - [ ] Budget-reallocation plan specified per REPLAN
 - [ ] Feeds the Task-10 schedule's slack allocation and fallback ordering
+- [ ] Unknowns 1.1, 1.2, 2.1, 2.2, 6.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -555,7 +565,7 @@ grep -qiE "Sprint 31|Sprint-31" docs/planning/EPIC_4/SPRINT_30/REPLAN_RISK_ASSES
 **Deadline:** Before Sprint 30 Day 1
 **Owner:** Development team (CGE / Epic-5)
 **Dependencies:** Task 1
-**Unknowns Verified:** Category 6 (6.1, 6.2, 6.3)
+**Unknowns Verified:** 6.1, 6.2, 6.3
 
 ### Objective
 
@@ -604,6 +614,7 @@ grep -qE "191.7346" docs/planning/EPIC_4/SPRINT_30/CAMCGE_WALRAS_TRANSFORM_DESIG
 - `docs/planning/EPIC_4/SPRINT_30/CAMCGE_WALRAS_TRANSFORM_DESIGN.md` — the degeneracy-detection heuristic + false-positive guard; the redundant-row + numéraire-selection rule (reproducing 191.7346 on paper); the empirical-confirmation experiment scope; the cohort-generality check plan
 - The three `CGE_DEGENERACY_SCOPING.md` §5 open questions resolved into a design
 - The nlp2mcp/Epic-5 boundary (Class-B general-emit fixes stay in nlp2mcp)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 6.1, 6.2, 6.3
 
 ### Acceptance Criteria
 
@@ -613,6 +624,7 @@ grep -qE "191.7346" docs/planning/EPIC_4/SPRINT_30/CAMCGE_WALRAS_TRANSFORM_DESIG
 - [ ] The empirical-confirmation experiment (drop-`lmequil` + fix-`cpi=1` → MS 1) scoped for Priority 6 Day-0
 - [ ] The cohort-generality check plan present (is camcge the sole inherent case?)
 - [ ] The nlp2mcp/Epic-5 boundary recorded (Class-B general-emit stays in nlp2mcp)
+- [ ] Unknowns 6.1, 6.2, 6.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -624,7 +636,7 @@ grep -qE "191.7346" docs/planning/EPIC_4/SPRINT_30/CAMCGE_WALRAS_TRANSFORM_DESIG
 **Deadline:** Before Sprint 30 Day 1
 **Owner:** Development team (Tooling)
 **Dependencies:** Task 1
-**Unknowns Verified:** Category 8 (8.1, 8.2)
+**Unknowns Verified:** 1.4, 8.1, 8.3, 8.4
 
 ### Objective
 
@@ -678,6 +690,7 @@ grep -qiE "gap list|no extensions needed|Day-0 extension" docs/planning/EPIC_4/S
 - `docs/planning/EPIC_4/SPRINT_30/TOOLING_READINESS_AUDIT.md` — per-tool readiness verdict for the Sprint-30 classes (head-offset dual-transfer, widened-VARIABLE re-solve coverage, property-catalog extensibility, allowlist currency)
 - A scoped gap list (Day-0 extensions ≤ 1h each) or "no extensions needed"
 - Confirmation the `--resolve-changed` checkpoint covers the Sprint-30 changed-golden set
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.4, 8.1, 8.3, 8.4
 
 ### Acceptance Criteria
 
@@ -687,6 +700,7 @@ grep -qiE "gap list|no extensions needed|Day-0 extension" docs/planning/EPIC_4/S
 - [ ] Property-test catalog confirmed extensible to the head-offset + offset-alias shapes
 - [ ] Allowlists confirmed current; divergence detector soft-classifies the Class-B/cold-convex residue
 - [ ] Gap list produced (each extension ≤ 1h) or "no extensions needed"
+- [ ] Unknowns 1.4, 8.1, 8.3, 8.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -698,7 +712,7 @@ grep -qiE "gap list|no extensions needed|Day-0 extension" docs/planning/EPIC_4/S
 **Deadline:** Before Sprint 30 Day 1
 **Owner:** Development team (AD/emit specialist)
 **Dependencies:** Tasks 1, 8
-**Unknowns Verified:** 4.1, 5.1, 5.2, 7.1
+**Unknowns Verified:** 3.3, 4.1, 4.2, 5.1, 5.2, 5.3, 7.1
 
 ### Objective
 
@@ -748,6 +762,7 @@ grep -qiE "property.test|fixture|test_ad_crossterm_shapes" docs/planning/EPIC_4/
 - `docs/planning/EPIC_4/SPRINT_30/BACKLOG_FIX_SURFACE_ANALYSIS.md` — the #1385 sarf emit site, the offset-alias coordinated-fix hypothesis + Day-5 revert root cause, the Class-B CGE `stat_pz` patch site, and the property-test fixture plan
 - The #1111/#1112 architectural-REPLAN boundary flagged for the Task-6 assessment
 - The two new property-test fixtures scoped for P8
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.3, 4.1, 4.2, 5.1, 5.2, 5.3, 7.1
 
 ### Acceptance Criteria
 
@@ -757,6 +772,7 @@ grep -qiE "property.test|fixture|test_ad_crossterm_shapes" docs/planning/EPIC_4/
 - [ ] The offset-alias Day-5 revert coupling (distance-Jacobian) recorded + the coordinated-fix hypothesis
 - [ ] Property-test fixture plan (head-offset + offset-alias-successor shapes) present
 - [ ] The #1111/#1112 architectural-REPLAN boundary flagged
+- [ ] Unknowns 3.3, 4.1, 4.2, 5.1, 5.2, 5.3, 7.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
