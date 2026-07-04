@@ -1469,10 +1469,10 @@ Derived from `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently". (
 ## Acceptance Criteria
 - **PATH Consultation:** Document submitted to Ferris/Dirkse with reproducible cases
 - **Solution Forcing:** At least 2 strategies implemented and tested
-- **Parse Rate:** ≥ 100% of pipeline scope (maintain from Sprint 29)
-- **Translate Rate:** ≥ 95% of parsed models (maintain from Sprint 29; S31 steps up to ≥ 97% per Rolling KPIs)
-- **Solve Rate:** ≥ 81% of translated models (maintain Sprint 29's ≥ 81% baseline; modest stretch to ≥ 82% via forcing strategies recovering 1–2 divergent models; S31/S32 continue the ramp to ≥ 83% / ≥ 85%)
-- **Full Pipeline Match:** ≥ 45% of pipeline scope — **legacy inherited target, now stale:** this predates the Sprint-28 presolve-retry methodology lift; Sprint 29's re-baselined Full Pipeline Match is ≥ 64% (footnote ⁸), so re-baseline this to ≥ 64% when Sprint 31 is planned
+- **Parse Rate:** ≥ 100% of pipeline scope (maintain from Sprint 30)
+- **Translate Rate:** ≥ 95% of parsed models (maintain from Sprint 30; the step-up to ≥ 97% happens in Sprint 32 per Rolling KPIs)
+- **Solve Rate:** ≥ 81% of translated models (maintain Sprint 30's ≥ 81% baseline; modest stretch to ≥ 82% via forcing strategies recovering 1–2 divergent models; Sprint 32 / Sprint 33 continue the ramp to ≥ 83% / ≥ 85% per Rolling KPIs)
+- **Full Pipeline Match:** ≥ 45% of pipeline scope — **legacy inherited target, superseded:** this predates the Sprint-28 presolve-retry methodology lift; the new **Sprint 30 Priority 8** re-baselines the Rolling-KPIs Match targets for S31–S33 to the ≥ 64% line (footnote ⁸), so this ≥ 45% figure is replaced by that ≥ 64% target once Sprint 30 lands
 - **Quality:** All tests pass; all fixes have regression tests
 
 **Estimated Effort:** 22-28 hours
