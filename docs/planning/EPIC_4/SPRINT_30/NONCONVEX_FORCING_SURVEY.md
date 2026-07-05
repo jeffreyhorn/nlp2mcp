@@ -14,7 +14,7 @@ rocket (#1462) is the Goddard rocket optimal-control problem (COPS): highly non-
 **This survey's empirical findings (Task-4 probes, this branch):**
 
 1. **The effective forcing levers are PATH solver options, not emittable GAMS.** Trust-region damping = PATH `proximal_perturbation` (Levenberg-Marquardt Jacobian regularization); the other tunable levers (`crash_method`, `merit_function`, iteration limits) are also PATH options.
-2. **No in-GAMS PATH-option lever forces rocket to MS 1/2.** Across `proximal_perturbation` 1e-1…1e2, `crash pnewton`, `merit_function normal`, and combined strong configs, rocket **stays MS 5**; the best config (`merit_function normal` + `proximal_perturbation 1e-2`) reduces the infeasible-row count **477 → 382** but never converges. → the residual convergence is a **PATH-solver-internals question → Sprint-31 PATH-author consultation.**
+2. **No PATH-option configuration (via optfile) forces rocket to MS 1/2.** Across `proximal_perturbation` 1e-1…1e2, `crash_method pnewton`, `merit_function normal`, and combined strong configs, rocket **stays MS 5**; the best config (`merit_function normal` + `proximal_perturbation 1e-2`) reduces the infeasible-row count **477 → 382** but never converges. → the residual convergence is a **PATH-solver-internals question → Sprint-31 PATH-author consultation.**
 3. **No cold-convex Case-c shared payoff.** The 4 Case-c cohort models (bearing / launch / mathopt3 / robustlp, `COLD_CONVEX_COHORT_SURVEY.md` §3) are emit-correct and **already warm-match** (`model_optimal_presolve` + `compare_objective_match`, residual ≤ 8e-6) — they need **no forcing**. rocket is the **sole** genuinely-non-converging model. So a rocket forcing lever has no additional cohort to lift.
 4. **Chosen P2 lever + decision.** Sprint-30 P2 = build the **emitted-GAMS forcing-harness scaffold** (homotopy/continuation + multi-start driver + optional PATH-optfile emission) as the P8 entry point — **NOT** a firm rocket +1 Solve. rocket's +1 Solve is **conditional and likely defers to Sprint-31** (the PATH-option tuning that moves INFES 477 → 382 but doesn't converge is the concrete PATH-consultation hand-off). This is the honest outcome: the scaffold lands; rocket's solve does not, on the evidence.
 
@@ -73,7 +73,7 @@ The Sprint-29 cohort survey (`COLD_CONVEX_COHORT_SURVEY.md` §3) partitioned the
 
 **P8 forcing-scaffold entry point (feeds Unknown 8.3 / Task 8):** the stable interface Sprint-31 inherits = a lever-injection hook around the MCP solve + a MODEL-STATUS reporter (the scaffold emits the driver; the strategy is a parameter). Sprint-30 P8 builds this scaffold and validates its plumbing on rocket (it *runs* the levers) — but, per §2, it is **not** expected to make rocket converge.
 
-**Sprint-31 PATH-consultation hand-off scope:** "rocket's MCP is MS 5 with `EXIT — other error` at an ill-conditioned initial Jacobian (`1/ht²`,`1/m²`); `proximal_perturbation`/`merit_function`/`crash` move INFES 477 → 382 but do not converge from the NLP-optimum warm-start. Which PATH option set / regularization schedule / reformulation forces convergence for this division-by-variable optimal-control MCP?"
+**Sprint-31 PATH-consultation hand-off scope:** "rocket's MCP is MS 5 with `EXIT — other error` at an ill-conditioned initial Jacobian (`1/ht²`,`1/m²`); `proximal_perturbation`/`merit_function`/`crash_method` move INFES 477 → 382 but do not converge from the NLP-optimum warm-start. Which PATH option set / regularization schedule / reformulation forces convergence for this division-by-variable optimal-control MCP?"
 
 **Decision (feeds Task 6 REPLAN + Task 10 schedule):** P2 Sprint-30 deliverable = **the forcing scaffold** (firm) + **the PATH-consultation hand-off** (Sprint-31). rocket's **+1 Solve is NOT firm for Sprint 30** — it is conditional on the Sprint-31 PATH consultation (or a reformulation). Task 6 should record rocket as PROCEED-to-scaffold with the +1 Solve deferred; Task 10 should schedule the scaffold build, not a rocket-solve milestone.
 
@@ -92,7 +92,7 @@ The Sprint-29 cohort survey (`COLD_CONVEX_COHORT_SURVEY.md` §3) partitioned the
 
 - Emit: `.venv/bin/python -m src.cli data/gamslib/raw/rocket.gms --nlp-presolve -o /tmp/rocket_ps.gms`.
 - Baseline: GAMS from repo root → embedded NLP MS 2; MCP MS 5, 477 INFES, 0 eval errors.
-- PATH-option probes (transient `path.opt`, `mcp_model.optfile=1`): pp{1e-1,1.0,1e2}, crash pnewton, merit_function normal, combined — all **MS 5**; best INFES 382 (merit + pp 1e-2).
+- PATH-option probes (transient `path.opt`, `mcp_model.optfile=1`): pp{1e-1,1.0,1e2}, crash_method pnewton, merit_function normal, combined — all **MS 5**; best INFES 382 (merit + pp 1e-2).
 - Case-c cohort buckets (§3): DB `data/gamslib/gamslib_status.json` — bearing/launch/mathopt3/robustlp all `model_optimal_presolve` + `compare_objective_match`; rocket `model_infeasible`.
 - Prior: `docs/issues/ISSUE_1462_*.md` Day-2 (complete `_fx_` warm-start → NLP MS 2 1.00412 / MCP MS 5; degenerate-bound probe no help; residual not cleanable by warm-start value).
 - No `src/` or golden change committed; all probes reverted.
