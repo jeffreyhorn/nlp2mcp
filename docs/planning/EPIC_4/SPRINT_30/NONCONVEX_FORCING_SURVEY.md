@@ -14,7 +14,7 @@ rocket (#1462) is the Goddard rocket optimal-control problem (COPS): highly non-
 **This survey's empirical findings (Task-4 probes, this branch):**
 
 1. **The effective forcing levers are PATH solver options, not emittable GAMS.** Trust-region damping = PATH `proximal_perturbation` (Levenberg-Marquardt Jacobian regularization); the other tunable levers (`crash_method`, `merit_function`, iteration limits) are also PATH options.
-2. **No PATH-option configuration (via optfile) forces rocket to MS 1/2.** Across `proximal_perturbation` 1e-1…1e2, `crash_method pnewton`, `merit_function normal`, and combined strong configs, rocket **stays MS 5**; the best config (`merit_function normal` + `proximal_perturbation 1e-2`) reduces the infeasible-row count **477 → 382** but never converges. → the residual convergence is a **PATH-solver-internals question → Sprint-31 PATH-author consultation.**
+2. **No PATH-option configuration (via optfile) forces rocket to MS 1/2.** Across `proximal_perturbation` {1e-2, 1e-1, 1.0, 1e2}, `crash_method pnewton`, `merit_function normal`, and combined strong configs, rocket **stays MS 5**; the best config (`merit_function normal` + `proximal_perturbation 1e-2`) reduces the infeasible-row count **477 → 382** but never converges. → the residual convergence is a **PATH-solver-internals question → Sprint-31 PATH-author consultation.**
 3. **No cold-convex Case-c shared payoff.** The 4 Case-c cohort models (bearing / launch / mathopt3 / robustlp, `COLD_CONVEX_COHORT_SURVEY.md` §3) are emit-correct and **already warm-match** (`model_optimal_presolve` + `compare_objective_match`, residual ≤ 8e-6) — they need **no forcing**. rocket is the **sole** genuinely-non-converging model. So a rocket forcing lever has no additional cohort to lift.
 4. **Chosen P2 lever + decision.** Sprint-30 P2 = build the **emitted-GAMS forcing-harness scaffold** (homotopy/continuation + multi-start driver + optional PATH-optfile emission) as the P8 entry point — **NOT** a firm rocket +1 Solve. rocket's +1 Solve is **conditional and likely defers to Sprint-31** (the PATH-option tuning that moves INFES 477 → 382 but doesn't converge is the concrete PATH-consultation hand-off). This is the honest outcome: the scaffold lands; rocket's solve does not, on the evidence.
 
@@ -24,7 +24,7 @@ rocket (#1462) is the Goddard rocket optimal-control problem (COPS): highly non-
 
 | Lever family | Mechanism | Emittable GAMS? / PATH option? | rocket probe result |
 |---|---|---|---|
-| **Trust-region damping** | PATH `proximal_perturbation` — adds a Levenberg-Marquardt regularization term to the Jacobian (the MCP analogue of a trust region), stabilizing the ill-conditioned `1/ht²`,`1/m²` initial Jacobian | **PATH option** (optfile) | pp ∈ {1e-1, 1.0, 1e2}: **MS 5**; INFES 477 → 456–482 (no monotone gain) |
+| **Trust-region damping** | PATH `proximal_perturbation` — adds a Levenberg-Marquardt regularization term to the Jacobian (the MCP analogue of a trust region), stabilizing the ill-conditioned `1/ht²`,`1/m²` initial Jacobian | **PATH option** (optfile) | pp ∈ {1e-1, 1.0, 1e2} standalone (+ 1e-2 in the merit-combined config): **MS 5**; INFES 477 → 456–482 (no monotone gain) |
 | **Crash / restart** | PATH `crash_method pnewton` + `crash_perturb` — a projected-Newton crash to a better initial basis | **PATH option** | **MS 5**, INFES 477 (unchanged) |
 | **Merit function** | PATH `merit_function normal` + `gradient_step_limit` — the non-monotone merit steering | **PATH option** | **MS 5**; INFES → **382** (the best of all configs), still no convergence |
 | **Combined strong** | merit + pp 1e-1 + crash + 20k major / 500k minor iters | **PATH option** | **MS 5**, INFES 458 |
@@ -81,7 +81,7 @@ The Sprint-29 cohort survey (`COLD_CONVEX_COHORT_SURVEY.md` §3) partitioned the
 
 ## 5. Unknowns resolved
 
-- **2.1 (which forcing lever moves rocket): ⚠️ none of the tunable in-GAMS PATH options do** — best (merit+proximal_perturbation) reduces INFES 477 → 382 but stays MS 5. Intrinsic non-convergence confirmed.
+- **2.1 (which forcing lever moves rocket): ⚠️ none of the tunable PATH options (via optfile) do** — best (merit+proximal_perturbation) reduces INFES 477 → 382 but stays MS 5. Intrinsic non-convergence confirmed.
 - **2.2 (nlp2mcp/PATH boundary): the effective levers are PATH options** (proximal_perturbation/crash/merit), and even the strongest don't converge → PATH-internals → **Sprint-31 PATH consultation**; the emittable-GAMS levers (homotopy/multi-start) are the P8 scaffold.
 - **2.3 (Case-c shared payoff): NONE** — the 4 Case-c cohort models already warm-match (emit-correct); rocket is the sole non-converging model.
 - **7.2 (Case-c residue disposition): rocket-alone.** The 4 Case-c models are documented inherent-non-convexity-that-warm-matches (no action); rocket is the Sprint-31 PATH-consultation target. No Sprint-30 forcing cohort.
@@ -92,7 +92,7 @@ The Sprint-29 cohort survey (`COLD_CONVEX_COHORT_SURVEY.md` §3) partitioned the
 
 - Emit: `.venv/bin/python -m src.cli data/gamslib/raw/rocket.gms --nlp-presolve -o /tmp/rocket_ps.gms`.
 - Baseline: GAMS from repo root → embedded NLP MS 2; MCP MS 5, 477 INFES, 0 eval errors.
-- PATH-option probes (transient `path.opt`, `mcp_model.optfile=1`): pp{1e-1,1.0,1e2}, crash_method pnewton, merit_function normal, combined — all **MS 5**; best INFES 382 (merit + pp 1e-2).
+- PATH-option probes (transient `path.opt`, `mcp_model.optfile=1`): pp{1e-2,1e-1,1.0,1e2}, crash_method pnewton, merit_function normal, combined — all **MS 5**; best INFES 382 (merit + pp 1e-2).
 - Case-c cohort buckets (§3): DB `data/gamslib/gamslib_status.json` — bearing/launch/mathopt3/robustlp all `model_optimal_presolve` + `compare_objective_match`; rocket `model_infeasible`.
 - Prior: `docs/issues/ISSUE_1462_*.md` Day-2 (complete `_fx_` warm-start → NLP MS 2 1.00412 / MCP MS 5; degenerate-bound probe no help; residual not cleanable by warm-start value).
 - No `src/` or golden change committed; all probes reverted.
