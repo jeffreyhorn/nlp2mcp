@@ -177,9 +177,10 @@ grep -oE "#(1443|1462|1236|1385|1146|1143|1330|1111|1112)" docs/planning/EPIC_4/
 
 ## Task 2: Sprint 29 → Sprint 30 Day-0 Baseline + Genuine-Floor Re-Baseline (PR15 + PR17 + PR25)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
-**Estimated Time:** 3–4 hours
+**Estimated Time:** 3–4 hours (actual: ~2h)
+**Completed:** 2026-07-05
 **Deadline:** Before Sprint 30 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
@@ -209,11 +210,11 @@ Sprint 29 closed with the headline Match at 92 but a **genuine floor of 69** (th
 
 ### Changes
 
-To be completed.
+Authored `docs/planning/EPIC_4/SPRINT_30/BASELINE_METRICS.md` (§0 Day-0 assertion + latent-snippet finding, §1 headline counts, §2 genuine/methodology split, §3 per-target bucket provenance + PR25 tally, §4 scope freeze). Recomputed the canonical tally from the committed DB via `get_candidate_models`. Updated `KNOWN_UNKNOWNS.md` Unknown 8.2 → ✅ VERIFIED. CHANGELOG entry.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-05).** Day-0 = Sprint 29 final, **no fresh retest**: `git diff 68b5b4a7..HEAD -- src/ scripts/` empty (every post-close commit docs-only). Canonical recompute (142 scope) = **Parse 142 · Translate 135 · Solve 107 · Match 92 · Mismatch 9 · model_infeasible 7** — reproduces the Sprint 29 final headline exactly. Genuine floor **69** carried forward (methodology ~23); genuine-floor → ≥ 72 conversion map documented (robert P1 / polygon-himmel16 P5 / Class-B CGE P7 / hhfair P3). Per-target Day-0 buckets pinned: mine/rocket/camcge `model_infeasible`; hhfair `model_optimal`+mismatch (72.147 vs 87.159); robert/polygon/himmel16 + Class-B cluster `model_optimal_presolve`+match; sarf `translate_failure`. **Two findings:** (a) the committed DB is byte-unchanged since the *Sprint 28* close because Sprint 29 netted no bucket change (all headline movers REPLAN'd); (b) the `git log --grep='SPRINT 29 CLOSED' -1` auto-derive snippet is now ambiguous (resolves to a docs-only PR-#1490 commit, not the true close) — drift result identical, but the schedule (Task 10) / tooling audit (Task 8) should use the pinned SHA or `--format=%H | tail -1`.
 
 ### Verification
 
@@ -240,12 +241,12 @@ grep -qi "genuine" docs/planning/EPIC_4/SPRINT_30/BASELINE_METRICS.md && grep -q
 
 ### Acceptance Criteria
 
-- [ ] BASELINE_METRICS.md created; Day-0 asserted = Sprint 29 final (no `src/` drift)
-- [ ] Canonical bucket tally recomputed (Solve 107 / Match 92 / model_infeasible 7)
-- [ ] Genuine floor 69 carried forward with the genuine-floor → ≥ 72 conversion map
-- [ ] Per-Sprint-30-target Day-0 bucket + projected-delta table (mine/rocket/hhfair/robert/sarf/polygon/himmel16/camcge/Class-B CGE)
-- [ ] Each projected delta labeled genuine vs already-banked (PR25)
-- [ ] Unknown 8.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] BASELINE_METRICS.md created; Day-0 asserted = Sprint 29 final (no `src/` drift)
+- [x] Canonical bucket tally recomputed (Solve 107 / Match 92 / model_infeasible 7)
+- [x] Genuine floor 69 carried forward with the genuine-floor → ≥ 72 conversion map
+- [x] Per-Sprint-30-target Day-0 bucket + projected-delta table (mine/rocket/hhfair/robert/sarf/polygon/himmel16/camcge/Class-B CGE)
+- [x] Each projected delta labeled genuine vs already-banked (PR25)
+- [x] Unknown 8.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

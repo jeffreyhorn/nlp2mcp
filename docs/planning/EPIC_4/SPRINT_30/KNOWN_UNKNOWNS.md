@@ -896,7 +896,13 @@ git diff --quiet "$S29"..HEAD -- src/ scripts/ && echo "no drift → Day 0 = Spr
 Sprint planning
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Day-0 Baseline + Genuine-Floor Re-Baseline)
+**Date:** 2026-07-05
+**Findings:** `git diff 68b5b4a7..HEAD -- src/ scripts/` is **empty** — no `src/`/`scripts/` drift since the true Sprint 29 close (`68b5b4a7`, "SPRINT 29 CLOSED", 2026-07-01); every commit since is docs-only (PRs #1489, #1490). The committed DB recomputes over the canonical 142-model scope (`get_candidate_models` = `convexity.status ∈ {verified_convex, likely_convex}`) to exactly **Parse 142 · Translate 135 · Solve 107 · Match 92 · Mismatch 9 · model_infeasible 7** — the Sprint 29 final headline. The genuine floor **69** carries forward (Sprint 28 genuine 68 +1 from Sprint 29's maxmin/catmix reclassification; methodology ~23), with the genuine-floor → ≥ 72 conversion map documented (robert P1 / polygon-himmel16 P5 / Class-B CGE P7 / hhfair P3). **Bonus finding:** the committed DB is byte-unchanged since the *Sprint 28* close (`2717d542`) — because Sprint 29 netted no bucket change (all headline movers REPLAN'd; the firm deliverables were genuine-floor/cold-correctness, Match-neutral) — so the Sprint-28-close DB *is* the Sprint-29-final DB.
+**Evidence:** `docs/planning/EPIC_4/SPRINT_30/BASELINE_METRICS.md` §0–§3 (git-diff drift check, canonical recompute, per-target bucket table).
+**Decision:** **reuse the committed DB — no fresh ~4 h retest.** Day-0 = Sprint 29 final. ⚠️ **Latent-snippet finding** (recorded in `BASELINE_METRICS.md` §0 for Task 8/Task 10): the `git log --grep='SPRINT 29 CLOSED' -1` auto-derive now resolves to a docs-only PR-#1490 review-fix commit (`7a2d30e3`), not the true close (`68b5b4a7`), because prep commit bodies quote the phrase — drift *result* is identical (all-docs in between) but the reported SHA is misleading; use the pinned SHA or `... --format=%H | tail -1` (oldest match).
+**Day-0-bucket contribution to other unknowns:** confirmed each Sprint-30 target is still in its gating bucket at Day 0 — **mine** + **rocket** + **camcge** `model_infeasible` (feeds 1.1 / 2.1 / 6.1); **hhfair** `model_optimal` + **mismatch** 72.147 vs 87.159 (feeds 3.1); **robert** `model_optimal_presolve` + match 11025.0 (P1 genuine-floor candidate); **sarf** `translate_failure` (feeds 4.1); **polygon**/**himmel16** + the Class-B cluster `model_optimal_presolve` + match (methodology). Their *fix-surface* aspects remain to be verified by Tasks 3/4/5.
 
 ---
 
