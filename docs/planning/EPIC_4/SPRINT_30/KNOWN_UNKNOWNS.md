@@ -132,7 +132,12 @@ Hand-derive robert's head-offset cross-term + dual-transfer index map; confirm t
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — does NOT generalize (different bug classes); favourable re-scope
+**Verified by:** Task 3 (Head-Offset Architecture Design + robert Minimal Reproduction)
+**Date:** 2026-07-05
+**Findings:** The banked premise (robert = pure-constant-offset minimal reproduction of mine; one head-offset fix converts both) is **refuted**. Cold-solve control experiments on `robert_mcp.gms`: patching **only** `stat_x` to `nu_sb(r,tt+1)` (the banked "fix") leaves robert at the spurious **6741.67**; patching **only** `stat_s`'s objective gradient (drop-in `−res-value(r)` boundary term at `tt=4`, guard `storage-c(r)` to `t(tt)`) makes robert cold-solve to **11025.0 = NLP optimum (MATCH)**. So robert's real bug is an **objective-gradient boundary-term drop** (same class as Sprint-29 #1447 maxmin), NOT the head-offset cross-term — and it is a **different class** from mine's firm `comp_pr` `l+1`-head × `li(k)`/`lj(k)`-parameter-offset coupling (`ISSUE_1443` Day-7). robert's `stat_x` cross-term `nu_sb(r,tt)` is already correct under the emit's base-labeling.
+**Evidence:** `docs/planning/EPIC_4/SPRINT_30/HEAD_OFFSET_ARCHITECTURE_DESIGN.md` §0–§2 + §Appendix (the two cold-solve control experiments).
+**Decision:** **Priority 1 splits into two independent tracks** — robert (genuine-floor +1, LOW-risk standalone objective-gradient fix, ~2–4 h, decoupled) and mine (+1 Solve, HIGH-risk multi-site `comp_pr` re-derivation, ~10–16 h, REPLAN-prone). Removing the false coupling de-risks the robert gain and isolates mine. Fed to Task 5 (gate refresh: record robert as objective-gradient, head-offset architecture as mine-only) + Task 6 (REPLAN mine only) + Task 10 (schedule robert early + standalone).
 
 ---
 
@@ -167,7 +172,12 @@ grep -n "_emit_nlp_presolve\|comp_pr\|stat_x" src/emit/emit_gams.py src/kkt/stat
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — mine-only (robert is not a 3-site problem)
+**Verified by:** Task 3 (Head-Offset Architecture Design)
+**Date:** 2026-07-05
+**Findings:** The 3-site coordination (`comp_pr` / `_emit_nlp_presolve` / `stat_x`) applies **only to mine** — robert needs no site coordination (its bug is a single objective-gradient site; cold-confirmed at 11025 with the `stat_s` fix alone, Unknown 1.1). For mine the 3-site budget stands as the firm `ISSUE_1443` Day-7 finding: fixing Site 2 alone (dual transfer → `pr.m(k,l+1,i,j)`) clears only the `nw` direction (`li=lj=0`), leaving `ne`/`se`/`sw` at ~1e10 `comp_pr` infeasibility — so each site can expose the next (the head-offset × parameter-offset coupling is the un-budgeted risk). Design recommends a single shared head-offset index-map helper all three sites call.
+**Evidence:** `HEAD_OFFSET_ARCHITECTURE_DESIGN.md` §3 (three-site table with `file:line`); `ISSUE_1443` Day-7.
+**Decision:** mine ~10–16 h with a REPLAN-if-cascade exit (Task 6); robert is NOT counted in the 3-site budget (separate ~2–4 h objective-gradient fix).
 
 ---
 
@@ -201,7 +211,12 @@ After the Task-3 head-offset design, evaluate mine's corrected cold emit and con
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — robert cold-LCP feasible after the objective-gradient fix; mine hypothesis firm
+**Verified by:** Task 3 (Head-Offset Architecture Design)
+**Date:** 2026-07-05
+**Findings:** **robert ✅ CONFIRMED** — after the `stat_s` objective-gradient fix, robert's cold MCP solves to MS 1 at 11025.0, a clean convex-LP cold solve with **no warm-start** and no residual bound coupling. **mine (hypothesis, firm):** the head-offset `comp_pr` fix must drive the `comp_pr` LCP residual (the `x → 4e10`) to 0; mine is a convex LP (monotone LCP) so there is no Case-c escape — a residual after the 3-site fix is a remaining emit/index-map bug (still Case-b), not non-convexity.
+**Evidence:** `HEAD_OFFSET_ARCHITECTURE_DESIGN.md` §1.4 (robert cold 11025) + §4; `ISSUE_1443` (mine convex-LP / `x → 4e10` = comp_pr LCP residual).
+**Decision:** robert's cold LCP is fully consistent once the objective gradient is fixed (no bound-coupling second fix). mine's cold-LCP consistency is the PROCEED criterion for the 3-site fix (Task 6).
 
 ---
 
@@ -236,7 +251,12 @@ robert's `x(p,tt)` stationarity cross-term is `sum(r, a(r,p)*nu_sb(r,tt+1))` (th
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — `nu_sb(r,tt+1)` is NOT robert's fix; the emitted `nu_sb(r,tt)` is already correct
+**Verified by:** Task 3 (Head-Offset Architecture Design)
+**Date:** 2026-07-05
+**Findings:** The hand-derived `sum(r, a(r,p)*nu_sb(r,tt+1))` cross-term is **not** robert's fix. Control experiment: patching robert's cold `stat_x` from `nu_sb(r,tt)` to `nu_sb(r,tt+1)` leaves the cold MCP at the spurious **6741.67** (unchanged) — because under the emit's **base-labeling** of `sb(r,tt)$(ord(tt)<=card-1)`, the equation body references `x(p,tt)` at the base index, so `∂sb(r,tt)/∂x(p,tt)=a(r,p)` and the emitted `nu_sb(r,tt)` index is **already correct**. robert's cold-match (11025) / residual → 0 is achieved by the **`stat_s` objective-gradient boundary-term fix** instead (drop-in `−res-value(r)` at `tt=4` + guard `storage-c(r)` to `t(tt)`) — see Unknown 1.1. The harness localized to `stat_x` only because its same-index dual transfer (`nu_sb.l=sb.m`, NLP marginals stored at the head label) shifts `nu_sb` and corrupts the `stat_x` residual rows (a transfer artifact, not a formula bug).
+**Evidence:** `HEAD_OFFSET_ARCHITECTURE_DESIGN.md` §1.2–1.5 + §Appendix (the `stat_x`-only patch → 6741.67; the harness-artifact explanation).
+**Decision:** do NOT touch robert's `stat_x`; the objective-gradient `stat_s` fix is the whole robert fix (Unknown 1.1). This also invalidates the banked `ISSUE_1443` Day-12 robert diagnosis (a PR24 correction — recorded for the Task-5 gate refresh).
 
 ---
 
