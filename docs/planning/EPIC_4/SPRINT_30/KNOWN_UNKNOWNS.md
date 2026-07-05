@@ -295,7 +295,12 @@ Prototype-probe the most promising lever on rocket's presolve MCP (env-guarded, 
 Development team (numerics / solver-interface)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+⚠️ **Status:** VERIFIED — no PATH-option configuration (via optfile) forces rocket (intrinsic non-convergence confirmed)
+**Verified by:** Task 4 (Non-Convex Forcing Strategy Survey)
+**Date:** 2026-07-05
+**Findings:** Prototype-probed the tunable forcing levers on rocket's presolve MCP (env-guarded `path.opt` + `mcp_model.optfile=1`, zero `src/`). Baseline: MCP MS 5, **477 INFES**, 0 eval errors (embedded NLP MS 2). Across `proximal_perturbation` ∈ {1e-2, 1e-1, 1.0, 1e2} (trust-region/Levenberg-Marquardt Jacobian regularization), `crash_method pnewton`, `merit_function normal`, and combined strong configs, rocket **stays MS 5** — best (`merit_function normal` + `proximal_perturbation 1e-2`) reduces INFES 477 → **382** but never converges. rocket is the Goddard rocket (division-by-variable `1/ht²`,`1/m²` initial Jacobian) — intrinsic non-convergence, confirming ISSUE_1462 Day-2.
+**Evidence:** `docs/planning/EPIC_4/SPRINT_30/NONCONVEX_FORCING_SURVEY.md` §1–§2 + §Appendix.
+**Decision:** no tunable PATH-option configuration (via optfile) crosses; the PATH-option tuning (INFES 477 → 382) is the concrete **Sprint-31 PATH-consultation hand-off** (2.2). Sprint-30 P2 = the emitted-GAMS forcing scaffold (homotopy/multi-start), not a firm rocket +1 Solve.
 
 ---
 
@@ -329,7 +334,12 @@ grep -rn "option\|control file\|\.optfile" docs/planning/EPIC_4/SPRINT_30/NONCON
 Development team (numerics / solver-interface)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the effective levers are PATH options; the emittable-GAMS levers are the P8 scaffold
+**Verified by:** Task 4 (Non-Convex Forcing Strategy Survey)
+**Date:** 2026-07-05
+**Findings:** The three *tunable* levers (trust-region = `proximal_perturbation`, `crash_method`, `merit_function`) are **PATH options** (delivered via an `optfile` — nlp2mcp can emit the optfile, but the tuning is PATH-internal). The two *structural* levers (homotopy/continuation, multi-start) are **emittable GAMS** (a driver loop around `Solve mcp_model using MCP;`). On the evidence (2.1), even the strongest PATH-option config does not converge rocket → the convergence question is PATH-solver-internals.
+**Evidence:** `NONCONVEX_FORCING_SURVEY.md` §1 (the lever/boundary table) + §4.
+**Decision:** **Sprint-31 PATH-author consultation** for the PATH-option tuning (the scoped question: which option set/regularization schedule/reformulation converges the division-by-variable optimal-control MCP); the emitted-GAMS homotopy/multi-start scaffold is the **Sprint-30 P8** deliverable + entry point (feeds Unknown 8.3 / Task 8).
 
 ---
 
@@ -362,7 +372,12 @@ Apply the chosen lever to 2–3 Case-c cohort models; measure MODEL STATUS:
 Development team (numerics / solver-interface)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — no shared payoff (the Case-c cohort already warm-matches)
+**Verified by:** Task 4 (Non-Convex Forcing Strategy Survey)
+**Date:** 2026-07-05
+**Findings:** The 4 cold-convex Case-c cohort models (`COLD_CONVEX_COHORT_SURVEY.md` §3 — **bearing, launch, mathopt3, robustlp**) are emit-correct (residual ≤ 8e-6) and **already warm-match** (`model_optimal_presolve` + `compare_objective_match` in the Day-0 DB) — they need **no forcing**. rocket (`model_infeasible`) is the **sole** genuinely-non-converging model (its NLP-optimum warm-start still fails — the distinguishing intrinsic-non-convergence signature the 4 do not share). A rocket forcing lever therefore has no additional cohort to lift.
+**Evidence:** `NONCONVEX_FORCING_SURVEY.md` §3 (per-model bucket table); DB `data/gamslib/gamslib_status.json`.
+**Decision:** no shared-payoff bonus; rocket forcing is a standalone (Sprint-31) target. Feeds Unknown 7.2 (residue disposition = the 4 already-matching + rocket-alone).
 
 ---
 
@@ -812,7 +827,12 @@ Enumerate the post-forcing Case-c residue; classify each:
 Development team (numerics)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the residue is rocket-alone; the 4 Case-c models already warm-match (no action)
+**Verified by:** Task 4 (Non-Convex Forcing Strategy Survey)
+**Date:** 2026-07-05
+**Findings:** The cold-convex Case-c residue = {bearing, launch, mathopt3, robustlp} — all **emit-correct and already warm-matching** (`model_optimal_presolve` + `compare_objective_match`, residual ≤ 8e-6; `COLD_CONVEX_COHORT_SURVEY.md` §3) → **no action, documented inherent-non-convexity-that-warm-matches**. rocket (`model_infeasible`) is the **sole** genuinely-non-converging model, and no PATH-option configuration (via optfile) forces it (Unknown 2.1). So there is **no Sprint-30 forcing cohort** — the residue is rocket-alone.
+**Evidence:** `NONCONVEX_FORCING_SURVEY.md` §3; DB buckets.
+**Decision:** the 4 Case-c models need no forcing (documented); **rocket is the Sprint-31 PATH-consultation target** (2.2). No Sprint-30/Sprint-31 forcing *sprint* is warranted — a single-model (rocket) PATH-consultation suffices.
 
 ---
 

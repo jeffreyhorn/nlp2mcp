@@ -331,9 +331,10 @@ for m in robert mine; do .venv/bin/python scripts/diagnostics/kkt_residual.py da
 
 ## Task 4: Non-Convex Forcing Strategy Survey (rocket #1462 + Cold-Convex Case-c Residue) (Priority 2 Foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
-**Estimated Time:** 4–6 hours
+**Estimated Time:** 4–6 hours (actual: ~4h)
+**Completed:** 2026-07-05
 **Deadline:** Before Sprint 30 Day 1
 **Owner:** Development team (numerics / solver-interface)
 **Dependencies:** Task 1
@@ -364,11 +365,11 @@ Sprint 29 Day-2 confirmed rocket's residual MS-5 is **intrinsic non-convex conve
 
 ### Changes
 
-To be completed.
+Authored `docs/planning/EPIC_4/SPRINT_30/NONCONVEX_FORCING_SURVEY.md` (lever enumeration + boundary table, the rocket PATH-option probes, the Case-c shared-payoff check, the P8 scaffold + Sprint-31 hand-off). Updated `KNOWN_UNKNOWNS.md` 2.1/2.2/2.3/7.2. CHANGELOG entry. No `src/`/golden change (all probes were `/tmp` copies + a transient `path.opt`, reverted).
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-05).** rocket prototype-probe: emitted the presolve MCP, confirmed baseline MS 5 / 477 INFES, then applied the tunable PATH levers (env-guarded `path.opt`): `proximal_perturbation` {1e-2,1e-1,1.0,1e2}, `crash_method pnewton`, `merit_function normal`, combined — **all stay MS 5**; best (`merit_function normal` + `proximal_perturbation 1e-2`) reduces INFES 477 → **382** but never converges. **No PATH-option configuration (via optfile) forces rocket** → intrinsic non-convergence confirmed. The effective levers (proximal_perturbation/crash/merit) are **PATH options** → the tuning is the **Sprint-31 PATH-consultation** hand-off; the emittable-GAMS levers (homotopy/multi-start) are the **Sprint-30 P8 forcing scaffold** + entry point. **No Case-c shared payoff:** the 4 Case-c cohort models (bearing/launch/mathopt3/robustlp) are emit-correct + already warm-match; rocket is the sole non-converging model. **Decision:** P2 Sprint-30 = the forcing scaffold (firm) + the PATH hand-off; **rocket's +1 Solve is NOT firm for Sprint 30** (conditional on Sprint-31). Fed to Task 6 (rocket PROCEED-to-scaffold, +1 Solve deferred) + Task 10 (schedule the scaffold, not a rocket-solve milestone).
 
 ### Verification
 
@@ -395,12 +396,12 @@ grep -qi "rocket" docs/planning/EPIC_4/SPRINT_30/NONCONVEX_FORCING_SURVEY.md && 
 
 ### Acceptance Criteria
 
-- [ ] NONCONVEX_FORCING_SURVEY.md created
-- [ ] The three forcing-lever families enumerated with the nlp2mcp-emittable vs PATH-option boundary per lever
-- [ ] One lever prototype-probed on rocket (env-guarded, zero `src/`); MODEL STATUS progression recorded
-- [ ] The cold-convex Case-c shared-payoff checked
-- [ ] The chosen P2 lever + the P8 scaffold entry point identified; the Sprint-31 PATH hand-off scoped
-- [ ] Unknowns 2.1, 2.2, 2.3, 7.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] NONCONVEX_FORCING_SURVEY.md created
+- [x] The forcing-lever families enumerated with the nlp2mcp-emittable (homotopy/multi-start) vs PATH-option (proximal_perturbation/crash/merit) boundary per lever
+- [x] Levers prototype-probed on rocket (env-guarded, zero `src/`); MODEL STATUS + INFES progression recorded (all MS 5; best 477→382 INFES)
+- [x] The cold-convex Case-c shared-payoff checked (**none** — the 4 Case-c models already warm-match)
+- [x] The chosen P2 lever (emitted-GAMS forcing scaffold) + the P8 scaffold entry point identified; the Sprint-31 PATH hand-off scoped
+- [x] Unknowns 2.1, 2.2, 2.3, 7.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
