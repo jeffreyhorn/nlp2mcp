@@ -38,6 +38,8 @@ Re-emitting the constraints (1) WITHOUT the cross-terms (2) would create an inco
 
 ## Phase 0: Acceptance Gate
 
+> **🔄 Sprint-30 refresh (Prep Task 5, 2026-07-05): PROCEED to the atomic runtime-guard re-emit for sarf.** Smallest target = **sarf** (Sprint 29 Day 9); the `J_gᵀ·lam` cross-terms are **hand-derived + banked**. Disposition: **PROCEED** to land the runtime-guarded equation-body re-emit **atomically** with the banked cross-terms (a re-emit without cross-terms = an inconsistent MCP), with **no quoted-set-name multiplier indices** (the Sprint-26-Day-4 failure mode) and no re-introduction of the translate-timeout (Unknown 4.1 / 4.2). +Translate target (sarf `translate_failure → translate`). **REPLAN to Sprint 31** if the symbolic re-emit re-triggers the combinatorial instance blow-up. Fix surface (Day-0 hypothesis): `src/kkt/stationarity.py` + `src/ad/index_mapping.py` (Task 9 pins the emit site).
+
 > **Day-0 status (Sprint 29 Prep Task 4, 2026-06-25):** unlike the other Sprint-29 tracks, #1385 is **not** a standard `kkt_residual.py` target at Day-0 — the timeout models do not yet emit a *complete* MCP (the skipped `slack`/`demand` constraints and their `J_gᵀ·lam` cross-terms are absent by design after the Sprint-27 translate-time short-circuit), so there is no warm-startable MCP to read a residual from. The gate is therefore **structural** (hand-derived runtime-guard `stat_*` cross-terms) with an **atomic-landing** requirement; the harness becomes the post-fix verifier once the cross-terms exist.
 
 ### Hand-Derived KKT Shape

@@ -89,6 +89,8 @@ Translates but MCP compilation fails with $120/$149/$171 errors. Stationarity eq
 
 ## Phase 0: Acceptance Gate
 
+> **🔄 Sprint-30 refresh (Prep Task 5, 2026-07-05): coordinated offset-alias fix; #1111/#1112 architectural-REPLAN boundary.** The Sprint-29 Day-5 revert showed the successor-offset cross-term is **coupled with the distance-Jacobian** (the representative-selection fix made polygon's gradient correct but regressed its **solve** to a spurious 0.0 optimum). Disposition: **PROCEED** to a **coordinated** fix landing the successor-offset cross-term (polygon `stat_theta`) **together with** the distance-Jacobian, gated to the cyclic/successor shape (Unknown 5.2). **Cold-robustness / genuine-floor** (polygon already matches warm), not +Match. **REPLAN to Sprint 31** (the #1111/#1112 AD-engine core) if a localized gate cannot make it correct. Verify: `.venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/polygon.gms`.
+
 > **Day-0 status (Sprint 29 Prep Task 3/4, 2026-06-25):** the "compile fails / 100% mismatch" status above is **stale (2026-03-30)**. On the current Day-0 DB polygon **matches warm** (`model_optimal_presolve`, 0.7797 ≈ 0.7797) and the harness verdict is **Case b**, `max_residual_row = stat_theta`, rel = **0.492**, dual-transfer consistent → **PROCEED**. The fix is **cold-robustness** (polygon already matches warm), not headline +Match — Class A in `docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md`. Also a Case-b validation target for the parent offset-alias-AD architecture (#1111/#1112).
 
 ### Hand-Derived KKT Shape

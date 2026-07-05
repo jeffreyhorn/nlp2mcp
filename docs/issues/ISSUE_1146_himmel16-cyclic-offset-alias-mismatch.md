@@ -80,6 +80,8 @@ Translates and solves to Optimal but objective does not match the NLP reference.
 
 ## Phase 0: Acceptance Gate
 
+> **🔄 Sprint-30 refresh (Prep Task 5, 2026-07-05): coordinated offset-alias fix; #1111/#1112 architectural-REPLAN boundary.** The Sprint-29 Day-5 revert showed the offset-image cross-term is **coupled with the distance-Jacobian** — fixing one without the other regressed the solve. Disposition: **PROCEED** to a **coordinated** fix that lands the cyclic-offset cross-term (himmel16 `stat_area`) **together with** the distance-Jacobian, gated tightly to the cyclic/successor-offset shape (Unknown 5.2). This is **cold-robustness / genuine-floor** (himmel16 already matches warm), not headline +Match. **REPLAN to Sprint 31** (the #1111 alias-aware-differentiation / #1112 dollar-condition-propagation AD-engine core) if a localized gate cannot make it correct without the general architecture. Verify: `.venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/himmel16.gms`.
+
 > **Day-0 status (Sprint 29 Prep Task 3/4, 2026-06-25):** the 43% cold mismatch above is **stale (2026-03-30)**. On the current Day-0 DB himmel16 **matches warm** (`model_optimal_presolve`, 0.675 ≈ 0.675) and the harness verdict is **Case b**, `max_residual_row = stat_area`, rel = **2.000**, dual-transfer consistent → **PROCEED**. The fix is **cold-robustness** (himmel16 already matches warm), not headline +Match — Class A in `docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md`. Also a Case-b validation target for the parent offset-alias-AD architecture (#1111/#1112).
 
 ### Hand-Derived KKT Shape

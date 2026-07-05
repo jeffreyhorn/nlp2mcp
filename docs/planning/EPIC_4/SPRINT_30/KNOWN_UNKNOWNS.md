@@ -179,6 +179,8 @@ Development team (AD/KKT specialist)
 **Evidence:** `HEAD_OFFSET_ARCHITECTURE_DESIGN.md` §3 (three-site table with `file:line`); `ISSUE_1443` Day-7.
 **Decision:** mine ~10–16 h with a REPLAN-if-cascade exit (Task 6); robert is NOT counted in the 3-site budget (separate ~2–4 h objective-gradient fix).
 
+**Task 5 (2026-07-05):** the #1443 gate was refreshed to this disposition (mine-only 3-site `comp_pr` re-derivation; PROCEED, REPLAN-if-cascade).
+
 ---
 
 ## Unknown 1.3: Does the head-offset fix alone leave the cold LCP feasible (mine's `x → 4e10` resolved)?
@@ -217,6 +219,8 @@ Development team (AD/KKT specialist)
 **Findings:** **robert ✅ CONFIRMED** — after the `stat_s` objective-gradient fix, robert's cold MCP solves to MS 1 at 11025.0, a clean convex-LP cold solve with **no warm-start** and no residual bound coupling. **mine (hypothesis, firm):** the head-offset `comp_pr` fix must drive the `comp_pr` LCP residual (the `x → 4e10`) to 0; mine is a convex LP (monotone LCP) so there is no Case-c escape — a residual after the 3-site fix is a remaining emit/index-map bug (still Case-b), not non-convexity.
 **Evidence:** `HEAD_OFFSET_ARCHITECTURE_DESIGN.md` §1.4 (robert cold 11025) + §4; `ISSUE_1443` (mine convex-LP / `x → 4e10` = comp_pr LCP residual).
 **Decision:** robert's cold LCP is fully consistent once the objective gradient is fixed (no bound-coupling second fix). mine's cold-LCP consistency is the PROCEED criterion for the 3-site fix (Task 6).
+
+**Task 5 (2026-07-05):** the #1443 gate records the cold-LCP-consistency criterion (convex LP, no Case-c; the `comp_pr` fix must clear `x → 4e10`).
 
 ---
 
@@ -341,6 +345,8 @@ Development team (numerics / solver-interface)
 **Evidence:** `NONCONVEX_FORCING_SURVEY.md` §1 (the lever/boundary table) + §4.
 **Decision:** **Sprint-31 PATH-author consultation** for the PATH-option tuning (the scoped question: which option set/regularization schedule/reformulation converges the division-by-variable optimal-control MCP); the emitted-GAMS homotopy/multi-start scaffold is the **Sprint-30 P8** deliverable + entry point (feeds Unknown 8.3 / Task 8).
 
+**Task 5 (2026-07-05):** the #1462 gate was refreshed — PROCEED to the P8 forcing scaffold; PATH-option tuning → Sprint-31 consultation.
+
 ---
 
 ## Unknown 2.3: Does the chosen forcing lever recover any cold-convex Case-c residue (shared payoff)?
@@ -414,7 +420,12 @@ grep -rn "184\|widened\|\$onMulti" docs/issues/ISSUE_1236_*.md docs/issues/finis
 Development team (emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — Phase-0 gate refreshed (PROCEED via the #1449 widened-VARIABLE fix)
+**Verified by:** Task 5 (Phase 0 Acceptance Gate refresh)
+**Date:** 2026-07-05
+**Findings:** The #1236 gate now records the Sprint-30 disposition: the compile blocker is the **`$184`** #1449 widened-symbol conflict for the VARIABLE `n` (source `n(t)` vs MCP-widened `n(tl)`), **not** the Day-0-attributed `$141`. PROCEED to generalize the #1449 widened-symbol handling from the parameter case to the variable case so the residual MCP compiles.
+**Evidence:** `docs/issues/ISSUE_1236_hhfair-objective-mismatch.md` §"Phase 0: Acceptance Gate" (Sprint-30 refresh note); Sprint 29 Day 8 `$184` finding.
+**Decision:** PROCEED; the fix-surface (the #1449 widened-symbol path, variable branch) is a Day-0 hypothesis (PR24) to re-trace in-sprint; verified via `kkt_residual.py data/gamslib/raw/hhfair.gms` after the compile clears.
 
 ---
 
@@ -448,7 +459,12 @@ After the `$184` fix, run the harness on hhfair:
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — gate encodes the post-compile CES verdict branch
+**Verified by:** Task 5 (Phase 0 Acceptance Gate refresh)
+**Date:** 2026-07-05
+**Findings:** The #1236 gate records: after the `$184` clears, read the CES/product objective-mismatch verdict — PROCEED if it localizes to a Case-b `stat_*` row (+1 Match), REPLAN to Sprint 31 if the post-compile mismatch is an inherent non-convexity (Case-c). The verdict is unreadable until the compile fix lands.
+**Evidence:** `ISSUE_1236` §"Phase 0" Sprint-30 refresh; `kkt_residual.py` as the discriminator.
+**Decision:** conditional — PROCEED-if-Case-b / REPLAN-to-Sprint-31-if-Case-c, decided in-sprint after the `$184` compile fix.
 
 ---
 
@@ -519,7 +535,12 @@ grep -rn "runtime.guard\|J_g\|cross.term" docs/issues/ISSUE_1385_*.md | head
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — gate refreshed (PROCEED to the atomic runtime-guard re-emit for sarf)
+**Verified by:** Task 5 (Phase 0 Acceptance Gate refresh)
+**Date:** 2026-07-05
+**Findings:** The #1385 gate records the Sprint-30 disposition: land the runtime-guarded equation-body re-emit **atomically** with the banked `J_gᵀ·lam` cross-terms for **sarf** (a re-emit without cross-terms = an inconsistent MCP), with **no quoted-set-name multiplier indices** (the Sprint-26-Day-4 failure mode) and no re-introduction of the translate-timeout.
+**Evidence:** `docs/issues/ISSUE_1385_*.md` §"Phase 0" Sprint-30 refresh (sarf reference target; cross-terms hand-derived + banked).
+**Decision:** PROCEED; fix-surface (Day-0 hypothesis) = `src/kkt/stationarity.py` + `src/ad/index_mapping.py`, pinned by Task 9; REPLAN to Sprint 31 if the symbolic re-emit re-triggers the combinatorial blow-up.
 
 ---
 
@@ -621,7 +642,12 @@ grep -rn "1111\|1112\|alias.aware\|dollar.condition" docs/issues/ISSUE_1146_*.md
 Development team (AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — gates refreshed with the localized-vs-architectural boundary
+**Verified by:** Task 5 (Phase 0 Acceptance Gate refresh)
+**Date:** 2026-07-05
+**Findings:** The #1146/#1143 gates record the Sprint-30 disposition: PROCEED to a **coordinated** offset-alias fix (the offset-image cross-term landed **together with** the distance-Jacobian — the Sprint-29 Day-5 revert proved they are coupled), gated tightly to the cyclic/successor-offset shape. This is cold-robustness / genuine-floor (both already match warm), not +Match.
+**Evidence:** `docs/issues/ISSUE_1146_*.md` + `ISSUE_1143_*.md` §"Phase 0" Sprint-30 refresh notes.
+**Decision:** PROCEED if a tight gate makes it correct; **REPLAN to Sprint 31** (the #1111 alias-aware-differentiation / #1112 dollar-condition-propagation AD-engine core) if the localized fix needs the general architecture. The architectural-REPLAN boundary is the Task-6 assessment input.
 
 ---
 
@@ -690,7 +716,12 @@ grep -rn "191.7346\|lmequil\|cpi\|numéraire\|numeraire" docs/planning/EPIC_5/CG
 Development team (CGE / Epic-5)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — gate refreshed to PROCEED via the Epic-5 Walras transformation
+**Verified by:** Task 5 (Phase 0 Acceptance Gate refresh)
+**Date:** 2026-07-05
+**Findings:** The #1330 gate records the Sprint-30 P6 disposition: PROCEED to the Epic-5 CGE-domain preprocessing transformation (drop the redundant `lmequil` row + fix a price numéraire `cpi=1`), solution-preserving on paper and reproducing camcge's NLP optimum 191.7346. The empirical confirmation (drop-`lmequil` + fix-`cpi=1` → MODEL STATUS 1 at 191.7346) is the P6 Day-0 gate.
+**Evidence:** `docs/issues/ISSUE_1330_*.md` §"Phase 0" Sprint-30 refresh; `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md`.
+**Decision:** PROCEED to the transformation; the detection-heuristic + numéraire-selection design is Prep Task 7; REPLAN to a per-model-numéraire-declaration Epic-5 item if the heuristic proves unreliable (Unknown 6.2).
 
 ---
 
@@ -794,7 +825,12 @@ for m in irscge lrgcge moncge stdcge marco; do .venv/bin/python scripts/diagnost
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — Class-B `stat_pz` gate authored (PROCEED-conditional)
+**Verified by:** Task 5 (Phase 0 Acceptance Gate — new gate)
+**Date:** 2026-07-05
+**Findings:** Authored `docs/issues/ISSUE_classB_cge_stat_pz.md`: the Class-B cluster (irscge/lrgcge/moncge `stat_pz` rel ≈ 1.0, stdcge `stat_epsilon` 2.0, marco `stat_w` 3.3) is a **general-emit coefficient/scaling discrepancy** (the `pz` cross-terms are present, not dropped; dual transfer CONSISTENT). The gate's confirmatory test for one-fix-converts-several: irscge/lrgcge/moncge all localize to the same `stat_pz` coefficient.
+**Evidence:** `ISSUE_classB_cge_stat_pz.md` §"Phase 0" (4 subsections); `COLD_CONVEX_COHORT_SURVEY.md` §4 Class B; Sprint 29 Day 12.
+**Decision:** PROCEED-conditional — the payoff is genuine-floor (cold-robustness; all already warm-match, non-convex), gated on whether one general-emit coefficient fix converges the cluster (else per-model, 1–2 models). Fix-surface (Day-0 hypothesis) = the CGE output-price Jacobian-transpose coefficient in `src/kkt/`.
 
 ---
 
@@ -866,7 +902,12 @@ for m in irscge lrgcge moncge stdcge; do .venv/bin/python scripts/diagnostics/kk
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — gate confirms NOT Walras (distinct from camcge Category-6)
+**Verified by:** Task 5 (Phase 0 Acceptance Gate — new gate)
+**Date:** 2026-07-05
+**Findings:** The Class-B `stat_pz` gate records the NOT-Walras discriminator: harness **CASE_B** + dual transfer **CONSISTENT** across the cluster (Sprint 29 Day 12), with a full-rank market-clearing block — distinct from camcge (#1330)'s structural singularity (MS-4-at-iteration-0). So the Class-B residual is an **nlp2mcp general-emit** coefficient bug (Priority 7), NOT an Epic-5 CGE transformation (Priority 6).
+**Evidence:** `docs/issues/ISSUE_classB_cge_stat_pz.md` §"Phase 0" (the NOT-Walras verification bullet); `ISSUE_1330` Sprint-30 refresh (explicitly distinguishes the two).
+**Decision:** the Class-B cluster stays in nlp2mcp (P7 general emit); it does not fold into the camcge Walras transformation (P6). Re-confirm the Day-12 harness/Jacobian evidence in-sprint (Day-0).
 
 ---
 
