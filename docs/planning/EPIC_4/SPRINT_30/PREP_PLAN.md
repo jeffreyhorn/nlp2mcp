@@ -223,7 +223,9 @@ Authored `docs/planning/EPIC_4/SPRINT_30/BASELINE_METRICS.md` (§0 Day-0 asserti
 test -f docs/planning/EPIC_4/SPRINT_30/BASELINE_METRICS.md && echo "baseline present"
 
 # No src/scripts drift since Sprint 29 close (Day-0 == S29 final)
-S29=$(git log --grep='SPRINT 29 CLOSED' -1 --format=%H)
+# Use the OLDEST match (| tail -1) — later prep commits quote "SPRINT 29 CLOSED" in their bodies,
+# so `-1` (newest) would resolve to a docs-only review-fix commit, not the true close.
+S29=$(git log --grep='SPRINT 29 CLOSED' --format=%H | tail -1)
 git diff --quiet "$S29"..HEAD -- src/ scripts/ && echo "no src/ drift — Day-0 == S29 final" || git diff --stat "$S29"..HEAD -- src/ scripts/
 
 # DB headline counts recomputed (canonical scope) — expect Solve 107 / Match 92 / infeasible 7

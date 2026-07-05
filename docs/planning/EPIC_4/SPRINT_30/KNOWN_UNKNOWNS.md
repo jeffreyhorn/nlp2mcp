@@ -881,7 +881,9 @@ Sprint 30 Day 0 equals the Sprint 29 final state (no `src/`/`scripts/` drift sin
 
 ### How to Verify
 ```bash
-S29=$(git log --grep='SPRINT 29 CLOSED' -1 --format=%H)
+# Use the OLDEST match (| tail -1) — later prep commits quote "SPRINT 29 CLOSED", so `-1` (newest)
+# would resolve to a docs-only review-fix commit, not the true close.
+S29=$(git log --grep='SPRINT 29 CLOSED' --format=%H | tail -1)
 git diff --quiet "$S29"..HEAD -- src/ scripts/ && echo "no drift → Day 0 = Sprint 29 final, reuse the committed DB, no fresh retest" || git diff --stat "$S29"..HEAD -- src/ scripts/
 # Pass (exit 0 + "no drift") → Day-0 baseline holds; any output from --stat → drift, fresh retest needed
 ```
