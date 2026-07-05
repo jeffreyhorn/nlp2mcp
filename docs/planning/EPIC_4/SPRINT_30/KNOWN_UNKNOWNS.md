@@ -317,7 +317,7 @@ Development team (numerics / solver-interface)
 **Medium** — a bonus; the lever's primary target is rocket, but a shared payoff on the Case-c cohort would lift additional models.
 
 ### Assumption
-The forcing lever chosen for rocket also moves at least one cold-convex Case-c cohort model (from the Sprint-29 `COLD_CONVEX_COHORT_SURVEY.md`) toward a solve, because both share the "correct emit, non-convex cold-convergence failure" signature.
+The forcing lever chosen for rocket also moves at least one cold-convex Case-c cohort model (from the Sprint-29 `docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md`) toward a solve, because both share the "correct emit, non-convex cold-convergence failure" signature.
 
 ### Research Questions
 1. Which Case-c cohort models share rocket's non-convergence signature?
