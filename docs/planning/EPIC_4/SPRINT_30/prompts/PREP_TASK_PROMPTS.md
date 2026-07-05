@@ -52,7 +52,11 @@ Tasks 2–10 are dispatchable in the following order per the Prep Task Overview 
 
 **Tasks to Complete:**
 
-1. Assert Day-0 = Sprint 29 final: `git diff <S29-close-SHA>..HEAD -- src/ scripts/` empty (only planning docs landed) → reuse the committed DB, no fresh ~4h retest. (`<S29-close-SHA>` = the "SPRINT 29 CLOSED" merge.)
+1. Assert Day-0 = Sprint 29 final — derive the close SHA and diff automatically (no manual placeholder lookup), matching the PREP_PLAN/KNOWN_UNKNOWNS snippets:
+   ```bash
+   S29=$(git log --oneline --grep='SPRINT 29 CLOSED' -1 --format=%H)
+   git diff --quiet "$S29"..HEAD -- src/ scripts/ && echo "no src/ drift — reuse the committed DB, no fresh ~4h retest" || git diff --stat "$S29"..HEAD -- src/ scripts/
+   ```
 2. Recompute the canonical bucket tally from the committed DB (`get_candidate_models`, canonical 142): Solve 107 / Match 92 / model_infeasible 7 / Translate 135.
 3. Carry the genuine-vs-methodology split forward — genuine floor 69; document which Sprint-30 tracks convert methodology/warm matches into genuine cold matches (robert P1, hhfair P3, polygon/himmel16 P5, Class-B CGE P7) → the "genuine floor → ≥ 72" conversion map.
 4. Pin the per-Sprint-30-target Day-0 bucket + projected delta (mine, rocket, hhfair, robert, sarf, polygon, himmel16, camcge, the Class-B CGE cluster), each labeled genuine bucket-to-success vs already-banked (mirror `SPRINT_29/BASELINE_METRICS.md §3`).
@@ -590,7 +594,7 @@ EOF
 
 1. KKT-residual harness: run it on robert + mine (head-offset `lam_pr`/`nu_sb` multipliers) and confirm the dual-transfer self-check reports CONSISTENT; if it mis-transfers the head-offset multiplier, scope the minimal one-line index-mapping extension as a Day-0 task (feeds 1.4).
 2. `--resolve-changed`: confirm it covers the widened-VARIABLE presolve regens (hhfair P3) and the head-offset goldens (mine/robert P1) — i.e., the changed-golden diff surfaces them as at-risk.
-3. Property-test catalog: confirm `test_ad_crossterm_shapes.py` is extensible to the head-domain-offset + offset-alias-successor shapes (P8 adds these fixtures); no structural blocker.
+3. Property-test catalog: confirm `test_ad_crossterm_shapes.py` is extensible to the head-domain-offset shape (the one new fixture P8 adds) and that the existing `shape8_offset_alias_successor` (currently xfail) + `shape7_offset_alias_cyclic` can be enabled once the offset-alias fix lands; no structural blocker.
 4. Allowlists + detector: confirm the golden-staleness + divergence allowlists are current at Day 0; confirm the divergence detector soft-classifies the Class-B CGE + cold-convex residue (no false hard-fails). Produce a gap list (each Day-0 extension ≤ 1h) or "no extensions needed".
 
 **Deliverables:**
@@ -607,7 +611,7 @@ EOF
 
 **CHANGELOG.md Update:** Under `[Unreleased]` → `### Sprint 30 Prep`, prepend:
 ```markdown
-- **Prep Task 8 COMPLETE (YYYY-MM-DD):** reusable-tooling readiness audit. `TOOLING_READINESS_AUDIT.md` — validated the KKT-residual harness dual-transfer on robert + mine (head-offset `lam_pr`/`nu_sb` multipliers) [CONSISTENT | ≤1h extension]; confirmed `--resolve-changed` covers the widened-VARIABLE + head-offset goldens; confirmed `test_ad_crossterm_shapes.py` extensible to the head-offset + offset-alias-successor shapes; allowlists current + the divergence detector soft-classifies the Class-B/cold-convex residue. Gap list = [none needed | scoped Day-0 extensions]. Verified Unknowns 1.4, 8.1, 8.3, 8.4.
+- **Prep Task 8 COMPLETE (YYYY-MM-DD):** reusable-tooling readiness audit. `TOOLING_READINESS_AUDIT.md` — validated the KKT-residual harness dual-transfer on robert + mine (head-offset `lam_pr`/`nu_sb` multipliers) [CONSISTENT | ≤1h extension]; confirmed `--resolve-changed` covers the widened-VARIABLE + head-offset goldens; confirmed `test_ad_crossterm_shapes.py` extensible to the new head-offset shape (the offset-alias `shape7`/`shape8` fixtures already exist, `shape8` xfail — to be enabled when the fix lands); allowlists current + the divergence detector soft-classifies the Class-B/cold-convex residue. Gap list = [none needed | scoped Day-0 extensions]. Verified Unknowns 1.4, 8.1, 8.3, 8.4.
 ```
 
 **Quality Gate:**
@@ -623,8 +627,9 @@ Complete Sprint 30 Prep Task 8: Reusable-Tooling Readiness Audit
 TOOLING_READINESS_AUDIT.md: validated the KKT-residual harness dual-transfer on
 robert + mine (head-offset multipliers); confirmed --resolve-changed covers the
 widened-VARIABLE + head-offset goldens; confirmed the AD property-test catalog is
-extensible to the head-offset + offset-alias-successor shapes; allowlists current +
-divergence detector soft-classifies the Class-B/cold-convex residue. Gap list =
+extensible to the new head-offset shape (offset-alias shape7/shape8 already exist,
+shape8 xfail); allowlists current + divergence detector soft-classifies the
+Class-B/cold-convex residue. Gap list =
 [none needed | scoped Day-0 extensions].
 
 ## Deliverables
@@ -647,7 +652,7 @@ gh pr create --title "Complete Sprint 30 Prep Task 8: Reusable-Tooling Readiness
 - [x] `make typecheck && make format && make lint && make test` all PASS (audit-only)
 - [x] Harness dual-transfer validated on robert + mine (head-offset multipliers)
 - [x] `--resolve-changed` confirmed to cover the widened-VARIABLE + head-offset goldens
-- [x] Property-test catalog confirmed extensible to the head-offset + offset-alias shapes
+- [x] Property-test catalog confirmed extensible to the new head-offset shape (existing `shape7`/`shape8` offset-alias fixtures noted; `shape8` xfail)
 - [x] Gap list produced (each ≤ 1h) or "no extensions needed"
 - [x] Unknowns 1.4, 8.1, 8.3, 8.4 verified in KNOWN_UNKNOWNS.md
 - [x] Task 8 Acceptance Criteria all checked in PREP_PLAN.md
@@ -681,13 +686,13 @@ EOF
 1. #1385 sarf — pin the emit site where the runtime-guard equation-body re-emit + the banked `J_gᵀ·lam` cross-terms materialize (`src/kkt/stationarity.py` + `src/ad/index_mapping.py`); record the smallest-target verification (no quoted-set-name multiplier indices; byte-stable golden) + the instance-count tractability (no translate-timeout re-intro).
 2. Offset-alias #1146/#1143 + #1111/#1112 — record the Day-5 revert root cause (the offset-image cross-term coupled with the distance-Jacobian), the coordinated-fix hypothesis, the property-test fixture (the cyclic `i++1` / successor `ord(j)=ord(i)+1` shape), and the blast radius; flag the #1111/#1112 architectural-REPLAN boundary.
 3. Class-B CGE `stat_pz` — trace the general-emit coefficient-discrepancy patch site (the harness-localized `stat_pz` row, confirmed NOT Walras); record whether one fix converts several models (irscge/lrgcge/moncge/stdcge/marco).
-4. Property-test fixture plan — the two new fixtures (head-domain-offset from Task 3, offset-alias-successor) that P8 adds to `test_ad_crossterm_shapes.py`. Also confirm the hhfair widened-VARIABLE fix blast radius (3.3).
+4. Property-test fixture plan — the new head-domain-offset fixture (from Task 3) that P8 adds to `test_ad_crossterm_shapes.py`, plus enabling the existing `shape8_offset_alias_successor` xfail (and `shape7_offset_alias_cyclic`) once the offset-alias fix lands. Also confirm the hhfair widened-VARIABLE fix blast radius (3.3).
 
 **Deliverables:**
 
 - `docs/planning/EPIC_4/SPRINT_30/BACKLOG_FIX_SURFACE_ANALYSIS.md` — the #1385 sarf emit site, the offset-alias coordinated-fix hypothesis + Day-5 revert root cause, the Class-B CGE `stat_pz` patch site, and the property-test fixture plan
 - The #1111/#1112 architectural-REPLAN boundary flagged for the Task-6 assessment
-- The two new property-test fixtures scoped for P8
+- The new head-offset property-test fixture scoped for P8, plus the plan to enable the existing `shape7`/`shape8` offset-alias xfail
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.3, 4.1, 4.2, 5.1, 5.2, 5.3, 7.1
 - CHANGELOG.md updated with the Task 9 completion entry
 
@@ -697,7 +702,7 @@ EOF
 
 **CHANGELOG.md Update:** Under `[Unreleased]` → `### Sprint 30 Prep`, prepend:
 ```markdown
-- **Prep Task 9 COMPLETE (YYYY-MM-DD):** backlog fix-surface analysis for the banked Sprint-30 tracks. `BACKLOG_FIX_SURFACE_ANALYSIS.md` — the #1385 sarf runtime-guard emit site + instance-count tractability; the offset-alias #1146/#1143 Day-5 revert coupling (offset-image × distance-Jacobian) + coordinated-fix hypothesis + the #1111/#1112 architectural-REPLAN boundary; the Class-B CGE `stat_pz` general-emit patch site (one fix / several models); the hhfair widened-VARIABLE blast radius; the two new property-test fixtures (head-offset + offset-alias-successor) scoped for P8. All framed as Day-0 hypotheses (PR24). Verified Unknowns 3.3, 4.1, 4.2, 5.1, 5.2, 5.3, 7.1.
+- **Prep Task 9 COMPLETE (YYYY-MM-DD):** backlog fix-surface analysis for the banked Sprint-30 tracks. `BACKLOG_FIX_SURFACE_ANALYSIS.md` — the #1385 sarf runtime-guard emit site + instance-count tractability; the offset-alias #1146/#1143 Day-5 revert coupling (offset-image × distance-Jacobian) + coordinated-fix hypothesis + the #1111/#1112 architectural-REPLAN boundary; the Class-B CGE `stat_pz` general-emit patch site (one fix / several models); the hhfair widened-VARIABLE blast radius; the new head-offset property-test fixture scoped for P8 + enabling the existing `shape7`/`shape8` offset-alias xfail. All framed as Day-0 hypotheses (PR24). Verified Unknowns 3.3, 4.1, 4.2, 5.1, 5.2, 5.3, 7.1.
 ```
 
 **Quality Gate:**
@@ -714,8 +719,9 @@ BACKLOG_FIX_SURFACE_ANALYSIS.md: the #1385 sarf runtime-guard emit site + instan
 count tractability; the offset-alias #1146/#1143 Day-5 revert coupling (offset-image x
 distance-Jacobian) + coordinated-fix hypothesis + the #1111/#1112 architectural-REPLAN
 boundary; the Class-B CGE stat_pz general-emit patch site (one fix / several models);
-the hhfair widened-VARIABLE blast radius; the two new property-test fixtures scoped for
-P8. All framed as Day-0 hypotheses (PR24).
+the hhfair widened-VARIABLE blast radius; the new head-offset property-test fixture
+scoped for P8 + enabling the existing shape7/shape8 offset-alias xfail. All framed as
+Day-0 hypotheses (PR24).
 
 ## Deliverables
 - docs/planning/EPIC_4/SPRINT_30/BACKLOG_FIX_SURFACE_ANALYSIS.md
@@ -738,7 +744,7 @@ gh pr create --title "Complete Sprint 30 Prep Task 9: Backlog Fix-Surface Analys
 - [x] All three banked tracks referenced (#1385 sarf, #1146/#1143/#1112/#1111 offset-alias, Class-B `stat_pz`)
 - [x] Each patch-site framed as a Day-0 hypothesis (PR24)
 - [x] The offset-alias Day-5 revert coupling recorded + the coordinated-fix hypothesis
-- [x] Property-test fixture plan (head-offset + offset-alias-successor) present; #1111/#1112 boundary flagged
+- [x] Property-test fixture plan present (new head-offset fixture + enabling the existing `shape7`/`shape8` offset-alias xfail); #1111/#1112 boundary flagged
 - [x] Unknowns 3.3, 4.1, 4.2, 5.1, 5.2, 5.3, 7.1 verified in KNOWN_UNKNOWNS.md
 - [x] Task 9 Acceptance Criteria all checked in PREP_PLAN.md
 EOF

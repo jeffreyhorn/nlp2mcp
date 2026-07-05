@@ -830,28 +830,28 @@ Development team (AD/emit specialist)
 
 # Category 8: Property-Test Catalog Extension + Re-Baseline + Forcing Scaffold
 
-## Unknown 8.1: Do the head-domain-offset and offset-alias-successor cross-term shapes need new property-test fixtures?
+## Unknown 8.1: Does the head-domain-offset shape need a new property-test fixture, and can the existing offset-alias `shape8` xfail be enabled?
 
 ### Priority
-**Medium** — the property-test catalog must guard the new Sprint-30 cross-term shapes; a gap means the head-offset / offset-alias fixes ship without a regression guard.
+**Medium** — the property-test catalog must guard the new Sprint-30 cross-term shapes; a gap means the head-offset fix ships without a regression guard, and the already-present offset-alias xfail must flip to passing when its fix lands.
 
 ### Assumption
-The head-domain-offset (Category 1) and offset-alias-successor (Category 5) cross-term shapes are **not** covered by the existing Sprint-28 `test_ad_crossterm_shapes.py` shapes 1–7, so P8 adds two new fixtures — but the catalog is structurally extensible (no refactor needed to add them).
+The `test_ad_crossterm_shapes.py` catalog already has **8** fixtures (`shape1`–`shape8`), including `shape7_offset_alias_cyclic` and `shape8_offset_alias_successor` (Category 5; `test_shape8_offset_alias_successor` is currently **xfail**). So the **head-domain-offset** shape (Category 1) is the one genuinely-missing fixture P8 adds, while the offset-alias work **enables the existing `shape8` (and `shape7`) xfail** once the fix lands — the catalog is structurally extensible (no refactor needed to add the head-offset fixture).
 
 ### Research Questions
-1. Do any of the existing 7 fixtures cover the head-offset or offset-alias-successor shape?
-2. Is `test_ad_crossterm_shapes.py` + `tests/fixtures/crossterm_shapes/` extensible by adding two fixtures, or does it need a structural change?
-3. What are the minimal synthetic fixtures for the two shapes?
+1. Do any of the existing 8 fixtures cover the head-domain-offset shape (the offset-alias-successor shape is already `shape8`, xfail)?
+2. Is `test_ad_crossterm_shapes.py` + `tests/fixtures/crossterm_shapes/` extensible by adding the one head-offset fixture, or does it need a structural change?
+3. What is the minimal synthetic fixture for the head-offset shape, and does enabling the `shape8` (and `shape7`) offset-alias xfail just require removing the `@pytest.mark.xfail` once the fix lands?
 
 ### How to Verify
-Review the existing fixtures; confirm the two new shapes are absent + addable:
+Review the existing fixtures (expect `shape1`–`shape8`, `shape8` xfail); confirm only the head-offset shape is absent + addable:
 ```bash
 ls tests/fixtures/crossterm_shapes/
-grep -c "def test_" tests/integration/emit/test_ad_crossterm_shapes.py
+grep -nE "def test_shape|xfail" tests/integration/emit/test_ad_crossterm_shapes.py
 ```
 
 ### Risk if Wrong
-- **Not extensible / already covered:** either a small refactor (extensibility) or no new fixture needed (already covered) — low impact either way.
+- **Head-offset already covered / not extensible:** either no new fixture is needed or a small refactor is — low impact. If `shape8`/`shape7` cannot be enabled by simply dropping the xfail, the offset-alias fix is incomplete (feeds Unknown 5.2).
 
 ### Estimated Research Time
 1 hour (Task 8 — the property-catalog extensibility audit)

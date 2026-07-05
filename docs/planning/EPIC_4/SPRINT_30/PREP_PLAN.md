@@ -119,7 +119,7 @@ Sprint 30's central risk is inverted from Sprint 29's: it is **implementation-bo
    - What is the disposition of the remaining cold-convex Case-c residue — Sprint-31 forcing, or documented inherent non-convexity?
 
    **Category 8 (P8 infrastructure — property tests, re-baseline, forcing scaffold):**
-   - Do the head-domain-offset and offset-alias-successor cross-term shapes need new `test_ad_crossterm_shapes.py` fixtures, or do the Sprint-28 shapes 1–7 already cover them?
+   - Does the head-domain-offset cross-term shape need a new `test_ad_crossterm_shapes.py` fixture (the offset-alias-successor shape already exists as `shape8`, currently xfail; `shape7` is the cyclic variant), and does landing the offset-alias fix let the existing `shape7`/`shape8` xfail be enabled?
    - Does the solution-forcing harness scaffold (from P2) provide a stable entry point the renumbered Sprint 31 PATH-consultation + forcing sprint can inherit?
 
 3. **Assign priority + verification** to each unknown; write the Task-to-Unknown mapping appendix (which prep task resolves which unknown). Aim for **24–32 unknowns across 8 categories**.
@@ -645,7 +645,7 @@ Audit the Sprint-29 diagnostic/CI tools — `kkt_residual.py`, `check_presolve_d
 
 ### Why This Matters
 
-Sprint 30 reuses the Sprint-28/29 tooling rather than rebuilding it — but the new model classes stress paths the tooling has not yet been audited against: the harness dual-transfer must handle the head-offset `lam_pr`/`nu_sb` multipliers (Task 3 relies on the residual → 0 confirmation being trustworthy), the `--resolve-changed` gate must cover the widened-VARIABLE presolve regens, and the AD property-test catalog must be extensible to the head-offset + offset-alias shapes (P8). A readiness audit confirms this up front so the in-sprint diagnosis runs on tooling that already covers the cases, not one that silently mis-classifies them (the Sprint-29 hhfair `$141`→`$184` lesson: trust the tool's actual output, not the assumed one).
+Sprint 30 reuses the Sprint-28/29 tooling rather than rebuilding it — but the new model classes stress paths the tooling has not yet been audited against: the harness dual-transfer must handle the head-offset `lam_pr`/`nu_sb` multipliers (Task 3 relies on the residual → 0 confirmation being trustworthy), the `--resolve-changed` gate must cover the widened-VARIABLE presolve regens, and the AD property-test catalog must be extensible to the new head-offset shape — the offset-alias `shape7`/`shape8` fixtures already exist (`shape8` xfail, to be enabled when the fix lands) (P8). A readiness audit confirms this up front so the in-sprint diagnosis runs on tooling that already covers the cases, not one that silently mis-classifies them (the Sprint-29 hhfair `$141`→`$184` lesson: trust the tool's actual output, not the assumed one).
 
 ### Background
 
@@ -658,7 +658,7 @@ Sprint 30 reuses the Sprint-28/29 tooling rather than rebuilding it — but the 
 
 1. **KKT-residual harness:** run it on robert + mine (head-offset `lam_pr`/`nu_sb` multipliers) and confirm the dual-transfer self-check reports CONSISTENT; if it mis-transfers the head-offset multiplier, scope the minimal one-line index-mapping extension as a Day-0 task.
 2. **`--resolve-changed` checkpoint re-solve:** confirm it covers the widened-VARIABLE presolve regens (hhfair P3) and the head-offset goldens (mine/robert P1) — i.e., the changed-golden diff surfaces them as at-risk.
-3. **Property-test catalog:** confirm `test_ad_crossterm_shapes.py` is extensible to the head-domain-offset and offset-alias-successor shapes (P8 adds these fixtures); no structural blocker.
+3. **Property-test catalog:** confirm `test_ad_crossterm_shapes.py` is extensible to the head-domain-offset shape (the one new fixture P8 adds) and that the existing `shape8_offset_alias_successor` (currently xfail) + `shape7_offset_alias_cyclic` can be enabled once the offset-alias fix lands; no structural blocker.
 4. **Allowlists + detector:** confirm the golden-staleness + divergence allowlists are current at Sprint 30 Day 0 (no new models need allowlisting/removing); confirm the divergence detector soft-classifies the Class-B CGE + cold-convex residue (no false hard-fails).
 5. **Produce a gap list** (each Day-0 extension ≤ 1h) or "no extensions needed".
 
@@ -698,7 +698,7 @@ grep -qiE "gap list|no extensions needed|Day-0 extension" docs/planning/EPIC_4/S
 - [ ] TOOLING_READINESS_AUDIT.md created covering the four tools + `--resolve-changed`
 - [ ] KKT-residual harness dual-transfer validated on robert + mine (head-offset multipliers) — CONSISTENT or a scoped ≤1h extension
 - [ ] `--resolve-changed` confirmed to cover the widened-VARIABLE + head-offset goldens
-- [ ] Property-test catalog confirmed extensible to the head-offset + offset-alias shapes
+- [ ] Property-test catalog confirmed extensible to the new head-offset shape (existing `shape7`/`shape8` offset-alias fixtures noted; `shape8` xfail)
 - [ ] Allowlists confirmed current; divergence detector soft-classifies the Class-B/cold-convex residue
 - [ ] Gap list produced (each extension ≤ 1h) or "no extensions needed"
 - [ ] Unknowns 1.4, 8.1, 8.3, 8.4 verified and updated in KNOWN_UNKNOWNS.md
@@ -735,7 +735,7 @@ These three tracks share a property: Sprint 29 *diagnosed* them but did not *imp
 1. **#1385 sarf** — pin the emit site where the runtime-guard equation-body re-emit + the banked `J_gᵀ·lam` cross-terms materialize (`src/kkt/stationarity.py` + `src/ad/index_mapping.py`); record the smallest-target verification (no quoted-set-name multiplier indices; byte-stable golden).
 2. **Offset-alias #1146/#1143 + #1111/#1112** — record the Day-5 revert root cause (the offset-image cross-term coupled with the distance-Jacobian), the coordinated-fix hypothesis, and the property-test fixture (the cyclic `i++1` / successor `ord(j)=ord(i)+1` shape); flag the #1111/#1112 architectural-REPLAN boundary.
 3. **Class-B CGE `stat_pz`** — trace the general-emit coefficient-discrepancy patch site (the harness-localized `stat_pz` row, confirmed NOT Walras); record whether one fix converts several models (irscge/lrgcge/moncge/stdcge/marco).
-4. **Property-test fixture plan** — the two new fixtures (head-domain-offset from Task 3, offset-alias-successor) that P8 adds to `test_ad_crossterm_shapes.py`.
+4. **Property-test fixture plan** — the new head-domain-offset fixture (from Task 3) that P8 adds to `test_ad_crossterm_shapes.py`, plus enabling the existing `shape8_offset_alias_successor` xfail (and `shape7_offset_alias_cyclic`) once the offset-alias fix lands.
 
 ### Changes
 
@@ -762,7 +762,7 @@ grep -qiE "property.test|fixture|test_ad_crossterm_shapes" docs/planning/EPIC_4/
 
 - `docs/planning/EPIC_4/SPRINT_30/BACKLOG_FIX_SURFACE_ANALYSIS.md` — the #1385 sarf emit site, the offset-alias coordinated-fix hypothesis + Day-5 revert root cause, the Class-B CGE `stat_pz` patch site, and the property-test fixture plan
 - The #1111/#1112 architectural-REPLAN boundary flagged for the Task-6 assessment
-- The two new property-test fixtures scoped for P8
+- The new head-offset property-test fixture scoped for P8, plus the plan to enable the existing `shape7`/`shape8` offset-alias xfail
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.3, 4.1, 4.2, 5.1, 5.2, 5.3, 7.1
 
 ### Acceptance Criteria
@@ -771,7 +771,7 @@ grep -qiE "property.test|fixture|test_ad_crossterm_shapes" docs/planning/EPIC_4/
 - [ ] All three banked tracks referenced (#1385 sarf, #1146/#1143/#1112/#1111 offset-alias, Class-B `stat_pz`)
 - [ ] Each patch-site framed as a Day-0 hypothesis (PR24), not fact
 - [ ] The offset-alias Day-5 revert coupling (distance-Jacobian) recorded + the coordinated-fix hypothesis
-- [ ] Property-test fixture plan (head-offset + offset-alias-successor shapes) present
+- [ ] Property-test fixture plan present (new head-offset fixture + enabling the existing `shape7`/`shape8` offset-alias fixtures)
 - [ ] The #1111/#1112 architectural-REPLAN boundary flagged
 - [ ] Unknowns 3.3, 4.1, 4.2, 5.1, 5.2, 5.3, 7.1 verified and updated in KNOWN_UNKNOWNS.md
 
