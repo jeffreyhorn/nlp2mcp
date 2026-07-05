@@ -254,9 +254,10 @@ grep -qi "genuine" docs/planning/EPIC_4/SPRINT_30/BASELINE_METRICS.md && grep -q
 
 ## Task 3: Head-Domain-Offset Emit-Architecture Design + robert Minimal Reproduction (Priority 1 Foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
-**Estimated Time:** 5–7 hours
+**Estimated Time:** 5–7 hours (actual: ~5h)
+**Completed:** 2026-07-05
 **Deadline:** Before Sprint 30 Day 1
 **Owner:** Development team (AD/KKT specialist)
 **Dependencies:** Tasks 1, 2
@@ -287,11 +288,11 @@ Sprint 29 Day-7 REPLAN'd #1443 mine precisely because the fix is **not** a singl
 
 ### Changes
 
-To be completed.
+Authored `docs/planning/EPIC_4/SPRINT_30/HEAD_OFFSET_ARCHITECTURE_DESIGN.md` (robert re-derivation + the two cold-solve control experiments; mine's firm `comp_pr` bug; the 3-site table; the generalization verdict; the P1 re-scope). Updated `KNOWN_UNKNOWNS.md` Unknowns 1.1 (❌ WRONG), 1.2 (mine-only), 1.3 (robert ✅), 1.4 (❌ WRONG). CHANGELOG entry. No `src/`/golden change (all probes were `/tmp` copies, reverted).
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-05) — a PR24 correction that re-scopes Priority 1.** Empirical re-derivation **refuted the banked robert diagnosis**: cold-solve control experiments on `robert_mcp.gms` show patching **only** `stat_x` to `nu_sb(r,tt+1)` (the banked "fix") leaves robert at the spurious **6741.67**, while patching **only** `stat_s`'s objective gradient (drop-in `−res-value(r)` boundary term at `tt=4` + guard `storage-c(r)` to `t(tt)`) makes robert cold-solve to **11025.0 = NLP optimum (MATCH)**. So robert's real bug is an **objective-gradient boundary-term drop** (same class as #1447 maxmin), NOT the head-offset cross-term — and it is a **different class** from mine's firm `comp_pr` `l+1`-head × `li(k)`/`lj(k)`-parameter-offset coupling. **Unknown 1.1 = ❌ does NOT generalize.** Favourable: **P1 splits into two independent tracks** — robert (genuine-floor +1, LOW-risk standalone objective-gradient fix ~2–4 h, decoupled) and mine (+1 Solve, HIGH-risk multi-site `comp_pr` re-derivation ~10–16 h, REPLAN-prone). robert's cold LCP is confirmed feasible (11025, no warm-start); the 3-site coordination is mine-only. Fed to Task 5 (record robert as objective-gradient / head-offset architecture as mine-only), Task 6 (REPLAN mine only), Task 10 (schedule robert early + standalone).
 
 ### Verification
 
@@ -318,13 +319,13 @@ for m in robert mine; do .venv/bin/python scripts/diagnostics/kkt_residual.py da
 
 ### Acceptance Criteria
 
-- [ ] HEAD_OFFSET_ARCHITECTURE_DESIGN.md created
-- [ ] robert's head-offset cross-term + dual-transfer index map hand-derived; residual → 0 at the NLP optimum via `kkt_residual.py`
-- [ ] The three emit sites (`comp_pr` / `_emit_nlp_presolve` / `stat_x`) and their shared-vs-branched code path designed
-- [ ] The robert → mine generalization verdict recorded (Unknown 1.1: does the constant-offset fix generalize to the parameter-offset case?)
-- [ ] The cold-LCP-consistency question resolved (does the head-offset fix alone clear mine's `x → 4e10`?)
-- [ ] The P1 budget re-sized on the generalization verdict; fed to Tasks 5 + 10
-- [ ] Unknowns 1.1, 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] HEAD_OFFSET_ARCHITECTURE_DESIGN.md created
+- [x] robert re-derived; residual → 0 / cold-match 11025 at the NLP optimum achieved — but via the **`stat_s` objective-gradient fix**, not the head-offset cross-term (the banked `nu_sb(r,tt+1)` was refuted; `nu_sb(r,tt)` is already correct)
+- [x] The three emit sites (`comp_pr` / `_emit_nlp_presolve` / `stat_x`) designed — **mine-only**; robert needs no site coordination
+- [x] The robert → mine generalization verdict recorded (Unknown 1.1: **❌ does NOT generalize** — different bug classes)
+- [x] The cold-LCP-consistency question resolved (robert ✅ confirmed cold-feasible at 11025; mine hypothesis: the `comp_pr` fix must clear `x → 4e10`)
+- [x] The P1 budget re-sized on the generalization verdict (**two independent tracks**: robert ~2–4 h objective-gradient, mine ~10–16 h `comp_pr`); fed to Tasks 5 + 10
+- [x] Unknowns 1.1, 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
