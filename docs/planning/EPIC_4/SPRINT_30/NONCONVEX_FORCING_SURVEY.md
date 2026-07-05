@@ -27,7 +27,7 @@ rocket (#1462) is the Goddard rocket optimal-control problem (COPS): highly non-
 | **Trust-region damping** | PATH `proximal_perturbation` — adds a Levenberg-Marquardt regularization term to the Jacobian (the MCP analogue of a trust region), stabilizing the ill-conditioned `1/ht²`,`1/m²` initial Jacobian | **PATH option** (optfile) | pp ∈ {1e-1, 1.0, 1e2} standalone (+ 1e-2 in the merit-combined config): **MS 5**; INFES 477 → 456–482 (no monotone gain) |
 | **Crash / restart** | PATH `crash_method pnewton` + `crash_perturb` — a projected-Newton crash to a better initial basis | **PATH option** | **MS 5**, INFES 477 (unchanged) |
 | **Merit function** | PATH `merit_function normal` + `gradient_step_limit` — the non-monotone merit steering | **PATH option** | **MS 5**; INFES → **382** (the best of all configs), still no convergence |
-| **Combined strong** | merit + pp 1e-1 + crash + 20k major / 500k minor iters | **PATH option** | **MS 5**, INFES 458 |
+| **Combined strong** | `merit_function normal` + `proximal_perturbation 1e-1` + `crash_method pnewton` + 20k major / 500k minor iters | **PATH option** | **MS 5**, INFES 458 |
 | **Homotopy / continuation** | Emitted-GAMS loop: solve a relaxed/convexified/scaled problem, then step a continuation parameter `μ: relaxed → original`, re-solving from each prior point | **Emittable GAMS** (a P2/P8 scaffold — a driver loop around the `Solve mcp_model using MCP;`) | design-level (a scaffold, not a one-line probe) — **not demonstrated to crack rocket** |
 | **Multi-start** | Emitted-GAMS `.l`-perturbation loop: re-solve from several perturbed initial points, keep the first MS-1/2 | **Emittable GAMS** | probe not cleanly executed (the injected `.l` perturbation broke the emit) — **inconclusive**; superseded by the PATH-option result (warm-starting from the *NLP optimum itself* already fails, so random restarts are a priori unpromising) |
 
@@ -37,7 +37,7 @@ rocket (#1462) is the Goddard rocket optimal-control problem (COPS): highly non-
 
 ## 2. rocket prototype-probe (Unknown 2.1) — method + result
 
-- **Emit:** `nlp2mcp data/gamslib/raw/rocket.gms --nlp-presolve -o /tmp/rocket_ps.gms` (the presolve emit already carries the Day-1 `_fx_` warm-start). Run GAMS from the repo root (the emit's `$include "data/gamslib/raw/rocket.gms"` is repo-relative).
+- **Emit:** `.venv/bin/python -m src.cli data/gamslib/raw/rocket.gms --nlp-presolve -o /tmp/rocket_ps.gms` (the presolve emit already carries the Day-1 `_fx_` warm-start). Run GAMS from the repo root (the emit's `$include "data/gamslib/raw/rocket.gms"` is repo-relative).
 - **Baseline:** embedded NLP → MS 2; MCP `mcp_model` → **MS 5 Locally Infeasible, 477 INFES, 0 evaluation errors** (matches ISSUE_1462 Day-2).
 - **Lever injection:** `mcp_model.optfile = 1;` before the `Solve mcp_model using MCP;` + a `path.opt` per config (env-guarded, transient — removed after each run; **zero `src/` diff**).
 - **Result:** every PATH-option config stayed **MS 5**. Best = `merit_function normal` + `proximal_perturbation 1e-2` → INFES 477 → **382** (a ~20% reduction, but PATH stalls, does not converge). Larger `proximal_perturbation` (1e2) and crash did **not** improve on the baseline. **No config reached MS 1/2 or the NLP objective 1.0128.**
