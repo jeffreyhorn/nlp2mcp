@@ -364,7 +364,7 @@ hhfair's `$184` (Sprint 29 Day 8 — a live nonlinear-stationarity variable `n(t
 Reproduce the `$184`; inspect the #1449 widened-symbol handling for a variable branch:
 ```bash
 # Reproduce the hhfair $184 (Sprint 29 Day 8)
-grep -rn "184\|widened\|\$onMulti" docs/issues/ISSUE_1236_*.md docs/issues/ISSUE_1449_*.md 2>/dev/null | head
+grep -rn "184\|widened\|\$onMulti" docs/issues/ISSUE_1236_*.md docs/issues/finished/ISSUE_1449_*.md 2>/dev/null | head
 ```
 
 ### Risk if Wrong

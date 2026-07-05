@@ -855,7 +855,7 @@ grep -iE "12h|≤ 12|hours/day" docs/planning/EPIC_4/SPRINT_30/PLAN.md | head
 | # | Task | Deliverable | Status |
 |---|------|-------------|--------|
 | — | PROJECT_PLAN Sprint 30 insertion | `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 30" | ✅ (PR #1489) |
-| 1 | Known Unknowns List | `docs/planning/EPIC_4/SPRINT_30/KNOWN_UNKNOWNS.md` | 🔵 |
+| 1 | Known Unknowns List | `docs/planning/EPIC_4/SPRINT_30/KNOWN_UNKNOWNS.md` | ✅ |
 | 2 | Day-0 Baseline + Genuine-Floor Re-Baseline | `docs/planning/EPIC_4/SPRINT_30/BASELINE_METRICS.md` | 🔵 |
 | 3 | Head-Offset Architecture Design + robert Minimal Reproduction | `docs/planning/EPIC_4/SPRINT_30/HEAD_OFFSET_ARCHITECTURE_DESIGN.md` | 🔵 |
 | 4 | Non-Convex Forcing Strategy Survey | `docs/planning/EPIC_4/SPRINT_30/NONCONVEX_FORCING_SURVEY.md` | 🔵 |
@@ -935,7 +935,7 @@ This prep plan succeeds if Sprint 30 starts with:
 - `scripts/diagnostics/kkt_residual.py` (KKT-residual Case-(a/b/c) harness — Tasks 3, 5, 6, 8)
 - `scripts/diagnostics/check_presolve_divergence.py` (embedded-NLP-divergence detector — Task 8)
 - `scripts/sprint_audit/check_golden_staleness.py` + `scripts/sprint_audit/changed_emit_artifacts.py` + the `--resolve-changed` mode (golden-staleness gate + changed-artifact diff + checkpoint re-solve — Tasks 8, 10)
-- `scripts/emit/emit_gams.py` `_emit_nlp_presolve` + `src/kkt/stationarity.py` (the head-offset emit sites — Task 3) and the widened-symbol #1449 handling (hhfair — Task 5)
+- `src/emit/emit_gams.py` `_emit_nlp_presolve` + `src/kkt/stationarity.py` (the head-offset emit sites — Task 3) and the widened-symbol #1449 handling (hhfair — Task 5)
 - `tests/integration/emit/test_ad_crossterm_shapes.py` + `tests/fixtures/crossterm_shapes/` (AD cross-term property-test catalog — Tasks 8, 9)
 - `docs/research/convexity_detection.md`, `docs/research/CONVEXITY_VERIFICATION_DESIGN.md` (Case-c non-convexity context for the forcing survey — Task 4)
 
