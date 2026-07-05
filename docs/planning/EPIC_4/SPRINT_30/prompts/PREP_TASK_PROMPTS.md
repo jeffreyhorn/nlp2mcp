@@ -54,7 +54,7 @@ Tasks 2–10 are dispatchable in the following order per the Prep Task Overview 
 
 1. Assert Day-0 = Sprint 29 final — derive the close SHA and diff automatically (no manual placeholder lookup), matching the PREP_PLAN/KNOWN_UNKNOWNS snippets:
    ```bash
-   S29=$(git log --oneline --grep='SPRINT 29 CLOSED' -1 --format=%H)
+   S29=$(git log --grep='SPRINT 29 CLOSED' -1 --format=%H)
    git diff --quiet "$S29"..HEAD -- src/ scripts/ && echo "no src/ drift — reuse the committed DB, no fresh ~4h retest" || git diff --stat "$S29"..HEAD -- src/ scripts/
    ```
 2. Recompute the canonical bucket tally from the committed DB (`get_candidate_models`, canonical 142): Solve 107 / Match 92 / model_infeasible 7 / Translate 135.

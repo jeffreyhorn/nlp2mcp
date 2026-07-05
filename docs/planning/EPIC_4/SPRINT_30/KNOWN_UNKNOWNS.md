@@ -221,7 +221,9 @@ robert's `x(p,tt)` stationarity cross-term is `sum(r, a(r,p)*nu_sb(r,tt+1))` (th
 ### How to Verify
 ```bash
 .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/robert.gms
-# Expect: CASE_A/B residual → 0 at the NLP optimum with nu_sb(r,tt+1); dual transfer CONSISTENT
+# Expect: the current emit localizes to a CASE_B stat_x residual (the nu_sb(r,tt) bug);
+#         substituting the hand-derived nu_sb(r,tt+1) drives the residual → 0 (CASE_A, emit
+#         correct) at the NLP optimum; dual transfer CONSISTENT
 ```
 
 ### Risk if Wrong
@@ -879,7 +881,7 @@ Sprint 30 Day 0 equals the Sprint 29 final state (no `src/`/`scripts/` drift sin
 
 ### How to Verify
 ```bash
-S29=$(git log --oneline --grep='SPRINT 29 CLOSED' -1 --format=%H)
+S29=$(git log --grep='SPRINT 29 CLOSED' -1 --format=%H)
 git diff --quiet "$S29"..HEAD -- src/ scripts/ && echo "no drift → Day 0 = Sprint 29 final, reuse the committed DB, no fresh retest" || git diff --stat "$S29"..HEAD -- src/ scripts/
 # Pass (exit 0 + "no drift") → Day-0 baseline holds; any output from --stat → drift, fresh retest needed
 ```
