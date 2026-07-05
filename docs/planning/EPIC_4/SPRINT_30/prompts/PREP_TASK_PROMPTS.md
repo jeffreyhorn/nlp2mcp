@@ -11,7 +11,7 @@ Self-contained prompts for Sprint 30 Prep Tasks 2–10. Each prompt can be copy-
 
 Task 1 (Create Sprint 30 Known Unknowns List) is already ✅ COMPLETE — no prompt needed.
 
-Tasks 2–10 are dispatchable in the following order per the dependency graph in `docs/planning/EPIC_4/SPRINT_30/PREP_PLAN.md` (Task 1 is done, so the tasks that depend only on it — or on nothing — are immediately dispatchable):
+Tasks 2–10 are dispatchable in the following order per the Prep Task Overview table (Dependencies column) + the Critical/Secondary/Tertiary Path notes in `docs/planning/EPIC_4/SPRINT_30/PREP_PLAN.md` (Task 1 is done, so the tasks that depend only on it — or on nothing — are immediately dispatchable):
 
 - **Immediately dispatchable:** Task 2 (no dependencies), Tasks 4 + 7 + 8 (need only the completed Task 1)
 - **After Task 2:** Task 3 (the head-offset design reuses the Day-0 baseline / robert bucket)
@@ -75,7 +75,7 @@ Tasks 2–10 are dispatchable in the following order per the dependency graph in
 
 **Quality Gate:**
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 Docs-only task — no Python expected. Run the gate regardless; do NOT commit until all pass.
 
@@ -105,7 +105,7 @@ gh pr create --title "Complete Sprint 30 Prep Task 2: Day-0 Baseline + Genuine-F
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (docs-only)
 - [x] BASELINE_METRICS.md records Day-0 = Sprint 29 final + per-target buckets + the genuine-floor-69 carry-forward
 - [x] Day-0 = Sprint 29 final confirmed (git diff empty)
 - [x] Unknown 8.2 verified in KNOWN_UNKNOWNS.md
@@ -162,7 +162,7 @@ EOF
 
 **Quality Gate:**
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 Docs/design-only — no `src/` change (the fix is *built in-sprint*; any prototype probe is env-guarded + reverted, zero diff). Run the gate regardless; do NOT commit until all pass.
 
@@ -193,7 +193,7 @@ gh pr create --title "Complete Sprint 30 Prep Task 3: Head-Offset Architecture D
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs/design-only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (docs/design-only)
 - [x] robert's cross-term + dual-transfer hand-derived; `kkt_residual.py` residual → 0 at the NLP optimum
 - [x] The 3 emit sites + shared-vs-branched code path designed
 - [x] The robert → mine generalization verdict recorded (Unknown 1.1)
@@ -252,7 +252,7 @@ EOF
 
 **Quality Gate:**
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 Research/design-only — any rocket probe is env-guarded + reverted (zero `src/` diff). Run the gate regardless; do NOT commit until all pass.
 
@@ -283,7 +283,7 @@ gh pr create --title "Complete Sprint 30 Prep Task 4: Non-Convex Forcing Strateg
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (research/design-only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (research/design-only)
 - [x] The three forcing-lever families enumerated with the nlp2mcp/PATH boundary per lever
 - [x] One lever prototype-probed on rocket (env-guarded, zero src/); MODEL STATUS recorded
 - [x] The cold-convex Case-c shared payoff checked
@@ -342,7 +342,7 @@ EOF
 
 **Quality Gate:**
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 Docs-only (ISSUE-doc gate sections) — no Python expected. Run the gate regardless; do NOT commit until all pass.
 
@@ -374,7 +374,7 @@ gh pr create --title "Complete Sprint 30 Prep Task 5: Refresh + Author Phase 0 A
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (docs-only)
 - [x] The seven existing gates refreshed to the Sprint-30 dispositions
 - [x] robert gate + Class-B `stat_pz` gate authored
 - [x] hhfair gate corrected to the `$184` widened-VARIABLE blocker (not `$141`-only)
@@ -434,7 +434,7 @@ EOF
 
 **Quality Gate:**
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 Docs/analysis-only — no Python expected. Run the gate regardless; do NOT commit until all pass.
 
@@ -465,7 +465,7 @@ gh pr create --title "Complete Sprint 30 Prep Task 6: REPLAN-Prone Track Risk As
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs/analysis-only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (docs/analysis-only)
 - [x] Risk assessment covers #1443 (multi-site), #1462 (forcing), #1330 (Epic-5)
 - [x] Each track has PROCEED + REPLAN signals + a Sprint-31 exit + the firm part that lands
 - [x] Budget-reallocation plan per REPLAN
@@ -523,7 +523,7 @@ EOF
 
 **Quality Gate:**
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 Docs/design-only — no Python expected. Run the gate regardless; do NOT commit until all pass.
 
@@ -554,7 +554,7 @@ gh pr create --title "Complete Sprint 30 Prep Task 7: camcge -> Epic 5 Walras Tr
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs/design-only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (docs/design-only)
 - [x] The detection heuristic designed with an explicit non-degenerate-model false-positive guard
 - [x] The redundant-row + numéraire-selection rule reproduces 191.7346 on paper
 - [x] The empirical-confirmation experiment (drop-`lmequil` + fix-`cpi=1` → MS 1) scoped for P6 Day-0
@@ -612,7 +612,7 @@ EOF
 
 **Quality Gate:**
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 Audit-only (read-only tool runs) — no Python expected. Run the gate regardless; do NOT commit until all pass.
 
@@ -644,7 +644,7 @@ gh pr create --title "Complete Sprint 30 Prep Task 8: Reusable-Tooling Readiness
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (audit-only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (audit-only)
 - [x] Harness dual-transfer validated on robert + mine (head-offset multipliers)
 - [x] `--resolve-changed` confirmed to cover the widened-VARIABLE + head-offset goldens
 - [x] Property-test catalog confirmed extensible to the head-offset + offset-alias shapes
@@ -702,7 +702,7 @@ EOF
 
 **Quality Gate:**
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 Analysis-only — no Python expected (the fixtures are *added in-sprint*). Run the gate regardless; do NOT commit until all pass.
 
@@ -734,7 +734,7 @@ gh pr create --title "Complete Sprint 30 Prep Task 9: Backlog Fix-Surface Analys
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (analysis-only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (analysis-only)
 - [x] All three banked tracks referenced (#1385 sarf, #1146/#1143/#1112/#1111 offset-alias, Class-B `stat_pz`)
 - [x] Each patch-site framed as a Day-0 hypothesis (PR24)
 - [x] The offset-alias Day-5 revert coupling recorded + the coordinated-fix hypothesis
@@ -791,7 +791,7 @@ EOF
 
 **Quality Gate:**
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 Docs-only — no Python expected. Run the gate regardless; do NOT commit until all pass.
 
@@ -824,7 +824,7 @@ gh pr create --title "Complete Sprint 30 Prep Task 10: Plan Sprint 30 Detailed S
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] `make typecheck && make format && make lint && make test` all PASS (docs-only)
 - [x] PLAN.md covers Day 0 + Days 1–13; the 8 priorities sequenced with P1 front-loaded
 - [x] The Day-5/Day-10 `--resolve-changed` checkpoint + PR25 re-baseline embedded
 - [x] The three REPLAN decision points placed per the Task-6 assessment with fallbacks

@@ -222,7 +222,8 @@ To be completed.
 test -f docs/planning/EPIC_4/SPRINT_30/BASELINE_METRICS.md && echo "baseline present"
 
 # No src/scripts drift since Sprint 29 close (Day-0 == S29 final)
-git diff --stat "$(git log --oneline --grep='SPRINT 29 CLOSED' -1 --format=%H)"..HEAD -- src/ scripts/ | tail -1
+S29=$(git log --oneline --grep='SPRINT 29 CLOSED' -1 --format=%H)
+git diff --quiet "$S29"..HEAD -- src/ scripts/ && echo "no src/ drift — Day-0 == S29 final" || git diff --stat "$S29"..HEAD -- src/ scripts/
 
 # DB headline counts recomputed (canonical scope) — expect Solve 107 / Match 92 / infeasible 7
 grep -E "Solve 107|Match 92|model_infeasible 7|genuine floor 69" docs/planning/EPIC_4/SPRINT_30/BASELINE_METRICS.md

@@ -879,8 +879,9 @@ Sprint 30 Day 0 equals the Sprint 29 final state (no `src/`/`scripts/` drift sin
 
 ### How to Verify
 ```bash
-git diff --stat "$(git log --oneline --grep='SPRINT 29 CLOSED' -1 --format=%H)"..HEAD -- src/ scripts/ | tail -1
-# Expect: empty → Day 0 = Sprint 29 final, reuse the committed DB, no fresh retest
+S29=$(git log --oneline --grep='SPRINT 29 CLOSED' -1 --format=%H)
+git diff --quiet "$S29"..HEAD -- src/ scripts/ && echo "no drift → Day 0 = Sprint 29 final, reuse the committed DB, no fresh retest" || git diff --stat "$S29"..HEAD -- src/ scripts/
+# Pass (exit 0 + "no drift") → Day-0 baseline holds; any output from --stat → drift, fresh retest needed
 ```
 
 ### Risk if Wrong
