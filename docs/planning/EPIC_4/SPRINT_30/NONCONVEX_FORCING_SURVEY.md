@@ -25,7 +25,7 @@ rocket (#1462) is the Goddard rocket optimal-control problem (COPS): highly non-
 | Lever family | Mechanism | Emittable GAMS? / PATH option? | rocket probe result |
 |---|---|---|---|
 | **Trust-region damping** | PATH `proximal_perturbation` — adds a Levenberg-Marquardt regularization term to the Jacobian (the MCP analogue of a trust region), stabilizing the ill-conditioned `1/ht²`,`1/m²` initial Jacobian | **PATH option** (optfile) | pp ∈ {1e-1, 1.0, 1e2} standalone (+ 1e-2 in the merit-combined config): **MS 5**; INFES 477 → 456–482 (no monotone gain) |
-| **Crash / restart** | PATH `crash_method pnewton` + `crash_perturb` — a projected-Newton crash to a better initial basis | **PATH option** | **MS 5**, INFES 477 (unchanged) |
+| **Crash / restart** | PATH `crash_method pnewton` + `crash_perturb yes` — a projected-Newton crash to a better initial basis | **PATH option** | **MS 5**, INFES 477 (unchanged) |
 | **Merit function** | PATH `merit_function normal` + `gradient_step_limit` — the non-monotone merit steering | **PATH option** | **MS 5**; INFES → **382** (the best of all configs), still no convergence |
 | **Combined strong** | `merit_function normal` + `proximal_perturbation 1e-1` + `crash_method pnewton` + 20k major / 500k minor iters | **PATH option** | **MS 5**, INFES 458 |
 | **Homotopy / continuation** | Emitted-GAMS loop: solve a relaxed/convexified/scaled problem, then step a continuation parameter `μ: relaxed → original`, re-solving from each prior point | **Emittable GAMS** (a P2/P8 scaffold — a driver loop around the `Solve mcp_model using MCP;`) | design-level (a scaffold, not a one-line probe) — **not demonstrated to crack rocket** |
@@ -92,7 +92,7 @@ The Sprint-29 cohort survey (`COLD_CONVEX_COHORT_SURVEY.md` §3) partitioned the
 
 - Emit: `.venv/bin/python -m src.cli data/gamslib/raw/rocket.gms --nlp-presolve -o /tmp/rocket_ps.gms`.
 - Baseline: GAMS from repo root → embedded NLP MS 2; MCP MS 5, 477 INFES, 0 eval errors.
-- PATH-option probes (transient `path.opt`, `mcp_model.optfile=1`): pp{1e-2,1e-1,1.0,1e2}, crash_method pnewton, merit_function normal, combined — all **MS 5**; best INFES 382 (merit + pp 1e-2).
+- PATH-option probes (transient `path.opt`, `mcp_model.optfile=1`): pp{1e-2,1e-1,1.0,1e2}, `crash_method pnewton` + `crash_perturb yes`, merit_function normal, combined — all **MS 5**; best INFES 382 (merit + pp 1e-2).
 - Case-c cohort buckets (§3): DB `data/gamslib/gamslib_status.json` — bearing/launch/mathopt3/robustlp all `model_optimal_presolve` + `compare_objective_match`; rocket `model_infeasible`.
 - Prior: `docs/issues/ISSUE_1462_*.md` Day-2 (complete `_fx_` warm-start → NLP MS 2 1.00412 / MCP MS 5; degenerate-bound probe no help; residual not cleanable by warm-start value).
 - No `src/` or golden change committed; all probes reverted.
