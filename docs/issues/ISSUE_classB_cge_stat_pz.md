@@ -42,7 +42,7 @@ done
 ### PROCEED/REPLAN Signal
 
 - **🟡 PROCEED-conditional — Sprint-30 P7 general-emit backlog.** PROCEED to trace the `stat_pz` coefficient discrepancy; the value is genuine-floor (cold-robustness across the cluster), not as-measured +Match (all already warm-match). Confirm one-fix-converts-several (Unknown 7.1) before counting the conversion.
-- **Traced Fix-Surface (Day-0 hypothesis, PR24):** the general stationarity-emit coefficient path for the CGE output-price variable — the Jacobian-transpose coefficient on the `pz`-referencing cross-terms in `src/kkt/stationarity.py` / `src/kkt/constraint_jacobian.py` (the terms are present; the coefficient/scaling is off). Trace command: the per-model harness loop above + `grep -E 'stat_pz|eqpzs|nu_' <model>_mcp.gms`. Evidence: `docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md` §4 Class B; the Sprint 29 Day-12 CHANGELOG entry (harness CASE_B, `stat_pz`≈1.0 / `stat_epsilon`≈2.0, dual transfer CONSISTENT, NOT Walras).
+- **Traced Fix-Surface (Day-0 hypothesis, PR24):** the general stationarity-emit coefficient path for the CGE output-price variable — the Jacobian-transpose coefficient on the `pz`-referencing cross-terms in `src/kkt/stationarity.py` / `src/ad/constraint_jacobian.py` (the terms are present; the coefficient/scaling is off). Trace command: the per-model harness loop above + `grep -E 'stat_pz|eqpzs|nu_' <model>_mcp.gms`. Evidence: `docs/planning/EPIC_4/SPRINT_29/COLD_CONVEX_COHORT_SURVEY.md` §4 Class B; the Sprint 29 Day-12 CHANGELOG entry (harness CASE_B, `stat_pz`≈1.0 / `stat_epsilon`≈2.0, dual transfer CONSISTENT, NOT Walras).
 
 ## Provenance
 
