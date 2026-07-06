@@ -12,7 +12,7 @@ robert (Elementary Production and Inventory, an LP — convex) matches its NLP o
 
 ## Phase 0: Acceptance Gate
 
-> **Sprint-30 disposition (Prep Task 3, 2026-07-05): PROCEED — standalone objective-gradient fix.** Two cold-solve control experiments on `data/gamslib/mcp/robert_mcp.gms` (self-contained; no warm-start): patching **only** `stat_x` → `nu_sb(r,tt+1)` (the banked "fix") leaves robert at the spurious **6741.67**; patching **only** `stat_s`'s objective gradient (drop-in `-res-value(r)` at `tt=4` + guard `storage-c(r)` to `t(tt)`) makes robert cold-solve to **11025.0 = NLP optimum (MATCH)**. So the `stat_x` cross-term `nu_sb(r,tt)` is already correct under the emit's base-labeling; the objective-gradient `stat_s` fix is necessary **and sufficient**. Decoupled from mine (`ISSUE_1443`).
+> **Sprint-30 disposition (Prep Task 3, 2026-07-05): PROCEED — standalone objective-gradient fix.** Two cold-solve control experiments on `data/gamslib/mcp/robert_mcp.gms` (self-contained; no warm-start): patching **only** `stat_x` → `nu_sb(r,tt+1)` (the banked "fix") leaves robert at the spurious **6741.67**; patching **only** `stat_s`'s objective gradient (drop-in `-misc("res-value",r)` at `tt=4` + guard `misc("storage-c",r)` to `t(tt)`) makes robert cold-solve to **11025.0 = NLP optimum (MATCH)**. So the `stat_x` cross-term `nu_sb(r,tt)` is already correct under the emit's base-labeling; the objective-gradient `stat_s` fix is necessary **and sufficient**. Decoupled from mine (`ISSUE_1443`).
 
 ### Hand-Derived KKT Shape
 
@@ -23,7 +23,7 @@ stat_s(r,tt)..  ( misc("storage-c",r)$(t(tt)) - misc("res-value",r)$(ord(tt)=car
                 - nu_sb(r,tt) + nu_sb(r,tt-1)$(ord(tt)>1) - piL_s(r,tt)  =E= 0
 ```
 
-The `nu_sb` difference part (`- nu_sb(r,tt) + nu_sb(r,tt-1)`) is correct in the current emit. The **objective-gradient part is wrong**: the emit applies `misc("storage-c",r)` for **all** `tt` (no `$(t(tt))` guard) and **drops** the `res-value(r)·s(r,"4")` boundary term — so at `tt=4` it emits `+storage-c(r)` where the KKT needs `-res-value(r)`.
+The `nu_sb` difference part (`- nu_sb(r,tt) + nu_sb(r,tt-1)`) is correct in the current emit. The **objective-gradient part is wrong**: the emit applies `misc("storage-c",r)` for **all** `tt` (no `$(t(tt))` guard) and **drops** the `misc("res-value",r)·s(r,"4")` boundary term — so at `tt=4` it emits `+misc("storage-c",r)` where the KKT needs `-misc("res-value",r)`.
 
 ### Expected Emit Pattern
 
@@ -43,7 +43,7 @@ The `nu_sb` difference part (`- nu_sb(r,tt) + nu_sb(r,tt-1)`) is correct in the 
 ### PROCEED/REPLAN Signal
 
 - **🟢 PROCEED — Sprint-30 P1 genuine-floor (Prep Task 3, 2026-07-05).** LOW-risk, standalone, ~2–4 h. Cold-confirmed at 11025 by the control experiment. Independent of mine's head-offset `comp_pr` re-derivation (different bug class). No REPLAN branch (convex LP, no Case-c).
-- **Traced Fix-Surface (Day-0 hypothesis, PR24):** the objective-gradient → stationarity emit for `s` — the handling of (a) a **subset-domain objective term** (`storage-c(r)·s(r,t)`, `t` a subset of `tt`) emitted **without** its `$(t(tt))` guard, and (b) a **fixed-literal-index objective term** (`res-value(r)·s(r,"4")`) **dropped** from `stat_s(r,"4")`. Likely `src/ad/gradient.py` (`find_objective_expression` / the per-variable gradient builder) or `src/kkt/stationarity.py` — the **same family as #1447** (objective-term subset-scoping), extended to fixed-literal-element terms. **NOT** the head-offset builder (`stationarity.py:5562`/`:5750`). Trace command: `kkt_residual.py data/gamslib/raw/robert.gms` + the two cold-solve control patches on `robert_mcp.gms` (§Verification). Evidence: `docs/planning/EPIC_4/SPRINT_30/HEAD_OFFSET_ARCHITECTURE_DESIGN.md` §1.
+- **Traced Fix-Surface (Day-0 hypothesis, PR24):** the objective-gradient → stationarity emit for `s` — the handling of (a) a **subset-domain objective term** (`misc("storage-c",r)·s(r,t)`, `t` a subset of `tt`) emitted **without** its `$(t(tt))` guard, and (b) a **fixed-literal-index objective term** (`misc("res-value",r)·s(r,"4")`) **dropped** from `stat_s(r,"4")`. Likely `src/ad/gradient.py` (`find_objective_expression` / the per-variable gradient builder) or `src/kkt/stationarity.py` — the **same family as #1447** (objective-term subset-scoping), extended to fixed-literal-element terms. **NOT** the head-offset builder (`stationarity.py:5562`/`:5750`). Trace command: `kkt_residual.py data/gamslib/raw/robert.gms` + the two cold-solve control patches on `robert_mcp.gms` (§Verification). Evidence: `docs/planning/EPIC_4/SPRINT_30/HEAD_OFFSET_ARCHITECTURE_DESIGN.md` §1.
 - **Blast-radius note (for Task 9):** the "terminal stock valued at res-value" (`s(r,"last")`) pattern is common in inventory/dynamic models — the fix must be checked corpus-wide.
 
 ## Provenance
