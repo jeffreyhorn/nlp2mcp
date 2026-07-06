@@ -35,7 +35,7 @@
 
 **Audit — the detector's classification logic (`classify_divergence`, read-only):**
 
-- **HARD-FAILS (exit 1) only** on unambiguous `$onMultiR` corruption: (a) `execerror` — the embedded `$include` run **aborted** (korcge #1439), or (b) the **embedded NLP is infeasible / non-optimal** (MODEL STATUS ∉ {1,2}) while the reference is optimal (camshape #1424). It gates on the **embedded NLP**, never on the MCP.
+- **HARD-FAILS (exit 1)** on unambiguous `$onMultiR` corruption, one of three triggers: (a) `execerror` — the embedded `$include` run **aborted** (korcge #1439); (b) the **embedded NLP is infeasible / non-optimal** (MODEL STATUS ∉ {1,2}) while the reference is optimal (camshape #1424); or (c) the **embedded presolve produced no objective value** (`emb_obj is None` — an unparseable/absent objective). Triggers (b) and (c) both require a canonical reference (else the model is `skipped`, never failed). It gates on the **embedded NLP**, never on the MCP.
 - **SOFT signal** (`obj_gap`, reported but **not** failed): the embedded NLP *solves* but its objective differs from the canonical reference.
 
 | Class | Embedded-NLP status | MCP status | Detector result | Hard-fail? |
@@ -44,7 +44,7 @@
 | **Cold-convex residue** (bearing/launch/mathopt3/robustlp) | optimal (already warm-match, residual ≤ 8e-6) | matches | no divergence / 0 obj-gap | **No** |
 | **rocket** (#1462) | MS 2 (embedded solves) | MS 5 (intrinsic non-convergence) | informational `obj_gap` — detector gates on the embedded NLP, not the MS-5 MCP | **No** |
 
-**Readiness: ✅ READY — no extension, no new allowlist entry.** Because the detector gates on the **embedded NLP** (which solves for every one of these classes) and never on the MCP, the Class-B `stat_pz` MCP discrepancy and rocket's MS-5 MCP both soft-classify. The only hard-fail triggers (embedded abort / infeasible-embedded) are unchanged from Sprint 29 (korcge #1439 allowlisted; camshape #1424 fixed). No Sprint-30 class introduces a new hard-fail.
+**Readiness: ✅ READY — no extension, no new allowlist entry.** Because the detector gates on the **embedded NLP** (which for every one of these classes solves optimally **and** yields a parseable objective) and never on the MCP, none of the three hard-fail triggers (abort / non-optimal-embedded / no-objective) fires — so the Class-B `stat_pz` MCP discrepancy and rocket's MS-5 MCP both soft-classify. The hard-fail triggers are unchanged from Sprint 29 (korcge #1439 allowlisted; camshape #1424 fixed). No Sprint-30 class introduces a new hard-fail.
 
 ---
 
