@@ -508,7 +508,12 @@ grep -rln "widened\|1449" data/gamslib/mcp/*_mcp_presolve.gms 2>/dev/null | head
 Development team (emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the #1449 widened-parameter presolve cohort is 4 models; the variable extension is a disjoint additive path
+**Verified by:** Task 9 (Backlog Fix-Surface Analysis)
+**Date:** 2026-07-06
+**Findings:** The #1449 widened-**parameter** presolve cohort = **4 models** — `cclinpts`, `chain`, `otpop`, `rocket` (the `*_mcp_presolve.gms` carrying the `#1449` marker). hhfair's blocker is the **`$184`** #1449 conflict for a **VARIABLE** `n` (source `n(t)` vs MCP-widened `n(tl)`); the parameter `__pw`-companion fix does **not** transfer (`n` is a live nonlinear-stat coefficient, not a value-copy), so the fix is a **new companion-*variable* + value-coupling path**, disjoint from and additive to the widened-parameter `__pw` branch. So the extension fires only on the widened-VARIABLE shape and leaves the 4 widened-parameter goldens untouched.
+**Evidence:** `grep -lE "#1449" data/gamslib/mcp/*_mcp_presolve.gms` → cclinpts/chain/otpop/rocket; `docs/issues/ISSUE_1236_*.md` Day-8 (the `$184` widened-VARIABLE root cause); `BACKLOG_FIX_SURFACE_ANALYSIS.md` Part D.
+**Decision:** blast-radius-safe as an additive path — the Day-0 check is a byte-scan of the 4 #1449 presolve goldens (0 diff) + `--resolve-changed` GO after the fix; only hhfair's golden changes. Feeds Task 6 (hhfair PROCEED via the widened-VARIABLE fix, then the CES/product Case-b verdict).
 
 ---
 
@@ -552,6 +557,8 @@ Development team (AD/emit specialist)
 **Evidence:** `docs/issues/ISSUE_1385_*.md` §"Phase 0" Sprint-30 refresh (sarf reference target; cross-terms hand-derived + banked).
 **Decision:** PROCEED; fix-surface (Day-0 hypothesis) = `src/kkt/stationarity.py` + `src/ad/index_mapping.py`, pinned by Task 9; REPLAN to Sprint 31 if the symbolic re-emit re-triggers the combinatorial blow-up.
 
+**Task 9 (2026-07-06) — emit-site pinned (two coupled sites).** `BACKLOG_FIX_SURFACE_ANALYSIS.md` Part A pins: (1) **`src/ad/index_mapping.py`** — extend `_is_blowup_dynamic_subset_equation` / `enumerate_equation_instances` from the srpchase **1-D** shape (`len(eq_domain)!=1` bails) to sarf's **2-D** dynamic-subset constraints (`tbal(g,t)$taskposs`, `equipb1(m,t)$equipposs`, `equipb2(n,t)$equipposs`); (2) **`src/kkt/stationarity.py`** — a **new symbolic runtime-guard cross-term emit path** that differentiates each short-circuited constraint body parametrically in `(g,t,m,n)` (the equations enumerate **zero** instances, so the `J_gᵀ·lam` cross-terms can't be assembled per-instance) and injects the banked 6-guarded-term `stat_task(g,t,m,n)` derivation with `$taskposs`/`$equipposs` guards and **no set-name multiplier indices**. Atomic (re-emit + cross-terms together). Feeds Unknown 4.2 (the emit must be O(constraints), not O(instances)).
+
 ---
 
 ## Unknown 4.2: Is sarf's skipped-constraint instance count tractable at emit time, or does the symbolic re-emit re-introduce the translate-timeout?
@@ -583,7 +590,12 @@ Translate sarf with the symbolic re-emit; measure wall-clock:
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the tractability analysis is complete (instance counts pinned; the O(constraints) design requirement identified); the emit-timing is the Day-0 PROCEED/REPLAN gate
+**Verified by:** Task 9 (Backlog Fix-Surface Analysis)
+**Date:** 2026-07-06
+**Findings:** sarf's three blow-up constraints materialize **tbal 384 + equipb1 648 + equipb2 120 = 1,152** instances (the `taskposs`/`equipposs` conditions are computed from `treq`/`tech` data → zero concrete members at compile time → the full Cartesian is what blows up `differentiate_expr` >200 s, `ISSUE_1385` Day-9). The symbolic runtime-guard re-emit must **NOT** re-enumerate these per-instance — it differentiates each constraint body **once** parametrically in `(g,t,m,n)` and emits a single runtime-guarded row, so the emit-time cost is **O(constraints), not O(instances)**. The cross-term *derivation* is tractable (banked, 6 guarded terms); the open risk is purely the *implementation* keeping the emit O(constraints). (Analysis complete; the empirical emit-timing is the Day-0 gate — analogous to Unknown 4.1's "PROCEED, gate refreshed" and Unknown 6.1's "designed + Day-0 gate" dispositions.)
+**Evidence:** `docs/issues/ISSUE_1385_*.md` §PROCEED/REPLAN (the 384/648/120 instance counts + the blow-up diagnosis); `BACKLOG_FIX_SURFACE_ANALYSIS.md` Part A.
+**Decision:** PROCEED with the Day-0 tractability gate = time `sarf_mcp.gms` emit; **PROCEED** to land if it emits under the translate budget, **REPLAN to Sprint 31** if the symbolic re-emit re-triggers the per-instance enumeration (the timeout). The +Translate is conditional on this gate.
 
 ---
 
@@ -619,7 +631,12 @@ grep -rn "Day-5\|revert\|distance.Jacobian\|offset.image" docs/issues/ISSUE_1146
 Development team (AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the coupling is confirmed (polygon: objective-gradient cross-term × distance-Jacobian symmetry); the coordinated fix must land both together (planned, not yet implemented)
+**Verified by:** Task 9 (Backlog Fix-Surface Analysis)
+**Date:** 2026-07-06
+**Findings:** The Day-5 revert was **polygon** specifically: the Day-4 representative-selection fix made polygon's **objective gradient** correct (`stat_theta`/`stat_r` gained the predecessor offset-image cross-term) but the Day-5 Checkpoint re-solve caught **`match` (0.7797) → `mismatch` (spurious 0.0 optimum)**. Root cause = a **SECOND, independent bug**: the `distance(i,j)` **constraint-Jacobian symmetry** — `stat_r` sums only the `ord(j)>ord(i)` first-index direction, dropping the symmetric second-index `r(j)` term (the "Multi-pattern Jacobian: skipping correction for distance/r" warning). With the objective gradient complete but the distance-Jacobian one-sided, the KKT admits a degenerate `area=0` solution. **So the coupling is confirmed** — neither piece alone matches: (a) the objective-gradient cross-term alone regressed to 0.0 (the revert); (b) the distance-Jacobian alone leaves the dropped cross-term. **himmel16 is a DISTINCT shape** (its cyclic cross-term is structurally *present*; the 2.0 residual is a numeric/objvar-gradient-sign defect, not a dropped term) — the two models share the code path, not the exact defect.
+**Evidence:** `docs/issues/ISSUE_1143_*.md` §"REVERTED — Sprint 29 Day 5" (the match→mismatch + the distance-Jacobian symmetry); `docs/issues/ISSUE_1146_*.md` §"NOT a missing-term bug"; `BACKLOG_FIX_SURFACE_ANALYSIS.md` Part B.
+**Decision:** land the coordinated fix — polygon = the successor-offset objective cross-term (`derivative_rules.py` `_diff_varref` / the `_partial_collapse_sum` non-circular-offset branch, preserved in `shape8` xfail) **+** the `distance(i,j)` second-index symmetry (`constraint_jacobian.py` multi-pattern correction); gate tightly to the cyclic/successor shape (Unknown 5.2). REPLAN to Sprint 31 if it needs the #1111/#1112 core.
 
 ---
 
@@ -659,6 +676,8 @@ Development team (AD specialist)
 **Evidence:** `docs/issues/ISSUE_1146_*.md` + `ISSUE_1143_*.md` §"Phase 0" Sprint-30 refresh notes.
 **Decision:** PROCEED if a tight gate makes it correct; **REPLAN to Sprint 31** (the #1111 alias-aware-differentiation / #1112 dollar-condition-propagation AD-engine core) if the localized fix needs the general architecture. The architectural-REPLAN boundary is the Task-6 assessment input.
 
+**Task 9 (2026-07-06) — the boundary pinned per shape.** `BACKLOG_FIX_SURFACE_ANALYSIS.md` Part B refines: the two models share the code path but have **distinct** defects, each with its own localized surface — **polygon** = successor-offset objective cross-term (`_diff_varref` / the `_partial_collapse_sum` non-circular-offset branch) **+** distance-Jacobian second-index symmetry (`constraint_jacobian.py`); **himmel16** = the cyclic `i++1` cross-term is *present*, so its fix is the objvar-gradient-**sign** reconciliation in the `_diff_varref(circular=True)` branch + the dual-transfer sign. Both lean **localized** (single-row integer-residual signatures, gateable to the cyclic/successor shape). **REPLAN to Sprint 31** (#1111/#1112 AD core) only if a tight shape-gate can't make either correct without threading general alias differentiation. The #1111/#1112 footprint is small (3 issues: #1146/#1143/#1162) → Sprint-31 candidate, not an Epic-5 necessity. Flagged for the Task-6 REPLAN assessment.
+
 ---
 
 ## Unknown 5.3: Does a coordinated polygon/himmel16 fix stay blast-radius-safe (no regression on the other offset-alias models)?
@@ -690,7 +709,12 @@ Enumerate the offset-alias shape across the corpus; regen + re-solve:
 Development team (AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — blast-radius-safe as two shape-gated fixes; guarded by the property catalog + `--resolve-changed`
+**Verified by:** Task 9 (Backlog Fix-Surface Analysis)
+**Date:** 2026-07-06
+**Findings:** Each fix is gated to its own offset shape — polygon's successor `ord(j)=ord(i)+1` (+ the `distance` symmetry) and himmel16's circular `i++1` — so the blast radius is limited to models emitting the identical shape. The property-test catalog already guards these: `shape7_offset_alias_cyclic` (himmel16, passing structural guard) and `shape8_offset_alias_successor` (polygon, xfail-strict — flips to passing when the coordinated fix lands). The Day-0 blast-radius check is a full-corpus golden byte-scan + `--resolve-changed` GO after the fix (expect only polygon/himmel16 goldens change); the `shape8` xfail flipping to pass is the regression signal that the fix is complete + correctly scoped.
+**Evidence:** `tests/integration/emit/test_ad_crossterm_shapes.py` (shape7 pass / shape8 xfail-strict — Task 8 re-confirmed 7 passed, 1 xfailed); `BACKLOG_FIX_SURFACE_ANALYSIS.md` Part B + Part E.
+**Decision:** blast-radius-safe with the shape gate; the property fixtures (`shape7`/`shape8`) + the golden byte-scan + `--resolve-changed` are the Day-0 guards. Enabling `shape8` (drop `@pytest.mark.xfail`) is the completion gate for the coordinated fix.
 
 ---
 
@@ -859,6 +883,8 @@ Development team (AD/emit specialist)
 **Findings:** Authored `docs/issues/ISSUE_classB_cge_stat_pz.md`: the Class-B cluster (irscge/lrgcge/moncge `stat_pz` rel ≈ 1.0, stdcge `stat_epsilon` 2.0, marco `stat_w` 3.3) is a **general-emit coefficient/scaling discrepancy** (the `pz` cross-terms are present, not dropped; dual transfer CONSISTENT). The gate's confirmatory test for one-fix-converts-several: irscge/lrgcge/moncge all localize to the same `stat_pz` coefficient.
 **Evidence:** `ISSUE_classB_cge_stat_pz.md` §"Phase 0" (4 subsections); `COLD_CONVEX_COHORT_SURVEY.md` §4 Class B; Sprint 29 Day 12.
 **Decision:** PROCEED-conditional — the payoff is genuine-floor (cold-robustness; all already warm-match, non-convex), gated on whether one general-emit coefficient fix converges the cluster (else per-model, 1–2 models). Fix-surface (Day-0 hypothesis) = the CGE output-price Jacobian-transpose coefficient in `src/kkt/`.
+
+**Task 9 (2026-07-06) — fresh Day-0 harness re-confirms one-fix-several.** Ran `kkt_residual.py` on the cluster: **irscge** `stat_pz(MLK)` rel **1.00**, **lrgcge** `stat_pz(MLK)` rel **1.00**, **moncge** `stat_pz(BRD)` rel **1.00** — all **CASE_B**, all **dual transfer CONSISTENT**. The **identical relative residual (exactly 1.0)** across the three is the missing-unit-coefficient fingerprint → **one general-emit coefficient fix converts all three** (strong one-fix-several evidence). CASE_B (not the MS-4-at-iter-0 singular signature) confirms **NOT Walras** (Unknown 7.3) — full-rank market-clearing, stays in nlp2mcp general emit. Pinned fix-surface: the Jacobian-transpose coefficient on the `pz`-referencing cross-terms in `src/kkt/stationarity.py` / `src/ad/constraint_jacobian.py` (terms present, coefficient off by a unit factor). stdcge (`stat_epsilon` 2.0) is a probable same-path variant; marco (`stat_w` 3.3) is model-specific/separate. See `BACKLOG_FIX_SURFACE_ANALYSIS.md` Part C.
 
 ---
 
