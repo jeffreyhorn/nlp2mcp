@@ -590,12 +590,12 @@ Translate sarf with the symbolic re-emit; measure wall-clock:
 Development team (AD/emit specialist)
 
 ### Verification Results
-⚠️ **Status:** SCOPED (Task 9) — the instance counts are pinned; tractability hinges on the symbolic re-emit being O(constraints), the Day-0 timing gate
+✅ **Status:** VERIFIED — the tractability analysis is complete (instance counts pinned; the O(constraints) design requirement identified); the emit-timing is the Day-0 PROCEED/REPLAN gate
 **Verified by:** Task 9 (Backlog Fix-Surface Analysis)
 **Date:** 2026-07-06
-**Findings:** sarf's three blow-up constraints materialize **tbal 384 + equipb1 648 + equipb2 120 = 1,152** instances (the `taskposs`/`equipposs` conditions are computed from `treq`/`tech` data → zero concrete members at compile time → the full Cartesian is what blows up `differentiate_expr` >200 s, `ISSUE_1385` Day-9). The symbolic runtime-guard re-emit must **NOT** re-enumerate these per-instance — it differentiates each constraint body **once** parametrically in `(g,t,m,n)` and emits a single runtime-guarded row, so the emit-time cost is **O(constraints), not O(instances)**. The cross-term *derivation* is tractable (banked, 6 guarded terms); the open risk is purely the *implementation* keeping the emit O(constraints).
+**Findings:** sarf's three blow-up constraints materialize **tbal 384 + equipb1 648 + equipb2 120 = 1,152** instances (the `taskposs`/`equipposs` conditions are computed from `treq`/`tech` data → zero concrete members at compile time → the full Cartesian is what blows up `differentiate_expr` >200 s, `ISSUE_1385` Day-9). The symbolic runtime-guard re-emit must **NOT** re-enumerate these per-instance — it differentiates each constraint body **once** parametrically in `(g,t,m,n)` and emits a single runtime-guarded row, so the emit-time cost is **O(constraints), not O(instances)**. The cross-term *derivation* is tractable (banked, 6 guarded terms); the open risk is purely the *implementation* keeping the emit O(constraints). (Analysis complete; the empirical emit-timing is the Day-0 gate — analogous to Unknown 4.1's "PROCEED, gate refreshed" and Unknown 6.1's "designed + Day-0 gate" dispositions.)
 **Evidence:** `docs/issues/ISSUE_1385_*.md` §PROCEED/REPLAN (the 384/648/120 instance counts + the blow-up diagnosis); `BACKLOG_FIX_SURFACE_ANALYSIS.md` Part A.
-**Decision:** the Day-0 tractability gate = time `sarf_mcp.gms` emit; **PROCEED** if it emits under the translate budget, **REPLAN to Sprint 31** if the symbolic re-emit re-triggers the per-instance enumeration (the timeout). The +Translate is conditional on this gate.
+**Decision:** PROCEED with the Day-0 tractability gate = time `sarf_mcp.gms` emit; **PROCEED** to land if it emits under the translate budget, **REPLAN to Sprint 31** if the symbolic re-emit re-triggers the per-instance enumeration (the timeout). The +Translate is conditional on this gate.
 
 ---
 
@@ -631,7 +631,7 @@ grep -rn "Day-5\|revert\|distance.Jacobian\|offset.image" docs/issues/ISSUE_1146
 Development team (AD specialist)
 
 ### Verification Results
-✅ **Status:** VERIFIED — the coupling is confirmed (polygon: objective-gradient cross-term × distance-Jacobian symmetry); the coordinated fix lands both together
+✅ **Status:** VERIFIED — the coupling is confirmed (polygon: objective-gradient cross-term × distance-Jacobian symmetry); the coordinated fix must land both together (planned, not yet implemented)
 **Verified by:** Task 9 (Backlog Fix-Surface Analysis)
 **Date:** 2026-07-06
 **Findings:** The Day-5 revert was **polygon** specifically: the Day-4 representative-selection fix made polygon's **objective gradient** correct (`stat_theta`/`stat_r` gained the predecessor offset-image cross-term) but the Day-5 Checkpoint re-solve caught **`match` (0.7797) → `mismatch` (spurious 0.0 optimum)**. Root cause = a **SECOND, independent bug**: the `distance(i,j)` **constraint-Jacobian symmetry** — `stat_r` sums only the `ord(j)>ord(i)` first-index direction, dropping the symmetric second-index `r(j)` term (the "Multi-pattern Jacobian: skipping correction for distance/r" warning). With the objective gradient complete but the distance-Jacobian one-sided, the KKT admits a degenerate `area=0` solution. **So the coupling is confirmed** — neither piece alone matches: (a) the objective-gradient cross-term alone regressed to 0.0 (the revert); (b) the distance-Jacobian alone leaves the dropped cross-term. **himmel16 is a DISTINCT shape** (its cyclic cross-term is structurally *present*; the 2.0 residual is a numeric/objvar-gradient-sign defect, not a dropped term) — the two models share the code path, not the exact defect.
