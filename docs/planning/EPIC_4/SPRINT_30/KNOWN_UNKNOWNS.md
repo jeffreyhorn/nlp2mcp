@@ -266,6 +266,8 @@ Development team (AD/KKT specialist)
 **Evidence:** `HEAD_OFFSET_ARCHITECTURE_DESIGN.md` §1.2–1.5 + §Appendix (the `stat_x`-only patch → 6741.67; the harness-artifact explanation).
 **Decision:** do NOT touch robert's `stat_x`; the objective-gradient `stat_s` fix is the whole robert fix (Unknown 1.1). This also invalidates the banked `ISSUE_1443` Day-12 robert diagnosis (a PR24 correction — recorded for the Task-5 gate refresh).
 
+**Task 8 (2026-07-06) — tooling-readiness layer (the harness handles the `nu_sb` head-offset multiplier).** Actual harness runs: **robert** dual transfer **CONSISTENT** (verdict CASE_B, top `stat_x(high,3)` rel 7.20); **mine** dual transfer **CONSISTENT** (verdict CASE_B, top `stat_x(4,1,1)` rel 1.33). So the harness loads the head-offset `nu_sb`/`lam_pr` multipliers with **no mis-transfer / no false-inconsistency** — the self-check is trustworthy. **But** the top per-row residual on base-normalized head-offset equations is a **same-index-transfer artifact** (robert's `stat_x` top row; the operative bug is `stat_s` — this Unknown's finding), so per-row *localization* must be corroborated with the **cold-solve control experiment** (Task 3's method). Optional non-blocking ≤ 1 h harness extension (head-label warm-start `nu_<eq>.l(idx)=<eq>.m(head(idx))`). See `TOOLING_READINESS_AUDIT.md` Tool 1.
+
 ---
 
 # Category 2: rocket #1462 — Non-Convex Convergence Forcing
@@ -969,7 +971,12 @@ grep -nE "def test_shape|xfail" tests/integration/emit/test_ad_crossterm_shapes.
 Development team (Tooling)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — head-offset shape is the one missing fixture (a clean one-file add); `shape8`/`shape7` offset-alias fixtures already exist (`shape8` xfail-strict)
+**Verified by:** Task 8 (Reusable-Tooling Readiness Audit)
+**Date:** 2026-07-06
+**Findings:** `tests/fixtures/crossterm_shapes/` has **8** fixtures (`shape1`–`shape8`); `pytest tests/integration/emit/test_ad_crossterm_shapes.py` = **7 passed, 1 xfailed**. `shape8_offset_alias_successor` is **xfail-strict** (`#1143/#1447: reverted; pending coupled distance-Jacobian fix (Sprint 30)`); `shape7_offset_alias_cyclic` **passes** as a structural-decomposition guard for the himmel16 `i++1` cyclic shape (#1146; its `2.0` numeric residual defect is noted as not assertable without a GAMS residual eval). None of `shape1`–`shape8` covers the **head-domain-offset** `nu_sb`/`lam_pr` cross-term (shape8 is the distinct Category-5 *offset-alias* successor), so the head-offset shape is the **one genuinely-missing fixture** P8 adds. The catalog is **structurally extensible** — a new fixture is a `.gms` drop + a `def test_shape9_...` using the existing `_emit`/`_stat_row` helpers (no refactor); enabling `shape8` is a one-line drop of `@pytest.mark.xfail` once the offset-alias fix lands.
+**Evidence:** `ls tests/fixtures/crossterm_shapes/` (shape1–8); `pytest tests/integration/emit/test_ad_crossterm_shapes.py -q` → 7 passed, 1 xfailed; `test_ad_crossterm_shapes.py:104-134` (shape8 xfail-strict; shape7 passing); `TOOLING_READINESS_AUDIT.md` Tool 4.
+**Decision:** no structural blocker — P8 adds the one head-offset fixture; `shape8` (and any residual `shape7` numeric assertion) flips to passing by removing the xfail when the #1143 offset-alias fix lands (feeds Unknown 5.2). No Day-0 extension.
 
 ---
 
@@ -1044,7 +1051,12 @@ grep -rn "Sprint 31\|PATH consultation\|forcing scaffold" docs/planning/EPIC_4/P
 Development team (Tooling)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the stable entry point is a lever-injection hook + a MODEL-STATUS reporter around the MCP solve
+**Verified by:** Task 8 (Reusable-Tooling Readiness Audit) — building on the Task-4 forcing survey
+**Date:** 2026-07-06
+**Findings:** The Task-4 `NONCONVEX_FORCING_SURVEY.md` §4 already defined the P8 scaffold's stable interface: a `--force <strategy>` emit mode (or driver template) that wraps `Solve mcp_model using MCP;` in one of {homotopy/continuation loop, multi-start `.l`-perturbation loop, emitted PATH `optfile`} + a **MODEL-STATUS reporter**. The **minimal stable hook** Sprint 31 inherits = the lever-injection point around the MCP solve + the status reporter; the **strategy is a parameter**, so the Sprint-31 PATH-consultation work (a `proximal_perturbation`/`merit_function` schedule via the emitted optfile) plugs into the *same* hook without reshaping it. Sprint 30 P8 builds + validates this scaffold on rocket (it *runs* the levers, per Task 4); Sprint 31 adds strategies. No new tooling audit gap — this is a design-forward confirmation that the P8 entry point is stable enough to hand off.
+**Evidence:** `NONCONVEX_FORCING_SURVEY.md` §4 (the P8 scaffold entry point + the Sprint-31 hand-off scope); `REPLAN_RISK_ASSESSMENT.md` Track B (rocket PROCEED-to-scaffold); `TOOLING_READINESS_AUDIT.md` (forcing-scaffold row).
+**Decision:** the scaffold interface (lever-injection hook + MODEL-STATUS reporter, strategy-as-parameter) is stable and documented for the Sprint-31 PATH-consultation inheritance; no rework expected. Feeds Task 10 (schedule the P8 scaffold build).
 
 ---
 
@@ -1077,7 +1089,12 @@ test -f scripts/sprint_audit/changed_emit_artifacts.py && echo "changed-artifact
 Development team (Tooling)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — `--resolve-changed` present on `main`, covers the Sprint-30 changed-golden set unchanged
+**Verified by:** Task 8 (Reusable-Tooling Readiness Audit)
+**Date:** 2026-07-06
+**Findings:** `run_full_test.py --resolve-changed --since-commit <SHA>` is present on `main` (Sprint-29 Priority 8). It defines `_GOLDEN_SUFFIXES = ("_mcp_presolve.gms", "_mcp.gms")` (longest-first) and `_changed_golden_model_ids(since_commit)` git-diffs `<SHA>..HEAD` for changed goldens of **either** suffix — so the changed-golden set surfaces **both** the Sprint-30 **widened-VARIABLE presolve** regen (hhfair `_mcp_presolve.gms`, P3) **and** the **head-offset cold** regen (mine/robert `_mcp.gms`, P1); `run_resolve_changed` re-solves each and diffs its bucket vs the committed DB, exiting **NO-GO** on any backward move. `changed_emit_artifacts.py --since-commit <Day-0 SHA> --format json/markdown` is the same at-risk list for the Day-5/Day-10 checkpoint. The PR25 re-baseline step applies unchanged to the genuine-floor-69 → ≥ 72 measurement (a post-methodology re-measure, tool-independent).
+**Evidence:** `scripts/gamslib/run_full_test.py:1043-1229` (`--resolve-changed`, `_GOLDEN_SUFFIXES`, `_changed_golden_model_ids`, `run_resolve_changed`); `scripts/sprint_audit/changed_emit_artifacts.py` present; `TOOLING_READINESS_AUDIT.md` Tool 3.
+**Decision:** reuse unchanged — no rebuild. The Task-2 baseline + the Day-5/Day-10 checkpoints inherit `--resolve-changed` directly; it covers both Sprint-30 golden kinds.
 
 ---
 

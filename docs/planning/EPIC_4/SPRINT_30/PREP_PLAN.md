@@ -646,7 +646,8 @@ grep -qE "191.7346" docs/planning/EPIC_4/SPRINT_30/CAMCGE_WALRAS_TRANSFORM_DESIG
 
 ## Task 8: Reusable-Tooling Readiness Audit for the Sprint-30 Model Classes
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-06
 **Priority:** Medium
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 30 Day 1
@@ -679,11 +680,15 @@ Sprint 30 reuses the Sprint-28/29 tooling rather than rebuilding it — but the 
 
 ### Changes
 
-To be completed.
+**COMPLETE (2026-07-06).** Authored `docs/planning/EPIC_4/SPRINT_30/TOOLING_READINESS_AUDIT.md` — per-tool readiness verdict for the Sprint-30 classes, from **actual read-only tool runs** (the harness on robert + mine, the crossterm-shapes pytest, the detector logic + allowlist review, the `--resolve-changed` surface). Updated KNOWN_UNKNOWNS Unknowns 1.4 (Task-8 tooling layer)/8.1/8.3/8.4 to VERIFIED + CHANGELOG Task-8 entry.
 
 ### Result
 
-To be completed.
+- **Harness (`kkt_residual.py`):** ran on robert + mine — **dual transfer CONSISTENT on both** (robert CASE_B `stat_x(high,3)` rel 7.20; mine CASE_B `stat_x(4,1,1)` rel 1.33). The harness handles the head-offset `nu_sb`/`lam_pr` multipliers with no mis-transfer. **Caveat (the Task-8 nuance):** the top per-row residual on base-normalized head-offset equations is a **same-index-transfer artifact** (robert's `stat_x` is the artifact; the operative bug is `stat_s`), so per-row *localization* is corroborated with the cold-solve control (Task 3's proven method). → **one OPTIONAL non-blocking ≤ 1 h extension** (head-label multiplier warm-start); not required.
+- **Divergence detector:** hard-fails on one of three embedded-NLP triggers — abort (`execerror`, korcge #1439), infeasible/non-optimal embedded NLP (camshape #1424), or no parseable objective (`emb_obj is None`) — and gates on the embedded NLP, never the MCP. So the **Class-B CGE `stat_pz`** (embedded optimal + objective present; MCP coefficient discrepancy) and the **cold-convex residue** (incl. rocket's MS-5 MCP) both **soft-classify** — no false hard-fail, no new allowlist entry.
+- **`--resolve-changed`:** present on `main`; `_GOLDEN_SUFFIXES = ("_mcp_presolve.gms", "_mcp.gms")` → covers **both** the widened-VARIABLE presolve regen (hhfair P3) **and** the head-offset cold golden (mine/robert P1). Allowlists current (golden-staleness 7, divergence 1 = korcge; **#1439 + #1461 both OPEN** → keep).
+- **Property catalog:** `pytest tests/integration/emit/test_ad_crossterm_shapes.py` = **7 passed, 1 xfailed** (shape8 xfail-strict #1143; shape7 passing). The head-domain-offset shape is the one genuinely-missing fixture (a clean one-file add for P8); shape8 flips to passing by dropping its xfail when the offset-alias fix lands.
+- **Gap list = one OPTIONAL ≤ 1 h harness extension (non-blocking); otherwise NONE.** Proceed to Day 1 on the existing tooling.
 
 ### Verification
 
@@ -710,13 +715,13 @@ grep -qiE "gap list|no extensions needed|Day-0 extension" docs/planning/EPIC_4/S
 
 ### Acceptance Criteria
 
-- [ ] TOOLING_READINESS_AUDIT.md created covering the four tools + `--resolve-changed`
-- [ ] KKT-residual harness dual-transfer validated on robert + mine (head-offset multipliers) — CONSISTENT or a scoped ≤1h extension
-- [ ] `--resolve-changed` confirmed to cover the widened-VARIABLE + head-offset goldens
-- [ ] Property-test catalog confirmed extensible to the new head-offset shape (existing `shape7`/`shape8` offset-alias fixtures noted; `shape8` xfail)
-- [ ] Allowlists confirmed current; divergence detector soft-classifies the Class-B/cold-convex residue
-- [ ] Gap list produced (each extension ≤ 1h) or "no extensions needed"
-- [ ] Unknowns 1.4, 8.1, 8.3, 8.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] TOOLING_READINESS_AUDIT.md created covering the four tools + `--resolve-changed`
+- [x] KKT-residual harness dual-transfer validated on robert + mine (head-offset multipliers) — CONSISTENT on both + a scoped OPTIONAL ≤1h extension for per-row localization
+- [x] `--resolve-changed` confirmed to cover the widened-VARIABLE + head-offset goldens (`_GOLDEN_SUFFIXES` = both suffixes)
+- [x] Property-test catalog confirmed extensible to the new head-offset shape (existing `shape7`/`shape8` offset-alias fixtures noted; `shape8` xfail-strict; run = 7 passed, 1 xfailed)
+- [x] Allowlists confirmed current (7 + 1, #1439/#1461 open); divergence detector soft-classifies the Class-B/cold-convex residue
+- [x] Gap list produced (one OPTIONAL ≤1h harness extension, non-blocking; otherwise none)
+- [x] Unknowns 1.4, 8.1, 8.3, 8.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
