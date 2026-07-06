@@ -13,8 +13,8 @@
 
 - **Grounding refinement (this task): camcge has NO `cpi` variable, and `er` is a fixed `Scalar` (= 0.21), not a free numéraire.** The scoping doc's canonical "fix-`cpi=1`" is a *generic placeholder* (its §3 itself says "e.g. a consumer price index `cpi = 1`, or a chosen good's price"). For camcge concretely, the numéraire must be instantiated on an **existing** variable: a **base-consumption-weighted composite-price index** pinned to its calibrated level — `sum(i$cles(i), cles(i)*p(i)) =e= sum(i$cles(i), cles(i)*pd0(i))` — which *is* a CPI = 1 normalization (the prices calibrate to `p.l(i)=pd0(i)`), reconciling the scoping doc with the model. This is the single most important input the empirical P6 Day-0 run needs.
 - **Detection heuristic (Q2):** a **market-clearing-block rank check** (the primary signal) corroborated by the **MS-4-at-iteration-0 / PATH basis-singularity** signature, gated by a **structural precondition** (≥ 2 market-clearing rows + an aggregate budget-balance identity + price homogeneity). The **false-positive guard is the correctness gate**: default = **pass through untouched**; transform **only** when *all three* fire — so a well-posed CGE that already fixes a numéraire (full-rank market-clearing block) is never touched.
-- **Selection rule (Q3):** drop the **labor-market row `lmequil(lc)`** (the smaller block; Walras-redundant) + add the consumption-weighted numéraire above. Per-model, because *which* row is redundant and *which* price is the natural numéraire depend on the model's closure — so the rule ships with a **per-model declaration fallback** (opt-in), acceptable because camcge is the corpus's **sole** inherent Walras case.
-- **Empirical confirmation (Q1 → P6 Day-0):** the drop-`lmequil` + fix-the-numéraire GAMS run must reach **MODEL STATUS 1 at omega 191.7346** with a non-singular PATH basis; the cohort-generality check confirms camcge is the only model flagged.
+- **Selection rule (Q3):** drop **exactly one** market-clearing row *instance* — a single `lmequil(lc_drop)` for a chosen labor category (Walras' law ⇒ rank deficiency **exactly 1**, so drop one *row*, **not** the whole `lc` family — the other `lmequil` instances and every `equil(i)` stay enforced) + add the consumption-weighted numéraire above. Per-model, because *which* instance is dropped and *which* price is the natural numéraire depend on the model's closure — so the rule ships with a **per-model declaration fallback** (opt-in), acceptable because camcge is the corpus's **sole** inherent Walras case.
+- **Empirical confirmation (Q1 → P6 Day-0):** the drop-one-`lmequil(lc_drop)`-instance + fix-the-numéraire GAMS run must reach **MODEL STATUS 1 at omega 191.7346** with a non-singular PATH basis; the cohort-generality check confirms camcge is the only model flagged.
 
 ---
 
@@ -25,7 +25,7 @@
 | Structural element | camcge form (`file` evidence) | role in the degeneracy |
 |---|---|---|
 | **Goods-market clearing** | `equil(i).. x(i) =e= int(i) + cd(i) + gd(i) + id(i) + dst(i);` (over sectors `i`) | one of the two market-clearing blocks |
-| **Labor-market clearing** | `lmequil(lc).. sum(i, l(i,lc)) =e= ls(lc);` (over labor categories `lc`) | the **redundant** row (Walras) — the drop candidate |
+| **Labor-market clearing** | `lmequil(lc).. sum(i, l(i,lc)) =e= ls(lc);` (an indexed family, one row per labor category `lc`) | the drop candidate — **one** instance `lmequil(lc_drop)` is Walras-redundant (rank deficiency 1); drop that single row, **not** the whole `lc` family |
 | **Budget balance / income** | `y`, `hhsaveq.. hhsav =e= mps*y`, `totsav`, `greq`, `caeq` (the SAM income/savings identities) | the identity that makes one market-clearing row linearly dependent |
 | **Consumption behavior** | `cdeq(i).. p(i)*cd(i) =e= cles(i)*(1 - mps)*y;` | Cobb-Douglas; ties `cd(i)` to the composite price `p(i)` and income `y` |
 | **Objective (welfare)** | `obj.. omega =e= prod(i$cles(i), cd(i)**cles(i));` | Cobb-Douglas welfare index over `cd(i)`, weights `cles(i)` |
@@ -71,9 +71,9 @@ else:
 
 ### 3.1 Redundant-row drop
 
-**Rule:** drop **one** market-clearing row. For camcge, drop the **labor-market row `lmequil(lc)`** (the smaller block — `|lc|` labor categories vs `|i|` sectors — minimizing the perturbation surface). By Walras' law it is linearly dependent on the remaining goods-market rows + the budget identities, so it carries no independent information; the labor market clears automatically at the solution.
+**Rule:** drop **exactly one market-clearing row *instance*** — Walras' law gives the combined market-clearing block (`equil(i)` ∪ `lmequil(lc)`) a rank deficiency of **exactly 1**, so removing a **single** row removes the redundancy. `lmequil(lc)` is an **indexed equation family** (one row per labor category `lc`; camcge's emitted `lmequil` has `|lc|` = 3 instances), so the transform drops **one instance** `lmequil(lc_drop)` for a chosen `lc_drop` and keeps **all** the other market-clearing rows enforced (the remaining `lmequil(lc≠lc_drop)` **and** every `equil(i)`). Dropping the whole `lmequil` family would over-remove `|lc|−1` *independent* labor-market conditions and would **not** be solution-preserving. By Walras' law the single dropped market clears automatically at the solution, so it carries no independent information. (The choice of *which* instance is, by Walras, arbitrary — any single market-clearing row works; a labor-market instance is a natural pick, a per-model choice, §3.3.)
 
-**Solution-preservation (paper).** Let the goods rows be `g_i(x)=0`, the labor row `h(x)=0`, and budget balance `B(x,p)=0`. Walras' law: `∑_i p_i·g_i + ∑_lc wa_lc·h_lc ≡ B` identically. Given `B=0` and all `g_i=0`, `h=0` follows (when `wa ≠ 0`). Dropping `h` (`lmequil`) loses **no** equilibrium constraint — the reduced system has the **same solution set** minus the rank-deficiency.
+**Solution-preservation (paper).** Let the market-clearing rows (all goods + labor instances) be `{g_k(x) = 0}` and budget balance `B(x,p) = 0`. Walras' law: `∑_k π_k·g_k ≡ B` identically (each row weighted by its price/wage `π_k`). Given `B = 0` and **all-but-one** `g_k = 0` (`k ≠ k_drop`), the remaining row `g_{k_drop} = 0` follows (when its weight `π_{k_drop} ≠ 0`). So dropping exactly **one** instance `g_{k_drop}` (here a single `lmequil(lc_drop)`) loses **no** equilibrium constraint — the reduced system has the **same solution set** with the rank-deficiency removed. Dropping more than one row would break this (the second-dropped row is **not** implied by the rest).
 
 ### 3.2 Numéraire fix — the camcge-concrete instantiation
 
@@ -92,7 +92,7 @@ where `cles(i)` are the consumption shares (the same weights as the `omega` obje
 ### 3.3 Selection is per-model (Unknown 6.3) → the declaration fallback
 
 *Which* row is redundant and *which* price is the numéraire depend on the model's closure + SAM. The general *argument* (Walras redundancy + homogeneity) is generic, but the *instantiation* is per-model. So the rule ships two tiers:
-1. **Automatic (stretch):** the detection heuristic (§2) picks the factor-market row (`lmequil`) to drop + the consumption-weighted index to fix, from the structural signature.
+1. **Automatic (stretch):** the detection heuristic (§2) picks a single factor-market instance (`lmequil(lc_drop)`) to drop + the consumption-weighted index to fix, from the structural signature.
 2. **Per-model declaration (fallback, opt-in):** the model author (or a camcge-specific entry) declares the drop-row + numéraire. **Acceptable because camcge is the sole inherent case** (§4) — a single declaration lands the +1 Solve without a general auto-detector. This is the Task-6 REPLAN target if the automatic heuristic proves unreliable.
 
 ---
@@ -104,7 +104,7 @@ where `cles(i)` are the consumption shares (the same weights as the `omega` obje
 ```bash
 # 1. Emit camcge MCP (warm-started), then hand-apply the transform on a /tmp copy:
 .venv/bin/python -m src.cli data/gamslib/raw/camcge.gms --nlp-presolve -o /tmp/camcge_ps.gms
-#    - delete/comment the lmequil(lc) market-clearing row + its paired multiplier/comp row
+#    - delete/comment ONE lmequil(lc_drop) instance (a single labor category, e.g. lc_drop = the first lc) + its paired multiplier/comp row — NOT the whole lmequil(lc) family (rank deficiency is exactly 1)
 #    - add:  numeraire.. sum(i$cles(i), cles(i)*p(i)) =e= sum(i$cles(i), cles(i)*pd0(i));  (+ its multiplier)
 # 2. Solve cold from repo root (the emit's $include is repo-relative):
 cd <repo> && gams /tmp/camcge_ps.gms lo=2
@@ -146,7 +146,7 @@ This is the **false-positive validation** (§2): the four cohort models are know
 |---|---|
 | **Q1 — numéraire-selection rule** | A **base-consumption-weighted composite-price index** pinned to its calibrated level (§3.2), instantiated on camcge's existing `p(i)`/`pd0(i)` (no `cpi` variable exists); a single good's price `p('numéraire-good')=pd0` as fallback. Automatic tier + per-model declaration tier (§3.3). |
 | **Q2 — degeneracy detection w/o false positives** | The **S1 rank ∧ S2 singular-solve-signature ∧ S3 CGE-structure** conjunction with a **pass-through default** (§2); the residual-clean sub-check separates structural singularity from an emit bug; conservative (never false-positive). |
-| **Q3 — empirical confirmation** | The P6 Day-0 GAMS run (drop-`lmequil` + fix the numéraire → **MS 1 at 191.7346**, non-singular basis, §4.1). |
+| **Q3 — empirical confirmation** | The P6 Day-0 GAMS run (drop one `lmequil(lc_drop)` instance + fix the numéraire → **MS 1 at 191.7346**, non-singular basis, §4.1). |
 | **Q4 — cohort generality** | The §4.2 heuristic sweep over camcge + irscge/lrgcge/moncge/stdcge; expected **camcge sole** flagged (false-positive validation). |
 | **Q5 — CES conditioning (#1070 family)** | Out of this transform's scope — prolog matches (Case-a healthy); a *related* scaling/bound-init observation, not the Walras redundancy. Left as a separate Epic-5 sub-topic. |
 
