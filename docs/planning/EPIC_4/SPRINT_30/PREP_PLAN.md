@@ -818,7 +818,7 @@ Produce the detailed 14-day Sprint 30 schedule (Day 0 setup + Days 1–13 execut
 
 ### Why This Matters
 
-This is the terminal task — the schedule is only trustworthy once the deep-track designs (Task 3 head-offset, Task 4 forcing, Task 7 camcge) and the REPLAN assessment (Task 6) are done, because they size the REPLAN-prone priorities and set the fallback ordering. The schedule must front-load the hardest track (P1 head-offset architecture, with robert first as the minimal reproduction), embed the Day-5/Day-10 checkpoint re-solve (the Sprint-29 `--resolve-changed` gate), and place the REPLAN decision points (mine generalization, rocket forcing, camcge empirical) where the Task-6 assessment says.
+This is the terminal task — the schedule is only trustworthy once the deep-track designs (Task 3 head-offset, Task 4 forcing, Task 7 camcge) and the REPLAN assessment (Task 6) are done, because they size the REPLAN-prone priorities and set the fallback ordering. The schedule must front-load P1 — **but per the Task-3 correction (Unknown 1.1 returned ❌ WRONG: robert does NOT generalize to mine), P1 splits into two independent tracks**: **P1a robert**, a *decoupled* objective-gradient boundary-term genuine-floor fix (early, standalone, no REPLAN branch), and **P1b mine**, the REPLAN-prone head-offset architecture (mid-sprint). It must also embed the Day-5/Day-10 checkpoint re-solve (the Sprint-29 `--resolve-changed` gate), and place the REPLAN decision points (mine head-offset architecture, rocket forcing, camcge empirical) where the Task-6 assessment says.
 
 ### Background
 
@@ -828,9 +828,9 @@ This is the terminal task — the schedule is only trustworthy once the deep-tra
 
 ### What Needs to Be Done
 
-1. **Sequence the 8 priorities across Days 1–13** — front-load P1 (head-offset architecture: robert minimal reproduction first, then mine generalization), interleave P2 (rocket forcing) and P3 (hhfair `$184`) early (both feed the Solve target), place P4/P5/P7 (banked cross-terms) mid-sprint, P6 (camcge Epic-5) and P8 (infrastructure) as they fit; respect ≤ 12h/day.
+1. **Sequence the 8 priorities across Days 1–13** — front-load P1 per the **Task-3 split** (Unknown 1.1 refuted — robert does NOT generalize to mine): **P1a robert** (a decoupled objective-gradient genuine-floor fix) first, then **P1b mine** (the head-offset architecture) mid-sprint; interleave P2 (rocket forcing) and P3 (hhfair `$184`) early (both feed the Solve target), place P4/P5/P7 (banked cross-terms) mid-sprint, P6 (camcge Epic-5) and P8 (infrastructure) as they fit; respect ≤ 12h/day.
 2. **Embed the checkpoint re-solve** at Day 5 + Day 10 using the Sprint-29 `--resolve-changed` gate (so a broken solve surfaces mid-sprint) + the PR25 re-baseline recompute.
-3. **Place the REPLAN decision points** (mine-generalization Day ~6–7, rocket-forcing Day ~2–3, camcge-empirical Day ~11) per the Task-6 assessment, each with the fallback the assessment specifies.
+3. **Place the REPLAN decision points** (mine head-offset architecture Day ~6–7, rocket-forcing Day ~2–3, camcge-empirical Day ~11) per the Task-6 assessment, each with the fallback the assessment specifies.
 4. **Write the day-by-day execution prompts** (`prompts/PLAN_PROMPTS.md`) — one per day, each self-contained with objectives / branch / Phase-0 gate / quality gate / PR + wait-for-review.
 
 ### Changes
