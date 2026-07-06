@@ -804,7 +804,8 @@ grep -qiE "property.test|fixture|test_ad_crossterm_shapes" docs/planning/EPIC_4/
 
 ## Task 10: Plan Sprint 30 Detailed Schedule
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-06
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 30 Day 1
@@ -834,11 +835,15 @@ This is the terminal task — the schedule is only trustworthy once the deep-tra
 
 ### Changes
 
-To be completed.
+**COMPLETE (2026-07-06).** Authored `docs/planning/EPIC_4/SPRINT_30/PLAN.md` (Day 0 + Days 1–13 schedule, §1–§19) + `docs/planning/EPIC_4/SPRINT_30/prompts/PLAN_PROMPTS.md` (14 self-contained day prompts). Updated KNOWN_UNKNOWNS §"Next Steps" → prep phase COMPLETE + GO for Day 0; updated the §Summary Prep-Task→Deliverable Map statuses to ✅ + added the prep-phase-COMPLETE line; CHANGELOG Task-10 entry + Sprint-30-prep-COMPLETE note.
 
 ### Result
 
-To be completed.
+- **Schedule** (`PLAN.md`): Day 0 traces → **Day 1 P1a robert** (the decoupled, firm objective-gradient genuine-floor +1) → **Days 2–3 P2 rocket** forcing scaffold + REPLAN decision → **Day 4 P3 hhfair** `$184` → **Day 5 Checkpoint 1 + P7 Class-B** start → **Days 6–7 P1b mine** head-offset architecture (REPLAN-gated) → **Day 8 P5 offset-alias** → **Days 9–10 P4 #1385 sarf** + Checkpoint 2 → **Day 11 P6 camcge** Walras (REPLAN-gated) → **Day 12 P7/P8** + REPLAN-slack → **Day 13** final retest + closeout. **~110 h** mid-estimate, **no day > 12 h** (heaviest ~7 h/day in the Days 6–7 mine block); fits the 168 h cap with ≥ 58 h slack.
+- **Absorbs the Task-3 P1 split (INVERTED Unknown 1.1):** robert is scheduled Day 1 as a *decoupled* objective-gradient fix (not the head-offset cross-term); the head-offset architecture is mine-only (Days 6–7).
+- **Three REPLAN decision points** placed per the Task-6 assessment, each with its firm part + Sprint-31 exit: rocket (Day ~2–3, +1 Solve → Sprint-31 PATH consultation, scaffold firm), mine (Day ~6–7, → Sprint-31 head-offset architecture, robert firm), camcge (Day ~11, → per-model-numéraire declaration, Class-B firm).
+- **Checkpoints** at Day 5 + Day 10 (`--resolve-changed` + PR25 re-baseline); Day 13 full 3× `PYTHONHASHSEED` retest.
+- **Honest projection:** Solve ≥ 109 (mine + rocket) is the most REPLAN-sensitive KPI; the genuine-floor lift (≥ 72) is robust even under a triple-REPLAN.
 
 ### Verification
 
@@ -865,12 +870,12 @@ grep -iE "12h|≤ 12|hours/day" docs/planning/EPIC_4/SPRINT_30/PLAN.md | head
 
 ### Acceptance Criteria
 
-- [ ] PLAN.md created covering Day 0 + Days 1–13
-- [ ] The 8 priorities sequenced with P1 front-loaded (robert minimal reproduction first)
-- [ ] The Day-5/Day-10 checkpoint re-solve (`--resolve-changed`) + PR25 re-baseline embedded
-- [ ] The three REPLAN decision points placed per the Task-6 assessment with fallbacks
-- [ ] PLAN_PROMPTS.md created with one self-contained prompt per day
-- [ ] ≤ 12h/day budget respected (no day exceeds 12h; < 168h total)
+- [x] PLAN.md created covering Day 0 + Days 1–13
+- [x] The 8 priorities sequenced with P1 front-loaded (robert Day 1 — the decoupled objective-gradient genuine-floor half of the Task-3 split)
+- [x] The Day-5/Day-10 checkpoint re-solve (`--resolve-changed`) + PR25 re-baseline embedded
+- [x] The three REPLAN decision points placed per the Task-6 assessment with fallbacks
+- [x] PLAN_PROMPTS.md created with one self-contained prompt per day (14: Day 0–13)
+- [x] ≤ 12h/day budget respected (no day exceeds 12h; ~110 h total < 168 h)
 
 ---
 
@@ -882,17 +887,19 @@ grep -iE "12h|≤ 12|hours/day" docs/planning/EPIC_4/SPRINT_30/PLAN.md | head
 |---|------|-------------|--------|
 | — | PROJECT_PLAN Sprint 30 insertion | `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 30" | ✅ (PR #1489) |
 | 1 | Known Unknowns List | `docs/planning/EPIC_4/SPRINT_30/KNOWN_UNKNOWNS.md` | ✅ |
-| 2 | Day-0 Baseline + Genuine-Floor Re-Baseline | `docs/planning/EPIC_4/SPRINT_30/BASELINE_METRICS.md` | 🔵 |
-| 3 | Head-Offset Architecture Design + robert Minimal Reproduction | `docs/planning/EPIC_4/SPRINT_30/HEAD_OFFSET_ARCHITECTURE_DESIGN.md` | 🔵 |
-| 4 | Non-Convex Forcing Strategy Survey | `docs/planning/EPIC_4/SPRINT_30/NONCONVEX_FORCING_SURVEY.md` | 🔵 |
-| 5 | Refresh + Author Phase 0 Acceptance Gates | `docs/issues/ISSUE_*.md` Phase-0 sections (refreshed) + robert + Class-B gates | 🔵 |
-| 6 | REPLAN Risk Assessment | `docs/planning/EPIC_4/SPRINT_30/REPLAN_RISK_ASSESSMENT.md` | 🔵 |
-| 7 | camcge → Epic 5 Walras Transformation Design | `docs/planning/EPIC_4/SPRINT_30/CAMCGE_WALRAS_TRANSFORM_DESIGN.md` | 🔵 |
-| 8 | Reusable-Tooling Readiness Audit | `docs/planning/EPIC_4/SPRINT_30/TOOLING_READINESS_AUDIT.md` | 🔵 |
-| 9 | Backlog Fix-Surface Analysis | `docs/planning/EPIC_4/SPRINT_30/BACKLOG_FIX_SURFACE_ANALYSIS.md` | 🔵 |
-| 10 | Sprint 30 Detailed Schedule | `docs/planning/EPIC_4/SPRINT_30/PLAN.md` + `prompts/PLAN_PROMPTS.md` | 🔵 |
+| 2 | Day-0 Baseline + Genuine-Floor Re-Baseline | `docs/planning/EPIC_4/SPRINT_30/BASELINE_METRICS.md` | ✅ |
+| 3 | Head-Offset Architecture Design + robert Minimal Reproduction | `docs/planning/EPIC_4/SPRINT_30/HEAD_OFFSET_ARCHITECTURE_DESIGN.md` | ✅ |
+| 4 | Non-Convex Forcing Strategy Survey | `docs/planning/EPIC_4/SPRINT_30/NONCONVEX_FORCING_SURVEY.md` | ✅ |
+| 5 | Refresh + Author Phase 0 Acceptance Gates | `docs/issues/ISSUE_*.md` Phase-0 sections (refreshed) + robert + Class-B gates | ✅ |
+| 6 | REPLAN Risk Assessment | `docs/planning/EPIC_4/SPRINT_30/REPLAN_RISK_ASSESSMENT.md` | ✅ |
+| 7 | camcge → Epic 5 Walras Transformation Design | `docs/planning/EPIC_4/SPRINT_30/CAMCGE_WALRAS_TRANSFORM_DESIGN.md` | ✅ |
+| 8 | Reusable-Tooling Readiness Audit | `docs/planning/EPIC_4/SPRINT_30/TOOLING_READINESS_AUDIT.md` | ✅ |
+| 9 | Backlog Fix-Surface Analysis | `docs/planning/EPIC_4/SPRINT_30/BACKLOG_FIX_SURFACE_ANALYSIS.md` | ✅ |
+| 10 | Sprint 30 Detailed Schedule | `docs/planning/EPIC_4/SPRINT_30/PLAN.md` + `prompts/PLAN_PROMPTS.md` | ✅ |
 
 **Total prep effort ≈ 34–48 h** (~4.5–6 working days).
+
+**✅ Sprint 30 prep phase COMPLETE (Tasks 1–10, 2026-07-06).** All 10 prep tasks landed; all 25 Known Unknowns VERIFIED (3 INVERTED/WRONG, absorbed by the schedule); the 14-day PLAN + day-by-day prompts are authored. **Sprint 30 is GO for Day 0.**
 
 ### Verification
 
