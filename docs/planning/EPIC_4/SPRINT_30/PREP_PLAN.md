@@ -917,14 +917,14 @@ for d in HEAD_OFFSET_ARCHITECTURE_DESIGN NONCONVEX_FORCING_SURVEY CAMCGE_WALRAS_
 grep -Ei 'Day [0-9]' docs/planning/EPIC_4/SPRINT_30/PLAN.md | head -20
 ```
 
-**When all critical items checked: Sprint 30 ready to begin.**
+**✅ All critical items checked — Sprint 30 is ready to begin (GO for Day 0).**
 
 ### Success Criteria
 
 This prep plan succeeds if Sprint 30 starts with:
 
 1. **No banked diagnosis taken as fact** — every carryforward fix surface is re-framed as a Day-0 `kkt_residual.py` hypothesis (PR24), so the Sprint-29 hhfair `$141`→`$184` correction cannot recur silently.
-2. **A de-risked hardest track** — the head-offset architecture has a concrete index-map design with **robert as the minimal reproduction** (Task 3), so P1 is "one fix, two models" or a known robert-then-mine split, not a mid-sprint discovery.
+2. **A de-risked, correctly-scoped hardest track** — Task 3 established that **P1 splits** (Unknown 1.1 returned WRONG: robert does NOT generalize to mine): **robert** is a *decoupled* objective-gradient boundary-term genuine-floor fix, and **mine** is the head-offset architecture (a concrete 3-site index-map design). The split is known up front, not a mid-sprint discovery.
 3. **A chosen forcing lever, not an improvisation** — the non-convex forcing survey (Task 4) picks rocket's lever and sets the nlp2mcp/PATH boundary before implementation.
 4. **Planned REPLANs, not surprises** — the three diagnosis-heavy tracks (#1443 multi-site, #1462 forcing, #1330 Epic-5) have explicit PROCEED/REPLAN signals + Sprint 31 exits + budget reallocation (Task 6), with the firm parts (robert / scaffold / Class-B fix) landing regardless.
 5. **An implementable Epic-5 transformation** — the camcge Walras design (Task 7) answers the three `CGE_DEGENERACY_SCOPING.md` §5 open questions (detection heuristic, numéraire selection, empirical confirmation) so P6 is an implementation, not a spike.
@@ -932,7 +932,7 @@ This prep plan succeeds if Sprint 30 starts with:
 7. **Reused, not rebuilt, tooling** — the Sprint-29 KKT-residual harness, divergence detector, golden-staleness gate, and `--resolve-changed` checkpoint re-solve are audited ready for the new model classes (Task 8).
 
 **Estimated prep investment:** 4.5–6 days
-**Expected benefit:** de-risks the multi-site head-offset architecture (the deepest carryforward) via the robert minimal reproduction, picks a forcing lever for rocket before implementation, turns the paper-verified Walras transformation into an implementable design, and keeps the headline Match honestly attributable — so Sprint 30 spends its budget landing the Sprint-29 REPLAN'd carryforwards rather than re-diagnosing them.
+**Expected benefit:** correctly scopes the multi-site head-offset architecture (the deepest carryforward — mine-only after the Task-3 P1 split, with robert decoupled as a standalone objective-gradient genuine-floor fix), picks a forcing lever for rocket before implementation, turns the paper-verified Walras transformation into an implementable design, and keeps the headline Match honestly attributable — so Sprint 30 spends its budget landing the Sprint-29 REPLAN'd carryforwards rather than re-diagnosing them.
 
 ---
 
