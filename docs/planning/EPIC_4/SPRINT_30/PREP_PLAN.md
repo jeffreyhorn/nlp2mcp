@@ -407,9 +407,10 @@ grep -qi "rocket" docs/planning/EPIC_4/SPRINT_30/NONCONVEX_FORCING_SURVEY.md && 
 
 ## Task 5: Refresh + Author Phase 0 Acceptance Gates for the Sprint-30 Tracks (PR20 + PR24 + PR27)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
-**Estimated Time:** 4–6 hours
+**Estimated Time:** 4–6 hours (actual: ~4h)
+**Completed:** 2026-07-05
 **Deadline:** Before Sprint 30 Day 1
 **Owner:** Development team (AD/KKT specialist)
 **Dependencies:** Tasks 1, 3
@@ -440,11 +441,11 @@ The Phase-0 gate is the scope-correctness mechanism (PR20/PR24): hand-derived KK
 
 ### Changes
 
-To be completed.
+Added a dated 🔄 Sprint-30 refresh note to the `## Phase 0: Acceptance Gate` of `docs/issues/ISSUE_{1443,1462,1236,1385,1146,1143,1330}_*.md`; authored two new gates — `docs/issues/ISSUE_robert_objgrad_boundary_term.md` and `docs/issues/ISSUE_classB_cge_stat_pz.md` (each 4 subsections). Updated `KNOWN_UNKNOWNS.md` Unknowns 1.2/1.3/2.2 (Task-5 refresh note) + 3.1/3.2/4.1/5.2/6.1/7.1/7.3 (VERIFIED). CHANGELOG entry.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-05).** Refreshed the 7 existing gates to the Sprint-30 dispositions and authored the 2 new gates. Key refreshes: **#1443** now mine-**only** and flags the Day-12 robert note as **REFUTED** (robert → the new objective-gradient gate; P1 splits into two tracks); **#1462** records "no PATH-option configuration forces rocket → P8 scaffold + Sprint-31 PATH consultation, +1 Solve deferred"; **#1236** corrected to the `$184` widened-VARIABLE blocker (not `$141`); **#1385** to the atomic sarf runtime-guard re-emit; **#1146/#1143** to the coordinated offset-alias fix + the #1111/#1112 architectural-REPLAN boundary; **#1330** to the Epic-5 Walras transformation. New gates: **robert** (objective-gradient boundary-term, PROCEED, decoupled) and **Class-B CGE `stat_pz`** (general-emit coefficient discrepancy, PROCEED-conditional, NOT Walras). All 9 gates cite `kkt_residual.py`; REPLAN-prone gates (P1/P2/P5/P6) carry an explicit Sprint-31 exit. 10 Unknowns VERIFIED.
 
 ### Verification
 
@@ -474,13 +475,13 @@ for f in 1443 1462 1236 1385 1146 1143 1330; do grep -lE 'kkt_residual\.py' docs
 
 ### Acceptance Criteria
 
-- [ ] The seven existing gates refreshed to the Sprint-30 dispositions (mine+robert, rocket-forcing, hhfair-`$184`, #1385-banked, offset-alias-coupled, camcge-Walras)
-- [ ] A robert gate authored (the P1 minimal reproduction)
-- [ ] A Class-B CGE `stat_pz` gate authored (the P7 general-emit backlog)
-- [ ] hhfair gate corrected to the `$184` widened-VARIABLE blocker (not `$141`-only)
-- [ ] Every gate frames its fix-surface as a Day-0 hypothesis (PR24) + cites `kkt_residual.py` (PR27)
-- [ ] REPLAN-prone gates (P1/P2/P5/P6) have an explicit Sprint-31 exit
-- [ ] Unknowns 1.2, 1.3, 2.2, 3.1, 3.2, 4.1, 5.2, 6.1, 7.1, 7.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The seven existing gates refreshed to the Sprint-30 dispositions (mine [robert refuted], rocket-forcing, hhfair-`$184`, #1385-banked, offset-alias-coupled, camcge-Walras)
+- [x] A robert gate authored (`ISSUE_robert_objgrad_boundary_term.md` — the objective-gradient bug, not the head-offset; a separate track)
+- [x] A Class-B CGE `stat_pz` gate authored (`ISSUE_classB_cge_stat_pz.md` — the P7 general-emit backlog)
+- [x] hhfair gate corrected to the `$184` widened-VARIABLE blocker (not `$141`-only)
+- [x] Every gate frames its fix-surface as a Day-0 hypothesis (PR24) + cites `kkt_residual.py` (PR27)
+- [x] REPLAN-prone gates (P1/P2/P5/P6) have an explicit Sprint-31 exit
+- [x] Unknowns 1.2, 1.3, 2.2, 3.1, 3.2, 4.1, 5.2, 6.1, 7.1, 7.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
