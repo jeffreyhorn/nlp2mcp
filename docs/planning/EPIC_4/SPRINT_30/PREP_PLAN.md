@@ -598,7 +598,7 @@ The Sprint-29 Epic-5 scoping doc proved the transformation (drop one redundant m
 
 1. **Design the degeneracy-detection heuristic** — a rank check on the market-clearing block, or the PATH basis-singularity report, or a model-structure signature; specify the false-positive guard (a well-posed model must be left untouched) and how the layer decides to transform vs pass through.
 2. **Design the redundant-row + numéraire selection** — the rule for choosing which market-clearing row to drop and which price to fix (a SAM-largest-sector rule, a CPI aggregate, or a per-model declaration); verify it reproduces camcge's 191.7346 on paper.
-3. **Scope the empirical-confirmation experiment** — the Day-0 GAMS run (drop-`lmequil` + fix-`cpi=1` → MS 1 at 191.7346) that Priority 6 runs first, and the cohort-generality check (does any *other* corpus model need the transformation, or is camcge the sole inherent case?).
+3. **Scope the empirical-confirmation experiment** — the Day-0 GAMS run (drop-`lmequil` + fix the concrete consumption-weighted numéraire `sum(i$cles(i), cles(i)*p(i)) =e= sum(i$cles(i), cles(i)*pd0(i))` — "`cpi=1`" is generic shorthand; camcge has no literal `cpi` — → MS 1 at 191.7346) that Priority 6 runs first, and the cohort-generality check (does any *other* corpus model need the transformation, or is camcge the sole inherent case?).
 4. **Record the nlp2mcp/Epic-5 boundary** — the transformation is CGE-domain preprocessing (Epic 5), invoked only for detected-degenerate models; the general-emit fixes (Class-B `stat_pz`, empty-equation multipliers) stay in nlp2mcp (P7).
 
 ### Changes

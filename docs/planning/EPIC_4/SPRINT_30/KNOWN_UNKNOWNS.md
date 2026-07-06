@@ -699,8 +699,10 @@ Development team (AD specialist)
 ### Priority
 **Critical** — the transformation is proven on paper only (`CGE_DEGENERACY_SCOPING.md` §3); if the empirical GAMS run does not reach MS 1 at the NLP optimum, the Epic-5 P6 premise is invalid.
 
+> **Shorthand note (governs all of Category 6):** "`cpi=1`" is a **generic placeholder** for a fixed price numéraire — **camcge has no literal `cpi` variable** (Task 7 grounding). The concrete camcge instantiation is a base-consumption-weighted composite-price index on the existing `p(i)`/`pd0(i)`: `sum(i$cles(i), cles(i)*p(i)) =e= sum(i$cles(i), cles(i)*pd0(i))` (`CAMCGE_WALRAS_TRANSFORM_DESIGN.md` §3.2). Read every "fix-`cpi=1`" below as this concrete numéraire.
+
 ### Assumption
-The Walras transformation (drop one redundant market-clearing row `lmequil` + fix a price numéraire `cpi=1`) empirically drives camcge's MCP to MODEL STATUS 1 at the NLP optimum 191.7346 — reproducing the paper-verified solution-preservation argument in a real GAMS solve.
+The Walras transformation (drop one redundant market-clearing row `lmequil` + fix a price numéraire — `cpi=1` shorthand, see the note above) empirically drives camcge's MCP to MODEL STATUS 1 at the NLP optimum 191.7346 — reproducing the paper-verified solution-preservation argument in a real GAMS solve.
 
 ### Research Questions
 1. Does the drop-`lmequil` + fix-`cpi=1` MCP reach MS 1 (not MS 4-at-iteration-0, the current structural-singularity signature)?
