@@ -17,7 +17,7 @@ A cluster of CGE models — **irscge, lrgcge, moncge** (`stat_pz` rel ≈ 1.0), 
 For the standard CGE closure, the output-price variable `pz(j)` is defined by a zero-profit / price row `eqpzs(j)` (activity price = unit cost). `pz(j)` appears in `eqpzs(j)` (coefficient depending on the value-added / intermediate structure) and in the market-clearing / income rows. Its stationarity:
 
 ```
-stat_pz(j)..  ( Σ_over-rows-containing-pz(j)  COEFF · nu_<row> )  − piL_pz(j)  =E= 0
+stat_pz(j)..  ( Σ_over-rows-containing-pz(j)  COEFF · nu_<row> )  - piL_pz(j)  =E= 0
 ```
 
 A residual of exactly **1.0** (irscge/lrgcge/moncge) is the fingerprint of a **missing unit-coefficient factor or a mis-scaled `COEFF`** on one of the `pz(j)` cross-terms — the terms are structurally present (dual-transfer CONSISTENT), so the discrepancy is in the *coefficient*, not a dropped multiplier. (`stdcge` `stat_epsilon` 2.0 and `marco` `stat_w` 3.3 are adjacent per-variable variants.)

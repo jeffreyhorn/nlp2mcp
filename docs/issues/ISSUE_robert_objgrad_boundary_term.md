@@ -19,8 +19,8 @@ robert (Elementary Production and Inventory, an LP — convex) matches its NLP o
 robert's objective (maximize `profit`) is `pd.. profit =e= sum(t, sum(p, c(p,t)*x(p,t)) − sum(r, misc("storage-c",r)*s(r,t))) + sum(r, misc("res-value",r)*s(r,"4"))`, where `t` (short horizon {1,2,3}) is a subset of `tt` ({1..4}). `s(r,tt)` appears in the objective (storage-c for `tt∈t`; **res-value at `tt="4"`**) and in the base-normalized `sb(r,tt)` (∂ = −1) and `sb(r,tt-1)` (∂ = +1). The correct stationarity of `−profit`:
 
 ```
-stat_s(r,tt)..  ( storage-c(r)$(t(tt)) − res-value(r)$(ord(tt)=card(tt)) )  * objective gradient
-                − nu_sb(r,tt) + nu_sb(r,tt-1)$(ord(tt)>1) − piL_s(r,tt)  =E= 0
+stat_s(r,tt)..  ( misc("storage-c",r)$(t(tt)) - misc("res-value",r)$(ord(tt)=card(tt)) )  * objective gradient
+                - nu_sb(r,tt) + nu_sb(r,tt-1)$(ord(tt)>1) - piL_s(r,tt)  =E= 0
 ```
 
 The `nu_sb` difference part (`− nu_sb(r,tt) + nu_sb(r,tt-1)`) is correct in the current emit. The **objective-gradient part is wrong**: the emit applies `misc("storage-c",r)` for **all** `tt` (no `$(t(tt))` guard) and **drops** the `res-value(r)·s(r,"4")` boundary term — so at `tt=4` it emits `+storage-c(r)` where the KKT needs `−res-value(r)`.
