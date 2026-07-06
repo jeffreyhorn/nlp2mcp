@@ -699,8 +699,10 @@ Development team (AD specialist)
 ### Priority
 **Critical** — the transformation is proven on paper only (`CGE_DEGENERACY_SCOPING.md` §3); if the empirical GAMS run does not reach MS 1 at the NLP optimum, the Epic-5 P6 premise is invalid.
 
+> **Shorthand note (governs all of Category 6):** "`cpi=1`" is a **generic placeholder** for a fixed price numéraire — **camcge has no literal `cpi` variable** (Task 7 grounding). The concrete camcge instantiation is a base-consumption-weighted composite-price index on the existing `p(i)`/`pd0(i)`: `sum(i$cles(i), cles(i)*p(i)) =e= sum(i$cles(i), cles(i)*pd0(i))` (`CAMCGE_WALRAS_TRANSFORM_DESIGN.md` §3.2). Read every "fix-`cpi=1`" below as this concrete numéraire.
+
 ### Assumption
-The Walras transformation (drop one redundant market-clearing row `lmequil` + fix a price numéraire `cpi=1`) empirically drives camcge's MCP to MODEL STATUS 1 at the NLP optimum 191.7346 — reproducing the paper-verified solution-preservation argument in a real GAMS solve.
+The Walras transformation (drop **one** redundant market-clearing row *instance* — a single `lmequil(lc_drop)`, since Walras' law gives rank deficiency exactly 1, not the whole `lc` family — + fix a price numéraire — `cpi=1` shorthand, see the note above) empirically drives camcge's MCP to MODEL STATUS 1 at the NLP optimum 191.7346 — reproducing the paper-verified solution-preservation argument in a real GAMS solve.
 
 ### Research Questions
 1. Does the drop-`lmequil` + fix-`cpi=1` MCP reach MS 1 (not MS 4-at-iteration-0, the current structural-singularity signature)?
@@ -732,6 +734,8 @@ Development team (CGE / Epic-5)
 **Decision:** PROCEED to the transformation; the detection-heuristic + numéraire-selection design is Prep Task 7; REPLAN to a per-model-numéraire-declaration Epic-5 item if the heuristic proves unreliable (Unknown 6.2).
 
 **Task 6 (2026-07-06) — risk/decision layer:** the empirical MS-1 result (C1) is the first camcge gate, run at P6 Day-0. **PROCEED** the Epic-5 Walras transform if C1 reaches **MS 1 at 191.7346** *and* the detection heuristic is clean (6.2); **REPLAN** to deeper Epic-5 diagnosis if C1 does not reach MS 1 (the transform premise invalid) — the Class-B `stat_pz` general-emit fix (P7) then absorbs the freed budget. Prior of the empirical gate holding: high (the paper solution-preservation argument is solid). See `REPLAN_RISK_ASSESSMENT.md` Track C (step C1).
+
+**Task 7 (2026-07-06) — the empirical experiment scoped.** The P6 Day-0 run is fully specified in `CAMCGE_WALRAS_TRANSFORM_DESIGN.md` §4.1: emit `camcge_ps.gms` (`--nlp-presolve`), drop **one** `lmequil(lc_drop)` instance (a single labor category — Walras' law ⇒ rank deficiency exactly 1, **not** the whole `lc` family) + its paired multiplier/comp rows, add `numeraire.. sum(i$cles(i), cles(i)*p(i)) =e= sum(i$cles(i), cles(i)*pd0(i));`, solve cold → **expect MS 1 at omega 191.7346, non-singular PATH basis** (was MS-4-at-iter-0). **Grounding refinement:** camcge has **no `cpi` variable** and `er` is a fixed `Scalar` (=.21, a partial anchor for *traded* prices only), so the scoping-doc "fix-`cpi=1`" is instantiated as the consumption-weighted composite-price index above (a CPI=1 normalization on the existing `p(i)`/`pd0(i)`). Solution-preserving on paper (§3.2: quantities are invariant along the price ray, so the numéraire is a base-year normalization — λ=1 only if the unscaled equilibrium already satisfies it — not a perturbation ⇒ omega 191.7346). **Status → VERIFIED** (the empirical experiment is designed + scoped; the MS-1 GAMS confirmation is the P6 Day-0 gate). Evidence: `CAMCGE_WALRAS_TRANSFORM_DESIGN.md` §1/§3.2/§4.1.
 
 ---
 
@@ -772,6 +776,8 @@ Development team (CGE / Epic-5)
 **Evidence:** `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` §2 (camcge sole case) + §5 Q2 (the open detection question); `docs/planning/EPIC_4/SPRINT_30/REPLAN_RISK_ASSESSMENT.md` Track C (step C3).
 **Decision:** **PROCEED-conditional** — PROCEED the automatic transform if the Task-7 heuristic flags camcge with **zero false positives** across the CGE cohort (camcge + irscge/lrgcge/moncge/stdcge, step C3); **REPLAN to the per-model-declaration Epic-5 item (opt-in)** if it false-flags a well-posed model or the numéraire proves per-model (Unknown 6.3). Prior of REPLAN-to-declaration: Medium (the likeliest outcome is PROCEED-with-declaration — the +1 Solve lands via opt-in, the auto-detector is deferred to a later Epic-5 iteration). **Reallocation on REPLAN:** freed auto-heuristic budget → the Class-B `stat_pz` general-emit fix (P7).
 
+**Task 7 (2026-07-06) — the detection heuristic + false-positive guard designed.** `CAMCGE_WALRAS_TRANSFORM_DESIGN.md` §2 specifies a **conjunction of three signals** with a **pass-through default**: **S1** market-clearing-block rank deficiency (`equil(i)` + `lmequil(lc)` Jacobian rank < #rows, the primary signal), **S2** the singular-solve signature (MS-4-at-iter-0 + `kkt_residual.py` residual-clean + PATH basis-singularity), **S3** the CGE structural precondition (≥ 2 market-clearing rows + a budget-balance identity + price homogeneity, no existing numéraire). **Transform only if S1 ∧ S2 ∧ S3; else PASS THROUGH untouched.** The residual-clean sub-check inside S2 separates an *inherent structural* singularity (transform) from an *emit bug* (`CASE_B` → general emit path, NOT the transform), and a well-posed CGE that already fixes a numéraire has a full-rank block (S1 fails) → never transformed. The false-positive validation = the §4.2 cohort sweep (expect only camcge flagged). **Reliability caveat:** S1's rank-by-tolerance is the fragile piece → the auto-tier is PROCEED-conditional with the per-model-declaration fallback (6.3). **Status → VERIFIED** (design complete; the cohort false-positive sweep is the P6 Day-0 empirical validation). Evidence: `CAMCGE_WALRAS_TRANSFORM_DESIGN.md` §2 + §4.2.
+
 ---
 
 ## Unknown 6.3: Is the redundant-row + numéraire selection a single automatic rule or a per-model declaration?
@@ -803,7 +809,12 @@ Design the selection rule; verify it picks camcge's `lmequil`/`cpi`:
 Development team (CGE / Epic-5)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — a per-model rule with a declaration fallback; the *argument* is generic, the *instantiation* is per-model
+**Verified by:** Task 7 (camcge → Epic 5 Walras Transformation Design)
+**Date:** 2026-07-06
+**Findings:** `CAMCGE_WALRAS_TRANSFORM_DESIGN.md` §3 designs a two-tier rule. **Drop-row:** **one** factor-market row instance `lmequil(lc_drop)` (a single labor category — Walras' law ⇒ rank deficiency exactly 1, so drop one *row*, **not** the whole `lc` family; the other `lmequil` instances + all `equil(i)` stay enforced; the dropped market clears automatically at the solution). **Numéraire:** a **base-consumption-weighted composite-price index** pinned to its calibrated level — `sum(i$cles(i), cles(i)*p(i)) =e= sum(i$cles(i), cles(i)*pd0(i))` — instantiated on camcge's existing `p(i)`/`pd0(i)` (**grounding refinement: camcge has no `cpi` variable**, so the scoping-doc "fix-`cpi=1`" becomes this CPI=1 normalization on `p(i)`; a single good's price `p('numéraire-good')=pd0` is the fallback). By homogeneity of degree 0, quantities are invariant along the price ray, so the numéraire is a base-year normalization (λ=1 only if the unscaled equilibrium already satisfies it), a *selection* not a *perturbation* → quantities unchanged → `omega = prod(i$cles(i), cd(i)**cles(i))` = **191.7346** on paper. The general argument (Walras redundancy + price homogeneity) is generic to closed CGE models, but *which* row is redundant + *which* price is the numéraire is **per-model** (closure + SAM dependent).
+**Evidence:** `CAMCGE_WALRAS_TRANSFORM_DESIGN.md` §3.1/§3.2/§3.3; `data/gamslib/raw/camcge.gms` (`lmequil` line 339, `p.l(i)=pd0(i)` line 401, `cles(i)`, `obj/omega` line 395, `er` Scalar); `CGE_DEGENERACY_SCOPING.md` §3.
+**Decision:** ship the **automatic tier** (heuristic-driven `lmequil` drop + consumption-weighted numéraire) with a **per-model declaration fallback (opt-in)** — acceptable because camcge is the sole inherent Walras case (6.2). The declaration tier is the Task-6 REPLAN target if the automatic detection (6.2) proves unreliable; it lands camcge's +1 Solve regardless.
 
 ---
 
