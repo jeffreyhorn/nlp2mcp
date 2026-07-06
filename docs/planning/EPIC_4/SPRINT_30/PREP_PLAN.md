@@ -888,7 +888,7 @@ grep -iE "12h|≤ 12|hours/day" docs/planning/EPIC_4/SPRINT_30/PLAN.md | head
 | — | PROJECT_PLAN Sprint 30 insertion | `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 30" | ✅ (PR #1489) |
 | 1 | Known Unknowns List | `docs/planning/EPIC_4/SPRINT_30/KNOWN_UNKNOWNS.md` | ✅ |
 | 2 | Day-0 Baseline + Genuine-Floor Re-Baseline | `docs/planning/EPIC_4/SPRINT_30/BASELINE_METRICS.md` | ✅ |
-| 3 | Head-Offset Architecture Design + robert Minimal Reproduction | `docs/planning/EPIC_4/SPRINT_30/HEAD_OFFSET_ARCHITECTURE_DESIGN.md` | ✅ |
+| 3 | Head-Offset Architecture Design (mine) + robert (found decoupled — objective-gradient, NOT a minimal reproduction of mine) | `docs/planning/EPIC_4/SPRINT_30/HEAD_OFFSET_ARCHITECTURE_DESIGN.md` | ✅ |
 | 4 | Non-Convex Forcing Strategy Survey | `docs/planning/EPIC_4/SPRINT_30/NONCONVEX_FORCING_SURVEY.md` | ✅ |
 | 5 | Refresh + Author Phase 0 Acceptance Gates | `docs/issues/ISSUE_*.md` Phase-0 sections (refreshed) + robert + Class-B gates | ✅ |
 | 6 | REPLAN Risk Assessment | `docs/planning/EPIC_4/SPRINT_30/REPLAN_RISK_ASSESSMENT.md` | ✅ |

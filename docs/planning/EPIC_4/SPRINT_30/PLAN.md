@@ -12,7 +12,7 @@ Land the Sprint-29 REPLAN'd carryforwards: the **head-domain-offset emit archite
 
 ## 2. Acceptance Criteria (from `PROJECT_PLAN.md` §"Sprint 30")
 
-- **Solve:** ≥ 109 (from 107; +2 firm target via **mine** [P1] + **rocket** [P2] — but both are REPLAN-prone, §3; camcge is a conditional +1).
+- **Solve:** ≥ 109 (from 107; the +2 headline target is **mine** [P1] + **rocket** [P2], but **both are conditional — REPLAN-prone**, not firm (§3); camcge is a further conditional +1). The PROJECT_PLAN's "+2 firm" label predates the Task-6 assessment, which found mine (Medium-High) and rocket (High) REPLAN-prone — so Solve ≥ 109 is the most REPLAN-sensitive KPI, while the genuine-floor lift (≥ 72) is the robust deliverable.
 - **Match:** maintain ≥ 92 as-measured; **genuine floor 69 → ≥ 72** (robert [P1] + hhfair [P3, if Case-b] + polygon/himmel16 [P5] + Class-B CGE [P7] convert warm/methodology matches into genuine cold matches).
 - **model_infeasible:** ≤ 5 (from 7; −2 via mine + rocket; −1 more if camcge lands).
 - **path_syntax_error** ≤ 8 · **path_solve_terminated** ≤ 5 · **Translate** ≥ 135 (stretch +1 via #1385 sarf) · **Parse** 142 · **Tests** ≥ 4,990 · **Determinism** byte-identical ×3 `PYTHONHASHSEED`.
