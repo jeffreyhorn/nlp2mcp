@@ -608,7 +608,7 @@ The Sprint-29 Epic-5 scoping doc proved the transformation (drop one redundant m
 ### Result
 
 - **Grounding refinement (the key finding):** camcge has **no `cpi` variable** and `er` is a fixed `Scalar` (=.21) that anchors only *traded* prices — so the scoping-doc canonical "fix-`cpi=1`" is instantiated concretely as a **base-consumption-weighted composite-price index** on the existing `p(i)`/`pd0(i)`: `sum(i$cles(i), cles(i)*p(i)) =e= sum(i$cles(i), cles(i)*pd0(i))` (a CPI=1 normalization). This is the exact numéraire the P6 Day-0 run needs.
-- **Detection heuristic (6.2):** transform only if **S1** (market-clearing-block rank deficiency) ∧ **S2** (MS-4-at-iter-0 + residual-clean + PATH basis-singular) ∧ **S3** (CGE structure, no existing numéraire); **default = pass through untouched** (the correctness guard — a well-posed CGE with a full-rank block is never touched). The residual-clean sub-check separates structural singularity from an emit bug (Case b).
+- **Detection heuristic (6.2):** transform only if **S1** (market-clearing-block rank deficiency) ∧ **S2** (MS-4-at-iter-0 + residual-clean + PATH basis-singular) ∧ **S3** (CGE structure, no existing numéraire); **default = pass through untouched** (the correctness guard — a well-posed CGE with a full-rank block is never touched). The residual-clean sub-check separates structural singularity from an emit bug (`CASE_B`).
 - **Selection rule (6.3):** drop `lmequil(lc)` (Walras-redundant) + the consumption-weighted numéraire; by homogeneity quantities are invariant along the price ray, so the numéraire is a base-year normalization (λ=1 only if the unscaled equilibrium already satisfies it), a *selection* not a *perturbation* ⇒ omega **191.7346** on paper. Per-model (closure/SAM dependent) → ships with a **per-model declaration fallback (opt-in)**, acceptable because camcge is the sole inherent Walras case.
 - **Empirical experiment (6.1):** drop-`lmequil` + fix-the-numéraire → **MS 1 at 191.7346**, non-singular basis (P6 Day-0 gate); the §4.2 cohort sweep (camcge + irscge/lrgcge/moncge/stdcge) is the false-positive validation — expected only camcge flagged.
 - **Boundary:** the Walras transform is Epic-5 CGE-domain preprocessing (invoked only for detected-degenerate models); the Class-B `stat_pz` general-emit fix (confirmed NOT Walras) stays in nlp2mcp (P7). Feeds the Task-6 REPLAN reliability judgment (the auto-heuristic is PROCEED-conditional with the declaration fallback).
@@ -637,7 +637,7 @@ grep -qE "191.7346" docs/planning/EPIC_4/SPRINT_30/CAMCGE_WALRAS_TRANSFORM_DESIG
 - [x] CAMCGE_WALRAS_TRANSFORM_DESIGN.md created
 - [x] The degeneracy-detection heuristic designed with an explicit non-degenerate-model false-positive guard
 - [x] The redundant-row + numéraire-selection rule designed; reproduces 191.7346 on paper
-- [x] The empirical-confirmation experiment (drop-`lmequil` + fix the concrete consumption-weighted numéraire `sum(i$cles, cles·p) =e= sum(i$cles, cles·pd0)` — camcge has no `cpi` — → MS 1) scoped for Priority 6 Day-0
+- [x] The empirical-confirmation experiment (drop-`lmequil` + fix the concrete consumption-weighted numéraire `sum(i$cles(i), cles(i)*p(i)) =e= sum(i$cles(i), cles(i)*pd0(i))` — camcge has no `cpi` — → MS 1) scoped for Priority 6 Day-0
 - [x] The cohort-generality check plan present (is camcge the sole inherent case?)
 - [x] The nlp2mcp/Epic-5 boundary recorded (Class-B general-emit stays in nlp2mcp)
 - [x] Unknowns 6.1, 6.2, 6.3 verified and updated in KNOWN_UNKNOWNS.md
