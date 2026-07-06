@@ -1160,14 +1160,14 @@ Development team (Tooling)
 
 ## Next Steps
 
-> **⏳ PREP PHASE IN PROGRESS (Task 1 complete, 2026-07-04).** All **25** prep-time unknowns are authored and currently **🔍 INCOMPLETE**; they are verified during prep Tasks 2–10 (see §"Appendix: Task-to-Unknown Mapping"). This is the Task-1 deliverable — the risk-identification foundation for the rest of the Sprint 30 prep. As each downstream task lands, its unknowns move 🔍 INCOMPLETE → ✅ VERIFIED (or ❌ WRONG with a correction), and this note is updated. Sprint 30 is **GO for Day 0** once all Critical + High unknowns are VERIFIED (Task 10).
+> **✅ PREP PHASE COMPLETE (Task 10, 2026-07-06). Sprint 30 is GO for Day 0.** All **25** prep-time unknowns are now **✅ VERIFIED** (or **❌ WRONG** with a documented correction) across prep Tasks 1–9, and Task 10 has integrated them into the 14-day schedule (`PLAN.md` + `prompts/PLAN_PROMPTS.md`). **Three unknowns INVERTED / returned WRONG, and the schedule absorbs each:** (1) **Unknown 1.1 ❌ WRONG** — robert does NOT generalize to mine (robert's bug is an objective-gradient boundary-term drop, not the head-offset cross-term) → the schedule **splits P1**: robert Day 1 (decoupled, firm genuine-floor) + mine Days 6–7 (the head-offset architecture, REPLAN-prone); (2) **Unknown 1.4 ❌ WRONG** — `nu_sb(r,tt+1)` is not robert's fix → Day 1 lands the `stat_s` objective-gradient fix, not the `stat_x` cross-term; (3) **Unknown 2.2** — rocket is intrinsic non-convergence (PATH-side) → the rocket REPLAN (Days 2–3): the forcing scaffold is firm, the +1 Solve hands off to the Sprint-31 PATH consultation. The three REPLAN decision points (rocket Day ~2–3, mine Day ~6–7, camcge Day ~11) are placed per the Task-6 assessment with fallbacks; the genuine-floor lift (≥ 72) is robust even under a triple-REPLAN, while Solve ≥ 109 (needs mine + rocket) is the most REPLAN-sensitive KPI. **Sprint 30 prep phase COMPLETE (Tasks 1–10).**
 
-**Before Sprint 30 Day 1:**
-1. Review all Critical and High priority unknowns (16 total: 6 Critical + 10 High).
-2. Execute verification tests for the top unknowns via prep Tasks 2–10 (see §"Appendix: Task-to-Unknown Mapping").
-3. Update this document with findings (🔍 INCOMPLETE → ✅ VERIFIED or ❌ WRONG).
-4. Adjust Sprint 30 scope (PROJECT_PLAN.md or PLAN.md) if major assumptions are wrong — specifically, any of Unknowns 1.1, 1.2, 2.1, 3.1, 6.1, 6.2 returning WRONG triggers a Priority re-plan / REPLAN-to-Sprint-31 decision during prep (Task 6).
-5. Share findings with the team during sprint planning (Task 10).
+**Prep-phase checklist (✅ all COMPLETE before Sprint 30 Day 1 — Tasks 1–10):**
+1. ✅ Reviewed all Critical and High priority unknowns (16 total: 6 Critical + 10 High).
+2. ✅ Executed the verification for every unknown via prep Tasks 2–10 (see §"Appendix: Task-to-Unknown Mapping").
+3. ✅ Updated this document with findings (all 🔍 INCOMPLETE → ✅ VERIFIED or ❌ WRONG).
+4. ✅ Adjusted Sprint 30 scope for the WRONG-returning assumptions — **Unknown 1.1** returned WRONG (robert does NOT generalize to mine), which triggered the **P1 split** in `PLAN.md` (robert decoupled / mine head-offset) rather than a full REPLAN; **Unknown 2.2** (rocket intrinsic non-convergence) set the rocket → Sprint-31 PATH-consultation REPLAN — both absorbed by the Task-6 assessment + the schedule.
+5. ✅ Findings integrated into the sprint plan (Task 10 — `PLAN.md` + `prompts/PLAN_PROMPTS.md`).
 
 **During Sprint 30:**
 1. Reference this document daily (especially Critical / High unknowns).
