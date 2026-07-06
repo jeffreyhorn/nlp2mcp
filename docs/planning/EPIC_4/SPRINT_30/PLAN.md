@@ -126,7 +126,7 @@ Land the Sprint-29 REPLAN'd carryforwards: the **head-domain-offset emit archite
 
 ## 16. Phase 0 Coverage Audit (PR20 + PR24)
 
-All 8 implementation tracks have a Phase-0 gate authored/refreshed in prep (Task 5): `docs/issues/ISSUE_{1443,1462,1236,1385,1146,1143,1330}_*.md` + `ISSUE_robert_objgrad_boundary_term.md` + `ISSUE_classB_cge_stat_pz.md`. Each gate's `Traced Fix-Surface (Day-0)` line is re-confirmed Day 0 before any `src/`. (robert has its own gate — decoupled from mine's #1443; camcge #1330 is the Epic-5 transformation.)
+All 8 implementation tracks have a Phase-0 gate authored/refreshed in prep (Task 5): `docs/issues/ISSUE_{1443,1462,1236,1385,1146,1143,1330}_*.md` + `docs/issues/ISSUE_robert_objgrad_boundary_term.md` + `docs/issues/ISSUE_classB_cge_stat_pz.md`. Each gate's `Traced Fix-Surface (Day-0)` line is re-confirmed Day 0 before any `src/`. (robert has its own gate — decoupled from mine's #1443; camcge #1330 is the Epic-5 transformation.)
 
 ## 17. Known Unknowns Status Snapshot
 
