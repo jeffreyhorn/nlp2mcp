@@ -570,7 +570,8 @@ grep -qiE "Sprint 31|Sprint-31" docs/planning/EPIC_4/SPRINT_30/REPLAN_RISK_ASSES
 
 ## Task 7: camcge → Epic 5 Walras Transformation Design (Priority 6)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-06
 **Priority:** Medium
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 30 Day 1
@@ -602,11 +603,15 @@ The Sprint-29 Epic-5 scoping doc proved the transformation (drop one redundant m
 
 ### Changes
 
-To be completed.
+**COMPLETE (2026-07-06).** Authored `docs/planning/EPIC_4/SPRINT_30/CAMCGE_WALRAS_TRANSFORM_DESIGN.md` — grounded in a read of `data/gamslib/raw/camcge.gms` (equation/variable structure) + the `ISSUE_1330` diagnosis + the Epic-5 scoping paper argument. Resolves the three `CGE_DEGENERACY_SCOPING.md` §5 open questions into a design: the S1∧S2∧S3 detection heuristic with a pass-through false-positive guard (§2), the drop-`lmequil` + consumption-weighted-numéraire selection rule reproducing 191.7346 on paper (§3), the P6 Day-0 empirical experiment + cohort-generality check (§4), and the nlp2mcp/Epic-5 boundary (§5). Updated KNOWN_UNKNOWNS Unknowns 6.1/6.2/6.3 to VERIFIED (Task-7 layer) + CHANGELOG Task-7 entry.
 
 ### Result
 
-To be completed.
+- **Grounding refinement (the key finding):** camcge has **no `cpi` variable** and `er` is a fixed `Scalar` (=.21) that anchors only *traded* prices — so the scoping-doc canonical "fix-`cpi=1`" is instantiated concretely as a **base-consumption-weighted composite-price index** on the existing `p(i)`/`pd0(i)`: `sum(i$cles(i), cles(i)*p(i)) =e= sum(i$cles(i), cles(i)*pd0(i))` (a CPI=1 normalization). This is the exact numéraire the P6 Day-0 run needs.
+- **Detection heuristic (6.2):** transform only if **S1** (market-clearing-block rank deficiency) ∧ **S2** (MS-4-at-iter-0 + residual-clean + PATH basis-singular) ∧ **S3** (CGE structure, no existing numéraire); **default = pass through untouched** (the correctness guard — a well-posed CGE with a full-rank block is never touched). The residual-clean sub-check separates structural singularity from an emit bug (Case b).
+- **Selection rule (6.3):** drop `lmequil(lc)` (Walras-redundant) + the consumption-weighted numéraire; by homogeneity the numéraire selects λ=1 (calibrated level) ⇒ omega **191.7346** on paper. Per-model (closure/SAM dependent) → ships with a **per-model declaration fallback (opt-in)**, acceptable because camcge is the sole inherent Walras case.
+- **Empirical experiment (6.1):** drop-`lmequil` + fix-the-numéraire → **MS 1 at 191.7346**, non-singular basis (P6 Day-0 gate); the §4.2 cohort sweep (camcge + irscge/lrgcge/moncge/stdcge) is the false-positive validation — expected only camcge flagged.
+- **Boundary:** the Walras transform is Epic-5 CGE-domain preprocessing (invoked only for detected-degenerate models); the Class-B `stat_pz` general-emit fix (confirmed NOT Walras) stays in nlp2mcp (P7). Feeds the Task-6 REPLAN reliability judgment (the auto-heuristic is PROCEED-conditional with the declaration fallback).
 
 ### Verification
 
@@ -629,13 +634,13 @@ grep -qE "191.7346" docs/planning/EPIC_4/SPRINT_30/CAMCGE_WALRAS_TRANSFORM_DESIG
 
 ### Acceptance Criteria
 
-- [ ] CAMCGE_WALRAS_TRANSFORM_DESIGN.md created
-- [ ] The degeneracy-detection heuristic designed with an explicit non-degenerate-model false-positive guard
-- [ ] The redundant-row + numéraire-selection rule designed; reproduces 191.7346 on paper
-- [ ] The empirical-confirmation experiment (drop-`lmequil` + fix-`cpi=1` → MS 1) scoped for Priority 6 Day-0
-- [ ] The cohort-generality check plan present (is camcge the sole inherent case?)
-- [ ] The nlp2mcp/Epic-5 boundary recorded (Class-B general-emit stays in nlp2mcp)
-- [ ] Unknowns 6.1, 6.2, 6.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] CAMCGE_WALRAS_TRANSFORM_DESIGN.md created
+- [x] The degeneracy-detection heuristic designed with an explicit non-degenerate-model false-positive guard
+- [x] The redundant-row + numéraire-selection rule designed; reproduces 191.7346 on paper
+- [x] The empirical-confirmation experiment (drop-`lmequil` + fix-`cpi=1` → MS 1) scoped for Priority 6 Day-0
+- [x] The cohort-generality check plan present (is camcge the sole inherent case?)
+- [x] The nlp2mcp/Epic-5 boundary recorded (Class-B general-emit stays in nlp2mcp)
+- [x] Unknowns 6.1, 6.2, 6.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
