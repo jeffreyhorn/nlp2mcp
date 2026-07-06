@@ -487,7 +487,8 @@ for f in 1443 1462 1236 1385 1146 1143 1330; do grep -lE 'kkt_residual\.py' docs
 
 ## Task 6: Diagnosis-Heavy / REPLAN-Prone Track Risk Assessment (#1443 multi-site, #1462 forcing, #1330 Epic-5; PR16)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-06
 **Priority:** High
 **Estimated Time:** 3–5 hours
 **Deadline:** Before Sprint 30 Day 1
@@ -525,11 +526,14 @@ The Sprint-30 Solve target (≥ 109) depends on **both** mine (P1) and rocket (P
 
 ### Changes
 
-To be completed.
+**COMPLETE (2026-07-06).** Authored `docs/planning/EPIC_4/SPRINT_30/REPLAN_RISK_ASSESSMENT.md` (modeled on the Sprint-29 template) with per-track hypothesis + single-model validation design + PROCEED/REPLAN signal + Sprint-31 exit + budget reallocation for the three REPLAN-prone tracks, plus a Budget-at-Risk tally that feeds the Task-10 schedule. Appended a "Task 6 — risk/decision layer" note to the Verification Results of Unknowns 1.1, 1.2, 2.1, 2.2, 6.1 and filled the previously-INCOMPLETE Unknown 6.2 with the RISK-ASSESSED (Task 6) decision. CHANGELOG Task-6 entry added.
 
 ### Result
 
-To be completed.
+- **Track A (#1443):** the Task-3 verdict (Unknown 1.1 = ❌ does NOT generalize) splits P1 → **robert = firm PROCEED** (genuine-floor +1, ~2–4 h, cold-confirmed 11025, no REPLAN branch) and **mine = PROCEED-conditional / REPLAN-prone** (the coordinated 3-site `comp_pr` head-offset re-derivation; REPLAN mine — not robert — to a Sprint-31 head-offset-architecture workstream if a 4th site surfaces or the Day-7 `ne`/`se`/`sw` cascade persists). Prior of REPLAN Medium-High.
+- **Track B (#1462):** **PROCEED-to-scaffold** (the P8 forcing scaffold is firm) + **rocket's +1 Solve REPLANs to the Sprint-31 PATH consultation** (no PATH-option config converges even from the NLP optimum; prior of REPLAN High). One low-prior PROCEED-flip: a scaffold homotopy/multi-start strategy reaching MS 1/2 at 1.0128.
+- **Track C (#1330 camcge):** **PROCEED-conditional** on the empirical MS-1 gate (C1: drop-`lmequil` + fix-`cpi=1` → MS 1 at 191.7346) + the detection-heuristic false-positive gate (C3); **REPLAN to a per-model-numéraire-declaration Epic-5 item (opt-in)** if the auto-heuristic false-flags or the numéraire proves per-model. The declaration fallback still lands camcge's +1 Solve (camcge is the sole inherent Walras case). Prior of REPLAN-to-declaration Medium.
+- **Budget reallocation:** mine slip → Class-B CGE `stat_pz` (P7) + offset-alias (P5) genuine-floor; rocket slip → scaffold hardening + hhfair (P3); camcge slip → the Class-B general-emit fix (P7). **Solve ≥ 109 is the most REPLAN-sensitive KPI** (needs both mine + rocket); the firm parts (robert / scaffold / Class-B fix / camcge declaration-fallback) land regardless, so the genuine-floor lift is robust even under a triple-REPLAN.
 
 ### Verification
 
@@ -554,13 +558,13 @@ grep -qiE "Sprint 31|Sprint-31" docs/planning/EPIC_4/SPRINT_30/REPLAN_RISK_ASSES
 
 ### Acceptance Criteria
 
-- [ ] Risk assessment created covering #1443 (multi-site), #1462 (forcing), #1330 (Epic-5)
-- [ ] Each track has an architectural hypothesis + single-model validation experiment
-- [ ] Each track has explicit PROCEED and REPLAN signals tied to the Task-3/4/7 result
-- [ ] Each track has a Sprint-31 exit scope + the firm part that lands regardless (robert / scaffold / Class-B fix)
-- [ ] Budget-reallocation plan specified per REPLAN
-- [ ] Feeds the Task-10 schedule's slack allocation and fallback ordering
-- [ ] Unknowns 1.1, 1.2, 2.1, 2.2, 6.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Risk assessment created covering #1443 (multi-site), #1462 (forcing), #1330 (Epic-5)
+- [x] Each track has an architectural hypothesis + single-model validation experiment
+- [x] Each track has explicit PROCEED and REPLAN signals tied to the Task-3/4/7 result
+- [x] Each track has a Sprint-31 exit scope + the firm part that lands regardless (robert / scaffold / Class-B fix)
+- [x] Budget-reallocation plan specified per REPLAN
+- [x] Feeds the Task-10 schedule's slack allocation and fallback ordering
+- [x] Unknowns 1.1, 1.2, 2.1, 2.2, 6.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

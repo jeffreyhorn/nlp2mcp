@@ -139,6 +139,8 @@ Development team (AD/KKT specialist)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_30/HEAD_OFFSET_ARCHITECTURE_DESIGN.md` §0–§2 + §Appendix (the two cold-solve control experiments).
 **Decision:** **Priority 1 splits into two independent tracks** — robert (genuine-floor +1, LOW-risk standalone objective-gradient fix, ~2–4 h, decoupled) and mine (+1 Solve, HIGH-risk multi-site `comp_pr` re-derivation, ~10–16 h, REPLAN-prone). Removing the false coupling de-risks the robert gain and isolates mine. Fed to Task 5 (gate refresh: record robert as objective-gradient, head-offset architecture as mine-only) + Task 6 (REPLAN mine only) + Task 10 (schedule robert early + standalone).
 
+**Task 6 (2026-07-06) — risk/decision layer:** **robert = firm PROCEED** (genuine-floor +1, no REPLAN branch — convex LP, cold-confirmed 11025). **mine = PROCEED-conditional, prior of REPLAN Medium-High** — PROCEED the coordinated 3-site `comp_pr` fix if the cold-INFES stays dominated by `comp_pr`/`pr` (no 4th bound-row site) and the shared index-map drives the cold LCP to MS 1 within the ~10–16 h estimate / ~14–20 h P1 ceiling; **REPLAN mine (not robert)** to a Sprint-31 head-offset-architecture workstream if a 4th site surfaces or the Day-7 `ne`/`se`/`sw` cascade persists. **Reallocation on mine REPLAN:** freed ~10–16 h → genuine-floor Class-B CGE `stat_pz` (P7) + offset-alias himmel16/polygon (P5). robert lands regardless. See `REPLAN_RISK_ASSESSMENT.md` Track A.
+
 ---
 
 ## Unknown 1.2: Is the coordinated 3-site index-map re-derivation an ≤ 14–20h fix, or does each fixed site expose the next?
@@ -178,6 +180,8 @@ Development team (AD/KKT specialist)
 **Findings:** The 3-site coordination (`comp_pr` / `_emit_nlp_presolve` / `stat_x`) applies **only to mine** — robert needs no site coordination (its bug is a single objective-gradient site; cold-confirmed at 11025 with the `stat_s` fix alone, Unknown 1.1). For mine the 3-site budget stands as the firm `ISSUE_1443` Day-7 finding: fixing Site 2 alone (dual transfer → `pr.m(k,l+1,i,j)`) clears only the `nw` direction (`li=lj=0`), leaving `ne`/`se`/`sw` at ~1e10 `comp_pr` infeasibility — so each site can expose the next (the head-offset × parameter-offset coupling is the un-budgeted risk). Design recommends a single shared head-offset index-map helper all three sites call.
 **Evidence:** `HEAD_OFFSET_ARCHITECTURE_DESIGN.md` §3 (three-site table with `file:line`); `ISSUE_1443` Day-7.
 **Decision:** mine ~10–16 h with a REPLAN-if-cascade exit (Task 6); robert is NOT counted in the 3-site budget (separate ~2–4 h objective-gradient fix).
+
+**Task 6 (2026-07-06) — risk/decision layer:** the 3-site coordination is the mine REPLAN pivot. **PROCEED** if the shared head-offset index-map helper (all three sites) drives the cold LCP to MS 1 atomically within budget; **REPLAN mine to Sprint 31** if A2's cold-INFES histogram shows a 4th site (`comp_lo_x`/`comp_up_x`/bound coupling) or A3 shows each fixed site exposes the next (the Day-7 signature). Sprint-31 exit = "the head-domain-offset emit architecture as one workstream (a single δ + `li(k)`/`lj(k)` index-map helper with cold-LCP consistency)." Prior of REPLAN Medium-High. See `REPLAN_RISK_ASSESSMENT.md` Track A (steps A2/A3).
 
 **Task 5 (2026-07-05):** the #1443 gate was refreshed to this disposition (mine-only 3-site `comp_pr` re-derivation; PROCEED, REPLAN-if-cascade).
 
@@ -306,6 +310,8 @@ Development team (numerics / solver-interface)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_30/NONCONVEX_FORCING_SURVEY.md` §1–§2 + §Appendix.
 **Decision:** no tunable PATH-option configuration (via optfile) crosses; the PATH-option tuning (INFES 477 → 382) is the concrete **Sprint-31 PATH-consultation hand-off** (2.2). Sprint-30 P2 = the emitted-GAMS forcing scaffold (homotopy/multi-start), not a firm rocket +1 Solve.
 
+**Task 6 (2026-07-06) — risk/decision layer:** **PROCEED-to-scaffold (firm P8)** — build the `--force <strategy>` driver + MODEL-STATUS reporter; it lands regardless. **rocket's +1 Solve = REPLAN to the Sprint-31 PATH consultation** (prior of REPLAN High — no PATH-option config converges even from the NLP optimum). One PROCEED-flip: if a scaffold *homotopy/multi-start* strategy (the emittable-GAMS levers the Task-4 probe did not exhaustively drive) reaches MS 1/2 at 1.0128, rocket's +1 Solve lands in Sprint 30 (low prior — the NLP-optimum warm-start already fails). **Reallocation on rocket REPLAN:** the scaffold lands; freed tuning budget → scaffold hardening + Priority 3 hhfair (#1236). See `REPLAN_RISK_ASSESSMENT.md` Track B.
+
 ---
 
 ## Unknown 2.2: Is a forcing lever expressible in emitted GAMS, or does it require a PATH solver option?
@@ -346,6 +352,8 @@ Development team (numerics / solver-interface)
 **Decision:** **Sprint-31 PATH-author consultation** for the PATH-option tuning (the scoped question: which option set/regularization schedule/reformulation converges the division-by-variable optimal-control MCP); the emitted-GAMS homotopy/multi-start scaffold is the **Sprint-30 P8** deliverable + entry point (feeds Unknown 8.3 / Task 8).
 
 **Task 5 (2026-07-05):** the #1462 gate was refreshed — PROCEED to the P8 forcing scaffold; PATH-option tuning → Sprint-31 consultation.
+
+**Task 6 (2026-07-06) — risk/decision layer:** the emittable-GAMS/PATH boundary is the rocket REPLAN pivot. Since the effective (tunable) levers are PATH-side and none converge, **rocket's +1 Solve REPLANs to the Sprint-31 PATH-author consultation**; the emittable-GAMS homotopy/multi-start levers are the firm **Sprint-30 P8 scaffold**. Sprint-31 exit = the scoped PATH-option/regularization/reformulation question for the division-by-variable optimal-control MCP. See `REPLAN_RISK_ASSESSMENT.md` Track B.
 
 ---
 
@@ -723,6 +731,8 @@ Development team (CGE / Epic-5)
 **Evidence:** `docs/issues/ISSUE_1330_*.md` §"Phase 0" Sprint-30 refresh; `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md`.
 **Decision:** PROCEED to the transformation; the detection-heuristic + numéraire-selection design is Prep Task 7; REPLAN to a per-model-numéraire-declaration Epic-5 item if the heuristic proves unreliable (Unknown 6.2).
 
+**Task 6 (2026-07-06) — risk/decision layer:** the empirical MS-1 result (C1) is the first camcge gate, run at P6 Day-0. **PROCEED** the Epic-5 Walras transform if C1 reaches **MS 1 at 191.7346** *and* the detection heuristic is clean (6.2); **REPLAN** to deeper Epic-5 diagnosis if C1 does not reach MS 1 (the transform premise invalid) — the Class-B `stat_pz` general-emit fix (P7) then absorbs the freed budget. Prior of the empirical gate holding: high (the paper solution-preservation argument is solid). See `REPLAN_RISK_ASSESSMENT.md` Track C (step C1).
+
 ---
 
 ## Unknown 6.2: Is there a degeneracy-detection heuristic that does NOT false-flag a well-posed model?
@@ -755,7 +765,12 @@ Design the heuristic; run it across the CGE cohort; check for false positives:
 Development team (CGE / Epic-5)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+⚠️ **Status:** RISK-ASSESSED (Task 6) — the auto-heuristic is the REPLAN pivot; the per-model-declaration fallback makes it non-blocking. The heuristic *design* (the market-clearing-block rank check / PATH basis-singularity report / structural signature + the false-positive guard) is Prep Task 7.
+**Verified by:** Task 6 (REPLAN-Prone Track Risk Assessment) — the risk/decision layer over the Task-7 design
+**Date:** 2026-07-06
+**Findings:** The detection-heuristic reliability is the **correctness gate** for the *automatic* Walras transform: silently dropping a user row / fixing a price on a well-posed model would corrupt a correct problem. Because **camcge is the sole inherent Walras case in the corpus** (Sprint-29 Unknown 5.1 inverted — the "CGE cohort" #1354/#1355/#1317/#1331/#1251 are distinct ordinary emit bugs, and the Class-B `stat_pz` cluster is a separate general-emit discrepancy), a robust automatic detector is a *stretch*, not a blocker: the fallback is a **per-model numéraire + redundant-row declaration (opt-in)**, which lands camcge's +1 Solve without an auto-detector.
+**Evidence:** `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` §2 (camcge sole case) + §5 Q2 (the open detection question); `docs/planning/EPIC_4/SPRINT_30/REPLAN_RISK_ASSESSMENT.md` Track C (step C3).
+**Decision:** **PROCEED-conditional** — PROCEED the automatic transform if the Task-7 heuristic flags camcge with **zero false positives** across the CGE cohort (camcge + irscge/lrgcge/moncge/stdcge, step C3); **REPLAN to the per-model-declaration Epic-5 item (opt-in)** if it false-flags a well-posed model or the numéraire proves per-model (Unknown 6.3). Prior of REPLAN-to-declaration: Medium (the likeliest outcome is PROCEED-with-declaration — the +1 Solve lands via opt-in, the auto-detector is deferred to a later Epic-5 iteration). **Reallocation on REPLAN:** freed auto-heuristic budget → the Class-B `stat_pz` general-emit fix (P7).
 
 ---
 
