@@ -727,7 +727,8 @@ grep -qiE "gap list|no extensions needed|Day-0 extension" docs/planning/EPIC_4/S
 
 ## Task 9: Backlog Fix-Surface Analysis (#1385 sarf; #1146/#1143/#1112/#1111; Class-B CGE `stat_pz`)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-06
 **Priority:** Medium
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 30 Day 1
@@ -759,11 +760,15 @@ These three tracks share a property: Sprint 29 *diagnosed* them but did not *imp
 
 ### Changes
 
-To be completed.
+**COMPLETE (2026-07-06).** Authored `docs/planning/EPIC_4/SPRINT_30/BACKLOG_FIX_SURFACE_ANALYSIS.md` — Day-0 patch-site hypotheses (PR24) for the five banked surfaces, grounded in the banked ISSUE docs + fresh Day-0 `kkt_residual.py` runs on the Class-B cluster + the #1449 blast-radius enumeration + the Task-8 property catalog. Updated KNOWN_UNKNOWNS Unknowns 3.3/4.2/5.1/5.3 (INCOMPLETE → verified) + 4.1/5.2/7.1 (Task-9 layer appended) + CHANGELOG Task-9 entry.
 
 ### Result
 
-To be completed.
+- **#1385 sarf (Part A):** two coupled sites — `src/ad/index_mapping.py` (extend the short-circuit gate from srpchase's **1-D** to sarf's **2-D** dynamic-subset shape) + `src/kkt/stationarity.py` (a **new symbolic runtime-guard cross-term emit** differentiating each body parametrically in `(g,t,m,n)` — the equations enumerate zero instances). Atomic; the banked 6-guarded-term `stat_task` derivation is the target. Instance counts **384 + 648 + 120 = 1,152** → the emit must be **O(constraints), not O(instances)** (the Day-0 tractability gate; REPLAN S31 if it re-triggers the timeout).
+- **Offset-alias (Part B):** the Day-5 revert was **polygon** — the objective-gradient cross-term is **coupled** with the `distance(i,j)` **constraint-Jacobian symmetry** (the dropped second-index `r(j)` term); neither alone matches (the fix landed the gradient → regressed to a spurious 0.0). Coordinated fix = the successor-offset cross-term (`derivative_rules.py`) **+** the distance-Jacobian symmetry (`constraint_jacobian.py`). **himmel16 is distinct** (cyclic cross-term *present*; a numeric/objvar-gradient-**sign** defect). The **#1111/#1112** architectural boundary is flagged for Task 6 (REPLAN S31 only if a shape-gate can't make it correct).
+- **Class-B `stat_pz` (Part C):** fresh harness — irscge/lrgcge/moncge all `stat_pz` rel **1.00**, CONSISTENT, CASE_B (**not** Walras) → **one general-emit coefficient fix converts all three** (the missing-unit-coefficient fingerprint). Surface = the `pz`-cross-term Jacobian-transpose coefficient in `src/kkt/stationarity.py` / `src/ad/constraint_jacobian.py`. Genuine-floor.
+- **hhfair widened-VAR (Part D):** the #1449 widened-**parameter** presolve cohort = **4 models** (cclinpts/chain/otpop/rocket); the widened-**VARIABLE** fix (companion variable + value-coupling for the live nonlinear-stat coefficient `n`) is a **disjoint additive path** → blast-radius-safe (the 4 goldens stay byte-identical; only hhfair changes).
+- **Property fixtures (Part E):** the head-domain-offset fixture is the one missing shape (a clean one-file add for P8); `shape8` flips from xfail-strict to passing when the polygon coordinated fix lands; `shape7` (himmel16 structural) gains a numeric assertion when the objvar-sign fix lands.
 
 ### Verification
 
@@ -787,13 +792,13 @@ grep -qiE "property.test|fixture|test_ad_crossterm_shapes" docs/planning/EPIC_4/
 
 ### Acceptance Criteria
 
-- [ ] BACKLOG_FIX_SURFACE_ANALYSIS.md created
-- [ ] All three banked tracks referenced (#1385 sarf, #1146/#1143/#1112/#1111 offset-alias, Class-B `stat_pz`)
-- [ ] Each patch-site framed as a Day-0 hypothesis (PR24), not fact
-- [ ] The offset-alias Day-5 revert coupling (distance-Jacobian) recorded + the coordinated-fix hypothesis
-- [ ] Property-test fixture plan present (new head-offset fixture + enabling the existing `shape7`/`shape8` offset-alias fixtures)
-- [ ] The #1111/#1112 architectural-REPLAN boundary flagged
-- [ ] Unknowns 3.3, 4.1, 4.2, 5.1, 5.2, 5.3, 7.1 verified and updated in KNOWN_UNKNOWNS.md
+- [x] BACKLOG_FIX_SURFACE_ANALYSIS.md created
+- [x] All three banked tracks referenced (#1385 sarf, #1146/#1143/#1112/#1111 offset-alias, Class-B `stat_pz`)
+- [x] Each patch-site framed as a Day-0 hypothesis (PR24), not fact
+- [x] The offset-alias Day-5 revert coupling (distance-Jacobian) recorded + the coordinated-fix hypothesis
+- [x] Property-test fixture plan present (new head-offset fixture + enabling the existing `shape7`/`shape8` offset-alias fixtures)
+- [x] The #1111/#1112 architectural-REPLAN boundary flagged
+- [x] Unknowns 3.3, 4.1, 4.2, 5.1, 5.2, 5.3, 7.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
