@@ -40,6 +40,7 @@ from src.emit.original_symbols import (
 )
 from src.emit.templates import (
     _build_dynamic_subset_map,
+    _remap_domain,
     emit_equation_definitions,
     emit_equations,
     emit_variables,
@@ -1087,6 +1088,159 @@ def _rewrite_widened_param_refs(code: str, kkt: KKTSystem) -> tuple[str, set[str
     return code, renamed
 
 
+def _widened_var_outofsubset_condition(
+    kkt: KKTSystem, source_domain: tuple[str, ...], widened: tuple[str, ...]
+) -> str | None:
+    """Build the "in-subset" GAMS condition for a domain-widened variable — the
+    same predicate the #1179 out-of-subset fix uses — as ``and``-combined
+    ``orig(wide)`` membership tests over the widened positions. Returns ``None``
+    when no widened position is a direct subset (nothing to fix)."""
+    widened_conds: list[str] = []
+    for orig_d, wide_d in zip(source_domain, widened, strict=False):
+        if orig_d.lower() == wide_d.lower():
+            continue
+        set_def = kkt.model_ir.sets.get(orig_d)
+        if set_def is None:
+            alias_def = kkt.model_ir.aliases.get(orig_d)
+            if alias_def is not None:
+                alias_target = getattr(alias_def, "target", None)
+                if alias_target:
+                    set_def = kkt.model_ir.sets.get(alias_target)
+        set_domain = getattr(set_def, "domain", None) if set_def is not None else None
+        is_direct_subset = (
+            set_domain is not None
+            and len(set_domain) == 1
+            and set_domain[0].lower() == wide_d.lower()
+        )
+        if is_direct_subset:
+            widened_conds.append(f"{orig_d}({wide_d})")
+    if not widened_conds:
+        return None
+    return " and ".join(f"({part})" for part in widened_conds)
+
+
+def _emit_widened_var_companions(
+    kkt: KKTSystem, add_comments: bool, only_vars: set[str]
+) -> tuple[list[str], list[tuple[str, str]]]:
+    """Issue #1449 (variable analog): for each domain-widened primal variable
+    actually referenced at its parent-set index under presolve (see
+    `_rewrite_widened_var_refs`), emit a ``<v>__pw`` FREE companion at the widened
+    domain, an equality ``couple_<v>`` binding it to the source variable on the
+    subset, and the out-of-subset fix (mirrors #1179). The source variable stays
+    declared at its subset domain (matching the ``$include``), so the widened MCP
+    stationarity uses the companion without a $184 domain-redefinition clash.
+
+    Returns the GAMS lines and the list of ``(couple_eq, companion_var)``
+    complementarity pairs to add to the Model statement (empty if none).
+    """
+    widenings = kkt.var_domain_widenings or {}
+    targets = sorted(v for v in widenings if v in only_vars)
+    if not targets:
+        return [], []
+    dynamic_map = _build_dynamic_subset_map(kkt.model_ir)
+    lines: list[str] = []
+    pairs: list[tuple[str, str]] = []
+    if add_comments:
+        lines.append("* ============================================")
+        lines.append("* #1449: presolve widened-variable companions")
+        lines.append("* (avoid $184: the source $include declares these at their")
+        lines.append("*  subset domain; the MCP stationarity uses the <v>__pw")
+        lines.append("*  companion, bound to the source var on the subset by couple_<v>)")
+        lines.append("* ============================================")
+    for vname in targets:
+        var_def = kkt.model_ir.variables.get(vname)
+        if var_def is None:
+            for vn, vd in kkt.model_ir.variables.items():
+                if vn.lower() == vname:
+                    var_def = vd
+                    vname = vn
+                    break
+        if var_def is None or not var_def.domain:
+            continue
+        widened = tuple(widenings[vname.lower()])
+        source_domain = tuple(var_def.domain)
+        comp = f"{vname}{_PRESOLVE_WIDENED_SUFFIX}"
+        couple_eq = f"couple_{vname}"
+        # Issue #665: the synthesized companion + coupling-equation names must be
+        # quoted when the source variable name has special chars (e.g. 'p-x').
+        qcomp = _quote_symbol(comp)
+        qcouple = _quote_symbol(couple_eq)
+        qvar = _quote_symbol(vname)
+        # Issue #739: GAMS forbids dynamically-assigned subsets as DECLARATION
+        # domains — remap them to their parent set for the Free Variable /
+        # Equation declarations (like emit_variables does). Keep the raw
+        # source_domain for the coupling-equation DEFINITION indices (and the
+        # `.fx` assignment), so the coupling still applies only on the subset.
+        wdom_decl = ",".join(_quote_symbol(d) for d in _remap_domain(widened, dynamic_map))
+        sdom_decl = ",".join(_quote_symbol(d) for d in _remap_domain(source_domain, dynamic_map))
+        wdom = ",".join(_quote_symbol(d) for d in widened)
+        sdom = ",".join(_quote_symbol(d) for d in source_domain)
+        lines.append(f"Free Variable {qcomp}({wdom_decl});")
+        lines.append(f"Equation {qcouple}({sdom_decl});")
+        lines.append(f"{qcouple}({sdom}).. {qcomp}({sdom}) =e= {qvar}({sdom});")
+        cond = _widened_var_outofsubset_condition(kkt, source_domain, widened)
+        if cond:
+            lines.append(f"{qcomp}.fx({wdom})$(not ({cond})) = 0;")
+        # Return the quoted forms so the Model statement pair is #665-safe too.
+        pairs.append((qcouple, qcomp))
+    if lines:
+        lines.append("")
+    return lines, pairs
+
+
+def _rewrite_widened_var_refs(code: str, kkt: KKTSystem) -> tuple[str, set[str]]:
+    """Issue #1449 (variable analog): rewrite the domain-widened-VARIABLE
+    references that need the widened companion — those at the **parent-set index**
+    (e.g. ``n(tl)`` in a stationarity row) — to ``<v>__pw`` (presolve only).
+    **Subset-index** references (``n(t)``, incl. the re-emitted original
+    equations) are left intact so the embedded ``$include`` NLP is not corrupted.
+    Mirrors `_rewrite_widened_param_refs`. Returns the rewritten code and the set
+    of variable names (lowercased) actually rewritten.
+    """
+    widenings = kkt.var_domain_widenings or {}
+    renamed: set[str] = set()
+    if not widenings or not code:
+        return code, renamed
+
+    def _tok(name: str) -> str:
+        esc = re.escape(name)
+        return rf"(?:\b{esc}\b|'{esc}')"
+
+    _SLOT = r"(?:[^,()]|\([^()]*\))+"
+
+    for vname, widened in widenings.items():
+        if not widened:
+            continue
+        vdef = kkt.model_ir.variables.get(vname)
+        if vdef is None:
+            for vn, vd in kkt.model_ir.variables.items():
+                if vn.lower() == vname.lower():
+                    vdef = vd
+                    break
+        source_domain = tuple(vdef.domain) if vdef is not None else ()
+        comp_form = _quote_symbol(f"{vname}{_PRESOLVE_WIDENED_SUFFIX}")
+        name_tok = _tok(vname)
+        positions = [
+            i
+            for i, w in enumerate(widened)
+            if i >= len(source_domain) or w.lower() != source_domain[i].lower()
+        ]
+        if not positions and widened:
+            positions = [0]
+        hit = False
+        for pos in positions:
+            parent_tok = _tok(widened[pos])
+            lead = rf"(?:{_SLOT},){{{pos}}}" if pos > 0 else ""
+            pattern = rf"({name_tok})(\(\s*{lead}\s*{parent_tok})"
+            new_code, n = re.subn(pattern, comp_form + r"\g<2>", code, flags=re.IGNORECASE)
+            if n:
+                code = new_code
+                hit = True
+        if hit:
+            renamed.add(vname.lower())
+    return code, renamed
+
+
 def _emit_presolve_fx_unfix(
     kkt: KKTSystem, suppressed_fx: set[str], add_comments: bool
 ) -> list[str]:
@@ -1767,7 +1921,7 @@ def emit_gams_mcp(
     # Kept local — passed explicitly to downstream emitters instead of mutating kkt.
     suppressed_fx = _compute_suppressed_fx_equations(kkt)
 
-    variables_code = emit_variables(kkt)
+    variables_code = emit_variables(kkt, suppress_widenings=_presolve_will_emit_early)
     sections.append(variables_code)
     sections.append("")
 
@@ -2496,11 +2650,31 @@ def emit_gams_mcp(
     # (incl. the re-emitted original equations) are left intact so the embedded
     # NLP is not corrupted. Companions are inserted at the reserved slot for
     # exactly the params that were rewritten.
+    _var_companion_pairs: list[tuple[str, str]] = []
     if presolve_include_emitted:
+        # Accumulate the param + variable companion blocks and insert them ONCE at
+        # the reserved slot, in a deterministic order (params first, then vars) —
+        # avoids the LIFO artifact of two separate slice-inserts at the same index.
+        _companion_block: list[str] = []
         eq_defs_code, _renamed_widened = _rewrite_widened_param_refs(eq_defs_code, kkt)
         if _renamed_widened:
-            _companion_lines = _emit_widened_param_companions(kkt, add_comments, _renamed_widened)
-            sections[_companion_insert_idx:_companion_insert_idx] = _companion_lines
+            _companion_block.extend(
+                _emit_widened_param_companions(kkt, add_comments, _renamed_widened)
+            )
+        # Issue #1449 (variable analog): mirror the param path for domain-widened
+        # PRIMAL variables. Rewrite parent-index refs (n(tl)) to the `<v>__pw`
+        # companion, then emit the companion (FREE var + couple_<v> equality +
+        # out-of-subset fix) at the reserved slot. The couple pairs join the Model
+        # statement below; the #1179 out-of-subset fix on the source var is
+        # skipped under presolve (the source var is now declared at subset domain).
+        eq_defs_code, _renamed_widened_vars = _rewrite_widened_var_refs(eq_defs_code, kkt)
+        if _renamed_widened_vars:
+            _var_companion_lines, _var_companion_pairs = _emit_widened_var_companions(
+                kkt, add_comments, _renamed_widened_vars
+            )
+            _companion_block.extend(_var_companion_lines)
+        if _companion_block:
+            sections[_companion_insert_idx:_companion_insert_idx] = _companion_block
 
     # Emit index aliases if any are needed (to avoid GAMS Error 125)
     # These must be declared before the equation definitions that use them
@@ -2676,7 +2850,10 @@ def emit_gams_mcp(
     # Even when a variable has a stationarity-condition fix, that fix is emitted
     # over the original subset domain. If the symbol was declared over a widened
     # domain, we still need an additional fix for out-of-subset instances.
-    if kkt.var_domain_widenings:
+    # Issue #1449 (variable analog): under presolve the widened source var is
+    # declared at its SUBSET domain (so `var.fx(widened)` here would be invalid);
+    # the out-of-subset fix is emitted on the `<v>__pw` companion instead.
+    if kkt.var_domain_widenings and not _presolve_will_emit_early:
         for var_name_lower, widened_domain in sorted(kkt.var_domain_widenings.items()):
             var_def = kkt.model_ir.variables.get(var_name_lower)
             if not var_def:
@@ -3243,7 +3420,12 @@ def emit_gams_mcp(
         sections.append("*          equation ≥ 0 if variable = 0")
         sections.append("")
 
-    model_code = emit_model_mcp(kkt, model_name, suppressed_fx_equations=suppressed_fx)
+    model_code = emit_model_mcp(
+        kkt,
+        model_name,
+        suppressed_fx_equations=suppressed_fx,
+        extra_pairs=_var_companion_pairs,
+    )
     sections.append(model_code)
     sections.append("")
 

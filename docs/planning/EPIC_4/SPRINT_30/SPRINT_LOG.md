@@ -8,6 +8,7 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 | 1 | P1a robert objective-gradient fix (decoupled, firm) | genuine floor 69 → **70** (robert cold-match) | ✅ DONE |
 | 2 | P2 rocket forcing scaffold (firm P8) | — (scaffold lands; rocket +1 Solve → Sprint-31) | ✅ DONE |
 | 3 | P2 rocket forcing REPLAN decision | — (no lever converges; rocket +1 Solve → Sprint-31 PATH consult) | ✅ DONE (REPLAN) |
+| 4 | P3 hhfair widened-VARIABLE `$184` fix (companion-variable) | — (`$184` cleared, hhfair compiles+solves; +1 Match `stat_u` fix → Day 5+) | ✅ DONE (PROCEED, CASE_B) |
 
 ---
 
@@ -134,3 +135,35 @@ Neither converges. Combined with Task-4's PATH-option result (INFES 477 → 382 
 ### Day-3 outcome
 
 rocket's +1 Solve deferred to Sprint 31 (no metric change — Solve 107 / Match 92 hold; the +2-Solve target's rocket half is now formally at Sprint 31, as the Task-6 assessment anticipated). The forcing scaffold is hardened (homotopy = a real generic lever). Next: **Day 4 — P3 hhfair widened-VARIABLE `$184` fix** (the last live +Match; the freed rocket budget flows here).
+
+---
+
+## Day 4 — Priority 3: hhfair widened-VARIABLE `$184` fix + CASE_B verdict (2026-07-07)
+
+**Branch:** `planning/sprint30-day4-hhfair`. **Outcome: the `$184` blocker is CLEARED via the #1449 widened-VARIABLE companion-variable emit fix; the residual harness then reads a decisive CASE_B (emit_bug) verdict — the +1 Match `stat_u` sign fix is unblocked + precisely pinned, deferred to Day 5+ (P7 Class-B).**
+
+### The companion-variable `$184` fix (the Day-4 deliverable — landed)
+
+hhfair's presolve MCP couldn't compile: the source `$include` declares the VARIABLE `n(t)`, but the MCP widens it to `n(tl)` (n appears at the parent index in `stat_m(tl)`), so the two declarations collide (`$184 Domain list redefined`) under `$onMultiR`. The #1449 **parameter** `__pw`-companion doesn't transfer — `n` is a live nonlinear-stat coefficient, not a value copy. Generalized #1449 to the **variable** case (Task 9 Part D):
+
+- **Declare the source var at its SUBSET domain under presolve** (`emit_variables(..., suppress_widenings=True)`, `src/emit/templates.py`) — agrees with the `$include`, no `$184`.
+- **Emit a `<v>__pw` FREE companion at the widened domain** + a **`couple_<v>` equality** binding it to the source var on the subset + the out-of-subset `.fx` (`_emit_widened_var_companions`, mirrors `_emit_widened_param_companions`), inserted at the reserved post-include slot.
+- **Rewrite parent-index refs** `n(tl) → n__pw(tl)` in the MCP equation bodies (`_rewrite_widened_var_refs`); subset-index `n(t)` refs (incl. the re-emitted original equations) left intact so the embedded NLP isn't corrupted.
+- **Pair `couple_<v>.<v>__pw`** in the Model statement (`emit_model_mcp(extra_pairs=…)`); **skip the #1179 out-of-subset fix** on the source var under presolve (it is now declared at subset domain — the fix moves to the companion).
+
+hhfair now **translates + compiles clean (0 errors)** and the presolve MCP **solves MS 1**, warm-started from the embedded NLP optimum (87.159).
+
+- **Blast radius = hhfair ONLY (provably inert for the cohort).** The #1449 widened-*parameter* presolve cohort (cclinpts/chain/otpop/rocket) all have `var_domain_widenings = {}` — every new code path is gated on a non-empty variable widening, so their emit is unchanged. Only hhfair carries `{'n': ('tl',)}`.
+- **Tests:** `tests/unit/emit/test_widened_var_companion.py` (6: the two helpers + the out-of-subset condition + the presolve declaration suppression). Existing #1179 `test_domain_widened_fx` (no-presolve path) still fires. `make typecheck/format/lint/test` green — **4994 passed, 0 failed**.
+
+### The CES-mismatch verdict (Unknown 3.1/3.2) — CASE_B, PROCEED
+
+With the compile unblocked, `kkt_residual.py data/gamslib/raw/hhfair.gms` → **verdict: CASE_B — emit_bug** (dual transfer CONSISTENT; NOT non-convexity):
+
+- **`stat_u(1)` rel 2.00 (raw −36.05)**, `stat_u(2)` 1.888, `stat_u(3)` 1.782 → residual ∝ `ufact(t) = power(0.944, ord(t)-1)`, i.e. **exactly `−2·CES_grad(t)`** (dual_scale 18 = `CES_grad(1) ≈ 18.03`).
+- **Root cause pinned:** `u(t)` appears only in the objective *defining equation* `obj =e= prod(u**ufact)` (and is pinned by `utility.. u = CES`). `stat_c/l/n` are satisfied by the transferred `nu_utility ≈ −18` (that dual is correct), but `stat_u` inlines the objective term as `(-1)·CES_grad` (ν_objective = +1) when the `obj − prod = 0` normalization + max reduction require **`+CES_grad`** (ν_objective = −1) → `stat_u = −18 + (−18) = −36` instead of `+18 − 18 = 0`.
+- **Disposition:** PROCEED, but the sign fix touches objective-gradient inlining for any objvar-defined-by-equation model (higher blast radius) → **not a safe add-on to the `$184` architecture PR; deferred to Day 5+ (P7 Class-B)**, now unblocked and precisely targeted (`ISSUE_1236` Day-4 decision block).
+
+### Day-4 outcome
+
+The #1449 widened-VARIABLE presolve fix lands (general emit robustness; hhfair unblocked, compiles + solves). The last-live +1 Match is converted from "compile-blocked, verdict unreadable" to "CASE_B, precisely localized `stat_u` sign fix" — a Day 5+ genuine-floor target (69 → toward 72), **not** non-convexity. No metric change yet (Solve 107 / Match 92 hold). Next: **Day 5 — Checkpoint 1 + P7 Class-B** (incl. the hhfair `stat_u` objective-gradient sign fix).

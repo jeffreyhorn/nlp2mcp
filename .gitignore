@@ -63,6 +63,8 @@ results/
 
 # GAMS temporary/scratch directories
 [0-9][0-9][0-9][a-z]/
+# Python tempfile.mkdtemp() scratch dirs (emit/test/diagnostic runs)
+tmp*/
 **/gamsnext.sh
 **/gmsprmun.dat
 

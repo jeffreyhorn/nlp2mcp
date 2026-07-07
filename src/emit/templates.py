@@ -73,7 +73,7 @@ def _remap_domain(domain: tuple[str, ...], dynamic_map: dict[str, str]) -> tuple
     return tuple(dynamic_map.get(d.lower(), d) for d in domain)
 
 
-def emit_variables(kkt: KKTSystem) -> str:
+def emit_variables(kkt: KKTSystem, suppress_widenings: bool = False) -> str:
     """Emit Variables blocks grouped by VariableDef.kind.
 
     **CRITICAL (Finding #4)**: Preserves variable kinds from source model.
@@ -84,6 +84,12 @@ def emit_variables(kkt: KKTSystem) -> str:
 
     Args:
         kkt: KKT system containing variables and multipliers
+        suppress_widenings: Issue #1449 (variable analog) — when True, declare
+            domain-widened variables at their SOURCE (subset) domain instead of
+            the widened (parent) domain. Used under ``--nlp-presolve`` so the MCP
+            declaration agrees with the source ``$include`` (avoiding $184); the
+            MCP body is rewired to ``<v>__pw`` companions emitted at the widened
+            domain after the include.
 
     Returns:
         GAMS Variables blocks as string
@@ -129,7 +135,11 @@ def emit_variables(kkt: KKTSystem) -> str:
             continue
         # Issue #1164/#1175: Use widened domain if variable needs it
         domain = var_def.domain
-        if kkt.var_domain_widenings and var_name.lower() in kkt.var_domain_widenings:
+        if (
+            not suppress_widenings
+            and kkt.var_domain_widenings
+            and var_name.lower() in kkt.var_domain_widenings
+        ):
             domain = kkt.var_domain_widenings[var_name.lower()]
         var_groups[var_def.kind].append((var_name, domain))
 
