@@ -1,7 +1,7 @@
 # himmel16: Cyclic Offset Alias Gradient Mismatch
 
 **GitHub Issue:** [#1146](https://github.com/jeffreyhorn/nlp2mcp/issues/1146)
-**Status:** OPEN
+**Status:** **Sprint 30 Day 7 (2026-07-07): the `stat_area` sign fix is REFUTED — himmel16 cold-mismatch is NON-CONVEXITY, not a fixable emit bug.** Control experiment: flipping `stat_area(i)`'s objective-gradient sign `(-1)→(1)` in the cold emit is **inert** — the cold objective stays at **0.385** (unchanged), so `stat_area`'s sign does not affect the cold convergence point at all. himmel16 matches **warm** (0.674 ≈ NLP 0.675) but cold-converges to a spurious 0.385 (max-hexagon-area is non-convex; multiple local optima). The harness CASE_B / `stat_area` rel-2.0 signal is a uniform-`nu = -eq.m` negation artifact (my hand-derivation shows the emit `stat_area = -1 + nu_areadef` is **correct**: `nu_areadef = +1` at the optimum → residual 0). **→ No emit fix converts himmel16** (Case-c, non-convex); the genuine-floor gain is not available here. Deferred (not a Sprint-30 target). _(was: OPEN)_
 **Severity:** High — objective mismatch (43.0%)
 **Date:** 2026-03-23
 **Parent Issue:** #1111 (Alias-Aware Differentiation)

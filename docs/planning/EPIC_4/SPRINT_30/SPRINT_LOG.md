@@ -11,6 +11,7 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 | 4 | P3 hhfair widened-VARIABLE `$184` fix (companion-variable) | — (`$184` cleared, hhfair compiles+solves; +1 Match `stat_u` fix → Day 5+) | ✅ DONE (PROCEED, CASE_B) |
 | 5 | Checkpoint 1 (GO) + P7 Class-B: presolve dual-transfer **case-normalization** fix | — (`stat_pz` rel 1.0 → 0 across irscge/lrgcge/moncge; the obj-grad follow-on was **refuted Day 6**) | ✅ DONE (hypothesis refuted → real fix) |
 | 6 | P1b mine → **REPLAN Sprint 31** (IR head-offset plumbing) + shared obj-grad sign fix **REFUTED** (control test) | — (both non-actionable; no `src/` change; Solve 107 / Match 92 / floor 70 hold) | ✅ DONE (2 hypotheses tested, docs-only) |
+| 7 | mine REPLAN confirmed (cascade persists) + P5 offset-alias diagnostic | — (polygon fix **CONFIRMED** 0.780≈0.7797 → Day-8 impl; himmel16 non-convex refuted) | ✅ DONE (docs; polygon +1 Match confirmed) |
 
 ---
 
@@ -223,3 +224,24 @@ The Day-5 projection was that a single objective-gradient sign fix converts hhfa
 ### Day-6 outcome
 
 Two REPLAN-prone/hypothesis tracks tested and **both non-actionable this session**: mine → Sprint 31 (foundational IR head-offset plumbing); the shared obj-grad sign fix → **refuted by control experiment** (no clean +Match / Case-a). No `src/` change; no metric move (Solve 107 / Match 92 / genuine floor 70 hold). The firm sprint deliverables already landed (robert Day 1, forcing scaffold Days 2–3, hhfair `$184` Day 4, the Class-B case-normalization fix Day 5). Net: the PR24 discipline paid off twice more — a foundational-work REPLAN and a refuted sign hypothesis, both surfaced before any high-blast-radius `src/` change.
+
+---
+
+## Day 7 — mine REPLAN confirmed + P5 offset-alias diagnostic (polygon fix CONFIRMED, himmel16 refuted) (2026-07-07)
+
+**Branch:** `planning/sprint30-day7-offset-alias`. Docs-only checkpoint — the confirmed polygon fix implements on Day 8.
+
+### mine REPLAN — criterion confirmed, closed
+
+The cold-INFES histogram meets the Day-7 REPLAN trigger: `comp_pr`/`lam_pr` infeasibility persists across **all four k-directions** (se=12, sw=11, ne=9, nw=6) — the `ne`/`se`/`sw` parameter-offset cascade holds. mine stays `model_infeasible`; +1 Solve → Sprint 31 (filed Day 6, `ISSUE_1443`). robert (the decoupled P1 half) landed Day 1.
+
+### P5 offset-alias — polygon CONFIRMED (+1 Match), himmel16 refuted (non-convex)
+
+Freed mine budget → the P5 offset-alias diagnostic. Both re-confirmed CASE_B at Day 0; a control experiment (hand-patch the emitted `stat_*`, re-solve) then split them:
+
+- **polygon — FIX CONFIRMED (+1 Match).** Baseline cold 0.514 / warm 0.516 both **mismatch** NLP 0.7797 (polygon does NOT match warm today). Hand-patching `stat_r`/`stat_theta` with **four** missing cross-terms **warm-matches 0.780 ≈ 0.7797** (cold stays MS-5 — non-convex area-max — so it's a presolve/warm match). The distance-only subset alone → **0.000** (broken), confirming the "land all together" coupling. The two bug classes (each drops the *second* contribution when a variable sits at two offset/alias positions): (1) the **objective successor cross-term** (`r(i)`/`θ(i)` also appear as `(i+1)` in the area summand — `∂obj/∂r(i)` needs the `(i−1)`-summand term too), fix in `src/ad/gradient.py`; (2) the **distance constraint-Jacobian second-index symmetry** (`r`/`θ` at both indices of `distance(i,j)` — the `∂/∂·(j)` cross-term is dropped), fix in `src/ad/constraint_jacobian.py`. Exact GAMS terms banked in `ISSUE_1143` Day-7 block. **→ Day-8 implementation** (both AD paths, tightly gated, landed together).
+- **himmel16 — REFUTED (non-convex, Case-c).** Control: flipping `stat_area`'s obj-grad sign is **inert** (cold obj stays 0.385 unchanged). himmel16 matches warm (0.674 ≈ 0.675) but cold-converges to a spurious 0.385 (max-hexagon-area is non-convex). The emit `stat_area = -1 + nu_areadef` is **correct** (`nu_areadef=1` at the optimum → residual 0); the harness rel-2.0 is a uniform-`nu=-eq.m` negation artifact. **No emit fix converts himmel16** — the genuine-floor gain is not available here (`ISSUE_1146` updated). This is the third refuted "objvar-gradient-sign" hypothesis (after hhfair `stat_u`, irscge `stat_xp`) — the harness's single-point residual is systematically misleading for the objective-defining-intermediate-variable shape.
+
+### Day-7 outcome
+
+mine REPLAN closed (criterion confirmed). P5 diagnostic turned the banked uncertainty into a **confirmed polygon +1 Match** (exact 4-term fix, control-verified) and a **cleanly-refuted himmel16** (non-convex, no gain) — de-risking the Day-8 implementation to just the confirmed polygon AD fix. No `src/` change yet; Solve 107 / Match 92 / genuine floor 70 hold (polygon +1 Match lands on Day-8 implementation).
