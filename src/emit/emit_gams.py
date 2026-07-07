@@ -2643,10 +2643,15 @@ def emit_gams_mcp(
     # exactly the params that were rewritten.
     _var_companion_pairs: list[tuple[str, str]] = []
     if presolve_include_emitted:
+        # Accumulate the param + variable companion blocks and insert them ONCE at
+        # the reserved slot, in a deterministic order (params first, then vars) —
+        # avoids the LIFO artifact of two separate slice-inserts at the same index.
+        _companion_block: list[str] = []
         eq_defs_code, _renamed_widened = _rewrite_widened_param_refs(eq_defs_code, kkt)
         if _renamed_widened:
-            _companion_lines = _emit_widened_param_companions(kkt, add_comments, _renamed_widened)
-            sections[_companion_insert_idx:_companion_insert_idx] = _companion_lines
+            _companion_block.extend(
+                _emit_widened_param_companions(kkt, add_comments, _renamed_widened)
+            )
         # Issue #1449 (variable analog): mirror the param path for domain-widened
         # PRIMAL variables. Rewrite parent-index refs (n(tl)) to the `<v>__pw`
         # companion, then emit the companion (FREE var + couple_<v> equality +
@@ -2658,7 +2663,9 @@ def emit_gams_mcp(
             _var_companion_lines, _var_companion_pairs = _emit_widened_var_companions(
                 kkt, add_comments, _renamed_widened_vars
             )
-            sections[_companion_insert_idx:_companion_insert_idx] = _var_companion_lines
+            _companion_block.extend(_var_companion_lines)
+        if _companion_block:
+            sections[_companion_insert_idx:_companion_insert_idx] = _companion_block
 
     # Emit index aliases if any are needed (to avoid GAMS Error 125)
     # These must be declared before the equation definitions that use them
