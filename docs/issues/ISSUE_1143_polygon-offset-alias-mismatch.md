@@ -1,4 +1,4 @@
-# polygon: Offset-Alias Gradient Complete Failure (100% Mismatch)
+# polygon: Offset-Alias Gradient Mismatch (cold 0.514 / warm 0.516 vs NLP 0.7797; 4-term fix CONFIRMED Day 7)
 
 **GitHub Issue:** [#1143](https://github.com/jeffreyhorn/nlp2mcp/issues/1143)
 **Status:** **Sprint 30 Day 7 (2026-07-07): FIX CONFIRMED via control experiment — 4 coupled missing cross-terms, ready to implement.** A hand-patched emit with all four missing terms warm-matches (**0.780 ≈ NLP 0.7797**, up from the 0.516 mismatch); each subset alone fails (the distance-only patch → 0.000), confirming the "land both together" coupling. See the Day-7 block below. _(was: Sprint 29 Day 5 REVERTED → re-deferred to Sprint 30)_
@@ -60,6 +60,8 @@ gams /tmp/polygon_mcp.gms lo=2
 ---
 
 ## Root Cause Analysis
+
+> **⚠️ HISTORICAL (superseded by the Sprint-30 Day-7 block at the top).** The subsections below predate the current diagnosis and describe an earlier "100% failure / MCP 0.0" emit + a compilation-failure framing that no longer holds. The **current, confirmed** root cause and fix are in the "Sprint 30 Day 7 — FIX CONFIRMED" block above (two dropped second-contribution cross-terms: the objective successor + the `distance` two-index Jacobian; the 4-term patch warm-matches 0.780). Read the material below as historical context only.
 
 The polygon model uses:
 

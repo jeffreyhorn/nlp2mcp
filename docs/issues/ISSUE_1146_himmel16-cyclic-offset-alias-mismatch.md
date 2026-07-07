@@ -39,6 +39,8 @@ gams /tmp/himmel16_mcp.gms lo=2
 
 ## Root Cause Analysis
 
+> **⚠️ HISTORICAL HYPOTHESES (superseded by the Status line + Problem Summary above).** The subsections below investigate himmel16's mismatch as a **cyclic-offset gradient bug**. The Sprint-30 Day-7 control experiment **refuted** that: the cold mismatch is **non-convexity** (Case-c, max-hexagon-area), the emitted `stat_area` is correct, and the harness signal is a `nu`-negation artifact — **no emit/gradient fix converts himmel16**. Read the material below as historical hypotheses only.
+
 The himmel16 model uses:
 
 ```gams
