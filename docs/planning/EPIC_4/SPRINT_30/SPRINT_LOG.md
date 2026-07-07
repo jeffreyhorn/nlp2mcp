@@ -5,6 +5,7 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 | Day | Priority / Work | Metric delta | Status |
 |---|---|---|---|
 | 0 | Kickoff + Day-0 traces (PR24) | — (baseline confirmed) | ✅ DONE (docs/trace-only) |
+| 1 | P1a robert objective-gradient fix (decoupled, firm) | genuine floor 69 → **70** (robert cold-match) | ✅ DONE |
 
 ---
 
@@ -51,3 +52,23 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 ### Day-0 outcome
 
 Baseline = Sprint 29 final (no drift); all 9 banked surfaces re-confirmed at HEAD; the mine 3-site set is complete (no 4th bound-row site); Sprint 30 proceeds to **Day 1 (P1a robert objective-gradient fix)**. No `src/` change; no metric change. Trace-notes only.
+
+---
+
+## Day 1 — Priority 1a: robert objective-gradient fix (decoupled, firm genuine-floor) (2026-07-06)
+
+**Branch:** `planning/sprint30-day1-robert`. **+1 genuine floor** (robert warm-only-match → genuine **cold** match).
+
+### Root cause (the objective-gradient consolidation bug)
+
+`_build_indexed_gradient_term` (`src/kkt/stationarity.py`) consolidates the per-instance objective gradient into a single indexed `stat_<var>` term using **one representative instance**. For robert, `s(r,tt)` appears in the objective under TWO structurally-different terms — `sum(t, -storage-c*s(r,t))` (`t` a subset of `tt`) and `+res-value*s(r,"4")` (a fixed boundary element) — so `s(r,tt∈t)` has gradient `+storage-c(r)` while `s(r,"4")` has `-res-value(r)`. The single-representative collapse kept only the storage-c term, **dropped its `$(t(tt))` subset guard** (emitting it for all tt), and **dropped the res-value boundary term** — so the cold MCP admitted the spurious 6741.67 KKT point (the #1447 objective-term-scoping family, extended to fixed-literal-element terms).
+
+### Fix
+
+When the non-zero objective-gradient instances fall into MORE THAN ONE distinct generalized-gradient group, emit the **sum of each group's gradient guarded by the condition that selects its instances** (reusing the #1131 subset/sameas guard builder): `misc("storage-c",r)$(t(tt)) - misc("res-value",r)$(sameas(tt,'4'))`. Tightly gated: (a) not the #1387 offset path, (b) genuine **clustering** (`1 < groups ≤ 8` **and** `groups < non-zero instances`) — so per-instance offset residue that doesn't canonicalize (e.g. chain's `nh(i1-1)`, `nh(i2-1)`, … objective cross-terms) does **not** split into a per-element sum, and (c) a `≤ 32`-instance perf cap so the O(N) per-instance generalization never dominates emit time on large-instance variables (cesam's 81-instance `a(ii,jj)` stays on the unchanged single-representative path). `stat_x` is untouched (`nu_sb(r,tt)` was already correct, Unknown 1.4).
+
+### Verification
+
+- **robert cold-solves to MODEL STATUS 1 Optimal at profit 11025.0** (= the NLP optimum) — a genuine cold match, no warm-start (convex LP). The emitted `stat_s(r,tt).. (misc("storage-c",r)$(t(tt)) + (((-1) * misc("res-value",r)))$(sameas(tt,'4')) - nu_sb(r,tt) + nu_sb(r,tt-1)$(ord(tt)>1) - piL_s(r,tt))$(…)` matches the hand-derived KKT.
+- **Blast-radius (byte-scan + re-solve):** robert only; chain / cesam byte-identical (reverted by the clustering guard + the perf cap); no emit-time regression (cesam 10.1 s unchanged).
+- **Tests:** new property fixture `shape9_objgrad_subset_boundary.gms` + `test_shape9_objgrad_subset_boundary` (asserts both guarded groups); the #1131 gradient-condition unit tests pass (2 groups = 2 instances → no clustering → unchanged).

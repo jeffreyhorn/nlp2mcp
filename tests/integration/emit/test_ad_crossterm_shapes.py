@@ -132,3 +132,20 @@ def test_shape7_offset_alias_cyclic() -> None:
     # The circular predecessor decomposition: linear `i-1` + boundary wrap `i+5`.
     assert "nu_areadef(i-1))$(ord(i)>1)" in row, row
     assert re.search(r"nu_areadef\(i\+\d\)\)\$\(ord\(i\)<=card\(i\)-\d\)", row), row
+
+
+def test_shape9_objgrad_subset_boundary() -> None:
+    """robert (Sprint 30 P1a): a variable `s(tt)` in the objective under a
+    subset-summed term (`sum(t, -sc*s(t))`, `t` a subset of `tt`) AND a fixed
+    boundary-element term (`rv*s('4')`). The indexed `stat_s(tt)` consolidation
+    must emit BOTH gradient groups, each guarded by the condition that selects its
+    instances — `sc$(t(tt))` for the subset and the `rv` term at `sameas(tt,'4')`
+    — NOT collapse to a single unguarded representative (which drops the `$(t(tt))`
+    subset guard AND the boundary term, the pre-fix robert bug). Same family as
+    #1447, extended to fixed-literal-element boundary terms."""
+    row = _stat_row(_emit("shape9_objgrad_subset_boundary.gms"), "stat_s(tt)")
+    # The subset-summed term carries the `$(t(tt))` guard (not applied to all tt).
+    assert "sc$(t(tt))" in row, row
+    # The fixed boundary-element term is present and guarded to tt='4'
+    # (row is whitespace-stripped, so no space after the comma).
+    assert "rv" in row and "sameas(tt,'4')" in row, row

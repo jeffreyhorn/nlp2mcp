@@ -103,7 +103,7 @@ Equations
 Alias(t, t__);
 
 * Stationarity equations
-stat_s(r,tt).. (misc("storage-c",r) - nu_sb(r,tt) + nu_sb(r,tt-1)$(ord(tt) > 1) - piL_s(r,tt))$(s.up(r,tt) - s.lo(r,tt) > 1e-10) =E= 0;
+stat_s(r,tt).. (misc("storage-c",r)$(t(tt)) + (((-1) * misc("res-value",r)))$(sameas(tt, '4')) - nu_sb(r,tt) + nu_sb(r,tt-1)$(ord(tt) > 1) - piL_s(r,tt))$(s.up(r,tt) - s.lo(r,tt) > 1e-10) =E= 0;
 stat_x(p,tt).. (sum(t__$(sameas(t__, tt)), (((-1) * c(p,t__)))$(t(tt))) + sum(r, a(r,p) * nu_sb(r,tt)) + (lam_cc(tt)$(t(tt)))$(t(tt)) - piL_x(p,tt))$(t(tt)) =E= 0;
 
 * Inequality complementarity equations
