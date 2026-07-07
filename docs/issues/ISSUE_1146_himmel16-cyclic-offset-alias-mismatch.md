@@ -1,7 +1,7 @@
 # himmel16: Cyclic Offset Alias Gradient Mismatch
 
 **GitHub Issue:** [#1146](https://github.com/jeffreyhorn/nlp2mcp/issues/1146)
-**Status:** OPEN
+**Status:** **Sprint 30 Day 7 (2026-07-07): the `stat_area` sign fix is REFUTED — himmel16 cold-mismatch is NON-CONVEXITY, not a fixable emit bug.** Control experiment: flipping `stat_area(i)`'s objective-gradient sign `(-1)→(1)` in the cold emit is **inert** — the cold objective stays at **0.385** (unchanged), so `stat_area`'s sign does not affect the cold convergence point at all. himmel16 matches **warm** (0.674 ≈ NLP 0.675) but cold-converges to a spurious 0.385 (max-hexagon-area is non-convex; multiple local optima). The harness CASE_B / `stat_area` rel-2.0 signal is a uniform-`nu = -eq.m` negation artifact (my hand-derivation shows the emit `stat_area = -1 + nu_areadef` is **correct**: `nu_areadef = +1` at the optimum → residual 0). **→ No emit fix converts himmel16** (Case-c, non-convex); the genuine-floor gain is not available here. Deferred (not a Sprint-30 target). _(was: OPEN)_
 **Severity:** High — objective mismatch (43.0%)
 **Date:** 2026-03-23
 **Parent Issue:** #1111 (Alias-Aware Differentiation)
@@ -12,8 +12,14 @@
 ## Problem Summary
 
 The himmel16 model (Himmelblau Problem 16) uses `Alias(i, j)` with cyclic
-offset patterns where aliased indices wrap around the set boundary. The
-large mismatch (43.0%) indicates significant gradient errors.
+offset patterns where aliased indices wrap around the set boundary. The model
+matches **warm** (presolve 0.674 ≈ NLP 0.675) but its **cold** MCP converges to
+a spurious **0.385**. _(Day-7 correction: this cold mismatch is **non-convexity**,
+NOT a gradient error — max-hexagon-area has multiple local optima. The emitted
+`stat_area = -1 + nu_areadef` is **correct** (control test: flipping its sign is
+inert, cold obj stays 0.385), and the harness's `stat_area` rel-2.0 is a
+uniform-`nu = -eq.m` negation artifact. So this is **Case-c** — no emit/gradient
+fix converts himmel16. See the Status line above.)_
 
 | Model | NLP Objective | MCP Objective | Rel Diff |
 |-------|--------------|--------------|----------|
@@ -32,6 +38,8 @@ gams /tmp/himmel16_mcp.gms lo=2
 ---
 
 ## Root Cause Analysis
+
+> **⚠️ HISTORICAL HYPOTHESES (superseded by the Status line + Problem Summary above).** The subsections below investigate himmel16's mismatch as a **cyclic-offset gradient bug**. The Sprint-30 Day-7 control experiment **refuted** that: the cold mismatch is **non-convexity** (Case-c, max-hexagon-area), the emitted `stat_area` is correct, and the harness signal is a `nu`-negation artifact — **no emit/gradient fix converts himmel16**. Read the material below as historical hypotheses only.
 
 The himmel16 model uses:
 

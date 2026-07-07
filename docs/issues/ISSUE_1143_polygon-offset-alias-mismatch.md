@@ -1,11 +1,31 @@
-# polygon: Offset-Alias Gradient Complete Failure (100% Mismatch)
+# polygon: Offset-Alias Gradient Mismatch (cold 0.514 / warm 0.516 vs NLP 0.7797; 4-term fix CONFIRMED Day 7)
 
 **GitHub Issue:** [#1143](https://github.com/jeffreyhorn/nlp2mcp/issues/1143)
-**Status:** **Sprint 29 Day 5: Day-4 fix REVERTED (Checkpoint-1 caught a match→mismatch regression) → re-deferred to Sprint 30, COUPLED with the distance-constraint-Jacobian symmetry fix** (the objective-gradient cross-term + the distance-Jacobian must land together; neither alone matches). _(was: OPEN)_
-**Severity:** Medium — **solve mismatch / KKT inconsistency** (objective-gradient cross-term + the `distance(i,j)` constraint-Jacobian symmetry must both be fixed for polygon to match; matches warm today). _(The old "MCP compilation failure / compile errors" framing was stale — confirmed at Day 0: polygon translates + compiles cleanly and matches warm; the live issue is the cold-solve KKT inconsistency.)_
+**Status:** **Sprint 30 Day 7 (2026-07-07): FIX CONFIRMED via control experiment — 4 coupled missing cross-terms, ready to implement.** A hand-patched emit with all four missing terms warm-matches (**0.780 ≈ NLP 0.7797**, up from the 0.516 mismatch); each subset alone fails (the distance-only patch → 0.000), confirming the "land both together" coupling. See the Day-7 block below. _(was: Sprint 29 Day 5 REVERTED → re-deferred to Sprint 30)_
+**Severity:** Medium — **solve mismatch / KKT inconsistency** (objective-gradient successor cross-term + the `distance(i,j)` constraint-Jacobian second-index symmetry must both be fixed for polygon to match). _(Day-7 correction: polygon does **not** match warm today — baseline cold MCP 0.514 / warm 0.516 both mismatch NLP 0.7797; the 4-term fix recovers the **warm** match at 0.780. The old "MCP compilation failure" framing was stale — polygon translates + compiles cleanly; the live issue is the KKT-inconsistency mismatch.)_
 **Date:** 2026-03-23
 **Parent Issue:** #1111 (Alias-Aware Differentiation)
 **Affected Models:** polygon
+
+---
+
+## Sprint 30 Day 7 — FIX CONFIRMED (control experiment; the exact 4 terms)
+
+Day-0 harness re-confirmed CASE_B (`stat_theta(i12)` rel 0.492, dual-transfer CONSISTENT). Baseline: cold MCP 0.514 / warm (presolve) MCP **0.516** — both **mismatch** the NLP ref **0.7797** (polygon does NOT match warm today; the earlier "matches warm" framing was wrong). A control experiment hand-patching the emitted `stat_r`/`stat_theta` with the four missing cross-terms **warm-matches: 0.780 ≈ 0.7797** (cold stays MS-5 — non-convex area-max — so this is a **presolve/warm match**, converting polygon **mismatch → match, +1 Match**). The distance-only subset alone → **0.000** (broken), confirming the "land all together" coupling.
+
+**The two bug classes (both drop the second contribution when a variable appears at two offset/alias positions):**
+
+1. **Objective successor cross-term** (obj `polygon_area = 0.5·sum(i, r(i+1)·r(i)·sin(θ(i+1)−θ(i)))`). `r(i)` and `θ(i)` each appear as both the base `(i)` and the successor `(i+1)` in the summand, so `∂obj/∂r(i)` gets contributions from **both** the `i`-th and the `(i−1)`-th summand — the emit keeps only the `i`-th. Missing terms:
+   - `stat_r(i)`: `+ ((-1) * (0.5 * sin(theta(i) - theta(i-1)) * r(i-1) * 1$(j(i-1))))`
+   - `stat_theta(i)`: `+ ((-1) * (0.5 * r(i) * r(i-1) * cos(theta(i) - theta(i-1)) * 1$(j(i-1))))`
+   - Fix surface: the objective-gradient path (`src/ad/gradient.py` / `_diff_varref` / `_partial_collapse_sum` non-circular-offset branch — the reverted representative-selection).
+
+2. **Distance constraint-Jacobian second-index symmetry** (`distance(i,j)$(ord(j)>ord(i))..  sqr(r(i))+sqr(r(j)) − 2·r(i)·r(j)·cos(θ(j)−θ(i)) =l= 1`). `r`/`θ` appear at **both** indices; the emit only emits the `∂/∂·(i)` cross-term (`sum(j>i, …·lam_distance(i,j))`), dropping the `∂/∂·(j)` term (`sum(i'<i, …·lam_distance(i',i))`). Missing terms (with `j` = the alias, `ord(j)<ord(i)`):
+   - `stat_r(i)`: `+ sum(j, ((2 * r(i) - cos(theta(j) - theta(i)) * r(j) * 2) * lam_distance(j,i))$(ord(j) < ord(i)))`
+   - `stat_theta(i)`: `+ sum(j, ((2 * r(i) * r(j) * sin(theta(i) - theta(j))) * lam_distance(j,i))$(ord(j) < ord(i)))`
+   - Fix surface: `src/ad/constraint_jacobian.py` (the dropped second-index cross-term for a 2-index constraint whose variable appears at both indices).
+
+**Disposition: PROCEED** — both AD paths, tightly gated to the offset/alias shape, landed together (neither alone matches). REPLAN to Sprint 31 (#1111/#1112 general alias differentiation) only if a tight shape-gate proves infeasible.
 
 ---
 
@@ -13,27 +33,35 @@
 
 The polygon model (Largest Small Polygon) uses offset-based aliasing with
 `sum(j(i+1), ...)` patterns where `j` is an alias of `i` and the sum
-iterates over the successor element. The MCP objective is 0.0 versus
-the NLP objective of 0.780, indicating complete failure of the gradient
-computation.
+iterates over the successor element. **Current baseline (Day-7):** the MCP
+**mismatches** the NLP objective 0.7797 — cold **0.514** / warm (presolve)
+**0.516** — because `stat_r`/`stat_theta` drop the *second* contribution of the
+successor-offset objective gradient **and** the two-index `distance` Jacobian
+(see the Day-7 block above for the confirmed 4-term fix → warm-match 0.780).
+_(Historical: an earlier emit produced MCP objective **0.0** vs 0.780 — a "100%
+failure" — before the partial cross-term work; that figure is superseded by the
+0.514/0.516 baseline.)_
 
-| Model | NLP Objective | MCP Objective | Rel Diff |
+| Model | NLP Objective | MCP Objective (current baseline) | Fixed (warm) |
 |-------|--------------|--------------|----------|
-| polygon | 0.780 | 0.0 | 100% |
+| polygon | 0.7797 | 0.514 cold / 0.516 warm (mismatch) | **0.780 (match)** with the 4-term fix |
 
 ---
 
 ## Reproduction
 
 ```bash
-python -m src.cli data/gamslib/raw/polygon.gms -o /tmp/polygon_mcp.gms
+python -m src.cli data/gamslib/raw/polygon.gms --nlp-presolve -o /tmp/polygon_mcp.gms
 gams /tmp/polygon_mcp.gms lo=2
-# Objective: 0.0, expected: 0.780
+# Current baseline: warm MCP objective 0.516, expected 0.7797 (mismatch)
+# With the Day-7 4-term fix: 0.780 (warm-match)
 ```
 
 ---
 
 ## Root Cause Analysis
+
+> **⚠️ HISTORICAL (superseded by the Sprint-30 Day-7 block at the top).** The subsections below predate the current diagnosis and describe an earlier "100% failure / MCP 0.0" emit + a compilation-failure framing that no longer holds. The **current, confirmed** root cause and fix are in the "Sprint 30 Day 7 — FIX CONFIRMED" block above (two dropped second-contribution cross-terms: the objective successor + the `distance` two-index Jacobian; the 4-term patch warm-matches 0.780). Read the material below as historical context only.
 
 The polygon model uses:
 
