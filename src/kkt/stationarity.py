@@ -2933,7 +2933,76 @@ def _build_indexed_gradient_term(
     # fixed same-set literals preserved, conditions shifted. Tightly gated: only the
     # offset signature (an IndexOffset on a concrete domain-set element) over a 1-D
     # domain; everything else uses the unchanged generic path.
-    if len(domain) == 1 and _grad_has_concrete_base_offset(grad_component, element_to_set, domain):
+    use_offset_path = len(domain) == 1 and _grad_has_concrete_base_offset(
+        grad_component, element_to_set, domain
+    )
+
+    # robert (Sprint 30 P1a): the non-zero instances may carry STRUCTURALLY
+    # DIFFERENT gradient expressions (not merely zero vs non-zero) — robert's
+    # objective is ``sum(t, ... - storage-c*s(r,t)) + res-value*s(r,"4")`` where
+    # ``t`` is a subset of ``s``'s domain ``tt``, so ``s(r,tt∈t)`` has gradient
+    # ``+storage-c(r)`` while the boundary ``s(r,"4")`` has ``-res-value(r)``. The
+    # single-representative consolidation below keeps only ONE such term and drops
+    # the other along with its subset guard (emitting ``storage-c`` for ALL tt and
+    # dropping the res-value boundary term). When the generic (non-offset) path
+    # applies and the non-zero instances fall into MORE THAN ONE distinct
+    # generalized-gradient group, emit the SUM of each group's gradient guarded by
+    # the condition that selects that group's instances (reusing the #1131 subset/
+    # sameas guard builder — a subset dimension becomes ``$(t(tt))``, a single
+    # boundary element becomes ``$(sameas(tt,'4'))``). Same family as #1447
+    # (objective-term subset-scoping), extended to fixed-literal-element terms.
+    # Perf bound: the grouping below generalizes EACH non-zero instance's
+    # gradient (an O(N) tree-walk per instance). Restrict it to variables with a
+    # bounded instance count so it never dominates emit time on large-instance
+    # variables (e.g. cesam's 81-instance ``a(ii,jj)`` adds ~8 s). The robert
+    # boundary-element pattern involves a small domain (robert's ``s(r,tt)`` = 8
+    # instances); larger variables keep the existing single-representative
+    # behavior (unchanged — no perf cost and no new golden churn).
+    _MULTI_GROUP_INSTANCE_CAP = 32
+    if not use_offset_path and 1 < len(nonzero_instances) <= _MULTI_GROUP_INSTANCE_CAP:
+        groups: dict[str, tuple[Expr, list[tuple[int, tuple[str, ...]]]]] = {}
+        group_order: list[str] = []
+        for c_id, v_idx in nonzero_instances:
+            gc = kkt.gradient.get_derivative(c_id)
+            if gc is None:  # nonzero_instances are non-None; defensive for typing
+                continue
+            gen = _replace_indices_in_expr(
+                gc, domain, element_to_set, kkt.model_ir, equation_domain=domain
+            )
+            key = repr(gen)
+            if key not in groups:
+                groups[key] = (gen, [])
+                group_order.append(key)
+            groups[key][1].append((c_id, v_idx))
+        # Only split when the non-zero instances genuinely CLUSTER into a few
+        # structural groups (robert: the ``storage-c`` subset group + the
+        # ``res-value`` boundary group = 2 groups from 8 instances). If every
+        # instance is (nearly) its own group, that is the signature of per-
+        # instance offset/alias residue that ``_replace_indices_in_expr`` does
+        # NOT canonicalize — e.g. chain's objective cross-terms ``nh(i1-1)``,
+        # ``nh(i2-1)``, … differ per instance — and the single-representative
+        # path below (which handles the offset generalization) must be used
+        # instead. Require real clustering (fewer groups than non-zero
+        # instances) and a small, bounded group count so we never emit a giant
+        # per-element sum.
+        if 1 < len(groups) <= 8 and len(groups) < len(nonzero_instances):
+            terms: list[Expr] = []
+            for key in group_order:
+                gen_expr, group_insts = groups[key]
+                guard = _build_sameas_guard_for_instances(
+                    domain, group_insts, instances, kkt.model_ir
+                )
+                terms.append(
+                    DollarConditional(value_expr=gen_expr, condition=guard)
+                    if guard is not None
+                    else gen_expr
+                )
+            summed = terms[0]
+            for t in terms[1:]:
+                summed = Binary("+", summed, t)
+            return summed
+
+    if use_offset_path:
         expr = _resymbolize_offset_gradient(
             grad_component, rep_var_indices[0], domain[0], element_to_set, domain
         )
