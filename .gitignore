@@ -67,3 +67,6 @@ results/
 **/gmsprmun.dat
 
 .pr-bot.env
+
+# Forcing-scaffold (--force optfile) GAMS runtime artifact
+path.opt
