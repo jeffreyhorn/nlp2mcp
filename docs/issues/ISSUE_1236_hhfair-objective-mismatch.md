@@ -1,20 +1,25 @@
-# hhfair: Objective Mismatch (MCP=54.9 vs NLP=87.2)
+# hhfair: Objective Mismatch (cold MCP=72.147 vs NLP=87.159; historical figure 54.9 pre-#1449)
 
 **GitHub Issue:** [#1236](https://github.com/jeffreyhorn/nlp2mcp/issues/1236)
-**Status:** **`$184` BLOCKER CLEARED (Sprint 30 Day 4) → CES `stat_u` sign fix is the live +1 Match, deferred to Sprint 30 Day 5+ (P7 Class-B).** The #1449 widened-VARIABLE presolve fix (companion-variable + value-coupling) landed Day 4; hhfair now translates + compiles + solves (MS 1). The residual harness (`kkt_residual.py`) then returned a decisive **CASE_B (emit_bug)** verdict localized to `stat_u` (see the Day-4 decision block in §"PROCEED/REPLAN Signal"). **NOT non-convexity.** _(was: REPLAN → Sprint 30)_
+**Status:** **`$184` CLEARED (Day 4); the `stat_u` obj-grad SIGN-FLIP fix is REFUTED (Day 6 control test) — +1 Match NOT firm, deeper diagnosis deferred.** The #1449 widened-VARIABLE presolve fix landed Day 4 (hhfair translates + compiles + solves MS 1). The residual harness flagged CASE_B on `stat_u` (residual `-2·CES_grad`), but the **Day-6 control experiment refuted the sign fix**: hand-flipping `stat_u`'s obj-grad sign `(-1)→(1)` moves the MCP objective **72.147 → 22.144 (WORSE)**, away from the NLP ref 87.159 — not toward a match. hhfair is non-convex (CES + bilinear); the single-point harness residual was a misleading signal, and 72.147 may be a genuine spurious KKT point (closer to Case-c). See the Day-6 block in §"PROCEED/REPLAN Signal". _(was: CASE_B `stat_u` sign fix deferred to Day 5+)_
 **Severity:** Medium — Model solves optimally but objective differs from NLP
 **Date:** 2026-04-09
-**Last Updated:** 2026-07-07 (Sprint 30 Day 4 — `$184` cleared; CASE_B `stat_u` sign root cause pinned)
+**Last Updated:** 2026-07-07 (Sprint 30 Day 6 — `stat_u` sign-flip fix refuted by control experiment)
 **Affected Models:** hhfair
 
 ---
 
 ## Problem Summary
 
-After fixing EXECERROR (#1179), hhfair solves to MODEL STATUS 1 Optimal but
-with MCP obj=54.885 vs NLP obj=87.159 (37% mismatch). This indicates an
-incorrect KKT formulation — the stationarity conditions produce a different
-optimum than the original NLP.
+hhfair solves to MODEL STATUS 1 Optimal but with a **mismatched** objective.
+**Current (post-#1449, Sprint 30):** the `--nlp-presolve` MCP solves cold/warm to
+**MCP obj = 72.147 vs NLP obj = 87.159**. _(Historical: before the #1449
+widened-VARIABLE `$184` fix and #1179, an earlier emit reported **MCP = 54.885**;
+that figure is superseded — the current cold baseline is 72.147.)_ The mismatch
+indicates the stationarity conditions admit a different optimum than the NLP —
+but note hhfair is **non-convex** (CES + bilinear `timemoney`), so 72.147 may be a
+genuine spurious KKT point rather than a fixable emit bug (the Day-6 obj-grad
+sign-flip fix was refuted — see §"PROCEED/REPLAN Signal").
 
 ---
 
@@ -23,9 +28,9 @@ optimum than the original NLP.
 - **Translation**: Success
 - **GAMS compilation**: Success
 - **PATH solve**: MODEL STATUS 1 Optimal, SOLVER STATUS 1 Normal Completion
-- **Objective**: MCP=54.885, NLP=87.159 (37% mismatch)
+- **Objective**: cold/warm MCP = **72.147** vs NLP = 87.159 (post-#1449; the earlier **54.885** is historical/superseded)
 - **Pipeline category**: model_optimal (mismatch)
-- **Previous fixes**: #1179 (EXECERROR, domain-widened variable fixing)
+- **Previous fixes**: #1179 (EXECERROR, domain-widened variable fixing); #1449 (widened-VARIABLE `$184` presolve fix, Sprint 30 Day 4)
 
 ---
 
@@ -135,6 +140,8 @@ and `stat_c(t)`/`stat_l(t)`/`stat_n(t)` carry the chain-rule through the `(-a2)`
 - **REPLAN (Case c):** clean residual but cold PATH diverges → non-convexity (the `prod`/CES nest is non-convex) → Sprint 30 forcing.
 
 ### PROCEED/REPLAN Signal
+
+> **🔴 CORRECTION — the `stat_u` obj-grad SIGN-FLIP fix is REFUTED (Sprint 30 Day 6, 2026-07-07).** The Day-4 CASE_B verdict (below) localized a `−2·CES_grad` residual on `stat_u` and hypothesized an inlined objective-gradient sign error (`(-1)·CES_grad` should be `+CES_grad`). **A decisive control experiment refutes it** (mirroring the robert §1.4 method — a self-contained solve cuts through the single-point warm-start residual): hand-flipping `stat_u`'s obj-grad sign `(-1)→(1)` in the emitted `--nlp-presolve` MCP and solving moves the MCP objective **72.147 → 22.144 — WORSE** (further from the NLP ref 87.159), not toward a match. Cross-check on irscge (the CGE `stat_xp` sibling, already a presolve-match): flipping `stat_xp` is **neutral** (26.091 either way — the warm-start dominates). **So the sign fix is wrong**, and the harness's `−2·CES_grad` residual at the single NLP-optimum point was a **misleading signal** for this non-convex objective-defining-equation shape (`obj =e= prod(u**ufact)`, `u` also pinned by `utility.. u =e= CES` — an *intermediate* objective variable). hhfair is non-convex (CES + bilinear `timemoney`); 72.147 may be a genuine spurious KKT point (closer to **Case-c**). **Disposition:** the hhfair +1 Match is **NOT firm** via an obj-grad sign fix; a real fix (if any) needs deeper diagnosis (single-point-harness artifact vs subtle emit bug vs inherent non-convexity) — **deferred** (no high-blast-radius objective-gradient change shipped on a refuted hypothesis). PR24 lesson repeated: the derived fix-surface was a hypothesis; the control experiment corrected it.
 
 > **🟢 DECIDED — `$184` CLEARED + CASE_B verdict read (Sprint 30 Day 4, 2026-07-07).** The #1449 **widened-VARIABLE presolve fix landed** (companion-variable + value-coupling emit path — see §"Sprint 30 Day 4 fix" below). hhfair now translates, compiles clean (0 errors), and the presolve MCP solves **MS 1** warm-started from the embedded NLP optimum (87.159). With the compile unblocked, `kkt_residual.py data/gamslib/raw/hhfair.gms` returns a **decisive verdict: CASE_B — emit_bug** (dual transfer CONSISTENT: max comp-infeas 0, max equality-residual 5.7e-14; NOT non-convexity):
 > - **max-residual row `stat_u(1)`: rel = 2.00, raw = −36.05**; `stat_u(2)` rel 1.888, `stat_u(3)` rel 1.782. The residuals fall off as `power(lambda, ord(t)-1)` with **lambda = 0.944 = `ufact(t)`** → the residual is **exactly `−2·CES_grad(t)`** (dual_scale 18 = `CES_grad(1) = ufact(1)·obj/u(1) = 1·87.159/4.835 ≈ 18.03`; raw −36.05 = −2·18.03).
