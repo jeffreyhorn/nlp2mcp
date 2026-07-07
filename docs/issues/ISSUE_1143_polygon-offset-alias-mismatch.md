@@ -1,11 +1,39 @@
 # polygon: Offset-Alias Gradient Mismatch (cold 0.514 / warm 0.516 vs NLP 0.7797; 4-term fix CONFIRMED Day 7)
 
 **GitHub Issue:** [#1143](https://github.com/jeffreyhorn/nlp2mcp/issues/1143)
-**Status:** **Sprint 30 Day 7 (2026-07-07): FIX CONFIRMED via control experiment — 4 coupled missing cross-terms, ready to implement.** A hand-patched emit with all four missing terms warm-matches (**0.780 ≈ NLP 0.7797**, up from the 0.516 mismatch); each subset alone fails (the distance-only patch → 0.000), confirming the "land both together" coupling. See the Day-7 block below. _(was: Sprint 29 Day 5 REVERTED → re-deferred to Sprint 30)_
+**Status:** **Sprint 30 Day 8 (2026-07-07): the OBJECTIVE half is implemented + verified (shape8), but the DISTANCE half is the #1111/#1112 general-alias core → REPLAN the coupled fix to Sprint 31.** The objective-successor cross-term is a tight, working fix (interior-representative selection — see the Day-8 block); but the coupled `distance` second-index Jacobian requires NEW per-constraint-position cross-term logic (the existing multi-pattern correction is diagonal-vs-off-diagonal topology, not var-at-two-indices), and the objective half alone regresses polygon to MS-5 (the Sprint-29 coupling). Objective-half src reverted (can't land alone); the confirmed recipe + working objective implementation banked below. _(was: Sprint 30 Day 7 FIX CONFIRMED)_
 **Severity:** Medium — **solve mismatch / KKT inconsistency** (objective-gradient successor cross-term + the `distance(i,j)` constraint-Jacobian second-index symmetry must both be fixed for polygon to match). _(Day-7 correction: polygon does **not** match warm today — baseline cold MCP 0.514 / warm 0.516 both mismatch NLP 0.7797; the 4-term fix recovers the **warm** match at 0.780. The old "MCP compilation failure" framing was stale — polygon translates + compiles cleanly; the live issue is the KKT-inconsistency mismatch.)_
 **Date:** 2026-03-23
 **Parent Issue:** #1111 (Alias-Aware Differentiation)
 **Affected Models:** polygon
+
+---
+
+## Sprint 30 Day 8 — implementation attempt: objective half DONE, distance half = REPLAN to Sprint 31
+
+Attempted the coordinated fix with safety rails. Outcome: the **objective half is a tight, verified fix**; the **distance half is the #1111/#1112 general-alias core** → REPLAN the coupled pair to Sprint 31 (they cannot land separately — objective-alone regresses polygon to **MS-5 Locally Infeasible**, the Sprint-29 coupling).
+
+### Objective successor cross-term — IMPLEMENTED + VERIFIED (banked for Sprint 31)
+
+Root cause pinned: in `src/kkt/stationarity.py` `_build_indexed_gradient_term`, the `use_offset_path` branch re-symbolizes the **first non-zero** instance's gradient. For a successor-offset objective that instance may be a **boundary** column (whose out-of-range predecessor row drops one offset image), so the predecessor cross-term is dropped for every row. The per-instance gradients are **correct** (interior instances already carry both images); only the representative selection is wrong.
+
+**The working fix** (reverted here only because it can't ship without the coupled distance fix): pick the non-zero instance with the **most additive gradient terms** (an interior one) before re-symbolizing:
+```python
+# a helper that descends Unary(-) AND a scalar `Const * (...)` factor:
+def _count_additive_terms(expr) -> int: ...   # +/- binaries recurse; Const*sum descends; else 1
+# in the use_offset_path branch of _build_indexed_gradient_term:
+_rep_grad, _rep_idx = grad_component, rep_var_indices
+_rep_terms = _count_additive_terms(grad_component)
+for _c_id, _v_idx in nonzero_instances:
+    _n = _count_additive_terms(kkt.gradient.get_derivative(_c_id))
+    if _n > _rep_terms: _rep_terms, _rep_grad, _rep_idx = _n, ..., _v_idx
+expr = _resymbolize_offset_gradient(_rep_grad, _rep_idx[0], domain[0], element_to_set, domain)
+```
+Verified: `shape8_offset_alias_successor` emits both `x(i+1)*1$(j(i)) + x(i-1)*1$(j(i-1))`; polygon `stat_r`/`stat_theta` gain the `r(i-1)`/`theta(i-1)` successor terms. No-op when all non-zero instances share a term count (the #1387/#1455 per-instance-offset cohort is unaffected).
+
+### Distance second-index Jacobian — the #1111/#1112 general-alias core (REPLAN)
+
+The Jacobian **already computes** the second-index derivatives: `distance/r` has **300 first-index (var==i) + 300 second-index (var==j)** nonzero entries, with **distinct structure keys** (`2*r - cos*(r*2)` vs `2*r - cos*(2*r)`). But `_add_indexed_jacobian_terms` emits only the first-index sum and drops the second — because the Issue #1110 multi-pattern correction is built for **diagonal-vs-off-diagonal** topology (a variable appearing directly AND inside a sum), NOT a variable at **two constraint index-positions**. Correctly emitting the complementary sum `sum(j, ∂distance(j,i)/∂·(i) * lam_distance(j,i))$(ord(j) < ord(i))` (inverted multiplier index order + flipped `ord` condition, mirroring the first-index sum) is **new per-position cross-term logic** — the #1111/#1112 general-alias-differentiation core, coupled with the delicate multi-pattern machinery that many CGE models depend on. That is beyond a tight same-session shape-gate; **REPLAN to Sprint 31** per the Phase-0 gate ("REPLAN if it needs general alias differentiation"). The confirmed 4-term target (below) + the working objective half make the Sprint-31 implementation a well-specified, de-risked task.
 
 ---
 

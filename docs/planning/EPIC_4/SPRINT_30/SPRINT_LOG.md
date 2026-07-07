@@ -12,6 +12,7 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 | 5 | Checkpoint 1 (GO) + P7 Class-B: presolve dual-transfer **case-normalization** fix | — (`stat_pz` rel 1.0 → 0 across irscge/lrgcge/moncge; the obj-grad follow-on was **refuted Day 6**) | ✅ DONE (hypothesis refuted → real fix) |
 | 6 | P1b mine → **REPLAN Sprint 31** (IR head-offset plumbing) + shared obj-grad sign fix **REFUTED** (control test) | — (both non-actionable; no `src/` change; Solve 107 / Match 92 / floor 70 hold) | ✅ DONE (2 hypotheses tested, docs-only) |
 | 7 | mine REPLAN confirmed (cascade persists) + P5 offset-alias diagnostic | — (polygon fix **CONFIRMED** 0.780≈0.7797 → Day-8 impl; himmel16 non-convex refuted) | ✅ DONE (docs; polygon +1 Match confirmed) |
+| 8 | P5 polygon impl: objective half DONE + verified; distance half = #1111/#1112 core → **REPLAN Sprint 31** | — (coupled; objective-alone regresses polygon MS-5; reverted; recipe banked) | 🔄 REPLAN (objective half implemented + verified, banked) |
 
 ---
 
@@ -245,3 +246,25 @@ Freed mine budget → the P5 offset-alias diagnostic. Both re-confirmed CASE_B a
 ### Day-7 outcome
 
 mine REPLAN closed (criterion confirmed). P5 diagnostic turned the banked uncertainty into a **confirmed polygon +1 Match** (exact 4-term fix, control-verified) and a **cleanly-refuted himmel16** (non-convex, no gain) — de-risking the Day-8 implementation to just the confirmed polygon AD fix. No `src/` change yet; Solve 107 / Match 92 / genuine floor 70 hold (polygon +1 Match lands on Day-8 implementation).
+
+---
+
+## Day 8 — P5 polygon implementation: objective half done, distance half = #1111/#1112 core → REPLAN (2026-07-07)
+
+**Branch:** `planning/sprint30-day8-offset-alias`. Attempted the coordinated AD fix with safety rails; outcome: **REPLAN the coupled pair to Sprint 31** (docs-only — the objective-half src is reverted since it can't ship alone).
+
+### Objective successor cross-term — IMPLEMENTED + VERIFIED (banked)
+
+Pinned the root cause in `_build_indexed_gradient_term` (`use_offset_path` branch): it re-symbolizes the **first** non-zero instance, which for a successor-offset objective can be a **boundary** column missing one offset image → the predecessor cross-term is dropped for every row. Fix (a `_count_additive_terms` helper + interior-representative selection): **verified** — `shape8` emits both `x(i+1)*1$(j(i)) + x(i-1)*1$(j(i-1))`, and polygon `stat_r`/`stat_theta` gain the `r(i-1)`/`theta(i-1)` successor terms. Working implementation banked in `ISSUE_1143` Day-8 block.
+
+### Distance second-index Jacobian — the #1111/#1112 general-alias core (REPLAN)
+
+The Jacobian **already computes** the second-index derivatives (`distance/r`: 300 first-index + 300 second-index entries, distinct structure keys), but `_add_indexed_jacobian_terms` drops them: the Issue #1110 multi-pattern correction is **diagonal-vs-off-diagonal** topology (var directly + in a sum), NOT a var at **two constraint index-positions**. Emitting the complementary `sum(j, ∂distance(j,i)/∂·(i)·lam_distance(j,i))$(ord(j)<ord(i))` (inverted multiplier order + flipped `ord`) is **new per-position cross-term logic** = the #1111/#1112 general-alias-differentiation core, coupled with the delicate multi-pattern machinery many CGE models depend on. Beyond a tight same-session shape-gate → **REPLAN to Sprint 31** per the Phase-0 gate ("REPLAN if it needs general alias differentiation").
+
+### Coupling → both-or-neither
+
+The two halves are coupled (Sprint-29 finding, re-confirmed): with **only** the objective fix, polygon regresses **MS-1 mismatch (0.516) → MS-5 Locally Infeasible** (the now-complete objective gradient against the still-incomplete distance Jacobian yields an inconsistent, infeasible KKT). So the objective half **cannot land alone** → reverted. polygon restored byte-identical to baseline (MS-1, 0.516). `shape8` stays strict-xfail until the coupled fix lands.
+
+### Day-8 outcome
+
+REPLAN polygon (+ himmel16, already refuted Day 7) to the Sprint-31 #1111/#1112 general-alias-differentiation workstream. **Massively de-risked hand-off:** the confirmed 4-term target (control-verified 0.780) + the working, verified objective-half implementation + the pinned distance-half root cause (Jacobian complete, assembly topology mismatch) make the Sprint-31 task well-specified. No `src/` change lands this session; Solve 107 / Match 92 / genuine floor 70 hold. This is the plan's PROCEED-vs-REPLAN gate resolving to REPLAN at the general-alias boundary — surfaced with a near-complete recipe rather than a rushed high-blast-radius multi-pattern change.
