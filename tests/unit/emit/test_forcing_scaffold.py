@@ -73,11 +73,17 @@ class TestEmitForcingScaffold:
         assert "nlp2mcp_force_done$(mcp_model.modelStat <= 2) = 1;" in out
         assert "nlp2mcp_force_modelstat = mcp_model.modelStat;" in out
 
-    def test_homotopy_emits_continuation_loop(self):
+    def test_homotopy_emits_proximal_continuation_loop(self):
         out = emit_forcing_scaffold("homotopy", "mcp_model")
         assert "Set nlp2mcp_force_step" in out
         assert "Parameter nlp2mcp_force_mu(nlp2mcp_force_step)" in out
         assert "loop(nlp2mcp_force_step," in out
+        # the model-agnostic proximal_perturbation continuation: PATH forced,
+        # optfile enabled, path.opt rewritten per step with the mu schedule
+        assert "option mcp = path;" in out
+        assert "mcp_model.optfile = 1;" in out
+        assert "file nlp2mcp_force_opt / path.opt /;" in out
+        assert "putclose nlp2mcp_force_opt 'proximal_perturbation '" in out
         assert "Solve mcp_model using MCP;" in out
         assert "nlp2mcp_force_modelstat = mcp_model.modelStat;" in out
 

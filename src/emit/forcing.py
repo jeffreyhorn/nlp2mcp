@@ -13,8 +13,9 @@ it is validated to compile + run on rocket, but — per
 to make rocket converge on its own.
 
 Strategies:
-- ``homotopy``:   continuation loop over a relaxation parameter ``mu: 1 -> 0``,
-  warm-restarting from each prior point.
+- ``homotopy``:   a PATH ``proximal_perturbation`` continuation ``mu: large -> 0``
+  (Levenberg-Marquardt regularization; ``mu = 0`` recovers the original problem),
+  warm-restarting from each prior point. Fully model-agnostic — no relaxation hook.
 - ``multistart``: re-solve from N perturbed ``.l`` starts, keep the first MS 1/2.
 - ``optfile``:    a single solve with an emitted PATH ``path.opt``
   (``proximal_perturbation`` + ``merit_function normal``).
@@ -102,23 +103,30 @@ def emit_forcing_scaffold(
         lines.append(");")
 
     else:  # homotopy
-        # Continuation over mu: 1 (relaxed) -> 0 (original), warm from each prior point.
+        # Continuation over the PATH proximal_perturbation (Levenberg-Marquardt
+        # regularization) mu: large -> 0, warm-restarting from each prior point.
+        # mu = 0 recovers the original problem, so this is a fully model-agnostic
+        # homotopy — no model-specific relaxation hook is needed (Sprint 30 Day 3,
+        # validated on rocket: it runs the schedule, though rocket's non-convergence
+        # is intrinsic). A path.opt is rewritten per step via a GAMS put file.
         if add_comments:
             lines.append(
-                "* --force homotopy: continuation over mu (relaxed -> original),"
+                "* --force homotopy: proximal_perturbation continuation (mu large -> 0),"
                 " warm-restart from each prior point"
             )
-        lines.append("Set nlp2mcp_force_step / m1*m5 /;")
+        lines.append("option mcp = path;")
+        lines.append(f"{model_name}.optfile = 1;")
+        lines.append("Set nlp2mcp_force_step / m1*m7 /;")
         lines.append(
             "Parameter nlp2mcp_force_mu(nlp2mcp_force_step)"
-            " / m1 1.0, m2 0.5, m3 0.25, m4 0.1, m5 0.0 /;"
+            " / m1 1e3, m2 1e2, m3 1e1, m4 1.0, m5 1e-1, m6 1e-2, m7 0 /;"
         )
+        lines.append("file nlp2mcp_force_opt / path.opt /;")
         lines.append("loop(nlp2mcp_force_step,")
-        if add_comments:
-            lines.append(
-                "*   HOOK (model-specific): scale the model relaxation by"
-                " nlp2mcp_force_mu(nlp2mcp_force_step) here;"
-            )
+        lines.append(
+            "    putclose nlp2mcp_force_opt 'proximal_perturbation '"
+            " nlp2mcp_force_mu(nlp2mcp_force_step):0:8 / 'merit_function normal';"
+        )
         lines.append(f"    Solve {model_name} using MCP;")
         lines.append(");")
 
