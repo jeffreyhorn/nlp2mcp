@@ -12,8 +12,14 @@
 ## Problem Summary
 
 The himmel16 model (Himmelblau Problem 16) uses `Alias(i, j)` with cyclic
-offset patterns where aliased indices wrap around the set boundary. The
-large mismatch (43.0%) indicates significant gradient errors.
+offset patterns where aliased indices wrap around the set boundary. The model
+matches **warm** (presolve 0.674 ≈ NLP 0.675) but its **cold** MCP converges to
+a spurious **0.385**. _(Day-7 correction: this cold mismatch is **non-convexity**,
+NOT a gradient error — max-hexagon-area has multiple local optima. The emitted
+`stat_area = -1 + nu_areadef` is **correct** (control test: flipping its sign is
+inert, cold obj stays 0.385), and the harness's `stat_area` rel-2.0 is a
+uniform-`nu = -eq.m` negation artifact. So this is **Case-c** — no emit/gradient
+fix converts himmel16. See the Status line above.)_
 
 | Model | NLP Objective | MCP Objective | Rel Diff |
 |-------|--------------|--------------|----------|
