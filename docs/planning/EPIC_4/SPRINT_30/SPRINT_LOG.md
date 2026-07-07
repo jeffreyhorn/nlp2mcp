@@ -10,6 +10,7 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 | 3 | P2 rocket forcing REPLAN decision | — (no lever converges; rocket +1 Solve → Sprint-31 PATH consult) | ✅ DONE (REPLAN) |
 | 4 | P3 hhfair widened-VARIABLE `$184` fix (companion-variable) | — (`$184` cleared, hhfair compiles+solves; +1 Match `stat_u` fix → Day 5+) | ✅ DONE (PROCEED, CASE_B) |
 | 5 | Checkpoint 1 (GO) + P7 Class-B: presolve dual-transfer **case-normalization** fix | — (`stat_pz` rel 1.0 → 0 across irscge/lrgcge/moncge; genuine-floor pending the shared obj-grad fix) | ✅ DONE (hypothesis refuted → real fix) |
+| 6 | P1b mine → **REPLAN Sprint 31** (IR head-offset plumbing) + shared obj-grad sign fix **REFUTED** (control test) | — (both non-actionable; no `src/` change; Solve 107 / Match 92 / floor 70 hold) | ✅ DONE (2 hypotheses tested, docs-only) |
 
 ---
 
@@ -195,3 +196,28 @@ Re-confirmed the Day-0 fingerprint: irscge/lrgcge/moncge all **CASE_B**, `stat_p
 ### Day-5 outcome
 
 Checkpoint 1 GO. P7 Class-B refuted the coefficient hypothesis and landed the real fix — a general presolve dual-transfer **case-normalization** fix (completes the warm-start for all mixed-case-equation models; `stat_pz` rel 1.0 → 0). Full Case-a (residual → 0) for the cluster + hhfair's +1 Match now both gate on the **shared objective-gradient sign fix** (`stat_xp`/`stat_u`), the next P7 step. No metric change yet (Solve 107 / Match 92 hold; genuine floor 70).
+
+---
+
+## Day 6 — P1b mine REPLAN → Sprint 31 + the shared obj-grad fix hypothesis REFUTED (2026-07-07)
+
+**Branch:** `planning/sprint30-day6-mine`. Docs-only — two hypotheses tested; both non-actionable this session (no `src/` change).
+
+### P1b mine — REPLAN to Sprint 31 (foundational IR work required)
+
+Re-confirmed Day-0 (CASE_B, `stat_x(4,1,1)` rel 1.33, dual-transfer CONSISTENT — 5 `stat_x` warm-start residual cells = the Site-2 artifact) and the cold LCP break: **MS 5; `lam_pr`/`comp_pr` blow up to ~4.07e10 across ALL four k-directions** (nw/ne/se/sw, not just the parameter-offset ones). **Blocker:** the head-offset detail is **not stored in the IR** — `pr.has_head_domain_offset` is a bare `bool`; after normalization `pr.domain = (k,l,i,j)` with the `l+1` head lost (`lhs_rhs = x(l,i+li(k),j+lj(k)) =g= x(l+1,i,j)`). The shared 3-site index-map helper (parameterized by head-offset δ + param offsets `li`/`lj`, called by `comp_pr`/`_emit_nlp_presolve`/`stat_x`) **cannot be built without first plumbing the head-offset position+amount through parse → normalize → KKT** — a foundational IR change with corpus-wide blast radius. Per the design's Day-7 REPLAN criterion (broad cold break + each site exposes the next), **→ REPLAN mine to a Sprint-31 head-offset-architecture workstream** (Phase 1 = IR plumbing; Phase 2 = the shared helper). `ISSUE_1443` Day-6 decision block records it. robert (the decoupled P1 half) already landed Day 1.
+
+### The pivot — the shared obj-grad sign fix hypothesis is REFUTED (control experiment)
+
+The Day-5 projection was that a single objective-gradient sign fix converts hhfair `stat_u` (+1 Match) **and** the CGE cluster `stat_xp` → Case-a. The harness signal was `stat_u` residual `-2·CES_grad` at the NLP optimum (with the harness's `nu = -eq.m` correction), which *looked* like an inlined-obj-grad sign error. **Decisive control test (like robert's §1.4): hand-flip `stat_u`'s obj-grad sign `(-1)→(1)` in the emitted MCP and solve:**
+
+| Model | baseline MCP obj | after flipping the obj-grad sign | NLP ref |
+|---|---|---|---|
+| **hhfair** | 72.147 (mismatch) | **22.144 — WORSE** | 87.159 |
+| **irscge** | 26.091 (match) | 26.091 — neutral (presolve dominates) | 26.091 |
+
+**→ REFUTED.** Flipping `stat_u` moves hhfair *further* from the NLP optimum (72 → 22), not toward a match; and it's neutral for irscge (already matches warm). So the harness's single-point `-2·CES_grad` residual was a **misleading signal** for the non-convex objective-defining-equation case (`obj =e= prod(x**a)` with `x` also market-cleared) — the obvious sign fix is wrong, exactly the PR24 pattern (banked/derived fix-surface is a hypothesis; the control experiment cut through it). hhfair is non-convex (CES + bilinear); 72.147 may be a genuine spurious KKT point, making this closer to Case-c than a fixable Case-b. **The obj-grad genuine-floor gain is NOT firm** — a real fix (if any) needs deeper diagnosis (harness single-point artifact vs subtle emit bug vs inherent non-convexity), deferred.
+
+### Day-6 outcome
+
+Two REPLAN-prone/hypothesis tracks tested and **both non-actionable this session**: mine → Sprint 31 (foundational IR head-offset plumbing); the shared obj-grad sign fix → **refuted by control experiment** (no clean +Match / Case-a). No `src/` change; no metric move (Solve 107 / Match 92 / genuine floor 70 hold). The firm sprint deliverables already landed (robert Day 1, forcing scaffold Days 2–3, hhfair `$184` Day 4, the Class-B case-normalization fix Day 5). Net: the PR24 discipline paid off twice more — a foundational-work REPLAN and a refuted sign hypothesis, both surfaced before any high-blast-radius `src/` change.
