@@ -68,6 +68,7 @@ $include "data/gamslib/raw/cclinpts.gms"
 $offMulti
 
 * Transfer NLP duals to MCP multiplier initialization
+nu_FBCalc.l(j) = FBCalc.m(j);
 
 * Transfer variable marginals to bound multipliers
 piL_b.l(j)$(abs(b.l(j) - b.lo(j)) < 1e-6 and b.m(j) > 0) = b.m(j);

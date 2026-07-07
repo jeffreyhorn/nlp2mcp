@@ -9,6 +9,7 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 | 2 | P2 rocket forcing scaffold (firm P8) | — (scaffold lands; rocket +1 Solve → Sprint-31) | ✅ DONE |
 | 3 | P2 rocket forcing REPLAN decision | — (no lever converges; rocket +1 Solve → Sprint-31 PATH consult) | ✅ DONE (REPLAN) |
 | 4 | P3 hhfair widened-VARIABLE `$184` fix (companion-variable) | — (`$184` cleared, hhfair compiles+solves; +1 Match `stat_u` fix → Day 5+) | ✅ DONE (PROCEED, CASE_B) |
+| 5 | Checkpoint 1 (GO) + P7 Class-B: presolve dual-transfer **case-normalization** fix | — (`stat_pz` rel 1.0 → 0 across irscge/lrgcge/moncge; genuine-floor pending the shared obj-grad fix) | ✅ DONE (hypothesis refuted → real fix) |
 
 ---
 
@@ -167,3 +168,30 @@ With the compile unblocked, `kkt_residual.py data/gamslib/raw/hhfair.gms` → **
 ### Day-4 outcome
 
 The #1449 widened-VARIABLE presolve fix lands (general emit robustness; hhfair unblocked, compiles + solves). The last-live +1 Match is converted from "compile-blocked, verdict unreadable" to "CASE_B, precisely localized `stat_u` sign fix" — a Day 5+ genuine-floor target (69 → toward 72), **not** non-convexity. No metric change yet (Solve 107 / Match 92 hold). Next: **Day 5 — Checkpoint 1 + P7 Class-B** (incl. the hhfair `stat_u` objective-gradient sign fix).
+
+---
+
+## Day 5 — Checkpoint 1 (GO) + P7 Class-B: the presolve dual-transfer case-normalization fix (2026-07-07)
+
+**Branch:** `planning/sprint30-day5-classB`.
+
+### Checkpoint 1 — GO
+
+- **`--resolve-changed --since-commit 68b5b4a7`:** the only changed golden since Day-0 is **robert** — moved `model_optimal_presolve/match → model_optimal/match` (a *shift*, the Day-1 fix making it cold-match; **still MATCH, no backward move**). `blocking: []` → **GO**.
+- **Golden-staleness:** clean before the P7 change; the P7 change is scoped to 2 presolve goldens (below).
+- **PR25 re-baseline:** genuine floor **70** (69 + robert Day-1 warm→cold); Day-4 hhfair did not move Match. Match 92 as-measured holds.
+
+### P7 Class-B — the banked "coefficient bug" hypothesis is REFUTED; the real bug is a presolve dual-transfer case-normalization gap
+
+Re-confirmed the Day-0 fingerprint: irscge/lrgcge/moncge all **CASE_B**, `stat_pz` **rel exactly 1.00**, CONSISTENT — raw residual = dual_scale (irscge 15.9, lrgcge 22.7, moncge 15.6). But a term-by-term evaluation of `stat_pz(MLK)` at the NLP optimum (using the NLP equation marginals) **sums to ~0** (1.5e-14) — i.e. the emitted `stat_pz` **coefficients are correct** (the big `+141.38` on `nu_eqDs` is the derived `-D/((1-phi)·pz)` with phi>1 flipping the sign; hand-verified). So the banked hypothesis — a mis-scaled coefficient on the `pz` Jacobian-transpose in `stationarity.py`/`constraint_jacobian.py` (PR24) — is **refuted**.
+
+**Real root cause (`src/emit/emit_gams.py`, the presolve dual-transfer loop):** `get_solved_model_equations()` (nlp_eqs) **lowercases** its names, but `model_ir.equalities`/`inequalities` preserve source casing (`eqDs`, `eqE`, `SAMEQ`). The loop matched `eq_name in eq_set` **case-sensitively**, so every **mixed-case** equation was silently skipped — its `nu_<eq>.l = <eq>.m` warm-start never emitted. irscge only warm-started its 9 all-lowercase price-equation duals (of 25); the 15 mixed-case quantity-equation duals (`nu_eqE/eqDs/eqTz/...`) stayed at 0 → the price stationarity rows carried the full missing-dual residual (the `stat_pz` rel-1.0 fingerprint).
+
+**Fix:** map the lowercase name back to the source casing (case-insensitive membership + original-case `nu_<eq>`/`.m`). irscge dual transfers **10 → 25**; `stat_pz` residual **rel 1.00 → gone** (irscge/lrgcge/moncge). General-emit robustness — any mixed-case-equation model was under-warm-started.
+
+- **Blast radius = 2 presolve goldens** (`cclinpts` +1 `nu_FBCalc`; `cesam` +10 `nu_SAMEQ/SAMMAKE/ERROR1EQ/...`) — pure warm-start additions; both still solve **MCP MS 1 Optimal** (no regression). The other 11 presolve goldens byte-identical; **cold goldens unaffected** (the change is inside `_emit_nlp_presolve`). 1 new unit test.
+- **Residual second bug (`stat_xp` rel ~0.06, raw −1.02 identical across the three):** the emitted `stat_xp` inlines the objective-gradient term with the SAME `(-1)` sign as hhfair's `stat_u` (objective `UU =e= prod(Xp**alpha)`, Xp also market-cleared). So the CGE cluster's remaining residual is **the same objective-gradient-defining-equation sign bug as hhfair `stat_u`** — a **shared "one fix, several models"** target (hhfair +1 Match **and** irscge/lrgcge/moncge → Case-a). Deferred with the hhfair `stat_u` fix (higher blast radius — objective-gradient inlining for every objvar-defined-by-equation model).
+
+### Day-5 outcome
+
+Checkpoint 1 GO. P7 Class-B refuted the coefficient hypothesis and landed the real fix — a general presolve dual-transfer **case-normalization** fix (completes the warm-start for all mixed-case-equation models; `stat_pz` rel 1.0 → 0). Full Case-a (residual → 0) for the cluster + hhfair's +1 Match now both gate on the **shared objective-gradient sign fix** (`stat_xp`/`stat_u`), the next P7 step. No metric change yet (Solve 107 / Match 92 hold; genuine floor 70).
