@@ -3304,7 +3304,16 @@ def emit_gams_mcp(
         sections.extend(na_cleanup_lines)
         sections.append("")
 
-    solve_code = emit_solve(model_name)
+    # Sprint 30 P8: solution-forcing scaffold. When --force <strategy> is set,
+    # wrap the plain Solve in a forcing driver (homotopy / multistart / optfile)
+    # + a MODEL-STATUS reporter; otherwise emit the plain single solve.
+    force_strategy = config.force_strategy if config is not None else "none"
+    if force_strategy and force_strategy != "none":
+        from src.emit.forcing import emit_forcing_scaffold
+
+        solve_code = emit_forcing_scaffold(force_strategy, model_name, add_comments)
+    else:
+        solve_code = emit_solve(model_name)
     sections.append(solve_code)
 
     # Issue #985: Post-solve calibration skipped (see note near Equations section).

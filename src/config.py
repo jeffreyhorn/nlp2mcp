@@ -37,6 +37,14 @@ class Config:
     smooth_abs_epsilon: float = 1e-6
     scale: str = "none"
     simplification: str = "advanced"
+    # Sprint 30 P8: solution-forcing scaffold. When set to a strategy, the emit wraps
+    # the ``Solve mcp_model using MCP;`` in a forcing driver + a MODEL-STATUS reporter
+    # (the Sprint-31 PATH-consultation entry point). "none" = the plain single solve.
+    #   - "homotopy":   continuation loop over a relaxation parameter mu: 1 -> 0
+    #   - "multistart": re-solve from N perturbed .l starts, keep the first MS 1/2
+    #   - "optfile":    a single solve with an emitted PATH optfile (proximal_perturbation
+    #                   schedule + merit_function normal)
+    force_strategy: str = "none"
     model_ir: Any = field(default=None, repr=False)  # Type is ModelIR but use Any to avoid cycles
     # Issue #1387: internal flag — enable the objective-gradient offset cross-term
     # enumeration in _diff_sum. Set ONLY by compute_objective_gradient (scoped),
@@ -54,6 +62,12 @@ class Config:
         if self.simplification not in ("none", "basic", "advanced", "aggressive"):
             raise ValueError(
                 f"simplification must be 'none', 'basic', 'advanced', or 'aggressive', got '{self.simplification}'"
+            )
+
+        if self.force_strategy not in ("none", "homotopy", "multistart", "optfile"):
+            raise ValueError(
+                "force_strategy must be 'none', 'homotopy', 'multistart', or 'optfile', "
+                f"got '{self.force_strategy}'"
             )
 
 

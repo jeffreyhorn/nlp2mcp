@@ -203,6 +203,18 @@ EXIT_MULTI_SOLVE_OUT_OF_SCOPE = 4
         "reference objective."
     ),
 )
+@click.option(
+    "--force",
+    "force",
+    type=click.Choice(["none", "homotopy", "multistart", "optfile"], case_sensitive=False),
+    default="none",
+    help=(
+        "Solution-forcing scaffold for non-convergent non-convex MCPs (Sprint 30 P8): "
+        "wrap the Solve in a forcing driver + MODEL-STATUS reporter. "
+        "none (default) = plain solve; homotopy = mu-continuation loop; "
+        "multistart = perturbed-.l restart loop; optfile = emitted PATH proximal_perturbation/merit optfile."
+    ),
+)
 def main(
     input_file,
     output,
@@ -224,6 +236,7 @@ def main(
     check_convexity_numerical,
     allow_discrete,
     allow_multi_solve,
+    force,
 ):
     """Convert GAMS NLP model to MCP format using KKT conditions.
 
@@ -463,6 +476,7 @@ def main(
             smooth_abs_epsilon=smooth_abs_epsilon,
             scale=scale.lower(),
             simplification=simplification.lower(),
+            force_strategy=force.lower(),
         )
 
         if diag_report:

@@ -6,6 +6,7 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 |---|---|---|---|
 | 0 | Kickoff + Day-0 traces (PR24) | — (baseline confirmed) | ✅ DONE (docs/trace-only) |
 | 1 | P1a robert objective-gradient fix (decoupled, firm) | genuine floor 69 → **70** (robert cold-match) | ✅ DONE |
+| 2 | P2 rocket forcing scaffold (firm P8) | — (scaffold lands; rocket +1 Solve → Sprint-31) | ✅ DONE |
 
 ---
 
@@ -72,3 +73,37 @@ When the non-zero objective-gradient instances fall into MORE THAN ONE distinct 
 - **robert cold-solves to MODEL STATUS 1 Optimal at profit 11025.0** (= the NLP optimum) — a genuine cold match, no warm-start (convex LP). The emitted `stat_s(r,tt).. (misc("storage-c",r)$(t(tt)) + (((-1) * misc("res-value",r)))$(sameas(tt,'4')) - nu_sb(r,tt) + nu_sb(r,tt-1)$(ord(tt)>1) - piL_s(r,tt))$(…)` matches the hand-derived KKT.
 - **Blast-radius (byte-scan + re-solve):** robert only; chain / cesam byte-identical (reverted by the clustering guard + the perf cap); no emit-time regression (cesam 10.1 s unchanged).
 - **Tests:** new property fixture `shape9_objgrad_subset_boundary.gms` + `test_shape9_objgrad_subset_boundary` (asserts both guarded groups); the #1131 gradient-condition unit tests pass (2 groups = 2 instances → no clustering → unchanged).
+
+---
+
+## Day 2 — Priority 2: rocket forcing scaffold (firm P8) (2026-07-06)
+
+**Branch:** `planning/sprint30-day2-rocket-scaffold`. **Firm P8 deliverable** — the solution-forcing scaffold + the Sprint-31 PATH-consultation entry point. rocket's +1 Solve is **not** achieved (intrinsic non-convergence, deferred to Sprint 31, per `REPLAN_RISK_ASSESSMENT.md` Track B).
+
+### Deliverable — the `--force <strategy>` scaffold
+
+A new `--force {none|homotopy|multistart|optfile}` emit mode (`src/config.py` `Config.force_strategy` + `src/cli.py` `--force` + `src/emit/forcing.py`) that wraps the terminal `Solve mcp_model using MCP;` in a forcing driver + a **MODEL-STATUS reporter** — the stable interface (`NONCONVEX_FORCING_SURVEY.md` §4: a lever-injection hook around the MCP solve + a status reporter, strategy as a parameter). The strategy is emitted at the solve site in `src/emit/emit_gams.py`:
+- **`optfile`** — emits a PATH `path.opt` (`proximal_perturbation 1e-2` + `merit_function normal`) + `mcp_model.optfile = 1;` + one solve (the tunable levers, survey §1).
+- **`multistart`** — a perturbed-`.l` restart loop (re-solve from N starts, stop at the first MS 1/2); a documented model-specific perturbation hook + the loop plumbing.
+- **`homotopy`** — a `mu: 1 → 0` continuation loop, warm-restarting from each prior point; a documented relaxation hook + the loop plumbing.
+
+### Validation — the scaffold runs the levers on rocket
+
+Emitted rocket's `--nlp-presolve` MCP with each strategy and ran it in GAMS from the repo root:
+
+| Strategy | Compile errors | MCP solves run | Reporter | Result |
+|---|---|---|---|---|
+| optfile | 0 | 2 (embedded NLP + forced MCP) | fired | MS 5 (unchanged) |
+| multistart | 0 | 5 (embedded + **4 restart solves**) | fired | MS 5 (unchanged) |
+| homotopy | 0 | 6 (embedded + **5 continuation solves**) | fired | MS 5 (unchanged) |
+
+So the **plumbing runs the levers** (the loops execute the re-solves; the optfile applies the PATH options) and the reporter captures the status (`nlp2mcp_force_modelstat = 5` = MS-5 Locally Infeasible). As expected (survey §2), rocket stays MS-5 — it is intrinsic non-convergence, the **Sprint-31 PATH-consultation hand-off** ("which PATH option set / regularization schedule / reformulation forces convergence for this division-by-variable optimal-control MCP?").
+
+### Blast radius + verification
+
+- **Opt-in, no golden churn:** `--force none` (the default) emits the plain solve — rocket's presolve golden is byte-identical; no model's default emit changes.
+- **Tests:** `tests/unit/emit/test_forcing_scaffold.py` (13 tests: each driver's structure + reporter + the `none` default + validation + the `Config.force_strategy` field). `make typecheck/format/lint` pass (99 source files).
+
+### Day-2 outcome
+
+The firm P8 forcing scaffold lands + is validated (runs the levers on rocket). rocket's +1 Solve is **deferred to Sprint 31** (the PATH consultation). No metric change (Solve 107 / Match 92 hold); the genuine-floor lift is unaffected. Next: **Day 3 — the rocket forcing REPLAN decision** (drive the emittable-GAMS levers; PROCEED if any reaches MS 1/2 at 1.0128, else file the Sprint-31 hand-off).
