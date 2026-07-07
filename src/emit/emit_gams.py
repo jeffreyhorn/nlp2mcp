@@ -1159,17 +1159,21 @@ def _emit_widened_var_companions(
         source_domain = tuple(var_def.domain)
         comp = f"{vname}{_PRESOLVE_WIDENED_SUFFIX}"
         couple_eq = f"couple_{vname}"
+        # Issue #665: the synthesized companion + coupling-equation names must be
+        # quoted when the source variable name has special chars (e.g. 'p-x').
         qcomp = _quote_symbol(comp)
+        qcouple = _quote_symbol(couple_eq)
         qvar = _quote_symbol(vname)
         wdom = ",".join(_quote_symbol(d) for d in widened)
         sdom = ",".join(_quote_symbol(d) for d in source_domain)
         lines.append(f"Free Variable {qcomp}({wdom});")
-        lines.append(f"Equation {couple_eq}({sdom});")
-        lines.append(f"{couple_eq}({sdom}).. {qcomp}({sdom}) =e= {qvar}({sdom});")
+        lines.append(f"Equation {qcouple}({sdom});")
+        lines.append(f"{qcouple}({sdom}).. {qcomp}({sdom}) =e= {qvar}({sdom});")
         cond = _widened_var_outofsubset_condition(kkt, source_domain, widened)
         if cond:
             lines.append(f"{qcomp}.fx({wdom})$(not ({cond})) = 0;")
-        pairs.append((couple_eq, comp))
+        # Return the quoted forms so the Model statement pair is #665-safe too.
+        pairs.append((qcouple, qcomp))
     if lines:
         lines.append("")
     return lines, pairs

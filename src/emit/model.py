@@ -111,7 +111,9 @@ def emit_model_mcp(
         suppressed_fx_equations: _fx_ equations to omit from MCP pairs
         extra_pairs: additional ``(equation, variable)`` complementarity pairs to
             append (Issue #1449 variable analog — the presolve ``couple_<v>.<v>__pw``
-            companion pairs).
+            companion pairs). Both names arrive **already quoted** via
+            ``_quote_symbol`` (Issue #665), so they are emitted verbatim — do not
+            re-quote them here (that would double-quote special-char names).
 
     Returns:
         GAMS Model MCP declaration string
@@ -236,6 +238,8 @@ def emit_model_mcp(
 
     # 6. Issue #1449 (variable analog): presolve widened-variable coupling
     # equations paired with their `<v>__pw` companion (couple_<v>.<v>__pw).
+    # Both names are already `_quote_symbol`-quoted (Issue #665) by the caller,
+    # so emit them verbatim (re-quoting would double-quote special-char names).
     if extra_pairs:
         pairs.append("")
         pairs.append("    * Presolve widened-variable companions (#1449)")

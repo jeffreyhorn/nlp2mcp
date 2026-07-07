@@ -101,6 +101,23 @@ class TestEmitWidenedVarCompanions:
         assert lines == []
         assert pairs == []
 
+    def test_special_char_name_is_quoted(self, tmp_path):
+        """Issue #665: a widened variable whose name needs quoting (e.g. 'p-x')
+        must emit quoted companion + coupling names AND quoted Model pairs."""
+        from src.ir.symbols import VariableDef
+
+        kkt = _kkt_with_widening(tmp_path)
+        # Inject a special-char variable widened t -> tl.
+        kkt.model_ir.variables["p-x"] = VariableDef(name="p-x", domain=("t",))
+        kkt.var_domain_widenings = {"p-x": ("tl",)}
+        lines, pairs = _emit_widened_var_companions(kkt, add_comments=False, only_vars={"p-x"})
+        blob = "\n".join(lines)
+        assert "Free Variable 'p-x__pw'(tl);" in blob
+        assert "Equation 'couple_p-x'(t);" in blob
+        assert "'couple_p-x'(t).. 'p-x__pw'(t) =e= 'p-x'(t);" in blob
+        # the Model-statement pair is emitted pre-quoted (no double-quoting)
+        assert pairs == [("'couple_p-x'", "'p-x__pw'")]
+
     def test_outofsubset_condition(self, tmp_path):
         kkt = _kkt_with_widening(tmp_path)
         cond = _widened_var_outofsubset_condition(kkt, ("t",), ("tl",))
