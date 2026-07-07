@@ -72,6 +72,9 @@ def emit_forcing_scaffold(
         lines.append("proximal_perturbation 1e-2")
         lines.append("merit_function normal")
         lines.append("$offecho")
+        # path.opt is PATH-specific — force the MCP solver to PATH so the emitted
+        # options are actually applied (a model / $include could set a different one).
+        lines.append("option mcp = path;")
         lines.append(f"{model_name}.optfile = 1;")
         lines.append(f"Solve {model_name} using MCP;")
 
