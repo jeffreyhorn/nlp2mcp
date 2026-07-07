@@ -9,7 +9,7 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 | 2 | P2 rocket forcing scaffold (firm P8) | — (scaffold lands; rocket +1 Solve → Sprint-31) | ✅ DONE |
 | 3 | P2 rocket forcing REPLAN decision | — (no lever converges; rocket +1 Solve → Sprint-31 PATH consult) | ✅ DONE (REPLAN) |
 | 4 | P3 hhfair widened-VARIABLE `$184` fix (companion-variable) | — (`$184` cleared, hhfair compiles+solves; +1 Match `stat_u` fix → Day 5+) | ✅ DONE (PROCEED, CASE_B) |
-| 5 | Checkpoint 1 (GO) + P7 Class-B: presolve dual-transfer **case-normalization** fix | — (`stat_pz` rel 1.0 → 0 across irscge/lrgcge/moncge; genuine-floor pending the shared obj-grad fix) | ✅ DONE (hypothesis refuted → real fix) |
+| 5 | Checkpoint 1 (GO) + P7 Class-B: presolve dual-transfer **case-normalization** fix | — (`stat_pz` rel 1.0 → 0 across irscge/lrgcge/moncge; the obj-grad follow-on was **refuted Day 6**) | ✅ DONE (hypothesis refuted → real fix) |
 | 6 | P1b mine → **REPLAN Sprint 31** (IR head-offset plumbing) + shared obj-grad sign fix **REFUTED** (control test) | — (both non-actionable; no `src/` change; Solve 107 / Match 92 / floor 70 hold) | ✅ DONE (2 hypotheses tested, docs-only) |
 
 ---
