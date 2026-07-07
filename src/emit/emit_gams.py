@@ -40,6 +40,7 @@ from src.emit.original_symbols import (
 )
 from src.emit.templates import (
     _build_dynamic_subset_map,
+    _remap_domain,
     emit_equation_definitions,
     emit_equations,
     emit_variables,
@@ -1136,6 +1137,7 @@ def _emit_widened_var_companions(
     targets = sorted(v for v in widenings if v in only_vars)
     if not targets:
         return [], []
+    dynamic_map = _build_dynamic_subset_map(kkt.model_ir)
     lines: list[str] = []
     pairs: list[tuple[str, str]] = []
     if add_comments:
@@ -1164,10 +1166,17 @@ def _emit_widened_var_companions(
         qcomp = _quote_symbol(comp)
         qcouple = _quote_symbol(couple_eq)
         qvar = _quote_symbol(vname)
+        # Issue #739: GAMS forbids dynamically-assigned subsets as DECLARATION
+        # domains — remap them to their parent set for the Free Variable /
+        # Equation declarations (like emit_variables does). Keep the raw
+        # source_domain for the coupling-equation DEFINITION indices (and the
+        # `.fx` assignment), so the coupling still applies only on the subset.
+        wdom_decl = ",".join(_quote_symbol(d) for d in _remap_domain(widened, dynamic_map))
+        sdom_decl = ",".join(_quote_symbol(d) for d in _remap_domain(source_domain, dynamic_map))
         wdom = ",".join(_quote_symbol(d) for d in widened)
         sdom = ",".join(_quote_symbol(d) for d in source_domain)
-        lines.append(f"Free Variable {qcomp}({wdom});")
-        lines.append(f"Equation {qcouple}({sdom});")
+        lines.append(f"Free Variable {qcomp}({wdom_decl});")
+        lines.append(f"Equation {qcouple}({sdom_decl});")
         lines.append(f"{qcouple}({sdom}).. {qcomp}({sdom}) =e= {qvar}({sdom});")
         cond = _widened_var_outofsubset_condition(kkt, source_domain, widened)
         if cond:

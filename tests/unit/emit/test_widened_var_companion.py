@@ -123,6 +123,30 @@ class TestEmitWidenedVarCompanions:
         cond = _widened_var_outofsubset_condition(kkt, ("t",), ("tl",))
         assert cond == "(t(tl))"
 
+    def test_dynamic_subset_domain_remapped_in_declarations(self, tmp_path):
+        """Issue #739: a dynamically-assigned source subset (forbidden as a GAMS
+        declaration domain) is remapped to its parent set in the Free Variable /
+        Equation DECLARATIONS, while the coupling-equation DEFINITION keeps the
+        raw subset so it applies only on the subset."""
+        from src.ir.model_ir import SetAssignment
+        from src.ir.symbols import SetDef, VariableDef
+
+        kkt = _kkt_with_widening(tmp_path)
+        # `td` is a dynamic subset of `tl`: assigned at runtime, no static members.
+        kkt.model_ir.sets["td"] = SetDef(name="td", members=(), domain=("tl",))
+        kkt.model_ir.set_assignments.append(
+            SetAssignment(set_name="td", indices=("tl",), expr=None, location=None)
+        )
+        kkt.model_ir.variables["q"] = VariableDef(name="q", domain=("td",))
+        kkt.var_domain_widenings = {"q": ("tl",)}
+        lines, _ = _emit_widened_var_companions(kkt, add_comments=False, only_vars={"q"})
+        blob = "\n".join(lines)
+        # declarations use the PARENT set (tl), not the dynamic subset (td)
+        assert "Equation couple_q(tl);" in blob
+        assert "Free Variable q__pw(tl);" in blob
+        # the coupling DEFINITION still binds on the raw subset (td)
+        assert "couple_q(td).. q__pw(td) =e= q(td);" in blob
+
 
 class TestPresolveSuppressesWidenedDeclaration:
     def test_emit_variables_declares_source_domain_when_suppressed(self, tmp_path):
