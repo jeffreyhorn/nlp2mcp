@@ -7,6 +7,7 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 | 0 | Kickoff + Day-0 traces (PR24) | — (baseline confirmed) | ✅ DONE (docs/trace-only) |
 | 1 | P1a robert objective-gradient fix (decoupled, firm) | genuine floor 69 → **70** (robert cold-match) | ✅ DONE |
 | 2 | P2 rocket forcing scaffold (firm P8) | — (scaffold lands; rocket +1 Solve → Sprint-31) | ✅ DONE |
+| 3 | P2 rocket forcing REPLAN decision | — (no lever converges; rocket +1 Solve → Sprint-31 PATH consult) | ✅ DONE (REPLAN) |
 
 ---
 
@@ -107,3 +108,29 @@ So the **plumbing runs the levers** (the loops execute the re-solves; the optfil
 ### Day-2 outcome
 
 The firm P8 forcing scaffold lands + is validated (runs the levers on rocket). rocket's +1 Solve is **deferred to Sprint 31** (the PATH consultation). No metric change (Solve 107 / Match 92 hold); the genuine-floor lift is unaffected. Next: **Day 3 — the rocket forcing REPLAN decision** (drive the emittable-GAMS levers; PROCEED if any reaches MS 1/2 at 1.0128, else file the Sprint-31 hand-off).
+
+---
+
+## Day 3 — Priority 2: rocket forcing REPLAN decision (2026-07-07)
+
+**Branch:** `planning/sprint30-day3-rocket-replan`. **Decision: REPLAN rocket's +1 Solve to the Sprint-31 PATH consultation** (the scaffold + hand-off land regardless; prior High, per `REPLAN_RISK_ASSESSMENT.md` Track B).
+
+### Drove the emittable-GAMS levers on rocket (the ones Task 4 left unexhausted)
+
+On rocket's `--nlp-presolve` MCP, warm-started from the NLP optimum:
+
+| Lever (real, not a hook) | Config | Result |
+|---|---|---|
+| **multistart** (`.l` perturbation) | perturb `v`/`ht`/`m`/`step` ±5 %…±50 % across 6 restarts, keep first MS 1/2 | **all 6 restarts MS 5**, `done=0` — no convergence |
+| **homotopy** (proximal continuation) | `proximal_perturbation` `mu: 1e3 → 0` (7 steps), warm-restart from each prior point, fresh `path.opt`/step | **all 7 steps MS 5**, INFES ~458–467 (no monotone drive) |
+
+Neither converges. Combined with Task-4's PATH-option result (INFES 477 → 382 best, no config crosses even from the NLP optimum), rocket's MS-5 is **intrinsic non-convergence** — the ill-conditioned `1/ht²`,`1/m²` initial Jacobian of the Goddard rocket. The survey's a-priori held: warm-starting from the optimum already fails, so perturbed restarts / regularization schedules are unpromising.
+
+### REPLAN + scaffold hardening
+
+- **rocket's +1 Solve REPLANs to the Sprint-31 PATH consultation** (`ISSUE_1462` Day-3 decision block). Scoped hand-off: *which PATH option set / regularization schedule / reformulation converges the division-by-variable optimal-control MCP?* The firm parts (the P8 scaffold + the hand-off) landed Day 2–3.
+- **Scaffold hardening (the freed-budget deliverable):** the `--force homotopy` strategy now emits the **model-agnostic `proximal_perturbation` continuation** (`mu: 1e3 → 0` via a runtime-rewritten `path.opt`) — a *working* lever, not the Day-2 placeholder relaxation hook. Validated to run on rocket (compiles clean, executes the 7-step schedule). `src/emit/forcing.py` + the homotopy unit test updated; `make typecheck/format/lint/test` green.
+
+### Day-3 outcome
+
+rocket's +1 Solve deferred to Sprint 31 (no metric change — Solve 107 / Match 92 hold; the +2-Solve target's rocket half is now formally at Sprint 31, as the Task-6 assessment anticipated). The forcing scaffold is hardened (homotopy = a real generic lever). Next: **Day 4 — P3 hhfair widened-VARIABLE `$184` fix** (the last live +Match; the freed rocket budget flows here).
