@@ -195,7 +195,9 @@ Re-confirmed the Day-0 fingerprint: irscge/lrgcge/moncge all **CASE_B**, `stat_p
 
 ### Day-5 outcome
 
-Checkpoint 1 GO. P7 Class-B refuted the coefficient hypothesis and landed the real fix — a general presolve dual-transfer **case-normalization** fix (completes the warm-start for all mixed-case-equation models; `stat_pz` rel 1.0 → 0). Full Case-a (residual → 0) for the cluster + hhfair's +1 Match now both gate on the **shared objective-gradient sign fix** (`stat_xp`/`stat_u`), the next P7 step. No metric change yet (Solve 107 / Match 92 hold; genuine floor 70).
+Checkpoint 1 GO. P7 Class-B refuted the coefficient hypothesis and landed the real fix — a general presolve dual-transfer **case-normalization** fix (completes the warm-start for all mixed-case-equation models; `stat_pz` rel 1.0 → 0). Full Case-a (residual → 0) for the cluster + hhfair's +1 Match were framed here as gating on a **shared objective-gradient sign fix** (`stat_xp`/`stat_u`) as the next P7 step. No metric change yet (Solve 107 / Match 92 hold; genuine floor 70).
+
+> **⚠️ HYPOTHESIS — REFUTED Day 6.** The "shared objective-gradient sign fix converts hhfair + the CGE cluster" framing above is a *hypothesis*, not a settled result. The Day-6 control experiment **disproves it** (flipping `stat_u`'s obj-grad sign moves hhfair 72.147 → 22.144, worse; neutral for irscge). Read the Day-5 obj-grad "next step" as superseded by the Day-6 block below.
 
 ---
 
