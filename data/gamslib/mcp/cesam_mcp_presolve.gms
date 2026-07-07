@@ -187,6 +187,16 @@ $include "data/gamslib/raw/cesam.gms"
 $offMulti
 
 * Transfer NLP duals to MCP multiplier initialization
+nu_SAMEQ.l(ii) = SAMEQ.m(ii);
+nu_SAMMAKE.l(ii,jj) = SAMMAKE.m(ii,jj);
+nu_ERROR1EQ.l(ii) = ERROR1EQ.m(ii);
+nu_SUMW1.l(ii) = SUMW1.m(ii);
+nu_ROWSUM.l(ii) = ROWSUM.m(ii);
+nu_COLSUM.l(jj) = COLSUM.m(jj);
+nu_GDPFCDEF.l = GDPFCDEF.m;
+nu_GDPDEF.l = GDPDEF.m;
+nu_ERROR2EQ.l(macro) = ERROR2EQ.m(macro);
+nu_SUMW2.l(macro) = SUMW2.m(macro);
 
 * Transfer variable marginals to bound multipliers
 piL_a.l(ii,jj)$(abs(a.l(ii,jj) - a.lo(ii,jj)) < 1e-6 and a.m(ii,jj) > 0) = a.m(ii,jj);

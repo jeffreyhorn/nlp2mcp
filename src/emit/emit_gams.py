@@ -1432,9 +1432,16 @@ def _emit_nlp_presolve(
             sections.append("")
         return False
 
-    # Build sets of equality/inequality names for sign handling
-    eq_set = set(kkt.model_ir.equalities)
-    ineq_set = set(kkt.model_ir.inequalities)
+    # Build sets of equality/inequality names for sign handling.
+    # `get_solved_model_equations()` (nlp_eqs) lowercases its names, but
+    # `equalities`/`inequalities` preserve the source casing (e.g. `eqDs`,
+    # `eqE`). Map lowercase -> source name so mixed-case equations are matched
+    # case-insensitively below; otherwise their duals are silently skipped in the
+    # transfer (a nonzero warm-start stationarity residual — the CGE `stat_pz`
+    # Class-B fingerprint: irscge/lrgcge/moncge only transferred their
+    # all-lowercase price-equation duals).
+    eq_by_lower = {e.lower(): e for e in kkt.model_ir.equalities}
+    ineq_by_lower = {e.lower(): e for e in kkt.model_ir.inequalities}
 
     if add_comments:
         sections.append("* ============================================")
@@ -1460,21 +1467,23 @@ def _emit_nlp_presolve(
     # multipliers use the original inequality equation marginal with abs()
     # so the initialized MCP multiplier is nonnegative.
     for eq_name in nlp_eqs:
-        eq_def = kkt.model_ir.equations.get(eq_name)
+        # Resolve to the source-cased equation name (nlp_eqs is lowercased).
+        orig_eq = eq_by_lower.get(eq_name.lower()) or ineq_by_lower.get(eq_name.lower()) or eq_name
+        eq_def = kkt.model_ir.equations.get(orig_eq)
         domain_str = ""
         if eq_def and eq_def.domain:
             domain_str = f"({','.join(_quote_symbol(d) for d in eq_def.domain)})"
 
-        if eq_name in eq_set:
-            mult_name = create_eq_multiplier_name(eq_name)
+        if eq_name.lower() in eq_by_lower:
+            mult_name = create_eq_multiplier_name(orig_eq)
             if mult_name in kkt.multipliers_eq:
-                qeq = _quote_symbol(eq_name)
+                qeq = _quote_symbol(orig_eq)
                 qm = _quote_symbol(mult_name)
                 sections.append(f"{qm}.l{domain_str} = {qeq}.m{domain_str};")
-        elif eq_name in ineq_set:
-            mult_name = create_ineq_multiplier_name(eq_name)
+        elif eq_name.lower() in ineq_by_lower:
+            mult_name = create_ineq_multiplier_name(orig_eq)
             if mult_name in kkt.multipliers_ineq:
-                qeq = _quote_symbol(eq_name)
+                qeq = _quote_symbol(orig_eq)
                 qm = _quote_symbol(mult_name)
                 # Original inequality marginals: use abs() since GAMS
                 # ≤ marginals are ≥ 0 and ≥ marginals are ≤ 0 but
