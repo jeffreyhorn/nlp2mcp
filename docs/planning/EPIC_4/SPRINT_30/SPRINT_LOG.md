@@ -13,6 +13,7 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 | 6 | P1b mine → **REPLAN Sprint 31** (IR head-offset plumbing) + shared obj-grad sign fix **REFUTED** (control test) | — (both non-actionable; no `src/` change; Solve 107 / Match 92 / floor 70 hold) | ✅ DONE (2 hypotheses tested, docs-only) |
 | 7 | mine REPLAN confirmed (cascade persists) + P5 offset-alias diagnostic | — (polygon fix **CONFIRMED** 0.780≈0.7797 → Day-8 impl; himmel16 non-convex refuted) | ✅ DONE (docs; polygon +1 Match confirmed) |
 | 8 | P5 polygon impl: objective half DONE + verified; distance half = #1111/#1112 core → **REPLAN Sprint 31** | — (coupled; objective-alone regresses polygon MS-5; reverted; recipe banked) | 🔄 REPLAN (objective half implemented + verified, banked) |
+| 9 | P4 sarf #1385 atomic symbolic cross-terms → **REPLAN Sprint 31** (Sprint-26-failed architecture) | — (sarf stays translate_timeout; atomic symbolic-emit = dedicated multi-day workstream) | 🔄 REPLAN (docs; banked spec) |
 
 ---
 
@@ -268,3 +269,19 @@ The two halves are coupled (Sprint-29 finding, re-confirmed): with **only** the 
 ### Day-8 outcome
 
 REPLAN polygon (+ himmel16, already refuted Day 7) to the Sprint-31 #1111/#1112 general-alias-differentiation workstream. **Massively de-risked hand-off:** the confirmed 4-term target (control-verified 0.780) + the working, verified objective-half implementation + the pinned distance-half root cause (Jacobian complete, assembly topology mismatch) make the Sprint-31 task well-specified. No `src/` change lands this session; Solve 107 / Match 92 / genuine floor 70 hold. This is the plan's PROCEED-vs-REPLAN gate resolving to REPLAN at the general-alias boundary — surfaced with a near-complete recipe rather than a rushed high-blast-radius multi-pattern change.
+
+---
+
+## Day 9 — P4 sarf #1385 atomic symbolic cross-terms → REPLAN Sprint 31 (2026-07-07)
+
+**Branch:** `planning/sprint30-day9-sarf`. Docs-only — the atomic fix is the Sprint-26-failed architecture; REPLAN to a dedicated Sprint-31 workstream.
+
+### Assessment
+
+Re-confirmed sarf still hits `translate_timeout` (>2 min): the 1-D `_is_blowup_dynamic_subset_equation` bails on `len(eq_domain) != 1`, so it never fires on sarf's **2-D** dynamic-subset condition shape (`tbal(g,t)$taskposs(g,t)` [384], `equipb1(m,t)$equipposs(m,t)` [648], `equipb2(n,t)$equipposs(n,t)` [120]; 1,152 Cartesian instances; `taskposs`/`equipposs` are data-computed → zero static members → full-Cartesian enumeration → `differentiate_expr` blow-up).
+
+The **atomic** fix needs (a) a 2-D gate extension AND (b) a **new symbolic runtime-guard cross-term emit path** that differentiates each short-circuited body **once parametrically** in `(g,t,m,n)` (the gate makes those equations enumerate zero instances, so the cross-terms can't come from per-instance Jacobian entries). **That path is precisely the Sprint-26-Day-4 architecture that FAILED** (commit `243fe578`, reverted — `nu_slack("srn")` set-name-literal indices + dropped `J_gᵀ·lam` cross-terms), and **Sprint-29 Day-9 already REPLAN'd it as intractable in budget**. **Atomicity** forbids a safe partial (skip-only = incomplete MCP; re-emit-without-correct-cross-terms = the wrong MCP). This is a multi-day dedicated workstream, not a ~7h day.
+
+### Decision — REPLAN to Sprint 31
+
+REPLAN the atomic symbolic-emit to a dedicated Sprint-31 builder-pipeline-aware workstream (sarf as the reference target; the hand-derived `stat_task` cross-terms in `ISSUE_1385` are the banked spec). The **translate-only 2-D-gate partial** (srpchase-style — sarf translates by skipping the 3 constraints, no cross-terms) was considered and **declined**: it lands an incomplete MCP that ISSUE_1385's atomicity rejects, and the Day-9 goal is the *atomic* fix. No `src/` change; sarf stays `translate_timeout`; Solve 107 / Match 92 / genuine floor 70 hold. Consistent with the plan's REPLAN criterion ("REPLAN to Sprint 31 if it re-triggers the timeout" / the failed-architecture prior).
