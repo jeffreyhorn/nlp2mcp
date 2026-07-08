@@ -102,7 +102,7 @@ def test_shape6_tree_predicate_aliased_sum() -> None:
 
 
 @pytest.mark.xfail(
-    reason="#1143/#1111: the objective-successor half is implemented+verified (Sprint 30 "
+    reason="#1143/#1111/#1112: the objective-successor half is implemented+verified (Sprint 30 "
     "Day 8, interior-representative selection) but REVERTED — it can't ship without the "
     "coupled distance-Jacobian second-index fix, which is the #1111/#1112 general-alias "
     "core → REPLAN'd to Sprint 31 (control-verified 4-term recipe in ISSUE_1143)",
