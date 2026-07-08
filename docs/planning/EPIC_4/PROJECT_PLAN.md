@@ -1547,7 +1547,7 @@ Derived from `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently". (
 - **Parse Rate:** ≥ 100% of pipeline scope (maintain from Sprint 31)
 - **Translate Rate:** ≥ 95% of parsed models (maintain from Sprint 31; the step-up to ≥ 97% happens in Sprint 33 per Rolling KPIs)
 - **Solve Rate:** ≥ 81% of translated models (maintain Sprint 31's ≥ 81% baseline; modest stretch to ≥ 82% via forcing strategies recovering 1–2 divergent models; Sprint 33 / Sprint 34 continue the ramp to ≥ 83% / ≥ 85% per Rolling KPIs)
-- **Full Pipeline Match:** ≥ 45% of pipeline scope — **legacy inherited target, superseded:** this predates the Sprint-28 presolve-retry methodology lift; the new **Sprint 30 Priority 8** re-baselines the Rolling-KPIs Match targets for S32–S34 to the ≥ 64% line (footnote ⁸), so this ≥ 45% figure is replaced by that ≥ 64% target once Sprint 30 lands
+- **Full Pipeline Match:** ≥ 45% of pipeline scope — **legacy inherited target, superseded:** this predates the Sprint-28 presolve-retry methodology lift; **Sprint 30 Priority 8** re-baselined the Rolling-KPIs Match targets for S32–S34 to the ≥ 64% line (footnote ⁸, Sprint 30 Day 12 / 2026-07-08), so this ≥ 45% figure is superseded by that ≥ 64% target
 - **Quality:** All tests pass; all fixes have regression tests
 
 **Estimated Effort:** 22-28 hours
