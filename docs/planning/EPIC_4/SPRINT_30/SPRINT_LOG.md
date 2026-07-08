@@ -15,6 +15,7 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 | 8 | P5 polygon impl: objective half DONE + verified; distance half = #1111/#1112 core → **REPLAN Sprint 31** | — (coupled; objective-alone regresses polygon MS-5; reverted; recipe banked) | 🔄 REPLAN (objective half implemented + verified, banked) |
 | 9 | P4 sarf #1385 atomic symbolic cross-terms → **REPLAN Sprint 31** (Sprint-26-failed architecture) | — (sarf stays translate_timeout; atomic symbolic-emit = dedicated multi-day workstream) | 🔄 REPLAN (docs; banked spec) |
 | 10 | Checkpoint 2 (GO) + P4 #1385 close (REPLAN filed) | — (no backward move; measurement + close only) | ✅ DONE |
+| 11 | P6 camcge Walras transform → **REPLAN Sprint 31** (design's drop-row breaks the MCP dual) | — (price-pin → correct omega 191.735 but MS-4; row-drop corrupts; refined findings banked) | 🔄 REPLAN (empirical; dual-flaw pinned) |
 
 ---
 
@@ -310,3 +311,23 @@ Per the Day-10 close criterion ("sarf translate verified byte-stable + `action=c
 ### Day-10 outcome
 
 Checkpoint 2 GO (no regression across the changed-golden set); #1385 closed via the filed Sprint-31 REPLAN. No `src/` or golden change (measurement + close only). Solve 107 / Match 92 / genuine floor 70 hold. Next: **Days 11–12 — camcge (#1330 → Epic 5) + P7/P8 slack absorption**, then **Day 13 — final retest + closeout**.
+
+---
+
+## Day 11 — P6 camcge Walras transform → REPLAN Sprint 31 (2026-07-08)
+
+**Branch:** `planning/sprint30-day11-camcge`. Empirical (~2h, all `/tmp` hand-transforms — no `src/` change) → REPLAN.
+
+### Empirical findings (the design's transform breaks the MCP dual)
+
+Hand-applied the Epic-5 Walras transform to camcge's emitted `--nlp-presolve` MCP:
+
+1. **Premise validated:** NLP optimum has `p.l(i) = pd0(i) = 1` ∀i → the consumption-weighted numéraire targets the correct equilibrium.
+2. **Pinning the price ray → correct allocation:** fixing `p('services')=pd0('services')` OR adding the numéraire eq `sum(i$cles(i),cles(i)*p(i)) =e= sum(i$cles(i),cles(i)*pd0(i))` (+ the `cles(i)*nu_numeraire` cross-term in `stat_p`) both reach **omega 191.735** (= NLP ref) — but stay **MODEL STATUS 4** (residual Walras row-redundancy; PATH stuck near the solution with a large `gdp` INFES; **proximal_perturbation does NOT rescue it** — a true structural rank deficiency).
+3. **The row-drop corrupts:** dropping `lmequil('rural')` + fixing `nu_lmequil('rural')=0` zeros the **rural wage** in `stat_l(i,'rural')` → omega **299** (broken). **Every** market-clearing multiplier is a needed dual (`nu_lmequil(lc)` = wage in `stat_l`; `nu_equil(i)` = goods price in ~6 `stat_*` rows), so dropping any row orphans a needed price/wage.
+
+**Root conclusion:** the design's **`drop-one-market-clearing-row + numéraire`** is **primal-solution-preserving on paper but breaks the MCP *dual*** — the paper analysis (`CAMCGE_WALRAS_TRANSFORM_DESIGN.md` §3.1) verified the primal and omitted the dual side. A clean MS-1 needs a **dual-consistent** redefinition (express the dropped market's multiplier via Walras' law so it stays available in the stationarity), which is genuinely deeper Epic-5 MCP research than a same-day hand-transform.
+
+### Decision — REPLAN to Sprint 31
+
+REPLAN the camcge Walras transform to a Sprint-31 Epic-5 workstream with the **refined findings banked** (`ISSUE_1330` + the design doc Day-11 refinement): the premise (p=pd0), the working price-pin recipe (right omega 191.735), and the pinned dual-flaw (row-drop orphans a needed multiplier). Substantial de-risking for Sprint 31 even though camcge's +1 Solve does not land. camcge stays `model_infeasible`; no `src/` change. Solve 107 / Match 92 / genuine floor 70 hold. The adjacent **firm P7 part — the Class-B `stat_pz` case-normalization fix (distinct from P6/camcge) — already landed Day 5.**
