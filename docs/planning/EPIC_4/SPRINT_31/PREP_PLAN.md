@@ -58,9 +58,10 @@ This prep plan focuses on:
 
 ## Task 1: Create Sprint 31 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
-**Estimated Time:** 3–4 hours
+**Estimated Time:** 3–4 hours (actual: ~3.5h)
+**Completed:** 2026-07-08
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
@@ -124,11 +125,11 @@ Sprint 31's central risk is that its carryforwards are the tracks Sprint 30 REPL
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_31/KNOWN_UNKNOWNS.md` (25 unknowns across the 7 Sprint-31 priority categories) + the Task-to-Unknown mapping appendix; added the "Unknowns Verified" metadata + Deliverables/Acceptance-Criteria lines on Tasks 2–10 below; CHANGELOG entry.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-08).** `KNOWN_UNKNOWNS.md` authored with **25 unknowns** (target 22–30) across **7 categories** aligned to the PROJECT_PLAN Sprint-31 priorities. Priority distribution: **6 Critical / 10 High / 6 Medium / 3 Low** (24% / 40% / 24% / 12%). Per-unknown research estimates sum to ~36h; the authoritative scheduling budget is the per-task 35–49h in this PREP_PLAN. Every unknown starts 🔍 INCOMPLETE and is assigned to a downstream prep task (2–10) in the mapping appendix. The six REPLAN-prone Criticals (1.1/1.2 head-offset IR plumbing, 2.2 offset-alias coupled core, 3.1/3.2 camcge dual-consistent + detector, 5.1 obj-grad ν_objective reduction) + the head-offset-IR-round-trip (1.1) + the camcge detection-heuristic false-positive (3.2) are captured as required. The two dominant Sprint-30 lessons (banked recipe = control-experiment-first hypothesis; check the dual side) thread through the Category-3/5 unknowns.
 
 ### Verification
 
@@ -163,14 +164,14 @@ grep -oE "#(1443|1462|1236|1385|1146|1143|1330|1111|1112|1110)" docs/planning/EP
 
 ### Acceptance Criteria
 
-- [ ] KNOWN_UNKNOWNS.md created with 7 categories aligned to the Sprint-31 priorities
-- [ ] 22–30 unknowns, each with Priority / Assumption / How to Verify / Risk if Wrong / Owner
-- [ ] The four deepest REPLAN-prone tracks (P1 IR plumbing, P2 #1111/#1112 core, P4 symbolic-emit rebuild, P5 control-refuted obj-grad) flagged Critical/High with a single-model or control-experiment validation
-- [ ] The head-offset-IR-round-trip Critical unknown is present (P1's foundation hinges on it — Category 1)
-- [ ] The camcge dual-consistent-redefinition correctness AND the degeneracy-detector false-positive risks are both captured (P3 — Category 3)
-- [ ] Sprint-30 open/carryforward KUs migrated with forward-links
-- [ ] Task-to-Unknown mapping appendix present
-- [ ] CHANGELOG updated
+- [x] KNOWN_UNKNOWNS.md created with 7 categories aligned to the Sprint-31 priorities
+- [x] 22–30 unknowns (25), each with Priority / Assumption / How to Verify / Risk if Wrong / Owner
+- [x] The four deepest REPLAN-prone tracks (P1 IR plumbing, P2 #1111/#1112 core, P4 symbolic-emit rebuild, P5 control-refuted obj-grad) flagged Critical/High with a single-model or control-experiment validation
+- [x] The head-offset-IR-round-trip Critical unknown is present (P1's foundation hinges on it — Category 1, Unknown 1.1)
+- [x] The camcge dual-consistent-redefinition correctness AND the degeneracy-detector false-positive risks are both captured (P3 — Unknowns 3.1, 3.2)
+- [x] Sprint-30 open/carryforward KUs migrated with forward-links (Sprint-30 Unknowns 1.1/1.2/5.1/6.1/2.2 → Sprint-31 Categories 1/2/3/6)
+- [x] Task-to-Unknown mapping appendix present
+- [x] CHANGELOG updated
 
 ---
 
@@ -182,6 +183,7 @@ grep -oE "#(1443|1462|1236|1385|1146|1143|1330|1111|1112|1110)" docs/planning/EP
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None (parallelizable with Task 1)
+**Unknowns Verified:** 7.2
 
 ### Objective
 
@@ -233,6 +235,7 @@ grep -oiE "mine|polygon|camcge|sarf|hhfair|rocket" docs/planning/EPIC_4/SPRINT_3
 
 - `docs/planning/EPIC_4/SPRINT_31/BASELINE_METRICS.md` — Day-0 per-model bucket table + the genuine-vs-methodology partition (genuine floor 70) + the per-priority target-model list with current buckets
 - Confirmation that the `--resolve-changed` checkpoint anchor selects the correct changed-emit set
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 7.2
 - CHANGELOG entry
 
 ### Acceptance Criteria
@@ -242,6 +245,7 @@ grep -oiE "mine|polygon|camcge|sarf|hhfair|rocket" docs/planning/EPIC_4/SPRINT_3
 - [ ] The 7 model_infeasible + path_* members enumerated by name
 - [ ] Each Sprint-31 priority's Day-0 target model + current bucket listed (mine, polygon, camcge, sarf, hhfair/CGE, rocket)
 - [ ] The `--resolve-changed` checkpoint anchor confirmed
+- [ ] Unknowns 7.2 verified and updated in KNOWN_UNKNOWNS.md
 - [ ] CHANGELOG updated
 
 ---
@@ -254,6 +258,7 @@ grep -oiE "mine|polygon|camcge|sarf|hhfair|rocket" docs/planning/EPIC_4/SPRINT_3
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 1.1, 1.2, 1.3, 1.4
 
 ### Objective
 
@@ -308,6 +313,7 @@ grep -oiE "comp_pr|nlp-presolve|presolve dual|stat_x" docs/planning/EPIC_4/SPRIN
 
 - `docs/planning/EPIC_4/SPRINT_31/HEAD_OFFSET_IR_PLUMBING_DESIGN.md` — the `EquationDef` head-offset storage design, the normalize round-trip design + blast-radius guard, the round-trip unit-reproduction spec, the Phase-2 shared 3-site helper signature, and the cold-INFES-by-direction success histogram
 - The minimal round-trip fixture spec (mine-shaped) for `tests/fixtures/`
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.3, 1.4
 - CHANGELOG entry
 
 ### Acceptance Criteria
@@ -318,6 +324,7 @@ grep -oiE "comp_pr|nlp-presolve|presolve dual|stat_x" docs/planning/EPIC_4/SPRIN
 - [ ] The Phase-2 shared 3-site helper signature (parameterized by δ, `li(k)`, `lj(k)`) + the atomic-application requirement are specified
 - [ ] The cold-INFES-by-direction success histogram is the Phase-2 completion gate
 - [ ] The 4th-site REPLAN exit is named (deeper architecture → Sprint 32)
+- [ ] Unknowns 1.1, 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
 - [ ] CHANGELOG updated
 
 ---
@@ -330,6 +337,7 @@ grep -oiE "comp_pr|nlp-presolve|presolve dual|stat_x" docs/planning/EPIC_4/SPRIN
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 2.1, 2.2, 2.3, 2.4
 
 ### Objective
 
@@ -383,6 +391,7 @@ grep -oiE "#1110|himmel16|non-convex" docs/planning/EPIC_4/SPRINT_31/OFFSET_ALIA
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_31/OFFSET_ALIAS_JACOBIAN_DESIGN.md` — the 4-term recipe re-confirmation result, the `_add_indexed_jacobian_terms` second-index restoration design + tight gate, the #1110 orthogonality confirmation, the coupled-landing design with `shape8` as the completion gate, and the Sprint-32 REPLAN exit
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.2, 2.3, 2.4
 - CHANGELOG entry
 
 ### Acceptance Criteria
@@ -393,6 +402,7 @@ grep -oiE "#1110|himmel16|non-convex" docs/planning/EPIC_4/SPRINT_31/OFFSET_ALIA
 - [ ] The coupled-landing design names `shape8_offset_alias_successor` (drop strict-xfail) as the completion gate
 - [ ] himmel16 non-convex scope guard recorded (no emit fix expected)
 - [ ] The Sprint-32 #1111/#1112 AD-engine REPLAN exit is named
+- [ ] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 - [ ] CHANGELOG updated
 
 ---
@@ -405,6 +415,7 @@ grep -oiE "#1110|himmel16|non-convex" docs/planning/EPIC_4/SPRINT_31/OFFSET_ALIA
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
+**Unknowns Verified:** 3.1, 3.2, 3.3, 3.4
 
 ### Objective
 
@@ -458,6 +469,7 @@ grep -oiE "irscge|lrgcge|moncge|stdcge" docs/planning/EPIC_4/SPRINT_31/CAMCGE_DU
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_31/CAMCGE_DUAL_CONSISTENT_DESIGN.md` (or an extension of `EPIC_5/CAMCGE_WALRAS_TRANSFORM_DESIGN.md`) — the dual-consistent multiplier redefinition, the S1∧S2∧S3 detector + false-positive guard, the prototype-on-`/tmp`-first plan, and the per-model-numéraire fallback
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.1, 3.2, 3.3, 3.4
 - CHANGELOG entry
 
 ### Acceptance Criteria
@@ -467,6 +479,7 @@ grep -oiE "irscge|lrgcge|moncge|stdcge" docs/planning/EPIC_4/SPRINT_31/CAMCGE_DU
 - [ ] The S1∧S2∧S3 degeneracy detector + the irscge/lrgcge/moncge/stdcge false-positive guard are specified
 - [ ] The prototype-on-`/tmp`-first plan (reach MS 1 before the src change) is required
 - [ ] The per-model-numéraire-declaration fallback + Epic-5 scoping are named
+- [ ] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
 - [ ] CHANGELOG updated
 
 ---
@@ -479,6 +492,7 @@ grep -oiE "irscge|lrgcge|moncge|stdcge" docs/planning/EPIC_4/SPRINT_31/CAMCGE_DU
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1, 3, 4, 5
+**Unknowns Verified:** 1.2, 2.2, 3.1, 4.1, 5.1, 6.2
 
 ### Objective
 
@@ -534,6 +548,7 @@ done
 
 - `docs/planning/EPIC_4/SPRINT_31/PHASE_0_ACCEPTANCE_GATES.md` — the per-track (P1–P6) PROCEED/REPLAN gate criteria consolidated from Tasks 3/4/5/9
 - Refreshed `## Phase 0: Acceptance Gate` sections in the src-touching ISSUE docs (#1443, #1143, #1330, #1385, hhfair/CGE obj-grad, #1462)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.2, 2.2, 3.1, 4.1, 5.1, 6.2
 - CHANGELOG entry
 
 ### Acceptance Criteria
@@ -544,6 +559,7 @@ done
 - [ ] The P5 gate bans the sign flip and requires the ν_objective control experiment before the src change (PR24/PR27)
 - [ ] The P4 gate requires O(constraints) emit timed against the translate budget
 - [ ] Each src-touching ISSUE doc has a refreshed `## Phase 0: Acceptance Gate` section
+- [ ] Unknowns 1.2, 2.2, 3.1, 4.1, 5.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
 - [ ] CHANGELOG updated
 
 ---
@@ -556,6 +572,7 @@ done
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 3, 4, 5, 6
+**Unknowns Verified:** 1.1, 1.2, 2.2, 2.3, 4.2, 5.1, 5.2
 
 ### Objective
 
@@ -607,6 +624,7 @@ grep -qiE "Solve.*109|genuine floor.*73" docs/planning/EPIC_4/SPRINT_31/REPLAN_R
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_31/REPLAN_RISK_ASSESSMENT.md` — per-track (P1/P2/P4/P5) single-model validation + Sprint-32 REPLAN exit + budget reallocation, plus the honest Solve ≥109 / genuine floor ≥73 KPI projection under each single-track REPLAN
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 2.2, 2.3, 4.2, 5.1, 5.2
 - CHANGELOG entry
 
 ### Acceptance Criteria
@@ -614,6 +632,7 @@ grep -qiE "Solve.*109|genuine floor.*73" docs/planning/EPIC_4/SPRINT_31/REPLAN_R
 - [ ] Each of P1/P2/P4/P5 has a single-model or control-experiment validation measurable by the Day-5 checkpoint
 - [ ] Each has an explicit Sprint-32 REPLAN exit + a budget-reallocation target
 - [ ] The honest KPI projection ties Solve ≥109 to (mine + camcge) and genuine floor ≥73 to (polygon + hhfair/CGE), stating what survives each single-track REPLAN
+- [ ] Unknowns 1.1, 1.2, 2.2, 2.3, 4.2, 5.1, 5.2 verified and updated in KNOWN_UNKNOWNS.md
 - [ ] CHANGELOG updated
 
 ---
@@ -626,6 +645,7 @@ grep -qiE "Solve.*109|genuine floor.*73" docs/planning/EPIC_4/SPRINT_31/REPLAN_R
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
+**Unknowns Verified:** 4.2, 6.1, 7.1, 7.3
 
 ### Objective
 
@@ -677,6 +697,7 @@ grep -n "shape8_offset_alias_successor\|shape9_objgrad_subset_boundary" tests/in
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_31/TOOLING_READINESS_AUDIT.md` — per-tool coverage confirmation for the Sprint-31 classes + a minimal-extension list (feeds Task 9 + P7)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.2, 6.1, 7.1, 7.3
 - CHANGELOG entry
 
 ### Acceptance Criteria
@@ -684,6 +705,7 @@ grep -n "shape8_offset_alias_successor\|shape9_objgrad_subset_boundary" tests/in
 - [ ] The KKT-residual harness, presolve-divergence detector, golden-staleness gate, `--resolve-changed` re-solve, and `--force` scaffold are each confirmed for their Sprint-31 touchpoints
 - [ ] The `shape8` P2 completion gate + the new head-offset P7 fixture are scoped
 - [ ] Any minimal tooling extension is listed with the priority it blocks
+- [ ] Unknowns 4.2, 6.1, 7.1, 7.3 verified and updated in KNOWN_UNKNOWNS.md
 - [ ] CHANGELOG updated
 
 ---
@@ -696,6 +718,7 @@ grep -n "shape8_offset_alias_successor\|shape9_objgrad_subset_boundary" tests/in
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1, 8
+**Unknowns Verified:** 4.1, 4.3, 5.1, 5.2, 5.3, 5.4, 6.1, 6.3
 
 ### Objective
 
@@ -748,6 +771,7 @@ grep -qiE "PATH.consultation|PATH question" docs/planning/EPIC_4/SPRINT_31/BACKL
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_31/BACKLOG_FIX_SURFACE_ANALYSIS.md` — the P4 sarf symbolic-emit patch site + fixture spec, the P5 ν_objective obj-grad reduction site + control-experiment + fixture spec, and the P6 emittable-lever set + PATH-consultation-input draft
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.1, 4.3, 5.1, 5.2, 5.3, 5.4, 6.1, 6.3
 - CHANGELOG entry
 
 ### Acceptance Criteria
@@ -756,6 +780,7 @@ grep -qiE "PATH.consultation|PATH question" docs/planning/EPIC_4/SPRINT_31/BACKL
 - [ ] The P5 obj-grad fix-surface is the ν_objective reduction (the sign flip is explicitly excluded) with a control-experiment + fixture spec
 - [ ] The P6 emittable-lever set + the drafted PATH-consultation question scope are recorded
 - [ ] Each patch site is framed as a Day-0-re-confirm hypothesis (PR24)
+- [ ] Unknowns 4.1, 4.3, 5.1, 5.2, 5.3, 5.4, 6.1, 6.3 verified and updated in KNOWN_UNKNOWNS.md
 - [ ] CHANGELOG updated
 
 ---
@@ -768,6 +793,7 @@ grep -qiE "PATH.consultation|PATH question" docs/planning/EPIC_4/SPRINT_31/BACKL
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1–9
+**Unknowns Verified:** all 25 (integrates every verified unknown into the schedule)
 
 ### Objective
 
@@ -824,6 +850,7 @@ grep -nE "[0-9]+h|hours" docs/planning/EPIC_4/SPRINT_31/PLAN.md | head
 - `docs/planning/EPIC_4/SPRINT_31/PLAN.md` — the 14-day schedule (Day 0 + Days 1–13) with per-day priority / Phase-0 gate / deliverable / REPLAN exit, the Day-5 / Day-10 checkpoints + the final determinism retest, and the ≤ 12h/day budget verification
 - `docs/planning/EPIC_4/SPRINT_31/prompts/PLAN_PROMPTS.md` — the day-by-day execution prompts
 - `docs/planning/EPIC_4/SPRINT_31/SPRINT_LOG.md` (skeleton for the sprint)
+- Updated KNOWN_UNKNOWNS.md — all 25 unknowns integrated into the 14-day schedule
 - CHANGELOG entry
 
 ### Acceptance Criteria
@@ -833,6 +860,7 @@ grep -nE "[0-9]+h|hours" docs/planning/EPIC_4/SPRINT_31/PLAN.md | head
 - [ ] P1 head-offset leads with contiguous Phase-1 (IR plumbing) then Phase-2 (helper) days
 - [ ] The Day-5 / Day-10 `--resolve-changed` checkpoints + the REPLAN-reallocation decision points + the final Day-13 ≥3-seed determinism retest are placed
 - [ ] Per-day execution prompts name the priority, Phase-0 gate, deliverable, and REPLAN exit
+- [ ] All 25 unknowns from KNOWN_UNKNOWNS.md integrated into the schedule
 - [ ] CHANGELOG updated
 
 ---
