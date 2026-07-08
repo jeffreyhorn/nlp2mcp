@@ -102,7 +102,10 @@ def test_shape6_tree_predicate_aliased_sum() -> None:
 
 
 @pytest.mark.xfail(
-    reason="#1143/#1447: reverted; pending coupled distance-Jacobian fix (Sprint 30)",
+    reason="#1143/#1111: the objective-successor half is implemented+verified (Sprint 30 "
+    "Day 8, interior-representative selection) but REVERTED — it can't ship without the "
+    "coupled distance-Jacobian second-index fix, which is the #1111/#1112 general-alias "
+    "core → REPLAN'd to Sprint 31 (control-verified 4-term recipe in ISSUE_1143)",
     strict=True,
 )
 def test_shape8_offset_alias_successor() -> None:
@@ -110,7 +113,9 @@ def test_shape8_offset_alias_successor() -> None:
     the sum body at offset 0 AND +1, so stat_x(i) must carry BOTH the own-row
     successor and the predecessor term — the representative-instance selection
     must pick an INTERIOR column (not a boundary one missing the predecessor).
-    Currently the predecessor term is dropped (the fix was reverted, #1143)."""
+    The objective half was implemented + verified Day 8 (this assertion passes with
+    it applied) but reverted (coupled with the distance-Jacobian #1111/#1112 core,
+    REPLAN'd to Sprint 31); it stays strict-xfail until the coupled fix lands."""
     row = _stat_row(_emit("shape8_offset_alias_successor.gms"), "stat_x(i)")
     # Own-row successor term and the predecessor cross-term, each subset-guarded.
     assert "x(i+1)*1$(j(i))" in row, row
