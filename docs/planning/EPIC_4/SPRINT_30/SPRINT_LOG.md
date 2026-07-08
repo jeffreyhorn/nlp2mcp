@@ -28,7 +28,7 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 | Metric | Day-0 | Target | **Final** | Verdict |
 |---|---|---|---|---|
 | Parse | 142 | ≥100% | **142** | ✅ met |
-| Translate | 135 | ≥95% (+1 via #1385) | **135** | ➖ maintained (#1385 sarf REPLAN'd → no +1) |
+| Translate | 135 | 136 (135 +1 via #1385; ≥95% rate) | **135** | ➖ maintained (#1385 sarf REPLAN'd → no +1) |
 | **Solve** | 107 | ≥109 | **107** | ❌ miss — the +2 was mine [P1b] + rocket [P2], **both REPLAN'd to Sprint 31** (§`REPLAN_RISK_ASSESSMENT.md` anticipated this) |
 | **Match** | 92 | ≥92 (genuine floor 69→≥72) | **92** | ✅ **met** as-measured; genuine floor **70** (robert +1) — the further +2/+3 (polygon/hhfair/Class-B) REPLAN'd/refuted |
 | model_infeasible | 7 | ≤5 | **7** | ❌ miss — the −2 was mine + rocket (both REPLAN'd) |

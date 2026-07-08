@@ -35,7 +35,7 @@
 
 4. **Control experiments turn "REPLAN with a shrug" into "REPLAN with a recipe."** Every deferred track carries a *de-risked* hand-off: polygon has a control-verified 4-term fix + a working objective-half implementation; camcge has the price-pin recipe (omega 191.735) + the pinned dual-flaw; sarf has the banked `stat_task` derivation; mine has the cold-INFES characterization. Sprint 31 inherits specifications, not open questions.
 
-5. **A 14-day sprint (Day 0 + Days 1–13) with 5 REPLANs still shipped 3 firm general-robustness fixes + the infra.** The REPLANs were not wasted days — each produced a precise diagnosis that advances the Sprint-31 work. But the sprint would have benefited from **front-loading the tractability probes** (e.g. the mine IR-plumbing blocker and the polygon #1111/#1112 boundary were discoverable Day-0 with a deeper structural read, which would have re-allocated the Days 6–8 budget toward the firm floor gains earlier).
+5. **A 14-phase sprint (Day 0 + Days 1–13 log-days; ~3 calendar days elapsed) with 5 REPLANs still shipped 3 firm general-robustness fixes + the infra.** The REPLANs were not wasted days — each produced a precise diagnosis that advances the Sprint-31 work. But the sprint would have benefited from **front-loading the tractability probes** (e.g. the mine IR-plumbing blocker and the polygon #1111/#1112 boundary were discoverable Day-0 with a deeper structural read, which would have re-allocated the Days 6–8 budget toward the firm floor gains earlier).
 
 ## 4. Sprint-31 carryforwards
 
