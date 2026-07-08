@@ -14,7 +14,7 @@
 | Match | 92 | ≥92 | 92 | ✅ |
 | genuine floor | 69 | ≥72 | 70 | ❌ (+1 robert; rest REPLAN'd/refuted) |
 | model_infeasible | 7 | ≤5 | 7 | ❌ (−2 was mine+rocket) |
-| Determinism / Tests | — | ✅ | ✅ / 4997 | ✅ |
+| Determinism / Tests | — | ✅ | ✅ / 4997 passed | ✅ |
 
 **The Match ≥92 floor held; the Solve ≥109 and genuine-floor ≥72 stretches missed — exactly along the REPLAN-risk lines the Task-6 assessment drew.** Solve ≥109 required *both* mine and rocket, both rated High-risk / REPLAN-prone up front; both REPLAN'd. The genuine-floor lift was the "robust" deliverable on paper, but three of its four contributors (polygon P5, hhfair/Class-B obj-grad P7) hit a REPLAN boundary or a control-refutation, leaving robert as the sole +1.
 
