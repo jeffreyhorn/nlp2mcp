@@ -278,7 +278,7 @@ REPLAN polygon (+ himmel16, already refuted Day 7) to the Sprint-31 #1111/#1112 
 
 ### Assessment
 
-Re-confirmed sarf still `translate_timeout`s (>2 min): the 1-D `_is_blowup_dynamic_subset_equation` bails on `len(eq_domain) != 1`, so it never fires on sarf's **2-D** dynamic-subset condition shape (`tbal(g,t)$taskposs(g,t)` [384], `equipb1(m,t)$equipposs(m,t)` [648], `equipb2(n,t)$equipposs(n,t)` [120]; 1,152 Cartesian instances; `taskposs`/`equipposs` are data-computed → zero static members → full-Cartesian enumeration → `differentiate_expr` blow-up).
+Re-confirmed sarf still hits `translate_timeout` (>2 min): the 1-D `_is_blowup_dynamic_subset_equation` bails on `len(eq_domain) != 1`, so it never fires on sarf's **2-D** dynamic-subset condition shape (`tbal(g,t)$taskposs(g,t)` [384], `equipb1(m,t)$equipposs(m,t)` [648], `equipb2(n,t)$equipposs(n,t)` [120]; 1,152 Cartesian instances; `taskposs`/`equipposs` are data-computed → zero static members → full-Cartesian enumeration → `differentiate_expr` blow-up).
 
 The **atomic** fix needs (a) a 2-D gate extension AND (b) a **new symbolic runtime-guard cross-term emit path** that differentiates each short-circuited body **once parametrically** in `(g,t,m,n)` (the gate makes those equations enumerate zero instances, so the cross-terms can't come from per-instance Jacobian entries). **That path is precisely the Sprint-26-Day-4 architecture that FAILED** (commit `243fe578`, reverted — `nu_slack("srn")` set-name-literal indices + dropped `J_gᵀ·lam` cross-terms), and **Sprint-29 Day-9 already REPLAN'd it as intractable in budget**. **Atomicity** forbids a safe partial (skip-only = incomplete MCP; re-emit-without-correct-cross-terms = the wrong MCP). This is a multi-day dedicated workstream, not a ~7h day.
 
