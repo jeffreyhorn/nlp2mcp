@@ -2,7 +2,7 @@
 
 **Sprint:** 30 (Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD — Sprint 29 carryforwards)
 **Closed:** 2026-07-08 (Day 13)
-**Final metrics (142 corpus):** Parse 142 · Translate 135 · **Solve 107** · **Match 92** (genuine floor **70**) · model_infeasible 7 · determinism ✅ ×3 {0,1,42} · Tests 4997 green.
+**Final metrics (142 corpus):** Parse 142 · Translate 135 · **Solve 107** · **Match 92** (genuine floor **70**) · model_infeasible 7 · determinism ✅ ×3 `PYTHONHASHSEED` {0,1,42} · Tests 4997 passed (green).
 
 ---
 
@@ -20,7 +20,7 @@
 
 ## 2. What landed (firm)
 
-- **robert (P1a)** — objective-gradient boundary-term fix; cold-matches 11025.0. +1 genuine floor. The one clean, decoupled, low-risk win — and it was correctly split out from mine early (the Task-3 "robert does NOT generalize to mine" inversion).
+- **robert (P1a)** — objective-gradient boundary-term fix; cold-matches at 11025.0. +1 genuine floor. The one clean, decoupled, low-risk win — and it was correctly split out from mine early (the Task-3 "robert does NOT generalize to mine" inversion).
 - **hhfair `$184` (P3)** — the #1449 widened-VARIABLE companion-variable emit architecture; general robustness (any widened variable under presolve). Unblocked hhfair's compile.
 - **Class-B `stat_pz` (P7)** — the presolve dual-transfer **case-normalization** fix. General emit robustness: mixed-case equation duals were silently skipped in the warm-start for *every* model, not just the CGE cluster.
 - **P8 infrastructure** — the `--force` solution-forcing scaffold (Sprint-31 PATH-consultation entry point), the PR25 KPI re-baseline, the AD cross-term property catalog.

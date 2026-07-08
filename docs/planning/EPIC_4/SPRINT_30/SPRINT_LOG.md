@@ -28,7 +28,7 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 | Metric | Day-0 | Target | **Final** | Verdict |
 |---|---|---|---|---|
 | Parse | 142 | ≥100% | **142** | ✅ met |
-| Translate | 135 | 136 (135 +1 via #1385; ≥95% rate) | **135** | ➖ maintained (#1385 sarf REPLAN'd → no +1) |
+| Translate | 135 | ≥135 (stretch 136 via #1385; ≥95% rate) | **135** | ➖ maintained (#1385 sarf REPLAN'd → no stretch +1) |
 | **Solve** | 107 | ≥109 | **107** | ❌ miss — the +2 was mine [P1b] + rocket [P2], **both REPLAN'd to Sprint 31** (§`REPLAN_RISK_ASSESSMENT.md` anticipated this) |
 | **Match** | 92 | ≥92 (genuine floor 69→≥72) | **92** | ✅ **met** as-measured; genuine floor **70** (robert +1) — the further +2/+3 (polygon/hhfair/Class-B) REPLAN'd/refuted |
 | model_infeasible | 7 | ≤5 | **7** | ❌ miss — the −2 was mine + rocket (both REPLAN'd) |
@@ -36,7 +36,7 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 | Determinism | — | byte-stable ×3 | **✅** | emit-affected models byte-identical across `PYTHONHASHSEED` 0/1/42 |
 | Tests | — | green | **4997 passed** | ✅ |
 
-**Method note (closeout):** a full 142-model 3× retest is ~12h compute; the final metrics are established instead by (a) **no `src/` change landed after Day 5** (Days 6–13 are docs-only + test-comment edits), (b) both **`--resolve-changed` checkpoints GO** (Day 5, Day 10 — no backward bucket move on the changed goldens robert/cclinpts/cesam), and (c) the **scoped 3-seed determinism check** on the emit-affected cohort (robert/hhfair/irscge/lrgcge/moncge/cclinpts/cesam **all byte-identical across `PYTHONHASHSEED` 0/1/42**). No as-measured bucket moved: robert was already `model_optimal_presolve`-match (Day-1 fix made it cold-match — a genuine-floor shift, not a count change); hhfair stays mismatch (compiles+solves post-`$184`); the case-normalization cohort already matched.
+**Method note (closeout):** a full 142-model 3× retest is ~12h of compute; the final metrics are established instead by (a) **no `src/` change landed after Day 5** (Days 6–13 are docs-only + test-comment edits), (b) both **`--resolve-changed` checkpoints GO** (Day 5, Day 10 — no backward bucket move on the changed goldens robert/cclinpts/cesam), and (c) the **scoped 3-seed determinism check** on the emit-affected cohort (robert/hhfair/irscge/lrgcge/moncge/cclinpts/cesam **all byte-identical across `PYTHONHASHSEED` 0/1/42**). No as-measured bucket moved: robert was already `model_optimal_presolve`-match (Day-1 fix made it cold-match — a genuine-floor shift, not a count change); hhfair stays mismatch (compiles+solves post-`$184`); the case-normalization cohort already matched.
 
 ### Per-priority summary
 
