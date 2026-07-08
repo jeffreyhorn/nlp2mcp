@@ -17,8 +17,55 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 | 10 | Checkpoint 2 (GO) + P4 #1385 close (REPLAN filed) | — (no backward move; measurement + close only) | ✅ DONE |
 | 11 | P6 camcge Walras transform → **REPLAN Sprint 31** (design's drop-row breaks the MCP dual) | — (price-pin → correct omega 191.735 but MS-4; row-drop corrupts; refined findings banked) | 🔄 REPLAN (empirical; dual-flaw pinned) |
 | 12 | P7 finish (verified) + P8 infra (PR25 re-baseline, catalog, forcing hand-off) | — (P7 `stat_pz` converted confirmed; S31–S33 KPIs re-baselined; genuine floor 70) | ✅ DONE (verify + infra) |
+| 13 | Final retest (determinism ✅) + closeout — **SPRINT 30 CLOSED** | **Solve 107 / Match 92 / genuine floor 70** (Match target met; Solve/floor miss = REPLAN'd tracks) | ✅ DONE |
 
 ---
+
+## Sprint 30 — Final Summary (Day 13, 2026-07-08) — **CLOSED**
+
+### Final metrics (142-model corpus)
+
+| Metric | Day-0 | Target | **Final** | Verdict |
+|---|---|---|---|---|
+| Parse | 142 | ≥100% | **142** | ✅ met |
+| Translate | 135 | ≥135 (stretch 136 via #1385; ≥95% rate) | **135** | ➖ maintained (#1385 sarf REPLAN'd → no stretch +1) |
+| **Solve** | 107 | ≥109 | **107** | ❌ miss — the +2 was mine [P1b] + rocket [P2], **both REPLAN'd to Sprint 31** (§`REPLAN_RISK_ASSESSMENT.md` anticipated this) |
+| **Match** | 92 | ≥92 (genuine floor 69→≥72) | **92** | ✅ **met** as-measured; genuine floor **70** (robert +1) — the further +2/+3 (polygon/hhfair/Class-B) REPLAN'd/refuted |
+| model_infeasible | 7 | ≤5 | **7** | ❌ miss — the −2 was mine + rocket (both REPLAN'd) |
+| genuine floor | 69 | ≥72 | **70** | ❌ miss (+1 robert; the rest REPLAN'd/refuted) |
+| Determinism | — | byte-stable ×3 | **✅** | emit-affected models byte-identical across `PYTHONHASHSEED` 0/1/42 |
+| Tests | — | green | **4997 passed** | ✅ |
+
+**Method note (closeout):** a full 142-model 3× retest is ~12h of compute; the final metrics are established instead by (a) **no `src/` change landed after Day 5** (Days 6–13 are docs-only + test-comment edits), (b) both **`--resolve-changed` checkpoints GO** (Day 5, Day 10 — no backward bucket move on the changed goldens robert/cclinpts/cesam), and (c) the **scoped 3-seed determinism check** on the emit-affected cohort (robert/hhfair/irscge/lrgcge/moncge/cclinpts/cesam **all byte-identical across `PYTHONHASHSEED` 0/1/42**). No as-measured bucket moved: robert was already `model_optimal_presolve`-match (Day-1 fix made it cold-match — a genuine-floor shift, not a count change); hhfair stays mismatch (compiles+solves post-`$184`); the case-normalization cohort already matched.
+
+### Per-priority summary
+
+- **P1a robert (firm, LANDED Day 1):** objective-gradient boundary-term fix (`_build_indexed_gradient_term` multi-group consolidation) → robert cold-matches at 11025.0. **+1 genuine floor (69→70).** shape9 fixture guards it.
+- **P1b mine (REPLAN → Sprint 31):** the head-domain-offset architecture. Cold LCP breaks ~4e10 across all k-directions; the shared 3-site helper needs **foundational IR head-offset plumbing** first (not stored today). +1 Solve deferred; recipe + Site-3 landed prior sprint.
+- **P2 rocket (scaffold LANDED Days 2–3; +1 Solve REPLAN → Sprint 31):** the `--force {homotopy,multistart,optfile}` solution-forcing scaffold (the Sprint-31 PATH-consultation entry point). No emittable lever converges rocket (intrinsic non-convergence); the PATH question is the hand-off.
+- **P3 hhfair (`$184` fix LANDED Day 4; +1 Match REPLAN → Sprint 31):** the #1449 widened-VARIABLE companion-variable emit (general robustness) cleared `$184`; hhfair now compiles + solves MS-1. The residual `stat_u` mismatch is **non-convex** (the sign-flip fix was control-refuted Day 6).
+- **P4 sarf #1385 (REPLAN → Sprint 31):** the atomic symbolic runtime-guard cross-term emit is the Sprint-26-failed architecture; a dedicated builder-pipeline-aware workstream. sarf stays `translate_timeout`.
+- **P5 offset-alias (polygon +1 Match CONFIRMED but REPLAN → Sprint 31; himmel16 refuted):** polygon's 4-term coupled fix is control-verified (warm-match 0.780); the objective half is implemented+verified but the **distance-Jacobian half is the #1111/#1112 general-alias core** (can't land alone). himmel16 = non-convex (refuted).
+- **P6 camcge #1330 (REPLAN → Sprint 31):** the Walras transform's **drop-row breaks the MCP dual** (orphans a needed price/wage); pinning the price → correct omega 191.735 but MS-4. Needs a dual-consistent redefinition. Refined findings + price-pin recipe banked.
+- **P7 Class-B `stat_pz` (firm, LANDED Day 5):** the presolve dual-transfer **case-normalization** fix (mixed-case equation duals were silently skipped) → `stat_pz` rel 1.0 → 0 across irscge/lrgcge/moncge. General emit robustness. The cold-convex `stat_xp` residue → Sprint 31.
+- **P8 infra (LANDED Days 2–3, 12):** the forcing scaffold; the PR25 re-baseline of the S31–S33 KPI Match targets (→ ≥64% line); the property-test catalog (shape9 landed, shape7/shape8 guards). CONTRIBUTING/forcing hand-off documented.
+
+### Sprint 30 net + the honest read
+
+**3 firm fixes landed** (robert genuine-floor +1, hhfair `$184` general robustness, Class-B `stat_pz` case-normalization) + **the P8 infrastructure** (forcing scaffold, KPI re-baseline, property catalog). **The 5 REPLAN-prone/hard tracks all deferred to Sprint 31 with precisely-diagnosed, de-risked hand-offs** — the Task-6 assessment anticipated this (Solve ≥109 needed both mine + rocket, both High-risk; the genuine-floor lift was the "robust" deliverable but polygon/hhfair/Class-B-obj-grad hit REPLAN boundaries or control-refutations too). The sprint's signature was **PR24 discipline**: every banked fix-surface was re-confirmed Day-0 and several were **refuted by control experiment before shipping** (the obj-grad sign fix ×3, the stat_pz coefficient hypothesis, the camcge drop-row) — surfacing the real root cause rather than a wrong high-blast-radius change. **Metrics: Solve 107 / Match 92 (met) / genuine floor 70 (+1) / determinism ✅ / 4997 tests passed (green).**
+
+### Sprint-31 carryforwards (filed)
+
+| Track | Issue/doc | Hand-off state |
+|---|---|---|
+| **mine** head-offset architecture | `ISSUE_1443` | REPLAN'd; needs IR head-offset plumbing (Phase 1) then the shared 3-site helper (Phase 2) |
+| **rocket** PATH consultation | `ISSUE_1462` + `NONCONVEX_FORCING_SURVEY.md` §4 | scaffold landed; the concrete PATH-option/reformulation question is banked |
+| **polygon + himmel16** #1111/#1112 | `ISSUE_1143` (control-verified 4-term recipe + working objective half) / `ISSUE_1146` (himmel16 non-convex, no fix) | the distance-Jacobian second-index = the general-alias core |
+| **sarf** #1385 symbolic-emit | `ISSUE_1385` (banked `stat_task` derivation) | dedicated builder-pipeline-aware workstream |
+| **camcge** #1330 Walras | `ISSUE_1330` + `CAMCGE_WALRAS_TRANSFORM_DESIGN.md` Day-11 refinement | dual-consistent multiplier redefinition; price-pin recipe (omega 191.735) banked |
+| **cold-convex obj-grad residue** (hhfair `stat_u` / CGE `stat_xp`) | `ISSUE_1236` (sign-flip refuted) | the objective-defining-intermediate-variable family; needs a non-sign-flip treatment |
+
+**SPRINT 30 CLOSED.**
 
 ## Day 0 — Kickoff + Day-0 Traces (2026-07-06)
 
