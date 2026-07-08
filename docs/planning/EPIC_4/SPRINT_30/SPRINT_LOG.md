@@ -14,6 +14,7 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 | 7 | mine REPLAN confirmed (cascade persists) + P5 offset-alias diagnostic | — (polygon fix **CONFIRMED** 0.780≈0.7797 → Day-8 impl; himmel16 non-convex refuted) | ✅ DONE (docs; polygon +1 Match confirmed) |
 | 8 | P5 polygon impl: objective half DONE + verified; distance half = #1111/#1112 core → **REPLAN Sprint 31** | — (coupled; objective-alone regresses polygon MS-5; reverted; recipe banked) | 🔄 REPLAN (objective half implemented + verified, banked) |
 | 9 | P4 sarf #1385 atomic symbolic cross-terms → **REPLAN Sprint 31** (Sprint-26-failed architecture) | — (sarf stays translate_timeout; atomic symbolic-emit = dedicated multi-day workstream) | 🔄 REPLAN (docs; banked spec) |
+| 10 | Checkpoint 2 (GO) + P4 #1385 close (REPLAN filed) | — (no backward move; measurement + close only) | ✅ DONE |
 
 ---
 
@@ -285,3 +286,27 @@ The **atomic** fix needs (a) a 2-D gate extension AND (b) a **new symbolic runti
 ### Decision — REPLAN to Sprint 31
 
 REPLAN the atomic symbolic-emit to a dedicated Sprint-31 builder-pipeline-aware workstream (sarf as the reference target; the hand-derived `stat_task` cross-terms in `ISSUE_1385` are the banked spec). The **translate-only 2-D-gate partial** (srpchase-style — sarf translates by skipping the 3 constraints, no cross-terms) was considered and **declined**: it lands an incomplete MCP that ISSUE_1385's atomicity rejects, and the Day-9 goal is the *atomic* fix. No `src/` change; sarf stays `translate_timeout`; Solve 107 / Match 92 / genuine floor 70 hold. Consistent with the plan's REPLAN criterion ("REPLAN to Sprint 31 if it re-triggers the timeout" / the failed-architecture prior).
+
+---
+
+## Day 10 — Checkpoint 2 (GO) + P4 #1385 close (2026-07-07)
+
+**Branch:** `planning/sprint30-day10-checkpoint2`. Measurement + close only — no new `src/`.
+
+### Checkpoint 2 — GO
+
+- **`--resolve-changed --since-commit 68b5b4a7`** (the 3 goldens changed since Day-0: robert [Day 1], cclinpts + cesam [Day 5 case-normalization]): **verdict GO, `blocking: []`.**
+  - `cclinpts`: match → match (same)
+  - `cesam`: not_tested → not_tested (same — license/absent)
+  - `robert`: match → match (shift — the Day-1 cold-match; still MATCH)
+  - **No backward bucket move** (no `match→mismatch`, `model_optimal→model_infeasible`, or presolve-match→abort). GO.
+- **Golden-staleness:** clean (the 2 Day-5 presolve goldens + robert are the only in-scope changes; no stale goldens).
+- **PR25 re-baseline tally:** genuine floor **70** (69 + robert Day-1 warm→cold); methodology ~22; Match **92** as-measured. No methodology change landed since Day 5 (Days 6–9 were general-emit robustness + REPLANs/refutations, no new matches). The genuine-floor target (≥72) was **not** reached this sprint — the remaining floor gains (polygon P5, hhfair/Class-B obj-grad P7) were REPLAN'd/refuted; robert is the sole genuine-floor +1.
+
+### P4 #1385 (sarf) — CLOSED (Sprint-31 REPLAN filed)
+
+Per the Day-10 close criterion ("sarf translate verified byte-stable + `action=c` clean, **or** the Sprint-31 REPLAN filed"): the atomic symbolic-emit was **REPLAN'd to Sprint 31** (Day 9), so the close = the **Sprint-31 REPLAN is filed** (`ISSUE_1385` Day-9 decision block + the banked `stat_task` spec). sarf stays `translate_timeout` (no `src/` change; no golden to regen). #1385 closed for Sprint 30.
+
+### Day-10 outcome
+
+Checkpoint 2 GO (no regression across the changed-golden set); #1385 closed via the filed Sprint-31 REPLAN. No `src/` or golden change (measurement + close only). Solve 107 / Match 92 / genuine floor 70 hold. Next: **Days 11–12 — camcge (#1330 → Epic 5) + P7/P8 slack absorption**, then **Day 13 — final retest + closeout**.
