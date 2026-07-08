@@ -8,7 +8,7 @@
 
 ## 0. Day-0 = Sprint 30 Final (no fresh retest)
 
-`git diff <S30-close>..HEAD -- src/ scripts/` is **empty** — no `src/` or `scripts/` drift since the Sprint 30 close, so the Day-0 metrics equal the Sprint 30 final without a ~4 h retest.
+`git diff "$S30"..HEAD -- src/ scripts/` (with `S30` pinned to the Sprint-30 close SHA `ea4191dc`, as set in the snippet below) is **empty** — no `src/` or `scripts/` drift since the Sprint 30 close, so the Day-0 metrics equal the Sprint 30 final without a ~4 h retest.
 
 ```bash
 # The robust close-SHA anchor (see the finding below): pin the subject-anchored commit.
