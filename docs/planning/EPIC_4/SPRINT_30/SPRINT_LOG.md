@@ -16,6 +16,7 @@ Head-Domain-Offset Emit Architecture, Non-Convex Forcing & Offset-Alias AD (Spri
 | 9 | P4 sarf #1385 atomic symbolic cross-terms → **REPLAN Sprint 31** (Sprint-26-failed architecture) | — (sarf stays translate_timeout; atomic symbolic-emit = dedicated multi-day workstream) | 🔄 REPLAN (docs; banked spec) |
 | 10 | Checkpoint 2 (GO) + P4 #1385 close (REPLAN filed) | — (no backward move; measurement + close only) | ✅ DONE |
 | 11 | P6 camcge Walras transform → **REPLAN Sprint 31** (design's drop-row breaks the MCP dual) | — (price-pin → correct omega 191.735 but MS-4; row-drop corrupts; refined findings banked) | 🔄 REPLAN (empirical; dual-flaw pinned) |
+| 12 | P7 finish (verified) + P8 infra (PR25 re-baseline, catalog, forcing hand-off) | — (P7 `stat_pz` converted confirmed; S31–S33 KPIs re-baselined; genuine floor 70) | ✅ DONE (verify + infra) |
 
 ---
 
@@ -331,3 +332,23 @@ Hand-applied the Epic-5 Walras transform to camcge's emitted `--nlp-presolve` MC
 ### Decision — REPLAN to Sprint 31
 
 REPLAN the camcge Walras transform to a Sprint-31 Epic-5 workstream with the **refined findings banked** (`ISSUE_1330` + the design doc Day-11 refinement): the premise (p=pd0), the working price-pin recipe (right omega 191.735), and the pinned dual-flaw (row-drop orphans a needed multiplier). Substantial de-risking for Sprint 31 even though camcge's +1 Solve does not land. camcge stays `model_infeasible`; no `src/` change. Solve 107 / Match 92 / genuine floor 70 hold. The adjacent **firm P7 part — the Class-B `stat_pz` case-normalization fix (distinct from P6/camcge) — already landed Day 5.**
+
+---
+
+## Day 12 — P7 finish (verified) + P8 infra + PR25 re-baseline (2026-07-08)
+
+**Branch:** `planning/sprint30-day12-infra`. Verify + infra/docs consolidation (one test-comment edit; no emit `src/` change).
+
+### P7 Class-B — FINISHED (verified)
+
+Re-ran `kkt_residual.py` on irscge/lrgcge/moncge post-Day-5: the **`stat_pz` rel-1.0 residual is GONE** across all three — the Day-5 presolve dual-transfer **case-normalization** fix converted it (the case-insensitive mapping now warm-starts the mixed-case quantity-equation duals; `stat_pz` residual → 0). The residual max-row is now **`stat_xp` rel ~0.06** (raw −1.02, identical across the three) = the **cold-convex Case-c residue** — the objective-gradient-defining-equation family (`obj =e= prod(x**a)`, `x` also market-cleared), the same shape whose sign-flip fix was **control-refuted** (hhfair Days 4/6, himmel16 Day 7). **Documented for Sprint 31** as a distinct genuine-floor target (needs the dual-consistent obj-grad treatment, not the refuted sign flip). P7 `stat_pz` is complete; the cluster's cold-convex residue is a Sprint-31 carryforward.
+
+### P8 infrastructure
+
+- **PR25 re-baseline (`PROJECT_PLAN.md` Rolling KPIs footnote ⁸):** the stale S31–S33 Full-Pipeline-Match targets (≥45%/≥48%/≥52%, pre-methodology-lift) are **re-baselined to the ≥64% line** (the Sprint-28 methodology-lifted floor); the **genuine-floor count** is the real ramp — S30 actual **70** → S31 ≥73 → S32 ≥75 → S33 ≥78 as the Sprint-31 carryforwards (polygon #1111/#1112, camcge Walras, sarf, mine) land. Table cells + footnote updated with the ᴿ marker.
+- **Property-test catalog:** consistent (`test_ad_crossterm_shapes.py`: 8 passed, 1 xfail). `shape9` (robert obj-grad boundary) landed Day 1; `shape7` (himmel16 cyclic) is the structural guard (himmel16 refuted non-convex Day 7); **`shape8` (polygon successor) xfail reason updated** to reflect the Day-8 state — the objective half is implemented+verified but reverted (coupled with the distance-Jacobian #1111/#1112 core → Sprint 31; the control-verified 4-term recipe is banked in `ISSUE_1143`). The **head-domain-offset fixture** is deferred to the Sprint-31 mine workstream (the IR head-offset plumbing is its prerequisite).
+- **Solution-forcing scaffold hand-off:** the `--force {homotopy,multistart,optfile}` scaffold landed Days 2–3; the Sprint-31 PATH-consultation hand-off scope is already documented in `NONCONVEX_FORCING_SURVEY.md` §4 (the stable lever-injection + MODEL-STATUS-reporter interface Sprint 31 inherits; rocket's concrete PATH question).
+
+### Day-12 outcome
+
+P7 Class-B verified finished (`stat_pz` → 0; the cold-convex `stat_xp` residue documented for Sprint 31). P8 infra consolidated: PR25 re-baseline applied to the S31–S33 KPI Match targets, property-test catalog left consistent with the REPLAN state, forcing-scaffold hand-off confirmed documented. No emit `src/` change (one test-comment edit only); Solve 107 / Match 92 / genuine floor 70 hold. Next: **Day 13 — final retest + closeout.**
