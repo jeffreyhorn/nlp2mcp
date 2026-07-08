@@ -109,13 +109,14 @@ def test_shape6_tree_predicate_aliased_sum() -> None:
     strict=True,
 )
 def test_shape8_offset_alias_successor() -> None:
-    """#1143/#1447: successor offset-alias objective cross-term. x(i) appears in
-    the sum body at offset 0 AND +1, so stat_x(i) must carry BOTH the own-row
-    successor and the predecessor term — the representative-instance selection
-    must pick an INTERIOR column (not a boundary one missing the predecessor).
-    The objective half was implemented + verified Day 8 (this assertion passes with
-    it applied) but reverted (coupled with the distance-Jacobian #1111/#1112 core,
-    REPLAN'd to Sprint 31); it stays strict-xfail until the coupled fix lands."""
+    """#1143/#1111/#1112 (successor offset-alias objective cross-term; #1447 is the
+    related objective-term-scoping family). x(i) appears in the sum body at offset 0
+    AND +1, so stat_x(i) must carry BOTH the own-row successor and the predecessor
+    term — the representative-instance selection must pick an INTERIOR column (not a
+    boundary one missing the predecessor). The objective half was implemented +
+    verified Day 8 (this assertion passes with it applied) but reverted (coupled with
+    the distance-Jacobian #1111/#1112 general-alias core, REPLAN'd to Sprint 31); it
+    stays strict-xfail until the coupled fix lands."""
     row = _stat_row(_emit("shape8_offset_alias_successor.gms"), "stat_x(i)")
     # Own-row successor term and the predecessor cross-term, each subset-guarded.
     assert "x(i+1)*1$(j(i))" in row, row
