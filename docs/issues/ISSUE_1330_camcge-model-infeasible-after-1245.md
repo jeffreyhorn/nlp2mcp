@@ -12,7 +12,7 @@
 Harness on `data/gamslib/raw/camcge.gms` (NLP ref 191.7346, MODEL STATUS 2): `dual transfer CONSISTENT`, verdict **CASE_B**, max-residual `stat_mps` (rel 1.05, raw −210), then `stat_tm`/`stat_pwm` (rel 0.04–0.08). The `stat_mps` CASE_B is the fix-multiplier artifact above (verified: `stat_mps` emit is structurally correct; `nu_mps_fx` un-transferred ⇒ residual = −gradient). Cold MCP MODEL STATUS 4 Infeasible at iteration 0 with `stat_cd` rows INFES at a uniform −0.2022 — the singular-system signature. → **inherent CGE degeneracy; REPLAN to Epic 5.** The prior round-1/2/3 partial fixes stand. **No metric change** (camcge stays model_infeasible).
 **Severity:** Medium — model compiles and PATH runs but returns INFEASIBLE; users get no usable solution
 **Date:** 2026-04-30
-**Last Updated:** 2026-06-11 (Sprint 28 Prep Task 5 — Phase 0 acceptance gate authored (extending existing doc); prior: 2026-04-30)
+**Last Updated:** 2026-07-08 (Sprint 30 Day 11 — REPLAN → Sprint 31; empirical: price-pin → correct omega 191.735 but MS-4, drop-row breaks the MCP dual; prior: 2026-06-11 Sprint 28 Prep Task 5, 2026-04-30)
 **Affected Models:** camcge
 **Predecessors:**
 - [#1245](https://github.com/jeffreyhorn/nlp2mcp/issues/1245) (CLOSED, PR #1329) — wrapped traded-only multiplier terms in `stat_pd` / `stat_xxd` with `$(it(i))` to remove EXECERROR=4 from `1/gamma(in) = 1/0` and `0**negative`.
