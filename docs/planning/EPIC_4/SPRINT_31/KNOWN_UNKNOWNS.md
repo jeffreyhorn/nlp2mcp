@@ -678,6 +678,8 @@ Development team (AD/performance specialist)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_31/REPLAN_RISK_ASSESSMENT.md` Track P4 + the Budget-at-Risk tally.
 **Decision:** the risk signal + Sprint-32 exit + reallocation are pinned; the **empirical O(constraints) timing probe** is run by Task 9 (the Day-0 timing).
 
+**Task 8 (2026-07-09) — tooling layer:** the **emit-budget timing tooling is ready** — `/usr/bin/time -p .venv/bin/python -m src.cli data/gamslib/raw/sarf.gms -o /tmp/sarf_mcp.gms` + a `grep -c '^stat_task'` row-count check measures O(constraints)-vs-O(instances). A read-only run this sprint confirmed **sarf's current emit exceeds a 2-minute wall clock and produces no golden** (the translate_failure / combinatorial blow-up the P4 re-emit must avoid). Stays 🔍 INCOMPLETE at the fix-outcome layer — the empirical O(constraints) result is the Task-9/P4 check. See `TOOLING_READINESS_AUDIT.md` §"4.2 — emit-budget timing tooling".
+
 ---
 
 ## Unknown 4.3: Do the re-emit and cross-terms land atomically (no inconsistent-MCP intermediate)?
@@ -898,7 +900,12 @@ grep -n "force\|homotopy\|multistart\|optfile" src/emit/forcing.py src/config.py
 Development team (solver/forcing specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (tooling layer) — the `--force` scaffold takes the rocket levers + feeds the PATH-consultation input; lever-exhaustion result by Task 9
+**Verified by:** Task 8 (Reusable-Tooling Readiness Audit)
+**Date:** 2026-07-09
+**Findings:** The `--force` scaffold (`src/emit/forcing.py`, read-only) supports the three rocket levers — `FORCING_STRATEGIES = ("homotopy", "multistart", "optfile")` (config `force_strategy`, CLI `--force`) — and `emit_forcing_scaffold` emits a PATH `path.opt` (`proximal_perturbation 1e-2` + `merit_function normal` + `<model>.optfile = 1`) for optfile/homotopy and a perturbed-restart driver for multistart. So the scaffold **takes the rocket continuation/reformulation levers (P6)**, and its optfile structure + the Sprint-30 forcing-survey results (`NONCONVEX_FORCING_SURVEY.md` §4) **feed the PATH-consultation input** for the renumbered Sprint 32; the `--force` entry point is stable and inherited by that work.
+**Evidence:** `docs/planning/EPIC_4/SPRINT_31/TOOLING_READINESS_AUDIT.md` Tool 2; `src/emit/forcing.py` (`FORCING_STRATEGIES`, `emit_forcing_scaffold`).
+**Decision:** the scaffold is ready (no extension); the **empirical lever-exhaustion result** (does any lever cross rocket's INFES) is run by Task 9 + the in-sprint P6 work.
 
 ---
 
@@ -1007,7 +1014,12 @@ grep -n "shape8_offset_alias_successor\|shape9_objgrad_subset_boundary\|strict=T
 Development team (test/AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — `shape8` is the P2 gate; the head-offset fixture is a clean one-file P7 add
+**Verified by:** Task 8 (Reusable-Tooling Readiness Audit)
+**Date:** 2026-07-09
+**Findings:** The AD property catalog (`tests/fixtures/crossterm_shapes/`, read-only) has all 9 shapes. **`shape8_offset_alias_successor` is `strict=True` xfail — the P2 completion gate**: its assertion (`x(i+1)*1$(j(i))` **and** `x(i-1)*1$(j(i-1))` in `stat_x(i)`) passes once the coupled offset-alias fix lands, and dropping the xfail is the gate. **`shape9_objgrad_subset_boundary`** is robert's obj-grad boundary-term guard (the P5-adjacent family). The **new P7 add is the head-offset round-trip fixture** `tests/fixtures/head_offset_ir_roundtrip.gms` (Task 3 §4 spec) — a mine-shaped model asserting `head_domain_offsets[1] == IndexOffset('l', Const(1.0), False)`; **NOTE it is a *parse-round-trip* fixture** (guards the P1 IR plumbing at the parse layer) in `tests/fixtures/`, distinct from the *emit-shape* `crossterm_shapes/` fixtures — a clean one-file add once P1's IR plumbing lands.
+**Evidence:** `TOOLING_READINESS_AUDIT.md` Tool 3; `tests/integration/emit/test_ad_crossterm_shapes.py` (`shape8` `strict=True`, `shape9`) + the 9-fixture `crossterm_shapes/` dir.
+**Decision:** `shape8` is the P2 gate as-is; the head-offset fixture is the single P7 property-fixture add (scoped, one file).
 
 ---
 
@@ -1084,7 +1096,12 @@ grep -rn "resolve.changed\|since.commit" scripts/gamslib/run_full_test.py | head
 Development team (tooling specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — `--resolve-changed` covers the emit sites via the `data/gamslib/mcp/` golden diff (sarf golden-gap noted)
+**Verified by:** Task 8 (Reusable-Tooling Readiness Audit)
+**Date:** 2026-07-09
+**Findings:** `_changed_golden_model_ids(since_commit)` (`run_full_test.py:1087`) git-diffs `data/gamslib/mcp/` → the changed model ids, and `run_resolve_changed` (`:1169`) re-solves each + diffs its bucket against the committed DB; the Sprint-31 anchor is the Sprint-30 close **`ea4191dc`**. The newly-touched emit sites all produce committed goldens the diff catches — the **head-offset core** (`mine_mcp.gms`), **`_add_indexed_jacobian_terms`** (`polygon_mcp.gms`), the **Walras redefinition** (`camcge_mcp.gms`), the **obj-grad reduction** (`hhfair_mcp.gms` + the CGE cluster). **⚠️ sarf golden-gap:** sarf is a `translate_failure` with **no committed `sarf_mcp.gms`**, so `--resolve-changed` cannot select it until the P4 symbolic emit first produces + commits its golden — the P4 landing must commit the new sarf golden and use the **full retest** for sarf's *first* verification (a sequencing note, not a tool gap).
+**Evidence:** `TOOLING_READINESS_AUDIT.md` Tool 4; `run_full_test.py` `_changed_golden_model_ids`/`run_resolve_changed`; the golden paths (mine/polygon/camcge/hhfair present, sarf absent).
+**Decision:** `--resolve-changed` covers the P1/P2/P3/P5 emit sites at the Day-5/Day-10 checkpoints; the P4 sarf golden-sequencing note is fed to Task 9 + the P4 landing.
 
 ---
 
