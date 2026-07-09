@@ -642,6 +642,8 @@ Development team (AD/KKT specialist)
 
 ---
 
+**Task 9 (2026-07-09) — fix-surface layer:** the 2-D gate extension is at `_is_blowup_dynamic_subset_equation` (`index_mapping.py:402`, the `len(eq_domain) != 1` bail at `:421` that never fires on sarf's `tbal(g,t)$taskposs(g,t)` 2-D shape); the parametric `stat_task` builder is in `stationarity.py` (the banked 6-guarded-term derivation, symbolic `(g,t,m,n)` multiplier indices, no set-name literals); the O(constraints) synthetic fixture guards the Sprint-26 `nu_slack("srn")` failure mode. See `BACKLOG_FIX_SURFACE_ANALYSIS.md` §1.
+
 ## Unknown 4.2: Is the symbolic re-emit O(constraints), not O(instances), staying inside the translate budget?
 
 ### Priority
@@ -712,7 +714,12 @@ grep -n "stat_task\|runtime.guard\|re-emit" src/kkt/stationarity.py | head
 Development team (KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (fix-surface pinned) — atomic re-emit + cross-terms in one pass
+**Verified by:** Task 9 (Backlog Fix-Surface Analysis)
+**Date:** 2026-07-09
+**Findings:** The runtime-guard equation-body re-emit (`tbal`/`equipb1`/`equipb2` as `sum(...)$cond`) and the `J_gᵀ·lam` cross-terms (the parametric `stat_task`) must land in **one coordinated pass** — a re-emit without the cross-terms is an inconsistent MCP (a multiplier with no complementarity coupling); skip-only is an incomplete MCP. The emit path builds both from the **same short-circuited-equation set** (no intermediate state where the constraint exists but its stationarity cross-term is missing). This is ISSUE_1385's load-bearing all-or-nothing constraint.
+**Evidence:** `BACKLOG_FIX_SURFACE_ANALYSIS.md` §1 (atomicity); `ISSUE_1385` Day-9.
+**Decision:** the atomic re-emit+cross-term path is the P4 implementation requirement; a partial land is rejected at the Phase-0 gate.
 
 ---
 
@@ -760,6 +767,8 @@ Development team (AD/KKT specialist)
 
 ---
 
+**Task 9 (2026-07-09) — fix-surface layer, strong Case-c lean:** a read-only emit shows the current hhfair `stat_u` **already carries the correct log-derivative product gradient** (`(-1)·obj·ufact(t)/u(t)`, no `nu_objective` — the objective is inlined). The ν_objective reduction is **sign-equivalent** for hhfair (`nu_objective = 1`), and the sign flip is refuted (72.147 → 22.144), so **hhfair leans genuine Case-c** (a spurious non-convex KKT point) → the P5 REPLAN exit. The definitive patch-and-solve control experiment is the in-sprint P5 gate; the emit-fixable P5 gain is the CGE cluster (5.2). See `BACKLOG_FIX_SURFACE_ANALYSIS.md` §2.
+
 ## Unknown 5.2: Does the same reduction convert the CGE cluster (irscge/lrgcge/moncge `stat_xp`) to Case-a?
 
 ### Priority
@@ -792,7 +801,10 @@ for m in irscge lrgcge moncge; do echo "== $m =="; \
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — risk/decision layer pinned (Task 7); the empirical CGE-cluster same-class check is pending Task 9
+✅ **Status:** VERIFIED (fix-surface pinned) — the CGE cluster is the emit-fixable P5 target
+**Verified by:** Task 9 (Backlog Fix-Surface Analysis)
+**Date:** 2026-07-09
+**Findings (Task 9):** The CGE cluster (irscge/lrgcge/moncge `stat_xp` rel ~0.06 after the Day-5 case-normalization fix) is the **emit-fixable** P5 target — convex CGE models where a small residual is a real emit defect (unlike hhfair, which leans Case-c). The ν_objective reduction (route the obj-grad through the objective-defining-equation multiplier) in the objective-gradient path (`gradient.py`/`stationarity.py`) is the candidate that converts `stat_xp` → 0 (Case-a); the in-sprint control experiment confirms. Fix surface pinned (`BACKLOG_FIX_SURFACE_ANALYSIS.md` §2.3).
 **Risk/decision layer (Task 7, 2026-07-09):** P5 (cold-convex obj-grad) carries the **largest single-track genuine-floor exposure** — the ν_objective reduction converting the CGE cluster (irscge/lrgcge/moncge `stat_xp` rel ~0.06) to Case-a is a **+1 to +3** genuine-floor lift, on top of hhfair's +1. **Validation** V2: the same reduction that reaches the NLP optimum on hhfair (V1) drives the CGE `stat_xp` → 0 (Case-a). **REPLAN exit:** the CGE shape is distinct (the reduction is hhfair-only) → −1 to −3 genuine floor; combined with a hhfair Case-c this is the P5 REPLAN. The genuine-floor ramp is **conditional** on this (Sprint-30 §3 lesson 3 — not independent +1s). **Budget reallocation** ~6–12h → P7.
 **Evidence:** `REPLAN_RISK_ASSESSMENT.md` Track P5 + the "Honest KPI projection" section (P5 REPLAN = −1 to −4 genuine floor, the largest exposure).
 **Decision:** the risk signal + the conditional-genuine-floor framing are pinned; the **empirical CGE-cluster same-class check** is run by Task 9.
@@ -830,7 +842,12 @@ grep -rln "=e=.*prod\|=e=.*sum.*log" data/gamslib/raw/ | head
 Development team (AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — a single structural rule
+**Verified by:** Task 9 (Backlog Fix-Surface Analysis)
+**Date:** 2026-07-09
+**Findings:** The objective-defining-intermediate-variable shape (a variable appearing only in the objective-defining equation `obj =e= prod/CES(...)` and also market-cleared) is **detectable structurally**, so a **single general rule** — route its objective gradient through the defining-equation multiplier (ν_objective) — covers hhfair + the CGE cluster + any same-shape model, not a per-model patch.
+**Evidence:** `BACKLOG_FIX_SURFACE_ANALYSIS.md` §2.4.
+**Decision:** ship the general structural rule; per-model patching not needed.
 
 ---
 
@@ -863,7 +880,12 @@ grep -n "eq_by_lower\|ineq_by_lower\|case.normal" src/emit/emit_gams.py | head
 Development team (emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — orthogonal to the Day-5 case-normalization fix
+**Verified by:** Task 9 (Backlog Fix-Surface Analysis)
+**Date:** 2026-07-09
+**Findings:** The CGE `stat_xp` rel ~0.06 is measured **after** the Sprint-30 Day-5 presolve dual-transfer case-normalization fix (mixed-case duals no longer silently skipped). The ν_objective reduction operates on that already-case-normalized `stat_xp` row, closing the ~0.06 **remainder** — the two are orthogonal, no double-handling.
+**Evidence:** `BACKLOG_FIX_SURFACE_ANALYSIS.md` §2.4; `SPRINT_30/SPRINT_RETROSPECTIVE.md` §2 (the case-normalization fix).
+**Decision:** the reduction composes cleanly on top of the case-normalization fix.
 
 ---
 
@@ -908,6 +930,8 @@ Development team (solver/forcing specialist)
 **Decision:** the scaffold is ready (no extension); the **empirical lever-exhaustion result** (does any lever cross rocket's INFES) is run by Task 9 + the in-sprint P6 work.
 
 ---
+
+**Task 9 (2026-07-09) — lever-set layer:** the remaining emittable-GAMS levers are the **`1/m` / `1/ht²` division-by-variable reformulation** (6.3) + scaled/relaxed continuation via `--force homotopy`; the survey confirmed no PATH-option config converges rocket (INFES 477 → 382). The finalized PATH-consultation question is drafted (`BACKLOG_FIX_SURFACE_ANALYSIS.md` §3); the definitive emittable-lever exhaustion is the in-sprint P6 run.
 
 ## Unknown 6.2: Is the emit residual clean at the NLP point (Case-c) before any forcing attempt?
 
@@ -978,7 +1002,12 @@ grep -in "ht\|1/m\|division" data/gamslib/raw/rocket.gms | head
 Development team (solver specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (candidate pinned) — the `1/m` division-by-variable reformulation
+**Verified by:** Task 9 (Backlog Fix-Surface Analysis)
+**Date:** 2026-07-09
+**Findings:** rocket's ill-conditioning is the division-by-variable in `v_eqn` (`…/m(h)`) and `gf` (`g = g_0·sqr(h_0/ht(h))`, the `1/ht²`). The emittable-GAMS reformulation multiplies through by the divisor (an auxiliary `w(h)` with `w(h)·m(h) =e= X`), removing the division-by-variable from the Jacobian (which blows up near small `m`/`ht`). This is the candidate emittable lever the P6 work tries before the PATH hand-off; if it doesn't converge, it is a documented candidate in the PATH-consultation question.
+**Evidence:** `BACKLOG_FIX_SURFACE_ANALYSIS.md` §3; `data/gamslib/raw/rocket.gms` (`gf`/`v_eqn` division-by-variable).
+**Decision:** the reformulation is the primary emittable P6 lever; else it feeds the Sprint-32 PATH-consultation question.
 
 ---
 
