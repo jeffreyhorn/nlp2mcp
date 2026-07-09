@@ -130,7 +130,12 @@ grep -n "domain" src/ir/normalize.py | head
 Development team (IR/AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — favorable: a field addition, not a deep normalize rewrite
+**Verified by:** Task 3 (Head-Offset IR-Plumbing Design)
+**Date:** 2026-07-08
+**Findings:** The head offset is discarded at **parse**, NOT at normalization. A read-only parse of `mine.gms` shows `pr.domain=('k','l','i','j')` (base labels) + `has_head_domain_offset=True` — the `l+1` is already gone before normalize runs. The culprit is `_domain_list_has_offset` (`src/ir/parser.py:932`), which walks the domain elements but returns only a bool; `_extract_domain_indices` (`:956`) strips each element to its base name. **Normalization does not re-collapse** — `NormalizedEquation` (`src/ir/normalize.py:13`) doesn't even carry `has_head_domain_offset`, and the KKT/emit consumers read the original `EquationDef` from `model_ir.equations[name]`. So the fix is a **field addition** on `EquationDef` (`head_domain_offsets`, a per-position `IndexOffset` tuple mirroring the `declaration_domain` precedent from #1327) + copy-through at the ~3 reconstructor sites (`sqr_reformulation.py:88/:108`, `complementarity.py:242`) that already copy `has_head_domain_offset`. The parameter offsets `li(k)`/`lj(k)` are ALREADY preserved in the body (`lhs = x(l, IndexOffset('i',ParamRef(li(k))), IndexOffset('j',ParamRef(lj(k))))`); only the domain head δ needs plumbing. The round-trip unit fixture (`tests/fixtures/head_offset_ir_roundtrip.gms`) asserting `head_domain_offsets[1] == IndexOffset('l', Const(1.0), False)` is the Phase-1 gate.
+**Evidence:** `docs/planning/EPIC_4/SPRINT_31/HEAD_OFFSET_IR_PLUMBING_DESIGN.md` §0–§4 (empirical parse + code trace + fixture spec).
+**Decision:** PROCEED with the Phase-1 IR field addition (favorable — not a deep normalize rewrite); the round-trip fixture gates Phase 2. The hard/REPLAN-prone work stays in Phase 2 (the shared helper + `comp_pr` coupling).
 
 ---
 
@@ -167,7 +172,12 @@ grep -n "_emit_nlp_presolve\|comp_pr\|stat_x" src/emit/emit_gams.py src/kkt/stat
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — mine-only; 3 sites confirmed with a bounded 4th-site risk
+**Verified by:** Task 3 (Head-Offset IR-Plumbing Design)
+**Date:** 2026-07-08
+**Findings:** Once the head δ is plumbed (1.1), a single helper parameterized by (head δ from `head_domain_offsets`, param offsets from the body) drives the three sites atomically: Site 1 `comp_pr` head var (`emit_gams.py:2951/:3125`, `equations.py:1072/:1103/:1173`), Site 2 the `--nlp-presolve` dual transfer (`_emit_nlp_presolve`, `emit_gams.py:1354`), Site 3 the landed `stat_x` cross-term (`_try_build_param_offset_crossterm`, `stationarity.py:5618/:5825`). Partial application is the Day-7 failure mode (Site-2-only clears `nw` but leaves `ne/se/sw` at ~1e10) → the helper is the single source of truth, applied to all three or none. The **4th-site risk** is a bound-complementarity coupling (`comp_lo_x`/`comp_up_x` ⊥ `piL_x`/`piU_x`) surviving after the `comp_pr` fix (Day-4 saw 49 INFES across comp_pr/comp_lo_x/comp_up_x/stat_x/def; Day-6 attributed the driver to the 38 comp_pr rows) — the explicit Sprint-32 REPLAN exit.
+**Evidence:** `HEAD_OFFSET_IR_PLUMBING_DESIGN.md` §5–§6 (helper signature + the three sites with current file:line + the cold-INFES-by-direction gate); `ISSUE_1443` Day-6/7.
+**Decision:** PROCEED with the shared 3-site helper; REPLAN mine to a Sprint-32 head-offset-Phase-3 workstream if the bound rows persist after the comp_pr fix (the IR plumbing + helper still land as reusable foundation).
 
 ---
 
@@ -201,7 +211,12 @@ After the Task-3 design, evaluate mine's corrected cold emit and confirm the LCP
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (hypothesis firm) — convex LP ⇒ no Case-c escape
+**Verified by:** Task 3 (Head-Offset IR-Plumbing Design)
+**Date:** 2026-07-08
+**Findings:** mine is a convex LP (a monotone LCP), so a correct emit MUST cold-solve — there is no warm-start escape and no Case-c exit (cold infeasibility here *is* the emit bug). The Phase-2 completion gate is the cold-INFES-by-direction histogram driven to zero: baseline ~4.07e10 across nw/ne/se/sw → the shared 3-site helper must drive all four `comp_pr` directions to 0 → cold MS 1 with `x ≤ x.up = 1` (no `x → 4e10`) and `compare_objective_match`. A residual after the 3-site fix is a remaining emit/index-map bug (still Case-b — take the 4th-site bound-complementarity exit, Unknown 1.2), NOT non-convexity. (This is the same convex-LP guarantee `ISSUE_1443` Day-0/Day-6 established; unchanged by the IR-plumbing design.)
+**Evidence:** `HEAD_OFFSET_IR_PLUMBING_DESIGN.md` §6 (the cold-INFES histogram + the `kkt_residual.py` / cold-solve gate); `ISSUE_1443` Day-0 (convex LP, no Case-c).
+**Decision:** the cold-LCP-consistency criterion (all four directions → 0, cold MS 1) is the Phase-2 PROCEED gate; a residual → the 4th-site Sprint-32 REPLAN, never a warm-start fallback.
 
 ---
 
@@ -236,7 +251,12 @@ grep -rln "has_head_domain_offset" src/ir/
 Development team (IR specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — zero emit change from the field addition; Phase-2 helper is mine-only
+**Verified by:** Task 3 (Head-Offset IR-Plumbing Design)
+**Date:** 2026-07-08
+**Findings:** The `head_domain_offsets` field addition changes **no emit output** — populating it is inert until a consumer reads it (no Phase-1 emit path branches on it). The meaningful blast radius is the **Phase-2 helper**, gated (as today) to the non-`Const` parameter-offset shape, which fires on **mine only** (the Sprint-28 gate note: launch/camshape/otpop/trnsport byte-identical). A read-only corpus sample shows head-offset *equations* are common (mine `pr`, robert `sb`, camshape `eqrdiff`, ramsey `kk`, abel `stateq`) but the parameter-offset coupling is rare (mine). The IR change touches only additive storage + the ~3 reconstructor copy-through sites; `NormalizedEquation` is unaffected, so no other equation's normalized domain changes.
+**Evidence:** `HEAD_OFFSET_IR_PLUMBING_DESIGN.md` §3 (blast-radius guard + the reconstructor touchpoints + the corpus sample table).
+**Decision:** the Phase-1 verification (in-sprint) is a full-corpus parse-scan enumerating every `has_head_domain_offset=True` equation + a golden byte-diff showing **zero changes** before Phase 2 touches any emit site.
 
 ---
 

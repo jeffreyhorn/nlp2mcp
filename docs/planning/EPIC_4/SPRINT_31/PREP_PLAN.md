@@ -253,9 +253,10 @@ grep -oiE "mine|polygon|camcge|sarf|hhfair|rocket" docs/planning/EPIC_4/SPRINT_3
 
 ## Task 3: mine Head-Offset IR-Plumbing Design + Round-Trip Reproduction (Priority 1 foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
-**Estimated Time:** 5–7 hours
+**Estimated Time:** 5–7 hours (actual: ~4h)
+**Completed:** 2026-07-08
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1, 2
@@ -287,11 +288,11 @@ Sprint 30 Day 6 REPLAN'd #1443 for a *foundational* reason, not a tactical one: 
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_31/HEAD_OFFSET_IR_PLUMBING_DESIGN.md` (the `EquationDef.head_domain_offsets` storage design, the parse-time-collapse trace, the normalize round-trip + reconstructor copy-through touchpoints, the round-trip fixture spec, the Phase-2 shared 3-site helper signature, the cold-INFES-by-direction histogram + the 4th-site REPLAN exit). Updated `KNOWN_UNKNOWNS.md` Unknowns 1.1–1.4 → ✅ VERIFIED. CHANGELOG entry.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-08).** Empirical parse of `mine.gms` (read-only) established the decisive finding: **the head offset is discarded at PARSE, not at normalization** — `pr.domain=('k','l','i','j')` + `has_head_domain_offset=True` (a bare bool), the `l+1` gone before normalize runs (culprit `_domain_list_has_offset`, `parser.py:932`); the param offsets `li(k)`/`lj(k)` are already preserved in the body. So the round-trip is a **field addition** on `EquationDef` (`head_domain_offsets`, a per-position `IndexOffset` tuple mirroring the `declaration_domain` #1327 precedent) + copy-through at the ~3 reconstructor sites (`sqr_reformulation.py:88/:108`, `complementarity.py:242`) — **NOT a deep normalize rewrite** (`NormalizedEquation` doesn't carry it; consumers read the original `EquationDef`). This de-risks Phase 1 (**Unknown 1.1 ✅ favorable**; zero emit blast radius until a consumer reads it, **1.4 ✅**). The Phase-2 shared helper (parameterized by head δ + body param offsets) drives Sites 1–3 (`comp_pr`/`_emit_nlp_presolve`/`stat_x`) atomically, gated by the cold-INFES-by-direction histogram (baseline ~4.07e10 across nw/ne/se/sw → all four → 0, cold MS 1) with an explicit 4th-site (bound-complementarity) Sprint-32 REPLAN exit (**1.2 ✅**); mine is a convex LP so no Case-c escape (**1.3 ✅**). The round-trip unit fixture (`tests/fixtures/head_offset_ir_roundtrip.gms`) asserting `head_domain_offsets[1] == IndexOffset('l', Const(1.0), False)` is the Phase-1 gate. Docs/design-only (read-only parses; no `src/`).
 
 ### Verification
 
@@ -319,14 +320,14 @@ grep -oiE "comp_pr|nlp-presolve|presolve dual|stat_x" docs/planning/EPIC_4/SPRIN
 
 ### Acceptance Criteria
 
-- [ ] HEAD_OFFSET_IR_PLUMBING_DESIGN.md specifies where the head-offset δ + `li(k)`/`lj(k)` are stored on `EquationDef`, replacing the bare bool
-- [ ] The normalize round-trip design preserves the head-offset detail with a blast-radius guard against the domain semantics other equations rely on
-- [ ] The round-trip unit reproduction (parse→normalize asserting the head-offset survives) is specified as the Phase-1 gate
-- [ ] The Phase-2 shared 3-site helper signature (parameterized by δ, `li(k)`, `lj(k)`) + the atomic-application requirement are specified
-- [ ] The cold-INFES-by-direction success histogram is the Phase-2 completion gate
-- [ ] The 4th-site REPLAN exit is named (deeper architecture → Sprint 32)
-- [ ] Unknowns 1.1, 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
-- [ ] CHANGELOG updated
+- [x] HEAD_OFFSET_IR_PLUMBING_DESIGN.md specifies where the head-offset δ + `li(k)`/`lj(k)` are stored on `EquationDef` (`head_domain_offsets`, mirroring `declaration_domain`), replacing the bare bool
+- [x] The normalize round-trip design preserves the head-offset detail with a blast-radius guard (field addition + copy-through; `NormalizedEquation` unaffected; zero emit change until a consumer reads it)
+- [x] The round-trip unit reproduction (`tests/fixtures/head_offset_ir_roundtrip.gms`, parse asserting the head-offset survives) is specified as the Phase-1 gate
+- [x] The Phase-2 shared 3-site helper signature (parameterized by δ, `li(k)`, `lj(k)`) + the atomic-application requirement are specified
+- [x] The cold-INFES-by-direction success histogram is the Phase-2 completion gate
+- [x] The 4th-site REPLAN exit is named (bound-complementarity → Sprint 32)
+- [x] Unknowns 1.1, 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] CHANGELOG updated
 
 ---
 
