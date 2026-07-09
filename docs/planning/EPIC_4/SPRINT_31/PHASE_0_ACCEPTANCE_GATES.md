@@ -79,9 +79,9 @@ Sprint 30 **refuted five banked diagnoses** via control experiments *before* any
 |---|---|---|---|---|
 | P1 | mine (#1443) | PROCEED | round-trip fixture green → cold-INFES histogram → all 4 dirs → 0, cold MS-1 | 4th bound-complementarity site → Sprint 32 |
 | P2 | polygon (#1143) | PROCEED | 4-term recipe re-confirmed (✅) + #1110 orthogonality; obj + distance halves together; `shape8` enable + warm-match 0.780 + CGE byte-stable | gate leaks → #1111/#1112 AD-engine filing, Sprint 32 |
-| P3 | camcge (#1330) | PROCEED-cond | dual-consistent redefinition → MS-1 @ 191.7346 on `/tmp` **before** src; S1∧S2∧S3 flags camcge only | `/tmp` can't reach MS-1 → per-model-numéraire fallback (Epic 5) |
+| P3 | camcge (#1330) | PROCEED-conditional | dual-consistent redefinition → MS-1 @ 191.7346 on `/tmp` **before** src; S1∧S2∧S3 flags camcge only | `/tmp` can't reach MS-1 → per-model-numéraire fallback (Epic 5) |
 | P4 | sarf (#1385) | PROCEED | O(constraints) emit timed vs translate budget; `stat_task` = banked derivation, no set-name literals; atomic; golden byte-stable | timeout re-trigger → re-scope |
-| P5 | hhfair/CGE (#1236) | PROCEED-cond | ν_objective reduction → NLP optimum on hhfair **before** src; **sign flip BANNED** (refuted 3×) | genuine Case-c → documented non-convexity |
-| P6 | rocket (#1462) | PROCEED-cond | residual clean at NLP point (Case-c) **before** forcing; exhaust emittable levers | intrinsic non-convergence → Sprint-32 PATH-consultation input |
+| P5 | hhfair/CGE (#1236) | PROCEED-conditional | ν_objective reduction → NLP optimum on hhfair **before** src; **sign flip BANNED** (refuted 3×) | genuine Case-c → documented non-convexity |
+| P6 | rocket (#1462) | PROCEED-conditional | residual clean at NLP point (Case-c) **before** forcing; exhaust emittable levers | intrinsic non-convergence → Sprint-32 PATH-consultation input |
 
 **Cross-cutting:** every gate cites `kkt_residual.py` (PR27) as the Case-(a/b/c) verdict engine; every emit-touching PR must also pass the golden-staleness check (PR26) + the `--resolve-changed` checkpoint re-solve; each per-issue `## Phase 0: Acceptance Gate` section (ISSUE_{1443,1143,1330,1385,1236} + #1462) carries the authoritative 4-subsection gate refreshed to this disposition.
