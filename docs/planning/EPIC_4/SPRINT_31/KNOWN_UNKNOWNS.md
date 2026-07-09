@@ -1170,15 +1170,15 @@ Development team (tooling specialist)
 
 ## Next Steps
 
-> **PREP PHASE IN PROGRESS (Task 1 COMPLETE, 2026-07-08).** This Known Unknowns List (Task 1) is authored; the remaining prep Tasks 2–10 will research and verify each unknown before Sprint 31 Day 1. All **25** prep-time unknowns start 🔍 INCOMPLETE and are assigned to a downstream prep task (2–10) in the §"Appendix: Task-to-Unknown Mapping". The six Critical unknowns — the foundational IR-plumbing round-trip (1.1), the shared-helper-vs-4th-site sizing (1.2), the coupled offset-alias core (2.2), the dual-consistent Walras redefinition (3.1) + its false-positive detector (3.2), and the control-refuted obj-grad reduction (5.1) — are the ones whose WRONG outcome forces a mid-sprint REPLAN, so they carry a single-model or control-experiment verification and feed the Task-7 REPLAN assessment.
+> **✅ PREP PHASE COMPLETE (Task 10, 2026-07-09). Sprint 31 is GO for Day 0.** All prep-time unknowns are **✅ VERIFIED** across prep Tasks 1–9, and Task 10 has integrated them into the 14-day schedule (`PLAN.md` + `prompts/PLAN_PROMPTS.md` + the `SPRINT_LOG.md` skeleton). **Exactly one unknown remains 🔍 INCOMPLETE by design — Unknown 4.2** (the sarf O(constraints) *empirical* result): its fix surface + the emit-timing tooling are pinned (Tasks 8/9), but the fix-outcome timing is the in-sprint P4 Day-9 gate, not a prep deliverable. **No unknown returned WRONG this sprint** (unlike Sprint 30's robert inversion), but three notable prep findings the schedule absorbs: **(a)** the head offset is a *favorable field addition* not a deep normalize rewrite (Task 3 — de-risks the P1 foundation); **(b)** two PR24 fix-surface corrections (Task 4 — the offset-alias second-index drop is in `stationarity.py:5767`, not `constraint_jacobian.py`); **(c)** hhfair leans *genuine Case-c* (Task 9 — its `stat_u` is already emit-correct), so the emit-fixable P5 gain is the **CGE cluster**, and the schedule targets Day-10 P5 there, not hhfair. **Sprint 31 prep phase COMPLETE (Tasks 1–10).**
 
-**Prep-phase checklist (to complete before Sprint 31 Day 1 — Tasks 1–10):**
+**Prep-phase checklist (✅ all COMPLETE before Sprint 31 Day 1 — Tasks 1–10):**
 1. ✅ Task 1: this Known Unknowns List authored (25 unknowns, 7 categories).
-2. 🔵 Research and verify all Critical and High priority unknowns (16 total: 6 Critical + 10 High) via prep Tasks 2–10.
-3. 🔵 Create minimal test cases / run the `kkt_residual.py` trace + the cold-solve control experiments.
-4. 🔵 Update each "Verification Results" section (🔍 INCOMPLETE → ✅ VERIFIED or ❌ WRONG with correction).
-5. 🔵 Adjust Sprint 31 scope for any WRONG-returning assumption (the PR16 REPLAN exits in Task 7).
-6. 🔵 Integrate findings into the sprint plan (Task 10 — `PLAN.md` + `prompts/PLAN_PROMPTS.md`).
+2. ✅ Researched + verified all Critical + High priority unknowns via prep Tasks 2–9 (all VERIFIED; Unknown 4.2's empirical timing is the in-sprint P4 gate).
+3. ✅ Ran the `kkt_residual.py` traces + the cold-solve/read-only control experiments (Tasks 2–9).
+4. ✅ Updated each "Verification Results" section (🔍 INCOMPLETE → ✅ VERIFIED; no ❌ WRONG this sprint).
+5. ✅ Sprint 31 scope carries the PR16 REPLAN exits (Task 7) for the four deepest tracks; the P5 re-scope (hhfair Case-c → CGE cluster) is absorbed by the schedule.
+6. ✅ Findings integrated into the sprint plan (Task 10 — `PLAN.md` + `prompts/PLAN_PROMPTS.md` + `SPRINT_LOG.md`).
 
 **During Sprint 31:**
 1. Reference this document daily (especially Critical / High unknowns).

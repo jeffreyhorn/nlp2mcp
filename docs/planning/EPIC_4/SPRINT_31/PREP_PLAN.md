@@ -795,9 +795,10 @@ grep -qiE "PATH.consultation|PATH question" docs/planning/EPIC_4/SPRINT_31/BACKL
 
 ## Task 10: Plan Sprint 31 Detailed Schedule
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
-**Estimated Time:** 3–4 hours
+**Estimated Time:** 3–4 hours (actual: ~3.5h)
+**Completed:** 2026-07-09
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1–9
@@ -828,11 +829,11 @@ This is the final prep task — it consumes every prior task's output (the KU li
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_31/PLAN.md` (14-day schedule) + `prompts/PLAN_PROMPTS.md` (14 day prompts) + `SPRINT_LOG.md` (skeleton). Updated `KNOWN_UNKNOWNS.md` §"Next Steps" → prep phase COMPLETE / Sprint 31 GO for Day 0. CHANGELOG entry + the Summary "Prep Task → Deliverable Map" statuses.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-09).** The 14-day schedule (Day 0 + Days 1–13, ≤ 12 h/day) sequences the seven priorities with **P1 head-offset leading** (contiguous Phase-1 IR plumbing Days 1–2 → Phase-2 helper Day 2–3, the ~11 h heaviest day), then P2 offset-alias (Days 4–5 + Checkpoint 1), P3 camcge dual-consistent Walras (Days 6–7), P4 sarf symbolic emit (Days 8–9 + Checkpoint 2), P5 cold-convex obj-grad **on the CGE cluster** (Day 10; hhfair documented Case-c per Task 9), P6 rocket forcing/PATH input (Day 11), P7 infra + REPLAN-slack (Day 12), and the final ≥3-seed determinism retest + closeout (Day 13). **Day 0 front-loads the three tractability probes** (P1 round-trip, P3 dual-consistent `/tmp` → MS-1, P5 hhfair ν_objective → Case-c). The Day-5/Day-10 `--resolve-changed` checkpoints + the P1/P2/P3/P4/P5 REPLAN decision points (per the Task-7 assessment with reallocation) + the PR25 re-baseline are placed. Budget ~114 h mid (92–134 h envelope), no day > 12 h. **All 25 prep unknowns integrated (Unknown 4.2's empirical timing is the in-sprint P4 gate); Sprint 31 is GO for Day 0. Sprint 31 prep phase COMPLETE** (Tasks 1–10). Docs-only (no `src/`).
 
 ### Verification
 
@@ -863,13 +864,13 @@ grep -nE "[0-9]+h|hours" docs/planning/EPIC_4/SPRINT_31/PLAN.md | head
 
 ### Acceptance Criteria
 
-- [ ] PLAN.md covers 14 days (Day 0 + Days 1–13), each ≤ 12 hours, total within the 92–134h envelope
-- [ ] Day 0 runs the P1 round-trip + P3 `/tmp` prototype + P5 hhfair control experiment tractability probes
-- [ ] P1 head-offset leads with contiguous Phase-1 (IR plumbing) then Phase-2 (helper) days
-- [ ] The Day-5 / Day-10 `--resolve-changed` checkpoints + the REPLAN-reallocation decision points + the final Day-13 ≥3-seed determinism retest are placed
-- [ ] Per-day execution prompts name the priority, Phase-0 gate, deliverable, and REPLAN exit
-- [ ] All 25 unknowns from KNOWN_UNKNOWNS.md integrated into the schedule
-- [ ] CHANGELOG updated
+- [x] PLAN.md covers 14 days (Day 0 + Days 1–13), each ≤ 12 hours (~114h mid, within the 92–134h envelope; heaviest ~11h Day 2)
+- [x] Day 0 runs the P1 round-trip + P3 `/tmp` prototype + P5 hhfair control experiment tractability probes
+- [x] P1 head-offset leads with contiguous Phase-1 (IR plumbing, Days 1–2) then Phase-2 (helper, Days 2–3)
+- [x] The Day-5 / Day-10 `--resolve-changed` checkpoints + the REPLAN-reallocation decision points + the final Day-13 ≥3-seed determinism retest are placed
+- [x] Per-day execution prompts name the priority, Phase-0 gate, deliverable, and REPLAN exit
+- [x] All 25 unknowns from KNOWN_UNKNOWNS.md integrated into the schedule (Unknown 4.2's empirical timing is the in-sprint P4 gate)
+- [x] CHANGELOG updated
 
 ---
 
@@ -877,18 +878,20 @@ grep -nE "[0-9]+h|hours" docs/planning/EPIC_4/SPRINT_31/PLAN.md | head
 
 ### Prep Task → Deliverable Map
 
-| Task | Primary Deliverable | Feeds |
+| Task | Primary Deliverable | Status |
 |------|--------------------|-------|
-| 1 | `KNOWN_UNKNOWNS.md` (22–30 unknowns, 7 categories) | Tasks 3–10 |
-| 2 | `BASELINE_METRICS.md` (Day-0 buckets + genuine floor 70) | Tasks 3, 7, 10 |
-| 3 | `HEAD_OFFSET_IR_PLUMBING_DESIGN.md` (P1 foundation) | Tasks 6, 7, 10 |
-| 4 | `OFFSET_ALIAS_JACOBIAN_DESIGN.md` (P2 second-index core) | Tasks 6, 7, 10 |
-| 5 | `CAMCGE_DUAL_CONSISTENT_DESIGN.md` (P3 Epic-5) | Tasks 6, 7, 10 |
-| 6 | `PHASE_0_ACCEPTANCE_GATES.md` + per-issue Phase-0 sections | Tasks 7, 10 |
-| 7 | `REPLAN_RISK_ASSESSMENT.md` (P1/P2/P4/P5 exits + KPI projection) | Task 10 |
-| 8 | `TOOLING_READINESS_AUDIT.md` | Tasks 9, 10 |
-| 9 | `BACKLOG_FIX_SURFACE_ANALYSIS.md` (P4/P5/P6 patch sites) | Task 10 |
-| 10 | `PLAN.md` + `prompts/PLAN_PROMPTS.md` + `SPRINT_LOG.md` skeleton | Sprint 31 execution |
+| 1 | `KNOWN_UNKNOWNS.md` (25 unknowns, 7 categories) | ✅ |
+| 2 | `BASELINE_METRICS.md` (Day-0 buckets + genuine floor 70) | ✅ |
+| 3 | `HEAD_OFFSET_IR_PLUMBING_DESIGN.md` (P1 foundation) | ✅ |
+| 4 | `OFFSET_ALIAS_JACOBIAN_DESIGN.md` (P2 second-index core) | ✅ |
+| 5 | `CAMCGE_DUAL_CONSISTENT_DESIGN.md` (P3 Epic-5) | ✅ |
+| 6 | `PHASE_0_ACCEPTANCE_GATES.md` + per-issue Phase-0 sections | ✅ |
+| 7 | `REPLAN_RISK_ASSESSMENT.md` (P1/P2/P4/P5 exits + KPI projection) | ✅ |
+| 8 | `TOOLING_READINESS_AUDIT.md` | ✅ |
+| 9 | `BACKLOG_FIX_SURFACE_ANALYSIS.md` (P4/P5/P6 patch sites) | ✅ |
+| 10 | `PLAN.md` + `prompts/PLAN_PROMPTS.md` + `SPRINT_LOG.md` skeleton | ✅ |
+
+**✅ Sprint 31 prep phase COMPLETE (Tasks 1–10, 2026-07-09). Sprint 31 is GO for Day 0.**
 
 ### Verification
 
