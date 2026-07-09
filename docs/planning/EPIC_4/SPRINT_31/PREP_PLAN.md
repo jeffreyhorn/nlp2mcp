@@ -829,7 +829,7 @@ This is the final prep task — it consumes every prior task's output (the KU li
 
 ### Changes
 
-Created `docs/planning/EPIC_4/SPRINT_31/PLAN.md` (14-day schedule) + `prompts/PLAN_PROMPTS.md` (14 day prompts) + `SPRINT_LOG.md` (skeleton). Updated `KNOWN_UNKNOWNS.md` §"Next Steps" → prep phase COMPLETE / Sprint 31 GO for Day 0. CHANGELOG entry + the Summary "Prep Task → Deliverable Map" statuses.
+Created `docs/planning/EPIC_4/SPRINT_31/PLAN.md` (14-day schedule) + `docs/planning/EPIC_4/SPRINT_31/prompts/PLAN_PROMPTS.md` (14-day prompts) + `docs/planning/EPIC_4/SPRINT_31/SPRINT_LOG.md` (skeleton). Updated `KNOWN_UNKNOWNS.md` §"Next Steps" → prep phase COMPLETE / Sprint 31 GO for Day 0. CHANGELOG entry + the Summary "Prep Task → Deliverable Map" statuses.
 
 ### Result
 
