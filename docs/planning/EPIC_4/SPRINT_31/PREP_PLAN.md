@@ -333,9 +333,10 @@ grep -oiE "comp_pr|nlp-presolve|presolve dual|stat_x" docs/planning/EPIC_4/SPRIN
 
 ## Task 4: Offset-Alias #1111/#1112 Recipe Re-Confirmation + Distance-Jacobian Second-Index Design (Priority 2 foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
-**Estimated Time:** 4–6 hours
+**Estimated Time:** 4–6 hours (actual: ~3.5h)
+**Completed:** 2026-07-08
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1, 2
@@ -367,11 +368,11 @@ Sprint 30 Day 8 *implemented and verified* the objective-successor half of the p
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_31/OFFSET_ALIAS_JACOBIAN_DESIGN.md` (the 4-term recipe re-confirmation, the `_add_indexed_jacobian_terms` second-index drop-point trace + restoration, the #1110 orthogonality table, the coupled-landing design + gate, the himmel16 non-convex scope guard, the Sprint-32 REPLAN exit). Updated `KNOWN_UNKNOWNS.md` Unknowns 2.1–2.4 → ✅ VERIFIED. CHANGELOG entry.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-08).** The 4-term recipe **reproduces exactly on the current tree** (Unknown 2.1): the KKT-residual harness on `polygon.gms` is byte-identical to the banked Day-0 fingerprint (CASE_B, `stat_theta(i12)` rel 0.492, dual-transfer CONSISTENT), and the current emit drops precisely the distance **second-index** sum + the objective **predecessor** term. **Two PR24 fix-surface corrections:** the second-index drop is in `_add_indexed_jacobian_terms` (`src/kkt/stationarity.py:5767`), **NOT** `constraint_jacobian.py`; the reverted objective half (`_count_additive_terms`) is confirmed absent on `main` and `shape8` is strict-xfail. The restoration (Unknown 2.2) is a new per-position complementary sum (inverted multiplier order + flipped `ord`); **#1110 is orthogonal** — its multi-pattern correction is a *single scalar* (diagonal-vs-off-diagonal) keyed on pattern multiplicity, vs a *whole sum* keyed on constraint-index-position multiplicity. The coupled fix (objective half `_build_indexed_gradient_term:2864` + distance half `_add_indexed_jacobian_terms:5767`) lands together, tightly gated to var-at-two-indices, with `shape8` enable + polygon warm-match 0.780 + CGE byte-stability as the completion gate (Unknown 2.3), and a Sprint-32 #1111/#1112 AD-engine REPLAN exit if the gate leaks. himmel16 is confirmed non-convex (Unknown 2.4 — scope guard, no fix). Docs/design-only (read-only parses/emits/harness; no `src/`).
 
 ### Verification
 
@@ -398,14 +399,14 @@ grep -oiE "#1110|himmel16|non-convex" docs/planning/EPIC_4/SPRINT_31/OFFSET_ALIA
 
 ### Acceptance Criteria
 
-- [ ] The Day-7 control-verified 4-term recipe is re-confirmed on the current tree (or re-diagnosed if drifted — PR24)
-- [ ] The `_add_indexed_jacobian_terms` second-index drop is located and the general-alias-core restoration specified, tightly gated to var-at-two-indices
-- [ ] #1110 multi-pattern orthogonality confirmed (no CGE multi-pattern regression)
-- [ ] The coupled-landing design names `shape8_offset_alias_successor` (drop strict-xfail) as the completion gate
-- [ ] himmel16 non-convex scope guard recorded (no emit fix expected)
-- [ ] The Sprint-32 #1111/#1112 AD-engine REPLAN exit is named
-- [ ] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
-- [ ] CHANGELOG updated
+- [x] The Day-7 control-verified 4-term recipe is re-confirmed on the current tree (harness CASE_B / stat_theta(i12) 0.492 CONSISTENT — no drift; 2 PR24 fix-surface corrections recorded)
+- [x] The `_add_indexed_jacobian_terms` second-index drop is located (`stationarity.py:5767`, not `constraint_jacobian.py`) and the general-alias-core restoration specified, tightly gated to var-at-two-indices
+- [x] #1110 multi-pattern orthogonality confirmed (single-scalar diagonal-vs-off-diagonal vs a whole position-keyed sum; no CGE multi-pattern regression)
+- [x] The coupled-landing design names `shape8_offset_alias_successor` (drop strict-xfail) as the completion gate
+- [x] himmel16 non-convex scope guard recorded (sign-fix refuted; no emit fix expected)
+- [x] The Sprint-32 #1111/#1112 AD-engine REPLAN exit is named
+- [x] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] CHANGELOG updated
 
 ---
 

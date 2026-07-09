@@ -293,7 +293,12 @@ Re-run the Day-7 control experiment on the current tree; confirm the 4-term reci
 Development team (AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — recipe reproduces exactly; no drift (2 PR24 corrections)
+**Verified by:** Task 4 (Offset-Alias Recipe Re-Confirmation + Distance-Jacobian Design)
+**Date:** 2026-07-08
+**Findings:** The KKT-residual harness on `polygon.gms` (current tree, read-only) is **byte-identical to the banked Day-0 fingerprint**: CASE_B, `stat_theta(i12)` rel **0.492**, dual-transfer CONSISTENT. The current `polygon_mcp.gms` emit drops precisely the four banked terms — the distance **second-index** sum (`$(ord(j)<ord(i))`) and the objective **predecessor** cross-term — while keeping the first-index distance sum (`$(ord(j)>ord(i))`) and the own-row objective successor. **Two PR24 fix-surface corrections:** (a) the second-index drop is in `_add_indexed_jacobian_terms` (`src/kkt/stationarity.py:5767`), **NOT** `src/ad/constraint_jacobian.py` as the prompt/ISSUE_1143 name it (the constraint Jacobian *computes* both first- and second-index entries; the *stationarity* transpose-sum assembly drops the second); (b) the reverted objective half (`_count_additive_terms`) is confirmed **absent on `main`**, and `shape8_offset_alias_successor` is strict-xfail.
+**Evidence:** `docs/planning/EPIC_4/SPRINT_31/OFFSET_ALIAS_JACOBIAN_DESIGN.md` §1 (harness + current-emit diff + the 4 missing terms); `ISSUE_1143` Day-7.
+**Decision:** the banked recipe is valid on the current tree; PROCEED to the coupled-fix design (§2–§3) with the corrected fix-surface file.
 
 ---
 
@@ -330,7 +335,12 @@ grep -n "shape8_offset_alias_successor\|strict=True" tests/integration/emit/test
 Development team (AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — restoration located; #1110 orthogonal
+**Verified by:** Task 4 (Offset-Alias Recipe Re-Confirmation + Distance-Jacobian Design)
+**Date:** 2026-07-08
+**Findings:** The drop is in `_add_indexed_jacobian_terms` (`stationarity.py:5767`): it groups Jacobian entries by constraint name (`:5789–5806`), so for `distance(i,j)` and `r` the first-index (var==`i`, `ord(j)>ord(i)`) AND second-index (var==`j`, `r(i)` as the second index of `distance(j,i)` for `j<i`) entries land in the SAME group; it builds ONE sum on the representative `entries[0]` (`:5814`, the first-index direction) and drops the second-index complementary sum. **Restoration** = split the group by variable-index-POSITION and emit a second gated sum `sum(j, ∂distance(j,i)/∂·(i)·lam_distance(j,i))$(ord(j)<ord(i))` (inverted multiplier order + flipped `ord`, mirroring the first-index sum). **#1110 orthogonality confirmed:** the Issue #1110 multi-pattern logic (`:6155–6338`) emits a **single scalar** `_multi_pattern_correction` (`min_d − maj_d`, applied `:7080–7082`) keyed on *derivative-structure-pattern* multiplicity (diagonal-vs-off-diagonal); the second-index restoration is a **whole sum** keyed on *constraint-index-POSITION* multiplicity — a different predicate, additive, not touching the #1110 majority/minority path the CGE cohort depends on.
+**Evidence:** `OFFSET_ALIAS_JACOBIAN_DESIGN.md` §2 (drop-point trace + restoration + the #1110 orthogonality table); code trace `stationarity.py:5767/:5789/:5814/:6155–6338/:7080`.
+**Decision:** PROCEED with the per-position second-index sum, tightly gated to var-at-two-indices; verify #1110/CGE byte-stability via `--resolve-changed` in-sprint. Coupled with the objective half (2.3).
 
 ---
 
@@ -365,7 +375,12 @@ grep -rn "_add_indexed_jacobian_terms\|indexed_jacobian" src/ad/constraint_jacob
 Development team (AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — localized fix ships; Sprint-32 REPLAN exit named
+**Verified by:** Task 4 (Offset-Alias Recipe Re-Confirmation + Distance-Jacobian Design)
+**Date:** 2026-07-08
+**Findings:** The second-index restoration is gateable to the **var-at-two-indices** shape — fire only when a variable instance maps to ≥2 distinct constraint index-positions of a multi-index constraint under an ordinal/offset condition (a property of the index mapping), returning unchanged for every other shape (the #1387/#1455 per-instance-offset cohort + the CGE multi-pattern cohort untouched). The objective half is gated to the non-circular successor-offset image (`j(i+1)`-style). Both halves land together (neither alone matches; objective-alone regresses polygon to MS-5). **Completion gate:** `shape8_offset_alias_successor` drops its strict-xfail (its assertion `x(i+1)*1$(j(i))` + `x(i-1)*1$(j(i-1))` passes with the objective half) + polygon warm-matches 0.780 + the CGE multi-pattern GO list is byte-stable; a companion distance-second-index property fixture (shape10-style) guards the Jacobian half. **REPLAN exit:** if the gate leaks into the CGE cohort, the per-position logic needs the full #1111/#1112 AD-engine core → Sprint-32 filing (the banked recipe + working objective half + this design make it a de-risked hand-off).
+**Evidence:** `OFFSET_ALIAS_JACOBIAN_DESIGN.md` §3 (coupled-landing + gate) + §5 (Sprint-32 REPLAN exit).
+**Decision:** ship the coupled localized fix this sprint with `shape8` as the completion gate; REPLAN to the #1111/#1112 AD-engine filing only if the tight gate proves infeasible.
 
 ---
 
@@ -399,7 +414,12 @@ grep -n "shape7_offset_alias_cyclic\|himmel16\|non-convex" tests/integration/emi
 Development team (AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — non-convex, scope guard (no emit fix)
+**Verified by:** Task 4 (Offset-Alias Recipe Re-Confirmation + Distance-Jacobian Design)
+**Date:** 2026-07-08
+**Findings:** himmel16 is documented **non-convex** (`ISSUE_1146`). The Sprint-30 Day-7 control experiment refuted its `stat_area` sign fix: flipping the objective-gradient sign `(-1)→(1)` in the cold emit is **inert** — the cold objective stays at **0.385** (a spurious local optimum of the non-convex max-hexagon-area problem). himmel16 matches **warm** (0.674 ≈ NLP 0.675) but cold-converges to 0.385; the harness CASE_B / `stat_area` rel-2.0 signal is a uniform-`nu = −eq.m` negation artifact (the emit `stat_area = −1 + nu_areadef` is correct: `nu_areadef=+1` at the optimum → residual 0). `shape7_offset_alias_cyclic` guards the *structural* cyclic decomposition but NOT the numeric residual (inherent non-convexity). The P2 second-index restoration is orthogonal to himmel16's shape and must not be expected to convert it.
+**Evidence:** `OFFSET_ALIAS_JACOBIAN_DESIGN.md` §4; `ISSUE_1146` (sign-fix refuted, non-convex).
+**Decision:** himmel16 is a **scope guard**, NOT a P2 target — no emit fix, no genuine-floor gain expected. Keeps the P2 scope to polygon.
 
 ---
 
