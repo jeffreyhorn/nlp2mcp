@@ -719,9 +719,10 @@ grep -n "shape8_offset_alias_successor\|shape9_objgrad_subset_boundary" tests/in
 
 ## Task 9: Backlog Fix-Surface Analysis (#1385 sarf; hhfair/CGE obj-grad; rocket forcing/PATH input)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Medium
-**Estimated Time:** 3–4 hours
+**Estimated Time:** 3–4 hours (actual: ~3.5h)
+**Completed:** 2026-07-09
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1, 8
@@ -752,11 +753,11 @@ P4/P5/P6 are the carryforwards whose *fix surface* is banked but whose *exact pa
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_31/BACKLOG_FIX_SURFACE_ANALYSIS.md` (the P4 sarf patch site + O(constraints) fixture, the P5 obj-grad reduction site + the hhfair Case-c lean / CGE-cluster target, the P6 rocket lever set + PATH-consultation input). Updated `KNOWN_UNKNOWNS.md` — 4.3/5.2/5.3/5.4/6.3 → ✅ VERIFIED + Task-9 fix-surface notes on 4.1/5.1/6.1. CHANGELOG entry.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-09).** Pinned the three implementation-lighter carryforwards' patch sites (PR24 Day-0 hypotheses). **P4 sarf:** the 2-D gate extension at `_is_blowup_dynamic_subset_equation` (`index_mapping.py:402`, the `len(eq_domain) != 1` bail that never fires on `tbal(g,t)$taskposs(g,t)`) + the parametric `stat_task` builder (`stationarity.py`, the banked 6-guarded-term derivation, symbolic `(g,t,m,n)` indices, no set-name literals) + the atomic re-emit + an O(constraints) synthetic fixture (4.1, 4.3). **P5 headline finding:** a read-only emit shows the current hhfair `stat_u` **already carries the correct log-derivative product gradient** (maximize-negated, no `nu_objective`), so the ν_objective reduction is sign-equivalent for hhfair and — with the refuted sign flip — **hhfair leans genuine Case-c** (the P5 REPLAN exit); the **emit-fixable P5 gain is the CGE cluster** (irscge/lrgcge/moncge `stat_xp` rel ~0.06, convex) via the reduction in `gradient.py`/`stationarity.py`; a single structural rule; orthogonal to the Day-5 case-normalization fix (5.1, 5.2, 5.3, 5.4). **P6 rocket:** the emittable levers = the `1/m` / `1/ht²` division-by-variable reformulation (multiply through by the divisor) + scaled continuation; the finalized PATH-consultation question drafted (6.1, 6.3). Docs/analysis-only (Day-0 read-only emit/reads; no `src/`).
 
 ### Verification
 
@@ -783,12 +784,12 @@ grep -qiE "PATH.consultation|PATH question" docs/planning/EPIC_4/SPRINT_31/BACKL
 
 ### Acceptance Criteria
 
-- [ ] The P4 sarf 2-D `_is_blowup_dynamic_subset_equation` extension + parametric `stat_task` builder site are re-confirmed on the current tree with an O(constraints) property fixture spec
-- [ ] The P5 obj-grad fix-surface is the ν_objective reduction (the sign flip is explicitly excluded) with a control-experiment + fixture spec
-- [ ] The P6 emittable-lever set + the drafted PATH-consultation question scope are recorded
-- [ ] Each patch site is framed as a Day-0-re-confirm hypothesis (PR24)
-- [ ] Unknowns 4.1, 4.3, 5.1, 5.2, 5.3, 5.4, 6.1, 6.3 verified and updated in KNOWN_UNKNOWNS.md
-- [ ] CHANGELOG updated
+- [x] The P4 sarf 2-D `_is_blowup_dynamic_subset_equation` extension (`index_mapping.py:402`, the len!=1 bail) + parametric `stat_task` builder site re-confirmed on the current tree with an O(constraints) property fixture spec
+- [x] The P5 obj-grad fix-surface is the ν_objective reduction (the sign flip explicitly excluded) with a control-experiment + fixture spec (hhfair Case-c lean; CGE cluster the emit-fixable target)
+- [x] The P6 emittable-lever set (`1/m` reformulation + continuation) + the drafted PATH-consultation question scope recorded
+- [x] Each patch site is framed as a Day-0-re-confirm hypothesis (PR24)
+- [x] Unknowns 4.1, 4.3, 5.1, 5.2, 5.3, 5.4, 6.1, 6.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] CHANGELOG updated
 
 ---
 
