@@ -456,7 +456,12 @@ Prototype the dual-consistent redefinition on `/tmp` (hand-edited from `camcge_m
 Development team (KKT/CGE specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (design + prototype-first plan) — the dual repair is the missing piece
+**Verified by:** Task 5 (camcge Dual-Consistent Walras Transform Design)
+**Date:** 2026-07-08
+**Findings:** The Day-11 price-pin (`p('services')=pd0` or the consumption-weighted numéraire) reaches the correct allocation **omega 191.735** but stays **MS-4** (the dual market-clearing block is still rank-deficient); the naive drop-row (drop `lmequil('rural')` + fix `nu_lmequil('rural')=0`) **orphans a needed dual** → omega 299 (broken). A read-only emit confirms the dual-flaw: `nu_equil(i)` appears in **7** goods-price stationarity rows and `nu_lmequil(lc)` in **3** wage rows — dropping a market-clearing row deletes its price/wage from the stationarity. **The fix (design):** keep every market-clearing row (no orphaned dual) + add a numéraire (consumption-weighted composite — camcge has no `cpi`, so "fix cpi=1" is instantiated on `cles(i)`/`pd0(i)`) + **redefine the redundant market's dual via Walras' law** so the dual block is full-rank → MS-1. The mechanically-simplest equivalent (try first) is re-pairing the numéraire multiplier with the numéraire good's price so the one redundant dual DOF is absorbed by `nu_numeraire`.
+**Evidence:** `docs/planning/EPIC_4/SPRINT_31/CAMCGE_DUAL_CONSISTENT_DESIGN.md` §1–§2 (the dual-flaw + the redefinition); `ISSUE_1330` Day-11; the read-only `camcge_mcp.gms` emit (`nu_equil`×7, `nu_lmequil`×3).
+**Decision:** PROCEED to prototype the dual-consistent redefinition on `/tmp` to MS-1 at 191.7346 **before** the `src/` change (check the dual side); REPLAN to the per-model-numéraire fallback if `/tmp` can't reach MS-1.
 
 ---
 
@@ -493,7 +498,12 @@ for m in camcge irscge lrgcge moncge stdcge; do echo "== $m =="; \
 Development team (KKT/CGE specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — S1∧S2∧S3 with S3 as the false-positive guard
+**Verified by:** Task 5 (camcge Dual-Consistent Walras Transform Design)
+**Date:** 2026-07-08
+**Findings:** Three conjunctive conditions (pass-through default): **S1** — a market-clearing block whose duals are prices/wages in the stationarity (camcge: `equil(i)` + `lmequil(lc)`; `nu_equil`×7, `nu_lmequil`×3 — read-only-confirmed); **S2** — no price numéraire fixed (no `p.fx`/`cpi`/numéraire eq — confirmed; prices homogeneous deg 0 → rank deficiency exactly 1); **S3** — the cold MCP is empirically singular at iteration 0 (MS-4 with the uniform-residual `stat_*` fingerprint, e.g. `stat_cd` uniform −0.2022, while the warm-start is a valid KKT point `gdp_check ≈ 0`). **S3 is the false-positive guard:** a well-posed model with a market-clearing block (S1) and no explicit numéraire (S2) but a determined closure passes S1∧S2 yet **fails S3** (its cold MCP is not singular at iter 0). The transform is detected, never silent. Cohort precision test: irscge/lrgcge/moncge/stdcge are well-posed (Optimal per `CGE_DEGENERACY_SCOPING.md` §2, camcge is the sole inherent Walras case) → each fails ≥1 condition (most likely S3) → pass-through.
+**Evidence:** `CAMCGE_DUAL_CONSISTENT_DESIGN.md` §3 (the S1∧S2∧S3 detector + false-positive guard + cohort test); `CGE_DEGENERACY_SCOPING.md` §2/§4.
+**Decision:** the S1∧S2∧S3 detector with the S3 empirical-singularity gate is the precision guard; the in-sprint step runs it across the CGE cohort to confirm camcge-only.
 
 ---
 
@@ -528,7 +538,12 @@ grep -in "services\|numeraire\|pd0" docs/planning/EPIC_5/CAMCGE_WALRAS_TRANSFORM
 Development team (KKT/CGE specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — automatic for camcge; per-model-declaration fallback
+**Verified by:** Task 5 (camcge Dual-Consistent Walras Transform Design)
+**Date:** 2026-07-08
+**Findings:** For camcge the selection is **automatic**: the **redundant row** is always the numéraire good's market (by Walras' law any single market-clearing row is redundant, and the dual-consistent redefinition ties it to the numéraire — no per-model "which row" choice); the **numéraire** is the consumption-weighted composite on `cles(i)`/`pd0(i)` (auto-derivable from the model's existing consumption shares — Day-11-confirmed to reach 191.735), with the SAM's largest-sector price as a secondary heuristic. If the automatic selection proves non-robust on a *future* Walras-degenerate model (the composite fails to reach the NLP optimum, or the numéraire good can't be auto-identified), the **per-model-declaration fallback** (the model/config declares the numéraire good + redundant market) is the Epic-5 exit (`CGE_DEGENERACY_SCOPING.md` §5 Q1). camcge is currently the sole inherent Walras case, so the automatic rule need only be robust for camcge this sprint.
+**Evidence:** `CAMCGE_DUAL_CONSISTENT_DESIGN.md` §5 (automatic rule + per-model fallback + REPLAN exit).
+**Decision:** ship the automatic consumption-weighted-numéraire rule; per-model-declaration fallback + REPLAN to an Epic-5 item if `/tmp` can't reach MS-1 or the rule doesn't generalize.
 
 ---
 
@@ -562,7 +577,12 @@ Verify the Walras identity numerically at camcge's NLP optimum; confirm the drop
 Development team (KKT/CGE specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (firm) — closure identities hold at machine precision ⇒ exact recovery
+**Verified by:** Task 5 (camcge Dual-Consistent Walras Transform Design)
+**Date:** 2026-07-08
+**Findings:** Walras' law holds across camcge's full market structure: `∑_i p_i·(x_i − int_i − cd_i − gd_i − id_i − dst_i) + ∑_lc wa_lc·(∑_i l_{i,lc} − ls_lc) ≡` the household budget identity, so the market-clearing block is rank-deficient by exactly 1 and the redundant market's dual is a **clean linear combination** of the others (exact recovery, not approximate). The closure identities hold at machine precision at the NLP optimum (`gdp_check ≈ −4.83e-10`, `totsav_check ≈ 1.33e-14`, per the ISSUE_1330 round-3 residual checks), confirming the warm-start is a valid KKT point and the Walras dependency is exact. The in-sprint step confirms the *dual* relation `p(n*)·nu_equil(n*) = −[∑_{i≠n*} p(i)·nu_equil(i) + ∑_lc wa(lc)·nu_lmequil(lc) − <budget-dual terms>]` closes at machine precision at the NLP duals.
+**Evidence:** `CAMCGE_DUAL_CONSISTENT_DESIGN.md` §1 (Walras' law → rank deficiency 1) + §4 (the identity verification); `ISSUE_1330` round-3 (`gdp_check`/`totsav_check` ≈ 0).
+**Decision:** the exact-recovery premise is firm (primal identity verified at machine precision); the dual-relation closure is the in-sprint `/tmp` verification gating the redefinition.
 
 ---
 
