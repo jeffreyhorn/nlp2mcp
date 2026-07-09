@@ -137,6 +137,8 @@ Development team (IR/AD specialist)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_31/HEAD_OFFSET_IR_PLUMBING_DESIGN.md` §0–§4 (empirical parse + code trace + fixture spec).
 **Decision:** PROCEED with the Phase-1 IR field addition (favorable — not a deep normalize rewrite); the round-trip fixture gates Phase 2. The hard/REPLAN-prone work stays in Phase 2 (the shared helper + `comp_pr` coupling).
 
+**Task 7 (2026-07-09) — risk/decision layer:** P1 prior of REPLAN **Medium** (lower than Sprint 30's Medium-High — the IR-plumbing blocker is designed away as a favorable field addition). Validation V1: the round-trip fixture green by **Day 1**. REPLAN exit: a 4th bound-complementarity site → Sprint-32 head-offset-Phase-3; **budget reallocation** ~10–14h → P5 + P7 (the IR plumbing + helper still land). See `REPLAN_RISK_ASSESSMENT.md` Track P1.
+
 ---
 
 ## Unknown 1.2: Does one shared index-map helper drive all three sites, or does a 4th site surface?
@@ -180,6 +182,8 @@ Development team (AD/KKT specialist)
 **Decision:** PROCEED with the shared 3-site helper; REPLAN mine to a Sprint-32 head-offset-Phase-3 workstream if the bound rows persist after the comp_pr fix (the IR plumbing + helper still land as reusable foundation).
 
 **Task 6 (2026-07-09) — gate layer:** the P1 gate is authored (`PHASE_0_ACCEPTANCE_GATES.md` §P1 + the ISSUE_1443 Sprint-31 refresh): PROCEED requires the round-trip fixture green **before** the emit change, then the cold-INFES-by-direction histogram → all four k-directions → 0, cold MS-1; REPLAN on a 4th bound-complementarity site → Sprint 32. Cites `kkt_residual.py` (PR27).
+
+**Task 7 (2026-07-09) — risk/decision layer:** the shared 3-site helper vs the 4th-site risk is the P1 REPLAN pivot. Validation V2: the cold-INFES histogram → all four k-directions → 0, cold MS-1, **no 4th site** by the **Day-5 checkpoint**. REPLAN exit: a 4th site → Sprint-32; mine's +1 Solve becomes conditional. See `REPLAN_RISK_ASSESSMENT.md` Track P1.
 
 ---
 
@@ -346,6 +350,8 @@ Development team (AD specialist)
 
 **Task 6 (2026-07-09) — gate layer:** the P2 gate is authored (`PHASE_0_ACCEPTANCE_GATES.md` §P2 + the ISSUE_1143 Sprint-31 refresh): PROCEED requires the 4-term recipe re-confirmed (✅) + #1110 orthogonality; land the objective + distance-second-index halves **together**, tightly gated; completion = `shape8` enabled + polygon warm-match 0.780 + CGE byte-stable; REPLAN if the gate leaks → #1111/#1112 AD-engine filing, Sprint 32.
 
+**Task 7 (2026-07-09) — risk/decision layer:** P2 prior of REPLAN **Medium** (recipe control-verified; the tight-gate-vs-general-core boundary is the risk). Validation V2: the coupled fix gates tightly to var-at-two-indices — `shape8` enabled + polygon warm-match 0.780 + **CGE multi-pattern GO list byte-stable** by the **Day-5 checkpoint**. REPLAN exit: the gate leaks → the #1111/#1112 AD-engine filing (Sprint 32); polygon's genuine-floor +1 becomes conditional. See `REPLAN_RISK_ASSESSMENT.md` Track P2.
+
 ---
 
 ## Unknown 2.3: Is the second-index cross-term gateable to var-at-two-indices, or does it need the full #1111/#1112 core?
@@ -385,6 +391,8 @@ Development team (AD specialist)
 **Findings:** The second-index restoration is gateable to the **var-at-two-indices** shape — fire only when a variable instance maps to ≥2 distinct constraint index-positions of a multi-index constraint under an ordinal/offset condition (a property of the index mapping), returning unchanged for every other shape (the #1387/#1455 per-instance-offset cohort + the CGE multi-pattern cohort untouched). The objective half is gated to the non-circular successor-offset image (`j(i+1)`-style). Both halves land together (neither alone matches; objective-alone regresses polygon to MS-5). **Completion gate:** `shape8_offset_alias_successor` drops its strict-xfail (its assertion `x(i+1)*1$(j(i))` + `x(i-1)*1$(j(i-1))` passes with the objective half) + polygon warm-matches 0.780 + the CGE multi-pattern GO list is byte-stable; a companion distance-second-index property fixture (shape10-style) guards the Jacobian half. **REPLAN exit:** if the gate leaks into the CGE cohort, the per-position logic needs the full #1111/#1112 AD-engine core → Sprint-32 filing (the banked recipe + working objective half + this design make it a de-risked hand-off).
 **Evidence:** `OFFSET_ALIAS_JACOBIAN_DESIGN.md` §3 (coupled-landing + gate) + §5 (Sprint-32 REPLAN exit).
 **Decision:** ship the coupled localized fix this sprint with `shape8` as the completion gate; REPLAN to the #1111/#1112 AD-engine filing only if the tight gate proves infeasible.
+
+**Task 7 (2026-07-09) — risk/decision layer:** the localized-fix-vs-#1111/#1112-core decision is the P2 REPLAN exit. **Budget reallocation** on a leak: polygon's ~8–14h → P5 + P7. The banked 4-term recipe + the working objective half + the second-index design make the Sprint-32 filing a de-risked hand-off. See `REPLAN_RISK_ASSESSMENT.md` Track P2 + the Budget-at-Risk tally.
 
 ---
 
@@ -665,7 +673,10 @@ grep -c "^stat_task" /tmp/sarf_mcp.gms
 Development team (AD/performance specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔍 **Status:** INCOMPLETE — risk/decision layer pinned (Task 7); the empirical O(constraints) timing probe is pending Task 9
+**Risk/decision layer (Task 7, 2026-07-09):** P4 (sarf symbolic emit) is a **failed-architecture rebuild** — prior of REPLAN **Medium-High** (the Sprint-26 attempt failed on exactly the set-name-literal + combinatorial-blowup axes). The **single-model validation** is V1: `sarf_mcp.gms` translates **well under the >180s Option-1 timeout** with an **O(constraints), not O(instances)** `stat_task` row count (sarf has 1,152 Cartesian instances). **REPLAN exit:** the parametric re-emit re-triggers the timeout → re-scope the parametric emit; +Translate deferred; **budget reallocation** ~10–16h → P5 + P7. The +Translate stretch is the lowest-priority target (does not move Solve/Match).
+**Evidence:** `docs/planning/EPIC_4/SPRINT_31/REPLAN_RISK_ASSESSMENT.md` Track P4 + the Budget-at-Risk tally.
+**Decision:** the risk signal + Sprint-32 exit + reallocation are pinned; the **empirical O(constraints) timing probe** is run by Task 9 (the Day-0 timing).
 
 ---
 
@@ -743,6 +754,8 @@ Development team (AD/KKT specialist)
 **Evidence:** `PHASE_0_ACCEPTANCE_GATES.md` §P5; `ISSUE_1236` Phase-0 refresh; the Sprint-30 sign-flip refutation.
 **Decision:** the gate is written (control-before-implement, sign flip banned); the **fix-surface Day-0 trace** (the ν_objective reduction in `src/kkt/stationarity.py` / `src/ad/gradient.py`, NOT the sign flip) + the control experiment are run by **Task 9** (PR24).
 
+**Task 7 (2026-07-09) — risk/decision layer:** P5 prior of REPLAN **Medium** (the sign flip is refuted — the wrong path is closed — but the ν_objective reduction is not yet control-verified). Validation V1: the ν_objective control experiment reaches the NLP optimum on hhfair **Day-0** (the sign flip BANNED). REPLAN exit: genuine Case-c → a documented non-convexity finding, **no `src/` change** (the control experiment prevents the bad ship that killed the sign flip 3×). See `REPLAN_RISK_ASSESSMENT.md` Track P5.
+
 ---
 
 ## Unknown 5.2: Does the same reduction convert the CGE cluster (irscge/lrgcge/moncge `stat_xp`) to Case-a?
@@ -777,7 +790,10 @@ for m in irscge lrgcge moncge; do echo "== $m =="; \
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔍 **Status:** INCOMPLETE — risk/decision layer pinned (Task 7); the empirical CGE-cluster same-class check is pending Task 9
+**Risk/decision layer (Task 7, 2026-07-09):** P5 (cold-convex obj-grad) carries the **largest single-track genuine-floor exposure** — the ν_objective reduction converting the CGE cluster (irscge/lrgcge/moncge `stat_xp` rel ~0.06) to Case-a is a **+1 to +3** genuine-floor lift, on top of hhfair's +1. **Validation** V2: the same reduction that reaches the NLP optimum on hhfair (V1) drives the CGE `stat_xp` → 0 (Case-a). **REPLAN exit:** the CGE shape is distinct (the reduction is hhfair-only) → −1 to −3 genuine floor; combined with a hhfair Case-c this is the P5 REPLAN. The genuine-floor ramp is **conditional** on this (Sprint-30 §3 lesson 3 — not independent +1s). **Budget reallocation** ~6–12h → P7.
+**Evidence:** `REPLAN_RISK_ASSESSMENT.md` Track P5 + the "Honest KPI projection" section (P5 REPLAN = −1 to −4 genuine floor, the largest exposure).
+**Decision:** the risk signal + the conditional-genuine-floor framing are pinned; the **empirical CGE-cluster same-class check** is run by Task 9.
 
 ---
 

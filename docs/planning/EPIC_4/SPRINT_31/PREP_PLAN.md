@@ -571,9 +571,10 @@ done
 
 ## Task 7: Diagnosis-Heavy / REPLAN-Prone Track Risk Assessment (PR16)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
-**Estimated Time:** 3–5 hours
+**Estimated Time:** 3–5 hours (actual: ~3h)
+**Completed:** 2026-07-09
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 3, 4, 5, 6
@@ -604,11 +605,11 @@ The Sprint-30 Task-6 risk assessment *predicted the outcome* (retro §3 lesson 3
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_31/REPLAN_RISK_ASSESSMENT.md` (per-track P1/P2/P4/P5 single-model validation + Sprint-32 REPLAN exit + budget reallocation + prior of REPLAN; the Budget-at-Risk tally; the honest Solve ≥109 / genuine floor ≥73 KPI projection). Updated `KNOWN_UNKNOWNS.md` — risk-layer notes on 1.1/1.2/2.2/2.3/5.1 (already VERIFIED) + a risk/decision-layer note on 4.2/5.2 (kept 🔍 INCOMPLETE — the empirical check is pending Task 9). CHANGELOG entry.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-09).** Applied PR16 hypothesis-validation to the four deepest REPLAN-prone tracks, each with a Day-5-measurable validation + a Sprint-32 exit + a reallocation target: **P1** (round-trip fixture green Day-1 → cold-INFES histogram all 4 dirs → 0 by Day-5; REPLAN on a 4th site → reallocate ~10–14h to P5/P7; prior **Medium** — the IR blocker is designed away); **P2** (the coupled fix gates tightly + CGE byte-stable by Day-5; REPLAN on a leak → #1111/#1112 filing; prior **Medium**); **P4** (O(constraints) emit under the translate budget; REPLAN on timeout re-trigger; prior **Medium-High** — a failed-architecture rebuild); **P5** (the ν_objective control experiment reaches the NLP optimum on hhfair Day-0, sign flip BANNED; REPLAN on genuine Case-c → documented non-convexity; prior **Medium**). **Honest KPI projection:** **Solve ≥109 (mine [P1] + camcge [P3]) is the most REPLAN-sensitive KPI** — P3 has a per-model-numéraire fallback that still solves, P1 does not; **the genuine-floor ramp ≥73 is conditional** on polygon [P2] + hhfair/CGE [P5] (P5 is the largest single-track exposure, −1 to −4 floor), not independent +1s (Sprint-30 §3 lesson 3). Reallocation order on any deep REPLAN: P5 → P7 → the +Translate/forcing tails; the Task-10 lower bound assumes P1's +1 Solve + the P2/P5 genuine-floor lift slip. Docs/analysis-only (no `src/`).
 
 ### Verification
 
@@ -634,11 +635,11 @@ grep -qiE "Solve.*109|genuine floor.*73" docs/planning/EPIC_4/SPRINT_31/REPLAN_R
 
 ### Acceptance Criteria
 
-- [ ] Each of P1/P2/P4/P5 has a single-model or control-experiment validation measurable by the Day-5 checkpoint
-- [ ] Each has an explicit Sprint-32 REPLAN exit + a budget-reallocation target
-- [ ] The honest KPI projection ties Solve ≥109 to (mine + camcge) and genuine floor ≥73 to (polygon + hhfair/CGE), stating what survives each single-track REPLAN
-- [ ] Unknowns 1.1, 1.2, 2.2, 2.3, 4.2, 5.1, 5.2 verified and updated in KNOWN_UNKNOWNS.md
-- [ ] CHANGELOG updated
+- [x] Each of P1/P2/P4/P5 has a single-model or control-experiment validation measurable by the Day-5 checkpoint
+- [x] Each has an explicit Sprint-32 REPLAN exit + a budget-reallocation target
+- [x] The honest KPI projection ties Solve ≥109 to (mine + camcge) and genuine floor ≥73 to (polygon + hhfair/CGE), stating what survives each single-track REPLAN
+- [x] Unknowns 1.1, 1.2, 2.2, 2.3, 5.1 verified (risk-layer notes) + 4.2, 5.2 risk-noted (kept INCOMPLETE — empirical check pending Task 9) in KNOWN_UNKNOWNS.md
+- [x] CHANGELOG updated
 
 ---
 
