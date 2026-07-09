@@ -40,7 +40,7 @@ So the source `pr(k,l+1,i,j)` loses the `+1` on domain position `l`; the emit la
 - **`_domain_list_has_offset` (`src/ir/parser.py:932`)** — recursively walks each `domain_element` subtree, returns `True` if any has a `linear_lead`/`linear_lag` node, else `False`. It **sees** the position (enumeration order of `node.children`) and the offset node (the `+1`) but collapses both to a single bool. The result is stored at `parser.py:3856` (`head_has_offset = _domain_list_has_offset(domain_list_node)`) and passed to the `EquationDef` constructor at `parser.py:3952` (`has_head_domain_offset=head_has_offset`).
 - **`_extract_domain_indices` (`src/ir/parser.py:956`)** — extracts *base identifiers only* (`i+1 -> ['i']`), so the stored `domain` is the base tuple.
 
-**The IR already has the machinery to represent the offset:** `IndexOffset(base, offset, circular)` (`src/ir/ast.py:346`) — `l+1` is exactly `IndexOffset(base='l', offset=Const(1.0), circular=False)` — and the parser's per-index builder (`parser.py:1231–1405`, `_index_expr_to_offset`) already produces these for body indices. The head-offset loss is purely that `_domain_list_has_offset` throws the structure away.
+**The IR already has the machinery to represent the offset:** `IndexOffset(base, offset, circular)` (`src/ir/ast.py:346`) — `l+1` is exactly `IndexOffset(base='l', offset=Const(1.0), circular=False)` — and the parser's per-index builder (`_process_index_expr`, `parser.py:1228`, used by `_extract_indices_with_subset` at `:1128`) already produces these for body indices. The head-offset loss is purely that `_domain_list_has_offset` throws the structure away.
 
 ---
 
@@ -72,7 +72,7 @@ class EquationDef:
 - **`None` (not `()`) default** distinguishes "not yet plumbed / no offset" from "computed, empty" — but since it is populated at parse for every equation, consumers can treat `None` as "no head offset" safely.
 - **Type reuse:** `IndexOffset` already carries `(base, offset, circular)` — the design needs no new type. The `offset` is `Const(1.0)` for `+1`; a general `IndexOffset` also covers `l-1` / symbolic heads for free.
 
-**Producer (1 site):** `_domain_list_has_offset` is replaced/supplemented by a new `_domain_list_head_offsets(node) -> tuple[IndexOffset | None, ...]` that reuses the existing `_index_expr_to_offset` logic per domain position; `EquationDef(...)` at `parser.py:3952` gains `head_domain_offsets=...`. `has_head_domain_offset` becomes `any(...)` over it.
+**Producer (1 site):** `_domain_list_has_offset` is replaced/supplemented by a new `_domain_list_head_offsets(node) -> tuple[IndexOffset | None, ...]` that reuses the existing `_process_index_expr` logic per domain position; `EquationDef(...)` at `parser.py:3952` gains `head_domain_offsets=...`. `has_head_domain_offset` becomes `any(...)` over it.
 
 ---
 
@@ -120,7 +120,9 @@ A minimal, committed, mine-shaped fixture whose **parse output** is asserted to 
 Set k /nw/, l /1*3/, i /1*2/, j /1*2/;
 Parameter li(k) /nw 0/, lj(k) /nw 0/;
 Set c(l,i,j); c(l,i,j) = yes;
-Variable x(l,i,j), z;  Positive Variable x;  x.up(l,i,j) = 1;
+Positive Variable x(l,i,j);
+Variable z;
+x.up(l,i,j) = 1;
 Equation pr(k,l+1,i,j), def;
 pr(k,l+1,i,j)$c(l,i,j)..  x(l,i+li(k),j+lj(k)) =g= x(l+1,i,j);   * head +1 on position l + body param offsets
 def..                     z =e= sum((l,i,j), x(l,i,j));
