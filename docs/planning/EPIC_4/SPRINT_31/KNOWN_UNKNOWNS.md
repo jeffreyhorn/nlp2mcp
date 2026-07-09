@@ -179,6 +179,8 @@ Development team (AD/KKT specialist)
 **Evidence:** `HEAD_OFFSET_IR_PLUMBING_DESIGN.md` §5–§6 (helper signature + the three sites with current file:line + the cold-INFES-by-direction gate); `ISSUE_1443` Day-6/7.
 **Decision:** PROCEED with the shared 3-site helper; REPLAN mine to a Sprint-32 head-offset-Phase-3 workstream if the bound rows persist after the comp_pr fix (the IR plumbing + helper still land as reusable foundation).
 
+**Task 6 (2026-07-09) — gate layer:** the P1 gate is authored (`PHASE_0_ACCEPTANCE_GATES.md` §P1 + the ISSUE_1443 Sprint-31 refresh): PROCEED requires the round-trip fixture green **before** the emit change, then the cold-INFES-by-direction histogram → all four k-directions → 0, cold MS-1; REPLAN on a 4th bound-complementarity site → Sprint 32. Cites `kkt_residual.py` (PR27).
+
 ---
 
 ## Unknown 1.3: Does the head-offset fix leave the cold LCP feasible (mine's ~4.07e10 blowup resolved)?
@@ -342,6 +344,8 @@ Development team (AD specialist)
 **Evidence:** `OFFSET_ALIAS_JACOBIAN_DESIGN.md` §2 (drop-point trace + restoration + the #1110 orthogonality table); code trace `stationarity.py:5767/:5789/:5814/:6155–6338/:7080`.
 **Decision:** PROCEED with the per-position second-index sum, tightly gated to var-at-two-indices; verify #1110/CGE byte-stability via `--resolve-changed` in-sprint. Coupled with the objective half (2.3).
 
+**Task 6 (2026-07-09) — gate layer:** the P2 gate is authored (`PHASE_0_ACCEPTANCE_GATES.md` §P2 + the ISSUE_1143 Sprint-31 refresh): PROCEED requires the 4-term recipe re-confirmed (✅) + #1110 orthogonality; land the objective + distance-second-index halves **together**, tightly gated; completion = `shape8` enabled + polygon warm-match 0.780 + CGE byte-stable; REPLAN if the gate leaks → #1111/#1112 AD-engine filing, Sprint 32.
+
 ---
 
 ## Unknown 2.3: Is the second-index cross-term gateable to var-at-two-indices, or does it need the full #1111/#1112 core?
@@ -462,6 +466,8 @@ Development team (KKT/CGE specialist)
 **Findings:** The Day-11 price-pin (`p('services')=pd0` or the consumption-weighted numéraire) reaches the correct allocation **omega 191.735** but stays **MS-4** (the dual market-clearing block is still rank-deficient); the naive drop-row (drop `lmequil('rural')` + fix `nu_lmequil('rural')=0`) **orphans a needed dual** → omega 299 (broken). A read-only emit confirms the dual-flaw: `nu_equil(i)` appears in **7** goods-price stationarity rows and `nu_lmequil(lc)` in **3** wage rows — dropping a market-clearing row deletes its price/wage from the stationarity. **The fix (design):** keep every market-clearing row (no orphaned dual) + add a numéraire (consumption-weighted composite — camcge has no `cpi`, so "fix cpi=1" is instantiated on `cles(i)`/`pd0(i)`) + **redefine the redundant market's dual via Walras' law** so the dual block is full-rank → MS-1. The mechanically-simplest equivalent (try first) is re-pairing the numéraire multiplier with the numéraire good's price so the one redundant dual DOF is absorbed by `nu_numeraire`.
 **Evidence:** `docs/planning/EPIC_4/SPRINT_31/CAMCGE_DUAL_CONSISTENT_DESIGN.md` §1–§2 (the dual-flaw + the redefinition); `ISSUE_1330` Day-11; the read-only `camcge_mcp.gms` emit (`nu_equil`×7, `nu_lmequil`×3).
 **Decision:** PROCEED to prototype the dual-consistent redefinition on `/tmp` to MS-1 at 191.7346 **before** the `src/` change (check the dual side); REPLAN to the per-model-numéraire fallback if `/tmp` can't reach MS-1.
+
+**Task 6 (2026-07-09) — gate layer:** the P3 gate is authored (`PHASE_0_ACCEPTANCE_GATES.md` §P3 + the ISSUE_1330 Sprint-31 refresh): PR24 control — the dual-consistent redefinition must reach **MS-1 at omega 191.7346 on `/tmp` BEFORE the src change** (the Day-11 price-pin reaches 191.735 but MS-4; the drop-row orphans a dual → 299); the S1∧S2∧S3 detector flags camcge only (S3 false-positive guard); REPLAN to the per-model-numéraire fallback if `/tmp` can't reach MS-1.
 
 ---
 
@@ -619,7 +625,12 @@ grep -rn "_is_blowup_dynamic_subset_equation" src/ad/index_mapping.py
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (gate layer) — the O(constraints) tractability gate is authored; fix-surface pinned by Task 9
+**Verified by:** Task 6 (Phase-0 Acceptance Gates)
+**Date:** 2026-07-09
+**Findings:** The P4 Phase-0 gate is authored (`PHASE_0_ACCEPTANCE_GATES.md` §P4 + the ISSUE_1385 Sprint-31 refresh): the symbolic re-emit must be **O(constraints), not O(instances)** — sarf has **1,152** Cartesian instances, and the re-emit must differentiate each short-circuited body once parametrically in `(g,t,m,n)`, matching the banked 6-guarded-term `stat_task` derivation with **no set-name-literal multiplier indices** (the Sprint-26-Day-4 `nu_slack("srn")` failure mode), landing the re-emit + cross-terms atomically. **PROCEED gate:** time `sarf_mcp.gms` against the translate budget (sub-timeout) + verify `stat_task` vs the banked derivation + byte-stable golden. **REPLAN:** timeout re-trigger → re-scope.
+**Evidence:** `PHASE_0_ACCEPTANCE_GATES.md` §P4; `ISSUE_1385` Phase-0 refresh.
+**Decision:** the gate is written; the **fix-surface Day-0 trace** (`src/ad/index_mapping.py` 2-D `_is_blowup_dynamic_subset_equation` extension + `src/kkt/stationarity.py` parametric `stat_task` builder) is pinned by **Task 9** (PR24).
 
 ---
 
@@ -725,7 +736,12 @@ Control experiment: patch hhfair's cold `stat_u` with the ν_objective reduction
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (gate layer) — the ν_objective control-before-src gate is authored; sign flip BANNED; fix-surface pinned by Task 9
+**Verified by:** Task 6 (Phase-0 Acceptance Gates)
+**Date:** 2026-07-09
+**Findings:** The P5 Phase-0 gate is authored (`PHASE_0_ACCEPTANCE_GATES.md` §P5 + the ISSUE_1236 Sprint-31 refresh): the objective-gradient reduction **through the objective-defining-equation multiplier (ν_objective)** must reach the **NLP optimum on hhfair** in a `/tmp` control experiment **BEFORE** the objective-gradient `src/` change (PR24/PR27). **The sign flip is BANNED** — control-refuted three times in Sprint 30 (hhfair 72.147 → 22.144, worse, away from the NLP ref 87.159). **PROCEED gate:** the control experiment reaches the NLP optimum → then convert the CGE cluster to Case-a. **REPLAN:** genuine Case-c → documented non-convexity, no src change.
+**Evidence:** `PHASE_0_ACCEPTANCE_GATES.md` §P5; `ISSUE_1236` Phase-0 refresh; the Sprint-30 sign-flip refutation.
+**Decision:** the gate is written (control-before-implement, sign flip banned); the **fix-surface Day-0 trace** (the ν_objective reduction in `src/kkt/stationarity.py` / `src/ad/gradient.py`, NOT the sign flip) + the control experiment are run by **Task 9** (PR24).
 
 ---
 
@@ -900,7 +916,12 @@ Run the harness at rocket's NLP point; confirm Case-c (clean emit):
 Development team (KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (gate layer) — the PR27 residual-clean-before-forcing gate is authored; lever set pinned by Task 9
+**Verified by:** Task 6 (Phase-0 Acceptance Gates)
+**Date:** 2026-07-09
+**Findings:** The P6 Phase-0 gate is authored (`PHASE_0_ACCEPTANCE_GATES.md` §P6 + the ISSUE_1462 Sprint-31 refresh): **re-confirm the emit residual is clean at the NLP point (Case-c) BEFORE any forcing attempt** (PR27) — this keeps rocket a *forcing* problem, not a latent emit bug (a Case-b residual would mean fix the emit first). **PROCEED gate:** Case-c confirmed → exhaust the remaining emittable-GAMS levers (the `1/ht²`/`1/m²` division-by-variable Jacobian reformulation; scaled/relaxed continuation via the landed `--force` scaffold). **REPLAN:** no lever crosses (INFES 477→382 best, intrinsic non-convergence) → the finalized PATH-consultation input for the renumbered Sprint 32.
+**Evidence:** `PHASE_0_ACCEPTANCE_GATES.md` §P6; `ISSUE_1462` Phase-0 refresh; the Sprint-30 forcing survey (`NONCONVEX_FORCING_SURVEY.md` §4).
+**Decision:** the gate is written (residual-clean-before-forcing); the **lever exhaustion + the PATH-consultation-input draft** are run by **Task 9**.
 
 ---
 
