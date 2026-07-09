@@ -481,7 +481,7 @@ grep -oiE "irscge|lrgcge|moncge|stdcge" docs/planning/EPIC_4/SPRINT_31/CAMCGE_DU
 - [x] The dual-consistent multiplier redefinition (Walras' law) is designed, replacing the naive dual-breaking drop-row
 - [x] The omega 191.735 target (price-pin) + the naive-drop omega-299 / MS-4 failure are recorded as the control baseline
 - [x] The S1∧S2∧S3 degeneracy detector + the irscge/lrgcge/moncge/stdcge false-positive guard (S3 = cold-MCP-singular) are specified
-- [x] The prototype-on-`/tmp`-first plan (reach MS 1 at 191.7346 before the src change) is required
+- [x] The prototype-on-`/tmp`-first plan (reach MS-1 at 191.7346 before the src change) is required
 - [x] The per-model-numéraire-declaration fallback + Epic-5 scoping are named
 - [x] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
 - [x] CHANGELOG updated
