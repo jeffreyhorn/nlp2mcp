@@ -7,13 +7,13 @@
 
 ---
 
-## 0. Executive summary
+## Executive summary
 
 Sprint 31's carryforwards are the tracks Sprint 30 explicitly REPLAN'd *because* they proved to need foundational (P1 IR plumbing), general-alias-AD (P2 #1111/#1112), failed-architecture-rebuild (P4 #1385), or refuted-hypothesis-re-diagnosis (P5 obj-grad) work. This assessment applies the PR16 hypothesis-validation discipline to the **four deepest REPLAN-prone tracks (P1, P2, P4, P5)**: each gets a **single-model / control-experiment validation** (measurable by the Day-5 checkpoint), an **explicit Sprint-32 REPLAN exit**, and a **budget-reallocation target** if it stalls. (P3 camcge + P6 rocket are also REPLAN-prone but are gated by Task 6 + designed by Task 5 / the Sprint-30 forcing survey; they appear in the KPI projection.)
 
 **The decisive mitigation (Sprint-30 §3 lesson):** each track now carries a **control-verified recipe or a precisely-pinned root cause** — polygon's 4-term fix warm-matches 0.780 (Task 4 re-confirmed on the current tree); the head offset is a favorable field-addition, not a normalize rewrite (Task 3); camcge's price-pin gives omega 191.735 and the dual-flaw is pinned (Task 5); hhfair's sign flip is *refuted* so the ν_objective reduction is the named target (Task 6 gate). Sprint 31 implements against specifications, not open questions — so REPLAN risk is **bounded**, and every REPLAN hands cleanly to a Sprint-32 filing rather than a dead end.
 
-**The honest KPI projection (Sprint-30 §3 lesson 3, binding):** treat the genuine-floor ramp (→ ≥73) as **conditional** on the #1111/#1112 core [P2] + the dual-consistent CGE [P3] + the obj-grad reduction [P5], **NOT as independent +1s**. **Solve ≥109 (needs mine [P1] + camcge [P3]) is the most REPLAN-sensitive KPI.** (§5.)
+**The honest KPI projection (Sprint-30 §3 lesson 3, binding):** treat the genuine-floor ramp (→ ≥73) as **conditional** on the #1111/#1112 core [P2] + the dual-consistent CGE [P3] + the obj-grad reduction [P5], **NOT as independent +1s**. **Solve ≥109 (needs mine [P1] + camcge [P3]) is the most REPLAN-sensitive KPI.** (See the "Honest KPI projection" section below.)
 
 ---
 
@@ -93,7 +93,7 @@ Sprint 31's carryforwards are the tracks Sprint 30 explicitly REPLAN'd *because*
 
 ---
 
-## 4. Budget-at-Risk tally (feeds Task 10's schedule lower bound + fallback ordering)
+## Budget-at-Risk tally (feeds Task 10's schedule lower bound + fallback ordering)
 
 | Track | Priority | Budget at risk | At-risk condition | Firm part (lands regardless) | Prior of REPLAN |
 |---|---|---|---|---|---|
@@ -105,7 +105,7 @@ Sprint 31's carryforwards are the tracks Sprint 30 explicitly REPLAN'd *because*
 
 ---
 
-## 5. Honest KPI projection (which KPI survives each single-track REPLAN)
+## Honest KPI projection (which KPI survives each single-track REPLAN)
 
 **Solve 107 → ≥ 109** rests on **mine [P1] + camcge [P3]** (rocket [P6] is a conditional third → the Sprint-32 PATH-consultation input on the evidence). This is the **most REPLAN-sensitive KPI**:
 
