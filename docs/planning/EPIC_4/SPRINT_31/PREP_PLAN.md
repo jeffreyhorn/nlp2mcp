@@ -490,9 +490,10 @@ grep -oiE "irscge|lrgcge|moncge|stdcge" docs/planning/EPIC_4/SPRINT_31/CAMCGE_DU
 
 ## Task 6: Refresh + Author Phase 0 Acceptance Gates for the Sprint-31 Tracks (PR20 + PR24 + PR27)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
-**Estimated Time:** 4–6 hours
+**Estimated Time:** 4–6 hours (actual: ~3.5h)
+**Completed:** 2026-07-09
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1, 3, 4, 5
@@ -525,11 +526,11 @@ Sprint 30 refuted *five* banked diagnoses via the Phase-0 gate before any high-b
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_31/PHASE_0_ACCEPTANCE_GATES.md` (the consolidated per-track P1–P6 PROCEED/REPLAN gates + the standing PR24/PR27 control-experiment discipline + the summary table). Added a `> **🔄 Sprint-31 refresh (Prep Task 6)**` block to each of the six src-touching ISSUE docs' `## Phase 0: Acceptance Gate` sections (ISSUE_{1443,1143,1330,1385,1236,1462}). Updated `KNOWN_UNKNOWNS.md` — 4.1/5.1/6.2 → ✅ VERIFIED (gate layer) + gate-layer notes on 1.2/2.2/3.1. CHANGELOG entry.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-09).** Every emit-touching Sprint-31 priority (P1–P6) has a written PROCEED/REPLAN gate consolidated in `PHASE_0_ACCEPTANCE_GATES.md` + refreshed in its per-issue Phase-0 section (all six keep the 4 required `###` subsections per CONTRIBUTING PR20). Each gate frames its fix-surface as a Day-0 hypothesis (PR24) + cites `kkt_residual.py` (PR27): **P1** the round-trip fixture green before the emit change → cold-INFES histogram (REPLAN on a 4th site); **P2** the 4-term recipe re-confirmed + #1110 orthogonality (`shape8` = completion gate, REPLAN to the #1111/#1112 filing); **P3** the dual-consistent prototype to MS-1 at omega 191.7346 on `/tmp` **before** src + the S1∧S2∧S3 detector (per-model-numéraire fallback); **P4** the O(constraints) emit timed vs the translate budget (REPLAN on timeout); **P5** the ν_objective control experiment before src with **the sign flip BANNED** (refuted 3×; REPLAN to a Case-c finding); **P6** the residual-clean-at-NLP-point (Case-c) rule before forcing (REPLAN to the PATH-consultation input). The control-experiment-before-implement discipline (which refuted five Sprint-30 hypotheses) + the "check the dual side" lesson are the standing rules. Docs-only (gate doc + ISSUE Phase-0 refreshes; no `src/`).
 
 ### Verification
 
@@ -557,14 +558,14 @@ done
 
 ### Acceptance Criteria
 
-- [ ] PHASE_0_ACCEPTANCE_GATES.md has a written PROCEED/REPLAN gate for each of P1–P6
-- [ ] The P1 gate requires the IR round-trip reproduction green before the emit change
-- [ ] The P3 gate requires the dual-consistent prototype to reach MS 1 at 191.735 on `/tmp` before the src change (PR24)
-- [ ] The P5 gate bans the sign flip and requires the ν_objective control experiment before the src change (PR24/PR27)
-- [ ] The P4 gate requires O(constraints) emit timed against the translate budget
-- [ ] Each src-touching ISSUE doc has a refreshed `## Phase 0: Acceptance Gate` section
-- [ ] Unknowns 1.2, 2.2, 3.1, 4.1, 5.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
-- [ ] CHANGELOG updated
+- [x] PHASE_0_ACCEPTANCE_GATES.md has a written PROCEED/REPLAN gate for each of P1–P6
+- [x] The P1 gate requires the IR round-trip reproduction green before the emit change
+- [x] The P3 gate requires the dual-consistent prototype to reach MS-1 at 191.7346 on `/tmp` before the src change (PR24)
+- [x] The P5 gate bans the sign flip and requires the ν_objective control experiment before the src change (PR24/PR27)
+- [x] The P4 gate requires O(constraints) emit timed against the translate budget
+- [x] Each src-touching ISSUE doc has a refreshed `## Phase 0: Acceptance Gate` section (all 6 keep the 4 required subsections)
+- [x] Unknowns 1.2, 2.2, 3.1, 4.1, 5.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] CHANGELOG updated
 
 ---
 
