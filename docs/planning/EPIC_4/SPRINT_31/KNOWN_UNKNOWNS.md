@@ -945,7 +945,14 @@ print('solved', sum(1 for v in d.values() if v.get('solve_status')=='solved'))"
 Development team (metrics/planning)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — genuine floor 70 reproduced from first principles; footnote-⁸ ramp aligns
+**Verified by:** Task 2 (Day-0 Baseline + Genuine-Floor Re-Baseline)
+**Date:** 2026-07-08
+**Findings:** The canonical-scope recompute from the committed DB (`get_candidate_models`, 142 models) reproduces the **Sprint 30 final headline exactly** — Parse 142 · Translate 135 · **Solve 107** (63 `model_optimal` + 44 `model_optimal_presolve`) · **Match 92** · Mismatch 9 · model_infeasible 7 · path_syntax_error 8 · path_solve_terminated 4 · path_solve_license 9 · Tests 4,997. The PR25 genuine-vs-methodology partition reproduces the **genuine floor 70** (Sprint-28 genuine 68 **+1** S29 maxmin/catmix **+1** S30 robert cold obj-grad) with **methodology 22** (the Sprint-30 set minus robert, now genuine). The footnote-⁸ ramp aligns: **S30 actual 70 → S31 ≥ 73 → S32 ≥ 73 → S33 ≥ 75 → S34 ≥ 78** on the re-baselined ≥ 64% as-measured Match line. The genuine-floor → ≥ 73 conversion map (polygon P2 +1, hhfair P5 +1, CGE cluster irscge/lrgcge/moncge P5 +1–3, mine P1 +0–1) has nominal headroom, but the Sprint-30 retrospective (§3 lesson 3) binds it as **conditional** on the #1111/#1112 core + the dual-consistent CGE + the obj-grad reduction — NOT independent +1s. himmel16 is documented non-convex (not a converter).
+**Evidence:** `docs/planning/EPIC_4/SPRINT_31/BASELINE_METRICS.md` §1–§2 (recompute + partition); the DB is byte-unchanged since the Sprint 28 close (`2717d542`) because both S29 and S30 netted no as-measured bucket change.
+**Decision:** Day-0 = Sprint 30 final (Solve 107 / Match 92 / genuine floor 70 / model_infeasible 7 / Translate 135 / Tests 4,997), reused unchanged (no `src/`/`scripts/` drift since the S30 close `ea4191dc`; no fresh retest). The genuine-floor ramp is measured against this floor-70 anchor, conditionally per the Task-7 REPLAN assessment.
+
+**Day-0-bucket aspect of 1.3 / 2.1 / 3.1 / 5.1 / 6.1 (Task 2 contribution; their fix-surface aspect is verified by Tasks 3/4/5/9):** the per-Sprint-31-target Day-0 buckets are pinned (BASELINE_METRICS.md §3) — **mine** `model_infeasible` (16747.072, P1, 1.3), **polygon** `model_optimal_presolve`+match (0.7797, P2, 2.1), **camcge** `model_infeasible` (0.0, P3, 3.1), **hhfair** `model_optimal`+**mismatch** (72.147, P5, 5.1), **rocket** `model_infeasible` (1.137, P6, 6.1) — each still in the bucket its Sprint-31 track targets.
 
 ---
 

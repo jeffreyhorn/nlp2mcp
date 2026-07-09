@@ -177,9 +177,10 @@ grep -oE "#(1443|1462|1236|1385|1146|1143|1330|1111|1112|1110)" docs/planning/EP
 
 ## Task 2: Sprint 30 → Sprint 31 Day-0 Baseline + Genuine-Floor Re-Baseline (PR15 + PR17 + PR25)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
-**Estimated Time:** 3–4 hours
+**Estimated Time:** 3–4 hours (actual: ~2h)
+**Completed:** 2026-07-08
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None (parallelizable with Task 1)
@@ -209,11 +210,11 @@ Every Sprint-31 KPI target is relative to Day 0 (Solve 107 → ≥109; genuine f
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_31/BASELINE_METRICS.md` (Day-0 = Sprint 30 final; canonical bucket recompute; genuine-vs-methodology partition; per-Sprint-31-target bucket provenance + PR25 projection labels; checkpoint anchor). Updated `KNOWN_UNKNOWNS.md` Unknown 7.2 → ✅ VERIFIED (+ the Day-0-bucket aspect of 1.3/2.1/3.1/5.1/6.1). CHANGELOG entry.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-08).** Day-0 = Sprint 30 final, reused unchanged — no `src/`/`scripts/` drift since the S30 close (`ea4191dc`), so no fresh ~4 h retest. The canonical-scope recompute (`get_candidate_models`, 142 models) reproduces the Sprint 30 final headline exactly: **Parse 142 · Translate 135 · Solve 107** (63 `model_optimal` + 44 `model_optimal_presolve`) **· Match 92 · Mismatch 9 · model_infeasible 7 · path_syntax_error 8 · path_solve_terminated 4 · path_solve_license 9 · Tests 4,997.** The PR25 partition reproduces the **genuine floor 70** (methodology 22) from first principles, and the footnote-⁸ ramp aligns (S30 70 → S31 ≥ 73 → S32 ≥ 73 → S33 ≥ 75 → S34 ≥ 78). **Finding:** the committed DB is byte-unchanged since the *Sprint 28* close (`2717d542`) — both S29 and S30 netted no as-measured bucket change (all headline movers REPLAN'd; the firm wins were genuine-floor/robustness). The genuine-floor → ≥ 73 conversion map (polygon P2 / hhfair+CGE P5 / mine P1) is captured but flagged **conditional** per the Sprint-30 retrospective §3 (not independent +1s). himmel16 recorded as non-convex (not a converter). The `--resolve-changed --since-commit ea4191dc` checkpoint anchor selects **0 models at Day 0** (clean baseline; no changed goldens). Docs-only (no `src/`).
 
 ### Verification
 
@@ -240,13 +241,13 @@ grep -oiE "mine|polygon|camcge|sarf|hhfair|rocket" docs/planning/EPIC_4/SPRINT_3
 
 ### Acceptance Criteria
 
-- [ ] BASELINE_METRICS.md records Day-0 = Sprint 30 final (Solve 107 / Match 92 / genuine floor 70 / model_infeasible 7 / Translate 135 / Tests 4,997)
-- [ ] The genuine-vs-methodology partition reproduces the genuine floor 70 from first principles
-- [ ] The 7 model_infeasible + path_* members enumerated by name
-- [ ] Each Sprint-31 priority's Day-0 target model + current bucket listed (mine, polygon, camcge, sarf, hhfair/CGE, rocket)
-- [ ] The `--resolve-changed` checkpoint anchor confirmed
-- [ ] Unknowns 7.2 verified and updated in KNOWN_UNKNOWNS.md
-- [ ] CHANGELOG updated
+- [x] BASELINE_METRICS.md records Day-0 = Sprint 30 final (Solve 107 / Match 92 / genuine floor 70 / model_infeasible 7 / Translate 135 / Tests 4,997)
+- [x] The genuine-vs-methodology partition reproduces the genuine floor 70 from first principles
+- [x] The 7 model_infeasible + path_* members enumerated by name
+- [x] Each Sprint-31 priority's Day-0 target model + current bucket listed (mine, polygon, camcge, sarf, hhfair/CGE, rocket)
+- [x] The `--resolve-changed` checkpoint anchor confirmed (0 models at Day 0 — clean baseline)
+- [x] Unknowns 7.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] CHANGELOG updated
 
 ---
 
