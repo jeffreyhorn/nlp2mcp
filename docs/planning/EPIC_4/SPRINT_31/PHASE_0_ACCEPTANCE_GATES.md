@@ -52,7 +52,7 @@ Sprint 30 **refuted five banked diagnoses** via control experiments *before* any
 - **Disposition:** PROCEED (the dedicated builder-pipeline-aware symbolic-emit workstream).
 - **PROCEED precondition (tractability gate):** the symbolic re-emit must be **O(constraints), not O(instances)** — sarf has **1,152** Cartesian instances (`tbal(g,t)$taskposs`, `equipb1/equipb2`), and the whole point of the Option-1 short-circuit was to avoid enumerating them. Time `sarf_mcp.gms` against the translate budget (must stay well under the >180s Option-1 timeout); the re-emitted `stat_task` must match the **banked 6-guarded-term hand-derivation** with **no set-name-literal multiplier indices** (the Sprint-26-Day-4 `nu_slack("srn")` failure mode); the re-emit + `J_gᵀ·lam` cross-terms land **atomically** (a re-emit without cross-terms = an inconsistent MCP); the regenerated golden is byte-stable.
 - **REPLAN exit:** the parametric re-emit **re-triggers the translate timeout** (O(instances) after all) → re-scope the parametric emit (documented re-scoping); +Translate deferred.
-- **Verify:** `time .venv/bin/python -m src.cli data/gamslib/raw/sarf.gms --emit-mcp -o /tmp/sarf_mcp.gms` (O(constraints) `stat_task` row count, sub-timeout).
+- **Verify:** `time .venv/bin/python -m src.cli data/gamslib/raw/sarf.gms -o /tmp/sarf_mcp.gms` (O(constraints) `stat_task` row count, sub-timeout).
 - **Unknowns:** 4.1 (the 2-D `_is_blowup_dynamic_subset_equation` extension + the parametric `stat_task` builder, no set-name literals), 4.2 (O(constraints) budget), 4.3 (atomicity). **Fix surface pinned by Task 9** (`src/ad/index_mapping.py` + `src/kkt/stationarity.py`, Day-0 hypothesis).
 
 ### P5 — cold-convex obj-grad residue (hhfair `stat_u` / CGE `stat_xp`, #1236)

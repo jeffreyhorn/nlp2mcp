@@ -658,7 +658,7 @@ The symbolic runtime-guard re-emit differentiates each short-circuited body **on
 ### How to Verify
 Time the sarf emit; confirm O(constraints) row count + sub-timeout translate:
 ```bash
-time .venv/bin/python -m src.cli data/gamslib/raw/sarf.gms --emit-mcp -o /tmp/sarf_mcp.gms 2>&1 | tail
+time .venv/bin/python -m src.cli data/gamslib/raw/sarf.gms -o /tmp/sarf_mcp.gms 2>&1 | tail
 grep -c "^stat_task" /tmp/sarf_mcp.gms
 # Expect: O(constraints) stat_task rows, translate well under the timeout budget
 ```
