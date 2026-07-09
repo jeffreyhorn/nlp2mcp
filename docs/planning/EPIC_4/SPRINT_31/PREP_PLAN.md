@@ -412,9 +412,10 @@ grep -oiE "#1110|himmel16|non-convex" docs/planning/EPIC_4/SPRINT_31/OFFSET_ALIA
 
 ## Task 5: camcge Dual-Consistent Walras Transform Design + Degeneracy-Detector Scope (Priority 3)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
-**Estimated Time:** 4–5 hours
+**Estimated Time:** 4–5 hours (actual: ~4h)
+**Completed:** 2026-07-08
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
@@ -445,11 +446,11 @@ Sprint 30 Day 11 delivered the decisive camcge lesson (retro §3 lesson 2): the 
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_31/CAMCGE_DUAL_CONSISTENT_DESIGN.md` (the dual-consistent multiplier redefinition, the S1∧S2∧S3 detector + false-positive guard, the prototype-on-`/tmp`-first plan + the Walras-identity verification, the automatic-rule + per-model-numéraire fallback). Updated `KNOWN_UNKNOWNS.md` Unknowns 3.1–3.4 → ✅ VERIFIED. CHANGELOG entry.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-08).** The Day-11 refinement is the crux (checking the dual side, the Sprint-30 lesson): the price-pin reaches the correct **omega 191.735** but stays **MS-4** (the dual market-clearing block is still rank-deficient), and the naive drop-row **orphans a needed dual** (omega 299, broken) — a read-only emit confirms `nu_equil(i)` in 7 goods-price stationarity rows and `nu_lmequil(lc)` in 3 wage rows. **The fix (design):** keep every market-clearing row (no orphaned dual) + add a consumption-weighted numéraire (camcge has no `cpi`, so "fix cpi=1" is instantiated on `cles(i)`/`pd0(i)`) + **redefine the redundant market's dual via Walras' law** so the dual block is full-rank → MS-1 (Unknown 3.1). The **S1∧S2∧S3 detector** flags camcge-only with **S3 (cold-MCP-singular-at-iter-0) as the false-positive guard** — a well-posed model with S1∧S2 but a determined closure fails S3 (Unknown 3.2). Selection is automatic for camcge (consumption-weighted numéraire; redundant row = the numéraire good's market), with a per-model-declaration Epic-5 fallback (Unknown 3.3). Walras' law holds at machine precision at the NLP optimum (`gdp_check ≈ −4.83e-10`) ⇒ the redundant dual is a clean linear combination (exact recovery, Unknown 3.4). The `/tmp` prototype to MS-1 at 191.7346 is the pre-`src/` control gate; REPLAN to the per-model-numéraire fallback if it can't reach MS-1. Docs/design-only (read-only emit + banked Day-11 `/tmp`; no `src/`).
 
 ### Verification
 
@@ -477,13 +478,13 @@ grep -oiE "irscge|lrgcge|moncge|stdcge" docs/planning/EPIC_4/SPRINT_31/CAMCGE_DU
 
 ### Acceptance Criteria
 
-- [ ] The dual-consistent multiplier redefinition (Walras' law) is designed, replacing the naive dual-breaking drop-row
-- [ ] The omega 191.735 target + the naive-drop MS-4 failure are recorded as the control baseline
-- [ ] The S1∧S2∧S3 degeneracy detector + the irscge/lrgcge/moncge/stdcge false-positive guard are specified
-- [ ] The prototype-on-`/tmp`-first plan (reach MS 1 before the src change) is required
-- [ ] The per-model-numéraire-declaration fallback + Epic-5 scoping are named
-- [ ] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
-- [ ] CHANGELOG updated
+- [x] The dual-consistent multiplier redefinition (Walras' law) is designed, replacing the naive dual-breaking drop-row
+- [x] The omega 191.735 target (price-pin) + the naive-drop omega-299 / MS-4 failure are recorded as the control baseline
+- [x] The S1∧S2∧S3 degeneracy detector + the irscge/lrgcge/moncge/stdcge false-positive guard (S3 = cold-MCP-singular) are specified
+- [x] The prototype-on-`/tmp`-first plan (reach MS-1 at 191.7346 before the src change) is required
+- [x] The per-model-numéraire-declaration fallback + Epic-5 scoping are named
+- [x] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] CHANGELOG updated
 
 ---
 
