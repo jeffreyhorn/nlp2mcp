@@ -645,13 +645,14 @@ grep -qiE "Solve.*109|genuine floor.*73" docs/planning/EPIC_4/SPRINT_31/REPLAN_R
 
 ## Task 8: Reusable-Tooling Readiness Audit for the Sprint-31 Model Classes
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Medium
-**Estimated Time:** 3–4 hours
+**Estimated Time:** 3–4 hours (actual: ~3h)
+**Completed:** 2026-07-09
 **Deadline:** Before Sprint 31 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
-**Unknowns Verified:** 4.2, 6.1, 7.1, 7.3
+**Unknowns Verified:** 4.2 (tooling layer), 6.1, 7.1, 7.3
 
 ### Objective
 
@@ -679,11 +680,11 @@ The Sprint-31 estimate depends on reusing (not rebuilding) the KKT-residual harn
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_31/TOOLING_READINESS_AUDIT.md` (per-tool coverage confirmation from read-only tool runs + the minimal-extension list). Updated `KNOWN_UNKNOWNS.md` — 6.1/7.1/7.3 → ✅ VERIFIED + a Task-8 tooling-layer note on 4.2 (kept INCOMPLETE at the fix-outcome layer). CHANGELOG entry.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-09).** All Sprint-28–30 tooling **covers the Sprint-31 model classes** (audit from read-only runs): the **KKT-residual harness** scores the P1/P2/P3/P5 shapes (mine CASE_B 1.33, polygon CASE_B 0.492 re-run this sprint, camcge CASE_B+singular, hhfair CASE_B `stat_u`; slow-NLP → the standing `--gdx`/`--no-cold-start` flags); the **`--force` scaffold** takes the rocket homotopy/multistart/optfile levers + emits the PATH optfile that feeds the PATH-consultation input (6.1); the **AD property catalog** has `shape8` as the strict-xfail P2 gate + `shape9` (robert), with the **head-offset round-trip fixture** (Task 3 §4) the one clean P7 add — a *parse*-round-trip fixture, distinct from the emit-shape `crossterm_shapes/` catalog (7.1); the **golden-staleness gate + `--resolve-changed`** git-diff `data/gamslib/mcp/` (anchor `ea4191dc`) and catch the mine/polygon/camcge/hhfair emit changes (7.3); the **presolve-divergence detector** hard-fails only on `$onMultiR` corruption, so the head-offset/Walras MCP changes soft-classify (no false hard-fail). **Minimal-extension list: (1)** the head-offset property fixture (P7, one file); **(2)** the sarf golden-sequencing note (`--resolve-changed` can't select sarf until the P4 emit first commits `sarf_mcp.gms` — a read-only run confirmed sarf's emit exceeds 2 min / no golden today); **(3)** the slow-NLP `--gdx` harness caveat (operational). **No blocking tool gap.** Verified Unknowns 6.1/7.1/7.3; 4.2 tooling-layer confirmed (emit-timing ready; the empirical O(constraints) result is Task 9's). Audit-only (read-only tool runs; no `src/`).
 
 ### Verification
 
@@ -708,11 +709,11 @@ grep -n "shape8_offset_alias_successor\|shape9_objgrad_subset_boundary" tests/in
 
 ### Acceptance Criteria
 
-- [ ] The KKT-residual harness, presolve-divergence detector, golden-staleness gate, `--resolve-changed` re-solve, and `--force` scaffold are each confirmed for their Sprint-31 touchpoints
-- [ ] The `shape8` P2 completion gate + the new head-offset P7 fixture are scoped
-- [ ] Any minimal tooling extension is listed with the priority it blocks
-- [ ] Unknowns 4.2, 6.1, 7.1, 7.3 verified and updated in KNOWN_UNKNOWNS.md
-- [ ] CHANGELOG updated
+- [x] The KKT-residual harness, presolve-divergence detector, golden-staleness gate, `--resolve-changed` re-solve, and `--force` scaffold are each confirmed for their Sprint-31 touchpoints
+- [x] The `shape8` P2 completion gate + the new head-offset P7 fixture are scoped
+- [x] Any minimal tooling extension is listed with the priority it blocks (head-offset fixture P7; sarf golden-sequencing P4; slow-NLP `--gdx` caveat)
+- [x] Unknowns 6.1, 7.1, 7.3 verified + 4.2 tooling-layer confirmed (empirical O(constraints) pending Task 9) in KNOWN_UNKNOWNS.md
+- [x] CHANGELOG updated
 
 ---
 
