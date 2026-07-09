@@ -526,7 +526,7 @@ Sprint 30 refuted *five* banked diagnoses via the Phase-0 gate before any high-b
 
 ### Changes
 
-Created `docs/planning/EPIC_4/SPRINT_31/PHASE_0_ACCEPTANCE_GATES.md` (the consolidated per-track P1–P6 PROCEED/REPLAN gates + the standing PR24/PR27 control-experiment discipline + the summary table). Added a `> **🔄 Sprint-31 refresh (Prep Task 6)**` block to each of the six src-touching ISSUE docs' `## Phase 0: Acceptance Gate` sections (ISSUE_{1443,1143,1330,1385,1236} + #1462). Updated `KNOWN_UNKNOWNS.md` — 4.1/5.1/6.2 → ✅ VERIFIED (gate layer) + gate-layer notes on 1.2/2.2/3.1. CHANGELOG entry.
+Created `docs/planning/EPIC_4/SPRINT_31/PHASE_0_ACCEPTANCE_GATES.md` (the consolidated per-track P1–P6 PROCEED/REPLAN gates + the standing PR24/PR27 control-experiment discipline + the summary table). Added a `> **🔄 Sprint-31 refresh (Prep Task 6)**` block to each of the six src-touching ISSUE docs' `## Phase 0: Acceptance Gate` sections (ISSUE_{1443,1143,1330,1385,1236,1462}). Updated `KNOWN_UNKNOWNS.md` — 4.1/5.1/6.2 → ✅ VERIFIED (gate layer) + gate-layer notes on 1.2/2.2/3.1. CHANGELOG entry.
 
 ### Result
 
