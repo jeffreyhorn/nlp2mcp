@@ -10,12 +10,15 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
 import pytest
 
 from src.emit.emit_gams import head_offset_marginal_index_map
 from src.ir.ast import Const, IndexOffset
 from src.ir.symbols import EquationDef, Rel
+
+_MINE_SRC = Path(__file__).resolve().parents[3] / "data" / "gamslib" / "raw" / "mine.gms"
 
 
 def _parse_file(path: str):
@@ -89,8 +92,10 @@ def test_offset_base_is_quoted_like_non_offset_branch():
 @pytest.mark.unit
 def test_mine_pr_equation_from_parse():
     """End-to-end: the real parsed mine `pr` equation maps to (k,l+1,i,j)."""
-    m = _parse_file("data/gamslib/raw/mine.gms")
-    if "pr" not in m.equations:
+    # data/gamslib/raw/*.gms is gitignored / absent on some runners — skip
+    # (rather than error with FileNotFoundError) when the raw corpus is missing.
+    if not _MINE_SRC.exists():
         pytest.skip("mine.gms not available (raw corpus absent)")
+    m = _parse_file(str(_MINE_SRC))
     assert head_offset_marginal_index_map(m.equations["pr"]) == "(k,l+1,i,j)"
     assert head_offset_marginal_index_map(m.equations["def"]) is None
