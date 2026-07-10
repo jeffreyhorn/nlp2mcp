@@ -254,6 +254,12 @@ def build_complementarity_pairs(
             # for head offsets (pak conl/invl/invu) while dropping it for true
             # body offsets (kand dembalx with eps*sum(tree,y(t-1))).
             has_head_domain_offset=eq_def.has_head_domain_offset,
+            # Sprint 31 P1 Phase 1 (#1443): carry the per-position head offsets
+            # through the constraint-equation rebuild alongside the bool, so the
+            # Phase-2 shared helper can read the l+1 head + tail param offsets from
+            # this (the source) EquationDef. domain is unchanged here, so the tuple
+            # stays aligned.
+            head_domain_offsets=eq_def.head_domain_offsets,
         )
 
         # Check if this is a max constraint from reformulation

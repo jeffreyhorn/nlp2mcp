@@ -155,6 +155,33 @@ class EquationDef:
     # `comp_Constraints(m).. ...` which GAMS automatically restricts to members
     # of `m`). Falls back to `domain` for backward compat when not set.
     declaration_domain: tuple[str, ...] | None = None
+    # Sprint 31 P1 Phase 1 (#1443): the per-position domain head offset, aligned to
+    # `domain`. Element k is the IndexOffset for domain position k, or None if that
+    # position has no linear lead/lag. For `pr(k,l+1,i,j)`:
+    #   (None, IndexOffset('l', Const(1.0), False), None, None).
+    # Mirrors declaration_domain (#1327): the un-collapsed detail stored ALONGSIDE the
+    # collapsed `domain`, so the KKT/emit layer re-applies the base<->head correspondence
+    # instead of re-deriving it from the equation body. Circular (++/--) offsets stay
+    # excluded (as with has_head_domain_offset).
+    #
+    # Populated by the domain-equation parser path; scalar/no-domain equations and the
+    # derived KKT equations (comp_*/equality) leave it None. `None` (not `()`) therefore
+    # means "no head-offset detail plumbed" — consumers treat it as "no head offset". When
+    # it IS populated, __post_init__ derives `has_head_domain_offset` from it so the bool
+    # can never go stale (the single-source-of-truth invariant Phase-2 consumers rely on);
+    # when it is None the explicitly-passed bool is authoritative. The ~8 existing bool
+    # read sites keep working while new code reads this richer field.
+    head_domain_offsets: tuple[IndexOffset | None, ...] | None = None
+
+    def __post_init__(self) -> None:
+        # Sprint 31 P1 Phase 1 (#1443): keep has_head_domain_offset consistent with
+        # head_domain_offsets whenever the richer field is populated, so the two cannot
+        # drift no matter which constructor built this EquationDef. Constructions that
+        # leave head_domain_offsets=None keep the explicitly-passed bool (the derived
+        # KKT equations rely on that). This is a no-op for every current call site
+        # (the parser and the copy-through reconstructors already pass both consistently).
+        if self.head_domain_offsets is not None:
+            self.has_head_domain_offset = any(o is not None for o in self.head_domain_offsets)
 
 
 @dataclass
