@@ -78,10 +78,17 @@ def test_presolve_transfer_is_head_shifted_fixture():
 
 
 def test_cold_emit_has_no_presolve_transfer_fixture():
-    """The shift lives only in the presolve path — the cold emit has no transfer."""
+    """The dual transfer is presolve-only — the cold (non-presolve) emit must
+    contain NEITHER the shifted nor the base transfer (a shifted line leaking
+    into the cold emit would be a bug too)."""
     assert _FIXTURE.exists(), f"missing committed fixture: {_FIXTURE}"
     out = _emit_mcp_for(_FIXTURE, nlp_presolve=False)
-    assert "lam_pr.l" not in out or _BASE.search(out) is None
+    offending = [line for line in out.splitlines() if "lam_pr.l" in line and "abs(pr.m(" in line]
+    assert _SHIFTED.search(out) is None and _BASE.search(out) is None, (
+        "Cold (non-presolve) emit must not contain a `lam_pr.l = abs(pr.m(...))` "
+        "dual transfer (neither shifted (k,l+1,i,j) nor base (k,l,i,j)); found:\n"
+        + "\n".join(offending)
+    )
 
 
 # --- Real GAMSlib mine (skips when the raw model is absent) ------------------
