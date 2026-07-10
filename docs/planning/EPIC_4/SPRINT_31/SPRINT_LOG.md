@@ -8,7 +8,7 @@
 | 0 | Kickoff + Day-0 traces (PR24) + tractability probes (P1 round-trip / P3 `/tmp` prototype / P5 hhfair control) | — (baseline confirmed: Parse 142 · Translate 135 · Solve 107 · Match 92 · genuine 70; `DAY0_TRACES.md`) | ✅ DONE |
 | 1 | P1 Phase 1: head-offset IR plumbing (`EquationDef.head_domain_offsets` field addition) | — (round-trip fixture green; 5 head-offset models byte-identical to goldens — field inert) | ✅ DONE |
 | 2 | P1 Phase 2: shared 3-site helper (heaviest day) | — (helper `head_offset_marginal_index_map` wired to Site 2 dual-transfer; Sites 1/3 verified already-correct; blast radius 0) | ✅ DONE (WIP: Day-3 4th-site gate) |
-| 3 | P1 mine close-or-REPLAN (cold-INFES-by-direction gate) | — (target: mine → MS-1, +1 Solve; REPLAN on a 4th site) | 🔵 PENDING |
+| 3 | P1 mine close-or-REPLAN (cold-INFES-by-direction gate) | **0 (REPLAN → Sprint 32 — 4th bound-complementarity site confirmed; foundation landed Days 1–2)** | 🔴 REPLAN |
 | 4 | P2 offset-alias #1111/#1112 core (polygon): coupled objective + distance second-index | — (target: coupled fix lands, tightly gated) | 🔵 PENDING |
 | 5 | P2 finish (shape8 enable, warm-match 0.780) + Checkpoint 1 | — (target: polygon genuine floor +1; REPLAN on gate leak) | 🔵 PENDING |
 | 6 | P3 camcge dual-consistent Walras (start; `/tmp` prototype → src) | — (target: dual-consistent redefinition + S1∧S2∧S3 detector) | 🔵 PENDING |
@@ -37,6 +37,20 @@
 4. **The "4th site" (Day-3 gate).** Even with the shifted transfer, mine's presolve MCP is **still MS-5 (22058)** until the `x.fx(l,i,j)$(not d(l,i,j)) = 0` fixing is relaxed. Isolation: shifted-transfer + `x.up=inf` for all (non-`d` left free, bound via `comp_up_x`) → **MS-1 17500**; shifted-transfer + `x.up(d)=inf` only (non-`d` kept fixed) → **MS-5 22058**. So hard-fixing the inactive non-`d` instances to 0 makes the LCP infeasible even from the exact NLP KKT warm point. This is the bound-complementarity 4th site the design §6 flagged → **Day 3 close-or-REPLAN.**
 
 **Landed (Day 2):** the shared helper + Site-2 wiring; 5 unit + 3 integration tests (committed fixture `head_offset_ir_roundtrip.gms` is the always-run guard). **Blast radius zero** — all 13 committed `*_mcp_presolve.gms` goldens + all cold goldens byte-identical (Site 2 is presolve-only; only mine's uncommitted presolve emit changes). Quality gate green. **mine still `model_infeasible` — the +1 Solve is the Day-3 gate (relax/scope the non-`d` fixing, or REPLAN to Sprint-32 per §6).**
+
+## Day 3 — P1 mine close-or-REPLAN → **REPLAN to Sprint 32** (2026-07-10)
+
+**Branch** `planning/sprint31-day3-mine-close`. Docs/decision-only (no `src/` — the REPLAN means no mine fix lands; the IR plumbing + Site-2 helper already landed Days 1–2).
+
+**Decision: REPLAN mine → Sprint 32.** The PROCEED criterion (cold MS-1, all four k-directions → 0) is NOT met; a residual **4th bound-complementarity site** is confirmed — exactly the design §6 REPLAN exit.
+
+**Rigorous Day-3 re-verification (GAMS):**
+- **Cold MCP MS-5** (`stat_x`/`lam_pr` → 4.07e10); **presolve MCP MS-5** (omega 22058) even with the merged Site-2 head-shifted transfer.
+- **KKT-residual harness — CASE_B emit_bug** with the shifted transfer (verified via `extract_dual_transfer` that the harness reads `lam_pr.l(k,l,i,j)=abs(pr.m(k,l+1,i,j))`): `stat_x(3,1,1)` rel **2.37** / raw **3.2e4**, dual-transfer CONSISTENT. So **even with the correct head-shifted duals the stationarity does not balance at the NLP optimum** — the `piL_x`/`piU_x` bound multipliers satisfying `comp_lo_x`/`comp_up_x` don't reconcile with `stat_x` given the head-offset cross-terms (the 4th site).
+
+**⚠️ Day-2 measurement-error correction (integrity).** The Day-2 record ("emit already correct; warm-solves to MS-1 17500") was WRONG: those experiments set `x.up=inf` to relax the non-`d` `x.fx` fixing, which produces **34 "Unmatched variable not free or fixed" errors** (a variable paired with a vacuous conditioned `stat_x` MUST be fixed for MCP matching). The MCP solve never executed; the reported "17500/MS-1" was the **embedded `$include` LP**, not the MCP. Freeing non-`d` is structurally invalid → not an available fix. The Site-2 shift is still objectively correct (NLP stores `pr.m` at the `l+1` head label: `pr.m(se,4,1,1)=−7500` is the dual of the base-`l=3` constraint) and a genuine improvement — just **not sufficient**. Corrected in `ISSUE_1443` (top block) and the CHANGELOG.
+
+**Landed this sprint (P1, reusable, merged):** Phase-1 IR field `EquationDef.head_domain_offsets` (Day 1, PR #1526); the shared `head_offset_marginal_index_map` helper + Site-2 head-shifted dual transfer (Day 2, PR #1527). **Metric: mine stays `model_infeasible` (0 Solve/Match change).** Sprint-32 carryforward = the bound-complementarity / stat_x reconciliation (stationarity-consistent bound-multiplier derivation vs the `x.m` reduced-cost transfer). robert inherits the same 4th-site risk. **Freed ~10–14 h → P5 (CGE cluster) / P7** per Task 7.
 
 ## Sprint 31 — Final Summary (Day 13)
 
