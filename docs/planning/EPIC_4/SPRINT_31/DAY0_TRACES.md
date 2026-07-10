@@ -2,7 +2,7 @@
 
 **Day:** 0 (Kickoff)
 **Date:** 2026-07-09
-**Scope:** docs/trace-only — read-only parses/emits + the KKT-residual harness; the one committed artifact is `tests/fixtures/head_offset_ir_roundtrip.gms` (the P1 round-trip fixture, always-run test infra). No `src/` change.
+**Scope:** docs/trace-only — read-only parses/emits + the KKT-residual harness; the one committed artifact is `tests/fixtures/head_offset_ir_roundtrip.gms` (the P1 round-trip fixture — data only; the always-run test that exercises it is wired on Day 1 with the Phase-1 field addition, not yet in CI). No `src/` change.
 
 ---
 

@@ -14,6 +14,6 @@ Positive Variable x(l,i,j);
 Variable z;
 x.up(l,i,j) = 1;
 Equation pr(k,l+1,i,j), def;
-pr(k,l+1,i,j)$c(l,i,j)..  x(l,i+li(k),j+lj(k)) =g= x(l+1,i,j);
+pr(k,l+1,i,j)$(c(l,i,j) and ord(l) < card(l))..  x(l,i+li(k),j+lj(k)) =g= x(l+1,i,j);
 def..                     z =e= sum((l,i,j), x(l,i,j));
 Model m /all/;  Solve m maximizing z using lp;
