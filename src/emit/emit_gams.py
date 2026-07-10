@@ -1384,7 +1384,18 @@ def head_offset_marginal_index_map(eq_def: EquationDef) -> str | None:
         return None
     parts: list[str] = []
     for base, off in zip(eq_def.domain, offs, strict=True):  # aligned 1:1 (Phase 1)
-        parts.append(_quote_symbol(base) if off is None else off.to_gams_string())
+        if off is None:
+            parts.append(_quote_symbol(base))
+        else:
+            # Route the base identifier through _quote_symbol (quoting +
+            # injection-safety), consistent with the non-offset branch, then
+            # re-attach the lead/lag suffix. `to_gams_string()` always renders as
+            # `<base><suffix>` (e.g. `l+1`), so the suffix is everything past the
+            # base; the offset amount itself is an integer/index and needs no
+            # quoting. (A lead/lag only applies to a plain set index, so the
+            # quoted form is exercised for validation, not semantics.)
+            suffix = off.to_gams_string()[len(off.base) :]
+            parts.append(f"{_quote_symbol(base)}{suffix}")
     return f"({','.join(parts)})"
 
 

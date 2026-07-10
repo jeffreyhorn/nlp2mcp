@@ -73,6 +73,20 @@ def test_scalar_equation_returns_none():
 
 
 @pytest.mark.unit
+def test_offset_base_is_quoted_like_non_offset_branch():
+    """A base that requires quoting is routed through `_quote_symbol` in the
+    offset branch too (quoting + injection-safety), not emitted raw."""
+    from src.emit.emit_gams import _quote_symbol
+
+    eq = _eq(
+        ("a-b",),
+        (IndexOffset(base="a-b", offset=Const(1.0), circular=False),),
+    )
+    quoted = _quote_symbol("a-b")  # e.g. 'a-b'
+    assert head_offset_marginal_index_map(eq) == f"({quoted}+1)"
+
+
+@pytest.mark.unit
 def test_mine_pr_equation_from_parse():
     """End-to-end: the real parsed mine `pr` equation maps to (k,l+1,i,j)."""
     m = _parse_file("data/gamslib/raw/mine.gms")
