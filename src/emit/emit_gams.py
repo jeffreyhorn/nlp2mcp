@@ -1351,6 +1351,43 @@ def _emit_presolve_fx_warmstart(
     return lines
 
 
+def head_offset_marginal_index_map(eq_def: EquationDef) -> str | None:
+    """Shared head-offset index map: the shifted equation-marginal read indices.
+
+    Sprint 31 P1 Phase 2 (#1443). For a head-domain-offset inequality such as
+    ``pr(k,l+1,i,j)$c(l,i,j)..``, GAMS labels the generated equation instance —
+    and therefore stores its marginal ``pr.m`` — at the SHIFTED head label
+    ``(k, l+1, i, j)``, while the paired MCP multiplier ``lam_pr`` is declared and
+    complemented at the collapsed BASE domain ``(k, l, i, j)`` (``comp_pr`` is
+    emitted at base ``l`` — see ``complementarity.py``). So the ``--nlp-presolve``
+    warm-start dual transfer must read ``pr.m`` at the shifted head label, not the
+    base; reading the base initialises ``lam_pr`` from the wrong instance and
+    leaves the warm MCP off the NLP KKT point (mine's ``stat_x`` residual — the
+    Sprint-30/31 diagnosis; the warm MCP reaches the NLP optimum once the read is
+    shifted).
+
+    Reads the head offset from ``eq_def.head_domain_offsets`` (the Phase-1 IR
+    field) and renders the per-position read index: the base label where there is
+    no head offset, or ``<base><±δ>`` (e.g. ``l+1``) where there is. Returns the
+    ``(...)`` domain string for the marginal read, or ``None`` when the equation
+    has no head offset (callers keep the plain base-domain read).
+
+    This is the shared source of truth for the head↔base correspondence. Site 1
+    (``comp_pr`` body emission) and Site 3 (``stat_x`` cross-term,
+    ``stationarity.py``) realise the SAME correspondence inline — the ``l+1`` head
+    on the RHS body variable and the ``l-1``/``i-li(k)``/``j-lj(k)`` inversions in
+    the cross-term (verified consistent with the NLP KKT point); this helper
+    centralises the dual-transfer (Site 2) read so the three cannot drift.
+    """
+    offs = eq_def.head_domain_offsets
+    if not offs or not any(o is not None for o in offs):
+        return None
+    parts: list[str] = []
+    for base, off in zip(eq_def.domain, offs, strict=True):  # aligned 1:1 (Phase 1)
+        parts.append(_quote_symbol(base) if off is None else off.to_gams_string())
+    return f"({','.join(parts)})"
+
+
 def _emit_nlp_presolve(
     sections: list[str],
     kkt: KKTSystem,
@@ -1488,7 +1525,14 @@ def _emit_nlp_presolve(
                 # Original inequality marginals: use abs() since GAMS
                 # ≤ marginals are ≥ 0 and ≥ marginals are ≤ 0 but
                 # MCP λ must be ≥ 0.
-                sections.append(f"{qm}.l{domain_str} = abs({qeq}.m{domain_str});")
+                # Sprint 31 P1 Phase 2 (#1443): for a head-domain-offset inequality
+                # (e.g. pr(k,l+1,i,j)) GAMS stores the marginal at the SHIFTED head
+                # label (pr.m(k,l+1,i,j)) while lam_pr is paired at the base
+                # (k,l,i,j); read the marginal at the shifted label so the warm
+                # start initialises lam_pr from the right instance. Base domain
+                # otherwise (helper returns None → domain_str).
+                marg_domain = head_offset_marginal_index_map(eq_def) if eq_def else None
+                sections.append(f"{qm}.l{domain_str} = abs({qeq}.m{marg_domain or domain_str});")
 
     # Transfer bound multipliers from variable marginals
     sections.append("")
