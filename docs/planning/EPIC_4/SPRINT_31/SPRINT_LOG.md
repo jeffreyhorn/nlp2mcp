@@ -6,7 +6,7 @@
 | Day | Priority / Work | Metric delta | Status |
 |---|---|---|---|
 | 0 | Kickoff + Day-0 traces (PR24) + tractability probes (P1 round-trip / P3 `/tmp` prototype / P5 hhfair control) | — (baseline confirmed: Parse 142 · Translate 135 · Solve 107 · Match 92 · genuine 70; `DAY0_TRACES.md`) | ✅ DONE |
-| 1 | P1 Phase 1: head-offset IR plumbing (`EquationDef.head_domain_offsets` field addition) | — (round-trip fixture green; goldens byte-stable) | 🔵 PENDING |
+| 1 | P1 Phase 1: head-offset IR plumbing (`EquationDef.head_domain_offsets` field addition) | — (round-trip fixture green; 5 head-offset models byte-identical to goldens — field inert) | ✅ DONE |
 | 2 | P1 Phase 2: shared 3-site helper (heaviest day) | — (helper wired to comp_pr / dual-transfer / stat_x) | 🔵 PENDING |
 | 3 | P1 mine close-or-REPLAN (cold-INFES-by-direction gate) | — (target: mine → MS-1, +1 Solve; REPLAN on a 4th site) | 🔵 PENDING |
 | 4 | P2 offset-alias #1111/#1112 core (polygon): coupled objective + distance second-index | — (target: coupled fix lands, tightly gated) | 🔵 PENDING |

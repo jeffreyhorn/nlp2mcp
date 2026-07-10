@@ -953,6 +953,104 @@ def _domain_list_has_offset(node: Tree) -> bool:
     return False
 
 
+def _index_list_head_offsets(
+    index_list_node: Tree,
+    expr_fn: Callable[[Tree], Expr] | None = None,
+) -> list[IndexOffset | None]:
+    """Offset-aware analog of ``_extract_domain_indices`` for nested subset domains.
+
+    Returns one entry (``IndexOffset`` for a *linear* lead/lag position, else
+    ``None``) per identifier that ``_extract_domain_indices`` would append, so a
+    nested domain element like ``nh(i+1)`` stays aligned with the flat domain
+    tuple. Quoted element literals and ``index_string`` nodes are skipped
+    identically to ``_extract_domain_indices`` (they contribute no domain index).
+    """
+    offsets: list[IndexOffset | None] = []
+    for child in index_list_node.children:
+        if isinstance(child, Token):
+            offsets.append(None)
+        elif isinstance(child, Tree):
+            if child.data == "index_simple":
+                # index_simple: ID lag_lead_suffix?
+                if child.children and isinstance(child.children[0], Token):
+                    tok_val = str(child.children[0])
+                    # Issue #975: quoted IDs are element literals — _extract_domain_indices
+                    # skips them, so skip here too to preserve alignment.
+                    if len(tok_val) >= 2 and (
+                        (tok_val[0] == "'" and tok_val[-1] == "'")
+                        or (tok_val[0] == '"' and tok_val[-1] == '"')
+                    ):
+                        continue
+                    if (
+                        len(child.children) >= 2
+                        and isinstance(child.children[1], Tree)
+                        and child.children[1].data in ("linear_lead", "linear_lag")
+                    ):
+                        result = _process_index_expr(child, expr_fn)
+                        offsets.append(result if isinstance(result, IndexOffset) else None)
+                    else:
+                        offsets.append(None)
+            elif child.data == "index_subset":
+                # index_subset: ID "(" index_list ")" — recurse into the nested list
+                for subchild in child.children:
+                    if isinstance(subchild, Tree) and subchild.data == "index_list":
+                        offsets.extend(_index_list_head_offsets(subchild, expr_fn))
+            elif child.data == "index_string":
+                # Quoted element literal — not a domain index (matches _extract_domain_indices)
+                pass
+    return offsets
+
+
+def _domain_list_head_offsets(
+    node: Tree,
+    expr_fn: Callable[[Tree], Expr] | None = None,
+) -> tuple[IndexOffset | None, ...]:
+    """Extract the per-position domain head offset, aligned to ``_domain_list``.
+
+    For each base identifier that ``_domain_list`` appends to the equation
+    domain, return the corresponding ``IndexOffset`` if that position carried a
+    *linear* lead/lag qualifier (e.g. ``pr(k,l+1,i,j)`` → position ``l`` gets
+    ``IndexOffset('l', Const(1.0), False)``), or ``None`` otherwise. Circular
+    (``++``/``--``) offsets are excluded (mapped to ``None``), matching
+    ``_domain_list_has_offset`` — they wrap the set and do not restrict which
+    equation instances are generated.
+
+    The result is aligned 1:1 with the flat tuple ``_domain_list`` returns, so
+    ``EquationDef.head_domain_offsets[k]`` describes ``EquationDef.domain[k]``.
+    Reuses ``_process_index_expr`` for the offset parsing (offset_number /
+    offset_variable / offset_func / offset_paren + the lag→negative and
+    circular-flag handling); a linear head offset ``ID <suffix>`` is wrapped in a
+    synthetic ``index_simple`` node so the same code path applies.
+    """
+    offsets: list[IndexOffset | None] = []
+    for domain_elem in node.children:
+        if not isinstance(domain_elem, Tree) or domain_elem.data != "domain_element":
+            continue
+        if not domain_elem.children:
+            continue
+        first_child = domain_elem.children[0]
+        if not isinstance(first_child, Token):
+            continue
+        # domain_element: ID | ID lag_lead_suffix | ID "(" index_list ")"
+        if len(domain_elem.children) == 1:
+            offsets.append(None)  # simple ID, no head offset
+        elif len(domain_elem.children) == 2:
+            second_child = domain_elem.children[1]
+            if not isinstance(second_child, Tree):
+                offsets.append(None)
+            elif second_child.data in ("linear_lead", "linear_lag"):
+                synthetic = Tree("index_simple", [first_child, second_child])
+                result = _process_index_expr(synthetic, expr_fn)
+                offsets.append(result if isinstance(result, IndexOffset) else None)
+            elif second_child.data in ("circular_lead", "circular_lag"):
+                # Circular offsets are excluded (as with has_head_domain_offset)
+                # but still occupy one domain position — keep alignment.
+                offsets.append(None)
+            elif second_child.data == "index_list":
+                offsets.extend(_index_list_head_offsets(second_child, expr_fn))
+    return tuple(offsets)
+
+
 def _extract_domain_indices(index_list_node: Tree) -> list[str]:
     """Recursively extract base identifiers from index_list for domain tracking.
 
@@ -3853,7 +3951,14 @@ class _ModelBuilder:
         name = _token_text(node.children[0])
         domain_list_node = node.children[1]
         domain = _domain_list(domain_list_node)  # Sprint 11 Day 1: Use _domain_list
-        head_has_offset = _domain_list_has_offset(domain_list_node)
+        # Sprint 31 P1 Phase 1 (#1443): capture the per-position head offset (the
+        # l+1 in pr(k,l+1,i,j)), aligned to `domain`, instead of collapsing it to a
+        # bare bool. `has_head_domain_offset` is derived from it (single source of
+        # truth). The field is inert until a consumer reads it (Phase 2).
+        head_domain_offsets = _domain_list_head_offsets(
+            domain_list_node, expr_fn=lambda n: self._expr(n, domain)
+        )
+        head_has_offset = any(o is not None for o in head_domain_offsets)
         if name.lower() not in self._declared_equations:  # Issue #373: case-insensitive
             raise self._parse_error(
                 f"Equation '{name}' defined without declaration",
@@ -3877,6 +3982,9 @@ class _ModelBuilder:
             # The filtered domain is used both for validation and as the equation's
             # stored domain (literal elements are fixed selectors, not set indices).
             filtered_domain: list[str] = []
+            # Sprint 31 P1 Phase 1 (#1443): filter head_domain_offsets in lockstep
+            # so it stays aligned to the (literal-stripped) domain.
+            filtered_offsets: list[IndexOffset | None] = []
             for i, d in enumerate(domain):
                 if (
                     i < len(raw_tokens)
@@ -3885,8 +3993,11 @@ class _ModelBuilder:
                 ):
                     continue  # literal element — not a set reference, skip validation
                 filtered_domain.append(d)
+                if i < len(head_domain_offsets):
+                    filtered_offsets.append(head_domain_offsets[i])
             self._ensure_sets(filtered_domain, f"equation '{name}' domain", node)
             domain = tuple(filtered_domain)
+            head_domain_offsets = tuple(filtered_offsets)
         else:
             self._ensure_sets(domain, f"equation '{name}' domain", node)
 
@@ -3950,6 +4061,7 @@ class _ModelBuilder:
             condition=condition_expr,
             source_location=source_location,
             has_head_domain_offset=head_has_offset,
+            head_domain_offsets=head_domain_offsets,
             declaration_domain=declaration_domain,
         )
         self.model.add_equation(equation)

@@ -93,6 +93,7 @@ def reformulate_sqr_equalities(model_ir: ModelIR) -> list[str]:
                 condition=eq_def.condition,
                 source_location=eq_def.source_location,
                 has_head_domain_offset=eq_def.has_head_domain_offset,
+                head_domain_offsets=eq_def.head_domain_offsets,
             )
             reformulated.append(eq_name)
             logger.info(
@@ -113,6 +114,7 @@ def reformulate_sqr_equalities(model_ir: ModelIR) -> list[str]:
                 condition=eq_def.condition,
                 source_location=eq_def.source_location,
                 has_head_domain_offset=eq_def.has_head_domain_offset,
+                head_domain_offsets=eq_def.head_domain_offsets,
             )
             reformulated.append(eq_name)
             logger.info(

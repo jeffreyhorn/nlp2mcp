@@ -155,6 +155,19 @@ class EquationDef:
     # `comp_Constraints(m).. ...` which GAMS automatically restricts to members
     # of `m`). Falls back to `domain` for backward compat when not set.
     declaration_domain: tuple[str, ...] | None = None
+    # Sprint 31 P1 Phase 1 (#1443): the per-position domain head offset, aligned to
+    # `domain`. Element k is the IndexOffset for domain position k, or None if that
+    # position has no linear lead/lag. For `pr(k,l+1,i,j)`:
+    #   (None, IndexOffset('l', Const(1.0), False), None, None).
+    # Mirrors declaration_domain (#1327): the un-collapsed detail stored ALONGSIDE the
+    # collapsed `domain`, so the KKT/emit layer re-applies the base<->head correspondence
+    # instead of re-deriving it from the equation body. `has_head_domain_offset` above is
+    # the derived convenience (= any(o is not None for o in head_domain_offsets)); the ~8
+    # existing bool read sites keep working while new code reads this richer field.
+    # Circular (++/--) offsets stay excluded (as with has_head_domain_offset). None (not
+    # ()) distinguishes "not plumbed" from "computed, no offset"; the parser populates it
+    # for every equation, so consumers may treat None as "no head offset".
+    head_domain_offsets: tuple[IndexOffset | None, ...] | None = None
 
 
 @dataclass
