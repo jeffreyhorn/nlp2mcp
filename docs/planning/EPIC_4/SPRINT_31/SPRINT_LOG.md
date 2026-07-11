@@ -9,7 +9,7 @@
 | 1 | P1 Phase 1: head-offset IR plumbing (`EquationDef.head_domain_offsets` field addition) | — (round-trip fixture green; 5 head-offset models byte-identical to goldens — field inert) | ✅ DONE |
 | 2 | P1 Phase 2: shared 3-site helper (heaviest day) | — (helper `head_offset_marginal_index_map` wired to Site 2 dual-transfer, correct + landed but not sufficient; blast radius 0. ⚠️ the Day-2 "Sites 1/3 already-correct / MS-1 17500" claim was a measurement error — corrected Day 3) | ✅ DONE (code); ⚠️ diagnosis corrected Day 3 |
 | 3 | P1 mine close-or-REPLAN (cold-INFES-by-direction gate) | **0 (REPLAN → Sprint 32 — 4th bound-complementarity site confirmed; foundation landed Days 1–2)** | 🔴 REPLAN |
-| 4 | P2 offset-alias #1111/#1112 core (polygon): coupled objective + distance second-index | — (target: coupled fix lands, tightly gated) | 🔵 PENDING |
+| 4 | P2 offset-alias #1111/#1112 core (polygon): coupled objective + distance second-index | **polygon → MATCH 0.780 (genuine floor +1); +cpack/himmel16/ps2×2/ps3 correct KKT completions, all still solve** | ✅ DONE |
 | 5 | P2 finish (shape8 enable, warm-match 0.780) + Checkpoint 1 | — (target: polygon genuine floor +1; REPLAN on gate leak) | 🔵 PENDING |
 | 6 | P3 camcge dual-consistent Walras (start; `/tmp` prototype → src) | — (target: dual-consistent redefinition + S1∧S2∧S3 detector) | 🔵 PENDING |
 | 7 | P3 camcge close-or-REPLAN (MS-1 @ 191.7346 + detector precision) | — (target: camcge → MS-1, +1 Solve; REPLAN to per-model-numéraire) | 🔵 PENDING |
