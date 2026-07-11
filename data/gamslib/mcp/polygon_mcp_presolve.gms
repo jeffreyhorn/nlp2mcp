@@ -109,8 +109,8 @@ Equations
 
 $onMultiR
 * Stationarity equations
-stat_r(i).. ((-1) * (0.5 * (sin(theta(i+1) - theta(i)) * r(i+1) * 1$(j(i)) + sin(theta(i) - theta(i-1)) * r(i-1) * 1$(j(i-1))))) + nu_r_fx_i25$(sameas(i, 'i25')) + sum(j, ((2 * r(i) - cos(theta(j) - theta(i)) * r(j) * 2) * lam_distance(i,j))$(ord(j) > ord(i))) + sum(j, ((2 * r(i) - cos(theta(i) - theta(j)) * 2 * r(j)) * lam_distance(j,i))$(ord(i) > ord(j))) - piL_r(i) + piU_r(i) =E= 0;
-stat_theta(i).. ((-1) * (0.5 * (((-1) * (r(i+1) * r(i) * cos(theta(i+1) - theta(i)) * 1$(j(i)))) + r(i) * r(i-1) * cos(theta(i) - theta(i-1)) * 1$(j(i-1))))) + nu_theta_fx_i25$(sameas(i, 'i25')) + lam_ordered(i) + ((-1) * lam_ordered(i-1))$(ord(i) > 1) + sum(j, (((-1) * (2 * r(i) * r(j) * ((-1) * (sin(theta(j) - theta(i)))) * (-1))) * lam_distance(i,j))$(ord(j) > ord(i))) + sum(j, (((-1) * (2 * r(j) * r(i) * ((-1) * (sin(theta(i) - theta(j)))))) * lam_distance(j,i))$(ord(i) > ord(j))) - piL_theta(i) + piU_theta(i) =E= 0;
+stat_r(i).. ((-1) * (0.5 * (sin(theta(i+1) - theta(i)) * r(i+1) * 1$(j(i)) + sin(theta(i) - theta(i-1)) * r(i-1) * 1$(j(i-1))))) + nu_r_fx_i25$(sameas(i, 'i25')) + sum(j, ((2 * r(i) - cos(theta(j) - theta(i)) * r(j) * 2) * lam_distance(i,j))$(ord(j) > ord(i))) + sum(j, ((2 * r(i) - cos(theta(i) - theta(j)) * 2 * r(j)) * lam_distance(j,i))$(ord(i) > ord(j) and (not sameas(j, i)))) - piL_r(i) + piU_r(i) =E= 0;
+stat_theta(i).. ((-1) * (0.5 * (((-1) * (r(i+1) * r(i) * cos(theta(i+1) - theta(i)) * 1$(j(i)))) + r(i) * r(i-1) * cos(theta(i) - theta(i-1)) * 1$(j(i-1))))) + nu_theta_fx_i25$(sameas(i, 'i25')) + lam_ordered(i) + ((-1) * lam_ordered(i-1))$(ord(i) > 1) + sum(j, (((-1) * (2 * r(i) * r(j) * ((-1) * (sin(theta(j) - theta(i)))) * (-1))) * lam_distance(i,j))$(ord(j) > ord(i))) + sum(j, (((-1) * (2 * r(j) * r(i) * ((-1) * (sin(theta(i) - theta(j)))))) * lam_distance(j,i))$(ord(i) > ord(j) and (not sameas(j, i)))) - piL_theta(i) + piU_theta(i) =E= 0;
 
 * Inequality complementarity equations
 comp_distance(i,j)$(ord(j) > ord(i)).. ((-1) * (sqr(r(i)) + sqr(r(j)) - 2 * r(i) * r(j) * cos(theta(j) - theta(i)) - 1)) =G= 0;

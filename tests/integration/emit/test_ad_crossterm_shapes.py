@@ -165,5 +165,7 @@ def test_shape10_distance_second_index() -> None:
     # First-index sum: multiplier in declared order, guarded ord(j)>ord(i).
     assert "lam_g(i,j))$(ord(j)>ord(i))" in row, row
     # Complementary second-index sum: inverted multiplier lam_g(j,i), flipped guard
-    # (ord(i)>ord(j) ≡ ord(j)<ord(i)).
-    assert "lam_g(j,i))$(ord(i)>ord(j))" in row, f"second-index sum dropped (#1111/#1112): {row}"
+    # (ord(i)>ord(j) ≡ ord(j)<ord(i)) AND an explicit diagonal exclusion so the
+    # (i,i) row is not double-counted (the main-loop sum already carries it once).
+    assert "lam_g(j,i))$(ord(i)>ord(j)" in row, f"second-index sum dropped (#1111/#1112): {row}"
+    assert "notsameas(j,i)" in row, f"diagonal (j==i) not excluded — double-count risk: {row}"

@@ -7368,13 +7368,23 @@ def _build_complement_index_sum(
     # Flip the ord condition for the complementary position by swapping the two
     # constraint domain names (ord(j)>ord(i) → ord(j)<ord(i)).
     eq_def = kkt.model_ir.equations.get(eq_name_base)
+    cond: Expr | None = None
     if eq_def is not None and eq_def.condition is not None:
         cond = eq_def.condition
         if comp_pos == 1:
             cond = _reindex_condition_symbols(
                 cond, {stat: SymbolRef(sum_idx), sum_idx: SymbolRef(stat)}
             )
-        term = DollarConditional(value_expr=term, condition=cond)
+
+    # Explicitly exclude the DIAGONAL (sum_idx == stat, i.e. j==i) from the
+    # complementary sum: the main-loop sum already accounts for the (i,i) Jacobian
+    # contribution once (the full ∂g(i,i)/∂r(i) chain-rule term). Every firing
+    # model's own $-condition already excludes j==i (polygon `ord(j)>ord(i)`,
+    # cpack `ij(i,j)`), but a 2-D constraint WITHOUT such a filter would otherwise
+    # double-count the diagonal — so guard it here unconditionally.
+    diag_exclusion: Expr = Unary("not", Call("sameas", (SymbolRef(sum_idx), SymbolRef(stat))))
+    cond = diag_exclusion if cond is None else Binary("and", cond, diag_exclusion)
+    term = DollarConditional(value_expr=term, condition=cond)
 
     return Sum((sum_idx,), term)
 

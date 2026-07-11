@@ -97,8 +97,8 @@ Equations
 
 * Stationarity equations
 stat_r.. -1 + sum(i, ((-1) * (2 * (1 - r) * (-1))) * lam_circumscribe(i)) + sum((i,j)$(ij(i,j)), 4 * 2 * r * lam_nooverlap(i,j)) - piL_r + piU_r =E= 0;
-stat_x(i).. 2 * x(i) * lam_circumscribe(i) + sum(j, (((-1) * (2 * (x(i) - x(j)))) * lam_nooverlap(i,j))$(ij(i,j))) + sum(j, (((-1) * (2 * (x(j) - x(i)) * (-1))) * lam_nooverlap(j,i))$(ij(j,i))) - piL_x(i) + piU_x(i) =E= 0;
-stat_y(i).. 2 * y(i) * lam_circumscribe(i) + sum(j, (((-1) * (2 * (y(i) - y(j)))) * lam_nooverlap(i,j))$(ij(i,j))) + sum(j, (((-1) * (2 * (y(j) - y(i)) * (-1))) * lam_nooverlap(j,i))$(ij(j,i))) - piL_y(i) + piU_y(i) =E= 0;
+stat_x(i).. 2 * x(i) * lam_circumscribe(i) + sum(j, (((-1) * (2 * (x(i) - x(j)))) * lam_nooverlap(i,j))$(ij(i,j))) + sum(j, (((-1) * (2 * (x(j) - x(i)) * (-1))) * lam_nooverlap(j,i))$(ij(j,i) and (not sameas(j, i)))) - piL_x(i) + piU_x(i) =E= 0;
+stat_y(i).. 2 * y(i) * lam_circumscribe(i) + sum(j, (((-1) * (2 * (y(i) - y(j)))) * lam_nooverlap(i,j))$(ij(i,j))) + sum(j, (((-1) * (2 * (y(j) - y(i)) * (-1))) * lam_nooverlap(j,i))$(ij(j,i) and (not sameas(j, i)))) - piL_y(i) + piU_y(i) =E= 0;
 
 * Inequality complementarity equations
 comp_circumscribe(i).. sqr(1 - r) - (sqr(x(i)) + sqr(y(i))) =G= 0;
