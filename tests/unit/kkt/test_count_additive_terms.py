@@ -18,10 +18,12 @@ import pytest
 from src.ir.ast import Binary, Const, DollarConditional, Sum, SymbolRef, Unary, VarRef
 from src.kkt.stationarity import _count_additive_terms
 
-_A = VarRef("x", (SymbolRef("i"),))
-_B = VarRef("y", (SymbolRef("i"),))
+# VarRef.indices are `tuple[str | IndexOffset, ...]` — use bare string indices,
+# the representative AST shape (the parser emits `VarRef("x", ("i",))`).
+_A = VarRef("x", ("i",))
+_B = VarRef("y", ("i",))
 _ADD = Binary("+", _A, _B)  # two additive terms
-_COND = SymbolRef("c")
+_COND = SymbolRef("c")  # a condition is an Expr; SymbolRef is a valid condition
 _COND_FACTOR = DollarConditional(value_expr=Const(1.0), condition=_COND)  # `1$(c)`
 
 
