@@ -7425,9 +7425,14 @@ def _build_complement_index_sum(
     if eq_def is not None and eq_def.condition is not None:
         cond = eq_def.condition
         if comp_pos == 1:
-            cond = _reindex_condition_symbols(
-                cond, {stat: SymbolRef(sum_idx), sum_idx: SymbolRef(stat)}
-            )
+            # Swap the two constraint domain names (stat↔sum) throughout the
+            # condition. Pass PLAIN STRING replacements — `_reindex_condition_symbols`
+            # / its `remap_index` require `str`/`IndexOffset` values; a `SymbolRef`
+            # would be written verbatim into `ParamRef`/`VarRef` index tuples for a
+            # condition with indexed symbols (e.g. `sig(i)`, `p(i)`), which later
+            # crashes `_format_mixed_indices` (that expects `str|IndexOffset`). The
+            # walk looks up each original name once, so this is a simultaneous swap.
+            cond = _reindex_condition_symbols(cond, {stat: sum_idx, sum_idx: stat})
 
     # Explicitly exclude the DIAGONAL (sum_idx == stat, i.e. j==i) from the
     # complementary sum: the main-loop sum already accounts for the (i,i) Jacobian

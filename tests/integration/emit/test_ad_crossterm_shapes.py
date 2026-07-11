@@ -169,3 +169,17 @@ def test_shape10_distance_second_index() -> None:
     # (i,i) row is not double-counted (the main-loop sum already carries it once).
     assert "lam_g(j,i))$(ord(i)>ord(j)" in row, f"second-index sum dropped (#1111/#1112): {row}"
     assert "notsameas(j,i)" in row, f"diagonal (j==i) not excluded — double-count risk: {row}"
+
+
+def test_shape11_second_index_indexed_condition() -> None:
+    """Sprint 31 P2 (#1111/#1112): the second-index sum swaps the constraint domain
+    names (i↔j) throughout the $-condition. When the condition carries an INDEXED
+    symbol (`w(i)`), the swap must produce `w(j)` — a plain string index — NOT a
+    `w(SymbolRef('j'))` that later crashes `_format_mixed_indices`. Emitting the row
+    at all (no crash) plus the `w(j)` check guards `_reindex_condition_symbols`
+    being called with string replacements."""
+    row = _stat_row(_emit("shape11_second_index_indexed_condition.gms"), "stat_r(i)")
+    # First-index sum keeps w(i); the complementary second-index sum swaps to w(j).
+    assert "lam_g(i,j))$(ord(j)>ord(i)andw(i))" in row, row
+    assert "lam_g(j,i))$(ord(i)>ord(j)andw(j)" in row, f"indexed condition not swapped: {row}"
+    assert "SymbolRef" not in row, f"SymbolRef leaked into an index tuple: {row}"
