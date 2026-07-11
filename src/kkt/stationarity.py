@@ -2920,11 +2920,16 @@ def _count_additive_terms(expr: Expr | None) -> int:
 
 
 def _is_const_like_factor(expr: Expr | None) -> bool:
-    """A multiplicative factor that scales without adding terms: a bare ``Const``
-    or a condition factor ``DollarConditional(Const(1.0), cond)`` (the shape
-    ``gradient.py``'s ``_is_condition_factor`` recognizes). Used by
-    :func:`_count_additive_terms` so a conditioned additive gradient is not
-    under-counted as a single term.
+    """A multiplicative factor that scales without adding terms: a bare ``Const``,
+    or a *constant* condition factor ``DollarConditional(Const(<any value>), cond)``
+    (``c$(cond)`` for any constant ``c``). Used by :func:`_count_additive_terms`
+    so a conditioned additive gradient is not under-counted as a single term.
+
+    Deliberately BROADER than ``gradient.py``'s ``_is_condition_factor``, which
+    matches only ``Const(1.0)`` (the exact shape ``_ensure_numeric_condition``
+    emits). For term-counting any ``c$(cond)`` scales an additive tree without
+    changing its term count — e.g. ``(A + B) * 3$(cond)`` is still two terms — so
+    the constant value is irrelevant here and the predicate accepts any ``Const``.
     """
     if isinstance(expr, Const):
         return True
