@@ -2864,9 +2864,18 @@ def _resymbolize_offset_gradient(
 def _count_additive_terms(expr: Expr | None) -> int:
     """Count the top-level additive (+/-) terms of a gradient expression.
 
-    Sprint 31 P2 (#1111/#1112): recurses through ``+``/``-`` Binary nodes and
-    descends a ``Const * Sum`` into its summand; every other node counts as one
-    term. Used by :func:`_build_indexed_gradient_term`'s offset path to pick the
+    Sprint 31 P2 (#1111/#1112). Traversal (each descent preserves the additive
+    term count of the sub-tree it enters):
+      - ``+``/``-`` ``Binary`` → sum of the two operands' counts;
+      - a leading ``Unary("-"/"+")`` (the maximize-negation) → recurse through
+        its child, so ``-(a + b)`` is two terms, not one;
+      - ``Const * <expr>`` (Const on either side) → recurse into the non-Const
+        factor, so a scaled additive tree like ``0.5 * (A + B)`` distributes to
+        two terms (a genuine product ``a * b`` with no bare-Const factor stays
+        one term — the inner factor is itself a product → 1);
+      - ``Sum`` → recurse into its body;
+      - every other node counts as one term.
+    Used by :func:`_build_indexed_gradient_term`'s offset path to pick the
     *interior* representative instance for an offset-alias objective gradient —
     a boundary column drops one offset image (e.g. polygon's ``theta('i1')``
     carries only the ``+1`` successor, not the out-of-range ``-1`` predecessor),
