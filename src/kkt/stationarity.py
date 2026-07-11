@@ -7257,11 +7257,23 @@ def _var_at_two_indices_complement(
 
     Fires only when a 1-D variable maps to a 2-D constraint AND appears at BOTH
     index positions across ``entries`` (e.g. polygon's ``r(i)`` at position 0 of
-    ``distance(i,j)`` and position 1 of ``distance(j,i)``). The main loop emits
-    the sum for ``entries[0]``'s position; this returns the OTHER position (so the
-    caller appends its complementary sum). Returns ``None`` for every other shape
-    — a plain 1-index constraint, a variable at a single position, dim-mismatch,
-    or a >2-index constraint — so nothing else is touched.
+    ``distance(i,j)`` and position 1 of ``distance(j,i)``).
+
+    Position inference IGNORES diagonal rows (``eq_idx[0] == eq_idx[1]``): there
+    the variable coincidentally matches both positions and would falsely look
+    like var-at-two-indices. ``main_pos`` is therefore the first NON-diagonal
+    entry's position, and the complement is ``1 - main_pos``. Every constraint
+    that fires today generates NO diagonal instances (the var-at-two-indices
+    shape carries an ord/triangle/subset filter — polygon ``ord(j)>ord(i)``,
+    cpack ``ij(i,j)`` — that excludes ``i==j``), so ``entries[0]`` is itself
+    non-diagonal and ``main_pos`` equals ``entries[0]``'s position — matching the
+    single sum the main loop emits from ``entries[0]``. The diagonal-skip only
+    matters for the guard direction: a same-set constraint like irscge's
+    ``eqX(i,j)`` whose sole "position-0" evidence is the ambiguous diagonal
+    yields positions ``{1}`` → no complement (correctly not fired). Returns
+    ``None`` for every other shape — a plain 1-index constraint, a variable at a
+    single position, dim-mismatch, or a >2-index constraint — so nothing else is
+    touched.
     """
     if len(var_domain) != 1 or not entries:
         return None
