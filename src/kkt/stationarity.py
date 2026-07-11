@@ -2869,12 +2869,23 @@ def _count_additive_terms(expr: Expr | None) -> int:
       - ``+``/``-`` ``Binary`` → sum of the two operands' counts;
       - a leading ``Unary("-"/"+")`` (the maximize-negation) → recurse through
         its child, so ``-(a + b)`` is two terms, not one;
-      - ``Const * <expr>`` (Const on either side) → recurse into the non-Const
-        factor, so a scaled additive tree like ``0.5 * (A + B)`` distributes to
-        two terms (a genuine product ``a * b`` with no bare-Const factor stays
+      - ``<const-like> * <expr>`` (a bare ``Const`` OR a condition-factor
+        ``DollarConditional(Const(1.0), cond)`` on either side — see
+        ``gradient.py``'s ``_is_condition_factor`` / ``_extract_condition_from_expr``
+        pattern 2) → recurse into the OTHER factor, so a scaled/conditioned
+        additive tree like ``0.5 * (A + B)`` or ``(A + B) * 1$(cond)`` distributes
+        to two terms (a genuine product ``a * b`` with no const-like factor stays
         one term — the inner factor is itself a product → 1);
       - ``Sum`` → recurse into its body;
+      - ``DollarConditional(value, cond)`` (pattern 1) → recurse into ``value``;
+        the condition wraps but does not change the additive term count;
       - every other node counts as one term.
+    Being transparent to the DollarConditional condition-wrapper/factor forms is
+    load-bearing: gradient derivatives of a *conditioned* objective are wrapped
+    in exactly these shapes, so an opaque leaf would UNDERCOUNT and let the
+    offset-path representative selection pick a boundary instance even when an
+    interior one carries more offset images (re-dropping the cross-term).
+
     Used by :func:`_build_indexed_gradient_term`'s offset path to pick the
     *interior* representative instance for an offset-alias objective gradient —
     a boundary column drops one offset image (e.g. polygon's ``theta('i1')``
@@ -2891,17 +2902,33 @@ def _count_additive_terms(expr: Expr | None) -> int:
     if isinstance(expr, Binary) and expr.op in ("+", "-"):
         return _count_additive_terms(expr.left) + _count_additive_terms(expr.right)
     if isinstance(expr, Binary) and expr.op == "*":
-        # A `Const * <additive tree>` (e.g. polygon's `0.5 * (A + B)`) distributes
-        # — descend into the non-Const factor so a scaled multi-image gradient is
-        # not under-counted as one term. A genuine product `a * b` (neither factor
-        # a bare Const) stays one term (the inner factor is itself a product → 1).
-        if isinstance(expr.left, Const):
+        # A `<const-like> * <additive tree>` (polygon's `0.5 * (A + B)`, or a
+        # condition factor `(A + B) * 1$(cond)`) distributes — descend into the
+        # non-const-like factor. A genuine product `a * b` (neither factor
+        # const-like) stays one term (the inner factor is itself a product → 1).
+        if _is_const_like_factor(expr.left):
             return _count_additive_terms(expr.right)
-        if isinstance(expr.right, Const):
+        if _is_const_like_factor(expr.right):
             return _count_additive_terms(expr.left)
     if isinstance(expr, Sum):
         return _count_additive_terms(expr.body)
+    if isinstance(expr, DollarConditional):
+        # The condition wraps the value but does not change its additive term
+        # count (gradient.py pattern 1: DollarConditional(value, cond)).
+        return _count_additive_terms(expr.value_expr)
     return 1
+
+
+def _is_const_like_factor(expr: Expr | None) -> bool:
+    """A multiplicative factor that scales without adding terms: a bare ``Const``
+    or a condition factor ``DollarConditional(Const(1.0), cond)`` (the shape
+    ``gradient.py``'s ``_is_condition_factor`` recognizes). Used by
+    :func:`_count_additive_terms` so a conditioned additive gradient is not
+    under-counted as a single term.
+    """
+    if isinstance(expr, Const):
+        return True
+    return isinstance(expr, DollarConditional) and isinstance(expr.value_expr, Const)
 
 
 def _build_indexed_gradient_term(
