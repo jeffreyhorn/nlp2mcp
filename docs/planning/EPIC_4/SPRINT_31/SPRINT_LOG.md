@@ -12,7 +12,7 @@
 | 4 | P2 offset-alias #1111/#1112 core (polygon): coupled objective + distance second-index | **polygon → MATCH 0.780 (genuine floor +1); +cpack/himmel16/ps2×2/ps3 correct KKT completions, all still solve** | ✅ DONE |
 | 5 | P2 finish (shape8 enable, warm-match 0.780) + Checkpoint 1 | **Checkpoint 1 GO: +3 as-measured Match (ps2_f_s/ps2_s/ps3_s_gic mismatch→match), genuine floor 70→74, Match 92→95 — both targets already met** | ✅ DONE |
 | 6 | P3 camcge dual-consistent Walras (start; `/tmp` prototype → src) | **0 (REPLAN → Epic 5 — `/tmp` prototype stayed MS-4; harness re-diagnosed CASE_B stat_mps, not clean Walras)** | 🔴 REPLAN |
-| 7 | P3 camcge close-or-REPLAN (MS-1 @ 191.7346 + detector precision) | — (target: camcge → MS-1, +1 Solve; REPLAN to per-model-numéraire) | 🔵 PENDING |
+| 7 | P3 camcge close-or-REPLAN (MS-1 @ 191.7346 + detector precision) | **0 (REPLAN confirmed → Epic 5; cohort precision verified: irscge/lrgcge/moncge/stdcge all Optimal → only camcge would flag)** | 🔴 REPLAN |
 | 8 | P4 sarf symbolic emit (start): 2-D gate + parametric `stat_task` | — (target: 2-D `_is_blowup_dynamic_subset_equation` + no set-name literals) | 🔵 PENDING |
 | 9 | P4 sarf tractability gate (O(constraints)) + Checkpoint 2 | — (target: sarf → translate, +Translate; REPLAN on timeout) | 🔵 PENDING |
 | 10 | P5 cold-convex obj-grad: CGE cluster `stat_xp` reduction (hhfair = Case-c) | — (target: irscge/lrgcge/moncge → Case-a, genuine floor; sign flip BANNED) | 🔵 PENDING |
@@ -77,6 +77,25 @@
 - **KKT-residual harness: CASE_B — emit_bug.** `stat_mps` rel **1.05** / raw −210 (+ `stat_tm`/`stat_pwm` residues); dual-transfer CONSISTENT (closure residual 4.8e-10). `mps.fx=.09305` (FIXED), so `stat_mps` carries the fixing multiplier `nu_mps_fx` — the residual is a **fixing-multiplier transfer/stationarity defect**, a *different bug class* from the Walras dual-singularity.
 
 **Decision: REPLAN → Epic 5, with a corrected diagnosis.** The design's premise ("warm-start IS a valid KKT point; failure is only the singular Jacobian") is **refuted** — camcge has a genuine **CASE_B `stat_mps`/`nu_mps_fx` emit residual**, so the dual-consistent Walras transform addresses the wrong defect. The Epic-5 item is re-scoped: FIRST resolve the `stat_mps` Case-B residual, THEN the dual-consistent numéraire. camcge stays `model_infeasible`; +1 Solve deferred. **The S1∧S2∧S3 detector was NOT built** (no src). **Sprint targets already met** (Day-5: Match 95 ≥ 92, genuine floor 74 ≥ 73) — only the Solve ≥ 109 stretch (mine [P1 REPLAN'd] + camcge) is missed, the most REPLAN-sensitive KPI (Task 7). All experiments on `/tmp` (reverted); docs/decision-only.
+
+## Day 7 — P3 camcge close-or-REPLAN → **REPLAN confirmed → Epic 5** + cohort precision (2026-07-12)
+
+**Branch** `planning/sprint31-day7-camcge-close`. Docs/measurement-only (P3 REPLAN'd Day 6; this day confirms the close decision + verifies the detector cohort precision). No `src/`.
+
+**PROCEED criterion NOT met (confirmed).** camcge does not reach MS-1: Day 6's numéraire re-pairing and single-dual pin both stayed MS-4, and the harness re-diagnosed CASE_B (`stat_mps`). Critically, the Day-6 **single-dual pin** (`nu_equil.fx('services')` = warm value) staying MS-4 **rules out the explicit Walras redefinition too** — that redefinition just pins `nu_equil(n*)` to its Walras value, which is exactly what the warm-value pin does. So no numéraire/Walras variant (auto composite, single-good, per-model declaration, or explicit dual redefinition) reaches MS-1. **The per-model-numéraire alternative also does NOT land camcge** — the defect is the CASE_B `stat_mps` residual, not the numéraire/dual-singularity.
+
+**Detector cohort precision — VERIFIED (S3 is decisive).** The well-posed CGE cohort all cold-solve **MODEL STATUS 1 Optimal** → their cold MCP is NOT Walras-singular at iter 0 → they **fail S3** → pass-through:
+| Model | cold MCP | S3 (singular @ iter 0)? |
+|---|---|---|
+| irscge | MS-1 Optimal | no → pass-through |
+| lrgcge | MS-1 Optimal | no → pass-through |
+| moncge | MS-1 Optimal | no → pass-through |
+| stdcge | MS-1 Optimal | no → pass-through |
+| **camcge** | **MS-4** | **yes → would flag (sole case)** |
+
+So **only camcge** is the (would-be) Walras case — confirming the design's scope claim and that a per-model-numéraire declaration would not spuriously apply to any other CGE model. The S1∧S2∧S3 detector was NOT built (no src — REPLAN); this cohort test is the de-risking evidence for the Epic-5 hand-off.
+
+**Decision: REPLAN → Epic 5 CONFIRMED, with the corrected CASE_B scope** (resolve `stat_mps`/`nu_mps_fx` first, then the numéraire). camcge stays `model_infeasible`; +1 Solve deferred. **P3 track closed.** Freed budget → P5 (CGE cluster `stat_xp`) / P7 per Task 7. **Sprint targets already met** (Match 95 ≥ 92, genuine floor 74 ≥ 73); the Solve ≥ 109 stretch (mine + camcge, both REPLAN'd) is the only miss. All experiments on `/tmp` (reverted).
 
 ## Sprint 31 — Final Summary (Day 13)
 
