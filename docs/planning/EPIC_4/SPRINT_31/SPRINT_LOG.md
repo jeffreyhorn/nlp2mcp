@@ -13,7 +13,7 @@
 | 5 | P2 finish (shape8 enable, warm-match 0.780) + Checkpoint 1 | **Checkpoint 1 GO: +3 as-measured Match (ps2_f_s/ps2_s/ps3_s_gic mismatch→match), genuine floor 70→74, Match 92→95 — both targets already met** | ✅ DONE |
 | 6 | P3 camcge dual-consistent Walras (start; `/tmp` prototype → src) | **0 (REPLAN → Epic 5 — `/tmp` prototype stayed MS-4; harness re-diagnosed CASE_B stat_mps, not clean Walras)** | 🔴 REPLAN |
 | 7 | P3 camcge close-or-REPLAN (MS-1 @ 191.7346 + detector precision) | **0 (REPLAN confirmed → Epic 5; cohort precision verified: irscge/lrgcge/moncge/stdcge all Optimal → only camcge would flag)** | 🔴 REPLAN |
-| 8 | P4 sarf symbolic emit (start): 2-D gate + parametric `stat_task` | — (target: 2-D `_is_blowup_dynamic_subset_equation` + no set-name literals) | 🔵 PENDING |
+| 8 | P4 sarf symbolic emit (start): 2-D gate + parametric `stat_task` | **0 (REPLAN → Sprint 32 — 2-D gate built + fires, but the dominant blow-up is the 369K-instance 4-D `task` var stationarity, not the 1,152 constraints)** | 🔴 REPLAN |
 | 9 | P4 sarf tractability gate (O(constraints)) + Checkpoint 2 | — (target: sarf → translate, +Translate; REPLAN on timeout) | 🔵 PENDING |
 | 10 | P5 cold-convex obj-grad: CGE cluster `stat_xp` reduction (hhfair = Case-c) | — (target: irscge/lrgcge/moncge → Case-a, genuine floor; sign flip BANNED) | 🔵 PENDING |
 | 11 | P6 rocket forcing → PATH-consultation input (`1/m` reformulation + continuation) | — (target: +1 Solve OR the finalized PATH-consultation input) | 🔵 PENDING |
@@ -96,6 +96,16 @@
 So **only camcge** is the (would-be) Walras case — confirming the design's scope claim and that a per-model-numéraire declaration would not spuriously apply to any other CGE model. The S1∧S2∧S3 detector was NOT built (no src — REPLAN); this cohort test is the de-risking evidence for the Epic-5 hand-off.
 
 **Decision: REPLAN → Epic 5 CONFIRMED, with the corrected CASE_B scope** (resolve `stat_mps`/`nu_mps_fx` first, then the numéraire). camcge stays `model_infeasible`; +1 Solve deferred. **P3 track closed.** Freed budget → P5 (CGE cluster `stat_xp`) / P7 per Task 7. **Sprint targets already met** (Match 95 ≥ 92, genuine floor 74 ≥ 73); the Solve ≥ 109 stretch (mine + camcge, both REPLAN'd) is the only miss. All experiments on `/tmp` (reverted).
+
+## Day 8 — P4 sarf symbolic emit → **REPLAN to Sprint 32** (enlarged scope) (2026-07-12)
+
+**Branch** `planning/sprint31-day8-sarf`. Docs/decision-only (the 2-D gate was built for measurement and REVERTED — it neither makes sarf translate nor can land). No `src/`.
+
+**A Day-8 finding enlarges the scope.** Built the 2-D gate extension `_is_blowup_2d_condition_equation` (sarf's shape: 2-D regular eq_domain + a 2-D dynamic-subset-condition `$taskposs(g,t)`/`$equipposs(m,t)` with 0 static members + a 2-D-summing body). It **fires tightly** on `tbal`/`equipb1`/`equipb2` (verified) and short-circuits their AD enumeration (warnings confirm) — **but sarf STILL times out.**
+- **The dominant blow-up is the 4-D `task(g,t,mn,mn)` variable: 16·24·31·31 = 369,024 instances** (the next-largest variable is `xcrop` at 48), so `stat_task` is enumerated 369K times regardless of the constraint short-circuit.
+- **So the design's fix-surface (2-D constraint gate + parametric cross-term) is necessary but INSUFFICIENT** — the design scoped the blow-up as the 1,152 constraint instances (tbal 384 / equipb1 648 / equipb2 120), but the real cost is the 369K-instance `task`-variable stationarity. The parametric emit must ALSO sparsify `stat_task` to the `$taskposs(g,t)`-active subset (the banked `stat_task(g,t,m,n)$taskposs(g,t)` shape IS parametric, but the current per-instance emit enumerates all 369K before guarding).
+
+**Decision: REPLAN → Sprint 32, with an enlarged scope.** The full fix is parametric stationarity emit for a 369K-instance 4-D variable + the parametric constraint cross-terms, landed atomically — strictly larger than the already-4×-failed Sprint-26 symbolic-emit. Gate reverted (measurement-only). sarf stays `translate_timeout`; +Translate deferred. **Sprint targets already met** (Match 95, genuine floor 74 at Day 5); P4 was a +Translate stretch. This is the 5th REPLAN of this track — the enlarged scope (369K var blow-up) is the new banked finding for the dedicated Sprint-32/Epic workstream.
 
 ## Sprint 31 — Final Summary (Day 13)
 
