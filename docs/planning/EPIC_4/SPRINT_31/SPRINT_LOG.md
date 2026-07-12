@@ -11,7 +11,7 @@
 | 3 | P1 mine close-or-REPLAN (cold-INFES-by-direction gate) | **0 (REPLAN → Sprint 32 — 4th bound-complementarity site confirmed; foundation landed Days 1–2)** | 🔴 REPLAN |
 | 4 | P2 offset-alias #1111/#1112 core (polygon): coupled objective + distance second-index | **polygon → MATCH 0.780 (genuine floor +1); +cpack/himmel16/ps2×2/ps3 correct KKT completions, all still solve** | ✅ DONE |
 | 5 | P2 finish (shape8 enable, warm-match 0.780) + Checkpoint 1 | **Checkpoint 1 GO: +3 as-measured Match (ps2_f_s/ps2_s/ps3_s_gic mismatch→match), genuine floor 70→74, Match 92→95 — both targets already met** | ✅ DONE |
-| 6 | P3 camcge dual-consistent Walras (start; `/tmp` prototype → src) | — (target: dual-consistent redefinition + S1∧S2∧S3 detector) | 🔵 PENDING |
+| 6 | P3 camcge dual-consistent Walras (start; `/tmp` prototype → src) | **0 (REPLAN → Epic 5 — `/tmp` prototype stayed MS-4; harness re-diagnosed CASE_B stat_mps, not clean Walras)** | 🔴 REPLAN |
 | 7 | P3 camcge close-or-REPLAN (MS-1 @ 191.7346 + detector precision) | — (target: camcge → MS-1, +1 Solve; REPLAN to per-model-numéraire) | 🔵 PENDING |
 | 8 | P4 sarf symbolic emit (start): 2-D gate + parametric `stat_task` | — (target: 2-D `_is_blowup_dynamic_subset_equation` + no set-name literals) | 🔵 PENDING |
 | 9 | P4 sarf tractability gate (O(constraints)) + Checkpoint 2 | — (target: sarf → translate, +Translate; REPLAN on timeout) | 🔵 PENDING |
@@ -65,6 +65,18 @@
 **PR25 re-baseline recompute (`BASELINE_METRICS.md` §Checkpoint 1):** genuine floor **70 → 74** (polygon methodology→genuine +1; ps2×3 new genuine +3); methodology **22 → 21**; **as-measured Match 92 → 95** (74 + 21 = 95 ✓). **Both sprint targets already met at Day 5** — genuine floor ≥ 73 (74) and Match ≥ 92 (95). The DB is not persisted at a checkpoint (the tool restores it on exit); the gains land in the DB at the Day-13 final retest.
 
 **Golden-staleness:** clean (goldens on `main` current). **No REPLAN** — the var-at-two-indices gate did not leak (CGE cohort byte-stable).
+
+## Day 6 — P3 camcge dual-consistent Walras → **REPLAN to Epic 5** (2026-07-11)
+
+**Branch** `planning/sprint31-day6-camcge`. The Phase-0 gate (`/tmp` prototype must reach MS-1 at omega 191.7346 BEFORE src) was **NOT met** → REPLAN; no `src/` landed.
+
+**The Day-0-flagged substantive experiment (GAMS):**
+- **Baseline** camcge presolve MCP: omega **191.7346, MS-4 Infeasible** (as banked).
+- **Numéraire re-pairing** (`numeraire.. sum(i$cles(i), cles(i)*p(i)) = sum(i$cles(i), cles(i)*pd0(i))` + `nu_numeraire` + `cles(i)*nu_numeraire` in `stat_p`, `numeraire ⊥ nu_numeraire`, all market-clearing rows kept — the design's "try first"): omega 191.7346, **still MS-4**.
+- **Single-dual pin** (`nu_equil.fx('services')` to warm value): **still MS-4** → the dual redundancy is **deeper than a single Walras relation** (design §5 REPLAN trigger).
+- **KKT-residual harness: CASE_B — emit_bug.** `stat_mps` rel **1.05** / raw −210 (+ `stat_tm`/`stat_pwm` residues); dual-transfer CONSISTENT (closure residual 4.8e-10). `mps.fx=.09305` (FIXED), so `stat_mps` carries the fixing multiplier `nu_mps_fx` — the residual is a **fixing-multiplier transfer/stationarity defect**, a *different bug class* from the Walras dual-singularity.
+
+**Decision: REPLAN → Epic 5, with a corrected diagnosis.** The design's premise ("warm-start IS a valid KKT point; failure is only the singular Jacobian") is **refuted** — camcge has a genuine **CASE_B `stat_mps`/`nu_mps_fx` emit residual**, so the dual-consistent Walras transform addresses the wrong defect. The Epic-5 item is re-scoped: FIRST resolve the `stat_mps` Case-B residual, THEN the dual-consistent numéraire. camcge stays `model_infeasible`; +1 Solve deferred. **The S1∧S2∧S3 detector was NOT built** (no src). **Sprint targets already met** (Day-5: Match 95 ≥ 92, genuine floor 74 ≥ 73) — only the Solve ≥ 109 stretch (mine [P1 REPLAN'd] + camcge) is missed, the most REPLAN-sensitive KPI (Task 7). All experiments on `/tmp` (reverted); docs/decision-only.
 
 ## Sprint 31 — Final Summary (Day 13)
 
