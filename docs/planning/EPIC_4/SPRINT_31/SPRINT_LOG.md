@@ -72,7 +72,7 @@
 
 **The Day-0-flagged substantive experiment (GAMS):**
 - **Baseline** camcge presolve MCP: omega **191.7346, MS-4 Infeasible** (as banked).
-- **Numéraire re-pairing** (`numeraire.. sum(i$cles(i), cles(i)*p(i)) = sum(i$cles(i), cles(i)*pd0(i))` + `nu_numeraire` + `cles(i)*nu_numeraire` in `stat_p`, `numeraire ⊥ nu_numeraire`, all market-clearing rows kept — the design's "try first"): omega 191.7346, **still MS-4**.
+- **Numéraire re-pairing** (`numeraire.. sum(i$cles(i), cles(i)*p(i)) =e= sum(i$cles(i), cles(i)*pd0(i))` + `nu_numeraire` + `cles(i)*nu_numeraire` in `stat_p`, `numeraire ⊥ nu_numeraire`, all market-clearing rows kept — the design's "try first"): omega 191.7346, **still MS-4**.
 - **Single-dual pin** (`nu_equil.fx('services')` to warm value): **still MS-4** → the dual redundancy is **deeper than a single Walras relation** (design §5 REPLAN trigger).
 - **KKT-residual harness: CASE_B — emit_bug.** `stat_mps` rel **1.05** / raw −210 (+ `stat_tm`/`stat_pwm` residues); dual-transfer CONSISTENT (closure residual 4.8e-10). `mps.fx=.09305` (FIXED), so `stat_mps` carries the fixing multiplier `nu_mps_fx` — the residual is a **fixing-multiplier transfer/stationarity defect**, a *different bug class* from the Walras dual-singularity.
 
