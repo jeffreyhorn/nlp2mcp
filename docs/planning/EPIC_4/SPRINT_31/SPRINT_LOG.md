@@ -10,7 +10,7 @@
 | 2 | P1 Phase 2: shared 3-site helper (heaviest day) | — (helper `head_offset_marginal_index_map` wired to Site 2 dual-transfer, correct + landed but not sufficient; blast radius 0. ⚠️ the Day-2 "Sites 1/3 already-correct / MS-1 17500" claim was a measurement error — corrected Day 3) | ✅ DONE (code); ⚠️ diagnosis corrected Day 3 |
 | 3 | P1 mine close-or-REPLAN (cold-INFES-by-direction gate) | **0 (REPLAN → Sprint 32 — 4th bound-complementarity site confirmed; foundation landed Days 1–2)** | 🔴 REPLAN |
 | 4 | P2 offset-alias #1111/#1112 core (polygon): coupled objective + distance second-index | **polygon → MATCH 0.780 (genuine floor +1); +cpack/himmel16/ps2×2/ps3 correct KKT completions, all still solve** | ✅ DONE |
-| 5 | P2 finish (shape8 enable, warm-match 0.780) + Checkpoint 1 | — (target: polygon genuine floor +1; REPLAN on gate leak) | 🔵 PENDING |
+| 5 | P2 finish (shape8 enable, warm-match 0.780) + Checkpoint 1 | **Checkpoint 1 GO: +3 as-measured Match (ps2_f_s/ps2_s/ps3_s_gic mismatch→match), genuine floor 70→74, Match 92→95 — both targets already met** | ✅ DONE |
 | 6 | P3 camcge dual-consistent Walras (start; `/tmp` prototype → src) | — (target: dual-consistent redefinition + S1∧S2∧S3 detector) | 🔵 PENDING |
 | 7 | P3 camcge close-or-REPLAN (MS-1 @ 191.7346 + detector precision) | — (target: camcge → MS-1, +1 Solve; REPLAN to per-model-numéraire) | 🔵 PENDING |
 | 8 | P4 sarf symbolic emit (start): 2-D gate + parametric `stat_task` | — (target: 2-D `_is_blowup_dynamic_subset_equation` + no set-name literals) | 🔵 PENDING |
@@ -53,6 +53,18 @@
 **⚠️ Day-2 measurement-error correction (integrity).** The Day-2 record ("emit already correct; warm-solves to MS-1 17500") was WRONG: those experiments set `x.up=inf` to relax the non-`d` `x.fx` fixing, which produces **34 "Unmatched variable not free or fixed" errors** (a variable paired with a vacuous conditioned `stat_x` MUST be fixed for MCP matching). The MCP solve never executed; the reported "17500/MS-1" was the **embedded `$include` LP**, not the MCP. Freeing non-`d` is structurally invalid → not an available fix. The Site-2 shift is still objectively correct (NLP stores `pr.m` at the `l+1` head label: `pr.m(se,4,1,1)=−7500` is the dual of the base-`l=3` constraint) and a genuine improvement — just **not sufficient**. Corrected in `ISSUE_1443` (top block) and the CHANGELOG.
 
 **Landed this sprint (P1, reusable, merged):** Phase-1 IR field `EquationDef.head_domain_offsets` (Day 1, PR #1526); the shared `head_offset_marginal_index_map` helper + Site-2 head-shifted dual transfer (Day 2, PR #1527). **Metric: mine stays `model_infeasible` (0 Solve/Match change).** Sprint-32 carryforward = the bound-complementarity / stat_x reconciliation (stationarity-consistent bound-multiplier derivation vs the `x.m` reduced-cost transfer). robert inherits the same 4th-site risk. **Freed ~10–14 h → P5 (CGE cluster) / P7** per Task 7.
+
+## Day 5 — P2 finish + Checkpoint 1 (2026-07-11)
+
+**Branch** `planning/sprint31-day5-checkpoint1`. Docs/measurement-only (the P2 completion gate — shape8 un-xfailed + polygon warm-match 0.780 + CGE byte-stable — all landed Day 4, PR #1529; no `src/` this day).
+
+**Checkpoint 1 `--resolve-changed --since-commit ea4191dc` — GO.** 6 changed goldens re-solved + bucket-diffed vs the committed DB; none moved backward. **3 forward:**
+- polygon / cpack / himmel16 — held `model_optimal_presolve / match`.
+- **ps2_f_s / ps2_s / ps3_s_gic — `model_optimal / mismatch` → `model_optimal_presolve / match` (✅ forward).** The distance second-index half generalized: these pooling models' packing-style constraints put a variable at both indices, so the missing second-index transpose sum was exactly their KKT defect. Verified ps2_f_s presolve MCP → MS-1, `nlp2mcp_obj_val = 0.861` = NLP ref.
+
+**PR25 re-baseline recompute (`BASELINE_METRICS.md` §Checkpoint 1):** genuine floor **70 → 74** (polygon methodology→genuine +1; ps2×3 new genuine +3); methodology **22 → 21**; **as-measured Match 92 → 95** (74 + 21 = 95 ✓). **Both sprint targets already met at Day 5** — genuine floor ≥ 73 (74) and Match ≥ 92 (95). The DB is not persisted at a checkpoint (the tool restores it on exit); the gains land in the DB at the Day-13 final retest.
+
+**Golden-staleness:** clean (goldens on `main` current). **No REPLAN** — the var-at-two-indices gate did not leak (CGE cohort byte-stable).
 
 ## Sprint 31 — Final Summary (Day 13)
 
