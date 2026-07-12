@@ -50,21 +50,36 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Initialization
+* NLP Pre-Solve (warm-start for MCP duals)
 * ============================================
 
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
-* POSITIVE variables with explicit .l values are
-* clamped to min(max(value, 1e-6), upper_bound).
+$onMultiR
+$include "data/gamslib/raw/polygon.gms"
+$offMulti
 
-r.l(i) = 4 * ord(i) * (card(i) + 1 - ord(i)) / sqr(card(i) + 1);
-r.l(i) = min(max(r.l(i), 1e-6), r.up(i));
-r.l('i25') = 0;
-theta.l(i) = pi * ord(i) / card(i);
-theta.l(i) = min(max(theta.l(i), 1e-6), theta.up(i));
-theta.l('i25') = 3.141592653589793;
+* Transfer NLP duals to MCP multiplier initialization
+lam_ordered.l(i) = abs(ordered.m(i+1));
+lam_distance.l(i,j) = abs(distance.m(i,j));
+
+* Transfer variable marginals to bound multipliers
+piL_r.l(i)$(abs(r.l(i) - r.lo(i)) < 1e-6 and r.m(i) > 0) = r.m(i);
+piL_theta.l(i)$(abs(theta.l(i) - theta.lo(i)) < 1e-6 and theta.m(i) > 0) = theta.m(i);
+piU_r.l(i)$(abs(r.l(i) - r.up(i)) < 1e-6 and r.m(i) < 0) = -(r.m(i));
+piU_theta.l(i)$(abs(theta.l(i) - theta.up(i)) < 1e-6 and theta.m(i) < 0) = -(theta.m(i));
+
+* Transfer fixed-variable marginals to _fx_ multipliers (#1462)
+nu_r_fx_i25.l = r.m('i25');
+nu_theta_fx_i25.l = theta.m('i25');
+
+* ============================================
+* #1449 (Layer 4): unfix elements fixed by the source $include but
+* enforced in the MCP via an active _fx_ complementarity equation
+* (else PATH drops the fixed column, leaving the _fx_ row unmatched).
+* ============================================
+r.lo('i25') = 0;
+r.up('i25') = +inf;
+theta.lo('i25') = 0;
+theta.up('i25') = +inf;
 
 * ============================================
 * Equations
@@ -92,6 +107,7 @@ Equations
 * Equation Definitions
 * ============================================
 
+$onMultiR
 * Stationarity equations
 stat_r(i).. ((-1) * (0.5 * (sin(theta(i+1) - theta(i)) * r(i+1) * 1$(j(i)) + sin(theta(i) - theta(i-1)) * r(i-1) * 1$(j(i-1))))) + nu_r_fx_i25$(sameas(i, 'i25')) + sum(j, ((2 * r(i) - cos(theta(j) - theta(i)) * r(j) * 2) * lam_distance(i,j))$(ord(j) > ord(i))) + sum(j, ((2 * r(i) - cos(theta(i) - theta(j)) * 2 * r(j)) * lam_distance(j,i))$(ord(i) > ord(j) and (not sameas(j, i)))) - piL_r(i) + piU_r(i) =E= 0;
 stat_theta(i).. ((-1) * (0.5 * (((-1) * (r(i+1) * r(i) * cos(theta(i+1) - theta(i)) * 1$(j(i)))) + r(i) * r(i-1) * cos(theta(i) - theta(i-1)) * 1$(j(i-1))))) + nu_theta_fx_i25$(sameas(i, 'i25')) + lam_ordered(i) + ((-1) * lam_ordered(i-1))$(ord(i) > 1) + sum(j, (((-1) * (2 * r(i) * r(j) * ((-1) * (sin(theta(j) - theta(i)))) * (-1))) * lam_distance(i,j))$(ord(j) > ord(i))) + sum(j, (((-1) * (2 * r(j) * r(i) * ((-1) * (sin(theta(i) - theta(j)))))) * lam_distance(j,i))$(ord(i) > ord(j) and (not sameas(j, i)))) - piL_theta(i) + piU_theta(i) =E= 0;
@@ -113,6 +129,7 @@ obj.. polygon_area =E= 0.5 * sum(i$(j(i)), r(i+1) * r(i) * sin(theta(i+1) - thet
 r_fx_i25.. r("i25") - 0 =E= 0;
 theta_fx_i25.. theta("i25") - 3.141592653589793 =E= 0;
 
+$offMulti
 
 * ============================================
 * Fix inactive variable instances

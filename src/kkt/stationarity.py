@@ -2861,6 +2861,81 @@ def _resymbolize_offset_gradient(
     return walk(expr)
 
 
+def _count_additive_terms(expr: Expr | None) -> int:
+    """Count the top-level additive (+/-) terms of a gradient expression.
+
+    Sprint 31 P2 (#1111/#1112). Traversal (each descent preserves the additive
+    term count of the sub-tree it enters):
+      - ``+``/``-`` ``Binary`` → sum of the two operands' counts;
+      - a leading ``Unary("-"/"+")`` (the maximize-negation) → recurse through
+        its child, so ``-(a + b)`` is two terms, not one;
+      - ``<const-like> * <expr>`` (a bare ``Const`` OR a condition-factor
+        ``DollarConditional(Const(1.0), cond)`` on either side — see
+        ``gradient.py``'s ``_is_condition_factor`` / ``_extract_condition_from_expr``
+        pattern 2) → recurse into the OTHER factor, so a scaled/conditioned
+        additive tree like ``0.5 * (A + B)`` or ``(A + B) * 1$(cond)`` distributes
+        to two terms (a genuine product ``a * b`` with no const-like factor stays
+        one term — the inner factor is itself a product → 1);
+      - ``Sum`` → recurse into its body;
+      - ``DollarConditional(value, cond)`` (pattern 1) → recurse into ``value``;
+        the condition wraps but does not change the additive term count;
+      - every other node counts as one term.
+    Being transparent to the DollarConditional condition-wrapper/factor forms is
+    load-bearing: gradient derivatives of a *conditioned* objective are wrapped
+    in exactly these shapes, so an opaque leaf would UNDERCOUNT and let the
+    offset-path representative selection pick a boundary instance even when an
+    interior one carries more offset images (re-dropping the cross-term).
+
+    Used by :func:`_build_indexed_gradient_term`'s offset path to pick the
+    *interior* representative instance for an offset-alias objective gradient —
+    a boundary column drops one offset image (e.g. polygon's ``theta('i1')``
+    carries only the ``+1`` successor, not the out-of-range ``-1`` predecessor),
+    so the correct representative is the non-zero instance with the MOST additive
+    terms, not merely the first non-zero one.
+    """
+    if expr is None:
+        return 0
+    if isinstance(expr, Unary) and expr.op in ("-", "+"):
+        # A leading maximize-negation (or unary plus) wraps the additive tree —
+        # recurse through it so `-(a + b)` counts as two terms, not one.
+        return _count_additive_terms(expr.child)
+    if isinstance(expr, Binary) and expr.op in ("+", "-"):
+        return _count_additive_terms(expr.left) + _count_additive_terms(expr.right)
+    if isinstance(expr, Binary) and expr.op == "*":
+        # A `<const-like> * <additive tree>` (polygon's `0.5 * (A + B)`, or a
+        # condition factor `(A + B) * 1$(cond)`) distributes — descend into the
+        # non-const-like factor. A genuine product `a * b` (neither factor
+        # const-like) stays one term (the inner factor is itself a product → 1).
+        if _is_const_like_factor(expr.left):
+            return _count_additive_terms(expr.right)
+        if _is_const_like_factor(expr.right):
+            return _count_additive_terms(expr.left)
+    if isinstance(expr, Sum):
+        return _count_additive_terms(expr.body)
+    if isinstance(expr, DollarConditional):
+        # The condition wraps the value but does not change its additive term
+        # count (gradient.py pattern 1: DollarConditional(value, cond)).
+        return _count_additive_terms(expr.value_expr)
+    return 1
+
+
+def _is_const_like_factor(expr: Expr | None) -> bool:
+    """A multiplicative factor that scales without adding terms: a bare ``Const``,
+    or a *constant* condition factor ``DollarConditional(Const(<any value>), cond)``
+    (``c$(cond)`` for any constant ``c``). Used by :func:`_count_additive_terms`
+    so a conditioned additive gradient is not under-counted as a single term.
+
+    Deliberately BROADER than ``gradient.py``'s ``_is_condition_factor``, which
+    matches only ``Const(1.0)`` (the exact shape ``_ensure_numeric_condition``
+    emits). For term-counting any ``c$(cond)`` scales an additive tree without
+    changing its term count — e.g. ``(A + B) * 3$(cond)`` is still two terms — so
+    the constant value is irrelevant here and the predicate accepts any ``Const``.
+    """
+    if isinstance(expr, Const):
+        return True
+    return isinstance(expr, DollarConditional) and isinstance(expr.value_expr, Const)
+
+
 def _build_indexed_gradient_term(
     kkt: KKTSystem,
     var_name: str,
@@ -3003,6 +3078,25 @@ def _build_indexed_gradient_term(
             return summed
 
     if use_offset_path:
+        # Sprint 31 P2 (#1111/#1112): the offset path re-symbolizes ONE
+        # representative's gradient and generalizes it to every interior row, so
+        # a boundary representative (whose out-of-range predecessor/successor row
+        # drops one offset image) drops that cross-term for ALL rows. Re-select
+        # the representative as the non-zero instance carrying the MOST additive
+        # gradient terms (the interior column that holds both offset images);
+        # ties keep the first (byte-stable for the single-image cohort — #1387/
+        # #1455 per-instance offsets all share a term count, so no re-selection).
+        _rep_terms = _count_additive_terms(grad_component)
+        for _c_id, _v_idx in nonzero_instances:
+            _gc = kkt.gradient.get_derivative(_c_id)
+            if _gc is None:
+                continue
+            _n = _count_additive_terms(_gc)
+            if _n > _rep_terms:
+                _rep_terms = _n
+                col_id = _c_id
+                grad_component = _gc
+                rep_var_indices = _v_idx
         expr = _resymbolize_offset_gradient(
             grad_component, rep_var_indices[0], domain[0], element_to_set, domain
         )
@@ -5808,12 +5902,26 @@ def _add_indexed_jacobian_terms(
     # Cache for resolved set names and member→position maps (shared across constraints)
     domain_cache: dict = {}
 
+    # Sprint 31 P2 (#1111/#1112): the distance second-index (var-at-two-indices)
+    # transpose sums. The main loop below emits ONE sum per constraint from
+    # entries[0]'s representative — for a 1-D variable at position 0 of a 2-D
+    # constraint (polygon's r(i) in distance(i,j), rows ord(j)>ord(i)) that is the
+    # first-index sum, and the complementary second-index sum (r(i) at position 1
+    # of distance(j,i), rows ord(j)<ord(i)) is dropped. Collect the complementary
+    # position here and append its sum AFTER the main loop, leaving the existing
+    # first-index emission byte-identical.
+    _two_index_todo: list[tuple[str, int, list[tuple[int, int]]]] = []
+
     # For each constraint, add the Jacobian term
     for _eq_name, entries in constraint_entries.items():
         # Get first entry to extract structure
         row_id, col_id = entries[0]
         derivative = jacobian.get_derivative(row_id, col_id)
         eq_name_base, eq_indices = jacobian.index_mapping.row_to_eq[row_id]
+
+        _comp_pos = _var_at_two_indices_complement(jacobian, entries, var_domain)
+        if _comp_pos is not None:
+            _two_index_todo.append((eq_name_base, _comp_pos, list(entries)))
 
         # Issue #1224 (mine): parameter-valued index offsets in an inequality body
         # (e.g. ``pr.. x(l,i+li(k),j+lj(k)) - x(l+1,i,j)``) cannot be represented by
@@ -7162,7 +7270,181 @@ def _add_indexed_jacobian_terms(
 
                     expr = Binary("+", expr, term)
 
+    # Sprint 31 P2 (#1111/#1112): append the complementary second-index transpose
+    # sum for var-at-two-indices constraints (see the collection above). Each todo
+    # is a distinct (constraint, complementary-position) not emitted by the main
+    # loop; deduped so a constraint contributes at most one complementary sum.
+    _seen_two_index: set[tuple[str, int]] = set()
+    for _eq_nb, _comp_pos, _entries in _two_index_todo:
+        if (_eq_nb, _comp_pos) in _seen_two_index:
+            continue
+        _seen_two_index.add((_eq_nb, _comp_pos))
+        _second = _build_complement_index_sum(
+            kkt, jacobian, _eq_nb, _comp_pos, _entries, var_domain, element_to_set, name_func
+        )
+        if _second is not None:
+            expr = Binary("+", expr, _second)
+
     return expr
+
+
+def _var_at_two_indices_complement(
+    jacobian,
+    entries: list[tuple[int, int]],
+    var_domain: tuple[str, ...],
+) -> int | None:
+    """Sprint 31 P2 (#1111/#1112): detect the var-at-two-indices shape and return
+    the COMPLEMENTARY constraint index-position the main loop drops.
+
+    Fires only when a 1-D variable maps to a 2-D constraint AND appears at BOTH
+    index positions across ``entries`` (e.g. polygon's ``r(i)`` at position 0 of
+    ``distance(i,j)`` and position 1 of ``distance(j,i)``).
+
+    Position inference IGNORES diagonal rows (``eq_idx[0] == eq_idx[1]``): there
+    the variable coincidentally matches both positions and would falsely look
+    like var-at-two-indices. ``main_pos`` is therefore the first NON-diagonal
+    entry's position, and the complement is ``1 - main_pos``. Every constraint
+    that fires today generates NO diagonal instances (the var-at-two-indices
+    shape carries an ord/triangle/subset filter — polygon ``ord(j)>ord(i)``,
+    cpack ``ij(i,j)`` — that excludes ``i==j``), so ``entries[0]`` is itself
+    non-diagonal and ``main_pos`` equals ``entries[0]``'s position — matching the
+    single sum the main loop emits from ``entries[0]``. The diagonal-skip only
+    matters for the guard direction: a same-set constraint like irscge's
+    ``eqX(i,j)`` whose sole "position-0" evidence is the ambiguous diagonal
+    yields positions ``{1}`` → no complement (correctly not fired). Returns
+    ``None`` for every other shape — a plain 1-index constraint, a variable at a
+    single position, dim-mismatch, or a >2-index constraint — so nothing else is
+    touched.
+    """
+    if len(var_domain) != 1 or not entries:
+        return None
+    positions: set[int] = set()
+    main_pos: int | None = None
+    for row_id, col_id in entries:
+        eq_idx = jacobian.index_mapping.row_to_eq[row_id][1]
+        var_idx = jacobian.index_mapping.col_to_var[col_id][1]
+        if len(eq_idx) != 2 or len(var_idx) != 1:
+            return None
+        # Skip DIAGONAL rows (eq_idx[0] == eq_idx[1]): there the variable
+        # coincidentally matches BOTH positions, which would falsely look like
+        # var-at-two-indices. A genuine second-index constraint (polygon's
+        # distance(i,j)$(ord(j)>ord(i))) never has i==j; a same-set constraint
+        # like irscge's eqX(i,j) with a diagonal instance (z at position 1 for all
+        # off-diagonal rows plus the ambiguous diagonal) must NOT fire — position
+        # is taken from the off-diagonal rows only, giving {1} → no complement.
+        if eq_idx[0] == eq_idx[1]:
+            continue
+        if eq_idx[0] == var_idx[0]:
+            pos = 0
+        elif eq_idx[1] == var_idx[0]:
+            pos = 1
+        else:
+            return None
+        positions.add(pos)
+        if main_pos is None:
+            main_pos = pos
+    if positions != {0, 1} or main_pos is None:
+        return None
+    return 1 - main_pos
+
+
+def _build_complement_index_sum(
+    kkt: KKTSystem,
+    jacobian,
+    eq_name_base: str,
+    comp_pos: int,
+    entries: list[tuple[int, int]],
+    var_domain: tuple[str, ...],
+    element_to_set: dict,
+    name_func,
+) -> Expr | None:
+    """Sprint 31 P2 (#1111/#1112): build the complementary-position transpose sum.
+
+    Mirrors the first-index sum with an INVERTED multiplier index order and a
+    FLIPPED ``ord`` condition. For the second position of ``distance(j,i)`` w.r.t.
+    ``r(i)`` this emits
+    ``sum(j, ∂distance(j,i)/∂r(i) · lam_distance(j,i))$(ord(j) < ord(i))``.
+    Reuses the same re-symbolization primitives as the main loop
+    (``_build_constraint_element_mapping`` + ``_replace_indices_in_expr``), with
+    the constraint domain arranged so the variable's ``comp_pos`` element maps to
+    the stationarity index and the other to the summation index.
+    """
+    mult_domain = _get_constraint_domain(kkt, eq_name_base)
+    if not mult_domain or len(mult_domain) != 2:
+        return None
+    stat = var_domain[0]
+    others = [d for d in mult_domain if d != stat]
+    if len(others) != 1:
+        return None
+    sum_idx = others[0]
+
+    # Pick the interior representative among the complementary-position entries
+    # (the boundary column drops one cross-image; the interior carries the full
+    # derivative structure).
+    rep: tuple[int, int, Expr] | None = None
+    rep_terms = -1
+    for row_id, col_id in entries:
+        eq_idx = jacobian.index_mapping.row_to_eq[row_id][1]
+        var_idx = jacobian.index_mapping.col_to_var[col_id][1]
+        if len(eq_idx) != 2 or len(var_idx) != 1 or eq_idx[0] == eq_idx[1]:
+            continue  # skip diagonal rows (ambiguous position)
+        pos = 0 if eq_idx[0] == var_idx[0] else (1 if eq_idx[1] == var_idx[0] else None)
+        if pos != comp_pos:
+            continue
+        d = jacobian.get_derivative(row_id, col_id)
+        n = _count_additive_terms(d)
+        if n > rep_terms and d is not None:
+            rep_terms = n
+            rep = (row_id, col_id, d)
+    if rep is None:
+        return None
+    row_id, col_id, derivative = rep
+    _, group_eq_indices = jacobian.index_mapping.row_to_eq[row_id]
+
+    # Arrange the constraint domain so the variable element (at comp_pos) maps to
+    # the stationarity index and the other element to the summation index.
+    constraint_domain = (stat, sum_idx) if comp_pos == 0 else (sum_idx, stat)
+    constraint_element_to_set = _build_constraint_element_mapping(
+        element_to_set, group_eq_indices, constraint_domain
+    )
+    indexed_deriv = _replace_indices_in_expr(
+        derivative,
+        var_domain,
+        constraint_element_to_set,
+        kkt.model_ir,
+        equation_domain=var_domain,
+    )
+    mult_indices = tuple(constraint_element_to_set[e] for e in group_eq_indices)
+    mult_ref = MultiplierRef(name_func(eq_name_base), mult_indices)
+    term: Expr = Binary("*", indexed_deriv, mult_ref)
+
+    # Flip the ord condition for the complementary position by swapping the two
+    # constraint domain names (ord(j)>ord(i) → ord(j)<ord(i)).
+    eq_def = kkt.model_ir.equations.get(eq_name_base)
+    cond: Expr | None = None
+    if eq_def is not None and eq_def.condition is not None:
+        cond = eq_def.condition
+        if comp_pos == 1:
+            # Swap the two constraint domain names (stat↔sum) throughout the
+            # condition. Pass PLAIN STRING replacements — `_reindex_condition_symbols`
+            # / its `remap_index` require `str`/`IndexOffset` values; a `SymbolRef`
+            # would be written verbatim into `ParamRef`/`VarRef` index tuples for a
+            # condition with indexed symbols (e.g. `sig(i)`, `p(i)`), which later
+            # crashes `_format_mixed_indices` (that expects `str|IndexOffset`). The
+            # walk looks up each original name once, so this is a simultaneous swap.
+            cond = _reindex_condition_symbols(cond, {stat: sum_idx, sum_idx: stat})
+
+    # Explicitly exclude the DIAGONAL (sum_idx == stat, i.e. j==i) from the
+    # complementary sum: the main-loop sum already accounts for the (i,i) Jacobian
+    # contribution once (the full ∂g(i,i)/∂r(i) chain-rule term). Every firing
+    # model's own $-condition already excludes j==i (polygon `ord(j)>ord(i)`,
+    # cpack `ij(i,j)`), but a 2-D constraint WITHOUT such a filter would otherwise
+    # double-count the diagonal — so guard it here unconditionally.
+    diag_exclusion: Expr = Unary("not", Call("sameas", (SymbolRef(sum_idx), SymbolRef(stat))))
+    cond = diag_exclusion if cond is None else Binary("and", cond, diag_exclusion)
+    term = DollarConditional(value_expr=term, condition=cond)
+
+    return Sum((sum_idx,), term)
 
 
 def _subset_alias_superset_index(

@@ -101,22 +101,19 @@ def test_shape6_tree_predicate_aliased_sum() -> None:
     assert not re.search(r"nu_dembal\(n[+-]\d", row), f"phantom-offset enumeration (#1390): {row}"
 
 
-@pytest.mark.xfail(
-    reason="#1143/#1111/#1112: the objective-successor half is implemented+verified (Sprint 30 "
-    "Day 8, interior-representative selection) but REVERTED — it can't ship without the "
-    "coupled distance-Jacobian second-index fix, which is the #1111/#1112 general-alias "
-    "core → REPLAN'd to Sprint 31 (control-verified 4-term recipe in ISSUE_1143)",
-    strict=True,
-)
 def test_shape8_offset_alias_successor() -> None:
     """#1143/#1111/#1112 (successor offset-alias objective cross-term; #1447 is the
     related objective-term-scoping family). x(i) appears in the sum body at offset 0
     AND +1, so stat_x(i) must carry BOTH the own-row successor and the predecessor
     term — the representative-instance selection must pick an INTERIOR column (not a
-    boundary one missing the predecessor). The objective half was implemented +
-    verified Day 8 (this assertion passes with it applied) but reverted (coupled with
-    the distance-Jacobian #1111/#1112 general-alias core, REPLAN'd to Sprint 31); it
-    stays strict-xfail until the coupled fix lands."""
+    boundary one missing the predecessor).
+
+    Sprint 31 P2 (Day 4): the coupled offset-alias fix LANDED — the objective
+    successor half (`_count_additive_terms` interior-representative selection in
+    `_build_indexed_gradient_term`) + the distance second-index half
+    (`_build_complement_index_sum`, the var-at-two-indices complementary transpose
+    sum). polygon now warm-matches 0.780 (≈ NLP 0.7797). This assertion guards the
+    objective half."""
     row = _stat_row(_emit("shape8_offset_alias_successor.gms"), "stat_x(i)")
     # Own-row successor term and the predecessor cross-term, each subset-guarded.
     assert "x(i+1)*1$(j(i))" in row, row
@@ -155,3 +152,34 @@ def test_shape9_objgrad_subset_boundary() -> None:
     # The fixed boundary-element term is present and guarded to tt='4'
     # (row is whitespace-stripped, so no space after the comma).
     assert "rv" in row and "sameas(tt,'4')" in row, row
+
+
+def test_shape10_distance_second_index() -> None:
+    """Sprint 31 P2 (#1111/#1112): a variable at BOTH index positions of a 2-index
+    constraint (`g(i,j)$(ord(j)>ord(i))` with `r(i)` and `r(j)`). stat_r(i) must
+    carry TWO transpose sums: the first-index sum over j>i with `lam_g(i,j)` AND the
+    complementary second-index sum over j<i with the INVERTED multiplier `lam_g(j,i)`
+    and a flipped ord condition. Before the fix the second-index sum was dropped
+    (the offset-key machinery collapsed both positions to one representative)."""
+    row = _stat_row(_emit("shape10_distance_second_index.gms"), "stat_r(i)")
+    # First-index sum: multiplier in declared order, guarded ord(j)>ord(i).
+    assert "lam_g(i,j))$(ord(j)>ord(i))" in row, row
+    # Complementary second-index sum: inverted multiplier lam_g(j,i), flipped guard
+    # (ord(i)>ord(j) ≡ ord(j)<ord(i)) AND an explicit diagonal exclusion so the
+    # (i,i) row is not double-counted (the main-loop sum already carries it once).
+    assert "lam_g(j,i))$(ord(i)>ord(j)" in row, f"second-index sum dropped (#1111/#1112): {row}"
+    assert "notsameas(j,i)" in row, f"diagonal (j==i) not excluded — double-count risk: {row}"
+
+
+def test_shape11_second_index_indexed_condition() -> None:
+    """Sprint 31 P2 (#1111/#1112): the second-index sum swaps the constraint domain
+    names (i↔j) throughout the $-condition. When the condition carries an INDEXED
+    symbol (`w(i)`), the swap must produce `w(j)` — a plain string index — NOT a
+    `w(SymbolRef('j'))` that later crashes `_format_mixed_indices`. Emitting the row
+    at all (no crash) plus the `w(j)` check guards `_reindex_condition_symbols`
+    being called with string replacements."""
+    row = _stat_row(_emit("shape11_second_index_indexed_condition.gms"), "stat_r(i)")
+    # First-index sum keeps w(i); the complementary second-index sum swaps to w(j).
+    assert "lam_g(i,j))$(ord(j)>ord(i)andw(i))" in row, row
+    assert "lam_g(j,i))$(ord(i)>ord(j)andw(j)" in row, f"indexed condition not swapped: {row}"
+    assert "SymbolRef" not in row, f"SymbolRef leaked into an index tuple: {row}"

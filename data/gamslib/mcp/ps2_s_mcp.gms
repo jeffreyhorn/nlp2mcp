@@ -102,8 +102,8 @@ Equations
 
 * Stationarity equations
 stat_b(i).. ((-1) * p(i)) + nu_rev(i) - piL_b(i) =E= 0;
-stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) + sum(j, (-1) * lam_ic(i,j)) - piL_w(i) =E= 0;
-stat_x(i).. ((-1) * (0.5 * x(i) ** (-0.5))) * nu_rev(i) + theta(i) * lam_pc(i) + sum(j, theta(i) * lam_ic(i,j)) - piL_x(i) =E= 0;
+stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) + sum(j, (-1) * lam_ic(i,j)) + sum(j, lam_ic(j,i)$((not sameas(j, i)))) - piL_w(i) =E= 0;
+stat_x(i).. ((-1) * (0.5 * x(i) ** (-0.5))) * nu_rev(i) + theta(i) * lam_pc(i) + sum(j, theta(i) * lam_ic(i,j)) + sum(j, (((-1) * theta(i)) * lam_ic(j,i))$((not sameas(j, i)))) - piL_x(i) =E= 0;
 
 * Inequality complementarity equations
 comp_ic(i,j).. w(i) - theta(i) * x(i) - (w(j) - theta(i) * x(j)) =G= 0;

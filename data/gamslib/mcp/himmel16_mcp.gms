@@ -94,8 +94,8 @@ Equations
 
 * Stationarity equations
 stat_area(i).. -1 + nu_areadef(i) =E= 0;
-stat_x(i).. ((-1) * (0.5 * y(i))) * nu_areadef(i) + (((-1) * (0.5 * ((-1) * y(i)))) * nu_areadef(i+5))$(ord(i) <= card(i) - 5) + (((-1) * (0.5 * ((-1) * y(i)))) * nu_areadef(i-1))$(ord(i) > 1) + nu_x_fx_1$(sameas(i, '1')) + sum(j, (2 * (x(i) - x(j)) * lam_maxdist(i,j))$(ord(i) < ord(j))) =E= 0;
-stat_y(i).. ((-1) * (0.5 * ((-1) * x(i)))) * nu_areadef(i) + (((-1) * (0.5 * x(i))) * nu_areadef(i+5))$(ord(i) <= card(i) - 5) + (((-1) * (0.5 * x(i))) * nu_areadef(i-1))$(ord(i) > 1) + nu_y_fx_1$(sameas(i, '1')) + nu_y_fx_2$(sameas(i, '2')) + sum(j, (2 * (y(i) - y(j)) * lam_maxdist(i,j))$(ord(i) < ord(j))) =E= 0;
+stat_x(i).. ((-1) * (0.5 * y(i))) * nu_areadef(i) + (((-1) * (0.5 * ((-1) * y(i)))) * nu_areadef(i+5))$(ord(i) <= card(i) - 5) + (((-1) * (0.5 * ((-1) * y(i)))) * nu_areadef(i-1))$(ord(i) > 1) + nu_x_fx_1$(sameas(i, '1')) + sum(j, (2 * (x(i) - x(j)) * lam_maxdist(i,j))$(ord(i) < ord(j))) + sum(j, (2 * (x(j) - x(i)) * (-1) * lam_maxdist(j,i))$(ord(j) < ord(i) and (not sameas(j, i)))) =E= 0;
+stat_y(i).. ((-1) * (0.5 * ((-1) * x(i)))) * nu_areadef(i) + (((-1) * (0.5 * x(i))) * nu_areadef(i+5))$(ord(i) <= card(i) - 5) + (((-1) * (0.5 * x(i))) * nu_areadef(i-1))$(ord(i) > 1) + nu_y_fx_1$(sameas(i, '1')) + nu_y_fx_2$(sameas(i, '2')) + sum(j, (2 * (y(i) - y(j)) * lam_maxdist(i,j))$(ord(i) < ord(j))) + sum(j, (2 * (y(j) - y(i)) * (-1) * lam_maxdist(j,i))$(ord(j) < ord(i) and (not sameas(j, i)))) =E= 0;
 
 * Inequality complementarity equations
 comp_maxdist(i,j)$(ord(i) < ord(j)).. ((-1) * (sqr(x(i) - x(j)) + sqr(y(i) - y(j)) - 1)) =G= 0;
