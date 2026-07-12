@@ -84,6 +84,33 @@ The as-measured Match 92 carries forward from Sprint 28's 62 → 92 (+30) jump, 
 
 ---
 
+## Checkpoint 1 re-baseline (Sprint 31 Day 5, 2026-07-11) — PR25 recompute after the P2 offset-alias fix
+
+**Checkpoint 1 `--resolve-changed --since-commit ea4191dc` bucket-diff (6 changed goldens): GO — no model moved backward; 3 forward.**
+
+| Model | Committed bucket | Fresh (Day-5) bucket | Δ |
+|---|---|---|---|
+| polygon | model_optimal_presolve / match | model_optimal_presolve / match | held (emit now genuine) |
+| cpack | model_optimal_presolve / match | model_optimal_presolve / match | held |
+| himmel16 | model_optimal_presolve / match | model_optimal_presolve / match | held (non-convex) |
+| **ps2_f_s** | model_optimal / **mismatch** | model_optimal_presolve / **match** | **✅ forward** |
+| **ps2_s** | model_optimal / **mismatch** | model_optimal_presolve / **match** | **✅ forward** |
+| **ps3_s_gic** | model_optimal / **mismatch** | model_optimal_presolve / **match** | **✅ forward** |
+
+The distance second-index half generalized beyond polygon: **ps2_f_s / ps2_s / ps3_s_gic** (pooling models whose packing-style constraints put a variable at both indices) went **mismatch → match** — the missing second-index transpose sum was exactly their KKT defect. Verified: ps2_f_s presolve MCP → MODEL STATUS 1, `nlp2mcp_obj_val = 0.861` = NLP reference.
+
+**PR25 recompute (the DB is NOT persisted at a checkpoint — the tool restores it on exit; these gains are measured now and land in the DB at the Day-13 final retest):**
+
+| Component | Day-0 | **Day-5 (Checkpoint 1)** | Δ |
+|---|---|---|---|
+| **Genuine, stable** (floor) | 70 | **74** | **+4** — polygon (methodology→genuine, its cold emit was fixed) + ps2_f_s / ps2_s / ps3_s_gic (live mismatch → genuine match via the second-index fix) |
+| **Methodology-recovered** | 22 | **21** | −1 — polygon reclassified out (cpack/himmel16 stay: matched before & after, non-convex — the fix improved their KKT without changing status) |
+| **As-measured Match** | 92 | **95** | **+3** — ps2_f_s / ps2_s / ps3_s_gic net-new matches (74 genuine + 21 methodology = 95 ✓) |
+
+**The genuine-floor target (≥ 73) and the Match-maintain target (≥ 92) are BOTH already met at Day 5** — genuine floor 74, as-measured Match 95. The P2 track delivered **+4 genuine floor** (vs the +1 polygon-only projection) because the #1111/#1112 general-alias core is not polygon-specific.
+
+---
+
 ## 3. Per-Sprint-31-Target Bucket Provenance
 
 Per-model trajectory: Sprint 30 final (= Sprint 31 Day-0) bucket + the gating issue + the **PR25 projection label** (genuine bucket-to-success vs methodology-already-banked). Buckets pinned from the committed DB.
