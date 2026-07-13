@@ -17,7 +17,7 @@
 | 9 | P4 sarf tractability gate (O(constraints)) + Checkpoint 2 | **sarf tractability gate FAILED (Day-8 REPLAN confirmed — O(instances) 369K); Checkpoint 2 GO (P2 gains stable: Match 95, genuine floor 74)** | ✅ DONE |
 | 10 | P5 cold-convex obj-grad: CGE cluster `stat_xp` reduction (hhfair = Case-c) | **0 (REPLAN → Case-c — control refuted: reduction INERT, CGE cluster non-convex like hhfair; sign flip stayed BANNED)** | 🔴 REPLAN |
 | 11 | P6 rocket forcing → PATH-consultation input (`1/m` reformulation + continuation) | **0 Solve (REPLAN → Sprint 32) — reformulation exhausted (MS-5 cold/warm/continuation); PATH-consultation input finalized** | 🔴 REPLAN (deliverable landed) |
-| 12 | P7 infrastructure (shape8 + head-offset fixtures, genuine-floor tracking) + REPLAN-slack | — (property fixtures confirmed green ×35; PR25 genuine floor FINALIZED = **74**, P2 sole gain; REPLAN-slack = no add'l emit gains) | ✅ DONE |
+| 12 | P7 infrastructure (shape8 + head-offset fixtures, genuine-floor tracking) + REPLAN-slack | — (property fixtures confirmed green ×35; PR25 genuine floor FINALIZED = **74**, P2 sole gain; REPLAN-slack = no additional emit gains) | ✅ DONE |
 | 13 | Final retest (≥3 `PYTHONHASHSEED`) + closeout | — (target: Solve ≥109 / genuine floor ≥73 / determinism ✅) | 🔵 PENDING |
 
 **Targets (`PROJECT_PLAN.md` §"Sprint 31"):** Solve 107 → ≥ 109 · Match maintain ≥ 92 / genuine floor 70 → ≥ 73 · model_infeasible 7 → ≤ 5 · Translate ≥ 135 (stretch +1 via #1385) · Tests ≥ 5,000 · determinism ✅.

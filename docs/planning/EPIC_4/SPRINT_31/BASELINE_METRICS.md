@@ -120,7 +120,7 @@ The full-sprint outcome, after all Day 3–11 REPLAN decisions:
 | **P3** camcge dual-consistent | (Solve, not floor) | **0** | REPLAN Day 6 (CASE_B `stat_mps`, not Walras) |
 | **P5** hhfair / CGE cluster | +1 to +4 | **0** | REPLAN Day 10 (control refuted; genuine Case-c non-convexity) |
 
-**Final genuine floor = 74** (S30 70 + P2's +4); methodology **21**; as-measured **Match 95**. **Only P2 landed a genuine-floor gain** — the +1-to-+4 P5 ramp component did NOT materialise (the CGE cluster + hhfair are genuine Case-c, not the fixable-convex case the projection assumed). This validates the Sprint-30-retro §3 conditionality warning (the genuine-floor ramp is NOT independent +1s): the ramp was carried entirely by the one track (P2) whose fix genuinely converted methodology/mismatch → genuine cold match.
+**Final genuine floor = 74** (S30 70 + P2's +4); methodology **21**; as-measured **Match 95**. **Only P2 landed a genuine-floor gain** — the +1-to-+4 P5 ramp component did NOT materialize (the CGE cluster + hhfair are genuine Case-c, not the fixable-convex case the projection assumed). This validates the Sprint-30-retro §3 conditionality warning (the genuine-floor ramp is NOT independent +1s): the ramp was carried entirely by the one track (P2) whose fix genuinely converted methodology/mismatch → genuine cold match.
 
 **Footnote-⁸ ramp actual:** **S30 70 → S31 74** (target ≥ 73 MET, via P2 alone). S32+ ramp (≥ 73/75/78) unchanged; the S31 ≥ 73 step is met with +1 headroom. The S32 candidates now carry the REPLAN carryforwards: mine [P1 → S32], sarf [P4 → S32], rocket [P6 → S32 PATH-consultation], camcge [P3 → Epic 5], the CGE cluster / hhfair [P5 → documented Case-c].
 
