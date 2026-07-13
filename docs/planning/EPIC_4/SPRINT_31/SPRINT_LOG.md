@@ -18,7 +18,7 @@
 | 10 | P5 cold-convex obj-grad: CGE cluster `stat_xp` reduction (hhfair = Case-c) | **0 (REPLAN → Case-c — control refuted: reduction INERT, CGE cluster non-convex like hhfair; sign flip stayed BANNED)** | 🔴 REPLAN |
 | 11 | P6 rocket forcing → PATH-consultation input (`1/m` reformulation + continuation) | **0 Solve (REPLAN → Sprint 32) — reformulation exhausted (MS-5 cold/warm/continuation); PATH-consultation input finalized** | 🔴 REPLAN (deliverable landed) |
 | 12 | P7 infrastructure (shape8 + head-offset fixtures, genuine-floor tracking) + REPLAN-slack | — (property fixtures confirmed green ×35; PR25 genuine floor FINALIZED = **74**, P2 sole gain; REPLAN-slack = no additional emit gains) | ✅ DONE |
-| 13 | Final retest (≥3 `PYTHONHASHSEED`) + closeout | — (target: Solve ≥109 / genuine floor ≥73 / determinism ✅) | 🔵 PENDING |
+| 13 | Final retest (≥3 `PYTHONHASHSEED`) + closeout | **Parse 142 · Translate 135 · Solve 107 · Match 92 (142-corpus, maintained) · genuine floor 74 · all-219 Match 95 · Tests 5,074 · determinism ✅ ×3** — SPRINT 31 CLOSED | ✅ DONE |
 
 **Targets (`PROJECT_PLAN.md` §"Sprint 31"):** Solve 107 → ≥ 109 · Match maintain ≥ 92 / genuine floor 70 → ≥ 73 · model_infeasible 7 → ≤ 5 · Translate ≥ 135 (stretch +1 via #1385) · Tests ≥ 5,000 · determinism ✅.
 
@@ -165,6 +165,39 @@ So **only camcge** is the (would-be) Walras case — confirming the design's sco
 
 **`--resolve-changed` checkpoint targets (Day-13 retest):** the 6 P2-touched goldens (polygon, cpack, himmel16, ps2_f_s, ps2_s, ps3_s_gic) against anchor `ea4191dc` — GO iff no changed golden moves backward. No other track landed `src/`, so the changed-golden set is exactly the P2 set.
 
-## Sprint 31 — Final Summary (Day 13)
+## Day 13 — Final Retest + Closeout → SPRINT 31 CLOSED (2026-07-13)
 
-_(To be completed at closeout — final metrics table, per-priority summary, determinism verification, Sprint-32 carryforwards.)_
+**Branch** `planning/sprint31-day13-close`. DB + docs (no `src/`; the last `src/` change was Day 4/5 P2 #1529 — Days 6–12 landed zero `src/`, so the emit is byte-identical to the P2-gains state confirmed at Checkpoints 1 & 2).
+
+**Retest (the full 12h solve-retest was justifiably scoped down — zero `src/` change since Checkpoint 2, so the emit and thus every bucket carries forward, re-confirmed three ways):**
+1. **Determinism ✅ ×3.** Emitted all 6 P2-changed models (cold) + the 3 ps2/ps3 presolve variants under `PYTHONHASHSEED` {0,1,42} — **byte-identical across seeds**, and each cold emit == its committed golden.
+2. **`--resolve-changed --since-commit ea4191dc` → GO.** Exactly the 6 P2 goldens changed since the Sprint-30 close; on re-solve, polygon/cpack/himmel16 held `match`, and ps2_f_s/ps2_s/ps3_s_gic moved `mismatch → match` (forward). No backward move.
+3. **DB bucket recompute** (142-corpus + all-219) — below.
+
+**Final metrics — 142-corpus (headline KPI = `verified_convex + likely_convex`):** **Parse 142 · Translate 135 · Solve 107 · Match 92 · model_infeasible 7 · Tests 5,074 · determinism ✅**. All **unchanged from Day-0** (= Sprint 30 final; the DB was byte-unchanged since the Sprint 28 close until this day). Targets: Parse/Translate/Match-maintain/Tests/determinism **MET**; **Solve ≥ 109 and model_infeasible ≤ 5 MISS by exactly 2** — the REPLAN'd deep tracks (mine [P1], camcge [P3], rocket [P6], all in the `model_infeasible` 7 = agreste/camcge/cesam/fawley/lnts/mine/rocket). **No regression** (every bucket ≥ Day-0).
+
+**The +3 Match lands OUTSIDE the 142 corpus (persisted this day).** ps2_f_s/ps2_s/ps3_s_gic are **`non_convex` → non-candidates**, so they lift the **all-219 tally (92 → 95)** and the **genuine floor**, but NOT the headline 142-corpus KPI (which stays **92, maintained ✓** — polygon/cpack/himmel16 were already matching). The Day-5/Day-12 "as-measured Match 95" phrasing = this all-219 tally; the headline KPI is 92. The +3 were persisted via `run_pipeline` (repo-relative `mcp_file_used = *_mcp_presolve.gms`, #1400-compliant); the 3 new `_mcp_presolve.gms` goldens are the match artifacts (deterministic ×3, committed alongside the DB).
+
+**Genuine floor 70 → 74 (+4, target ≥ 73 MET).** polygon + ps2_f_s + ps2_s + ps3_s_gic. All four are **genuine** by the operational definition (methodology requires the cold emit byte-identical to pre-fix; the P2 #1111/#1112 fix **changed** all four cold emits with real second-index cross-terms). These match via the presolve warm-start (PATH cold-diverges to a spurious KKT point on these non-convex models), exactly the polygon precedent. **P2 is the sole genuine-floor contributor** — the projected P5 CGE-cluster ramp (+1..+4) was control-refuted as genuine Case-c (Day 10), and P1 mine REPLAN'd (Day 3).
+
+### Per-priority summary
+
+| Priority | Track | Outcome |
+|---|---|---|
+| P1 | mine head-offset IR plumbing (#1443) | **REPLAN → S32** (Day 3; 4th bound-complementarity site; the head-offset IR foundation landed Days 1–2). Day-2 "MS-1 17500" was a measurement error, corrected Day 3. |
+| **P2** | **offset-alias #1111/#1112 (polygon)** | **✅ LANDED** — the sole genuine emit track. +4 genuine floor (polygon + ps2×3), +3 all-219 matches. The general-alias second-index-transpose core is not polygon-specific. |
+| P3 | camcge dual-consistent Walras (#1330) | **REPLAN → Epic 5** (Days 6–7; harness re-diagnosed CASE_B `stat_mps`, not clean Walras singularity). |
+| P4 | sarf symbolic emit (#1385) | **REPLAN → S32** (Days 8–9; the dominant blow-up is the 369K-instance 4-D `task` var stationarity, not the 1,152 constraints). |
+| P5 | cold-convex obj-grad (CGE cluster + hhfair) | **REPLAN → Case-c** (Day 10; control refuted — the ν_objective reduction is inert, the CGE cluster + hhfair are genuine non-convex Case-c). 0 genuine floor. |
+| P6 | rocket forcing (#1462) | **REPLAN → S32** (Day 11; division-by-variable reformulation exhausted — MS-5 cold/warm/continuation; intrinsic non-convergence; finalized PATH-consultation input is the deliverable). |
+| P7 | property fixtures + genuine-floor tracking | **✅ DONE** (Day 12; shape8/10/11 + head-offset fixtures green ×35; PR25 tracking finalized). |
+
+### Sprint-32 carryforwards (ISSUE headers synced)
+
+- **mine** (#1443, P1) → S32: the 4th bound-complementarity site; head-offset IR foundation already on main.
+- **sarf** (#1385, P4) → S32: O(instances) — needs a 4-D `task`-var stationarity gate, not the O(constraints) approach.
+- **camcge** (#1330, P3) → Epic 5: CGE-domain dual-consistent Walras transform (CASE_B `stat_mps`).
+- **rocket** (#1462, P6) → S32: PATH-consultation on the intrinsic discretized-optimal-control MCP non-convergence; `--force` scaffold + finalized question are the de-risked hand-off.
+- **hhfair + CGE cluster** (#1236, P5): documented genuine Case-c (non-convex; no emit fix converts them; the presolve warm-start is required).
+
+**SPRINT 31 CLOSED.** Net: ONE genuine emit track (P2, +4 genuine floor); five deep tracks REPLAN'd on refuted premises (each caught before shipping a wrong fix — the PR24/PR27 control-first discipline working as intended). Both stated targets (Match maintain ≥ 92, genuine floor ≥ 73) MET; the two Solve-side targets missed by exactly the deferrals. Retrospective: `SPRINT_RETROSPECTIVE.md`.

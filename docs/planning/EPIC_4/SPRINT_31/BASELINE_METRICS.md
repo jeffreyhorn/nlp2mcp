@@ -180,6 +180,45 @@ At **Day 0** this selects **0 models** — `git diff --name-only ea4191dc..HEAD 
 
 ---
 
+## 5. Day-13 Final Recompute — SPRINT 31 CLOSED (2026-07-13)
+
+Final retest: emit determinism ×3 `PYTHONHASHSEED` {0,1,42} (byte-identical on all 6 P2 goldens, cold + presolve); `--resolve-changed --since-commit ea4191dc` **GO** (6 changed goldens; the 3 ps2/ps3 moved mismatch→match, none backward); the +3 non-candidate matches persisted to the DB (repo-relative `mcp_file_used`, #1400-compliant).
+
+### 142-corpus KPIs (the headline metric — `verified_convex + likely_convex`)
+
+| KPI | Day-0 | **Final** | Target | Verdict |
+|---|---|---|---|---|
+| Parse | 142 | **142** | 142 | ✅ |
+| Translate | 135 | **135** | ≥ 135 | ✅ (stretch 136 — sarf #1385 REPLAN'd) |
+| Solve | 107 | **107** | ≥ 109 | ❌ −2 (mine [P1] + camcge [P3] REPLAN'd) |
+| Match | 92 | **92** | maintain ≥ 92 | ✅ |
+| model_infeasible | 7 | **7** | ≤ 5 | ❌ −2 (mine/camcge/rocket REPLAN'd) |
+| Tests | 4,997 | **5,074** | ≥ 5,000 | ✅ |
+| determinism | ✅ | **✅ ×3** | ✅ | ✅ |
+
+**Met:** Parse, Translate, Match-maintain, genuine floor, Tests, determinism. **Missed:** Solve (≥ 109) and model_infeasible (≤ 5), by *exactly* the REPLAN'd deep tracks (mine [P1], camcge [P3], rocket [P6]). **No regression** — every 142-corpus bucket is ≥ its Day-0 value; the misses are deferrals, not backward moves.
+
+### ⚠️ Corpus KPI (92, maintained) vs all-model tally (95) — the P2 gains land OUTSIDE the 142 corpus
+
+This is the one subtlety the earlier Day-5/Day-12 "as-measured Match 95" phrasing must be read against: **the headline 142-corpus Match KPI is 92 and does NOT move from P2.** The reasons:
+
+- **polygon/cpack/himmel16** (the P2 in-corpus models) were **already matching** before Sprint 31 (via presolve) — their status is unchanged; P2 only corrected their cold emit (polygon methodology→genuine).
+- **ps2_f_s / ps2_s / ps3_s_gic** (the 3 net-new matches) are **`non_convex` → non-candidates → NOT in the 142 corpus.** They contribute to the **all-219 tally (92 → 95)** and the **genuine floor**, but not to the headline corpus KPI.
+
+So the honest final tally:
+
+| Match scope | Day-0 | Final | Note |
+|---|---|---|---|
+| **142-corpus (headline KPI)** | 92 | **92** | maintained ✅ — target was "maintain ≥ 92" |
+| **all-219 tally** | 92 | **95** | +3 ps2/ps3 non-candidate matches (persisted this day) |
+| **genuine cold-robustness floor** | 70 | **74** | +4 (polygon + ps2×3), target ≥ 73 ✅ |
+
+**Genuine-floor classification (operational definition, §2 line 72):** methodology requires the cold emit to be **byte-identical to its pre-fix state** (warm-start merely validates an already-correct emit). The P2 #1111/#1112 fix **changed** polygon + ps2×3 cold emits (real second-index cross-terms; cold goldens committed Day 4), so all four are **genuine**, not methodology — regardless of the fact that PATH still needs the presolve warm-start to converge on these non-convex models (cold ps2 reaches a spurious KKT point 0.861/1.056; presolve reaches the true optimum 0.8654/1.1615). This is exactly the polygon precedent (§3 line 136: "methodology → genuine" while still `model_optimal_presolve`).
+
+**Net Sprint 31:** ONE genuine emit track landed (P2, +4 genuine floor / +3 all-model matches); the five deep tracks (mine/P1, camcge/P3, sarf/P4, CGE-cluster+hhfair/P5, rocket/P6) all REPLAN'd on refuted fix premises. Both *stated* sprint targets — Match maintain ≥ 92, genuine floor ≥ 73 — are MET; the two Solve-side targets (Solve ≥ 109, model_infeasible ≤ 5) missed by exactly the deferred tracks. **SPRINT 31 CLOSED.**
+
+---
+
 **Document Created:** 2026-07-08
 **Owner:** Sprint 31 Planning Team
 **Authoritative scheduling budget:** the per-task totals in `docs/planning/EPIC_4/SPRINT_31/PREP_PLAN.md` (35–49 h across Tasks 1–10).
