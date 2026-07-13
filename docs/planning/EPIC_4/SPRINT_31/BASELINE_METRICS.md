@@ -76,9 +76,9 @@ The as-measured Match 92 carries forward from Sprint 28's 62 → 92 (+30) jump, 
 | Track | Models it converts | Genuine-floor delta |
 |---|---|---|
 | **P2 offset-alias core (#1111/#1112, polygon)** | `polygon` (cold offset-alias fix → genuine cold match) | +1 |
-| **P5 cold-convex obj-grad (hhfair `stat_u`)** | `hhfair` — *not* methodology (currently **mismatch**); a fix is a **new** genuine match (+1 as-measured Match **and** +1 floor) | +1 |
-| **P5 cold-convex obj-grad (CGE `stat_xp`)** | `irscge`, `lrgcge`, `moncge` (one ν_objective reduction → several cold; rel ~0.06 after the S30 case-normalization fix) | +1 to +3 |
-| **P1 head-offset (#1443, mine)** | `mine` — infeasible → optimal; **+1 genuine floor** if the cold LCP also cold-matches (also +1 Solve) | +0 to +1 |
+| **P5 cold-convex obj-grad (hhfair `stat_u`)** | ~~`hhfair`~~ **❌ genuine Case-c (Task 9 / Day 10)** — sign flip refuted 3× (72.147 → 22.144, worse); no emit fix; stays mismatch | ~~+1~~ **0** |
+| **P5 cold-convex obj-grad (CGE `stat_xp`)** | ~~`irscge`, `lrgcge`, `moncge`~~ **❌ REFUTED (Day 10): genuine Case-c, NOT converters** — control shows the ν_objective reduction is INERT (all three cold `UU=25.5085` vs match 26.09; sign flip inert, `UU` obj-only), the models are non-convex (Scale-Economy/Large-Country/Monopoly CGE); they stay methodology. | ~~+1 to +3~~ **0** |
+| **P1 head-offset (#1443, mine)** | `mine` — infeasible → optimal; **+1 genuine floor** if the cold LCP also cold-matches (also +1 Solve) | +0 to +1 **→ 0 (REPLAN'd Day 3)** |
 
 > **⚠️ Conditionality (Sprint-30 retrospective §3, lesson 3 — binding for Sprint 31).** The genuine-floor lift proved *less robust than projected* in Sprint 30 because its contributors are entangled with non-convexity / general-alias differentiation: **"Sprint-31 planning should treat the genuine-floor ramp (→ ≥73/75/78) as conditional on the #1111/#1112 core + the dual-consistent CGE work, not as independent +1s."** So the +3 (70 → ≥73) has *nominal* headroom, but each contributor carries a Task-7 REPLAN exit. **himmel16 is NOT a converter** — it is documented **non-convex** (Sprint 30 Day-7 sign-fix refuted; no emit fix converts it), a change from the Sprint-30 P5 framing.
 
