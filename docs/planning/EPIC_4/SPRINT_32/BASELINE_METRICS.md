@@ -122,8 +122,9 @@ The Sprint-32 mid-sprint checkpoints (Day 5 / Day 10) re-solve only the emit-tou
 At **Day 0** this selects **0 models** — `git diff --name-only 4cbf8bff..HEAD -- 'data/gamslib/mcp/*_mcp.gms' 'data/gamslib/mcp/*_mcp_presolve.gms'` is empty (no emit golden has changed since the S31 close), confirming the clean baseline:
 
 ```
-GO: no emit goldens changed since 4cbf8bffa0b2481d4bb324f449a6ed23223f1f4b
+GO: no emit goldens changed since 4cbf8bff
 ```
+(`run_full_test.py` logs the `--since-commit` value verbatim, so the output echoes the same short SHA the command was invoked with; the full 40-char form `4cbf8bffa0b2481d4bb324f449a6ed23223f1f4b` resolves to the same commit.)
 
 During Sprint 32, as the emit sites change (the mine bound-multiplier, the sarf `stat_task` sparsification, the camcge `stat_mps` + Walras redefinition), the anchor selects exactly the emit-touched models for a bounded re-solve rather than a full ~4 h pipeline run; GO iff no changed golden moves backward.
 
