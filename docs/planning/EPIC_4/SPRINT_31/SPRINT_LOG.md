@@ -17,7 +17,7 @@
 | 9 | P4 sarf tractability gate (O(constraints)) + Checkpoint 2 | **sarf tractability gate FAILED (Day-8 REPLAN confirmed — O(instances) 369K); Checkpoint 2 GO (P2 gains stable: Match 95, genuine floor 74)** | ✅ DONE |
 | 10 | P5 cold-convex obj-grad: CGE cluster `stat_xp` reduction (hhfair = Case-c) | **0 (REPLAN → Case-c — control refuted: reduction INERT, CGE cluster non-convex like hhfair; sign flip stayed BANNED)** | 🔴 REPLAN |
 | 11 | P6 rocket forcing → PATH-consultation input (`1/m` reformulation + continuation) | **0 Solve (REPLAN → Sprint 32) — reformulation exhausted (MS-5 cold/warm/continuation); PATH-consultation input finalized** | 🔴 REPLAN (deliverable landed) |
-| 12 | P7 infrastructure (shape8 + head-offset fixtures, genuine-floor tracking) + REPLAN-slack | — (target: property fixtures + PR25 re-baseline recompute) | 🔵 PENDING |
+| 12 | P7 infrastructure (shape8 + head-offset fixtures, genuine-floor tracking) + REPLAN-slack | — (property fixtures confirmed green ×35; PR25 genuine floor FINALIZED = **74**, P2 sole gain; REPLAN-slack = no additional emit gains) | ✅ DONE |
 | 13 | Final retest (≥3 `PYTHONHASHSEED`) + closeout | — (target: Solve ≥109 / genuine floor ≥73 / determinism ✅) | 🔵 PENDING |
 
 **Targets (`PROJECT_PLAN.md` §"Sprint 31"):** Solve 107 → ≥ 109 · Match maintain ≥ 92 / genuine floor 70 → ≥ 73 · model_infeasible 7 → ≤ 5 · Translate ≥ 135 (stretch +1 via #1385) · Tests ≥ 5,000 · determinism ✅.
@@ -147,6 +147,23 @@ So **only camcge** is the (would-be) Walras case — confirming the design's sco
 **So rocket's non-convergence is intrinsic to the discretized optimal-control MCP structure, NOT the division-by-variable Jacobian conditioning.** Combined with the exhausted PATH-option survey (INFES 477 → 382, Sprint-30 Task 4) and continuation/multistart (all MS-5, Sprint-30 Day 3), **NO emittable lever converges rocket.**
 
 **Decision: REPLAN → Sprint 32; the finalized PATH-consultation input is the deliverable.** The reformulation is now a *ruled-out* candidate in the `BACKLOG §3` PATH-consultation question, sharpening it toward the intrinsic structure. The `--force` scaffold (Sprint 30) + this finalized question are the de-risked hand-off. rocket stays `model_infeasible`; +1 Solve deferred. **Sprint targets remain met** (Match 95 ≥ 92, genuine floor 74 ≥ 73). This was the last live +Solve/+Match attempt.
+
+## Day 12 — P7 infrastructure + REPLAN-slack (2026-07-13)
+
+**Branch** `planning/sprint31-day12-infra`. Docs-only (all P7 fixtures already landed Days 0–4; no new `src/` or fixtures — nothing to gate).
+
+**Property fixtures confirmed present + guarded + GREEN (35 passed).** The P7 cross-term/head-offset property suite is in place:
+- `shape8_offset_alias_successor.gms` — xfail **removed** (Day 5, warm-match 0.780); guarded by `test_ad_crossterm_shapes.py::test_shape8`.
+- `shape10_distance_second_index.gms` + `shape11_second_index_indexed_condition.gms` — the P2 #1111/#1112 second-index-transpose regression fixtures; guarded by `test_ad_crossterm_shapes.py`.
+- `head_offset_ir_roundtrip.gms` — the Phase-1 `head_domain_offsets` round-trip anchor; guarded by `test_head_domain_offsets.py` + `test_head_offset_presolve_transfer.py` + `test_head_offset_marginal_map.py` (Site-2 shifted read).
+- `test_count_additive_terms.py` — the interior-representative selection unit guard (8 tests).
+- Full P7 suite: **35 passed** (`pytest test_ad_crossterm_shapes test_head_domain_offsets test_head_offset_presolve_transfer test_head_offset_marginal_map test_count_additive_terms`).
+
+**PR25 genuine-floor tracking FINALIZED** (`BASELINE_METRICS.md` Day-12 section): **genuine floor = 74** (S30 70 + P2's +4), methodology 21, as-measured Match 95. **P2 is the sole genuine-floor contributor** — the projected P5 ramp component (+1 to +4 from the CGE cluster) did NOT land (control refuted it as genuine Case-c non-convexity, Day 10), and P1's +0-to-+1 mine gain REPLAN'd (Day 3). This is the Sprint-30-retro §3 conditionality warning realized: the genuine-floor ramp is NOT independent +1s — it was carried entirely by the one convex-fixable track. **Footnote-⁸ ramp: S30 70 → S31 74 (S31 ≥ 73 MET, +1 headroom).**
+
+**REPLAN-slack outcome: no additional emit gains.** The Task-7 reallocation order (P5 → P7 → +Translate/forcing tails) freed slack from the mine/polygon/sarf/hhfair-CGE/rocket REPLANs, but every deep track that REPLAN'd did so because its fix premise was refuted (measurement error, Case-c non-convexity, O(instances) blow-up, intrinsic non-convergence) — there was no *correct-but-unshipped* emit fix to absorb. The freed slack went to hardening the P7 property suite and de-risking the S32 carryforwards (PATH-consultation question sharpened, ISSUE files updated). **P2 remains the sole net gain; both sprint targets stay met (Match 95 ≥ 92, genuine floor 74 ≥ 73).**
+
+**`--resolve-changed` checkpoint targets (Day-13 retest):** the 6 P2-touched goldens (polygon, cpack, himmel16, ps2_f_s, ps2_s, ps3_s_gic) against anchor `ea4191dc` — GO iff no changed golden moves backward. No other track landed `src/`, so the changed-golden set is exactly the P2 set.
 
 ## Sprint 31 — Final Summary (Day 13)
 
