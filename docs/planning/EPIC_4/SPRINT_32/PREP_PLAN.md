@@ -117,10 +117,14 @@ test -f docs/planning/EPIC_4/SPRINT_32/KNOWN_UNKNOWNS.md && echo "KU list presen
 # 7 categories aligned to the PROJECT_PLAN Sprint-32 priorities (expect 7)
 grep -cE "^# Category [0-9]+:" docs/planning/EPIC_4/SPRINT_32/KNOWN_UNKNOWNS.md
 
-# Every numbered unknown carries a "How to Verify" section
-u=$(grep -cE "^## Unknown [0-9]+\.[0-9]+:" docs/planning/EPIC_4/SPRINT_32/KNOWN_UNKNOWNS.md)
-v=$(grep -cE "^### How to Verify" docs/planning/EPIC_4/SPRINT_32/KNOWN_UNKNOWNS.md)
-echo "unknowns=$u how-to-verify=$v (should match)"
+# Every numbered unknown carries a "How to Verify" section.
+# Strip the "Template for New Unknowns" section first — its code block also
+# contains a "### How to Verify" heading (and the other field headings), which
+# would otherwise inflate the count to 26 vs 25.
+body=$(sed '/^## Template for New Unknowns/,$d' docs/planning/EPIC_4/SPRINT_32/KNOWN_UNKNOWNS.md)
+u=$(printf '%s\n' "$body" | grep -cE "^## Unknown [0-9]+\.[0-9]+:")
+v=$(printf '%s\n' "$body" | grep -cE "^### How to Verify")
+echo "unknowns=$u how-to-verify=$v (should match — both 25)"
 
 # The bound-multiplier-derivation Critical unknown is present
 grep -iqE "bound.multiplier|bound-active|4th site" docs/planning/EPIC_4/SPRINT_32/KNOWN_UNKNOWNS.md && echo "P1 4th-site unknown present"
