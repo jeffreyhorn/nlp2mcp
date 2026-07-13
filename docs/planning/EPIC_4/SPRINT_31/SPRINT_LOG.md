@@ -15,7 +15,7 @@
 | 7 | P3 camcge close-or-REPLAN (MS-1 @ 191.7346 + detector precision) | **0 (REPLAN confirmed → Epic 5; cohort precision verified: irscge/lrgcge/moncge/stdcge all Optimal → only camcge would flag)** | 🔴 REPLAN |
 | 8 | P4 sarf symbolic emit (start): 2-D gate + parametric `stat_task` | **0 (REPLAN → Sprint 32 — 2-D gate built + fires, but the dominant blow-up is the 369K-instance 4-D `task` var stationarity, not the 1,152 constraints)** | 🔴 REPLAN |
 | 9 | P4 sarf tractability gate (O(constraints)) + Checkpoint 2 | **sarf tractability gate FAILED (Day-8 REPLAN confirmed — O(instances) 369K); Checkpoint 2 GO (P2 gains stable: Match 95, genuine floor 74)** | ✅ DONE |
-| 10 | P5 cold-convex obj-grad: CGE cluster `stat_xp` reduction (hhfair = Case-c) | — (target: irscge/lrgcge/moncge → Case-a, genuine floor; sign flip BANNED) | 🔵 PENDING |
+| 10 | P5 cold-convex obj-grad: CGE cluster `stat_xp` reduction (hhfair = Case-c) | **0 (REPLAN → Case-c — control refuted: reduction INERT, CGE cluster non-convex like hhfair; sign flip stayed BANNED)** | 🔴 REPLAN |
 | 11 | P6 rocket forcing → PATH-consultation input (`1/m` reformulation + continuation) | — (target: +1 Solve OR the finalized PATH-consultation input) | 🔵 PENDING |
 | 12 | P7 infrastructure (shape8 + head-offset fixtures, genuine-floor tracking) + REPLAN-slack | — (target: property fixtures + PR25 re-baseline recompute) | 🔵 PENDING |
 | 13 | Final retest (≥3 `PYTHONHASHSEED`) + closeout | — (target: Solve ≥109 / genuine floor ≥73 / determinism ✅) | 🔵 PENDING |
@@ -119,6 +119,17 @@ So **only camcge** is the (would-be) Walras case — confirming the design's sco
 - **GO: all 6 held their bucket** — the P2 gains are **stable** (no regression introduced by the Day 6–8 REPLAN work).
 
 **Golden-staleness:** clean. **PR25 tally — unchanged from Checkpoint 1:** genuine floor **74**, methodology **21**, as-measured **Match 95** (no new golden changes since Day 5). **Both sprint targets remain met** (Match ≥ 92, genuine floor ≥ 73). The +3 Match gains land in the DB at the Day-13 final retest.
+
+## Day 10 — P5 cold-convex obj-grad (CGE cluster) → **REPLAN to Case-c** (2026-07-12)
+
+**Branch** `planning/sprint31-day10-objgrad`. The control gate (the ν_objective reduction must reach residual→0 in a `/tmp` control BEFORE any `src/`) **FAILED** → REPLAN; no `src/` landed. **The sign flip stayed BANNED** (tested only as a control, never shipped).
+
+**The `/tmp` control (GAMS) refutes the reduction:**
+- **irscge cold-mismatches:** cold `UU = 25.5085` vs the presolve match **26.0914** (the harness's CASE_B, `stat_xp(BRD)` rel 0.064). So the P5 target (methodology → genuine cold match) exists.
+- **The ν_objective reduction is INERT.** `UU` appears ONLY in `obj.. UU =e= prod(i, Xp(i)**alpha(i))` → nu_obj = ±1, so the reduction reduces to the sign choice. Flipping `stat_xp`'s objective-gradient sign leaves the cold primal at the **identical 25.5085** — it does NOT move toward the match.
+- **The whole cluster is uniformly the same:** irscge / lrgcge / moncge all cold `25.5085`, sign flip inert both ways. They are **non-convex model classes** (irscge = *Scale Economy* / increasing returns, lrgcge = *Large-Country*, moncge = *Monopoly* CGE) → 25.5085 is a genuine non-global local optimum; the match is only reachable via the presolve warm-start.
+
+**Decision: REPLAN — the CGE cluster is genuine Case-c (like hhfair).** The design's "CGE cluster is convex, one ν_objective reduction → several cold" hypothesis is REFUTED by the control — exactly the hhfair Case-c pattern (Sprint-30 Day-6 sign-fix refutation). The 3 CGE models stay methodology (match via presolve, not cold); hhfair stays genuine Case-c. **P5 delivers 0 genuine floor** — the floor stays **74** (P2's gain). No high-blast-radius obj-grad change shipped on a refuted hypothesis (the PR24/PR27 control discipline working as intended — the same lesson as hhfair Day-6). **Sprint targets remain met** (Match 95 ≥ 92, genuine floor 74 ≥ 73). All experiments on `/tmp` (reverted); docs/decision-only.
 
 ## Sprint 31 — Final Summary (Day 13)
 
