@@ -90,7 +90,7 @@ This closes `stat_x` **exactly by construction** (`piL_x − piU_x = N`), and �
 
 **Emit site (single, local):** `src/emit/emit_gams.py:1548–1577` — the "Transfer variable marginals to bound multipliers" block, **presolve-only**. Replace the two `± x.m`-keyed assignments with an `N`-residual-based assignment that (a) reads the already-transferred `lam_pr.l` + the objective coefficient to form `N(l,i,j)`, then (b) splits `N` by sign into `piL_x.l`/`piU_x.l`. The cold emit and the `stat_x`/`comp_*` equation bodies are **unchanged** (this is a warm-start-value change only).
 
-**Scope / blast radius (Unknown 1.3 — favorable):** the change is confined to the presolve bound-multiplier **warm-start value** transfer. It does **not** touch the `EquationDef.head_domain_offsets` IR field or the Site-2 `head_offset_marginal_index_map` constraint-dual transfer (`emit_gams.py:1354/1545`), which are a *separate* block. The head-offset foundation regression guard passes on the current tree:
+**Scope / blast radius (Unknown 1.3 — favorable):** the change is confined to the presolve bound-multiplier **warm-start value** transfer. It does **not** touch the `EquationDef.head_domain_offsets` IR field or the Site-2 `head_offset_marginal_index_map` constraint-dual transfer (`src/emit/emit_gams.py:1354/1545`), which are a *separate* block. The head-offset foundation regression guard passes on the current tree:
 
 ```
 pytest tests/unit/ir/test_head_domain_offsets.py \
@@ -120,15 +120,15 @@ The 5 head-offset models stay byte-stable; the cold `mine_mcp.gms` is unchanged 
 
 | # | Unknown | Disposition |
 |---|---|---|
-| 1.1 | Can the bound-active `stat_x` be reconciled with a stationarity-consistent bound-multiplier? | ✅ VERIFIED — YES by construction: `piL_x = max(N,0)`, `piU_x = max(−N,0)` closes `stat_x = N − piL_x + piU_x`; the emit site is `emit_gams.py:1548–1577` (presolve, local). |
+| 1.1 | Can the bound-active `stat_x` be reconciled with a stationarity-consistent bound-multiplier? | ✅ VERIFIED — YES by construction: `piL_x = max(N,0)`, `piU_x = max(−N,0)` closes `stat_x = N − piL_x + piU_x`; the emit site is `src/emit/emit_gams.py:1548–1577` (presolve, local). |
 | 1.2 | Single 4th site, or does a 5th coupling surface? | ✅ VERIFIED (design) — the residual is localized to the `x.m` bound-multiplier transfer (duals CONSISTENT); the in-sprint warm-residual→0 gate is the single decisive test, with the explicit 5th-coupling REPLAN exit if the warm residual does not close / the sign contradicts the bound. |
 | 1.3 | Does the fix preserve the head-offset IR foundation (zero regression)? | ✅ VERIFIED — the change is confined to the presolve bound-multiplier warm-start value; independent of the Site-2 `head_offset_marginal_index_map`; the 16 head-offset guard tests pass; cold `mine_mcp.gms` byte-unchanged. Gate the `N`-derivation (or `--resolve-changed`-verify) so other presolve goldens stay byte-stable. |
 | 1.4 | Does the warm→cold gate assert `modelstat`? | ✅ VERIFIED — the protocol asserts `mcp_model.modelstat` before every objective read; the `x.up=inf` experiment is recorded BANNED (34 unmatched-variable errors). |
 
-**Decision: PROCEED** to the in-sprint P1 implementation of the stationarity-consistent bound-multiplier derivation (`emit_gams.py:1548–1577`, presolve), behind the Task-8 Phase-0 gate (warm residual → 0 → presolve MS-1, `modelstat` asserted). The 4th site is precisely localized (the `x.m` transfer), the fix is a single local emit change, and the head-offset foundation is provably preserved. The 5th-coupling REPLAN exit is explicit.
+**Decision: PROCEED** to the in-sprint P1 implementation of the stationarity-consistent bound-multiplier derivation (`src/emit/emit_gams.py:1548–1577`, presolve), behind the Task-8 Phase-0 gate (warm residual → 0 → presolve MS-1, `modelstat` asserted). The 4th site is precisely localized (the `x.m` transfer), the fix is a single local emit change, and the head-offset foundation is provably preserved. The 5th-coupling REPLAN exit is explicit.
 
 ---
 
 **Document Created:** 2026-07-13
 **Owner:** Sprint 32 Planning Team (KKT/emit specialist)
-**Evidence:** `kkt_residual.py data/gamslib/raw/mine.gms` (CASE_B `stat_x(3,1,1)` rel 2.37, duals CONSISTENT); cold `/tmp/mine_mcp.gms` + presolve `/tmp/mine_mcp_presolve.gms` emits; `emit_gams.py:1548–1577`; 16 head-offset guard tests green.
+**Evidence:** `kkt_residual.py data/gamslib/raw/mine.gms` (CASE_B `stat_x(3,1,1)` rel 2.37, duals CONSISTENT); cold `/tmp/mine_mcp.gms` + presolve `/tmp/mine_mcp_presolve.gms` emits; `src/emit/emit_gams.py:1548–1577`; 16 head-offset guard tests green.

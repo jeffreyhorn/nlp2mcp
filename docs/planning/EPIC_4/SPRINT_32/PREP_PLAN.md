@@ -303,8 +303,8 @@ grep -iqE "REPLAN|5th|deeper" docs/planning/EPIC_4/SPRINT_32/MINE_BOUND_MULTIPLI
 ### Acceptance Criteria
 
 - [x] The 4th site is reproduced + localized on the current tree via `kkt_residual.py` (CASE_B `stat_x(3,1,1)` rel 2.37, duals CONSISTENT)
-- [x] The bound-dual mismatch is characterized (`x.m` vs `piU_x`/`piL_x` vs the `stat_x` non-bound residual `N`; the `emit_gams.py:1548–1577` `±x.m` transfer)
-- [x] A stationarity-consistent bound-multiplier derivation is designed (`piL_x = max(N,0)`, `piU_x = max(−N,0)`), with the emit site named (`emit_gams.py:1548–1577`, presolve)
+- [x] The bound-dual mismatch is characterized (`x.m` vs `piU_x`/`piL_x` vs the `stat_x` non-bound residual `N`; the `src/emit/emit_gams.py:1548–1577` `±x.m` transfer)
+- [x] A stationarity-consistent bound-multiplier derivation is designed (`piL_x = max(N,0)`, `piU_x = max(−N,0)`), with the emit site named (`src/emit/emit_gams.py:1548–1577`, presolve)
 - [x] The warm→cold residual gate is defined, with `modelstat` asserted at each step (Day-2 lesson; `x.up=inf` BANNED)
 - [x] The 5th-coupling / deeper-IR REPLAN exit is explicit
 - [x] The head-offset IR foundation regression guard passes (16 tests green; cold `mine_mcp.gms` byte-stable)
