@@ -16,7 +16,7 @@
 | 8 | P4 sarf symbolic emit (start): 2-D gate + parametric `stat_task` | **0 (REPLAN → Sprint 32 — 2-D gate built + fires, but the dominant blow-up is the 369K-instance 4-D `task` var stationarity, not the 1,152 constraints)** | 🔴 REPLAN |
 | 9 | P4 sarf tractability gate (O(constraints)) + Checkpoint 2 | **sarf tractability gate FAILED (Day-8 REPLAN confirmed — O(instances) 369K); Checkpoint 2 GO (P2 gains stable: Match 95, genuine floor 74)** | ✅ DONE |
 | 10 | P5 cold-convex obj-grad: CGE cluster `stat_xp` reduction (hhfair = Case-c) | **0 (REPLAN → Case-c — control refuted: reduction INERT, CGE cluster non-convex like hhfair; sign flip stayed BANNED)** | 🔴 REPLAN |
-| 11 | P6 rocket forcing → PATH-consultation input (`1/m` reformulation + continuation) | — (target: +1 Solve OR the finalized PATH-consultation input) | 🔵 PENDING |
+| 11 | P6 rocket forcing → PATH-consultation input (`1/m` reformulation + continuation) | **0 Solve (REPLAN → Sprint 32) — reformulation exhausted (MS-5 cold/warm/continuation); PATH-consultation input finalized** | 🔴 REPLAN (deliverable landed) |
 | 12 | P7 infrastructure (shape8 + head-offset fixtures, genuine-floor tracking) + REPLAN-slack | — (target: property fixtures + PR25 re-baseline recompute) | 🔵 PENDING |
 | 13 | Final retest (≥3 `PYTHONHASHSEED`) + closeout | — (target: Solve ≥109 / genuine floor ≥73 / determinism ✅) | 🔵 PENDING |
 
@@ -130,6 +130,23 @@ So **only camcge** is the (would-be) Walras case — confirming the design's sco
 - **The whole cluster is uniformly the same:** irscge / lrgcge / moncge all cold `25.5085`, sign flip inert both ways. They are **non-convex model classes** (irscge = *Scale Economy* / increasing returns, lrgcge = *Large-Country*, moncge = *Monopoly* CGE) → 25.5085 is a genuine non-global local optimum; the match is only reachable via the presolve warm-start.
 
 **Decision: REPLAN — the CGE cluster is genuine Case-c (like hhfair).** The design's "CGE cluster is convex, one ν_objective reduction → several cold" hypothesis is REFUTED by the control — exactly the hhfair Case-c pattern (Sprint-30 Day-6 sign-fix refutation). The 3 CGE models stay methodology (match via presolve, not cold); hhfair stays genuine Case-c. **P5 delivers 0 genuine floor** — the floor stays **74** (P2's gain). No high-blast-radius obj-grad change shipped on a refuted hypothesis (the PR24/PR27 control discipline working as intended — the same lesson as hhfair Day-6). **Sprint targets remain met** (Match 95 ≥ 92, genuine floor 74 ≥ 73). All experiments on `/tmp` (reverted); docs/decision-only.
+
+## Day 11 — P6 rocket forcing → PATH-consultation input (2026-07-12)
+
+**Branch** `planning/sprint31-day11-rocket`. Docs/decision-only (no `src/` — the reformulation is a model-level change that does not converge, so nothing lands; the `--force` scaffold already landed Sprint 30). All experiments on `/tmp`.
+
+**Gate: residual clean at the NLP point (Case-c) — PASS.** The harness reports CASE_B `stat_ht(h0)` rel 1.00, but per ISSUE_1462 the residual at the h0/h50 **boundary** rows (moving with the warm-start value, `nu_*_fx=0` → `stat_step`; `=var.m` → `stat_ht(h0)`) is the non-convex **Case-c boundary** signature, not a cleanable emit bug — rocket stays a forcing problem.
+
+**The LAST untried emittable lever — the division-by-variable reformulation — is EXHAUSTED.** Reformulated rocket to remove ALL division-by-variable from the initial Jacobian: `gf(h)` → `g(h)*sqr(ht(h)) =e= g_0*sqr(h_0)` (removes 1/ht²); a free acceleration `a(h)` with `accel(h).. (a(h)+g(h))*m(h) =e= T(h)−D(h)` replacing `(T−D−m·g)/m` in `v_eqn` (removes 1/m). The reformulated NLP solves to the same optimum (**1.0128**), but its MCP is:
+- **MS-5 Locally Infeasible cold** (nh=10),
+- **MS-5 warm-started from the NLP optimum** (presolve),
+- **MS-5 across every mu-continuation step** (`--force homotopy`).
+
+(The nh=50 reformulated MCP exceeds the demo-license nonlinear-row limit — the auxiliary `a(h)` + bilinear `accel` push it past 1000 rows — so the comparison ran at nh=10, where the ORIGINAL rocket MCP is also MS-5, a fair baseline.)
+
+**So rocket's non-convergence is intrinsic to the discretized optimal-control MCP structure, NOT the division-by-variable Jacobian conditioning.** Combined with the exhausted PATH-option survey (INFES 477 → 382, Sprint-30 Task 4) and continuation/multistart (all MS-5, Sprint-30 Day 3), **NO emittable lever converges rocket.**
+
+**Decision: REPLAN → Sprint 32; the finalized PATH-consultation input is the deliverable.** The reformulation is now a *ruled-out* candidate in the `BACKLOG §3` PATH-consultation question, sharpening it toward the intrinsic structure. The `--force` scaffold (Sprint 30) + this finalized question are the de-risked hand-off. rocket stays `model_infeasible`; +1 Solve deferred. **Sprint targets remain met** (Match 95 ≥ 92, genuine floor 74 ≥ 73). This was the last live +Solve/+Match attempt.
 
 ## Sprint 31 — Final Summary (Day 13)
 
