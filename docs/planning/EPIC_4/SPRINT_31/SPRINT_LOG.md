@@ -14,7 +14,7 @@
 | 6 | P3 camcge dual-consistent Walras (start; `/tmp` prototype → src) | **0 (REPLAN → Epic 5 — `/tmp` prototype stayed MS-4; harness re-diagnosed CASE_B stat_mps, not clean Walras)** | 🔴 REPLAN |
 | 7 | P3 camcge close-or-REPLAN (MS-1 @ 191.7346 + detector precision) | **0 (REPLAN confirmed → Epic 5; cohort precision verified: irscge/lrgcge/moncge/stdcge all Optimal → only camcge would flag)** | 🔴 REPLAN |
 | 8 | P4 sarf symbolic emit (start): 2-D gate + parametric `stat_task` | **0 (REPLAN → Sprint 32 — 2-D gate built + fires, but the dominant blow-up is the 369K-instance 4-D `task` var stationarity, not the 1,152 constraints)** | 🔴 REPLAN |
-| 9 | P4 sarf tractability gate (O(constraints)) + Checkpoint 2 | — (target: sarf → translate, +Translate; REPLAN on timeout) | 🔵 PENDING |
+| 9 | P4 sarf tractability gate (O(constraints)) + Checkpoint 2 | **sarf tractability gate FAILED (Day-8 REPLAN confirmed — O(instances) 369K); Checkpoint 2 GO (P2 gains stable: Match 95, genuine floor 74)** | ✅ DONE |
 | 10 | P5 cold-convex obj-grad: CGE cluster `stat_xp` reduction (hhfair = Case-c) | — (target: irscge/lrgcge/moncge → Case-a, genuine floor; sign flip BANNED) | 🔵 PENDING |
 | 11 | P6 rocket forcing → PATH-consultation input (`1/m` reformulation + continuation) | — (target: +1 Solve OR the finalized PATH-consultation input) | 🔵 PENDING |
 | 12 | P7 infrastructure (shape8 + head-offset fixtures, genuine-floor tracking) + REPLAN-slack | — (target: property fixtures + PR25 re-baseline recompute) | 🔵 PENDING |
@@ -106,6 +106,19 @@ So **only camcge** is the (would-be) Walras case — confirming the design's sco
 - **So the design's fix-surface (2-D constraint gate + parametric cross-term) is necessary but INSUFFICIENT** — the design scoped the blow-up as the 1,152 constraint instances (tbal 384 / equipb1 648 / equipb2 120), but the real cost is the 369K-instance `task`-variable stationarity. The parametric emit must ALSO sparsify `stat_task` to the `$taskposs(g,t)`-active subset (the banked `stat_task(g,t,m,n)$taskposs(g,t)` shape IS parametric, but the current per-instance emit enumerates all 369K before guarding).
 
 **Decision: REPLAN → Sprint 32, with an enlarged scope.** The full fix is parametric stationarity emit for a 369K-instance 4-D variable + the parametric constraint cross-terms, landed atomically — strictly larger than the already-4×-failed Sprint-26 symbolic-emit. Gate reverted (measurement-only). sarf stays `translate_timeout`; +Translate deferred. **Sprint targets already met** (Match 95, genuine floor 74 at Day 5); P4 was a +Translate stretch. This is the 5th REPLAN of this track — the enlarged scope (369K var blow-up) is the new banked finding for the dedicated Sprint-32/Epic workstream.
+
+## Day 9 — P4 sarf tractability gate + Checkpoint 2 (2026-07-12)
+
+**Branch** `planning/sprint31-day9-checkpoint2`. Docs/measurement-only (no `src/`; the DB is not persisted at a checkpoint — the tool restores it on exit).
+
+**P4 sarf tractability gate — FAILED (REPLAN confirmed Day 8).** The gate requires the emit to be **O(constraints), not O(instances)**. Day 8 established it is O(instances): even with the 2-D constraint gate short-circuiting `tbal`/`equipb1`/`equipb2`, the 4-D `task(g,t,mn,mn)` variable's `stat_task` enumerates **369,024** instances → the >2-min timeout persists. So the tractability gate is not met → **REPLAN → Sprint 32** (enlarged scope: parametric stationarity emit for the 369K-instance variable). sarf stays `translate_timeout`; no +Translate.
+
+**Checkpoint 2 (`--resolve-changed --since-commit ea4191dc`) — GO.** The changed-golden set is unchanged since Checkpoint 1 (Days 6–8 were REPLANs / docs-only, no golden changes), so the 6 P2 models re-solve identically:
+- polygon / cpack / himmel16 — held `model_optimal_presolve / match`.
+- ps2_f_s / ps2_s / ps3_s_gic — `model_optimal / mismatch` → `model_optimal_presolve / match` (✅ forward).
+- **GO: all 6 held their bucket** — the P2 gains are **stable** (no regression introduced by the Day 6–8 REPLAN work).
+
+**Golden-staleness:** clean. **PR25 tally — unchanged from Checkpoint 1:** genuine floor **74**, methodology **21**, as-measured **Match 95** (no new golden changes since Day 5). **Both sprint targets remain met** (Match ≥ 92, genuine floor ≥ 73). The +3 Match gains land in the DB at the Day-13 final retest.
 
 ## Sprint 31 — Final Summary (Day 13)
 
