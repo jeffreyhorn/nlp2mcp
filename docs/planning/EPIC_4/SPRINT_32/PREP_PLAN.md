@@ -238,9 +238,10 @@ grep -oiE "mine|sarf|camcge|rocket|hhfair" docs/planning/EPIC_4/SPRINT_32/BASELI
 
 ## Task 3: mine 4th Bound-Complementarity Site — Localization + Bound-Multiplier Design (Priority 1 foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
-**Estimated Time:** 5–7 hours
+**Estimated Time:** 5–7 hours (actual: ~4h)
+**Completed:** 2026-07-13
 **Deadline:** Before Sprint 32 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
@@ -270,11 +271,11 @@ mine (P1) is the deepest Sprint-32 track and one of the two firm +Solve movers (
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_32/MINE_BOUND_MULTIPLIER_DESIGN.md` (§1 harness localization; §2 bound-dual mismatch characterization; §3 the stationarity-consistent bound-multiplier derivation + emit site; §4 warm→cold gate + 5th-coupling REPLAN exit; §5 KU dispositions). Set `KNOWN_UNKNOWNS.md` Unknowns 1.1/1.2/1.3/1.4 → ✅ VERIFIED. CHANGELOG entry. All experiments read-only (harness + `/tmp` emits); no `src/` change.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-13).** The harness reproduces the Day-3 fingerprint **exactly** on the current tree: **CASE_B**, `stat_x(3,1,1)` rel **2.37** / raw −3.2e4, **dual-transfer CONSISTENT** (comp/equality residual 0), dual scale 1.35e4 — the residual localizes entirely to `stat_x` rows, so `lam_pr`/`pr.m` (head-shifted via Site-2) are correct and the **4th site is the warm-start bound-multiplier transfer**. Emit-site pinned: `src/emit/emit_gams.py:1548–1577` ("Transfer variable marginals to bound multipliers") sets `piL_x/piU_x = ±x.m` (the LP reduced cost), but at mine's degenerate LP vertex `x.m ≠ N` (the non-bound part of `stat_x`), so `stat_x = N − (±x.m) ≠ 0`. **Fix (design):** derive `piL_x = max(N,0)`, `piU_x = max(−N,0)` from the stationarity residual `N` after the `lam_pr` transfer — closes `stat_x = N − piL_x + piU_x` by construction, with the sign matching the bound-active status. The change is **presolve-only, local, and independent of the head-offset foundation** (the Site-2 `head_offset_marginal_index_map` + `EquationDef.head_domain_offsets` are untouched; the 16 head-offset guard tests pass; cold `mine_mcp.gms` byte-unchanged). **Warm→cold gate:** warm residual → 0 (harness Case-a, `modelstat` asserted) → presolve MS-1 (+1 Solve) → cold MS-1 (stretch); the `x.up=inf` experiment is BANNED. **5th-coupling REPLAN exit:** REPLAN to a Sprint-33 deeper head-offset architecture iff the `N`-derivation does not close the warm residual or the sign of `N` contradicts the bound (budget → P6/P7 per Task 9). **Decision: PROCEED** to the in-sprint P1 implementation behind the Task-8 gate. Docs/design-only (no `src/`).
 
 ### Verification
 
@@ -301,13 +302,13 @@ grep -iqE "REPLAN|5th|deeper" docs/planning/EPIC_4/SPRINT_32/MINE_BOUND_MULTIPLI
 
 ### Acceptance Criteria
 
-- [ ] The 4th site is reproduced + localized on the current tree via `kkt_residual.py` (CASE_B `stat_x` at bound-active rows)
-- [ ] The bound-dual mismatch is characterized (`x.m` vs `piU_x` vs `stat_x` residual per bound-active element)
-- [ ] A stationarity-consistent bound-multiplier derivation is designed, with the emit site(s) named
-- [ ] The warm→cold residual gate is defined, with `modelstat` asserted at each step (Day-2 lesson)
-- [ ] The 5th-coupling / deeper-IR REPLAN exit is explicit
-- [ ] The head-offset IR foundation regression guard passes (5 head-offset models byte-stable)
-- [ ] Unknowns 1.1, 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The 4th site is reproduced + localized on the current tree via `kkt_residual.py` (CASE_B `stat_x(3,1,1)` rel 2.37, duals CONSISTENT)
+- [x] The bound-dual mismatch is characterized (`x.m` vs `piU_x`/`piL_x` vs the `stat_x` non-bound residual `N`; the `emit_gams.py:1548–1577` `±x.m` transfer)
+- [x] A stationarity-consistent bound-multiplier derivation is designed (`piL_x = max(N,0)`, `piU_x = max(−N,0)`), with the emit site named (`emit_gams.py:1548–1577`, presolve)
+- [x] The warm→cold residual gate is defined, with `modelstat` asserted at each step (Day-2 lesson; `x.up=inf` BANNED)
+- [x] The 5th-coupling / deeper-IR REPLAN exit is explicit
+- [x] The head-offset IR foundation regression guard passes (16 tests green; cold `mine_mcp.gms` byte-stable)
+- [x] Unknowns 1.1, 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
