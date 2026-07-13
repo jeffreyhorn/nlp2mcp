@@ -133,7 +133,12 @@ Run the KKT-residual harness on the current tree; tabulate the per-element bound
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (favorable — a single local presolve-transfer fix)
+**Verified by:** Task 3 (mine 4th-Site Localization + Bound-Multiplier Design)
+**Date:** 2026-07-13
+**Findings:** The bound-active `stat_x` **can** be reconciled by construction. The harness reproduces the Day-3 fingerprint exactly (CASE_B, `stat_x(3,1,1)` rel 2.37 / raw −3.2e4, dual-transfer CONSISTENT, dual scale 1.35e4). The residual localizes entirely to `stat_x` rows with the duals CONSISTENT, so `lam_pr`/`pr.m` are correct and the mismatch is the **warm-start bound-multiplier transfer** at `src/emit/emit_gams.py:1548–1577`: it sets `piL_x/piU_x = ±x.m` (the LP reduced cost), but at mine's degenerate LP vertex `x.m ≠ N` (the non-bound part of `stat_x` = `−obj_grad + Σ_k[lam_pr(k,l,i-li,j-lj)$c − lam_pr(k,l-1,i,j)$c]`), so `stat_x = N − (±x.m) ≠ 0`. The fix: derive `piL_x = max(N,0)`, `piU_x = max(−N,0)` — which closes `stat_x = N − piL_x + piU_x = 0` exactly and respects the complementarity pairing.
+**Evidence:** `docs/planning/EPIC_4/SPRINT_32/MINE_BOUND_MULTIPLIER_DESIGN.md` §1–§3 (harness output + the emitted `stat_x` + the emit-site trace `src/emit/emit_gams.py:1548–1577`).
+**Decision:** PROCEED to the in-sprint stationarity-consistent bound-multiplier derivation (presolve, local emit change), behind the Task-8 warm-residual→0 gate.
 
 ---
 
@@ -167,7 +172,12 @@ After the Unknown-1.1 warm reconciliation, attempt the cold solve (asserting `mo
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (design — the single decisive in-sprint gate is defined)
+**Verified by:** Task 3 (mine 4th-Site Localization + Bound-Multiplier Design)
+**Date:** 2026-07-13
+**Findings:** The residual is localized to a **single** site — the `x.m` bound-multiplier transfer (the duals are CONSISTENT, so `lam_pr`/`pr.m`/complementarity are all correct; only `stat_x` fails to close, and only via the `piL_x/piU_x = ±x.m` warm-start). The in-sprint decisive test is the **warm-residual→0 gate**: after the `N`-derivation transfer, the harness must report Case-a (`stat_x` ≈ 0 at the NLP optimum). Because the `N`-split closes `stat_x` by construction, the only way a **5th coupling** surfaces is if (a) a fresh residual persists at the NLP optimum after the fix, or (b) the sign of `N` contradicts `x`'s bound-active status at some row (⇒ the emitted `stat_x` cross-term itself is still inconsistent) — both are explicit REPLAN triggers.
+**Evidence:** `MINE_BOUND_MULTIPLIER_DESIGN.md` §3–§4 (the `N`-derivation + the warm→cold gate + the 5th-coupling exit).
+**Decision:** PROCEED with the single-site fix + the warm-residual→0 gate; REPLAN to a Sprint-33 deeper head-offset architecture only if the warm residual does not close (budget → P6/P7 per Task 9).
 
 ---
 
@@ -201,7 +211,12 @@ Run the head-offset regression tests + the `--resolve-changed` checkpoint after 
 Development team (IR/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (favorable — local, foundation-independent)
+**Verified by:** Task 3 (mine 4th-Site Localization + Bound-Multiplier Design)
+**Date:** 2026-07-13
+**Findings:** The fix is confined to the presolve bound-multiplier **warm-start value** transfer (`src/emit/emit_gams.py:1548–1577`, "Transfer variable marginals to bound multipliers"), a block **independent** of the Site-2 `head_offset_marginal_index_map` constraint-dual transfer (`src/emit/emit_gams.py:1354/1545`) and of the `EquationDef.head_domain_offsets` IR field. The cold `mine_mcp.gms` and the `stat_x`/`comp_*` equation bodies are unchanged. The head-offset foundation regression guard passes on the current tree — **16 passed** (`tests/unit/ir/test_head_domain_offsets.py` + `tests/integration/emit/test_head_offset_presolve_transfer.py` + `tests/unit/emit/test_head_offset_marginal_map.py`). Caveat: the `x.m`→bound-multiplier transfer is a **generic** block, so the in-sprint implementation must gate the `N`-derivation to the head-offset-coupled case (or `--resolve-changed`-verify) to keep other presolve goldens byte-stable.
+**Evidence:** `MINE_BOUND_MULTIPLIER_DESIGN.md` §3; the 16-test head-offset guard run; `src/emit/emit_gams.py` block trace.
+**Decision:** PROCEED — favorable (local change, foundation provably preserved); the in-sprint change must be gated/`--resolve-changed`-verified for the non-mine presolve cohort.
 
 ---
 
@@ -231,7 +246,12 @@ Review the Task-3 design doc + the Task-8 P1 gate for the `modelstat`-assertion 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 3 (mine 4th-Site Localization + Bound-Multiplier Design)
+**Date:** 2026-07-13
+**Findings:** The warm→cold verification protocol asserts `mcp_model.modelstat` (== 1) **before** any objective read at each step (warm residual → 0 [harness Case-a] → presolve MS-1 → cold MS-1 stretch). The structurally invalid `x.up=inf` experiment is recorded **BANNED** — it produces 34 "Unmatched variable not free or fixed" errors (a variable paired with a vacuous conditioned `stat_x` MUST stay fixed for MCP matching), and the Sprint-31 Day-2 "MS-1 17500" was the embedded `$include` LP, not the MCP. The design's gate (§4) makes the `modelstat` assertion an explicit precondition of every solve step.
+**Evidence:** `MINE_BOUND_MULTIPLIER_DESIGN.md` §4 (the protocol + the banned-experiment note); ISSUE_1443 Day-2 correction.
+**Decision:** PROCEED — the protocol is defined and binding for the in-sprint P1 work.
 
 ---
 
