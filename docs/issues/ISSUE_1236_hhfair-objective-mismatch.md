@@ -4,7 +4,7 @@
 **Status:** **DOCUMENTED GENUINE CASE-C (Sprint 31 Day 10, 2026-07-12) — carried forward as a non-convexity finding, no emit fix.** The Sprint-31 P5 track (the ν_objective objective-gradient reduction for the objective-defining-intermediate-variable family, hhfair `stat_u` + the CGE cluster `stat_xp`) was **control-refuted before any `src/` change**: the reduction is inert (the CGE cluster stays cold `UU=25.5085` for both sign choices; hhfair's sign flip was already refuted 3× in Sprint 30, 72.147 → 22.144 *worse*). hhfair (CES + bilinear) and the CGE cluster (irscge/lrgcge/moncge — Scale-Economy/Large-Country/Monopoly) are **genuine non-convex Case-c**: the cold solve sits at a spurious local KKT point, and the match is reachable only via the presolve warm-start (they stay methodology, not genuine floor). P5 delivered **0** genuine floor; the SIGN FLIP STAYED BANNED (no `src/` shipped on a refuted hypothesis — the PR24/PR27 control-first discipline as intended). See the Day-10 OUTCOME block in §"PROCEED/REPLAN Signal". _(was: `$184` CLEARED Day 4; the `stat_u` obj-grad SIGN-FLIP fix REFUTED Day 6 — +1 Match NOT firm, deeper diagnosis deferred.)_
 **Severity:** Medium — Model solves optimally but objective differs from NLP
 **Date:** 2026-04-09
-**Last Updated:** 2026-07-07 (Sprint 30 Day 6 — `stat_u` sign-flip fix refuted by control experiment)
+**Last Updated:** 2026-07-13 (Sprint 31 Day 13 closeout — documented genuine Case-c; hhfair + CGE cluster carried forward as a non-convexity finding, no emit fix; prior: 2026-07-12 Sprint 31 Day 10 REPLAN → Case-c; 2026-07-07 Sprint 30 Day 6 `stat_u` sign-flip refuted by control)
 **Affected Models:** hhfair
 
 ---
