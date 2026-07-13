@@ -158,9 +158,10 @@ grep -oE "#(1443|1385|1330|1462|1236|1111|1112)" docs/planning/EPIC_4/SPRINT_32/
 
 ## Task 2: Sprint 31 → Sprint 32 Day-0 Baseline + Genuine-Floor Re-Baseline (PR15 + PR17 + PR25)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
-**Estimated Time:** 3–4 hours
+**Estimated Time:** 3–4 hours (actual: ~2h)
+**Completed:** 2026-07-13
 **Deadline:** Before Sprint 32 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None (parallelizable with Task 1)
@@ -191,11 +192,11 @@ Every Sprint-32 KPI target is relative to Day 0 (Solve 107 → ≥ 109; genuine 
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_32/BASELINE_METRICS.md` (§1 Day-0 KPI table; §2 canonical 142-candidate bucket recompute + failure-bucket enumeration; §3 the PR25 genuine-vs-methodology partition — genuine floor 74; §4 the 142-corpus vs all-219 scope; §5 per-Sprint-32-target Day-0 bucket provenance + PR25 projection labels; §6 the `--resolve-changed` checkpoint anchor). Set `KNOWN_UNKNOWNS.md` Unknown 7.2 → ✅ VERIFIED (+ the Day-0-bucket aspect of 1.1/2.1/3.1). CHANGELOG entry.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-13).** Day-0 = Sprint 31 final, reused unchanged — no `src/`/`scripts/` drift since the S31 close (`4cbf8bff`), so no fresh ~4 h retest. The canonical-scope recompute (`get_candidate_models`, 142) reproduces the Sprint 31 final headline exactly: **Parse 142 · Translate 135 · Solve 107** (63 `model_optimal` + 44 `model_optimal_presolve`) **· Match 92 · model_infeasible 7 · path_syntax_error 8 · path_solve_terminated 4 · path_solve_license 9 · Tests 5,074.** The PR25 partition reproduces the **genuine floor 74** (methodology 21; all-219 Match 95 = 74 genuine + 21 methodology) from first principles (S30 70 + P2's +4: polygon + ps2_f_s/ps2_s/ps3_s_gic), and the footnote-⁸ ramp aligns (S30 70 → S31 74 → **S32 ≥ 75** → S33 maintain ≥ 75 → S34 ≥ 77 → S35 ≥ 78). The **142-corpus vs all-219** distinction is recorded (headline Match 92 over the 142 convex candidates; the +3 non-candidate `non_convex` ps2/ps3 lift the all-219 tally to 95 + the genuine floor, not the headline KPI). Per-Sprint-32-target Day-0 buckets pinned: **mine / camcge / rocket `model_infeasible`** (all candidates), **sarf translate-failure** (candidate), **hhfair `model_optimal` + mismatch 72.147 vs 87.159**, **irscge/lrgcge/moncge `model_optimal_presolve` + match** (documented Case-c). The `--resolve-changed --since-commit 4cbf8bff` checkpoint anchor selects **0 models at Day 0** (clean baseline; GO). Solve ≥ 109 rests on mine [P1] + camcge [P3] (both candidates → lift the 142-corpus Match, unlike the S31 ps2/ps3 gains). Docs-only (no `src/`).
 
 ### Verification
 
@@ -225,13 +226,13 @@ grep -oiE "mine|sarf|camcge|rocket|hhfair" docs/planning/EPIC_4/SPRINT_32/BASELI
 
 ### Acceptance Criteria
 
-- [ ] BASELINE_METRICS.md created with the Day-0 metrics (Solve 107, Match 92, genuine floor 74, model_infeasible 7, Translate 135, Tests 5,074, all-219 Match 95)
-- [ ] The PR25 genuine floor 74 reproduced from first principles (polygon + ps2×3 over S30 70)
-- [ ] The 142-corpus vs all-219 distinction explicitly recorded (per the Sprint-31 closeout finding)
-- [ ] The Sprint-31-final SHA pinned; the `--resolve-changed` anchor selects 0 models at Day 0
-- [ ] The per-priority Day-0 target-model list (mine/sarf/camcge/rocket/hhfair+CGE) recorded with buckets
-- [ ] CHANGELOG updated
-- [ ] Unknowns 7.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] BASELINE_METRICS.md created with the Day-0 metrics (Solve 107, Match 92, genuine floor 74, model_infeasible 7, Translate 135, Tests 5,074, all-219 Match 95)
+- [x] The PR25 genuine floor 74 reproduced from first principles (polygon + ps2×3 over S30 70)
+- [x] The 142-corpus vs all-219 distinction explicitly recorded (per the Sprint-31 closeout finding)
+- [x] The Sprint-31-final SHA pinned (`4cbf8bff`); the `--resolve-changed` anchor selects 0 models at Day 0 (GO)
+- [x] The per-priority Day-0 target-model list (mine/sarf/camcge/rocket/hhfair+CGE) recorded with buckets
+- [x] CHANGELOG updated
+- [x] Unknowns 7.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

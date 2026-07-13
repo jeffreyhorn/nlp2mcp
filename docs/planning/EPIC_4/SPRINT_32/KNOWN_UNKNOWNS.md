@@ -905,7 +905,12 @@ Recompute the genuine-floor tracking against the footnote-⁸ ramp; confirm the 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Sprint 31 → Sprint 32 Day-0 Baseline + Genuine-Floor Re-Baseline)
+**Date:** 2026-07-13
+**Findings:** The PR25 genuine-floor tracking recomputes cleanly. Day-0 = Sprint 31 final (no `src/`/`scripts/` drift since the S31 close `4cbf8bff`), so the committed DB is the Day-0 source and the canonical 142-candidate recompute reproduces the S31 headline exactly: **Parse 142 · Translate 135 · Solve 107** (63 `model_optimal` + 44 `model_optimal_presolve`) **· Match 92 · model_infeasible 7 · Tests 5,074**. The PR25 partition reproduces the **genuine floor 74** (methodology 21; all-219 Match 95 = 74 genuine + 21 methodology) from first principles: S30 70 + P2's +4 (polygon methodology→genuine + ps2_f_s/ps2_s/ps3_s_gic mismatch→genuine). The footnote-⁸ ramp aligns (S30 70 → S31 74 → **S32 ≥ 75** → S33 maintain ≥ 75 → S34 ≥ 77 → S35 ≥ 78), with genuine floor 74 as the S31 anchor. The **142-corpus vs all-219** distinction is recorded: headline Match 92 (over the 142 convex candidates) vs all-219 tally 95 (+3 non-candidate `non_convex` ps2/ps3); the genuine floor 74 spans candidates + non-candidates. The S32 conversion targets that would reach ≥ 75 are mine [P1] + camcge [P3] (both `model_infeasible` candidates → genuine cold match), conditional per the Sprint-30-retro §3 warning.
+**Evidence:** `docs/planning/EPIC_4/SPRINT_32/BASELINE_METRICS.md` §1–§6 (DB recompute + the genuine-vs-methodology partition + the per-target bucket table + the checkpoint anchor).
+**Decision:** Genuine-floor tracking recomputes correctly; the S32 ≥ 75 step is well-defined and conditional on mine + camcge cold-matching. Day-0 bucket aspect of Unknowns 1.1 / 2.1 / 3.1 recorded (their fix-surface aspect is verified by Tasks 3/4/5): mine `model_infeasible`, sarf translate-failure, camcge `model_infeasible`. The `--resolve-changed --since-commit 4cbf8bff` anchor selects **0 models at Day 0** (clean baseline; GO) — the checkpoint-coverage aspect (Unknown 7.3) is confirmed by Task 10.
 
 ---
 
