@@ -16,10 +16,12 @@
 ```
 model: rocket    dual scale: 4.56
 dual transfer: CONSISTENT (max comp infeas 0.00e+00 rel, max equality residual 1.53e-10 raw)
-verdict: CASE_B  — emit_bug
+verdict: CASE_B  — emit_bug        <- harness's NOMINAL classifier label; see the interpretation below
 max-residual row: stat_ht(h0)   rel = 1.00e+00  (raw -4.56e+00)
 top: stat_ht(h0) 1.00, stat_step 0.497, stat_ht(h50) 0.438, stat_v(h0) 0.038, stat_m(h0) 0.014
 ```
+
+*(`CASE_B — emit_bug` is the harness's **nominal** classifier label — the residual-tolerance verdict, not a final diagnosis; the interpretation below shows it is a Case-c **boundary** signature, not a cleanable emit bug.)*
 
 **Reading — this is the Case-c *boundary* signature, not a cleanable emit bug (per ISSUE_1462):** the residual concentrates entirely on the **boundary/terminal rows** of the discretized optimal-control problem — `stat_ht(h0)` (the initial-altitude grid point), `stat_ht(h50)` (the terminal grid point), and `stat_step` (the time-step) — which **move with the warm-start value** (`nu_*_fx = 0` → `stat_step`; `= var.m` → `stat_ht(h0)`). The **interior** stationarity rows are near tolerance (`stat_v(h0)` 0.038, `stat_m(h0)` 0.014). Dual-transfer CONSISTENT (closure 1.53e-10). So the emit is clean except the boundary rows that are inherently non-convex — **rocket is a genuine forcing problem, not a latent emit bug.** The scope guard holds: no emit fix is attempted; the deliverable is the PATH-consultation input.
 
@@ -45,7 +47,7 @@ Every emittable-GAMS / PATH-option lever probed across Sprints 30–31 — **non
 
 ## §3. The finalized PATH-consultation question (feeds Sprint 33)
 
-> rocket's MCP is **MODEL STATUS 5** with `EXIT — other error` at an ill-conditioned initial Jacobian from division-by-variable terms (`1/m(h)` in the velocity update, `1/ht(h)²` in gravity). `proximal_perturbation` / `merit_function` / `crash_method` move INFES **477 → 382** but do **not** converge from the NLP-optimum warm-start. A `1/m` + `1/ht²` auxiliary-variable reformulation (`gf` multiplied through to `g·ht² = g_0·h_0²`; a free acceleration `a(h)` with `(a+g)·m = T−D` replacing `(T−D−m·g)/m` in `v_eqn`) — which removes **ALL** division-by-variable from the initial Jacobian — **ALSO does not converge** (the reformulated NLP solves to the same optimum 1.0128, but its MCP is MS-5 Locally Infeasible cold, MS-5 warm-started from the NLP optimum, and MS-5 across every μ-continuation step, at nh=10). **So the non-convergence is intrinsic to the discretized optimal-control MCP structure, not the division-by-variable Jacobian conditioning.** The residual at the NLP optimum is clean except the boundary rows (`stat_ht(h0)`/`stat_ht(h50)`/`stat_step`), which move with the warm-start value — a non-convex boundary signature. **Which PATH option set / regularization schedule / model reformulation forces convergence for this discretized optimal-control MCP?**
+> rocket's MCP is **MODEL STATUS 5** with `EXIT — other error` at an ill-conditioned initial Jacobian; the ill-conditioning was *initially suspected* to come from the division-by-variable terms (`1/m(h)` in the velocity update, `1/ht(h)²` in gravity). `proximal_perturbation` / `merit_function` / `crash_method` move INFES **477 → 382** but do **not** converge from the NLP-optimum warm-start. A `1/m` + `1/ht²` auxiliary-variable reformulation (`gf` multiplied through to `g·ht² = g_0·h_0²`; a free acceleration `a(h)` with `(a+g)·m = T−D` replacing `(T−D−m·g)/m` in `v_eqn`) — which removes **ALL** division-by-variable from the initial Jacobian — **ALSO does not converge** (the reformulated NLP solves to the same optimum 1.0128, but its MCP is MS-5 Locally Infeasible cold, MS-5 warm-started from the NLP optimum, and MS-5 across every μ-continuation step, at nh=10). **So the non-convergence is intrinsic to the discretized optimal-control MCP structure, not the division-by-variable Jacobian conditioning.** The residual at the NLP optimum is clean except the boundary rows (`stat_ht(h0)`/`stat_ht(h50)`/`stat_step`), which move with the warm-start value — a non-convex boundary signature. **Which PATH option set / regularization schedule / model reformulation forces convergence for this discretized optimal-control MCP?**
 
 **Reproducible case for the PATH authors:** `data/gamslib/raw/rocket.gms` (the Goddard rocket, COPS) → `nlp2mcp … --nlp-presolve` → `rocket_mcp_presolve.gms` (MS-5 warm-started from the embedded NLP optimum); the `--force homotopy` / `optfile` scaffold emits the μ-continuation + the PATH optfile.
 
