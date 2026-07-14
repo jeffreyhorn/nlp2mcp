@@ -547,7 +547,7 @@ Design the `kkt_residual.py` **Case-c auto-classifier extension** for the object
 
 ### Why This Matters
 
-hhfair + the CGE cluster (P5) delivered **0 genuine floor** in Sprint 31 — the P5 ν_objective reduction was control-refuted (inert; the sign flip stayed BANNED, refuted 4× across S30–S31). The Sprint-32 deliverable is *formalization*, not a fix: an auto-classifier that flags the family so future sprints don't re-attempt the refuted reduction, plus a clean ISSUE closure. Designing the classifier's discriminator (the objective-defining-intermediate-variable shape: a variable appearing only in `obj =e= prod(x**a)` and also market-cleared, whose cold solve sits at a spurious local KKT point) before implementation keeps it from false-positing genuine Case-b rows.
+hhfair + the CGE cluster (P5) delivered **0 genuine floor** in Sprint 31 — the P5 ν_objective reduction was control-refuted (inert; the sign flip stayed BANNED, refuted 4× across S30–S31). The Sprint-32 deliverable is *formalization*, not a fix: an auto-classifier that flags the family so future sprints don't re-attempt the refuted reduction, plus a clean ISSUE closure. Designing the classifier's discriminator (the objective-defining-intermediate-variable shape: a variable appearing only in `obj =e= prod(x**a)` and also market-cleared, whose cold solve sits at a spurious local KKT point) before implementation keeps it from false-positive genuine Case-b rows.
 
 ### Background
 
