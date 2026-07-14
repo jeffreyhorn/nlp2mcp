@@ -1271,10 +1271,19 @@ def _emit_presolve_fx_unfix(
     equalities_set = set(kkt.model_ir.equalities)
     lines: list[str] = []
     for var_name, var_def in kkt.model_ir.variables.items():
-        if not var_def.fx_map:
+        # Sprint 32 P3 (#1330): unfix BOTH per-element (`fx_map`) and scalar (`.fx`)
+        # fixings — symmetric with `_emit_presolve_fx_warmstart`. A scalar-fixed
+        # variable (camcge `mps.fx`) is otherwise left hold-fixed by the `$include`
+        # while its paired `_fx_` equation stays in the MCP → the #1449
+        # over-determined/unmatched mode. Same fixing cohort as the warm-start pass.
+        if not var_def.fx_map and var_def.fx is None:
             continue
         lo, up = _kind_bounds.get(var_def.kind, ("-inf", "+inf"))
-        for indices, _val in sorted(var_def.fx_map.items()):
+        fixings: list[tuple[tuple[str, ...], float]] = []
+        if var_def.fx is not None:
+            fixings.append(((), var_def.fx))
+        fixings.extend(sorted(var_def.fx_map.items()))
+        for indices, _val in fixings:
             eq_name = _fx_eq_name(var_name, indices)
             mult_name = create_eq_multiplier_name(eq_name)
             eq_paired_in_mcp = (
@@ -1284,12 +1293,13 @@ def _emit_presolve_fx_unfix(
             )
             if not eq_paired_in_mcp:
                 continue
-            idx_str = _format_map_indices(indices)
             # Quote the variable name (Issue #665) — a fixed variable could be a
-            # quoted identifier (e.g. containing '-').
+            # quoted identifier (e.g. containing '-'). A scalar fix has no indices
+            # → `var.lo = …;` (no parens); per-element → `var.lo('a','b') = …;`.
             qvar = _quote_symbol(var_name)
-            lines.append(f"{qvar}.lo({idx_str}) = {lo};")
-            lines.append(f"{qvar}.up({idx_str}) = {up};")
+            idx = f"({_format_map_indices(indices)})" if indices else ""
+            lines.append(f"{qvar}.lo{idx} = {lo};")
+            lines.append(f"{qvar}.up{idx} = {up};")
     if not lines:
         return []
     if add_comments:
