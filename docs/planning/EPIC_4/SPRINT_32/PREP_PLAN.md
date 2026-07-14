@@ -751,7 +751,8 @@ grep -iqE "conditional|Solve ≥ ?109|genuine floor" docs/planning/EPIC_4/SPRINT
 
 ## Task 10: Reusable-Tooling Readiness Audit + Backlog Fix-Surface Analysis (Priorities 6 + 7)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-14
 **Priority:** Medium
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 32 Day 1
@@ -782,11 +783,15 @@ Sprint 32's tools are **reused, not rebuilt** — but the audit must confirm the
 
 ### Changes
 
-To be completed.
+- Authored `docs/planning/EPIC_4/SPRINT_32/TOOLING_AND_BACKLOG_ANALYSIS.md` from read-only tool runs: §1 the per-track tooling-readiness audit (all 6 tools present + confirmed; minimal extension per track), §2 the P6 offset-alias generalization candidate list + the `--resolve-changed` GO gate, §3 the P6 failure-cohort re-triage (agreste/cesam/fawley/lnts harness sweep), §4 the P7 property-catalog fixtures + genuine-floor recompute + Epic-4-SUMMARY skeleton.
+- Set KNOWN_UNKNOWNS Unknowns 6.1/6.2/6.3/7.1/7.3 → ✅ VERIFIED (Verified by / Date / Findings / Evidence / Decision from the sweeps).
 
 ### Result
 
-To be completed.
+- **Tooling:** no blocking gap. The only tool-code change is the P5 Case-c classifier in the diagnostic harness `scripts/diagnostics/kkt_residual.py` (not `src/`; no emit change); P1/P3/P4 reuse existing tools; the two new coverage adds are P7 fixtures (shape12/shape13). `--resolve-changed --since-commit 4cbf8bff --dry-run` = GO (0 at Day 0).
+- **P6 offset-alias (6.1):** the structural audit surfaces **cpack** (circle-packing distance sibling, highest prior) + ps3_s_scp/ps5_s_mn/ps10_s_mn/partssupply; the CGE cluster + himmel16 are excluded (Case-c / non-convex). Per-candidate cold-emit diff is Day-1 P6 work.
+- **P6 cohort re-triage (6.2):** **fawley** = clean fixable Case-b (convex LP, uniform `stat_bq(*,fuel-oil)` rel 0.973 — the strongest +Solve candidate, overlapping the second-index family); **agreste** = candidate Case-b, rel 2.0 on a convex LP, but a double-`solve` driver (scope caveat); **cesam** = Case-c (bilinear SAM) / driver; **lnts** = Case-c (bilinear-`step` optimal-control, rocket-family). 2 candidate +Solve + 2 banked Case-c.
+- **Checkpoint (6.3/7.3):** the `--resolve-changed` GO gate is ready; the one nuance is sarf's *new* golden (caught by the golden-staleness gate, not `--resolve-changed`). **P7 fixtures (7.1):** shape12 (head-offset 4th-site) + shape13 (sarf 4-D `task`) designed.
 
 ### Verification
 
@@ -814,11 +819,11 @@ grep -iqE "property|shape|SUMMARY|genuine-floor" docs/planning/EPIC_4/SPRINT_32/
 
 ### Acceptance Criteria
 
-- [ ] The reusable tool guarding each Sprint-32 track is confirmed, with the minimal extension per track identified
-- [ ] The P6 offset-alias generalization candidate list (other 2-index-transpose models) is recorded with the `--resolve-changed` GO gate
-- [ ] The P6 failure-cohort (agreste/cesam/fawley/lnts) is re-triaged (Case-b vs Case-c per model) with banked diagnoses
-- [ ] The P7 property-catalog fixtures + the genuine-floor-tracking recompute surface + the Epic-4-SUMMARY skeleton are enumerated
-- [ ] Unknowns 6.1, 6.2, 6.3, 7.1, 7.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The reusable tool guarding each Sprint-32 track is confirmed, with the minimal extension per track identified
+- [x] The P6 offset-alias generalization candidate list (other 2-index-transpose models) is recorded with the `--resolve-changed` GO gate
+- [x] The P6 failure-cohort (agreste/cesam/fawley/lnts) is re-triaged (Case-b vs Case-c per model) with banked diagnoses
+- [x] The P7 property-catalog fixtures + the genuine-floor-tracking recompute surface + the Epic-4-SUMMARY skeleton are enumerated
+- [x] Unknowns 6.1, 6.2, 6.3, 7.1, 7.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
