@@ -45,7 +45,7 @@ Sprint 32's carryforwards are the five tracks Sprint 31's Day-13 closeout explic
 | Step | Gate | Measurable by |
 |---|---|---|
 | V1 | The symbolic re-emit is **O(active = 398), not O(369,024)** — `sarf_mcp.gms` translates in **seconds** (srpchase's 1-D analogue is 6.56s), well under the >180s Option-1 timeout | **Day-0 timing probe** (Task 9 designed; in-sprint measured) |
-| V2 | The re-emitted `stat_task` matches the **banked 7-guarded-term hand-derivation** with **no set-name-literal multiplier indices** (the Sprint-26 `nu_slack("srn")` failure, commit `243fe578`; grep scan `nu_[[:alnum:]_]+\("` = empty); the 2-D gate + the 4-D sparsification + the `J_gᵀ·lam` cross-terms + `task.fx` land **atomically**; golden byte-stable; `--resolve-changed` GO (sarf only) | mid-sprint |
+| V2 | The re-emitted `stat_task` matches the **banked 7-guarded-term hand-derivation** with **no set-name-literal multiplier indices** (the Sprint-26 `nu_slack("srn")` failure, commit `243fe578`; scan `grep -En 'nu_[[:alnum:]_]+\("' sarf_mcp.gms` = empty — the `-E` extended-regex flag is required for the `+` quantifier); the 2-D gate + the 4-D sparsification + the `J_gᵀ·lam` cross-terms + `task.fx` land **atomically**; golden byte-stable; `--resolve-changed` GO (sarf only) | mid-sprint |
 
 **REPLAN exit (Sprint 33):** the parametric re-emit **re-triggers the translate timeout** (O(instances) after all) → **re-scope the parametric emit** (a documented builder-pipeline constraint); +Translate deferred; sarf stays `translate_failure`. The **de-risked hand-off**: the `SARF_STAT_TASK_SPARSIFICATION_DESIGN.md` O(active) sparsification design + the timing evidence make the re-scoping a documented finding, not a dead end.
 
