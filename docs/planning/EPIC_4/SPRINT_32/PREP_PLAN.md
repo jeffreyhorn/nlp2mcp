@@ -829,7 +829,8 @@ grep -iqE "property|shape|SUMMARY|genuine-floor" docs/planning/EPIC_4/SPRINT_32/
 
 ## Task 11: Plan Sprint 32 Detailed Schedule
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-14
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 32 Day 1
@@ -860,11 +861,18 @@ The schedule is where the pinned root causes (Tasks 3/4/5), the Phase-0 gates (T
 
 ### Changes
 
-To be completed.
+- Authored `docs/planning/EPIC_4/SPRINT_32/PLAN.md` — the day-by-day schedule (Day 0 + Days 1–13): §1 goal, §2 acceptance criteria, §3 sequencing constraints, §4–§14 the per-day objectives/gates/complexity, §15 the budget summary (~99 h mid, ≤ 12 h/day), §16 Phase-0 coverage, §17 unknowns snapshot, §18 risk register, §19 related docs.
+- Authored `docs/planning/EPIC_4/SPRINT_32/prompts/PLAN_PROMPTS.md` — one self-contained execution prompt per day (Day 0 + Days 1–13) with the cross-cutting rules (PR24/PR25/PR27 + `modelstat`-before-objective) + per-day branch/Phase-0-gate/quality-gate/PR steps.
+- Authored `docs/planning/EPIC_4/SPRINT_32/SPRINT_LOG.md` skeleton — the 14-row progress table (all 🔵 PENDING) + the targets + the honest KPI projection, to fill per day.
+- Set KNOWN_UNKNOWNS §"Next Steps" → ✅ PREP PHASE COMPLETE (all 25 unknowns VERIFIED; the in-sprint-only execution gates noted; **Sprint 32 GO for Day 0**).
+- Fixed this task's verification grep to the actual `## N. Day …` heading style (the S31 template + this PLAN use numbered section headings).
 
 ### Result
 
-To be completed.
+- **Front-loaded the two firm +Solve movers:** P1 mine (Days 1–3, close-or-REPLAN Day 3) + P3 camcge (Days 4–5, close-or-REPLAN + **Checkpoint 1** Day 5) — both PROCEED/REPLAN gates fire by the Day-5 checkpoint. Then P2 sarf (Days 6–8, tractability gate Day 7), P4 rocket (Day 9), P5 Case-c classifier + **Checkpoint 2** (Day 10), P6 adjacent backlog + REPLAN-slack (Day 11), P7 infra + REPLAN-slack (Day 12), retest + closeout (Day 13).
+- **Budget ~99 h mid** (80 h if deep tracks REPLAN early, 120 h if all PROCEED) — fits the 168 h cap with ≥ 48 h slack; no day > 12 h.
+- **REPLAN slip valves wired** (Task 9): mine 5th-coupling → Sprint-33 architecture; camcge Walras step-2 → Epic-5 numéraire (step 1 lands regardless); sarf timeout → re-scoping — each freeing budget to P6 → P7 → the rocket tail.
+- All 25 prep unknowns integrated; **Sprint 32 is GO for Day 0**.
 
 ### Verification
 
@@ -872,8 +880,9 @@ To be completed.
 # Schedule doc exists
 test -f docs/planning/EPIC_4/SPRINT_32/PLAN.md && echo "schedule present"
 
-# Day 0 + Days 1–13 present
-grep -cE "^#+ .*Day [0-9]+" docs/planning/EPIC_4/SPRINT_32/PLAN.md   # expect >=14
+# Day 0 + Days 1–13 present (11 day-sections; some cover a range, e.g. "Days 4–5")
+grep -cE "^## [0-9]+\. Days? [0-9]" docs/planning/EPIC_4/SPRINT_32/PLAN.md   # expect >=9 sections covering Day 0–13
+grep -cE "^## Day [0-9]+ Prompt" docs/planning/EPIC_4/SPRINT_32/prompts/PLAN_PROMPTS.md   # 14 per-day prompt headings (Day 0–13)
 
 # Checkpoints (Day 5 + Day 10) + REPLAN slip valves referenced
 grep -ciE "Checkpoint|Day 5|Day 10" docs/planning/EPIC_4/SPRINT_32/PLAN.md
@@ -891,12 +900,12 @@ grep -iqE "≤ ?12|12 ?h/day|168" docs/planning/EPIC_4/SPRINT_32/PLAN.md && echo
 
 ### Acceptance Criteria
 
-- [ ] PLAN.md created with Day 0 + Days 1–13, each with objectives / prompts / integration risks / complexity estimates
-- [ ] P1 (mine) + P3 (camcge) front-loaded so a REPLAN surfaces by the Day-5 checkpoint
-- [ ] Day-5 + Day-10 checkpoints placed with GO/NO-GO criteria vs the Day-0 baseline
-- [ ] REPLAN slip valves (Task 9) wired into the schedule with budget reallocation
-- [ ] ≤ 12 h/day budget honored (total 80–120h ≤ 168h); Day-13 retest + closeout scheduled
-- [ ] CHANGELOG updated
+- [x] PLAN.md created with Day 0 + Days 1–13, each with objectives / prompts / integration risks / complexity estimates
+- [x] P1 (mine) + P3 (camcge) front-loaded so a REPLAN surfaces by the Day-5 checkpoint
+- [x] Day-5 + Day-10 checkpoints placed with GO/NO-GO criteria vs the Day-0 baseline
+- [x] REPLAN slip valves (Task 9) wired into the schedule with budget reallocation
+- [x] ≤ 12 h/day budget honored (total 80–120h ≤ 168h); Day-13 retest + closeout scheduled
+- [x] CHANGELOG updated
 
 ---
 
@@ -915,17 +924,17 @@ grep -iqE "≤ ?12|12 ?h/day|168" docs/planning/EPIC_4/SPRINT_32/PLAN.md && echo
 
 ### Success Criteria (all prep tasks complete)
 
-- [ ] **KNOWN_UNKNOWNS.md** authored — 22–30 unknowns across 7 categories, each with priority + verification; the three REPLAN-prone deep tracks + the bound-multiplier + `stat_mps`-ordering Criticals captured (Task 1).
-- [ ] **BASELINE_METRICS.md** authored — Day-0 = Sprint 31 final (Solve 107 / Match 92 / genuine floor 74 / model_infeasible 7 / Translate 135 / Tests 5,074 / all-219 Match 95); the 142-corpus vs all-219 distinction + the checkpoint anchor recorded (Task 2).
-- [ ] **Three deep-track design docs** authored — mine bound-multiplier (Task 3), sarf `stat_task` sparsification (Task 4), camcge `stat_mps` + Walras (Task 5) — each with a named emit site + a REPLAN exit.
-- [ ] **rocket PATH-consultation input** packaged (Task 6) + **hhfair/CGE Case-c classifier** designed (Task 7).
-- [ ] **PHASE_0_ACCEPTANCE_GATES.md** authored — one PROCEED/REPLAN gate per P1–P5 (Task 8).
-- [ ] **REPLAN_RISK_ASSESSMENT.md** authored — per-track REPLAN exits + budget reallocation + the honest KPI projection (Task 9).
-- [ ] **TOOLING_AND_BACKLOG_ANALYSIS.md** authored — tooling readiness + P6 offset-alias/failure-cohort + P7 groundwork (Task 10).
-- [ ] **PLAN.md** authored — the day-by-day 14-day schedule with checkpoints + REPLAN slip valves at ≤ 12 h/day (Task 11).
-- [ ] **Total prep effort 36–51h** tracked; the critical path (Task 1 → 3 → 8 → 9 → 11) completed before Sprint 32 Day 1.
+- [x] **KNOWN_UNKNOWNS.md** authored — 25 unknowns across 7 categories, each with priority + verification (all 25 ✅ VERIFIED); the three REPLAN-prone deep tracks + the bound-multiplier + `stat_mps`-ordering Criticals captured (Task 1).
+- [x] **BASELINE_METRICS.md** authored — Day-0 = Sprint 31 final (Solve 107 / Match 92 / genuine floor 74 / model_infeasible 7 / Translate 135 / Tests 5,074 / all-219 Match 95); the 142-corpus vs all-219 distinction + the checkpoint anchor recorded (Task 2).
+- [x] **Three deep-track design docs** authored — mine bound-multiplier (Task 3), sarf `stat_task` sparsification (Task 4), camcge `stat_mps` + Walras (Task 5) — each with a named emit site + a REPLAN exit.
+- [x] **rocket PATH-consultation input** packaged (Task 6) + **hhfair/CGE Case-c classifier** designed (Task 7).
+- [x] **PHASE_0_ACCEPTANCE_GATES.md** authored — one PROCEED/REPLAN gate per P1–P5 (Task 8).
+- [x] **REPLAN_RISK_ASSESSMENT.md** authored — per-track REPLAN exits + budget reallocation + the honest KPI projection (Task 9).
+- [x] **TOOLING_AND_BACKLOG_ANALYSIS.md** authored — tooling readiness + P6 offset-alias/failure-cohort + P7 groundwork (Task 10).
+- [x] **PLAN.md** authored — the day-by-day 14-day schedule (+ `prompts/PLAN_PROMPTS.md` + the `SPRINT_LOG.md` skeleton) with checkpoints + REPLAN slip valves at ≤ 12 h/day (Task 11).
+- [x] **Total prep effort** tracked; the critical path (Task 1 → 3 → 8 → 9 → 11) completed before Sprint 32 Day 1.
 
-**Sprint 32 is ready to start when:** every prep task above is ✅ COMPLETE, every Critical/High Known Unknown has a Day-0 disposition, each of P1–P5 is behind a PROCEED/REPLAN gate with a pinned Sprint-33 REPLAN exit, and the detailed schedule front-loads the two firm +Solve movers (mine + camcge) so a REPLAN surfaces by the Day-5 checkpoint.
+**✅ Sprint 32 is GO for Day 0** (2026-07-14): every prep task above is ✅ COMPLETE, all 25 Known Unknowns are ✅ VERIFIED (none WRONG), each of P1–P5 is behind a PROCEED/REPLAN gate with a pinned Sprint-33 REPLAN exit, and the detailed schedule front-loads the two firm +Solve movers (mine + camcge) so a REPLAN surfaces by the Day-5 checkpoint.
 
 ---
 
