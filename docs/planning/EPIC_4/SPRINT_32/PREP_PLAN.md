@@ -532,9 +532,10 @@ grep -iqE "Sprint 33|hand-off|consultation" docs/planning/EPIC_4/SPRINT_32/ROCKE
 
 ## Task 7: hhfair + CGE Cluster Case-c Formalization + Harness Classifier Design (Priority 5)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Medium
-**Estimated Time:** 2–3 hours
+**Estimated Time:** 2–3 hours (actual: ~2.5h)
+**Completed:** 2026-07-13
 **Deadline:** Before Sprint 32 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
@@ -546,7 +547,7 @@ Design the `kkt_residual.py` **Case-c auto-classifier extension** for the object
 
 ### Why This Matters
 
-hhfair + the CGE cluster (P5) delivered **0 genuine floor** in Sprint 31 — the P5 ν_objective reduction was control-refuted (inert; the sign flip stayed BANNED, refuted 4× across S30–S31). The Sprint-32 deliverable is *formalization*, not a fix: an auto-classifier that flags the family so future sprints don't re-attempt the refuted reduction, plus a clean ISSUE closure. Designing the classifier's discriminator (the objective-defining-intermediate-variable shape: a variable appearing only in `obj =e= prod(x**a)` and also market-cleared, whose cold solve sits at a spurious local KKT point) before implementation keeps it from false-positing genuine Case-b rows.
+hhfair + the CGE cluster (P5) delivered **0 genuine floor** in Sprint 31 — the P5 ν_objective reduction was control-refuted (inert; the sign flip stayed BANNED, refuted 4× across S30–S31). The Sprint-32 deliverable is *formalization*, not a fix: an auto-classifier that flags the family so future sprints don't re-attempt the refuted reduction, plus a clean ISSUE closure. Designing the classifier's discriminator (the objective-defining-intermediate-variable shape: a variable appearing only in `obj =e= prod(x**a)` and also market-cleared, whose cold solve sits at a spurious local KKT point) before implementation keeps it from producing false positives on genuine Case-b rows.
 
 ### Background
 
@@ -563,11 +564,11 @@ hhfair + the CGE cluster (P5) delivered **0 genuine floor** in Sprint 31 — the
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_32/CASE_C_CLASSIFIER_DESIGN.md` (§1 the Case-c discriminator D1–D4; §2 the current-tree re-confirmation; §3 the `kkt_residual.py` classifier-extension design; §4 the sign-flip ban; §5 the ISSUE-closure criteria; §6 KU dispositions). Set `KNOWN_UNKNOWNS.md` Unknowns 5.1/5.2/5.3/5.4 → ✅ VERIFIED. CHANGELOG entry. All experiments read-only (harness); no `src/` change.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-13).** **Discriminator (D1∧D2∧D3):** a `stat_<var>` residual is genuine objective-defining-intermediate-variable Case-c when **D1** — `<var>` appears in the objective defining equation `obj =e= f(<var>)` (so `nu_obj=±1`, no free multiplier) and is pinned by its own defining equation; **D2** — dual-transfer CONSISTENT; **D3** — the cold-start MCP reaches a spurious KKT point (cold ≠ match). **Re-confirmed on the current tree:** hhfair `stat_u(1)` rel 2.00, irscge `stat_xp(BRD)` rel 0.064 — both concentrated on the objective-defining intermediate variable (`u` in `objective.. obj =e= prod(u**ufact)`; `Xp` in `obj.. UU =e= prod(Xp**alpha)`), interiors near tolerance, duals CONSISTENT. The Day-10 cohort control (banked) confirms all four Case-c: irscge/lrgcge/moncge cold `UU=25.5085` vs match `26.09` (sign flip inert), hhfair cold `72.147` vs `87.159`. **Classifier extension:** a post-verdict reclassification pass in `kkt_residual.py` — if CASE_B + D1 + D3 (**D2 is implied by the CASE_B verdict** — the harness only returns CASE_B when dual-transfer is CONSISTENT), emit `case_c (objective-defining-intermediate-variable non-convexity)`; the tight D1 structural gate prevents false-positives on real Case-b bugs; D4 (sign-flip-inert) is the manual control for new candidates. **Sign flip BANNED** (refuted 4×: hhfair S30 Days 4/6 [72→22 worse], himmel16 S30 Day 7, the reduction inert S31 Day 10). **ISSUE-closure:** classifier auto-flag + BANNED sign flip + Sprint-33 forcing/PATH hand-off + `ISSUE_1236` closed as documented-non-convex (methodology, not genuine floor; P5 delivers 0 floor). **Decision: PROCEED** to the in-sprint classifier extension + ISSUE closure; no emit fix. Docs/design-only (no `src/`).
 
 ### Verification
 
@@ -589,11 +590,11 @@ grep -oiE "hhfair|irscge|lrgcge|moncge" docs/planning/EPIC_4/SPRINT_32/CASE_C_CL
 
 ### Acceptance Criteria
 
-- [ ] The objective-defining-intermediate-variable Case-c discriminator is specified precisely
-- [ ] The `kkt_residual.py` classifier extension is designed (auto-flags the family; no false-positive on Case-b)
-- [ ] The ISSUE-closure criteria for hhfair + irscge/lrgcge/moncge are defined
-- [ ] The sign-flip ban is re-confirmed with the control-refutation history (4× S30–S31)
-- [ ] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The objective-defining-intermediate-variable Case-c discriminator is specified precisely (D1 structural: `<var>` in `obj =e= f(<var>)`, `nu_obj=±1`; D2 dual-consistent; D3 cold-spurious; D4 sign-flip-inert)
+- [x] The `kkt_residual.py` classifier extension is designed (a D1∧D2∧D3 post-verdict reclassification pass; the D1 gate prevents false-positives on Case-b)
+- [x] The ISSUE-closure criteria for hhfair + irscge/lrgcge/moncge are defined (auto-flag + BANNED sign flip + Sprint-33 hand-off + documented-non-convex closure)
+- [x] The sign-flip ban is re-confirmed with the control-refutation history (4× S30–S31)
+- [x] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

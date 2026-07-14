@@ -687,13 +687,13 @@ Development team
 
 # Category 5: hhfair + CGE Cluster #1236 — Case-c Formalization
 
-## Unknown 5.1: Does the `kkt_residual.py` Case-c classifier flag the objective-defining-intermediate-variable family without false-positing Case-b?
+## Unknown 5.1: Does the `kkt_residual.py` Case-c classifier flag the objective-defining-intermediate-variable family without false-positives on Case-b?
 
 ### Priority
 **High** — the P5 deliverable is a classifier extension. If it false-positives on genuine Case-b rows, it would wrongly suppress future fixable-emit-bug diagnoses.
 
 ### Assumption
-The objective-defining-intermediate-variable shape (a variable appearing only in `obj =e= prod(x**a)` AND market-cleared, whose cold solve reaches a spurious local KKT point) is a **precise, detectable discriminator** that the harness can auto-flag as Case-c without false-positing genuine Case-b rows.
+The objective-defining-intermediate-variable shape (a variable appearing only in `obj =e= prod(x**a)` AND market-cleared, whose cold solve reaches a spurious local KKT point) is a **precise, detectable discriminator** that the harness can auto-flag as Case-c without producing false positives on genuine Case-b rows.
 
 ### Research Questions
 1. What is the exact structural discriminator (variable appears only in the objective defining equation + is market-cleared + cold-diverges to a spurious KKT point)?
@@ -717,7 +717,12 @@ Design the discriminator; test it across hhfair + the CGE cluster + a known Case
 Development team (KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (favorable — a tight structural D1 gate)
+**Verified by:** Task 7 (hhfair + CGE Cluster Case-c Formalization + Harness Classifier Design)
+**Date:** 2026-07-13
+**Findings:** The classifier reclassifies CASE_B → Case-c via D1∧D2∧D3: **D1 (structural)** — the max-residual `stat_<var>` row's `<var>` appears in the objective defining equation `obj =e= f(<var>)` (so `nu_obj = ±1` — no free multiplier for a reduction) and is itself pinned by its own defining equation (an intermediate variable); **D2** — dual-transfer CONSISTENT; **D3** — the cold-start MCP solve reaches a spurious KKT point (cold ≠ match). A genuine Case-b residual on a **non**-objective-defining variable never trips D1, so no false-positive; D3 separates it from a Case-b that would reach the match after a fix; D4 (sign-flip-inert) is the definitive manual control for any new candidate. Re-confirmed on the current tree: hhfair `stat_u(1)` rel 2.00, irscge `stat_xp(BRD)` rel 0.064 — both concentrated on the objective-defining intermediate variable, interiors near tolerance.
+**Evidence:** `docs/planning/EPIC_4/SPRINT_32/CASE_C_CLASSIFIER_DESIGN.md` §1–§3 (the discriminator + the harness output + the classifier-extension design).
+**Decision:** PROCEED — implement the D1∧D2∧D3 reclassification pass; the structural D1 gate prevents false-positives on real Case-b bugs.
 
 ---
 
@@ -747,7 +752,12 @@ Review ISSUE_1236 + the Case-c design for the explicit sign-flip ban + the contr
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (BANNED — refuted 4× across S30–S31)
+**Verified by:** Task 7 (hhfair + CGE Cluster Case-c Formalization + Harness Classifier Design)
+**Date:** 2026-07-13
+**Findings:** The inlined objective-gradient sign flip is BANNED, control-refuted 4×: (1) S30 Day-4 hhfair `stat_u` sign-flip hypothesized; (2) S30 Day-6 hhfair sign flip solved → 72.147 → **22.144** (worse, away from NLP 87.159); (3) S30 Day-7 himmel16 sign fix refuted (sibling non-convex); (4) S31 Day-10 the hhfair + CGE-cluster ν_objective reduction **inert** (cold `UU=25.5085` for both sign choices). The reduction is inert precisely because `nu_obj = ±1` (D1) — there is no free multiplier for it to exploit. Recorded in the Case-c classification + ISSUE_1236 so no Day-1 sign-flip attempt is made.
+**Evidence:** `CASE_C_CLASSIFIER_DESIGN.md` §4; `docs/issues/ISSUE_1236_hhfair-objective-mismatch.md` (the S30 Day-6 refutation + the S31 Day-10 control).
+**Decision:** PROCEED — the sign flip stays BANNED; the classifier records it.
 
 ---
 
@@ -781,7 +791,12 @@ Re-run the Sprint-31 Day-10 control across the four models (asserting `modelstat
 Development team (KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (all four genuine Case-c — none fixable)
+**Verified by:** Task 7 (hhfair + CGE Cluster Case-c Formalization + Harness Classifier Design)
+**Date:** 2026-07-13
+**Findings:** All four members are genuine Case-c; none is a fixable Case-b. Re-confirmed on the current tree (hhfair `stat_u(1)` rel 2.00; irscge `stat_xp(BRD)` rel 0.064 — both concentrated on the objective-defining intermediate variable, duals CONSISTENT) + the Sprint-31 Day-10 cohort control: **irscge/lrgcge/moncge all cold `UU=25.5085` vs the presolve match `26.0914`**, sign flip inert; hhfair cold `72.147` vs NLP `87.159`, sign flip `72→22` worse. All four: cold-spurious KKT + presolve-match + a non-convex model class (hhfair = CES + bilinear; irscge = Scale-Economy; lrgcge = Large-Country; moncge = Monopoly). The cold solve sits at a non-global local optimum — the match is reachable only via the presolve warm-start (methodology, not genuine floor).
+**Evidence:** `CASE_C_CLASSIFIER_DESIGN.md` §2; the hhfair/irscge harness runs; the Day-10 cohort control (ISSUE_1236 Day-10 OUTCOME).
+**Decision:** PROCEED — formalize all four as documented Case-c; no member is carved out as a fixable genuine-floor candidate.
 
 ---
 
@@ -811,7 +826,12 @@ Define the closure checklist; confirm the hand-off + the ISSUE disposition.
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (closure criteria defined)
+**Verified by:** Task 7 (hhfair + CGE Cluster Case-c Formalization + Harness Classifier Design)
+**Date:** 2026-07-13
+**Findings:** "Documented Case-c" closure for hhfair + irscge/lrgcge/moncge means all of: (1) the classifier auto-flags them `case_c (objective-defining-intermediate-variable non-convexity)`, not `case_b — emit_bug`; (2) the sign flip is recorded BANNED in ISSUE_1236; (3) they hand to the Sprint-33 forcing/PATH work (like rocket — the match is presolve-only, so forcing/reformulation or the PATH consultation is the only remaining avenue); (4) ISSUE_1236 closes as **documented-non-convex** (not `wontfix`) — they stay methodology matches, NOT genuine floor (P5 delivers 0 genuine floor). himmel16 is a sibling documented-non-convex (S30 Day 7), outside this four-member family.
+**Evidence:** `CASE_C_CLASSIFIER_DESIGN.md` §5.
+**Decision:** PROCEED — close ISSUE_1236 as documented-non-convex per the four criteria; the classification is the durable P5 deliverable.
 
 ---
 
