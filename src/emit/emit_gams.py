@@ -1327,9 +1327,21 @@ def _emit_presolve_fx_warmstart(
     equalities_set = set(kkt.model_ir.equalities)
     lines: list[str] = []
     for var_name, var_def in kkt.model_ir.variables.items():
-        if not var_def.fx_map:
+        # Sprint 32 P3 (#1330): cover BOTH the per-element (`fx_map`) and the
+        # scalar (`.fx`) fixings. A scalar-fixed variable (e.g. camcge `mps.fx`)
+        # stores its fixing in `var_def.fx` with an EMPTY index tuple and has an
+        # empty `fx_map`, so the original `fx_map`-only loop skipped it entirely —
+        # leaving `nu_<var>_fx` at 0 and a nonzero `stat_<var>` residual (camcge
+        # `stat_mps` +209.86 = CASE_B). Mirror normalize._iterate_bounds (scalar
+        # first, then the sorted per-element map) so the fixing-equation cohort
+        # matches normalization exactly.
+        if not var_def.fx_map and var_def.fx is None:
             continue
-        for indices, _val in sorted(var_def.fx_map.items()):
+        fixings: list[tuple[tuple[str, ...], float]] = []
+        if var_def.fx is not None:
+            fixings.append(((), var_def.fx))
+        fixings.extend(sorted(var_def.fx_map.items()))
+        for indices, _val in fixings:
             eq_name = _fx_eq_name(var_name, indices)
             mult_name = create_eq_multiplier_name(eq_name)
             eq_paired_in_mcp = (
@@ -1339,13 +1351,16 @@ def _emit_presolve_fx_warmstart(
             )
             if not eq_paired_in_mcp:
                 continue
-            idx_str = _format_map_indices(indices)
             qvar = _quote_symbol(var_name)
             qm = _quote_symbol(mult_name)
             # The `_fx_` equation `var(idx) - val =e= 0` has Jacobian +1 w.r.t.
             # var(idx); its multiplier mirrors the equality transfer using the
             # fixed variable's own marginal (the NLP reports the fix dual there).
-            lines.append(f"{qm}.l = {qvar}.m({idx_str});")
+            # A scalar fix has no indices → the marginal is `var.m` (no parens);
+            # the /tmp control (Sprint 32 Day 4) confirmed the DIRECT `= var.m`
+            # sign closes camcge `stat_mps` to ~0 (Case-a).
+            marginal = f"{qvar}.m" if not indices else f"{qvar}.m({_format_map_indices(indices)})"
+            lines.append(f"{qm}.l = {marginal};")
     if lines and add_comments:
         lines = ["* Transfer fixed-variable marginals to _fx_ multipliers (#1462)"] + lines
     return lines

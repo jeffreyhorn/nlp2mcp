@@ -11,7 +11,7 @@
 | 1 | P1 mine bound-multiplier `/tmp` control (PR24/PR27) → **5th coupling confirmed** | **0 (REPLAN → Sprint 33 — the `N`-derivation closes `stat_x` by construction but PATH MS-5 @ 22058; 6 bound-active rows carry wrong-sign `N` → infeasible negative multiplier; interior emit correct)** | 🔴 REPLAN |
 | 2 | ~~P1 mine warm→cold verification~~ → **freed by Day-1 REPLAN** → pull P6 forward (Task 9 reallocation) | — | ⏭️ REALLOCATED |
 | 3 | ~~P1 mine close-or-REPLAN~~ → **REPLAN fired Day 1** (front-loading worked — surfaced early) | — | ⏭️ REALLOCATED |
-| 4 | P3 camcge `stat_mps` (step 1 `nu_mps_fx.l=-mps.m`) + Walras (step 2) start | — | 🔵 PENDING |
+| 4 | P3 camcge **step 1 landed** — scalar-`fx` marginal transfer (`nu_mps_fx.l = mps.m`, DIRECT — sign corrected by control) | **`stat_mps` CASE_B rel 1.05 → Case-a** (dropped from top residuals; camcge max now `stat_tm(biens-int)` 0.076); all 17 presolve goldens clean; general emit fix (`emit_gams.py`) | ✅ DONE (step 1) |
 | 5 | **P3 camcge close-or-REPLAN** (MS-1 @ 191.7346 + detector) **+ Checkpoint 1** | — (target +1 Solve; else step 1 lands, numéraire → Epic 5) | 🔵 PENDING |
 | 6 | P2 sarf 4-D `task` sparsification start (2-D gate + parametric `stat_task`) | — | 🔵 PENDING |
 | 7 | P2 sarf tractability gate (O(active=398) not O(369K)) | — (target +1 Translate; else REPLAN → Sprint 33 re-scoping) | 🔵 PENDING |
@@ -49,5 +49,17 @@ The PR24/PR27 Day-1 `/tmp` control (hand-edited `mine_mcp_presolve.gms`, GAMS 53
 - **0 interior rows with `N≠0`** — the interior emit is correct; the residual is exclusively at bound-active rows with the **wrong sign** (would need an infeasible negative multiplier).
 
 **Diagnosis:** the emitted `stat_x` head-offset **cross-term** is inconsistent at bound-active rows — the design's own explicit 5th-coupling REPLAN trigger. No warm-start bound-multiplier value can fix it; the fix is a deeper head-offset cross-term emit change → **Sprint 33**. **REPLAN; no `src/` change** (the 6th consecutive control-first REPLAN, S30–S32). mine stays `model_infeasible`; Solve ≥ 109 now rests on **camcge [P3] alone** (+ a possible P6 cpack/fawley convert). P1 Days 1–3 budget → **P6 + P7** (Task 9); the Day-2/3 mine slots pull P6 forward.
+
+## Day 4 — P3 camcge step 1: scalar-`fx` marginal transfer (general emit fix) (2026-07-14)
+
+**Branch** `planning/sprint32-day4-camcge`. Emit-touching (`src/emit/emit_gams.py`). See `CAMCGE_STAT_MPS_WALRAS_DESIGN.md` §2 (sign-corrected).
+
+**Root cause (IR probe):** camcge fixes the scalar `mps.fx = .09305`; a scalar fix lives in `var_def.fx` with an **empty index tuple** and an empty `fx_map`, so the `#1462 _emit_presolve_fx_warmstart` loop — which iterated only `fx_map.items()` — **skipped it**, leaving `nu_mps_fx` at 0 and `stat_mps` at CASE_B rel 1.05.
+
+**`/tmp` control (PR24/PR27, before src) — corrected the design's sign:** the emitted `stat_mps` body is **+209.86** at the warm point (the harness's −210 is its sign-corrected variant). `nu_mps_fx = -mps.m` (the design's proposal) → **+419.72 (worse)**; `nu_mps_fx = mps.m` (DIRECT, = −209.861) → **−3.9e-4 ≈ 0 (Case-a)**. So the fix is the **same direct `= var.m`** as the existing `l`-transfers.
+
+**Fix (src):** extended `_emit_presolve_fx_warmstart` to iterate **both** `fx_map` (per-element) **and** the scalar `.fx` (empty-index) fixing, mirroring `normalize._iterate_bounds`; the scalar marginal emits as `var.m` (no parens). Now emits `nu_gdtot_fx.l = gdtot.m; nu_mps_fx.l = mps.m; nu_fsav_fx.l = fsav.m;` for camcge's three scalar fixes.
+
+**Result:** harness camcge — **`stat_mps` dropped out of the CASE_B top residuals** (rel 1.05 → Case-a); max residual now `stat_tm(biens-int)` rel 0.076 (the secondary rows = step-2 Walras territory, as the design predicted). **Blast radius:** all 17 committed presolve goldens **clean** (golden-staleness) + all plain goldens clean — camcge is the only affected model (no committed presolve golden). A **general nlp2mcp emit-correctness fix** (any scalar-`.fx`-in-stationarity model benefits). **Step 2 (dual-consistent Walras → MS-1 @ 191.7346) is Day 5.**
 
 _(Per-day entries appended below as the sprint runs.)_
