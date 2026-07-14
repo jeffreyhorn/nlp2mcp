@@ -2,7 +2,7 @@
 
 **Created:** 2026-07-13
 **Prep Task:** 5 (Priority 3 / Epic 5)
-**Issue:** #1330
+**Issue:** #1330 (local write-up: `docs/issues/ISSUE_1330_camcge-model-infeasible-after-1245.md`)
 **Status:** Design (prep) — the two-step fix is designed here; the in-sprint P3 work implements + validates it behind the Phase-0 gate (Task 8). All experiments below are read-only (harness + NLP marginal probe + `/tmp` emit); no `src/` change.
 
 **Objective:** Design the two-step camcge fix the Sprint-31 CASE_B verdict established — **step 1 (general nlp2mcp emit fix):** resolve the `stat_mps`/`nu_mps_fx` fixing-multiplier defect; **step 2 (Epic-5 CGE transformation, gated on step 1):** the dual-consistent Walras numéraire (price-pin omega 191.735) — plus the degeneracy detector that flags **only** camcge across the CGE cohort.
@@ -68,7 +68,7 @@ Extend the **#1462 fixed-variable-marginal transfer** to cover the general scala
 
 ## §3. Step 2 — dual-consistent Walras numéraire (Epic 5, gated on step 1)
 
-**The residual Walras singularity is independent of `stat_mps`.** camcge's MCP is MS-4 at iteration 0 (cold) from an **inherent Walras-law rank-deficiency**: the goods-clearing rows `equil(i)` + the labor-clearing `lmequil(lc)` are linearly dependent given household budget balance (Walras' law), and **no price numéraire is fixed** (CGE conditions are homogeneous of degree 0 in prices) → a 1-D nullspace + a price-scaling indeterminacy (`CGE_DEGENERACY_SCOPING.md` §1). Even with `stat_mps` fixed, MS-1 requires resolving this.
+**The residual Walras singularity is independent of `stat_mps`.** camcge's MCP is MS-4 at iteration 0 (cold) from an **inherent Walras-law rank-deficiency**: the goods-clearing rows `equil(i)` + the labor-clearing `lmequil(lc)` are linearly dependent given household budget balance (Walras' law), and **no price numéraire is fixed** (CGE conditions are homogeneous of degree 0 in prices) → a 1-D nullspace + a price-scaling indeterminacy (`docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` §1). Even with `stat_mps` fixed, MS-1 requires resolving this.
 
 **The Day-11 empirical result (the "check the dual side" lesson):**
 - **Pinning the price ray** (fix `p('services')=pd0` OR add `numeraire.. sum(i$cles(i), cles(i)*p(i)) =e= sum(i$cles(i), cles(i)*pd0(i))` + its `cles(i)*nu_numeraire` cross-term in `stat_p`) reaches the **correct allocation omega 191.735** but stays **MS-4** (the residual Walras redundancy; `proximal_perturbation` does not rescue it).
@@ -94,7 +94,7 @@ The detector must flag **only** camcge across the CGE cohort — nlp2mcp must no
 
 ## §5. Numéraire-selection rule (Unknown 3.4)
 
-For camcge the **consumption-weighted numéraire** (`sum(i$cles(i), cles(i)·p(i)) = sum(i$cles(i), cles(i)·pd0(i))`) is the automatic rule (it reproduces the NLP optimum's `p=pd0` — a selection, not a perturbation). Whether this generalizes is `CGE_DEGENERACY_SCOPING.md` §5 Q1 — **which** row is redundant and **which** price is the numéraire is **per-model** (depends on the closure + SAM). Since **camcge is the sole inherent-Walras case in the corpus** (§4; `CGE_DEGENERACY_SCOPING.md` §2), a **per-model-numéraire declaration** fallback is acceptable — the automatic consumption-weighted rule is the camcge instance, and the detector (§4) ensures it applies nowhere else.
+For camcge the **consumption-weighted numéraire** (`sum(i$cles(i), cles(i)·p(i)) = sum(i$cles(i), cles(i)·pd0(i))`) is the automatic rule (it reproduces the NLP optimum's `p=pd0` — a selection, not a perturbation). Whether this generalizes is `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` §5 Q1 — **which** row is redundant and **which** price is the numéraire is **per-model** (depends on the closure + SAM). Since **camcge is the sole inherent-Walras case in the corpus** (§4; `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` §2), a **per-model-numéraire declaration** fallback is acceptable — the automatic consumption-weighted rule is the camcge instance, and the detector (§4) ensures it applies nowhere else.
 
 ---
 
@@ -114,4 +114,4 @@ For camcge the **consumption-weighted numéraire** (`sum(i$cles(i), cles(i)·p(i
 **Document Created:** 2026-07-13
 **Owner:** Sprint 32 Planning Team (KKT/CGE specialist)
 **Cross-reference:** `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` (the Epic-5 handoff spec; §1 the singularity, §3 the transformation, §4 the boundary, §5 the open questions).
-**Evidence:** `kkt_residual.py camcge.gms` (CASE_B `stat_mps` rel 1.05, duals CONSISTENT); the emitted `/tmp/camcge_mcp_presolve.gms` (#1462 block misses `nu_mps_fx`; `stat_mps`/`mps_fx` structure); the NLP marginal probe (`mps.m = −209.861`); the Sprint-31 Day-7 cohort-precision test; `CGE_DEGENERACY_SCOPING.md`.
+**Evidence:** `kkt_residual.py camcge.gms` (CASE_B `stat_mps` rel 1.05, duals CONSISTENT); the emitted `/tmp/camcge_mcp_presolve.gms` (#1462 block misses `nu_mps_fx`; `stat_mps`/`mps_fx` structure); the NLP marginal probe (`mps.m = −209.861`); the Sprint-31 Day-7 cohort-precision test; `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md`.

@@ -16,7 +16,7 @@
 
 Sprint 32 inherits the five Sprint-31 REPLAN'd carryforwards (Priorities 1–5 in `PROJECT_PLAN.md` §"Sprint 32"): the mine head-offset 4th bound-complementarity site (#1443); the sarf 4-D `task`-variable stationarity sparsification (#1385); the camcge #1330 dual-consistent Walras / CASE_B `stat_mps` (Epic 5); the rocket #1462 PATH-consultation forcing input; and the hhfair + CGE-cluster Case-c formalization (#1236). Priority 6 pulls the adjacent offset-alias / symbolic-emit backlog + a residual failure-cohort re-triage; Priority 7 (infrastructure) extends the AD cross-term property catalog with the new head-offset 4th-site + sarf 4-D shapes, recomputes the PR25 genuine-floor tracking, refreshes the `--resolve-changed` checkpoint targets, and begins the Epic-4 `SUMMARY.md` groundwork.
 
-Sprint 32 resembles Sprint 31 in one structural way: **Sprint 31 diagnosed and precisely pinned these tracks; Sprint 32 implements them against a banked root cause.** Because the root causes are already pinned (the Sprint 31 SPRINT_LOG per-day entries, the per-track ISSUE docs, `BACKLOG_FIX_SURFACE_ANALYSIS.md` §3 for rocket, `EPIC_5/CGE_DEGENERACY_SCOPING.md` for camcge, and the AD cross-term property catalog), Sprint 32 prep is lighter on *survey* and heavier on **design-before-implement + tractability-probe**: the hardest track (P1 mine 4th site) needs a concrete **stationarity-consistent bound-multiplier design** (how the bound-active `stat_x` reconciles the LP reduced costs `x.m` warm-started into `piU_x`) before any emit change; the second-hardest (P2 sarf) needs the **O(active-instances) symbolic `stat_task` emit design** over the `$taskposs`-active subset that couples with the 2-D constraint gate; and P3 (camcge Epic-5) needs the **`stat_mps`-first-then-dual-consistent-Walras** ordering design that the Sprint-31 CASE_B verdict established. The Sprint-28–31 diagnostic tooling (KKT-residual harness, presolve-divergence detector, golden-staleness gate, `--resolve-changed` checkpoint re-solve, the `--force` solution-forcing scaffold) is **reused rather than rebuilt** throughout.
+Sprint 32 resembles Sprint 31 in one structural way: **Sprint 31 diagnosed and precisely pinned these tracks; Sprint 32 implements them against a banked root cause.** Because the root causes are already pinned (the Sprint 31 SPRINT_LOG per-day entries, the per-track ISSUE docs, `BACKLOG_FIX_SURFACE_ANALYSIS.md` §3 for rocket, `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` for camcge, and the AD cross-term property catalog), Sprint 32 prep is lighter on *survey* and heavier on **design-before-implement + tractability-probe**: the hardest track (P1 mine 4th site) needs a concrete **stationarity-consistent bound-multiplier design** (how the bound-active `stat_x` reconciles the LP reduced costs `x.m` warm-started into `piU_x`) before any emit change; the second-hardest (P2 sarf) needs the **O(active-instances) symbolic `stat_task` emit design** over the `$taskposs`-active subset that couples with the 2-D constraint gate; and P3 (camcge Epic-5) needs the **`stat_mps`-first-then-dual-consistent-Walras** ordering design that the Sprint-31 CASE_B verdict established. The Sprint-28–31 diagnostic tooling (KKT-residual harness, presolve-divergence detector, golden-staleness gate, `--resolve-changed` checkpoint re-solve, the `--force` solution-forcing scaffold) is **reused rather than rebuilt** throughout.
 
 This prep plan focuses on:
 
@@ -443,7 +443,7 @@ grep -oiE "irscge|lrgcge|moncge|stdcge" docs/planning/EPIC_4/SPRINT_32/CAMCGE_ST
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_32/CAMCGE_STAT_MPS_WALRAS_DESIGN.md` — the CASE_B `stat_mps` re-confirmation, the `nu_mps_fx` fixing-multiplier fix design, the dual-consistent Walras numéraire design (omega 191.735, gated on `stat_mps` first), and the degeneracy-detector scope (flags only camcge; pass-through default; per-model-numéraire fallback)
-- Updated `KNOWN_UNKNOWNS.md` Category-3 unknowns + `EPIC_5/CGE_DEGENERACY_SCOPING.md` cross-link
+- Updated `KNOWN_UNKNOWNS.md` Category-3 unknowns + `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` cross-link
 - Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 3.1, 3.2, 3.3, 3.4
 
 ### Acceptance Criteria
@@ -453,7 +453,7 @@ grep -oiE "irscge|lrgcge|moncge|stdcge" docs/planning/EPIC_4/SPRINT_32/CAMCGE_ST
 - [x] The dual-consistent Walras numéraire is designed (omega 191.735), gated on the `stat_mps` fix landing first; the `/tmp`-to-MS-1 prototype is the in-sprint gate
 - [x] The degeneracy detector is scoped to flag ONLY camcge across irscge/lrgcge/moncge/stdcge (S3 cold-singular guard; Day-7 cohort test)
 - [x] The pass-through default + per-model-numéraire fallback are specified
-- [x] The Epic-5 cross-link is recorded (`EPIC_5/CGE_DEGENERACY_SCOPING.md`)
+- [x] The Epic-5 cross-link is recorded (`docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md`)
 - [x] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
