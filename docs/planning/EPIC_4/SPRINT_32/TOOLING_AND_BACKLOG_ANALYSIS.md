@@ -15,7 +15,7 @@ Sprint 32's diagnostic tooling is **reused, not rebuilt** — this audit confirm
 
 ## §1. Per-track tooling-readiness audit
 
-All six reusable tools are present and exercised this task (paths confirmed on `main`):
+All six reusable tools are present and confirmed on `main` (two exercised this task — the KKT-residual harness sweep + the `--resolve-changed` dry-run; the other four confirmed present):
 
 | Tool | Path | Confirmed |
 |---|---|---|
