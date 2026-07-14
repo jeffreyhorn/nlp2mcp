@@ -601,7 +601,12 @@ Re-run the harness on rocket; confirm the Case-c boundary signature:
 Development team (KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Case-c boundary signature — rocket is a forcing problem)
+**Verified by:** Task 6 (rocket PATH-Consultation Input Packaging)
+**Date:** 2026-07-13
+**Findings:** The harness residual is clean at the NLP point except the **boundary rows** — `stat_ht(h0)` rel 1.00 / raw −4.56, `stat_step` 0.50, `stat_ht(h50)` 0.44 (the initial/terminal/time-step conditions of the discretized optimal-control problem), which move with the warm-start value (`nu_*_fx=0` → `stat_step`; `= var.m` → `stat_ht(h0)`) — the non-convex Case-c boundary signature per ISSUE_1462, NOT a cleanable emit bug. The interior rows are near tolerance (`stat_v(h0)` 0.038, `stat_m(h0)` 0.014); dual-transfer CONSISTENT (closure 1.53e-10). So rocket is a genuine forcing problem, not a latent emit bug.
+**Evidence:** `docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` §1 (harness output + boundary-row interpretation).
+**Decision:** PROCEED — the Case-c scope guard holds; no emit fix attempted; the packaged PATH-consultation input is the deliverable.
 
 ---
 
@@ -636,7 +641,12 @@ Sweep the remaining `--force` continuation parameter space; record whether any l
 Development team (solver specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (all emittable levers exhausted — intrinsic non-convergence)
+**Verified by:** Task 6 (rocket PATH-Consultation Input Packaging)
+**Date:** 2026-07-13
+**Findings:** No untried emittable lever surfaces. The PATH-option space is exhausted (`proximal_perturbation`/`crash_method`/`merit_function`/combined all MS-5; best INFES 477 → 382); the μ-continuation is exhausted (MS-5 every step); multistart is superseded (warm-starting from the NLP optimum itself already fails); and the division-by-variable reformulation is exhausted (reformulated NLP solves to 1.0128, but the MCP is MS-5 cold/warm/continuation). Since the reformulation removes ALL `1/m`,`1/ht²` from the initial Jacobian yet still doesn't converge, the non-convergence is **intrinsic to the discretized optimal-control MCP structure**, not the Jacobian conditioning — no scaled/relaxed continuation offers a new mechanism.
+**Evidence:** `ROCKET_PATH_CONSULTATION_INPUT.md` §2/§4 (the ruled-out-lever survey + the sweep result); `NONCONVEX_FORCING_SURVEY.md` §4; the Day-11 reformulation probe.
+**Decision:** PROCEED — no Day-1 forcing attempt is warranted; the packaged PATH-consultation input is the deliverable; rocket's +1 Solve is deferred to the Sprint-33 consultation.
 
 ---
 
@@ -666,7 +676,12 @@ Review the packaged input against the Sprint-33 consultation needs; confirm the 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (concrete, self-contained hand-off)
+**Verified by:** Task 6 (rocket PATH-Consultation Input Packaging)
+**Date:** 2026-07-13
+**Findings:** The packaged PATH-consultation question is concrete and self-contained: it states the MS-5 symptom + the `EXIT — other error` at the ill-conditioned initial Jacobian, the exhausted PATH-option survey (INFES 477 → 382), the exhausted division-by-variable reformulation (ruled out — MS-5 despite removing all `1/m`,`1/ht²`), the intrinsic-structure framing, the clean-except-boundary residual, a reproducible case (`rocket.gms` → `--nlp-presolve` → `rocket_mcp_presolve.gms`), and the concrete question ("which PATH option set / regularization schedule / model reformulation forces convergence for this discretized optimal-control MCP?"). The `--force` scaffold + the question form the de-risked hand-off; the ruled-out-lever survey prevents the PATH authors re-suggesting exhausted levers.
+**Evidence:** `ROCKET_PATH_CONSULTATION_INPUT.md` §3/§5 (the finalized question + the Sprint-33 hand-off note); `BACKLOG_FIX_SURFACE_ANALYSIS.md` §3.
+**Decision:** PROCEED to the Sprint-33 hand-off; rocket's +1 Solve is conditional on the consultation.
 
 ---
 
