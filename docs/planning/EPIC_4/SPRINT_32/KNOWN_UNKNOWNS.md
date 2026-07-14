@@ -877,7 +877,12 @@ Audit the corpus for the 2-index-transpose shape; for each candidate, check whet
 Development team (AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (candidate list — the per-candidate cold-emit diff is Day-1 P6 work)
+**Verified by:** Task 10 (Reusable-Tooling Readiness Audit + Backlog Fix-Surface Analysis)
+**Date:** 2026-07-14
+**Findings:** A structural corpus grep for the var-at-two-indices distance/norm shape (`sqr(x(i)−x(j))` / `sum(j, …(i)…(j))`) surfaces the adjacent-candidate set beyond the landed polygon/ps2_f_s/ps2_s/ps3_s_gic: **cpack** (circle-packing pairwise distance — the direct polygon sibling, highest prior) + ps3_s_scp/ps5_s_mn/ps10_s_mn (ps-family siblings) + partssupply/maxcut (lower prior). The CGE cluster (irscge/lrgcge/moncge/camcge) and himmel16 are **excluded** (the P5 Case-c family / documented non-convex — 0 genuine floor). fawley also surfaced from the Unknown-6.2 sweep as a cross-constraint second-index candidate, so the offset-alias and cohort tracks converge on the second-index cross-term.
+**Evidence:** `docs/planning/EPIC_4/SPRINT_32/TOOLING_AND_BACKLOG_ANALYSIS.md` §2 (the structural-audit candidate table).
+**Decision:** PROCEED to the Day-1 P6 per-candidate cold-emit diff (cpack-led), each gated by the Unknown-6.3 `--resolve-changed` GO; if none corrects, the §3 fawley Case-b is the fallback +Solve.
 
 ---
 
@@ -911,7 +916,12 @@ for m in agreste cesam fawley lnts; do .venv/bin/python scripts/diagnostics/kkt_
 Development team (KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (harness sweep — 2 candidate Case-b + 2 banked Case-c)
+**Verified by:** Task 10 (Reusable-Tooling Readiness Audit + Backlog Fix-Surface Analysis)
+**Date:** 2026-07-14
+**Findings:** `kkt_residual.py` on all four (`--tol 0.001`, dual-transfer CONSISTENT on every one): **fawley** — CASE_B, `stat_bq(*,fuel-oil)` rel 0.973 uniform across the whole `fuel-oil` column on a **convex LP** (`bq(c,cfq)` summed over `cfq` in `cbal`, over `c` in `qsb`/`pbal`) = a clean **fixable Case-b / second-index candidate** (the strongest cohort +Solve); **agreste** — CASE_B, `stat_sales(sugar-cane)` rel exactly 2.00 on a **convex LP** = a candidate Case-b (factor-of-2 / dropped gradient term), but a **double-`solve` scenario driver** (scope caveat, cf. danwolfe/decomp/saras); **cesam** — CASE_B, dispersed `stat_tsam(*,GRE)` rel ~1.0, `TSAM = A·(X+ERR1)` bilinear + an embedded `solve … using mcp` = **genuine Case-c (bilinear SAM) / out-of-scope driver**; **lnts** — CASE_B, `stat_step` rel 9.66 with near-tol interior, `step` multiplies every dynamics row (`tf = step·nh`, trapezoidal `0.5·step·(…)`) = **genuine Case-c (bilinear-`step` optimal-control, rocket-family)**.
+**Evidence:** `TOOLING_AND_BACKLOG_ANALYSIS.md` §3 (the four verdicts + max-residual rows + the solve-type / defining-equation structure).
+**Decision:** 2 candidate +Solve (fawley clean, agreste scope-caveated) + 2 Case-c (cesam/lnts) banked for Sprint 33; fawley is the strongest single P6 +Solve and overlaps the Unknown-6.1 second-index family.
 
 ---
 
@@ -945,7 +955,12 @@ For each P6 candidate, run the checkpoint gate:
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (gate ready)
+**Verified by:** Task 10 (Reusable-Tooling Readiness Audit + Backlog Fix-Surface Analysis)
+**Date:** 2026-07-14
+**Findings:** `run_full_test.py --resolve-changed --since-commit 4cbf8bff --dry-run` reports **`GO: no emit goldens changed since 4cbf8bff`** — 0 selected at Day 0 (clean baseline; `4cbf8bff` confirmed an ancestor of `main`, the S31-close SHA). The gate selects a model the moment its emit golden changes, so it is the ready Day-1 per-candidate blast-radius check: a P6 candidate lands only if no changed golden moves backward across the 92 matches / 107 solves. The golden-staleness gate + the presolve-divergence detector are present as the companion clean-emit checks.
+**Evidence:** `TOOLING_AND_BACKLOG_ANALYSIS.md` §1 (tool table) + §2 (the GO gate); the `--dry-run` GO output.
+**Decision:** The `--resolve-changed` GO gate is ready; each P6 candidate emit change is Day-1-gated on it (NO-GO → revert, no net loss).
 
 ---
 
@@ -980,7 +995,12 @@ Design the fixtures; confirm they guard the P1/P2 shapes (fail-before/pass-after
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (design)
+**Verified by:** Task 10 (Reusable-Tooling Readiness Audit + Backlog Fix-Surface Analysis)
+**Date:** 2026-07-14
+**Findings:** The catalog `tests/integration/emit/test_ad_crossterm_shapes.py` holds shapes 1–11 (shape10 `distance_second_index` + shape11 `second_index_indexed_condition` are the polygon #1111/#1112 family). Two fixtures extend it, added **once P1/P2 land** (fail-before/pass-after): **shape12** — a head-offset 4th-site bound-multiplier model asserting `stat_x` closes when `piL_x/piU_x` derive from the residual `N` (not `x.m`); **shape13** — a 2-D dynamic-subset model asserting the emitted `stat_task$taskposs` is the symbolic guarded O(active) form with no set-name-literal indices. Both slot into the existing in-process emit + pattern-match harness.
+**Evidence:** `TOOLING_AND_BACKLOG_ANALYSIS.md` §4 (the shape12/shape13 fixture design) + the shape-1–11 catalog listing.
+**Decision:** The two fixtures are designed; they are added in-sprint once the P1/P2 emits land (guarding the new emit paths against future regression).
 
 ---
 
@@ -1049,7 +1069,12 @@ Confirm the checkpoint anchor + the changed-golden selection for the Sprint-32 e
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 10 (Reusable-Tooling Readiness Audit + Backlog Fix-Surface Analysis)
+**Date:** 2026-07-14
+**Findings:** The `--resolve-changed --since-commit 4cbf8bff --dry-run` reports GO (0 changed at Day 0); the gate selects mine (`_mcp_presolve.gms`) and camcge (`_mcp.gms`) goldens the moment their emit sites change, so the Day-5/Day-10 checkpoints re-solve exactly the touched set. `4cbf8bff` (the S31-close SHA, DB changed that day) is confirmed the correct anchor (ancestor of `main`). **One nuance:** sarf has **no golden today** (`translate_failure`), so the P2 emit *creates* `sarf_mcp.gms` — a *new* golden caught by the golden-staleness gate, not by `--resolve-changed` (which diffs *existing* goldens). Any P6-candidate golden is covered identically to mine/camcge (an existing-golden change → selected).
+**Evidence:** `TOOLING_AND_BACKLOG_ANALYSIS.md` §4 (checkpoint coverage + the sarf-new-golden nuance); the `--dry-run` GO output.
+**Decision:** The checkpoint covers the newly-touched emit sites (mine/camcge/P6 via `--resolve-changed`; sarf's new golden via the golden-staleness gate). Anchor `4cbf8bff`.
 
 ---
 
