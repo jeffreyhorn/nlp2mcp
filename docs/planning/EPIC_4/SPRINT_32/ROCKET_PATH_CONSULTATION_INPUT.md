@@ -49,7 +49,14 @@ Every emittable-GAMS / PATH-option lever probed across Sprints 30–31 — **non
 
 > rocket's MCP is **MODEL STATUS 5** with `EXIT — other error` at an ill-conditioned initial Jacobian; the ill-conditioning was *initially suspected* to come from the division-by-variable terms (`1/m(h)` in the velocity update, `1/ht(h)²` in gravity). `proximal_perturbation` / `merit_function` / `crash_method` move INFES **477 → 382** but do **not** converge from the NLP-optimum warm-start. A `1/m` + `1/ht²` auxiliary-variable reformulation (`gf` multiplied through to `g·ht² = g_0·h_0²`; a free acceleration `a(h)` with `(a+g)·m = T−D` replacing `(T−D−m·g)/m` in `v_eqn`) — which removes **ALL** division-by-variable from the initial Jacobian — **ALSO does not converge** (the reformulated NLP solves to the same optimum 1.0128, but its MCP is MS-5 Locally Infeasible cold, MS-5 warm-started from the NLP optimum, and MS-5 across every μ-continuation step, at nh=10). **So the non-convergence is intrinsic to the discretized optimal-control MCP structure, not the division-by-variable Jacobian conditioning.** The residual at the NLP optimum is clean except the boundary rows (`stat_ht(h0)`/`stat_ht(h50)`/`stat_step`), which move with the warm-start value — a non-convex boundary signature. **Which PATH option set / regularization schedule / model reformulation forces convergence for this discretized optimal-control MCP?**
 
-**Reproducible case for the PATH authors:** `data/gamslib/raw/rocket.gms` (the Goddard rocket, COPS) → `nlp2mcp … --nlp-presolve` → `rocket_mcp_presolve.gms` (MS-5 warm-started from the embedded NLP optimum); the `--force homotopy` / `optfile` scaffold emits the μ-continuation + the PATH optfile.
+**Reproducible case for the PATH authors:** from `data/gamslib/raw/rocket.gms` (the Goddard rocket, COPS), emit the warm-started MCP with
+
+```bash
+python -m src.cli data/gamslib/raw/rocket.gms -o rocket_mcp_presolve.gms --nlp-presolve
+gams rocket_mcp_presolve.gms        # → MODEL STATUS 5, warm-started from the embedded NLP optimum
+```
+
+The forcing scaffold adds the μ-continuation driver + the PATH optfile: `python -m src.cli data/gamslib/raw/rocket.gms -o rocket_mcp_forced.gms --nlp-presolve --force homotopy` (or `--force optfile`).
 
 ---
 
