@@ -9,13 +9,13 @@
 
 ## Executive summary
 
-Sprint 32's diagnostic tooling is **reused, not rebuilt** — this audit confirms, from read-only runs, that each of the five carryforward tracks inherits a tool that already guards its shape, with only **one new `src/` extension** (the P5 Case-c classifier, designed in Task 7) and **two new test fixtures** (P7). The Priority-6 fill/absorb-slack work is scoped here so Day-1 P6 is not an open-ended search: (a) a corpus structural audit surfaces the offset-alias generalization candidates beyond polygon/ps2 (chiefly **cpack**, a circle-packing distance sibling); (b) the `kkt_residual.py` sweep re-triages the four residual `model_infeasible` members — **fawley is a clean fixable Case-b / second-index candidate** (a convex LP with a uniform transpose-column residual), **agreste** a candidate-with-caveat (a convex LP but a double-solve driver), and **cesam + lnts genuine Case-c** (bilinear SAM / bilinear-`step` optimal-control non-convexity) banked for Sprint 33. The `--resolve-changed --since-commit 4cbf8bff` gate reports **GO (0 changed) at Day 0** (clean baseline), so it is the ready regression gate for every P6/P1/P2/P3 emit change.
+Sprint 32's diagnostic tooling is **reused, not rebuilt** — this audit confirms, from read-only runs, that each of the five carryforward tracks inherits a tool that already guards its shape, with only **one new tool-code extension** (the P5 Case-c classifier in the diagnostic harness `scripts/diagnostics/kkt_residual.py`, designed in Task 7 — not a `src/` emit/runtime change) and **two new test fixtures** (P7). The Priority-6 fill/absorb-slack work is scoped here so Day-1 P6 is not an open-ended search: (a) a corpus structural audit surfaces the offset-alias generalization candidates beyond polygon/ps2 (chiefly **cpack**, a circle-packing distance sibling); (b) the `kkt_residual.py` sweep re-triages the four residual `model_infeasible` members — **fawley is a clean fixable Case-b / second-index candidate** (a convex LP with a uniform transpose-column residual), **agreste** a candidate-with-caveat (a convex LP but a double-solve driver), and **cesam + lnts genuine Case-c** (bilinear SAM / bilinear-`step` optimal-control non-convexity) banked for Sprint 33. The `--resolve-changed --since-commit 4cbf8bff` gate reports **GO (0 changed) at Day 0** (clean baseline), so it is the ready regression gate for every P6/P1/P2/P3 emit change.
 
 ---
 
 ## §1. Per-track tooling-readiness audit
 
-All five reusable tools are present and exercised this task (paths confirmed on `main`):
+All six reusable tools are present and exercised this task (paths confirmed on `main`):
 
 | Tool | Path | Confirmed |
 |---|---|---|
@@ -32,9 +32,9 @@ All five reusable tools are present and exercised this task (paths confirmed on 
 | **P2 sarf** (4-D `stat_task` sparsification) | The translate-budget timer (`run_full_test.py --only-parse`/emit timing) + the golden-staleness gate on `sarf_mcp.gms` | **No tool change** — the O(active=398) timing probe uses the existing translate path; the golden-staleness gate catches the new `sarf_mcp.gms` (no golden today — sarf is `translate_failure`, so the first emit *creates* the golden). |
 | **P3 camcge** (`stat_mps` + Walras) | `kkt_residual.py` — the CASE_B `stat_mps` verdict + the dual-transfer flag; the S1∧S2∧S3 detector logic (Task 5) | **No harness code change** for step 1 (the general `nu_mps_fx` emit fix); the S1∧S2∧S3 CGE-degeneracy detector is a *Task-5-designed* check run at the `/tmp` prototype (analysis, not tool code). |
 | **P4 rocket** (PATH-consultation) | The `--force` scaffold (homotopy/multistart/optfile levers + PATH optfile emit) | **No tool change** — the scaffold landed Sprint 30; P4 consumes it to package the ruled-out-lever survey. |
-| **P5 hhfair/CGE** (Case-c formalization) | `kkt_residual.py` — the CASE_B + D1(obj-defining)∧D3(cold-spurious) reclassification | **The one new `src/` extension:** the `kkt_residual.py` **Case-c auto-classifier** (Task 7 design) — a post-verdict reclassification pass, no emit change. |
+| **P5 hhfair/CGE** (Case-c formalization) | `kkt_residual.py` — the CASE_B + D1(obj-defining)∧D3(cold-spurious) reclassification | **The one new tool-code extension** (in the diagnostic harness `scripts/diagnostics/kkt_residual.py`, **not** `src/`): the **Case-c auto-classifier** (Task 7 design) — a post-verdict reclassification pass, no emit change. |
 
-**Conclusion:** no blocking tool gap. The only `src/` tool change is the P5 classifier (diagnostic, no emit); everything else is a reuse + the two P7 fixtures (§4).
+**Conclusion:** no blocking tool gap. The only tool-code change is the P5 classifier (in the diagnostic harness `scripts/diagnostics/kkt_residual.py`, not `src/`; no emit change); everything else is a reuse + the two P7 fixtures (§4).
 
 ---
 
