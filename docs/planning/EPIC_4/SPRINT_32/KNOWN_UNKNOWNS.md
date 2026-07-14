@@ -606,7 +606,7 @@ Development team (KKT specialist)
 **Date:** 2026-07-13
 **Findings:** The harness residual is clean at the NLP point except the **boundary rows** — `stat_ht(h0)` rel 1.00 / raw −4.56, `stat_step` 0.50, `stat_ht(h50)` 0.44 (the initial/terminal/time-step conditions of the discretized optimal-control problem), which move with the warm-start value (`nu_*_fx=0` → `stat_step`; `= var.m` → `stat_ht(h0)`) — the non-convex Case-c boundary signature per ISSUE_1462, NOT a cleanable emit bug. The interior rows are near tolerance (`stat_v(h0)` 0.038, `stat_m(h0)` 0.014); dual-transfer CONSISTENT (closure 1.53e-10). So rocket is a genuine forcing problem, not a latent emit bug.
 **Evidence:** `docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` §1 (harness output + boundary-row interpretation).
-**Decision:** PROCEED — the Case-c scope guard holds; no emit fix attempted; the packaged PATH-consultation input is the deliverable.
+**Decision:** PROCEED — the Case-c scope guard holds; no emit fix attempted; the packaged PATH-consultation input is the deliverable. The Task-8 P4 gate makes this residual-clean-at-NLP-point re-confirm a precondition of any forcing attempt.
 
 ---
 
@@ -722,7 +722,7 @@ Development team (KKT specialist)
 **Date:** 2026-07-13
 **Findings:** The classifier reclassifies CASE_B → Case-c via D1∧D2∧D3: **D1 (structural)** — the max-residual `stat_<var>` row's `<var>` appears in the objective defining equation `obj =e= f(<var>)` (so `nu_obj = ±1` — no free multiplier for a reduction) and is itself pinned by its own defining equation (an intermediate variable); **D2** — dual-transfer CONSISTENT; **D3** — the cold-start MCP solve reaches a spurious KKT point (cold ≠ match). A genuine Case-b residual on a **non**-objective-defining variable never trips D1, so no false-positive; D3 separates it from a Case-b that would reach the match after a fix; D4 (sign-flip-inert) is the definitive manual control for any new candidate. Re-confirmed on the current tree: hhfair `stat_u(1)` rel 2.00, irscge `stat_xp(BRD)` rel 0.064 — both concentrated on the objective-defining intermediate variable, interiors near tolerance.
 **Evidence:** `docs/planning/EPIC_4/SPRINT_32/CASE_C_CLASSIFIER_DESIGN.md` §1–§3 (the discriminator + the harness output + the classifier-extension design).
-**Decision:** PROCEED — implement the D1∧D2∧D3 reclassification pass; the structural D1 gate prevents false-positives on real Case-b bugs.
+**Decision:** PROCEED — implement the D1∧D2∧D3 reclassification pass; the structural D1 gate prevents false-positives on real Case-b bugs. The Task-8 P5 gate binds this to control-before-implement (the sign flip is BANNED; the only `src/` change is the diagnostic classifier, no emit change).
 
 ---
 
