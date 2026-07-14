@@ -693,7 +693,7 @@ Development team
 **High** — the P5 deliverable is a classifier extension. If it false-positives on genuine Case-b rows, it would wrongly suppress future fixable-emit-bug diagnoses.
 
 ### Assumption
-The objective-defining-intermediate-variable shape (a variable appearing only in `obj =e= prod(x**a)` AND market-cleared, whose cold solve reaches a spurious local KKT point) is a **precise, detectable discriminator** that the harness can auto-flag as Case-c without false-positive genuine Case-b rows.
+The objective-defining-intermediate-variable shape (a variable appearing only in `obj =e= prod(x**a)` AND market-cleared, whose cold solve reaches a spurious local KKT point) is a **precise, detectable discriminator** that the harness can auto-flag as Case-c without producing false positives on genuine Case-b rows.
 
 ### Research Questions
 1. What is the exact structural discriminator (variable appears only in the objective defining equation + is market-cleared + cold-diverges to a spurious KKT point)?
