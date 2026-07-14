@@ -66,7 +66,7 @@ Land the five Sprint-31 REPLAN'd Solve/Match carryforwards, each now carrying a 
 
 ## 10. Day 9 — Priority 4: rocket PATH-consultation input (~9 h)
 
-- **Re-confirm + finalize the packaged hand-off (Task 6).** Re-confirm the emit residual is **clean at the NLP point (Case-c boundary signature** — `stat_ht(h0)`/`stat_step`/`stat_ht(h50)` move with the warm-start value, interior near tolerance**) before** any forcing (PR27). Confirm no untried emittable lever crosses (PATH options 477→382, μ-continuation / multistart / the division-by-variable reformulation all MS-5 in prep).
+- **Re-confirm + finalize the packaged hand-off (Task 6).** Re-confirm the emit residual is **clean at the NLP point (Case-c boundary signature)** — `stat_ht(h0)`/`stat_step`/`stat_ht(h50)` move with the warm-start value, interior near tolerance — **before** any forcing (PR27). Confirm no untried emittable lever crosses (PATH options 477→382, μ-continuation / multistart / the division-by-variable reformulation all MS-5 in prep).
 - **Disposition (Unknown 4.1, prior — hand-off):** **finalize the PATH-consultation input** for the renumbered Sprint 33 (`ROCKET_PATH_CONSULTATION_INPUT.md` — the concrete question + the ruled-out-lever survey + the `--force` scaffold); **+1 Solve only if** a lever unexpectedly crosses. rocket's +1 Solve is a conditional Sprint-33 hand-off.
 - **Verifies:** 4.1, 4.2, 4.3. **PR (docs, unless a lever lands emit). Est ~9 h.**
 

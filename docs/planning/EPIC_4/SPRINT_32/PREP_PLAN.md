@@ -882,7 +882,7 @@ test -f docs/planning/EPIC_4/SPRINT_32/PLAN.md && echo "schedule present"
 
 # Day 0 + Days 1–13 present (11 day-sections; some cover a range, e.g. "Days 4–5")
 grep -cE "^## [0-9]+\. Days? [0-9]" docs/planning/EPIC_4/SPRINT_32/PLAN.md   # expect >=9 sections covering Day 0–13
-grep -cE "Day [0-9]+" docs/planning/EPIC_4/SPRINT_32/prompts/PLAN_PROMPTS.md   # 14 per-day prompts (Day 0–13)
+grep -cE "^## Day [0-9]+ Prompt" docs/planning/EPIC_4/SPRINT_32/prompts/PLAN_PROMPTS.md   # 14 per-day prompt headings (Day 0–13)
 
 # Checkpoints (Day 5 + Day 10) + REPLAN slip valves referenced
 grep -ciE "Checkpoint|Day 5|Day 10" docs/planning/EPIC_4/SPRINT_32/PLAN.md
