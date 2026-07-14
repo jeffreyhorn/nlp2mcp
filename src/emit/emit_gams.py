@@ -1332,9 +1332,12 @@ def _emit_presolve_fx_warmstart(
         # stores its fixing in `var_def.fx` with an EMPTY index tuple and has an
         # empty `fx_map`, so the original `fx_map`-only loop skipped it entirely —
         # leaving `nu_<var>_fx` at 0 and a nonzero `stat_<var>` residual (camcge
-        # `stat_mps` +209.86 = CASE_B). Mirror normalize._iterate_bounds (scalar
-        # first, then the sorted per-element map) so the fixing-equation cohort
-        # matches normalization exactly.
+        # `stat_mps` +209.86 = CASE_B). The fixing COHORT here matches
+        # normalize._iterate_bounds (the scalar `.fx` plus every `fx_map` entry —
+        # the same set of fixing equations normalization creates). The emission
+        # ORDER is independent of normalization (which iterates the map in dict
+        # order): the scalar goes first, then the per-element map entries are
+        # `sorted()` for deterministic emission.
         if not var_def.fx_map and var_def.fx is None:
             continue
         fixings: list[tuple[tuple[str, ...], float]] = []
