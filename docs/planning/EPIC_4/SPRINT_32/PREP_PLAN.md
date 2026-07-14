@@ -676,7 +676,8 @@ grep -iqE "control experiment|/tmp prototype|residual → 0|O\(active" docs/plan
 
 ## Task 9: Diagnosis-Heavy / REPLAN-Prone Track Risk Assessment (PR16)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-14
 **Priority:** High
 **Estimated Time:** 3–5 hours
 **Deadline:** Before Sprint 32 Day 1
@@ -707,11 +708,16 @@ Sprint 31's honest projection was borne out exactly: the two Solve-side targets 
 
 ### Changes
 
-To be completed.
+- Authored `docs/planning/EPIC_4/SPRINT_32/REPLAN_RISK_ASSESSMENT.md` (the SPRINT_31 template refreshed): Executive summary + a per-track section for the three deepest REPLAN-prone tracks — **P1 mine** (4th-site bound-dual, deeper-IR risk), **P2 sarf** (4-D sparsification, timeout-re-trigger risk), **P3 camcge** (Epic-5, dual-consistency risk) — each with a pinned bug class, a PR16 single-model validation (V1/V2 table), a Sprint-33 REPLAN exit + de-risked hand-off, a budget-reallocation target, and a REPLAN prior; plus a Budget-at-Risk tally + the Honest KPI projection. P4 rocket + P5 hhfair/CGE (a 0-floor documented-Case-c) appear in the KPI projection, not as deep tracks.
+- Added a Task-9 risk-layer note to KNOWN_UNKNOWNS Unknowns 1.1/1.2/2.1/3.1/3.2 (Verified by / Date / Findings — the prior + single-model validation + Sprint-33 exit + reallocation / Decision).
+- Fixed this task's verification grep to the template-consistent `## Track P` heading style (the SPRINT_31 template + this doc use `## Track P1 — …`, not `## P1`).
 
 ### Result
 
-To be completed.
+- **P1 mine** (Prior **Medium**): the `N`-derivation transfer → warm residual → 0 (Case-a, `modelstat`) → presolve MS-1 by Day 5; 5th-coupling REPLAN → Sprint-33 deeper head-offset architecture; ~8–14h → P6 + P7. mine's +1 Solve is one of the two firm Solve movers.
+- **P2 sarf** (Prior **Medium-High**, a failed-architecture rebuild): the Day-0 O(active=398)-not-O(369K) timing probe caps the dominant risk early; timeout-re-trigger REPLAN → documented re-scoping; ~8–16h → P6 + P7. Translate +1 conditional on this track (lowest-leverage KPI).
+- **P3 camcge** (Prior **Medium**, step-2-only): step 1 (`nu_mps_fx.l=-mps.m`, `mps.m=−209.861`) is a near-certain general emit fix that lands regardless (partly de-risking P3); step 2 gated on the `/tmp`-to-MS-1 (191.7346) prototype before any Walras `src/` change; Epic-5-deferral REPLAN → camcge stays `model_infeasible` in S32, +1 Solve at risk; ~6–12h → P6 + P7.
+- **Honest KPI projection:** Solve ≥ 109 needs BOTH mine [P1] AND camcge [P3] (the 2-element mover set; rocket [P4] a conditional third) — the most REPLAN-sensitive KPI; genuine floor 74 → ≥ 75 conditional on mine/camcge **cold-matching** or a P6 emit change, NOT presolve-methodology (P5 delivers 0 floor); Translate +1 conditional on sarf. Reallocation order on any REPLAN: P6 → P7 → the rocket [P4] forcing tail.
 
 ### Verification
 
@@ -720,7 +726,7 @@ To be completed.
 test -f docs/planning/EPIC_4/SPRINT_32/REPLAN_RISK_ASSESSMENT.md && echo "risk assessment present"
 
 # Each deep track has a hypothesis + REPLAN exit + reallocation target
-grep -cE "^## (P1|P2|P3|mine|sarf|camcge)" docs/planning/EPIC_4/SPRINT_32/REPLAN_RISK_ASSESSMENT.md
+grep -cE "^## Track P[123]" docs/planning/EPIC_4/SPRINT_32/REPLAN_RISK_ASSESSMENT.md
 grep -ciE "REPLAN exit|reallocat|slip valve" docs/planning/EPIC_4/SPRINT_32/REPLAN_RISK_ASSESSMENT.md
 
 # The honest KPI projection is present
@@ -735,11 +741,11 @@ grep -iqE "conditional|Solve ≥ ?109|genuine floor" docs/planning/EPIC_4/SPRINT
 
 ### Acceptance Criteria
 
-- [ ] P1/P2/P3 each have a hypothesis + single-model validation + PROCEED/REPLAN threshold
-- [ ] Each has a pinned Sprint-33 REPLAN exit with its de-risked hand-off
-- [ ] The budget-reallocation order (freed hours → firm tracks / P6 / P7) is defined
-- [ ] The honest KPI projection (Solve ≥ 109 / genuine floor ≥ 75 / Translate +1, each conditional) is recorded
-- [ ] Unknowns 1.1, 1.2, 2.1, 3.1, 3.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] P1/P2/P3 each have a hypothesis + single-model validation + PROCEED/REPLAN threshold
+- [x] Each has a pinned Sprint-33 REPLAN exit with its de-risked hand-off
+- [x] The budget-reallocation order (freed hours → firm tracks / P6 / P7) is defined
+- [x] The honest KPI projection (Solve ≥ 109 / genuine floor ≥ 75 / Translate +1, each conditional) is recorded
+- [x] Unknowns 1.1, 1.2, 2.1, 3.1, 3.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

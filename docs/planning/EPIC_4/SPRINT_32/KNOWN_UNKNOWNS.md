@@ -140,6 +140,8 @@ Development team (KKT/emit specialist)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_32/MINE_BOUND_MULTIPLIER_DESIGN.md` §1–§3 (harness output + the emitted `stat_x` + the emit-site trace `src/emit/emit_gams.py:1548–1577`).
 **Decision:** PROCEED to the in-sprint stationarity-consistent bound-multiplier derivation (presolve, local emit change), behind the Task-8 warm-residual→0 gate.
 
+**Risk-layer — Verified by:** Task 9 (REPLAN Risk Assessment). **Date:** 2026-07-14. **Findings:** Prior of REPLAN **Medium** — the S31 IR blocker is landed (foundation on `main`) and the fix is derivable by construction (`piL_x = max(N,0)`), but mine is a degenerate LP (a bound-dual class that has surfaced fresh couplings before). Single-model validation: the `N`-derivation transfer → warm residual → 0 (Case-a, `modelstat` asserted) → presolve MS-1, by the Day-5 checkpoint. Sprint-33 exit: a 5th coupling → a deeper head-offset bound-complementarity architecture (the bound-multiplier design + the S31 IR foundation hand off cleanly). Reallocation: mine's ~8–14h → P6 (offset-alias generalization beyond polygon/ps2) + P7 (property fixtures + genuine-floor tracking). **Decision:** PROCEED; mine's +1 Solve is one of the two firm Solve movers, so Solve ≥ 109 is conditional on it.
+
 ---
 
 ## Unknown 1.2: Is the residual a single 4th site, or does a 5th coupling surface?
@@ -178,6 +180,8 @@ Development team (KKT/emit specialist)
 **Findings:** The residual is localized to a **single** site — the `x.m` bound-multiplier transfer (the duals are CONSISTENT, so `lam_pr`/`pr.m`/complementarity are all correct; only `stat_x` fails to close, and only via the `piL_x/piU_x = ±x.m` warm-start). The in-sprint decisive test is the **warm-residual→0 gate**: after the `N`-derivation transfer, the harness must report Case-a (`stat_x` ≈ 0 at the NLP optimum). Because the `N`-split closes `stat_x` by construction, the only way a **5th coupling** surfaces is if (a) a fresh residual persists at the NLP optimum after the fix, or (b) the sign of `N` contradicts `x`'s bound-active status at some row (⇒ the emitted `stat_x` cross-term itself is still inconsistent) — both are explicit REPLAN triggers.
 **Evidence:** `MINE_BOUND_MULTIPLIER_DESIGN.md` §3–§4 (the `N`-derivation + the warm→cold gate + the 5th-coupling exit).
 **Decision:** PROCEED with the single-site fix + the warm-residual→0 gate; REPLAN to a Sprint-33 deeper head-offset architecture only if the warm residual does not close (budget → P6/P7 per Task 9).
+
+**Risk-layer — Verified by:** Task 9 (REPLAN Risk Assessment). **Date:** 2026-07-14. **Findings:** The 5th-coupling question is mine's dominant residual risk (Prior **Medium**), resolved by the Day-5 warm-residual→0 check — either `stat_x` closes (single 4th site → PROCEED) or a fresh residual / sign contradiction surfaces (5th coupling → REPLAN). On REPLAN, mine's +1 Solve becomes a Sprint-33 carry and Solve ≥ 109 rests on camcge alone (a miss unless rocket [P4] converts). Sprint-33 exit + reallocation as Unknown 1.1. **Decision:** PROCEED; the 5th-coupling REPLAN exit is explicit and hands off a de-risked filing.
 
 ---
 
@@ -295,6 +299,8 @@ Development team (AD/emit specialist)
 **Findings:** The sparsified emit makes sarf O(active), not O(369K). Emit **one symbolic guarded equation** `stat_task(g,t,m,n)$taskposs(g,t)..` (the banked 7-term derivation) + `task.fx(g,t,m,n)$(not (taskposs(g,t) and tech(g,m,n))) = 0` — translate-time cost is O(1 symbolic equation), not O(369,024). GAMS instantiates the guarded equation at runtime, collapsing to the 398 live rows (the fixed inactive columns' paired `stat_task` rows drop under MCP matching). Sites: `src/ad/index_mapping.py` (extend the short-circuit so the `task`-variable stationarity isn't materialized over the 369K Cartesian) + `src/kkt/stationarity.py` (the new symbolic parametric cross-term path — the short-circuited constraints enumerate zero per-instance Jacobian entries, so `stat_task` cross-terms are built by differentiating each body once, parametrically in `(g,t,m,n)`).
 **Evidence:** `docs/planning/EPIC_4/SPRINT_32/SARF_STAT_TASK_SPARSIFICATION_DESIGN.md` §1–§3 (sizing probe + the emit design + sites).
 **Decision:** PROCEED to the in-sprint parametric `stat_task` emit; the O(active) translate-budget gate (Task 8) is the decisive test.
+
+**Risk-layer — Verified by:** Task 9 (REPLAN Risk Assessment). **Date:** 2026-07-14. **Findings:** Prior of REPLAN **Medium-High** — sarf is a failed-architecture rebuild (the Sprint-26 `nu_slack("srn")` set-name-literal + combinatorial-blow-up failure), and the 369K enumeration is the worst-case instance of that axis. Single-model validation: the Day-0 timing probe — `sarf_mcp.gms` translates in seconds (srpchase's 1-D analogue 6.56s), O(active=398) not O(369K); resolves the dominant risk before any downstream emit work. Sprint-33 exit: a timeout re-trigger → a documented parametric-emit re-scoping (builder-pipeline constraint); +Translate deferred, sarf stays `translate_failure`. Reallocation: sarf's ~8–16h → P6 + P7 (the +Translate stretch is the lowest-leverage KPI). **Decision:** PROCEED; the V1 O(active) timing probe caps the prior early. Translate +1 is conditional on this track.
 
 ---
 
@@ -454,6 +460,8 @@ Development team (KKT/CGE specialist)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_32/CAMCGE_STAT_MPS_WALRAS_DESIGN.md` §1–§2 (harness + the emitted #1462 block + the `mps.m = −209.861` probe).
 **Decision:** PROCEED — step 1 is a general emit fix in `src/emit/emit_gams.py` (the #1462 transfer block); it resolves the CASE_B residual before the Walras step.
 
+**Risk-layer — Verified by:** Task 9 (REPLAN Risk Assessment). **Date:** 2026-07-14. **Findings:** Step 1 is a **near-certain** general emit fix (`mps.m = −209.861` measured, matches the −210 residual; `nu_mps_fx.l = -mps.m` → `stat_mps` Case-a). It lands regardless of step 2, so P3 is partly de-risked — the CASE_B emit residual clears even if the Walras step slips. **Decision:** PROCEED with step 1 as the firm part of the split track; camcge's +1 Solve rests on step 2 (Unknown 3.2).
+
 ---
 
 ## Unknown 3.2: Does the dual-consistent Walras redefinition then reach MS 1 at omega 191.735?
@@ -492,6 +500,8 @@ Development team (KKT/CGE specialist)
 **Findings:** The residual Walras singularity is **independent** of `stat_mps` (an inherent rank-deficiency: `equil(i)`+`lmequil(lc)` dependent via budget balance + no numéraire fixed → 1-D nullspace). The design keeps every market-clearing row (no orphaned dual — the Day-11 "check the dual side" lesson: dropping a row → omega 299 broken) + fixes the consumption-weighted numéraire (`sum(i$cles(i), cles(i)·p(i)) = sum(…, cles(i)·pd0(i))`) + redefines the redundant market's dual via Walras' law. The Day-11 price-pin reaches the correct **omega 191.735** but stays MS-4 **without** the `stat_mps` fix; the re-scoped hypothesis is `stat_mps`-first-then-numéraire. **MS-1 is unproven in prep** (the Day-6/7 numéraire variants stayed MS-4, but on an inconsistent warm point); the combined (step 1 + step 2) `/tmp`-to-MS-1 prototype is the Task-8 in-sprint gate.
 **Evidence:** `CAMCGE_STAT_MPS_WALRAS_DESIGN.md` §3; `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` §1/§3; the Day-11 price-pin (omega 191.735, MS-4).
 **Decision:** PROCEED to the dual-consistent Walras as an Epic-5 step gated on step 1; the `/tmp`-to-MS-1 prototype is the gate, with an explicit Epic-5-deferral exit (per-model-numéraire fallback) if MS-4 persists.
+
+**Risk-layer — Verified by:** Task 9 (REPLAN Risk Assessment). **Date:** 2026-07-14. **Findings:** Prior of REPLAN **Medium** (step-2-only; step 1 firm). Single-model validation: the `/tmp` prototype of step 1 + the dual-consistent Walras → MS-1 at omega 191.7346 (`modelstat` asserted) **before** the Walras `src/` change; the S1∧S2∧S3 detector must flag only camcge. Sprint-33 / Epic-5 exit: the `/tmp` stays MS-4 → step 1 still lands (cleaner emit), the numéraire → a per-model-numéraire-declaration **Epic-5 item that does not land in Sprint 32**, so camcge stays `model_infeasible` and its **+1 Solve is genuinely at risk** (unlike the S31 framing that assumed an in-sprint fallback). Reallocation: camcge's step-2 ~6–12h → P6 + P7. **Decision:** PROCEED gated on the `/tmp`-to-MS-1 prototype; camcge is the second of the two firm Solve movers, so Solve ≥ 109 is conditional on this step.
 
 ---
 
