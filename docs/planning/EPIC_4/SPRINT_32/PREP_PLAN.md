@@ -314,9 +314,10 @@ grep -iqE "REPLAN|5th|deeper" docs/planning/EPIC_4/SPRINT_32/MINE_BOUND_MULTIPLI
 
 ## Task 4: sarf 4-D `task`-Variable Stationarity Sparsification Design (Priority 2 foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
-**Estimated Time:** 4–6 hours
+**Estimated Time:** 4–6 hours (actual: ~3.5h)
+**Completed:** 2026-07-13
 **Deadline:** Before Sprint 32 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
@@ -346,11 +347,11 @@ sarf (P2) is the sprint's +1 Translate stretch. Sprint 31 Day 8 built the 2-D co
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_32/SARF_STAT_TASK_SPARSIFICATION_DESIGN.md` (§1 sizing probe; §2 model structure; §3 sparsified `stat_task` emit + sites; §4 2-D-gate atomicity coupling; §5 anti-pattern guard; §6 O(active) translate-budget gate + REPLAN exit; §7 KU dispositions). Set `KNOWN_UNKNOWNS.md` Unknowns 2.1/2.2/2.3/2.4 → ✅ VERIFIED. CHANGELOG entry. All experiments read-only (GAMS data probe + code reads); no `src/` change.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-13).** A GAMS data probe pins the sizing decisively: `task(g,t,mn,mn)` Cartesian = 16·24·31·31 = **369,024**; `card(taskposs)` = 129 active `(g,t)`; and the active `task(g,t,m,n)` subset (`taskposs(g,t)` ∧ `tech(g,m,n)`) = **398** — a **927× reduction**. `task` is declared over the full 369K but appears only conditioned on `$taskposs(g,t)` ∧ `$tech(g,m,n)`, so the 368,626 inactive columns are vacuous (→ `task.fx = 0`, the mine non-`d` precedent). **Fix (design):** emit **one symbolic guarded equation** `stat_task(g,t,m,n)$taskposs(g,t)..` (the banked 7-term ISSUE_1385 derivation) — translate-time O(1 symbolic equation), not O(369K) — plus `task.fx$(not active)=0`. Sites: `src/ad/index_mapping.py` (variable-stationarity short-circuit, extending the 1-D `_is_blowup_dynamic_subset_equation` to the 2-D shape — the 2-D gate is confirmed **absent from main**, reverted Day 8) + `src/kkt/stationarity.py` (the new symbolic parametric cross-term path, since the short-circuited constraints enumerate zero per-instance Jacobian entries). **Atomicity:** the 2-D constraint gate + the 4-D sparsification + the cross-terms + `task.fx` assemble at a single point (re-emit-without-cross-terms = inconsistent MCP). **Anti-pattern guard:** the banked `stat_task` is symbolic (`nu_tbal(g,t)`, `lam_equipb1(m,t)`, …); the `grep 'nu_*("' / 'lam_*("'` compile-clean scan gates against the Sprint-26 `nu_slack("srn")` bug (commit `243fe578`). **O(active) translate-budget gate + re-scoping REPLAN exit** defined. **Decision: PROCEED** to the in-sprint P2 implementation behind the Task-8 gate (high-risk architectural rebuild; the O(active) budget gate + atomicity/anti-pattern checks are load-bearing). Docs/design-only (no `src/`).
 
 ### Verification
 
@@ -375,12 +376,12 @@ grep -iqE "set-name|nu_slack|243fe578" docs/planning/EPIC_4/SPRINT_32/SARF_STAT_
 
 ### Acceptance Criteria
 
-- [ ] The 369,024 Cartesian figure + the `$taskposs`-active target instance count are recorded
-- [ ] The sparsified O(active) `stat_task` emit is designed, with symbolic (not set-name-literal) multiplier indices + named sites
-- [ ] The 2-D-gate + 4-D-sparsification atomicity coupling is designed (ISSUE_1385 atomicity)
-- [ ] The O(active) translate-budget gate is defined; the timeout-re-trigger REPLAN exit is explicit
-- [ ] The Sprint-26 `nu_slack("srn")` anti-pattern is named as the guard
-- [ ] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The 369,024 Cartesian figure + the `$taskposs`-active target instance count (398) are recorded
+- [x] The sparsified O(active) `stat_task` emit is designed, with symbolic (not set-name-literal) multiplier indices + named sites (`src/ad/index_mapping.py` + `src/kkt/stationarity.py`)
+- [x] The 2-D-gate + 4-D-sparsification atomicity coupling is designed (ISSUE_1385 atomicity — single assembly point)
+- [x] The O(active) translate-budget gate is defined; the timeout-re-trigger REPLAN exit is explicit
+- [x] The Sprint-26 `nu_slack("srn")` anti-pattern (commit `243fe578`) is named as the guard (+ the `grep 'nu_*("'` compile-clean scan)
+- [x] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
