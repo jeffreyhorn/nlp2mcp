@@ -289,7 +289,12 @@ Enumerate the active subset size; design the symbolic emit; time the translate:
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (favorable — 927× reduction, O(1 symbolic equation) at translate time)
+**Verified by:** Task 4 (sarf 4-D `task`-Variable Stationarity Sparsification Design)
+**Date:** 2026-07-13
+**Findings:** The sparsified emit makes sarf O(active), not O(369K). Emit **one symbolic guarded equation** `stat_task(g,t,m,n)$taskposs(g,t)..` (the banked 7-term derivation) + `task.fx(g,t,m,n)$(not (taskposs(g,t) and tech(g,m,n))) = 0` — translate-time cost is O(1 symbolic equation), not O(369,024). GAMS instantiates the guarded equation at runtime, collapsing to the 398 live rows (the fixed inactive columns' paired `stat_task` rows drop under MCP matching). Sites: `src/ad/index_mapping.py` (extend the short-circuit so the `task`-variable stationarity isn't materialized over the 369K Cartesian) + `src/kkt/stationarity.py` (the new symbolic parametric cross-term path — the short-circuited constraints enumerate zero per-instance Jacobian entries, so `stat_task` cross-terms are built by differentiating each body once, parametrically in `(g,t,m,n)`).
+**Evidence:** `docs/planning/EPIC_4/SPRINT_32/SARF_STAT_TASK_SPARSIFICATION_DESIGN.md` §1–§3 (sizing probe + the emit design + sites).
+**Decision:** PROCEED to the in-sprint parametric `stat_task` emit; the O(active) translate-budget gate (Task 8) is the decisive test.
 
 ---
 
@@ -323,7 +328,12 @@ grep -n "_is_blowup_2d_condition_equation\|_is_blowup_dynamic_subset_equation" s
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (design — atomic single-assembly-point coupling)
+**Verified by:** Task 4 (sarf 4-D `task`-Variable Stationarity Sparsification Design)
+**Date:** 2026-07-13
+**Findings:** The 2-D constraint gate and the 4-D `task` sparsification **must** land atomically. The re-landed 2-D gate (`_is_blowup_2d_condition_equation`, extending the 1-D `_is_blowup_dynamic_subset_equation` `len(eq_domain) != 1` bail to sarf's `taskposs(g,t)`/`equipposs(m,t)` shape on `tbal`/`equipb1`/`equipb2`) makes those constraints enumerate **zero** per-instance Jacobian entries, so their `J_gᵀ·lam` contributions to `stat_task` (and `stat_xcrop`, `stat_equipp`, …) cannot be assembled per-instance — they come from the §3 parametric cross-term path. Re-emit-without-cross-terms = an inconsistent MCP (ISSUE_1385 atomicity); there is no safe partial. The design assembles the guarded constraint re-emit + the parametric `stat_*` cross-terms + the `task.fx` fixing at a **single atomic point**.
+**Evidence:** `SARF_STAT_TASK_SPARSIFICATION_DESIGN.md` §4; the 1-D gate at `src/ad/index_mapping.py:402` (2-D gate confirmed absent from main).
+**Decision:** PROCEED — the atomic-coupling design is pinned; the re-emit + cross-terms + fixing land together.
 
 ---
 
@@ -356,7 +366,12 @@ Cross-check the banked derivation + the design against the `243fe578` anti-patte
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (favorable — the banked derivation is already symbolic)
+**Verified by:** Task 4 (sarf 4-D `task`-Variable Stationarity Sparsification Design)
+**Date:** 2026-07-13
+**Findings:** The parametric `stat_task` uses **symbolic** multiplier indices over the stat equation's own domain — `nu_tbal(g,t)`, `lam_labor(t)`, `lam_equipb1(m,t)`, `lam_equipb2(n,t)`, `nu_acost3`, `piL_task(g,t,m,n)` — with **no quoted-set-name indices** (the banked ISSUE_1385 derivation). The Sprint-26 anti-pattern (commit `243fe578`, reverted) emitted `nu_slack("srn")`/`lam_demand("srn")` where `srn` is a set name → UEL/domain errors + dropped cross-terms. The structural guard is a compile-clean scan of the emitted MCP: `grep -E 'nu_[[:alnum:]_]+\("|lam_[[:alnum:]_]+\("' sarf_mcp.gms` must be empty. The parametric emit must build multiplier refs from the constraint's **declared domain symbols** (mapped to the stat variable's domain), never from a literal set name.
+**Evidence:** `SARF_STAT_TASK_SPARSIFICATION_DESIGN.md` §5; the banked `stat_task` (ISSUE_1385); the `243fe578` `nu_slack("srn")` emit sample.
+**Decision:** PROCEED — the banked spec is symbolic; the grep scan gates against the anti-pattern at implementation.
 
 ---
 
@@ -390,7 +405,12 @@ Enumerate the `$taskposs`-active set from `sarf.gms`; compute the fraction:
 Development team (AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (favorable — 398 active vs 369,024 Cartesian, a 927× reduction)
+**Verified by:** Task 4 (sarf 4-D `task`-Variable Stationarity Sparsification Design)
+**Date:** 2026-07-13
+**Findings:** A GAMS data probe on `sarf.gms` gives the hard counts: `card(g)=16`, `card(t)=24`, `card(mn)=31` → Cartesian `task(g,t,mn,mn)` = 16·24·31·31 = **369,024**; `card(taskposs)` = 129 active `(g,t)`; `card(equipposs)` = 329; and the active `task(g,t,m,n)` subset (`taskposs(g,t)` ∧ `tech(g,m,n)`) = **398**. So the O(active) target is **398, a 927× reduction** — decisively tractable. `$taskposs` is far from dense (129 of 16·24 = 384 possible `(g,t)`, and only ~3 tech-active `(m,n)` per active `(g,t)`), so O(active) ≈ O(398), not O(369K).
+**Evidence:** `SARF_STAT_TASK_SPARSIFICATION_DESIGN.md` §1 (the GAMS probe: 16/24/31/369,024/129/329/398).
+**Decision:** PROCEED — the active subset is sparse enough that the sparsified emit is tractable within the translate budget.
 
 ---
 
