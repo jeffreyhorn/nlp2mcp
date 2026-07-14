@@ -8,9 +8,9 @@
 | Day | Priority / Work | Metric delta | Status |
 |---|---|---|---|
 | 0 | Kickoff + Day-0 traces (PR24) + tractability probes (P1 warm-residual→0 / P3 step-1 `mps.m` / P2 O(active) sizing) | — (baseline confirmed: Parse 142 · Translate 135 · Solve 107 · Match 92 · genuine 74; `src/`+`scripts/` diff vs `4cbf8bff` EMPTY; 4 harness fingerprints re-confirmed exactly, duals CONSISTENT; sarf 369,024→398; `DAY0_TRACES.md`) | ✅ DONE |
-| 1 | P1 mine bound-multiplier emit start (`emit_gams.py:1548–1577`, `piL_x/piU_x` from residual `N`) | — | 🔵 PENDING |
-| 2 | P1 mine warm→cold verification (warm residual → 0 Case-a → presolve MS-1) | — | 🔵 PENDING |
-| 3 | **P1 mine close-or-REPLAN** (5th-coupling gate) | — (target +1 Solve / +1 floor if cold-match; else REPLAN → Sprint 33) | 🔵 PENDING |
+| 1 | P1 mine bound-multiplier `/tmp` control (PR24/PR27) → **5th coupling confirmed** | **0 (REPLAN → Sprint 33 — the `N`-derivation closes `stat_x` by construction but PATH MS-5 @ 22058; 6 bound-active rows carry wrong-sign `N` → infeasible negative multiplier; interior emit correct)** | 🔴 REPLAN |
+| 2 | ~~P1 mine warm→cold verification~~ → **freed by Day-1 REPLAN** → pull P6 forward (Task 9 reallocation) | — | ⏭️ REALLOCATED |
+| 3 | ~~P1 mine close-or-REPLAN~~ → **REPLAN fired Day 1** (front-loading worked — surfaced early) | — | ⏭️ REALLOCATED |
 | 4 | P3 camcge `stat_mps` (step 1 `nu_mps_fx.l=-mps.m`) + Walras (step 2) start | — | 🔵 PENDING |
 | 5 | **P3 camcge close-or-REPLAN** (MS-1 @ 191.7346 + detector) **+ Checkpoint 1** | — (target +1 Solve; else step 1 lands, numéraire → Epic 5) | 🔵 PENDING |
 | 6 | P2 sarf 4-D `task` sparsification start (2-D gate + parametric `stat_task`) | — | 🔵 PENDING |
@@ -37,5 +37,17 @@
 - **Tractability probes:** (P1) mine warm-residual pre-fix fingerprint re-confirmed — the `N`-derivation `/tmp` is the Day-1 pre-`src/` control; (P3) camcge step-1 `−210`/`mps.m` re-confirmed — the dual-consistent-Walras `/tmp`-to-MS-1 (191.7346) is the Day-4 pre-`src/` control; (P2) sarf sizing re-confirmed **369,024 Cartesian → 398 active** (927×), the O(1 symbolic equation) fix.
 - **PR25 tally:** genuine 74 / methodology 21; → ≥ 75 needs mine/camcge cold-match or a P6 emit gain (P5 = 0 floor).
 - **Disposition: GO for Day 1** (the mine bound-multiplier emit at `src/emit/emit_gams.py:1548–1577`, gated on the `/tmp` warm-residual→0 control).
+
+## Day 1 — P1 mine bound-multiplier `/tmp` control → 5th coupling REPLAN (2026-07-14)
+
+**Branch** `planning/sprint32-day1-mine-boundmult`. Control-only (**no `src/`** — the fix was refuted before src). See `MINE_5TH_COUPLING_REPLAN.md`.
+
+The PR24/PR27 Day-1 `/tmp` control (hand-edited `mine_mcp_presolve.gms`, GAMS 53; embedded NLP MS-1 @ 17500) refuted the banked `N`-derivation:
+- **`stat_x` body = 0.000 by construction** (`piL_x=max(N,0)`, `piU_x=max(−N,0)` — the formula is correct).
+- **But the MCP solve → MS-5 Locally Infeasible @ 22058** (≠ NLP 17500) — the S31 Day-2/3 signature.
+- **6 complementarity violations:** `piL_x>0` off the lower bound at `x(1,3,{1,2,3})`, `piU_x>0` off the upper bound at `x(3,1,2)/x(3,2,1)/x(4,1,1)` — the sign-split multiplier is nonzero at rows whose `x` is at the *opposite* bound.
+- **0 interior rows with `N≠0`** — the interior emit is correct; the residual is exclusively at bound-active rows with the **wrong sign** (would need an infeasible negative multiplier).
+
+**Diagnosis:** the emitted `stat_x` head-offset **cross-term** is inconsistent at bound-active rows — the design's own explicit 5th-coupling REPLAN trigger. No warm-start bound-multiplier value can fix it; the fix is a deeper head-offset cross-term emit change → **Sprint 33**. **REPLAN; no `src/` change** (the 6th consecutive control-first REPLAN, S30–S32). mine stays `model_infeasible`; Solve ≥ 109 now rests on **camcge [P3] alone** (+ a possible P6 cpack/fawley convert). P1 Days 1–3 budget → **P6 + P7** (Task 9); the Day-2/3 mine slots pull P6 forward.
 
 _(Per-day entries appended below as the sprint runs.)_
