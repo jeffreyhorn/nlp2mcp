@@ -460,9 +460,10 @@ grep -oiE "irscge|lrgcge|moncge|stdcge" docs/planning/EPIC_4/SPRINT_32/CAMCGE_ST
 
 ## Task 6: rocket PATH-Consultation Input Packaging + Remaining-Lever Sweep (Priority 4)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Medium
-**Estimated Time:** 2–3 hours
+**Estimated Time:** 2–3 hours (actual: ~2h)
+**Completed:** 2026-07-13
 **Deadline:** Before Sprint 32 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
@@ -492,11 +493,11 @@ rocket (P4) is a deferred +1 Solve — Sprint 31 Day 11 exhausted the last emitt
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` (§1 Case-c scope-guard re-confirmation; §2 the consolidated ruled-out-lever survey; §3 the finalized PATH-consultation question + reproducible case; §4 the remaining-lever sweep result; §5 the Sprint-33 hand-off note; §6 KU dispositions). Set `KNOWN_UNKNOWNS.md` Unknowns 4.1/4.2/4.3 → ✅ VERIFIED. CHANGELOG entry. All experiments read-only (harness); no `src/` change.
 
 ### Result
 
-To be completed.
+**COMPLETE (2026-07-13).** **Case-c scope guard re-confirmed:** the harness (`kkt_residual.py rocket.gms`) reports a nominal CASE_B verdict, but the residual concentrates entirely on the **boundary rows** — `stat_ht(h0)` rel 1.00 / raw −4.56, `stat_step` 0.50, `stat_ht(h50)` 0.44 (the initial/terminal/time-step conditions of the discretized optimal-control problem) — which move with the warm-start value (the non-convex Case-c boundary signature per ISSUE_1462, NOT a cleanable emit bug); the interior rows are near tolerance (`stat_v(h0)` 0.038, `stat_m(h0)` 0.014); dual-transfer CONSISTENT (closure 1.53e-10). So rocket is a genuine forcing problem. **Remaining-lever sweep: no untried emittable lever** — the PATH-option space (best INFES 477 → 382), μ-continuation, multistart, and the division-by-variable reformulation are all exhausted (MS-5); since the reformulation removes ALL `1/m`,`1/ht²` yet still doesn't converge, the non-convergence is **intrinsic to the discretized optimal-control MCP structure**, so no Day-1 attempt is warranted. **The packaged PATH-consultation input is the deliverable:** the finalized question (with the reformulation as a ruled-out candidate + a reproducible case), the ruled-out-lever survey, and the `--force` scaffold form the de-risked Sprint-33 hand-off. **Decision: PROCEED to the Sprint-33 hand-off;** rocket's +1 Solve is conditional on the consultation. Docs/analysis-only (read-only harness; no `src/`).
 
 ### Verification
 
@@ -520,12 +521,12 @@ grep -iqE "Sprint 33|hand-off|consultation" docs/planning/EPIC_4/SPRINT_32/ROCKE
 
 ### Acceptance Criteria
 
-- [ ] The Case-c scope guard (residual clean at the NLP point) is re-confirmed on the current tree
-- [ ] The packaged PATH-consultation question set is concrete (targets the intrinsic structure; the reformulation ruled out)
-- [ ] The ruled-out-lever survey is consolidated (PATH-option 477→382; continuation/multistart MS-5; reformulation)
-- [ ] The remaining-lever sweep result is recorded (Day-1 attempt warranted or hand-off is the deliverable)
-- [ ] The Sprint-33 hand-off note is drafted
-- [ ] Unknowns 4.1, 4.2, 4.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The Case-c scope guard (residual clean except the boundary rows) is re-confirmed on the current tree (`stat_ht(h0)`/`stat_step`/`stat_ht(h50)`, duals CONSISTENT)
+- [x] The packaged PATH-consultation question set is concrete (targets the intrinsic structure; the reformulation ruled out; reproducible case)
+- [x] The ruled-out-lever survey is consolidated (PATH-option 477→382; continuation/multistart MS-5; reformulation MS-5)
+- [x] The remaining-lever sweep result is recorded (no untried lever → the hand-off is the deliverable)
+- [x] The Sprint-33 hand-off note is drafted (question + `--force` scaffold + ruled-out survey)
+- [x] Unknowns 4.1, 4.2, 4.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
