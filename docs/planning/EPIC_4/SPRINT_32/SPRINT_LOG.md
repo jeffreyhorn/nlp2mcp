@@ -12,7 +12,7 @@
 | 2 | ~~P1 mine warm→cold verification~~ → **freed by Day-1 REPLAN** → pull P6 forward (Task 9 reallocation) | — | ⏭️ REALLOCATED |
 | 3 | ~~P1 mine close-or-REPLAN~~ → **REPLAN fired Day 1** (front-loading worked — surfaced early) | — | ⏭️ REALLOCATED |
 | 4 | P3 camcge **step 1 landed** — scalar-`fx` marginal transfer (`nu_mps_fx.l = mps.m`, DIRECT — sign corrected by control) | **`stat_mps` CASE_B rel 1.05 → Case-a** (dropped from top residuals; camcge max now `stat_tm(biens-int)` 0.076); all 17 presolve goldens clean; general emit fix (`emit_gams.py`) | ✅ DONE (step 1) |
-| 5 | **P3 camcge close-or-REPLAN** (MS-1 @ 191.7346 + detector) **+ Checkpoint 1** | — (target +1 Solve; else step 1 lands, numéraire → Epic 5) | 🔵 PENDING |
+| 5 | **P3 camcge step 2 REPLAN** (dual-consistent Walras) **+ Checkpoint 1 GO** | **0 Solve (REPLAN → Epic 5 — step 1 + numéraire reaches omega 191.7346 [correct] but MS-4; residual Walras singularity on the accounting identities; re-scoped hypothesis refuted). Step 1 landed (general emit fix). Checkpoint 1 GO (no golden regressed).** | 🔴 REPLAN (step 1 landed) |
 | 6 | P2 sarf 4-D `task` sparsification start (2-D gate + parametric `stat_task`) | — | 🔵 PENDING |
 | 7 | P2 sarf tractability gate (O(active=398) not O(369K)) | — (target +1 Translate; else REPLAN → Sprint 33 re-scoping) | 🔵 PENDING |
 | 8 | P2 sarf close + golden byte-stable | — | 🔵 PENDING |
@@ -61,5 +61,19 @@ The PR24/PR27 Day-1 `/tmp` control (hand-edited `mine_mcp_presolve.gms`, GAMS 53
 **Fix (src):** extended `_emit_presolve_fx_warmstart` to iterate **both** `fx_map` (per-element) **and** the scalar `.fx` (empty-index) fixing; the scalar marginal emits as `var.m` (no parens). Now emits `nu_gdtot_fx.l = gdtot.m; nu_mps_fx.l = mps.m; nu_fsav_fx.l = fsav.m;` for camcge's three scalar fixes. **(PR #1553 review):** extended the companion `_emit_presolve_fx_unfix` symmetrically — a scalar-fixed var (`mps.fx` from the `$include`) must be unfixed (`mps.lo/up` restored) so its paired `_fx_` equation does the fixing (the #1449 over-determined/unmatched mode otherwise); now emits `gdtot.lo/up`, `mps.lo/up`, `fsav.lo/up`. Added scalar warm-start + unfix unit tests.
 
 **Result:** harness camcge — **`stat_mps` dropped out of the CASE_B top residuals** (rel 1.05 → Case-a); max residual now `stat_tm(biens-int)` rel 0.076 (the secondary rows = step-2 Walras territory, as the design predicted). **Blast radius:** all 17 committed presolve goldens **clean** (golden-staleness) + all plain goldens clean — camcge is the only affected model (no committed presolve golden). A **general nlp2mcp emit-correctness fix** (any scalar-`.fx`-in-stationarity model benefits). **Step 2 (dual-consistent Walras → MS-1 @ 191.7346) is Day 5.**
+
+## Day 5 — P3 camcge step 2 REPLAN (dual-consistent Walras → Epic 5) + Checkpoint 1 (2026-07-14)
+
+**Branch** `planning/sprint32-day5-camcge-walras`. Control-only (**no step-2 `src/`** — refuted before src). See `CAMCGE_WALRAS_REPLAN.md`.
+
+The PR24/PR27 `/tmp` control tested the re-scoped hypothesis — **`stat_mps`-fixed-first (step 1, on main) + the consumption-weighted numéraire → MS-1**:
+- Built `numeraire.. sum(i$cles(i), cles(i)*(p(i)−pd0(i))) =E= 0;` + `nu_numeraire` + the `cles(i)·nu_numeraire` cross-term in `stat_p`, every market row kept.
+- **Result: omega = 191.7346 (correct allocation) but MODEL STATUS 4** — the residual Walras singularity on the accounting identities (`gdp`/`depreq` 131.96, `hhsaveq` 97.26, `gruse` 43.97). **Primal-correct / basis-singular.**
+
+**The re-scoped hypothesis is refuted** — fixing `stat_mps` first does not let the numéraire reach MS-1 (consistent with 3 sprints of prep; the Walras rank-deficiency is deeper than a numéraire selection). The dual-consistent redefinition is genuinely deeper Epic-5 MCP research (the design's own words). **REPLAN step 2 → Epic 5; no step-2 `src/`** (7th consecutive control-first REPLAN, S30–S32). **Step 1 landed** (PR #1553 — the general scalar-`fx` emit fix). camcge stays `model_infeasible`.
+
+**Checkpoint 1: GO** — `--resolve-changed --since-commit 4cbf8bff` = no golden changed (step 1 changed only `src/`); golden-staleness clean; no changed-golden model moved backward. PR25 unchanged (genuine floor 74 / methodology 21).
+
+**Both firm +Solve movers have now REPLAN'd** (mine Day 1, camcge Day 5) — the Task-9 honest projection realized. **Solve stays 107** unless P6 (cpack/fawley) converts; **genuine floor ≥ 75 now rests entirely on a P6 emit change**. Freed step-2 + Days-2/3 mine budget → **P6 + P7**.
 
 _(Per-day entries appended below as the sprint runs.)_
