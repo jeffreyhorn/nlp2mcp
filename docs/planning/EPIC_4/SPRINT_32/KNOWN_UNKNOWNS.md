@@ -447,7 +447,12 @@ Re-run the harness; localize `stat_mps`; design the `nu_mps_fx` fix; verify the 
 Development team (KKT/CGE specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (empirically — a general emit fix, precisely localized)
+**Verified by:** Task 5 (camcge `stat_mps` CASE_B + Dual-Consistent Walras Design)
+**Date:** 2026-07-13
+**Findings:** The harness re-confirms CASE_B `stat_mps` rel 1.05 / raw −210 (duals CONSISTENT). The emitted `stat_mps` is structurally correct; the defect is that **`nu_mps_fx` is never warm-started** — the `--nlp-presolve` "Transfer fixed-variable marginals to `_fx_` multipliers (#1462)" block emits transfers only for the two `$include`-fixed `l(i,lc)` elements (the #1449-widened case), with **no `nu_mps_fx.l = …` line** for the general `mps.fx=.09305` scalar fixing → `nu_mps_fx = 0` → `stat_mps = gradient = −210`. **Empirical confirmation:** the NLP marginal probe gives `mps.m = −209.861`, matching the −210 residual — so `nu_mps_fx` is derived from the fixed variable's reduced cost `mps.m` with the `stat_mps` sign: `nu_mps_fx.l = -mps.m` (= +209.861, cancels the −210 gradient). The fix (extend the #1462 block to transfer `nu_<var>_fx.l = ±<var>.m` — sign per the multiplier's stationarity role — for every scalar `var.fx` fixing) is a **general nlp2mcp emit-correctness fix** (not camcge-specific), landable in Sprint 32; it closes `stat_mps` (harness → Case-a).
+**Evidence:** `docs/planning/EPIC_4/SPRINT_32/CAMCGE_STAT_MPS_WALRAS_DESIGN.md` §1–§2 (harness + the emitted #1462 block + the `mps.m = −209.861` probe).
+**Decision:** PROCEED — step 1 is a general emit fix in `src/emit/emit_gams.py` (the #1462 transfer block); it resolves the CASE_B residual before the Walras step.
 
 ---
 
@@ -481,7 +486,12 @@ Prototype the `stat_mps` fix + the dual-consistent redefinition on `/tmp`; solve
 Development team (KKT/CGE specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (design; MS-1 is the in-sprint gate)
+**Verified by:** Task 5 (camcge `stat_mps` CASE_B + Dual-Consistent Walras Design)
+**Date:** 2026-07-13
+**Findings:** The residual Walras singularity is **independent** of `stat_mps` (an inherent rank-deficiency: `equil(i)`+`lmequil(lc)` dependent via budget balance + no numéraire fixed → 1-D nullspace). The design keeps every market-clearing row (no orphaned dual — the Day-11 "check the dual side" lesson: dropping a row → omega 299 broken) + fixes the consumption-weighted numéraire (`sum(i$cles(i), cles(i)·p(i)) = sum(…, cles(i)·pd0(i))`) + redefines the redundant market's dual via Walras' law. The Day-11 price-pin reaches the correct **omega 191.735** but stays MS-4 **without** the `stat_mps` fix; the re-scoped hypothesis is `stat_mps`-first-then-numéraire. **MS-1 is unproven in prep** (the Day-6/7 numéraire variants stayed MS-4, but on an inconsistent warm point); the combined (step 1 + step 2) `/tmp`-to-MS-1 prototype is the Task-8 in-sprint gate.
+**Evidence:** `CAMCGE_STAT_MPS_WALRAS_DESIGN.md` §3; `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` §1/§3; the Day-11 price-pin (omega 191.735, MS-4).
+**Decision:** PROCEED to the dual-consistent Walras as an Epic-5 step gated on step 1; the `/tmp`-to-MS-1 prototype is the gate, with an explicit Epic-5-deferral exit (per-model-numéraire fallback) if MS-4 persists.
 
 ---
 
@@ -515,7 +525,12 @@ Design the detector; run it across the CGE cohort; confirm it flags only camcge:
 Development team (KKT/CGE specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (cohort precision confirmed — Day-7 banked)
+**Verified by:** Task 5 (camcge `stat_mps` CASE_B + Dual-Consistent Walras Design)
+**Date:** 2026-07-13
+**Findings:** The detector flags **only** camcge. The S1∧S2∧S3 conditions: S1 (market-clearing block dependent via budget balance) ∧ S2 (no numéraire fixed) ∧ **S3 (cold MCP singular at iteration 0 = MS-4)** — S3 is the false-positive guard: a well-posed CGE with a determined closure passes S1∧S2 structurally but has a nonsingular Jacobian → fails S3 → pass-through. The Sprint-31 Day-7 cohort test (banked) confirms the cold MCP MODEL STATUS: **irscge / lrgcge / moncge / stdcge all MS-1 Optimal** (pass-through) vs **camcge MS-4** (flags). Pass-through default = the identity transform (faithful KKT emission); a per-model-numéraire declaration is the Epic-5 fallback for the flagged model.
+**Evidence:** `CAMCGE_STAT_MPS_WALRAS_DESIGN.md` §4; the Sprint-31 Day-7 cohort-precision test (ISSUE_1330 Day-7 close); `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` §2 (camcge is the sole inherent-Walras case).
+**Decision:** PROCEED — the S3 guard makes the detector fire on only camcge; no risk of corrupting a well-posed CGE.
 
 ---
 
@@ -536,7 +551,7 @@ The redundant-row + numéraire selection can be a **single automatic rule** (Wal
 Design both the automatic rule + the fallback; assess generality against the CGE cohort.
 
 ### Risk if Wrong
-- **Automatic rule is camcge-specific:** the fix is a per-model fallback (Epic-5-scoped) rather than a general emit rule → still lands camcge but doesn't generalize (acceptable; documented in `CGE_DEGENERACY_SCOPING.md`).
+- **Automatic rule is camcge-specific:** the fix is a per-model fallback (Epic-5-scoped) rather than a general emit rule → still lands camcge but doesn't generalize (acceptable; documented in `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md`).
 
 ### Estimated Research Time
 1 hour (Task 5 — the rule-vs-fallback design)
@@ -545,7 +560,12 @@ Design both the automatic rule + the fallback; assess generality against the CGE
 Development team (KKT/CGE specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (favorable — automatic rule + per-model fallback, camcge is the sole case)
+**Verified by:** Task 5 (camcge `stat_mps` CASE_B + Dual-Consistent Walras Design)
+**Date:** 2026-07-13
+**Findings:** For camcge the **consumption-weighted numéraire** (`sum(i$cles(i), cles(i)·p(i)) = sum(…, cles(i)·pd0(i))`) is the automatic rule — it reproduces the NLP optimum's `p=pd0` (a selection, not a perturbation). Whether it generalizes is `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` §5 Q1 (which row is redundant + which price is the numéraire is per-model, depending on the closure + SAM). Since **camcge is the sole inherent-Walras case in the corpus**, a **per-model-numéraire declaration** fallback is acceptable: the automatic consumption-weighted rule is the camcge instance, and the S1∧S2∧S3 detector (Unknown 3.3) ensures it applies nowhere else.
+**Evidence:** `CAMCGE_STAT_MPS_WALRAS_DESIGN.md` §5; `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` §2/§5.
+**Decision:** PROCEED — automatic consumption-weighted numéraire for camcge; per-model-numéraire declaration as the Epic-5 fallback (safe because camcge is the sole detected case).
 
 ---
 
