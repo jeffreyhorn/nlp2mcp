@@ -600,7 +600,7 @@ grep -oiE "hhfair|irscge|lrgcge|moncge" docs/planning/EPIC_4/SPRINT_32/CASE_C_CL
 
 ## Task 8: Refresh + Author Phase 0 Acceptance Gates for the Sprint-32 Tracks (PR20 + PR24 + PR27)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
 **Estimated Time:** 4–6 hours
 **Deadline:** Before Sprint 32 Day 1
@@ -632,18 +632,24 @@ Sprint 31 REPLAN'd all five deep tracks after a control or harness re-diagnosis 
 
 ### Changes
 
-To be completed.
+- Authored `docs/planning/EPIC_4/SPRINT_32/PHASE_0_ACCEPTANCE_GATES.md` (the Sprint-32 refresh of the SPRINT_31 template): §0 the standing discipline (PR20/PR24/PR27 + the `modelstat`-before-objective / `x.up=inf`-BANNED lesson); §1 the five per-track gates (P1 mine, P2 sarf, P3 camcge, P4 rocket, P5 hhfair/CGE), each with Disposition + PROCEED precondition (control-before-src) + REPLAN exit + cross-links to its KNOWN_UNKNOWNS category + Task-3–7 design doc; §2 the gate summary table; §3 the gate-layer Known-Unknowns dispositions (1.1/2.1/3.1/4.1/5.1). Every emit-touching gate (P1/P2/P3) cites the golden-staleness check (PR26) + `--resolve-changed --since-commit 4cbf8bff`.
+- Fixed this task's verification grep to the template-consistent `### P` heading style (the SPRINT_31 template + this doc use `### P1 — …` under `## 1. Per-track gates`, not `## P1`).
+- Set KNOWN_UNKNOWNS Unknowns 1.1/2.1/3.1/4.1/5.1 gate-layer disposition (each already VERIFIED by Tasks 3–7; Task 8 adds the PROCEED/REPLAN gate-framing).
 
 ### Result
 
-To be completed.
+- **P1 (mine) PROCEED** behind the warm-residual→0 gate: replace `piL_x/piU_x = ±x.m` (`src/emit/emit_gams.py:1548–1577`) with the stationarity-residual `N`-derivation, re-run `kkt_residual.py` → Case-a (`modelstat` asserted) → presolve MS-1; 5th-coupling REPLAN exit → Sprint-33.
+- **P2 (sarf) PROCEED** behind the O(active=398)-not-O(369K) translate-budget probe + atomic emit (symbolic `stat_task$taskposs` + `task.fx`, no set-name-literal indices, golden byte-stable); timeout-re-trigger REPLAN exit → re-scope.
+- **P3 (camcge) PROCEED (split):** step 1 (`nu_mps_fx.l = -mps.m`, `mps.m=−209.861`) → `stat_mps` Case-a is a general emit fix that lands regardless; step 2 (dual-consistent Walras) gated on the `/tmp` prototype → MS-1 @ 191.7346 + the S1∧S2∧S3 detector flagging camcge only; Epic-5-deferral REPLAN exit.
+- **P4 (rocket) PROCEED-conditional:** residual-clean-at-NLP-point (Case-c boundary signature) re-confirm before any forcing; intrinsic-non-convergence REPLAN exit → the packaged Sprint-33 PATH-consultation input.
+- **P5 (hhfair/CGE) PROCEED:** the only `src/` change is the `kkt_residual.py` Case-c classifier extension (no emit fix; the sign flip is BANNED, refuted 4×); all four re-confirmed Case-c → `ISSUE_1236` documented-non-convex.
 
 ### Verification
 
 ```bash
 # Gate doc exists with a gate per track
 test -f docs/planning/EPIC_4/SPRINT_32/PHASE_0_ACCEPTANCE_GATES.md && echo "gates present"
-grep -cE "^## (P1|P2|P3|P4|P5)" docs/planning/EPIC_4/SPRINT_32/PHASE_0_ACCEPTANCE_GATES.md   # expect >=5
+grep -cE "^### (P1|P2|P3|P4|P5)" docs/planning/EPIC_4/SPRINT_32/PHASE_0_ACCEPTANCE_GATES.md   # expect >=5
 
 # Each gate has a PROCEED/REPLAN decision + a control/probe step
 grep -ciE "PROCEED|REPLAN" docs/planning/EPIC_4/SPRINT_32/PHASE_0_ACCEPTANCE_GATES.md
@@ -658,13 +664,13 @@ grep -iqE "control experiment|/tmp prototype|residual → 0|O\(active" docs/plan
 
 ### Acceptance Criteria
 
-- [ ] A Phase-0 gate exists for each of P1–P5, each with a PROCEED/REPLAN decision
-- [ ] The P1 gate is the warm→cold residual reduction (with `modelstat` asserted); the 5th-coupling REPLAN exit is explicit
-- [ ] The P2 gate is the O(active) translate-budget probe; the timeout-re-trigger REPLAN exit is explicit
-- [ ] The P3 gate is the `/tmp` `stat_mps`-then-Walras prototype to MS 1 + the detector-scope check; the Epic-5-deferral exit is explicit
-- [ ] The P4 gate (Case-c re-confirm) + the P5 gate (control-before-implement, sign flip BANNED) are authored
-- [ ] Each gate cross-links its KNOWN_UNKNOWNS category + design doc
-- [ ] Unknowns 1.1, 2.1, 3.1, 4.1, 5.1 verified and updated in KNOWN_UNKNOWNS.md
+- [x] A Phase-0 gate exists for each of P1–P5, each with a PROCEED/REPLAN decision
+- [x] The P1 gate is the warm→cold residual reduction (with `modelstat` asserted); the 5th-coupling REPLAN exit is explicit
+- [x] The P2 gate is the O(active) translate-budget probe; the timeout-re-trigger REPLAN exit is explicit
+- [x] The P3 gate is the `/tmp` `stat_mps`-then-Walras prototype to MS 1 + the detector-scope check; the Epic-5-deferral exit is explicit
+- [x] The P4 gate (Case-c re-confirm) + the P5 gate (control-before-implement, sign flip BANNED) are authored
+- [x] Each gate cross-links its KNOWN_UNKNOWNS category + design doc
+- [x] Unknowns 1.1, 2.1, 3.1, 4.1, 5.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
