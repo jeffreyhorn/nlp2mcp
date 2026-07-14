@@ -1114,15 +1114,17 @@ Development team
 
 ## Next Steps
 
-> **🔵 PREP PHASE IN PROGRESS (Task 1 COMPLETE, 2026-07-13).** This Known Unknowns List is authored (**25 unknowns across 7 categories** aligned to the PROJECT_PLAN Sprint-32 priorities); every unknown starts 🔍 INCOMPLETE and is assigned to a downstream prep task (2–11) in §"Appendix: Task-to-Unknown Mapping". The six REPLAN-prone Criticals (1.1/1.2 mine bound-multiplier + 5th-coupling, 2.1 sarf O(active) sparsification, 3.1/3.2 camcge `stat_mps`-first + dual-consistent Walras, 3.3 detector false-positive) + the two dominant Sprint-31 lessons (control-experiment-first hypothesis; assert `modelstat` before an objective read) thread through the Category-1/3 unknowns. Prep Tasks 2–11 will move each unknown 🔍 INCOMPLETE → ✅ VERIFIED (or ❌ WRONG with correction).
+> **✅ PREP PHASE COMPLETE (Tasks 1–11, 2026-07-14).** This Known Unknowns List is authored (**25 unknowns across 7 categories** aligned to the PROJECT_PLAN Sprint-32 priorities) and **all 25 are ✅ VERIFIED** (no unknown returned ❌ WRONG). The six REPLAN-prone Criticals (1.1/1.2 mine bound-multiplier + 5th-coupling, 2.1 sarf O(active) sparsification, 3.1/3.2 camcge `stat_mps`-first + dual-consistent Walras, 3.3 detector false-positive) + the two dominant Sprint-31 lessons (control-experiment-first hypothesis; assert `modelstat` before an objective read) are dispositioned and threaded into the Phase-0 gates (Task 8) + the REPLAN risk assessment (Task 9) + the schedule (Task 11). The remaining gates are **in-sprint execution** gates (each track's PROCEED/REPLAN decision on Days 3/5/7), not open prep unknowns. **Sprint 32 is GO for Day 0.**
 
 **Prep-phase checklist (before Sprint 32 Day 1 — Tasks 1–11):**
 1. ✅ Task 1: this Known Unknowns List authored (25 unknowns, 7 categories).
-2. 🔵 Research + verify all Critical + High priority unknowns via prep Tasks 2–10 (in progress).
-3. 🔵 Run the `kkt_residual.py` traces + the cold-solve/read-only control experiments (asserting `modelstat`) (Tasks 3–7, 10).
-4. 🔵 Update each "Verification Results" section (🔍 INCOMPLETE → ✅ VERIFIED / ❌ WRONG).
-5. 🔵 Sprint 32 scope carries the PR16 REPLAN exits (Task 9) for the three deepest tracks (mine, sarf, camcge).
-6. 🔵 Findings integrated into the sprint plan (Task 11 — `PLAN.md` + `prompts/PLAN_PROMPTS.md` + `SPRINT_LOG.md`).
+2. ✅ Research + verify all Critical + High priority unknowns via prep Tasks 2–10 (all 25 ✅ VERIFIED).
+3. ✅ Ran the `kkt_residual.py` traces + the read-only control experiments (asserting `modelstat`) (Tasks 3–7, 10 — incl. the Task-10 cohort sweep + the `--resolve-changed` dry-run).
+4. ✅ Each "Verification Results" section updated (🔍 INCOMPLETE → ✅ VERIFIED; none ❌ WRONG).
+5. ✅ Sprint 32 scope carries the PR16 REPLAN exits (Task 9) for the three deepest tracks (mine, sarf, camcge).
+6. ✅ Findings integrated into the sprint plan (Task 11 — `PLAN.md` + `prompts/PLAN_PROMPTS.md` + `SPRINT_LOG.md`).
+
+**In-sprint-only gates (by design — not open prep unknowns):** each emit-touching track's PROCEED/REPLAN decision fires during execution — mine's 5th-coupling gate (Day 3), camcge's MS-1-@-191.7346 gate (Day 5), sarf's O(active) tractability gate (Day 7); the P6 per-candidate `--resolve-changed` GO gate (Day 11). The prep phase verified these are *decidable* (the design + the Day-0 `/tmp` control); the decision itself is Day-N work.
 
 **During Sprint 32:**
 1. Reference this document daily (especially Critical / High unknowns).
