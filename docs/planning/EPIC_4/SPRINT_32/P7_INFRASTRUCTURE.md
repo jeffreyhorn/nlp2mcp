@@ -36,7 +36,7 @@ Recomputed from the committed DB (`get_candidate_models`, 142-corpus) — **byte
 
 ## 3. `--resolve-changed` checkpoint refresh
 
-The Day-0 anchor **`4cbf8bff`** remains valid: `run_full_test.py --resolve-changed --since-commit 4cbf8bff --dry-run` = **GO (0 emit goldens changed)**. The only emit-touching landing (camcge step-1) changed **no committed golden** (camcge is `model_infeasible`, no presolve golden). So there is **no new checkpoint target** to add this sprint — the anchor + the golden-staleness gate already cover the Sprint-32 emit surface. When the Sprint-33 fawley/#1111-#1112 fix lands and changes `fawley_mcp*.gms`, `--resolve-changed --since-commit 4cbf8bff` will select it automatically.
+The Day-0 anchor **`4cbf8bff`** remains valid: `.venv/bin/python scripts/gamslib/run_full_test.py --resolve-changed --since-commit 4cbf8bff --dry-run` = **GO (0 emit goldens changed)**. The only emit-touching landing (camcge step-1) changed **no committed golden** (camcge is `model_infeasible`, no presolve golden). So there is **no new checkpoint target** to add this sprint — the anchor + the golden-staleness gate already cover the Sprint-32 emit surface. When the Sprint-33 fawley/#1111-#1112 fix lands and changes `fawley_mcp*.gms`, `--resolve-changed --since-commit 4cbf8bff` will select it automatically.
 
 ## 4. Epic-4 `SUMMARY.md` skeleton (S30-retro §5 front-loading)
 
