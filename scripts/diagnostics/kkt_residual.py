@@ -463,6 +463,10 @@ VERDICT_LABELS = {
     "case_a": "healthy (KKT correct, PATH converges)",
     "case_b": "emit_bug",
     "case_c": "non_convexity (warm-start, not an emit fix)",
+    "case_c_objdef": (
+        "objective-defining-intermediate-variable non-convexity "
+        "(case_c; NOT an emit fix — the sign flip is BANNED)"
+    ),
     "case_a_or_c": "healthy_residual (cold-start skipped — a-vs-c unresolved)",
     "dual_transfer_inconsistent": "dual_transfer_inconsistent (fix the transfer, re-run)",
 }
@@ -519,6 +523,137 @@ def classify_verdict(
         return Verdict("case_c", best_rel, best, scale)
     # None (--no-cold-start) or "unavailable" — the a-vs-c split is unresolved.
     return Verdict("case_a_or_c", best_rel, best, scale)
+
+
+# --- Sprint 32 P5 (#1236): objective-defining-intermediate-variable Case-c ---
+# A post-verdict reclassification (CASE_C_CLASSIFIER_DESIGN.md §3): a CASE_B whose
+# max-residual `stat_<var>` is the objective-defining intermediate variable (D1),
+# with the cold-start MCP at a spurious point (D3), is a genuine non-convexity, not
+# an emit bug. D2 (dual-transfer CONSISTENT) is already implied by the case_b branch.
+
+
+def _var_from_stat_label(label: str | None) -> str | None:
+    """Extract ``<var>`` from a ``stat_<var>(idx)`` row label (e.g. ``stat_u(1)`` →
+    ``u``)."""
+    m = re.match(r"^stat_([A-Za-z]\w*)", label or "")
+    return m.group(1) if m else None
+
+
+def _expr_refs_var(expr: object, var_name: str) -> bool:
+    """True iff ``var_name`` appears anywhere in the expression tree
+    (case-insensitive), walking ``Expr.children()``."""
+    from src.ir.ast import SymbolRef, VarRef
+
+    if isinstance(expr, (VarRef, SymbolRef)) and expr.name.lower() == var_name.lower():
+        return True
+    children = getattr(expr, "children", None)
+    if children is None:
+        return False
+    return any(_expr_refs_var(c, var_name) for c in children())
+
+
+def _is_objdef_intermediate_var(model_path: Path, var_name: str) -> bool:
+    """D1 (CASE_C_CLASSIFIER_DESIGN.md §1): is ``var_name`` the objective-defining
+    intermediate variable — it appears in the objective-defining equation
+    (``objvar =e= f(var)``, so its multiplier ``nu_obj = ±1`` and the objective-
+    gradient reduction collapses to a sign choice) AND has its own defining
+    equation?
+
+    A tight *structural* check on the single objective-defining equation, so a
+    genuine emit residual on a **non**-objective-defining variable is never
+    reclassified. Parses the source model; fails closed (returns ``False``) on any
+    error, leaving the CASE_B verdict unchanged.
+    """
+    try:
+        from src.ir.normalize import normalize_model
+        from src.ir.parser import parse_model_file
+        from src.ir.symbols import Rel
+        from src.kkt.objective import _is_var_ref, extract_objective_info
+    except ImportError:
+        return False
+
+    old = sys.getrecursionlimit()
+    sys.setrecursionlimit(50000)
+    try:
+        model = parse_model_file(str(model_path))
+        normalize_model(model)
+        obj = extract_objective_info(model)
+        if not obj.defining_equation:
+            return False
+        objdef = model.equations.get(obj.defining_equation)
+        if objdef is None:
+            return False
+        lhs, rhs = objdef.lhs_rhs
+        # D1a: `var` appears in the objective-defining equation body.
+        if not (_expr_refs_var(lhs, var_name) or _expr_refs_var(rhs, var_name)):
+            return False
+        # D1b: `var` has its OWN defining equation (an equality with `var` on a
+        # side), distinct from the objective-defining equation itself.
+        for name, eq in model.equations.items():
+            if name == obj.defining_equation or eq.relation != Rel.EQ:
+                continue
+            eq_lhs, eq_rhs = eq.lhs_rhs
+            if _is_var_ref(eq_lhs, var_name) or _is_var_ref(eq_rhs, var_name):
+                return True
+        return False
+    except Exception:
+        return False
+    finally:
+        sys.setrecursionlimit(old)
+
+
+def _cold_is_spurious(
+    cold_status: str | None, cold_obj: float | None, match_obj: float | None
+) -> bool:
+    """D3 (CASE_C_CLASSIFIER_DESIGN.md §3): the cold-start MCP reaches a *spurious*
+    point — it does NOT reach the presolve match objective. True if the cold solve
+    diverged, or reached a local optimum at a **different** objective than the
+    match (e.g. hhfair cold 72.147 vs match 87.159, both MS-1). Fails closed
+    (returns ``False`` → leave the CASE_B verdict) when either objective is
+    unavailable."""
+    if cold_status == "diverged":
+        return True
+    if cold_status != "optimal" or cold_obj is None or match_obj is None:
+        return False
+    return abs(cold_obj - match_obj) / max(abs(match_obj), 1.0) > 2e-3
+
+
+def reclassify_objdef_case_c(
+    verdict: Verdict,
+    model_path: Path,
+    presolve_path: Path,
+    cold_status: str | None,
+    cold_obj: float | None,
+    timeout: int = 120,
+) -> Verdict:
+    """CASE_C_CLASSIFIER_DESIGN.md §3: reclassify a CASE_B → ``case_c_objdef`` when
+    D1 (objective-defining intermediate variable) ∧ D3 (cold-start spurious) hold.
+
+    D2 (dual-transfer CONSISTENT) is already implied — ``classify_verdict`` returns
+    ``dual_transfer_inconsistent`` before ever reaching ``case_b``. D1 is checked
+    first (a cheap structural parse) so the extra presolve-match solve for D3 runs
+    only for a genuine objective-defining-intermediate-variable candidate. **The
+    sign flip is BANNED** (§4): a flagged model is a genuine non-convexity
+    (presolve-recovered, methodology — NOT a genuine-floor emit fix). Any NEW
+    candidate that trips D1 must still pass the manual D4 sign-flip-inert ``/tmp``
+    control before being trusted as Case-c.
+    """
+    if verdict.code != "case_b" or verdict.max_row is None:
+        return verdict
+    var = _var_from_stat_label(verdict.max_row.label)
+    if var is None or not _is_objdef_intermediate_var(model_path, var):  # D1
+        return verdict
+    # D3: solve for the presolve match objective ONLY when the objective comparison
+    # is actually needed. A diverged cold is spurious outright; a cold without a
+    # usable local optimum leaves the CASE_B verdict — neither needs the extra solve.
+    if cold_status == "diverged":
+        return Verdict("case_c_objdef", verdict.max_rel, verdict.max_row, verdict.scale)
+    if cold_status != "optimal" or cold_obj is None:
+        return verdict
+    match_obj = _presolve_match_objective(presolve_path, timeout=timeout)
+    if not _cold_is_spurious(cold_status, cold_obj, match_obj):
+        return verdict
+    return Verdict("case_c_objdef", verdict.max_rel, verdict.max_row, verdict.scale)
 
 
 def build_report(
@@ -863,30 +998,56 @@ def collect_multiplier_values(
     return values
 
 
-def cold_start_status(model_path: Path, scratch: Path, timeout: int = 120) -> str:
+def cold_start_result(
+    model_path: Path, scratch: Path, timeout: int = 120
+) -> tuple[str, float | None]:
     """Cold-start MCP solve (design §3, Case-a-vs-c split): emit the *non-presolve*
     MCP and solve it from the default start. (Uses ``solve_mcp``, which performs its
     own GAMS discovery — no ``gams_exe`` argument needed.)
 
-    Returns ``"optimal"`` if PATH reaches a (locally) optimal model status (1/2),
-    ``"diverged"`` if it reaches an infeasible / non-converged status, or
-    ``"unavailable"`` if the cold MCP could not be produced (so the a-vs-c split is
-    left unresolved rather than mislabelled Case c). The translate ``status`` can be
-    ``"failure"`` from a post-emit compile check even when a solvable file is
-    written, so the file's existence — not that flag — gates the solve."""
+    Returns ``(status, objective)`` where ``status`` is ``"optimal"`` if PATH
+    reaches a (locally) optimal model status (1/2), ``"diverged"`` if it reaches an
+    infeasible / non-converged status, or ``"unavailable"`` if the cold MCP could
+    not be produced (so the a-vs-c split is left unresolved rather than mislabelled
+    Case c). ``objective`` is the cold solve's objective value (``None`` if
+    unavailable) — used by the P5 objective-defining-intermediate-variable Case-c
+    reclassification to compare the cold optimum against the presolve match
+    (``72.147`` cold vs ``87.159`` match for hhfair, both MS-1: a *spurious*
+    local optimum). The translate ``status`` can be ``"failure"`` from a post-emit
+    compile check even when a solvable file is written, so the file's existence —
+    not that flag — gates the solve."""
     from scripts.gamslib.batch_translate import translate_single_model
     from scripts.gamslib.test_solve import solve_mcp
 
     cold_path = scratch / f"{model_path.stem}_mcp_cold.gms"
     translate_single_model(model_path, cold_path, nlp_presolve=False)
     if not cold_path.exists():
-        return "unavailable"
+        return "unavailable", None
     solved = solve_mcp(cold_path, timeout=timeout)
+    obj = solved.get("objective_value")
+    obj = float(obj) if isinstance(obj, (int, float)) else None
     if solved.get("model_status") in (1, 2):
-        return "optimal"
+        return "optimal", obj
     if solved.get("model_status") is None:
-        return "unavailable"  # GAMS couldn't run / no status parsed
-    return "diverged"
+        return "unavailable", None  # GAMS couldn't run / no status parsed
+    return "diverged", obj
+
+
+def _presolve_match_objective(presolve_path: Path, timeout: int = 120) -> float | None:
+    """The presolve (warm-started) MCP's converged objective — the "match" the P5
+    Case-c reclassification (D3) compares the cold optimum against. Returns ``None``
+    (fail closed → the CASE_B verdict is left unchanged) if the presolve MCP does
+    not reach a usable optimum."""
+    from scripts.gamslib.test_solve import solve_mcp
+
+    try:
+        solved = solve_mcp(presolve_path, timeout=timeout)
+        if solved.get("model_status") in (1, 2):
+            obj = solved.get("objective_value")
+            return float(obj) if isinstance(obj, (int, float)) else None
+    except Exception:
+        return None
+    return None
 
 
 def build_residual_only_mcp(
@@ -982,12 +1143,20 @@ def run_harness(
     stat_rows = [r for r in rows if r.kind == "stationarity"]
 
     transfer = check_dual_transfer(rows)
-    cold = None
+    cold: str | None = None
+    cold_obj: float | None = None
     if transfer.consistent and not no_cold_start:
         print("[kkt-residual] cold-start MCP solve (Case a-vs-c split)…")
-        cold = cold_start_status(model_path, scratch, timeout=timeout)
+        cold, cold_obj = cold_start_result(model_path, scratch, timeout=timeout)
 
     verdict = classify_verdict(stat_rows, scale, transfer, tol=tol, cold_start_status=cold)
+    # Sprint 32 P5 (#1236): reclassify the objective-defining-intermediate-variable
+    # CASE_B family (hhfair `stat_u` / CGE `stat_xp`) as `case_c_objdef` (§3) — D1
+    # (structural) ∧ D3 (cold spurious vs the presolve match objective).
+    if not no_cold_start:
+        verdict = reclassify_objdef_case_c(
+            verdict, model_path, presolve_path, cold, cold_obj, timeout=timeout
+        )
     return build_report(model_path.stem, tol, verdict, transfer, stat_rows)
 
 

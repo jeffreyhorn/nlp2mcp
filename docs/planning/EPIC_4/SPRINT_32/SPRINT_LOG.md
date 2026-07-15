@@ -17,7 +17,7 @@
 | 7 | ~~P2 sarf tractability gate~~ → **gate fired Day 6** (front-loaded; surfaced early) | — | ⏭️ REALLOCATED |
 | 8 | ~~P2 sarf close~~ → **freed by Day-6 REPLAN** → P6/P7 (Task 9) | — | ⏭️ REALLOCATED |
 | 9 | **P4 rocket PATH-consultation input FINALIZED** (Case-c re-confirm + scaffold emits) | **Case-c boundary signature re-confirmed (`stat_ht(h0)` 1.00 / `stat_step` 0.497 / `stat_ht(h50)` 0.438, interior near tol, duals CONSISTENT); `--force homotopy` scaffold emits; no lever crosses. Deliverable packaged for Sprint 33; +1 Solve conditional on the consultation.** | ✅ DONE (hand-off) |
-| 10 | P5 hhfair + CGE Case-c classifier (harness extension) **+ Checkpoint 2** | — (0 genuine floor; `ISSUE_1236` documented-non-convex) | 🔵 PENDING |
+| 10 | **P5 hhfair + CGE Case-c classifier LANDED** (harness extension) **+ Checkpoint 2 GO** | **`kkt_residual.py` `reclassify_objdef_case_c` (D1∧D3 → `case_c_objdef`); all four members auto-flag (hhfair `stat_u` 2.0, irscge/lrgcge/moncge `stat_xp` 0.04–0.07), camcge `stat_tm` guard stays `case_b`; `ISSUE_1236` CLOSED. 0 genuine floor (methodology); sign flip BANNED. Checkpoint 2 GO. Tests +7.** | ✅ DONE |
 | 11 | P6 adjacent backlog (cpack offset-alias + fawley Case-b) + REPLAN-slack | — (target ≥ 1 model recovered OR cohort re-triaged) | 🔵 PENDING |
 | 12 | P7 infrastructure (shape12/shape13 fixtures + genuine-floor tracking + Epic-4-SUMMARY) + REPLAN-slack | — | 🔵 PENDING |
 | 13 | Final retest (≥ 3 `PYTHONHASHSEED`) + closeout | — | 🔵 PENDING |
@@ -96,5 +96,16 @@ A profiling probe + a bounded implementation attempt (the Day-7 tractability gat
 - **The `--force homotopy` scaffold still emits** (`--nlp-presolve --force homotopy` → the `proximal_perturbation` μ-continuation driver + `mcp_model.optfile = 1`) — the hand-off mechanism the consultation's recommended option-set plugs into.
 - **No emittable lever crosses** (the banked survey stands: PATH options 477→382 / μ-continuation / multistart / the division-by-variable reformulation all MS-5; the reformulation-exhaustion finding sharpens the question to the intrinsic discretized-optimal-control structure).
 - **Deliverable: the finalized PATH-consultation input packaged for Sprint 33** (the concrete question + the ruled-out-lever survey + the `--force` scaffold). rocket stays `model_infeasible`; **+1 Solve is a conditional Sprint-33 hand-off, not a Sprint-32 gain** — as the schedule anticipated (P4 is a hand-off track, not a KPI mover). No `src/` change.
+
+## Day 10 — P5 hhfair + CGE Case-c classifier LANDED + Checkpoint 2 (2026-07-15)
+
+**Branch** `planning/sprint32-day10-casec`. Diagnostic-harness change (`scripts/diagnostics/kkt_residual.py` — **not** `src/` emit). See `CASE_C_CLASSIFIER_DESIGN.md`.
+
+Landed the **`kkt_residual.py` Case-c auto-classifier** (`reclassify_objdef_case_c`): a post-verdict pass reclassifying a CASE_B → **`case_c_objdef`** when **D1** (the max-residual `stat_<var>`'s `<var>` is the objective-defining intermediate variable — in `obj =e= f(<var>)`, with its own defining equation, so `nu_obj=±1`) ∧ **D3** (the cold-start MCP reaches a *spurious* optimum — cold objective ≠ the presolve match). D2 (dual-CONSISTENT) is implied by the case_b branch. Implemented via `cold_start_result` (now returns the cold objective) + `_presolve_match_objective` (the match) + `_cold_is_spurious` (the objective comparison, rtol 2e-3) + the structural `_is_objdef_intermediate_var` (D1).
+
+- **All four family members auto-flag `case_c_objdef`:** hhfair `stat_u(1)` rel 2.00 (cold 72.147 ≠ match 87.159), irscge `stat_xp(BRD)` 0.064, lrgcge `stat_xp(BRD)` 0.045, moncge `stat_xp(MLK)` 0.066.
+- **False-positive guard holds:** camcge (`stat_tm`, a non-objective-defining variable) correctly stays `case_b` — D1 gates before the match solve, so a genuine emit residual is never mislabeled.
+- **`ISSUE_1236` CLOSED** as documented-non-convex (auto-classified). **THE SIGN FLIP STAYS BANNED** (refuted 4× S30–S31). P5 delivers **0 genuine floor** (methodology — presolve-recovered); the family hands to the Sprint-33 forcing/PATH work like rocket.
+- **Checkpoint 2: GO** (`--resolve-changed --since-commit 4cbf8bff` = no emit golden changed — the classifier is diagnostic tooling, not the emit path). **Tests +7** (the P5 classifier unit tests: `_var_from_stat_label`, `_cold_is_spurious`, `_is_objdef_intermediate_var`, the D1∧D3 reclassification + guards). No `src/` emit change.
 
 _(Per-day entries appended below as the sprint runs.)_
