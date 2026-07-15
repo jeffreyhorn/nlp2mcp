@@ -8,7 +8,7 @@
 
 ## 1. Outcome vs targets
 
-| Target (`PROJECT_PLAN.md` §"Sprint 32") | Result | |
+| Target (`PROJECT_PLAN.md` §"Sprint 32") | Result | Status |
 |---|---|---|
 | Solve ≥ 109 | **107** | ✗ |
 | Match maintain ≥ 92 (142-corpus) | **92** | ✅ |
