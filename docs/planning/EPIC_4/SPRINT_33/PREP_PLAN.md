@@ -62,7 +62,7 @@ This prep plan focuses on:
 
 ## Task 1: Create Sprint 33 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 33 Day 1
@@ -97,11 +97,11 @@ Sprint 33's carryforwards each arrive with a control-confirmed diagnosis but an 
 
 ### Changes
 
-*To be completed*
+Created `docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md` with 27 unknowns across the 7 carryforward/backlog/infrastructure categories, each with priority, assumption, research questions, verification method, risk-if-wrong, research-time, owner, and a `🔍 Status: INCOMPLETE` verification stub; plus the Task-to-Unknown mapping appendix and the "Unknowns Verified" metadata on Tasks 2–10 below.
 
 ### Result
 
-*To be completed*
+27 unknowns (Critical 7 / High 11 / Medium 7 / Low 2; ~34h research) covering the five carryforward tracks (P1–P5) + the P6 failure-cohort + P7 infrastructure. Every prep Task 2–10 is mapped to the specific unknowns it verifies.
 
 ### Verification
 
@@ -124,12 +124,12 @@ grep -E 'Critical|High' docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md | grep 
 
 ### Acceptance Criteria
 
-- [ ] Document created with ≥ 25 unknowns across the 6 categories
-- [ ] All unknowns have assumption, verification method, priority, risk-if-wrong
-- [ ] All Critical/High unknowns have a verification deadline (Day 0/1/N)
-- [ ] The two Sprint-32 wrong-design lessons (sign, sufficiency) are represented as explicit unknowns for P1/P3
-- [ ] Update template + priority definitions included
-- [ ] Cross-referenced to `PROJECT_PLAN.md` §"Sprint 33" and the banked REPLAN docs
+- [x] Document created with ≥ 25 unknowns across the 6 categories
+- [x] All unknowns have assumption, verification method, priority, risk-if-wrong
+- [x] All Critical/High unknowns have a verification deadline (Day 0/1/N)
+- [x] The two Sprint-32 wrong-design lessons (sign, sufficiency) are represented as explicit unknowns for P1/P3
+- [x] Update template + priority definitions included
+- [x] Cross-referenced to `PROJECT_PLAN.md` §"Sprint 33" and the banked REPLAN docs
 
 ---
 
@@ -141,6 +141,7 @@ grep -E 'Critical|High' docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md | grep 
 **Deadline:** Before Sprint 33 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None (parallelizable with Task 1)
+**Unknowns Verified:** 1.1, 3.1, 7.2
 
 ### Objective
 
@@ -190,6 +191,7 @@ grep -E 'Solve.*107|Match.*92|genuine floor.*74|Translate.*135' docs/planning/EP
 - Per-model bucket provenance table for every carryforward-touched model (Day-0 → expected Day-13)
 - The PR25 genuine-floor anchor (74) + the mover levers
 - Determinism ×3 confirmation + the resolved Day-0 git anchor SHA
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 3.1, 7.2
 
 ### Acceptance Criteria
 
@@ -199,6 +201,7 @@ grep -E 'Solve.*107|Match.*92|genuine floor.*74|Translate.*135' docs/planning/EP
 - [ ] Per-model provenance recorded for the carryforward-touched models
 - [ ] PR25 genuine-floor anchor 74 re-affirmed with mover levers identified
 - [ ] Determinism ✅ ×3 `PYTHONHASHSEED` {0,1,42}
+- [ ] Unknowns 1.1, 3.1, 7.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -210,6 +213,7 @@ grep -E 'Solve.*107|Match.*92|genuine floor.*74|Translate.*135' docs/planning/EP
 **Deadline:** Before Sprint 33 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 1.1, 1.2, 1.3, 1.4, 1.5
 
 ### Objective
 
@@ -260,6 +264,7 @@ grep -icE 'modelstat|/tmp control|REPLAN exit' docs/planning/EPIC_4/SPRINT_33/MI
 - The `file:line` fix-surface hypothesis in `src/kkt/stationarity.py`
 - The pre-`src/` `/tmp` control spec (warm residual → 0 at bound-active rows, then MS-1)
 - The honest 18–24h sizing + the explicit deeper-coupling REPLAN exit
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.3, 1.4, 1.5
 
 ### Acceptance Criteria
 
@@ -269,6 +274,7 @@ grep -icE 'modelstat|/tmp control|REPLAN exit' docs/planning/EPIC_4/SPRINT_33/MI
 - [ ] The re-derivation designed as a `file:line` hypothesis (with sign/guard specifics)
 - [ ] The pre-`src/` `/tmp` control specified (the `x.up=inf` experiment noted BANNED)
 - [ ] The track sized (18–24h) with a documented deeper-coupling REPLAN exit
+- [ ] Unknowns 1.1, 1.2, 1.3, 1.4, 1.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -280,6 +286,7 @@ grep -icE 'modelstat|/tmp control|REPLAN exit' docs/planning/EPIC_4/SPRINT_33/MI
 **Deadline:** Before Sprint 33 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 2.1, 2.2, 2.3, 2.4, 2.5
 
 ### Objective
 
@@ -328,6 +335,7 @@ grep -icE 'atomic|O\(active|budget|srpchase|6.56' docs/planning/EPIC_4/SPRINT_33
 - The single symbolic guarded `stat_task(g,t,m,n)$taskposs(g,t)` emit spec (7-term derivation) + `task.fx` + parametric cross-terms
 - The atomic-landing requirement + the O(active) budget/grep/byte-stable acceptance test
 - The 20–28h sizing + the timeout-re-trigger REPLAN exit
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.2, 2.3, 2.4, 2.5
 
 ### Acceptance Criteria
 
@@ -337,6 +345,7 @@ grep -icE 'atomic|O\(active|budget|srpchase|6.56' docs/planning/EPIC_4/SPRINT_33
 - [ ] The atomic-landing requirement stated
 - [ ] The O(active) budget test defined (translate time vs srpchase 6.56s, grep-clean, byte-stable golden)
 - [ ] The track sized (20–28h) with a documented timeout-re-trigger REPLAN exit
+- [ ] Unknowns 2.1, 2.2, 2.3, 2.4, 2.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -348,6 +357,7 @@ grep -icE 'atomic|O\(active|budget|srpchase|6.56' docs/planning/EPIC_4/SPRINT_33
 **Deadline:** Before Sprint 33 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 3.1, 3.2, 3.3, 3.4
 
 ### Objective
 
@@ -396,6 +406,7 @@ grep -icE 'resolve-changed|polygon|ps2|/tmp control|MS-1' docs/planning/EPIC_4/S
 - The `file:line` fix-surface hypothesis in `src/kkt/stationarity.py` (second-index gate extension)
 - The no-regression (`--resolve-changed`) + `/tmp` (`max|stat_bq| → 0`, MS-1 at 2899.25) control specs
 - The 12–18h sizing + the gate-leak REPLAN exit
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.1, 3.2, 3.3, 3.4
 
 ### Acceptance Criteria
 
@@ -405,6 +416,7 @@ grep -icE 'resolve-changed|polygon|ps2|/tmp control|MS-1' docs/planning/EPIC_4/S
 - [ ] The no-regression requirement pinned (polygon/ps2/mbal via `--resolve-changed`)
 - [ ] The `/tmp` control specified (`max|stat_bq| → 0`, MS-1 at 2899.25)
 - [ ] The track sized (12–18h) with a documented gate-leak REPLAN exit
+- [ ] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -416,6 +428,7 @@ grep -icE 'resolve-changed|polygon|ps2|/tmp control|MS-1' docs/planning/EPIC_4/S
 **Deadline:** Before Sprint 33 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
+**Unknowns Verified:** 4.1, 4.2, 4.3, 4.4
 
 ### Objective
 
@@ -464,6 +477,7 @@ grep -icE 'irscge|lrgcge|moncge|stdcge|false.?positive|S1.*S2.*S3' docs/planning
 - The S1∧S2∧S3 detector scope (flags only camcge)
 - The `/tmp` prototype gate (MS-1 at omega 191.7346, `modelstat` asserted)
 - The Sprint-33-vs-Epic-5 disposition + the 10–16h sizing + the Epic-5-deferral REPLAN exit
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.1, 4.2, 4.3, 4.4
 
 ### Acceptance Criteria
 
@@ -473,6 +487,7 @@ grep -icE 'irscge|lrgcge|moncge|stdcge|false.?positive|S1.*S2.*S3' docs/planning
 - [ ] The `/tmp` prototype gate specified (MS-1 at omega 191.7346)
 - [ ] The Sprint-33-vs-Epic-5 disposition decided with an explicit deferral exit
 - [ ] The track sized (10–16h)
+- [ ] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -484,6 +499,7 @@ grep -icE 'irscge|lrgcge|moncge|stdcge|false.?positive|S1.*S2.*S3' docs/planning
 **Deadline:** Before Sprint 33 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
+**Unknowns Verified:** 5.1, 5.2, 5.3
 
 ### Objective
 
@@ -528,6 +544,7 @@ grep -icE 'Case-c|case_c_objdef|sign flip|BANNED|hhfair|irscge|lrgcge|moncge' do
 - `docs/planning/EPIC_4/SPRINT_33/ROCKET_CASEC_FORCING_PLAN.md` with the Sprint-34 submission mechanism + the `--force` lever survey plan
 - The Case-c re-confirm gate (residual clean at the NLP point before forcing) + the BANNED sign-flip note
 - The 8–12h sizing + the conditional +Solve note
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 5.1, 5.2, 5.3
 
 ### Acceptance Criteria
 
@@ -536,6 +553,7 @@ grep -icE 'Case-c|case_c_objdef|sign flip|BANNED|hhfair|irscge|lrgcge|moncge' do
 - [ ] "Lever crosses" (+Solve) vs "survey banked" criteria defined
 - [ ] The Case-c re-confirm gate + BANNED sign flip re-affirmed
 - [ ] The track sized (8–12h) with the conditional +Solve noted
+- [ ] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -547,6 +565,7 @@ grep -icE 'Case-c|case_c_objdef|sign flip|BANNED|hhfair|irscge|lrgcge|moncge' do
 **Deadline:** Before Sprint 33 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1, 3, 4, 5, 6
+**Unknowns Verified:** 1.1, 2.1, 3.1, 4.1, 5.1
 
 ### Objective
 
@@ -594,6 +613,7 @@ grep -icE 'golden-staleness|presolve-divergence|resolve-changed' docs/planning/E
 - The `modelstat` assertion + the PROCEED/REPLAN criterion per gate
 - The standing BANs (mine `x.up=inf`; Case-c sign flip) as explicit conditions
 - The emit-touching CI gate references (golden-staleness, presolve-divergence, `--resolve-changed`)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 2.1, 3.1, 4.1, 5.1
 
 ### Acceptance Criteria
 
@@ -602,6 +622,7 @@ grep -icE 'golden-staleness|presolve-divergence|resolve-changed' docs/planning/E
 - [ ] The mine `x.up=inf` and Case-c sign-flip BANs encoded as gate conditions
 - [ ] The emit-touching CI gates (PR26 golden-staleness, presolve-divergence, `--resolve-changed`) referenced
 - [ ] Cross-referenced to the per-track design docs (Tasks 3–7)
+- [ ] Unknowns 1.1, 2.1, 3.1, 4.1, 5.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -613,6 +634,7 @@ grep -icE 'golden-staleness|presolve-divergence|resolve-changed' docs/planning/E
 **Deadline:** Before Sprint 33 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 3, 4, 5, 8
+**Unknowns Verified:** 1.2, 2.3, 3.3
 
 ### Objective
 
@@ -660,6 +682,7 @@ grep -icE 'flat.?KPI|modal|Solve.*108|110|genuine floor|front.?load' docs/planni
 - The pinned REPLAN exits + freed-budget reallocation (→ P6/P7)
 - The honest KPI projection (firm movers, stretch, modal flat-KPI outcome)
 - The front-load ordering recommendation
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.2, 2.3, 3.3
 
 ### Acceptance Criteria
 
@@ -668,6 +691,7 @@ grep -icE 'flat.?KPI|modal|Solve.*108|110|genuine floor|front.?load' docs/planni
 - [ ] REPLAN exits + freed-budget reallocation pinned (→ P6/P7)
 - [ ] The honest KPI projection authored (firm movers, stretch ≥ 110, modal flat-KPI)
 - [ ] The front-load ordering recommended (deep tracks by Day 5)
+- [ ] Unknowns 1.2, 2.3, 3.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -679,6 +703,7 @@ grep -icE 'flat.?KPI|modal|Solve.*108|110|genuine floor|front.?load' docs/planni
 **Deadline:** Before Sprint 33 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 8
+**Unknowns Verified:** 6.1, 6.2, 6.3, 7.1, 7.3
 
 ### Objective
 
@@ -722,6 +747,7 @@ grep -icE 'agreste|cesam|lnts|shape12|shape13|second-index|genuine-floor|SUMMARY
 - `docs/planning/EPIC_4/SPRINT_33/TOOLING_AND_BACKLOG_ANALYSIS.md` with the tooling-readiness audit (reuse vs gap) + the P6 fix-surface + P7 fixture scope
 - The agreste double-`solve` scope caveat + the cesam/lnts Case-c re-confirm plan
 - The shape12/shape13/fawley property-fixture plan (fail-before/pass-after, gated on P1/P2/P3) + the genuine-floor recompute + Epic-4-SUMMARY continuation
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 6.1, 6.2, 6.3, 7.1, 7.3
 
 ### Acceptance Criteria
 
@@ -730,6 +756,7 @@ grep -icE 'agreste|cesam|lnts|shape12|shape13|second-index|genuine-floor|SUMMARY
 - [ ] The P7 property fixtures scoped (shape12/shape13/fawley, fail-before/pass-after, gated on landings)
 - [ ] The genuine-floor recompute (anchor 74) + Epic-4-SUMMARY row-33 continuation noted
 - [ ] Each P6 candidate gated by a `--resolve-changed` GO
+- [ ] Unknowns 6.1, 6.2, 6.3, 7.1, 7.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
