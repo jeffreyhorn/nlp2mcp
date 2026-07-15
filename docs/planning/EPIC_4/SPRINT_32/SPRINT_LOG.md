@@ -18,7 +18,7 @@
 | 8 | ~~P2 sarf close~~ → **freed by Day-6 REPLAN** → P6/P7 (Task 9) | — | ⏭️ REALLOCATED |
 | 9 | **P4 rocket PATH-consultation input FINALIZED** (Case-c re-confirm + scaffold emits) | **Case-c boundary signature re-confirmed (`stat_ht(h0)` 1.00 / `stat_step` 0.497 / `stat_ht(h50)` 0.438, interior near tol, duals CONSISTENT); `--force homotopy` scaffold emits; no lever crosses. Deliverable packaged for Sprint 33; +1 Solve conditional on the consultation.** | ✅ DONE (hand-off) |
 | 10 | **P5 hhfair + CGE Case-c classifier LANDED** (harness extension) **+ Checkpoint 2 GO** | **`kkt_residual.py` `reclassify_objdef_case_c` (D1∧D3 → `case_c_objdef`); all four members auto-flag (hhfair `stat_u` 2.0, irscge/lrgcge/moncge `stat_xp` 0.04–0.07), camcge `stat_tm` guard stays `case_b`; `ISSUE_1236` CLOSED. 0 genuine floor (methodology); sign flip BANNED. Checkpoint 2 GO. Tests +7.** | ✅ DONE |
-| 11 | P6 adjacent backlog (cpack offset-alias + fawley Case-b) + REPLAN-slack | — (target ≥ 1 model recovered OR cohort re-triaged) | 🔵 PENDING |
+| 11 | **P6 adjacent backlog RE-TRIAGED** (cpack no-op / fawley 96%-diagnosed) + REPLAN-slack | **0 KPI (cohort re-triaged — §2 offset-alias candidates already solve + cpack CASE_A [no-op]; fawley CASE_B qsb/pbal `sameas` gap control-confirmed [`stat_bq` 473→18, 96%] but incomplete + MCP diverges MS-5 → Sprint-33 hand-off). No src.** | 🟡 RE-TRIAGED |
 | 12 | P7 infrastructure (shape12/shape13 fixtures + genuine-floor tracking + Epic-4-SUMMARY) + REPLAN-slack | — | 🔵 PENDING |
 | 13 | Final retest (≥ 3 `PYTHONHASHSEED`) + closeout | — | 🔵 PENDING |
 
@@ -107,5 +107,13 @@ Landed the **`kkt_residual.py` Case-c auto-classifier** (`reclassify_objdef_case
 - **False-positive guard holds:** camcge (`stat_tm`, a non-objective-defining variable) correctly stays `case_b` — D1 gates before the match solve, so a genuine emit residual is never mislabeled.
 - **`ISSUE_1236` CLOSED** as documented-non-convex (auto-classified). **THE SIGN FLIP STAYS BANNED** (refuted 4× S30–S31). P5 delivers **0 genuine floor** (methodology — presolve-recovered); the family hands to the Sprint-33 forcing/PATH work like rocket.
 - **Checkpoint 2: GO** (`--resolve-changed --since-commit 4cbf8bff` = no emit golden changed — the classifier is diagnostic tooling, not the emit path). **Tests +7** (the P5 classifier unit tests: `_var_from_stat_label`, `_cold_is_spurious`, `_is_objdef_intermediate_var`, the D1∧D3 reclassification + guards). No `src/` emit change.
+
+## Day 11 — P6 adjacent-backlog RE-TRIAGED (offset-alias no-op / fawley 96%-diagnosed) (2026-07-15)
+
+**Branch** `planning/sprint32-day11-backlog`. Probe/re-triage only (**no `src/`**). See `P6_BACKLOG_RETRIAGE.md`.
+
+- **Offset-alias generalization (§2) — no gain:** the Task-10 structural candidates already solve and are emit-correct — **cpack** is **CASE_A** (residual 1.4e-17, the landed core already covers its distance shape); ps5_s_mn/ps10_s_mn/partssupply already `success`; ps3_s_scp non_convex. Structural shape ≠ a dropped cross-term → no genuine-floor gain.
+- **Failure-cohort (§3) — fawley 96%-diagnosed, not a clean +Solve:** fawley (`solve=failure`, LP 2899.25) CASE_B `stat_bq(*,fuel-oil)` rel 0.973. **Root cause found + control-confirmed:** `bq(c,cf)` in `qsb(cfq,l,s)`/`pbal(cfq,m)` is the #1111/#1112 second-index-transpose shape, but `stat_bq` applies `$(sameas(cfq__, cf))` to the **mbal** cross-term and **not** to the **qsb/pbal** terms (they over-sum over all `cfq__`). The `/tmp` sameas patch closes `max|stat_bq|` **473 → 18 (96%)** — BUT a residual 18.47 remains AND the MCP still diverges (MS-5 @ 5739, not the LP 2899). A deeper AD-core generalization + LP-convergence issue (the Task-9 "#1111/#1112 gate leaks" REPLAN, confirmed) → **Sprint-33 hand-off**. agreste (double-`solve` driver) + cesam/lnts (Case-c) stay banked.
+- **No `src/` change** (offset-alias no-op; fawley fix incomplete + high-blast-radius). **No headline KPI gain** — Solve 107 / Translate 135 / genuine floor 74 hold at Day-0. Freed budget → **P7** (Day 12). The de-risked fawley diagnosis (the qsb/pbal `sameas` gap, 96%-confirmed) is the banked Sprint-33 deliverable.
 
 _(Per-day entries appended below as the sprint runs.)_
