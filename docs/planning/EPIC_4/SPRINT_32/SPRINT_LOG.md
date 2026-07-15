@@ -16,7 +16,7 @@
 | 6 | **P2 sarf REPLAN** (2-D gate necessary but insufficient — tractability gate front-loaded) | **0 Translate (REPLAN → Sprint 33 — the 2-D constraint gate fires sarf-only but `compute_constraint_jacobian` still times out; the 369K `task` columns enumerate via `acost3` + the variable path; the full fix is a from-scratch symbolic parametric emit). No src (gate reverted).** | 🔴 REPLAN |
 | 7 | ~~P2 sarf tractability gate~~ → **gate fired Day 6** (front-loaded; surfaced early) | — | ⏭️ REALLOCATED |
 | 8 | ~~P2 sarf close~~ → **freed by Day-6 REPLAN** → P6/P7 (Task 9) | — | ⏭️ REALLOCATED |
-| 9 | P4 rocket PATH-consultation input (Case-c re-confirm + finalize) | — (deliverable: packaged input; +1 Solve only if a lever crosses) | 🔵 PENDING |
+| 9 | **P4 rocket PATH-consultation input FINALIZED** (Case-c re-confirm + scaffold emits) | **Case-c boundary signature re-confirmed (`stat_ht(h0)` 1.00 / `stat_step` 0.497 / `stat_ht(h50)` 0.438, interior near tol, duals CONSISTENT); `--force homotopy` scaffold emits; no lever crosses. Deliverable packaged for Sprint 33; +1 Solve conditional on the consultation.** | ✅ DONE (hand-off) |
 | 10 | P5 hhfair + CGE Case-c classifier (harness extension) **+ Checkpoint 2** | — (0 genuine floor; `ISSUE_1236` documented-non-convex) | 🔵 PENDING |
 | 11 | P6 adjacent backlog (cpack offset-alias + fawley Case-b) + REPLAN-slack | — (target ≥ 1 model recovered OR cohort re-triaged) | 🔵 PENDING |
 | 12 | P7 infrastructure (shape12/shape13 fixtures + genuine-floor tracking + Epic-4-SUMMARY) + REPLAN-slack | — | 🔵 PENDING |
@@ -87,5 +87,14 @@ A profiling probe + a bounded implementation attempt (the Day-7 tractability gat
 **The real fix** — stop materializing the 369K `task` columns everywhere + emit one symbolic guarded `stat_task$taskposs` + `task.fx` with parametric cross-terms — is a **from-scratch symbolic-emit subsystem** (the current builder works from enumerated entries). The design's re-scoping REPLAN exit. **REPLAN → Sprint 33; no `src/`** (gate reverted; 8th consecutive control/probe-first REPLAN). sarf stays `translate_timeout`; **Translate maintains 135** (+1 deferred — the lowest-leverage KPI).
 
 **ALL THREE deep tracks have now REPLAN'd** (mine Solve Day 1, camcge Solve Day 5, sarf Translate Day 6). **Solve 107 / Translate 135 / genuine floor 74 all hold at Day-0.** Any Sprint-32 KPI gain now rests **entirely on P6** (cpack/fawley). Freed P2 + mine/camcge budget → **P6 + P7**. De-risked hand-off: the profiled locus + the working sarf-only 2-D detector (the "necessary" half, banked).
+
+## Day 9 — P4 rocket PATH-consultation input FINALIZED (2026-07-15)
+
+**Branch** `planning/sprint32-day9-rocket`. Docs/hand-off only (no `src/`). See `ROCKET_PATH_CONSULTATION_INPUT.md` (Status → FINALIZED).
+
+- **Case-c re-confirmed (PR27, before any forcing):** `kkt_residual.py rocket.gms` → CASE_B concentrated on the boundary rows `stat_ht(h0)` rel **1.00** / `stat_step` **0.497** / `stat_ht(h50)` **0.438**, interior near tolerance (`stat_v(h0)` 0.038, `stat_m(h0)` 0.014), dual-transfer CONSISTENT (closure 1.53e-10) — matches Day-0. The residual is clean at the NLP point ⇒ a **forcing** problem, not a latent emit bug.
+- **The `--force homotopy` scaffold still emits** (`--nlp-presolve --force homotopy` → the `proximal_perturbation` μ-continuation driver + `mcp_model.optfile = 1`) — the hand-off mechanism the consultation's recommended option-set plugs into.
+- **No emittable lever crosses** (the banked survey stands: PATH options 477→382 / μ-continuation / multistart / the division-by-variable reformulation all MS-5; the reformulation-exhaustion finding sharpens the question to the intrinsic discretized-optimal-control structure).
+- **Deliverable: the finalized PATH-consultation input packaged for Sprint 33** (the concrete question + the ruled-out-lever survey + the `--force` scaffold). rocket stays `model_infeasible`; **+1 Solve is a conditional Sprint-33 hand-off, not a Sprint-32 gain** — as the schedule anticipated (P4 is a hand-off track, not a KPI mover). No `src/` change.
 
 _(Per-day entries appended below as the sprint runs.)_
