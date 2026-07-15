@@ -3,7 +3,9 @@
 **Created:** 2026-07-13
 **Prep Task:** 6 (Priority 4)
 **Issue:** #1462 (local write-up: `docs/issues/ISSUE_1462_rocket-fx-multiplier-warmstart-nonconvex.md`)
-**Status:** Packaged hand-off (prep) — the finalized PATH-consultation input for the renumbered **Sprint 33** consultation. All experiments read-only (harness); no `src/` change.
+**Status:** ✅ **FINALIZED (Sprint 32 Day 9, 2026-07-15)** — the PATH-consultation input for the renumbered **Sprint 33** consultation is packaged and finalized. All experiments read-only (harness); no `src/` change.
+
+> **Day-9 finalization (PR27 gate satisfied):** the Case-c boundary signature is **re-confirmed on the current tree** — `kkt_residual.py rocket.gms` → CASE_B concentrated on the boundary rows `stat_ht(h0)` rel **1.00** (raw −4.56) / `stat_step` **0.497** / `stat_ht(h50)` **0.438**, with the interior near tolerance (`stat_v(h0)` 0.038, `stat_m(h0)` 0.014) and **dual-transfer CONSISTENT** (closure 1.53e-10). The residual is clean at the NLP point ⇒ rocket is a **forcing** problem, not a latent emit bug (fix-the-emit-first is ruled out). The `--force homotopy` scaffold **still emits** for rocket (`--nlp-presolve --force homotopy` → the `proximal_perturbation` μ-continuation driver + `mcp_model.optfile = 1`) — the hand-off mechanism the consultation's recommended option-set plugs into. **No emittable lever crosses** (the §2 survey stands: PATH options / μ-continuation / multistart / division-by-variable reformulation all MS-5). **+1 Solve is a conditional Sprint-33 hand-off, NOT a Sprint-32 gain.**
 
 **Objective:** Package the finalized PATH-consultation input for rocket (the concrete question set + the ruled-out-lever survey) that feeds the Sprint-33 PATH consultation; confirm the emit residual is clean at the NLP point (Case-c) so rocket stays a forcing problem; and sweep for any remaining emittable lever.
 
