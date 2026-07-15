@@ -2,13 +2,13 @@
 
 **Status:** 🚧 Groundwork skeleton (begun Sprint 32 Day 12, 2026-07-15 — S30-retro §5 front-loading recommendation). One row per Sprint 18–35; the KPI columns are filled from the closed-sprint record (SPRINT_RETROSPECTIVE.md / SPRINT_LOG.md per sprint) and completed at Epic-4 close. Cells marked "—" are historical rows to backfill.
 
-**Headline KPI convention:** Solve / Match / genuine floor are over the **142 convex-candidate corpus** (`reference_match_kpi_corpus_scope`); "genuine floor" = cold-emit-correct genuine matches (vs presolve-recovered methodology). Anchors: S32 close DB byte-unchanged since S31 close `4cbf8bff`.
+**Headline KPI convention:** Solve / Match / genuine floor are over the **142 convex-candidate corpus** (the authoritative scope definition + the 142-vs-all-219 distinction: `docs/planning/EPIC_4/SPRINT_32/BASELINE_METRICS.md`); "genuine floor" = cold-emit-correct genuine matches (vs presolve-recovered methodology). Anchors: S32 close DB byte-unchanged since S31 close `4cbf8bff`.
 
 ---
 
 ## Sprint-by-sprint
 
-| Sprint | Weeks | Theme | Headline (Solve / Match / genuine floor) | Firm landing(s) | REPLAN'd → carryforward |
+| Sprint | Weeks | Theme | Headline KPIs (format varies by era) | Firm landing(s) | REPLAN'd → carryforward |
 |---|---|---|---|---|---|
 | 18 | 1–3 | Syntactic validation, emit solve fixes, parse quick wins | — | — | — |
 | 19 | 3–4 | Major parse push (lexer/internal errors) | — | — | — |
