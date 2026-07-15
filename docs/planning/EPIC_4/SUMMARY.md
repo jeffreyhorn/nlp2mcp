@@ -1,4 +1,4 @@
-# Epic 4 — Sprint-by-Sprint Summary (SKELETON)
+# EPIC 4 — Sprint-by-Sprint Summary (SKELETON)
 
 **Status:** 🚧 Groundwork skeleton (begun Sprint 32 Day 12, 2026-07-15 — S30-retro §5 front-loading recommendation). One row per Sprint 18–35; the KPI columns are filled from the closed-sprint record (SPRINT_RETROSPECTIVE.md / SPRINT_LOG.md per sprint) and completed at Epic-4 close. Cells marked "—" are historical rows to backfill.
 
