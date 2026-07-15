@@ -20,7 +20,7 @@
 | 10 | **P5 hhfair + CGE Case-c classifier LANDED** (harness extension) **+ Checkpoint 2 GO** | **`kkt_residual.py` `reclassify_objdef_case_c` (D1∧D3 → `case_c_objdef`); all four members auto-flag (hhfair `stat_u` 2.0, irscge/lrgcge/moncge `stat_xp` 0.04–0.07), camcge `stat_tm` guard stays `case_b`; `ISSUE_1236` CLOSED. 0 genuine floor (methodology); sign flip BANNED. Checkpoint 2 GO. Tests +7.** | ✅ DONE |
 | 11 | **P6 adjacent backlog RE-TRIAGED** (cpack no-op / fawley 96%-diagnosed) + REPLAN-slack | **0 KPI (cohort re-triaged — §2 offset-alias candidates already solve + cpack CASE_A [no-op]; fawley CASE_B qsb/pbal `sameas` gap control-confirmed [`stat_bq` 473→18, 96%] but incomplete + MCP diverges MS-5 → Sprint-33 hand-off). No src.** | 🟡 RE-TRIAGED |
 | 12 | **P7 infrastructure DONE** (fixtures right-sized + genuine-floor recompute + Epic-4-SUMMARY skeleton) | **shape12/shape13 deferred with P1/P2 (REPLAN'd — nothing to guard); what landed [camcge scalar-`fx`, Case-c classifier] already tested; genuine floor `74` recomputed (S32 ≥75 MISSED); checkpoint anchor `4cbf8bff` stands (GO); `SUMMARY.md` skeleton begun. No src.** | ✅ DONE |
-| 13 | Final retest (≥ 3 `PYTHONHASHSEED`) + closeout | — | 🔵 PENDING |
+| 13 | Final retest (≥ 3 `PYTHONHASHSEED`) + closeout | **Parse 142 · Translate 135 · Solve 107 · Match 92 (142-corpus, maintained) · genuine floor 74 · model_infeasible 7 · Tests 5,085 (+11) · determinism ✅ ×3 {0,1,42} — SPRINT 32 CLOSED.** No headline gain (all movers REPLAN'd); 2 genuine landings (camcge step-1 emit fix, Case-c classifier) + 5 banked S33/Epic-5 diagnoses. DB byte-unchanged since `4cbf8bff`. | ✅ DONE |
 
 **Targets (`PROJECT_PLAN.md` §"Sprint 32"):** Solve 107 → ≥ 109 · Match maintain ≥ 92 / genuine floor 74 → ≥ 75 · model_infeasible 7 → ≤ 5 · Translate ≥ 135 (+1 via #1385 sarf) · Tests ≥ 5,080 · determinism ✅ ×3.
 
@@ -126,4 +126,38 @@ Landed the **`kkt_residual.py` Case-c auto-classifier** (`reclassify_objdef_case
 - **Epic-4 `SUMMARY.md` skeleton begun** — one row per Sprint 18–35 (headline KPI + firm landing + REPLAN'd carryforwards), seeded from the closed-sprint record; to fill at Epic-4 close.
 - **REPLAN-slack absorbed:** the freed mine/camcge/sarf/P6 budget flowed to P7 (this infra + the banked-diagnosis write-ups). No `src/` change.
 
-_(Per-day entries appended below as the sprint runs.)_
+## Day 13 — Final Retest + Closeout — SPRINT 32 CLOSED (2026-07-15)
+
+**Branch** `planning/sprint32-day13-close`. Docs/retest-only (no `src/`). See `SPRINT_RETROSPECTIVE.md`.
+
+- **Determinism ✅ ×3:** camcge presolve (the emit change), hhfair presolve, polygon plain — all byte-identical across `PYTHONHASHSEED` {0,1,42}.
+- **DB byte-unchanged since `4cbf8bff`** (`git diff 4cbf8bff..HEAD -- data/gamslib/gamslib_status.json data/gamslib/mcp/` empty) — no bucket moved, so no re-solve/persist. The only emit change (camcge step-1 `emit_gams.py`) changed no committed golden.
+- **Final (142-corpus):** Parse 142 · Translate 135 · **Solve 107** · **Match 92** (maintained) · **genuine floor 74** · model_infeasible 7 · **Tests 5,085** (+11: 2 scalar-`fx` + 9 Case-c classifier).
+
+### Per-priority summary
+
+| P | Track | Outcome |
+|---|---|---|
+| P1 | mine 4th bound-complementarity site (#1443) | 🔴 REPLAN → Sprint 33 (5th coupling: wrong-sign `N` at 6 bound-active rows; MS-5 @ 22058; the `N`-derivation control-refuted, no src) |
+| P3 | camcge `stat_mps` + Walras (#1330) | ✅ step 1 landed (scalar-`fx` general emit fix, `stat_mps` → Case-a) · 🔴 step 2 REPLAN → Epic 5 (numéraire → omega 191.7346 but MS-4; Walras rank-deficiency deeper) |
+| P2 | sarf 4-D `task` sparsification (#1385) | 🔴 REPLAN → Sprint 33 (2-D constraint gate necessary but insufficient — 369K `task` columns via `acost3` + variable path; from-scratch symbolic-emit subsystem needed) |
+| P4 | rocket PATH-consultation (#1462) | ✅ FINALIZED hand-off (Case-c re-confirmed; `--force` scaffold emits; no lever crosses; +1 Solve conditional on the Sprint-33 consultation) |
+| P5 | hhfair + CGE Case-c (#1236) | ✅ classifier landed (`case_c_objdef`, D1∧D3; all four members auto-flag; camcge guard holds); ISSUE_1236 CLOSED; 0 floor (methodology); sign flip BANNED |
+| P6 | adjacent backlog | 🟡 re-triaged (offset-alias candidates already solve/CASE_A; fawley qsb/pbal `sameas` gap control-confirmed 473→18 [96%] but incomplete + MCP diverges → Sprint 33) |
+| P7 | infrastructure | ✅ fixtures right-sized (shape12/13 deferred with P1/P2); genuine-floor 74 recomputed; Epic-4 `SUMMARY.md` skeleton |
+
+### Targets vs actual (`PROJECT_PLAN.md` §"Sprint 32")
+
+| Target | Result |
+|---|---|
+| Solve ≥ 109 | ✗ **107** (both firm movers mine+camcge REPLAN'd — the Task-9-flagged "needs BOTH" fragility) |
+| Match maintain ≥ 92 | ✅ 92 |
+| genuine floor ≥ 75 | ✗ **74** (no genuine cold-match landed; ramp re-baselines to 74) |
+| model_infeasible ≤ 5 | ✗ 7 |
+| Translate +1 (136) | ✗ 135 (sarf REPLAN'd) |
+| Tests ≥ 5,080 | ✅ 5,085 |
+| Determinism ✅ ×3 | ✅ |
+
+**No headline KPI gain** — exactly the Task-9 honest projection (every mover REPLAN-prone). **Realized value:** 2 genuine landings (camcge step-1 scalar-`fx` emit-correctness fix; the P5 Case-c auto-classifier + ISSUE_1236 closure) + 5 control-confirmed, de-risked banked diagnoses for Sprint 33/Epic 5 (mine 5th-coupling, camcge Walras/Epic-5, sarf symbolic-emit, fawley qsb/pbal sameas, rocket PATH-consultation), with **zero broken code shipped** — the control-first (PR24/PR27) discipline held on every deep track.
+
+**SPRINT 32 CLOSED.** Anchors: S32 close = this Day-13 branch (`planning/sprint32-day13-close`); S31 close `4cbf8bff`.
