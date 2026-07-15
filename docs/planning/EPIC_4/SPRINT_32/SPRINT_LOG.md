@@ -13,9 +13,9 @@
 | 3 | ~~P1 mine close-or-REPLAN~~ → **REPLAN fired Day 1** (front-loading worked — surfaced early) | — | ⏭️ REALLOCATED |
 | 4 | P3 camcge **step 1 landed** — scalar-`fx` marginal transfer (`nu_mps_fx.l = mps.m`, DIRECT — sign corrected by control) | **`stat_mps` CASE_B rel 1.05 → Case-a** (dropped from top residuals; camcge max now `stat_tm(biens-int)` 0.076); all 17 presolve goldens clean; general emit fix (`emit_gams.py`) | ✅ DONE (step 1) |
 | 5 | **P3 camcge step 2 REPLAN** (dual-consistent Walras) **+ Checkpoint 1 GO** | **0 Solve (REPLAN → Epic 5 — step 1 + numéraire reaches omega 191.7346 [correct] but MS-4; residual Walras singularity on the accounting identities; re-scoped hypothesis refuted). Step 1 landed (general emit fix). Checkpoint 1 GO (no golden regressed).** | 🔴 REPLAN (step 1 landed) |
-| 6 | P2 sarf 4-D `task` sparsification start (2-D gate + parametric `stat_task`) | — | 🔵 PENDING |
-| 7 | P2 sarf tractability gate (O(active=398) not O(369K)) | — (target +1 Translate; else REPLAN → Sprint 33 re-scoping) | 🔵 PENDING |
-| 8 | P2 sarf close + golden byte-stable | — | 🔵 PENDING |
+| 6 | **P2 sarf REPLAN** (2-D gate necessary but insufficient — tractability gate front-loaded) | **0 Translate (REPLAN → Sprint 33 — the 2-D constraint gate fires sarf-only but `compute_constraint_jacobian` still times out; the 369K `task` columns enumerate via `acost3` + the variable path; the full fix is a from-scratch symbolic parametric emit). No src (gate reverted).** | 🔴 REPLAN |
+| 7 | ~~P2 sarf tractability gate~~ → **gate fired Day 6** (front-loaded; surfaced early) | — | ⏭️ REALLOCATED |
+| 8 | ~~P2 sarf close~~ → **freed by Day-6 REPLAN** → P6/P7 (Task 9) | — | ⏭️ REALLOCATED |
 | 9 | P4 rocket PATH-consultation input (Case-c re-confirm + finalize) | — (deliverable: packaged input; +1 Solve only if a lever crosses) | 🔵 PENDING |
 | 10 | P5 hhfair + CGE Case-c classifier (harness extension) **+ Checkpoint 2** | — (0 genuine floor; `ISSUE_1236` documented-non-convex) | 🔵 PENDING |
 | 11 | P6 adjacent backlog (cpack offset-alias + fawley Case-b) + REPLAN-slack | — (target ≥ 1 model recovered OR cohort re-triaged) | 🔵 PENDING |
@@ -75,5 +75,17 @@ The PR24/PR27 `/tmp` control tested the re-scoped hypothesis — **`stat_mps`-fi
 **Checkpoint 1: GO** — `--resolve-changed --since-commit 4cbf8bff` = no golden changed (step 1 changed only `src/`); golden-staleness clean; no changed-golden model moved backward. PR25 unchanged (genuine floor 74 / methodology 21).
 
 **Both firm +Solve movers have now REPLAN'd** (mine Day 1, camcge Day 5) — the Task-9 honest projection realized. **Solve stays 107** unless P6 (cpack/fawley) converts; **genuine floor ≥ 75 now rests entirely on a P6 emit change**. Freed step-2 + Days-2/3 mine budget → **P6 + P7**.
+
+## Day 6 — P2 sarf REPLAN (2-D gate necessary but insufficient → Sprint 33) (2026-07-14)
+
+**Branch** `planning/sprint32-day6-sarf`. Control/probe-only (**no `src/`** — the insufficient gate was reverted). See `SARF_TRANSLATE_REPLAN.md`.
+
+A profiling probe + a bounded implementation attempt (the Day-7 tractability gate, front-loaded):
+- **Profiled the blow-up:** parse 11.3s, then **`compute_constraint_jacobian` TIMEOUT >120s** — the runtime-computed 2-D dynamic sets `taskposs`/`equipposs` are un-evaluable at compile time → the constraint enumeration falls back to the full Cartesian × the 369K `task(g,t,mn,mn)` columns.
+- **Implemented + tested the 2-D gate** (`_is_blowup_2d_condition_equation`): fires correctly for `sarf:tbal/equipb1/equipb2` and **no other** sampled model (well-scoped). **But `compute_constraint_jacobian` STILL times out >90s** — the 369K `task` columns enumerate via `acost3` (`sum((g,t,m,n)$taskposs(g,t), oc·task)`, a scalar eq the gate doesn't touch) + the variable path. **The design's own "necessary but insufficient" confirmed empirically.**
+
+**The real fix** — stop materializing the 369K `task` columns everywhere + emit one symbolic guarded `stat_task$taskposs` + `task.fx` with parametric cross-terms — is a **from-scratch symbolic-emit subsystem** (the current builder works from enumerated entries). The design's re-scoping REPLAN exit. **REPLAN → Sprint 33; no `src/`** (gate reverted; 8th consecutive control/probe-first REPLAN). sarf stays `translate_timeout`; **Translate maintains 135** (+1 deferred — the lowest-leverage KPI).
+
+**ALL THREE deep tracks have now REPLAN'd** (mine Solve Day 1, camcge Solve Day 5, sarf Translate Day 6). **Solve 107 / Translate 135 / genuine floor 74 all hold at Day-0.** Any Sprint-32 KPI gain now rests **entirely on P6** (cpack/fawley). Freed P2 + mine/camcge budget → **P6 + P7**. De-risked hand-off: the profiled locus + the working sarf-only 2-D detector (the "necessary" half, banked).
 
 _(Per-day entries appended below as the sprint runs.)_
