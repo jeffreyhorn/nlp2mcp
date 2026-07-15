@@ -26,6 +26,9 @@ from kkt_residual import (  # noqa: E402  (path set above)
     RowResidual,
     TransferCheck,
     Verdict,
+    _cold_is_spurious,
+    _is_objdef_intermediate_var,
+    _var_from_stat_label,
     apply_residual_sign_correction,
     build_arg_parser,
     build_gdx_skip_variant,
@@ -47,6 +50,7 @@ from kkt_residual import (  # noqa: E402  (path set above)
     parse_gdxdump_allfields,
     parse_gdxdump_csv,
     primal_scale,
+    reclassify_objdef_case_c,
     relative_residual,
     row_kind,
 )
@@ -763,3 +767,115 @@ class TestGdxdumpFailClosed:
         header = '"i","Val","Marginal","Lower","Upper","Scale"\n'
         monkeypatch.setattr(kr.subprocess, "run", lambda *a, **k: self._proc(0, header))
         assert kr.gdxdump_equation(Path("x.gdx"), "eemp", "gdxdump") == {}
+
+
+class TestObjdefCaseCClassifier:
+    """Sprint 32 P5 (#1236): the objective-defining-intermediate-variable Case-c
+    reclassification (CASE_C_CLASSIFIER_DESIGN §3) — D1 (structural) ∧ D3 (cold
+    spurious vs the presolve match objective). D2 is implied by the case_b branch."""
+
+    # A model whose objective is defined by an intermediate variable `u`
+    # (obj =e= sum(u)) that has its OWN defining equation (utility.. u =e= sqr(c)).
+    # `u` trips D1; `c` (not in the objective-defining equation) does not.
+    _SRC_OBJDEF = """
+Set t / t1, t2 /;
+Variable u(t), c(t), obj;
+Equation objective, utility(t), budget(t);
+objective.. obj =e= sum(t, u(t));
+utility(t).. u(t) =e= sqr(c(t));
+budget(t).. c(t) =e= 1;
+Model m /all/;
+Solve m using nlp maximizing obj;
+"""
+
+    def _write(self, tmp_path, text):
+        p = tmp_path / "objdef.gms"
+        p.write_text(text)
+        return p
+
+    def test_var_from_stat_label(self) -> None:
+        assert _var_from_stat_label("stat_u(1)") == "u"
+        assert _var_from_stat_label("stat_xp(BRD)") == "xp"
+        assert _var_from_stat_label("stat_step") == "step"
+        assert _var_from_stat_label("comp_pr(k)") is None
+        assert _var_from_stat_label(None) is None
+
+    def test_cold_is_spurious_objective_comparison(self) -> None:
+        # cold reaches a DIFFERENT optimum than the match → spurious (hhfair shape)
+        assert _cold_is_spurious("optimal", 72.147, 87.159) is True
+        # cold reaches the SAME objective as the match → NOT spurious (would-be case_b)
+        assert _cold_is_spurious("optimal", 87.159, 87.159) is False
+        # cold diverged → spurious
+        assert _cold_is_spurious("diverged", None, 87.159) is True
+        # missing objective(s) → fail closed (leave case_b)
+        assert _cold_is_spurious("optimal", None, 87.159) is False
+        assert _cold_is_spurious("optimal", 72.147, None) is False
+        assert _cold_is_spurious("unavailable", None, None) is False
+
+    def test_d1_detects_objdef_intermediate_var(self, tmp_path) -> None:
+        p = self._write(tmp_path, self._SRC_OBJDEF)
+        # `u` is the objective-defining intermediate variable (in obj =e= sum(u),
+        # has its own defining equation `utility`)
+        assert _is_objdef_intermediate_var(p, "u") is True
+        # `c` is NOT in the objective-defining equation → not reclassified (guard)
+        assert _is_objdef_intermediate_var(p, "c") is False
+
+    def test_reclassify_case_c_objdef_when_d1_and_d3(self, tmp_path, monkeypatch) -> None:
+        import kkt_residual as krh
+
+        monkeypatch.setattr(krh, "_presolve_match_objective", lambda *_a, **_k: 87.159)
+        v = Verdict("case_b", 2.0, RowResidual.equality("stat_u", ("t1",), -36.1), 18.0)
+        out = reclassify_objdef_case_c(
+            v,
+            self._write(tmp_path, self._SRC_OBJDEF),
+            tmp_path / "pre.gms",
+            cold_status="optimal",
+            cold_obj=72.147,
+        )
+        assert out.code == "case_c_objdef"
+        assert "sign flip is BANNED" in out.label
+
+    def test_no_reclassify_when_cold_reaches_match(self, tmp_path, monkeypatch) -> None:
+        # D1 holds but cold reaches the match objective → a would-be emit bug, stays case_b
+        import kkt_residual as krh
+
+        monkeypatch.setattr(krh, "_presolve_match_objective", lambda *_a, **_k: 87.159)
+        v = Verdict("case_b", 2.0, RowResidual.equality("stat_u", ("t1",), -36.1), 18.0)
+        out = reclassify_objdef_case_c(
+            v,
+            self._write(tmp_path, self._SRC_OBJDEF),
+            tmp_path / "pre.gms",
+            cold_status="optimal",
+            cold_obj=87.159,
+        )
+        assert out.code == "case_b"
+
+    def test_no_reclassify_non_objdef_var(self, tmp_path, monkeypatch) -> None:
+        # A CASE_B on `c` (not the objective-defining variable) is never reclassified;
+        # D1 fails before the match solve, so _presolve_match_objective is not called.
+        import kkt_residual as krh
+
+        def _boom(*_a, **_k):  # must not be reached
+            raise AssertionError("match solve should not run when D1 fails")
+
+        monkeypatch.setattr(krh, "_presolve_match_objective", _boom)
+        v = Verdict("case_b", 0.9, RowResidual.equality("stat_c", ("t1",), -1.0), 1.0)
+        out = reclassify_objdef_case_c(
+            v,
+            self._write(tmp_path, self._SRC_OBJDEF),
+            tmp_path / "pre.gms",
+            cold_status="optimal",
+            cold_obj=1.0,
+        )
+        assert out.code == "case_b"
+
+    def test_no_reclassify_non_case_b(self, tmp_path) -> None:
+        v = Verdict("case_a", 1e-4, RowResidual.equality("stat_u", ("t1",), 1e-6), 1.0)
+        out = reclassify_objdef_case_c(
+            v,
+            self._write(tmp_path, self._SRC_OBJDEF),
+            tmp_path / "pre.gms",
+            cold_status="optimal",
+            cold_obj=1.0,
+        )
+        assert out.code == "case_a"
