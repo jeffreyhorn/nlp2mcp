@@ -879,3 +879,40 @@ Solve m using nlp maximizing obj;
             cold_obj=1.0,
         )
         assert out.code == "case_a"
+
+    def test_diverged_cold_reclassifies_without_match_solve(self, tmp_path, monkeypatch) -> None:
+        # D1 holds and the cold solve diverged → spurious outright; the (expensive)
+        # presolve-match solve must NOT run.
+        import kkt_residual as krh
+
+        def _boom(*_a, **_k):
+            raise AssertionError("match solve should not run when cold diverged")
+
+        monkeypatch.setattr(krh, "_presolve_match_objective", _boom)
+        v = Verdict("case_b", 2.0, RowResidual.equality("stat_u", ("t1",), -36.1), 18.0)
+        out = reclassify_objdef_case_c(
+            v,
+            self._write(tmp_path, self._SRC_OBJDEF),
+            tmp_path / "pre.gms",
+            cold_status="diverged",
+            cold_obj=None,
+        )
+        assert out.code == "case_c_objdef"
+
+    def test_unavailable_cold_skips_match_solve(self, tmp_path, monkeypatch) -> None:
+        # D1 holds but cold has no usable optimum → leave case_b, no match solve.
+        import kkt_residual as krh
+
+        def _boom(*_a, **_k):
+            raise AssertionError("match solve should not run when cold is unavailable")
+
+        monkeypatch.setattr(krh, "_presolve_match_objective", _boom)
+        v = Verdict("case_b", 2.0, RowResidual.equality("stat_u", ("t1",), -36.1), 18.0)
+        out = reclassify_objdef_case_c(
+            v,
+            self._write(tmp_path, self._SRC_OBJDEF),
+            tmp_path / "pre.gms",
+            cold_status="unavailable",
+            cold_obj=None,
+        )
+        assert out.code == "case_b"

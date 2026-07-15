@@ -643,8 +643,15 @@ def reclassify_objdef_case_c(
     var = _var_from_stat_label(verdict.max_row.label)
     if var is None or not _is_objdef_intermediate_var(model_path, var):  # D1
         return verdict
+    # D3: solve for the presolve match objective ONLY when the objective comparison
+    # is actually needed. A diverged cold is spurious outright; a cold without a
+    # usable local optimum leaves the CASE_B verdict — neither needs the extra solve.
+    if cold_status == "diverged":
+        return Verdict("case_c_objdef", verdict.max_rel, verdict.max_row, verdict.scale)
+    if cold_status != "optimal" or cold_obj is None:
+        return verdict
     match_obj = _presolve_match_objective(presolve_path, timeout=timeout)
-    if not _cold_is_spurious(cold_status, cold_obj, match_obj):  # D3
+    if not _cold_is_spurious(cold_status, cold_obj, match_obj):
         return verdict
     return Verdict("case_c_objdef", verdict.max_rel, verdict.max_row, verdict.scale)
 
