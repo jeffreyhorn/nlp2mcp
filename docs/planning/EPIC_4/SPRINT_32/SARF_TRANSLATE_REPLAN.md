@@ -37,7 +37,7 @@ Making sarf translate requires the **369K `task` columns to never be materialize
 ## 4. Disposition
 
 - **REPLAN sarf [P2] → Sprint 33** (a dedicated symbolic-emit workstream). **No `src/` change** — the insufficient 2-D gate was **reverted** (shipping the gate alone would drop cross-terms for a still-timing-out emit; no KPI gain, correctness risk). The 8th consecutive control/probe-first REPLAN across S30–S32.
-- **+1 Translate deferred;** sarf stays `translate_failure` (Translate maintains 135). This is the **lowest-leverage KPI** (moves neither Solve nor Match) — the Task-9-ranked outcome.
+- **+1 Translate deferred;** sarf stays `translate_timeout` (Translate maintains 135). This is the **lowest-leverage KPI** (moves neither Solve nor Match) — the Task-9-ranked outcome.
 - **The de-risked Sprint-33 hand-off:** the profiled blow-up locus (`compute_constraint_jacobian`, the 369K `task` columns via `acost3` + the variable enumeration); the **working, well-scoped 2-D detector** (`_is_blowup_2d_condition_equation`, fires sarf-only — the "necessary" half, ready to reuse); and the confirmed requirement that the fix must eliminate the 369K `task`-column materialization everywhere + emit the symbolic parametric `stat_task` + `task.fx` (the "sufficient" half).
 - **All three deep tracks have now REPLAN'd** (mine Solve Day 1, camcge Solve Day 5, sarf Translate Day 6) — every headline KPI mover REPLAN'd. **Solve 107 / Translate 135 / genuine floor 74 all hold at Day-0**; any Sprint-32 KPI gain now rests **entirely on P6** (cpack offset-alias / fawley second-index Case-b). Freed P2 budget (~14–20 h) + the mine/camcge freed budget → **P6 + P7** (Task 9 reallocation).
 
