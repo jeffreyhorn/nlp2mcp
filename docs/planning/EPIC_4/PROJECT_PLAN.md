@@ -1360,8 +1360,8 @@ Derived from `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently". (
 - **Deliverable:** the Class-B `stat_pz` general-emit fix lands; ≥2 Class-B CGE models cold-match (genuine-floor); the cold-convex Case-c residue documented for Sprint 34 forcing.
 
 ### Priority 8 (Infrastructure): Property-Test Catalog Extension + Re-Baseline + Forcing Scaffold (~6–10h)
-- **Sprint 29 retrospective infrastructure recommendations:** (a) extend the AD cross-term property-test catalog (`test_ad_crossterm_shapes.py`) with the **head-domain-offset** and **offset-alias successor** shapes so the P1/P5 fixes are permanently guarded; (b) apply the **PR25 re-baseline** to the stale Rolling-KPIs Match targets (the renumbered S33–S35 ≥45/48/52% lines predate the Sprint-28 methodology lift — re-baseline to the ≥64% line per footnote ⁸); (c) scaffold a **solution-forcing harness** (trust-region / homotopy / multi-start entry point) from the rocket P2 work so the Sprint-34 PATH-consultation sprint inherits a tested lever set rather than starting cold.
-- **Deliverable:** the two new property-test fixtures; the re-baselined Rolling-KPIs Match targets for S33–S35; the forcing-harness scaffold + a CONTRIBUTING/Phase-0 note.
+- **Sprint 29 retrospective infrastructure recommendations:** (a) extend the AD cross-term property-test catalog (`test_ad_crossterm_shapes.py`) with the **head-domain-offset** and **offset-alias successor** shapes so the P1/P5 fixes are permanently guarded; (b) apply the **PR25 re-baseline** to the stale Rolling-KPIs Match targets (the renumbered S34–S36 ≥45/48/52% lines predate the Sprint-28 methodology lift — re-baseline to the ≥64% line per footnote ⁸); (c) scaffold a **solution-forcing harness** (trust-region / homotopy / multi-start entry point) from the rocket P2 work so the Sprint-34 PATH-consultation sprint inherits a tested lever set rather than starting cold.
+- **Deliverable:** the two new property-test fixtures; the re-baselined Rolling-KPIs Match targets for S34–S36; the forcing-harness scaffold + a CONTRIBUTING/Phase-0 note.
 
 ### Pipeline Retest (~4h)
 - Full pipeline at each checkpoint (Day 5 + Day 10) and final (Day 13) per PR6, using the Sprint 29 `--resolve-changed` checkpoint re-solve so a broken solve surfaces mid-sprint; final retest under ≥ 3 `PYTHONHASHSEED` values (PR12).
@@ -1389,7 +1389,7 @@ Derived from `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently". (
 - **Tests:** ≥ 4,990 (up from 4,971; the head-offset + offset-alias property fixtures + warm-start/forcing regression tests add coverage)
 - **Determinism:** byte-identical pipeline output under ≥ 3 `PYTHONHASHSEED` values (PR12)
 - **Epic 5:** the camcge Walras drop-row + fix-numéraire transformation lands or is empirically proven; #1330 resolved or Epic-5-scoped with the result
-- **Process:** the Rolling-KPIs Match targets for S33–S35 re-baselined off the ≥64% line (footnote ⁸); the head-offset/offset-alias property fixtures guard P1/P5
+- **Process:** the Rolling-KPIs Match targets for S34–S36 re-baselined off the ≥64% line (footnote ⁸); the head-offset/offset-alias property fixtures guard P1/P5
 - **Quality:** all quality gates pass; all fixes have regression tests; emit-touching PRs pass the golden-staleness check (PR26) + the presolve-divergence detector + the `--resolve-changed` checkpoint re-solve
 
 **Estimated Effort:** 92–142 hours over a 14-day sprint (Day 0 + Days 1–13). At ≤ 12 hours/day this fits within the 168-hour budget (14 × 12 = 168) with slack. Per-priority budgets: P1 head-offset architecture [14–20h] + P2 rocket forcing [10–16h] + P3 hhfair widened-VARIABLE [10–16h] + P4 #1385 cross-terms [10–16h] + P5 offset-alias AD [12–18h] + P6 camcge Walras transform [10–16h] + P7 Class-B CGE + cold-convex residue [10–16h] + P8 infrastructure [6–10h] + pipeline retest [4h] = 86–132h work-item total, plus ~6–10h prep tasks (Phase-0 gates for the diagnosis-heavy tracks). The lower bound assumes the deepest tracks (P1 multi-site head-offset re-derivation, P2 non-convex forcing, P6 Epic-5 transformation) partially slip to Sprint 31; the upper bound assumes all 8 priorities ship. The Sprint 29 KKT-residual harness, presolve-divergence detector, golden-staleness gate, and `--resolve-changed` checkpoint re-solve are reused throughout, so the diagnosis cost is lower than a from-scratch sprint. Heaviest day budget: a ~11h day mid-sprint (the P1 multi-site head-offset re-derivation + the robert/mine dual verification).
@@ -1436,7 +1436,7 @@ Derived from `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently". (
 - **Deliverable:** rocket → match via a documented forcing/reformulation strategy (+1 Solve) OR the finalized PATH-consultation input for Sprint 34; #1462 advanced or handed off.
 
 ### Priority 7 (Infrastructure): Property-Test Catalog Completion + Genuine-Floor Tracking (~6–10h)
-- Complete the AD cross-term property catalog the Sprint-30 REPLANs deferred: **enable `shape8_offset_alias_successor`** (the polygon completion gate, once P2 lands) + add the **head-domain-offset fixture** (once P1's IR plumbing lands, guarding the mine index-map). Recompute the PR25 **genuine-floor tracking** against the S31–S35 re-baselined Match KPIs (footnote ⁸ ramp S31 ≥73 → …). Refresh the `--resolve-changed` checkpoint targets for the newly-touched emit sites.
+- Complete the AD cross-term property catalog the Sprint-30 REPLANs deferred: **enable `shape8_offset_alias_successor`** (the polygon completion gate, once P2 lands) + add the **head-domain-offset fixture** (once P1's IR plumbing lands, guarding the mine index-map). Recompute the PR25 **genuine-floor tracking** against the S31–S36 re-baselined Match KPIs (footnote ⁸ ramp S31 ≥73 → …). Refresh the `--resolve-changed` checkpoint targets for the newly-touched emit sites.
 - **Deliverable:** the two enabled/added property fixtures; the recomputed genuine-floor tracking; the checkpoint target list refreshed.
 
 ### Pipeline Retest (~4h)
@@ -1510,7 +1510,7 @@ Derived from `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently". (
 - **Deliverable:** ≥ 1 additional model recovered (Solve/Match/Translate) OR the cohort re-triaged with banked harness diagnoses for Sprint 34.
 
 ### Priority 7 (Infrastructure): Property-Catalog + Genuine-Floor Tracking + Checkpoint Refresh (~6–10h)
-- Extend the AD cross-term property catalog with the **mine head-offset 4th-site** + **sarf 4-D `task`** shapes (once P1/P2 land, guarding the new emit paths); recompute the PR25 **genuine-floor tracking** against the S32–S35 re-baselined Match KPIs (footnote ⁸ ramp S32 ≥75); refresh the `--resolve-changed` checkpoint targets for the newly-touched emit sites; begin the Epic-4 `SUMMARY.md` sprint-by-sprint groundwork (S30-retro §5 front-loading recommendation).
+- Extend the AD cross-term property catalog with the **mine head-offset 4th-site** + **sarf 4-D `task`** shapes (once P1/P2 land, guarding the new emit paths); recompute the PR25 **genuine-floor tracking** against the S32–S36 re-baselined Match KPIs (footnote ⁸ ramp S32 ≥75); refresh the `--resolve-changed` checkpoint targets for the newly-touched emit sites; begin the Epic-4 `SUMMARY.md` sprint-by-sprint groundwork (S30-retro §5 front-loading recommendation).
 - **Deliverable:** the property fixtures; the recomputed genuine-floor tracking; the refreshed checkpoint target list; the Epic-4-SUMMARY skeleton.
 
 ### Pipeline Retest (~4h)
