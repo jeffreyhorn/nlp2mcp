@@ -22,7 +22,7 @@
 | 12 | **P7 infrastructure DONE** (fixtures right-sized + genuine-floor recompute + Epic-4-SUMMARY skeleton) | **shape12/shape13 deferred with P1/P2 (REPLAN'd — nothing to guard); what landed [camcge scalar-`fx`, Case-c classifier] already tested; genuine floor `74` recomputed (S32 ≥75 MISSED); checkpoint anchor `4cbf8bff` stands (GO); `SUMMARY.md` skeleton begun. No src.** | ✅ DONE |
 | 13 | Final retest (≥ 3 `PYTHONHASHSEED`) + closeout | **Parse 142 · Translate 135 · Solve 107 · Match 92 (142-corpus, maintained) · genuine floor 74 · model_infeasible 7 · Tests 5,085 (+11) · determinism ✅ ×3 {0,1,42} — SPRINT 32 CLOSED.** No headline gain (all movers REPLAN'd); 2 genuine landings (camcge step-1 emit fix, Case-c classifier) + 5 banked S33/Epic-5 diagnoses. DB byte-unchanged since `4cbf8bff`. | ✅ DONE |
 
-**Targets (`PROJECT_PLAN.md` §"Sprint 32"):** Solve 107 → ≥ 109 · Match maintain ≥ 92 / genuine floor 74 → ≥ 75 · model_infeasible 7 → ≤ 5 · Translate ≥ 135 (+1 via #1385 sarf) · Tests ≥ 5,080 · determinism ✅ ×3.
+**Targets (`PROJECT_PLAN.md` §"Sprint 32"):** Solve 107 → ≥ 109 · Match maintain ≥ 92 / genuine floor 74 → ≥ 75 · model_infeasible 7 → ≤ 5 · Translate 135 → +1 (136, via #1385 sarf) · Tests ≥ 5,080 · determinism ✅ ×3.
 
 **Honest KPI projection (`REPLAN_RISK_ASSESSMENT.md`):** Solve ≥ 109 needs BOTH mine [P1] AND camcge [P3] (the 2-element mover set; rocket [P4] a conditional third) — the most REPLAN-sensitive KPI; genuine floor ≥ 75 is conditional on mine/camcge **cold-matching** or a P6 emit change, NOT presolve-methodology (P5 = 0 floor); Translate +1 is conditional on sarf [P2]. Reallocation order on any REPLAN: P6 → P7 → the rocket [P4] forcing tail.
 
