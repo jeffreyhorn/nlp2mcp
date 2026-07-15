@@ -17,7 +17,7 @@ Per-stage timing of the sarf pipeline (hard-capped):
 | normalize | 0.0 s |
 | **`compute_constraint_jacobian`** | **TIMEOUT > 120 s** ← the blow-up |
 
-The `translate_timeout` is in the **constraint Jacobian**, not the stationarity build. GAMS warnings pinpoint the cause: `tbal(g,t)$taskposs`, `equipb1(m,t)$equipposs`, `equipb2(n,t)$equipposs` — the conditions are **runtime-computed 2-D dynamic sets** (`taskposs(g,t) = sum((c,s), yes$treq(...))`), so they cannot be evaluated at compile time and `enumerate_equation_instances` falls back to the **full Cartesian** ("Including unevaluable instances by default"). The Jacobian then differentiates each body against the **369,024-Cartesian `task(g,t,mn,mn)`** variable.
+The `translate_timeout` is in the **constraint Jacobian**, not the stationarity build. GAMS warnings pinpoint the cause: `tbal(g,t)$taskposs(g,t)`, `equipb1(m,t)$equipposs(m,t)`, `equipb2(n,t)$equipposs(n,t)` — the conditions are **runtime-computed 2-D dynamic sets** (`taskposs(g,t) = sum((c,s), yes$treq(...))`), so they cannot be evaluated at compile time and `enumerate_equation_instances` falls back to the **full Cartesian** ("Including unevaluable instances by default"). The Jacobian then differentiates each body against the **369,024-Cartesian `task(g,t,mn,mn)`** variable.
 
 ## 2. The bounded attempt — the 2-D gate is necessary but insufficient
 
