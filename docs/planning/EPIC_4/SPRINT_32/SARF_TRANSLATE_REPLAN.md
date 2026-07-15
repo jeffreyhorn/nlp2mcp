@@ -43,7 +43,7 @@ Making sarf translate requires the **369K `task` columns to never be materialize
 
 ## 5. Evidence
 
-The per-stage profiling (parse 11.3 s, `compute_constraint_jacobian` TIMEOUT > 120 s); the detector unit-fire check (`_is_blowup_2d_condition_equation` = True for tbal/equipb1/equipb2, and the corpus blast-radius sample = sarf-only); the re-profile with the gate active (`compute_constraint_jacobian` still TIMEOUT > 90 s). `git checkout src/ad/index_mapping.py` reverted the gate. Anchor `4cbf8bff`. See `SARF_STAT_TASK_SPARSIFICATION_DESIGN.md` §5–§6 + `docs/issues/ISSUE_1385_*.md` §"Phase 0".
+The per-stage profiling (parse 11.3 s, `compute_constraint_jacobian` TIMEOUT > 120 s); the detector unit-fire check (`_is_blowup_2d_condition_equation` = True for tbal/equipb1/equipb2, and the corpus blast-radius sample = sarf-only); the re-profile with the gate active (`compute_constraint_jacobian` still TIMEOUT > 90 s). `git checkout src/ad/index_mapping.py` reverted the gate. Anchor `4cbf8bff`. See `SARF_STAT_TASK_SPARSIFICATION_DESIGN.md` §5–§6 + `docs/issues/ISSUE_1385_option-1-short-circuit-redesign-symbolic-instance-handling.md` §"Phase 0".
 
 ---
 
