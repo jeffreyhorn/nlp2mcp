@@ -14,7 +14,7 @@
 | Match maintain ≥ 92 (142-corpus) | **92** | ✅ |
 | genuine floor ≥ 75 | **74** | ✗ |
 | model_infeasible ≤ 5 | **7** | ✗ |
-| Translate ≥ 135 (+1 via sarf) | **135** | ✗ |
+| Translate +1 → 136 (via sarf) | **135** | ✗ |
 | Tests ≥ 5,080 | **5,085** | ✅ |
 | Determinism ✅ ×3 `PYTHONHASHSEED` | ✅ {0,1,42} | ✅ |
 | Parse 142 | **142** | ✅ |
