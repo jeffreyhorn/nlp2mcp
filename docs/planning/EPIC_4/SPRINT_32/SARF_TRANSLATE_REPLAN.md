@@ -25,7 +25,7 @@ Implemented `_is_blowup_2d_condition_equation` (`src/ad/index_mapping.py`) — e
 
 - **The detector is correct + well-scoped:** it fires for exactly `sarf:tbal`, `sarf:equipb1`, `sarf:equipb2` and for **no other** sampled corpus model (srpchase/otpop/launch/camcge/hhfair/robert) — no false-fire blast radius.
 - **But `compute_constraint_jacobian` still TIMES OUT > 90 s with the gate active.** Skipping the 3 constraints does **not** resolve the blow-up, because the **369,024 `task`-variable columns** still enumerate elsewhere in the Jacobian:
-  - `acost3.. cost("operating") =E= sum((g,t,m,n)$taskposs(g,t), oc(g,m,n)·task(g,t,m,n))` — a **scalar** equation (not a 2-D-conditioned one, so the gate does not touch it) whose `∂/∂task` produces a Jacobian entry for **every** of the 369K `task` columns;
+  - `acost3.. cost("operating") =E= sum((g,t,m,n)$taskposs(g,t), oc(g,m,n)·task(g,t,m,n))` — a **scalar** equation (not a 2-D-conditioned one, so the gate does not touch it) whose `∂/∂task` produces a Jacobian entry for **each** of the 369K `task` columns;
   - plus the `task`-variable instance enumeration itself (the 369K columns are materialized regardless of the 3 constraints).
 
 This is **exactly the design's finding** (`SARF_STAT_TASK_SPARSIFICATION_DESIGN.md` §5 / Task 4): *"The 2-D constraint gate short-circuits `tbal`/`equipb1`/`equipb2` but does **nothing** about the 369K `stat_task` enumeration — necessary but insufficient."* The empirical probe confirms it.
