@@ -384,7 +384,7 @@ The re-emit produces a byte-identical golden under ≥ 3 `PYTHONHASHSEED` values
 3. Does the golden match across the three seeds (md5)?
 
 ### How to Verify
-Emit the sarf golden under `PYTHONHASHSEED` {0,1,42}; compare with `md5 -q`; confirm byte-identical.
+Emit the sarf golden under `PYTHONHASHSEED` {0,1,42}; compare with `md5 -q` (macOS) / `md5sum` (Linux); confirm byte-identical.
 
 ### Risk if Wrong
 - **Nondeterminism:** the determinism gate fails → the emit cannot ship until the ordering is fixed.

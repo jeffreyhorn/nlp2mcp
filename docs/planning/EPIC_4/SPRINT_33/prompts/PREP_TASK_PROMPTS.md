@@ -15,7 +15,7 @@ Task 1 (Create Sprint 33 Known Unknowns List) is already ✅ COMPLETE — no pro
 
 - **Immediately dispatchable:** Task 2 (no dependencies); Task 6 + Task 7 (need only the completed Task 1)
 - **After Task 2:** Task 3 + Task 4 + Task 5 (the three deep-track designs need Tasks 1, 2)
-- **After Tasks 1 + 3 + 4 + 5 + 6:** Task 8 (the Phase-0 gate refresh consumes the per-track design docs)
+- **After Tasks 1 + 3 + 4 + 5 + 6 + 7:** Task 8 (the Phase-0 gate refresh consumes the per-track design docs)
 - **After Tasks 1 + 8:** Task 10 (the tooling-readiness + backlog analysis reuses the gates)
 - **After Tasks 3 + 4 + 5 + 8:** Task 9 (the REPLAN assessment consumes the designs + the gates)
 - **After all (final integration):** Task 11
@@ -59,7 +59,7 @@ Task 1 (Create Sprint 33 Known Unknowns List) is already ✅ COMPLETE — no pro
    ```bash
    S32=$(git log --grep='SPRINT 32 CLOSED' --format=%H | tail -1)
    git diff --quiet "$S32"..HEAD -- src/ scripts/ && echo "no src/ drift — reuse committed DB" || git diff --stat "$S32"..HEAD -- src/ scripts/
-   md5 -q data/gamslib/gamslib_status.json   # confirm byte-unchanged since 4cbf8bff
+   md5 -q data/gamslib/gamslib_status.json   # macOS; on Linux: md5sum ...  (confirm byte-unchanged since 4cbf8bff)
    ```
 2. Recompute the canonical bucket tally from the committed DB (`get_candidate_models`, 142): Parse 142 / Translate 135 / Solve 107 / Match 92 / model_infeasible 7. Enumerate the 7 model_infeasible + the path_syntax_error / path_solve_terminated members by name.
 3. Record per-model bucket provenance (Day-0 → expected Day-13) for every carryforward-touched model: mine, sarf, fawley, camcge, rocket, hhfair/irscge/lrgcge/moncge, agreste, cesam, lnts.
@@ -596,7 +596,7 @@ EOF
 
 - `docs/planning/EPIC_4/SPRINT_33/PREP_PLAN.md` §Task 8
 - `docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md` §Unknowns 1.1, 2.1, 3.1, 4.1, 5.1
-- The five per-track design docs from Tasks 3–7: `MINE_CROSSTERM_DESIGN.md`, `SARF_EMIT_SUBSYSTEM_DESIGN.md`, `FAWLEY_SECOND_INDEX_DESIGN.md`, `CAMCGE_WALRAS_DESIGN.md`, `ROCKET_CASEC_FORCING_PLAN.md` (must be merged first — Task 8 depends on Tasks 3, 4, 5, 6)
+- The five per-track design docs from Tasks 3–7: `MINE_CROSSTERM_DESIGN.md`, `SARF_EMIT_SUBSYSTEM_DESIGN.md`, `FAWLEY_SECOND_INDEX_DESIGN.md`, `CAMCGE_WALRAS_DESIGN.md`, `ROCKET_CASEC_FORCING_PLAN.md` (must be merged first — Task 8 depends on Tasks 3, 4, 5, 6, 7)
 - `docs/planning/EPIC_4/SPRINT_32/PHASE_0_ACCEPTANCE_GATES.md` (the gate template)
 - `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 33" (the per-priority Phase-0 gate lines)
 

@@ -45,7 +45,7 @@ This prep plan focuses on:
 | 5 | fawley #1111/#1112 Second-Index Cross-Term Generalization Design (Priority 3 foundation) | High | 4–6h | Tasks 1, 2 | Priority 3 — fawley (Solve) second-index gate |
 | 6 | camcge Dual-Consistent Walras Numéraire Design + Degeneracy-Detector Scope (Priority 4 / Epic 5) | High | 4–5h | Task 1 | Priority 4 — Epic 5 camcge (Solve) |
 | 7 | rocket PATH-Consultation Submission Package + hhfair/CGE Case-c Forcing Plan (Priority 5) | Medium | 2–3h | Task 1 | Priority 5 — rocket hand-off + Case-c forcing |
-| 8 | Refresh + Author Phase 0 Acceptance Gates for the Sprint-33 Tracks (PR20 + PR24 + PR27) | Critical | 4–6h | Tasks 1, 3, 4, 5, 6 | Priorities 1–5 — primary scope-correctness gate |
+| 8 | Refresh + Author Phase 0 Acceptance Gates for the Sprint-33 Tracks (PR20 + PR24 + PR27) | Critical | 4–6h | Tasks 1, 3, 4, 5, 6, 7 | Priorities 1–5 — primary scope-correctness gate |
 | 9 | Diagnosis-Heavy / REPLAN-Prone Track Risk Assessment (P1 cross-term, P2 sarf timeout, P3 fawley gate-leak; PR16) | High | 3–5h | Tasks 3, 4, 5, 8 | Priorities 1, 2, 3 — REPLAN-prone tracks |
 | 10 | Reusable-Tooling Readiness Audit + Backlog Fix-Surface Analysis (Priorities 6 + 7) | Medium | 3–4h | Tasks 1, 8 | Priorities 6, 7 — tooling reuse + backlog fix-surfaces |
 | 11 | Plan Sprint 33 Detailed Schedule | Critical | 3–4h | Tasks 1–10 | All priorities — sprint planning |
@@ -56,7 +56,7 @@ This prep plan focuses on:
 **Secondary Path:** Task 1 → Task 4 → Task 8 → Task 9 → Task 11 (the sarf symbolic-emit subsystem design feeds the P2 gate + the timeout-re-trigger REPLAN assessment → schedule).
 **Tertiary Path:** Task 1 → Task 5 → Task 8 → Task 9 → Task 11 (the fawley second-index generalization design feeds the P3 gate + the gate-leak REPLAN assessment → schedule).
 **Quaternary Path:** Task 1 → Task 10 → Task 11 (tooling readiness + backlog fix-surface analysis → schedule).
-**Parallelizable:** Tasks 1 + 2 (independent); Tasks 3 + 4 + 5 + 6 + 7 (independent after Tasks 1/2); Task 10 follows Task 8; Tasks 3/4/5/6 gate the Phase-0 refresh (Task 8).
+**Parallelizable:** Tasks 1 + 2 (independent); Tasks 3 + 4 + 5 + 6 + 7 (independent after Tasks 1/2); Task 10 follows Task 8; Tasks 3/4/5/6/7 gate the Phase-0 refresh (Task 8).
 
 ---
 
@@ -106,7 +106,7 @@ Created `docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md` with 27 unknowns acro
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 test -f docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md && echo "file exists"
 # ≥ 25 unknowns across 6 categories
 grep -cE '^\| ' docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md
@@ -157,7 +157,7 @@ Sprint 32 final (142 corpus): Parse 142 · Translate 135 · Solve 107 · Match 9
 
 ### What Needs to Be Done
 
-1. **Confirm the Day-0 git anchor** — verify `git diff --quiet <S32-close>..HEAD -- src/ scripts/` is empty (no drift since the S32 close), and that the committed `data/gamslib/gamslib_status.json` is byte-unchanged since `4cbf8bff` (`md5 -q`).
+1. **Confirm the Day-0 git anchor** — verify `git diff --quiet <S32-close>..HEAD -- src/ scripts/` is empty (no drift since the S32 close), and that the committed `data/gamslib/gamslib_status.json` is byte-unchanged since `4cbf8bff` (`md5 -q` on macOS / `md5sum` on Linux).
 2. **Re-run the pipeline tally** on the 142 convex-candidate corpus (`--only-parse` fast pass + the full-status DB read) and confirm the buckets: Parse 142 / Translate 135 / Solve 107 / Match 92 / model_infeasible 7 / path_syntax_error / path_solve_terminated.
 3. **Record per-model bucket provenance** (PR15) for the models each carryforward touches (mine, sarf, fawley, camcge, rocket, hhfair/irscge/lrgcge/moncge, agreste, cesam, lnts) — Day-0 bucket + expected Day-13 bucket.
 4. **Re-affirm the PR25 genuine-floor anchor 74** (cold-emit-correct genuine matches vs presolve-recovered methodology) and record the levers that would move it (mine [P1] / fawley [P3] cold-matches).
@@ -175,10 +175,10 @@ Sprint 32 final (142 corpus): Parse 142 · Translate 135 · Solve 107 · Match 9
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 test -f docs/planning/EPIC_4/SPRINT_33/BASELINE_METRICS.md && echo "baseline doc exists"
 # DB unchanged vs the S31-close byte anchor
-md5 -q data/gamslib/gamslib_status.json
+md5 -q data/gamslib/gamslib_status.json   # macOS; on Linux: md5sum data/gamslib/gamslib_status.json
 # no src/scripts drift since the S32 close anchor (fill in the resolved SHA)
 git diff --quiet 4cbf8bff..HEAD -- src/ scripts/ && echo "no src drift vs 4cbf8bff (adjust to S32-close anchor)"
 # the four headline numbers appear in the baseline doc
@@ -248,7 +248,7 @@ Sprint 31 landed the head-offset IR foundation (`EquationDef.head_domain_offsets
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 test -f docs/planning/EPIC_4/SPRINT_33/MINE_CROSSTERM_DESIGN.md && echo "design doc exists"
 # design names the 6 bound-active rows + the cross-term emit site
 grep -cE 'x\(1,3|x\(3,1,2\)|x\(3,2,1\)|x\(4,1,1\)|lam_pr' docs/planning/EPIC_4/SPRINT_33/MINE_CROSSTERM_DESIGN.md
@@ -321,7 +321,7 @@ The 2-D constraint gate exists and fires sarf-only (the "necessary" half). The b
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 test -f docs/planning/EPIC_4/SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md && echo "design doc exists"
 # design names all three enumeration sites + the active-subset count
 grep -icE 'compute_constraint_jacobian|variable enumeration|variable stationarity|369,?024|398|taskposs' docs/planning/EPIC_4/SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md
@@ -392,7 +392,7 @@ P3 is the second firm +1 Solve/genuine-floor lever and the empirical test of the
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 test -f docs/planning/EPIC_4/SPRINT_33/FAWLEY_SECOND_INDEX_DESIGN.md && echo "design doc exists"
 # design names the qsb/pbal/mbal terms + the sameas restriction + the residual
 grep -icE 'qsb|pbal|mbal|sameas|stat_bq|18.47|2899' docs/planning/EPIC_4/SPRINT_33/FAWLEY_SECOND_INDEX_DESIGN.md
@@ -463,7 +463,7 @@ Step 2's failure is a rank-deficiency: dropping a redundant market-clearing row 
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 test -f docs/planning/EPIC_4/SPRINT_33/CAMCGE_WALRAS_DESIGN.md && echo "design doc exists"
 # design names the numéraire target + the accounting identities + the detector scope
 grep -icE '191.7346|gdp|depreq|hhsaveq|gruse|Walras|numéraire|numeraire' docs/planning/EPIC_4/SPRINT_33/CAMCGE_WALRAS_DESIGN.md
@@ -532,7 +532,7 @@ Sprint 32 finalized rocket's PATH-consultation input (Case-c boundary re-confirm
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 test -f docs/planning/EPIC_4/SPRINT_33/ROCKET_CASEC_FORCING_PLAN.md && echo "plan doc exists"
 # the submission mechanism + the --force levers + the Case-c gate are specified
 grep -icE 'submit|Sprint 34|homotopy|multistart|optfile|--force' docs/planning/EPIC_4/SPRINT_33/ROCKET_CASEC_FORCING_PLAN.md
@@ -564,7 +564,7 @@ grep -icE 'Case-c|case_c_objdef|sign flip|BANNED|hhfair|irscge|lrgcge|moncge' do
 **Estimated Time:** 4–6 hours
 **Deadline:** Before Sprint 33 Day 1
 **Owner:** Sprint planning
-**Dependencies:** Tasks 1, 3, 4, 5, 6
+**Dependencies:** Tasks 1, 3, 4, 5, 6, 7
 **Unknowns Verified:** 1.1, 2.1, 3.1, 4.1, 5.1
 
 ### Objective
@@ -598,7 +598,7 @@ Sprint 32's gates are in `SPRINT_32/PHASE_0_ACCEPTANCE_GATES.md`. The KKT-residu
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 test -f docs/planning/EPIC_4/SPRINT_33/PHASE_0_ACCEPTANCE_GATES.md && echo "gates doc exists"
 # a gate section per track P1-P5 + the modelstat assertion + PROCEED/REPLAN
 grep -icE 'mine|sarf|fawley|camcge|rocket' docs/planning/EPIC_4/SPRINT_33/PHASE_0_ACCEPTANCE_GATES.md
@@ -668,7 +668,7 @@ Sprint 32's assessment is in `SPRINT_32/REPLAN_RISK_ASSESSMENT.md`. The control-
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 test -f docs/planning/EPIC_4/SPRINT_33/REPLAN_RISK_ASSESSMENT.md && echo "assessment doc exists"
 # each deep track + its REPLAN exit + the freed-budget flow
 grep -icE 'P1|P2|P3|REPLAN|freed budget|reallocat' docs/planning/EPIC_4/SPRINT_33/REPLAN_RISK_ASSESSMENT.md
@@ -735,7 +735,7 @@ The reused tooling: the KKT-residual harness (incl. the new `case_c_objdef` clas
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 test -f docs/planning/EPIC_4/SPRINT_33/TOOLING_AND_BACKLOG_ANALYSIS.md && echo "analysis doc exists"
 # the reused tools + the P6 cohort + the P7 fixtures are covered
 grep -icE 'kkt_residual|case_c_objdef|presolve-divergence|golden-staleness|resolve-changed|--force' docs/planning/EPIC_4/SPRINT_33/TOOLING_AND_BACKLOG_ANALYSIS.md
@@ -801,7 +801,7 @@ Sprint 32's schedule + prompts are in `SPRINT_32/PLAN.md` and `SPRINT_32/prompts
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 test -f docs/planning/EPIC_4/SPRINT_33/PLAN.md && echo "plan exists"
 test -f docs/planning/EPIC_4/SPRINT_33/prompts/PLAN_PROMPTS.md && echo "prompts exist"
 # Day 0 + Days 1-13 all present as prompt headers
