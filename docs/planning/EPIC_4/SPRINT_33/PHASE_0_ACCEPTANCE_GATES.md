@@ -54,7 +54,7 @@
 |---|---|---|---|---|
 | **P1** | mine (#1443) | PROCEED (H1) | head-label-keyed `comp_pr`/`lam_pr`/cross-term (via `head_domain_offsets`); warm residual `N → 0` at all 6 bound-active rows + interior unchanged (`modelstat`) → presolve MS-1 @ 17500; no-regression GO. **NB: cross-term premise REFUTED — the fix is multiplier-keying.** | H1/H2 can't close `N` without perturbing interior/regressing srpchase → deeper head-offset dual subsystem (later sprint) |
 | **P2** | sarf (#1385) | PROCEED | eliminate 369K at 3 sites (S1 `acost3` / S2 index-map / S3 stationarity); one symbolic `stat_task$taskposs` + `task.fx`; translate seconds not >75s; no set-name literals; atomic; golden byte-stable + det ×3; GO | parametric emit re-triggers the timeout → re-scope; +Translate deferred |
-| **P3** | fawley (#1111/#1112) | PROCEED (conditional) | the `sameas`-guard path generalization (2-D, NOT the 1-D core); `max|stat_bq| → 0` (not 96%) → MS-1 @ 2899.25 (H-a); no polygon/ps2/mbal move (GO) | gate leaks onto mbal / regresses the 1-D core → REPLAN; OR `max|stat_bq|→0` but MS-5 (H-b non-emit) → emit ships genuine, +Solve → P5 forcing |
+| **P3** | fawley (#1111/#1112) | PROCEED (conditional) | the `sameas`-guard path generalization (2-D, NOT the 1-D core); `max\|stat_bq\| → 0` (not 96%) → MS-1 @ 2899.25 (H-a); no polygon/ps2/mbal move (GO) | gate leaks onto mbal / regresses the 1-D core → REPLAN; OR `max\|stat_bq\|→0` but MS-5 (H-b non-emit) → emit ships genuine, +Solve → P5 forcing |
 | **P4** | camcge (#1330) | **Epic-5-deferred** | `/tmp` full dual-consistent redefinition (keep every row + numéraire + Walras-law dual redefinition) → MS-1 @ 191.7346 before `src/`; S1∧S2∧S3 flags camcge only | `/tmp` stays MS-4 → numéraire → per-model Epic-5 fallback; camcge `model_infeasible` (**expected**) |
 | **P5** | rocket/Case-c (#1462/#1236) | PROCEED (hand-off + survey, no firm KPI) | residual clean at NLP point (rocket boundary / hhfair-CGE `case_c_objdef`) before forcing; `--force` survey (crosses = global MS-1 vs banked); **sign flip BANNED** | rocket survey exhausted → PATH-consultation input **submitted to Sprint 34**; hhfair/CGE cross conditional → else banked Case-c |
 
@@ -64,11 +64,11 @@
 
 ## 3. Known-Unknowns dispositions (gate-layer)
 
-| Unknown | Gate disposition |
-|---|---|
+| Unknown | Summary | Gate disposition |
+|---|---|---|
 | **1.1** | mine cross-term / bound-active reconciliation | ✅ (gate) — P1 PROCEED (H1) behind the warm-residual→0-at-bound-active-rows gate (`modelstat` asserted, `x.up=inf` BANNED); the cross-term premise is refuted (the fix is head-label multiplier-keying); deeper-coupling (H3) REPLAN exit. |
 | **2.1** | sarf three-site O(active) elimination | ✅ (gate) — P2 PROCEED behind the O(active=398) translate-budget probe (seconds not >75s) + the atomicity/anti-pattern (no set-name literals) checks; timeout-re-trigger REPLAN exit. |
-| **3.1** | fawley second-index `sameas`-guard generalization | ✅ (gate) — P3 PROCEED (conditional) behind the `max|stat_bq|→0` + MS-1 @ 2899.25 (H-a) / H-b-non-emit gate + the no-regression GO; gate-leak / mbal-regression REPLAN exit. |
+| **3.1** | fawley second-index `sameas`-guard generalization | ✅ (gate) — P3 PROCEED (conditional) behind the `max\|stat_bq\|→0` + MS-1 @ 2899.25 (H-a) / H-b-non-emit gate + the no-regression GO; gate-leak / mbal-regression REPLAN exit. |
 | **4.1** | camcge dual-consistent Walras `/tmp`-to-MS-1 | ✅ (gate) — P4 gated on the `/tmp` full-redefinition prototype reaching MS-1 @ 191.7346 + the S1∧S2∧S3 detector; **Epic-5-deferral REPLAN exit is the expected outcome** (the numéraire falls to the per-model Epic-5 fallback). |
 | **5.1** | rocket Case-c residual-clean-before-forcing | ✅ (gate) — P5 gated on the residual being clean at the NLP point (rocket boundary / `case_c_objdef`) before any forcing + the sign-flip BAN; the `--force` survey's crosses-vs-banked criteria; no emit fix. |
 
