@@ -851,16 +851,16 @@ grep -icE 'Day 5|Day 10|checkpoint|front.?load|PYTHONHASHSEED' docs/planning/EPI
 
 ### Success Criteria for Sprint 33 Prep
 
-- [ ] All 11 prep tasks complete (or explicitly deferred with rationale)
-- [ ] Known Unknowns list identifies ≥ 25 unknowns with verification plans (Task 1)
-- [ ] Day-0 baseline confirmed = Sprint 32 close, DB byte-unchanged since `4cbf8bff` (Task 2)
-- [ ] Each deep track (P1 mine, P2 sarf, P3 fawley) has a `file:line` design + a pre-`src/` `/tmp` control (Tasks 3, 4, 5)
-- [ ] camcge Walras + rocket/Case-c dispositions designed (Tasks 6, 7)
-- [ ] A Phase-0 acceptance gate authored per track P1–P5 with `modelstat` + PROCEED/REPLAN (Task 8)
-- [ ] The REPLAN-prone risk assessment pins exits + the honest flat-KPI-modal projection (Task 9)
-- [ ] The tooling reuse is confirmed + the P6/P7 fix-surfaces analyzed (Task 10)
-- [ ] The 14-day schedule + day-by-day prompts front-load the deep tracks with Day-5/10 checkpoints (Task 11)
-- [ ] Every design carries an explicit REPLAN exit (the modal outcome is de-risking, not a bucket move)
+- [x] All 11 prep tasks complete (or explicitly deferred with rationale)
+- [x] Known Unknowns list identifies ≥ 25 unknowns with verification plans (Task 1)
+- [x] Day-0 baseline confirmed = Sprint 32 close, DB byte-unchanged since `4cbf8bff` (Task 2)
+- [x] Each deep track (P1 mine, P2 sarf, P3 fawley) has a `file:line` design + a pre-`src/` `/tmp` control (Tasks 3, 4, 5)
+- [x] camcge Walras + rocket/Case-c dispositions designed (Tasks 6, 7)
+- [x] A Phase-0 acceptance gate authored per track P1–P5 with `modelstat` + PROCEED/REPLAN (Task 8)
+- [x] The REPLAN-prone risk assessment pins exits + the honest flat-KPI-modal projection (Task 9)
+- [x] The tooling reuse is confirmed + the P6/P7 fix-surfaces analyzed (Task 10)
+- [x] The 14-day schedule + day-by-day prompts front-load the deep tracks with Day-5/10 checkpoints (Task 11)
+- [x] Every design carries an explicit REPLAN exit (the modal outcome is de-risking, not a bucket move)
 
 **Total prep effort:** 40–56 hours (~5–7 working days), front-loaded on the deep-track designs (Tasks 3/4/5) that gate the Phase-0 refresh and the schedule.
 
