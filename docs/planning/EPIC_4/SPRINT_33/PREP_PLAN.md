@@ -375,7 +375,7 @@ P3 is the second firm +1 Solve/genuine-floor lever and the empirical test of the
 
 ### Background
 
-`bq(c,cf)` appears in qsb(cfq,l,s)/pbal(cfq,m) as the #1111/#1112 second-index-transpose shape. The landed core (`_var_at_two_indices_complement` + `_build_complement_index_sum` in `src/kkt/stationarity.py`) covers the variable's-first-index = equation-index shape (mbal, polygon, ps2). The banked write-up is `SPRINT_32/P6_BACKLOG_RETRIAGE.md` §3. Research: `docs/research/nested_subset_indexing_research.md`, `docs/research/multidimensional_indexing.md`.
+`bq(c,cf)` appears in qsb(cfq,l,s)/pbal(cfq,m) as the #1111/#1112 second-index-transpose shape. The landed **1-D** complement core (`_var_at_two_indices_complement` + `_build_complement_index_sum` in `src/kkt/stationarity.py`) covers the 1-D var-at-two-indices shape (polygon, ps2) — it does **not** fire for the 2-D `bq`. The **2-D** mbal diagonal restriction (and the fawley qsb/pbal fix) instead flow through the general indexed cross-term `sameas`-guard path (`_build_sameas_guard` / `_get_or_create_fresh_alias` in `_add_indexed_jacobian_terms`) — see the Task-5 design §3 fix-surface refinement. The banked write-up is `SPRINT_32/P6_BACKLOG_RETRIAGE.md` §3. Research: `docs/research/nested_subset_indexing_research.md`, `docs/research/multidimensional_indexing.md`.
 
 ### What Needs to Be Done
 

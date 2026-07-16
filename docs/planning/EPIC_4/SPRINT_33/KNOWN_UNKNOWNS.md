@@ -505,7 +505,7 @@ Development team (AD/emit specialist)
 **Critical** — The core correctness question for the P3 fix; a leaky generalization is the confirmed "#1111/#1112 gate leaks" risk
 
 ### Assumption
-Extending the landed `_var_at_two_indices_complement` / `_build_complement_index_sum` gate from the variable's-first-index = equation-index shape (mbal) to the variable's-second-index-summed shape covers qsb/pbal, so `max|stat_bq| → 0`.
+Extending the diagonal `sameas`-restriction from the variable's-first-index shape (mbal) to the variable's-second-index-summed shape (qsb/pbal) — via the general indexed cross-term `sameas`-guard path (`_build_sameas_guard` / `_get_or_create_fresh_alias` in `_add_indexed_jacobian_terms`), **not** the 1-D `_var_at_two_indices_complement` core (which never fires for the 2-D `bq`) — makes `max|stat_bq| → 0`.
 
 ### Research Questions
 1. Is the qsb/pbal shape truly the *variable's-second-index-summed* transpose (vs a distinct shape)?
