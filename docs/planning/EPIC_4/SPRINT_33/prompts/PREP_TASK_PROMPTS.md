@@ -27,7 +27,7 @@ Task 1 (Create Sprint 33 Known Unknowns List) is already ✅ COMPLETE — no pro
 - Branch from `main`; the PR targets `main`. Branch name: `planning/sprint33-task<N>`.
 - User preferences (enforce in every commit/PR): **NO `Co-Authored-By` lines** in commit messages; **NO "Generated with Claude Code"** in PR descriptions.
 - Replace `YYYY-MM-DD` with the actual date at execution time.
-- These are **docs/design/analysis-only** prep tasks — no Python source changes are expected (the fixes/scripts they design are *built in-sprint*, not in prep; the KKT-residual harness, presolve-divergence detector, golden-staleness gate, `--resolve-changed` mode, and the `--force` scaffold already exist on `main`). Run the full quality gate before committing regardless; if you did touch Python, it must pass.
+- These are **docs/design/analysis-only** prep tasks — no Python source changes are expected (the fixes/scripts they design are *built in-sprint*, not in prep; the KKT-residual harness, presolve-divergence detector, golden-staleness gate, `--resolve-changed` mode, and the `--force` scaffold already exist on `main`). Run the quality gate before committing **only if you touched Python** — per the project's per-day workflow (quality gate only if `*.py` changed), a docs-only task skips it. If you did touch Python, `make typecheck && make lint && make format && make test` must pass.
 - **PR24/PR27 discipline:** every Sprint-32 control-confirmed root cause is a Day-0-**re-confirm hypothesis**, never fact — including its *sign* and *sufficiency*. Sprint 32 REPLAN'd all five deep tracks after a `/tmp` control refuted the original premise, and corrected two materially-wrong designs (camcge's `nu_mps_fx.l = -mps.m` → `= mps.m`; mine's `N`-derivation, proven insufficient at 6 bound-active rows). Record the symptom + reproducer; frame the fix surface as a hypothesis to re-trace; gate any high-blast-radius change on a `/tmp` control experiment BEFORE the `src/` change.
 - **Assert `modelstat` before reading an objective off a solve** (the Sprint-31 measurement-error lesson: relaxing `x.up=inf` produced 34 unmatched-variable errors, so the "MS-1 17500" was the embedded LP, not the MCP). The `x.up=inf` experiment is **BANNED** for mine.
 - **Check the dual side** (the Sprint-30 camcge lesson): any structural transform that drops/adds rows must be verified against the KKT *dual*, not just the primal solution set.
@@ -88,7 +88,7 @@ Task 1 (Create Sprint 33 Known Unknowns List) is already ✅ COMPLETE — no pro
 ```bash
 make typecheck && make lint && make format && make test
 ```
-Docs-only task — no Python expected. Run the gate regardless; do NOT commit until all pass.
+Docs-only task — no Python expected, so the quality gate is not required (docs-only changes skip it, per the project convention). If you did touch Python, run it and do NOT commit until all pass.
 
 **Commit Message Format:**
 ```
@@ -180,7 +180,7 @@ EOF
 ```bash
 make typecheck && make lint && make format && make test
 ```
-Docs-only task — no Python expected. Run the gate regardless; do NOT commit until all pass.
+Docs-only task — no Python expected, so the quality gate is not required (docs-only changes skip it, per the project convention). If you did touch Python, run it and do NOT commit until all pass.
 
 **Commit Message Format:**
 ```
@@ -271,7 +271,7 @@ EOF
 ```bash
 make typecheck && make lint && make format && make test
 ```
-Docs-only task — no Python expected. Run the gate regardless; do NOT commit until all pass.
+Docs-only task — no Python expected, so the quality gate is not required (docs-only changes skip it, per the project convention). If you did touch Python, run it and do NOT commit until all pass.
 
 **Commit Message Format:**
 ```
@@ -362,7 +362,7 @@ EOF
 ```bash
 make typecheck && make lint && make format && make test
 ```
-Docs-only task — no Python expected. Run the gate regardless; do NOT commit until all pass.
+Docs-only task — no Python expected, so the quality gate is not required (docs-only changes skip it, per the project convention). If you did touch Python, run it and do NOT commit until all pass.
 
 **Commit Message Format:**
 ```
@@ -452,7 +452,7 @@ EOF
 ```bash
 make typecheck && make lint && make format && make test
 ```
-Docs-only task — no Python expected. Run the gate regardless; do NOT commit until all pass.
+Docs-only task — no Python expected, so the quality gate is not required (docs-only changes skip it, per the project convention). If you did touch Python, run it and do NOT commit until all pass.
 
 **Commit Message Format:**
 ```
@@ -540,7 +540,7 @@ EOF
 ```bash
 make typecheck && make lint && make format && make test
 ```
-Docs-only task — no Python expected. Run the gate regardless; do NOT commit until all pass.
+Docs-only task — no Python expected, so the quality gate is not required (docs-only changes skip it, per the project convention). If you did touch Python, run it and do NOT commit until all pass.
 
 **Commit Message Format:**
 ```
@@ -629,7 +629,7 @@ EOF
 ```bash
 make typecheck && make lint && make format && make test
 ```
-Docs-only task — no Python expected. Run the gate regardless; do NOT commit until all pass.
+Docs-only task — no Python expected, so the quality gate is not required (docs-only changes skip it, per the project convention). If you did touch Python, run it and do NOT commit until all pass.
 
 **Commit Message Format:**
 ```
@@ -719,7 +719,7 @@ EOF
 ```bash
 make typecheck && make lint && make format && make test
 ```
-Docs-only task — no Python expected. Run the gate regardless; do NOT commit until all pass.
+Docs-only task — no Python expected, so the quality gate is not required (docs-only changes skip it, per the project convention). If you did touch Python, run it and do NOT commit until all pass.
 
 **Commit Message Format:**
 ```
@@ -805,7 +805,7 @@ EOF
 ```bash
 make typecheck && make lint && make format && make test
 ```
-Docs-only task — no Python expected. Run the gate regardless; do NOT commit until all pass.
+Docs-only task — no Python expected, so the quality gate is not required (docs-only changes skip it, per the project convention). If you did touch Python, run it and do NOT commit until all pass.
 
 **Commit Message Format:**
 ```
@@ -894,7 +894,7 @@ EOF
 ```bash
 make typecheck && make lint && make format && make test
 ```
-Docs-only task — no Python expected. Run the gate regardless; do NOT commit until all pass.
+Docs-only task — no Python expected, so the quality gate is not required (docs-only changes skip it, per the project convention). If you did touch Python, run it and do NOT commit until all pass.
 
 **Commit Message Format:**
 ```

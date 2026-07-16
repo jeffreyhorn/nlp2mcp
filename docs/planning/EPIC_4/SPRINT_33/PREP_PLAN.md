@@ -108,23 +108,23 @@ Created `docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md` with 27 unknowns acro
 ```bash
 cd "$(git rev-parse --show-toplevel)"
 test -f docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md && echo "file exists"
-# ≥ 25 unknowns across 6 categories
-grep -cE '^\| ' docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md
-# all six carryforward/backlog categories present
-grep -cE '^## (Category|.*mine|.*sarf|.*fawley|.*camcge|.*rocket|.*Infrastructure)' docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md
-# every Critical/High unknown has a verification deadline column populated
-grep -E 'Critical|High' docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md | grep -cE 'Day [0-9]'
+# 27 unknowns (>= 25 target) — headings are '## Unknown N.M:'
+grep -cE '^## Unknown [0-9]+\.[0-9]+:' docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md
+# all 7 categories present — headings are '# Category N:'
+grep -cE '^# Category [0-9]:' docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md
+# every unknown carries the INCOMPLETE verification stub (27 + 1 template)
+grep -cF '🔍 **Status:** INCOMPLETE' docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md` with ≥ 25 unknowns across 6 categories (one per carryforward track + P6/P7)
+- `docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md` with 27 unknowns across 7 categories (one per carryforward track + P6 + P7)
 - Each unknown: assumption · verification method · priority · risk-if-wrong · verification deadline
 - Update template + priority definitions + a "newly discovered" section
 
 ### Acceptance Criteria
 
-- [x] Document created with ≥ 25 unknowns across the 6 categories
+- [x] Document created with 27 unknowns across the 7 categories
 - [x] All unknowns have assumption, verification method, priority, risk-if-wrong
 - [x] All Critical/High unknowns have a verification deadline (Day 0/1/N)
 - [x] The two Sprint-32 wrong-design lessons (sign, sufficiency) are represented as explicit unknowns for P1/P3
