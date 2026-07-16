@@ -63,6 +63,7 @@ This prep plan focuses on:
 ## Task 1: Create Sprint 33 Known Unknowns List
 
 **Status:** ✅ COMPLETE
+**Completed:** 2026-07-15
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 33 Day 1
@@ -112,8 +113,8 @@ test -f docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md && echo "file exists"
 grep -cE '^## Unknown [0-9]+\.[0-9]+:' docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md
 # all 7 categories present — headings are '# Category N:'
 grep -cE '^# Category [0-9]:' docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md
-# every unknown carries the INCOMPLETE verification stub (27 + 1 template)
-grep -cF '🔍 **Status:** INCOMPLETE' docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md
+# every unknown carries a Verification Results section (27 + 1 template = 28; the Status value fills in ✅/🟡 as prep Tasks 2–10 verify — do not assume all INCOMPLETE)
+grep -cE '^### Verification Results$' docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md
 ```
 
 ### Deliverables
@@ -135,7 +136,8 @@ grep -cF '🔍 **Status:** INCOMPLETE' docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKN
 
 ## Task 2: Sprint 32 → Sprint 33 Day-0 Baseline + Genuine-Floor Re-Baseline (PR15 + PR17 + PR25)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-16
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 33 Day 1
@@ -157,8 +159,8 @@ Sprint 32 final (142 corpus): Parse 142 · Translate 135 · Solve 107 · Match 9
 
 ### What Needs to Be Done
 
-1. **Confirm the Day-0 git anchor** — verify `git diff --quiet <S32-close>..HEAD -- src/ scripts/` is empty (no drift since the S32 close), and that `git diff --quiet 4cbf8bff..HEAD -- data/gamslib/gamslib_status.json` is empty (the committed DB is byte-unchanged since `4cbf8bff` — comparing against the anchor commit, not just hashing the working-tree file; optionally print the current hash with `md5 -q` / `md5sum`).
-2. **Re-run the pipeline tally** on the 142 convex-candidate corpus (`--only-parse` fast pass + the full-status DB read) and confirm the buckets: Parse 142 / Translate 135 / Solve 107 / Match 92 / model_infeasible 7 / path_syntax_error / path_solve_terminated.
+1. **Confirm the Day-0 git anchor** — verify `git diff --quiet ee51ed9e..HEAD -- src/ scripts/` is empty (no drift since the S32 close `ee51ed9e`), and that `git diff --quiet 4cbf8bff..HEAD -- data/gamslib/gamslib_status.json` is empty (the committed DB is byte-unchanged since `4cbf8bff` — comparing against the anchor commit, not just hashing the working-tree file; optionally print the current hash with `md5 -q` / `md5sum`).
+2. **Re-run the pipeline tally** on the 142 convex-candidate corpus (`--only-parse` fast pass + the full-status DB read) and confirm the buckets: Parse 142 / Translate 135 / Solve 107 / Match 92 / model_infeasible 7 / path_syntax_error 8 / path_solve_license 9 / path_solve_terminated 4 / non-translate 7.
 3. **Record per-model bucket provenance** (PR15) for the models each carryforward touches (mine, sarf, fawley, camcge, rocket, hhfair/irscge/lrgcge/moncge, agreste, cesam, lnts) — Day-0 bucket + expected Day-13 bucket.
 4. **Re-affirm the PR25 genuine-floor anchor 74** (cold-emit-correct genuine matches vs presolve-recovered methodology) and record the levers that would move it (mine [P1] / fawley [P3] cold-matches).
 5. **Confirm determinism** ×3 `PYTHONHASHSEED` {0,1,42} on the Day-0 emit.
@@ -166,11 +168,11 @@ Sprint 32 final (142 corpus): Parse 142 · Translate 135 · Solve 107 · Match 9
 
 ### Changes
 
-*To be completed*
+Confirmed Day-0 = the Sprint 32 close (`ee51ed9e`): no `src/`/`scripts/` drift since (docs-only PR #1561/#1562), DB byte-unchanged since `4cbf8bff` (md5 `a92b040924d20d693699d1861972780c`) → reused the committed DB, no fresh retest. Recomputed the 142-candidate bucket tally, enumerated every bucket's members by name, reproduced the PR25 genuine-vs-methodology partition (74 genuine + 21 methodology = 95), pinned the per-carryforward-model Day-0 provenance, ran the `--resolve-changed --since-commit ee51ed9e --dry-run` checkpoint (GO, 0 changed), and spot-confirmed determinism ×3. Authored `docs/planning/EPIC_4/SPRINT_33/BASELINE_METRICS.md`.
 
 ### Result
 
-*To be completed*
+**Day-0 (142 corpus): Parse 142 · Translate 135 · Solve 107 · Match 92 · genuine floor 74 · model_infeasible 7** (agreste/camcge/cesam/fawley/lnts/mine/rocket) · path_syntax_error 8 · path_solve_license 9 · path_solve_terminated 4 · non-translate 7 · all-219 Match 95. Genuine floor 74 = S30 70 + S31 P2's +4; the → ≥ 75 movers are mine [P1] + fawley [P3] (camcge [P4] Epic-5). Determinism ✅ ×3 {0,1,42}; `--resolve-changed` GO. Verified Unknown 7.2 (✅); 1.1/3.1 Day-0 bucket verified (fix-surface → Tasks 3/5).
 
 ### Verification
 
@@ -180,8 +182,8 @@ test -f docs/planning/EPIC_4/SPRINT_33/BASELINE_METRICS.md && echo "baseline doc
 # DB byte-unchanged since the 4cbf8bff anchor (compares against the commit, not just a hash)
 git diff --quiet 4cbf8bff..HEAD -- data/gamslib/gamslib_status.json && echo "DB byte-unchanged since 4cbf8bff"
 md5 -q data/gamslib/gamslib_status.json   # optional: print the current hash (macOS; 'md5sum ...' on Linux)
-# no src/scripts drift since the Sprint-32 close (resolve <S32-close>, e.g. git log --grep='SPRINT 32 CLOSED')
-git diff --quiet <S32-close>..HEAD -- src/ scripts/ && echo "no src/scripts drift since the S32 close"
+# no src/scripts drift since the Sprint-32 close ee51ed9e (resolved via git log --grep='SPRINT 32 CLOSED' --format=%H | tail -1)
+git diff --quiet ee51ed9e..HEAD -- src/ scripts/ && echo "no src/scripts drift since the S32 close"
 # the four headline numbers appear in the baseline doc
 grep -E 'Solve.*107|Match.*92|genuine floor.*74|Translate.*135' docs/planning/EPIC_4/SPRINT_33/BASELINE_METRICS.md
 ```
@@ -196,13 +198,13 @@ grep -E 'Solve.*107|Match.*92|genuine floor.*74|Translate.*135' docs/planning/EP
 
 ### Acceptance Criteria
 
-- [ ] Day-0 = Sprint 32 close confirmed (Solve 107 / Match 92 / floor 74 / model_infeasible 7 / Translate 135 / Tests 5,085 / all-219 Match 95)
-- [ ] `gamslib_status.json` byte-unchanged since `4cbf8bff` verified
-- [ ] No `src/`/`scripts/` drift since the S32-close anchor
-- [ ] Per-model provenance recorded for the carryforward-touched models
-- [ ] PR25 genuine-floor anchor 74 re-affirmed with mover levers identified
-- [ ] Determinism ✅ ×3 `PYTHONHASHSEED` {0,1,42}
-- [ ] Unknowns 1.1, 3.1, 7.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Day-0 = Sprint 32 close confirmed (Solve 107 / Match 92 / floor 74 / model_infeasible 7 / Translate 135 / Tests 5,085 / all-219 Match 95)
+- [x] `gamslib_status.json` byte-unchanged since `4cbf8bff` verified
+- [x] No `src/`/`scripts/` drift since the S32-close anchor
+- [x] Per-model provenance recorded for the carryforward-touched models
+- [x] PR25 genuine-floor anchor 74 re-affirmed with mover levers identified
+- [x] Determinism ✅ ×3 `PYTHONHASHSEED` {0,1,42}
+- [x] Unknowns 1.1, 3.1, 7.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

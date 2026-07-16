@@ -116,7 +116,17 @@ Re-run the Sprint-32 `/tmp` mine control (assert `modelstat`; the `x.up=inf` exp
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIAL — Day-0 bucket VERIFIED (Task 2); *sufficiency* pending Task 3
+**Verified by:** Task 2 (Day-0-bucket aspect only — the primary owner is Task 3)
+**Date:** 2026-07-16
+
+**Findings:**
+- Day-0 bucket confirmed: **mine** is `model_infeasible` (MS 5, objective 16747.072 at the current emit's locally-infeasible solve), a `verified_convex` candidate — the +1 Solve / +1 genuine-floor lever if it cold-matches (infeasible → optimal at the NLP optimum 17500).
+- The **core question of this unknown** (is the wrong-sign `N` *fully explained* by the head-offset `stat_x` cross-term vs a deeper coupling?) is the fix-surface/sufficiency question, which is verified by **Task 3** (`MINE_CROSSTERM_DESIGN.md` + its `/tmp` control), NOT by this baseline task.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/BASELINE_METRICS.md` §5 (mine provenance: model_infeasible, MS 5, candidate).
+
+**Decision:** Day-0 bucket pinned; the sufficiency verdict (PROCEED vs deeper-coupling REPLAN) is deferred to Task 3.
 
 ---
 
@@ -429,7 +439,17 @@ Hand-derive `stat_bq` for qsb/pbal from the fawley source; prototype the general
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🟡 **Status:** PARTIAL — Day-0 bucket VERIFIED (Task 2); *gate generalization* pending Task 5
+**Verified by:** Task 2 (Day-0-bucket aspect only — the primary owner is Task 5)
+**Date:** 2026-07-16
+
+**Findings:**
+- Day-0 bucket confirmed: **fawley** is `model_infeasible` (MS 5, LP optimum 2899.25), a `verified_convex` candidate — the +1 Solve / +1 genuine-floor lever if the second-index generalization cold-matches (infeasible → optimal).
+- The **core question of this unknown** (does the second-index gate generalize cleanly from the variable's-first-index to the variable's-second-index-summed shape?) is the fix-surface question, verified by **Task 5** (`FAWLEY_SECOND_INDEX_DESIGN.md` + its `/tmp` control), NOT by this baseline task.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/BASELINE_METRICS.md` §5 (fawley provenance: model_infeasible, MS 5, candidate).
+
+**Decision:** Day-0 bucket pinned; the gate-generalization verdict (PROCEED vs gate-leak REPLAN) is deferred to Task 5.
 
 ---
 
@@ -887,7 +907,19 @@ Recompute the PR25 genuine-vs-methodology split at Day 0 (Task 2 baseline); conf
 Sprint planning
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Day-0 Baseline + Genuine-Floor Re-Baseline)
+**Date:** 2026-07-16
+
+**Findings:**
+- The PR25 genuine-floor anchor is **74** at Sprint-33 Day 0, reproduced from the partition: **74 genuine + 21 methodology = 95** (all-219 Match). The 74 = S30 70 + S31 P2's +4 (polygon [candidate] + ps2_f_s / ps2_s / ps3_s_gic [non-candidate]).
+- 142-corpus Match **92**; all-219 tally **95** (+3 non-candidate `non_convex` ps2×3).
+- **Genuine-floor movers for Sprint 33:** mine [P1] + fawley [P3] (both `model_infeasible` candidates → +1 genuine floor each if they cold-match); camcge [P4] is the Epic-5-scoped third lever. (Note the change from Sprint 32's map, which paired mine + camcge.)
+- Footnote-⁸ ramp: S30 70 → S31 74 → **S32 actual 74** → **S33 ≥ 75** (the step Sprint 33 targets) → S34 maintain ≥ 75 → S35 ≥ 77 → S36 ≥ 78.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/BASELINE_METRICS.md` §4 (the PR25 partition recompute) + §3 (bucket tally); the committed DB byte-unchanged since `4cbf8bff`.
+
+**Decision:** Anchor confirmed at **74**; the → ≥ 75 conversion is conditional on mine [P1] / fawley [P3] cold-matching. Every mover is a from-scratch AD/emit track (REPLAN-prone), so a flat-74 close is the modal outcome — the value is the de-risking.
 
 ---
 
