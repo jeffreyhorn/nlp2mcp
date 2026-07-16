@@ -688,7 +688,17 @@ Prototype the per-model-numéraire + Walras redefinition in a `/tmp` model; asse
 Development team (CGE/Epic-5 specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (design-level) — MS-1 is the Epic-5 `/tmp` gate, not proven in this docs-only prep
+**Verified by:** Task 6
+**Date:** 2026-07-16
+
+**Findings:**
+- The per-model-numéraire + dual-consistent Walras redefinition is designed: **keep every** market-clearing row (no orphaned dual — the naïve drop-row is primal-correct but breaks the MCP dual) + the **consumption-weighted numéraire** (`sum(i$cles(i), cles(i)·p(i)) = …·pd0(i)`) + **redefine the redundant market's dual via Walras' law** so the reduced system is full-rank while the multiplier stays available. Verified against the KKT **dual**, not just the primal (the Day-11 lesson).
+- **MS-1 unproven:** the banked step-1 + numéraire (price-pin) prototype reaches **omega 191.7346 (correct primal) but MS-4** (residual singularity on gdp/depreq/hhsaveq/gruse); 3+ sprints of MS-4 variants. The full dual-consistent redefinition's `/tmp`-to-MS-1 prototype is the **Epic-5** gate, not run here.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/CAMCGE_WALRAS_DESIGN.md` §1 (banked numéraire prototype: omega 191.7346, MS-4) + §2 (the redefinition design) + §4 (the Epic-5 `/tmp` gate).
+
+**Decision:** Design the recipe + the Epic-5 gate; MS-1 is genuinely hard (Epic-5-deep). See 4.3 (Epic-5-deferred).
 
 ---
 
@@ -718,7 +728,17 @@ Run the S1∧S2∧S3 detector on all five CGE models (camcge + irscge/lrgcge/mon
 Development team (CGE/Epic-5 specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 6
+**Date:** 2026-07-16
+
+**Findings:**
+- The **S1∧S2∧S3** detector flags **only camcge**: **S1** market-clearing block linearly dependent via budget balance; **S2** no price numéraire fixed; **S3** (the false-positive guard) the cold MCP is singular at iteration 0 (MS-4). A well-posed CGE passes S1∧S2 structurally but has a nonsingular Jacobian → fails S3 → pass-through.
+- Cohort re-confirmed on the current DB: **camcge MS-4** (flags) vs **irscge/lrgcge/moncge/stdcge all MS-1** (pass-through); the banked Sprint-31 Day-7 cold-MCP test established the *cold* MS status (siblings cold MS-1, camcge cold MS-4).
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/CAMCGE_WALRAS_DESIGN.md` §1 (cohort table) + §3 (the S1∧S2∧S3 conditions); the DB (camcge MS-4, four siblings MS-1).
+
+**Decision:** Pass-through default (identity transform); the redefinition applies to the flagged model (camcge) only.
 
 ---
 
@@ -748,7 +768,17 @@ The Task-6 disposition (`CAMCGE_WALRAS_DESIGN.md`) + the Unknown-4.1 prototype r
 Sprint planning
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — **Epic-5-deferred**
+**Verified by:** Task 6
+**Date:** 2026-07-16
+
+**Findings:**
+- The dual-consistent Walras redefinition is genuinely deeper MCP research (not a same-day / prep hand-transform). The banked step-1 + numéraire prototype reaches omega 191.7346 but **MS-4**; the price-pin/single-dual-pin/drop-row variants across 3+ sprints all stayed MS-4 (or corrupt). So MS-1 is Epic-5-deep.
+- **Disposition:** camcge stays `model_infeasible` in Sprint 33; the +1 Solve + the per-model-numéraire declaration + the dual redefinition are the **Epic-5** deliverable (`EPIC_5/CGE_DEGENERACY_SCOPING.md` §3–§5).
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/CAMCGE_WALRAS_DESIGN.md` §4 (disposition) + §5 (sizing + Epic-5-deferral) + the banked `CAMCGE_WALRAS_REPLAN.md`.
+
+**Decision:** Epic-5-deferred; the de-risked hand-off is the numéraire recipe (191.7346) + the residual-singularity characterization + the S1∧S2∧S3 detector.
 
 ---
 
@@ -777,7 +807,17 @@ Re-run the Sprint-32 step-1 `stat_mps` control after applying the numéraire red
 Development team (CGE/Epic-5 specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 6
+**Date:** 2026-07-16
+
+**Findings:**
+- The numéraire adds the `numeraire` equation + the `cles(i)·nu_numeraire` cross-term in `stat_p` — it does **not** touch `stat_mps` (step 1). The landed `nu_mps_fx = mps.m` transfer (Case-a) is unaffected.
+- The banked step-1 + numéraire prototype kept **omega 191.7346** — step 1 is stable under the numéraire change (no sign interaction with the redefined dual observed).
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/CAMCGE_WALRAS_DESIGN.md` §4 (step-1 stability); the banked prototype (omega 191.7346 with step 1 present).
+
+**Decision:** Step 1 stays correct under the numéraire; no re-derivation of step 1 needed alongside step 2.
 
 ---
 

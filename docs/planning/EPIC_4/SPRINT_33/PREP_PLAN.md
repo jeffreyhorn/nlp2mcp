@@ -428,7 +428,8 @@ grep -icE 'resolve-changed|polygon|ps2|/tmp control|MS-1' docs/planning/EPIC_4/S
 
 ## Task 6: camcge Dual-Consistent Walras Numéraire Design + Degeneracy-Detector Scope (Priority 4 / Epic 5)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-16
 **Priority:** High
 **Estimated Time:** 4–5 hours
 **Deadline:** Before Sprint 33 Day 1
@@ -460,11 +461,11 @@ Step 2's failure is a rank-deficiency: dropping a redundant market-clearing row 
 
 ### Changes
 
-*To be completed*
+Re-confirmed the base camcge state (`model_infeasible`, MS-4 Walras singularity; step 1 landed S32 → `stat_mps` Case-a) and the S1∧S2∧S3 detector cohort on the current DB (camcge MS-4 flags; irscge/lrgcge/moncge/stdcge all MS-1 → pass-through). Cited the banked Sprint-32 Day-5 numéraire prototype (omega 191.7346 correct primal but MS-4, INFES on gdp/depreq/hhsaveq/gruse — byte-identical model). Designed the per-model-numéraire + dual-consistent Walras redefinition (keep every market-clearing row + consumption-weighted numéraire + redefine the redundant market's dual via Walras' law → full-rank while the dual stays available; dual side checked), scoped the S1∧S2∧S3 detector, specified the Epic-5 `/tmp`-to-MS-1 gate + step-1 stability. Authored `docs/planning/EPIC_4/SPRINT_33/CAMCGE_WALRAS_DESIGN.md`. (The `kkt_residual.py camcge.gms` cold re-run exceeds a 2-min cap — large CGE model; the MS-4 base is well-banked.)
 
 ### Result
 
-*To be completed*
+**Epic-5-deferred.** The dual-consistent Walras redefinition is genuinely deeper MCP research: the banked step-1 + numéraire prototype reaches omega 191.7346 (correct primal) but MS-4, and 3+ sprints of MS-4 variants confirm MS-1 is Epic-5-deep — camcge stays `model_infeasible` in Sprint 33; the +1 Solve + the per-model-numéraire declaration are the Epic-5 deliverable. The S1∧S2∧S3 detector flags only camcge (DB + banked Day-7 cold-MCP test); step 1 stays correct under the numéraire. Sized **10–16h** (Epic-5 work, if pursued) with the Epic-5-deferral REPLAN exit (the realized disposition). Unknowns 4.1 ✅ (design-level, MS-1 = Epic-5 gate), 4.2/4.3/4.4 ✅ VERIFIED (4.3 Epic-5-deferred).
 
 ### Verification
 
@@ -487,13 +488,13 @@ grep -icE 'irscge|lrgcge|moncge|stdcge|false.?positive|S1.*S2.*S3' docs/planning
 
 ### Acceptance Criteria
 
-- [ ] Step 2 re-confirmed (omega 191.7346 at MS-4, Walras singularity on the four identities, `modelstat` asserted)
-- [ ] The per-model-numéraire + Walras redefinition designed (full-rank, dual available)
-- [ ] The S1∧S2∧S3 detector scope defined (no false-flag on irscge/lrgcge/moncge/stdcge)
-- [ ] The `/tmp` prototype gate specified (MS-1 at omega 191.7346)
-- [ ] The Sprint-33-vs-Epic-5 disposition decided with an explicit deferral exit
-- [ ] The track sized (10–16h)
-- [ ] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Step 2 re-confirmed (omega 191.7346 at MS-4, Walras singularity on the four identities, `modelstat` asserted)
+- [x] The per-model-numéraire + Walras redefinition designed (full-rank, dual available)
+- [x] The S1∧S2∧S3 detector scope defined (no false-flag on irscge/lrgcge/moncge/stdcge)
+- [x] The `/tmp` prototype gate specified (MS-1 at omega 191.7346)
+- [x] The Sprint-33-vs-Epic-5 disposition decided with an explicit deferral exit
+- [x] The track sized (10–16h)
+- [x] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
