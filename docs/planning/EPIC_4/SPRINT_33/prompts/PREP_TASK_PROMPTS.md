@@ -58,6 +58,7 @@ Task 1 (Create Sprint 33 Known Unknowns List) is already ✅ COMPLETE — no pro
 1. Confirm the Day-0 git anchor: derive the Sprint 32 close SHA and verify no `src/`/`scripts/` drift since — reuse the committed DB (no fresh retest) if clean:
    ```bash
    S32=$(git log --grep='SPRINT 32 CLOSED' --format=%H | tail -1)
+   [ -n "$S32" ] || { echo "ERROR: could not resolve the Sprint 32 close SHA — resolve it manually before diffing"; exit 1; }
    git diff --quiet "$S32"..HEAD -- src/ scripts/ && echo "no src/ drift — reuse committed DB" || git diff --stat "$S32"..HEAD -- src/ scripts/
    md5 -q data/gamslib/gamslib_status.json   # macOS; on Linux: md5sum ...  (confirm byte-unchanged since 4cbf8bff)
    ```
@@ -117,7 +118,7 @@ gh pr create --base main --title "Complete Sprint 33 Prep Task 2: Day-0 Baseline
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] Docs-only change — quality gate not required (run `make typecheck && make lint && make format && make test` only if you touched Python)
 - [x] BASELINE_METRICS.md records Day-0 = Sprint 32 close + per-target buckets + genuine floor 74 + the 142-vs-219 split
 - [x] Day-0 = Sprint 32 close confirmed (no src/ drift; DB byte-unchanged since 4cbf8bff)
 - [x] Unknowns 1.1, 3.1, 7.2 verified in KNOWN_UNKNOWNS.md
@@ -210,7 +211,7 @@ gh pr create --base main --title "Complete Sprint 33 Prep Task 3: mine Head-Offs
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] Docs-only change — quality gate not required (run `make typecheck && make lint && make format && make test` only if you touched Python)
 - [x] MINE_CROSSTERM_DESIGN.md has the hand-derivation + the file:line hypothesis + the /tmp control spec
 - [x] Day-1 control re-confirmed (wrong-sign N at the 6 bound-active rows, modelstat asserted)
 - [x] Unknowns 1.1-1.5 verified in KNOWN_UNKNOWNS.md
@@ -301,7 +302,7 @@ gh pr create --base main --title "Complete Sprint 33 Prep Task 4: sarf Symbolic 
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] Docs-only change — quality gate not required (run `make typecheck && make lint && make format && make test` only if you touched Python)
 - [x] SARF_EMIT_SUBSYSTEM_DESIGN.md names all three sites + the O(active) elimination + the atomic-landing + budget test
 - [x] The 7-term derivation checked against a hand-derivation; no set-name literals
 - [x] Unknowns 2.1-2.5 verified in KNOWN_UNKNOWNS.md
@@ -391,7 +392,7 @@ gh pr create --base main --title "Complete Sprint 33 Prep Task 5: fawley Second-
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] Docs-only change — quality gate not required (run `make typecheck && make lint && make format && make test` only if you touched Python)
 - [x] FAWLEY_SECOND_INDEX_DESIGN.md has the residual-18.47 diagnosis + the gate design + the no-regression + /tmp controls
 - [x] Day-11 control re-confirmed (473 -> 18, 96%)
 - [x] Unknowns 3.1-3.4 verified in KNOWN_UNKNOWNS.md
@@ -481,7 +482,7 @@ gh pr create --base main --title "Complete Sprint 33 Prep Task 6: camcge Dual-Co
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] Docs-only change — quality gate not required (run `make typecheck && make lint && make format && make test` only if you touched Python)
 - [x] CAMCGE_WALRAS_DESIGN.md has the redefinition + the detector scope + the /tmp gate + the disposition
 - [x] Step 2 re-confirmed (omega 191.7346 at MS-4, modelstat asserted); detector flags only camcge
 - [x] Unknowns 4.1-4.4 verified in KNOWN_UNKNOWNS.md
@@ -569,7 +570,7 @@ gh pr create --base main --title "Complete Sprint 33 Prep Task 7: rocket PATH-Co
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] Docs-only change — quality gate not required (run `make typecheck && make lint && make format && make test` only if you touched Python)
 - [x] ROCKET_CASEC_FORCING_PLAN.md has the Sprint-34 submission mechanism + the --force survey + the Case-c gate
 - [x] The sign flip stays BANNED (not re-litigated)
 - [x] Unknowns 5.1-5.3 verified in KNOWN_UNKNOWNS.md
@@ -658,7 +659,7 @@ gh pr create --base main --title "Complete Sprint 33 Prep Task 8: Phase 0 Accept
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] Docs-only change — quality gate not required (run `make typecheck && make lint && make format && make test` only if you touched Python)
 - [x] PHASE_0_ACCEPTANCE_GATES.md has one gate per track P1-P5 with modelstat + PROCEED/REPLAN
 - [x] The mine x.up=inf and Case-c sign-flip BANs are encoded; the emit-touching CI gates are referenced
 - [x] Unknowns 1.1, 2.1, 3.1, 4.1, 5.1 verified in KNOWN_UNKNOWNS.md
@@ -748,7 +749,7 @@ gh pr create --base main --title "Complete Sprint 33 Prep Task 9: REPLAN-Prone T
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] Docs-only change — quality gate not required (run `make typecheck && make lint && make format && make test` only if you touched Python)
 - [x] REPLAN_RISK_ASSESSMENT.md has the per-track REPLAN probability + exits + the honest KPI projection + the front-load ordering
 - [x] Unknowns 1.2, 2.3, 3.3 verified in KNOWN_UNKNOWNS.md
 - [x] Task 9 Acceptance Criteria all checked in PREP_PLAN.md
@@ -835,7 +836,7 @@ gh pr create --base main --title "Complete Sprint 33 Prep Task 10: Tooling Readi
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] Docs-only change — quality gate not required (run `make typecheck && make lint && make format && make test` only if you touched Python)
 - [x] TOOLING_AND_BACKLOG_ANALYSIS.md has the tooling audit + the P6 fix-surfaces + the P7 fixture scope
 - [x] The agreste double-solve caveat + the cesam/lnts Case-c re-confirm are recorded
 - [x] Unknowns 6.1, 6.2, 6.3, 7.1, 7.3 verified in KNOWN_UNKNOWNS.md
@@ -923,7 +924,7 @@ gh pr create --base main --title "Complete Sprint 33 Prep Task 11: Plan Sprint 3
 
 ## Test plan
 
-- [x] `make typecheck && make lint && make format && make test` all PASS (docs-only)
+- [x] Docs-only change — quality gate not required (run `make typecheck && make lint && make format && make test` only if you touched Python)
 - [x] PLAN.md has Day 0 + Days 1-13, the deep-track front-load, the Day-5/10 checkpoints, and the budget verification
 - [x] prompts/PLAN_PROMPTS.md has one pasteable prompt per day (Day 0-13)
 - [x] All 27 unknowns show a resolved verification result from Tasks 2-10
