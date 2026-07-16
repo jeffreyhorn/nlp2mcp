@@ -590,11 +590,11 @@ The second-index generalization is additive — it fires on qsb/pbal without cha
 
 ### Research Questions
 1. Does the broadened detection accidentally fire on polygon/ps2/mbal?
-2. Does `--resolve-changed --since-commit 4cbf8bff` return GO (no bucket moves for the covered models)?
+2. Does `--resolve-changed --since-commit ee51ed9e` (the Day-0 code anchor) return GO (no bucket moves for the covered models)?
 3. Is the generalization gated so it fires only on the second-index-summed shape?
 
 ### How to Verify
-Run `--resolve-changed --since-commit 4cbf8bff` after the `/tmp` prototype; confirm GO (no polygon/ps2/mbal regression); inspect the emitted diff for those models (should be unchanged).
+Run `--resolve-changed --since-commit ee51ed9e` (the Day-0 code anchor; `4cbf8bff` is the DB byte-anchor, a different purpose) after the `/tmp` prototype; confirm GO (no polygon/ps2/mbal regression); inspect the emitted diff for those models (should be unchanged).
 
 ### Risk if Wrong
 - **Regression:** the generalization breaks a covered model → the fix cannot ship as-is.

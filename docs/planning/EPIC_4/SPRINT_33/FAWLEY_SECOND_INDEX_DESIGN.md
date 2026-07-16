@@ -32,13 +32,12 @@ CASE_B holds; the dual transfer is CONSISTENT; the residual concentrates on the 
 | `qsb(cfq,l,s)` | `sum(c$bposs(cfq,c), … char(c,m)·bq(c,cfq))` | `bq`'s **second** index `cfq` = the equation's **first** index; **first** index `c` is **summed** | second (`cfq`) |
 | `pbal(cfq,m)` | `sum(c$bposs(cfq,c), char(c,m)·bq(c,cfq))` | same as qsb — second index `cfq` = equation's first index | second (`cfq`) |
 
-The emitted `stat_bq` (`data/gamslib/mcp/fawley_mcp.gms:238`):
+The emitted `stat_bq` (verbatim from `data/gamslib/mcp/fawley_mcp.gms:238`):
 ```gams
-stat_bq(c,cf).. ( sum(cfq__, (((-1)*1$(bposs(cfq__,c)))*nu_mbal(c))$(sameas(cfq__, cf)))                       * mbal — HAS $(sameas(cfq__, cf)) ✓
-  + sum((cfq__,l,s), ((prop(c,s)*sum(m$(ms(m,s)),char(c,m))*1$(bposs(cf,c))*nu_qsb(cfq__,l,s))$(cfq(cfq__)))$(specs(cfq__,l,s)))  * qsb — NO sameas ✗ (sums nu_qsb over ALL cfq__)
-  + sum((cfq__,m), ((((-1)*(char(c,m)*1$(bposs(cf,c))))*nu_pbal(cfq__,m))$(cfq(cfq__)))$(cfm(cfq__,m)))          * pbal — NO sameas ✗ (sums nu_pbal over ALL cfq__)
-  - piL_bq(c,cf) )$(cfq(cf)) =E= 0;
+stat_bq(c,cf).. (sum(cfq__, (((-1) * 1$(bposs(cfq__,c))) * nu_mbal(c))$(sameas(cfq__, cf))) + sum((cfq__,l,s), ((prop(c,s) * sum(m$(ms(m,s)), char(c,m)) * 1$(bposs(cf,c)) * nu_qsb(cfq__,l,s))$(cfq(cfq__)))$(specs(cfq__,l,s))) + sum((cfq__,m), ((((-1) * (char(c,m) * 1$(bposs(cf,c)))) * nu_pbal(cfq__,m))$(cfq(cfq__)))$(cfm(cfq__,m))) - piL_bq(c,cf))$(cfq(cf)) =E= 0;
 ```
+
+(The three `sum(...)` terms are, in order, the **mbal**, **qsb**, and **pbal** cross-terms, then the `piL_bq` bound term.)
 
 The **mbal** cross-term carries `$(sameas(cfq__, cf))` (the summed alias restricted to the stat index); the **qsb / pbal** cross-terms sum `nu_qsb(cfq__,l,s)` / `nu_pbal(cfq__,m)` over **all** `cfq__` (guarded only by `$(cfq(cfq__))` membership, not the diagonal restriction). From a from-scratch ∂-derivation: `∂qsb(cfq,l,s)/∂bq(c,cf)` and `∂pbal(cfq,m)/∂bq(c,cf)` are **nonzero only when `cfq = cf`**, so the correct terms require the same `$(sameas(cfq__, cf))` the mbal term has. **The over-sum is the bug** (confirmed: the banked sameas patch closes 96%).
 
@@ -64,7 +63,7 @@ After the sameas patch restricts all three cross-terms to `cfq__ = cf`, a from-s
 Run **before** any `src/` change; assert `modelstat`:
 1. **Reproduce + localize.** Re-emit fawley, patch the qsb/pbal `stat_bq` terms with `$(sameas(cfq__, cf))`, and eval the residual per `(c,cf)` at the warm LP point (via the harness residual mechanism, avoiding the `--nlp-presolve` domain-redef path). **Gate:** confirm `max|stat_bq|` 473 → ~18, and **localize the 18.47 by column** — does it sit on a *second* `cfq` (H-a) or is it distributed/near-zero with MS-5 driven elsewhere (H-b)?
 2. **Full gate generalization.** Prototype the §3 extension so **every** second-index `cfq` gets the sameas restriction. **Gate:** `max|stat_bq| → 0` (not 96%) at the warm point, then presolve to **MS-1 at 2899.25** (`modelstat=1` asserted). If it reaches MS-1 → H-a; if `max|stat_bq| → 0` but still MS-5 → H-b (the emit is correct; the divergence is non-emit → forcing hand-off).
-3. **No-regression.** `--resolve-changed --since-commit ee51ed9e` GO — no polygon/ps2 move (they use the 1-D core, a *different* path, so naturally safe) and **no mbal-term change** for fawley or any other 2-D indexed-cross-term user (the mbal sameas must be preserved). Spot re-emit + emit-diff before the src change.
+3. **No-regression.** `--resolve-changed --since-commit ee51ed9e` GO — **`ee51ed9e` is the Day-0 code anchor (the Sprint 32 close), the correct emit-diff baseline; `4cbf8bff` is the DB byte-anchor (Sprint 31 close), a different purpose** — — no polygon/ps2 move (they use the 1-D core, a *different* path, so naturally safe) and **no mbal-term change** for fawley or any other 2-D indexed-cross-term user (the mbal sameas must be preserved). Spot re-emit + emit-diff before the src change.
 
 **PROCEED** iff probe 2 reaches `max|stat_bq| → 0` **and** MS-1 at 2899.25 and probe 3 is clean; **PROCEED-as-forcing** if `max|stat_bq| → 0` but MS-5 persists (emit fix ships as a genuine cross-term correction; the +Solve becomes a forcing hand-off); **REPLAN** if the generalization leaks onto mbal / regresses the 1-D core.
 

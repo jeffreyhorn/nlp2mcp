@@ -382,7 +382,7 @@ P3 is the second firm +1 Solve/genuine-floor lever and the empirical test of the
 1. **Re-confirm the Day-11 control** (Day-0 re-confirm): re-run the `/tmp` fawley `$(sameas(cfq__,cf))` patch, confirm `max|stat_bq|` 473 → 18 (96%), and localize the residual 18.47 term.
 2. **Diagnose the residual** — is the remaining 18.47 a second over-sum (a further gate-leak) or a distinct qsb/pbal term the sameas restriction doesn't reach? Determine whether closing it also fixes the MS-5 LP-convergence.
 3. **Design the gate generalization** in `src/kkt/stationarity.py`: extend the second-index gate from the variable's-first-index shape to the variable's-second-index-summed shape, covering qsb/pbal, so `max|stat_bq| → 0`.
-4. **Specify the no-regression requirement** — the extended gate must NOT regress polygon/ps2/mbal (already covered); pin the `--resolve-changed --since-commit 4cbf8bff` GO test.
+4. **Specify the no-regression requirement** — the extended gate must NOT regress polygon/ps2/mbal (already covered); pin the `--resolve-changed --since-commit ee51ed9e` GO test (the Day-0 code anchor).
 5. **Specify the `/tmp` control** — `max|stat_bq| → 0` + MS-1 at 2899.25 BEFORE any `src/` change.
 6. **Size the track** (12–18h) and pin the gate-leak REPLAN exit.
 7. **Write** `docs/planning/EPIC_4/SPRINT_33/FAWLEY_SECOND_INDEX_DESIGN.md`.
