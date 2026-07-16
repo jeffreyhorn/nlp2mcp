@@ -30,6 +30,7 @@
 | model_infeasible | **7** | maintain ≤ 7 (−1 per mine / fawley / camcge recovery) |
 | path_syntax_error | **8** | maintain ≤ 8 |
 | path_solve_terminated | **4** | maintain ≤ 5 |
+| path_solve_license | **9** | (tracked; GAMS demo-license size limit, not an emit target) |
 | Tests | **5,085** | ≥ 5,085 |
 | all-219 Match tally | **95** | (tracked; 92 candidates + 3 non-candidate) |
 

@@ -171,7 +171,7 @@ Confirmed Day-0 = the Sprint 32 close (`ee51ed9e`): no `src/`/`scripts/` drift s
 
 ### Result
 
-**Day-0 (142 corpus): Parse 142 · Translate 135 · Solve 107 · Match 92 · genuine floor 74 · model_infeasible 7** (agreste/camcge/cesam/fawley/lnts/mine/rocket) · path_syntax_error 8 · path_solve_terminated 4 · all-219 Match 95. Genuine floor 74 = S30 70 + S31 P2's +4; the → ≥ 75 movers are mine [P1] + fawley [P3] (camcge [P4] Epic-5). Determinism ✅ ×3 {0,1,42}; `--resolve-changed` GO. Verified Unknown 7.2 (✅); 1.1/3.1 Day-0 bucket verified (fix-surface → Tasks 3/5).
+**Day-0 (142 corpus): Parse 142 · Translate 135 · Solve 107 · Match 92 · genuine floor 74 · model_infeasible 7** (agreste/camcge/cesam/fawley/lnts/mine/rocket) · path_syntax_error 8 · path_solve_license 9 · path_solve_terminated 4 · non-translate 7 · all-219 Match 95. Genuine floor 74 = S30 70 + S31 P2's +4; the → ≥ 75 movers are mine [P1] + fawley [P3] (camcge [P4] Epic-5). Determinism ✅ ×3 {0,1,42}; `--resolve-changed` GO. Verified Unknown 7.2 (✅); 1.1/3.1 Day-0 bucket verified (fix-surface → Tasks 3/5).
 
 ### Verification
 
