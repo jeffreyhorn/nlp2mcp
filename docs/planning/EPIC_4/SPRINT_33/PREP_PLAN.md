@@ -416,7 +416,7 @@ grep -icE 'resolve-changed|polygon|ps2|/tmp control|MS-1' docs/planning/EPIC_4/S
 
 ### Acceptance Criteria
 
-- [x] The Day-11 control re-confirmed (473 → 18, 96%) and the residual 18.47 localized
+- [x] The Day-11 control re-confirmed (harness CASE_B 473; banked sameas patch 473 → 18, 96%) and the residual 18.47 **diagnosed** (not a fourth over-sum; H-a second-column gate-leak vs H-b non-emit LP-convergence — exact per-column localization is an in-sprint `/tmp` step)
 - [x] The residual diagnosed (second gate-leak vs distinct term; LP-convergence link)
 - [x] The second-index gate generalization designed as a `file:line` hypothesis
 - [x] The no-regression requirement pinned (polygon/ps2/mbal via `--resolve-changed`)
