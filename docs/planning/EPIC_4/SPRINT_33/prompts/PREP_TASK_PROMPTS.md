@@ -238,7 +238,7 @@ EOF
 
 - `docs/planning/EPIC_4/SPRINT_33/PREP_PLAN.md` §Task 4
 - `docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md` §Category 2 (Unknowns 2.1–2.5)
-- `docs/planning/EPIC_4/SPRINT_32/SARF_TRANSLATE_REPLAN.md` + `SARF_STAT_TASK_SPARSIFICATION_DESIGN.md` (the 369K `acost3`+variable-path enumeration; the banked 7-term derivation; the working 2-D detector)
+- `docs/planning/EPIC_4/SPRINT_32/SARF_TRANSLATE_REPLAN.md` + `docs/planning/EPIC_4/SPRINT_32/SARF_STAT_TASK_SPARSIFICATION_DESIGN.md` (the 369K `acost3`+variable-path enumeration; the banked 7-term derivation; the working 2-D detector)
 - `src/ad/constraint_jacobian.py` (the `compute_constraint_jacobian` blow-up) + `src/kkt/stationarity.py`
 - `docs/research/multidimensional_indexing.md`
 
@@ -419,7 +419,7 @@ EOF
 
 - `docs/planning/EPIC_4/SPRINT_33/PREP_PLAN.md` §Task 6
 - `docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md` §Category 4 (Unknowns 4.1–4.4)
-- `docs/planning/EPIC_4/SPRINT_32/CAMCGE_WALRAS_REPLAN.md` + `CAMCGE_STAT_MPS_WALRAS_DESIGN.md` (omega 191.7346 but MS-4; the rank-deficiency on gdp/depreq/hhsaveq/gruse; the drop-row-breaks-the-dual finding) + `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md`
+- `docs/planning/EPIC_4/SPRINT_32/CAMCGE_WALRAS_REPLAN.md` + `docs/planning/EPIC_4/SPRINT_32/CAMCGE_STAT_MPS_WALRAS_DESIGN.md` (omega 191.7346 but MS-4; the rank-deficiency on gdp/depreq/hhsaveq/gruse; the drop-row-breaks-the-dual finding) + `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md`
 - `docs/research/convexity_detection.md`
 - `scripts/diagnostics/kkt_residual.py`
 
@@ -461,7 +461,7 @@ Complete Sprint 33 Prep Task 6: camcge Dual-Consistent Walras Numeraire Design
 
 Re-confirmed step 2 (omega 191.7346 at MS-4, Walras singularity on gdp/depreq/hhsaveq/
 gruse, modelstat asserted); designed the per-model-numeraire + Walras redefinition
-(full-rank, dual available); scoped the S1^S2^S3 detector (flags only camcge across the
+(full-rank, dual available); scoped the S1∧S2∧S3 detector (flags only camcge across the
 5 CGE models); specified the /tmp prototype gate (MS-1 at omega 191.7346) + the Sprint-33-
 vs-Epic-5 disposition. Sized 10-16h + Epic-5-deferral REPLAN exit.
 
@@ -509,7 +509,7 @@ EOF
 
 - `docs/planning/EPIC_4/SPRINT_33/PREP_PLAN.md` §Task 7
 - `docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md` §Category 5 (Unknowns 5.1–5.3)
-- `docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` (Status: FINALIZED — the concrete question + ruled-out-lever survey + `--force` scaffold) + `CASE_C_CLASSIFIER_DESIGN.md` (the `case_c_objdef` family; ISSUE_1236 CLOSED; sign flip BANNED)
+- `docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` (Status: FINALIZED — the concrete question + ruled-out-lever survey + `--force` scaffold) + `docs/planning/EPIC_4/SPRINT_32/CASE_C_CLASSIFIER_DESIGN.md` (the `case_c_objdef` family; ISSUE_1236 CLOSED; sign flip BANNED)
 - `docs/research/convexity_detection.md`, `docs/research/minmax_objective_reformulation.md`
 - The `--force {homotopy,multistart,optfile}` scaffold + `scripts/diagnostics/kkt_residual.py`
 
@@ -687,7 +687,7 @@ EOF
 - `docs/planning/EPIC_4/SPRINT_33/PREP_PLAN.md` §Task 9
 - `docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md` §Unknowns 1.2, 2.3, 3.3
 - The Tasks 3/4/5 design docs + the Task 8 `PHASE_0_ACCEPTANCE_GATES.md` (must be merged first — Task 9 depends on Tasks 3, 4, 5, 8)
-- `docs/planning/EPIC_4/SPRINT_32/REPLAN_RISK_ASSESSMENT.md` (the assessment template) + `SPRINT_RETROSPECTIVE.md` §3 (the modal flat-KPI lesson)
+- `docs/planning/EPIC_4/SPRINT_32/REPLAN_RISK_ASSESSMENT.md` (the assessment template) + `docs/planning/EPIC_4/SPRINT_32/SPRINT_RETROSPECTIVE.md` §3 (the modal flat-KPI lesson)
 - `docs/planning/EPIC_4/PROJECT_PLAN.md` §"Sprint 33" Risk Level (the P1/P2/P3 from-scratch risks + the REPLAN exits)
 
 **Tasks to Complete:**
@@ -776,7 +776,7 @@ EOF
 - `docs/planning/EPIC_4/SPRINT_33/PREP_PLAN.md` §Task 10
 - `docs/planning/EPIC_4/SPRINT_33/KNOWN_UNKNOWNS.md` §Category 6 (6.1–6.3) + §Unknowns 7.1, 7.3
 - The Task 8 `PHASE_0_ACCEPTANCE_GATES.md` (must be merged first — Task 10 depends on Tasks 1, 8)
-- `docs/planning/EPIC_4/SPRINT_32/TOOLING_AND_BACKLOG_ANALYSIS.md` + `P6_BACKLOG_RETRIAGE.md` + `P7_INFRASTRUCTURE.md` (the templates + the agreste/cesam/lnts diagnoses)
+- `docs/planning/EPIC_4/SPRINT_32/TOOLING_AND_BACKLOG_ANALYSIS.md` + `docs/planning/EPIC_4/SPRINT_32/P6_BACKLOG_RETRIAGE.md` + `docs/planning/EPIC_4/SPRINT_32/P7_INFRASTRUCTURE.md` (the templates + the agreste/cesam/lnts diagnoses)
 - The reused tooling: `scripts/diagnostics/kkt_residual.py` (incl. `case_c_objdef`), the presolve-divergence detector, the golden-staleness gate, `scripts/gamslib/run_full_test.py --resolve-changed`, the `--force` scaffold; `tests/**/test_ad_crossterm_shapes.py` (shapes 1–11); `docs/planning/EPIC_4/SUMMARY.md` (row 33)
 
 **Tasks to Complete:**
