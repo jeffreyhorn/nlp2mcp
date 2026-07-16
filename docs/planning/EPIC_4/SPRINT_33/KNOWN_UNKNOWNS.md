@@ -310,7 +310,7 @@ The 369,024 `task(g,t,mn,mn)` columns enumerate at three sites — the constrain
 4. Is there any fourth enumeration site not yet profiled?
 
 ### How to Verify
-Re-profile the timeout (Day-0 re-confirm); instrument each candidate site to confirm the 369K materialization; cross-check against `SPRINT_32/SARF_TRANSLATE_REPLAN.md` and `SARF_STAT_TASK_SPARSIFICATION_DESIGN.md`.
+Re-profile the timeout (Day-0 re-confirm) and read the three enumeration sites in source — the `enumerate_equation_instances` calls at `constraint_jacobian.py:798/1247` + `index_mapping.py:648`, and the `acost3` body-differentiation — to confirm the 369K materialization; cross-check against `SPRINT_32/SARF_TRANSLATE_REPLAN.md` and `SARF_STAT_TASK_SPARSIFICATION_DESIGN.md`. (Per-site runtime instrumentation, if needed, is an in-sprint step.)
 
 ### Risk if Wrong
 - **Missed site:** the parametric emit re-triggers the timeout mid-sprint → P2 REPLAN, no +1 Translate.

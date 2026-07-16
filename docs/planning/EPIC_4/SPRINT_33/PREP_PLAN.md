@@ -303,7 +303,7 @@ Sprint 32 Day 6 proved the extended 2-D constraint gate (`_is_blowup_2d_conditio
 
 ### Background
 
-The 2-D constraint gate exists and fires sarf-only (the "necessary" half). The banked 7-term `stat_task` derivation + the `task.fx$(not active)=0` handling are in `SPRINT_32/SARF_TRANSLATE_REPLAN.md` and `SPRINT_32/SARF_STAT_TASK_SPARSIFICATION_DESIGN.md`. srpchase's 1-D analogue translates in 6.56s (the O(active) target reference). The blow-up profiles to `compute_constraint_jacobian`; the fix touches `src/ad/constraint_jacobian.py` + `src/kkt/stationarity.py`. Research: `docs/research/multidimensional_indexing.md`.
+The 2-D constraint gate exists and fires sarf-only (the "necessary" half). The banked 7-term `stat_task` derivation + the `task.fx$(not active)=0` handling are in `SPRINT_32/SARF_TRANSLATE_REPLAN.md` and `SPRINT_32/SARF_STAT_TASK_SPARSIFICATION_DESIGN.md`. srpchase's 1-D analogue translates in 6.56s (the O(active) target reference). The blow-up profiles to `compute_constraint_jacobian`; the fix touches `src/ad/constraint_jacobian.py` (S1) + `src/ad/index_mapping.py` (S2) + `src/kkt/stationarity.py` (S3). Research: `docs/research/multidimensional_indexing.md`.
 
 ### What Needs to Be Done
 
