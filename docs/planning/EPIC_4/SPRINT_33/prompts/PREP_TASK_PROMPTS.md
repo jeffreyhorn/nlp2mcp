@@ -60,7 +60,8 @@ Task 1 (Create Sprint 33 Known Unknowns List) is already ✅ COMPLETE — no pro
    S32=$(git log --grep='SPRINT 32 CLOSED' --format=%H | tail -1)
    [ -n "$S32" ] || { echo "ERROR: could not resolve the Sprint 32 close SHA — resolve it manually before diffing"; exit 1; }
    git diff --quiet "$S32"..HEAD -- src/ scripts/ && echo "no src/ drift — reuse committed DB" || git diff --stat "$S32"..HEAD -- src/ scripts/
-   md5 -q data/gamslib/gamslib_status.json   # macOS; on Linux: md5sum ...  (confirm byte-unchanged since 4cbf8bff)
+   git diff --quiet 4cbf8bff..HEAD -- data/gamslib/gamslib_status.json && echo "DB byte-unchanged since 4cbf8bff" || echo "DB CHANGED since 4cbf8bff — investigate"
+   md5 -q data/gamslib/gamslib_status.json   # optional: print current hash (macOS; 'md5sum ...' on Linux)
    ```
 2. Recompute the canonical bucket tally from the committed DB (`get_candidate_models`, 142): Parse 142 / Translate 135 / Solve 107 / Match 92 / model_infeasible 7. Enumerate the 7 model_infeasible + the path_syntax_error / path_solve_terminated members by name.
 3. Record per-model bucket provenance (Day-0 → expected Day-13) for every carryforward-touched model: mine, sarf, fawley, camcge, rocket, hhfair/irscge/lrgcge/moncge, agreste, cesam, lnts.

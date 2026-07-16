@@ -1018,7 +1018,7 @@ This table shows which prep tasks (from `PREP_PLAN.md`) verify which unknowns. E
 
 ---
 
-**Document Status:** 🔵 DRAFT — Pre-Sprint 33
+**Document Status:** 🔵 Active — Pre-Sprint 33
 **Last Updated:** 2026-07-15
 **Owner:** Sprint 33 Planning Team
 **Review Frequency:** Daily during Sprint 33
