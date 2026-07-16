@@ -500,7 +500,8 @@ grep -icE 'irscge|lrgcge|moncge|stdcge|false.?positive|S1.*S2.*S3' docs/planning
 
 ## Task 7: rocket PATH-Consultation Submission Package + hhfair/CGE Case-c Forcing Plan (Priority 5)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-16
 **Priority:** Medium
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 33 Day 1
@@ -530,11 +531,11 @@ Sprint 32 finalized rocket's PATH-consultation input (Case-c boundary re-confirm
 
 ### Changes
 
-*To be completed*
+Confirmed the rocket PATH-consultation input is FINALIZED + submission-ready (concrete question + ruled-out-lever survey + reproducible case + `--force` scaffold); defined the **Sprint-34** hand-off mechanism (Sprint 33 submits the self-contained brief; Sprint 34 conducts the author consultation). Re-confirmed the Case-c family on the current DB (rocket MS-5 boundary signature; hhfair MS-1 mismatch + irscge/lrgcge/moncge methodology-match — the `case_c_objdef` `nu_obj=±1` signature). Planned the `--force` (multistart-primary) lever survey with the "lever crosses" (global MS-1) vs "banked" criteria; re-affirmed the Case-c gate + the BANNED sign flip. Authored `docs/planning/EPIC_4/SPRINT_33/ROCKET_CASEC_FORCING_PLAN.md`.
 
 ### Result
 
-*To be completed*
+**PROCEED (hand-off + survey), no firm KPI.** rocket's consultation input feeds the Sprint-34 consultation (its `--force` survey is exhausted — homotopy/multistart/optfile all MS-5); the hhfair/CGE multistart survey is the only untried avenue (conditional +Match / methodology→genuine, a priori unpromising — warm-from-optimum already fails). The modal outcome is banked Case-c (no bucket move). The sign flip stays BANNED. Sized **8–12h** with the conditional-KPI note. Unknowns 5.1/5.3 ✅ VERIFIED, 5.2 ✅ VERIFIED (design-level; the survey run is in-sprint).
 
 ### Verification
 
@@ -555,12 +556,12 @@ grep -icE 'Case-c|case_c_objdef|sign flip|BANNED|hhfair|irscge|lrgcge|moncge' do
 
 ### Acceptance Criteria
 
-- [ ] The rocket PATH-consultation package confirmed submission-ready + the Sprint-34 hand-off mechanism defined
-- [ ] The `--force` lever survey planned (homotopy/multistart/optfile on rocket + hhfair/CGE)
-- [ ] "Lever crosses" (+Solve) vs "survey banked" criteria defined
-- [ ] The Case-c re-confirm gate + BANNED sign flip re-affirmed
-- [ ] The track sized (8–12h) with the conditional +Solve noted
-- [ ] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The rocket PATH-consultation package confirmed submission-ready + the Sprint-34 hand-off mechanism defined
+- [x] The `--force` lever survey planned (homotopy/multistart/optfile on rocket + hhfair/CGE)
+- [x] "Lever crosses" (+Solve) vs "survey banked" criteria defined
+- [x] The Case-c re-confirm gate + BANNED sign flip re-affirmed
+- [x] The track sized (8–12h) with the conditional +Solve noted
+- [x] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

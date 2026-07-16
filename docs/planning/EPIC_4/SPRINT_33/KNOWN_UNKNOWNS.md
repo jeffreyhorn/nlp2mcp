@@ -849,7 +849,17 @@ Review `ROCKET_PATH_CONSULTATION_INPUT.md`; define the hand-off mechanism in the
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 7
+**Date:** 2026-07-16
+
+**Findings:**
+- The rocket PATH-consultation input (`SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md`, **FINALIZED**) is submission-ready: the concrete question (which PATH option-set/schedule/reformulation forces the discretized optimal-control MCP, division-by-variable *ruled out*) + the ruled-out-lever survey (PATH options best INFES 382, μ-continuation, multistart, reformulation — all MS-5) + the reproducible two-command case + the `--force` scaffold.
+- **Sprint-34 hand-off mechanism defined:** Sprint 33 **submits** the self-contained brief (question + survey + reproducer + scaffold artifact); Sprint 34 ("PATH Author Consultation") conducts the author back-and-forth (Ferris/Dirkse — External Deps); a recommended option-set plugs into the `--force {homotopy,optfile}` scaffold.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/ROCKET_CASEC_FORCING_PLAN.md` §2 (submission mechanism) + the FINALIZED consultation input.
+
+**Decision:** Submit to the Sprint-34 consultation; rocket stays `model_infeasible` until then (+1 Solve conditional).
 
 ---
 
@@ -879,7 +889,17 @@ Run the `--force` survey on rocket + hhfair/irscge/lrgcge/moncge; record which l
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (design-level) — the `--force` survey run is the in-sprint P5 exercise, not this docs-only prep
+**Verified by:** Task 7
+**Date:** 2026-07-16
+
+**Findings:**
+- The `--force [homotopy|multistart|optfile]` survey is planned across the Case-c family with the criteria: **"a lever crosses"** = global optimum at MS-1 (rocket MS-5→MS-1 = +Solve; hhfair mismatch→87.159 = +Match; CGE cluster cold match at 26.0914 = methodology→genuine floor); **"banked"** = no cross → documented Case-c.
+- **rocket's survey is exhausted** (homotopy/multistart/optfile all MS-5 — banked → the consultation). **hhfair/CGE multistart** is the only untried avenue (find the non-convex global), but a priori unpromising (warm-from-optimum already fails for rocket; the CGE cold optima are spurious). The realistic modal outcome is **banked Case-c** (no bucket move).
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/ROCKET_CASEC_FORCING_PLAN.md` §3 (the survey plan + crosses-vs-banked criteria) + §1 (rocket survey exhausted); the DB (rocket MS-5, hhfair mismatch, CGE cluster methodology-match).
+
+**Decision:** Run the multistart-primary survey in-sprint; any +Match/+genuine-floor is conditional (not a firm KPI).
 
 ---
 
@@ -908,7 +928,17 @@ Re-run the harness on the Case-c family; confirm the `case_c_objdef` classificat
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 7
+**Date:** 2026-07-16
+
+**Findings:**
+- Each family member's residual is clean at the NLP point (Case-c, not an emit bug): **rocket** — the discretized-optimal-control boundary signature (`stat_ht(h0)`/`stat_ht(h50)`/`stat_step`, move with the warm-start value; interior near tol; dual CONSISTENT); **hhfair + CGE cluster** — the `case_c_objdef` signature (`stat_u`/`stat_xp`, the objective-defining intermediate variable, `nu_obj=±1`; D1∧D2∧D3 hold; ISSUE_1236 CLOSED).
+- **The sign flip is BANNED** — control-refuted 4× (hhfair 72.147 → 22.144 *worse*; the CGE ν_objective reduction inert since `nu_obj=±1`). Not re-litigated.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/ROCKET_CASEC_FORCING_PLAN.md` §1 (Case-c signatures + the sign-flip BAN); `SPRINT_32/CASE_C_CLASSIFIER_DESIGN.md`.
+
+**Decision:** Each candidate is re-confirmed Case-c before any forcing (keeps them forcing problems, not latent emit bugs); the sign flip stays BANNED.
 
 ---
 
