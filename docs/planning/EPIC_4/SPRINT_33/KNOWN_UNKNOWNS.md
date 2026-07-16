@@ -986,7 +986,17 @@ Inspect the agreste source for multiple `solve` statements; re-run the harness u
 Development team (diagnostics)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 10
+**Date:** 2026-07-16
+
+**Findings:**
+- agreste has **two** `solve agreste maximizing yfarm using lp` statements (source lines 294 + 298) — a scenario driver. The Sprint-32 CASE_B `stat_sales` rel 2.0 **may be a double-`solve` scope artifact**, not a genuine emit bug.
+- Scope must be verified BEFORE any fix (the multi-solve-gate lesson — cf. danwolfe/decomp/saras). If the single-solve scope holds CASE_B, it is a factor-of-2 dropped-gradient Case-b (+Solve candidate); if it is a driver artifact, bank it (not a fixable emit bug).
+
+**Evidence:** the source-scope grep (`grep -niE '^\s*solve ' data/gamslib/raw/agreste.gms` → 2 hits) + `docs/planning/EPIC_4/SPRINT_33/TOOLING_AND_BACKLOG_ANALYSIS.md` §2 + the banked S32 `stat_sales` rel-2.0 verdict.
+
+**Decision:** agreste is a scope-verify-first P6 candidate — `--resolve-changed --since-commit ee51ed9e`-gated; conditional +Solve if the single-solve scope holds CASE_B, else banked.
 
 ---
 
@@ -1016,7 +1026,18 @@ Run the KKT-residual harness + a convexity check on cesam and lnts; confirm Case
 Development team (diagnostics)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 10
+**Date:** 2026-07-16
+
+**Findings:**
+- **cesam** — bilinear SAM: `TSAM(ii,jj) =e= A(ii,jj)*(X(jj)+ERR1(jj))` (source line 362) + the cross-entropy `log` objective; it embeds its own `solve m_SAMENTROP using mcp` (line 595). The bilinear balancing is the non-convexity → **Case-c**.
+- **lnts** — bilinear-`step` optimal control: `tf =e= step*nh` (line 57) + `y(c,h+1) =e= y(c,h) + 0.5*step*(…)` (lines 59/61/63), so `step` multiplies every dynamics row (brachistochrone min-time) → **Case-c** (the same signature as rocket).
+- Neither is an emit defect masquerading as non-convexity; both join the forcing/PATH cohort, not the emit-fix cohort.
+
+**Evidence:** the source-scope grep of the bilinear signatures (above) + the `solve`-statement counts (cesam 3, lnts 1) + `docs/planning/EPIC_4/SPRINT_33/TOOLING_AND_BACKLOG_ANALYSIS.md` §2 + the banked S32 harness verdicts.
+
+**Decision:** cesam + lnts **bank as Case-c** (forcing-only); they do not enter the P6 emit-fix cohort.
 
 ---
 
@@ -1046,7 +1067,18 @@ After P2 lands, scan the failure cohort for the same shape; run `--resolve-chang
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 10
+**Date:** 2026-07-16
+
+**Findings:**
+- The P2 sarf three-site symbolic `stat_task$taskposs` subsystem generalizes to any model sharing the **active-subset dynamic-guard emit shape** (a Cartesian product guarded by a dynamic subset intersection).
+- **srpchase is the *reference* 1-D analogue** (it already translates — ~2.9s current runner / 6.56s S32 runner), NOT an unlock. The unlock is any *currently-failing* model with the same 2-D+ dynamic-subset blow-up.
+- **Prior Low–Medium:** the shape is specific (few models carry a 369K-scale dynamic-subset product); the realistic outcome is 0–1 follow-ons — bonus back-half scope, not a firm KPI.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/TOOLING_AND_BACKLOG_ANALYSIS.md` §3 + the Task-4 `SARF_EMIT_SUBSYSTEM_DESIGN.md` (the srpchase 1-D-analogue reference).
+
+**Decision:** a Day-6+ (post-P2) `translate_failure`-cohort shape scan, each candidate `--resolve-changed --since-commit ee51ed9e`-gated; if none matches, the P2 subsystem is sarf-specific (documented, acceptable).
 
 ---
 
@@ -1079,7 +1111,18 @@ Author the fixtures against the Day-0 emit (confirm fail-before); after each fix
 Development team (test infrastructure)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 10
+**Date:** 2026-07-16
+
+**Findings:**
+- The catalog `tests/integration/emit/test_ad_crossterm_shapes.py` holds **shapes 1–11** (shape10 `distance_second_index` + shape11 `second_index_indexed_condition` = the **1-D** polygon #1111/#1112 family).
+- Three fixtures, each **fail-before/pass-after**, landing only once the fix lands: **shape12** (head-offset bound-active, guards P1 — assert `stat_x` `N → 0` at a bound-active row via the H1 head-label keying); **shape13** (sarf symbolic `stat_task`, guards P2 — assert the O(active) guarded form, no set-name literals + `task.fx$(not active)=0`); a **new fawley 2-D second-index fixture** (guards P3 — assert `$(sameas(cfq__,cf))` fires on every second-index `cfq`; distinct from the 1-D shape10/11).
+- All three are property-based (the cross-term shape), not model-specific, and extend the shapes-1–11 catalog cleanly.
+
+**Evidence:** the catalog inventory (`grep -oE 'shape[0-9]+' … | sort -u` → shapes 1–11) + `docs/planning/EPIC_4/SPRINT_33/TOOLING_AND_BACKLOG_ANALYSIS.md` §4.
+
+**Decision:** author each fixture against the Day-0 emit (confirm fail-before), land it once P1/P2/P3 land (confirm pass-after) — the permanent regression guard on the new emit paths.
 
 ---
 
@@ -1151,7 +1194,17 @@ Review `SUMMARY.md` row 33 (currently "(planned)"); confirm the cell format vs r
 Sprint planning
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 10
+**Date:** 2026-07-16
+
+**Findings:**
+- The `SUMMARY.md` skeleton is on `main`; the Sprint-33 row is `| 33 | 31–32 | PATH author consultation & solution forcing | (planned) | — | — |`.
+- Two continuation items at Sprint-33 close (a Day-12 task, mirroring S32): (1) **reconcile the theme cell** — "PATH author consultation & solution forcing" is **Sprint 34's** theme; Sprint 33's is "Sprint 32 REPLAN'd carryforwards (mine/sarf/fawley/camcge/rocket)"; (2) **fill the cells** in the rows-28–32 format — {Theme / Headline KPIs (Solve/Match/floor at close) / Firm landing(s) / REPLAN'd → carryforward}.
+
+**Evidence:** `grep -nE '^\| 33 \|' docs/planning/EPIC_4/SUMMARY.md` (the current `(planned)` row) + the rows-28–32 format + `docs/planning/EPIC_4/SPRINT_33/TOOLING_AND_BACKLOG_ANALYSIS.md` §4.
+
+**Decision:** a Day-12 close continuation scheduled in the Task-11 plan (not this docs-only prep); reconcile the theme + backfill the cells at close.
 
 ---
 
