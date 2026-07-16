@@ -321,7 +321,7 @@ Re-confirmed the Day-0 blow-up (bounded re-profile: parse 18.9s, `compute_constr
 
 ### Result
 
-**PROCEED** — the sparsification target is decisively small (398 active vs 369,024 Cartesian, 927×) and the banked `stat_task` is symbolic + complete; the fix eliminates 369K at all three sites atomically (one symbolic guarded `stat_task(g,t,m,n)$taskposs(g,t)` + parametric `acost3` ∂ + `task.fx`), gated by the O(active) translate-budget gate + the anti-pattern grep + determinism ×3. Sized **20–28h** (high-risk from-scratch subsystem across `index_mapping.py` + `stationarity.py`) with the timeout-re-trigger REPLAN exit. Unknowns 2.1–2.5 ✅ VERIFIED. sarf +1 Translate (→136) is the deliverable — the lowest-leverage KPI (moves neither Solve nor Match).
+**PROCEED** — the sparsification target is decisively small (398 active vs 369,024 Cartesian, 927×) and the banked `stat_task` is symbolic + complete; the fix eliminates 369K at all three sites atomically (one symbolic guarded `stat_task(g,t,m,n)$taskposs(g,t)` + parametric `acost3` ∂ + `task.fx`), gated by the O(active) translate-budget gate + the anti-pattern grep + determinism ×3. Sized **20–28h** (high-risk from-scratch subsystem across `constraint_jacobian.py` + `index_mapping.py` + `stationarity.py`) with the timeout-re-trigger REPLAN exit. Unknowns 2.1–2.5 ✅ VERIFIED. sarf +1 Translate (→136) is the deliverable — the lowest-leverage KPI (moves neither Solve nor Match).
 
 ### Verification
 

@@ -17,7 +17,7 @@ Bounded re-profile of the sarf pipeline on the current tree (Sprint 32 close `ee
 | normalize | ~0 s |
 | **`compute_constraint_jacobian`** | **TIMEOUT > 75 s** (cap; the banked run was > 120 s) ← the blow-up |
 
-The `translate_timeout` is in the **constraint Jacobian**, not the stationarity build. The enumeration warnings fire at `src/ad/constraint_jacobian.py:798` + `:1247` and `src/ad/index_mapping.py:648` for `tbal`/`equipb1`/`equipb2` (`taskposs`/`equipposs` are runtime-computed 2-D dynamic sets with 0 static members → `enumerate_equation_instances` includes the full Cartesian). The **2-D constraint gate is absent from `main`** (`_is_blowup_2d_condition_equation` count = 0 — reverted Sprint 32, as banked); the reusable **1-D base gate** `_is_blowup_dynamic_subset_equation` is present. This reproduces the Sprint-32 Day-6 `SARF_TRANSLATE_REPLAN.md` control.
+The `translate_timeout` is in the **constraint Jacobian**, not the stationarity build. The enumeration warnings fire at `src/ad/constraint_jacobian.py:798` + `:1247` and `src/ad/index_mapping.py:648` for `tbal`/`equipb1`/`equipb2` (`taskposs`/`equipposs` are runtime-computed 2-D dynamic sets with 0 static members → `enumerate_equation_instances` includes the full Cartesian). The **2-D constraint gate is absent from `main`** — the symbol `_is_blowup_2d_condition_equation` **does not exist in `src/`** (reverted/removed Sprint 32; `grep -c` = 0 matches — not merely non-firing, as banked); the reusable **1-D base gate** `_is_blowup_dynamic_subset_equation` is present. This reproduces the Sprint-32 Day-6 `SARF_TRANSLATE_REPLAN.md` control.
 
 **Sizing (banked GAMS data probe, byte-identical GAMSlib model):** Cartesian `card(g)·card(t)·card(mn)·card(mn) = 16·24·31·31 = 369,024`; `card(taskposs)=129`, `card(equipposs)=329`; **active `task(g,t,m,n)` (`taskposs(g,t) ∧ tech(g,m,n)`) = 398** — a **927× reduction**. srpchase (the 1-D analogue) translates in **~2.9 s** (6.56 s under the slower Sprint-32 runner) — the O(active) reference.
 
@@ -56,7 +56,7 @@ stat_task(g,t,m,n)$taskposs(g,t)..
 
 Verified term-for-term against the constraint bodies (`tbal`/`equipb1`/`equipb2`/`acost3`/labor + the `task.lo=0` bound). **Every multiplier is indexed by the stat equation's own domain** — `nu_tbal(g,t)`, `lam_labor(t)`, `lam_equipb1(m,t)`, `lam_equipb2(n,t)`, `nu_acost3`, `piL_task(g,t,m,n)` — with **no quoted-set-name indices** (the guard against the reverted Sprint-26 `243fe578` `nu_slack("srn")` anti-pattern, Unknown 2.3). GAMS collapses the guarded equation to the **398 live rows** at runtime (`$taskposs` head + `$tech`/`$equipposs`/`sameas` per-term guards; the `task.fx` columns drop under MCP matching).
 
-**Fix surface (hypothesis):** `src/ad/index_mapping.py` — extend the short-circuit so the `task`-variable stationarity (S3) + column enumeration (S2) are not materialized over the Cartesian; `src/kkt/stationarity.py` — the **new parametric cross-term path**: because the short-circuited constraints (incl. the parametrically-handled `acost3`, S1) enumerate **zero** per-instance Jacobian entries, the `stat_task` cross-terms are built by differentiating each constraint body **once, parametrically in `(g,t,m,n)`** (the 7-term form), carrying the runtime `$` guards.
+**Fix surface (hypothesis):** `src/ad/constraint_jacobian.py` — short-circuit the `acost3` body-differentiation (S1) so `task` is not differentiated per-column over the Cartesian (its contribution comes from the parametric path); `src/ad/index_mapping.py` — extend the short-circuit so the `task`-variable stationarity (S3) + column enumeration (S2) are not materialized over the Cartesian; `src/kkt/stationarity.py` — the **new parametric cross-term path**: because the short-circuited constraints (incl. the parametrically-handled `acost3`, S1) enumerate **zero** per-instance Jacobian entries, the `stat_task` cross-terms are built by differentiating each constraint body **once, parametrically in `(g,t,m,n)`** (the 7-term form), carrying the runtime `$` guards.
 
 ## 4. Atomicity + the O(active) budget gate (Unknowns 2.2, 2.5)
 
@@ -69,8 +69,8 @@ Verified term-for-term against the constraint bodies (`tbal`/`equipb1`/`equipb2`
 
 ## 5. Sizing + REPLAN exit (Unknown 2.5)
 
-**20–28 h** — a from-scratch symbolic-emit subsystem touching three layers (the 4×-failed Sprint-26 path; **high risk**):
-- Re-land + extend the 2-D constraint gate (`_is_blowup_2d_condition_equation`, banked) + wire S2/S3 short-circuit in `index_mapping.py` (~6–9 h).
+**20–28 h** — a from-scratch symbolic-emit subsystem touching **three layers** (`constraint_jacobian.py` [S1] + `index_mapping.py` [S2] + `stationarity.py` [S3]; the 4×-failed Sprint-26 path; **high risk**):
+- Re-land + extend the 2-D constraint gate (`_is_blowup_2d_condition_equation`, banked) + the S1 `acost3` short-circuit in `constraint_jacobian.py` + the S2/S3 short-circuit in `index_mapping.py` (~6–9 h).
 - The parametric cross-term path in `stationarity.py` (differentiate each short-circuited body once in `(g,t,m,n)`; inject the guarded term into every `stat_*` it touches; the `acost3`/S1 parametric ∂; `task.fx`) (~9–13 h).
 - The O(active) budget gate + anti-pattern grep + determinism ×3 + `--resolve-changed` + a shape13 regression fixture (~4–6 h).
 
