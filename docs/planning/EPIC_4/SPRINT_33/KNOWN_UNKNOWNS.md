@@ -253,17 +253,17 @@ Development team (KKT/emit specialist)
 
 ---
 
-## Unknown 1.5: Is the mine track sizing (18–24h) realistic given the from-scratch cross-term re-derivation?
+## Unknown 1.5: Is the mine track sizing (18–24h) realistic given the depth of the P1 fix?
 
 ### Priority
 **Medium** — Affects the schedule front-load and the Day-5 checkpoint REPLAN decision
 
 ### Assumption
-18–24h covers the hand-derivation + the `stat_x` cross-term emit change + the `/tmp` control + the presolve verification, with the REPLAN surfacing (if any) by the Day-5 checkpoint.
+18–24h covers the hand-derivation + the P1 emit change (a `stat_x` cross-term correction or — per the Task-3 finding — a head-offset multiplier-keying / IR-plumbing change) + the `/tmp` control + the presolve verification, with the REPLAN surfacing (if any) by the Day-5 checkpoint.
 
 ### Research Questions
-1. How deep is the re-derivation — a bounded sign/guard change, or an AD-core change?
-2. Does the fix touch only `src/kkt/stationarity.py`, or also the AD layer?
+1. How deep is the fix — a bounded cross-term sign/guard change, or a multiplier-keying / IR-plumbing change?
+2. Does the fix touch only `src/kkt/stationarity.py`, or also the multiplier keying / IR (`head_domain_offsets`)?
 3. Does the schedule front-load surface a REPLAN by Day 5 (as Sprint 32's did for mine Day 1)?
 
 ### How to Verify
