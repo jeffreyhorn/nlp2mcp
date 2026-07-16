@@ -128,6 +128,8 @@ Development team (KKT/emit specialist)
 
 **Decision:** Re-deriving the single cross-term closes nothing (it is already correct). P1's fix is **re-scoped** to a head-offset multiplier-keying reconciliation (H1: head-label `comp_pr`/`lam_pr`/cross-term; H2: `d\c`-ring bound reconciliation), gated by the `/tmp` control; deeper-coupling REPLAN exit (H3) pinned.
 
+**Task-8 gate contribution (✅ gate feasible):** the mine `/tmp` control (warm residual `N → 0` at the 6 bound-active rows + interior unchanged → MS-1 @ 17500, `modelstat` asserted, `x.up=inf` BANNED) is authored with a clean PROCEED (H1)/REPLAN (H3 deeper coupling) decision — `docs/planning/EPIC_4/SPRINT_33/PHASE_0_ACCEPTANCE_GATES.md` §1 P1. Primary verifier: Task 3.
+
 ---
 
 ## Unknown 1.2: Does the re-derived cross-term vanish at all 6 bound-active rows without perturbing interior rows?
@@ -332,6 +334,8 @@ Development team (AD/emit specialist)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md` §1 (re-profile: `compute_constraint_jacobian` TIMEOUT > 75 s; 2-D gate absent from main) + §2 (three-site table) + §3 (per-site O(active) elimination).
 
 **Decision:** Emit one symbolic guarded `stat_task(g,t,m,n)$taskposs(g,t)` (S3) + parametric `acost3` ∂ (S1) + `task.fx` (S2); all three land atomically (Unknown 2.2).
+
+**Task-8 gate contribution (✅ gate feasible):** the sarf O(active) gate (translate seconds not >75s + no set-name literals + atomic landing + byte-stable golden) is authored with a clean PROCEED/REPLAN (timeout re-trigger) decision — `docs/planning/EPIC_4/SPRINT_33/PHASE_0_ACCEPTANCE_GATES.md` §1 P2. Primary verifier: Task 4.
 
 ---
 
@@ -538,6 +542,8 @@ Development team (KKT/emit specialist)
 
 **Decision:** Extend the diagonal-`sameas` logic to the variable's-second-index-summed shape (qsb/pbal), symmetric with the first-index shape (mbal).
 
+**Task-8 gate contribution (✅ gate feasible):** the fawley `/tmp` control (`max|stat_bq| → 0` → MS-1 @ 2899.25 [H-a] / MS-5 [H-b] + the no-regression GO) is authored with a clean PROCEED (conditional)/REPLAN (gate-leak) decision — `docs/planning/EPIC_4/SPRINT_33/PHASE_0_ACCEPTANCE_GATES.md` §1 P3. Primary verifier: Task 5.
+
 ---
 
 ## Unknown 3.2: Does closing the residual 18.47 also fix the MS-5 LP-convergence?
@@ -700,6 +706,8 @@ Development team (CGE/Epic-5 specialist)
 
 **Decision:** Design the recipe + the Epic-5 gate; MS-1 is genuinely hard (Epic-5-deep). See 4.3 (Epic-5-deferred).
 
+**Task-8 gate contribution (✅ gate feasible):** the camcge Epic-5 `/tmp` gate (the full dual-consistent redefinition → MS-1 @ 191.7346 + the S1∧S2∧S3 detector) is authored; the Epic-5-deferral REPLAN exit is the expected outcome — `docs/planning/EPIC_4/SPRINT_33/PHASE_0_ACCEPTANCE_GATES.md` §1 P4. Primary verifier: Task 6.
+
 ---
 
 ## Unknown 4.2: Does the S1∧S2∧S3 degeneracy detector flag only camcge (not irscge/lrgcge/moncge/stdcge)?
@@ -860,6 +868,8 @@ Development team
 **Evidence:** `docs/planning/EPIC_4/SPRINT_33/ROCKET_CASEC_FORCING_PLAN.md` §2 (submission mechanism) + the FINALIZED consultation input.
 
 **Decision:** Submit to the Sprint-34 consultation; rocket stays `model_infeasible` until then (+1 Solve conditional).
+
+**Task-8 gate contribution (✅ gate feasible):** the rocket/Case-c gate (residual clean at the NLP point before forcing + the `--force` crosses-vs-banked criteria + the sign-flip BAN) is authored — `docs/planning/EPIC_4/SPRINT_33/PHASE_0_ACCEPTANCE_GATES.md` §1 P5. Primary verifier: Task 7.
 
 ---
 
