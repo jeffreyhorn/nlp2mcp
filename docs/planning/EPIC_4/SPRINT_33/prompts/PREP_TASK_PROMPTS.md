@@ -59,8 +59,10 @@ Task 1 (Create Sprint 33 Known Unknowns List) is already ✅ COMPLETE — no pro
    ```bash
    S32=$(git log --grep='SPRINT 32 CLOSED' --format=%H | tail -1)
    [ -n "$S32" ] || { echo "ERROR: could not resolve the Sprint 32 close SHA — resolve it manually before diffing"; exit 1; }
-   git diff --quiet "$S32"..HEAD -- src/ scripts/ && echo "no src/ drift — reuse committed DB" || git diff --stat "$S32"..HEAD -- src/ scripts/
-   git diff --quiet 4cbf8bff..HEAD -- data/gamslib/gamslib_status.json && echo "DB byte-unchanged since 4cbf8bff" || echo "DB CHANGED since 4cbf8bff — investigate"
+   git diff --quiet "$S32"..HEAD -- src/ scripts/ || { echo "ERROR: src/scripts drift since the S32 close — a fresh retest is required; do NOT reuse the committed DB"; git diff --stat "$S32"..HEAD -- src/ scripts/; exit 1; }
+   echo "no src/scripts drift — safe to reuse the committed DB"
+   git diff --quiet 4cbf8bff..HEAD -- data/gamslib/gamslib_status.json || { echo "ERROR: DB changed since 4cbf8bff — the Day-0 baseline assumption is violated; investigate before proceeding"; exit 1; }
+   echo "DB byte-unchanged since 4cbf8bff"
    md5 -q data/gamslib/gamslib_status.json   # optional: print current hash (macOS; 'md5sum ...' on Linux)
    ```
 2. Recompute the canonical bucket tally from the committed DB (`get_candidate_models`, 142): Parse 142 / Translate 135 / Solve 107 / Match 92 / model_infeasible 7. Enumerate the 7 model_infeasible + the path_syntax_error / path_solve_terminated members by name.
