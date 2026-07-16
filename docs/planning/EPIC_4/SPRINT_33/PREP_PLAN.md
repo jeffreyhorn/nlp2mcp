@@ -663,7 +663,7 @@ Sprint 32's assessment is in `SPRINT_32/REPLAN_RISK_ASSESSMENT.md`. The control-
 1. **For each of P1/P2/P3, assess the REPLAN probability** — what control/harness evidence would refute the banked design (P1 the re-derivation surfaces a further coupling; P2 the parametric emit re-triggers the timeout; P3 the second-index gate leaks again), and how early the Day-5 checkpoint surfaces it.
 2. **Assess P4 (Epic-5 deferral) and P5 (conditional +Solve)** — the disposition each hands forward.
 3. **Pin the REPLAN exits + budget reallocation** — where freed budget flows (P6 failure-cohort re-triage + P7 property fixtures) if a deep track REPLANs early.
-4. **Author the honest KPI projection** — which buckets can firmly move (Solve +1 via any one of P1/P3/P4; Translate +1 via P2; genuine floor +1 via P1/P3 cold-match), the stretch (Solve ≥ 110), and the modal flat-KPI outcome.
+4. **Author the honest KPI projection** — which buckets can firmly move (Solve +1 via P1 **or** P3 — P4 camcge is Epic-5-deferred, not an in-sprint Solve mover, and P5 rocket is a Sprint-34 conditional; Translate +1 via P2; genuine floor +1 via P1/P3 cold-match), the stretch (Solve ≥ 110), and the modal flat-KPI outcome.
 5. **Recommend the front-load ordering** — the deep tracks (P1, P2) front-loaded so REPLANs surface by Day 5.
 6. **Write** `docs/planning/EPIC_4/SPRINT_33/REPLAN_RISK_ASSESSMENT.md`.
 
