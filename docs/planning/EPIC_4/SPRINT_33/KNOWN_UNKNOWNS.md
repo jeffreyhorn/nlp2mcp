@@ -362,17 +362,17 @@ After the design lands in a `/tmp` prototype, time `sarf_mcp.gms` against the tr
 Development team (AD/emit specialist)
 
 ### Verification Results
-✅ **Status:** VERIFIED
+✅ **Status:** VERIFIED (design-level) — the translate-time / O(active) measurement is an in-sprint **Phase-0 (post-implementation) gate**, not yet run
 **Verified by:** Task 4
 **Date:** 2026-07-16
 
 **Findings:**
-- The 2-D constraint gate makes `tbal`/`equipb1`/`equipb2` enumerate **zero** Jacobian entries, so their `Jᵀ·λ` contributions to `stat_task` (and `stat_xcrop`/`stat_equipp`/…) **cannot** be assembled from per-instance entries — they must come from the parametric cross-term path.
-- **Re-emit-without-cross-terms = an inconsistent MCP** (multipliers with no stationarity coupling). There is **no safe partial landing**: the guarded constraint re-emit + the parametric `stat_task` (every `stat_*` the short-circuited constraints touch) + `task.fx` assemble at a **single atomic point**.
+- **Design-confirmed (by construction):** the O(active) target is **398** (vs 369,024 Cartesian, 927× — banked GAMS probe), and the design eliminates every per-instance path — S1 `acost3` parametric ∂, S2 `task.fx` + 398-active mapping, S3 one symbolic `stat_task` — so no residual O(369K) path remains. Atomicity holds: the 2-D constraint gate makes `tbal`/`equipb1`/`equipb2` enumerate **zero** Jacobian entries, so their `Jᵀ·λ` contributions **must** come from the parametric path (re-emit-without-cross-terms = an inconsistent MCP; no safe partial landing).
+- **Not yet measured (Phase-0):** RQ4 — the actual `sarf_mcp.gms` translate time vs srpchase's ~2.9 s — is measured only **after** the `/tmp` prototype lands in-sprint. That measurement is the O(active) translate-budget gate (§4); the timeout-re-trigger REPLAN exit fires if it re-triggers the timeout.
 
-**Evidence:** `docs/planning/EPIC_4/SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md` §4 (atomicity requirement).
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md` §2 (three sites) + §3 (per-site elimination) + §4 (atomicity + the budget gate); the banked 398-active GAMS probe. **No observed translate-time measurement** (sarf still times out on `main`).
 
-**Decision:** Gate + parametric emit + `task.fx` land in one change; the O(active) budget gate verifies completeness (§4).
+**Decision:** Design-level PROCEED; the translate-time / O(active) empirical confirmation is the in-sprint Phase-0 gate, not this docs-only prep.
 
 ---
 
@@ -488,7 +488,7 @@ Development team (AD/emit specialist)
 **Date:** 2026-07-16
 
 **Findings:**
-- Byte-stability/determinism is enforced by the O(active) translate-budget gate (§4): determinism ×3 `PYTHONHASHSEED` + `--resolve-changed --since-commit ee51ed9e` GO (sarf the only changed golden) + the anti-pattern grep + the term-by-term `stat_task` check. The O(active) target (398) makes the emit decisively tractable (srpchase's 1-D analogue ~2.9 s vs sarf's > 75 s).
+- Byte-stability/determinism is **design-level** here — enforced by the O(active) translate-budget gate (§4), which runs in-sprint after the emit lands (not measured in this docs-only prep): determinism ×3 `PYTHONHASHSEED` + `--resolve-changed --since-commit ee51ed9e` GO (sarf the only changed golden) + the anti-pattern grep + the term-by-term `stat_task` check. The O(active) target (398) makes the emit decisively tractable (srpchase's 1-D analogue ~2.9 s vs sarf's > 75 s).
 - Sized **20–28 h** (a from-scratch subsystem across three layers, the 4×-failed Sprint-26 path — high risk) with the **timeout-re-trigger REPLAN exit**.
 
 **Evidence:** `docs/planning/EPIC_4/SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md` §4 (budget gate) + §5 (sizing + REPLAN exit).
