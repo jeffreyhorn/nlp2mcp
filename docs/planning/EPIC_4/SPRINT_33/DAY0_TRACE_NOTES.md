@@ -43,8 +43,8 @@ Run via `.venv/bin/python scripts/diagnostics/kkt_residual.py <model>.gms --tol 
 
 **(1) P1 H1 head-label re-keying — control SUBSTRATE set up; the fix surface is pinned; the → MS-1 control is a Day-1 emit-layer prototype.** Generated `/tmp/mine_mcp_presolve.gms` and pinned the exact H1 surface:
 - **Line 79:** `lam_pr.l(k,l,i,j) = abs(pr.m(k,l+1,i,j))` — the transfer reads `pr.m` at the **shifted** head label `l+1` but keys `lam_pr` at the **base** `l`.
-- **Line 107 (`stat_x`):** the cross-term `sum(k, lam_pr(k,l,i−li,j−lj)$c − lam_pr(k,l−1,i,j)$c)` reads `lam_pr` at `l`/`l−1`.
-- **Line 110 (`comp_pr`):** pairs `lam_pr(k,l)` with the `x(l,i+li,j+lj) − x(l+1,i,j) ≥ 0` coupling.
+- **Line 107 (`stat_x`):** the cross-term (verbatim) `sum(k, lam_pr(k,l,i-li(k),j-lj(k))$(c(l,i-li(k),j-lj(k))) - lam_pr(k,l-1,i,j)$(c(l-1,i,j)))` reads `lam_pr` at `l`/`l-1`.
+- **Line 110 (`comp_pr`):** `comp_pr(k,l,i,j)$((c(l,i,j)) and (ord(l) <= card(l) - 1)).. x(l,i+li(k),j+lj(k)) - x(l+1,i,j) =G= 0;` — pairs `lam_pr(k,l)` with this `x(l,.)`/`x(l+1,.)` coupling.
 - This is exactly the Task-3 multiplier-keying question (the cross-term is correct; the `lam_pr` value lives at `l+1` while the `stat_x`/`comp_pr` keying reads `l`).
 - **Why the → MS-1 control is Day-1, not a Day-0 `/tmp` text edit:** `kkt_residual.py` emits internally (it does not accept a pre-emitted `.gms`), and a standalone `gams /tmp/mine_mcp_presolve.gms` errors on the mine emit's **dynamic-`c`-set membership** (the emit warns "Set membership for `c` cannot be evaluated statically"; `profit.l` unpopulated → 5 compile errors) — the presolve file needs the pipeline's NLP→MCP flow. So the H1 re-keying → `N → 0` at the 6 bound-active rows → MS-1 @ 17500 control is an **emit-layer (`src/`) prototype run through the harness** — the Day-1 opener. Consistent with Task 9 (P1 = the deepest, **High**-prior from-scratch track).
 
