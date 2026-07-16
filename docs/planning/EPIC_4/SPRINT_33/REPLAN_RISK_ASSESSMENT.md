@@ -126,7 +126,7 @@ Order the sprint so **every deep-track REPLAN surfaces by the Day-5 checkpoint**
 
 1. **Day 0–1: P1 mine** (highest prior, deepest architecture). Run the H1 `/tmp` head-label re-keying control **first** — it is the single most REPLAN-prone track, and its V2 warm-residual→0 check is a clean Day-1 verdict. An early H3 REPLAN frees ~14–18h into P6/P7 with the whole sprint remaining.
 2. **Day 0–2: P2 sarf** (V1 is a **Day-0 timing probe** — the cheapest, earliest verdict in the sprint; run it in parallel with P1). If the three-site O(active) re-emit still times out, re-scope immediately and reallocate.
-3. **Day 2–5: P3 fawley** (the H-a/H-b discriminator localizes the residual 18.47 by column early; the genuine emit fix can land even under H-b). Its no-regression control (`--resolve-changed` GO) gates the src change.
+3. **Day 2–5: P3 fawley** (the H-a/H-b discriminator localizes the residual 18.47 by column early; the genuine emit fix can land even under H-b). Its no-regression control (`--resolve-changed --since-commit ee51ed9e` GO) gates the src change.
 4. **Day 1–3 (parallel, low-cost): P4 camcge Epic-5 gate** — run the `/tmp` full-redefinition prototype to *confirm the deferral* (expected MS-4); if by some chance it reaches MS-1, promote it. Otherwise it is a documented Epic-5 hand-off.
 5. **Day 5+ (back half): P5 rocket/Case-c** submission + the `--force` survey, then **P6** (freed-budget failure-cohort re-triage) + **P7** (property fixtures for whichever P1/P2/P3 emit paths landed + genuine-floor re-baseline + Epic-4 `SUMMARY`).
 
