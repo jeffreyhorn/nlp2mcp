@@ -44,10 +44,10 @@
 | **Solve** | **107** | 63 `model_optimal` (cold) + 44 `model_optimal_presolve` |
 | **Match** (as-measured) | **92** | `solution_comparison.comparison_status = match` |
 | model_infeasible | **7** | `mcp_solve.outcome_category = model_infeasible` |
-| path_syntax_error | **8** | |
-| path_solve_license | **9** | |
-| path_solve_terminated | **4** | |
-| non-translate | **7** | (no `mcp_solve`) |
+| path_syntax_error | **8** | `mcp_solve.outcome_category = path_syntax_error` |
+| path_solve_license | **9** | `mcp_solve.outcome_category = path_solve_license` |
+| path_solve_terminated | **4** | `mcp_solve.outcome_category = path_solve_terminated` |
+| non-translate | **7** | `nlp2mcp_translate.status ≠ success` (no `mcp_solve`) |
 
 Total: 63 + 44 + 9 + 8 + 7 + 7 + 4 = 142. ✓
 
