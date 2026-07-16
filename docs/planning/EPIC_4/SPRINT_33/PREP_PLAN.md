@@ -210,7 +210,8 @@ grep -E 'Solve.*107|Match.*92|genuine floor.*74|Translate.*135' docs/planning/EP
 
 ## Task 3: mine Head-Offset Bound-Active Cross-Term — Localization + Re-Derivation Design (Priority 1 foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-16
 **Priority:** Critical
 **Estimated Time:** 6–8 hours
 **Deadline:** Before Sprint 33 Day 1
@@ -220,7 +221,7 @@ grep -E 'Solve.*107|Match.*92|genuine floor.*74|Translate.*135' docs/planning/EP
 
 ### Objective
 
-Turn the Sprint-32 Day-1 control finding — the bound-multiplier `N`-derivation closes `stat_x` by construction but yields a wrong-sign residual at 6 bound-active rows — into a concrete, stationarity-consistent **re-derivation of the head-offset `stat_x` cross-term** that vanishes at every bound-active row, sizing Sprint 33's deepest (+1 Solve) track before the schedule is set.
+**Validate or refute** the Sprint-32 banked premise (that the wrong-sign residual at the 6 bound-active rows is a `stat_x` cross-term defect closable by re-deriving the cross-term) and produce the concrete P1 fix design — the head-offset reconciliation fix-surface hypotheses + a pre-`src/` `/tmp` control spec — sizing Sprint 33's deepest (+1 Solve) track before the schedule is set.
 
 ### Why This Matters
 
@@ -233,20 +234,20 @@ Sprint 31 landed the head-offset IR foundation (`EquationDef.head_domain_offsets
 ### What Needs to Be Done
 
 1. **Re-confirm the Day-1 control** (Day-0 re-confirm, PR24): re-run the `/tmp` mine control, assert `modelstat` (the `x.up=inf` experiment is BANNED), and reproduce the wrong-sign `N` at the 6 bound-active rows.
-2. **Localize the cross-term** in `src/kkt/stationarity.py`: identify exactly where the head-offset `stat_x` cross-term `sum(k, lam_pr(k,l,i−li,j−lj)$c − lam_pr(k,l−1,i,j)$c)` is emitted and how the shifted-label pairing (`head_domain_offsets`) feeds it.
-3. **Derive by hand** the correct bound-active-row stationarity: show which term(s) in the emitted cross-term carry the opposite bound's sign, and what the stationarity-consistent form is at a bound-active row vs an interior row.
-4. **Design the re-derivation** (`file:line` fix-surface as a *hypothesis*): the concrete change to the cross-term emission so `N → 0` at all 6 bound-active rows without perturbing interior rows; note whether it needs a new head-offset guard or a sign correction on the shifted-label term.
+2. **Localize the emit site** in `src/kkt/stationarity.py`: identify which builder emits the head-offset `stat_x` cross-term `sum(k, lam_pr(k,l,i−li,j−lj)$c − lam_pr(k,l−1,i,j)$c)` (the #1224 parameter-offset path or the `head_domain_offsets` path).
+3. **Derive the cross-term from scratch** to test whether the emit is correct: compare the hand-derived stationarity term-for-term against the emit; if it matches, localize the residual to the head-offset boundary and diagnose the reconciliation gap (rather than assume a cross-term term error).
+4. **Design the fix** (`file:line` fix-surface as a *hypothesis*) from what the derivation shows: a cross-term correction if the derivation surfaces one, else the head-offset **multiplier-keying / boundary reconciliation** it implies — so `N → 0` at all 6 bound-active rows without perturbing interior rows.
 5. **Specify the `/tmp` control** that must pass BEFORE any `src/` change (warm residual → 0 at bound-active rows, then presolve MS-1).
 6. **Size the track** honestly (18–24h) and pin the REPLAN exit (a documented deeper-coupling finding if the re-derivation surfaces a further cross-term).
 7. **Write** `docs/planning/EPIC_4/SPRINT_33/MINE_CROSSTERM_DESIGN.md`.
 
 ### Changes
 
-*To be completed*
+Re-confirmed the Day-0 harness control (CASE_B `stat_x(3,1,1)` rel 2.37, dual transfer CONSISTENT); classified the 6 wrong-sign rows + the max as **all on the `c`-boundary** (a sharper localization than the banked doc); localized the emit to `_try_build_param_offset_crossterm` (`src/kkt/stationarity.py:5712`) — NOT the `head_domain_offsets` path; and **hand-derived the cross-term from scratch, finding it term-for-term algebraically correct**. Authored `docs/planning/EPIC_4/SPRINT_33/MINE_CROSSTERM_DESIGN.md` with the re-derivation, the head-label multiplier-keying fix hypotheses (H1/H2) + the REPLAN exit (H3), the pre-`src/` `/tmp` control spec, and the ~22–24h sizing.
 
 ### Result
 
-*To be completed*
+**The banked "cross-term re-derivation" premise is REFUTED** (Unknowns 1.1/1.2 ❌ WRONG): the emitted `stat_x` cross-term is algebraically correct, so re-deriving it closes nothing. P1's fix is **re-scoped** from a cross-term sign/guard tweak to a **head-offset multiplier-keying reconciliation** (H1 head-label `comp_pr`/`lam_pr`/cross-term via `head_domain_offsets`; H2 `d\c`-ring bound reconciliation), gated by a `/tmp` control, with a deeper-coupling REPLAN exit (H3). Sized ~22–24h (upper half). Unknowns 1.1/1.2 ❌ WRONG (corrected direction recorded), 1.3/1.4/1.5 ✅ VERIFIED. A control-first de-risking win — the wrong banked premise was caught by hand-derivation before any `src/`.
 
 ### Verification
 
@@ -271,13 +272,13 @@ grep -icE 'modelstat|/tmp control|REPLAN exit' docs/planning/EPIC_4/SPRINT_33/MI
 
 ### Acceptance Criteria
 
-- [ ] The Day-1 control re-confirmed (wrong-sign `N` at the 6 bound-active rows, `modelstat` asserted)
-- [ ] The head-offset `stat_x` cross-term emit site localized in `src/kkt/stationarity.py`
-- [ ] The correct bound-active-row stationarity derived by hand
-- [ ] The re-derivation designed as a `file:line` hypothesis (with sign/guard specifics)
-- [ ] The pre-`src/` `/tmp` control specified (the `x.up=inf` experiment noted BANNED)
-- [ ] The track sized (18–24h) with a documented deeper-coupling REPLAN exit
-- [ ] Unknowns 1.1, 1.2, 1.3, 1.4, 1.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The Day-1 control re-confirmed (wrong-sign `N` at the 6 bound-active rows, `modelstat` asserted)
+- [x] The head-offset `stat_x` cross-term emit site localized in `src/kkt/stationarity.py`
+- [x] The correct bound-active-row stationarity derived by hand
+- [x] The re-derivation designed as a `file:line` hypothesis (with sign/guard specifics)
+- [x] The pre-`src/` `/tmp` control specified (the `x.up=inf` experiment noted BANNED)
+- [x] The track sized (18–24h) with a documented deeper-coupling REPLAN exit
+- [x] Unknowns 1.1, 1.2, 1.3, 1.4, 1.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
