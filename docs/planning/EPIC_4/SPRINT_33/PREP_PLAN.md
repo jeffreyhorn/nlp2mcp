@@ -567,7 +567,8 @@ grep -icE 'Case-c|case_c_objdef|sign flip|BANNED|hhfair|irscge|lrgcge|moncge' do
 
 ## Task 8: Refresh + Author Phase 0 Acceptance Gates for the Sprint-33 Tracks (PR20 + PR24 + PR27)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-16
 **Priority:** Critical
 **Estimated Time:** 4–6 hours
 **Deadline:** Before Sprint 33 Day 1
@@ -597,11 +598,11 @@ Sprint 32's gates are in `SPRINT_32/PHASE_0_ACCEPTANCE_GATES.md`. The KKT-residu
 
 ### Changes
 
-*To be completed*
+Consolidated the per-track `/tmp` control specs from the five Task-3–7 design docs into one `PHASE_0_ACCEPTANCE_GATES.md`: one hand-derived gate per track (P1 mine, P2 sarf, P3 fawley, P4 camcge, P5 rocket/Case-c) with the exact `/tmp` control + pass criterion + the `modelstat` assertion + the PROCEED/REPLAN decision — carrying each design's **updated** disposition (P1 the refuted-cross-term → H1 multiplier-keying re-scope; P3 the H-a/H-b conditional; P4 Epic-5-deferred). Encoded the standing BANs (mine `x.up=inf`; Case-c sign flip) as explicit gate conditions + the emit-touching CI gates (golden-staleness PR26, presolve-divergence, `--resolve-changed --since-commit ee51ed9e` — the Day-0 code anchor). Appended a Task-8 gate-feasibility note to Unknowns 1.1/2.1/3.1/4.1/5.1 (not overwriting the Task-3–7 primary blocks).
 
 ### Result
 
-*To be completed*
+One Phase-0 gate per track P1–P5, each with a clean PROCEED/REPLAN and the control-before-`src/` precondition; the standing BANs + the emit-touching CI gates encoded; the `--resolve-changed` anchor is `ee51ed9e` (Day-0 code anchor). Authored `docs/planning/EPIC_4/SPRINT_33/PHASE_0_ACCEPTANCE_GATES.md`. Unknowns 1.1/2.1/3.1/4.1/5.1 carry the ✅ Task-8 gate-feasibility contribution (primary verifiers remain Tasks 3–7). The gate discipline (PR24/PR27 control-first) is the load-bearing safeguard for the three REPLAN-prone from-scratch tracks (P1/P2/P3).
 
 ### Verification
 
@@ -625,12 +626,12 @@ grep -icE 'golden-staleness|presolve-divergence|resolve-changed' docs/planning/E
 
 ### Acceptance Criteria
 
-- [ ] A Phase-0 gate authored for each of P1–P5 with an exact `/tmp` control + pass criterion
-- [ ] Every gate asserts `modelstat` and states a PROCEED/REPLAN decision
-- [ ] The mine `x.up=inf` and Case-c sign-flip BANs encoded as gate conditions
-- [ ] The emit-touching CI gates (PR26 golden-staleness, presolve-divergence, `--resolve-changed`) referenced
-- [ ] Cross-referenced to the per-track design docs (Tasks 3–7)
-- [ ] Unknowns 1.1, 2.1, 3.1, 4.1, 5.1 verified and updated in KNOWN_UNKNOWNS.md
+- [x] A Phase-0 gate authored for each of P1–P5 with an exact `/tmp` control + pass criterion
+- [x] Every gate asserts `modelstat` and states a PROCEED/REPLAN decision
+- [x] The mine `x.up=inf` and Case-c sign-flip BANs encoded as gate conditions
+- [x] The emit-touching CI gates (PR26 golden-staleness, presolve-divergence, `--resolve-changed`) referenced
+- [x] Cross-referenced to the per-track design docs (Tasks 3–7)
+- [x] Unknowns 1.1, 2.1, 3.1, 4.1, 5.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
