@@ -356,7 +356,8 @@ grep -icE 'atomic|O\(active|budget|srpchase|6.56' docs/planning/EPIC_4/SPRINT_33
 
 ## Task 5: fawley #1111/#1112 Second-Index Cross-Term Generalization Design (Priority 3 foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-16
 **Priority:** High
 **Estimated Time:** 4–6 hours
 **Deadline:** Before Sprint 33 Day 1
@@ -374,25 +375,25 @@ P3 is the second firm +1 Solve/genuine-floor lever and the empirical test of the
 
 ### Background
 
-`bq(c,cf)` appears in qsb(cfq,l,s)/pbal(cfq,m) as the #1111/#1112 second-index-transpose shape. The landed core (`_var_at_two_indices_complement` + `_build_complement_index_sum` in `src/kkt/stationarity.py`) covers the variable's-first-index = equation-index shape (mbal, polygon, ps2). The banked write-up is `SPRINT_32/P6_BACKLOG_RETRIAGE.md` §3. Research: `docs/research/nested_subset_indexing_research.md`, `docs/research/multidimensional_indexing.md`.
+`bq(c,cf)` appears in qsb(cfq,l,s)/pbal(cfq,m) as the #1111/#1112 second-index-transpose shape. The landed **1-D** complement core (`_var_at_two_indices_complement` + `_build_complement_index_sum` in `src/kkt/stationarity.py`) covers the 1-D var-at-two-indices shape (polygon, ps2) — it does **not** fire for the 2-D `bq`. The **2-D** mbal diagonal restriction (and the fawley qsb/pbal fix) instead flow through the general indexed cross-term `sameas`-guard path (`_build_sameas_guard` / `_get_or_create_fresh_alias` in `_add_indexed_jacobian_terms`) — see the Task-5 design §3 fix-surface refinement. The banked write-up is `SPRINT_32/P6_BACKLOG_RETRIAGE.md` §3. Research: `docs/research/nested_subset_indexing_research.md`, `docs/research/multidimensional_indexing.md`.
 
 ### What Needs to Be Done
 
 1. **Re-confirm the Day-11 control** (Day-0 re-confirm): re-run the `/tmp` fawley `$(sameas(cfq__,cf))` patch, confirm `max|stat_bq|` 473 → 18 (96%), and localize the residual 18.47 term.
 2. **Diagnose the residual** — is the remaining 18.47 a second over-sum (a further gate-leak) or a distinct qsb/pbal term the sameas restriction doesn't reach? Determine whether closing it also fixes the MS-5 LP-convergence.
 3. **Design the gate generalization** in `src/kkt/stationarity.py`: extend the second-index gate from the variable's-first-index shape to the variable's-second-index-summed shape, covering qsb/pbal, so `max|stat_bq| → 0`.
-4. **Specify the no-regression requirement** — the extended gate must NOT regress polygon/ps2/mbal (already covered); pin the `--resolve-changed --since-commit 4cbf8bff` GO test.
+4. **Specify the no-regression requirement** — the extended gate must NOT regress polygon/ps2/mbal (already covered); pin the `--resolve-changed --since-commit ee51ed9e` GO test (the Day-0 code anchor).
 5. **Specify the `/tmp` control** — `max|stat_bq| → 0` + MS-1 at 2899.25 BEFORE any `src/` change.
 6. **Size the track** (12–18h) and pin the gate-leak REPLAN exit.
 7. **Write** `docs/planning/EPIC_4/SPRINT_33/FAWLEY_SECOND_INDEX_DESIGN.md`.
 
 ### Changes
 
-*To be completed*
+Re-confirmed the Day-0 harness control (CASE_B `stat_bq(res-arab-l,fuel-oil)` rel 0.973 raw 473, dual CONSISTENT); confirmed the emit mechanism in the golden (mbal has `$(sameas(cfq__, cf))`, qsb/pbal sum `nu` over all `cfq__`); hand-derived the qsb/pbal ∂ from scratch (they need the same restriction). **Fix-surface refinement:** the fix is the general indexed cross-term `sameas`-guard path (`_build_sameas_guard` / `_get_or_create_fresh_alias` in `_add_indexed_jacobian_terms`), NOT the 1-D polygon core `_var_at_two_indices_complement` (which never fires — `bq` is 2-D). Diagnosed the residual 18.47 (not a fourth over-sum; H-a second-column gate-leak vs H-b non-emit LP-convergence). Authored `docs/planning/EPIC_4/SPRINT_33/FAWLEY_SECOND_INDEX_DESIGN.md` with the no-regression + `/tmp` control specs and the ~12–18h sizing. (A fresh GAMS re-measurement of the 18.47 was blocked by the `--nlp-presolve` domain-redef compile errors — a separate known issue; the banked 473→18 stands.)
 
 ### Result
 
-*To be completed*
+**PROCEED (conditional).** The primary emit bug (qsb/pbal miss the `sameas` restriction the mbal term has) is a real, designable fix that closed 96% (473→18) in the banked control — the fix surface refined to the general 2-D `sameas`-guard path (not the 1-D polygon core). But the residual 18.47 + the patched MCP's MS-5 @ 5739 flag a **gate-leak / LP-convergence risk**: closing `stat_bq` may not alone reach MS-1 (H-b). Sized **12–18h** with the gate-leak REPLAN exit; the +1 Solve / +1 genuine floor is **conditional** on the in-sprint H-a/H-b discrimination (if H-b, the emit fix ships genuine and the +Solve hands off to P5 forcing). Unknowns 3.1/3.3/3.4 ✅ VERIFIED, 3.2 ✅ VERIFIED (design-level).
 
 ### Verification
 
@@ -415,13 +416,13 @@ grep -icE 'resolve-changed|polygon|ps2|/tmp control|MS-1' docs/planning/EPIC_4/S
 
 ### Acceptance Criteria
 
-- [ ] The Day-11 control re-confirmed (473 → 18, 96%) and the residual 18.47 localized
-- [ ] The residual diagnosed (second gate-leak vs distinct term; LP-convergence link)
-- [ ] The second-index gate generalization designed as a `file:line` hypothesis
-- [ ] The no-regression requirement pinned (polygon/ps2/mbal via `--resolve-changed`)
-- [ ] The `/tmp` control specified (`max|stat_bq| → 0`, MS-1 at 2899.25)
-- [ ] The track sized (12–18h) with a documented gate-leak REPLAN exit
-- [ ] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The Day-11 control re-confirmed (harness CASE_B 473; banked sameas patch 473 → 18, 96%) and the residual 18.47 **diagnosed** (not a fourth over-sum; H-a second-column gate-leak vs H-b non-emit LP-convergence — exact per-column localization is an in-sprint `/tmp` step)
+- [x] The residual diagnosed (second gate-leak vs distinct term; LP-convergence link)
+- [x] The second-index gate generalization designed as a `file:line` hypothesis
+- [x] The no-regression requirement pinned (polygon/ps2/mbal via `--resolve-changed`)
+- [x] The `/tmp` control specified (`max|stat_bq| → 0`, MS-1 at 2899.25)
+- [x] The track sized (12–18h) with a documented gate-leak REPLAN exit
+- [x] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

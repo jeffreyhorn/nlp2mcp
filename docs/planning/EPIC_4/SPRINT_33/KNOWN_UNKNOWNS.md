@@ -505,7 +505,7 @@ Development team (AD/emit specialist)
 **Critical** — The core correctness question for the P3 fix; a leaky generalization is the confirmed "#1111/#1112 gate leaks" risk
 
 ### Assumption
-Extending the landed `_var_at_two_indices_complement` / `_build_complement_index_sum` gate from the variable's-first-index = equation-index shape (mbal) to the variable's-second-index-summed shape covers qsb/pbal, so `max|stat_bq| → 0`.
+Extending the diagonal `sameas`-restriction from the variable's-first-index shape (mbal) to the variable's-second-index-summed shape (qsb/pbal) — via the general indexed cross-term `sameas`-guard path (`_build_sameas_guard` / `_get_or_create_fresh_alias` in `_add_indexed_jacobian_terms`), **not** the 1-D `_var_at_two_indices_complement` core (which never fires for the 2-D `bq`) — makes `max|stat_bq| → 0`.
 
 ### Research Questions
 1. Is the qsb/pbal shape truly the *variable's-second-index-summed* transpose (vs a distinct shape)?
@@ -526,17 +526,17 @@ Hand-derive `stat_bq` for qsb/pbal from the fawley source; prototype the general
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🟡 **Status:** PARTIAL — Day-0 bucket VERIFIED (Task 2); *gate generalization* pending Task 5
-**Verified by:** Task 2 (Day-0-bucket aspect only — the primary owner is Task 5)
+✅ **Status:** VERIFIED
+**Verified by:** Task 5 (Task 2 previously confirmed the Day-0 bucket: fawley `model_infeasible`, MS 5, candidate, LP 2899.25)
 **Date:** 2026-07-16
 
 **Findings:**
-- Day-0 bucket confirmed: **fawley** is `model_infeasible` (MS 5, LP optimum 2899.25), a `verified_convex` candidate — the +1 Solve / +1 genuine-floor lever if the second-index generalization cold-matches (infeasible → optimal).
-- The **core question of this unknown** (does the second-index gate generalize cleanly from the variable's-first-index to the variable's-second-index-summed shape?) is the fix-surface question, verified by **Task 5** (`FAWLEY_SECOND_INDEX_DESIGN.md` + its `/tmp` control), NOT by this baseline task.
+- Re-confirmed the Day-0 harness control (CASE_B `stat_bq(res-arab-l,fuel-oil)` rel 0.973 raw 473, dual CONSISTENT). The emit mechanism is confirmed in the golden: the **mbal** cross-term carries `$(sameas(cfq__, cf))` but the **qsb / pbal** terms sum `nu_qsb`/`nu_pbal` over **all** `cfq__` (no sameas). A from-scratch ∂-derivation confirms qsb/pbal need the same restriction (`∂qsb/∂bq(c,cf)` nonzero only when `cfq=cf`).
+- **Fix-surface refinement:** the fix is the **general indexed cross-term `sameas`-guard path** (`_build_sameas_guard` / `_get_or_create_fresh_alias` in `_add_indexed_jacobian_terms`), **NOT** the 1-D polygon core `_var_at_two_indices_complement` — that returns `None` unless `len(var_domain)==1`, and `bq(c,cf)` is 2-D.
 
-**Evidence:** `docs/planning/EPIC_4/SPRINT_33/BASELINE_METRICS.md` §5 (fawley provenance: model_infeasible, MS 5, candidate).
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/FAWLEY_SECOND_INDEX_DESIGN.md` §2 (emit mechanism + ∂-derivation) + §3 (fix-surface refinement); the Day-0 harness.
 
-**Decision:** Day-0 bucket pinned; the gate-generalization verdict (PROCEED vs gate-leak REPLAN) is deferred to Task 5.
+**Decision:** Extend the diagonal-`sameas` logic to the variable's-second-index-summed shape (qsb/pbal), symmetric with the first-index shape (mbal).
 
 ---
 
@@ -566,7 +566,17 @@ Localize the residual-18.47 term; prototype the full fix in a `/tmp` control; as
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (design-level) — the residual's H-a/H-b split is decided by the in-sprint `/tmp` control, not this docs-only prep
+**Verified by:** Task 5
+**Date:** 2026-07-16
+
+**Findings:**
+- The residual 18.47 (after the banked sameas patch) is **not** a fourth over-sum: a from-scratch ∂-derivation shows the three cross-terms are individually correct once restricted to `cfq__=cf`. Two candidates: **H-a** a second-column gate-leak (a different `cfq` the single-column-dominant patch under-closes → the full generalization closes it), or **H-b** a non-emit LP-convergence.
+- The banked patched MCP still solves **MS-5 @ 5739** (a large jump from LP 2899.25, not a near-optimal point) → a likely **H-b** component, so **closing 18.47 may not alone reach MS-1**. The "#1111/#1112 gate leaks" REPLAN risk is live.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/FAWLEY_SECOND_INDEX_DESIGN.md` §4 (diagnosis) + §1 (the banked MS-5 @ 5739). The fresh per-column localization was blocked by the `--nlp-presolve` domain-redef compile errors (§1 note) and is an in-sprint `/tmp` step.
+
+**Decision:** The in-sprint `/tmp` per-column decomposition (§5) discriminates H-a vs H-b; if `max|stat_bq|→0` but MS-5 persists (H-b), the emit fix ships genuine and the +Solve hands off to forcing.
 
 ---
 
@@ -580,11 +590,11 @@ The second-index generalization is additive — it fires on qsb/pbal without cha
 
 ### Research Questions
 1. Does the broadened detection accidentally fire on polygon/ps2/mbal?
-2. Does `--resolve-changed --since-commit 4cbf8bff` return GO (no bucket moves for the covered models)?
+2. Does `--resolve-changed --since-commit ee51ed9e` (the Day-0 code anchor) return GO (no bucket moves for the covered models)?
 3. Is the generalization gated so it fires only on the second-index-summed shape?
 
 ### How to Verify
-Run `--resolve-changed --since-commit 4cbf8bff` after the `/tmp` prototype; confirm GO (no polygon/ps2/mbal regression); inspect the emitted diff for those models (should be unchanged).
+Run `--resolve-changed --since-commit ee51ed9e` (the Day-0 code anchor; `4cbf8bff` is the DB byte-anchor, a different purpose) after the `/tmp` prototype; confirm GO (no polygon/ps2/mbal regression); inspect the emitted diff for those models (should be unchanged).
 
 ### Risk if Wrong
 - **Regression:** the generalization breaks a covered model → the fix cannot ship as-is.
@@ -596,7 +606,16 @@ Run `--resolve-changed --since-commit 4cbf8bff` after the `/tmp` prototype; conf
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 5
+**Date:** 2026-07-16
+
+**Findings:**
+- No-regression is structurally favorable: polygon/ps2 use the **1-D** core (`_var_at_two_indices_complement`, a different path) — untouched by the 2-D `sameas`-guard fix. The real risk is perturbing the **mbal / first-index** sameas on the *same* 2-D path (it must stay correct).
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/FAWLEY_SECOND_INDEX_DESIGN.md` §3 (the fix is on the 2-D indexed-cross-term path, distinct from the 1-D core) + §5 probe 3 (the no-regression control).
+
+**Decision:** Guard with `--resolve-changed --since-commit ee51ed9e` GO + a 2-D indexed-cross-term emit-diff (no polygon/ps2/mbal move) before the src change.
 
 ---
 
@@ -626,7 +645,17 @@ After the fix, diff the cold emit vs the Day-0 emit (must change → genuine); r
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 5
+**Date:** 2026-07-16
+
+**Findings:**
+- Sized **12–18 h** (`/tmp` control ~4–6h + the second-index gate extension ~5–8h + no-regression/determinism/fixture ~3–4h).
+- **Cold-match:** the fix changes the cold emit (adds the sameas to qsb/pbal) → a **genuine** cross-term correction, not methodology. fawley cold-matches (+1 Solve, +1 genuine floor) **iff** the emit fix reaches MS-1 (H-a); if H-b dominates (MS-5 persists), the emit fix is still genuine but the +Solve hands off to the P5 forcing survey — **conditional**.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/FAWLEY_SECOND_INDEX_DESIGN.md` §6 (sizing + cold-match + REPLAN exit).
+
+**Decision:** 12–18 h with the gate-leak REPLAN exit; the +1 Solve / +1 genuine floor is conditional on the H-a/H-b outcome.
 
 ---
 
