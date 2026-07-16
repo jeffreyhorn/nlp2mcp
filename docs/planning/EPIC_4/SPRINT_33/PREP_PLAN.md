@@ -707,7 +707,8 @@ grep -icE 'flat.?KPI|modal|Solve.*108|110|genuine floor|front.?load' docs/planni
 
 ## Task 10: Reusable-Tooling Readiness Audit + Backlog Fix-Surface Analysis (Priorities 6 + 7)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-16
 **Priority:** Medium
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 33 Day 1
@@ -736,11 +737,11 @@ The reused tooling: the KKT-residual harness (incl. the new `case_c_objdef` clas
 
 ### Changes
 
-*To be completed*
+Authored `docs/planning/EPIC_4/SPRINT_33/TOOLING_AND_BACKLOG_ANALYSIS.md` from read-only runs (a `--resolve-changed --dry-run` at `ee51ed9e`, a source-scope grep of the P6 cohort, a DB `outcome_category` sweep, a property-catalog inventory). §1 audited all six reused tools — **zero new diagnostic-tool code** this sprint (the S32 `case_c_objdef` extension landed on `main`), only the three P7 fixtures; `--resolve-changed` GO at `ee51ed9e` (ancestor confirmed). §2 re-triaged the `model_infeasible` cohort: agreste = double-`solve` driver (lines 294/298 — scope-verify before treating CASE_B as an emit bug), cesam/lnts = confirmed Case-c (bilinear SAM / bilinear-`step`), plus a distinct 8-member `path_syntax_error` cohort (clearlak/dinam/ganges/gangesx/indus/sample/turkey/turkpow, all convex — a translate-syntax fix-surface). §3 scoped the P2 sarf/srpchase symbolic-emit unlock (Low–Medium, Day-6+ post-P2). §4 scoped the P7 fixtures (shape12/shape13 + a new fawley 2-D second-index fixture, fail-before/pass-after, gated on P1/P2/P3), the genuine-floor recompute (anchor 74), and the SUMMARY row-33 continuation (theme reconcile + Day-12 backfill). Verified Unknowns 6.1/6.2/6.3/7.1/7.3 in KNOWN_UNKNOWNS.md.
 
 ### Result
 
-*To be completed*
+Sprint 33's tooling is a **pure reuse** — no new diagnostic-tool code, only the three P7 fail-before/pass-after fixtures. The P6 back-half starts against a plan: agreste (scope-verify → conditional +Solve) + the 8-member `path_syntax_error` translate-syntax cohort (bonus, likely a shared root) are the `--resolve-changed`-gated candidates; cesam/lnts bank as Case-c; the sarf/srpchase unlock is a Low–Medium Day-6+ scan. The offset-alias generalization is **exhausted** (cpack et al. already solve; fawley was promoted to P3). No blocking tool gap.
 
 ### Verification
 
@@ -761,12 +762,12 @@ grep -icE 'agreste|cesam|lnts|shape12|shape13|second-index|genuine-floor|SUMMARY
 
 ### Acceptance Criteria
 
-- [ ] The Sprint-28–32 tooling audited against the new Sprint-33 classes (reuse confirmed, any gap noted)
-- [ ] The P6 cohort analyzed (agreste scope caveat, cesam/lnts Case-c, residual path_syntax_error, srpchase/sarf follow-ons)
-- [ ] The P7 property fixtures scoped (shape12/shape13/fawley, fail-before/pass-after, gated on landings)
-- [ ] The genuine-floor recompute (anchor 74) + Epic-4-SUMMARY row-33 continuation noted
-- [ ] Each P6 candidate gated by a `--resolve-changed` GO
-- [ ] Unknowns 6.1, 6.2, 6.3, 7.1, 7.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The Sprint-28–32 tooling audited against the new Sprint-33 classes (reuse confirmed, any gap noted)
+- [x] The P6 cohort analyzed (agreste scope caveat, cesam/lnts Case-c, residual path_syntax_error, srpchase/sarf follow-ons)
+- [x] The P7 property fixtures scoped (shape12/shape13/fawley, fail-before/pass-after, gated on landings)
+- [x] The genuine-floor recompute (anchor 74) + Epic-4-SUMMARY row-33 continuation noted
+- [x] Each P6 candidate gated by a `--resolve-changed` GO
+- [x] Unknowns 6.1, 6.2, 6.3, 7.1, 7.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
