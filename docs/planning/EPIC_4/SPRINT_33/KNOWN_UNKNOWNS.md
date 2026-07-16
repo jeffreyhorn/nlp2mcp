@@ -322,7 +322,16 @@ Re-profile the timeout (Day-0 re-confirm); instrument each candidate site to con
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 4
+**Date:** 2026-07-16
+
+**Findings:**
+- Eliminating the 369,024-column materialization requires **all three** sites atomically, not just `compute_constraint_jacobian`'s constraint gate: **S1** the `acost3` body-differentiation (scalar eq, `∂/∂task` → 369K Jacobian column entries — untouched by the 2-D constraint gate), **S2** the variable-column enumeration (`src/ad/index_mapping.py`), **S3** the variable stationarity (`src/kkt/stationarity.py`). Fixing only the constraint gate is the Sprint-32 Day-6 "necessary but insufficient" finding, re-confirmed.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md` §1 (re-profile: `compute_constraint_jacobian` TIMEOUT > 75 s; 2-D gate absent from main) + §2 (three-site table) + §3 (per-site O(active) elimination).
+
+**Decision:** Emit one symbolic guarded `stat_task(g,t,m,n)$taskposs(g,t)` (S3) + parametric `acost3` ∂ (S1) + `task.fx` (S2); all three land atomically (Unknown 2.2).
 
 ---
 
@@ -353,7 +362,17 @@ After the design lands in a `/tmp` prototype, time `sarf_mcp.gms` against the tr
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 4
+**Date:** 2026-07-16
+
+**Findings:**
+- The 2-D constraint gate makes `tbal`/`equipb1`/`equipb2` enumerate **zero** Jacobian entries, so their `Jᵀ·λ` contributions to `stat_task` (and `stat_xcrop`/`stat_equipp`/…) **cannot** be assembled from per-instance entries — they must come from the parametric cross-term path.
+- **Re-emit-without-cross-terms = an inconsistent MCP** (multipliers with no stationarity coupling). There is **no safe partial landing**: the guarded constraint re-emit + the parametric `stat_task` (every `stat_*` the short-circuited constraints touch) + `task.fx` assemble at a **single atomic point**.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md` §4 (atomicity requirement).
+
+**Decision:** Gate + parametric emit + `task.fx` land in one change; the O(active) budget gate verifies completeness (§4).
 
 ---
 
@@ -385,7 +404,16 @@ Hand-derive `stat_task` from the sarf source and compare against the banked 7-te
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 4
+**Date:** 2026-07-16
+
+**Findings:**
+- The banked 7-term `stat_task` derivation is **symbolic**: every multiplier is indexed by the stat equation's own domain — `nu_tbal(g,t)`, `lam_labor(t)`, `lam_equipb1(m,t)`, `lam_equipb2(n,t)`, `nu_acost3`, `piL_task(g,t,m,n)` — with **no quoted-set-name indices** (the guard against the reverted Sprint-26 `243fe578` `nu_slack("srn")` anti-pattern). Verified term-for-term against the `tbal`/`equipb1`/`equipb2`/`acost3`/labor bodies + the `task.lo=0` bound.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md` §3.1 (the 7-term emit + the term-source annotations).
+
+**Decision:** The structural guard is the compile-clean scan `grep -E 'nu_[[:alnum:]_]+\("|lam_[[:alnum:]_]+\("' sarf_mcp.gms` → must return nothing (Task-8 gate).
 
 ---
 
@@ -415,7 +443,17 @@ Emit the `task.fx` in a `/tmp` prototype; solve with PATH; confirm no unmatched-
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 4
+**Date:** 2026-07-16
+
+**Findings:**
+- `task.fx(g,t,m,n)$(not (taskposs(g,t) and tech(g,m,n))) = 0` fixes the **368,626 vacuous columns**; the `$(not active)` guard exactly complements the `$taskposs(g,t) ∧ $tech(g,m,n)`-active **398** (the mine non-`d` precedent). PATH accepts the fixing; the fixed columns' paired `stat_task` rows drop under MCP matching.
+- Active subset re-confirmed: 398 active vs 369,024 Cartesian (banked GAMS data probe, byte-identical GAMSlib model).
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md` §1 (398 sizing) + §3 (S2 elimination) + §3.1 (the `task.fx` line).
+
+**Decision:** The `task.fx$(not active)` fixing is part of the atomic landing.
 
 ---
 
@@ -445,7 +483,17 @@ Emit the sarf golden under `PYTHONHASHSEED` {0,1,42}; compare with `md5 -q` (mac
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 4
+**Date:** 2026-07-16
+
+**Findings:**
+- Byte-stability/determinism is enforced by the O(active) translate-budget gate (§4): determinism ×3 `PYTHONHASHSEED` + `--resolve-changed --since-commit ee51ed9e` GO (sarf the only changed golden) + the anti-pattern grep + the term-by-term `stat_task` check. The O(active) target (398) makes the emit decisively tractable (srpchase's 1-D analogue ~2.9 s vs sarf's > 75 s).
+- Sized **20–28 h** (a from-scratch subsystem across three layers, the 4×-failed Sprint-26 path — high risk) with the **timeout-re-trigger REPLAN exit**.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md` §4 (budget gate) + §5 (sizing + REPLAN exit).
+
+**Decision:** PROCEED to the in-sprint implementation against the spec; the budget/atomicity/anti-pattern gates + the REPLAN exit are load-bearing.
 
 ---
 

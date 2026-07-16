@@ -284,7 +284,8 @@ grep -icE 'modelstat|/tmp control|REPLAN exit' docs/planning/EPIC_4/SPRINT_33/MI
 
 ## Task 4: sarf Symbolic Parametric `stat_task` Emit-Subsystem Design (Priority 2 foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-16
 **Priority:** High
 **Estimated Time:** 5–7 hours
 **Deadline:** Before Sprint 33 Day 1
@@ -316,11 +317,11 @@ The 2-D constraint gate exists and fires sarf-only (the "necessary" half). The b
 
 ### Changes
 
-*To be completed*
+Re-confirmed the Day-0 blow-up (bounded re-profile: parse 18.9s, `compute_constraint_jacobian` **TIMEOUT > 75s**; enumeration at `constraint_jacobian.py:798/1247` + `index_mapping.py:648`; the 2-D gate is absent from `main`, reverted). Consolidated the **three** 369K-enumeration sites (S1 `acost3` body-differentiation, S2 variable-column enumeration, S3 variable stationarity) — the Sprint-32 Day-6 "necessary but insufficient" finding made explicit — with the O(active=398) elimination per site; verified the banked 7-term symbolic `stat_task` term-for-term (incl. the `nu_acost3` S1 term) + `task.fx$(not active)`; specified the atomic-landing requirement + the O(active) budget gate (vs srpchase ~2.9s). Authored `docs/planning/EPIC_4/SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md`.
 
 ### Result
 
-*To be completed*
+**PROCEED** — the sparsification target is decisively small (398 active vs 369,024 Cartesian, 927×) and the banked `stat_task` is symbolic + complete; the fix eliminates 369K at all three sites atomically (one symbolic guarded `stat_task(g,t,m,n)$taskposs(g,t)` + parametric `acost3` ∂ + `task.fx`), gated by the O(active) translate-budget gate + the anti-pattern grep + determinism ×3. Sized **20–28h** (high-risk from-scratch subsystem across `index_mapping.py` + `stationarity.py`) with the timeout-re-trigger REPLAN exit. Unknowns 2.1–2.5 ✅ VERIFIED. sarf +1 Translate (→136) is the deliverable — the lowest-leverage KPI (moves neither Solve nor Match).
 
 ### Verification
 
@@ -343,13 +344,13 @@ grep -icE 'atomic|O\(active|budget|srpchase|6.56' docs/planning/EPIC_4/SPRINT_33
 
 ### Acceptance Criteria
 
-- [ ] The timeout re-profiled and all three 369K enumeration sites named
-- [ ] The O(active = 398) elimination designed per site (Jacobian, variable list, stationarity)
-- [ ] The single symbolic guarded emit specified (7-term derivation, no set-name literals, parametric cross-terms)
-- [ ] The atomic-landing requirement stated
-- [ ] The O(active) budget test defined (translate time vs srpchase 6.56s, grep-clean, byte-stable golden)
-- [ ] The track sized (20–28h) with a documented timeout-re-trigger REPLAN exit
-- [ ] Unknowns 2.1, 2.2, 2.3, 2.4, 2.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The timeout re-profiled and all three 369K enumeration sites named
+- [x] The O(active = 398) elimination designed per site (Jacobian, variable list, stationarity)
+- [x] The single symbolic guarded emit specified (7-term derivation, no set-name literals, parametric cross-terms)
+- [x] The atomic-landing requirement stated
+- [x] The O(active) budget test defined (translate time vs srpchase 6.56s, grep-clean, byte-stable golden)
+- [x] The track sized (20–28h) with a documented timeout-re-trigger REPLAN exit
+- [x] Unknowns 2.1, 2.2, 2.3, 2.4, 2.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
