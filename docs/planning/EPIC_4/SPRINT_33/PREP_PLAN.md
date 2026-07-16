@@ -637,7 +637,8 @@ grep -icE 'golden-staleness|presolve-divergence|resolve-changed' docs/planning/E
 
 ## Task 9: Diagnosis-Heavy / REPLAN-Prone Track Risk Assessment (P1 cross-term, P2 sarf timeout, P3 fawley gate-leak; PR16)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-16
 **Priority:** High
 **Estimated Time:** 3–5 hours
 **Deadline:** Before Sprint 33 Day 1
@@ -668,11 +669,11 @@ Sprint 32's assessment is in `SPRINT_32/REPLAN_RISK_ASSESSMENT.md`. The control-
 
 ### Changes
 
-*To be completed*
+Authored `docs/planning/EPIC_4/SPRINT_33/REPLAN_RISK_ASSESSMENT.md` applying the PR16 hypothesis-validation discipline to the three from-scratch tracks (P1 mine, P2 sarf, P3 fawley): a per-track single-model/control validation table (V1/V2, Day-5-measurable), an explicit REPLAN exit, a budget-at-risk figure, and a REPLAN prior. Assessed the P4 camcge Epic-5 deferral (expected) and the P5 rocket/Case-c conditional hand-off (0 genuine floor). Pinned the freed-budget reallocation (→ P6 failure-cohort re-triage + P7 property fixtures). Authored the honest KPI projection (Solve +1 conditional on P1 or P3-H-a; Translate +1 on P2; genuine floor +1 on P1/P3 cold-match; Solve ≥110 stretch; modal flat-KPI) and the deep-track front-load ordering (P1 Day 0–1, P2 Day-0 timing probe, P3 by Day 5). Appended Task-9 REPLAN-probability contributions to Unknowns 1.2/2.3/3.3 (without clobbering the Task-3/4/5 primary blocks).
 
 ### Result
 
-*To be completed*
+The three deepest tracks each carry a control-measurable REPLAN exit + a freed-budget target, with the sprint's dominant risk converted into a **Day-5 fork**. The one Sprint-33-specific escalation is pinned: **P1's banked premise was already refuted during prep** (Task 3), so mine enters on an unproven third hypothesis (H1) at a **High** REPLAN prior — one fewer firm mover than Sprint 32 carried (camcge is now Epic-5-out-of-sprint). The **modal outcome is flat-KPI**; the most-likely single gain, if any, is genuine floor +1 via P3's genuine cross-term correction (the one lever that lands even under its adverse hypothesis H-b). The sprint's real product is the de-risking, not the bucket.
 
 ### Verification
 
@@ -695,12 +696,12 @@ grep -icE 'flat.?KPI|modal|Solve.*108|110|genuine floor|front.?load' docs/planni
 
 ### Acceptance Criteria
 
-- [ ] P1/P2/P3 each assessed for REPLAN probability + the refuting control/harness evidence
-- [ ] P4 (Epic-5) and P5 (conditional) dispositions assessed
-- [ ] REPLAN exits + freed-budget reallocation pinned (→ P6/P7)
-- [ ] The honest KPI projection authored (firm movers, stretch ≥ 110, modal flat-KPI)
-- [ ] The front-load ordering recommended (deep tracks by Day 5)
-- [ ] Unknowns 1.2, 2.3, 3.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] P1/P2/P3 each assessed for REPLAN probability + the refuting control/harness evidence
+- [x] P4 (Epic-5) and P5 (conditional) dispositions assessed
+- [x] REPLAN exits + freed-budget reallocation pinned (→ P6/P7)
+- [x] The honest KPI projection authored (firm movers, stretch ≥ 110, modal flat-KPI)
+- [x] The front-load ordering recommended (deep tracks by Day 5)
+- [x] Unknowns 1.2, 2.3, 3.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
