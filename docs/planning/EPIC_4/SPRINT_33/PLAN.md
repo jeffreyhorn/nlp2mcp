@@ -13,7 +13,7 @@ Land the five Sprint-32 REPLAN'd carryforwards, each carrying a **Sprint-32 cont
 
 ## 2. Acceptance Criteria (from `PROJECT_PLAN.md` §"Sprint 33")
 
-- **Solve 107 → +1 (108), stretch +2 (109) / ≥ 110** — conditional on P1 mine **or** P3 fawley (Task 9: P4 camcge is **Epic-5-deferred**, not an in-sprint Solve mover; P5 rocket is a **Sprint-34** conditional). **model_infeasible ≤ 7** maintain (−1 per landed mover).
+- **Solve 107 → +1 (108)** conditional on P1 mine **or** P3 fawley landing an emit fix that reaches MS-1 (both land ⇒ +2 = 109); **Solve ≥ 110 is a further stretch** that also needs out-of-band camcge/rocket conversion — a priori unlikely (Task 9: P4 camcge is **Epic-5-deferred**, not an in-sprint Solve mover; P5 rocket is a **Sprint-34** conditional). **model_infeasible ≤ 7** maintain (−1 per landed mover).
 - **Match maintain ≥ 92** as-measured (all-219 Match 95); **genuine floor 74 → +1 (75)** conditional on P1 **or** P3 COLD-matching an emit change — **NOT** presolve-methodology reclassification (**P5 delivers 0 floor**).
 - **Translate 135 → +1 (136)** via #1385 sarf [P2]; **Parse 142** maintain; **path_syntax_error ≤ 8** maintain.
 - **Tests** up from 5,085; **Determinism** byte-identical under ≥ 3 `PYTHONHASHSEED` (PR12).
