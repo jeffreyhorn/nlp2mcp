@@ -773,7 +773,8 @@ grep -icE 'agreste|cesam|lnts|shape12|shape13|second-index|genuine-floor|SUMMARY
 
 ## Task 11: Plan Sprint 33 Detailed Schedule
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-16
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 33 Day 1
@@ -803,11 +804,11 @@ Sprint 32's schedule + prompts are in `SPRINT_32/PLAN.md` and `SPRINT_32/prompts
 
 ### Changes
 
-*To be completed*
+Authored `docs/planning/EPIC_4/SPRINT_33/PLAN.md` (the 14-day schedule, Day 0 + Days 1–13, 19 sections) + `docs/planning/EPIC_4/SPRINT_33/prompts/PLAN_PROMPTS.md` (one pasteable prompt per day, Day 0–13). Front-loaded the two in-sprint +Solve movers — **P1 mine** (Days 1–3, H1 head-label re-keying) + **P3 fawley** (Days 4–5, H-a/H-b) — so both close-or-REPLAN gates fire by the **Day-5 checkpoint**; P2 sarf's O(active) REPLAN probe is Day 0 with the emit build Days 6–9 (tractability gate Day 7); P4 camcge Epic-5 `/tmp` gate + P5 rocket/Case-c survey Day 10 (Checkpoint 2); P6 failure-cohort Day 11; P7 infra Day 12; final retest ×3 `PYTHONHASHSEED` Day 13. Budget verified: ~101h mid (86–126h work-items per `PROJECT_PLAN.md` §Sprint 33), ≤ 12h/day, heaviest ~11h (Day 11), ≤ 168h. Confirmed all 27 unknowns resolved (25 VERIFIED / 2 WRONG, 0 INCOMPLETE — no Day-0 blocker). Each day-prompt references its Phase-0 gate + design doc + REPLAN exit; the honest modal-flat-KPI projection (Task 9) binds the acceptance criteria.
 
 ### Result
 
-*To be completed*
+Sprint 33 is **GO for Day 0** — all 11 prep tasks complete. The schedule front-loads the two in-sprint +Solve movers (mine + fawley) so a REPLAN surfaces by the Day-5 checkpoint (the Sprint-32 front-load lesson), with the honest projection binding: **P1 mine is High-prior** (its banked premise was already refuted in prep → an unproven H1), **P4 camcge is Epic-5-out-of-sprint**, **P5 rocket is Sprint-34** — so the modal outcome is flat-KPI and the firm product is the de-risking. Sprint 33 prep COMPLETE (Tasks 1–11).
 
 ### Verification
 
@@ -829,11 +830,11 @@ grep -icE 'Day 5|Day 10|checkpoint|front.?load|PYTHONHASHSEED' docs/planning/EPI
 
 ### Acceptance Criteria
 
-- [ ] The 14-day schedule laid out (Day 0 + Days 1–13) with the deep tracks (P1, P2) front-loaded
-- [ ] Checkpoints placed (Day 5 PROCEED/REPLAN + freed-budget reallocation, Day 10, final retest Day 13)
-- [ ] A pasteable day-by-day prompt authored for every day, each referencing its gate + design doc + REPLAN exit
-- [ ] The budget verified (≤ 12h/day, ≤ 168h, 86–126h work-items, heaviest ~11h)
-- [ ] Cross-referenced to all prior prep tasks (Tasks 1–10)
+- [x] The 14-day schedule laid out (Day 0 + Days 1–13) with the deep tracks (P1, P2) front-loaded
+- [x] Checkpoints placed (Day 5 PROCEED/REPLAN + freed-budget reallocation, Day 10, final retest Day 13)
+- [x] A pasteable day-by-day prompt authored for every day, each referencing its gate + design doc + REPLAN exit
+- [x] The budget verified (≤ 12h/day, ≤ 168h, 86–126h work-items, heaviest ~11h)
+- [x] Cross-referenced to all prior prep tasks (Tasks 1–10)
 
 ---
 
@@ -908,4 +909,4 @@ grep -icE 'Day 5|Day 10|checkpoint|front.?load|PYTHONHASHSEED' docs/planning/EPI
 
 **Document Created:** 2026-07-15
 **Owner:** Sprint 33 Planning Team
-**Status:** 🔵 Prep NOT STARTED — execute Tasks 1–11 before Sprint 33 Day 1
+**Status:** ✅ Prep COMPLETE (Tasks 1–11, 2026-07-16) — Sprint 33 is GO for Day 0 (`PLAN.md` + `prompts/PLAN_PROMPTS.md`)
