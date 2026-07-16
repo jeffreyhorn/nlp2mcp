@@ -210,7 +210,8 @@ grep -E 'Solve.*107|Match.*92|genuine floor.*74|Translate.*135' docs/planning/EP
 
 ## Task 3: mine Head-Offset Bound-Active Cross-Term — Localization + Re-Derivation Design (Priority 1 foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-16
 **Priority:** Critical
 **Estimated Time:** 6–8 hours
 **Deadline:** Before Sprint 33 Day 1
@@ -242,11 +243,11 @@ Sprint 31 landed the head-offset IR foundation (`EquationDef.head_domain_offsets
 
 ### Changes
 
-*To be completed*
+Re-confirmed the Day-0 harness control (CASE_B `stat_x(3,1,1)` rel 2.37, dual transfer CONSISTENT); classified the 6 wrong-sign rows + the max as **all on the `c`-boundary** (a sharper localization than the banked doc); localized the emit to `_try_build_param_offset_crossterm` (`src/kkt/stationarity.py:5712`) — NOT the `head_domain_offsets` path; and **hand-derived the cross-term from scratch, finding it term-for-term algebraically correct**. Authored `docs/planning/EPIC_4/SPRINT_33/MINE_CROSSTERM_DESIGN.md` with the re-derivation, the head-label multiplier-keying fix hypotheses (H1/H2) + the REPLAN exit (H3), the pre-`src/` `/tmp` control spec, and the ~22–24h sizing.
 
 ### Result
 
-*To be completed*
+**The banked "cross-term re-derivation" premise is REFUTED** (Unknowns 1.1/1.2 ❌ WRONG): the emitted `stat_x` cross-term is algebraically correct, so re-deriving it closes nothing. P1's fix is **re-scoped** from a cross-term sign/guard tweak to a **head-offset multiplier-keying reconciliation** (H1 head-label `comp_pr`/`lam_pr`/cross-term via `head_domain_offsets`; H2 `d\c`-ring bound reconciliation), gated by a `/tmp` control, with a deeper-coupling REPLAN exit (H3). Sized ~22–24h (upper half). Unknowns 1.1/1.2 ❌ WRONG (corrected direction recorded), 1.3/1.4/1.5 ✅ VERIFIED. A control-first de-risking win — the wrong banked premise was caught by hand-derivation before any `src/`.
 
 ### Verification
 
@@ -271,13 +272,13 @@ grep -icE 'modelstat|/tmp control|REPLAN exit' docs/planning/EPIC_4/SPRINT_33/MI
 
 ### Acceptance Criteria
 
-- [ ] The Day-1 control re-confirmed (wrong-sign `N` at the 6 bound-active rows, `modelstat` asserted)
-- [ ] The head-offset `stat_x` cross-term emit site localized in `src/kkt/stationarity.py`
-- [ ] The correct bound-active-row stationarity derived by hand
-- [ ] The re-derivation designed as a `file:line` hypothesis (with sign/guard specifics)
-- [ ] The pre-`src/` `/tmp` control specified (the `x.up=inf` experiment noted BANNED)
-- [ ] The track sized (18–24h) with a documented deeper-coupling REPLAN exit
-- [ ] Unknowns 1.1, 1.2, 1.3, 1.4, 1.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The Day-1 control re-confirmed (wrong-sign `N` at the 6 bound-active rows, `modelstat` asserted)
+- [x] The head-offset `stat_x` cross-term emit site localized in `src/kkt/stationarity.py`
+- [x] The correct bound-active-row stationarity derived by hand
+- [x] The re-derivation designed as a `file:line` hypothesis (with sign/guard specifics)
+- [x] The pre-`src/` `/tmp` control specified (the `x.up=inf` experiment noted BANNED)
+- [x] The track sized (18–24h) with a documented deeper-coupling REPLAN exit
+- [x] Unknowns 1.1, 1.2, 1.3, 1.4, 1.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

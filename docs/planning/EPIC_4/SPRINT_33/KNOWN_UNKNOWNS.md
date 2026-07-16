@@ -159,7 +159,17 @@ Prototype the corrected cross-term in a `/tmp` control (BEFORE any `src/` change
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG (assumption refuted — corrected direction recorded)
+**Verified by:** Task 3
+**Date:** 2026-07-16
+
+**Findings:**
+- The wrong-sign `N` is **NOT** produced entirely by the emitted head-offset cross-term. A from-scratch re-derivation + a source trace of `_try_build_param_offset_crossterm` (`src/kkt/stationarity.py:5712`) show the cross-term `sum(k, lam_pr(k,l,i−li,j−lj)$c(l,i−li,j−lj) − lam_pr(k,l−1,i,j)$c(l−1,i,j))` is **term-for-term algebraically correct** (labels, signs, conditions), with `lam_pr.fx` correctly zeroing the out-of-range `l=4`/`l−1=0` instances.
+- All 6 wrong-sign rows + the max-residual sit on the **`c`-boundary** (`ord(l)+ord(i)=card` / `=card+1`); interior rows are 0. The dual transfer is CONSISTENT (complementarity closes) yet `stat_x` does not → a **head-offset boundary reconciliation gap**, not a cross-term term error.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/MINE_CROSSTERM_DESIGN.md` §2 (`c`-boundary classification) + §3 (re-derivation matches the emit) + the Day-0 harness (CASE_B stat_x(3,1,1) rel 2.37, dual CONSISTENT).
+
+**Decision:** Re-deriving the single cross-term closes nothing (it is already correct). P1's fix is **re-scoped** to a head-offset multiplier-keying reconciliation (H1: head-label `comp_pr`/`lam_pr`/cross-term; H2: `d\c`-ring bound reconciliation), gated by the `/tmp` control; deeper-coupling REPLAN exit (H3) pinned.
 
 ---
 
@@ -190,7 +200,17 @@ Inspect the parsed `ModelIR` for mine (`head_domain_offsets`, `has_head_domain_o
 Development team (IR/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG (premise refuted — no cross-term correction exists)
+**Verified by:** Task 3
+**Date:** 2026-07-16
+
+**Findings:**
+- There is **no sign/guard correction on the cross-term** that makes `N→0`, because the cross-term is already correct (Unknown 1.1). A "corrected cross-term" cannot vanish at the 6 rows without perturbing interior rows — the interior emit is correct and unchanged.
+- The residual couples the `d\c`-ring variables through shared boundary multipliers (e.g. `stat_x(3,1,2)` and `stat_x(4,1,1)` via `lam_pr(ne,3,1,1)`), so the closure must change the **multiplier keying**, not a term sign.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/MINE_CROSSTERM_DESIGN.md` §4 (diagnosis + coupling) + §3 (cross-term verified correct).
+
+**Decision:** The closure is the head-label multiplier re-keying (H1) or `d\c`-ring reconciliation (H2); the `/tmp` control (§5) discriminates. Not a cross-term sign/guard fix.
 
 ---
 
@@ -220,7 +240,17 @@ Audit the P1 `/tmp` control scripts for a `modelstat` assertion; grep for any `x
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 3
+**Date:** 2026-07-16
+
+**Findings:**
+- `head_domain_offsets` (the S31 IR foundation) is **not referenced anywhere in `src/kkt/stationarity.py`** — mine's cross-term flows through `_try_build_param_offset_crossterm` (the #1224 parameter-offset path), **not** the head-offset IR. So the current emit does not consume the shifted-label pairing.
+- The re-scoped H1 fix (head-label-keyed multiplier) **does** need a head-label-indexed multiplier; `head_domain_offsets` is the natural carrier (currently unused by this path) → new IR/emit plumbing.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/MINE_CROSSTERM_DESIGN.md` §3 + the grep (0 `head_domain_offset` refs in stationarity.py).
+
+**Decision:** The IR foundation exists but must be wired into the multiplier keying for H1; scoped in §6.
 
 ---
 
@@ -250,7 +280,16 @@ The Task-3 design doc (`MINE_CROSSTERM_DESIGN.md`) sizing + the REPLAN assessmen
 Sprint planning
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 3
+**Date:** 2026-07-16
+
+**Findings:**
+- The Day-0 re-confirm ran through `kkt_residual.py` (which asserts the verdict from a `modelstat`-guarded solve); the `/tmp` control (§5) asserts `modelstat` before any objective read and **BANS** the `x.up=inf` relaxation (the Sprint-31 measurement-error lesson).
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/MINE_CROSSTERM_DESIGN.md` §1 (Day-0 re-confirm) + §5 (control spec).
+
+**Decision:** The measurement discipline is encoded in the control; no `x.up=inf`.
 
 ---
 
@@ -283,7 +322,17 @@ Re-profile the timeout (Day-0 re-confirm); instrument each candidate site to con
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 3
+**Date:** 2026-07-16
+
+**Findings:**
+- 18–24 h is realistic but sits at the **upper half (~22–24 h)** now that P1 is re-scoped from a cross-term sign/guard tweak to a **multiplier-keying + IR-plumbing** change (H1). Breakdown: control ~5–7 h; head-label keying + IR ~10–14 h; determinism/regression ~3–4 h.
+- The deeper-coupling **REPLAN exit (H3)** is pinned: if the `/tmp` prototype can't close `N→0` without perturbing interior/regressing srpchase, mine stays `model_infeasible` and hands a head-offset dual subsystem forward.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_33/MINE_CROSSTERM_DESIGN.md` §6 (sizing + REPLAN exit).
+
+**Decision:** Sized ~22–24 h with an explicit REPLAN exit.
 
 ---
 
