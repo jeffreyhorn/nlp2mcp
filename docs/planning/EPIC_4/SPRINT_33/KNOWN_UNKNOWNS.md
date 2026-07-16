@@ -172,6 +172,8 @@ Development team (KKT/emit specialist)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_33/MINE_CROSSTERM_DESIGN.md` §4 (diagnosis + coupling) + §3 (cross-term verified correct).
 
 **Decision:** The closure is the head-label multiplier re-keying (H1) or `d\c`-ring reconciliation (H2); the `/tmp` control (§5) discriminates. Not a cross-term sign/guard fix.
+**Task-9 REPLAN-probability contribution (High prior):** Because Task 3 refuted the cross-term premise itself — the *second* refutation of mine's banked root cause (after the S32 Day-1 `N`-derivation) — mine enters Sprint 33 on an **unproven third hypothesis** (H1 head-label multiplier-keying), not a pinned fix. That makes P1 the sprint's **highest-prior REPLAN track** (up from the S32 "Medium — derivable by construction"). The refuting evidence that would fire the H3 REPLAN: the H1 `/tmp` control fails to drive `N → 0` at the 6 bound-active rows without perturbing an interior row, or `sign(N)` still contradicts the bound-active status → a deeper head-offset dual-architecture gap (Sprint-34 filing). Surfaced by the **Day-5** warm-residual→0 checkpoint (P1 front-loaded Day 0–1). — `REPLAN_RISK_ASSESSMENT.md` §Track P1.
+
 
 ---
 
@@ -418,6 +420,8 @@ Development team (AD/emit specialist)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md` §3.1 (the 7-term emit + the term-source annotations).
 
 **Decision:** The structural guard is the compile-clean scan `grep -E 'nu_[[:alnum:]_]+\("|lam_[[:alnum:]_]+\("' sarf_mcp.gms` → must return nothing (Task-8 gate).
+**Task-9 REPLAN-probability contribution (Medium-High prior):** Derivation completeness (the 7 symbolic terms, no set-name literals) is Task-4-verified, so the *emit-correctness* risk is low; the live REPLAN risk is the **timeout re-trigger** — the parametric re-emit still enumerates O(instances) because a **fourth** materialization site (beyond S1/S2/S3) or a builder-pipeline path was missed (the S32 "necessary but insufficient" finding proved the 369K blow-up hides at multiple sites). The refuting evidence: `sarf_mcp.gms` still exceeds seconds on the **Day-0 timing probe** (the cheapest, earliest verdict in the sprint) → re-scope the parametric emit (documented); +Translate deferred. — `REPLAN_RISK_ASSESSMENT.md` §Track P2.
+
 
 ---
 
@@ -622,6 +626,8 @@ Development team (KKT/emit specialist)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_33/FAWLEY_SECOND_INDEX_DESIGN.md` §3 (the fix is on the 2-D indexed-cross-term path, distinct from the 1-D core) + §5 probe 3 (the no-regression control).
 
 **Decision:** Guard with `--resolve-changed --since-commit ee51ed9e` GO + a 2-D indexed-cross-term emit-diff (no polygon/ps2/mbal move) before the src change.
+**Task-9 REPLAN-probability contribution (Medium correctness-REPLAN / Medium-High +Solve miss):** No-regression is structurally favorable (polygon/ps2 use the different 1-D core), so the *correctness* REPLAN — the generalization leaking onto the same-path mbal/first-index `sameas` — is Medium and gated by `--resolve-changed --since-commit ee51ed9e` GO before the src change. The larger risk is the **+Solve miss under H-b**: the banked 96%-patch left the MCP diverging (MS-5 @ 5739), so if the residual 18.47 is non-emit LP-convergence, the genuine cross-term correction still ships (a **floor** lever — not a REPLAN) but fawley's +Solve defers to the P5 forcing survey. The H-a/H-b discriminator (localize 18.47 by column) fires by the **Day-5** checkpoint. — `REPLAN_RISK_ASSESSMENT.md` §Track P3.
+
 
 ---
 
