@@ -48,4 +48,4 @@ This is a **different emit MODE** (symbolic/parametric vs the current fully-enum
 Checkpoint holds: Solve 107 / Match 92 / genuine floor 74 / model_infeasible 7; src/goldens byte-unchanged since `ee51ed9e`. No `src/` change today.
 
 ---
-**Document Created:** 2026-07-17 · **Owner:** Sprint 33 execution (Day 6) · WIP — awaiting the Option A / B decision.
+**Document Created:** 2026-07-17 · **Owner:** Sprint 33 execution (Day 6) · **DECIDED: Option B** — sarf REPLAN'd → Sprint 34; sprint pivots to P6.
