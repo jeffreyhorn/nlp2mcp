@@ -25,7 +25,7 @@
 | 30 | 25–26 | S29 carryforward — head-offset emit arch + non-convex forcing | Solve 107 / Match 92 / floor 70 | robert obj-grad fix (+1 floor) · `--force` scaffold | mine / rocket / polygon / hhfair / camcge |
 | 31 | 27–28 | S30 carryforward — head-offset IR plumbing, #1111/#1112, dual-consistent CGE | Solve 107 / Match 92 / **floor 74 (+4)** | head-offset IR foundation · P2 offset-alias #1111/#1112 (polygon +4 floor) | mine [4th site] · camcge [Epic 5] · sarf [369K] · hhfair [Case-c] · rocket [PATH] |
 | 32 | 29–30 | S31 carryforward — mine 4th site, sarf 4-D, camcge Walras, rocket/Case-c | Solve 107 / Match 92 / **floor 74** (no headline gain) | camcge step-1 scalar-`fx` emit fix (`stat_mps`→Case-a) · P5 objective-defining Case-c classifier (`case_c_objdef`, ISSUE_1236 closed) | mine [5th coupling→S33] · camcge Walras [Epic 5] · sarf [symbolic-emit→S33] · fawley [qsb/pbal sameas, 96%→S33] · rocket [PATH input finalized] |
-| 33 | 31–32 | PATH author consultation & solution forcing | (planned) | — | — |
+| 33 | 31–32 | S32 carryforward — mine cross-term, sarf symbolic-emit, fawley 2nd-index, camcge Walras [Epic 5], rocket/Case-c | Solve 107 → **108** / Match 92 → **93** / **floor 74 → 75 (+1)** · path_syntax_error 8 → 7 | **P6 sample** pruned-var `.l`-init fix (`path_syntax_error` → model_optimal + match; genuine cold-emit → +1 Solve/Match/floor, meets floor ≥ 75) | mine [H1 value-invariant → S34 head-offset dual] · sarf [symbolic-emit subsystem → S34] · fawley [H-b; sameas + bound-transfer → S34] · camcge [Walras → Epic 5] · rocket [PATH → S34] · agreste/ganges/gangesx [banked] |
 | 34 | 33–34 | Quality, performance & PATH-feedback integration | (planned) | — | — |
 | 35 | 35–36 | v2.0.0 release & Epic 5 planning | (planned) | — | — |
 
