@@ -16,14 +16,14 @@
 `acost3.. cost("operating") =e= sum((g,t,m,n)$taskposs(g,t), oc(g,m,n)*task(g,t,m,n))` is a **scalar** equation (1 row), so the equation-gate never touches it. The timeout is **per-column differentiation of the `task` variable's 369,024 columns**:
 
 - **S1** — `∂(acost3 body)/∂task(g,t,m,n)` materializes a Jacobian entry per `task` column (369K).
-- **S2** — `enumerate_variable_instances(task)` (`index_mapping.py:369`) builds the full Cartesian cross-product **369,024**.
+- **S2** — `enumerate_variable_instances(task)` (`src/ad/index_mapping.py:369`) builds the full Cartesian cross-product **369,024**.
 - **S3** — the variable stationarity builds `stat_task` per column.
 
 The 1-D equation-gate cannot fix this (the Sprint-32 "necessary but insufficient" finding, re-confirmed).
 
 ## 3. Why there is no cheap gate — the active subset is not statically enumerable
 
-The active `task` columns = `taskposs(g,t) ∧ tech(g,m,n)` = **398** (a 927× reduction). But **`taskposs` is runtime-computed from data** (`taskposs(g,t) = sum((c,s), yes$treq(g,t,c,s))`, `treq` from `atask`/`btask`), so nlp2mcp **cannot statically enumerate the 398** at translate time. Therefore the fix cannot be "enumerate only the 398 columns" — it must **stop enumerating `task`'s columns entirely** and emit a **symbolic guarded equation** (`stat_task(g,t,m,n)$taskposs(g,t)` + `task.fx(g,t,m,n)$(not (taskposs(g,t) and tech(g,m,n))) = 0`), letting **GAMS** instantiate the 398 live rows at runtime.
+The active `task` columns = `taskposs(g,t) ∧ tech(g,m,n)` = **398** (a 927× reduction). But **`taskposs` is runtime-computed from data** (`taskposs(g,t) = sum((c,s), yes$treq(g,t,c,s))`, `treq` from `atask`/`btask`), so nlp2mcp **cannot statically enumerate the 398** at translate time. Therefore the fix cannot be "enumerate only the 398 columns" — it must **stop enumerating `task`'s columns entirely** and emit a **symbolic guarded equation** (`stat_task(g,t,m,n)$taskposs(g,t)`) together with `task.fx(g,t,m,n)$(not (taskposs(g,t) and tech(g,m,n))) = 0`. **Note the 398-row target comes from the *combination*, not the head guard alone:** `$taskposs(g,t)` alone still expands across all `(m,n)` per active `(g,t)` (~124K rows); the `task.fx` fixes the non-active columns to 0, and **under MCP matching the fixed columns — and their paired `stat_task` rows — drop**, so GAMS instantiates only the **398** live `taskposs ∧ tech` rows at runtime (the per-term `$tech`/`$equipposs`/`sameas` guards zero the remaining terms). This is the design's §3.1 mechanism.
 
 This is a **different emit MODE** (symbolic/parametric vs the current fully-enumerated per-column architecture) for the blow-up variable — the from-scratch subsystem the design describes, across all three sites, **atomic** (§4: a partial = an inconsistent MCP; the short-circuited constraints enumerate zero Jacobian entries, so every `stat_*` cross-term the constraints touch must come from the new parametric path).
 
