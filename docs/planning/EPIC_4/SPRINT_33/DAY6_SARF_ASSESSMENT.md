@@ -8,7 +8,7 @@
 ## 1. Phase-0 re-confirm (live tree)
 
 - **Blow-up reproduced:** `sarf` translate **TIMEOUT > 90s** (Day-0: >75s in `compute_constraint_jacobian`).
-- **The 2-D constraint gate is absent** from `src/` (`grep -c _is_blowup_2d_condition_equation` = 0 — reverted, as the design states); the **1-D base gate** `_is_blowup_dynamic_subset_equation` is present (`src/ad/index_mapping.py:402`).
+- **The 2-D constraint gate is absent** from `src/` (`grep -rn _is_blowup_2d_condition_equation src/` → no matches — reverted, as the design states); the **1-D base gate** `_is_blowup_dynamic_subset_equation` is present (`src/ad/index_mapping.py:402`).
 - **The 1-D gate's mechanism:** it returns `[]` for the gated equation (skips AD) **and drops the cross-terms** (srpchase translates but the MCP is incomplete → `path_solve_license`, does not solve). It gates **equation** enumeration, not **variable-column** enumeration.
 
 ## 2. Why sarf is not the 1-D shape — the blow-up is the `task` VARIABLE
@@ -23,7 +23,7 @@ The 1-D equation-gate cannot fix this (the Sprint-32 "necessary but insufficient
 
 ## 3. Why there is no cheap gate — the active subset is not statically enumerable
 
-The active `task` columns = `taskposs(g,t) ∧ tech(g,m,n)` = **398** (a 927× reduction). But **`taskposs` is runtime-computed from data** (`taskposs(g,t) = sum((c,s), yes$treq(g,t,c,s))`, `treq` from `atask`/`btask`), so nlp2mcp **cannot statically enumerate the 398** at translate time. Therefore the fix cannot be "enumerate only the 398 columns" — it must **stop enumerating `task`'s columns entirely** and emit a **symbolic guarded equation** (`stat_task(g,t,m,n)$taskposs(g,t)` + `task.fx(g,t,m,n)$(not (taskposs∧tech))=0`), letting **GAMS** instantiate the 398 live rows at runtime.
+The active `task` columns = `taskposs(g,t) ∧ tech(g,m,n)` = **398** (a 927× reduction). But **`taskposs` is runtime-computed from data** (`taskposs(g,t) = sum((c,s), yes$treq(g,t,c,s))`, `treq` from `atask`/`btask`), so nlp2mcp **cannot statically enumerate the 398** at translate time. Therefore the fix cannot be "enumerate only the 398 columns" — it must **stop enumerating `task`'s columns entirely** and emit a **symbolic guarded equation** (`stat_task(g,t,m,n)$taskposs(g,t)` + `task.fx(g,t,m,n)$(not (taskposs(g,t) and tech(g,m,n))) = 0`), letting **GAMS** instantiate the 398 live rows at runtime.
 
 This is a **different emit MODE** (symbolic/parametric vs the current fully-enumerated per-column architecture) for the blow-up variable — the from-scratch subsystem the design describes, across all three sites, **atomic** (§4: a partial = an inconsistent MCP; the short-circuited constraints enumerate zero Jacobian entries, so every `stat_*` cross-term the constraints touch must come from the new parametric path).
 
