@@ -19,7 +19,7 @@ Emitting the constraint-index diagonal requires extending `_add_indexed_jacobian
 
 ## 2. Checkpoint 1 (Day 5) — GO
 
-- `run_full_test.py --resolve-changed --since-commit ee51ed9e --dry-run` → **GO: no emit goldens changed since `ee51ed9e`**.
+- `.venv/bin/python scripts/gamslib/run_full_test.py --resolve-changed --since-commit ee51ed9e --dry-run` (run from the repo root) → **GO: no emit goldens changed since `ee51ed9e`**.
 - `git diff ee51ed9e..HEAD -- src/ scripts/ data/gamslib/mcp/` → **empty**. No `src/`, `scripts/`, or golden change across the sprint (all work has been control/docs).
 - **No backward moves:** Solve **107**, Match **92**, genuine floor **74**, model_infeasible **7** all hold at the Day-0 baseline. PR25 tally unchanged (genuine 74 / methodology 21 / all-219 95).
 
