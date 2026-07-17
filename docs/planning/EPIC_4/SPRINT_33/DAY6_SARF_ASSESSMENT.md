@@ -1,7 +1,7 @@
 # Sprint 33 — Day 6: P2 sarf Phase-0 re-confirm + tractability assessment
 
 **Date:** 2026-07-17 · **Day:** 6 · **Branch:** `planning/sprint33-day6-sarf-symbolic`
-**Status:** WIP — Phase-0 re-confirm + a code-level tractability assessment. **A genuine decision point:** the sarf fix is a **from-scratch symbolic/parametric emit-mode subsystem** (the design's "high-risk, 4×-failed path"), a multi-day atomic effort for the **lowest-leverage bucket (+1 Translate)**, in an already-flat-KPI sprint. **No `src/` change** (atomicity forbids a partial; the decision to commit the multi-day build vs invoke the REPLAN exit is surfaced below).
+**Disposition: REPLAN (Option B, DECIDED by the sprint owner).** The sarf symbolic/parametric emit-mode subsystem — the design's "high-risk, 4×-failed path", a multi-day atomic effort for the **lowest-leverage bucket (+1 Translate)** — is **deferred to a focused Sprint-34 effort**; the sprint pivots to **P6** (the remaining Solve-bucket lever, higher EV). **No `src/` change** (atomicity forbids a partial). sarf stays `translate_timeout`; Translate maintains 135.
 
 ---
 
@@ -40,6 +40,8 @@ This is a **different emit MODE** (symbolic/parametric vs the current fully-enum
 - **Option B — invoke the design's REPLAN exit now:** given flat-KPI (P1 REPLAN'd, P3 H-b) + sarf being the lowest-leverage/highest-risk/highest-effort track, defer the symbolic-emit subsystem to a **focused Sprint-34 effort** (the de-risked hand-off: this assessment + the blow-up locus + the 1-D base gate + the 398-active sizing + the 7-term derivation + the atomicity spec), and **reallocate to P6** (agreste + the `path_syntax_error` cohort — the remaining **Solve**-bucket lever, higher EV).
 
 **Recommendation:** given the sprint context, **Option B** is the higher-EV use of the remaining budget — pivot to P6, hand the sarf symbolic-emit subsystem to a focused Sprint-34 effort where the atomic multi-day rebuild gets the room + regression rigor it needs. Option A is defensible only if a firm +1 Translate is specifically wanted over the P6 Solve-bucket attempt.
+
+**Decision (sprint owner, 2026-07-17): Option B.** sarf REPLAN'd → Sprint 34 (the de-risked hand-off = this assessment). The sprint pivots to **P6** (agreste scope-verify + the `path_syntax_error` cohort) — the only remaining in-sprint Solve-bucket lever. sarf stays `translate_timeout`; Translate maintains **135** (no regression — the lowest-leverage KPI, unmoved). The Sprint-34 sarf hand-off carries: the re-confirmed blow-up locus (`compute_constraint_jacobian`, per-column `task` diff), the 1-D base gate + the missing 2-D gate, the 398-active sizing, the 7-term `stat_task` derivation, and the atomicity spec.
 
 ## 5. KPI status (unchanged)
 
