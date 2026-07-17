@@ -20,7 +20,7 @@ The full sameas generalization (every `cfq`) leaves **18.468 at a single cell** 
 - `bq(cc-dist, fuel-oil)`: level **0** (at its lower bound), reduced cost `bq.m` = **−18.468**, `bq.lo` 0, `bq.up` +INF.
 - The residual **= −bq.m** — i.e. `piL_bq` *should* be 18.468 but the warm-start left it **0**.
 
-**Root:** fawley is a **maximize** (`solve exxon maximizing profit`), but the emitted bound transfer is min-convention: `piL_bq.l(...)$(… and bq.m(c,cf) > 0) = bq.m(c,cf)` — it skips `bq.m < 0`. With a sign-robust transfer (`= abs(bq.m)`), the cc-dist warm residual → **0**. **This is a distinct bound-transfer-sign issue, not the sameas cross-term.**
+**Root:** fawley is a **MAXIMIZE** solve (`solve exxon maximizing profit`), but the emitted bound transfer is min-convention: `piL_bq.l(...)$(… and bq.m(c,cf) > 0) = bq.m(c,cf)` — it skips `bq.m < 0`. With a sign-robust transfer (`= abs(bq.m)`), the cc-dist warm residual → **0**. **This is a distinct bound-transfer-sign issue, not the sameas cross-term.**
 
 ## 4. The decisive test — H-a vs H-b
 
@@ -38,7 +38,7 @@ Patched the actual `stat_bq` equation with sameas **and** made **all 12** `piL_*
 
 - **fawley's +Solve is H-b → hands off to the P5 forcing survey / Sprint 34.** fawley stays `model_infeasible` in-sprint; **no in-sprint +Solve, and no genuine-floor gain** (a floor match needs the solve, which is forcing-dependent). Per `FAWLEY_SECOND_INDEX_DESIGN.md` §5/§6, this is PROCEED-as-forcing / the gate-leak outcome.
 - **The sameas cross-term correction is genuine** (closes the 473 over-sum). It *can* ship as a correctness fix (the `_add_indexed_jacobian_terms` diagonal-`sameas` extension, `FAWLEY_SECOND_INDEX_DESIGN.md` §3), but it moves **no bucket** (fawley stays MS-5) and is a general 2-D-indexed-cross-term emit change needing the full no-regression gate (no mbal / 1-D-core regression). **Decision deferred to Day 5** (ship for correctness + a shape fixture, or fold into the Sprint-34 hand-off).
-- **NEW cross-cutting finding — the max-convention bound-transfer-sign gap.** The `piL_*/piU_*` warm-start transfers are gated on the min-convention `.m > 0` / `.m < 0`; for a **maximize** they skip the correctly-signed multipliers (fawley `bq.m<0` at a lower bound; **the same class as mine's** untransferred upper-bound multipliers). This is a **general warm-start-transfer issue** (not fawley-specific), a candidate dedicated track for Sprint 34. It affects the *warm residual* (the harness CASE_B verdict) but — for fawley — **not the solve** (H-b), so it is not by itself a +Solve lever here.
+- **NEW cross-cutting finding — the max-convention bound-transfer-sign gap.** The `piL_*/piU_*` warm-start transfers are gated on the min-convention `.m > 0` / `.m < 0`; for a **MAXIMIZE** solve they skip the correctly-signed multipliers (fawley `bq.m<0` at a lower bound; **the same class as mine's** untransferred upper-bound multipliers). This is a **general warm-start-transfer issue** (not fawley-specific), a candidate dedicated track for Sprint 34. It affects the *warm residual* (the harness CASE_B verdict) but — for fawley — **not the solve** (H-b), so it is not by itself a +Solve lever here.
 
 ## 6. KPI impact (the modal outcome tightens further)
 
