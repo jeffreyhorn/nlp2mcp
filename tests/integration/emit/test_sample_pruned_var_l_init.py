@@ -11,9 +11,10 @@ n.l(h))`` (``c``'s ``l_expr``) has ``c`` in the MCP but references the dropped
 
 The fix (``src/emit/emit_gams.py`` variable-init pass) skips an expression ``.l``
 init whose ``.l``-variable references are not a subset of the declared MCP
-variables (``kkt.stationarity``). This guard asserts the emitted MCP no longer
-references ``n`` and compiles clean. Skips when the (gitignored) raw model is
-absent.
+variables (``kkt.stationarity``). This guard inspects the emitted GAMS text and
+asserts it no longer references ``n`` (``n.l``) — a proxy for avoiding the
+``$140 Unknown symbol`` compile error, without invoking GAMS. Skips when the
+(gitignored) raw model is absent.
 """
 
 from __future__ import annotations
