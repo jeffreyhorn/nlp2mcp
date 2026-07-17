@@ -2270,6 +2270,15 @@ def emit_gams_mcp(
     var_init_groups: dict[str, list[str]] = {}  # var_name -> init lines
     var_init_order: list[str] = []  # preserve original order for stable sort
     var_l_deps: dict[str, set[str]] = {}  # var_name -> set of var names it depends on
+    # P6 (path_syntax_error): the set of variables actually DECLARED in the MCP —
+    # one stationarity equation `stat_<var>` per declared primal. A variable
+    # referenced only in a non-translated model's equations (e.g. sample.gms's `n`,
+    # used by the original-formulation `cbal`/`vbal` while the last solve translates
+    # the `nr` reciprocal model) has no stationarity and is NOT declared. This is
+    # narrower than `kkt.referenced_variables`, which walks *all* equations. An
+    # expression `.l` init referencing an undeclared variable would emit an
+    # undeclared symbol → GAMS compile error.
+    _declared_mcp_vars = {name.removeprefix("stat_").lower() for name in kkt.stationarity}
     has_positive_clamp = False  # Track if any POSITIVE variable clamping is done
     has_positive_init = False  # Track if any POSITIVE variable is initialized to 1
     has_free_denom_init = False  # Track if any FREE-var-in-denominator init was emitted
@@ -2335,14 +2344,23 @@ def emit_gams_mcp(
             if deps:
                 var_l_deps[var_name] = deps
         elif not has_init and hasattr(var_def, "l_expr") and var_def.l_expr is not None:
-            expr_str = expr_to_gams(var_def.l_expr)
-            lines.append(f"{var_name}.l = {expr_str};")
             deps = _collect_varref_names(var_def.l_expr)
             deps.discard(var_name.lower())
-            if deps:
-                var_l_deps[var_name] = deps
-            has_init = True
-            emitted_l_expr_init = True
+            # P6 (path_syntax_error): skip an expression `.l` init that references a
+            # variable pruned from the MCP — e.g. sample.gms's
+            # `c.l = sum(h, data(h,"cost")*n.l(h))`, where `n` is the dropped
+            # original-formulation variable. `deps` holds only `.l` variable refs
+            # (`_collect_varref_names`); if any is absent from `_declared_mcp_vars`
+            # the emitted init would reference an undeclared symbol → compile error.
+            if not deps.issubset(_declared_mcp_vars):
+                pass  # references a pruned variable — do not emit this init
+            else:
+                expr_str = expr_to_gams(var_def.l_expr)
+                lines.append(f"{var_name}.l = {expr_str};")
+                if deps:
+                    var_l_deps[var_name] = deps
+                has_init = True
+                emitted_l_expr_init = True
 
         # Priority 2: Check for indexed lower bounds (lo_map) if no .l was provided
         if not has_init and var_def.lo_map:

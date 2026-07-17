@@ -84,10 +84,7 @@ nr.lo(h) = 1 / data(h,"pop");
 * Issue #1243: FREE variables appearing in stationarity-equation
 * denominators (e.g., 1/y from prod-objective derivatives) are set to 1.
 
-$onImplicitAssign
 nr.l(h) = 1;
-c.l = sum(h, data(h,"cost") * n.l(h));
-$offImplicitAssign
 
 * ============================================
 * Equations
