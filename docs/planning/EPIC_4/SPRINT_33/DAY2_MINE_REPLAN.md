@@ -18,7 +18,7 @@ Built on the Day-1 residual decomposition (which reproduces the harness residual
 
 ## 2. Why H1 cannot close the residual (the value-invariance proof, empirically confirmed)
 
-The NLP precedence constraint is head-placed: `pr(k,l+1,i,j)$c(l,i,j).. x(l,i+li(k),j+lj(k)) =g= x(l+1,i,j)`, so its dual lives at the head label `pr.m(k,l+1,i,j)`. The emit transfer (line 79) already reads the head-label dual and stores it at the body label: `lam_pr(k,l,i,j) = abs(pr.m(k,l+1,i,j))`. Therefore, for any read in the `stat_x` cross-term:
+The NLP precedence constraint is head-placed: `pr(k,l+1,i,j)$c(l,i,j).. x(l,i+li(k),j+lj(k)) =g= x(l+1,i,j)`, so its dual lives at the head label `pr.m(k,l+1,i,j)`. The emit transfer (line 79) already reads the head-label dual and stores it at the body label: `lam_pr.l(k,l,i,j) = abs(pr.m(k,l+1,i,j))`. Therefore, for any read in the `stat_x` cross-term:
 
 - **body-keyed** `lam_pr(k,l,·)` = `abs(pr.m(k,l+1,·))` = the value a **head-keyed** `lam_pr_head(k,l+1,·)` would hold.
 
