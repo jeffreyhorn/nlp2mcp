@@ -18,7 +18,7 @@
 
 ## 2. What landed (firm)
 
-- **P6 sample — the sprint's only in-sprint bucket move.** A `path_syntax_error` emit bug: the variable-init pass passed through an expression `.l` init (`c.l = sum(h, data*n.l(h))`) referencing a variable (`n`) **pruned** from the MCP (sample's last solve translates the `nr` reciprocal model, not the `n` original). Fix: skip such an init when its `.l`-refs aren't a subset of the *declared* MCP variables (`kkt.stationarity`), not the broader `kkt.referenced_variables`. A genuine cold-emit correction → +1 Solve / +1 Match / +1 genuine floor. Guarded by a fail-before/pass-after fixture (P7).
+- **P6 sample — the sprint's only in-sprint bucket move.** A `path_syntax_error` emit bug: the variable-init pass passed through an expression `.l` init (`c.l = sum(h, data(h,"cost")*n.l(h))`) referencing a variable (`n`) **pruned** from the MCP (sample's last solve translates the `nr` reciprocal model, not the `n` original). Fix: skip such an init when its `.l`-refs aren't a subset of the *declared* MCP variables (`kkt.stationarity`), not the broader `kkt.referenced_variables`. A genuine cold-emit correction → +1 Solve / +1 Match / +1 genuine floor. Guarded by a fail-before/pass-after fixture (P7).
 - **Six precisely-characterized Sprint-34 hand-offs** (§4), each control-confirmed.
 
 ## 3. What we'd do differently / key lessons

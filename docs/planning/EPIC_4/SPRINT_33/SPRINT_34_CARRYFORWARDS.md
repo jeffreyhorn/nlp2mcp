@@ -25,7 +25,7 @@ Each carryforward is **control-confirmed and de-risked** — a specification, no
 ## 4. The max-convention bound-transfer-sign track (NEW, cross-cutting)
 
 **Disposition:** a general warm-start-transfer gap discovered Day 4. The `piL_*/piU_*` warm-start transfers are gated on min-convention `.m > 0` / `.m < 0`; for a **MAXIMIZE** solve they skip the correctly-signed bound multipliers — surfaced in **both** fawley (`bq.m<0` at a lower bound → the residual-18.468 cell) and mine (`x.m>0` upper-bound multipliers). For fawley it does not unlock the solve (H-b), but it is worth checking as a **+Solve lever on other MAXIMIZE models** whose MCP divergence is warm-residual-driven (not structural).
-**Hand-off:** `DAY4_FAWLEY_CONTROL.md` §5 + `project_fawley_hb_and_bound_transfer.md`. A sign-robust transfer (`= abs(.m)` at the active bound) is the candidate fix; scope + regression-test across the max-model cohort.
+**Hand-off:** `DAY4_FAWLEY_CONTROL.md` §5 (the bound-transfer-sign analysis + the per-cell decomposition). A sign-robust transfer (`= abs(.m)` at the active bound) is the candidate fix; scope + regression-test across the max-model cohort.
 
 ## 5. camcge — dual-consistent Walras numéraire (#1330 → Epic 5)
 
