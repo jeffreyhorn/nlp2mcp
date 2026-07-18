@@ -124,7 +124,7 @@ grep -cE '^### Verification Results$' docs/planning/EPIC_4/SPRINT_34/KNOWN_UNKNO
 
 - [x] Document created with 27 unknowns across the 7 categories
 - [x] All unknowns have assumption, verification method, priority, risk-if-wrong
-- [x] All Critical/High unknowns have a verification method + research time (verified via prep Tasks 2–10)
+- [x] All Critical/High unknowns have a verification method + research time (planned for verification via prep Tasks 2–10, which are NOT STARTED)
 - [x] The Sprint-33 lessons (H1 value-invariant; fawley H-b; the modal-flat-KPI reality) are represented as explicit unknowns for P1/P3
 - [x] Update template + priority definitions + Task-to-Unknown mapping included
 - [x] Cross-referenced to `PROJECT_PLAN.md` §"Sprint 34" and the Sprint-33 control docs
@@ -157,7 +157,7 @@ Sprint 33 closed at Solve 108 / Match 93 / genuine floor 75 / model_infeasible 7
 
 1. **Confirm Day-0 = Sprint 33 close** — recompute the 142-candidate buckets from the committed `data/gamslib/gamslib_status.json`: Parse 142, Translate 135, Solve 108 (64 cold + 44 presolve), Match 93, model_infeasible 7, path_syntax_error 7, all-219 Match 96.
 2. **Pin the Day-0 code anchor** — record the S33-close SHA (`git log` for the SPRINT_33 close merge); confirm `git diff <S33-close>..HEAD -- src/ scripts/` is empty at prep time (no drift).
-3. **Enumerate the bucket members** — the 7 model_infeasible (agreste, camcge, cesam, fawley, lnts, mine, rocket), the 7 path_syntax_error (clearlak, dinam, ganges, gangesx, indus, sample→ now solved, turkey, turkpow — recount post-sample), and the genuine-floor / methodology partition members.
+3. **Enumerate the bucket members** — the 7 model_infeasible (agreste, camcge, cesam, fawley, lnts, mine, rocket), the 7 path_syntax_error (clearlak, dinam, ganges, gangesx, indus, turkey, turkpow — the S33 8-member cohort minus sample, which recovered to Solve at the S33 close), and the genuine-floor / methodology partition members.
 4. **Re-confirm the PR25 partition** — genuine floor **75** / methodology **21** / all-219 Match 96 (per PR25 definition); the genuine-floor → ≥ 76 conversion map (mine [P1] / fawley [P3] cold-match).
 5. **Determinism baseline** — confirm the S33 close is deterministic ×3 `PYTHONHASHSEED` (or note the blast radius).
 6. **Write** `docs/planning/EPIC_4/SPRINT_34/BASELINE_METRICS.md`.
