@@ -58,7 +58,8 @@ This prep plan focuses on:
 
 ## Task 1: Create Sprint 34 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-18
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 34 Day 1
@@ -67,7 +68,7 @@ This prep plan focuses on:
 
 ### Objective
 
-Create a proactive `docs/planning/EPIC_4/SPRINT_34/KNOWN_UNKNOWNS.md` cataloguing every assumption and open question across the six carryforward tracks (P1–P5) plus the P6/P7 backlog + infrastructure, so no Sprint-33-style late surprise (or refuted banked hypothesis) survives to Day 5.
+Create a proactive `docs/planning/EPIC_4/SPRINT_34/KNOWN_UNKNOWNS.md` cataloguing every assumption and open question across the seven categories (the six carryforward tracks P1–P5 — with the NEW bound-transfer track as its own category — plus the P6 backlog + P7 infrastructure), so no Sprint-33-style late surprise (or refuted banked hypothesis) survives to Day 5.
 
 ### Why This Matters
 
@@ -86,46 +87,47 @@ Sprint 34's carryforwards each arrive with a Sprint-33 control-confirmed diagnos
    - **Category 3 — fawley second-index correction + forcing (#1111/#1112):** Does the constraint-index-diagonal `sameas` extension close `max|stat_bq|→0` without regressing mbal / the 1-D polygon core? Is the +Solve genuinely H-b (MS-5 persists even with the warm residual closed)? Does the genuine cross-term correction lift the floor (fawley cold-match) even under H-b?
    - **Category 4 — max-convention bound-transfer-sign track (NEW):** Is the sign-robust `= abs(.m)` transfer correct across the MAXIMIZE cohort (no over-transfer on presolve-match models)? Which max models' MCP divergence is warm-residual-driven (a +Solve lever) vs structural (like fawley's H-b)? Does `--resolve-changed` stay GO?
    - **Category 5 — camcge Walras (#1330 / Epic 5) + rocket PATH:** Does the full dual-consistent redefinition reach MS-1 at omega 191.7346 in a `/tmp` prototype (the Epic-5 gate)? Does the S1∧S2∧S3 detector false-flag irscge/lrgcge/moncge/stdcge? Is the rocket PATH-consultation input complete for Sprint-35 submission?
-   - **Category 6 — P6 failure-cohort + P7 infrastructure:** Do ganges/gangesx share a single `$141/$145/$149` translate-syntax root (distinct from sample's `$140`)? Is agreste genuinely CASE_B or a double-`solve` scope artifact? Do the shape12/shape13/fawley property fixtures fail-before/pass-after only once P1/P2/P3 land?
+   - **Category 6 — P6 banked failure-cohort:** Do ganges/gangesx share a single `$141/$145/$149` translate-syntax root (distinct from sample's `$140`)? Is agreste genuinely CASE_B or a double-`solve` scope artifact? Is the cohort multi-root (verify per-model)?
+   - **Category 7 — P7 infrastructure:** Do the shape12/shape13/fawley property fixtures fail-before/pass-after only once P1/P2/P3 land? Is the PR25 genuine-floor anchor 75 + the Day-0 code anchor the S33-close SHA? What does the Epic-4 `SUMMARY.md` row-34 need?
 3. **Prioritize** by risk (Critical / High / Medium / Low).
 4. **Assign a verification method + deadline** (Day 0 / Day 1 / Day N) to every Critical/High unknown.
 5. **Write** `KNOWN_UNKNOWNS.md` with the update template + priority definitions + a Task-to-Unknown mapping appendix (which prep Task 2–10 verifies which unknowns).
 
 ### Changes
 
-*To be completed*
+Created `docs/planning/EPIC_4/SPRINT_34/KNOWN_UNKNOWNS.md` with 27 unknowns across the 7 categories (Category 1 mine dual subsystem ×5, Category 2 sarf symbolic emit ×5, Category 3 fawley correction + forcing ×4, Category 4 max-convention bound-transfer ×4, Category 5 camcge + rocket ×3, Category 6 failure-cohort ×3, Category 7 infrastructure ×3), each with priority, assumption, research questions, how-to-verify, risk-if-wrong, estimated research time, owner, and a `🔍 Status: INCOMPLETE` verification stub; plus the Confirmed Knowledge section, the update template + priority definitions, the Next Steps section, and the Task-to-Unknown mapping appendix. Added the "Unknowns Verified" metadata to Tasks 2–10 below.
 
 ### Result
 
-*To be completed*
+27 unknowns (Critical 7 / High 11 / Medium 7 / Low 2 — 26/41/26/7%; ~34h research, within the 28–36h target) covering the six carryforward tracks (P1–P5, with the NEW bound-transfer track as Category 4) + the P6 failure-cohort (Category 6) + P7 infrastructure (Category 7). Every prep Task 2–10 is mapped to the specific unknowns it verifies.
 
 ### Verification
 
 ```bash
 cd "$(git rev-parse --show-toplevel)"
 test -f docs/planning/EPIC_4/SPRINT_34/KNOWN_UNKNOWNS.md && echo "file exists"
-# >= 25 unknowns — headings are '## Unknown N.M:'
+# 27 unknowns (>= 25 target) — headings are '## Unknown N.M:'
 grep -cE '^## Unknown [0-9]+\.[0-9]+:' docs/planning/EPIC_4/SPRINT_34/KNOWN_UNKNOWNS.md
-# all 6 categories present — headings are '# Category N:'
+# all 7 categories present — headings are '# Category N:'
 grep -cE '^# Category [0-9]:' docs/planning/EPIC_4/SPRINT_34/KNOWN_UNKNOWNS.md
-# every unknown carries a Verification Results section
+# every unknown carries a Verification Results section (27 + 1 template = 28; the Status value fills in ✅/🟡 as prep Tasks 2–10 verify — do not assume all INCOMPLETE)
 grep -cE '^### Verification Results$' docs/planning/EPIC_4/SPRINT_34/KNOWN_UNKNOWNS.md
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_34/KNOWN_UNKNOWNS.md` with ≥ 25 unknowns across 6 categories (one per carryforward track + P6 + P7)
-- Each unknown: assumption · verification method · priority · risk-if-wrong · verification deadline
+- `docs/planning/EPIC_4/SPRINT_34/KNOWN_UNKNOWNS.md` with 27 unknowns across 7 categories (one per carryforward track — the NEW bound-transfer track its own category — + P6 + P7)
+- Each unknown: assumption · verification method · priority · risk-if-wrong · estimated research time · owner
 - Update template + priority definitions + the Task-to-Unknown mapping appendix
 
 ### Acceptance Criteria
 
-- [ ] Document created with ≥ 25 unknowns across the 6 categories
-- [ ] All unknowns have assumption, verification method, priority, risk-if-wrong
-- [ ] All Critical/High unknowns have a verification deadline (Day 0/1/N)
-- [ ] The Sprint-33 lessons (H1 value-invariant; fawley H-b; the modal-flat-KPI reality) are represented as explicit unknowns for P1/P3
-- [ ] Update template + priority definitions + Task-to-Unknown mapping included
-- [ ] Cross-referenced to `PROJECT_PLAN.md` §"Sprint 34" and the Sprint-33 control docs
+- [x] Document created with 27 unknowns across the 7 categories
+- [x] All unknowns have assumption, verification method, priority, risk-if-wrong
+- [x] All Critical/High unknowns have a verification method + research time (verified via prep Tasks 2–10)
+- [x] The Sprint-33 lessons (H1 value-invariant; fawley H-b; the modal-flat-KPI reality) are represented as explicit unknowns for P1/P3
+- [x] Update template + priority definitions + Task-to-Unknown mapping included
+- [x] Cross-referenced to `PROJECT_PLAN.md` §"Sprint 34" and the Sprint-33 control docs
 
 ---
 
@@ -137,6 +139,7 @@ grep -cE '^### Verification Results$' docs/planning/EPIC_4/SPRINT_34/KNOWN_UNKNO
 **Deadline:** Before Sprint 34 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** 1.1, 3.1, 7.2
 
 ### Objective
 
@@ -183,6 +186,7 @@ grep -icE 'S33.close|anchor|--resolve-changed' docs/planning/EPIC_4/SPRINT_34/BA
 - `docs/planning/EPIC_4/SPRINT_34/BASELINE_METRICS.md` with the 142-corpus Day-0 tally + bucket members
 - The Day-0 code anchor (S33-close SHA) for `--resolve-changed`
 - The PR25 genuine-vs-methodology partition (genuine floor 75) + the → ≥ 76 conversion map
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 3.1, 7.2
 
 ### Acceptance Criteria
 
@@ -191,6 +195,7 @@ grep -icE 'S33.close|anchor|--resolve-changed' docs/planning/EPIC_4/SPRINT_34/BA
 - [ ] The 7 model_infeasible + the residual path_syntax_error members enumerated
 - [ ] The PR25 genuine-floor partition (75) + the → ≥ 76 conversion map recorded
 - [ ] Cross-referenced to `SPRINT_33/SPRINT_LOG.md` + `SPRINT_33/BASELINE_METRICS.md`
+- [ ] Unknowns 1.1, 3.1, 7.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -202,6 +207,7 @@ grep -icE 'S33.close|anchor|--resolve-changed' docs/planning/EPIC_4/SPRINT_34/BA
 **Deadline:** Before Sprint 34 Day 1
 **Owner:** Development team (KKT/emit specialist)
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 1.1, 1.2, 1.3, 1.4, 1.5
 
 ### Objective
 
@@ -246,6 +252,7 @@ grep -icE 'value-invariant|dual-architecture|22.row|head_domain_offsets|/tmp|mod
 
 - `docs/planning/EPIC_4/SPRINT_34/MINE_DUAL_SUBSYSTEM_DESIGN.md` with the dual-architecture characterization + the reconciliation hypothesis + the `/tmp` control gate
 - The fix surface (as a Day-0-re-confirm hypothesis) + the sizing + the H3 REPLAN exit
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.3, 1.4, 1.5
 
 ### Acceptance Criteria
 
@@ -255,6 +262,7 @@ grep -icE 'value-invariant|dual-architecture|22.row|head_domain_offsets|/tmp|mod
 - [ ] The pre-`src/` `/tmp` control specified (`N→0` at all bound-active rows → MS-1 @ 17500; `modelstat` asserted; `x.up=inf` BANNED)
 - [ ] The H3 REPLAN exit pinned; the track sized
 - [ ] Cross-referenced to `SPRINT_33/DAY2_MINE_REPLAN.md` + `DAY1_PROGRESS_NOTES.md` + `MINE_CROSSTERM_DESIGN.md`
+- [ ] Unknowns 1.1, 1.2, 1.3, 1.4, 1.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -266,6 +274,7 @@ grep -icE 'value-invariant|dual-architecture|22.row|head_domain_offsets|/tmp|mod
 **Deadline:** Before Sprint 34 Day 1
 **Owner:** Development team (AD/emit specialist)
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 2.1, 2.2, 2.3, 2.4, 2.5
 
 ### Objective
 
@@ -309,6 +318,7 @@ grep -icE 'S1|S2|S3|acost3|taskposs|task.fx|O\(active|398|atomic|REPLAN' docs/pl
 
 - `docs/planning/EPIC_4/SPRINT_34/SARF_EMIT_MODE_DESIGN.md` with the three-site symbolic emit mode + the 7-term `stat_task` + the O(active) budget gate + atomicity spec
 - The REPLAN exit + the sizing
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.2, 2.3, 2.4, 2.5
 
 ### Acceptance Criteria
 
@@ -318,6 +328,7 @@ grep -icE 'S1|S2|S3|acost3|taskposs|task.fx|O\(active|398|atomic|REPLAN' docs/pl
 - [ ] The atomicity + the O(active) budget gate (translate seconds, byte-stable, det ×3, `--resolve-changed` GO) specified
 - [ ] The timeout-re-trigger REPLAN exit pinned; the track sized
 - [ ] Cross-referenced to `SPRINT_33/DAY6_SARF_ASSESSMENT.md` + `SARF_EMIT_SUBSYSTEM_DESIGN.md`
+- [ ] Unknowns 2.1, 2.2, 2.3, 2.4, 2.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -329,6 +340,7 @@ grep -icE 'S1|S2|S3|acost3|taskposs|task.fx|O\(active|398|atomic|REPLAN' docs/pl
 **Deadline:** Before Sprint 34 Day 1
 **Owner:** Development team (KKT/emit specialist)
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 3.1, 3.2, 3.3, 3.4
 
 ### Objective
 
@@ -372,6 +384,7 @@ grep -icE 'sameas|constraint-index|_add_indexed_jacobian_terms|H-b|forcing|no.re
 
 - `docs/planning/EPIC_4/SPRINT_34/FAWLEY_CORRECTION_FORCING_DESIGN.md` with the constraint-index-diagonal `sameas` design + the no-regression gate + the forcing hand-off
 - The REPLAN exit + the sizing (+ the fawley second-index fixture plan)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.1, 3.2, 3.3, 3.4
 
 ### Acceptance Criteria
 
@@ -381,6 +394,7 @@ grep -icE 'sameas|constraint-index|_add_indexed_jacobian_terms|H-b|forcing|no.re
 - [ ] The forcing hand-off for the H-b +Solve designed
 - [ ] The gate-leak REPLAN exit pinned; the track sized
 - [ ] Cross-referenced to `SPRINT_33/DAY4_FAWLEY_CONTROL.md` + `DAY5_FAWLEY_CLOSE.md`
+- [ ] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -392,6 +406,7 @@ grep -icE 'sameas|constraint-index|_add_indexed_jacobian_terms|H-b|forcing|no.re
 **Deadline:** Before Sprint 34 Day 1
 **Owner:** Development team (emit specialist)
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 4.1, 4.2, 4.3, 4.4
 
 ### Objective
 
@@ -435,6 +450,7 @@ grep -icE 'max.convention|piL|piU|abs\(|maximize|MAXIMIZE|cohort|warm-residual|s
 
 - `docs/planning/EPIC_4/SPRINT_34/BOUND_TRANSFER_SIGN_DESIGN.md` with the sign-robust transfer design + the MAXIMIZE-cohort +Solve survey + the no-regression gate
 - The REPLAN exit + the sizing
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.1, 4.2, 4.3, 4.4
 
 ### Acceptance Criteria
 
@@ -444,6 +460,7 @@ grep -icE 'max.convention|piL|piU|abs\(|maximize|MAXIMIZE|cohort|warm-residual|s
 - [ ] The +Solve survey (warm-residual-driven vs structural) specified
 - [ ] The no-regression gate + the REPLAN exit pinned; the track sized
 - [ ] Cross-referenced to `SPRINT_33/DAY4_FAWLEY_CONTROL.md` §5
+- [ ] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -455,6 +472,7 @@ grep -icE 'max.convention|piL|piU|abs\(|maximize|MAXIMIZE|cohort|warm-residual|s
 **Deadline:** Before Sprint 34 Day 1
 **Owner:** Development team (KKT/CGE specialist)
 **Dependencies:** Task 1
+**Unknowns Verified:** 5.1, 5.2, 5.3
 
 ### Objective
 
@@ -497,6 +515,7 @@ grep -icE 'Walras|numéraire|omega 191|MS-4|S1∧S2∧S3|Epic 5|rocket|Sprint-35
 
 - `docs/planning/EPIC_4/SPRINT_34/CAMCGE_ROCKET_PLAN.md` with the dual-consistent Walras design (Epic-5 gate) + the detector scope + the rocket submission plan
 - The Epic-5-deferral disposition + the Sprint-35 rocket hand-off
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 5.1, 5.2, 5.3
 
 ### Acceptance Criteria
 
@@ -505,6 +524,7 @@ grep -icE 'Walras|numéraire|omega 191|MS-4|S1∧S2∧S3|Epic 5|rocket|Sprint-35
 - [ ] The rocket PATH-consultation input submission to Sprint 35 planned
 - [ ] The Epic-5-deferral disposition pinned
 - [ ] Cross-referenced to `SPRINT_33/CAMCGE_WALRAS_DESIGN.md` + `ROCKET_CASEC_FORCING_PLAN.md` + `EPIC_5/CGE_DEGENERACY_SCOPING.md`
+- [ ] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -516,6 +536,7 @@ grep -icE 'Walras|numéraire|omega 191|MS-4|S1∧S2∧S3|Epic 5|rocket|Sprint-35
 **Deadline:** Before Sprint 34 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 3, 4, 5, 6, 7
+**Unknowns Verified:** 1.2, 2.2, 3.1, 4.1, 5.1
 
 ### Objective
 
@@ -558,6 +579,7 @@ grep -icE 'P1|P2|P3|P4|P5|PROCEED|REPLAN|modelstat|x.up=inf|BANNED|--resolve-cha
 
 - `docs/planning/EPIC_4/SPRINT_34/PHASE_0_ACCEPTANCE_GATES.md` — one PROCEED/REPLAN gate per track P1–P5 with the `/tmp` control + the pass criterion + the CI gates
 - The standing BANs + the Task-8 gate-feasibility notes on the mapped unknowns
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.2, 2.2, 3.1, 4.1, 5.1
 
 ### Acceptance Criteria
 
@@ -566,6 +588,7 @@ grep -icE 'P1|P2|P3|P4|P5|PROCEED|REPLAN|modelstat|x.up=inf|BANNED|--resolve-cha
 - [ ] The emit-touching CI gates encoded (golden-staleness, presolve-divergence, `--resolve-changed --since-commit <S33-close>`)
 - [ ] Task-8 gate-feasibility notes appended to the mapped unknowns (primary blocks preserved)
 - [ ] Cross-referenced to the Task-3–7 design docs + `SPRINT_33/PHASE_0_ACCEPTANCE_GATES.md`
+- [ ] Unknowns 1.2, 2.2, 3.1, 4.1, 5.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -577,6 +600,7 @@ grep -icE 'P1|P2|P3|P4|P5|PROCEED|REPLAN|modelstat|x.up=inf|BANNED|--resolve-cha
 **Deadline:** Before Sprint 34 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 3, 4, 5, 6, 8
+**Unknowns Verified:** 1.5, 2.2, 3.2, 4.2
 
 ### Objective
 
@@ -620,6 +644,7 @@ grep -icE 'P1|P2|P3|P4|REPLAN|freed budget|reallocat|flat.?KPI|modal|front.?load
 - `docs/planning/EPIC_4/SPRINT_34/REPLAN_RISK_ASSESSMENT.md` with a per-track REPLAN-probability + refutation-evidence assessment (P1/P2/P3/P4)
 - The pinned REPLAN exits + freed-budget reallocation (→ P6/P7)
 - The honest KPI projection (firm/conditional movers, stretch, modal outcome) + the front-load ordering
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.5, 2.2, 3.2, 4.2
 
 ### Acceptance Criteria
 
@@ -629,6 +654,7 @@ grep -icE 'P1|P2|P3|P4|REPLAN|freed budget|reallocat|flat.?KPI|modal|front.?load
 - [ ] The honest KPI projection authored (movers, stretch ≥ 110, modal outcome incl. the P6 failure-cohort lever)
 - [ ] The front-load ordering recommended (deep tracks + P4 by Day 5)
 - [ ] Cross-referenced to `SPRINT_33/REPLAN_RISK_ASSESSMENT.md` + `SPRINT_RETROSPECTIVE.md` §3
+- [ ] Unknowns 1.5, 2.2, 3.2, 4.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -640,6 +666,7 @@ grep -icE 'P1|P2|P3|P4|REPLAN|freed budget|reallocat|flat.?KPI|modal|front.?load
 **Deadline:** Before Sprint 34 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 8
+**Unknowns Verified:** 6.1, 6.2, 6.3, 7.1, 7.3
 
 ### Objective
 
@@ -682,6 +709,7 @@ grep -icE 'ganges|gangesx|agreste|shape12|shape13|second-index|genuine-floor|SUM
 - `docs/planning/EPIC_4/SPRINT_34/TOOLING_AND_BACKLOG_ANALYSIS.md` with the tooling-readiness audit (reuse vs gap) + the P6 fix-surface + P7 fixture scope
 - The ganges/gangesx `$141/$145/$149` root diagnosis + the agreste scope caveat
 - The shape12/shape13/fawley fixture plan (gated on P1/P2/P3) + the genuine-floor recompute (anchor 75) + Epic-4-SUMMARY continuation
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 6.1, 6.2, 6.3, 7.1, 7.3
 
 ### Acceptance Criteria
 
@@ -690,6 +718,7 @@ grep -icE 'ganges|gangesx|agreste|shape12|shape13|second-index|genuine-floor|SUM
 - [ ] The P7 property fixtures scoped (shape12/shape13/fawley, fail-before/pass-after, gated on landings)
 - [ ] The genuine-floor recompute (anchor 75) + Epic-4-SUMMARY row-34 continuation noted
 - [ ] Cross-referenced to `SPRINT_33/TOOLING_AND_BACKLOG_ANALYSIS.md` + the S33 P6 fixture pattern
+- [ ] Unknowns 6.1, 6.2, 6.3, 7.1, 7.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
