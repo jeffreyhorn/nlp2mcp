@@ -80,7 +80,7 @@ Sprint 34's carryforwards each arrive with a Sprint-33 control-confirmed diagnos
 
 ### What Needs to Be Done
 
-1. **Review the Sprint 34 scope** from `PROJECT_PLAN.md` §"Sprint 34" (Priorities 1–7) + `SPRINT_33/SPRINT_RETROSPECTIVE.md` §4 + `SPRINT_34_CARRYFORWARDS.md`.
+1. **Review the Sprint 34 scope** from `PROJECT_PLAN.md` §"Sprint 34" (Priorities 1–7) + `SPRINT_33/SPRINT_RETROSPECTIVE.md` §4 + `SPRINT_33/SPRINT_34_CARRYFORWARDS.md`.
 2. **Enumerate unknowns per category** (assumption · how-to-verify · priority · risk-if-wrong · verification deadline):
    - **Category 1 — mine head-offset dual subsystem (#1443):** Given H1 is value-invariant, what reconciliation of head-placed constraint duals into `stat_x` at the `c`-boundary drives `N→0` at all bound-active rows without perturbing interior rows? Does the S31 `head_domain_offsets` IR carry what the reconciliation needs? Is the 22-row breadth (not 6) fully characterized? Is `x.up=inf` BANNED (assert `modelstat`)?
    - **Category 2 — sarf symbolic/parametric emit mode (#1385):** Can the emit switch `task` to a symbolic mode at all three sites (S1 `acost3` body-diff, S2 enumeration, S3 stationarity) atomically? Is the banked 7-term `stat_task` derivation complete + free of set-name-literal indices? Does the `task.fx$(not active)` + MCP matching yield exactly the 398 live rows? Does the translate drop to seconds (O(active)) not >75s?
@@ -110,7 +110,7 @@ test -f docs/planning/EPIC_4/SPRINT_34/KNOWN_UNKNOWNS.md && echo "file exists"
 grep -cE '^## Unknown [0-9]+\.[0-9]+:' docs/planning/EPIC_4/SPRINT_34/KNOWN_UNKNOWNS.md
 # all 7 categories present — headings are '# Category N:'
 grep -cE '^# Category [0-9]:' docs/planning/EPIC_4/SPRINT_34/KNOWN_UNKNOWNS.md
-# every unknown carries a Verification Results section (27 + 1 template = 28; the Status value fills in ✅/🟡 as prep Tasks 2–10 verify — do not assume all INCOMPLETE)
+# every unknown carries a Verification Results section (27 + 1 template = 28; the Status value fills in ✅ VERIFIED / ❌ WRONG as prep Tasks 2–10 verify — do not assume all INCOMPLETE)
 grep -cE '^### Verification Results$' docs/planning/EPIC_4/SPRINT_34/KNOWN_UNKNOWNS.md
 ```
 

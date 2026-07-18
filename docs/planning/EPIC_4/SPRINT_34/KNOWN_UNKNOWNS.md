@@ -26,7 +26,7 @@ This document identifies every assumption and unknown for Sprint 34's carryforwa
 - **When every deep KPI mover is REPLAN-prone, a flat-KPI outcome is the modal result — but the designated failure-cohort fallback can still deliver.** Sprint 33's three deep tracks moved no bucket (the honest projection borne out), *but P6 (sample) delivered the +1 Solve / +1 Match / +1 floor*. Unknowns 1.5, 2.2, 3.2, 4.2 track the REPLAN-probability of each mover; Category 6 tracks the failure-cohort fallback.
 - **The failure cohort is multi-root — verify per-model, do not assume a shared root.** Sprint 33's `path_syntax_error` cohort was not a single root: sample (`$140`, pruned-var `.l`-init) recovered; ganges/gangesx (`$141/$145/$149`, referenced vars declared) are a *different* root. Unknowns 6.1/6.3 encode this.
 
-**Deferred-unknown lineage (from Sprint 33):** Sprint 34's Categories 1–5 are the direct continuation of the Sprint-33 REPLAN'd/deferred tracks (`SPRINT_33/SPRINT_RETROSPECTIVE.md` §4 + `SPRINT_34_CARRYFORWARDS.md`). The Sprint-33 Known Unknowns for these tracks were resolved as *control-confirmed characterizations with un-built (and, for P1/P3, harder-than-anticipated) fixes*; Sprint 34 carries forward the *implementation-shape* unknowns (the dual-reconciliation architecture, the symbolic emit mode, the constraint-index-diagonal correction, the NEW sign-robust bound transfer), not the diagnosis. Category 4 is a **newly-surfaced** track (the max-convention bound-transfer-sign gap, discovered Sprint-33 Day 4).
+**Deferred-unknown lineage (from Sprint 33):** Sprint 34's Categories 1–5 are the direct continuation of the Sprint-33 REPLAN'd/deferred tracks (`SPRINT_33/SPRINT_RETROSPECTIVE.md` §4 + `SPRINT_33/SPRINT_34_CARRYFORWARDS.md`). The Sprint-33 Known Unknowns for these tracks were resolved as *control-confirmed characterizations with un-built (and, for P1/P3, harder-than-anticipated) fixes*; Sprint 34 carries forward the *implementation-shape* unknowns (the dual-reconciliation architecture, the symbolic emit mode, the constraint-index-diagonal correction, the NEW sign-robust bound transfer), not the diagnosis. Category 4 is a **newly-surfaced** track (the max-convention bound-transfer-sign gap, discovered Sprint-33 Day 4).
 
 ---
 
@@ -769,7 +769,7 @@ ganges and gangesx share a single `path_syntax_error` translate-syntax root (`$1
 4. Does a single fix recover both, or are they two roots that merely share an error code?
 
 ### How to Verify
-Emit + compile ganges + gangesx (`data/gamslib/raw/`, skip-if-absent); capture the `$141/$145/$149` lines; confirm the shared vs distinct root; confirm the referenced vars are declared. Cross-check `SPRINT_34_CARRYFORWARDS.md` (banked P6).
+Emit + compile ganges + gangesx (`data/gamslib/raw/`, skip-if-absent); capture the `$141/$145/$149` lines; confirm the shared vs distinct root; confirm the referenced vars are declared. Cross-check `SPRINT_33/SPRINT_34_CARRYFORWARDS.md` (banked P6).
 
 ### Risk if Wrong
 - **Two distinct roots:** a single fix recovers only one (+1 not +2); the "shared root" hypothesis was only partially right (the Sprint-33 lesson).
@@ -800,7 +800,7 @@ agreste's CASE_B `stat_sales` rel 2.0 needs harness scope-verify: it is a single
 4. Is agreste a genuine CASE_B candidate or a false-positive?
 
 ### How to Verify
-Inspect agreste's source (the two `solve` statements); run the harness with single-solve scoping; determine whether the factor-of-2 is genuine or a driver artifact. Cross-check `SPRINT_34_CARRYFORWARDS.md`.
+Inspect agreste's source (the two `solve` statements); run the harness with single-solve scoping; determine whether the factor-of-2 is genuine or a driver artifact. Cross-check `SPRINT_33/SPRINT_34_CARRYFORWARDS.md`.
 
 ### Risk if Wrong
 - **Driver artifact:** agreste is a false CASE_B → chasing it wastes budget (the right call is to document + defer).
