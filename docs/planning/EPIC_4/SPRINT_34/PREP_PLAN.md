@@ -133,7 +133,8 @@ grep -cE '^### Verification Results$' docs/planning/EPIC_4/SPRINT_34/KNOWN_UNKNO
 
 ## Task 2: Sprint 33 → Sprint 34 Day-0 Baseline + Genuine-Floor Re-Baseline (PR15 + PR17 + PR25)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-18
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 34 Day 1
@@ -164,11 +165,11 @@ Sprint 33 closed at Solve 108 / Match 93 / genuine floor 75 / model_infeasible 7
 
 ### Changes
 
-*To be completed*
+Recomputed the 142-candidate bucket tally from the committed DB (`get_candidate_models`); derived + verified the Day-0 code anchor (the S33-close SHA `750803b2`, no `src/`/`scripts/` drift); enumerated the model_infeasible (7) + path_syntax_error (7) members; reproduced the PR25 genuine-vs-methodology partition (75/21) with the cold/presolve corroboration; ran the `--resolve-changed` dry-run (GO, 0 changed) + the determinism ×3 spot-check (mine/fawley/sample byte-identical). Authored `docs/planning/EPIC_4/SPRINT_34/BASELINE_METRICS.md`; verified Unknowns 1.1 (Day-0-bucket), 3.1 (Day-0-bucket), 7.2 (primary) in KNOWN_UNKNOWNS.md.
 
 ### Result
 
-*To be completed*
+Sprint-34 Day-0 = the Sprint 33 close (committed DB, byte-reused, no fresh retest): **Parse 142 · Translate 135 · Solve 108** (64 cold + 44 presolve) **· Match 93 · genuine floor 75 · model_infeasible 7 · path_syntax_error 7 · all-219 Match 96 · determinism ✅ ×3**. Day-0 code anchor = the **S33-close SHA `750803b2`** (the DB moved off `4cbf8bff` at the S33 Day-11 sample fix `1568a531`, so `4cbf8bff` is historical). PR25 partition: genuine floor **75** (63 cold + 12 genuine-presolve) / methodology 21; the → ≥ 76 conversion map = mine [P1] / fawley [P3] cold-match. Footnote-⁸ ramp anchored: S33 actual 75 → **S34 ≥ 76**.
 
 ### Verification
 
@@ -190,12 +191,12 @@ grep -icE 'S33.close|anchor|--resolve-changed' docs/planning/EPIC_4/SPRINT_34/BA
 
 ### Acceptance Criteria
 
-- [ ] Day-0 = Sprint 33 close confirmed from the committed DB (Solve 108 / Match 93 / floor 75 / mi 7 / Translate 135 / all-219 96)
-- [ ] The Day-0 code anchor (S33-close SHA) recorded; `git diff <anchor>..HEAD -- src/ scripts/` empty at prep time
-- [ ] The 7 model_infeasible + the residual path_syntax_error members enumerated
-- [ ] The PR25 genuine-floor partition (75) + the → ≥ 76 conversion map recorded
-- [ ] Cross-referenced to `SPRINT_33/SPRINT_LOG.md` + `SPRINT_33/BASELINE_METRICS.md`
-- [ ] Unknowns 1.1, 3.1, 7.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Day-0 = Sprint 33 close confirmed from the committed DB (Solve 108 / Match 93 / floor 75 / mi 7 / Translate 135 / all-219 96)
+- [x] The Day-0 code anchor (S33-close SHA `750803b2`) recorded; `git diff <anchor>..HEAD -- src/ scripts/` empty at prep time
+- [x] The 7 model_infeasible + the residual path_syntax_error members enumerated
+- [x] The PR25 genuine-floor partition (75) + the → ≥ 76 conversion map recorded
+- [x] Cross-referenced to `SPRINT_33/SPRINT_LOG.md` + `SPRINT_33/BASELINE_METRICS.md`
+- [x] Unknowns 1.1, 3.1, 7.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
