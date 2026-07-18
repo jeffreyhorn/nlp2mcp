@@ -117,7 +117,16 @@ Re-run the Sprint-33 Day-1/Day-2 `/tmp` mine control from the repo root (the emi
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Day-0-bucket aspect only)
+**Verified by:** Task 2 (the fix-surface / value-invariance aspect is verified by Task 3)
+**Date:** 2026-07-18
+
+**Findings:**
+- At Day 0, mine is `model_infeasible` (MS 5), a `verified_convex` candidate — the P1 bucket the head-offset dual subsystem targets (infeasible → MODEL STATUS 1 if the reconciliation cold-matches). Confirmed from the committed DB.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_34/BASELINE_METRICS.md` §3 (model_infeasible members) + §5 (mine provenance MS 5).
+
+**Decision:** the Day-0 mine bucket is confirmed; the value-invariance + dual-architecture + reconciliation-hypothesis aspects of this unknown are the primary work of Task 3 (mine dual-subsystem design).
 
 ---
 
@@ -433,7 +442,16 @@ Prototype the constraint-index-diagonal `sameas` in a `/tmp` emit; measure `max|
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Day-0-bucket aspect only)
+**Verified by:** Task 2 (the constraint-index-diagonal correction aspect is verified by Task 5)
+**Date:** 2026-07-18
+
+**Findings:**
+- At Day 0, fawley is `model_infeasible` (MS 5; LP opt 2899.25), a `verified_convex` candidate — the P3 bucket the constraint-index-diagonal `sameas` correction targets. Confirmed from the committed DB. (fawley's +Solve is **H-b** per the S33 control, so the in-sprint credit is a genuine-floor lever, not a guaranteed +Solve — verified in Task 5.)
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_34/BASELINE_METRICS.md` §3 (model_infeasible members) + §5 (fawley provenance MS 5) + §4 (the ≥ 76 conversion map, fawley H-b note).
+
+**Decision:** the Day-0 fawley bucket is confirmed; the `sameas`-correction / no-regression / H-b / floor-credit aspects are the primary work of Task 5 (fawley correction + forcing design).
 
 ---
 
@@ -906,7 +924,18 @@ Recompute the 142-corpus buckets from the committed DB (Task 2); confirm the anc
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2
+**Date:** 2026-07-18
+
+**Findings:**
+- The Day-0 baseline = the Sprint 33 close, recomputed from the committed DB: Parse 142 / Translate 135 / Solve 108 (64 cold + 44 presolve) / Match 93 / model_infeasible 7 / path_syntax_error 7 / all-219 Match 96.
+- The PR25 genuine-floor anchor is **75** (not the S33 Day-0 74) — the S33 P6 sample fix added +1 genuine (a cold-emit correction). Partition: genuine floor 75 / methodology 21 / all-219 Match 96, corroborated by the cold/presolve split (63 cold + 33 presolve; 63 + 12 genuine-presolve = 75, 21 methodology).
+- The Day-0 **code anchor** is the S33-close SHA **`750803b2`** (Merge #1581). `4cbf8bff` (S31 close) is **superseded** — the DB's last modifying commit is `1568a531` (S33 Day-11 sample), so the DB is no longer byte-unchanged since `4cbf8bff`. No `src/`/`scripts/` drift since `750803b2`.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_34/BASELINE_METRICS.md` §1–§4; `git diff --quiet 750803b2..HEAD -- src/ scripts/` clean; `run_full_test.py --resolve-changed --since-commit 750803b2 --dry-run` → GO (0 changed); DB md5 `6166acab90dcaff8789255f8ada83c54`; determinism ✅ ×3 `{0,1,42}` (mine/fawley/sample byte-identical).
+
+**Decision:** Sprint-34 Day-0 baseline pinned; the ≥ 76 conversion map (mine [P1] / fawley [P3] cold-match) recorded; the code anchor for all `--resolve-changed` checkpoints is `750803b2` (not `4cbf8bff`).
 
 ---
 
