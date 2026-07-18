@@ -117,16 +117,18 @@ Re-run the Sprint-33 Day-1/Day-2 `/tmp` mine control from the repo root (the emi
 Development team (KKT/emit specialist)
 
 ### Verification Results
-✅ **Status:** VERIFIED (Day-0-bucket aspect only)
-**Verified by:** Task 2 (the fix-surface / value-invariance aspect is verified by Task 3)
+✅ **Status:** VERIFIED (Task 2 Day-0-bucket + Task 3 primary — value-invariance/dual-architecture)
+**Verified by:** Task 2 (Day-0 bucket) + Task 3 (primary: value-invariance + dual-architecture)
 **Date:** 2026-07-18
 
-**Findings:**
+**Findings (Task 2 — Day-0 bucket):**
 - At Day 0, mine is `model_infeasible` (MS 5), a `verified_convex` candidate — the P1 bucket the head-offset dual subsystem targets (infeasible → MODEL STATUS 1 if the reconciliation cold-matches). Confirmed from the committed DB.
 
 **Evidence:** `docs/planning/EPIC_4/SPRINT_34/BASELINE_METRICS.md` §3 (model_infeasible members) + §5 (mine provenance MS 5).
 
 **Decision:** the Day-0 mine bucket is confirmed; the value-invariance + dual-architecture + reconciliation-hypothesis aspects of this unknown are the primary work of Task 3 (mine dual-subsystem design).
+
+**Task-3 (primary) — ✅ VERIFIED (2026-07-18):** H1 head-label re-keying is **value-invariant** (S33 Day-2 control: 22→22 rows, `d_N=d_Nh1` row-for-row); the live harness re-confirms the CASE_B fingerprint (`stat_x(3,1,1)` rel 2.37 raw −32000, dual scale 1.35e4, dual transfer CONSISTENT). The residual is a **head-offset dual-architecture mismatch** — the head-placed precedence dual `pr.m(k,l+1,i,j)` enters `stat_x` with opposite orientation at the boundary, with `x.m=0` degeneracy — **not** a keying or cross-term-term error (the cross-term is algebraically correct, S33 §3). Evidence: `MINE_DUAL_SUBSYSTEM_DESIGN.md` §1–§3; live `kkt_residual.py mine.gms`.
 
 ---
 
@@ -159,7 +161,18 @@ Prototype the reconciliation in a `/tmp` emit (no `src/` change); assert `models
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (design-level; the `/tmp` control is the Sprint-34 Day-1 executed gate)
+**Verified by:** Task 3
+**Date:** 2026-07-18
+
+**Findings:**
+- The reconciliation hypothesis **H_dual** is stated: anchor the head-placed precedence dual's *complementarity* to the head-side variable `x(l+1,i,j)` (a structural pairing change), not merely re-label the multiplier (the refuted H1).
+- **Key correction to the S33 gate:** because keying is value-invariant (Unknown 1.1), the warm residual `N` is the **wrong diagnostic** — no keying/pairing change moves the warm-point term VALUES. The gate is reframed to the **cold** MCP reaching **MS-1 @ 17500** (`modelstat` asserted), which the structural pairing change *can* affect. This is why S33's `N→0` gate could not be passed.
+- Fix surface (a Day-0-re-confirm hypothesis, PR24): `head_domain_offsets` IR carrier (`src/ir/parser.py`) + `_try_build_param_offset_crossterm` (`src/kkt/stationarity.py:5712`) + the `_emit_nlp_presolve` transfer (`src/emit/emit_gams.py`).
+
+**Evidence:** `MINE_DUAL_SUBSYSTEM_DESIGN.md` §4–§5.
+
+**Decision:** PROCEED spec = the `/tmp` H_dual prototype drives the **cold** MCP to MS-1 @ 17500 (interior unperturbed, srpchase no-regression, `--resolve-changed` GO); else REPLAN (H3′). Executed on Sprint-34 Day 1 (not in this docs-only prep).
 
 ---
 
@@ -190,7 +203,18 @@ Enumerate the 22 nonzero residual rows from the Day-1 decomposition; classify ea
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 3
+**Date:** 2026-07-18
+
+**Findings:**
+- The residual is exactly the pit's top edge — the **`c`-boundary** (`ord(l)+ord(i)=card` or `ord(l)+ord(j)=card`, `card(l)=4`) plus the **`d\c` ring** (`=card+1`, where `x` is a real variable in `d` but no precedence constraint originates). Interior rows have `N=0`.
+- The full nonzero set is **22 rows** (the S33 Day-2 control count), materially broader than the banked "6 bound-active rows."
+- Closing all 22 in the **cold** solution = MS-1 @ 17500 is the sufficiency gate (a partial close leaves MS-5).
+
+**Evidence:** `MINE_DUAL_SUBSYSTEM_DESIGN.md` §3.1 (boundary strata) + §3.2 (max-row decomposition); `SPRINT_33/MINE_CROSSTERM_DESIGN.md` §2.
+
+**Decision:** the 22-row breadth + boundary classification is confirmed; H_dual must close all 22 (cold), not just the max row.
 
 ---
 
@@ -221,7 +245,18 @@ Probe the mine `ModelIR` (`head_domain_offsets` for the precedence equation); tr
 Development team (KKT/IR specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 3
+**Date:** 2026-07-18
+
+**Findings:**
+- `EquationDef.head_domain_offsets` **exists** in the IR (`src/ir/parser.py`, defined line ~1019, populated ~3958) — the S31 foundation that describes, per domain position, the head offset (`l+1`) distinguishing the head label from the body label.
+- It is **NOT referenced anywhere in `src/kkt/stationarity.py`** (live `grep` → 0 hits): mine's cross-term flows through `_try_build_param_offset_crossterm` (the #1224 param-offset path), which re-inverts the body-keyed offset instead of consuming the head-offset IR.
+- H_dual needs a **head-label-indexed multiplier**; `head_domain_offsets` is its natural carrier, and H_dual would be its **first emit-layer consumer** — so **new IR/emit plumbing is required** (not a free existing capability). This is a scope factor for the 1.5 sizing.
+
+**Evidence:** `MINE_DUAL_SUBSYSTEM_DESIGN.md` §1 (live grep) + §4.2 (fix surface).
+
+**Decision:** the IR foundation exists but is unused by this path; the H_dual fix must wire `head_domain_offsets` into `_try_build_param_offset_crossterm` + `_emit_nlp_presolve` (new plumbing).
 
 ---
 
@@ -252,7 +287,18 @@ Break the P1 work into sub-items with hour estimates (`MINE_DUAL_SUBSYSTEM_DESIG
 Sprint planning
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 3
+**Date:** 2026-07-18
+
+**Findings:**
+- **18–24 h, upper half (~22–24 h)**: `/tmp` re-decomposition + H_dual structural prototype + the cold-MS-1 gate (~5–7 h); head-anchored complementarity + cross-term emit + `head_domain_offsets` plumbing (~10–14 h); determinism ×3 + golden-staleness + `--resolve-changed` + the `shape12` fixture (~3–4 h).
+- Front-loaded **Days 1–5** so the PROCEED/REPLAN decision lands by the **Day-5 checkpoint** — P1 is the sprint's **highest-REPLAN-prior** track (banked premise twice-refuted). An early REPLAN frees ~14–18 h → P6/P7 (exactly as S33 realized on Day 2).
+- The H3′ REPLAN exit is pinned (if the cold MCP cannot reach MS-1 without perturbing interior rows or regressing srpchase).
+
+**Evidence:** `MINE_DUAL_SUBSYSTEM_DESIGN.md` §6.
+
+**Decision:** 18–24 h (upper ~22–24 h) is realistic; front-load Days 1–5; H3′ REPLAN exit pinned. (Task 9 will assess the P1 REPLAN probability.)
 
 ---
 

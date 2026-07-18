@@ -202,7 +202,8 @@ grep -icE 'S33.close|anchor|--resolve-changed' docs/planning/EPIC_4/SPRINT_34/BA
 
 ## Task 3: mine Head-Offset Dual Subsystem: Design (Priority 1 foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-18
 **Priority:** Critical
 **Estimated Time:** 6–8 hours
 **Deadline:** Before Sprint 34 Day 1
@@ -234,11 +235,11 @@ P1 mine is the sprint's deepest and highest-REPLAN-prior track — its banked pr
 
 ### Changes
 
-*To be completed*
+Re-confirmed the Day-0 fingerprint live (`kkt_residual.py mine.gms` → CASE_B `stat_x(3,1,1)` 2.37, dual CONSISTENT) + the emit-site facts (`_try_build_param_offset_crossterm` at `stationarity.py:5712`; `head_domain_offsets` defined in `parser.py` but 0 hits in `stationarity.py`; cold mine MS 5). Characterized the head-offset dual-architecture mismatch (the head-placed `pr.m(k,l+1)` enters `stat_x` with opposite orientation at the `c`-boundary + `d\c` ring, 22-row breadth, `x.m=0` degeneracy). Designed the reconciliation hypothesis **H_dual** (anchor the dual's complementarity to the head-side variable) with the `head_domain_offsets` + `_try_build_param_offset_crossterm` + `_emit_nlp_presolve` fix surface as a Day-0-re-confirm hypothesis; **reframed the `/tmp` gate to the cold MCP reaching MS-1 @ 17500** (the warm residual `N` is keying-invariant, so S33's `N→0` gate was un-passable). Authored `docs/planning/EPIC_4/SPRINT_34/MINE_DUAL_SUBSYSTEM_DESIGN.md`; verified Unknowns 1.1–1.5 in KNOWN_UNKNOWNS.md.
 
 ### Result
 
-*To be completed*
+**H_dual designed + de-risked to a spec.** The residual is a head-offset dual-architecture mismatch, not a keying/cross-term error (H1 value-invariant, re-confirmed). The design's central contribution is the **reframed gate**: because keying is value-invariant, the pre-`src/` `/tmp` control must gate on the **cold** MCP reaching MS-1 @ 17500 (`modelstat` asserted; `x.up=inf` BANNED), not on `N→0` at the warm point. Fix surface stated as a hypothesis (PR24); H3′ REPLAN exit pinned; sized **18–24 h (upper ~22–24 h)**, front-loaded Days 1–5 so the PROCEED/REPLAN decision lands by the Day-5 checkpoint (P1 = highest-REPLAN-prior). No `src/` — the `/tmp` control is the Sprint-34 Day-1 executed gate.
 
 ### Verification
 
@@ -257,13 +258,13 @@ grep -icE 'value-invariant|dual-architecture|22.row|head_domain_offsets|/tmp|mod
 
 ### Acceptance Criteria
 
-- [ ] The Day-0 fingerprint re-confirmed + the 22-row residual decomposition reproduced
-- [ ] The head-offset dual-architecture mismatch characterized (the +16000/−16000 boundary gap, `x.m=0`)
-- [ ] The reconciliation hypothesis (H_dual) stated with a `file:line` fix surface (a hypothesis, PR24)
-- [ ] The pre-`src/` `/tmp` control specified (`N→0` at all bound-active rows → MS-1 @ 17500; `modelstat` asserted; `x.up=inf` BANNED)
-- [ ] The H3 REPLAN exit pinned; the track sized
-- [ ] Cross-referenced to `SPRINT_33/DAY2_MINE_REPLAN.md` + `DAY1_PROGRESS_NOTES.md` + `MINE_CROSSTERM_DESIGN.md`
-- [ ] Unknowns 1.1, 1.2, 1.3, 1.4, 1.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The Day-0 fingerprint re-confirmed (live harness CASE_B 2.37, dual CONSISTENT) + the 22-row residual decomposition characterized
+- [x] The head-offset dual-architecture mismatch characterized (the +16000/−16000 boundary gap, `x.m=0`)
+- [x] The reconciliation hypothesis (H_dual) stated with a `file:line` fix surface (a hypothesis, PR24)
+- [x] The pre-`src/` `/tmp` control specified — **gate reframed to the cold MCP reaching MS-1 @ 17500** (`modelstat` asserted; `x.up=inf` BANNED), since the warm residual `N` is keying-invariant (S33's `N→0` gate was un-passable)
+- [x] The H3′ REPLAN exit pinned; the track sized (18–24 h, upper ~22–24 h)
+- [x] Cross-referenced to `SPRINT_33/DAY2_MINE_REPLAN.md` + `DAY1_PROGRESS_NOTES.md` + `MINE_CROSSTERM_DESIGN.md`
+- [x] Unknowns 1.1, 1.2, 1.3, 1.4, 1.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
