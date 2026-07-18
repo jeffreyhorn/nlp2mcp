@@ -63,7 +63,7 @@ Task 1 (Create Sprint 34 Known Unknowns List) is already ✅ COMPLETE — no pro
    [ -n "$S33" ] || { echo "ERROR: could not resolve the Sprint 33 close SHA — resolve it manually before diffing"; exit 1; }
    git diff --quiet "$S33"..HEAD -- src/ scripts/ || { echo "ERROR: src/scripts drift since the S33 close — a fresh retest is required; do NOT reuse the committed DB"; git diff --stat "$S33"..HEAD -- src/ scripts/; exit 1; }
    echo "no src/scripts drift — safe to reuse the committed DB; Day-0 code anchor = $S33"
-   md5 -q data/gamslib/gamslib_status.json   # record the current DB hash (macOS; 'md5sum ...' on Linux)
+   { command -v md5sum >/dev/null 2>&1 && md5sum data/gamslib/gamslib_status.json || md5 -q data/gamslib/gamslib_status.json; }   # record the current DB hash (portable: md5sum on Linux, md5 -q on macOS)
    ```
 2. Recompute the canonical bucket tally from the committed DB (`get_candidate_models`, 142): Parse 142 / Translate 135 / Solve 108 (cold 64 + presolve 44) / Match 93 / model_infeasible 7 / path_syntax_error 7 / all-219 Match 96. Enumerate the 7 model_infeasible + the residual path_syntax_error members by name.
 3. Record per-model bucket provenance (Day-0 → expected Day-13) for every carryforward-touched model: mine, sarf, fawley (+ the MAXIMIZE cohort for P4), camcge, rocket, ganges, gangesx, agreste.
