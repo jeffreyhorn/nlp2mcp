@@ -331,7 +331,17 @@ Trace each site's `task`-column enumeration (bounded translate probe); confirm t
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 4
+**Date:** 2026-07-19
+
+**Findings:**
+- Eliminating the 369,024-column materialization requires **all three sites atomically**: S1 `acost3` body-differentiation (`constraint_jacobian.py`, `compute_constraint_jacobian` `:679`), S2 variable-column enumeration (`index_mapping.py` `enumerate_variable_instances`, def `:327`/call `:634`), S3 variable stationarity (`stationarity.py`). Fixing only the constraint gate is insufficient — the live blow-up persists (bounded probe: > 116 s still in `compute_constraint_jacobian` at `constraint_jacobian.py:1247`, `enumerate_equation_instances` for `tbal`).
+- No safe partial: the short-circuited constraints enumerate zero Jacobian entries, so every `stat_*` cross-term must come from the parametric path (Unknown 2.2).
+
+**Evidence:** `SARF_EMIT_MODE_DESIGN.md` §1–§3; live grep (2-D gate 0 matches, 1-D base gate `index_mapping.py:402`); the bounded translate probe.
+
+**Decision:** the three-site atomic elimination is confirmed as the required shape; S1 parametric ∂, S2 guarded-symbolic, S3 one symbolic `stat_task`.
 
 ---
 
@@ -362,7 +372,17 @@ Prototype the symbolic emit (`/tmp` or a bounded probe); measure translate time;
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (architecture verdict; the executed O(active) translate gate is the Sprint-34 in-sprint gate)
+**Verified by:** Task 4
+**Date:** 2026-07-19
+
+**Findings:**
+- **Architecture (verified now):** the parametric emit avoids materializing `task`'s columns at all three sites — S1 differentiates the `acost3` body once (→ `+oc(g,m,n)*nu_acost3`), S2 fixes the vacuous columns + treats `task` as a guarded symbol, S3 emits one guarded `stat_task(g,t,m,n)$taskposs(g,t)`. `taskposs` is runtime-computed (`sarf.gms:371`), so no static enumeration is attempted; GAMS resolves the 398 live rows at solve.
+- **Empirical (deferred to the in-sprint gate):** whether the parametric emit **translates in seconds** (no hidden 4th enumeration site re-triggering the timeout) is the O(active) translate-budget gate — run **in-sprint** (Task 8 Phase-0 / Days 1–7) before the golden ships, **not** in this docs-only prep. srpchase (~2.9 s) is the reference; the current failure is > 116 s.
+
+**Evidence:** `SARF_EMIT_MODE_DESIGN.md` §3, §5 (the O(active) gate); the live bounded blow-up probe.
+
+**Decision:** the architecture is sound; the timeout-re-trigger risk is the primary REPLAN exit, gated on the in-sprint translate-time measurement.
 
 ---
 
@@ -393,7 +413,17 @@ Re-derive `stat_task` term-for-term against the sarf constraint bodies; compare 
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 4
+**Date:** 2026-07-19
+
+**Findings:**
+- The 7-term `stat_task` is complete and re-verified **term-for-term against the live sarf bodies**: [1]+[2] tbal (`:427` + the `tadj`/harvest-c adjustment `:375`/`:379`), [3] labor `lam_labor(t)` (`labor(t)..` body), [4] equipb1$equipposs (`:443`), [5] equipb2$equipposs (`:446`), [6] acost3 `nu_acost3` (`:454`, S1), [7] `task.lo` `−piL_task` (`:402`).
+- **No set-name-literal multiplier indices** — every multiplier is over the stat domain (`nu_tbal(g,t)`, `lam_equipb1(m,t)`, `nu_acost3`, …). The compile-clean anti-pattern grep (`grep -E 'nu_[[:alnum:]_]+\("|lam_[[:alnum:]_]+\("' sarf_mcp.gms` → nothing) is the in-sprint structural guard against the reverted Sprint-26 `243fe578` `nu_slack("srn")` anti-pattern.
+
+**Evidence:** `SARF_EMIT_MODE_DESIGN.md` §4 (the term-by-term table against the live source).
+
+**Decision:** the derivation is complete + literal-free; the anti-pattern grep is a Phase-0 gate item.
 
 ---
 
@@ -424,7 +454,18 @@ Compute the row counts (`$taskposs` alone vs `+ task.fx + matching`); confirm 39
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (design reasoning; the emitted-MCP squareness is confirmed in-sprint by the golden)
+**Verified by:** Task 4
+**Date:** 2026-07-19
+
+**Findings:**
+- The **398 live rows come from the combination**, not the head guard alone: `$taskposs(g,t)` alone still expands across all `(m,n)` per active `(g,t)` (~124K rows); `task.fx(g,t,m,n)$(not (taskposs(g,t) and tech(g,m,n))) = 0` fixes the 368,626 vacuous columns, and under MCP matching the fixed columns — and their paired `stat_task` rows — drop, leaving the **398** `taskposs ∧ tech` rows.
+- The `$(not active)` guard exactly complements the `$taskposs∧$tech`-active 398 (the mine non-`d` precedent); PATH accepts the fixing.
+- The actual MCP squareness (no unmatched var/eqn) is confirmed in-sprint against the emitted golden (part of the O(active) gate).
+
+**Evidence:** `SARF_EMIT_MODE_DESIGN.md` §3 + §4 (Unknown 2.4 row); the banked GAMS data probe (taskposs 129, active 398).
+
+**Decision:** the 398 = head guard + `task.fx` + MCP matching (not the head alone); the emit is square by construction.
 
 ---
 
@@ -455,7 +496,17 @@ Emit sarf under 3 seeds (`{0,1,42}`); diff the goldens; run `--resolve-changed`;
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (gate specified; the determinism ×3 + `--resolve-changed` runs are the in-sprint gate)
+**Verified by:** Task 4
+**Date:** 2026-07-19
+
+**Findings:**
+- **Gate specified (now):** the O(active) budget gate (§5) enforces byte-stability + determinism ×3 `PYTHONHASHSEED` + `--resolve-changed --since-commit 750803b2` GO (sarf the only changed golden) + the anti-pattern grep. The track is sized **20–28 h** with the timeout-re-trigger REPLAN exit.
+- **Empirical (deferred):** the determinism ×3 run + the `--resolve-changed` GO execute **in-sprint** against the emitted golden (which does not exist in this docs-only prep) — a Task-8 Phase-0 / in-sprint gate.
+
+**Evidence:** `SARF_EMIT_MODE_DESIGN.md` §5 (the O(active) budget gate) + §6 (sizing + REPLAN exit).
+
+**Decision:** the byte-stability/determinism gate is specified as a Phase-0 acceptance item; the executed runs are in-sprint (Task 8 authors the gate).
 
 ---
 

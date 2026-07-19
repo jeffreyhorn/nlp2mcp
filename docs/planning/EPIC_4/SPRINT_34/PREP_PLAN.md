@@ -270,13 +270,14 @@ grep -icE 'value-invariant|dual-architecture|22.row|head_domain_offsets|/tmp|mod
 
 ## Task 4: sarf Symbolic/Parametric `stat_task` Emit-Mode Design (Priority 2 foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-19
 **Priority:** High
 **Estimated Time:** 5–7 hours
 **Deadline:** Before Sprint 34 Day 1
 **Owner:** Development team (AD/emit specialist)
 **Dependencies:** Tasks 1, 2
-**Unknowns Verified:** 2.1, 2.2, 2.3, 2.4, 2.5
+**Unknowns Verified:** 2.1, 2.3, 2.4 (verified); 2.2, 2.5 (architecture/spec-verified — the empirical O(active) translate + determinism runs are the Sprint-34 in-sprint gate)
 
 ### Objective
 
@@ -302,11 +303,11 @@ P2 sarf is the +Translate lever (lowest-leverage KPI) but the highest-effort/hig
 
 ### Changes
 
-*To be completed*
+Re-confirmed the Day-0 blow-up live (bounded translate probe: parse+normalize ~36s, then > 116s still in `compute_constraint_jacobian` at `constraint_jacobian.py:1247` — the `enumerate_equation_instances` site for `tbal`) + the code facts (2-D gate `_is_blowup_2d_condition_equation` 0 matches in `src/`; 1-D base gate `_is_blowup_dynamic_subset_equation` at `index_mapping.py:402`). Confirmed the three enumeration sites (S1 `constraint_jacobian.py` `compute_constraint_jacobian`:679, S2 `index_mapping.py` `enumerate_variable_instances` def:327/call:634, S3 `stationarity.py`). Verified the 7-term `stat_task` derivation **term-for-term against the live sarf source** (tbal `:427` + `tadj` `:375`/`:379`, labor, equipb1/2 `:443`/`:446`, acost3 `:454`, task.lo `:402`); no set-name-literal indices. Specified the symbolic/parametric emit mode per site + the atomic-landing requirement + the O(active) translate-budget gate + the timeout-re-trigger REPLAN exit. Authored `docs/planning/EPIC_4/SPRINT_34/SARF_EMIT_MODE_DESIGN.md`; verified Unknowns 2.1/2.3/2.4 and marked 2.2/2.5 architecture/spec-verified with the empirical O(active) translate + determinism runs flagged as the in-sprint gate.
 
 ### Result
 
-*To be completed*
+**The symbolic/parametric emit MODE designed + re-confirmed live.** The blow-up is per-column differentiation of `task`'s 369,024 columns at three sites; the active 398 (`taskposs ∧ tech`, a 927× reduction) is **not statically enumerable** (`taskposs` runtime-computed), so the fix must stop enumerating `task`'s columns and emit **one guarded symbolic `stat_task(g,t,m,n)$taskposs(g,t)`** (the 7-term form) + `task.fx$(not active)=0`, atomically with the 2-D constraint gate. Sized **20–28 h** (three-layer, high-risk, 4×-failed Sprint-26 path) with the timeout-re-trigger REPLAN exit; front-loaded so the decision surfaces by the Day-5 checkpoint. +1 Translate (→136) is the deliverable — the lowest-leverage KPI. No `src/` — the O(active) translate gate is the Sprint-34 in-sprint gate.
 
 ### Verification
 
@@ -324,13 +325,13 @@ grep -icE 'S1|S2|S3|acost3|taskposs|task.fx|O\(active|398|atomic|REPLAN' docs/pl
 
 ### Acceptance Criteria
 
-- [ ] The blow-up re-confirmed (> 75s in `compute_constraint_jacobian`; 2-D gate absent)
-- [ ] The symbolic emit mode designed per site (S1 `acost3` parametric ∂, S2 enumeration short-circuit, S3 one guarded `stat_task$taskposs`)
-- [ ] The 7-term derivation verified term-for-term; no set-name-literal indices
-- [ ] The atomicity + the O(active) budget gate (translate seconds, byte-stable, det ×3, `--resolve-changed` GO) specified
-- [ ] The timeout-re-trigger REPLAN exit pinned; the track sized
-- [ ] Cross-referenced to `SPRINT_33/DAY6_SARF_ASSESSMENT.md` + `SARF_EMIT_SUBSYSTEM_DESIGN.md`
-- [ ] Unknowns 2.1, 2.2, 2.3, 2.4, 2.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The blow-up re-confirmed live (> 116s still in `compute_constraint_jacobian` at `:1247`; 2-D gate absent — 0 matches)
+- [x] The symbolic emit mode designed per site (S1 `acost3` parametric ∂, S2 enumeration short-circuit, S3 one guarded `stat_task$taskposs`)
+- [x] The 7-term derivation verified term-for-term against the live sarf source; no set-name-literal indices
+- [x] The atomicity + the O(active) budget gate (translate seconds, byte-stable, det ×3, `--resolve-changed` GO) specified — the executed translate/determinism runs are the in-sprint gate
+- [x] The timeout-re-trigger REPLAN exit pinned; the track sized (20–28 h)
+- [x] Cross-referenced to `SPRINT_33/DAY6_SARF_ASSESSMENT.md` + `SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md`
+- [x] Unknowns 2.1/2.3/2.4 verified + 2.2/2.5 architecture/spec-verified (empirical O(active) translate + determinism runs are the in-sprint gate), all updated in KNOWN_UNKNOWNS.md
 
 ---
 
