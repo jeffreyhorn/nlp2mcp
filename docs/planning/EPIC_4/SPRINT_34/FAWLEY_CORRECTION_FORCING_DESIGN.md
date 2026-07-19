@@ -21,13 +21,13 @@ max-residual row: stat_bq(res-arab-l,fuel-oil)   rel = 0.973  (raw +473)
 top: stat_bq(res-arab-l,fuel-oil) 0.973 · (res-arab-h,fuel-oil) 0.973 · (res-brega,fuel-oil) 0.973 · (fuel-imp,fuel-oil) 0.973 · (fuel-equiv,fuel-oil) 0.973
 ```
 
-Identical to the S33 Day-0/Day-4 fingerprint; the residual concentrates on the **`(*, fuel-oil)`** column (`fuel-oil` is a `cfq`). Day-0 bucket (Task 2 `BASELINE_METRICS.md`): fawley `model_infeasible`, **MS 5**, LP opt **2899.25**. fawley is a **MAXIMIZE** solve (`solve exxon maximizing profit using lp`, `fawley.gms:255`).
+Identical to the S33 Day-0/Day-4 fingerprint; the residual concentrates on the **`(*, fuel-oil)`** column (`fuel-oil` is a `cfq`). Day-0 bucket (Task 2 `BASELINE_METRICS.md`): fawley `model_infeasible`, **MS 5**, LP opt **2899.25**. fawley is a **MAXIMIZE** solve (`solve exxon maximizing profit using lp`, `data/gamslib/raw/fawley.gms:255`).
 
 ---
 
 ## 2. The emit mechanism + the constraint-index-diagonal gap (Unknown 3.1)
 
-`bq(c,cf)` (a **2-D** `Positive Variable`, `fawley.gms:201/212`) appears in three equations with two index shapes. The emitted `stat_bq` (`data/gamslib/mcp/fawley_mcp.gms:238`):
+`bq(c,cf)` (a **2-D** `Positive Variable`, `data/gamslib/raw/fawley.gms:201/212`) appears in three equations with two index shapes. The emitted `stat_bq` (`data/gamslib/mcp/fawley_mcp.gms:238`):
 
 ```gams
 stat_bq(c,cf).. ( sum(cfq__, (((-1)*1$(bposs(cfq__,c)))*nu_mbal(c))$(sameas(cfq__, cf)))
@@ -114,7 +114,7 @@ Run **before** any `src/` change; assert `modelstat`. **In this docs-only prep t
 
 | Unknown | Verdict | Finding |
 |---|---|---|
-| **3.1** | ✅ **VERIFIED** | The qsb/pbal `sameas` gap is a **constraint-index diagonal** (the summed constraint index `cfq` = `bq`'s 2nd index = the stat index `cf`), distinct from mbal's variable-index diagonal. Fix surface = the general `sameas`-guard path (`_build_sameas_guard`/`_get_or_create_fresh_alias` in `_add_indexed_jacobian_terms`, `:5861`, ~1430 lines), **not** the 1-D core `_var_at_two_indices_complement` (`:7291`; never fires for 2-D `bq`). The correction gives `max|stat_bq|` **473 → 18.468** (control-proven); **→ 0 also needs the P4 bound-transfer fix** on the cc-dist cell. |
+| **3.1** | ✅ **VERIFIED** | The qsb/pbal `sameas` gap is a **constraint-index diagonal** (the summed constraint index `cfq` = `bq`'s 2nd index = the stat index `cf`), distinct from mbal's variable-index diagonal. Fix surface = the general `sameas`-guard path (`_build_sameas_guard`/`_get_or_create_fresh_alias` in `_add_indexed_jacobian_terms`, `src/kkt/stationarity.py:5861`, ~1430 lines), **not** the 1-D core `_var_at_two_indices_complement` (`src/kkt/stationarity.py:7291`; never fires for 2-D `bq`). The correction gives `max|stat_bq|` **473 → 18.468** (control-proven); **→ 0 also needs the P4 bound-transfer fix** on the cc-dist cell. |
 | **3.2** | ✅ **VERIFIED** | **H-b confirmed** (Day-4): sameas + all bound-transfer signs → warm `max|stat_bq| ~0` but the MCP still solves **MS-5 @ 4399.557** (LP opt 2899.25), objective identical with/without the bound-transfer fix. The divergence is **non-emit** (LP-convergence at fawley's scale) → the +Solve hands to P5 forcing. |
 | **3.3** | ✅ **VERIFIED** | The correction changes the cold emit → **genuine** (not methodology). But under H-b fawley **does not cold-match** (stays MS-5 without forcing), so the PR25 floor — which credits a matched model — gives **no in-sprint floor gain**; the +1 genuine floor is **contingent on forcing** (P5). Corrects the Day-5-prompt "+genuine floor" premise (it doesn't hold for fawley). |
 | **3.4** | ✅ **VERIFIED** | Sized **12–18 h** + the gate-leak REPLAN exit. The P7 fawley 2-D second-index fixture (fail-before/pass-after, `test_sample_pruned_var_l_init.py` pattern) lands **only once** the correction lands. The split outcome: correctness ships (no bucket); +Solve → P5 forcing; the cc-dist cell → P4. |
