@@ -251,8 +251,8 @@ Development team (KKT/IR specialist)
 
 **Findings:**
 - `EquationDef.head_domain_offsets` **exists** in the IR (`src/ir/parser.py`, defined line ~1019, populated ~3958) — the S31 foundation that describes, per domain position, the head offset (`l+1`) distinguishing the head label from the body label.
-- It is **NOT referenced anywhere in `src/kkt/stationarity.py`** (live `grep` → 0 hits): mine's cross-term flows through `_try_build_param_offset_crossterm` (the #1224 param-offset path), which re-inverts the body-keyed offset instead of consuming the head-offset IR.
-- H_dual needs a **head-label-indexed multiplier**; `head_domain_offsets` is its natural carrier, and H_dual would be its **first emit-layer consumer** — so **new IR/emit plumbing is required** (not a free existing capability). This is a scope factor for the 1.5 sizing.
+- It is **already consumed in the emit/KKT layer** (`src/emit/emit_gams.py::head_offset_marginal_index_map`; `src/kkt/complementarity.py`; `src/kkt/sqr_reformulation.py`) but is **NOT referenced anywhere in `src/kkt/stationarity.py`** (live `grep` → 0 hits): mine's cross-term flows through `_try_build_param_offset_crossterm` (the #1224 param-offset path), which re-inverts the body-keyed offset instead of consuming the head-offset IR.
+- H_dual needs a **head-label-indexed multiplier**; `head_domain_offsets` is its natural carrier, and H_dual would be its **first consumer in the stationarity cross-term path** (`src/kkt/stationarity.py`) — so the new work is **wiring the existing IR into `_try_build_param_offset_crossterm`** (not an IR capability from scratch, but new stationarity-emit plumbing). This is a scope factor for the 1.5 sizing.
 
 **Evidence:** `MINE_DUAL_SUBSYSTEM_DESIGN.md` §1 (live grep) + §4.2 (fix surface).
 
