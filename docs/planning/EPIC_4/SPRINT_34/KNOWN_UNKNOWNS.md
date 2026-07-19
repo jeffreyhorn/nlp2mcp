@@ -539,8 +539,8 @@ Prototype the constraint-index-diagonal `sameas` in a `/tmp` emit; measure `max|
 Development team (KKT/emit specialist)
 
 ### Verification Results
-✅ **Status:** VERIFIED (Day-0-bucket aspect only)
-**Verified by:** Task 2 (the constraint-index-diagonal correction aspect is verified by Task 5)
+✅ **Status:** VERIFIED (Task 2 Day-0-bucket + Task 5 primary — the constraint-index-diagonal correction)
+**Verified by:** Task 2 (Day-0 bucket) + Task 5 (primary: the constraint-index-diagonal `sameas` correction)
 **Date:** 2026-07-18
 
 **Findings:**
@@ -549,6 +549,8 @@ Development team (KKT/emit specialist)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_34/BASELINE_METRICS.md` §3 (model_infeasible members) + §5 (fawley provenance MS 5) + §4 (the ≥ 76 conversion map, fawley H-b note).
 
 **Decision:** the Day-0 fawley bucket is confirmed; the `sameas`-correction / no-regression / H-b / floor-credit aspects are the primary work of Task 5 (fawley correction + forcing design).
+
+**Task-5 (primary) — ✅ VERIFIED (2026-07-19):** the qsb/pbal `sameas` gap is a **constraint-index diagonal** (the summed constraint index `cfq` = `bq`'s 2nd index = the stat index `cf`), distinct from mbal's variable-index diagonal (the Day-5 refinement). Fix surface = the general `sameas`-guard path (`_build_sameas_guard` `:4623` / `_get_or_create_fresh_alias` `:4496` in `_add_indexed_jacobian_terms` `:5861`, ~1430 lines), **not** the 1-D core `_var_at_two_indices_complement` (`:7291`; never fires for 2-D `bq`). The correction gives `max|stat_bq|` **473 → 18.468** (control-proven); reaching **→ 0** also needs the P4 bound-transfer fix on the cc-dist cell. No-regression is structurally favorable (mbal + the 1-D core are different paths). Live fingerprint re-confirmed (CASE_B `stat_bq(res-arab-l,fuel-oil)` 0.973 raw 473, dual CONSISTENT). Evidence: `FAWLEY_CORRECTION_FORCING_DESIGN.md` §2/§4; `fawley_mcp.gms:238`.
 
 ---
 
@@ -579,7 +581,17 @@ Re-run the Sprint-33 fawley control (sameas + bound transfer, warm residual ~0);
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (H-b confirmed by the Sprint-33 Day-4 control)
+**Verified by:** Task 5
+**Date:** 2026-07-19
+
+**Findings:**
+- **H-b confirmed** (Day-4, `modelstat` asserted): sameas + all bound-transfer signs → warm `max|stat_bq| ~0`, but the MCP still solves **MS-5 @ 4399.557** (LP opt 2899.25), and the objective is **identical** with/without the bound-transfer fix. The divergence is **non-emit** — an LP-convergence/structural issue at fawley's scale (a large degenerate blending LP), separable from the `stat_bq` emit.
+- Therefore fawley's +Solve is **not** an emit fix → it hands to the **P5 `--force` survey** (homotopy/multistart/optfile) + the PATH consultation.
+
+**Evidence:** `SPRINT_33/DAY4_FAWLEY_CONTROL.md` §4 (the H-a/H-b table) + `FAWLEY_CORRECTION_FORCING_DESIGN.md` §3.
+
+**Decision:** the +Solve is a P5 forcing hand-off (H-b); the emit correction ships for correctness only (moves no in-sprint bucket).
 
 ---
 
@@ -610,7 +622,18 @@ Apply the genuine-vs-methodology floor definition (`reference_match_kpi_corpus_s
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (floor-credit determined: NO in-sprint gain under H-b)
+**Verified by:** Task 5
+**Date:** 2026-07-19
+
+**Findings:**
+- The correction **changes the cold emit** (adds the constraint-index-diagonal `sameas` to qsb/pbal) → a **genuine** cross-term fix (not methodology, per the PR25 definition).
+- **But under H-b fawley does not cold-match** (the cold MCP stays MS-5 without a forcing lever), and the PR25 genuine floor credits a **matched** model — so there is **no in-sprint genuine-floor gain**. The +1 genuine floor is **contingent on forcing landing the solve** (P5).
+- This corrects the Day-5-prompt premise that the H-b branch yields "+genuine floor" — it does **not** for fawley, because it doesn't cold-match (`SPRINT_33/DAY5_FAWLEY_CLOSE.md` §1).
+
+**Evidence:** `FAWLEY_CORRECTION_FORCING_DESIGN.md` §4.D; the PR25 partition (`SPRINT_34/BASELINE_METRICS.md` §4).
+
+**Decision:** the correction ships for correctness; the +1 genuine floor is contingent on the P5 forcing solve (not an in-sprint P3 gain).
 
 ---
 
@@ -641,7 +664,18 @@ Sketch the fixture (raw-file emit + the sameas-guard assertion + skip-if-absent)
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 5
+**Date:** 2026-07-19
+
+**Findings:**
+- The fawley 2-D second-index property fixture follows the S33 `tests/integration/emit/test_sample_pruned_var_l_init.py` pattern (raw-file emit + skip-if-absent): it asserts the `$(sameas(cfq__,cf))` guard is present on the **qsb/pbal** terms of the emitted `stat_bq` (absent before the correction → fails; present after → passes).
+- It lands **only once** the P3 correction lands (correctly deferred if P3 REPLANs — the S33 precedent for shape12/shape13/fawley).
+- Sized within the 12–18 h track (~3–4 h for no-regression + determinism ×3 + the fixture).
+
+**Evidence:** `FAWLEY_CORRECTION_FORCING_DESIGN.md` §6; the S33 `test_sample_pruned_var_l_init.py` pattern.
+
+**Decision:** the fixture is scoped (fail-before/pass-after, gated on the correction landing); the track is sized 12–18 h with the gate-leak REPLAN exit.
 
 ---
 

@@ -337,7 +337,8 @@ grep -icE 'S1|S2|S3|acost3|taskposs|task.fx|O\(active|398|atomic|REPLAN' docs/pl
 
 ## Task 5: fawley Second-Index Correction + Forcing Design (Priority 3 foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-19
 **Priority:** High
 **Estimated Time:** 4–6 hours
 **Deadline:** Before Sprint 34 Day 1
@@ -369,11 +370,11 @@ P3 fawley is a **split outcome**: the sameas correction is a genuine emit-correc
 
 ### Changes
 
-*To be completed*
+Re-confirmed the Day-0 fingerprint live (`kkt_residual.py fawley.gms` → CASE_B `stat_bq(res-arab-l,fuel-oil)` rel 0.973 raw +473, dual scale 486, dual CONSISTENT, `(*,fuel-oil)` column) + the emit/fix-surface facts (`stat_bq` at `fawley_mcp.gms:238` — mbal has `$(sameas(cfq__,cf))`, qsb/pbal over-sum; `_add_indexed_jacobian_terms` at `stationarity.py:5861` ~1430 lines; 1-D core `_var_at_two_indices_complement` at `:7291`; fawley MAXIMIZE `:255`). Characterized the **constraint-index-diagonal** gap (the Day-5 refinement: qsb/pbal sum `bq`'s first index, need the restriction on the constraint's own index `cfq` = stat index `cf`). Designed the correction (extend the `sameas`-guard path, a hypothesis) + the no-regression gate (no mbal / 1-D-core move) + the forcing hand-off (H-b +Solve → P5) + the fawley 2-D fixture. Authored `docs/planning/EPIC_4/SPRINT_34/FAWLEY_CORRECTION_FORCING_DESIGN.md`; verified Unknowns 3.1–3.4.
 
 ### Result
 
-*To be completed*
+**The split outcome designed.** (1) The **genuine constraint-index-diagonal `sameas` correction** ships for emit-correctness (473→18.468 control-proven); the fix surface is the general `sameas`-guard path in `_add_indexed_jacobian_terms`, not the 1-D polygon core. (2) fawley's **+Solve is H-b** (sameas + all bound-transfer signs → warm `max|stat_bq| ~0` but MCP MS-5 @ 4399.557, LP opt 2899.25; non-emit divergence) → hands to the **P5 `--force` survey**. (3) The residual-18.468 cc-dist cell is the **P4** max-convention bound-transfer track's, not P3's. **No in-sprint bucket** — fawley doesn't cold-match under H-b, so the +1 genuine floor is **contingent on forcing** (not a P3 gain). Sized **12–18 h** + the gate-leak REPLAN exit + the P7 fixture. No `src/` — the `/tmp` control is the in-sprint gate.
 
 ### Verification
 
@@ -391,13 +392,13 @@ grep -icE 'sameas|constraint-index|_add_indexed_jacobian_terms|H-b|forcing|no.re
 
 ### Acceptance Criteria
 
-- [ ] The control re-confirmed (473 → 18.468; the H-b discriminator)
-- [ ] The constraint-index-diagonal `sameas` design stated with a fix surface (a hypothesis, PR24)
-- [ ] The no-regression gate specified (no mbal / 1-D-core move; `--resolve-changed` GO)
-- [ ] The forcing hand-off for the H-b +Solve designed
-- [ ] The gate-leak REPLAN exit pinned; the track sized
-- [ ] Cross-referenced to `SPRINT_33/DAY4_FAWLEY_CONTROL.md` + `DAY5_FAWLEY_CLOSE.md`
-- [ ] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The control re-confirmed (live fingerprint CASE_B 0.973/473; the 473 → 18.468 + H-b discriminator from the Day-4 control)
+- [x] The constraint-index-diagonal `sameas` design stated with a fix surface (a hypothesis, PR24)
+- [x] The no-regression gate specified (no mbal / 1-D-core move; `--resolve-changed` GO)
+- [x] The forcing hand-off for the H-b +Solve designed (→ P5 `--force` survey)
+- [x] The gate-leak REPLAN exit pinned; the track sized (12–18 h)
+- [x] Cross-referenced to `SPRINT_33/DAY4_FAWLEY_CONTROL.md` + `SPRINT_33/DAY5_FAWLEY_CLOSE.md`
+- [x] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
