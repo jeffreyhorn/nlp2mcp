@@ -340,7 +340,7 @@ grep -icE 'S1|S2|S3|acost3|taskposs|task.fx|O\(active|398|atomic|REPLAN' docs/pl
 **Status:** ✅ COMPLETE
 **Completed:** 2026-07-19
 **Priority:** High
-**Estimated Time:** 4–6 hours
+**Estimated Time:** 4–6 hours (this prep/design task; the **in-sprint fawley implementation track** it sizes is a separate **12–18 h** — see Result)
 **Deadline:** Before Sprint 34 Day 1
 **Owner:** Development team (KKT/emit specialist)
 **Dependencies:** Tasks 1, 2
@@ -374,7 +374,7 @@ Re-confirmed the Day-0 fingerprint live (`scripts/diagnostics/kkt_residual.py da
 
 ### Result
 
-**The split outcome designed.** (1) The **genuine constraint-index-diagonal `sameas` correction** ships for emit-correctness (473→18.468 control-proven); the fix surface is the general `sameas`-guard path in `_add_indexed_jacobian_terms`, not the 1-D polygon core. (2) fawley's **+Solve is H-b** (sameas + all bound-transfer signs → warm `max|stat_bq| ~0` but MCP MS-5 @ 4399.557, LP opt 2899.25; non-emit divergence) → hands to the **P5 `--force` survey**. (3) The residual-18.468 cc-dist cell is the **P4** max-convention bound-transfer track's, not P3's. **No in-sprint bucket** — fawley doesn't cold-match under H-b, so the +1 genuine floor is **contingent on forcing** (not a P3 gain). Sized **12–18 h** + the gate-leak REPLAN exit + the P7 fixture. No `src/` — the `/tmp` control is the in-sprint gate.
+**The split outcome designed.** (1) The **genuine constraint-index-diagonal `sameas` correction** ships for emit-correctness (473→18.468 control-proven); the fix surface is the general `sameas`-guard path in `_add_indexed_jacobian_terms`, not the 1-D polygon core. (2) fawley's **+Solve is H-b** (sameas + all bound-transfer signs → warm `max|stat_bq| ~0` but MCP MS-5 @ 4399.557, LP opt 2899.25; non-emit divergence) → hands to the **P5 `--force` survey**. (3) The residual-18.468 cc-dist cell is the **P4** max-convention bound-transfer track's, not P3's. **No in-sprint bucket** — fawley doesn't cold-match under H-b, so the +1 genuine floor is **contingent on forcing** (not a P3 gain). The **in-sprint fawley implementation track** is sized **12–18 h** (distinct from this 4–6 h prep/design task) + the gate-leak REPLAN exit + the P7 fixture. No `src/` — the `/tmp` control is the in-sprint gate.
 
 ### Verification
 
