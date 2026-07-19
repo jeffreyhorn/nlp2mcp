@@ -709,7 +709,18 @@ Locate the min-convention gates in `src/emit/emit_gams.py`; prototype `= abs(.m)
 Development team (emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 6
+**Date:** 2026-07-19
+
+**Findings:**
+- The bound multiplier at an active bound is `|reduced cost|`, so `= abs(var.m)` is correct for **both** senses; the current sign gates (`var.m > 0` for `piL`, `var.m < 0` for `piU`) encode the MINIMIZE convention and skip the correctly-signed multiplier for MAXIMIZE (fawley `bq.m = −18.468`, Day-4 proven → `= abs(bq.m)` closes the residual; mine's symmetric 3 upper-bound `x.m > 0` rows).
+- The **position** gate (`abs(var.l − var.bound) < 1e-6`) confines the transfer to active bounds — **no over-transfer** at interior/inactive bounds (`abs(var.m) ≈ 0` there anyway), and MINIMIZE is value-identical (`abs(var.m) = var.m` when `var.m ≥ 0`).
+- Two implementation options: **A** universal `abs` (all ~44 presolve goldens byte-change; MINIMIZE value-identical) vs **B** sense-aware (`ObjSense.MAX`-conditioned; MINIMIZE byte-identical, only MAXIMIZE goldens change) — **Option B recommended** (surgical, minimal churn).
+
+**Evidence:** `BOUND_TRANSFER_SIGN_DESIGN.md` §1–§2; `SPRINT_33/DAY4_FAWLEY_CONTROL.md` §3; the live gate lines `src/emit/emit_gams.py:1590`/`:1603`.
+
+**Decision:** the sign-robust transfer is correct + no over-transfer; recommend the sense-aware Option B to minimize blast radius.
 
 ---
 
@@ -740,7 +751,18 @@ Enumerate the MAXIMIZE cohort (grep the raw sources / DB for `maximizing`); clas
 Development team (emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (design-level; the per-candidate +Solve survey is the in-sprint gate)
+**Verified by:** Task 6
+**Date:** 2026-07-19
+
+**Findings:**
+- The MAXIMIZE `model_infeasible` cohort (the +Solve targets) = **{fawley, mine, camcge, rocket, agreste}** (from the committed DB + `solve … maximizing` scan; ~85 MAXIMIZE candidates total).
+- **Four are already attributed to other tracks:** fawley **H-b** (Task 5, structural), mine **P1** (head-offset dual; `x.m=0` at the `c`-boundary — nothing to transfer; P4 closes only the 3 upper-bound `x.m>0` warm-residual rows, not the solve), camcge **Epic-5** (Walras rank-deficiency), rocket **Case-c** (non-convex). So the realistic +Solve target reduces to **agreste** — the one open candidate, but **P6-entangled** (its CASE_B may be a double-`solve` scenario-driver artifact).
+- **Honest finding:** the +Solve is **contingent and a-priori uncertain**; P4's firm value is the **general warm-start-correctness fix** (it closes the harness CASE_B warm residual for the MAXIMIZE cohort). The per-candidate solve (warm-residual-driven vs structural) is the **in-sprint** survey.
+
+**Evidence:** `BOUND_TRANSFER_SIGN_DESIGN.md` §3.1 (the attribution table) + §3.2 (the survey).
+
+**Decision:** front-load the survey (Days 1–5); the REPLAN/documented-finding exit is a general-correctness fix with no +Solve if no candidate is warm-residual-driven.
 
 ---
 
@@ -771,7 +793,18 @@ Run `--resolve-changed --since-commit <S33-close>` after the `/tmp`-validated ch
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (gate specified; the `--resolve-changed` run is the in-sprint gate)
+**Verified by:** Task 6
+**Date:** 2026-07-19
+
+**Findings:**
+- The sign-robust change byte-alters the transfer line; under **Option B** (sense-aware) only the **MAXIMIZE** goldens change (the MINIMIZE cohort stays byte-identical), confining the re-solve/regression surface to the MAXIMIZE cohort.
+- The regression-risk set = the ~20 MAXIMIZE **presolve-match** models (camshape, cclinpts, cpack, etamac, harker, himmel16, irscge, like, lrgcge, marco, moncge, paperco, polygon, robert, stdcge, tforss, weapons, worst, ps10_s_mn, ps5_s_mn) — their warm-start changes, so they must not regress.
+- **No-regression gate:** `--resolve-changed --since-commit 750803b2` **GO** (every changed golden re-solves to the same bucket). The executed run is **in-sprint**.
+
+**Evidence:** `BOUND_TRANSFER_SIGN_DESIGN.md` §3.3 + §2 (Option B); the committed DB (MAXIMIZE presolve-match enumeration).
+
+**Decision:** Option B confines the blast radius to the MAXIMIZE cohort; the `--resolve-changed` GO over the presolve-match set is the in-sprint no-regression gate.
 
 ---
 
@@ -802,7 +835,17 @@ Grep `src/emit/emit_gams.py` for the `piL`/`piU` transfer + the `.m > 0`/`.m < 0
 Development team (emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 6
+**Date:** 2026-07-19
+
+**Findings:**
+- The min-convention gate is localized (live) to `src/emit/emit_gams.py:1590` (`piL`: `…$(abs(var.l − var.lo) < 1e-6 and var.m > 0) = var.m`) + `:1603` (`piU`: `…$(abs(var.l − var.up) < 1e-6 and var.m < 0) = -(var.m)`), both inside `_emit_nlp_presolve` — the **sole** fix surface.
+- The indexed equality-multiplier transfers already use `abs()` (`src/emit/emit_gams.py:~145`), so they are unaffected; the objective sense for Option B is available via `model_ir.objective.sense == ObjSense.MAX` (`src/ir/parser.py:55/4072`; used at `src/kkt/reformulation.py:717`).
+
+**Evidence:** `BOUND_TRANSFER_SIGN_DESIGN.md` §1–§2; live grep of `src/emit/emit_gams.py`.
+
+**Decision:** the two gate lines are the sole fix surface; the objective sense is available for the sense-aware Option B.
 
 ---
 
