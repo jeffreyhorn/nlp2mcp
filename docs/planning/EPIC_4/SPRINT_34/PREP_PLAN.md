@@ -263,7 +263,7 @@ grep -icE 'value-invariant|dual-architecture|22.row|head_domain_offsets|/tmp|mod
 - [x] The reconciliation hypothesis (H_dual) stated with a `file:line` fix surface (a hypothesis, PR24)
 - [x] The pre-`src/` `/tmp` control specified — **gate reframed to the cold MCP reaching MS-1 @ 17500** (`modelstat` asserted; `x.up=inf` BANNED), since the warm residual `N` is keying-invariant (S33's `N→0` gate was unpassable)
 - [x] The H3′ REPLAN exit pinned; the track sized (18–24 h, upper ~22–24 h)
-- [x] Cross-referenced to `SPRINT_33/DAY2_MINE_REPLAN.md` + `DAY1_PROGRESS_NOTES.md` + `MINE_CROSSTERM_DESIGN.md`
+- [x] Cross-referenced to `SPRINT_33/DAY2_MINE_REPLAN.md` + `SPRINT_33/DAY1_PROGRESS_NOTES.md` + `SPRINT_33/MINE_CROSSTERM_DESIGN.md`
 - [x] Unknowns 1.1, 1.3, 1.4, 1.5 verified + 1.2 design-specified (cold-MS-1 control pending Day 1), all updated in KNOWN_UNKNOWNS.md
 
 ---
