@@ -85,7 +85,7 @@ The correction **changes the cold emit** (adds `sameas` to qsb/pbal) → a **gen
 
 ---
 
-## 5. The pre-`src/` `/tmp` control (PR24/PR27 gate) — in-sprint executed, spec here
+## 5. The pre-`src/` `/tmp` control (PR24/PR27 gate) — specification (executed in-sprint)
 
 Run **before** any `src/` change; assert `modelstat`. **In this docs-only prep the criteria are a specification, not an executed result** (the Day-4 control already established the H-b verdict + the 473→18.468 measurement).
 

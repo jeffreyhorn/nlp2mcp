@@ -541,10 +541,10 @@ Development team (KKT/emit specialist)
 ### Verification Results
 ✅ **Status:** VERIFIED (Task 2 Day-0-bucket + Task 5 primary — the constraint-index-diagonal correction)
 **Verified by:** Task 2 (Day-0 bucket) + Task 5 (primary: the constraint-index-diagonal `sameas` correction)
-**Date:** 2026-07-18
+**Date:** 2026-07-19 (Task 5 primary; Task 2 Day-0-bucket 2026-07-18)
 
-**Findings:**
-- At Day 0, fawley is `model_infeasible` (MS 5; LP opt 2899.25), a `verified_convex` candidate — the P3 bucket the constraint-index-diagonal `sameas` correction targets. Confirmed from the committed DB. (fawley's +Solve is **H-b** per the S33 control, so the in-sprint credit is a genuine-floor lever, not a guaranteed +Solve — verified in Task 5.)
+**Findings (Task 2 — Day-0 bucket):**
+- At Day 0, fawley is `model_infeasible` (MS 5; LP opt 2899.25), a `verified_convex` candidate — the P3 bucket the constraint-index-diagonal `sameas` correction targets. Confirmed from the committed DB. (fawley's +Solve is **H-b** per the S33 control, so there is **no in-sprint bucket**: the correction ships for correctness, and the +1 genuine floor is **contingent on the P5 forcing solve**, not an in-sprint P3 gain — see Task 5 / Unknown 3.3.)
 
 **Evidence:** `docs/planning/EPIC_4/SPRINT_34/BASELINE_METRICS.md` §3 (model_infeasible members) + §5 (fawley provenance MS 5) + §4 (the ≥ 76 conversion map, fawley H-b note).
 
