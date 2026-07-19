@@ -39,7 +39,7 @@ Identical to the S33 Day-0/Day-1 fingerprint. Day-0 bucket (Task 2 `BASELINE_MET
 
 The NLP precedence constraint is **head-placed**: `pr(k,l+1,i,j)$c(l,i,j).. x(l,i+li(k),j+lj(k)) =g= x(l+1,i,j)`, so its dual lives at the **head label** `pr.m(k,l+1,i,j)`. The `--nlp-presolve` transfer already reads the head-label dual and stores it at the **body** label: `lam_pr.l(k,l,i,j) = abs(pr.m(k,l+1,i,j))`.
 
-Sprint 33 Day 2 ran the pre-`src/` control (`DAY2_MINE_REPLAN.md` §1):
+Sprint 33 Day 2 ran the pre-`src/` control (`SPRINT_33/DAY2_MINE_REPLAN.md` §1):
 
 | Hypothesis | nonzero residual rows | Finding |
 |---|---|---|
@@ -56,7 +56,7 @@ Sprint 33 Day 2 ran the pre-`src/` control (`DAY2_MINE_REPLAN.md` §1):
 
 ### 3.1 The residual is exactly the pit's top edge — 22 rows
 
-Classified against `c` (`ord(l)+ord(i)≤card ∧ ord(l)+ord(j)≤card`, `card(l)=4`) and `d` (`≤card+1`), the wrong-sign rows sit on **two boundary strata** (`MINE_CROSSTERM_DESIGN.md` §2):
+Classified against `c` (`ord(l)+ord(i)≤card ∧ ord(l)+ord(j)≤card`, `card(l)=4`) and `d` (`≤card+1`), the wrong-sign rows sit on **two boundary strata** (`SPRINT_33/MINE_CROSSTERM_DESIGN.md` §2):
 
 | Stratum | example rows | position |
 |---|---|---|

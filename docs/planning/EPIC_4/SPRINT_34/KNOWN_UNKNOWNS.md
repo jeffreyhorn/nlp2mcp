@@ -104,7 +104,7 @@ The Sprint-33 Day-2 control result holds: re-keying the `l+1`-shifted head-label
 5. Is the 22-row breadth genuinely broader than the banked 6, and are all 22 on the boundary?
 
 ### How to Verify
-Re-run the Sprint-33 Day-1/Day-2 `/tmp` mine control from the repo root (the emit `$include` is repo-relative; assert `modelstat`; `x.up=inf` BANNED). Reproduce the residual decomposition (`DAY1_PROGRESS_NOTES.md` §5) row-for-row; confirm `d_N = d_Nh1` (value-invariance) and the 22-row `c`-boundary confinement. Cross-check `DAY2_MINE_REPLAN.md`.
+Re-run the Sprint-33 Day-1/Day-2 `/tmp` mine control from the repo root (the emit `$include` is repo-relative; assert `modelstat`; `x.up=inf` BANNED). Reproduce the residual decomposition (`SPRINT_33/DAY1_PROGRESS_NOTES.md` §5) row-for-row; confirm `d_N = d_Nh1` (value-invariance) and the 22-row `c`-boundary confinement. Cross-check `SPRINT_33/DAY2_MINE_REPLAN.md`.
 
 ### Risk if Wrong
 - **H1 not value-invariant (a keying change closes it):** P1 is far cheaper than scoped — but Sprint-33's control makes this unlikely; over-scoping wastes budget (recoverable).
@@ -148,7 +148,7 @@ An emit reconciliation that anchors the head-placed precedence dual `pr.m(k,l+1,
 5. Does it regress srpchase or any other head-offset model that shares the emit path?
 
 ### How to Verify
-Prototype the reconciliation in a `/tmp` emit (no `src/` change); assert `modelstat`; **gate on the cold MCP reaching MS-1 @ 17500** (the 22 boundary rows closing in the cold solution, interior rows unperturbed) — not on the warm residual `N → 0`, which is keying-invariant. Compare against `MINE_CROSSTERM_DESIGN.md` §2/§3 + `MINE_DUAL_SUBSYSTEM_DESIGN.md` §5.
+Prototype the reconciliation in a `/tmp` emit (no `src/` change); assert `modelstat`; **gate on the cold MCP reaching MS-1 @ 17500** (the 22 boundary rows closing in the cold solution, interior rows unperturbed) — not on the warm residual `N → 0`, which is keying-invariant. Compare against `SPRINT_33/MINE_CROSSTERM_DESIGN.md` §2/§3 + `MINE_DUAL_SUBSYSTEM_DESIGN.md` §5.
 
 ### Risk if Wrong
 - **Cannot drive the cold MCP to MS-1 without perturbing interior rows or regressing srpchase:** the reconciliation is the wrong mechanism → P1 REPLAN (H3′, a further-deferred head-offset dual architecture); mine stays `model_infeasible`.
@@ -182,7 +182,7 @@ Development team (KKT/emit specialist)
 **High** — If the breadth is wider than the reconciliation design accounts for, the fix is incomplete (partial residual → MS-5 persists)
 
 ### Assumption
-The wrong-sign residual is exactly the 22 `c`-boundary rows characterized in `DAY2_MINE_REPLAN.md` (broader than the banked 6 from Sprint 32), and closing all 22 (not merely the max row) is both necessary and sufficient to reach MS-1 @ 17500.
+The wrong-sign residual is exactly the 22 `c`-boundary rows characterized in `SPRINT_33/DAY2_MINE_REPLAN.md` (broader than the banked 6 from Sprint 32), and closing all 22 (not merely the max row) is both necessary and sufficient to reach MS-1 @ 17500.
 
 ### Research Questions
 1. Are all 22 nonzero rows on the `c`-boundary (`ord(l)+ord(i) = card` / `= card+1`)?
