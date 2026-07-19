@@ -161,8 +161,8 @@ Prototype the reconciliation in a `/tmp` emit (no `src/` change); assert `models
 Development team (KKT/emit specialist)
 
 ### Verification Results
-✅ **Status:** VERIFIED (design-level; the `/tmp` control is the Sprint-34 Day-1 executed gate)
-**Verified by:** Task 3
+🔍 **Status:** INCOMPLETE — DESIGN-SPECIFIED (the reconciliation design + the cold-MS-1 `/tmp` control are fully specified, but the control is the Sprint-34 **Day-1** executed gate and has **not** been run in this docs-only prep — the empirical question "does H_dual reach cold MS-1?" remains open)
+**Design by:** Task 3 (prep) · **Control (pending):** Sprint-34 Day 1
 **Date:** 2026-07-18
 
 **Findings:**
