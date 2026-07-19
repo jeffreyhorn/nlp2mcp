@@ -82,7 +82,7 @@ Sprint 34's carryforwards each arrive with a Sprint-33 control-confirmed diagnos
 
 1. **Review the Sprint 34 scope** from `PROJECT_PLAN.md` §"Sprint 34" (Priorities 1–7) + `SPRINT_33/SPRINT_RETROSPECTIVE.md` §4 + `SPRINT_33/SPRINT_34_CARRYFORWARDS.md`.
 2. **Enumerate unknowns per category** (assumption · how-to-verify · priority · risk-if-wrong · verification deadline):
-   - **Category 1 — mine head-offset dual subsystem (#1443):** Given H1 is value-invariant, what reconciliation of head-placed constraint duals into `stat_x` at the `c`-boundary drives `N→0` at all bound-active rows without perturbing interior rows? Does the S31 `head_domain_offsets` IR carry what the reconciliation needs? Is the 22-row breadth (not 6) fully characterized? Is `x.up=inf` BANNED (assert `modelstat`)?
+   - **Category 1 — mine head-offset dual subsystem (#1443):** Given H1 is value-invariant, what reconciliation of head-placed constraint duals into `stat_x` at the `c`-boundary drives the **cold MCP to MS-1 @ 17500** (the warm residual `N→0` is keying-invariant, so it is the wrong gate) without perturbing interior rows? Does the S31 `head_domain_offsets` IR carry what the reconciliation needs? Is the 22-row breadth (not 6) fully characterized? Is `x.up=inf` BANNED (assert `modelstat`)?
    - **Category 2 — sarf symbolic/parametric emit mode (#1385):** Can the emit switch `task` to a symbolic mode at all three sites (S1 `acost3` body-diff, S2 enumeration, S3 stationarity) atomically? Is the banked 7-term `stat_task` derivation complete + free of set-name-literal indices? Does the `task.fx$(not active)` + MCP matching yield exactly the 398 live rows? Does the translate drop to seconds (O(active)) not >75s?
    - **Category 3 — fawley second-index correction + forcing (#1111/#1112):** Does the constraint-index-diagonal `sameas` extension close `max|stat_bq|→0` without regressing mbal / the 1-D polygon core? Is the +Solve genuinely H-b (MS-5 persists even with the warm residual closed)? Does the genuine cross-term correction lift the floor (fawley cold-match) even under H-b?
    - **Category 4 — max-convention bound-transfer-sign track (NEW):** Is the sign-robust `= abs(.m)` transfer correct across the MAXIMIZE cohort (no over-transfer on presolve-match models)? Which max models' MCP divergence is warm-residual-driven (a +Solve lever) vs structural (like fawley's H-b)? Does `--resolve-changed` stay GO?
@@ -202,17 +202,18 @@ grep -icE 'S33.close|anchor|--resolve-changed' docs/planning/EPIC_4/SPRINT_34/BA
 
 ## Task 3: mine Head-Offset Dual Subsystem: Design (Priority 1 foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-18
 **Priority:** Critical
 **Estimated Time:** 6–8 hours
 **Deadline:** Before Sprint 34 Day 1
 **Owner:** Development team (KKT/emit specialist)
 **Dependencies:** Tasks 1, 2
-**Unknowns Verified:** 1.1, 1.2, 1.3, 1.4, 1.5
+**Unknowns Verified:** 1.1, 1.3, 1.4, 1.5 (verified); 1.2 (design-specified — the cold-MS-1 `/tmp` control is pending Sprint-34 Day 1)
 
 ### Objective
 
-Turn the Sprint-33 Day-2 control (H1 head-label re-keying is **value-invariant**; the residual is a deeper head-offset dual-architecture mismatch, 22-row breadth) into a concrete **head-offset dual-subsystem design** — how head-placed constraint duals reconcile into `stat_x` at the `c`-boundary so `N→0` at all bound-active rows — with a pre-`src/` `/tmp` control gate and a sizing.
+Turn the Sprint-33 Day-2 control (H1 head-label re-keying is **value-invariant**; the residual is a deeper head-offset dual-architecture mismatch, 22-row breadth) into a concrete **head-offset dual-subsystem design** — how head-placed constraint duals reconcile into `stat_x` at the `c`-boundary so the **cold MCP reaches MS-1 @ 17500** (the reframed gate; the warm residual `N→0` is keying-invariant) — with a pre-`src/` `/tmp` control gate and a sizing.
 
 ### Why This Matters
 
@@ -227,18 +228,18 @@ P1 mine is the sprint's deepest and highest-REPLAN-prior track — its banked pr
 1. **Re-confirm the Day-0 fingerprint** — `kkt_residual.py mine.gms` (CASE_B, `stat_x(3,1,1)` 2.37, dual CONSISTENT) + re-run the Day-1 residual decomposition (repo-root presolve substrate) to reproduce the 22-row `dbg_N`.
 2. **Characterize the dual-architecture mismatch** — from the residual decomposition, precisely state how the head-placed precedence dual `pr.m(k,l+1,i,j)` fails to map into `stat_x` at the `c`-boundary (the +16000-needed vs −16000-supplied gap; the `x.m=0` degeneracy at bound-active rows).
 3. **Design the reconciliation hypothesis (H_dual)** — the emit reformulation that makes head-placed constraint duals enter `stat_x` consistently at the boundary (candidate: a boundary-row dual-transfer term keyed on the S31 `head_domain_offsets` IR; or a `stat_x` reformulation that accounts for the head-shifted precedence structure). State the fix surface (`src/kkt/stationarity.py` `_try_build_param_offset_crossterm` + the S31 IR; any `src/ad/…` plumbing) as a **hypothesis**.
-4. **Specify the pre-`src/` `/tmp` control** — the reconciliation prototype must drive the warm residual `N→0` at **all** bound-active rows AND unchanged (0) at interior rows (`modelstat` asserted; `x.up=inf` BANNED); then presolve MS-1 @ 17500.
-5. **Pin the REPLAN exit (H3)** — if the reconciliation can't close `N→0` without perturbing interior rows or regressing srpchase → a further-deferred head-offset dual architecture; mine stays `model_infeasible`; freed budget → P6/P7.
+4. **Specify the pre-`src/` `/tmp` control** — the reconciliation prototype must drive the **cold** MCP to **MS-1 @ 17500** (`modelstat` asserted; `x.up=inf` BANNED), with the 22 boundary rows closing in the cold solution and interior rows unperturbed. NB: the gate is the **cold** solve, **not** the warm residual `N→0` — the warm residual is keying-invariant (Unknown 1.1), so a keying/pairing change leaves it unchanged; the cold solve is what the structural change actually affects (this is why S33's `N→0` gate was unpassable).
+5. **Pin the REPLAN exit (H3′)** — if the reconciliation can't drive the cold MCP to MS-1 @ 17500 without perturbing interior rows or regressing srpchase → a further-deferred head-offset dual architecture; mine stays `model_infeasible`; freed budget → P6/P7.
 6. **Size it** (design + `/tmp` control + emit/IR plumbing + regression fixture + determinism).
 7. **Write** `docs/planning/EPIC_4/SPRINT_34/MINE_DUAL_SUBSYSTEM_DESIGN.md`.
 
 ### Changes
 
-*To be completed*
+Re-confirmed the Day-0 fingerprint live (`kkt_residual.py mine.gms` → CASE_B `stat_x(3,1,1)` 2.37, dual CONSISTENT) + the emit-site facts (`_try_build_param_offset_crossterm` at `stationarity.py:5712`; `head_domain_offsets` defined in `parser.py` but 0 hits in `stationarity.py`; cold mine MS 5). Characterized the head-offset dual-architecture mismatch (the head-placed `pr.m(k,l+1)` enters `stat_x` with opposite orientation at the `c`-boundary + `d\c` ring, 22-row breadth, `x.m=0` degeneracy). Designed the reconciliation hypothesis **H_dual** (anchor the dual's complementarity to the head-side variable) with the `head_domain_offsets` + `_try_build_param_offset_crossterm` + `_emit_nlp_presolve` fix surface as a Day-0-re-confirm hypothesis; **reframed the `/tmp` gate to the cold MCP reaching MS-1 @ 17500** (the warm residual `N` is keying-invariant, so S33's `N→0` gate was unpassable). Authored `docs/planning/EPIC_4/SPRINT_34/MINE_DUAL_SUBSYSTEM_DESIGN.md`; verified Unknowns 1.1/1.3/1.4/1.5 and marked 1.2 **design-specified** (the cold-MS-1 `/tmp` control is the Day-1 executed gate, not run in this docs-only prep) in KNOWN_UNKNOWNS.md.
 
 ### Result
 
-*To be completed*
+**H_dual designed + de-risked to a spec.** The residual is a head-offset dual-architecture mismatch, not a keying/cross-term error (H1 value-invariant, re-confirmed). The design's central contribution is the **reframed gate**: because keying is value-invariant, the pre-`src/` `/tmp` control must gate on the **cold** MCP reaching MS-1 @ 17500 (`modelstat` asserted; `x.up=inf` BANNED), not on `N→0` at the warm point. Fix surface stated as a hypothesis (PR24); H3′ REPLAN exit pinned; sized **18–24 h (upper ~22–24 h)**, front-loaded Days 1–5 so the PROCEED/REPLAN decision lands by the Day-5 checkpoint (P1 = highest-REPLAN-prior). No `src/` — the `/tmp` control is the Sprint-34 Day-1 executed gate.
 
 ### Verification
 
@@ -257,13 +258,13 @@ grep -icE 'value-invariant|dual-architecture|22.row|head_domain_offsets|/tmp|mod
 
 ### Acceptance Criteria
 
-- [ ] The Day-0 fingerprint re-confirmed + the 22-row residual decomposition reproduced
-- [ ] The head-offset dual-architecture mismatch characterized (the +16000/−16000 boundary gap, `x.m=0`)
-- [ ] The reconciliation hypothesis (H_dual) stated with a `file:line` fix surface (a hypothesis, PR24)
-- [ ] The pre-`src/` `/tmp` control specified (`N→0` at all bound-active rows → MS-1 @ 17500; `modelstat` asserted; `x.up=inf` BANNED)
-- [ ] The H3 REPLAN exit pinned; the track sized
-- [ ] Cross-referenced to `SPRINT_33/DAY2_MINE_REPLAN.md` + `DAY1_PROGRESS_NOTES.md` + `MINE_CROSSTERM_DESIGN.md`
-- [ ] Unknowns 1.1, 1.2, 1.3, 1.4, 1.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The Day-0 fingerprint re-confirmed (live harness CASE_B 2.37, dual CONSISTENT) + the 22-row residual decomposition characterized
+- [x] The head-offset dual-architecture mismatch characterized (the +16000/−16000 boundary gap, `x.m=0`)
+- [x] The reconciliation hypothesis (H_dual) stated with a `file:line` fix surface (a hypothesis, PR24)
+- [x] The pre-`src/` `/tmp` control specified — **gate reframed to the cold MCP reaching MS-1 @ 17500** (`modelstat` asserted; `x.up=inf` BANNED), since the warm residual `N` is keying-invariant (S33's `N→0` gate was unpassable)
+- [x] The H3′ REPLAN exit pinned; the track sized (18–24 h, upper ~22–24 h)
+- [x] Cross-referenced to `SPRINT_33/DAY2_MINE_REPLAN.md` + `SPRINT_33/DAY1_PROGRESS_NOTES.md` + `SPRINT_33/MINE_CROSSTERM_DESIGN.md`
+- [x] Unknowns 1.1, 1.3, 1.4, 1.5 verified + 1.2 design-specified (cold-MS-1 control pending Day 1), all updated in KNOWN_UNKNOWNS.md
 
 ---
 
