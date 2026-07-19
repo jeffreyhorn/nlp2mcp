@@ -20,13 +20,13 @@ f"{qm}.l{domain_str}$(abs({qv}.l{domain_str} - {qv}.lo{domain_str}) < 1e-6 and {
 f"{qm}.l{domain_str}$(abs({qv}.l{domain_str} - {qv}.up{domain_str}) < 1e-6 and {qv}.m{domain_str} < 0) = -({qv}.m{domain_str});"
 ```
 
-Each gate has a **position** test (`abs(var.l − var.bound) < 1e-6` — the bound is active) **AND** a **sign** test (`var.m > 0` for `piL`, `var.m < 0` for `piU`). The sign tests encode the **MINIMIZE** convention: at an active *lower* bound a MINIMIZE reduced cost is `≥ 0`; at an active *upper* bound it is `≤ 0`. **For a MAXIMIZE solve the signs flip**, so both gates **skip the correctly-signed multiplier** → `piL`/`piU` left at 0 → a wrong warm-start (the harness CASE_B warm residual).
+Each gate has a **position** test (`abs(var.l - var.bound) < 1e-6` — the bound is active) **AND** a **sign** test (`var.m > 0` for `piL`, `var.m < 0` for `piU`). The sign tests encode the **MINIMIZE** convention: at an active *lower* bound a MINIMIZE reduced cost is `≥ 0`; at an active *upper* bound it is `≤ 0`. **For a MAXIMIZE solve the signs flip**, so both gates **skip the correctly-signed multiplier** → `piL`/`piU` left at 0 → a wrong warm-start (the harness CASE_B warm residual).
 
 ### The two discovery cells (Day-4, control-proven)
 
 | Model | sense | cell | bound | `var.m` | current gate | result |
 |---|---|---|---|---|---|---|
-| **fawley** | MAX | `bq(cc-dist, fuel-oil)` | lower (active) | **−18.468** | `piL … and var.m > 0` → **skips** | `piL_bq = 0`; residual `= −bq.m` = 18.468 |
+| **fawley** | MAX | `bq(cc-dist, fuel-oil)` | lower (active) | **−18.468** | `piL … and var.m > 0` → **skips** | `piL_bq = 0`; residual `= -bq.m` = 18.468 |
 | **mine** | MAX | 3 upper-bound-active `x` rows | upper (active) | **> 0** | `piU … and var.m < 0` → **skips** | `piU_x = 0` at those 3 rows |
 
 Both are MAXIMIZE LP solves (`solve exxon maximizing profit`; `solve mine maximizing profit`). The Day-4 control proved the sign-robust transfer (`= abs(bq.m)`) drives the fawley cc-dist warm residual **→ 0**; the mine 3-row case is the symmetric `piU` direction (S33 Day-2 §1: "max-convention upper-bound transfer closes only the 3 upper-bound-active `x.m>0` rows"). **The gap is general** (any MAXIMIZE model with an active-bound multiplier), not fawley-specific.
@@ -39,8 +39,8 @@ Both are MAXIMIZE LP solves (`solve exxon maximizing profit`; `solve mine maximi
 
 **Two implementation options (a real blast-radius decision):**
 
-- **Option A — universal `abs` (simpler):** `piL … $(abs(var.l − var.lo) < 1e-6) = abs(var.m)`; `piU … $(abs(var.l − var.up) < 1e-6) = abs(var.m)`. Correct for both senses (a bound multiplier is `|reduced cost|`). **Downside:** the emitted transfer *string* changes for **every** presolve-emitting model, so **all ~44 presolve goldens byte-change** (though MINIMIZE models re-solve **value-identically** — `abs(var.m) = var.m` when `var.m ≥ 0`). Large golden churn; `--resolve-changed` GO iff every bucket is invariant.
-- **Option B — sense-aware (surgical, RECOMMENDED):** condition on the objective sense (`model_ir.objective.sense == ObjSense.MAX`, available in the IR — `src/ir/parser.py:55/4072`, used at `src/kkt/reformulation.py:717`). For **MINIMIZE** keep the current gates (byte-identical — zero churn); for **MAXIMIZE** flip to the sign-robust form. **Only the MAXIMIZE goldens change** → minimal blast radius + golden churn, and the regression surface is confined to the MAXIMIZE cohort.
+- **Option A — universal `abs` (simpler):** `piL … $(abs(var.l - var.lo) < 1e-6) = abs(var.m)`; `piU … $(abs(var.l - var.up) < 1e-6) = abs(var.m)`. Correct for both senses (a bound multiplier is `|reduced cost|`). **Downside:** the emitted transfer *string* changes for **every** presolve-emitting model, so **all ~44 presolve goldens byte-change** (though MINIMIZE models re-solve **value-identically** — `abs(var.m) = var.m` when `var.m ≥ 0`). Large golden churn; `--resolve-changed` GO iff every bucket is invariant.
+- **Option B — sense-aware (surgical, RECOMMENDED):** condition on the objective sense (`model_ir.objective.sense == ObjSense.MAX`, available in the IR — the `ObjSense` enum `src/ir/symbols.py:42`, the `objective.sense` field `src/ir/model_ir.py:27`, parsed at `src/ir/parser.py:4104`; there is an existing precedent for branching on it at `src/ad/gradient.py:300` — `if sense == ObjSense.MAX:`). For **MINIMIZE** keep the current gates (byte-identical — zero churn); for **MAXIMIZE** flip to the sign-robust form. **Only the MAXIMIZE goldens change** → minimal blast radius + golden churn, and the regression surface is confined to the MAXIMIZE cohort.
 
 **Recommendation: Option B** — the surgical, sense-aware emit keeps the MINIMIZE cohort byte-identical (no churn, no regression surface) and confines the change to the MAXIMIZE cohort, matching the fix's actual scope.
 

@@ -714,8 +714,8 @@ Development team (emit specialist)
 **Date:** 2026-07-19
 
 **Findings:**
-- The bound multiplier at an active bound is `|reduced cost|`, so `= abs(var.m)` is correct for **both** senses; the current sign gates (`var.m > 0` for `piL`, `var.m < 0` for `piU`) encode the MINIMIZE convention and skip the correctly-signed multiplier for MAXIMIZE (fawley `bq.m = −18.468`, Day-4 proven → `= abs(bq.m)` closes the residual; mine's symmetric 3 upper-bound `x.m > 0` rows).
-- The **position** gate (`abs(var.l − var.bound) < 1e-6`) confines the transfer to active bounds — **no over-transfer** at interior/inactive bounds (`abs(var.m) ≈ 0` there anyway), and MINIMIZE is value-identical (`abs(var.m) = var.m` when `var.m ≥ 0`).
+- The bound multiplier at an active bound is `|reduced cost|`, so `= abs(var.m)` is correct for **both** senses; the current sign gates (`var.m > 0` for `piL`, `var.m < 0` for `piU`) encode the MINIMIZE convention and skip the correctly-signed multiplier for MAXIMIZE (fawley `bq.m = -18.468`, Day-4 proven → `= abs(bq.m)` closes the residual; mine's symmetric 3 upper-bound `x.m > 0` rows).
+- The **position** gate (`abs(var.l - var.bound) < 1e-6`) confines the transfer to active bounds — **no over-transfer** at interior/inactive bounds (`abs(var.m) ≈ 0` there anyway), and MINIMIZE is value-identical (`abs(var.m) = var.m` when `var.m ≥ 0`).
 - Two implementation options: **A** universal `abs` (all ~44 presolve goldens byte-change; MINIMIZE value-identical) vs **B** sense-aware (`ObjSense.MAX`-conditioned; MINIMIZE byte-identical, only MAXIMIZE goldens change) — **Option B recommended** (surgical, minimal churn).
 
 **Evidence:** `BOUND_TRANSFER_SIGN_DESIGN.md` §1–§2; `SPRINT_33/DAY4_FAWLEY_CONTROL.md` §3; the live gate lines `src/emit/emit_gams.py:1590`/`:1603`.
@@ -840,8 +840,8 @@ Development team (emit specialist)
 **Date:** 2026-07-19
 
 **Findings:**
-- The min-convention gate is localized (live) to `src/emit/emit_gams.py:1590` (`piL`: `…$(abs(var.l − var.lo) < 1e-6 and var.m > 0) = var.m`) + `:1603` (`piU`: `…$(abs(var.l − var.up) < 1e-6 and var.m < 0) = -(var.m)`), both inside `_emit_nlp_presolve` — the **sole** fix surface.
-- The indexed equality-multiplier transfers already use `abs()` (`src/emit/emit_gams.py:~145`), so they are unaffected; the objective sense for Option B is available via `model_ir.objective.sense == ObjSense.MAX` (`src/ir/parser.py:55/4072`; used at `src/kkt/reformulation.py:717`).
+- The min-convention gate is localized (live) to `src/emit/emit_gams.py:1590` (`piL`: `…$(abs(var.l - var.lo) < 1e-6 and var.m > 0) = var.m`) + `:1603` (`piU`: `…$(abs(var.l - var.up) < 1e-6 and var.m < 0) = -(var.m)`), both inside `_emit_nlp_presolve` — the **sole** fix surface.
+- The indexed equality-multiplier transfers already use `abs()` (`src/emit/emit_gams.py:~145`), so they are unaffected; the objective sense for Option B is available via `model_ir.objective.sense == ObjSense.MAX` (the `ObjSense` enum `src/ir/symbols.py:42`, parsed at `src/ir/parser.py:4104`; existing branch precedent at `src/ad/gradient.py:300` — `if sense == ObjSense.MAX:`).
 
 **Evidence:** `BOUND_TRANSFER_SIGN_DESIGN.md` §1–§2; live grep of `src/emit/emit_gams.py`.
 
