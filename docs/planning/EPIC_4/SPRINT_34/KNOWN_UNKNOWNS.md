@@ -1159,7 +1159,7 @@ Development team
 
 **Evidence:** `TOOLING_AND_BACKLOG_ANALYSIS.md` §3; the catalog (shapes 1–11 present); the S33 fixture pattern.
 
-**Decision:** the fixtures are scoped (fail-before/pass-after, gated on P1/P2/P3 landing, deferred on REPLAN).
+**Decision:** the fixtures are scoped (fail-before/pass-after, each gated on **its own** track's landing — shape12→P1, shape13→P2, fawley→P3 — deferred on that track's REPLAN).
 
 ---
 
