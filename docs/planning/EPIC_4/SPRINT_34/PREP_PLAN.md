@@ -624,7 +624,7 @@ Sprint 33's Task-9 honest projection was borne out exactly (three deep tracks mo
 
 ### What Needs to Be Done
 
-1. **For each of P1/P2/P3/P4, assess the REPLAN probability** — the control/harness evidence that would refute the design (P1 the reconciliation can't close `N→0`; P2 a 4th enumeration site; P3 a gate-leak / the H-b +Solve; P4 over-transfer / all-structural cohort), and how early the Day-5 checkpoint surfaces it. NB: P1 is **High** (banked premise twice-refuted); P4 is the freshest/least-refuted (the best +Solve odds).
+1. **For each of P1/P2/P3/P4, assess the REPLAN probability** — the control/harness evidence that would refute the design (P1 the reconciliation can't drive the **cold** MCP to MS-1 @ 17500 — the reframed gate, since warm `N→0` is keying-invariant; P2 a 4th enumeration site; P3 a gate-leak / the H-b +Solve; P4 over-transfer / all-structural cohort), and how early the Day-5 checkpoint surfaces it. NB: P1 is **High** (banked premise twice-refuted); P4 is the freshest/least-refuted (the best +Solve odds).
 2. **Assess P5** (camcge Epic-5 deferral; rocket Sprint-35 submission).
 3. **Pin the REPLAN exits + budget reallocation** (→ P6 failure-cohort + P7 fixtures).
 4. **Author the honest KPI projection** — the in-sprint Solve movers ({P1 mine, P4 bound-transfer [agreste], P6 ganges/gangesx}; **P3's +Solve is a P5 forcing hand-off, not in-sprint** — H-b confirmed); Translate +1 via P2; genuine floor +1 via P1 / P6 (P3's floor is contingent on forcing); the stretch (Solve ≥ 110); and the modal outcome (Sprint 33 showed the failure-cohort P6 is a genuine bucket source).
