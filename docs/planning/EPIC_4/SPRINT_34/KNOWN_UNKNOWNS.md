@@ -1308,7 +1308,7 @@ When adding unknowns during Sprint 34:
 
 ## Next Steps
 
-**Pre-Day-1 status (Task 11, 2026-07-20):** all 27 unknowns are resolved via prep Tasks 2–10 — **no Critical/High unknown is an unresolved Day-0 blocker**. The **sole `🔍 INCOMPLETE`** is **Unknown 1.2** (mine H_dual → cold MS-1), and it is **intentionally DESIGN-SPECIFIED**: the reconciliation design + the cold-MS-1 `/tmp` control are fully specified, but the control is the Sprint-34 **Day-1 executed gate** (it cannot run in a docs-only prep) — its resolution is an **in-sprint execution gate, not a prep blocker**. The remaining in-sprint gates are the *execution* of each track's PROCEED/REPLAN gate (Days 2/4/5/7), not open prep questions. Sprint 34 is **GO for Day 0** (`PLAN.md` §17).
+**Pre-Day-1 status (Task 11, 2026-07-20):** all 27 unknowns are resolved via prep Tasks 2–10 — **no Critical/High unknown is an unresolved Day-0 blocker**. The **sole `🔍 INCOMPLETE`** is **Unknown 1.2** (mine H_dual → cold-MS-1), and it is **intentionally DESIGN-SPECIFIED**: the reconciliation design + the cold-MS-1 `/tmp` control are fully specified, but the control is the Sprint-34 **Day-1 executed gate** (it cannot run in a docs-only prep) — its resolution is an **in-sprint execution gate, not a prep blocker**. The remaining in-sprint gates are the *execution* of each track's PROCEED/REPLAN gate (Days 2/4/5/7), not open prep questions. Sprint 34 is **GO for Day 0** (`PLAN.md` §17).
 
 **Before Sprint 34 Day 1:**
 1. Review all Critical and High priority unknowns (18 total) via prep Tasks 2–10 (see the Task-to-Unknown mapping appendix)
