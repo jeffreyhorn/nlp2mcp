@@ -302,6 +302,8 @@ Sprint planning
 
 **Decision:** 18–24 h (upper ~22–24 h) is realistic; front-load Days 1–5; H3′ REPLAN exit pinned. (Task 9 will assess the P1 REPLAN probability.)
 
+**Task-9 REPLAN-probability contribution (2026-07-19):** P1's prior is **High — higher than Sprint 33 carried.** The banked premise is now **twice-refuted** (S32 `N`-derivation + S33 H1 value-invariance), and mine enters on a **third** hypothesis (H_dual) against a **reframed cold-MS-1 gate** that is a harder bar than a warm-residual check on a degenerate LP (`x.m=0` at the boundary). ~14–18h at risk → P6/P7 on H3′ REPLAN. `REPLAN_RISK_ASSESSMENT.md` Track P1.
+
 ---
 
 # Category 2: sarf #1385 — Symbolic-Emit Subsystem
@@ -387,6 +389,8 @@ Development team (AD/emit specialist)
 **Decision:** the architecture is sound; the timeout-re-trigger risk is the primary REPLAN exit, gated on the in-sprint translate-time measurement.
 
 **Task-8 gate-feasibility note (2026-07-19):** the P2 Phase-0 gate is authored with a clean PROCEED (translate seconds not >116s, one symbolic `stat_task$taskposs` + `task.fx`, no set-name literals, atomic, byte-stable, det ×3, `--resolve-changed` GO) / REPLAN (timeout re-trigger) decision — `PHASE_0_ACCEPTANCE_GATES.md` §1 P2. The O(active=398) translate-budget probe is the load-bearing gate item.
+
+**Task-9 REPLAN-probability contribution (2026-07-19):** P2's prior is **Medium-High** — a failed-architecture rebuild (the 4×-failed Sprint-26 path); the "necessary but insufficient" finding proved the blow-up hides at multiple sites, so "eliminate it everywhere" carries genuine miss-a-site risk. The V1 O(active) timing probe resolves the dominant risk **Day-0**, capping the prior below High. +Translate is the lowest-leverage KPI; ~9–20h → P6/P7 on REPLAN. `REPLAN_RISK_ASSESSMENT.md` Track P2.
 
 ---
 
@@ -599,6 +603,8 @@ Development team (KKT/emit specialist)
 
 **Decision:** the +Solve is a P5 forcing hand-off (H-b); the emit correction ships for correctness only (moves no in-sprint bucket).
 
+**Task-9 REPLAN-probability contribution (2026-07-19):** P3's **correctness-REPLAN prior is Medium** (the no-regression is structurally favorable — polygon/ps2 use the different 1-D core; the only real risk is perturbing the same-path mbal). But **the +Solve is a P5 forcing hand-off (H-b confirmed), a priori unpromising — not an in-sprint mover**, and the genuine-floor +1 is **contingent on forcing** (fawley doesn't cold-match unaided). So P3 lands a firm correctness fix but its bucket contribution is effectively deferred to forcing. `REPLAN_RISK_ASSESSMENT.md` Track P3.
+
 ---
 
 ## Unknown 3.3: Does the genuine cross-term correction lift the genuine floor (fawley cold-match) even under H-b?
@@ -771,6 +777,8 @@ Development team (emit specialist)
 **Evidence:** `BOUND_TRANSFER_SIGN_DESIGN.md` §3.1 (the attribution table) + §3.2 (the survey).
 
 **Decision:** front-load the survey (Days 1–5); the REPLAN/documented-finding exit is a general-correctness fix with no +Solve if no candidate is warm-residual-driven.
+
+**Task-9 REPLAN-probability contribution (2026-07-19):** P4's **correctness prior is Low** (the sign-robust fix lands regardless), but **the +Solve miss is Medium-High** — "the freshest, least-refuted lever" is not "most-likely-to-move-a-bucket": the MAXIMIZE `model_infeasible` cohort is otherwise-attributed (fawley H-b, mine P1, camcge Epic-5, rocket Case-c), so the realistic +Solve target is **agreste alone (P6-entangled)**. The a-priori outcome is a general-correctness fix with **no +Solve** (the documented finding *is* the deliverable). `REPLAN_RISK_ASSESSMENT.md` Track P4.
 
 ---
 
