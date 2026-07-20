@@ -841,7 +841,7 @@ Development team (emit specialist)
 
 **Findings:**
 - The min-convention gate is localized (live) to `src/emit/emit_gams.py:1590` (`piL`: `…$(abs(var.l - var.lo) < 1e-6 and var.m > 0) = var.m`) + `:1603` (`piU`: `…$(abs(var.l - var.up) < 1e-6 and var.m < 0) = -(var.m)`), both inside `_emit_nlp_presolve` — the **sole** fix surface.
-- The indexed equality-multiplier transfers already use `abs()` (`src/emit/emit_gams.py:~145`), so they are unaffected; the objective sense for Option B is available via `model_ir.objective.sense == ObjSense.MAX` (the `ObjSense` enum `src/ir/symbols.py:42`, parsed at `src/ir/parser.py:4104`; existing branch precedent at `src/ad/gradient.py:300` — `if sense == ObjSense.MAX:`).
+- The **inequality**-multiplier warm-start transfer already uses `abs()` (`src/emit/emit_gams.py:1574`), so it is unaffected; the objective sense for Option B is available via `model_ir.objective.sense == ObjSense.MAX` (the `ObjSense` enum `src/ir/symbols.py:42`, parsed at `src/ir/parser.py:4104`; existing branch precedent at `src/ad/gradient.py:300` — `if sense == ObjSense.MAX:`).
 
 **Evidence:** `BOUND_TRANSFER_SIGN_DESIGN.md` §1–§2; live grep of `src/emit/emit_gams.py`.
 
