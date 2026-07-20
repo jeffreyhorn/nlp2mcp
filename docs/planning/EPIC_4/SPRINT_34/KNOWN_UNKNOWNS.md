@@ -866,7 +866,7 @@ The full dual-consistent Walras redefinition (keep every market-clearing row + t
 4. Is this in-scope for Sprint 34 or confirmed Epic-5-deferred?
 
 ### How to Verify
-Prototype the dual-consistent redefinition in a `/tmp` emit; assert `modelstat`; check MS-1 + omega 191.7346 + the dual side. Cross-check `CAMCGE_WALRAS_DESIGN.md` + `EPIC_5/CGE_DEGENERACY_SCOPING.md`.
+Prototype the dual-consistent redefinition in a `/tmp` emit; assert `modelstat`; check MS-1 + omega 191.7346 + the dual side. Cross-check `SPRINT_33/CAMCGE_WALRAS_DESIGN.md` + `EPIC_5/CGE_DEGENERACY_SCOPING.md`.
 
 ### Risk if Wrong
 - **Still MS-4:** camcge stays Epic-5-deferred (expected — 3+ sprints of MS-4 variants); the design is the Epic-5-ready recipe, not an in-sprint fix.
@@ -878,7 +878,18 @@ Prototype the dual-consistent redefinition in a `/tmp` emit; assert `modelstat`;
 Development team (KKT/CGE specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (design-level; MS-1 is the Epic-5 gate, not an in-sprint result)
+**Verified by:** Task 7
+**Date:** 2026-07-19
+
+**Findings:**
+- camcge is `model_infeasible` **MS-4** (live DB) — the Walras rank-deficiency (a redundant market-clearing row given budget balance → a 1-D KKT-Jacobian nullspace, MS-4 even at the correct primal). Step 1 (`nu_mps_fx`) landed S32; the MS-4 is independent of `stat_mps`.
+- The full dual-consistent redefinition is designed: **keep every market-clearing row** (no orphaned dual) + the **consumption-weighted numéraire** (removes the price nullspace → omega 191.7346, banked) + **redefine the redundant market's dual via Walras' law** (full-rank while the multiplier stays available) — with the **dual side checked** (the Day-11 lesson).
+- Whether it reaches **MS-1 at 191.7346** is **unproven**: the banked price-pin variant stayed MS-4 (INFES on gdp/depreq/hhsaveq/gruse); the `/tmp`-to-MS-1 prototype is the **Epic-5** gate (not runnable in this docs-only prep). **Epic-5-deferred** — camcge stays `model_infeasible` in Sprint 34.
+
+**Evidence:** `CAMCGE_ROCKET_PLAN.md` §2/§4; `SPRINT_33/CAMCGE_WALRAS_DESIGN.md`; `EPIC_5/CGE_DEGENERACY_SCOPING.md`; the live DB (camcge MS-4).
+
+**Decision:** Epic-5-deferred; the design (recipe + dual-side check) is the Epic-5 deliverable; MS-1 is the Epic-5 `/tmp` gate.
 
 ---
 
@@ -909,7 +920,17 @@ Run the detector against camcge + the four siblings; confirm camcge fires + the 
 Development team (KKT/CGE specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 7
+**Date:** 2026-07-19
+
+**Findings:**
+- The S1∧S2∧S3 degeneracy detector flags **only camcge** (no false-flag on the siblings): S1 = market-clearing block linearly dependent via budget balance; S2 = no price numéraire fixed; **S3 (the false-positive guard) = the cold MCP is singular at iteration 0 (MS-4)**.
+- Live DB confirms the cohort: camcge **MS-4** (fires); irscge/lrgcge/moncge/stdcge **MS-1** (pass-through — a determined closure → nonsingular Jacobian → fails S3). The pass-through default is the **identity transform** (faithful KKT emission).
+
+**Evidence:** `CAMCGE_ROCKET_PLAN.md` §3; the live DB (camcge MS-4 vs the four siblings MS-1); the banked Sprint-31 Day-7 cold-MCP test.
+
+**Decision:** the detector is correctly scoped (flags only camcge); the redefinition applies to the flagged model only — no false-flag on the four solving CGE siblings.
 
 ---
 
@@ -940,7 +961,18 @@ Review the rocket input package (`ROCKET_CASEC_FORCING_PLAN.md` + `SPRINT_32/ROC
 Development team (KKT/CGE specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 7
+**Date:** 2026-07-19
+
+**Findings:**
+- The rocket PATH-consultation input (`SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md`, FINALIZED S32) is submission-ready: the concrete question + the ruled-out-lever survey (PATH options / μ-continuation / multistart / division-by-variable, all MS-5) + the two-command reproducer + the `--force` scaffold. rocket is `model_infeasible` MS-5 (live DB), a Case-c **forcing** problem (boundary rows move with the warm-start; dual-transfer CONSISTENT), not an emit bug.
+- **Sprint-35 hand-off:** Sprint 34 submits the self-contained brief; **Sprint 35** ("PATH Author Consultation & Solution Forcing", renumbered from the pre-insertion Sprint 34) conducts the author consultation (Ferris/Dirkse). +1 Solve is conditional on the consultation (the `--force` survey is exhausted).
+- **The Case-c objective-gradient sign flip stays BANNED** (control-refuted 4×: hhfair 72.147 → 22.144 worse; the CGE-cluster `nu_objective` reduction inert since `nu_obj=±1`). No re-litigation.
+
+**Evidence:** `CAMCGE_ROCKET_PLAN.md` §5; `SPRINT_33/ROCKET_CASEC_FORCING_PLAN.md`; `SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md`; the live DB (rocket MS-5).
+
+**Decision:** the rocket input is complete + submission-ready for the Sprint-35 consultation; the sign-flip BAN is re-affirmed.
 
 ---
 
