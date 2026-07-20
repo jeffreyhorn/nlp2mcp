@@ -471,13 +471,14 @@ grep -icE 'max.convention|piL|piU|abs\(|maximize|MAXIMIZE|cohort|warm-residual|s
 
 ## Task 7: camcge Dual-Consistent Walras Numéraire Design (Epic 5) + rocket PATH-Consultation Submission Plan (Priority 5)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-19
 **Priority:** Medium
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 34 Day 1
 **Owner:** Development team (KKT/CGE specialist)
 **Dependencies:** Task 1
-**Unknowns Verified:** 5.1, 5.2, 5.3
+**Unknowns Verified:** 5.2, 5.3 (verified); 5.1 (design-level — MS-1 is the Epic-5 `/tmp` gate, not an in-sprint result)
 
 ### Objective
 
@@ -502,11 +503,11 @@ camcge is Epic-5-deferred (the expected disposition — 3+ sprints of MS-4 varia
 
 ### Changes
 
-*To be completed*
+Re-confirmed the live DB (camcge `model_infeasible` MS-4; irscge/lrgcge/moncge/stdcge MS-1 match — the detector pass-through; rocket MS-5). Designed the camcge dual-consistent Walras redefinition (keep every market-clearing row + the consumption-weighted numéraire + redefine the redundant market's dual via Walras' law — dual side checked) with the `/tmp`-to-MS-1 Epic-5 gate; scoped the S1∧S2∧S3 detector (S3 = cold-MCP-singular-at-iter-0, the false-positive guard — flags only camcge). Planned the rocket PATH-consultation submission (the FINALIZED input + reproducer + `--force` scaffold → the **Sprint-35** consultation) + re-affirmed the Case-c sign-flip BAN (refuted 4×). Authored `docs/planning/EPIC_4/SPRINT_34/CAMCGE_ROCKET_PLAN.md`; verified Unknowns 5.2/5.3 and marked 5.1 design-level (MS-1 is the Epic-5 gate).
 
 ### Result
 
-*To be completed*
+**camcge Epic-5-deferred + rocket Sprint-35 hand-off.** camcge's Walras rank-deficiency (redundant market-clearing row → 1-D KKT nullspace → MS-4 at the correct primal omega 191.7346) needs the full dual-consistent redefinition, which the banked price-pin variant could not reach MS-1 on (3+ sprints of MS-4 variants) — so it stays `model_infeasible` in Sprint 34; the recipe + detector + `/tmp`-to-MS-1 gate are the **Epic-5** deliverable. rocket's FINALIZED consultation input hands off to the **Sprint-35** "PATH Author Consultation & Solution Forcing" sprint (Sprint 34 submits; Sprint 35 conducts the author consultation); +1 Solve is conditional on the consultation. No Sprint-34 bucket from P5; the sign-flip BAN is re-affirmed. No `src/` — the camcge `/tmp` prototype is the Epic-5 gate, the rocket `--force` survey the Sprint-35 exercise.
 
 ### Verification
 
@@ -524,12 +525,12 @@ grep -icE 'Walras|numéraire|omega 191|MS-4|S1∧S2∧S3|Epic 5|rocket|Sprint-35
 
 ### Acceptance Criteria
 
-- [ ] camcge MS-4 re-confirmed + the S1∧S2∧S3 detector cohort (flags only camcge)
-- [ ] The full dual-consistent redefinition designed with the `/tmp`-to-MS-1 Epic-5 gate (dual side checked)
-- [ ] The rocket PATH-consultation input submission to Sprint 35 planned
-- [ ] The Epic-5-deferral disposition pinned
-- [ ] Cross-referenced to `SPRINT_33/CAMCGE_WALRAS_DESIGN.md` + `ROCKET_CASEC_FORCING_PLAN.md` + `EPIC_5/CGE_DEGENERACY_SCOPING.md`
-- [ ] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] camcge MS-4 re-confirmed live + the S1∧S2∧S3 detector cohort (flags only camcge; the 4 siblings MS-1 pass-through)
+- [x] The full dual-consistent redefinition designed with the `/tmp`-to-MS-1 Epic-5 gate (dual side checked)
+- [x] The rocket PATH-consultation input submission to Sprint 35 planned
+- [x] The Epic-5-deferral disposition pinned (camcge stays model_infeasible; rocket → Sprint-35)
+- [x] Cross-referenced to `SPRINT_33/CAMCGE_WALRAS_DESIGN.md` + `SPRINT_33/ROCKET_CASEC_FORCING_PLAN.md` + `EPIC_5/CGE_DEGENERACY_SCOPING.md`
+- [x] Unknowns 5.2, 5.3 verified + 5.1 design-level (MS-1 = the Epic-5 gate), all updated in KNOWN_UNKNOWNS.md
 
 ---
 
