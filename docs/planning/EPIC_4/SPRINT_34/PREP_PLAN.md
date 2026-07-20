@@ -601,7 +601,8 @@ grep -icE 'P1|P2|P3|P4|P5|PROCEED|REPLAN|modelstat|x.up=inf|BANNED|--resolve-cha
 
 ## Task 9: Diagnosis-Heavy / REPLAN-Prone Track Risk Assessment (P1 dual, P2 sarf timeout, P3 fawley gate-leak/H-b, P4 bound-transfer; PR16)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-19
 **Priority:** High
 **Estimated Time:** 3–5 hours
 **Deadline:** Before Sprint 34 Day 1
@@ -623,20 +624,20 @@ Sprint 33's Task-9 honest projection was borne out exactly (three deep tracks mo
 
 ### What Needs to Be Done
 
-1. **For each of P1/P2/P3/P4, assess the REPLAN probability** — the control/harness evidence that would refute the design (P1 the reconciliation can't close `N→0`; P2 a 4th enumeration site; P3 a gate-leak / the H-b +Solve; P4 over-transfer / all-structural cohort), and how early the Day-5 checkpoint surfaces it. NB: P1 is **High** (banked premise twice-refuted); P4 is the freshest/least-refuted (the best +Solve odds).
+1. **For each of P1/P2/P3/P4, assess the REPLAN probability** — the control/harness evidence that would refute the design (P1 the reconciliation can't drive the **cold** MCP to MS-1 @ 17500 — the reframed gate, since warm `N→0` is keying-invariant; P2 a 4th enumeration site; P3 a gate-leak / the H-b +Solve; P4 over-transfer / all-structural cohort), and how early the Day-5 checkpoint surfaces it. NB: P1 is **High** (banked premise twice-refuted); P4 is the freshest/least-refuted (the best +Solve odds).
 2. **Assess P5** (camcge Epic-5 deferral; rocket Sprint-35 submission).
 3. **Pin the REPLAN exits + budget reallocation** (→ P6 failure-cohort + P7 fixtures).
-4. **Author the honest KPI projection** — the in-sprint Solve movers ({P1 mine, P3-forcing, P4 bound-transfer, P6 ganges/gangesx}); Translate +1 via P2; genuine floor +1 via P1/P3 cold-match; the stretch (Solve ≥ 110); and the modal outcome (Sprint 33 showed the failure-cohort P6 is a genuine bucket source).
+4. **Author the honest KPI projection** — the in-sprint Solve movers ({P1 mine, P4 bound-transfer [agreste], P6 ganges/gangesx}; **P3's +Solve is a P5 forcing hand-off, not in-sprint** — H-b confirmed); Translate +1 via P2; genuine floor +1 via P1 / P6 (P3's floor is contingent on forcing); the stretch (Solve ≥ 110); and the modal outcome (Sprint 33 showed the failure-cohort P6 is a genuine bucket source).
 5. **Recommend the front-load ordering** (P1, P2 front-loaded; P4 early as the fresh lever).
 6. **Write** `docs/planning/EPIC_4/SPRINT_34/REPLAN_RISK_ASSESSMENT.md`.
 
 ### Changes
 
-*To be completed*
+Applied the PR16 hypothesis-validation discipline to the four from-scratch/new tracks (P1/P2/P3/P4) — each with a single-model validation (Day-5-measurable), an explicit REPLAN exit, and a budget-reallocation target. Assessed P5 (camcge Epic-5-deferred; rocket Sprint-35). Pinned the freed-budget reallocation (→ P6 failure-cohort + P7 fixtures) + the honest KPI projection + the front-load ordering. Authored `docs/planning/EPIC_4/SPRINT_34/REPLAN_RISK_ASSESSMENT.md`; appended Task-9 REPLAN-probability contributions to Unknowns 1.5/2.2/3.2/4.2 (primary blocks preserved).
 
 ### Result
 
-*To be completed*
+**The honest projection: modal flat-KPI, beaten (if at all) by P6.** REPLAN priors — **P1 High** (higher than S33: banked premise twice-refuted, now a third hypothesis H_dual vs a harder **cold-MS-1** gate on a degenerate LP); **P2 Medium-High** (failed-architecture rebuild; V1 timing probe Day-0); **P3 Medium correctness / +Solve = a P5 forcing hand-off, not in-sprint** (H-b confirmed; the floor +1 contingent on forcing); **P4 Low correctness / Medium-High +Solve-miss** (the MAXIMIZE cohort otherwise-attributed → agreste only). In-sprint Solve movers = {P1, P4-agreste, P6}; Translate +1 via P2; genuine floor +1 via P1/P3-forcing/**P6** — **P6 (ganges/gangesx) is the firmest** (the S33 sample precedent that the failure-cohort is a genuine bucket source). Stretch Solve ≥ 110 a-priori unlikely. Front-load P1/P2/P4 by the Day-5 checkpoint; P6/P7 in the back half. Docs-only.
 
 ### Verification
 
@@ -655,13 +656,13 @@ grep -icE 'P1|P2|P3|P4|REPLAN|freed budget|reallocat|flat.?KPI|modal|front.?load
 
 ### Acceptance Criteria
 
-- [ ] P1/P2/P3/P4 each assessed for REPLAN probability + the refuting control/harness evidence
-- [ ] P5 (Epic-5 / Sprint-35) disposition assessed
-- [ ] REPLAN exits + freed-budget reallocation pinned (→ P6/P7)
-- [ ] The honest KPI projection authored (movers, stretch ≥ 110, modal outcome incl. the P6 failure-cohort lever)
-- [ ] The front-load ordering recommended (deep tracks + P4 by Day 5)
-- [ ] Cross-referenced to `SPRINT_33/REPLAN_RISK_ASSESSMENT.md` + `SPRINT_RETROSPECTIVE.md` §3
-- [ ] Unknowns 1.5, 2.2, 3.2, 4.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] P1/P2/P3/P4 each assessed for REPLAN probability + the refuting control/harness evidence
+- [x] P5 (Epic-5 / Sprint-35) disposition assessed
+- [x] REPLAN exits + freed-budget reallocation pinned (→ P6/P7)
+- [x] The honest KPI projection authored (movers, stretch ≥ 110, modal outcome incl. the P6 failure-cohort lever)
+- [x] The front-load ordering recommended (deep tracks + P4 by Day 5)
+- [x] Cross-referenced to `SPRINT_33/REPLAN_RISK_ASSESSMENT.md` + `SPRINT_33/SPRINT_RETROSPECTIVE.md` §3
+- [x] Unknowns 1.5, 2.2, 3.2, 4.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
