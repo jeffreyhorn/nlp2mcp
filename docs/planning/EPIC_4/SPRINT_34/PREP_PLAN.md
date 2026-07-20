@@ -668,7 +668,8 @@ grep -icE 'P1|P2|P3|P4|REPLAN|freed budget|reallocat|flat.?KPI|modal|front.?load
 
 ## Task 10: Reusable-Tooling Readiness Audit + Backlog Fix-Surface Analysis (Priorities 6 + 7)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-19
 **Priority:** Medium
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 34 Day 1
@@ -697,11 +698,11 @@ The reused tooling: the KKT-residual harness (incl. `case_c_objdef`), the presol
 
 ### Changes
 
-*To be completed*
+Audited the Sprint-28–33 tooling against the new Sprint-34 emit classes (harness incl. `case_c_objdef`, presolve-divergence, golden-staleness, `--resolve-changed`, `--force`, the AD catalog shapes 1–11, the S33 P6 fixture pattern) — **zero new diagnostic-tool code**, pure reuse; `--resolve-changed --since-commit 750803b2 --dry-run` = **GO**. **Live-diagnosed** the P6 ganges/gangesx root (compiled the committed goldens: both `$141`×15 / `$145`×3 / `$149`×9 — the NaN-sanitization guard `param(i)$(NOT(param(i) > -inf …))=0` on declared-but-unassigned params; a single fix recovers both; distinct from sample's `$140`) + the agreste double-`solve` (lines 294/298 — scope-verify) + the multi-root confirm. Scoped the P7 fixtures (shape12/shape13/fawley, gated on P1/P2/P3) + the genuine-floor anchor 75 + the SUMMARY row-34 continuation. Authored `docs/planning/EPIC_4/SPRINT_34/TOOLING_AND_BACKLOG_ANALYSIS.md`; verified Unknowns 6.1/6.2/6.3/7.1/7.3.
 
 ### Result
 
-*To be completed*
+**Pure tooling reuse + a live-diagnosed P6 fix-surface.** No blocking tool gap; the only new artifacts are the three P7 fixtures (each gated on P1/P2/P3 landing). The P6 designated shot is pre-scoped from live compile diagnosis: **ganges/gangesx share a single `$141/$145/$149` root** (the NaN-sanitization emit pass emits a self-referential guard over params whose value depends on `dst.l`) — **a single `--resolve-changed`-gated fix recovers both**, distinct from sample's `$140`; **agreste is a double-`solve` scope caveat** (verify the single-solve harness scoping before treating CASE_B as an emit bug). The cohort is **multi-root** (verify per-model). P7: shape12/13/fawley fixtures gated on landings; genuine-floor anchor 75; the SUMMARY row-34 theme reconcile + backfill is a Day-12 continuation. Docs-only.
 
 ### Verification
 
@@ -721,12 +722,12 @@ grep -icE 'ganges|gangesx|agreste|shape12|shape13|second-index|genuine-floor|SUM
 
 ### Acceptance Criteria
 
-- [ ] The Sprint-28–33 tooling audited against the new Sprint-34 classes (reuse confirmed, any gap noted)
-- [ ] The P6 cohort analyzed (ganges/gangesx `$141/$145/$149` root, agreste scope caveat) — each `--resolve-changed`-gated
-- [ ] The P7 property fixtures scoped (shape12/shape13/fawley, fail-before/pass-after, gated on landings)
-- [ ] The genuine-floor recompute (anchor 75) + Epic-4-SUMMARY row-34 continuation noted
-- [ ] Cross-referenced to `SPRINT_33/TOOLING_AND_BACKLOG_ANALYSIS.md` + the S33 P6 fixture pattern
-- [ ] Unknowns 6.1, 6.2, 6.3, 7.1, 7.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The Sprint-28–33 tooling audited against the new Sprint-34 classes (reuse confirmed — zero new tool code; no gap)
+- [x] The P6 cohort analyzed **live** (ganges/gangesx `$141/$145/$149` root — a single fix recovers both; agreste double-`solve` scope caveat) — each `--resolve-changed`-gated
+- [x] The P7 property fixtures scoped (shape12/shape13/fawley, fail-before/pass-after, gated on landings)
+- [x] The genuine-floor recompute (anchor 75) + Epic-4-SUMMARY row-34 continuation noted
+- [x] Cross-referenced to `SPRINT_33/TOOLING_AND_BACKLOG_ANALYSIS.md` + the S33 P6 fixture pattern
+- [x] Unknowns 6.1, 6.2, 6.3, 7.1, 7.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
