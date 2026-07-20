@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Sprint 34 (execution)
+### Sprint 34 Execution
 
 - **Day 0 COMPLETE (2026-07-20) — GO for Day 1.** Kickoff + Day-0 traces + control probes (docs/trace-only, no `src/`). Baseline confirmed = S33 close: `git diff 750803b2..HEAD -- src/ scripts/` empty, DB md5 `6166acab…` (byte-identical to `BASELINE_METRICS.md`), `--resolve-changed --since-commit 750803b2 --dry-run` = **GO**, determinism ×3 `{0,1,42}` mine re-emit byte-identical **and** md5-matched to the recorded baseline (`a394cbc3…` — confirms zero emit drift). Re-confirmed all four Phase-0 fingerprints **exactly** on the live tree via `kkt_residual.py`: mine CASE_B `stat_x(3,1,1)` 2.37 (dual CONSISTENT), fawley CASE_B `stat_bq(res-arab-l,fuel-oil)` 0.973/473 (dual scale 486), camcge `stat_mps` cleared by S32 step 1 → deeper `stat_tm` MS-4 Walras (`case_b` guard), rocket CASE_C_OBJDEF `stat_ht(h0)` 1.0 (sign flip BANNED). Control probes: P2 sarf O(active) — 369,024 Cartesian (g16·t24·mn31·mn31) confirmed, 398 active runtime-gated (Task-4), translate `failure` live; P6 seed — ganges/gangesx identical NLP obj 6395.5444 (the shared `$141/$145/$149` root). The deep `/tmp` construction controls (P1 H_dual cold-MS-1 @ 17500, P3 fawley localize 473→18.468, P4 abs-cell) are the in-sprint executed gates (Days 1/5/4) per their designs — no cold-MS-1 pass claimed at Day 0 (Unknown 1.2 DESIGN-SPECIFIED; High REPLAN prior). Authored `docs/planning/EPIC_4/SPRINT_34/DAY0_TRACE_NOTES.md`. No Day-0 blocker.
 
