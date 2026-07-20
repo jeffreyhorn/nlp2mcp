@@ -1023,7 +1023,19 @@ Emit + compile ganges + gangesx (`data/gamslib/raw/`, skip-if-absent); capture t
 Development team (emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (live-diagnosed)
+**Verified by:** Task 10
+**Date:** 2026-07-19
+
+**Findings:**
+- Compiled the committed goldens (`data/gamslib/mcp/{ganges,gangesx}_mcp.gms`) from the repo root: **both have the identical error profile `$141` ×15 / `$145` ×3 / `$149` ×9** → a **single shared root**.
+- The root: the NaN-sanitization emit pass emits `param(i)$(NOT (param(i) > -inf and param(i) < inf)) = 0;` — a self-referential guard that *reads* `param(i)` — over parameters (`adst`, `aex`, `aid`, `an`, `as`, `az`, `cg`, `deltan`, …) whose source value-assignment is `= dst.l(i)/sum(j, dst.l(j))` (depends on a **variable level**, pruned/mis-ordered in the MCP) → `$141` "Symbol declared but no values assigned" (+ `$145` "Set identifier expected" / `$149` "Uncontrolled set as constant" on the same construct).
+- **A single fix may recover both.** **Distinct from sample's `$140`** (pruned-var `.l`-init) — the S33 P6 fix (skip an `.l`-init whose refs aren't a subset of the declared MCP vars) is a **no-op** here (ganges/gangesx's root is *parameter* sanitization, and their `.l`-init refs are declared).
+- **NB — the Assumption's `bound-clamp x$(not(...))=0` hypothesis was refined, not confirmed:** the root is the same guard *shape* (`sym$(NOT(...))=0`) but on a **parameter** (`param(i)$(NOT(...))=0`), **not** a variable bound-clamp — the parameter's value-assignment depends on a variable level (`dst.l`), so it is declared-but-unassigned in the MCP context. The "parameter-assignment lines" half of the Assumption was on the right track; the "variable bound-clamp" half was not the root.
+
+**Evidence:** `TOOLING_AND_BACKLOG_ANALYSIS.md` §2 (the live compile diagnosis); the GAMS listing (`$141` = declared-but-unassigned on `adst(i)$(NOT(...))=0`).
+
+**Decision:** the fix surface is the NaN-sanitization pass (`src/emit/emit_gams.py`, a hypothesis) — skip params whose value depends on a variable level, or emit the assignment before the guard; `--resolve-changed`-gated; a single fix recovers the ganges/gangesx pair.
 
 ---
 
@@ -1054,7 +1066,17 @@ Inspect agreste's source (the two `solve` statements); run the harness with sing
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (live-confirmed)
+**Verified by:** Task 10
+**Date:** 2026-07-19
+
+**Findings:**
+- agreste is `model_infeasible` MS-5 with a banked CASE_B `stat_sales` rel 2.0. **Confirmed live: two `solve agreste maximizing yfarm using lp;` statements (`data/gamslib/raw/agreste.gms:294` + `:298`)** — a single-model-solved-twice **scenario driver**.
+- So the factor-of-2 in `stat_sales` is likely a **driver-doubling artifact** (the harness's single-solve scoping conflating the two solves), **not** a genuine dropped-gradient emit bug.
+
+**Evidence:** `TOOLING_AND_BACKLOG_ANALYSIS.md` §2; `data/gamslib/raw/agreste.gms:294`/`:298`.
+
+**Decision:** **scope-verify the single-solve harness scoping BEFORE treating the CASE_B `stat_sales` as an emit bug** — the right call may be to document + defer (a false CASE_B, not a P6 recovery target).
 
 ---
 
@@ -1084,7 +1106,17 @@ Enumerate the residual `path_syntax_error` models; note the distinct error class
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 10
+**Date:** 2026-07-19
+
+**Findings:**
+- The `path_syntax_error` cohort is **multi-root** — sample (`$140`, pruned-var `.l`-init, recovered S33) ≠ ganges/gangesx (`$141/$145/$149`, parameter-sanitization). Two distinct roots already confirmed.
+- The S33 lesson holds: **verify per-model; do not assume a single shared root** (the earlier "one fix recovers the cohort" was only partially right — one fix recovers the ganges/gangesx *pair*, but not sample's distinct `$140`). The residual cohort (clearlak/dinam/indus/turkey/turkpow) each needs its own compile-diagnosis before treatment.
+
+**Evidence:** `TOOLING_AND_BACKLOG_ANALYSIS.md` §2 (the sample-vs-ganges/gangesx root split).
+
+**Decision:** the per-model-verify discipline is confirmed; P6 treats each model on its own compile-diagnosis (ganges/gangesx as a pair; the rest individually).
 
 ---
 
@@ -1117,7 +1149,17 @@ Sketch each fixture (assertion + skip-if-absent + the landing gate); confirm the
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 10
+**Date:** 2026-07-19
+
+**Findings:**
+- The AD cross-term property catalog is at **shapes 1–11** (`tests/integration/emit/test_ad_crossterm_shapes.py`); shape12/shape13/fawley are **not yet added** (correctly deferred, the S33 precedent).
+- The three fixtures follow the S33 `test_sample_pruned_var_l_init.py` pattern (raw-file emit + skip-if-absent), each fail-before/pass-after, landing **only once** its track lands: shape12 (P1 head-offset dual — the head-anchored reconciliation), shape13 (P2 sarf — one guarded `stat_task$taskposs`, no set-name literals), fawley 2-D second-index (P3 — the `$(sameas(cfq__,cf))` on qsb/pbal). A P4 MAXIMIZE bound-transfer fixture is added if P4's correctness fix lands. Each is correctly deferred if its track REPLANs.
+
+**Evidence:** `TOOLING_AND_BACKLOG_ANALYSIS.md` §3; the catalog (shapes 1–11 present); the S33 fixture pattern.
+
+**Decision:** the fixtures are scoped (fail-before/pass-after, each gated on **its own** track's landing — shape12→P1, shape13→P2, fawley→P3 — deferred on that track's REPLAN).
 
 ---
 
@@ -1190,7 +1232,17 @@ Review `SUMMARY.md` row 34 (currently "(planned)"); confirm the cell format vs r
 Sprint planning
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 10
+**Date:** 2026-07-19
+
+**Findings:**
+- `SUMMARY.md` row 33 is filled (the S33 close). **Row 34 currently reads `| 34 | 33–34 | Quality, performance & PATH-feedback integration | (planned) | … |`** — but that theme is the **pre-insertion** Sprint 34, now **Sprint 35** (the Sprint-34 insertion renumbered it).
+- The row-34 continuation is a **Day-12 close task** (mirroring S33's): **(1) reconcile the theme** — row 34 = "S33 carryforward — mine head-offset dual / sarf symbolic-emit / fawley 2nd-index + forcing / max-convention bound-transfer / camcge Walras [Epic 5] + rocket PATH [Sprint 35]"; **(2) fill the cells** in the rows-28–33 format (Theme / Headline KPIs at close / Firm landing(s) / REPLAN'd → carryforward); **(3) add a row 35** for the renumbered Quality/PATH theme. Genuine-floor recompute maintains **anchor 75**.
+
+**Evidence:** `TOOLING_AND_BACKLOG_ANALYSIS.md` §3; `docs/planning/EPIC_4/SUMMARY.md` row 34 (the current `(planned)` / pre-insertion theme).
+
+**Decision:** a Day-12 close continuation (not this docs-only prep) — reconcile the theme + backfill the cells + add row 35; the anchor-75 recompute holds.
 
 ---
 
