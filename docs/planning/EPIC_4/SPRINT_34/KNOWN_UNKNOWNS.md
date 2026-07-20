@@ -161,9 +161,9 @@ Prototype the reconciliation in a `/tmp` emit (no `src/` change); assert `models
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — DESIGN-SPECIFIED (the reconciliation design + the cold-MS-1 `/tmp` control are fully specified, but the control is the Sprint-34 **Day-1** executed gate and has **not** been run in this docs-only prep — the empirical question "does H_dual reach cold MS-1?" remains open)
-**Design by:** Task 3 (prep) · **Control (pending):** Sprint-34 Day 1
-**Date:** 2026-07-18
+❌ **Status:** WRONG — H_dual does **NOT** reach cold MS-1 (Sprint-34 **Day-1** control executed; `DAY1_PROGRESS_NOTES.md`). The head-anchored `/tmp` prototype (`comp_pr`/`lam_pr`/`stat_x` re-keyed to the head label) is **scalar-identical** to baseline (both cold **MS-5**, profit **16747.0723**, **51 INFES** — the `comp_pr` precedence complementarities). **The re-keying is value-invariant on the cold solve too** (extends S33's warm-residual value-invariance): each `(inequality ⊥ dual)` pair is the same physical pair, relabeled, so the scalar MCP is unchanged. The reframed cold-MS-1 gate — the correct diagnostic in principle — is **not passable by any keying/pairing reformulation** (design §3.2: the boundary needs +16000, unreachable without the banned sign flip or an unavailable bound multiplier, `x.m=0`). The LP primal is feasible/optimal at 17500, so mine's MCP failure is a **genuine dual-degeneracy** → **H3′ REPLAN** (mine stays `model_infeasible`, no `src/`; hand off to Sprint 35 — deeper dual architecture or the PATH-consultation track).
+**Design by:** Task 3 (prep) · **Control executed:** Sprint-34 Day 1 (H3′ REPLAN)
+**Date:** 2026-07-20
 
 **Findings:**
 - The reconciliation hypothesis **H_dual** is stated: anchor the head-placed precedence dual's *complementarity* to the head-side variable `x(l+1,i,j)` (a structural pairing change), not merely re-label the multiplier (the refuted H1).
