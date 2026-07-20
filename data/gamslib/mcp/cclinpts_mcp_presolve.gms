@@ -71,8 +71,8 @@ $offMulti
 nu_FBCalc.l(j) = FBCalc.m(j);
 
 * Transfer variable marginals to bound multipliers
-piL_b.l(j)$(abs(b.l(j) - b.lo(j)) < 1e-6 and b.m(j) > 0) = b.m(j);
-piU_b.l(j)$(abs(b.l(j) - b.up(j)) < 1e-6 and b.m(j) < 0) = -(b.m(j));
+piL_b.l(j)$(abs(b.l(j) - b.lo(j)) < 1e-6) = abs(b.m(j));
+piU_b.l(j)$(abs(b.l(j) - b.up(j)) < 1e-6) = abs(b.m(j));
 
 * Transfer fixed-variable marginals to _fx_ multipliers (#1462)
 nu_b_fx_s1.l = b.m('s1');

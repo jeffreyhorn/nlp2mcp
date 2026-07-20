@@ -66,7 +66,7 @@ from src.ir.ast import (
     VarRef,
 )
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import EquationDef, VariableDef, VarKind
+from src.ir.symbols import EquationDef, ObjSense, VariableDef, VarKind
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import (
     create_bound_lo_multiplier_name,
@@ -1574,6 +1574,20 @@ def _emit_nlp_presolve(
                 sections.append(f"{qm}.l{domain_str} = abs({qeq}.m{marg_domain or domain_str});")
 
     # Transfer bound multipliers from variable marginals
+    #
+    # Sprint 34 P4 (#NEW): the bound-multiplier warm-start transfer is
+    # objective-sense-aware. For a MINIMIZE solve the reduced cost at an active
+    # lower bound is >= 0 and at an active upper bound is <= 0 (the sign gates
+    # below). For a MAXIMIZE solve those signs flip, so the min-convention gates
+    # would SKIP the correctly-signed multiplier, leaving piL/piU at 0 — a wrong
+    # warm start (the harness CASE_B warm residual, e.g. fawley bq(cc-dist)
+    # var.m=-18.468 at an active lower bound). A bound multiplier is
+    # |reduced cost|, so for MAXIMIZE we drop the sign gate and transfer
+    # abs(var.m) at the active bound. Option B (sense-aware): MINIMIZE emit is
+    # byte-identical (abs(var.m) == var.m when var.m >= 0 anyway), only MAXIMIZE
+    # presolve goldens change. Precedent: src/ad/gradient.py:300.
+    obj = kkt.model_ir.objective
+    is_max = obj is not None and obj.sense == ObjSense.MAX
     sections.append("")
     if add_comments:
         sections.append("* Transfer variable marginals to bound multipliers")
@@ -1586,10 +1600,13 @@ def _emit_nlp_presolve(
         domain_str = ""
         if var_def and var_def.domain:
             domain_str = f"({','.join(_quote_symbol(d) for d in var_def.domain)})"
-        sections.append(
-            f"{qm}.l{domain_str}$(abs({qv}.l{domain_str} - {qv}.lo{domain_str}) < 1e-6 and {qv}.m{domain_str} > 0)"
-            f" = {qv}.m{domain_str};"
-        )
+        pos = f"abs({qv}.l{domain_str} - {qv}.lo{domain_str}) < 1e-6"
+        if is_max:
+            sections.append(f"{qm}.l{domain_str}$({pos}) = abs({qv}.m{domain_str});")
+        else:
+            sections.append(
+                f"{qm}.l{domain_str}$({pos} and {qv}.m{domain_str} > 0)" f" = {qv}.m{domain_str};"
+            )
     for var_name in kkt.multipliers_bounds_up:
         vname = var_name if isinstance(var_name, str) else var_name[0]
         mult_name = create_bound_up_multiplier_name(vname)
@@ -1599,10 +1616,14 @@ def _emit_nlp_presolve(
         domain_str = ""
         if var_def and var_def.domain:
             domain_str = f"({','.join(_quote_symbol(d) for d in var_def.domain)})"
-        sections.append(
-            f"{qm}.l{domain_str}$(abs({qv}.l{domain_str} - {qv}.up{domain_str}) < 1e-6 and {qv}.m{domain_str} < 0)"
-            f" = -({qv}.m{domain_str});"
-        )
+        pos = f"abs({qv}.l{domain_str} - {qv}.up{domain_str}) < 1e-6"
+        if is_max:
+            sections.append(f"{qm}.l{domain_str}$({pos}) = abs({qv}.m{domain_str});")
+        else:
+            sections.append(
+                f"{qm}.l{domain_str}$({pos} and {qv}.m{domain_str} < 0)"
+                f" = -({qv}.m{domain_str});"
+            )
 
     # Issue #1462: warm-start the per-element `_fx_` equation multipliers from the
     # fixed variables' marginals (the general dual-transfer loop above skips them

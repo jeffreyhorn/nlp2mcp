@@ -106,15 +106,15 @@ nu_m_eqn.l(h) = m_eqn.m(h);
 nu_v_eqn.l(h) = v_eqn.m(h);
 
 * Transfer variable marginals to bound multipliers
-piL_step.l$(abs(step.l - step.lo) < 1e-6 and step.m > 0) = step.m;
-piL_v.l(h)$(abs(v.l(h) - v.lo(h)) < 1e-6 and v.m(h) > 0) = v.m(h);
-piL_ht.l(h)$(abs(ht.l(h) - ht.lo(h)) < 1e-6 and ht.m(h) > 0) = ht.m(h);
-piL_g.l(h)$(abs(g.l(h) - g.lo(h)) < 1e-6 and g.m(h) > 0) = g.m(h);
-piL_m.l(h)$(abs(m.l(h) - m.lo(h)) < 1e-6 and m.m(h) > 0) = m.m(h);
-piL_t.l(h)$(abs(t.l(h) - t.lo(h)) < 1e-6 and t.m(h) > 0) = t.m(h);
-piL_d.l(h)$(abs(d.l(h) - d.lo(h)) < 1e-6 and d.m(h) > 0) = d.m(h);
-piU_m.l(h)$(abs(m.l(h) - m.up(h)) < 1e-6 and m.m(h) < 0) = -(m.m(h));
-piU_t.l(h)$(abs(t.l(h) - t.up(h)) < 1e-6 and t.m(h) < 0) = -(t.m(h));
+piL_step.l$(abs(step.l - step.lo) < 1e-6) = abs(step.m);
+piL_v.l(h)$(abs(v.l(h) - v.lo(h)) < 1e-6) = abs(v.m(h));
+piL_ht.l(h)$(abs(ht.l(h) - ht.lo(h)) < 1e-6) = abs(ht.m(h));
+piL_g.l(h)$(abs(g.l(h) - g.lo(h)) < 1e-6) = abs(g.m(h));
+piL_m.l(h)$(abs(m.l(h) - m.lo(h)) < 1e-6) = abs(m.m(h));
+piL_t.l(h)$(abs(t.l(h) - t.lo(h)) < 1e-6) = abs(t.m(h));
+piL_d.l(h)$(abs(d.l(h) - d.lo(h)) < 1e-6) = abs(d.m(h));
+piU_m.l(h)$(abs(m.l(h) - m.up(h)) < 1e-6) = abs(m.m(h));
+piU_t.l(h)$(abs(t.l(h) - t.up(h)) < 1e-6) = abs(t.m(h));
 
 * Transfer fixed-variable marginals to _fx_ multipliers (#1462)
 nu_v_fx_h0.l = v.m('h0');

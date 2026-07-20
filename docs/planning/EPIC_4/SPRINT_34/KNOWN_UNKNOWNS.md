@@ -780,6 +780,8 @@ Development team (emit specialist)
 
 **Task-9 REPLAN-probability contribution (2026-07-19):** P4's **correctness prior is Low** (the sign-robust fix lands regardless), but **the +Solve miss is Medium-High** — "the freshest, least-refuted lever" is not "most-likely-to-move-a-bucket": the MAXIMIZE `model_infeasible` cohort is otherwise-attributed (fawley H-b, mine P1, camcge Epic-5, rocket Case-c), so the realistic +Solve target is **agreste alone (P6-entangled)**. The a-priori outcome is a general-correctness fix with **no +Solve** (the documented finding *is* the deliverable). `REPLAN_RISK_ASSESSMENT.md` Track P4.
 
+**Day-4 executed survey (2026-07-20) — NO +Solve (the a-priori outcome, control-confirmed):** the agreste +Solve `/tmp` control (its presolve golden patched with the sign-robust `abs(var.m)` transfer, solved from repo root) reaches the **identical MS-5** as baseline (yfarm 16277.4895 both) — agreste's MCP divergence is **structural, not warm-residual-driven** (the two NLP presolve solves reach MS-1, but the MCP does not; consistent with the P6 double-`solve` scenario-driver, `agreste.gms:294`/`:298`). So the MAXIMIZE `model_infeasible` cohort yields **no +Solve**; P4 ships as the general warm-start-correctness fix. `DAY4_PROGRESS_NOTES.md` §1.
+
 ---
 
 ## Unknown 4.3: Does the sign-robust transfer keep `--resolve-changed` GO (no presolve-cohort regression)?
@@ -821,6 +823,8 @@ Development team
 **Evidence:** `BOUND_TRANSFER_SIGN_DESIGN.md` §3.3 + §2 (Option B); the committed DB (MAXIMIZE presolve-match enumeration).
 
 **Decision:** Option B confines the blast radius to the MAXIMIZE cohort; the `--resolve-changed` GO over the presolve-match set is the in-sprint no-regression gate.
+
+**Day-4 executed (2026-07-20) — GO, no regression:** Option B shipped (`src/emit/emit_gams.py`, `_emit_nlp_presolve`, `ObjSense.MAX`-conditioned). **11** MAXIMIZE presolve goldens changed (agreste, camshape, cclinpts, fawley, korcge, otpop, polygon, ps2_f_s, ps2_s, ps3_s_gic, rocket); the MINIMIZE-translated cohort (bearing/cesam/chain) is **byte-identical** (verified). `--resolve-changed --since-commit 750803b2` = **GO** — all 11 held their bucket: the presolve-match set (camshape/cclinpts/polygon/ps2_f_s/ps2_s/ps3_s_gic → `model_optimal_presolve`+match; korcge/otpop → `model_optimal`+match) and the `model_infeasible` set (agreste/fawley/rocket) all unchanged. Determinism ×3 via `regen-goldens --fix`; quality gate green (5035 passed, 1 isolated-pass load-flake). *(The design's ~20-model regression-risk enumeration was the upper bound; the actual changed set is the 11 whose translated sense is MAX — e.g. cpack/etamac/harker/etc. were not among the emitted presolve goldens or are MINIMIZE-translated.)* `DAY4_PROGRESS_NOTES.md` §3.
 
 ---
 
