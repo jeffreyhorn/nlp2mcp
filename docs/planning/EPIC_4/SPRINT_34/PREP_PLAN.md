@@ -404,13 +404,14 @@ grep -icE 'sameas|constraint-index|_add_indexed_jacobian_terms|H-b|forcing|no.re
 
 ## Task 6: Max-Convention Bound-Transfer-Sign Track Design (Priority 4 — NEW)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-19
 **Priority:** High
-**Estimated Time:** 4–6 hours
+**Estimated Time:** 4–6 hours (this prep/design task; the **in-sprint bound-transfer implementation track** it sizes is a separate **10–16 h** — see Result)
 **Deadline:** Before Sprint 34 Day 1
 **Owner:** Development team (emit specialist)
 **Dependencies:** Tasks 1, 2
-**Unknowns Verified:** 4.1, 4.2, 4.3, 4.4
+**Unknowns Verified:** 4.1, 4.4 (verified); 4.2, 4.3 (design/spec-verified — the per-candidate +Solve survey + the `--resolve-changed` run are the Sprint-34 in-sprint gate)
 
 ### Objective
 
@@ -436,11 +437,11 @@ P4 is the **freshest, least-refuted** lever — a *new* general gap discovered i
 
 ### Changes
 
-*To be completed*
+Re-confirmed the gap live — the min-convention gates in `_emit_nlp_presolve` at `src/emit/emit_gams.py:1590` (`piL`: `…and var.m > 0`) + `:1603` (`piU`: `…and var.m < 0`); the sign-robust `= abs(var.m)` closes the fawley cc-dist cell (`bq.m = -18.468`, Day-4 proven) + the mine 3 upper-bound `x.m > 0` rows (the symmetric `piU` direction). Enumerated the MAXIMIZE cohort (~85 candidates; 5 `model_infeasible`: agreste/camcge/fawley/mine/rocket, all confirmed `solve … maximizing`) + the ~20 MAXIMIZE presolve-match regression-risk set. Designed the sign-robust transfer (Option A universal `abs` vs **Option B sense-aware** via `ObjSense.MAX` — recommended, surgical) + the +Solve survey + the no-regression gate. Authored `docs/planning/EPIC_4/SPRINT_34/BOUND_TRANSFER_SIGN_DESIGN.md`; verified Unknowns 4.1/4.4 and marked 4.2/4.3 design/spec-verified (the per-candidate +Solve survey + the `--resolve-changed` run are the in-sprint gate).
 
 ### Result
 
-*To be completed*
+**The sign-robust transfer designed — the freshest lever, but with an honest +Solve finding.** The gap is general (any MAXIMIZE active-bound multiplier); the fix is `= abs(var.m)` at the active bound, localized to `src/emit/emit_gams.py:1590`/`:1603`, best implemented sense-aware (Option B — MINIMIZE byte-identical, only MAXIMIZE goldens change). **But the MAXIMIZE `model_infeasible` cohort is otherwise-attributed** — fawley H-b, mine P1 (`x.m=0` at the boundary), camcge Epic-5, rocket Case-c — so the realistic +Solve target reduces to **agreste** (P6-entangled). P4's firm value is the **general warm-start-correctness fix** (closes the harness CASE_B warm residual for the MAXIMIZE cohort); the **+Solve is contingent/uncertain**, surveyed in-sprint. The **in-sprint implementation track** is sized **10–16 h** (distinct from this 4–6 h prep task) + the documented-finding/REPLAN exit. No `src/` — the `/tmp` control + survey are the in-sprint gate.
 
 ### Verification
 
@@ -458,13 +459,13 @@ grep -icE 'max.convention|piL|piU|abs\(|maximize|MAXIMIZE|cohort|warm-residual|s
 
 ### Acceptance Criteria
 
-- [ ] The gap re-confirmed (min-convention gate; `= abs(.m)` closes the warm residual on fawley + mine)
-- [ ] The MAXIMIZE cohort enumerated (the +Solve candidates vs the regression-risk set)
-- [ ] The sign-robust transfer design stated with a fix surface (a hypothesis, PR24) + the active-bound gating
-- [ ] The +Solve survey (warm-residual-driven vs structural) specified
-- [ ] The no-regression gate + the REPLAN exit pinned; the track sized
-- [ ] Cross-referenced to `SPRINT_33/DAY4_FAWLEY_CONTROL.md` §5
-- [ ] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The gap re-confirmed live (gates at `src/emit/emit_gams.py:1590`/`:1603`; `= abs(.m)` closes the fawley cc-dist + mine 3-row warm cells)
+- [x] The MAXIMIZE cohort enumerated (5 `model_infeasible` +Solve candidates — all otherwise-attributed except agreste; the ~20 presolve-match regression-risk set)
+- [x] The sign-robust transfer design stated with a fix surface (a hypothesis, PR24) + the active-bound gating (Option A universal vs Option B sense-aware, B recommended)
+- [x] The +Solve survey (warm-residual-driven vs structural) specified — honest finding: +Solve contingent/uncertain, P4 primarily a general warm-start-correctness fix
+- [x] The no-regression gate (`--resolve-changed` GO) + the documented-finding/REPLAN exit pinned; the track sized (10–16 h in-sprint)
+- [x] Cross-referenced to `SPRINT_33/DAY4_FAWLEY_CONTROL.md` §5
+- [x] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
