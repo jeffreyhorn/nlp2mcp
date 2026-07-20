@@ -536,7 +536,8 @@ grep -icE 'Walras|numéraire|omega 191|MS-4|S1∧S2∧S3|Epic 5|rocket|Sprint-35
 
 ## Task 8: Author Phase 0 Acceptance Gates for the Sprint-34 Tracks (PR20 + PR24 + PR27)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-19
 **Priority:** Critical
 **Estimated Time:** 4–6 hours
 **Deadline:** Before Sprint 34 Day 1
@@ -566,11 +567,11 @@ Mirror `SPRINT_33/PHASE_0_ACCEPTANCE_GATES.md`. Each Sprint-34 emit-touching tra
 
 ### Changes
 
-*To be completed*
+Consolidated the per-track `/tmp` control specs from the five Task-3–7 design docs into one `PHASE_0_ACCEPTANCE_GATES.md` — one hand-derived gate per track P1–P5 (Disposition + PROCEED precondition [`/tmp` control + pass criterion + `modelstat`] + REPLAN exit), a gate summary table, and the gate-layer Known-Unknowns dispositions. Encoded the standing BANs (mine `x.up=inf`; the Case-c sign flip) + the emit-touching CI gates (golden-staleness PR26, presolve-divergence detector, `--resolve-changed --since-commit 750803b2`) + the keying-invariance reframe (P1 cold-MS-1, not warm `N→0`). Appended a Task-8 gate-feasibility note to Unknowns 1.2/2.2/3.1/4.1/5.1 (primary blocks preserved). Authored `docs/planning/EPIC_4/SPRINT_34/PHASE_0_ACCEPTANCE_GATES.md`.
 
 ### Result
 
-*To be completed*
+**One PROCEED/REPLAN gate per track, control-before-`src/`.** P1 mine → **cold MCP MS-1 @ 17500** (H_dual; the reframed gate, not warm `N→0`); P2 sarf → translate seconds not >116s (O(active=398), atomic, no set-name literals); P3 fawley → the constraint-index-diagonal 473→18.468 + no mbal/1-D-core move (**H-b confirmed**; +Solve → P5 forcing); P4 bound-transfer → sign-robust `= abs(var.m)` closes fawley cc-dist + mine cells (+Solve contingent; documented-finding exit); P5 → camcge `/tmp`-to-MS-1 (Epic-5-deferred, expected) + rocket Sprint-35 (sign flip BANNED). The CI-gate anchor is the **S33-close SHA `750803b2`** (`4cbf8bff` historical). Docs-only — the gates are the in-sprint control discipline.
 
 ### Verification
 
@@ -589,12 +590,12 @@ grep -icE 'P1|P2|P3|P4|P5|PROCEED|REPLAN|modelstat|x.up=inf|BANNED|--resolve-cha
 
 ### Acceptance Criteria
 
-- [ ] One hand-derived gate per track P1–P5 (control + pass criterion + `modelstat` + PROCEED/REPLAN)
-- [ ] The standing BANs encoded (mine `x.up=inf`; the Case-c sign flip)
-- [ ] The emit-touching CI gates encoded (golden-staleness, presolve-divergence, `--resolve-changed --since-commit <S33-close>`)
-- [ ] Task-8 gate-feasibility notes appended to the mapped unknowns (primary blocks preserved)
-- [ ] Cross-referenced to the Task-3–7 design docs + `SPRINT_33/PHASE_0_ACCEPTANCE_GATES.md`
-- [ ] Unknowns 1.2, 2.2, 3.1, 4.1, 5.1 verified and updated in KNOWN_UNKNOWNS.md
+- [x] One hand-derived gate per track P1–P5 (control + pass criterion + `modelstat` + PROCEED/REPLAN)
+- [x] The standing BANs encoded (mine `x.up=inf`; the Case-c sign flip)
+- [x] The emit-touching CI gates encoded (golden-staleness, presolve-divergence, `--resolve-changed --since-commit 750803b2`)
+- [x] Task-8 gate-feasibility notes appended to the mapped unknowns (primary blocks preserved)
+- [x] Cross-referenced to the Task-3–7 design docs + `SPRINT_33/PHASE_0_ACCEPTANCE_GATES.md`
+- [x] Unknowns 1.2, 2.2, 3.1, 4.1, 5.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

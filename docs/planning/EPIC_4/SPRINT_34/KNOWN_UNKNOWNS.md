@@ -174,6 +174,8 @@ Development team (KKT/emit specialist)
 
 **Decision:** PROCEED spec = the `/tmp` H_dual prototype drives the **cold** MCP to MS-1 @ 17500 (interior unperturbed, srpchase no-regression, `--resolve-changed` GO); else REPLAN (H3′). Executed on Sprint-34 Day 1 (not in this docs-only prep).
 
+**Task-8 gate-feasibility note (2026-07-19):** the P1 Phase-0 gate is authored with a clean PROCEED (cold MCP MS-1 @ 17500, `modelstat` asserted, `x.up=inf` BANNED, `/tmp` scratch copy run from the repo root) / REPLAN (H3′) decision — `PHASE_0_ACCEPTANCE_GATES.md` §1 P1. The keying-invariance reframe (cold-MS-1, not warm `N→0`) is encoded at the gate layer.
+
 ---
 
 ## Unknown 1.3: Is the 22-row breadth (not the banked 6) fully characterized, and does closing all 22 reach MS-1?
@@ -384,6 +386,8 @@ Development team (AD/emit specialist)
 
 **Decision:** the architecture is sound; the timeout-re-trigger risk is the primary REPLAN exit, gated on the in-sprint translate-time measurement.
 
+**Task-8 gate-feasibility note (2026-07-19):** the P2 Phase-0 gate is authored with a clean PROCEED (translate seconds not >116s, one symbolic `stat_task$taskposs` + `task.fx`, no set-name literals, atomic, byte-stable, det ×3, `--resolve-changed` GO) / REPLAN (timeout re-trigger) decision — `PHASE_0_ACCEPTANCE_GATES.md` §1 P2. The O(active=398) translate-budget probe is the load-bearing gate item.
+
 ---
 
 ## Unknown 2.3: Is the banked 7-term `stat_task` derivation complete and free of set-name-literal multiplier indices?
@@ -551,6 +555,8 @@ Development team (KKT/emit specialist)
 **Decision:** the Day-0 fawley bucket is confirmed; the `sameas`-correction / no-regression / H-b / floor-credit aspects are the primary work of Task 5 (fawley correction + forcing design).
 
 **Task-5 (primary) — ✅ VERIFIED (2026-07-19):** the qsb/pbal `sameas` gap is a **constraint-index diagonal** (the summed constraint index `cfq` = `bq`'s 2nd index = the stat index `cf`), distinct from mbal's variable-index diagonal (the Day-5 refinement). Fix surface = the general `sameas`-guard path (`_build_sameas_guard` `src/kkt/stationarity.py:4623` / `_get_or_create_fresh_alias` `src/kkt/stationarity.py:4496` in `_add_indexed_jacobian_terms` `src/kkt/stationarity.py:5861`, ~1430 lines), **not** the 1-D core `_var_at_two_indices_complement` (`src/kkt/stationarity.py:7291`; never fires for 2-D `bq`). The correction gives `max|stat_bq|` **473 → 18.468** (control-proven); reaching **→ 0** also needs the P4 bound-transfer fix on the cc-dist cell. No-regression is structurally favorable (mbal + the 1-D core are different paths). Live fingerprint re-confirmed (CASE_B `stat_bq(res-arab-l,fuel-oil)` 0.973 raw 473, dual CONSISTENT). Evidence: `FAWLEY_CORRECTION_FORCING_DESIGN.md` §2/§4; `data/gamslib/mcp/fawley_mcp.gms:238`.
+
+**Task-8 gate-feasibility note (2026-07-19):** the P3 Phase-0 gate is authored with a clean PROCEED (the constraint-index-diagonal correction 473→18.468, no mbal / 1-D-core move, `--resolve-changed` GO) / REPLAN (gate-leak) decision — `PHASE_0_ACCEPTANCE_GATES.md` §1 P3. **H-b is confirmed** at the gate layer: the +Solve is a P5 forcing hand-off, the correction ships for correctness, and the +1 genuine floor is contingent on forcing (`max|stat_bq|→0` also needs P4).
 
 ---
 
@@ -722,6 +728,8 @@ Development team (emit specialist)
 
 **Decision:** the sign-robust transfer is correct + no over-transfer; recommend the sense-aware Option B to minimize blast radius.
 
+**Task-8 gate-feasibility note (2026-07-19):** the P4 Phase-0 gate is authored with a clean PROCEED (sign-robust `= abs(var.m)` closes the fawley cc-dist + mine 3-row cells, active-bound gating, `--resolve-changed` GO over the MAXIMIZE presolve cohort) / documented-general-correctness-finding (no candidate warm-residual-driven → no +Solve) / re-scope (over-transfer) decision — `PHASE_0_ACCEPTANCE_GATES.md` §1 P4. The +Solve survey (primarily agreste) is the contingent lever.
+
 ---
 
 ## Unknown 4.2: Which MAXIMIZE-cohort models' MCP divergence is warm-residual-driven (a +Solve lever) vs structural (H-b)?
@@ -890,6 +898,8 @@ Development team (KKT/CGE specialist)
 **Evidence:** `CAMCGE_ROCKET_PLAN.md` §2/§4; `SPRINT_33/CAMCGE_WALRAS_DESIGN.md`; `EPIC_5/CGE_DEGENERACY_SCOPING.md`; the live DB (camcge MS-4).
 
 **Decision:** Epic-5-deferred; the design (recipe + dual-side check) is the Epic-5 deliverable; MS-1 is the Epic-5 `/tmp` gate.
+
+**Task-8 gate-feasibility note (2026-07-19):** the P5-camcge Phase-0 gate is authored with the `/tmp` full dual-consistent redefinition → MS-1 @ 191.7346 (dual side checked) + the S1∧S2∧S3 detector (flags only camcge) as the PROCEED precondition, and the **Epic-5-deferral as the expected REPLAN exit** (the banked price-pin variant stayed MS-4) — `PHASE_0_ACCEPTANCE_GATES.md` §1 P5. rocket's residual-clean-before-forcing + the sign-flip BAN are encoded at the gate layer.
 
 ---
 
