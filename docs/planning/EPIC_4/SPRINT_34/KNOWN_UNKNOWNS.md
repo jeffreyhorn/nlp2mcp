@@ -1045,6 +1045,8 @@ Development team (emit specialist)
 
 **Evidence:** `TOOLING_AND_BACKLOG_ANALYSIS.md` §2 (the live compile diagnosis); the GAMS listing (`$141` = declared-but-unassigned on `adst(i)$(NOT(...))=0`).
 
+**Day-11 executed (2026-07-21) — the "single shared root / one fix recovers both" is REFUTED (❌ WRONG on that claim; the `$141` root is real but insufficient).** The `$141`/`$145`/`$149` are **three independent roots**, not one: **(a) `$141`** = the `.l`-calibration NaN-cleanup (fix written + verified: skip params whose assignment references a variable attribute — removes ganges's 15 `$141`); **(b) `$145`** = a separate NaN-cleanup line over a **universal-set (`*`) domain** param (`series(*,years)`); **(c) `$149`** = an **uncontrolled index in the stationarity emit** (ganges `stat_pc`: the derivative of a CES/LES `prod(j, (pc(j)/pc00(j))**ac(j,r))` w.r.t. `pc(i)` leaves a free `j` — a **deep AD-core product-rule bug**). Fixing `$141` alone leaves `$145`+`$149` → **ganges/gangesx do NOT recover** (still `path_syntax_error`). The `$141` fix is **banked, not shipped** (0 bucket + un-regenerable slow-emit goldens; `DAY11_PROGRESS_NOTES.md` §3). The deep `$149` (CES/LES) blocker also gates dinam/indus/turkpow/clearlak, and turkey is a distinct `$161` dotted-tuple set-emit root — the cohort is far more multi-root than the prep hypothesis.
+
 **Decision:** the fix surface is the NaN-sanitization pass (`src/emit/emit_gams.py`, a hypothesis) — skip params whose value depends on a variable level, or emit the assignment before the guard; `--resolve-changed`-gated; a single fix recovers the ganges/gangesx pair.
 
 ---
