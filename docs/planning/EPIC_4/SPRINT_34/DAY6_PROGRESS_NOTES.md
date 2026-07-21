@@ -18,11 +18,11 @@ Re-confirmed on `main` (`32f971c4`), consistent with the Day-0 probe (369,024 Ca
 | **S2** variable-column enumeration | `enumerate_variable_instances` (`src/ad/index_mapping.py:327`) — called **for every variable** from both `build_index_mapping` (`src/ad/index_mapping.py:634`, which builds the `col_to_var` column index) and `_precompute_variable_instances` (`src/ad/constraint_jacobian.py:78`) — builds all 369,024 `task` columns | materializes |
 | **S3** variable stationarity | `src/kkt/stationarity.py` materializes `stat_task(g,t,m,n)` per Cartesian column | materializes |
 | 2-D constraint gate | `_is_blowup_2d_condition_equation` — **0 matches in `src/`** (reverted S32) | absent |
-| variable-blowup gate | **none exists** — the only blow-up gate is `_is_blowup_dynamic_subset_equation` (`index_mapping.py:402`), which gates **equations** (srpchase's 1-D shape), not **variables** | absent |
+| variable-blowup gate | **none exists** — the only blow-up gate is `_is_blowup_dynamic_subset_equation` (`src/ad/index_mapping.py:402`), which gates **equations** (srpchase's 1-D shape), not **variables** | absent |
 
 ## 2. Why this is a foundational re-architecture, not a gated add-on
 
-`enumerate_variable_instances` is the **foundation** of the AD pipeline: `build_index_mapping` (`src/ad/index_mapping.py:607`) calls it for **every** variable (`src/ad/index_mapping.py:634`) to build the `col_to_var` column index that the **entire downstream flow** — the constraint Jacobian, the objective gradient (`gradient.py:287/453`), and the stationarity builder — iterates over. (It is also called per-variable from `_precompute_variable_instances`, `src/ad/constraint_jacobian.py:76-79`.) There is no notion of a "symbolic" (non-enumerated) variable anywhere in that flow.
+`enumerate_variable_instances` is the **foundation** of the AD pipeline: `build_index_mapping` (`src/ad/index_mapping.py:607`) calls it for **every** variable (`src/ad/index_mapping.py:634`) to build the `col_to_var` column index that the **entire downstream flow** — the constraint Jacobian, the objective gradient (`src/ad/gradient.py:287/453`), and the stationarity builder — iterates over. (It is also called per-variable from `_precompute_variable_instances`, `src/ad/constraint_jacobian.py:76-79`.) There is no notion of a "symbolic" (non-enumerated) variable anywhere in that flow.
 
 Making `task` symbolic (S2) therefore cascades:
 - The **column index** must represent `task` as a single guarded symbol (not 369K columns) — a new column-index concept.
