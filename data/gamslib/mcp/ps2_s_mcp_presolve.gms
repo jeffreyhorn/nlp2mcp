@@ -71,9 +71,9 @@ lam_pc.l(i) = abs(pc.m(i));
 lam_ic.l(i,j) = abs(ic.m(i,j));
 
 * Transfer variable marginals to bound multipliers
-piL_x.l(i)$(abs(x.l(i) - x.lo(i)) < 1e-6 and x.m(i) > 0) = x.m(i);
-piL_b.l(i)$(abs(b.l(i) - b.lo(i)) < 1e-6 and b.m(i) > 0) = b.m(i);
-piL_w.l(i)$(abs(w.l(i) - w.lo(i)) < 1e-6 and w.m(i) > 0) = w.m(i);
+piL_x.l(i)$(abs(x.l(i) - x.lo(i)) < 1e-6) = abs(x.m(i));
+piL_b.l(i)$(abs(b.l(i) - b.lo(i)) < 1e-6) = abs(b.m(i));
+piL_w.l(i)$(abs(w.l(i) - w.lo(i)) < 1e-6) = abs(w.m(i));
 
 * ============================================
 * Equations

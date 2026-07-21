@@ -264,16 +264,16 @@ nu_caeq.l = caeq.m;
 nu_equil.l(i) = equil.m(i);
 
 * Transfer variable marginals to bound multipliers
-piL_pd.l(i)$(abs(pd.l(i) - pd.lo(i)) < 1e-6 and pd.m(i) > 0) = pd.m(i);
-piL_pk.l(i)$(abs(pk.l(i) - pk.lo(i)) < 1e-6 and pk.m(i) > 0) = pk.m(i);
-piL_px.l(i)$(abs(px.l(i) - px.lo(i)) < 1e-6 and px.m(i) > 0) = px.m(i);
-piL_p.l(i)$(abs(p.l(i) - p.lo(i)) < 1e-6 and p.m(i) > 0) = p.m(i);
-piL_x.l(i)$(abs(x.l(i) - x.lo(i)) < 1e-6 and x.m(i) > 0) = x.m(i);
-piL_xd.l(i)$(abs(xd.l(i) - xd.lo(i)) < 1e-6 and xd.m(i) > 0) = xd.m(i);
-piL_wa.l(lc)$(abs(wa.l(lc) - wa.lo(lc)) < 1e-6 and wa.m(lc) > 0) = wa.m(lc);
-piL_l.l(i,lc)$(abs(l.l(i,lc) - l.lo(i,lc)) < 1e-6 and l.m(i,lc) > 0) = l.m(i,lc);
-piL_int.l(i)$(abs(int.l(i) - int.lo(i)) < 1e-6 and int.m(i) > 0) = int.m(i);
-piL_y.l$(abs(y.l - y.lo) < 1e-6 and y.m > 0) = y.m;
+piL_pd.l(i)$(abs(pd.l(i) - pd.lo(i)) < 1e-6) = abs(pd.m(i));
+piL_pk.l(i)$(abs(pk.l(i) - pk.lo(i)) < 1e-6) = abs(pk.m(i));
+piL_px.l(i)$(abs(px.l(i) - px.lo(i)) < 1e-6) = abs(px.m(i));
+piL_p.l(i)$(abs(p.l(i) - p.lo(i)) < 1e-6) = abs(p.m(i));
+piL_x.l(i)$(abs(x.l(i) - x.lo(i)) < 1e-6) = abs(x.m(i));
+piL_xd.l(i)$(abs(xd.l(i) - xd.lo(i)) < 1e-6) = abs(xd.m(i));
+piL_wa.l(lc)$(abs(wa.l(lc) - wa.lo(lc)) < 1e-6) = abs(wa.m(lc));
+piL_l.l(i,lc)$(abs(l.l(i,lc) - l.lo(i,lc)) < 1e-6) = abs(l.m(i,lc));
+piL_int.l(i)$(abs(int.l(i) - int.lo(i)) < 1e-6) = abs(int.m(i));
+piL_y.l$(abs(y.l - y.lo) < 1e-6) = abs(y.m);
 
 * ============================================
 * Equations

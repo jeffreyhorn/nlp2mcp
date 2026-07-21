@@ -298,8 +298,8 @@ lam_convex_edge4.l(i) = abs(convex_edge4.m(i));
 nu_eqrdiff.l(i) = eqrdiff.m(i);
 
 * Transfer variable marginals to bound multipliers
-piL_r.l(i)$(abs(r.l(i) - r.lo(i)) < 1e-6 and r.m(i) > 0) = r.m(i);
-piU_r.l(i)$(abs(r.l(i) - r.up(i)) < 1e-6 and r.m(i) < 0) = -(r.m(i));
+piL_r.l(i)$(abs(r.l(i) - r.lo(i)) < 1e-6) = abs(r.m(i));
+piU_r.l(i)$(abs(r.l(i) - r.up(i)) < 1e-6) = abs(r.m(i));
 
 * ============================================
 * Equations
