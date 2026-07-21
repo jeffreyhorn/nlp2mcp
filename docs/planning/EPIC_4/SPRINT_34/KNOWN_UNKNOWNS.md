@@ -917,6 +917,8 @@ Development team (KKT/CGE specialist)
 
 **Task-8 gate-feasibility note (2026-07-19):** the P5-camcge Phase-0 gate is authored with the `/tmp` full dual-consistent redefinition → MS-1 @ 191.7346 (dual side checked) + the S1∧S2∧S3 detector (flags only camcge) as the PROCEED precondition, and the **Epic-5-deferral as the expected REPLAN exit** (the banked price-pin variant stayed MS-4) — `PHASE_0_ACCEPTANCE_GATES.md` §1 P5. rocket's residual-clean-before-forcing + the sign-flip BAN are encoded at the gate layer.
 
+**Day-10 executed (2026-07-21) — Epic-5-deferred (the expected outcome).** The S1∧S2∧S3 detector cohort is **confirmed live**: camcge cold MS-4 (NLP obj 191.7346), the four CGE siblings (irscge/lrgcge/moncge/stdcge) cold MS-1 (model_optimal_presolve + match) — so the detector fires **only** on camcge (S3 the false-positive guard holds). The full Walras-law dual redefinition `/tmp` prototype is **Epic-5 research, not a Day-10 landing** (a from-scratch CGE-aware emit layer; the banked price-pin MS-4 + 3+ sprints of failed prep make MS-1 a-priori refuted — the promote-to-+Solve condition does not fire). camcge stays `model_infeasible` (0 Solve); step-1 (`nu_mps_fx`) stability re-confirmed. `DAY10_PROGRESS_NOTES.md` §1.
+
 ---
 
 ## Unknown 5.2: Does the S1∧S2∧S3 degeneracy detector false-flag irscge/lrgcge/moncge/stdcge?
