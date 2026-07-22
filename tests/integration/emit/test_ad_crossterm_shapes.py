@@ -34,18 +34,27 @@ pytestmark = pytest.mark.integration
 FIXTURES = Path(__file__).resolve().parents[2] / "fixtures" / "crossterm_shapes"
 
 
-def _emit(fixture: str) -> str:
-    """Emit a synthetic fixture in-process (sub-second)."""
+def _emit(fixture: str, *, nlp_presolve: bool = False) -> str:
+    """Emit a synthetic fixture in-process (sub-second).
+
+    When ``nlp_presolve`` is set, the fixture path is passed as ``source_file`` so
+    ``_emit_nlp_presolve`` emits its `$include`-based warm-start block (the bound
+    multiplier transfer lives there).
+    """
     old = sys.getrecursionlimit()
     sys.setrecursionlimit(50000)
     try:
-        model = parse_model_file(str(FIXTURES / fixture))
+        path = str(FIXTURES / fixture)
+        model = parse_model_file(path)
         reformulate_model(model)
         normalized_eqs, _ = normalize_model(model)
         cfg = Config()
         gradient = compute_objective_gradient(model, cfg)
         j_eq, j_ineq = compute_constraint_jacobian(model, normalized_eqs, cfg)
-        return emit_gams_mcp(assemble_kkt_system(model, gradient, j_eq, j_ineq, cfg))
+        kkt = assemble_kkt_system(model, gradient, j_eq, j_ineq, cfg)
+        if nlp_presolve:
+            return emit_gams_mcp(kkt, nlp_presolve=True, source_file=path)
+        return emit_gams_mcp(kkt)
     finally:
         sys.setrecursionlimit(old)
 
@@ -183,3 +192,27 @@ def test_shape11_second_index_indexed_condition() -> None:
     assert "lam_g(i,j))$(ord(j)>ord(i)andw(i))" in row, row
     assert "lam_g(j,i))$(ord(i)>ord(j)andw(j)" in row, f"indexed condition not swapped: {row}"
     assert "SymbolRef" not in row, f"SymbolRef leaked into an index tuple: {row}"
+
+
+def test_p4_maximize_bound_transfer_sense_aware() -> None:
+    """Sprint 34 P4 (Day 4, Option B): the ``--nlp-presolve`` bound-multiplier
+    warm-start transfer must be objective-sense-aware. A bound multiplier is
+    ``|reduced cost|``; the min-convention sign gate (``piL``: ``var.m > 0``)
+    would SKIP the correctly-signed multiplier for a MAXIMIZE solve, leaving
+    ``piL`` at 0 (a wrong warm start). For MAXIMIZE the fix drops the sign gate,
+    keeps the active-bound position gate, and transfers ``abs(var.m)``.
+
+    The fixture maximizes over ``x`` with an active lower bound. The emitted
+    lower-bound transfer must be ``piL_x.l$(<position>) = abs(x.m);`` — with the
+    ``abs()`` and WITHOUT the ``and x.m > 0`` sign gate (the pre-fix,
+    min-convention form)."""
+    emit = _emit("shape_p4_max_bound_transfer.gms", nlp_presolve=True)
+    m = re.search(r"^piL_x\.l\$\([^\n]*?;", emit, re.MULTILINE)
+    assert m is not None, f"piL_x bound transfer not emitted:\n{emit}"
+    transfer = m.group(0)
+    # Sense-aware MAXIMIZE form: abs(var.m), position gate only.
+    assert "= abs(x.m)" in transfer, f"MAXIMIZE transfer not abs(var.m): {transfer}"
+    assert "abs(x.l - x.lo)" in transfer, f"active-bound position gate missing: {transfer}"
+    # The min-convention sign gate must be gone (it would zero the MAXIMIZE
+    # multiplier — the pre-fix bug).
+    assert "x.m > 0" not in transfer, f"min-convention sign gate leaked into MAXIMIZE: {transfer}"
