@@ -1037,10 +1037,10 @@ Development team (emit specialist)
 **Verified by:** Task 10
 **Date:** 2026-07-19
 
-**Findings:**
-- Compiled the committed goldens (`data/gamslib/mcp/{ganges,gangesx}_mcp.gms`) from the repo root: **both have the identical error profile `$141` ×15 / `$145` ×3 / `$149` ×9** → a **single shared root**.
+**Findings (2026-07-19 — HISTORICAL; the "single shared root / a single fix may recover both" conclusion is SUPERSEDED by the Day-11 execution block below, which refuted it. Read these bullets as the prep-time hypothesis, not current truth):**
+- Compiled the committed goldens (`data/gamslib/mcp/{ganges,gangesx}_mcp.gms`) from the repo root: **both have the identical error profile `$141` ×15 / `$145` ×3 / `$149` ×9** → ~~a **single shared root**~~ (superseded: three independent roots — see Day-11 below).
 - The root: the NaN-sanitization emit pass emits `param(i)$(NOT (param(i) > -inf and param(i) < inf)) = 0;` — a self-referential guard that *reads* `param(i)` — over parameters (`adst`, `aex`, `aid`, `an`, `as`, `az`, `cg`, `deltan`, …) whose source value-assignment is `= dst.l(i)/sum(j, dst.l(j))` (depends on a **variable level**, pruned/mis-ordered in the MCP) → `$141` "Symbol declared but no values assigned" (+ `$145` "Set identifier expected" / `$149` "Uncontrolled set as constant" on the same construct).
-- **A single fix may recover both.** **Distinct from sample's `$140`** (pruned-var `.l`-init) — the S33 P6 fix (skip an `.l`-init whose refs aren't a subset of the declared MCP vars) is a **no-op** here (ganges/gangesx's root is *parameter* sanitization, and their `.l`-init refs are declared).
+- ~~**A single fix may recover both.**~~ (superseded — Day-11: three independent roots, `$141` alone recovers neither.) **Distinct from sample's `$140`** (pruned-var `.l`-init) — the S33 P6 fix (skip an `.l`-init whose refs aren't a subset of the declared MCP vars) is a **no-op** here (ganges/gangesx's root is *parameter* sanitization, and their `.l`-init refs are declared).
 - **NB — the Assumption's `bound-clamp x$(not(...))=0` hypothesis was refined, not confirmed:** the root is the same guard *shape* (`sym$(NOT(...))=0`) but on a **parameter** (`param(i)$(NOT(...))=0`), **not** a variable bound-clamp — the parameter's value-assignment depends on a variable level (`dst.l`), so it is declared-but-unassigned in the MCP context. The "parameter-assignment lines" half of the Assumption was on the right track; the "variable bound-clamp" half was not the root.
 
 **Evidence:** `TOOLING_AND_BACKLOG_ANALYSIS.md` §2 (the live compile diagnosis); the GAMS listing (`$141` = declared-but-unassigned on `adst(i)$(NOT(...))=0`).
