@@ -142,7 +142,8 @@ grep -icE 'multi-root|per-model|Sprint 36|Sprint-36' docs/planning/EPIC_4/SPRINT
 
 ## Task 2: Sprint 34 → Sprint 35 Day-0 Baseline + Genuine-Floor Re-Baseline (PR15 + PR17 + PR25)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-23
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 35 Day 1
@@ -181,11 +182,17 @@ Every Sprint-35 KPI delta is measured against this baseline, and every emit-touc
 
 ### Changes
 
-_To be completed_
+Authored `docs/planning/EPIC_4/SPRINT_35/BASELINE_METRICS.md` from the committed DB (schema 2.2.1, md5 `6166acab90dcaff8789255f8ada83c54`), with every figure **recomputed rather than inherited**: the 142-candidate bucket tally with all bucket members enumerated; the PR25 genuine-vs-methodology partition **reconstructed** (both the 21-member methodology set and the 12-member genuine-presolve set listed by name, reconciling 63 cold + 12 = 75 and 63 + 33 = 96 = 75 + 21); per-model provenance rows for all 13 Sprint-35 target models with their Day-0 bucket, `model_status`, failure code and owning priority; the corrected portable anchor derivation; the `--resolve-changed --dry-run` GO record; and determinism ×3. Verified Unknowns 1.3, 3.3, 4.4, 7.2 in `KNOWN_UNKNOWNS.md`.
 
 ### Result
 
-_To be completed_
+**Day 0 = the Sprint 34 close, confirmed on every axis: Parse 142 · Translate 135 · Solve 108** (64 cold + 44 presolve) **· Match 93 · genuine floor 75 · model_infeasible 7 · path_syntax_error 7 · all-219 Match 96 · determinism ✅ ×3** — identical bucket *membership* too, consistent with S34's full modal-flat close.
+
+**The code anchor advances to `78ceaead`** (the S34 close) while the DB is reused byte-for-byte — and the mechanism is now on the record rather than asserted: exactly **one `src/` commit** (`b71da11a`, the S34 Day-4 P4 sense-aware bound-transfer) plus **11 regenerated presolve goldens** landed between `750803b2` and `78ceaead`, while the DB stayed byte-unchanged (last modifying commit still `1568a531`, the S33 Day-11 sample fix). Re-using `750803b2` would re-flag those 11 P4 goldens at every checkpoint. `git diff --quiet 78ceaead..HEAD -- src/ scripts/` is clean and `--resolve-changed --since-commit 78ceaead --dry-run` = **GO** (0 changed).
+
+**PR25 anchor = 75, reproduced not asserted:** all-219 Match 96 = 63 cold + 33 presolve; the 21 methodology members are all presolve, so 33 − 21 = 12 genuine-presolve and 63 + 12 = 75 ✓. The 21-member set matches the S31/S32/S33 enumeration exactly. The → ≥ 76 conversion map names **P4 ganges/gangesx as the firmest cold-emit contributor** (all-or-nothing across the three roots), P1 mine conditional, P3 fawley contingent under H-b, camcge excluded (Epic-5).
+
+**Three findings this task surfaced beyond its brief.** (1) The anchor-derivation grep pattern inherited from Sprint 34 was **broken** — the S34 close merge does not contain "SPRINT 34 CLOSED", so the bumped-number pattern returned empty and its drift check would have passed *vacuously*; corrected (PR #1604 review) and the fix is recorded in §2.1. (2) `fawley_mcp_presolve.gms` was one of the 11 P4-regenerated goldens, so fawley's **warm** path moved during S34 even though its cold emit did not — **Task 8 must re-measure the H-b figures rather than inherit them**. (3) A determinism attempt on **ganges exceeded a 2-minute wall-clock budget per seed**, the first live confirmation of the slow-emit CGE constraint that forced S34 to bank its verified `$141` fix — handed to Task 3 (Unknown 4.5), not resolved here.
 
 ### Verification
 
@@ -217,15 +224,15 @@ md5 -q data/gamslib/gamslib_status.json 2>/dev/null || md5sum data/gamslib/gamsl
 
 ### Acceptance Criteria
 
-- [ ] Day-0 baseline confirmed = Sprint 34 close (Solve 108 / Match 93 / genuine floor 75 / Translate 135 / Parse 142 / mi 7 / pse 7 / all-219 96)
-- [ ] Day-0 code anchor pinned to the S34-close SHA, with the portable derivation recorded
-- [ ] Zero `src/`/`scripts/` drift verified since the anchor (baseline reused byte-for-byte, no fresh retest)
-- [ ] PR25 genuine-floor anchor recomputed and confirmed at **75**
-- [ ] Per-model provenance recorded for mine, sarf, fawley, ganges, gangesx, camcge, rocket, turkey, dinam, indus, turkpow, clearlak, agreste
-- [ ] `--resolve-changed --since-commit <anchor> --dry-run` = GO recorded
-- [ ] The anchor-advance caveat (DB unchanged since `750803b2`, code anchor now S34-close) called out explicitly
-- [ ] Cross-referenced to `SPRINT_34/BASELINE_METRICS.md` + the corpus-scope reference
-- [ ] Unknowns 1.3, 3.3, 4.4, 7.2 verified and updated in `KNOWN_UNKNOWNS.md`
+- [x] Day-0 baseline confirmed = Sprint 34 close (Solve 108 / Match 93 / genuine floor 75 / Translate 135 / Parse 142 / mi 7 / pse 7 / all-219 96) — recomputed from the committed DB, bucket membership included
+- [x] Day-0 code anchor pinned to the S34-close SHA `78ceaead`, with the (corrected) portable derivation recorded in §2.1
+- [x] Zero `src/`/`scripts/` drift verified since the anchor (baseline reused byte-for-byte, no fresh retest)
+- [x] PR25 genuine-floor anchor recomputed and confirmed at **75** — reconstructed from the DB with both the 21 methodology and 12 genuine-presolve members enumerated
+- [x] Per-model provenance recorded for all 13 targets (mine, sarf, fawley, ganges, gangesx, camcge, rocket, turkey, dinam, indus, turkpow, clearlak, agreste)
+- [x] `--resolve-changed --since-commit 78ceaead --dry-run` = GO recorded (0 changed)
+- [x] The anchor-advance caveat called out explicitly, with the mechanism evidenced (one `src/` commit `b71da11a` + 11 presolve goldens; DB byte-unchanged, last modified at `1568a531`)
+- [x] Cross-referenced to `SPRINT_34/BASELINE_METRICS.md` + the corpus-scope reference
+- [x] Unknowns 1.3, 3.3, 4.4, 7.2 verified and updated in `KNOWN_UNKNOWNS.md` (4.4 marked **PARTIALLY VERIFIED** — the Day-0 provenance is confirmed but the per-model recovery verdict stays open for Task 5, deliberately, since that is the assumption S34 got wrong)
 
 ---
 
