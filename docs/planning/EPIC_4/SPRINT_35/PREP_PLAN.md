@@ -238,7 +238,8 @@ md5 -q data/gamslib/gamslib_status.json 2>/dev/null || md5sum data/gamslib/gamsl
 
 ## Task 3: Reusable-Tooling Readiness Audit + Slow-Emit CGE Golden-Regeneration Budget + P7 Fixture Catalog
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-23
 **Priority:** High
 **Estimated Time:** 4–5 hours
 **Deadline:** Before Sprint 35 Day 1
@@ -269,11 +270,19 @@ Reused tooling: `scripts/diagnostics/kkt_residual.py` (Case-a/b/c + `case_c_objd
 
 ### Changes
 
-_To be completed_
+Authored `docs/planning/EPIC_4/SPRINT_35/TOOLING_AND_BACKLOG_ANALYSIS.md`: the per-track tooling-readiness audit (seven reused tools, three exercised live), the **measured** slow-emit golden-regeneration budget (four `/usr/bin/time -p` emits + a scoped `check_golden_staleness.py --models` run + `cmp` byte-identity checks), the sprint budget arithmetic with the shipping verdict, the four-fixture P7 catalog, the `indus` allowlist finding, and the corrected `SUMMARY.md` continuation scope. Verified Unknowns 4.5, 7.1, 7.3 in `KNOWN_UNKNOWNS.md`. All emits wrote to `/tmp` only — the tree is untouched.
 
 ### Result
 
-_To be completed_
+**Zero new diagnostic-tool code** — a pure reuse, as in Sprint 34; the only new artifacts are the P7 fixtures, each landing-gated. Day-0 gate re-confirmed: `--resolve-changed --since-commit 78ceaead --dry-run` = **GO**.
+
+**The headline result: Sprint 34's ship-blocker does not survive measurement.** S34 banked a *written and verified* `$141` fix partly because the ganges/gangesx/clearlak/turkpow goldens were judged "un-regenerable in the CI budget". Measured: gangesx **151 s** · clearlak **192 s** · ganges **203 s** · turkpow **442 s** — **every one inside the 600 s per-emit timeout** (turkpow, the binding case, with ~26 % headroom) — and the **scoped** `check_golden_staleness.py --models ganges,gangesx,clearlak,turkpow` completes in **489.63 s (8.2 min) with 0 timeouts and all 4 clean**. The S34 soft-timeout was **full-sweep contention** (170 goldens at `MAX_WORKERS = 6`), not model cost, and the scoping flag that avoids it (`--models`, `:124`) **already exists** — so no new tooling is needed to unblock P4. All four re-emits are **byte-identical** to their committed goldens, so P4's eventual golden diff will be wholly attributable to its fixes.
+
+**Verdict (what Task 12 schedules against): P4's regeneration FITS A NORMAL ≤ 12 h DAY — no overnight slot.** Worst case ≈ 50 min (all four drift + an optional separate determinism ×3 pass + the follow-on re-solve); realistic ≈ 25 min. The `--fix` path costs **2 emits per drifted golden** (the determinism guard re-emits before overwriting), and the four models have **cold goldens only**, so P4 refreshes 4 goldens, not 8. Prescribed: scoped `--fix`, then `--resolve-changed`; **never the unscoped `make regen-goldens`** on the P4 day.
+
+**Consequence for the shipping rule:** S34 banked the `$141` fix on two grounds — 0 bucket recovered *and* un-regenerable goldens. **The second is now removed**; the first still stands. The S34-P4 exception criteria (fast, regenerable goldens + `--resolve-changed` GO) are **satisfiable** for this cohort, so Task 11 should weigh P4 with the golden constraint lifted.
+
+**Two findings beyond the brief.** (1) **`indus` is allowlisted** for cross-environment byte non-determinism (#1461) — and it is a `$149` cohort member, so its golden **cannot serve as a P4/P6 regression signal**; Tasks 4/5 must verify it by compile-error count instead. (2) The **`SUMMARY.md` continuation is larger than a row fill**: rows 35 and 36 still carry pre-insertion themes and rows 37/38 are absent, so the Day-12/13 task is a **reconcile-and-append across rows 35→38**.
 
 ### Verification
 
@@ -302,14 +311,14 @@ grep -n '^regen-goldens:' Makefile
 
 ### Acceptance Criteria
 
-- [ ] The S28–34 tooling audited against the new Sprint-35 classes; reuse confirmed with any gap named (target: zero new diagnostic-tool code)
-- [ ] Golden-regeneration wall-clock **measured** (not estimated) for ganges, gangesx, clearlak, turkpow
-- [ ] A concrete regen plan proposed (scoped invocation + run window + determinism-×3 cost + the follow-on `--resolve-changed` cost)
-- [ ] The "fits a normal day / needs an overnight slot" verdict stated explicitly for P4
-- [ ] The four P7 fixtures catalogued with their gating tracks and the skip-if-absent pattern for raw-dependent fixtures
-- [ ] `--resolve-changed --since-commit <S34-close> --dry-run` = GO recorded
-- [ ] Cross-referenced to `SPRINT_34/TOOLING_AND_BACKLOG_ANALYSIS.md` + `SPRINT_34/DAY11_PROGRESS_NOTES.md` (the banked-fix rationale) + `SPRINT_34/DAY12_P7_INFRA.md`
-- [ ] Unknowns 4.5, 7.1, 7.3 verified and updated in `KNOWN_UNKNOWNS.md`
+- [x] The S28–34 tooling audited against the new Sprint-35 classes; **zero new diagnostic-tool code** confirmed, no gap (seven tools present, three exercised live)
+- [x] Golden-regeneration wall-clock **measured** (not estimated): gangesx 151.00 s · clearlak 191.84 s · ganges 202.57 s · turkpow 442.15 s; plus the scoped run at 489.63 s
+- [x] A concrete regen plan proposed (scoped `--models … --fix` invocation + the 2-emits-per-drifted-golden cost model + determinism-×3 + the follow-on `--resolve-changed` re-solve)
+- [x] The verdict stated explicitly: **fits a normal ≤ 12 h day; no overnight slot** (~25 min realistic, ~50 min worst case) — and the S34 "un-regenerable" premise **refuted**
+- [x] The four P7 fixtures catalogued with gating tracks, shapes and homes; the ganges fixture flagged raw-emit + skip-if-absent
+- [x] `--resolve-changed --since-commit 78ceaead --dry-run` = GO recorded
+- [x] Cross-referenced to `SPRINT_34/TOOLING_AND_BACKLOG_ANALYSIS.md` + `SPRINT_34/DAY11_PROGRESS_NOTES.md` §45 (the refuted banked-fix rationale) + `SPRINT_34/DAY12_P7_INFRA.md`
+- [x] Unknowns 4.5, 7.1, 7.3 verified and updated in `KNOWN_UNKNOWNS.md` (4.5 ✅ **with the S34 premise refuted**; 7.3 ✅ **with the scope corrected to rows 35→38**)
 
 ---
 
