@@ -685,7 +685,19 @@ Emit ganges live and capture the offending line verbatim. Hand-derive the correc
 Development team (AD/KKT specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 4 (primary)
+**Date:** 2026-07-24
+
+**Findings:**
+- **Reproduced live:** ganges emit is byte-identical to the committed golden (md5 `72c5d5f268e9dad458f61f58491872c5`); GAMS `a=c` compile gives `$141×15 / $149×9 / $145×3` (+ `$300`/`$257` cascades). **All 9 `$149` are on one equation — `stat_pc(i)`, golden line 1002.**
+- **The offending index is `j`.** The product-derivative of `prod(j, (pc(j)/pc00(j))**ac(j,r))` w.r.t. `pc(i)` emits a `(df/dx)/f` factor that references `pc(j)`/`pc00(j)`/`ac(j,·)` **outside the `prod(j,…)` scope** → `j` uncontrolled → `$149`. Two renderings on the same line: **chunk 1** wraps in `sum(j,…)` and renames the prod bound to `j__` (compiles); **chunk 2** is the collapsed `prod(j,…) * (…j…)` form, un-aliased → free `j`.
+- **Hand-derived correct cross-term:** `∂/∂pc(i)[prod(j,(pc(j)/pc00(j))**ac(j,r))] = prod(j,(pc(j)/pc00(j))**ac(j,r)) * ac(i,r)/pc(i)` — `i` controlled, no free `j` (numerically cross-checked on a 2-element set). Three emit forms given (simplified `·ac(i,r)/pc(i)` [recommended, safest]; prod-ratio `·f'(i)/f(i)`; exp-sum-log); form 1 recommended.
+- **Localized to a two-layer `file:line` hypothesis** (labelled per the standing lesson): `src/ad/derivative_rules.py:_diff_prod` (~3395, the #1330 `symbolic_name_match` collapsed branch returns `expr * (body_deriv/body)` and *delegates* index-safety to the emitter) + `src/emit/expr_to_gams.py:collect_index_aliases` (:757, renames a Prod bound only on domain/enclosing-binder collision, **not** on a sibling-factor reference — the failing link). The **AD layer, not a cleanup pass, is the surface** (contra the general prior). The distinguishing feature isolating ganges/gangesx: the **cross-index** case (prod over `j`, differentiate w.r.t. `pc(i)`, `j ≠ i`), vs the name-match case the 18 working prod-models use.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/GANGES_149_PRODUCT_RULE_ANALYSIS.md` §§1–3, §5; the live emit + `gams a=c` listing; `src/ad/derivative_rules.py:3272–3410`; `src/emit/expr_to_gams.py:723–770`.
+
+**Decision:** the `$149` correction is form 1/2 at the AD layer (`_diff_prod`, option (a)) — Task 5 specifies it, sequenced after `$141`/`$145`, gated against the 18-model prod-in-stationarity regression set (§5.1). Not the `stationarity.py` cleanup surface the prior assumed.
 
 ---
 
@@ -944,7 +956,18 @@ Compile each committed golden and tabulate error codes with counts; classify eac
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — **and the S34 impact framing CORRECTED**
+**Verified by:** Task 4 (primary)
+**Date:** 2026-07-24
+
+**Findings:**
+- **`$149` is a GAMS error *code*, not a single *root*.** All seven cohort goldens compiled (`gams a=c`) and catalogued by code × count. **Only ganges and gangesx carry the product-rule `$149`** (on `stat_pc`, from the `prod` derivative). dinam / indus / turkpow / clearlak carry `$149` markers on **entirely different constructs** — a `sameas` alias-sum (`stat_v`), a raw data-assignment power term (`yc … **gammafrt`), a lag-KKT sum (`stat_zt`), and a set/element data assignment (`tmp1 = sum(nn$leaf(nn), snprob(leaf))`) — sharing only the error number.
+- **The cohort is more multi-root than S34 recorded:** dinam `$140×5/$8×3/$149×3/$37×2/$171×2/$141×1`; indus `$141×8/$140×5/$130×4/$409×3/$149×3/$148×2/…` (`$141`-dominated); turkpow `$170×6/$171×5/$149×1/$141×1` (`$170/$171`-dominated); clearlak `$352×4/$141×2/$149×1` (`$352`-dominated — **not `$171`**, correcting S34); turkey `$161×6/$141×1` (**no `$149`**). `$257`/`$300` are cascades.
+- **"What still fails after a correct `$149` fix":** ganges/gangesx → `$141×15`+`$145×3` remain (need all three roots, no single-root recovery); dinam/indus/turkpow/clearlak → **unchanged in practice** (`$149` is 0–3 unrelated markers each, dominated by other roots); turkey → unaffected.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/GANGES_149_PRODUCT_RULE_ANALYSIS.md` §4; seven `gams a=c` compiles of the committed goldens.
+
+**Decision:** the clean `$149`-product-rule beneficiaries are **ganges + gangesx only** → the honest P4 target is **+2**, not "the `$149` half of six models" (the carryforward framing is refuted). dinam/indus/turkpow/clearlak are **P6 residual**, not P4 `$149` beneficiaries.
 
 ---
 
@@ -977,7 +1000,18 @@ Compile every cohort golden and build the per-model code×count table; look for 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 4 (primary)
+**Date:** 2026-07-24
+
+**Findings:**
+- The multi-root discipline is upheld **and extended by live per-model compile**: the `path_syntax_error` cohort is more multi-root than S34's characterization (which said "dinam/indus `$140`+`$149`; turkpow/clearlak `$149`+`$171`; turkey `$161`"). Reality: dinam adds `$8/$37/$171/$141`; indus is `$141`-dominated (×8); turkpow is `$170/$171`-dominated with only `$149×1`; clearlak is `$352`-dominated (**S34's `$171` attribution is wrong**) with `$149×1`; `$257`/`$300` are cascades, not roots.
+- **ganges and gangesx were verified independently** (not inferred one from the other): both compile to the identical `$141×15/$149×9/$145×3` profile with the same `stat_pc` product-rule root — confirmed by two separate compiles, not assumed from their shared NLP objective.
+- No model recovers from a single root (S34's core finding re-confirmed and generalized to the whole cohort).
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/GANGES_149_PRODUCT_RULE_ANALYSIS.md` §4 (per-model code×count table + cascade annotation); the seven compiles.
+
+**Decision:** every P4/P6 recovery claim is gated on a per-model emit → compile → count → solve → bucket → match check (encoded into the P4 Phase-0 gate, Task 10). The prep root hypotheses in the carryforward are corrected here, once again validating the "verify per model" discipline.
 
 ---
 

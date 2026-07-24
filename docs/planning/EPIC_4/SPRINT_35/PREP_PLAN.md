@@ -324,7 +324,8 @@ grep -n '^regen-goldens:' Makefile
 
 ## Task 4: `$149` CES/LES `prod()` Product-Rule Stationarity AD Root Analysis + Uncontrolled-Index Cohort Catalog
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-24
 **Priority:** Critical
 **Estimated Time:** 5–7 hours
 **Deadline:** Before Sprint 35 Day 1
@@ -355,11 +356,17 @@ The GAMS `$149` error is "Uncontrolled set entered as constant" — an index app
 
 ### Changes
 
-_To be completed_
+Authored `docs/planning/EPIC_4/SPRINT_35/GANGES_149_PRODUCT_RULE_ANALYSIS.md`: reproduced `$149` live (ganges emit byte-identical to the golden), captured the offending `stat_pc(i)` line verbatim with the free `j` identified, hand-derived the correct cross-term (three emit forms + recommendation), localized the defect to a two-layer `file:line` hypothesis, compiled all seven cohort goldens for the per-model code×count catalog, and enumerated the 18-model prod-in-stationarity regression set. Verified Unknowns 4.3, 6.1, 6.2. All emits/compiles wrote to `/tmp`; the tree is untouched.
 
 ### Result
 
-_To be completed_
+**The `$149` root is a product-rule AD bug, and its blast is narrower than the carryforward claimed.** Differentiating `prod(j, (pc(j)/pc00(j))**ac(j,r))` w.r.t. `pc(i)` emits a derivative factor that references the product's bound `j` **outside** the `prod(j,…)` scope → `j` uncontrolled → **9 × `$149`, all on `stat_pc(i)`** (golden line 1002). Hand-derived correct form: **`prod(j,(pc(j)/pc00(j))**ac(j,r)) * ac(i,r)/pc(i)`** — `i` controlled, no free `j` (numerically cross-checked).
+
+**Two S34 corrections (the "verify per model" discipline firing again):**
+1. **`$149` is a code, not a root.** Only **ganges and gangesx** carry the product-rule `$149`; dinam/indus/turkpow/clearlak's `$149` markers are **unrelated constructs** (a `sameas` alias-sum, a raw data-assignment power term, a lag-KKT sum, a set/element assignment) sharing only the error number. The carryforward's "`$149` unblocks the `$149` half of six models" is **refuted** — the clean beneficiaries are ganges + gangesx only, so **the honest P4 `$149` target is +2, not six**.
+2. **The cohort is more multi-root than S34 recorded** — dinam `$140/$8/$37/$171/$141`; indus `$141`-dominated (×8); turkpow `$170/$171`-dominated; clearlak `$352`-dominated (**not `$171`** — S34 wrong); `$257`/`$300` are cascades. dinam/indus/turkpow/clearlak are **P6 residual**, not P4 `$149` beneficiaries.
+
+**Fix surface — the prior is refuted.** The carryforward/prep prior assumed `src/kkt/stationarity.py:_add_indexed_jacobian_terms`. The actual surface is the **AD layer**: `src/ad/derivative_rules.py:_diff_prod` (~3395, the #1330 `symbolic_name_match` collapsed branch that emits `expr * (body_deriv/body)` and delegates index-safety to the emitter) + `src/emit/expr_to_gams.py:collect_index_aliases` (:757, which renames a Prod bound only on domain/enclosing-binder collision, not on a sibling-factor reference — the failing link). Labelled a hypothesis with its evidence, per the standing lesson; recommend fixing at `_diff_prod` (rebind the derivative factor to the controlled index `i`). The distinguishing feature isolating ganges/gangesx is the **cross-index** case (prod over `j`, differentiate w.r.t. `pc(i)`, `j ≠ i`) — the 18 other prod-in-stationarity models that compile use the name-match case and are the regression set the P4 fix must not break (lmp2 explicitly). Two secondary artifacts on the same line (`ac(i+2,r)` offset; `** 1 /` precedence) are banked for Task 5.
 
 ### Verification
 
@@ -368,12 +375,13 @@ cd "$(git rev-parse --show-toplevel)"
 test -f docs/planning/EPIC_4/SPRINT_35/GANGES_149_PRODUCT_RULE_ANALYSIS.md && echo "analysis doc exists"
 # the hand-derived cross-term + the localized fix surface are recorded
 grep -icE 'prod\(|product rule|stat_pc|uncontrolled|free index|\$149' docs/planning/EPIC_4/SPRINT_35/GANGES_149_PRODUCT_RULE_ANALYSIS.md
-# the fix surface names a concrete file:line hypothesis
-grep -icE 'stationarity\.py|_add_indexed_jacobian_terms|index_mapping\.py' docs/planning/EPIC_4/SPRINT_35/GANGES_149_PRODUCT_RULE_ANALYSIS.md
+# the fix surface names a concrete file:line hypothesis (the AD layer — the prior's stationarity.py surface is REFUTED here)
+grep -icE 'derivative_rules\.py|_diff_prod|expr_to_gams\.py|collect_index_aliases' docs/planning/EPIC_4/SPRINT_35/GANGES_149_PRODUCT_RULE_ANALYSIS.md
 # the cohort catalog covers all seven models and marks residual roots
 grep -icE 'ganges|gangesx|dinam|indus|turkpow|clearlak|turkey|\$140|\$141|\$145|\$161|\$171' docs/planning/EPIC_4/SPRINT_35/GANGES_149_PRODUCT_RULE_ANALYSIS.md
-# the claimed fix surface exists in the tree
-grep -n 'def _add_indexed_jacobian_terms' src/kkt/stationarity.py
+# the claimed fix surfaces exist in the tree
+grep -n 'def _diff_prod' src/ad/derivative_rules.py
+grep -n 'def collect_index_aliases' src/emit/expr_to_gams.py
 ```
 
 ### Deliverables
@@ -388,14 +396,14 @@ grep -n 'def _add_indexed_jacobian_terms' src/kkt/stationarity.py
 
 ### Acceptance Criteria
 
-- [ ] `$149` reproduced live on ganges with the offending emit line captured verbatim
-- [ ] The correct cross-term hand-derived and written in a GAMS-emittable, fully-index-bound form
-- [ ] The fix surface localized to a `file:line` and labelled explicitly as a hypothesis with its evidence
-- [ ] All seven cohort models compiled and catalogued by distinct error code with counts
-- [ ] "Which models still fail after `$149`, and on what" answered per model (the multi-root discipline)
-- [ ] The blast-radius regression set enumerated for the P4 acceptance gate
-- [ ] Cross-referenced to `SPRINT_34/DAY11_PROGRESS_NOTES.md` + `SPRINT_34/SPRINT_35_CARRYFORWARDS.md` §4
-- [ ] Unknowns 4.3, 6.1, 6.2 verified and updated in `KNOWN_UNKNOWNS.md`
+- [x] `$149` reproduced live on ganges (byte-identical golden) with the offending `stat_pc(i)` line captured verbatim + the free `j` identified
+- [x] The correct cross-term hand-derived (`prod(…)*ac(i,r)/pc(i)`) in a fully-index-bound GAMS form, with three emit forms and a recommendation
+- [x] The fix surface localized to a **two-layer** `file:line` hypothesis (`_diff_prod` + `collect_index_aliases`), explicitly labelled + evidenced — **the prior's `stationarity.py` surface refuted**
+- [x] All seven cohort models compiled (`gams a=c`) and catalogued by distinct error code with counts
+- [x] "Which models still fail after `$149`, and on what" answered per model — **`$149` is a code not a root; only ganges/gangesx are product-rule beneficiaries**
+- [x] The blast-radius regression set enumerated (18 compiling prod-in-stationarity models, lmp2 flagged) for the P4 acceptance gate
+- [x] Cross-referenced to `SPRINT_34/DAY11_PROGRESS_NOTES.md` + `SPRINT_34/SPRINT_35_CARRYFORWARDS.md` §4 (both corrected)
+- [x] Unknowns 4.3, 6.1, 6.2 verified and updated in `KNOWN_UNKNOWNS.md` (6.1 ✅ **with the S34 impact framing corrected**)
 
 ---
 
