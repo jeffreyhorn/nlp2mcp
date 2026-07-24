@@ -198,7 +198,18 @@ Run `scripts/diagnostics/kkt_residual.py` on mine from the repo root and diff th
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Day-0-bucket aspect; the fingerprint aspect is Task 6's)
+**Verified by:** Task 2 (Day-0 bucket + emit stability) — Task 6 owns the residual decomposition
+**Date:** 2026-07-23
+
+**Findings (Task 2 — Day-0 bucket + emit stability):**
+- mine is `model_infeasible` (`model_status = 5`) at Day 0, a `verified_convex` candidate — the P1 bucket the head-offset dual subsystem targets (infeasible → MODEL STATUS 1 if the reconciliation cold-matches). Recomputed from the committed DB.
+- **mine's emit is byte-identical to the Sprint-34 Day-0 record**: md5 `a394cbc3dee15015aa099d7a84e0fa30`, reproduced under `PYTHONHASHSEED` ∈ {0,1,42}. This is the same md5 `SPRINT_34/BASELINE_METRICS.md` §2 recorded, so **the S34 P4 sense-aware bound-transfer did not perturb mine's cold emit** (P4 was MINIMIZE-byte-identical and mine's presolve golden was not among the 11 regenerated).
+- The 22-row breadth, the CASE_B `stat_x(3,1,1)` fingerprint (rel 2.37 / raw −32000 / dual CONSISTENT) and the +16000 gap are **not** re-measured here — they need the `kkt_residual.py` run and the residual decomposition, which are Task 6's primary work.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/BASELINE_METRICS.md` §3 (model_infeasible members), §2.4 (determinism ×3 + the md5 match vs S34 Day 0), §5 (mine provenance row).
+
+**Decision:** the Day-0 mine bucket and emit stability are confirmed, and the S34 P4 change is ruled out as a perturbation source; the fingerprint / 22-row / +16000 re-confirmation remains Task 6's (mine dual-architecture design).
 
 ---
 
@@ -527,7 +538,19 @@ Re-run fawley through the harness and a cold/presolve solve on the live tree wit
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Day-0-bucket aspect; the H-b aspect is Task 8's)
+**Verified by:** Task 2 (Day-0 bucket + emit stability) — Task 8 owns the H-b re-confirm
+**Date:** 2026-07-23
+
+**Findings (Task 2 — Day-0 bucket + emit stability):**
+- fawley is `model_infeasible` (`model_status = 5`) at Day 0, a `verified_convex` candidate — unchanged from the S34 close.
+- fawley's **cold** emit is byte-identical to the Sprint-34 Day-0 record: md5 `d2eb48f11bdd2b6743151490ca993e6f` under `PYTHONHASHSEED` ∈ {0,1,42}, matching the md5 in `SPRINT_34/BASELINE_METRICS.md` §2.
+- ⚠️ **But fawley's *warm* path did move.** `data/gamslib/mcp/fawley_mcp_presolve.gms` is one of the **11 presolve goldens regenerated** by the S34 Day-4 P4 commit `b71da11a` (the sense-aware `abs(var.m)` transfer, which now transfers fawley's `bq(cc-dist)` cell). So the MS-5 @ 4399.557 figure was measured **before** that change reached the warm start, and Task 8 must re-measure rather than inherit it.
+- The MS-5 @ 4399.557 / LP-opt 2899.25 / `max|stat_bq|` 473 → 18.468 figures are **not** re-measured here — they need the harness + solve runs that are Task 8's primary work.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/BASELINE_METRICS.md` §3 (model_infeasible members), §2.4 (determinism + md5 match), §5 (fawley provenance row), §1 (the 11 P4-regenerated goldens, incl. `fawley_mcp_presolve.gms`); `git diff --name-only 750803b2..78ceaead -- data/gamslib/mcp/`.
+
+**Decision:** the Day-0 fawley bucket and cold-emit stability are confirmed; **Task 8 must re-confirm the H-b figures against the post-P4 warm start**, not carry them forward from `SPRINT_34/DAY5_PROGRESS_NOTES.md` unchecked. This is a sharpened requirement Task 2 surfaced.
 
 ---
 
@@ -696,7 +719,18 @@ Per model, independently: emit → compile → count residual `$NNN` by code →
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔍 **Status:** PARTIALLY VERIFIED — Day-0 provenance confirmed (Task 2); **the recovery verdict remains OPEN** (Task 5)
+**Verified by:** Task 2 (Day-0 provenance only)
+**Date:** 2026-07-23
+
+**Findings (Task 2 — Day-0 provenance):**
+- ganges and gangesx are **both** `path_syntax_error` at Day 0, both `likely_convex` candidates, both with `mcp_solve.model_status = None` (neither ever reached a solve). Both translate successfully — the failure is at the GAMS compile of the emitted MCP, not at translation.
+- Both are members of the 7-model `path_syntax_error` bucket (`clearlak`, `dinam`, `ganges`, `gangesx`, `indus`, `turkey`, `turkpow`), unchanged from the S34 close.
+- Their identical NLP objective (6395.5444) and apparently identical root sets are **recorded but NOT treated as evidence of a shared fate** — that inference is exactly what Sprint 34's prep got wrong.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/BASELINE_METRICS.md` §3 (path_syntax_error members), §5 (ganges/gangesx provenance rows).
+
+**Decision:** the Day-0 provenance is confirmed, but **the substantive question — whether `$141` + `$145` + `$149` together are *sufficient* for each model, verified independently — is unanswerable from the DB and stays OPEN for Task 5** (design) and the in-sprint P4 execution (the per-model emit → compile → solve → bucket → match protocol). Marked PARTIALLY VERIFIED rather than ✅ deliberately: this is the assumption S34 got wrong, and a Day-0 bucket read is not evidence for it.
 
 ---
 
@@ -1028,7 +1062,20 @@ Recompute the PR25 split from the committed `data/gamslib/gamslib_status.json`; 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (primary)
+**Date:** 2026-07-23
+
+**Findings:**
+- **PR25 genuine-floor anchor = 75**, reproduced from the committed DB rather than asserted. The all-219 Match 96 splits **63 cold** (`model_optimal`) + **33 presolve** (`model_optimal_presolve`); the 21 methodology members are all presolve matches, so 33 − 21 = **12 genuine-presolve**, and 63 + 12 = **75**. ✓ Both sets are enumerated in `BASELINE_METRICS.md` §4.1 (methodology 21: cpack/etamac/harker/himmel16/irscge/like/lrgcge/marco/markov/mathopt1/mathopt3/mathopt4/mingamma/moncge/paperco/qsambal/sambal/stdcge/tforss/weapons/worst; genuine-presolve 12: bearing/camshape/catmix/cclinpts/launch/maxmin/polygon/ps2_f_s/ps2_s/ps3_s_gic/robert/robustlp). The 21-member set matches the S31/S32/S33 enumeration exactly (their named list plus `mathopt3`, covered there as "+ residue").
+- **The Day-0 code anchor MUST advance to the S34-close SHA `78ceaead`** — confirmed with the mechanism, not just the claim. Between `750803b2` and `78ceaead` there is exactly **one `src/` commit** (`b71da11a`, "Sprint 34 Day 4 (P4): sense-aware bound-transfer sign (Option B)") plus **11 regenerated presolve goldens** (agreste, camshape, cclinpts, fawley, korcge, otpop, polygon, ps2_f_s, ps2_s, ps3_s_gic, rocket), while `git diff --quiet 750803b2..HEAD -- data/gamslib/gamslib_status.json` is **clean** (the DB's last modifying commit is still `1568a531`, the S33 Day-11 sample fix). So the DB may be reused byte-for-byte, but re-using `750803b2` as the checkpoint anchor would re-flag those 11 P4 goldens on every checkpoint.
+- **The anchor-derivation pattern itself needed correcting.** The S33 close merge body ended with the literal `SPRINT 33 CLOSED`; the S34 close merge does **not** contain "SPRINT 34 CLOSED" (subject `Merge pull request #1602 from jeffreyhorn/planning/sprint34-day13-close`, body "Sprint 34 Day 13: Final retest + CLOSE — …"). The bumped-number pattern returns **empty**, and an empty rev makes `git diff --quiet "$S34"..HEAD` degenerate to `HEAD..HEAD` and pass **vacuously**. The corrected derivation matches the branch slug or closeout text case-insensitively with a non-empty guard (`BASELINE_METRICS.md` §2.1) and resolves `78ceaead`.
+- **Day-0 gate GO:** `run_full_test.py --resolve-changed --since-commit 78ceaead --dry-run` → "GO: no emit goldens changed since 78ceaead" (0 changed). `git diff --quiet 78ceaead..HEAD -- src/ scripts/` clean → the committed DB is reused with no fresh retest. DB md5 `6166acab90dcaff8789255f8ada83c54`.
+- **Determinism ✅ ×3** `{0,1,42}` on mine / fawley / sample, every md5 **also matching the S34 Day-0 record** — independent confirmation of zero emit drift across the whole of Sprint 34 for those models.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/BASELINE_METRICS.md` §§1, 2.1–2.4, 3, 4.1–4.2; `git log --first-parent 750803b2..78ceaead -- src/`; `git diff --name-only 750803b2..78ceaead -- data/gamslib/mcp/`; the `--dry-run` GO output.
+
+**Decision:** Sprint-35 Day 0 = the Sprint-34 close (Solve 108 / Match 93 / genuine floor 75 / mi 7 / pse 7 / Translate 135 / Parse 142 / all-219 96), with the code anchor pinned at **`78ceaead`** and `750803b2` explicitly retired as historical. The → ≥ 76 conversion map (§4.2) names **P4 ganges/gangesx as the firmest cold-emit contributor**, with P1 mine conditional and P3 fawley contingent under H-b; camcge is excluded as Epic-5-scoped.
 
 ---
 
