@@ -324,6 +324,8 @@ Sprint planning
 
 ---
 
+# Category 2: sarf #1385 — Symbolic-Emit Subsystem
+
 ## Unknown 2.1: Are S1/S2/S3 the complete set of enumeration sites?
 
 ### Priority
@@ -352,9 +354,21 @@ Instrument a sarf emit attempt (recursion limit 50000) with counters at each can
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 7 (primary)
+**Date:** 2026-07-24
+
+**Findings:**
+- The three enumeration sites are re-confirmed **live** and are the complete set: **S1** the per-column constraint diff (`src/ad/constraint_jacobian.py:1002–1013`, differentiating `acost3.. cost = sum((g,t,m,n)$taskposs, oc·task)` against each `task` column); **S2** `enumerate_variable_instances` (`src/ad/index_mapping.py:327`), called from `build_index_mapping` (`:634` → `col_to_var`) and `_precompute_variable_instances` (`constraint_jacobian.py:78`); **S3** `stat_task(g,t,m,n)` materialization in `src/kkt/stationarity.py`.
+- **No fourth materialization site.** The objective-gradient (`gradient.py:287/453`) and complementarity (`complementarity.py:367/512`) call sites also enumerate `task`, but they *consume* the same column set — they are additional consumers, not new loci (this is why the corpus-safety surface is 6 call sites, Unknown 2.3). The only blow-up gate that exists is the **equation**-level `_is_blowup_dynamic_subset_equation` (`index_mapping.py:402`); there is no variable-level gate.
+- **Counts re-verified:** g = 16, t = 24, mn = 31 → `task(g,t,mn,mn)` = **16·24·31·31 = 369,024** declared; active `taskposs∧tech` = **398** (both runtime-computed, not statically enumerable).
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/SARF_SYMBOLIC_EMIT_DESIGN.md` §1; the live source loci; `data/gamslib/raw/sarf.gms` (`:394` task decl, `:371` taskposs, `:454` acost3).
+
+**Decision:** three sites, complete; the fix must be atomic across S1/S2/S3 (Unknown 2.2).
 
 ---
+
 
 ## Unknown 2.2: Does the symbolic re-emit land at O(active = 398) rather than O(369K)?
 
@@ -385,9 +399,21 @@ Pin the measurement method first (a timed emit of `sarf_mcp.gms` from a clean tr
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (baseline measured); the post-change timing is DESIGN-SPECIFIED (in-sprint)
+**Verified by:** Task 7 (primary)
+**Date:** 2026-07-24
+
+**Findings:**
+- **Measured the current emit wall-clock: > 303 s and NON-TERMINATING.** `.venv/bin/python -m src.cli data/gamslib/raw/sarf.gms` was killed at a 300 s cap with **no output produced** — the O(369K) cost, stronger than the design's ">75 s" and consistent with the pipeline `translate_failure` (the 600 s harness timeout). The emit log shows the loop walking the full Cartesian with `UserWarning: … taskposs/equipposs cannot be evaluated statically … Including unevaluable instances by default` — the runtime-gated conditions can't prune at compile time.
+- **Pass threshold specified:** single-digit seconds (O(active = 398) / O(constraints); the srpchase ~2.9 s reference). Measurement method pinned (`/usr/bin/time -p … -o sarf_mcp.gms`, `real` seconds, clean tree).
+- **Partial-improvement pre-classification (PR20):** an improvement that does not cross the threshold (e.g. 303 s → 90 s but still failing) is a **REPLAN, not progress** — no "faster but still failing" partial credit.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/SARF_SYMBOLIC_EMIT_DESIGN.md` §6; the timed emit (killed at 300 s, no output); the emit log's static-unevaluability warnings.
+
+**Decision:** the baseline (> 303 s) is the O(369K) tractability gap; the post-change O(active) figure is an in-sprint executed result (DESIGN-SPECIFIED). The gate is Task 10's Phase-0 item.
 
 ---
+
 
 ## Unknown 2.3: Can `enumerate_variable_instances` gain a symbolic-column concept without perturbing the other 141 models?
 
@@ -418,9 +444,21 @@ Read `src/ad/index_mapping.py` (`enumerate_variable_instances`, `build_index_map
 Development team (AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 7 (primary)
+**Date:** 2026-07-24
+
+**Findings:**
+- **The symbolic-column concept** is designed: `task` presents as a single guarded domain expression `(domain=(g,t,m,n), guard=taskposs∧tech)` with **one** `col_to_var` entry instead of 369,024, never expanded; its cross-terms come parametrically (Unknown 2.4) and GAMS instantiates the 398 live rows from the emitted guard.
+- **The corpus-safety argument is explicit.** All **6** `enumerate_variable_instances` call sites enumerated (the complete surface): `index_mapping.py:634` (build_index_mapping / col_to_var), `constraint_jacobian.py:78` (_precompute_variable_instances / S1), `gradient.py:287` & `:453` (objective gradient), `complementarity.py:367` & `:512` (complementarity). The change is a **branch gated on a runtime-blow-up predicate** (a variable whose declared Cartesian is large *and* whose active subset is a runtime-computed guard the emit can't statically prune) — **sarf-only by construction**, so on the 141 other models the predicate is false for every variable and all 6 sites execute the **unchanged** enumeration path, keeping their `col_to_var` byte-identical and determinism (PR12) preserved.
+- **Residual risk:** the predicate must be *provably* false on all 141 models — "at the harness level" is not "byte-proven." That proof is the full-corpus regression harness (141 byte-identical goldens + determinism ×3, §7), which is why the design is **not landable without it**.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/SARF_SYMBOLIC_EMIT_DESIGN.md` §§2–3, §7; the live 6-call-site enumeration (`grep enumerate_variable_instances src/`).
+
+**Decision:** corpus-safe by a sarf-only-by-construction predicate; the 141-byte-identical-golden harness is the shippability gate (Task 10).
 
 ---
+
 
 ## Unknown 2.4: Is the banked 7-term `stat_task` derivation complete and fully index-bound?
 
@@ -450,9 +488,21 @@ Re-derive the `stat_task` cross-terms from `data/gamslib/raw/sarf.gms` by hand a
 Development team (AD specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (no term failed re-derivation)
+**Verified by:** Task 7 (primary)
+**Date:** 2026-07-24
+
+**Findings:**
+- The parametric cross-term path is designed against the banked S33 **7-term `stat_task`**, re-verified **term-for-term** against the `sarf.gms` constraint bodies: [1]–[2] `tbal` (`:426`) with the `tadj` harvest-c adjustment (`:424/:428`); [3] labor balance (`:439`); [4]–[5] `equipb1`/`equipb2` (`:412–413`); [6] `acost3` (`:454`, the S1 parametric ∂ → `oc(g,m,n)·nu_acost3`); [7] `task.lo = 0`. **No term failed re-derivation** — the banked form is correct as written.
+- **Every multiplier is over the stat equation's own domain** (`nu_tbal(g,t)`, `lam_labor(t)`, `lam_equipb1(m,t)`, `lam_equipb2(n,t)`, `nu_acost3`, `piL_task(g,t,m,n)`) with **no set-name-literal (quoted-set-name) indices** — the guard against the reverted Sprint-26 `243fe578` `nu_slack("srn")` anti-pattern. The compile-clean scan `grep -E 'nu_[[:alnum:]_]+\("|lam_[[:alnum:]_]+\("' sarf_mcp.gms` must return nothing.
+- A silently-wrong `stat_task` is the worst failure mode on this track (KPI moves while correctness regresses, uncaught by the timing gate), so the 7-term re-derivation is the correctness anchor; the fix surface (S1/S2/S3 short-circuits + the parametric path in `stationarity.py`) is a hypothesis to re-trace at implementation.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/SARF_SYMBOLIC_EMIT_DESIGN.md` §4; `SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md` §3.1; `data/gamslib/raw/sarf.gms` constraint bodies.
+
+**Decision:** the 7-term derivation is the parametric path's correctness target; the anti-pattern scan is the structural guard (Task 10 gate).
 
 ---
+
 
 ## Unknown 2.5: Does the guarded emit plus the `task.fx` companion yield exactly the 398 live rows?
 
@@ -482,7 +532,17 @@ After the symbolic emit exists, compile `sarf_mcp.gms` and read the GAMS row/col
 Development team (AD/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 7 (primary)
+**Date:** 2026-07-24
+
+**Findings:**
+- The guarded emit `stat_task(g,t,m,n)$taskposs(g,t)` (with per-term `$tech`/`$equipposs`/`sameas` guards) + `task.fx(...)$(not (taskposs(g,t) and tech(g,m,n))) = 0` yields exactly the **398** live rows: the `$(not active)` fixing guard **exactly complements** the `$taskposs∧$tech`-active set, so the square-system count is `variables − fixed = active = 398`; the fixed columns' `stat_task` rows drop under MCP matching (the mine non-`d` precedent). Landing check: compile `sarf_mcp.gms`, assert exactly 398 `stat_task` rows + a square MCP.
+- The full-corpus regression harness (§7) is specified: atomic landing; 141 byte-identical goldens (`--resolve-changed --since-commit 78ceaead` reporting sarf as the only changed golden); determinism ×3 `{0,1,42}`; the 7-term + anti-pattern scan; a **shape13** property fixture (a synthetic runtime-gated multi-dim variable, fail-before/pass-after — the P7 catalog entry).
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/SARF_SYMBOLIC_EMIT_DESIGN.md` §5, §7.
+
+**Decision:** the guarded emit + `task.fx` produce exactly 398 rows; the harness is the shippability gate. In-sprint disposition: **DEFER** (design complete, foundational/atomic/lowest-leverage; budget → P4).
 
 ---
 
@@ -908,6 +968,8 @@ Development team
 **Decision: P6, not P4.** Folding turkey into P4 would conflate two unrelated efforts and dilute the P4 gate. It is a bounded, standalone P6 item (quote dotted-tuple set elements consistently in the set-declaration emit) with its own `--resolve-changed` gate; a recovery would be +1 Solve on the P6 track.
 
 ---
+
+# Category 5: camcge Walras (Epic 5) + rocket PATH Submission
 
 ## Unknown 5.1: Does the full dual-consistent Walras redefinition reach MS-1 in a `/tmp` prototype?
 

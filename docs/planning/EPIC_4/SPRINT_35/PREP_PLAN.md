@@ -590,7 +590,8 @@ grep -rn 'head_domain_offsets' src/ir/*.py | head -3
 
 ## Task 7: sarf Symbolic/Parametric Emit-Mode Re-Architecture Design (Priority 2 foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-24
 **Priority:** High
 **Estimated Time:** 5–7 hours
 **Deadline:** Before Sprint 35 Day 1
@@ -624,11 +625,15 @@ P2 is the second-largest budget line (20–28h) for the **lowest-leverage** buck
 
 ### Changes
 
-_To be completed_
+Authored `docs/planning/EPIC_4/SPRINT_35/SARF_SYMBOLIC_EMIT_DESIGN.md`: re-confirmed the three enumeration sites + counts live, **measured** the current emit wall-clock, designed the symbolic-column concept, made the corpus-safety argument explicit across all 6 `enumerate_variable_instances` call sites, re-verified the banked 7-term `stat_task` term-for-term, specified the guarded emit / 398 rows + the tractability gate + the full-corpus regression harness, and returned the in-sprint DEFER disposition. Verified Unknowns 2.1–2.5 (all ✅; 2.2 baseline measured, post-change DESIGN-SPECIFIED). Only measured — no `src/` edits.
 
 ### Result
 
-_To be completed_
+**Design complete and shippable-to-a-dedicated-effort; in-sprint disposition DEFER (the fourth consecutive scope/risk deferral).** sarf's `task(g,t,mn,mn)` declares **369,024 = 16·24·31·31** columns (398 active, both runtime-gated); the emit materializes all 369K at three sites (S1 `constraint_jacobian.py:1002–1013`, S2 `enumerate_variable_instances`, S3 `stationarity.py`) and — **measured this task — the current emit runs > 303 s without terminating** (killed at a 300 s cap, no output; the O(369K) cost, consistent with `translate_failure`).
+
+**What this task added over the banked S33 design:** (1) the **measured** tractability baseline (> 303 s, stronger than the design's ">75 s"); (2) the **explicit corpus-safety argument** — all **6** `enumerate_variable_instances` call sites enumerated (`index_mapping.py:634`, `constraint_jacobian.py:78`, `gradient.py:287/453`, `complementarity.py:367/512`), with the symbolic-column change designed as a **branch gated on a runtime-blow-up predicate that is sarf-only by construction**, so the 141 byte-stable models traverse unchanged code with determinism preserved; (3) the **full-corpus regression harness** (141 byte-identical goldens + determinism ×3) that must *prove* the predicate is sarf-only. The banked 7-term `stat_task` re-verified term-for-term (no term failed); the guarded emit + `task.fx$(not active)` yield exactly 398 rows.
+
+**In-sprint DEFER** because the risk/reward is unchanged from S32/S33/S34: a 20–28 h from-scratch re-architecture of the foundational AD column-index → Jacobian → gradient → stationarity flow (all 142 models, atomic, no safe partial) for the **lowest-leverage KPI** (+1 Translate, moving neither Solve nor Match). With P1 (mine) also REPLAN'd in prep (Task 6), the freed budget (P1 18–24 h + P2 20–28 h) is best concentrated on **P4** (the designated bucket mover) + P6/P7. The de-risked hand-off is the complete spec; no `src/` ships. Handed to Task 10 (the O(active) + 141-golden gates), Task 11 (P2 = +1 Translate if landed, but DEFER'd), Task 12 (no in-sprint slot; freed budget front-loads P4).
 
 ### Verification
 
@@ -660,16 +665,16 @@ grep -n 'def enumerate_variable_instances' src/ad/index_mapping.py
 
 ### Acceptance Criteria
 
-- [ ] The three sites re-confirmed (or corrected) with the Cartesian and active counts re-verified
-- [ ] The symbolic-column concept designed, including the `col_to_var` representation
-- [ ] The corpus-safety argument made explicitly for the other 141 models, with determinism preserved
-- [ ] The parametric cross-term path designed and checked against the banked 7-term derivation
-- [ ] The guarded emit specified and argued to produce exactly the 398 live rows
-- [ ] The tractability gate quantified (seconds, not > 75s) with a pinned measurement method
-- [ ] The full-corpus regression harness specified (atomic, byte-stable, determinism ×3, `--resolve-changed`)
-- [ ] A REPLAN exit named (4th site / determinism break / golden churn / re-triggered timeout) with the freed-budget target
-- [ ] Cross-referenced to `SPRINT_34/DAY6_PROGRESS_NOTES.md`, `SPRINT_34/SARF_EMIT_MODE_DESIGN.md`, `SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md`, `docs/research/multidimensional_indexing.md`
-- [ ] Unknowns 2.1, 2.2, 2.3, 2.4, 2.5 verified and updated in `KNOWN_UNKNOWNS.md`
+- [x] The three sites re-confirmed live (S1 `constraint_jacobian.py:1002–1013`, S2 `enumerate_variable_instances`, S3 `stationarity.py`) with 369,024 = 16·24·31·31 / 398 active re-verified
+- [x] The symbolic-column concept designed (a guarded domain expression, one `col_to_var` entry)
+- [x] The corpus-safety argument made explicitly for the other 141 models — **all 6 call sites enumerated**, the symbolic branch sarf-only-by-construction, determinism preserved
+- [x] The parametric cross-term path designed and checked against the banked 7-term derivation (re-verified term-for-term; no term failed)
+- [x] The guarded emit specified and argued to produce exactly the 398 live rows (`$(not active)` fixing complements the active set)
+- [x] The tractability gate quantified — **measured baseline > 303 s non-terminating**; threshold single-digit seconds; a pinned measurement method + partial-improvement-is-REPLAN
+- [x] The full-corpus regression harness specified (atomic, 141 byte-identical goldens, determinism ×3, `--resolve-changed`)
+- [x] A REPLAN exit named (4th site / determinism break / golden churn / re-triggered timeout) with the freed-budget target (→ P4/P6/P7); in-sprint disposition **DEFER**
+- [x] Cross-referenced to `SPRINT_34/DAY6_PROGRESS_NOTES.md`, `SPRINT_34/SARF_EMIT_MODE_DESIGN.md`, `SPRINT_33/SARF_EMIT_SUBSYSTEM_DESIGN.md`, `docs/research/multidimensional_indexing.md`
+- [x] Unknowns 2.1, 2.2, 2.3, 2.4, 2.5 verified and updated in `KNOWN_UNKNOWNS.md`
 
 ---
 
