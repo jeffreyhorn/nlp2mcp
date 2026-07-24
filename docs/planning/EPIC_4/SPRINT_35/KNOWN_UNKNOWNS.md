@@ -324,6 +324,8 @@ Sprint planning
 
 ---
 
+# Category 2: sarf #1385 — Symbolic-Emit Subsystem
+
 ## Unknown 2.1: Are S1/S2/S3 the complete set of enumeration sites?
 
 ### Priority
@@ -544,6 +546,7 @@ Development team (AD/emit specialist)
 
 ---
 
+# Category 3: fawley #1111/#1112 — Constraint-Index-Diagonal Correction + Forcing
 
 ## Unknown 3.1: Does the constraint-index-diagonal guard drive `max|stat_bq|` to 0, not merely to 18.468?
 
@@ -965,6 +968,8 @@ Development team
 **Decision: P6, not P4.** Folding turkey into P4 would conflate two unrelated efforts and dilute the P4 gate. It is a bounded, standalone P6 item (quote dotted-tuple set elements consistently in the set-declaration emit) with its own `--resolve-changed` gate; a recovery would be +1 Solve on the P6 track.
 
 ---
+
+# Category 5: camcge Walras (Epic 5) + rocket PATH Submission
 
 ## Unknown 5.1: Does the full dual-consistent Walras redefinition reach MS-1 in a `/tmp` prototype?
 
