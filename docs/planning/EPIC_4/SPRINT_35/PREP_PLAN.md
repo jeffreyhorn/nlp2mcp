@@ -680,7 +680,8 @@ grep -n 'def enumerate_variable_instances' src/ad/index_mapping.py
 
 ## Task 8: fawley Constraint-Index-Diagonal Correction + Forcing Hand-Off Design (Priority 3 foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-24
 **Priority:** High
 **Estimated Time:** 4–6 hours
 **Deadline:** Before Sprint 35 Day 1
@@ -714,11 +715,17 @@ P3 is the clearest example in the sprint of a **genuine correctness fix whose bu
 
 ### Changes
 
-_To be completed_
+Authored `docs/planning/EPIC_4/SPRINT_35/FAWLEY_DIAGONAL_DESIGN.md`: re-measured the gap + H-b figures live (Task 2's requirement — the P4 change moved fawley's MAXIMIZE warm point), characterized the constraint-index diagonal as a predicate distinguished from #1049, designed the leak-free guard + placement + precedence + the 2-D-cohort harness, specified the `/tmp` control + the fawley fixture, spelled out the forcing hand-off, and named the gate-leak REPLAN exit. Verified Unknowns 3.1 (baseline ✅ / closure DESIGN-SPECIFIED), 3.2, 3.4 (✅); appended the Task-8 H-b addendum to 3.3 (Task 2 block preserved). Harness only — no `src/` edits.
 
 ### Result
 
-_To be completed_
+**A genuine, shippable correctness fix — but 0 in-sprint bucket (H-b), on high-blast-radius shared machinery.** The design keeps the two things separate: (1) the constraint-index-diagonal `sameas` correction that drives `max|stat_bq| → 0`; (2) the +Solve, which is **not** a P3 deliverable (H-b).
+
+**The gap re-confirmed live** (`kkt_residual.py fawley.gms` → CASE_B, `stat_bq(res-arab-l,fuel-oil)` rel 0.973 / raw 473, dual scale 486 — identical to S34): the `qsb`/`pbal` terms in `stat_bq(c,cf)` over-sum `cfq__` (missing the `$(sameas(cfq__,cf))` the `mbal` term carries). The **constraint-index diagonal** (the constraint's own summed index in the variable's stat position) is distinct from #1049 (variable-heavier orientation, `:7176`) and #1110/#1111 (variable-index diagonal); the fix lands in `_add_indexed_jacobian_terms` (`:5861`, ~1430 lines, shared with cesam2/camcge/ps2/ps3/polygon).
+
+**The re-measurement finding (Task 2 required it):** the stat_bq gap is unchanged, but the **max-residual row is now `stat_trans(tr-2)` (rel 1.00 / raw −488)** — and `stat_trans` is **emit-correct** (`sum(c, at(c,tr)*nu_mbal(c))`, no over-sum), so its residual is a **genuine non-emit divergence** that **strengthens H-b** (fawley is MAXIMIZE, so the P4 sense-aware transfer is in its warm path; the emit-correct row failing at the warm point confirms the divergence is non-emit) and **scopes the P3 gate to `max|stat_bq|`**, not the harness's global max.
+
+**Disposition:** the correctness fix is landable **if** the `/tmp` control reaches `max|stat_bq| → 0` (post-P4 the 18.468 cc-dist residue is expected already handled, so → 0, not the 96% partial) **and** the 2-D cohort (cesam2/camcge/ps2_f_s/ps2_s/ps3_s_gic/polygon) + mbal + the 1-D core stay byte-identical. But it moves **0 bucket** (H-b: MS-5 @ 4399.557 vs LP opt 2899.25), so it is a low-priority correctness-only landing — the +1 floor is contingent on P5 forcing, and with P1 (Task 6) and P2 (Task 7) also REPLAN'd/DEFER'd, the freed budget concentrates on **P4**. Gate-leak REPLAN exit named. Handed to Task 10 (the `/tmp` + byte-identity gates), Task 9 (fawley +Solve → `--force` survey), Task 11 (P3 = 0 in-sprint bucket, floor forcing-contingent).
 
 ### Verification
 
@@ -750,16 +757,16 @@ grep -n 'sameas' data/gamslib/mcp/fawley_mcp.gms | head -5
 
 ### Acceptance Criteria
 
-- [ ] The gap and the H-b finding re-confirmed with their exact figures
-- [ ] The constraint-index diagonal characterized as a predicate and distinguished from #1049
-- [ ] The guard placement designed with a precedence argument against each existing `sameas` path
-- [ ] The leak-free requirement stated operationally (no mbal change; 1-D core byte-identical) with the regression cohort enumerated
-- [ ] The pre-`src/` `/tmp` control specified (`max|stat_bq| → 0`, not 96%; `modelstat` asserted)
-- [ ] The fawley 2-D fixture designed as fail-before/pass-after
-- [ ] The forcing hand-off specified and the +Solve explicitly excluded from P3's in-sprint scope (H-b)
-- [ ] A REPLAN exit named (gate leak / residual not reaching 0) with the freed-budget target
-- [ ] Cross-referenced to `SPRINT_34/DAY5_PROGRESS_NOTES.md`, `SPRINT_34/FAWLEY_CORRECTION_FORCING_DESIGN.md` §6, `SPRINT_33/FAWLEY_SECOND_INDEX_DESIGN.md`
-- [ ] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in `KNOWN_UNKNOWNS.md`
+- [x] The gap and the H-b finding re-confirmed **live** with their exact figures (stat_bq 0.973/473, dual scale 486; MS-5 @ 4399.557 / LP opt 2899.25) — **re-measured, not inherited** (Task 2's requirement); the NEW emit-correct `stat_trans(tr-2)` residual strengthens H-b
+- [x] The constraint-index diagonal characterized as a predicate and distinguished from #1049 (`:7176`, variable-heavier) and #1110/#1111 (variable-index diagonal)
+- [x] The guard placement designed (in `_add_indexed_jacobian_terms:5861`) with a precedence argument against each existing `sameas` path
+- [x] The leak-free requirement stated operationally (no mbal change; 1-D core byte-identical) with the 2-D regression cohort enumerated (cesam2/camcge/ps2_f_s/ps2_s/ps3_s_gic/polygon)
+- [x] The pre-`src/` `/tmp` control specified (`max|stat_bq| → 0`, **not** the 96% partial; scoped to stat_bq not the global max; `modelstat` asserted) — closure DESIGN-SPECIFIED
+- [x] The fawley 2-D fixture designed as fail-before/pass-after (P7 catalog)
+- [x] The forcing hand-off specified and the +Solve explicitly **excluded** from P3's in-sprint scope (H-b; +1 floor forcing-contingent)
+- [x] A REPLAN exit named (gate leak / residual not reaching 0) with the freed-budget target (→ P4)
+- [x] Cross-referenced to `SPRINT_34/DAY5_PROGRESS_NOTES.md`, `SPRINT_34/FAWLEY_CORRECTION_FORCING_DESIGN.md` §6, `SPRINT_33/FAWLEY_SECOND_INDEX_DESIGN.md`
+- [x] Unknowns 3.1, 3.2, 3.4 verified (✅); 3.3 H-b addendum appended (Task 2 block preserved) in `KNOWN_UNKNOWNS.md`
 
 ---
 
