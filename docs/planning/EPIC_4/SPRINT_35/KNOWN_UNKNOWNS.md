@@ -577,9 +577,20 @@ A pre-`src/` `/tmp` control: apply the diagonal guard to fawley's emitted MCP by
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (baseline); DESIGN-SPECIFIED (the "→ 0" closure)
+**Verified by:** Task 8 (primary)
+**Date:** 2026-07-24
+
+**Findings:**
+- **The `stat_bq` over-sum gap is re-confirmed live.** `kkt_residual.py fawley.gms` → CASE_B, dual scale 486, dual transfer CONSISTENT, `stat_bq(res-arab-l,fuel-oil)` rel **0.973** / raw **473** — identical to the S34 figures. The `qsb`/`pbal` cross-terms in `stat_bq(c,cf)` (`fawley_mcp.gms:238`) sum over `cfq__` **without** the diagonal `$(sameas(cfq__,cf))` the `mbal` term carries; since `bq`'s second index `cf` = the constraint's own index `cfq`, `∂qsb(cfq,·)/∂bq(c,cf)` is nonzero only on `cfq=cf` → the over-sum.
+- **The `/tmp` control target is `max|stat_bq| → 0`** (machine zero), **not** the 96% partial (473 → 18.468). Post-P4 the 18.468 residue was the cc-dist bound-transfer cell (shipped S34 Day 4), so on the current tree the `sameas` fix alone is expected to reach 0 — the executed `/tmp` control verifies this (DESIGN-SPECIFIED; `modelstat` asserted). The gate is scoped to `max|stat_bq|`, **not** the harness's global max residual (which retains the emit-correct `stat_trans` non-emit residual, Unknown 3.3).
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/FAWLEY_DIAGONAL_DESIGN.md` §1, §5; the live `kkt_residual.py fawley.gms` (CASE_B, stat_bq 0.973/473); `fawley_mcp.gms:238`.
+
+**Decision:** the emit gap is intact and P3-fixable; the `→ 0` closure is the in-sprint `/tmp` gate (Task 10).
 
 ---
+
 
 ## Unknown 3.2: Is the guard leak-free against mbal, the 1-D core, and the 2-D cohort?
 
@@ -609,9 +620,21 @@ Read `_add_indexed_jacobian_terms` and map every `sameas` path; construct the pr
 Development team (KKT/emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 8 (primary)
+**Date:** 2026-07-24
+
+**Findings:**
+- **The constraint-index diagonal is characterized as a predicate:** a Jacobian cross-term where the constraint's **own** (summed) domain index occupies the **variable's non-summed (stat) index position**, requiring `$(sameas(<summed-constraint-index>, <variable-stat-index>))`. For fawley: qsb `nu_qsb(cfq__,l,s)`, variable `bq(c,cf)`, `cfq__` summed while occupying `cf`'s position → guard `$(sameas(cfq__,cf))`.
+- **Distinguished from the existing guards:** **#1049** (`src/kkt/stationarity.py:7176`, `len(var_domain) > len(mult_domain)`) fires on the **variable-heavier** orientation — qsb is constraint-heavier (3-D constraint, 2-D var), the **opposite**, so #1049 does not co-fire; **#1110/#1111** (`_get_or_create_fresh_alias:4496`) handle the **variable-index** diagonal (the mbal term, already guarded), not the constraint-index diagonal. The new predicate keys on a **constraint** domain index in the variable's stat position, so it leaves the mbal (variable-summed) term untouched.
+- **Guard placement + precedence** designed (in `_add_indexed_jacobian_terms:5861`, after the #1049 check, disjoint from #1110/#1111; #1104's alias machinery preserved) with a precedence argument against each of the dozen `sameas` paths (the leak risk); **leak-free requirement operational** (no mbal term change; 1-D core polygon/ps2_s/ps3_s_gic byte-identical); **2-D-cohort regression harness** = cesam2/camcge/ps2_f_s/ps2_s/ps3_s_gic/polygon byte-identical + `--resolve-changed --since-commit 78ceaead` reporting fawley as the only changed golden + determinism ×3. The fix surface is a labelled hypothesis (PR24).
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/FAWLEY_DIAGONAL_DESIGN.md` §§2–4, §6; `src/kkt/stationarity.py:5861` (`_add_indexed_jacobian_terms`), `:7176` (#1049), `:4496` (`_get_or_create_fresh_alias`); the 6 cohort goldens present on the tree.
+
+**Decision:** the predicate + guard + harness are specified; a leak-free landing is the gate (Task 10). Any mbal/cohort change = the gate-leak REPLAN exit (Unknown 3.4 / §8).
 
 ---
+
 
 ## Unknown 3.3: Is fawley's H-b finding still exact — MS-5 @ 4399.557 with the warm residual closed?
 
@@ -656,7 +679,10 @@ Development team
 
 **Decision:** the Day-0 fawley bucket and cold-emit stability are confirmed; **Task 8 must re-confirm the H-b figures against the post-P4 warm start**, not carry them forward from `SPRINT_34/DAY5_PROGRESS_NOTES.md` unchecked. This is a sharpened requirement Task 2 surfaced.
 
+**Task-8 addendum (2026-07-24) — H-b re-confirmed live and STRENGTHENED (Task 2 required the re-measurement).** Because the S34 P4 change regenerated `fawley_mcp_presolve.gms` and fawley is **MAXIMIZE** (so P4's sense-aware `abs(var.m)` transfer is in its warm path), the H-b figures were re-measured, not inherited. Result: the **stat_bq gap is unchanged** (rel 0.973 / raw 473, dual scale 486, CASE_B, CONSISTENT), but the **max-residual row is now `stat_trans(tr-2)` (rel 1.00 / raw −488)** — a row S34 did not report. `stat_trans(tr).. sum(c, at(c,tr)*nu_mbal(c)) - piL_trans(tr)` is **emit-correct** (a clean `∂mbal/∂trans` cross-term), so its residual is a **genuine non-emit divergence** — which **strengthens H-b** (the warm KKT point fails even emit-correct rows, likely a P4-moved-warm-point effect on a degenerate infeasible solve) and **scopes the P3 gate to `max|stat_bq|`**, not the global max residual. fawley still solves MS-5 @ 4399.557 (LP opt 2899.25) with the residual closed → the +Solve is non-emit → P5 forcing. H-b aspect ✅ VERIFIED (Task 8).
+
 ---
+
 
 ## Unknown 3.4: Does the correction lift the genuine floor — i.e. does fawley cold-match?
 
@@ -687,9 +713,20 @@ Byte-compare fawley's cold emit before and after the correction in the `/tmp` co
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (negative — no in-sprint floor gain)
+**Verified by:** Task 8 (primary)
+**Date:** 2026-07-24
+
+**Findings:**
+- Under **H-b** (Unknown 3.3, re-confirmed + strengthened) fawley does **not** cold-match, so the +1 genuine floor is **contingent on forcing (P5)**, not an in-sprint P3 deliverable. The `sameas` correction **does** change fawley's cold emit (a genuine cross-term fix, so it *could* count toward the floor under the PR25 definition) — but fawley stays `model_infeasible` with or without it (the MCP diverges MS-5, and now an emit-correct `stat_trans` row is a co-equal residual).
+- So P3's correction is a **correctness-only landing with 0 in-sprint bucket**; the floor credit accrues **only if** a `--force` lever later produces a cold match at 2899.25 (classified per the PR25 genuine-vs-methodology definition). The +Solve and the floor gain are both P5-forcing-contingent, not P3.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/FAWLEY_DIAGONAL_DESIGN.md` §7, §1.3; the live MS-5 @ 4399.557 / LP-opt 2899.25 H-b figures.
+
+**Decision:** P3 delivers 0 in-sprint bucket; the +1 floor is forcing-contingent (P5). The correctness fix is worth landing *if leak-free and cheap*, but it is not a bucket lever and must not displace P4.
 
 ---
+
 
 # Category 4: ganges/gangesx Multi-Root Recovery
 
