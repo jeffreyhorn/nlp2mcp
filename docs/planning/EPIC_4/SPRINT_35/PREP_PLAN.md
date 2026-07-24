@@ -409,7 +409,8 @@ grep -n 'def collect_index_aliases' src/emit/expr_to_gams.py
 
 ## Task 5: ganges/gangesx Multi-Root Recovery Design (Priority 4 foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-24
 **Priority:** Critical
 **Estimated Time:** 5–7 hours
 **Deadline:** Before Sprint 35 Day 1
@@ -447,11 +448,17 @@ Per `SPRINT_34/SPRINT_35_CARRYFORWARDS.md` §4 and `DAY11_PROGRESS_NOTES.md`:
 
 ### Changes
 
-_To be completed_
+Authored `docs/planning/EPIC_4/SPRINT_35/GANGES_RECOVERY_DESIGN.md`: re-validated the banked `$141` fix in a scratch tree (re-emitted ganges, compiled, then reverted), designed the `$145` universal-set skip with its minimal reproducing shape, carried the `$149` correction spec from Task 4, sequenced the three-root landing with per-step expected bucket outcomes, defined the per-model verification protocol, folded in Task 3's golden-regen budget, scoped turkey `$161` to P6, and named the REPLAN exit. Verified Unknowns 4.1, 4.2, 4.6 (✅), contributed to 4.3 (Task 4 primary preserved), and marked 4.4 DESIGN-SPECIFIED. The `$141` scratch patch was reverted — `src/` is clean.
 
 ### Result
 
-_To be completed_
+**The multi-root sequencing is now proven, not asserted.** Re-emitting ganges with **only** the reconstructed `$141` fix and compiling gives `$141` **15 → 0** while `$145×3` and `$149×9` **remain** — ganges still fails to compile. This directly re-confirms the S34 finding: **fixing one root recovers nothing; no bucket moves until all three land.** A mid-sequence flat KPI is the expected state.
+
+**The three roots + surfaces:** `$141` (NaN-cleanup over presolve-gated `.l`-calibration params → `emit_post_assignment_na_cleanup`, banked fix re-validated 15→0); `$145` (NaN-cleanup over the universal-set `series(*,years)` — `*` invalid as an assignment index; independent of `$141`, fix designed); `$149` (the CES/LES product-rule AD bug, Task 4's `_diff_prod` surface — the deepest, REPLAN-bearing root). **Landing order `$141`→`$145`→`$149`**, each `--resolve-changed`-gated, shipping as **one coherent P4 landing** (steps 1–2 don't ship alone — they touch collateral goldens for 0 bucket, exactly why S34 banked `$141`).
+
+**Collateral (a real design consideration):** the `$141` fix is general — it drops the cleanup guard for every `.l`-calibration param, touching ~9 more models (chakra, dinam, gancnsx, prolog, saras, senstran, shale, tfordy, turkey) but **NOT the data-calibrated CGE cluster** (irscge/lrgcge/moncge/stdcge calibrate from data params, not `.l` — verified on irscge). Golden-byte drift, no bucket change; `--resolve-changed`-gated + scoped-regen at landing (Task 3's budget holds — the collateral is mostly fast models).
+
+**turkey `$161` → P6** (a set-declaration emit root, disjoint from the ganges roots; turkey has no `$149`). **REPLAN exit:** `$149` is the risk — if `_diff_prod` can't be made surgical against the 18-model prod regression set, bank all three (no `src/` ships for 0 bucket) and reallocate P4's budget to P6/P7. **PROCEED:** +2 Solve / +2 Match / −2 path_syntax_error, +2 genuine floor if ganges/gangesx **cold**-match (per §5's classification). **Unknown 4.4 is DESIGN-SPECIFIED, not ✅** — the recovery verdict is an in-sprint execution result, since building/applying `$149`+`$145` and running the per-model protocol is the P4 landing, not this design (the exact assumption S34 got wrong).
 
 ### Verification
 
@@ -483,17 +490,17 @@ grep -icE 'REPLAN|exit|reallocat' docs/planning/EPIC_4/SPRINT_35/GANGES_RECOVERY
 
 ### Acceptance Criteria
 
-- [ ] The banked `$141` fix re-validated against the current tree (clean apply + 15 `$141` removed)
-- [ ] The `$145` universal-set skip designed with a concrete branch location
-- [ ] The `$149` correction specified from Task 4's hand-derived cross-term
-- [ ] The three roots ordered with a per-root `--resolve-changed` gate and per-step expected bucket outcome
-- [ ] "No bucket movement until all three land" stated explicitly so a mid-sequence flat KPI is not misread
-- [ ] The per-model verification protocol defined for ganges and gangesx independently (multi-root discipline)
-- [ ] The golden-regeneration plan (window, determinism ×3, follow-on re-solve) folded in from Task 3
-- [ ] turkey `$161` scoped separately with a P4/P6 placement decision
-- [ ] An explicit REPLAN exit + budget reallocation target named
-- [ ] Cross-referenced to `SPRINT_34/DAY11_PROGRESS_NOTES.md` + Task 4's analysis + `SPRINT_34/SPRINT_35_CARRYFORWARDS.md` §4
-- [ ] Unknowns 4.1, 4.2, 4.3, 4.4, 4.6 verified and updated in `KNOWN_UNKNOWNS.md`
+- [x] The banked `$141` fix re-validated against the current tree (clean apply + **15 `$141` removed**, re-emitted + compiled in a scratch tree, then reverted)
+- [x] The `$145` universal-set skip designed with a concrete branch location (`if any(d == "*" for d in param_def.domain): continue`) + minimal reproducing shape
+- [x] The `$149` correction specified from Task 4's hand-derived cross-term (AD-layer `_diff_prod`)
+- [x] The three roots ordered `$141`→`$145`→`$149` with a per-root `--resolve-changed` gate and per-step expected bucket outcome
+- [x] "No bucket movement until all three land" stated explicitly — **and empirically proven** (`$141`-only leaves `$145×3+$149×9`)
+- [x] The per-model verification protocol defined for ganges and gangesx independently (multi-root discipline; encoded for Task 10's gate)
+- [x] The golden-regeneration plan (scoped `--models`, determinism ×3, follow-on `--resolve-changed`) folded in from Task 3, with the collateral models enumerated
+- [x] turkey `$161` scoped separately → **P6** (disjoint root; no `$149`)
+- [x] An explicit REPLAN exit (`$149` AD-core restructure) + budget reallocation target (→ P6/P7) named
+- [x] Cross-referenced to `SPRINT_34/DAY11_PROGRESS_NOTES.md` + Task 4's analysis + `SPRINT_34/SPRINT_35_CARRYFORWARDS.md` §4
+- [x] Unknowns 4.1, 4.2, 4.6 verified (✅), 4.3 contributed (Task 4 primary preserved), 4.4 marked **DESIGN-SPECIFIED** in `KNOWN_UNKNOWNS.md`
 
 ---
 
