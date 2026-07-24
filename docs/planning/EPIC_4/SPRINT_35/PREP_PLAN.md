@@ -160,16 +160,18 @@ Every Sprint-35 KPI delta is measured against this baseline, and every emit-touc
 
 ### Background
 
-`SPRINT_34/BASELINE_METRICS.md` is the template (it pinned the S33-close SHA `750803b2` and floor 75). The Sprint-34 close is commit `78ceaead` (PR #1602, "Sprint 34 Day 13: Final retest + CLOSE"); `main` has since advanced only by the docs-only PROJECT_PLAN cascade (PR #1603, `cf34a80c`), so `git diff 78ceaead..HEAD -- src/ scripts/` is expected clean. Corpus scope, the genuine-vs-methodology definition, and the 142-vs-219 distinction are in `docs/planning/EPIC_4/SPRINT_28/` + the Match/Solve KPI corpus-scope reference. The DB is `data/gamslib/gamslib_status.json` (schema 2.2.1).
+`SPRINT_34/BASELINE_METRICS.md` is the template (it pinned the S33-close SHA `750803b2` and floor 75). The Sprint-34 close is commit `78ceaead` (PR #1602 — merge subject `Merge pull request #1602 from jeffreyhorn/planning/sprint34-day13-close`, body "Sprint 34 Day 13: Final retest + CLOSE — full modal-flat (0 bucket moves, Solve 108/Match 93/floor 75)"). **Note the wording change from Sprint 33:** the S33 close merge body ended with the literal string "SPRINT 33 CLOSED", but the S34 close merge does **not** contain "SPRINT 34 CLOSED" — so the anchor derivation must match the stable branch slug / closeout text instead, and must fail loudly rather than leaving the anchor unset. `main` has since advanced only by the docs-only PROJECT_PLAN cascade (PR #1603, `cf34a80c`), so `git diff 78ceaead..HEAD -- src/ scripts/` is expected clean. Corpus scope, the genuine-vs-methodology definition, and the 142-vs-219 distinction are in `docs/planning/EPIC_4/SPRINT_28/` + the Match/Solve KPI corpus-scope reference. The DB is `data/gamslib/gamslib_status.json` (schema 2.2.1).
 
 ### What Needs to Be Done
 
-1. **Derive the Day-0 code anchor portably** and record it:
+1. **Derive the Day-0 code anchor portably** and record it. Match the stable branch slug **or** the closeout text (case-insensitive) — the S34 close merge does *not* contain the literal "SPRINT 34 CLOSED" that S33's did — and **fail loudly** if nothing resolves, so no later command runs against an unset anchor:
    ```bash
-   S34=$(git log --first-parent main --grep='SPRINT 34 CLOSED' --format=%H -n 1)
+   S34=$(git log --first-parent main -i -E --grep='sprint34-day13-close|Sprint 34 Day 13.*CLOSE' --format=%H -n 1)
+   [ -n "$S34" ] || { echo "ERROR: could not resolve the Sprint 34 close SHA (expected 78ceaead) — resolve it manually before proceeding"; exit 1; }
+   [ "$(git rev-parse --short=8 "$S34")" = "78ceaead" ] || echo "WARN: resolved $S34 != the recorded 78ceaead — reconcile before proceeding"
    ```
    Confirm it resolves to the S34-close merge; record the full SHA + the DB md5.
-2. **Confirm zero `src/`/`scripts/` drift** since the anchor (`git diff --quiet 78ceaead..HEAD -- src/ scripts/`), so the committed DB can be reused byte-for-byte without a fresh full retest.
+2. **Confirm zero `src/`/`scripts/` drift** since the anchor (`git diff --quiet "$S34"..HEAD -- src/ scripts/` — use the resolved variable, not a literal, so the guard above protects it), so the committed DB can be reused byte-for-byte without a fresh full retest.
 3. **Recompute the KPI table from the committed DB** (142 convex-candidate corpus): Parse / Translate / Solve (cold + presolve split) / Match as-measured / genuine floor / model_infeasible / path_syntax_error / all-219 Match tally.
 4. **Recompute the PR25 genuine-vs-methodology split** and confirm the anchor is **75** (63 cold + 12 genuine-presolve; methodology 21; all-219 Match 96 = 63 cold + 33 presolve).
 5. **Record per-model provenance for every Sprint-35 target model** — mine, sarf, fawley, ganges, gangesx, camcge, rocket, turkey, dinam, indus, turkpow, clearlak, agreste — with its current bucket, failure code, and the priority that owns it.
@@ -191,7 +193,10 @@ _To be completed_
 cd "$(git rev-parse --show-toplevel)"
 test -f docs/planning/EPIC_4/SPRINT_35/BASELINE_METRICS.md && echo "baseline doc exists"
 # the Day-0 code anchor is the S34 close, and it is recorded in the doc
-S34=$(git log --first-parent main --grep='SPRINT 34 CLOSED' --format=%H -n 1); echo "anchor: $S34"
+# (match the branch slug or the closeout text — the S34 close merge does NOT contain "SPRINT 34 CLOSED")
+S34=$(git log --first-parent main -i -E --grep='sprint34-day13-close|Sprint 34 Day 13.*CLOSE' --format=%H -n 1)
+[ -n "$S34" ] || { echo "ERROR: anchor unresolved — an empty rev would make the drift check below vacuously pass"; exit 1; }
+echo "anchor: $S34"
 grep -c "${S34:0:8}" docs/planning/EPIC_4/SPRINT_35/BASELINE_METRICS.md
 # no src/ or scripts/ drift since the anchor (baseline is reusable byte-for-byte)
 git diff --quiet "$S34"..HEAD -- src/ scripts/ && echo "no drift"

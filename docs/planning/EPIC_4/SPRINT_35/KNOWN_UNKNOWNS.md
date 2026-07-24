@@ -1009,7 +1009,7 @@ The PR25 genuine-vs-methodology anchor is **75** (63 cold + 12 genuine-presolve;
 
 ### Research Questions
 1. Does the committed DB still yield genuine floor 75 on recompute?
-2. Does `git log --first-parent main --grep='SPRINT 34 CLOSED'` resolve to the expected close merge?
+2. Does the anchor derivation resolve to the expected close merge `78ceaead`? **Note:** Sprint 34's `--grep='SPRINT 33 CLOSED'` pattern does *not* carry over with the number bumped — the S34 close merge body does not contain "SPRINT 34 CLOSED", so match the branch slug / closeout text case-insensitively (`-i -E --grep='sprint34-day13-close|Sprint 34 Day 13.*CLOSE'`) and guard for a non-empty result, since an empty rev makes `git diff --quiet "$S34"..HEAD` vacuously pass.
 3. Is `git diff --quiet 78ceaead..HEAD -- src/ scripts/` clean, so the Day-0 baseline can be reused byte-for-byte without a fresh retest?
 4. Does `--resolve-changed --since-commit 78ceaead --dry-run` return GO?
 5. Which sprint artifacts still reference `750803b2` and must be updated to avoid an accidental stale-anchor run?
