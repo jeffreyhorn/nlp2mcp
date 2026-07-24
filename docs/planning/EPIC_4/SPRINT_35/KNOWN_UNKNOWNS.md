@@ -143,6 +143,8 @@ Development team (KKT/emit specialist)
 
 **Decision:** the boundary is unreachable by emit → **REPLAN** (Unknown 1.5); mine hands to the Sprint-36 PATH consultation.
 
+---
+
 ## Unknown 1.2: Does a head-offset dual reconciliation drive the cold MCP to MS-1 @ 17500 without perturbing interior rows?
 
 ### Priority
@@ -186,6 +188,8 @@ Development team (KKT/emit specialist)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_35/MINE_DUAL_ARCHITECTURE_DESIGN.md` §3 (candidate scoring), §5 (the control spec); `SPRINT_34/DAY1_PROGRESS_NOTES.md` (H_dual scalar-identical to baseline).
 
 **Decision:** REPLAN → the Sprint-36 PATH consultation (the primal-degenerate-LP question); no `src/`, 18–24 h freed to P4/P6/P7 (Unknown 1.5).
+
+---
 
 ## Unknown 1.3: Is the 22-row boundary breadth and the +16000 gap still exact at Day 0?
 
@@ -232,6 +236,8 @@ Development team
 ---
 **Task-6 addendum (2026-07-24):** the fingerprint aspect is now re-confirmed live. `kkt_residual.py mine.gms` → CASE_B, dual scale 1.35e4, dual transfer CONSISTENT, max row `stat_x(3,1,1)` rel 2.37 / raw −32000 — byte-for-byte the S33/S34 fingerprint; the 22-row `c`-boundary breadth and the +16000 gap hold (`MINE_DUAL_ARCHITECTURE_DESIGN.md` §§1–2). The **S34 P4 sense-aware bound-transfer did not perturb mine's cold emit** (md5 `a394cbc3…`, unchanged; mine's `x.m = 0` makes P4 a no-op). **New observation:** the *secondary* residual rows shift run-to-run (a degeneracy signature — multiple optimal dual solutions) while the max row is invariant. Fingerprint aspect ✅ VERIFIED (Task 6).
 
+---
+
 ## Unknown 1.4: Does `EquationDef.head_domain_offsets` carry everything the reconciliation needs?
 
 ### Priority
@@ -271,6 +277,8 @@ Development team (IR specialist)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_35/MINE_DUAL_ARCHITECTURE_DESIGN.md` §4; `grep head_domain_offset src/kkt/stationarity.py` → 0; `src/emit/emit_gams.py` → 7.
 
 **Decision:** IR sufficient; irrelevant given the REPLAN.
+
+---
 
 ## Unknown 1.5: What is P1's REPLAN probability, and is a fourth carry the right allocation?
 
@@ -313,6 +321,8 @@ Sprint planning
 **Evidence:** `docs/planning/EPIC_4/SPRINT_35/MINE_DUAL_ARCHITECTURE_DESIGN.md` §6; the four-sprint refutation chain (`SPRINT_32/MINE_5TH_COUPLING_REPLAN.md`, `SPRINT_33/DAY2_MINE_REPLAN.md`, `SPRINT_34/DAY1_PROGRESS_NOTES.md`).
 
 **Decision:** P1 contributes 0 in-sprint Solve / 0 genuine floor; reallocates to P4/P6/P7. Handed to Task 9 (mine joins rocket as a Sprint-36 consultation question), Task 11 (projection), Task 12 (no Day-1–5 slot for P1).
+
+---
 
 ## Unknown 2.1: Are S1/S2/S3 the complete set of enumeration sites?
 
@@ -666,6 +676,8 @@ Development team (emit specialist)
 
 **Decision:** the `$141` fix is landing-ready and low-risk; it ships as **step 1** of the three-root P4 sequence (not alone — it recovers nothing without `$145`+`$149`). Collateral goldens enumerated via `--resolve-changed` and regenerated (scoped `--models`, Task 3) at landing.
 
+---
+
 ## Unknown 4.2: Is `$145` genuinely an independent universal-set (`*`-domain) root?
 
 ### Priority
@@ -707,6 +719,8 @@ Development team (emit specialist)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_35/GANGES_RECOVERY_DESIGN.md` §2; `data/gamslib/raw/ganges.gms:251,310–319` (the `series` table + division assignments); the golden line `series(*,years)$(NOT …)`; the `$141`-only re-emit leaving `$145×3`.
 
 **Decision:** `$145` ships as **step 2** of the P4 sequence (a bounded cleanup-pass skip, low-risk). Blast radius = models with a `*`-domain division-assignment param (rare; enumerate at landing via `--resolve-changed`).
+
+---
 
 ## Unknown 4.3: Where does the `$149` free index originate, and what is the correct hand-derived `stat_pc` cross-term?
 
@@ -755,6 +769,8 @@ Development team (AD/KKT specialist)
 ---
 **Task-5 contribution (2026-07-24):** the `$149` correction is carried into the P4 recovery design (`GANGES_RECOVERY_DESIGN.md` §3) as the **deepest, REPLAN-bearing step** of the three-root sequence (`$141`→`$145`→`$149`). The AD-layer surface (`_diff_prod`, form 1/2) and the 18-model prod-in-stationarity regression set (lmp2 flagged) are handed to Task 10's Phase-0 gate. Task 4 remains the primary; this task does **not** build the fix.
 
+---
+
 ## Unknown 4.4: After all three roots, do ganges AND gangesx each actually compile, solve, and match?
 
 ### Priority
@@ -801,6 +817,8 @@ Development team
 ---
 
 **Prior (Task 2, 2026-07-23) — provenance-only, superseded above:** ganges and gangesx are both `path_syntax_error` `likely_convex` candidates at Day 0 (`model_status = None`, never reached solve). Recorded but explicitly not treated as evidence of a shared fate. See `SPRINT_35/BASELINE_METRICS.md` §5.
+
+---
 
 ## Unknown 4.5: Can the slow-emit CGE goldens be regenerated within the sprint budget?
 
@@ -888,6 +906,8 @@ Development team
 **Evidence:** `docs/planning/EPIC_4/SPRINT_35/GANGES_RECOVERY_DESIGN.md` §7; the turkey `gams a=c` compile (`$161` on the `ao` declaration).
 
 **Decision: P6, not P4.** Folding turkey into P4 would conflate two unrelated efforts and dilute the P4 gate. It is a bounded, standalone P6 item (quote dotted-tuple set elements consistently in the set-declaration emit) with its own `--resolve-changed` gate; a recovery would be +1 Solve on the P6 track.
+
+---
 
 ## Unknown 5.1: Does the full dual-consistent Walras redefinition reach MS-1 in a `/tmp` prototype?
 
