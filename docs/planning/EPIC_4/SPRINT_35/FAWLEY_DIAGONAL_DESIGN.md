@@ -109,7 +109,7 @@ The precise predicate + insertion point is a **hypothesis to re-trace at impleme
 
 Before any `src/` change: apply the diagonal `sameas` guard to fawley's emitted `stat_bq` by hand in `/tmp`, re-run `kkt_residual.py`, and require:
 
-- **`max|stat_bq| → 0`** (machine zero) — **not** the 96% partial (473 → 18.468). Post-P4, the 18.468 cc-dist residue is expected already handled (the cell shipped S34 Day 4), so the `sameas` fix alone should reach 0; the control verifies this. `modelstat` asserted.
+- **`max|stat_bq| → 0`** (machine zero) — **not** the 96% partial (473 → 18.468). Post-P4, the 18.468 cc-dist residue is expected already handled (the cell shipped S34 Day 4), so the `sameas` fix alone should reach 0; the in-sprint `/tmp` control **will** verify this (not executed in this prep). `modelstat` asserted.
 - **The gate is scoped to `max|stat_bq|`**, not the harness's global max residual (which retains the emit-correct `stat_trans` non-emit residual, §1.2).
 
 > **DESIGN-SPECIFIED (not executed here):** the `/tmp` control's "→ 0" verdict is the in-sprint executed gate. This prep records the *baseline* (`max|stat_bq|` 473, live) and the *target* (→ 0); the executed closure is Day-N.
