@@ -1037,9 +1037,21 @@ Build the `/tmp` prototype and solve, asserting `modelstat` and requiring MS-1 (
 Development team (CGE/MCP specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (design); the MS-1 result is DESIGN-SPECIFIED (Epic-5-deferred)
+**Verified by:** Task 9 (primary)
+**Date:** 2026-07-24
+
+**Findings:**
+- The **full dual-consistent Walras redefinition** is specified as emittable GAMS with the MCP square: (1) keep every market-clearing row; (2) add the consumption-weighted numéraire `numeraire.. sum(i$cles(i), cles(i)*(p(i)-pd0(i))) =E= 0` + the `cles(i)*nu_numeraire` cross-term in `stat_p` (removes the price-scaling nullspace → correct primal omega 191.7346); (3) redefine the redundant market's dual via Walras' law (removes the row-redundancy nullspace — the piece the price-pin variant lacks). Dual side checked (the redundant multiplier must equal its economically-correct value, not just leave the primal at 191.7346).
+- **The Epic-5 `/tmp` gate is MS-1 at 191.7346** — explicitly distinguished from the banked **price-pin** variant's correct-primal-**at-MS-4** result (INFES on `gdp` 131.96 / `depreq` 131.96 / `hhsaveq` 97.26 / `gruse` 43.97), `modelstat` asserted. **Not built in prep** — the `/tmp` prototype is the Epic-5 Phase-0 gate. MS-1 is **a-priori hard**: the price-pin variant + 3+ sprints of variants (single-dual-pin MS-4, drop-row corrupt @ 299) all stayed MS-4, so the prototype's expected outcome is MS-4.
+- **The per-model-numéraire fallback** is defined as an acceptable Epic-5 finding (the documented declaration + the residual-singularity characterization + the detector + step-1 stability), so a non-MS-1 outcome is a deliverable, not a failure. **camcge is explicitly excluded from the Sprint-35 Solve target.**
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/CAMCGE_ROCKET_PLAN.md` §1; `SPRINT_33/CAMCGE_WALRAS_DESIGN.md`; `SPRINT_32/CAMCGE_WALRAS_REPLAN.md`; `EPIC_5/CGE_DEGENERACY_SCOPING.md`; the DB (camcge MS-4).
+
+**Decision:** camcge **Epic-5-deferred** (0 in-sprint bucket, MS-1 a-priori hard); the redefinition + gate + fallback are the Epic-5 deliverable.
 
 ---
+
 
 ## Unknown 5.2: Does the S1∧S2∧S3 degeneracy detector still fire only on camcge?
 
@@ -1069,9 +1081,21 @@ Run the detector across camcge + the four siblings on the live tree, asserting `
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 9 (primary)
+**Date:** 2026-07-24
+
+**Findings:**
+- The S1∧S2∧S3 degeneracy detector fires **only** on camcge, re-confirmed live from the committed DB: **camcge** cold `model_infeasible` **MS-4** (fires — the Walras rank-deficiency, NLP obj 191.7346); **irscge/lrgcge/moncge/stdcge** cold `model_optimal_presolve` + match **MS-1** (pass-through). S3 (the cold-singular-at-iter-0 guard) is the false-positive guard.
+- **The S34 P4 bound-transfer did NOT alter any sibling's inputs** — none of irscge/lrgcge/moncge/stdcge is among the 11 P4-regenerated goldens (`git diff --name-only 750803b2..78ceaead -- data/gamslib/mcp/` — the four siblings are absent), so the detector inputs are unaffected. Pass-through is the identity transform (faithful KKT emission); the redefinition applies to the flagged model only.
+- Step-1 stability holds: the numéraire adds the `numeraire` equation + the `cles(i)*nu_numeraire` cross-term in `stat_p`, not touching `stat_mps` (step 1, `nu_mps_fx = mps.m`, Case-a).
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/CAMCGE_ROCKET_PLAN.md` §2; the committed DB (camcge MS-4, siblings MS-1); `git diff --name-only 750803b2..78ceaead -- data/gamslib/mcp/` (no sibling golden).
+
+**Decision:** the detector scope holds (camcge only); unaffected by P4; the Epic-5 hand-off artifact stands.
 
 ---
+
 
 ## Unknown 5.3: Is the FINALIZED rocket input complete, and is it correctly retargeted to the Sprint-36 consultation?
 
@@ -1102,9 +1126,22 @@ Read `SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` end-to-end and grep it for "S
 Sprint planning
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (with the renumbering hazard corrected)
+**Verified by:** Task 9 (primary)
+**Date:** 2026-07-24
+
+**Findings:**
+- **rocket Case-c re-confirmed live:** `kkt_residual.py rocket.gms` → **CASE_C_OBJDEF**, `stat_ht(h0)` rel 1.00 / raw −4.56, `stat_step` 0.497, `stat_ht(h50)` 0.438, dual transfer CONSISTENT (closure 1.53e-10) — **byte-for-byte the banked signature**. A forcing problem, not an emit bug.
+- **The FINALIZED input is submission-ready;** the submission plan (recipients Ferris/Dirkse, the artifact bundle = concrete question + ruled-out-lever survey + two-command reproducer + `--force` scaffold, response tracking) targets **Sprint 36** (`PROJECT_PLAN.md:1769`).
+- **⚠️ The renumbering hazard is richer than the task assumed.** The banked input does **not** carry stale "Sprint 35" references — it carries **"Sprint 33"** (× **11**: header "Sprint-33 Hand-Off", "feeds the Sprint-33 consultation", "§5. Sprint-33 hand-off note", …), its S32 authoring number, **doubly stale** (S33 → S35 via the S34 insertion → S36 via the S35 insertion). The `SPRINT_34/CAMCGE_ROCKET_PLAN.md` carries "Sprint 35". **Both retarget to Sprint 36** at submission; the technical content is current, only the sprint-number labels are stale.
+- **Sprint-36 bundle:** mine (Task 6, the primal-degenerate-LP consultation question) + fawley (Task 8, the H-b `--force` survey item) are bundled with rocket into one Sprint-36 consultation/forcing package.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/CAMCGE_ROCKET_PLAN.md` §3; the live `kkt_residual.py rocket.gms` (CASE_C_OBJDEF); `SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` (11 "Sprint 33" refs); `PROJECT_PLAN.md:1769` (Sprint 36).
+
+**Decision:** rocket submits to **Sprint 36** with all "Sprint 33"/"Sprint 35" destination labels updated; mine + fawley bundled. Conditional +Solve (not an in-sprint gain); sign flip BANNED.
 
 ---
+
 
 # Category 6: Residual Failure-Cohort + Banked Follow-Ons
 
@@ -1224,9 +1261,20 @@ Run the harness across the Case-c family and confirm the `case_c_objdef` classif
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 9 (primary)
+**Date:** 2026-07-24
+
+**Findings:**
+- The **objective-gradient sign flip is BANNED** (control-refuted 4×, S30–S31) — restated with no re-litigation path.
+- The Case-c family stays **documented non-convex** under the `case_c_objdef` classifier (`scripts/diagnostics/kkt_residual.py:466`, `reclassify_objdef_case_c:621`), residuals clean at the NLP point (forcing, not emit): rocket (model_infeasible MS-5, CASE_C_OBJDEF re-confirmed live), cesam (MS-4), lnts (MS-4), hhfair (model_optimal MS-1 **mismatch** — solves at a spurious local KKT point), the CGE cluster irscge/lrgcge/moncge/stdcge (model_optimal_presolve match — methodology, documented non-convex). None is an emit fix; all are forcing/consultation candidates for Sprint 36. No emit change attempted in Sprint 35.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/CAMCGE_ROCKET_PLAN.md` §4; the committed DB (family buckets); `scripts/diagnostics/kkt_residual.py` (`case_c_objdef`); `SPRINT_32/CASE_C_CLASSIFIER_DESIGN.md`.
+
+**Decision:** Case-c family documented non-convex, sign flip BANNED; the family hands to Sprint-36 forcing/consultation, not to any Sprint-35 emit fix.
 
 ---
+
 
 # Category 7: Infrastructure — Property Fixtures + Genuine-Floor Tracking
 

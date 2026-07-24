@@ -772,7 +772,8 @@ grep -n 'sameas' data/gamslib/mcp/fawley_mcp.gms | head -5
 
 ## Task 9: camcge Dual-Consistent Walras Design (Epic 5) + rocket PATH-Consultation Submission Plan (Priority 5)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-24
 **Priority:** Medium
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 35 Day 1
@@ -804,11 +805,15 @@ P5 is the sprint's explicitly *non-KPI* priority: camcge is Epic-5-scoped (its +
 
 ### Changes
 
-_To be completed_
+Authored `docs/planning/EPIC_4/SPRINT_35/CAMCGE_ROCKET_PLAN.md`: specified the full dual-consistent Walras redefinition + the Epic-5 `/tmp` MS-1 gate + the per-model-numéraire fallback, re-confirmed the detector scope + rocket Case-c live, and produced the Sprint-36 submission plan (with the corrected renumbering + the mine/fawley bundle). Verified Unknowns 5.1 (design ✅ / MS-1 DESIGN-SPECIFIED), 5.2, 5.3, 6.3 (✅). Harness only — no `src/` edits.
 
 ### Result
 
-_To be completed_
+**camcge Epic-5-deferred (0 in-sprint bucket, MS-1 a-priori hard); rocket a Sprint-36 hand-off.** P5 is the sprint's explicitly non-KPI priority. The three-part Walras redefinition (keep every market-clearing row + consumption-weighted numéraire + Walras-law dual redefinition) is specified as emittable GAMS with the MCP square; the Epic-5 `/tmp` gate is **MS-1 at omega 191.7346** (distinguished from the price-pin variant's correct-primal-**at-MS-4** result — INFES on gdp/depreq/hhsaveq/gruse), **not built in prep** (a-priori hard: 3+ sprints of variants all stayed MS-4), with the **per-model-numéraire fallback** as the acceptable Epic-5 finding. camcge is **explicitly excluded from the in-sprint Solve target**.
+
+**Detector scope re-confirmed live** (DB): S1∧S2∧S3 fires only on camcge (MS-4); the four CGE siblings stay MS-1; and the S34 P4 bound-transfer touched **none** of the four sibling goldens (none among the 11 P4-regenerated), so the detector inputs are unaffected.
+
+**rocket Case-c re-confirmed live** (`kkt_residual.py rocket.gms` → CASE_C_OBJDEF, `stat_ht(h0)` 1.00 / `stat_step` 0.497 / dual CONSISTENT 1.53e-10 — byte-for-byte the banked signature); the FINALIZED input submits to **Sprint 36**. **The renumbering hazard is richer than the task assumed:** the banked input carries **11 "Sprint 33"** references (its S32 authoring number, *doubly* stale S33→S35→S36), and the S34 plan carries "Sprint 35" — both retarget to **Sprint 36** (the technical content is current; only the sprint-number labels are stale). **Sprint-36 bundle:** mine (Task 6, the primal-degenerate-LP consultation question) + fawley (Task 8, the H-b `--force` survey) join rocket into one coherent Sprint-36 consultation/forcing package. The **Case-c sign flip stays BANNED** (4×-refuted); the Case-c family (rocket/cesam/lnts/hhfair + the CGE cluster) is documented non-convex. Handed to Task 10 (camcge Epic-5 gate; rocket no solve gate), Task 11 (P5 = 0 in-sprint bucket / 0 floor), Task 12 (a small P5 slot for the camcge `/tmp` gate + the Sprint-36 submission bundle + the renumbering fixes).
 
 ### Verification
 
@@ -837,15 +842,15 @@ test -f docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md && echo
 
 ### Acceptance Criteria
 
-- [ ] The Walras redefinition specified in full (rows kept, numéraire, dual redefinition)
-- [ ] The Epic-5 gate stated as **MS-1** (explicitly distinguished from the price-pin variant's correct-primal-at-MS-4 result), with `modelstat` asserted
-- [ ] The per-model-numéraire fallback defined as a successful Epic-5 outcome
-- [ ] The detector scope re-confirmed (camcge only; four siblings cold MS-1)
-- [ ] The rocket submission plan complete, targeting **Sprint 36**, with stale "Sprint 35" references in the banked input flagged
-- [ ] The Case-c sign-flip BAN restated with no re-litigation path
-- [ ] camcge explicitly excluded from the in-sprint Solve commitment (Epic-5-scoped)
-- [ ] Cross-referenced to `SPRINT_34/DAY10_PROGRESS_NOTES.md`, `SPRINT_33/CAMCGE_WALRAS_DESIGN.md`, `SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md`, `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md`
-- [ ] Unknowns 5.1, 5.2, 5.3, 6.3 verified and updated in `KNOWN_UNKNOWNS.md`
+- [x] The Walras redefinition specified in full (keep every row + consumption-weighted numéraire + Walras-law dual redefinition; MCP square; dual side checked)
+- [x] The Epic-5 gate stated as **MS-1** (explicitly distinguished from the price-pin variant's correct-primal-at-MS-4 result, INFES rows tracked), `modelstat` asserted; **not built in prep** (DESIGN-SPECIFIED; a-priori hard)
+- [x] The per-model-numéraire fallback defined as a successful Epic-5 outcome
+- [x] The detector scope re-confirmed **live** (camcge MS-4 only; four siblings cold MS-1; P4 touched no sibling golden)
+- [x] The rocket submission plan complete, targeting **Sprint 36** — **the renumbering hazard corrected:** the banked input carries **"Sprint 33"** (×11), not "Sprint 35"; both it and the S34 plan retarget to Sprint 36
+- [x] The Case-c sign-flip BAN restated with no re-litigation path
+- [x] camcge explicitly excluded from the in-sprint Solve commitment (Epic-5-scoped)
+- [x] Cross-referenced to `SPRINT_34/DAY10_PROGRESS_NOTES.md`, `SPRINT_33/CAMCGE_WALRAS_DESIGN.md`, `SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md`, `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md`
+- [x] Unknowns 5.1, 5.2, 5.3, 6.3 verified and updated in `KNOWN_UNKNOWNS.md`
 
 ---
 
