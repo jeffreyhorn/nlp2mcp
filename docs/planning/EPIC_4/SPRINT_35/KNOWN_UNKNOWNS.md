@@ -582,10 +582,10 @@ Development team (KKT/emit specialist)
 **Date:** 2026-07-24
 
 **Findings:**
-- **The `stat_bq` over-sum gap is re-confirmed live.** `kkt_residual.py fawley.gms` → CASE_B, dual scale 486, dual transfer CONSISTENT, `stat_bq(res-arab-l,fuel-oil)` rel **0.973** / raw **473** — identical to the S34 figures. The `qsb`/`pbal` cross-terms in `stat_bq(c,cf)` (`fawley_mcp.gms:238`) sum over `cfq__` **without** the diagonal `$(sameas(cfq__,cf))` the `mbal` term carries; since `bq`'s second index `cf` = the constraint's own index `cfq`, `∂qsb(cfq,·)/∂bq(c,cf)` is nonzero only on `cfq=cf` → the over-sum.
+- **The `stat_bq` over-sum gap is re-confirmed live.** `kkt_residual.py fawley.gms` → CASE_B, dual scale 486, dual transfer CONSISTENT, `stat_bq(res-arab-l,fuel-oil)` rel **0.973** / raw **473** — identical to the S34 figures. The `qsb`/`pbal` cross-terms in `stat_bq(c,cf)` (`data/gamslib/mcp/fawley_mcp.gms:238`) sum over `cfq__` **without** the diagonal `$(sameas(cfq__,cf))` the `mbal` term carries; since `bq`'s second index `cf` = the constraint's own index `cfq`, `∂qsb(cfq,·)/∂bq(c,cf)` is nonzero only on `cfq=cf` → the over-sum.
 - **The `/tmp` control target is `max|stat_bq| → 0`** (machine zero), **not** the 96% partial (473 → 18.468). Post-P4 the 18.468 residue was the cc-dist bound-transfer cell (shipped S34 Day 4), so on the current tree the `sameas` fix alone is expected to reach 0 — the in-sprint `/tmp` control **will** verify this closure (DESIGN-SPECIFIED — **not executed in this prep**; `modelstat` asserted). The gate is scoped to `max|stat_bq|`, **not** the harness's global max residual (which retains the emit-correct `stat_trans` non-emit residual, Unknown 3.3).
 
-**Evidence:** `docs/planning/EPIC_4/SPRINT_35/FAWLEY_DIAGONAL_DESIGN.md` §1, §5; the live `kkt_residual.py fawley.gms` (CASE_B, stat_bq 0.973/473); `fawley_mcp.gms:238`.
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/FAWLEY_DIAGONAL_DESIGN.md` §1, §5; the live `kkt_residual.py fawley.gms` (CASE_B, stat_bq 0.973/473); `data/gamslib/mcp/fawley_mcp.gms:238`.
 
 **Decision:** the emit gap is intact and P3-fixable; the `→ 0` closure is the in-sprint `/tmp` gate (Task 10).
 
