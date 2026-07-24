@@ -2,6 +2,7 @@
 
 **Prep Task:** 3 (High) · **Date:** 2026-07-23 · **Owner:** Sprint 35 prep (tooling/infra)
 **Day-0 code anchor:** `78ceaead` (S34 close) · no `src/`/`scripts/` drift since (Task 2 `BASELINE_METRICS.md`)
+**Measurement tree:** `78b81615` (`main` at the S35 prep Task-1 merge) — docs-only ahead of the anchor, so `src/`/`scripts/` are byte-identical to `78ceaead` (see §3 note)
 **Scope:** docs/measurement only — audits the reused tooling, **measures** the slow-emit golden-regeneration budget, and catalogs the P7 fixtures. No `src/` change.
 
 ---
@@ -72,7 +73,9 @@ So the S34 observation is real, but its *cause* is contention in the full sweep,
 
 ## §3. Measured golden-regeneration budget (Unknown 4.5 — primary)
 
-All measurements taken on the Day-0 tree (`78b81615`), macOS, 16 cores, `.venv` interpreter. **Measured, not estimated.**
+All measurements taken on the working tree at `78b81615` (`main` at the S35 prep Task-1 merge, PR #1604), macOS, 16 cores, `.venv` interpreter. **Measured, not estimated.**
+
+> **Which SHA is which.** The **code anchor is `78ceaead`** (the S34 close) — that is what `--resolve-changed` diffs against and what every KPI delta is measured from. The measurements below ran at **`78b81615`**, which is `78ceaead` plus the two docs-only PRs merged since (#1603 the PROJECT_PLAN cascade, #1604 the S35 prep plan). Those PRs touch only `docs/`, so **`src/` and `scripts/` are byte-identical between the two SHAs** — `git diff --quiet 78ceaead..78b81615 -- src/ scripts/` is clean — and the emit output is therefore identical to what it would be at the anchor. The two SHAs are used deliberately: `78ceaead` for the *anchor* semantics, `78b81615` for *reproducibility* (it is the exact tree the timings ran on). Both facts are consistent with Task 2's Day-0 record.
 
 ### 3.1 Per-model emit, run alone
 
