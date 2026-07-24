@@ -763,7 +763,21 @@ Time a single-model emit for each of the four models locally (`data/gamslib/raw/
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — **and the Sprint-34 premise is REFUTED**
+**Verified by:** Task 3 (primary)
+**Date:** 2026-07-23
+
+**Findings:**
+- **The four slow-emit goldens ARE regenerable in budget.** Measured per-model emit wall-clock, run alone: gangesx **151.00 s** · clearlak **191.84 s** · ganges **202.57 s** · turkpow **442.15 s** (sum 987.56 s / 16.5 min). **Every one clears the 600 s per-emit subprocess timeout** (`scripts/gamslib/batch_translate.py:265`); turkpow is the binding case with ~26 % headroom.
+- **The scoped regen completes in 8.2 minutes.** `check_golden_staleness.py --models ganges,gangesx,clearlak,turkpow` → `real 489.63 user 1356.92`, **0 timeouts, all 4 clean**. All four run concurrently under the 6-worker pool (`user`/`real` ≈ 2.8× confirms real parallelism), so wall-clock is set by the slowest model, not the sum — and **turkpow stayed under 600 s even under four-way contention**, so the parallel-contention risk did not materialise.
+- **The S34 soft-timeout was full-sweep contention, not model cost.** `make regen-goldens` sweeps **all 170** goldens at `MAX_WORKERS = 6` (`check_golden_staleness.py:36,:132`); the slow four contend with 166 others and hit the 600 s per-emit timeout, which `check_one` records as a **soft** `"timeout"` — explicitly *"couldn't verify in budget", NOT drift* (`:88–93`). The scoping flag that avoids this, **`--models`, already exists** (`:124`) — **no new tooling is needed to unblock P4**.
+- **No latent drift:** all four re-emits are **byte-identical** to their committed goldens (ganges md5 `72c5d5f268e9dad458f61f58491872c5` both sides). So when P4's fixes land, the golden diff is wholly attributable to them.
+- **Cost model:** a clean golden = 1 emit; a **drifted** golden under `--fix` = **2 emits** (the determinism guard re-emits and requires byte-identity before overwriting, `:105–112`). The four models have **cold goldens only** (no `_presolve` variants) → P4 refreshes **4 goldens, not 8**.
+- **Budget:** scoped `--fix` with all four drifting ≈ **16.4 min**; an optional separate determinism ×3 pass ≈ 24.6 min; the follow-on `--resolve-changed` re-solve ≤ 8 min. **Worst case ≈ 50 min; realistic ≈ 25 min.**
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/TOOLING_AND_BACKLOG_ANALYSIS.md` §§2, 3.1–3.5; the four `/usr/bin/time -p` emit runs; the scoped `check_golden_staleness.py --models …` run; `cmp` against the committed goldens; `SPRINT_34/DAY11_PROGRESS_NOTES.md` §45 (the refuted claim).
+
+**Decision: P4's golden regeneration FITS A NORMAL ≤ 12 h SPRINT DAY — no dedicated overnight slot is required** (Task 12 schedules against this). Prescribed invocation on the P4 landing day: `check_golden_staleness.py --models ganges,gangesx,clearlak,turkpow --fix`, then `run_full_test.py --resolve-changed --since-commit 78ceaead`. **Do NOT run the unscoped `make regen-goldens`** — that is the 170-golden sweep whose contention caused the S34 soft-timeout. **Consequence:** Sprint 34 banked its verified `$141` fix on two grounds — 0 bucket recovered, *and* un-regenerable goldens. **The second ground is removed.** The first still stands (no bucket → no `src/`), but the S34-P4 exception criteria (fast, regenerable goldens + `--resolve-changed` GO) are now **satisfiable** for this cohort. Task 11 should weigh P4 with the golden constraint lifted.
 
 ---
 
@@ -1029,7 +1043,19 @@ Read `tests/integration/emit/test_ad_crossterm_shapes.py` and `tests/fixtures/cr
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 3
+**Date:** 2026-07-23
+
+**Findings:**
+- **Zero new diagnostic-tool code for Sprint 35** — a pure reuse, as in Sprint 34. All seven reused tools confirmed present on `main` at the Day-0 anchor, three exercised live this task (`--resolve-changed --dry-run` = GO; the scoped `check_golden_staleness.py --models`; four `src.cli` emits): `kkt_residual.py` (with `reclassify_objdef_case_c` at `:621`, the `case_c_objdef` verdict at `:466`), `check_presolve_divergence.py`, `check_golden_staleness.py` (**`--models` at `:124`**), `run_full_test.py --resolve-changed`, `src/cli.py --force` (`:207`), the AD cross-term catalog (shapes 1–11 + `shape_p4_max_bound_transfer`, with the `nlp_presolve`-aware `_emit` helper), and the `test_sample_pruned_var_l_init.py` raw-emit skip-if-absent pattern.
+- **The four P7 fixtures are catalogued** with gating track, shape, pattern and home: **shape12** (head-offset dual → P1), **shape13** (sarf symbolic → P2), **fawley 2-D second-index** (→ P3, the #1049-guard's *opposite* index orientation) — all three synthetic and in-process (sub-second, no regen cost) — and the **ganges recovery** fixture (→ P4), which **must be raw-emit + skip-if-absent** because the defect only manifests on the real model's CES/LES structure and `data/gamslib/raw/` is gitignored/absent in CI. It should assert on the emitted text rather than invoking GAMS, exactly as the sample guard does.
+- **Each fixture lands only with its own track's fix.** If a track REPLANs, its fixture is simply not written — the correct outcome, per S34's Day-12 deferral of three fixtures (`SPRINT_34/DAY12_P7_INFRA.md` §18).
+- **New finding — `indus` cannot serve as a P4/P6 regression signal.** It is in the golden-staleness **allowlist** for cross-environment byte non-determinism (#1461: hash-seed-stable on macOS, ~45 bytes different on ubuntu CI), so its gate is suppressed. Since indus is a **`$149` cohort member** (`$140` + `$149`), Task 4's catalog and Task 5's per-model protocol must verify it by **compile-error count, not golden diff**.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/TOOLING_AND_BACKLOG_ANALYSIS.md` §§1, 4, 4.4, 4.5; the tool inventory; `scripts/sprint_audit/golden_staleness_allowlist.txt`.
+
+**Decision:** no blocking tool gap; Sprint 35 adds only P7 test fixtures, each landing-gated. The genuine-floor recompute maintains **anchor 75** unless a track lands a genuine cold-emit change that cold-matches (a warm-start-only fix yields 0 floor by definition — the S34 P4 precedent).
 
 ---
 
@@ -1107,7 +1133,21 @@ Read `docs/planning/EPIC_4/SUMMARY.md` rows 33–35 and compare against the `PRO
 Sprint planning
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — **with the scope corrected (larger than a row fill)**
+**Verified by:** Task 3
+**Date:** 2026-07-23
+
+**Findings:**
+- `SUMMARY.md` has 19 numbered rows. Rows 33 and 34 are correctly filled (the S33 and S34 closes). **But rows 35 and 36 still carry the *pre-insertion* themes**, and rows 37/38 do not exist:
+  - **row 35** currently reads "Quality, performance & PATH-feedback integration (incl. rocket PATH author consultation) — `(planned)`". Post-insertion that theme is **Sprint 37**; row 35 must be reconciled to the **S34-carryforward** theme (mine dual / sarf symbolic / fawley diagonal / **ganges multi-root** / camcge Epic-5 / rocket → S36).
+  - **row 36** currently reads "v2.0.0 release & Epic 5 planning" — post-insertion that is **row 38**; row 36 must become **PATH Author Consultation & Solution Forcing**.
+  - **rows 37 and 38 must be appended** (Quality/Performance/PATH-feedback; v2.0.0 + Epic 5).
+- So the P7 work is a **reconcile-and-append across rows 35→38**, not the single row fill the task brief implies — mirroring the reconcile-and-append the S33 and S34 closes each performed (`SPRINT_34/DAY12_P7_INFRA.md` §35 records the same pattern one sprint earlier).
+- Cell format is established by rows 28–34: Theme / Headline KPIs at close / Firm landing(s) / REPLAN'd → carryforward.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/TOOLING_AND_BACKLOG_ANALYSIS.md` §5; `docs/planning/EPIC_4/SUMMARY.md` rows 33–36; `docs/planning/EPIC_4/PROJECT_PLAN.md` §§"Sprint 35"–"Sprint 38" headers.
+
+**Decision:** a Day-12/13 close continuation with three steps (reconcile row 35 + fill its cells; reconcile row 36; append rows 37/38). No technical impact, but left undone the Epic summary contradicts `PROJECT_PLAN.md` for three consecutive sprints.
 
 ---
 
