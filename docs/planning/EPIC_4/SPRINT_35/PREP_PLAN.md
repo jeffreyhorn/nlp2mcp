@@ -506,7 +506,8 @@ grep -icE 'REPLAN|exit|reallocat' docs/planning/EPIC_4/SPRINT_35/GANGES_RECOVERY
 
 ## Task 6: mine Head-Offset Dual-Architecture Design (Priority 1 foundation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-24
 **Priority:** Critical
 **Estimated Time:** 6–8 hours
 **Deadline:** Before Sprint 35 Day 1
@@ -539,11 +540,15 @@ P1 is Sprint 35's largest single budget line (18–24h) and its highest REPLAN p
 
 ### Changes
 
-_To be completed_
+Authored `docs/planning/EPIC_4/SPRINT_35/MINE_DUAL_ARCHITECTURE_DESIGN.md`: re-confirmed the Day-0 fingerprint live (`kkt_residual.py mine.gms`), formalized the `x.m = 0` degeneracy with the quantified +16000 gap, enumerated and scored the four candidate architectures on reachability (all rejected), specified the `/tmp` control (for completeness — no candidate reaches it), restated the standing BANs, and returned a **REPLAN recommendation** with its disposition + freed-budget target. Verified Unknowns 1.1 (✅ negative), 1.4, 1.5 (✅); marked 1.2 ❌ WRONG/REPLAN; appended the Task-6 fingerprint addendum to 1.3 (Task 2's Day-0 block preserved). No `src/`.
 
 ### Result
 
-_To be completed_
+**REPLAN before Day 1 — the honest, budget-freeing outcome for a four-times-carried track.** No emit-side dual architecture can supply the +16000 the `x.m = 0`-degenerate boundary requires. The decisive prior fact (S34 Day 1): re-anchoring the precedence dual's complementarity to **any** label produces the identical scalar MCP, so every keying/pairing candidate is **value-invariant** by construction. Scored the four sprint-plan candidates against the reachability test (supply +16000 without the banned sign flip, without a bound multiplier since `x.m = 0`, without altering the LP primal): **(a)** explicit head-offset dual var → value-invariant or non-square; **(b)** precedence re-declaration at base label → relabeling, value-invariant; **(c)** both labels' multipliers live → double-counts (`−2λ`, worse) + non-square; **(d)** LP-side reformulation → the only non-invariant lever, but it changes the primal → out of emit scope = **the PATH-consultation question**. All four rejected; the emit-side space is exhausted.
+
+**mine is a primal-degenerate LP whose warm KKT point is not MCP-reconcilable by emit** — the shadow price lives entirely in the precedence duals with no complementary bound. Live corroboration: the harness's **secondary** residual rows shift run-to-run (multiple optimal dual solutions of the degenerate LP) while the max row (`stat_x(3,1,1)` 2.37 / −32000) is invariant.
+
+**Disposition:** hand mine to the **Sprint-36 PATH-author consultation** as the canonical primal-degenerate-LP question (alongside rocket's Case-c), and reallocate the **P1 sprint-workstream budget (18–24 h — the sprint allocation for the P1 track, *not* this prep task's 6–8 h estimate) → P4** (Task 5's ganges/gangesx recovery, the designated best shot) first, then P6/P7. Surfacing the REPLAN in **prep** (vs S34's Day-1) lets P4 plan against the full freed budget from Day 0. mine stays `model_infeasible`; no `src/`; P1 contributes 0 in-sprint Solve / 0 genuine floor (handed to Tasks 9/11/12). The IR (`head_domain_offsets`) is sufficient but moot — nothing survives to carry it. Standing BANs (sign flip; `x.up=inf`) restated, not reconsidered.
 
 ### Verification
 
@@ -572,14 +577,14 @@ grep -rn 'head_domain_offsets' src/ir/*.py | head -3
 
 ### Acceptance Criteria
 
-- [ ] The S33/S34 refutations restated precisely, separating "this keying is invariant" from "no emit change suffices"
-- [ ] The `x.m = 0` degeneracy characterized formally with the quantified boundary gap
-- [ ] ≥ 4 candidate architectures enumerated and each scored on whether it can supply the missing contribution
-- [ ] A `file:line` design for the surviving candidate **or** an explicit, argued REPLAN recommendation (either is an acceptable outcome)
-- [ ] The pre-`src/` `/tmp` control specified with `modelstat` asserted and the interior-row invariance requirement
-- [ ] The standing BANs restated (objective-gradient sign flip; `x.up=inf` measurement)
-- [ ] Cross-referenced to `SPRINT_34/DAY1_PROGRESS_NOTES.md`, `SPRINT_34/MINE_DUAL_SUBSYSTEM_DESIGN.md`, `SPRINT_33/MINE_CROSSTERM_DESIGN.md`, `SPRINT_32/MINE_5TH_COUPLING_REPLAN.md`
-- [ ] Unknowns 1.1, 1.2, 1.3, 1.4, 1.5 verified and updated in `KNOWN_UNKNOWNS.md`
+- [x] The S33/S34 refutations restated precisely, separating "this keying is invariant" from "no emit change suffices"
+- [x] The `x.m = 0` degeneracy characterized formally with the quantified +16000 boundary gap
+- [x] **4 candidate architectures enumerated and each scored on reachability — all rejected, with the rejection recorded** (§3)
+- [x] An explicit, **argued REPLAN recommendation** (the accepted "design **or** REPLAN" outcome — no design manufactured to check a box)
+- [x] The pre-`src/` `/tmp` control specified (for completeness) with `modelstat` asserted, the interior-row invariance requirement, and the cold-solve gate (not the warm residual `N → 0`)
+- [x] The standing BANs restated (objective-gradient sign flip; `x.up=inf` measurement)
+- [x] Cross-referenced to `SPRINT_34/DAY1_PROGRESS_NOTES.md`, `SPRINT_34/MINE_DUAL_SUBSYSTEM_DESIGN.md`, `SPRINT_33/MINE_CROSSTERM_DESIGN.md`, `SPRINT_32/MINE_5TH_COUPLING_REPLAN.md`
+- [x] Unknowns 1.1 (✅ negative), 1.4, 1.5 verified; 1.2 ❌ WRONG/REPLAN; 1.3 fingerprint addendum appended (Task 2 block preserved) in `KNOWN_UNKNOWNS.md`
 
 ---
 
