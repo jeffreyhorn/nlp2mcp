@@ -113,7 +113,7 @@ therefore
 
 **Supporting evidence that the two layers are the surface:**
 - Chunk 1 (general log path, `expr * sum(j, …)`) *is* aliased to `j__` and wrapped in `sum(j)` → compiles; chunk 2 (collapsed path, `expr * (…)`) is not → `$149`. The two paths differ exactly as the two branches of `_diff_prod` differ.
-- The 18 other prod-in-stationarity models that compile (§4.3) are the **name-match** case (prod index == wrt index, e.g. camcge's #1330 `prod(i, cd(i)**cles(i))` w.r.t. `cd(i)`), where the collapsed form + the existing aliasing works. ganges is the **cross-index** case (prod over `j`, differentiate w.r.t. `pc(i)`, `j ≠ i`) — the case the aliasing contract does not cover.
+- The 18 other prod-in-stationarity models that compile (§5.1) are the **name-match** case (prod index == wrt index, e.g. camcge's #1330 `prod(i, cd(i)**cles(i))` w.r.t. `cd(i)`), where the collapsed form + the existing aliasing works. ganges is the **cross-index** case (prod over `j`, differentiate w.r.t. `pc(i)`, `j ≠ i`) — the case the aliasing contract does not cover.
 
 **Open question for Task 5 (which layer):** (a) `_diff_prod` should not emit a form that references the prod bound outside the `prod` without itself aliasing/substituting it — e.g. use form 1/2 with the derivative factor rebound to the wrt index `i`; or (b) `collect_index_aliases` should detect a `Prod` bound referenced by a sibling factor and alias it. Option (a) is the more targeted (it fixes the mathematics at the source and yields the correct `ac(i,r)/pc(i)` shape); option (b) is broader and riskier (it changes aliasing for every collapsed prod-derivative). **Recommend (a).**
 
