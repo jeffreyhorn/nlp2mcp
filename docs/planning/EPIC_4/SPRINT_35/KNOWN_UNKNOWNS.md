@@ -618,9 +618,19 @@ Re-apply the banked helper in a scratch tree, emit ganges and gangesx (recursion
 Development team (emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 5 (primary)
+**Date:** 2026-07-24
 
----
+**Findings:**
+- The banked `$141` fix applies **cleanly** to the current tree: `_param_assignment_has_division` (`src/emit/original_symbols.py:137`) and `emit_post_assignment_na_cleanup` (`:152`) are unchanged in location and signature. Reconstructed the helper `_param_assignment_references_varref_attr` (mirroring the division helper; skips params whose assignment contains a `VarRef` with a non-empty `.attribute`, i.e. `.l`/`.m`/…) + the skip in the cleanup loop, exactly per `SPRINT_34/DAY11_PROGRESS_NOTES.md`.
+- **Re-verified empirically: `$141` 15 → 0.** Applied the fix in a scratch tree, re-emitted ganges (~200 s), compiled (`gams a=c`): the 15 `$141` markers are gone. **`$145×3` and `$149×9` remain** — ganges still fails to compile (the multi-root proof; Unknown 4.4). Scratch patch **reverted**; `src/` clean (design task).
+- **Root:** ganges calibrates from a solved base equilibrium (`adst(i)=dst.l(i)/…`, `cg(i)=dat(…)/pc.l(i)`, `deltax(i)=(z.l/g.l)**…`), so those assignments are presolve-gated and the param is declared-but-unassigned in the cold MCP → the NA-cleanup guard reads an unassigned symbol → `$141`.
+- **Collateral:** the fix is general — it drops the cleanup guard for any `.l`-referencing division param. Beyond ganges/gangesx that touches ~9 more `.l`-calibration models (chakra, dinam, gancnsx, prolog, saras, senstran, shale, tfordy, turkey) but **NOT the data-calibrated CGE cluster** (irscge/lrgcge/moncge/stdcge calibrate from data params `Xp0`/`Y0`/`F0`, not `.l` — verified). Golden-byte drift, no bucket change → `--resolve-changed`-safe but must be regenerated at landing.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/GANGES_RECOVERY_DESIGN.md` §1; the scratch re-emit + `gams a=c` tally (`$141` 15→0); `src/emit/original_symbols.py:114–214`; `src/ir/ast.py:53` (VarRef `.attribute`).
+
+**Decision:** the `$141` fix is landing-ready and low-risk; it ships as **step 1** of the three-root P4 sequence (not alone — it recovers nothing without `$145`+`$149`). Collateral goldens enumerated via `--resolve-changed` and regenerated (scoped `--models`, Task 3) at landing.
 
 ## Unknown 4.2: Is `$145` genuinely an independent universal-set (`*`-domain) root?
 
@@ -651,9 +661,18 @@ Compile the ganges golden and isolate the three `$145` lines; inspect the offend
 Development team (emit specialist)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 5 (primary)
+**Date:** 2026-07-24
 
----
+**Findings:**
+- `$145` is the NaN-cleanup guard emitted over `series(*,years)` — a param whose **first domain is the universal set `*`** (`Table series(*,years)`). Its assignments divide (`series("pim1",years)=series("pim1",years)/series("usdefl",years)`), so the cleanup filter fires and emits `series(*,years)$(NOT (series(*,years) > -inf …)) = 0;`. `*` is valid in a *declaration* but **invalid as an assignment/`$`-guard index** → GAMS `$145` ("Set identifier or quoted element expected"), ×3.
+- **Independent of `$141`, two ways:** (a) `series` references **no `.l`** (it divides one `series` element by another), so the `$141` skip does not cover it; (b) `series` **is** assigned unconditionally (source lines 310+), so it is not a declared-unassigned `$141`. The `$141`-only re-emit (Unknown 4.1) leaves the 3 `$145` intact — direct confirmation.
+- **Fix designed:** in the same cleanup loop, `if any(d == "*" for d in param_def.domain): continue` — skip universal-set-domain params (their index space is not a named set the guard can iterate; the guard is structurally malformed regardless of NA-ness). Minimal reproducing shape: `Table p(*,s)` with a division assignment → `p(*,s)$(NOT …)` → `$145`.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/GANGES_RECOVERY_DESIGN.md` §2; `data/gamslib/raw/ganges.gms:251,310–319` (the `series` table + division assignments); the golden line `series(*,years)$(NOT …)`; the `$141`-only re-emit leaving `$145×3`.
+
+**Decision:** `$145` ships as **step 2** of the P4 sequence (a bounded cleanup-pass skip, low-risk). Blast radius = models with a `*`-domain division-assignment param (rare; enumerate at landing via `--resolve-changed`).
 
 ## Unknown 4.3: Where does the `$149` free index originate, and what is the correct hand-derived `stat_pc` cross-term?
 
@@ -700,6 +719,7 @@ Development team (AD/KKT specialist)
 **Decision:** the `$149` correction is form 1/2 at the AD layer (`_diff_prod`, option (a)) — Task 5 specifies it, sequenced after `$141`/`$145`, gated against the 18-model prod-in-stationarity regression set (§5.1). Not the `stationarity.py` cleanup surface the prior assumed.
 
 ---
+**Task-5 contribution (2026-07-24):** the `$149` correction is carried into the P4 recovery design (`GANGES_RECOVERY_DESIGN.md` §3) as the **deepest, REPLAN-bearing step** of the three-root sequence (`$141`→`$145`→`$149`). The AD-layer surface (`_diff_prod`, form 1/2) and the 18-model prod-in-stationarity regression set (lmp2 flagged) are handed to Task 10's Phase-0 gate. Task 4 remains the primary; this task does **not** build the fix.
 
 ## Unknown 4.4: After all three roots, do ganges AND gangesx each actually compile, solve, and match?
 
@@ -731,20 +751,22 @@ Per model, independently: emit → compile → count residual `$NNN` by code →
 Development team
 
 ### Verification Results
-🔍 **Status:** PARTIALLY VERIFIED — Day-0 provenance confirmed (Task 2); **the recovery verdict remains OPEN** (Task 5)
-**Verified by:** Task 2 (Day-0 provenance only)
-**Date:** 2026-07-23
+🔍 **Status:** DESIGN-SPECIFIED (the protocol + sequence are designed; the recovery verdict is NOT executed)
+**Verified by:** Task 5 (design) — supersedes the Task-2 provenance-only status below; the verdict is an in-sprint P4 execution result
+**Date:** 2026-07-24
 
-**Findings (Task 2 — Day-0 provenance):**
-- ganges and gangesx are **both** `path_syntax_error` at Day 0, both `likely_convex` candidates, both with `mcp_solve.model_status = None` (neither ever reached a solve). Both translate successfully — the failure is at the GAMS compile of the emitted MCP, not at translation.
-- Both are members of the 7-model `path_syntax_error` bucket (`clearlak`, `dinam`, `ganges`, `gangesx`, `indus`, `turkey`, `turkpow`), unchanged from the S34 close.
-- Their identical NLP objective (6395.5444) and apparently identical root sets are **recorded but NOT treated as evidence of a shared fate** — that inference is exactly what Sprint 34's prep got wrong.
+**Findings:**
+- **The multi-root sequence is empirically confirmed** (not asserted): re-emitting ganges with **only** the `$141` fix leaves `$145×3 + $149×9` and still fails to compile. So **no bucket moves until all three roots land** — the S34 finding, re-proven. The landing sequence `$141`→`$145`→`$149` is each `--resolve-changed`-gated with per-step expected bucket outcome (all `path_syntax_error` until step 3).
+- **The per-model verification protocol is designed** (§5): for ganges and gangesx **independently** — emit → compile → count residual `$NNN` → translate → solve (cold + presolve, `modelstat` asserted) → bucket → match — with the explicit rule that compile-clean-but-not-solving is *not* a recovery (it is a bucket change, `path_syntax_error → model_infeasible`).
+- **But the recovery verdict itself is NOT executed here.** The `$149` AD fix is not built, and `$149`/`$145` were not applied — so whether all three roots together make ganges *and* gangesx compile, solve, and match is **unverified**. Marked **DESIGN-SPECIFIED**, deliberately: this is the exact assumption Sprint 34 got wrong (its "one fix recovers both" prep hypothesis), and a bucket read is not evidence for it. It becomes ✅ only when the in-sprint P4 execution runs §5's protocol per model.
 
-**Evidence:** `docs/planning/EPIC_4/SPRINT_35/BASELINE_METRICS.md` §3 (path_syntax_error members), §5 (ganges/gangesx provenance rows).
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/GANGES_RECOVERY_DESIGN.md` §4, §5; the `$141`-only re-emit tally (`$145×3 + $149×9` remain); `SPRINT_35/BASELINE_METRICS.md` §5 (ganges/gangesx Day-0 provenance, Task 2).
 
-**Decision:** the Day-0 provenance is confirmed, but **the substantive question — whether `$141` + `$145` + `$149` together are *sufficient* for each model, verified independently — is unanswerable from the DB and stays OPEN for Task 5** (design) and the in-sprint P4 execution (the per-model emit → compile → solve → bucket → match protocol). Marked PARTIALLY VERIFIED rather than ✅ deliberately: this is the assumption S34 got wrong, and a Day-0 bucket read is not evidence for it.
+**Decision:** the per-model protocol (§5) is encoded into the P4 Phase-0 gate (Task 10). Task 11's projection uses **+2 (ganges, gangesx)** as *contingent*, not firm — the verdict resolves in-sprint.
 
 ---
+
+**Prior (Task 2, 2026-07-23) — provenance-only, superseded above:** ganges and gangesx are both `path_syntax_error` `likely_convex` candidates at Day 0 (`model_status = None`, never reached solve). Recorded but explicitly not treated as evidence of a shared fate. See `SPRINT_35/BASELINE_METRICS.md` §5.
 
 ## Unknown 4.5: Can the slow-emit CGE goldens be regenerated within the sprint budget?
 
@@ -821,11 +843,17 @@ Compile the turkey golden, isolate the `$161` line and the declaration it comes 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 5 (primary)
+**Date:** 2026-07-24
 
----
+**Findings:**
+- turkey's `ao` set is declared with dotted-tuple elements (`grains.wheat, grains.corn, …, industrial.tea, fruits.grape, …`) with inconsistent quoting; the emit produces set elements GAMS rejects → `$161`, ×6, on the set declaration (compiled `gams a=c`: `$161×6 / $141×1 / $257×1`). Its `$141`/`$257` are **cascades** of `$161`.
+- **Disjoint from the ganges roots:** a **set-declaration emit** surface, unrelated to the NA-cleanup (`$141`/`$145`) or the product-rule (`$149`) — and **turkey has no `$149`** (Task 4). Shares no root, fix surface, or model with the ganges recovery.
 
-# Category 5: camcge Walras (Epic 5) + rocket PATH Submission
+**Evidence:** `docs/planning/EPIC_4/SPRINT_35/GANGES_RECOVERY_DESIGN.md` §7; the turkey `gams a=c` compile (`$161` on the `ao` declaration).
+
+**Decision: P6, not P4.** Folding turkey into P4 would conflate two unrelated efforts and dilute the P4 gate. It is a bounded, standalone P6 item (quote dotted-tuple set elements consistently in the set-declaration emit) with its own `--resolve-changed` gate; a recovery would be +1 Solve on the P6 track.
 
 ## Unknown 5.1: Does the full dual-consistent Walras redefinition reach MS-1 in a `/tmp` prototype?
 
