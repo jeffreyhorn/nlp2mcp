@@ -23,9 +23,10 @@ import pytest
 from src.emit.original_symbols import (
     _expr_contains_division,
     _param_assignment_has_division,
+    _param_assignment_references_varref_attr,
     emit_post_assignment_na_cleanup,
 )
-from src.ir.ast import Binary, Const, ParamRef
+from src.ir.ast import Binary, Const, ParamRef, VarRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import ParameterDef
 
@@ -160,6 +161,93 @@ def test_expr_contains_division_detects_nested_division():
     # No division
     expr_no_div = Binary("*", ParamRef("a", ()), ParamRef("b", ()))
     assert not _expr_contains_division(expr_no_div)
+
+
+@pytest.mark.unit
+def test_param_referencing_varref_attr_skips_cleanup():
+    """Sprint 35 / #1443 ($141): a division-based assignment that references
+    a variable attribute (e.g. `adst(i) = dst.l(i)/d(i)`) is presolve-gated —
+    absent (declared-but-unassigned) in the cold MCP — so NO cleanup line is
+    emitted, even though the RHS contains division.
+
+    Contrast with `test_indexed_param_with_division_emits_cleanup`: division
+    alone emits; division + a `VarRef` attribute is skipped.
+    """
+    adst = _make_param(
+        "adst",
+        ("i",),
+        expressions=[
+            (("i",), Binary("/", VarRef("dst", ("i",), attribute="l"), ParamRef("d", ("i",))))
+        ],
+    )
+    model = ModelIR()
+    model.params["adst"] = adst
+
+    output = emit_post_assignment_na_cleanup(model)
+
+    assert output == "", f"Expected empty output for a `.l`-referencing param; got:\n{output}"
+
+
+@pytest.mark.unit
+def test_param_assignment_references_varref_attr_helper():
+    """Direct test of `_param_assignment_references_varref_attr`: True when a
+    `VarRef` with a non-empty attribute appears at any depth, False otherwise
+    (a bare `VarRef` with no attribute does not count).
+    """
+    # adst(i) = dst.l(i) / d(i)  — references `.l`, nested under a Binary.
+    with_attr = _make_param(
+        "adst",
+        ("i",),
+        expressions=[
+            (("i",), Binary("/", VarRef("dst", ("i",), attribute="l"), ParamRef("d", ("i",))))
+        ],
+    )
+    assert _param_assignment_references_varref_attr(with_attr)
+
+    # p(i) = x(i) / d(i)  — bare VarRef, no attribute → not presolve-gated.
+    bare_varref = _make_param(
+        "p",
+        ("i",),
+        expressions=[(("i",), Binary("/", VarRef("x", ("i",)), ParamRef("d", ("i",))))],
+    )
+    assert not _param_assignment_references_varref_attr(bare_varref)
+
+    # p(i) = a(i) / b(i)  — no VarRef at all.
+    no_varref = _make_param(
+        "p",
+        ("i",),
+        expressions=[(("i",), Binary("/", ParamRef("a", ("i",)), ParamRef("b", ("i",))))],
+    )
+    assert not _param_assignment_references_varref_attr(no_varref)
+
+
+@pytest.mark.unit
+def test_wildcard_domain_param_skips_cleanup():
+    """Sprint 35 / #1443 ($145): a param whose domain contains the universal
+    set `*` (e.g. `series(*,years) = series(*,years)/q(years)`) is skipped —
+    `*` is not a valid assignment/`$`-guard index, so emitting the guard would
+    be structurally malformed. No cleanup line despite the division.
+    """
+    series = _make_param(
+        "series",
+        ("*", "years"),
+        expressions=[
+            (
+                ("*", "years"),
+                Binary(
+                    "/",
+                    ParamRef("series", ("*", "years")),
+                    ParamRef("q", ("years",)),
+                ),
+            )
+        ],
+    )
+    model = ModelIR()
+    model.params["series"] = series
+
+    output = emit_post_assignment_na_cleanup(model)
+
+    assert output == "", f"Expected empty output for a `*`-domain param; got:\n{output}"
 
 
 @pytest.mark.unit

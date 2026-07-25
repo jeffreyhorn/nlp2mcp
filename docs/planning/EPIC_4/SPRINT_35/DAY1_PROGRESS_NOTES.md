@@ -40,8 +40,12 @@ ganges emit is **byte-identical** under `PYTHONHASHSEED ∈ {0,1,42}` (all 1359 
 
 ## 5. Not done on Day 1 (deferred to the shipping landing, Day 3–4) — by design
 
-- **Golden regeneration is NOT committed here.** The `$141` fix is *general* — it also drops the (no-op) cleanup guard on ~9 `.l`-calibration collateral models (chakra, dinam, gancnsx, prolog, saras, senstran, shale, tfordy, turkey — **not** the data-calibrated CGE cluster), golden-byte drift with 0 bucket change. Regenerating those now — only to regenerate again after `$149` — would churn the WIP twice. They regenerate **once**, scoped (`check_golden_staleness.py --models … --fix`, never the unscoped `make regen-goldens`), at the all-three-roots landing. So the committed ganges/gangesx/collateral goldens are intentionally stale on this branch (CI-safe: the golden-comparison tests are `slow`/skip-if-absent and excluded from the default gate).
+- **Golden regeneration is NOT committed here.** The `$141` fix is *general* — it also drops the (no-op) cleanup guard on the `.l`-calibration collateral models (chakra, dinam, gancnsx, prolog, saras, senstran, shale, tfordy, turkey, indus — **not** the data-calibrated CGE cluster), golden-byte drift with 0 bucket change. Regenerating those now — only to regenerate again after `$149` — would churn the WIP twice. They regenerate **once**, scoped (`check_golden_staleness.py --models … --fix`, never the unscoped `make regen-goldens`), at the all-three-roots landing.
 - **`--resolve-changed` GO** — run at the landing (it enumerates the exact collateral drift set against `78ceaead`).
+
+### ⚠ Golden-staleness CI finding → this branch is HELD as a draft (Option B)
+
+An earlier draft of this note claimed the stale goldens were "CI-safe." **That was wrong.** The PR26 **golden-staleness CI job** (`scripts/sprint_audit/check_golden_staleness.py`, distinct from the `slow`/skip-if-absent golden-comparison *tests*) always runs on `src/emit/` changes: it re-emits every in-scope golden and byte-diffs it, and it **hard-fails** on `ganges_mcp.gms` + `gangesx_mcp.gms` drift (−888 bytes each); `indus_mcp.gms` also drifts but is allowlisted (WARN only). So a standalone `$141`+`$145` PR **cannot be CI-green** without committing 0-bucket golden churn — exactly what the "no bucket → no `src/`" rule forbids ("ship as one coherent landing, or not at all"). **Resolution (Option B):** PR #1617 is converted to a **draft** and the branch is **held**. The `$141`+`$145` code + the unit tests stay here; `$149` lands Day 3; the goldens regenerate **once** (now *compiling*) at the all-three-roots landing, when the real (non-draft) PR opens. Red golden-staleness CI on the draft is expected and correct until then.
 
 ## 6. Next (Day 2)
 
