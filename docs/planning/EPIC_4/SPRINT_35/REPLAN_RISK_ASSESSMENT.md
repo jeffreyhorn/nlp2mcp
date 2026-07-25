@@ -30,7 +30,7 @@
 
 **In-sprint REPLAN prior: RESOLVED (already exited).** mine is **four-times-carried** (S32 5th-coupling / S33 H1 / S34 H_dual — each control-refuted; S35 Task 6 screened the *entire* remaining candidate space to zero). There is no fifth in-sprint hypothesis to gamble on — the refuting evidence (value-invariance) is already in hand.
 
-**Refuting evidence + earliest surfacing:** already surfaced (in prep). The cold-MS-1-@-17500 gate is un-reachable; the S34 Day-1 control already refuted the strongest candidate. No Day-5 check needed.
+**Refuting evidence + earliest surfacing:** already surfaced (in prep). The cold-MS-1-@-17500 gate is unreachable; the S34 Day-1 control already refuted the strongest candidate. No Day-5 check needed.
 
 **Exit + reallocation:** mine → the **Sprint-36 PATH consultation** (the primal-degenerate-LP question, bundled with rocket by Task 9); **no `src/`**; the 18–24 h P1 design budget was **spent in prep** — its *in-sprint* footprint is ~0 h (a documentation line + the Sprint-36 hand-off, already in Task 9's bundle). **0 in-sprint bucket / 0 floor.**
 
