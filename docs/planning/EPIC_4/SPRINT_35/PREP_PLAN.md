@@ -1017,7 +1017,8 @@ grep -icE '92|134|168|12h|per-priority' docs/planning/EPIC_4/SPRINT_35/REPLAN_RI
 
 ## Task 12: Plan Sprint 35 Detailed Schedule
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-24
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 35 Day 1
@@ -1049,11 +1050,11 @@ Sprint 34's schedule + prompts are in `SPRINT_34/PLAN.md` and `SPRINT_34/prompts
 
 ### Changes
 
-_To be completed_
+Authored `PLAN.md` (the 14-day schedule: Day 0 + Days 1–13, §§1–21) and `prompts/PLAN_PROMPTS.md` (one pasteable prompt per day, 14 headers, each citing its Phase-0 gate + design doc + REPLAN exit). Laid out **Day 0** (baseline confirm vs the S34-close anchor `78ceaead` + the per-track control re-confirms + the GO/NO-GO). **Front-loaded P4 (Days 1–5)** per Task 11's argued recommendation — with the slot justified explicitly from the three-sprint record (mine ×4 / sarf ×3 / fawley ×3 = 0 buckets; the failure-cohort track the only genuine move), not inherited — so the sole live REPLAN gate (`$149` `/tmp` control, Day 2) surfaces by the **Day-5 checkpoint**. Placed P6 (the second bucket source) Days 6–7, the small P5 Epic-5/Sprint-36 slot Day 8, P3 optional Day 9, P7 + Checkpoint 2 Day 10, REPLAN-slack + Sprint-36 carryforwards Days 11–12, and the final retest (≥ 3 `PYTHONHASHSEED`) Day 13. Scheduled the slow-emit golden regeneration **in-day** (scoped `--fix` then `--resolve-changed`, never unscoped `make regen-goldens`) per Task 3's measured budget (fits a normal day — no overnight window). Verified the budget (§17), and recorded the Known-Unknowns resolution status + the **GO/NO-GO** in both `KNOWN_UNKNOWNS.md` §Next Steps and `PLAN.md` §19.
 
 ### Result
 
-_To be completed_
+**Sprint 35 is GO for Day 0.** The 14-day schedule front-loads P4 (the sole in-sprint bucket lever) so its `$149` REPLAN surfaces by Day 5; P1/P2 REPLAN'd/DEFER'd in prep (no in-sprint slot); P5 camcge Epic-5-deferred + rocket → Sprint 36; P3 correctness-only/optional. **Budget:** the per-priority work-items sum to **92–134 h** (fits the 168 h cap; heaviest scheduled day ~8 h — well under the ~11 h ceiling, because P1's 18–24 h + P2's 20–28 h design budgets were spent in prep), with a **real in-sprint footprint of ~34–70 h** — ample slack for a thorough P4 + P6 push. **All 29 Known Unknowns accounted for** (24 VERIFIED / 1 REFUTED→REPLAN / 4 DESIGN-SPECIFIED in-sprint gates; 0 Day-0 blockers). The honest **bimodal** projection binds: **Solve 108 or 110; Match 93 or 95; genuine floor 75 or 77 (cold-match-contingent); Translate 135; path_syntax_error 7 or 5; ≥ 112 a-priori REFUTED.**
 
 ### Verification
 
@@ -1081,14 +1082,14 @@ grep -icE 'INCOMPLETE|DESIGN-SPECIFIED|Day-0 blocker' docs/planning/EPIC_4/SPRIN
 
 ### Acceptance Criteria
 
-- [ ] The 14-day schedule laid out (Day 0 + Days 1–13) with the front-load following Task 11's recommendation
-- [ ] P4's scheduled position explicitly justified rather than inherited from prior sprints
-- [ ] The slow-emit golden-regeneration window scheduled per Task 3's measured budget
-- [ ] Checkpoints placed (Day 5 PROCEED/REPLAN + reallocation, Day 10, final retest Day 13 under ≥ 3 `PYTHONHASHSEED`)
-- [ ] A pasteable prompt authored for every day, each referencing its gate + design doc + REPLAN exit
-- [ ] The budget verified (≤ 12h/day, ≤ 168h, 92–134h work-items, heaviest ~11h)
-- [ ] All Critical/High unknowns confirmed resolved, flagged as Day-0 blockers, or labelled DESIGN-SPECIFIED
-- [ ] Cross-referenced to all prior prep tasks (Tasks 1–11) and `SPRINT_34/PLAN.md`
+- [x] The 14-day schedule laid out (Day 0 + Days 1–13) with the front-load following Task 11's recommendation
+- [x] P4's scheduled position explicitly justified rather than inherited from prior sprints
+- [x] The slow-emit golden-regeneration window scheduled per Task 3's measured budget
+- [x] Checkpoints placed (Day 5 PROCEED/REPLAN + reallocation, Day 10, final retest Day 13 under ≥ 3 `PYTHONHASHSEED`)
+- [x] A pasteable prompt authored for every day, each referencing its gate + design doc + REPLAN exit
+- [x] The budget verified (≤ 12h/day, ≤ 168h, 92–134h work-items, heaviest ~11h)
+- [x] All Critical/High unknowns confirmed resolved, flagged as Day-0 blockers, or labelled DESIGN-SPECIFIED
+- [x] Cross-referenced to all prior prep tasks (Tasks 1–11) and `SPRINT_34/PLAN.md`
 
 ---
 
@@ -1106,18 +1107,18 @@ grep -icE 'INCOMPLETE|DESIGN-SPECIFIED|Day-0 blocker' docs/planning/EPIC_4/SPRIN
 
 ### Success Criteria for Sprint 35 Prep
 
-- [ ] All 12 prep tasks complete (or explicitly deferred with rationale)
+- [x] All 12 prep tasks complete (or explicitly deferred with rationale) — **Tasks 1–12 ✅ COMPLETE (2026-07-24)**
 - [x] The Known Unknowns list identifies ≥ 25 unknowns with verification plans across 7 categories (Task 1 — **29 authored**, Critical 7 / High 12 / Medium 7 / Low 3, ~35.5h research)
-- [ ] Day-0 baseline confirmed = Sprint 34 close (Solve 108 / Match 93 / genuine floor 75 / Translate 135), with the code anchor advanced to the **S34-close SHA** (Task 2)
-- [ ] The slow-emit CGE golden-regeneration budget is **measured** and a shipping window is proposed — the S34 ship-blocker is resolved before Day 1 (Task 3)
-- [ ] The `$149` product-rule defect is localized to a `file:line` hypothesis with a hand-derived correct cross-term, and the cohort catalog answers "what still fails after `$149`" per model (Task 4)
-- [ ] P4 has an ordered, individually-gated, per-model-verified recovery design (Task 5)
-- [ ] Each deep track (P1 mine, P2 sarf, P3 fawley) has either a `file:line` design with a pre-`src/` `/tmp` control **or** an explicit, argued REPLAN recommendation (Tasks 6, 7, 8)
-- [ ] camcge's Epic-5 MS-1 gate + fallback and rocket's **Sprint-36** submission plan are specified (Task 9)
-- [ ] A Phase-0 acceptance gate is authored per track P1–P5, each with `modelstat` asserted and a PROCEED/REPLAN criterion (Task 10)
-- [ ] The REPLAN assessment pins the exits, the reallocation chain, and the honest modal-KPI projection — and argues P4's scheduling position from the three-sprint record (Task 11)
-- [ ] The 14-day schedule + day-by-day prompts front-load per that recommendation, with Day-5/10 checkpoints and the golden-regen window placed (Task 12)
-- [ ] Every design carries an explicit REPLAN exit (the modal outcome remains de-risking plus, at best, the P4 failure-cohort recovery — not a guaranteed deep-track bucket move)
+- [x] Day-0 baseline confirmed = Sprint 34 close (Solve 108 / Match 93 / genuine floor 75 / Translate 135), with the code anchor advanced to the **S34-close SHA** (Task 2)
+- [x] The slow-emit CGE golden-regeneration budget is **measured** and a shipping window is proposed — the S34 ship-blocker is resolved before Day 1 (Task 3)
+- [x] The `$149` product-rule defect is localized to a `file:line` hypothesis with a hand-derived correct cross-term, and the cohort catalog answers "what still fails after `$149`" per model (Task 4)
+- [x] P4 has an ordered, individually-gated, per-model-verified recovery design (Task 5)
+- [x] Each deep track (P1 mine, P2 sarf, P3 fawley) has either a `file:line` design with a pre-`src/` `/tmp` control **or** an explicit, argued REPLAN recommendation (Tasks 6, 7, 8)
+- [x] camcge's Epic-5 MS-1 gate + fallback and rocket's **Sprint-36** submission plan are specified (Task 9)
+- [x] A Phase-0 acceptance gate is authored per track P1–P5, each with `modelstat` asserted and a PROCEED/REPLAN criterion (Task 10)
+- [x] The REPLAN assessment pins the exits, the reallocation chain, and the honest modal-KPI projection — and argues P4's scheduling position from the three-sprint record (Task 11)
+- [x] The 14-day schedule + day-by-day prompts front-load per that recommendation, with Day-5/10 checkpoints and the golden-regen window placed (Task 12)
+- [x] Every design carries an explicit REPLAN exit (the modal outcome remains de-risking plus, at best, the P4 failure-cohort recovery — not a guaranteed deep-track bucket move)
 
 ---
 
@@ -1140,6 +1141,6 @@ grep -icE 'INCOMPLETE|DESIGN-SPECIFIED|Day-0 blocker' docs/planning/EPIC_4/SPRIN
 ---
 
 **Document Created:** 2026-07-23
-**Last Updated:** 2026-07-23 (Task 1 complete)
+**Last Updated:** 2026-07-24 (Task 12 complete — prep COMPLETE)
 **Owner:** Sprint 35 Planning Team
-**Status:** 🔵 Prep IN PROGRESS — Task 1 ✅ COMPLETE (29 unknowns authored); execute Tasks 2–12 before Sprint 35 Day 1
+**Status:** ✅ Prep COMPLETE — Tasks 1–12 all ✅ COMPLETE; **Sprint 35 is GO for Day 0** (`PLAN.md` §19 + `KNOWN_UNKNOWNS.md` §Next Steps). The 14-day schedule front-loads P4 (the sole live bucket gate) so its `$149` REPLAN surfaces by the Day-5 checkpoint; the honest bimodal projection binds (Solve 108 or 110; genuine floor 75 or 77; ≥ 112 REFUTED).
