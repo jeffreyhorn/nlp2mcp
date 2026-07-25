@@ -149,6 +149,36 @@ def _param_assignment_has_division(param_def: ParameterDef) -> bool:
     return False
 
 
+def _expr_contains_varref_attr(expr: Expr) -> bool:
+    """Return True if *expr* (or any subexpression) is a `VarRef` with a
+    non-empty attribute (`.l`/`.m`/`.lo`/`.up`).
+
+    Walks the AST via `Expr.children()`, mirroring `_expr_contains_division`.
+    The attribute lives on the `VarRef` node itself (`src/ir/ast.py:53`), so
+    checking each node directly (rather than descending into its indices)
+    is sufficient.
+    """
+    if isinstance(expr, VarRef) and expr.attribute:
+        return True
+    return any(_expr_contains_varref_attr(c) for c in expr.children())
+
+
+def _param_assignment_references_varref_attr(param_def: ParameterDef) -> bool:
+    """Return True if any of `param_def.expressions[*][1]` references a
+    variable attribute (`.l`/`.m`/…).
+
+    Issue #1443 ($141): Calibration assignments like `adst(i) = dst.l(i)/…`
+    reference a variable *level*, so nlp2mcp emits them only under
+    `--nlp-presolve` (they need the warm-start solve). In the cold MCP the
+    assignment is absent, leaving the parameter declared-but-unassigned; the
+    NA-cleanup guard then reads an unassigned symbol and GAMS raises `$141`
+    ("Symbol declared but no values assigned"). Skipping the cleanup for
+    these presolve-gated params avoids the spurious guard. Mirrors
+    `_param_assignment_has_division`.
+    """
+    return any(_expr_contains_varref_attr(expr) for _key, expr in param_def.expressions)
+
+
 def emit_post_assignment_na_cleanup(
     model_ir: ModelIR,
     model_relevant_params: set[str] | None = None,
@@ -202,6 +232,20 @@ def emit_post_assignment_na_cleanup(
         # Only emit cleanup for parameters whose assignments contain
         # division — that's the typical NA-from-arithmetic source.
         if not _param_assignment_has_division(param_def):
+            continue
+        # Issue #1443 ($141): skip params whose assignment references a
+        # variable attribute (`.l`/`.m`/…). These are presolve-gated
+        # calibration params — absent (declared-but-unassigned) in the cold
+        # MCP — so the cleanup guard would read an unassigned symbol → $141.
+        if _param_assignment_references_varref_attr(param_def):
+            continue
+        # Issue #1443 ($145): skip params whose domain contains the universal
+        # set `*`. `*` is a valid declaration placeholder but not a valid
+        # index in an assignment/`$`-guard, so the emitted guard is
+        # structurally malformed → $145 ("Set identifier or quoted element
+        # expected"). Such `*`-domain data tables are not the NA source #1322
+        # targets anyway.
+        if any(d == "*" for d in param_def.domain):
             continue
 
         domain_str = ",".join(param_def.domain)
