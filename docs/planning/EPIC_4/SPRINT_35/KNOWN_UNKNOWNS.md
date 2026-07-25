@@ -325,7 +325,10 @@ Sprint planning
 
 **Decision:** P1 contributes 0 in-sprint Solve / 0 genuine floor; reallocates to P4/P6/P7. Handed to Task 9 (mine joins rocket as a Sprint-36 consultation question), Task 11 (projection), Task 12 (no Day-1–5 slot for P1).
 
+**Task-11 contribution (2026-07-24) — risk assessment (Task 6 remains the design primary):** P1's in-sprint REPLAN prior is **RESOLVED (exited in prep)** — mine is four-times-carried (S32→S35), and Task 6 screened the *entire* remaining emit-side candidate space to zero, so there is no in-sprint hypothesis to gamble on. Its **18–24 h design budget was spent in prep** (in-sprint footprint ~0 h — a doc line + the Sprint-36 hand-off, already in Task 9's bundle); the freed budget flows to **P4/P6/P7** (`REPLAN_RISK_ASSESSMENT.md` §P1 + the budget-at-risk tally). 0 in-sprint bucket / 0 floor.
+
 ---
+
 
 # Category 2: sarf #1385 — Symbolic-Emit Subsystem
 
@@ -416,6 +419,8 @@ Development team (AD/emit specialist)
 **Decision:** the baseline (> 303 s) is the O(369K) tractability gap; the post-change O(active) figure is an in-sprint executed result (DESIGN-SPECIFIED). The gate is Task 10's Phase-0 item.
 
 **Task-10 contribution (2026-07-24):** the P2 gate is authored as a **timing** gate (`PHASE_0_ACCEPTANCE_GATES.md` §1 P2, PR20) — O(active = 398) in single-digit seconds vs the **measured > 303 s** baseline; a **partial improvement that does not cross the threshold is pre-classified as REPLAN, not progress**; plus the 7-term/no-set-name-literal check, atomic landing, 141 byte-stable goldens, determinism ×3, `--resolve-changed` GO. The DEFER exit is taken. Task 7 remains the primary.
+
+**Task-11 contribution (2026-07-24):** P2's timeout-re-trigger risk is **RESOLVED (DEFER'd in prep)** — the measured > 303 s baseline + the corpus-safety surface (6 call sites) pin the risk, so the DEFER is a settled scope/risk call, not a live gamble. The **20–28 h design budget was spent in prep** (in-sprint footprint ~0 h); freed → P4/P6/P7. Contributes to the retrospective-budget finding (`REPLAN_RISK_ASSESSMENT.md` §P2). Primary: Task 7.
 
 ---
 
@@ -639,6 +644,8 @@ Development team (KKT/emit specialist)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_35/FAWLEY_DIAGONAL_DESIGN.md` §§2–4, §6; `src/kkt/stationarity.py:5861` (`_add_indexed_jacobian_terms`), `:7176` (#1049), `:4496` (`_get_or_create_fresh_alias`); the 6 cohort goldens present on the tree.
 
 **Decision:** the predicate + guard + harness are specified; a leak-free landing is the gate (Task 10). Any mbal/cohort change = the gate-leak REPLAN exit (Unknown 3.4 / §8).
+
+**Task-11 contribution (2026-07-24):** P3's gate-leak REPLAN prior is **Medium — but the bucket is 0 either way** (H-b). The only risk is a correctness regression (the diagonal guard leaking onto mbal / the 2-D cohort / the 1-D core), surfaced pre-`src/` by the `/tmp` control + the cohort byte-diff. Since fawley stays `model_infeasible` under H-b whether or not the fix lands, **P3 is a low-priority correctness-only landing that must not displace P4** (`REPLAN_RISK_ASSESSMENT.md` §P3). Primary: Task 8.
 
 ---
 
@@ -972,7 +979,10 @@ Development team
 
 **Decision: P4's golden regeneration FITS A NORMAL ≤ 12 h SPRINT DAY — no dedicated overnight slot is required** (Task 12 schedules against this). Prescribed invocation on the P4 landing day: `check_golden_staleness.py --models ganges,gangesx,clearlak,turkpow --fix`, then `run_full_test.py --resolve-changed --since-commit 78ceaead`. **Do NOT run the unscoped `make regen-goldens`** — that is the 170-golden sweep whose contention caused the S34 soft-timeout. **Consequence:** Sprint 34 banked its verified `$141` fix on two grounds — 0 bucket recovered, *and* un-regenerable goldens. **The second ground is removed.** The first still stands (no bucket → no `src/`), but the S34-P4 exception criteria (fast, regenerable goldens + `--resolve-changed` GO) are now **satisfiable** for this cohort. Task 11 should weigh P4 with the golden constraint lifted.
 
+**Task-11 contribution (2026-07-24):** the measured golden-regen budget **makes P4 shippable in-sprint and unconstrains its scheduling** — ~8.2 min scoped fits a normal ≤ 12 h day (no overnight slot), so P4 can be **front-loaded Days 1–5** (surfacing the `$149` REPLAN gate by the Day-5 checkpoint) without reserving a nightly window, and the S34-P4 "no bucket → no `src/`" exception is *satisfiable* if a bucket move materializes (`REPLAN_RISK_ASSESSMENT.md` §P4 + front-load ordering). Primary: Task 3.
+
 ---
+
 
 ## Unknown 4.6: Is turkey's `$161` independent, and does it belong in P4 or P6?
 
