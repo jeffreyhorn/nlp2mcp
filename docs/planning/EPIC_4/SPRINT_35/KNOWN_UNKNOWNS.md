@@ -1501,7 +1501,9 @@ When adding unknowns during Sprint 35:
 
 ## Next Steps
 
-**Pre-Day-1 status (Task 1, 2026-07-23):** all 29 unknowns are authored and 🔍 INCOMPLETE. They are scheduled for verification via prep Tasks 2–11 (see the Task-to-Unknown mapping appendix). Sprint 35 is **not yet GO for Day 0** — the GO/NO-GO determination is made in prep Task 12 (Plan Sprint 35 Detailed Schedule), after Tasks 2–11 have resolved the Critical and High unknowns.
+**Pre-Day-1 status (Task 12, 2026-07-24): ✅ GO for Day 0.** All 29 unknowns are accounted for — **24 ✅ VERIFIED**, **1 ❌ WRONG/REFUTED → REPLAN** (1.2 mine H_dual, resolved as a *taken exit* → the Sprint-36 consultation), and **4 🔍 DESIGN-SPECIFIED** in-sprint execution gates (**not** Day-0 blockers): **4.4** (the P4 ganges/gangesx per-model recovery verdict — *the* live in-sprint gate, executed Day 4), **2.2** (post-change sarf timing — moot, P2 DEFER'd), **3.1** (fawley `stat_bq → 0` closure — P3 optional), **5.1** (camcge MS-1 — Epic-5-deferred, expected MS-4). **All 19 Critical/High unknowns (7 Critical + 12 High) are resolved, taken as an exit, or a DESIGN-SPECIFIED in-sprint gate by design — none remains a genuine Day-0 blocker.** The GO/NO-GO determination (prep Task 12, `PLAN.md` §19) is therefore **GO**: the sole live bucket lever (P4) is front-loaded Days 1–5 with its `$149` REPLAN gate surfacing by the Day-5 checkpoint; the golden-regen ship-blocker that banked S34's fix is measured away (Task 3 — fits a normal day); the budget fits with enormous slack (~34–70 h real in-sprint work vs the 168 h cap); and the honest **bimodal** projection binds (Solve 108 or 110; genuine floor 75 or 77 cold-match-contingent; Translate 135; **≥ 112 REFUTED**).
+
+**Historical (Task 1, 2026-07-23):** all 29 unknowns were authored 🔍 INCOMPLETE and scheduled for verification via prep Tasks 2–11 (see the Task-to-Unknown mapping appendix); the GO/NO-GO was deferred to Task 12 after Tasks 2–11 resolved the Critical/High unknowns.
 
 **Before Sprint 35 Day 1:**
 1. Review all Critical and High priority unknowns (19 total: 7 Critical + 12 High) via prep Tasks 2–11 (see the mapping appendix)
@@ -1541,7 +1543,7 @@ This table shows which prep tasks (from `PREP_PLAN.md`) verify which unknowns. E
 
 ---
 
-**Document Status:** 🔵 Active — Pre-Sprint 35 (29 authored, 0 resolved; verification via prep Tasks 2–11)
-**Last Updated:** 2026-07-23
+**Document Status:** ✅ GO for Day 0 — Pre-Sprint 35 (29 accounted for: 24 VERIFIED / 1 REFUTED→REPLAN / 4 DESIGN-SPECIFIED in-sprint gates; 0 Day-0 blockers). Prep Tasks 1–12 complete.
+**Last Updated:** 2026-07-24 (Task 12 — GO/NO-GO determined)
 **Owner:** Sprint 35 Planning Team
 **Review Frequency:** Daily during Sprint 35
