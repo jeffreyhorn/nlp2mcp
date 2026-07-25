@@ -82,7 +82,7 @@ Every emit-touching PR (in Sprint 35, only **P4** and — if it lands — **P3**
 |---|---|---|---|---|
 | **P1** | mine (#1443) | **REPLAN'd in prep** | (pre-refuted) cold MCP MS-1 @ 17500, `modelstat`, `x.up=inf` BANNED — no candidate reaches it (whole keying/pairing space value-invariant) | → Sprint-36 consultation; 18–24 h → P4/P6/P7; 0 bucket |
 | **P2** | sarf (#1385) | **DEFER'd in prep** | (timing, PR20) O(active=398) seconds, not the **measured > 303 s**; partial improvement = REPLAN; 141 byte-stable + det ×3 + atomic | → dedicated effort; 20–28 h → P4/P6/P7; 0 bucket |
-| **P3** | fawley (#1111/#1112) | **PROCEED (correctness, 0 bucket)** | `max\|stat_bq\| → 0` (not the 96% partial; scoped to stat_bq); no mbal/1-D/2-D-cohort change; GO | gate leak → DEFER; **+Solve → Sprint-36 forcing (H-b)**; floor forcing-contingent |
+| **P3** | fawley (#1111/#1112) | **PROCEED (correctness, 0 bucket)** | max `stat_bq` residual → 0 (not the 96% partial; scoped to `stat_bq`); no mbal/1-D/2-D-cohort change; GO | gate leak → DEFER; **+Solve → Sprint-36 forcing (H-b)**; floor forcing-contingent |
 | **P4** | ganges/gangesx | **PROCEED (the live bucket gate)** | **per-root** `$141`→`$145`→`$149`, each `--resolve-changed`-gated; `$149` `/tmp` vs the hand-derived cross-term + the 18-model regression set; **per-model** protocol encoded; **no bucket until all 3 land** | `$149` not surgical → bank all 3 (no `src/`); → P6/P7 |
 | **P5** | camcge (#1330) / rocket (#1462) | **Epic-5-deferred / Sprint-36 hand-off** | camcge `/tmp` MS-1 @ 191.7346 (dual side) — **expected MS-4** → per-model-numéraire Epic-5 fallback; rocket clean-at-NLP (no solve gate) | camcge → Epic 5; rocket → Sprint 36; 0 bucket |
 
@@ -98,7 +98,7 @@ Task 10 **contributes** to these unknowns via the gate design; the primary owner
 |---|---|---|
 | **1.2** | mine H_dual → cold MS-1 | The gate is **pre-refuted** (P1) — no candidate reaches the cold-MS-1-@-17500 gate; the exit (Sprint-36 consultation) is taken. Primary: Task 6. |
 | **2.2** | sarf O(active) / no timeout re-trigger | The **timing** gate is specified (O(active=398), the **measured > 303 s** baseline, partial-improvement-is-REPLAN); the DEFER exit is taken. Primary: Task 7. |
-| **3.1** | fawley `max\|stat_bq\| → 0` | The gate requires **→ 0** (not the 96% partial), scoped to `stat_bq`, `modelstat` asserted, no mbal/cohort leak; +Solve out of scope (H-b). Primary: Task 8. |
+| **3.1** | fawley max `stat_bq` residual → 0 | The gate requires **→ 0** (not the 96% partial), scoped to `stat_bq`, `modelstat` asserted, no mbal/cohort leak; +Solve out of scope (H-b). Primary: Task 8. |
 | **4.3** | `$149` product-rule correction | The P4 `$149` step is gated on a `/tmp` control vs Task 4's **hand-derived cross-term** + the 18-model regression set (`_diff_prod`, not `stationarity.py`); part of the per-root sequence. Primary: Task 4. |
 | **5.1** | camcge dual-consistent Walras `/tmp`-to-MS-1 | The camcge gate is the Epic-5 `/tmp` MS-1 @ 191.7346 prototype (dual side) + the detector; **expected MS-4 → per-model-numéraire Epic-5 fallback**. Primary: Task 9. |
 
