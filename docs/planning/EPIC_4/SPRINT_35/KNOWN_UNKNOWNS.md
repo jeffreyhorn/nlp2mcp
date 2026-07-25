@@ -189,7 +189,10 @@ Development team (KKT/emit specialist)
 
 **Decision:** REPLAN → the Sprint-36 PATH consultation (the primal-degenerate-LP question); no `src/`, 18–24 h freed to P4/P6/P7 (Unknown 1.5).
 
+**Task-10 contribution (2026-07-24):** the P1 Phase-0 gate is recorded as **pre-refuted** (`PHASE_0_ACCEPTANCE_GATES.md` §1 P1) — the cold-MCP-MS-1-@-17500 gate (`modelstat` asserted, `x.up=inf` BANNED; the *cold* solve, not the warm `N→0`) is the criterion, and **no candidate reaches it** (the whole keying/pairing space is value-invariant). The exit (Sprint-36 consultation; budget → P4/P6/P7) is taken. Task 6 remains the primary.
+
 ---
+
 
 ## Unknown 1.3: Is the 22-row boundary breadth and the +16000 gap still exact at Day 0?
 
@@ -412,6 +415,8 @@ Development team (AD/emit specialist)
 
 **Decision:** the baseline (> 303 s) is the O(369K) tractability gap; the post-change O(active) figure is an in-sprint executed result (DESIGN-SPECIFIED). The gate is Task 10's Phase-0 item.
 
+**Task-10 contribution (2026-07-24):** the P2 gate is authored as a **timing** gate (`PHASE_0_ACCEPTANCE_GATES.md` §1 P2, PR20) — O(active = 398) in single-digit seconds vs the **measured > 303 s** baseline; a **partial improvement that does not cross the threshold is pre-classified as REPLAN, not progress**; plus the 7-term/no-set-name-literal check, atomic landing, 141 byte-stable goldens, determinism ×3, `--resolve-changed` GO. The DEFER exit is taken. Task 7 remains the primary.
+
 ---
 
 
@@ -588,6 +593,8 @@ Development team (KKT/emit specialist)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_35/FAWLEY_DIAGONAL_DESIGN.md` §1, §5; the live `kkt_residual.py fawley.gms` (CASE_B, stat_bq 0.973/473); `data/gamslib/mcp/fawley_mcp.gms:238`.
 
 **Decision:** the emit gap is intact and P3-fixable; the `→ 0` closure is the in-sprint `/tmp` gate (Task 10).
+
+**Task-10 contribution (2026-07-24):** the P3 gate requires **`max|stat_bq| → 0`** (machine zero — NOT the 96% partial 473→18.468), **scoped to `stat_bq`** (not the harness global max, which retains the emit-correct `stat_trans` residual), `modelstat` asserted, with the leak-free requirement (no mbal/1-D-core/2-D-cohort change; `--resolve-changed --since-commit 78ceaead` GO) and the **+Solve out of scope** (H-b → Sprint-36 forcing). `PHASE_0_ACCEPTANCE_GATES.md` §1 P3. Task 8 remains the primary.
 
 ---
 
@@ -866,7 +873,10 @@ Development team (AD/KKT specialist)
 ---
 **Task-5 contribution (2026-07-24):** the `$149` correction is carried into the P4 recovery design (`GANGES_RECOVERY_DESIGN.md` §3) as the **deepest, REPLAN-bearing step** of the three-root sequence (`$141`→`$145`→`$149`). The AD-layer surface (`_diff_prod`, form 1/2) and the 18-model prod-in-stationarity regression set (lmp2 flagged) are handed to Task 10's Phase-0 gate. Task 4 remains the primary; this task does **not** build the fix.
 
+**Task-10 contribution (2026-07-24):** the P4 `$149` step is gated (`PHASE_0_ACCEPTANCE_GATES.md` §1 P4) on a **`/tmp` control BEFORE `src/`** that reproduces Task 4's **hand-derived `stat_pc` cross-term** (`prod(j,(pc(j)/pc00(j))**ac(j,r)) * ac(i,r)/pc(i)`, `i` controlled, no free `j`) and drives ganges's 9 `$149` → 0 **without perturbing the 18-model prod-in-stationarity regression set** (lmp2 most sensitive; the surface is `src/ad/derivative_rules.py:_diff_prod`, NOT `stationarity.py`). It is the deepest step of the per-root `$141`→`$145`→`$149` sequence, with the per-model verification protocol encoded. Task 4 remains the primary.
+
 ---
+
 
 ## Unknown 4.4: After all three roots, do ganges AND gangesx each actually compile, solve, and match?
 
@@ -1049,6 +1059,8 @@ Development team (CGE/MCP specialist)
 **Evidence:** `docs/planning/EPIC_4/SPRINT_35/CAMCGE_ROCKET_PLAN.md` §1; `SPRINT_33/CAMCGE_WALRAS_DESIGN.md`; `SPRINT_32/CAMCGE_WALRAS_REPLAN.md`; `EPIC_5/CGE_DEGENERACY_SCOPING.md`; the DB (camcge MS-4).
 
 **Decision:** camcge **Epic-5-deferred** (0 in-sprint bucket, MS-1 a-priori hard); the redefinition + gate + fallback are the Epic-5 deliverable.
+
+**Task-10 contribution (2026-07-24):** the P5-camcge gate is the Epic-5 `/tmp` **MS-1 @ 191.7346** prototype (`PHASE_0_ACCEPTANCE_GATES.md` §1 P5), verified against the KKT **dual** side + the S1∧S2∧S3 detector (flags only camcge), with `modelstat` asserted — **expected outcome MS-4** → the per-model-numéraire declaration is the documented Epic-5 fallback; camcge is excluded from the in-sprint Solve target. rocket has no solve gate (a hand-off). Task 9 remains the primary.
 
 ---
 

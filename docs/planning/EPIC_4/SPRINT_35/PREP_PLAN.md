@@ -856,7 +856,8 @@ test -f docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md && echo
 
 ## Task 10: Author Phase 0 Acceptance Gates for the Sprint-35 Tracks (PR20 + PR24 + PR27)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-24
 **Priority:** Critical
 **Estimated Time:** 4–6 hours
 **Deadline:** Before Sprint 35 Day 1
@@ -888,11 +889,11 @@ This is the discipline that has produced Sprint 32/33/34's defining outcome: **z
 
 ### Changes
 
-_To be completed_
+Authored `docs/planning/EPIC_4/SPRINT_35/PHASE_0_ACCEPTANCE_GATES.md`: one gate per track (P1–P5) with a measurable PROCEED/REPLAN criterion and the `modelstat` assertion requirement, the cross-cutting gates (determinism ×3, golden-staleness, presolve-divergence, `--resolve-changed` @ the S34-close anchor), and the "no bucket → no `src/`" rule with the S34-P4 exception written out. Appended Task-10 contribution blocks to Unknowns 1.2, 2.2, 3.1, 4.3, 5.1 (per-track primaries preserved). Docs-only.
 
 ### Result
 
-_To be completed_
+**The gate doc captures Sprint 35's defining shape: four of five tracks REPLAN'd/DEFER'd/Epic-5-deferred *in prep*, with P4 the sole live PROCEED gate.** **P1 mine** — gate pre-refuted (cold-MS-1 @ 17500, no candidate reaches it; the whole keying/pairing space value-invariant); exit taken → Sprint-36 consultation. **P2 sarf** — a **timing** gate (O(active = 398) seconds vs the **measured > 303 s**; partial-improvement-is-REPLAN); DEFER'd. **P3 fawley** — PROCEED for correctness only (`max|stat_bq| → 0`, scoped to stat_bq, no mbal/cohort leak); 0 bucket (H-b, +Solve → Sprint-36 forcing). **P4 ganges/gangesx** — the **per-root** `$141`→`$145`→`$149` gate sequence, each `--resolve-changed`-gated, the `$149` `/tmp` control vs Task 4's hand-derived cross-term + the 18-model regression set, the **per-model** verification protocol encoded so it can't be skipped, and **no bucket until all three land**. **P5 camcge** — the Epic-5 `/tmp` MS-1 @ 191.7346 gate (expected MS-4 → per-model-numéraire fallback); rocket no solve gate. Cross-cutting: determinism ×3 (PR12), golden-staleness (PR26), presolve-divergence, `--resolve-changed --since-commit 78ceaead`, and the "no bucket → no `src/`" rule with the S34-P4 exception written out for P4's expected use (Task 3 measured the goldens regenerable, so the exception is satisfiable if a bucket move materializes). Standing BANs restated (`x.up=inf` mine; the Case-c sign flip). Only P4 (and P3 if it lands leak-free) touch `src/`. Handed to Task 11 (the projection: P4 the sole in-sprint bucket lever) and Task 12 (the schedule).
 
 ### Verification
 
@@ -919,15 +920,15 @@ grep -icE 'PYTHONHASHSEED|determinism|golden-staleness|presolve-divergence|resol
 
 ### Acceptance Criteria
 
-- [ ] A gate authored for each of P1, P2, P3, P4, P5 with a measurable PROCEED/REPLAN criterion
-- [ ] Every gate that reads a solve result requires `modelstat` to be asserted
-- [ ] The standing BANs restated (mine `x.up=inf`; Case-c sign flip)
-- [ ] The P2 gate is a **timing** budget (O(active)) and the P4 gate is a **per-root** sequence — not generic residual gates
-- [ ] The P3 gate excludes the +Solve (H-b) and requires no mbal/1-D change
-- [ ] Cross-cutting gates included: determinism ×3, golden-staleness, presolve-divergence, `--resolve-changed` against the S34-close anchor
-- [ ] The "no bucket → no `src/`" rule and its exception criteria written out for P4
-- [ ] Cross-referenced to `SPRINT_34/PHASE_0_ACCEPTANCE_GATES.md` and Tasks 4–9's design docs
-- [ ] Unknowns 1.2, 2.2, 3.1, 4.3, 5.1 verified and updated in `KNOWN_UNKNOWNS.md`
+- [x] A gate authored for each of P1, P2, P3, P4, P5 with a measurable PROCEED/REPLAN criterion (P1/P2/P5 exits taken in prep; P3 correctness-only; P4 the sole live gate)
+- [x] Every gate that reads a solve result requires `modelstat` to be asserted
+- [x] The standing BANs restated (mine `x.up=inf`; Case-c sign flip)
+- [x] The P2 gate is a **timing** budget (O(active=398) vs the measured > 303 s) and the P4 gate is a **per-root** `$141`→`$145`→`$149` sequence — not generic residual gates
+- [x] The P3 gate excludes the +Solve (H-b) and requires no mbal/1-D/2-D-cohort change
+- [x] Cross-cutting gates included: determinism ×3 (PR12), golden-staleness (PR26), presolve-divergence, `--resolve-changed --since-commit 78ceaead`
+- [x] The "no bucket → no `src/`" rule and its S34-P4 exception criteria written out for P4's expected use
+- [x] Cross-referenced to `SPRINT_34/PHASE_0_ACCEPTANCE_GATES.md` and Tasks 4–9's design docs
+- [x] Unknowns 1.2, 2.2, 3.1, 4.3, 5.1 verified (Task-10 contribution blocks appended; per-track primaries preserved) in `KNOWN_UNKNOWNS.md`
 
 ---
 
