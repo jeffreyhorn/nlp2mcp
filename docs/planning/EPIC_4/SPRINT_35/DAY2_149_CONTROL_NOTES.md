@@ -28,6 +28,21 @@ Minimal faithful repro (hand-built ModelIR: alias `j→i`, set `i` with concrete
 In `_diff_prod`'s `symbolic_name_match` collapse branch (`src/ad/derivative_rules.py:~3410`), rebind the collapsed `log_term`'s prod-dummy index → the **original** wrt index when `_sum_should_collapse` substituted a concrete wrt (i.e. `effective_wrt != wrt_indices`). The factor then references the *differentiated column* (`pc("agricult")` → re-symbolized by the stationarity assembly to the equation's free `i`), not the prod's free dummy:
 
 ```python
+        # Sprint 35 / #1443 ($149): rebind the collapsed factor's prod-dummy
+        # index to the original wrt index when `_sum_should_collapse`
+        # substituted a concrete wrt to the prod's symbolic bound
+        # (effective_wrt != wrt_indices). The log_term references the prod's
+        # bound index; when that bound differs from the equation's free index
+        # (the CROSS-index case: prod over `j`, differentiate w.r.t. `pc(i)`,
+        # `j != i`), the emitter's aliasing will NOT rename it — it renames a
+        # Prod bound only on collision with the equation domain or an enclosing
+        # binder, never for a sibling multiplicative factor — so `j` leaks free
+        # → GAMS $149. Rebinding to the original (concrete) wrt index makes the
+        # factor reference the differentiated column, which the stationarity
+        # re-symbolization maps to the equation's free index (yielding the
+        # correct `f'(i)/f(i)`). For the name-match case (prod bound already ==
+        # equation index, e.g. camcge's `prod(i, cd(i)**cles(i))`) the value is
+        # unchanged. Skip when nothing was substituted.
         if (
             wrt_indices is not None
             and effective_wrt is not None
@@ -44,7 +59,7 @@ In `_diff_prod`'s `symbolic_name_match` collapse branch (`src/ad/derivative_rule
         return Binary("*", expr, log_term)
 ```
 
-(placed just before the existing `return Binary("*", expr, log_term)`; full patch in `/tmp/s35_day2_149_fix.patch`, 39 lines, one file). Uses the existing `_apply_index_substitution` helper. **Conservative:** it fires only for the exact concrete-collapse case (`len(effective_wrt) == len(wrt_indices)` and they differ); the partial-index `#724` path and the pure-symbolic name-match path are untouched. For the name-match case (camcge) the rebind maps `i → "ag-subsist"`, which re-symbolizes back to `i` — value **and bytes** unchanged (verified below).
+(placed just before the existing `return Binary("*", expr, log_term)`; the code block above is the complete insertion — 34 added lines including the comment, one file. The prototype was **reverted and not committed** — Day 2 is `/tmp`-only — so Day 3 re-applies exactly this block.) Uses the existing `_apply_index_substitution` helper. **Conservative:** it fires only for the exact concrete-collapse case (`len(effective_wrt) == len(wrt_indices)` and they differ); the partial-index `#724` path and the pure-symbolic name-match path are untouched. For the name-match case (camcge) the rebind maps `i → "ag-subsist"`, which re-symbolizes back to `i` — value **and bytes** unchanged (verified below).
 
 ## 3. Evidence (all three gate conditions MET)
 
