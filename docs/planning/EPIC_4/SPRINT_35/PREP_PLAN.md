@@ -934,7 +934,8 @@ grep -icE 'PYTHONHASHSEED|determinism|golden-staleness|presolve-divergence|resol
 
 ## Task 11: Diagnosis-Heavy / REPLAN-Prone Track Risk Assessment + Honest KPI Projection (PR16)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-07-24
 **Priority:** High
 **Estimated Time:** 4–6 hours
 **Deadline:** Before Sprint 35 Day 1
@@ -966,11 +967,15 @@ This projection has been accurate to the bucket for two consecutive sprints, and
 
 ### Changes
 
-_To be completed_
+Authored `docs/planning/EPIC_4/SPRINT_35/REPLAN_RISK_ASSESSMENT.md`: per-track REPLAN priors (P1/P2/P3/P4 with the carry counts weighed), the P5 disposition, the pinned exits + freed-budget reallocation, the honest bimodal KPI projection, the argued front-load ordering, and the budget arithmetic. Appended Task-11 contribution blocks to Unknowns 1.5, 2.2, 3.2, 4.5 (per-track primaries preserved). Docs-only.
 
 ### Result
 
-_To be completed_
+**The decisive structural finding: Sprint 35's deep tracks REPLAN'd/deferred IN PREP (Tasks 6/7/8/9), so their priors are RESOLVED — not prospective probabilities — and P4 is the sole live in-sprint REPLAN risk.** This inverts the S32/S33/S34 shape (where deep tracks REPLAN'd mid-sprint). **P1 mine** (×4) REPLAN'd, **P2 sarf** (×3) DEFER'd, **P3 fawley** (×3) correctness-only 0-bucket (H-b) — all exited in prep; **P5** Epic-5/Sprint-36. **P4 ganges/gangesx is the only track that can move a bucket**, and its live risk is the `$149` `_diff_prod` surgical fix (Med-High; `$141`/`$145` Low).
+
+**The projection is BIMODAL on P4, not "modal-flat":** either P4 lands **+2** (Solve 110 / Match 95 / genuine floor **77** *if ganges/gangesx cold-match* / path_syntax_error 5) or the sprint is **flat** (108/93/75/7, beaten only if the P6 residual cohort recovers a model). **The stretch ≥ 112 is a-priori REFUTED** (it needed a deep track, and all three exited in prep — max reachable is 110). **Translate holds 135** (P2 DEFER'd — no +1). The genuine-floor gain is entirely P4-contingent and specifically on **cold**-match (a warm-start match is methodology, 0 floor).
+
+**The retrospective-budget finding:** the 92–134 h estimate is now mostly retrospective — P1 (18–24 h) + P2 (20–28 h) design budgets were **spent in prep**, so the real in-sprint work is P4 + P6 + P7 + retest + small P5/P3 slots ≈ **34–70 h**, well under the 168 h cap with enormous slack for a thorough **P4 + P6** push. **Front-load ordering (argued from the three-sprint record):** **P4 FIRST (Days 1–5)** — the failure-cohort class is the genuine bucket source (S33 sample), the deep tracks are not (mine ×4 / sarf ×3 / fawley ×3 = 0 buckets), and Task 3 established the golden-regen fits a normal day (no overnight slot) so P4 can front-load without a nightly window; its `$149` `/tmp` control surfaces the REPLAN by the Day-5 checkpoint. Then P6 (second bucket source) → small P5 slot → P3 (optional) → P7 → retest. Handed to Task 12 (schedule + GO/NO-GO).
 
 ### Verification
 
@@ -998,15 +1003,15 @@ grep -icE '92|134|168|12h|per-priority' docs/planning/EPIC_4/SPRINT_35/REPLAN_RI
 
 ### Acceptance Criteria
 
-- [ ] P1/P2/P3/P4 each assigned a REPLAN prior with its refuting evidence and earliest surfacing day
-- [ ] The carry counts (mine ×4, sarf ×3, fawley ×3) weighed explicitly in the priors
-- [ ] P5 assessed as an a-priori non-mover (Epic-5 / Sprint-36 hand-off)
-- [ ] REPLAN exits + the freed-budget reallocation chain pinned
-- [ ] The honest KPI projection authored, including the genuine-floor conditionality (a warm-start fix yields 0 floor by definition)
-- [ ] The front-load ordering recommended and **argued**, with P4's position relative to P1/P2 justified from the three-sprint record
-- [ ] The budget arithmetic stated (92–134h vs 168h) with the early-REPLAN reallocation case
-- [ ] Cross-referenced to `SPRINT_34/REPLAN_RISK_ASSESSMENT.md` + `SPRINT_34/SPRINT_RETROSPECTIVE.md` §§1/3 + `PROJECT_PLAN.md` §"Sprint 35" Risk Level
-- [ ] Unknowns 1.5, 2.2, 3.2, 4.5 verified and updated in `KNOWN_UNKNOWNS.md`
+- [x] P1/P2/P3/P4 each assigned a REPLAN prior with its refuting evidence and earliest surfacing day — **P1/P2 RESOLVED (exited in prep), P3 Medium/0-bucket, P4 the sole live risk (`$149` Med-High)**
+- [x] The carry counts (mine ×4, sarf ×3, fawley ×3) weighed explicitly — ~half of three sprints' budget for 0 buckets, the failure-cohort the sole genuine mover
+- [x] P5 assessed as an a-priori non-mover (camcge Epic-5; rocket Sprint-36)
+- [x] REPLAN exits + the freed-budget reallocation chain pinned (→ P4 first, then P6/P7)
+- [x] The honest **bimodal** KPI projection authored, including the genuine-floor conditionality (cold-match only; a warm-start fix yields 0) — **stretch ≥ 112 REFUTED**; Translate 135 (P2 DEFER'd)
+- [x] The front-load ordering recommended and **argued** from the three-sprint record — **P4 FIRST** (not the back half); the golden-regen window does not constrain it
+- [x] The budget arithmetic stated (92–134 h vs 168 h) with the **retrospective-budget finding** (~34–70 h real in-sprint work; P1/P2 design spent in prep) + the early-REPLAN reallocation
+- [x] Cross-referenced to `SPRINT_34/REPLAN_RISK_ASSESSMENT.md` + `SPRINT_34/SPRINT_RETROSPECTIVE.md` §§1/3 + `PROJECT_PLAN.md` §"Sprint 35" Risk Level
+- [x] Unknowns 1.5, 2.2, 3.2, 4.5 verified (Task-11 contribution blocks appended; per-track primaries preserved) in `KNOWN_UNKNOWNS.md`
 
 ---
 
