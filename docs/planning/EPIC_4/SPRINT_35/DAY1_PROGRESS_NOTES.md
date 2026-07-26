@@ -2,7 +2,7 @@
 
 **Day:** 1 (Priority 4, roots 1–2) · **Date:** 2026-07-25 · **Owner:** Sprint 35 execution
 **Day-0 code anchor:** `78ceaead` (S34 close) · **Branch:** `planning/sprint35-day1-p4-banked-roots`
-**Status: ✅ roots 1–2 applied and verified — WIP, NOT YET SHIPPED.** Steps 1–2 recover **no bucket** on their own (the expected mid-sequence state); they ship only with `$149` (Day 3–4) as one coherent P4 landing, or all three bank. Per the "no bucket → no `src/`" rule, this branch does **not** merge to main standalone.
+**Status: ✅ roots 1–2 applied and verified — but BANKED at Day 3 (see `DAY3_P4_BANK_CARRYFORWARD.md`).** Steps 1–2 recover no bucket alone; the all-three-roots landing then hit a **4th root (`$66`, cold)** and a **5th blocker (`rPower` embedded-NLP `$onMultiR` divergence, presolve)**, so ganges/gangesx do **not** recover. Per "no bucket → no `src/`", **all `src/` (incl. this `$141`/`$145` change) was reverted** — this branch is now **docs-only**, a bank/carryforward record. The verified `$141`/`$145` patches remain in git history (`a8ff626c`) + §1 below for the Sprint-36 dedicated recovery effort.
 
 ---
 
