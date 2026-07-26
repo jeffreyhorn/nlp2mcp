@@ -13,7 +13,7 @@ Two roots of the P4 sequence, both in `src/emit/original_symbols.py` (`emit_post
 - **`$141`** — a new skip for params whose assignment references a variable attribute (`.l`/`.m`/…). Helper `_param_assignment_references_varref_attr` (+ its recursive `_expr_contains_varref_attr`), mirroring `_param_assignment_has_division:137`. These are **presolve-gated calibration params** (e.g. `adst(i) = dst.l(i)/…`): emitted only under `--nlp-presolve`, so in the **cold** MCP the param is declared-but-unassigned and the NA-cleanup guard reads an unassigned symbol → GAMS `$141`.
 - **`$145`** — a skip for params whose domain contains the universal set `*` (e.g. `series(*,years)`). `*` is a valid *declaration* placeholder but not a valid *assignment/`$`-guard* index, so the emitted guard is structurally malformed → GAMS `$145`. Such `*`-domain data tables are not the NA source #1322 targets anyway.
 
-Diff: **44 insertions, one file** (2 helpers + 2 loop skips). No other `src/` touched. `VarRef.attribute` is `src/ir/ast.py:53`; `VarRef` already imported at module scope.
+`src/` diff: **44 insertions to `src/emit/original_symbols.py`** (2 helpers + 2 loop skips) — the *source* portion only; the Day-1 PR also touched tests + docs + CHANGELOG. No other `src/` file touched. `VarRef.attribute` is `src/ir/ast.py:53`; `VarRef` already imported at module scope. **(Banked at Day 3 — see the correctness note in `DAY3_P4_BANK_CARRYFORWARD.md` §4: the `_expr_contains_varref_attr` helper introduced here should be replaced by the existing `_expr_contains_varref_attribute` on re-apply.)**
 
 ## 2. Verification (LIVE — re-emit + `gams a=c` compile)
 
