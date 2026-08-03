@@ -149,7 +149,7 @@ jobs:
           # by the failing `Install GAMS demo` step log → pin it below (a
           # placeholder here intentionally fails the SHA guard on the first run).
           GAMS_INSTALLER_URL: "https://d37drm4t2jghv5.cloudfront.net/distributions/54.2.1/linux/linux_x64_64_sfx.exe"
-          GAMS_INSTALLER_SHA256: "REFRESH_ME_PIN_THE_ACTUAL_SHA256_FROM_THE_CI_LOG_FOR_54_2_1"
+          GAMS_INSTALLER_SHA256: "47ff12dc51426a916a34e77c90fe5c20c3d10867c8dc1667ffa8b9c4d8d7096f"
         run: |
           # Download + verify GAMS demo edition. Refuses to run the installer
           # if the SHA256 doesn't match the pinned value.

@@ -76,7 +76,7 @@ jobs:
           # Refresh the SHA: bump URL → push → pin the actual SHA256 printed by
           # the failing `Install GAMS demo` step (placeholder fails the guard).
           GAMS_INSTALLER_URL: "https://d37drm4t2jghv5.cloudfront.net/distributions/54.2.1/linux/linux_x64_64_sfx.exe"
-          GAMS_INSTALLER_SHA256: "REFRESH_ME_PIN_THE_ACTUAL_SHA256_FROM_THE_CI_LOG_FOR_54_2_1"
+          GAMS_INSTALLER_SHA256: "47ff12dc51426a916a34e77c90fe5c20c3d10867c8dc1667ffa8b9c4d8d7096f"
         run: |
           curl -fSL -o /tmp/gams-installer.exe "$GAMS_INSTALLER_URL"
           ACTUAL_SHA256=$(sha256sum /tmp/gams-installer.exe | awk '{print $1}')
