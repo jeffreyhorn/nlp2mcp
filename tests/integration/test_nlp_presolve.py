@@ -14,6 +14,7 @@ from click.testing import CliRunner
 
 from src.cli import main
 from src.emit.emit_gams import emit_gams_mcp
+from src.validation.gams_check import find_gams_executable
 
 
 @pytest.mark.integration
@@ -629,7 +630,16 @@ class TestNLPPresolveGAMSSolve:
         repo_root = Path(__file__).resolve().parents[2]
         lst_file = output_file.with_suffix(".lst")
         gams_result = subprocess.run(
-            ["gams", str(output_file), "lo=0", f"o={lst_file}", f"idir={repo_root}"],
+            # Resolve the licensed install (Current/newest) rather than a bare
+            # `gams` on PATH — a pinned expired version (e.g. v53) may sit first
+            # on PATH and fail the solve with a licensing error. #1443.
+            [
+                find_gams_executable() or "gams",
+                str(output_file),
+                "lo=0",
+                f"o={lst_file}",
+                f"idir={repo_root}",
+            ],
             capture_output=True,
             text=True,
             cwd=str(tmp_path),
@@ -686,9 +696,10 @@ class TestNLPPresolveGAMSSolve:
         )
         assert result.exit_code == 0
 
-        # Solve with GAMS
+        # Solve with GAMS (resolve the licensed install, not a bare PATH `gams`
+        # that may point at an expired pinned version — #1443).
         subprocess.run(
-            ["gams", str(output_file), "lo=0"],
+            [find_gams_executable() or "gams", str(output_file), "lo=0"],
             capture_output=True,
             text=True,
             cwd=str(tmp_path),

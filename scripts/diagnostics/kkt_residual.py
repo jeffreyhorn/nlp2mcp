@@ -858,8 +858,12 @@ def build_gdx_skip_variant(
 
 # --- GAMS execution + gdxdump ----------------------------------------------
 
+# Prefer the `Current` symlink (tracks the active, licensed install) over any
+# hardcoded version number: a pinned version (e.g. `Versions/53`) may still exist
+# on disk after its time-limited license expires and would be picked here, then
+# fail with a licensing error. `Current` follows whatever version was installed
+# last. (Mirrors `scripts/gamslib/test_solve.py`.)
 _GAMS_CANDIDATES = (
-    "/Library/Frameworks/GAMS.framework/Versions/53/Resources/gams",
     "/Library/Frameworks/GAMS.framework/Versions/Current/Resources/gams",
     "/opt/gams/gams",
     "C:\\GAMS\\win64\\gams.exe",
