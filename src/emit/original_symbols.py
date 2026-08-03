@@ -502,6 +502,43 @@ def _sanitize_set_element(element: str) -> str:
     return element
 
 
+# Component of a dotted-tuple set member that is safe to read as a tuple axis
+# (as opposed to a numeric/decimal fragment like `4`, `.9`, `005`). Must start
+# with a letter/underscore so `4.5` / `.9` / `-.005` are NOT treated as tuples.
+_TUPLE_COMPONENT_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_\-+]*$")
+
+
+def _infer_domainless_tuple_arity(members: list[str]) -> int:
+    """Infer the tuple arity of a *domain-less* set from its members.
+
+    Returns N > 1 only when EVERY member is an unquoted dotted string that splits
+    into the SAME number N of components, each an identifier-like tuple axis
+    (`_TUPLE_COMPONENT_PATTERN`). Otherwise returns 1 (treat members as 1-D).
+
+    #1443/turkey: a domain-less set like `ao /grains.wheat, oil-crops.sunflower/`
+    is inferred as arity 2 so its members are quoted per-part. The strict guard
+    keeps genuine 1-D labels that merely contain a dot (e.g. numeric `4.5`, `.9`,
+    or any pre-quoted member) whole, since their dots are not tuple separators.
+    """
+    if not members:
+        return 1
+    arity: int | None = None
+    for m in members:
+        # Pre-quoted members are 1-D labels; a trailing-dot (GUSS) is not a tuple.
+        if m.startswith("'") or m.startswith('"') or m.endswith("."):
+            return 1
+        components = m.split(".")
+        if len(components) < 2:
+            return 1
+        if not all(_TUPLE_COMPONENT_PATTERN.match(c) for c in components):
+            return 1
+        if arity is None:
+            arity = len(components)
+        elif len(components) != arity:
+            return 1
+    return arity if arity is not None else 1
+
+
 def _format_set_declaration(set_name: str, set_def: "SetDef") -> str:
     """Format a single set declaration line.
 
@@ -531,6 +568,21 @@ def _format_set_declaration(set_name: str, set_def: "SetDef") -> str:
     # and sanitize each component separately to avoid quoting the entire tuple.
     if set_def.members:
         domain_arity = len(set_def.domain) if set_def.domain else 1
+        if not set_def.domain:
+            # TRULY domain-less set (e.g. `ao /grains.wheat, oil-crops.sunflower/`):
+            # gate on `not set_def.domain`, NOT `domain_arity == 1` — a 1-D SUBSET
+            # like `cg(genchar)` also has arity 1 (`domain=("genchar",)`) but is a
+            # bona-fide 1-D set whose members must never be split on `.`. GAMS
+            # infers the dimensionality from the members. Infer it here too, so a
+            # dotted tuple whose part needs quoting is quoted PER-PART
+            # (`'oil-crops'.sunflower`), not whole (`'oil-crops.sunflower'`, a 1-D
+            # string that collides with sibling 2-D tuples → GAMS $161 "Conflicting
+            # dimensions in element"). The strict-identifier guard keeps genuine 1-D
+            # labels that merely contain a dot (numeric/decimal like `4.5`, `.9`)
+            # whole. #1443/turkey `ao`.
+            inferred = _infer_domainless_tuple_arity(set_def.members)
+            if inferred > 1:
+                domain_arity = inferred
         if domain_arity > 1:
             # Multi-dimensional set: split members and sanitize each component
             sanitized_members = []

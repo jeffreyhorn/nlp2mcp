@@ -13,6 +13,8 @@ import pytest
 from src.emit.original_symbols import (
     _expand_table_key,
     _expr_references_param,
+    _format_set_declaration,
+    _infer_domainless_tuple_arity,
     _needs_quoting,
     _quote_assignment_index,
     _sanitize_set_element,
@@ -999,6 +1001,47 @@ class TestSetElementQuoting:
             _sanitize_set_element("'bad;element'")
         with pytest.raises(ValueError, match="unsafe characters"):
             _sanitize_set_element("'nested'quote'")
+
+    def test_infer_domainless_tuple_arity(self):
+        """Sprint 35 / #1443 (turkey $161): a domain-less set of consistent
+        identifier dotted tuples infers arity > 1; anything ambiguous stays 1-D.
+        """
+        # turkey `ao`: all members are 2-part identifier tuples (hyphens allowed)
+        assert _infer_domainless_tuple_arity(["grains.wheat", "oil-crops.sunflower"]) == 2
+        assert _infer_domainless_tuple_arity(["a.b.c", "d.e.f"]) == 3
+        # numeric/decimal labels are NOT tuples (the dot is part of the number)
+        assert _infer_domainless_tuple_arity(["4.5", "0.9"]) == 1
+        assert _infer_domainless_tuple_arity(["plant.4.5"]) == 1  # mixed id + number
+        # inconsistent arity, plain 1-D, pre-quoted, and empty → 1-D
+        assert _infer_domainless_tuple_arity(["a.b", "c.d.e"]) == 1
+        assert _infer_domainless_tuple_arity(["wheat", "corn"]) == 1
+        assert _infer_domainless_tuple_arity(["'oil-crops.sunflower'"]) == 1
+        assert _infer_domainless_tuple_arity([]) == 1
+
+    def test_domainless_2d_set_quotes_per_part(self):
+        """A domain-less 2-D set (turkey `ao`) emits hyphenated tuples per-part
+        (`'oil-crops'.sunflower`), not whole (`'oil-crops.sunflower'` → $161).
+        """
+        set_def = SetDef(
+            name="ao", members=["grains.wheat", "oil-crops.sunflower", "vegetables.gr-pepper"]
+        )
+        out = _format_set_declaration("ao", set_def)
+        assert "'oil-crops'.sunflower" in out
+        assert "vegetables.'gr-pepper'" in out
+        assert "grains.wheat" in out  # clean tuple unchanged
+        assert "'oil-crops.sunflower'" not in out  # NOT whole-quoted
+
+    def test_domainless_inference_does_not_touch_1d_subset(self):
+        """Sprint 35 / #1443 (PR #1620 review): the domain-less arity inference
+        must gate on `not set_def.domain`, NOT `domain_arity == 1` — a 1-D SUBSET
+        `cg(parent)` also has arity 1 but is a bona-fide 1-D set. Even if such a
+        subset had a dotted member, it must NOT be split into a tuple.
+        """
+        subset = SetDef(name="cg", members=["a.b", "c.d"], domain=("parent",))
+        out = _format_set_declaration("cg", subset)
+        # 1-D subset: members are NOT split per-part (would wrongly become 2-D).
+        assert "'a.b'" in out or "a.b" in out
+        assert "a'.'b" not in out and "'a'.'b'" not in out
 
     def test_sanitize_quotes_reserved_constants(self):
         """Sprint 19 Day 2: Reserved GAMS constants must be quoted as set elements."""

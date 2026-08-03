@@ -142,12 +142,16 @@ jobs:
           # mitigating supply-chain risk if the CloudFront endpoint is
           # compromised or the file is replaced upstream.
           #
-          # SHA256 captured on first PR #1396 CI run (Sprint 26 Day 11) for
-          # GAMS demo 53.1.0 linux_x64_64_sfx.exe (~648 MB). To refresh:
-          # bump URL → push → read the actual SHA256 from the failing
-          # `Install GAMS demo` step log → pin it here.
-          GAMS_INSTALLER_URL: "https://d37drm4t2jghv5.cloudfront.net/distributions/53.1.0/linux/linux_x64_64_sfx.exe"
-          GAMS_INSTALLER_SHA256: "8a82c82e257e54afc0d18c144957a862edae4e75020b81eed1950d93cb447b1a"
+          # GAMS demo 54.2.1 linux_x64_64_sfx.exe (~648 MB). Bumped from 53.1.0
+          # (Sprint 35 Day 6): the 53.1.0 demo license is time-limited and
+          # expired ~2026-07-29, so every solve returned rc=7 (licensing error).
+          # The SHA256 below IS the pinned, verified 54.2.1 hash (NOT a
+          # placeholder) — the SHA guard passes and GAMS installs.
+          # To refresh on a FUTURE version bump: change the URL, temporarily set
+          # this SHA to any placeholder, push — the guard prints the actual SHA
+          # on mismatch — then pin that printed value here.
+          GAMS_INSTALLER_URL: "https://d37drm4t2jghv5.cloudfront.net/distributions/54.2.1/linux/linux_x64_64_sfx.exe"
+          GAMS_INSTALLER_SHA256: "47ff12dc51426a916a34e77c90fe5c20c3d10867c8dc1667ffa8b9c4d8d7096f"
         run: |
           # Download + verify GAMS demo edition. Refuses to run the installer
           # if the SHA256 doesn't match the pinned value.
@@ -171,13 +175,18 @@ jobs:
           chmod +x /tmp/gams-installer.exe
           mkdir -p $HOME/gams
           /tmp/gams-installer.exe -q -d $HOME/gams
-          echo "$HOME/gams/gams53.1_linux_x64_64_sfx" >> $GITHUB_PATH
+          # Resolve the extracted install dir by glob rather than hardcoding the
+          # version-specific name (`gams54.2_linux_x64_64_sfx`), so a version
+          # bump only needs the URL + SHA updated above.
+          GAMS_DIR=$(ls -dt "$HOME"/gams/gams*_linux_x64_64_sfx 2>/dev/null | head -1)  # -t: newest install first (deterministic if multiple exist)
+          if [ -z "$GAMS_DIR" ]; then echo "ERROR: GAMS install dir not found under $HOME/gams"; ls -la "$HOME/gams"; exit 1; fi
+          echo "$GAMS_DIR" >> $GITHUB_PATH
           # Smoke-check the installer landed (use absolute path — `$GITHUB_PATH`
           # only takes effect for SUBSEQUENT steps, so plain `gams` won't resolve
           # in this same step). Use `gams audit` (canonical version+license dump
           # that exits 0); `gams --version` parses `--version` as a positional
-          # input file on 53.1.0 demo and exits with rc=6.
-          "$HOME/gams/gams53.1_linux_x64_64_sfx/gams" audit lo=2
+          # input file on the demo and exits non-zero.
+          "$GAMS_DIR/gams" audit lo=2
 
       - name: Verify GAMS on PATH (separate step so $GITHUB_PATH applies)
         if: steps.check-label.outputs.skip != 'true'
