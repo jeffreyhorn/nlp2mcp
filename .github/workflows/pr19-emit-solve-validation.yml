@@ -145,9 +145,11 @@ jobs:
           # GAMS demo 54.2.1 linux_x64_64_sfx.exe (~648 MB). Bumped from 53.1.0
           # (Sprint 35 Day 6): the 53.1.0 demo license is time-limited and
           # expired ~2026-07-29, so every solve returned rc=7 (licensing error).
-          # To refresh the pin: bump URL → push → read the actual SHA256 printed
-          # by the failing `Install GAMS demo` step log → pin it below (a
-          # placeholder here intentionally fails the SHA guard on the first run).
+          # The SHA256 below IS the pinned, verified 54.2.1 hash (NOT a
+          # placeholder) — the SHA guard passes and GAMS installs.
+          # To refresh on a FUTURE version bump: change the URL, temporarily set
+          # this SHA to any placeholder, push — the guard prints the actual SHA
+          # on mismatch — then pin that printed value here.
           GAMS_INSTALLER_URL: "https://d37drm4t2jghv5.cloudfront.net/distributions/54.2.1/linux/linux_x64_64_sfx.exe"
           GAMS_INSTALLER_SHA256: "47ff12dc51426a916a34e77c90fe5c20c3d10867c8dc1667ffa8b9c4d8d7096f"
         run: |
