@@ -53,7 +53,7 @@ Neither recovers without clearing its whole multi-root set (a large multi-fix ef
 
 **Verification:** `make test` went **22 failed → 0**. Sampled failing tests (trnsport, himmel16, rbrock, both bearing) — which failed identically on clean main — now pass. **CI (Linux) was never affected** (no macOS framework path → falls through to `shutil.which`).
 
-**Note (environment):** this is a macOS-local issue. CI (Linux) has no `/Library/Frameworks/GAMS.framework` path, so it falls through to `shutil.which("gams")` and was never affected.
+**Note (environment):** the local resolver issue is macOS-only. **But CI has the same root cause on its side:** `pr19-emit-solve-validation.yml` and `presolve-divergence.yml` pin **GAMS demo 53.1.0**, whose time-limited license also expired ~2026-07-29 → the PR19 canary solves return `rc=7` (licensing error) on every emit-touching PR. **Fixed:** bumped both workflows' installer URL to **54.2.1** and made the extracted-dir resolution a glob (`gams*_linux_x64_64_sfx`) so future version bumps only touch the URL + SHA. The SHA256 is a placeholder pending the workflow's built-in refresh round-trip (first CI run prints the actual SHA on the mismatch guard; pin it in a follow-up). The PR19 red on this PR is that expired-demo issue, not the turkey change.
 
 ---
 
