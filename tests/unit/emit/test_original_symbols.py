@@ -1031,6 +1031,18 @@ class TestSetElementQuoting:
         assert "grains.wheat" in out  # clean tuple unchanged
         assert "'oil-crops.sunflower'" not in out  # NOT whole-quoted
 
+    def test_domainless_inference_does_not_touch_1d_subset(self):
+        """Sprint 35 / #1443 (PR #1620 review): the domain-less arity inference
+        must gate on `not set_def.domain`, NOT `domain_arity == 1` — a 1-D SUBSET
+        `cg(parent)` also has arity 1 but is a bona-fide 1-D set. Even if such a
+        subset had a dotted member, it must NOT be split into a tuple.
+        """
+        subset = SetDef(name="cg", members=["a.b", "c.d"], domain=("parent",))
+        out = _format_set_declaration("cg", subset)
+        # 1-D subset: members are NOT split per-part (would wrongly become 2-D).
+        assert "'a.b'" in out or "a.b" in out
+        assert "a'.'b" not in out and "'a'.'b'" not in out
+
     def test_sanitize_quotes_reserved_constants(self):
         """Sprint 19 Day 2: Reserved GAMS constants must be quoted as set elements."""
         assert _sanitize_set_element("inf") == "'inf'"

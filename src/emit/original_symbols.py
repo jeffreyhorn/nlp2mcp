@@ -568,8 +568,11 @@ def _format_set_declaration(set_name: str, set_def: "SetDef") -> str:
     # and sanitize each component separately to avoid quoting the entire tuple.
     if set_def.members:
         domain_arity = len(set_def.domain) if set_def.domain else 1
-        if domain_arity == 1:
-            # Domain-less set (e.g. `ao /grains.wheat, oil-crops.sunflower/`): GAMS
+        if not set_def.domain:
+            # TRULY domain-less set (e.g. `ao /grains.wheat, oil-crops.sunflower/`):
+            # gate on `not set_def.domain`, NOT `domain_arity == 1` — a 1-D SUBSET
+            # like `cg(genchar)` also has arity 1 (`domain=("genchar",)`) but is a
+            # bona-fide 1-D set whose members must never be split on `.`. GAMS
             # infers the dimensionality from the members. Infer it here too, so a
             # dotted tuple whose part needs quoting is quoted PER-PART
             # (`'oil-crops'.sunflower`), not whole (`'oil-crops.sunflower'`, a 1-D

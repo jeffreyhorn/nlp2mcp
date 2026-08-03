@@ -176,7 +176,7 @@ jobs:
           # Resolve the extracted install dir by glob rather than hardcoding the
           # version-specific name (`gams54.2_linux_x64_64_sfx`), so a version
           # bump only needs the URL + SHA updated above.
-          GAMS_DIR=$(ls -d "$HOME"/gams/gams*_linux_x64_64_sfx 2>/dev/null | head -1)
+          GAMS_DIR=$(ls -dt "$HOME"/gams/gams*_linux_x64_64_sfx 2>/dev/null | head -1)  # -t: newest install first (deterministic if multiple exist)
           if [ -z "$GAMS_DIR" ]; then echo "ERROR: GAMS install dir not found under $HOME/gams"; ls -la "$HOME/gams"; exit 1; fi
           echo "$GAMS_DIR" >> $GITHUB_PATH
           # Smoke-check the installer landed (use absolute path — `$GITHUB_PATH`
