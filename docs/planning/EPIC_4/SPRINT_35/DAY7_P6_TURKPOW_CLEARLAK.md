@@ -8,7 +8,7 @@
 
 ## turkpow — 5 root codes; dominant root = a ragged-Table parse bug (deep)
 
-Live compile (GAMS 54): `$170`×6 · `$171`×5 · `$149`×1 · `$141`×1 · `$257`×1 (cascade) — 14 errors.
+Live compile (GAMS 54.2.1): `$170`×6 · `$171`×5 · `$149`×1 · `$141`×1 · `$257`×1 (cascade) — 14 errors.
 
 - **`$170`/`$171` "Domain violation for element/set" (dominant, 11 of 14):** the `Table mdatat(m,labels)` for thermal plants is **ragged** — e.g. `lignite-3`/`lignite-2`/`nuclear` have a **blank `initcap`** cell, shifting their columns. The parse mis-aligns those rows, so data *values* (`.9`, `-.005`, `4.5`, `-.01`, `30`, `inf`) are captured as **`labels` members** that aren't in the declared `labels` set (`initcap avail opcost opcost-g capcost capcost-g life maxcap`) → domain violation. This is a **fixed-width GAMS-Table column-alignment parse bug on blank cells** (parser-level, `src/gams/gams_grammar.lark` + `src/ir/parser.py`), pre-existing in the committed `turkpow_mcp.gms` golden. *(It is the same malformed `'lignite-3'.'4.5'` data the Day-6 turkey first-attempt tripped on.)*
 - **`$149` "Uncontrolled set entered as constant"** — Task 4: turkpow's `$149` is a `stat_zt(m,v,b,t)` lag-KKT `sum(t__kkt,…)`, a *different* construct from the ganges product-rule `$149`.
