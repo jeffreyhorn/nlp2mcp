@@ -25,7 +25,7 @@ Hand-deriving stationarity for `z(s,i,sp)`:
 - the **Kronecker `[σ=s][τ=i]`** (from the direct `sum(spp, z(sp,j,spp))` reference) ⇒ a **single, direct** `+ nu_constr(s,i)` diagonal term;
 - the **`−b·pi`** (from the summed reference) ⇒ the **off-diagonal sum** `Σ_(σ,τ) −b·pi(s,i,σ,τ,sp)·nu_constr(σ,τ)`, with `nu` indexed by the **summed** pair.
 
-So the correct first term is `nu_constr(s,i) + sum((s__kkt1,j), (−b·pi(s,i,s,i,s__kkt1))·nu_constr(s__kkt1,j)$(…))` — a direct Kronecker term split out of the sum. This is exactly the `test_markov_stationarity_has_correction_term` docstring's intended "after the fix" form.
+So the diagonal group's correct contribution is a single **direct** term `(1 − b·pi(s,i,s,i,sp))·nu_constr(s,i)` — the whole `1 − b·pi` for the *determined* `(σ=s, τ=i)` entry (pi's 5th index is the variable's own `sp`), **not** a sum. The off-diagonal entries are a **separate** contribution `−b·Σ_τ pr(i,τ)·nu_constr(sp,τ)` whose constraint index is `σ=sp` (the variable's *3rd, independent* index) with `τ` summed. This is derived rigorously in §6 (the instrumented landing attempt), which **supersedes** the `test_markov_stationarity_has_correction_term` docstring's approximate "after the fix" form — that docstring's `sum(…, −b·pi·nu_constr(s__kkt1,j)) + nu_constr(s,i)` conflates the diagonal `pi` slice with a summed multiplier and is not the exact target.
 
 **The current emit's term 1 (`markov_mcp.gms:162`, and the fresh CLI emit):**
 ```
@@ -62,8 +62,8 @@ For markov's `stat_z` first group the detection does **not** fire (`_multi_patte
 
 - **Payoff:** methodology→genuine, **floor 75→76 (+1)**; contingent on the fix + a cold re-solve showing `model_optimal` (local, tiny model).
 - **Control (done):** `kkt_residual.py data/gamslib/raw/markov.gms` = `CASE_B`, `max|stat_z|` rel 13.3 → after the fix must reach `CASE_A` (rel < tol). The tiny model makes each iteration cheap.
-- **Target form (term 1):** `nu_constr(s,i)` (direct) `+ sum((s__kkt1,j), ((-1)*(b*pi(s,i,s,i,s__kkt1)))*nu_constr(s__kkt1,j)$(…))` — split the Kronecker out; index the off-diagonal `nu` by the summed dummy (matching terms 2–45 and the test docstring).
-- **Fix surface:** the multi-pattern detection at `:6263–6293` (make it fire for markov's constr diagonal group) + the correction append at `:7187`; do **not** hand-special-case markov.
+- **Target form (see §6 for the derivation):** the diagonal group emits a single **direct** term `(1 − b·pi(s,i,s,i,sp))·nu_constr(s,i)` (Part 1 — implemented + verified 13.3→1.55); the off-diagonal contribution is `−b·Σ_τ pr(i,τ)·nu_constr(sp,τ)` with constraint index `σ=sp` and `τ` summed (Part 2 — the deeper enumeration blocker). Do **not** target the test docstring's `pi(s,i,s,i,s__kkt1)·nu_constr(s__kkt1,j)` shape — §6 shows it mixes the diagonal `pi` slice with a summed multiplier.
+- **Fix surface:** Part 1 is a NEW gated split in `_add_indexed_jacobian_terms` (the diagonal is its OWN single-key offset group `(0,0,999)`, so #1110's within-group detection at `:6263–6293` cannot fire — see §6); Part 2 is the offset-enumeration path that must represent a multiplier index bound to a non-first, independent variable index (`σ=sp`). Do **not** hand-special-case markov.
 - **Gates:** golden-staleness (only markov drifts; the 2-D cohort byte-identical), `--resolve-changed --since <SHA>` GO, determinism ×3, and the existing `test_markov_stationarity_has_correction_term` flips red→green (decide its `slow`/`xfail` disposition *with* the fix — the assertion is correct as-is).
 
 ## 6. Leak-gated landing attempt (Day 11) — diagonal fix works, off-diagonal is a second bug → reverted
