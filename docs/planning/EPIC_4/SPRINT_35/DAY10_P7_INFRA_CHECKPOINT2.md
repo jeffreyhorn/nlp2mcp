@@ -65,7 +65,7 @@ Recomputed over the **142 convex-candidate corpus** (`convexity.status ∈ {veri
 
 ## 4. `--resolve-changed` checkpoint targets — refreshed
 
-The at-risk target set is regenerated from git each checkpoint (`_changed_golden_model_ids(since_commit)` = `git diff --name-only <SHA>..HEAD -- data/gamslib/mcp/`), not a static list. For the Sprint-35 anchor `78ceaead` the current target set is **{turkey}** (was **∅** at Day-5 Checkpoint-1 — turkey's golden landed on Day 6). The Day-13 retest inherits this set plus the GAMS-version axis (v53 vs v54 baseline; [[FOLLOWUPS_GAMS54_TRANSITION]]).
+The at-risk target set is regenerated from git each checkpoint (`_changed_golden_model_ids(since_commit)` = `git diff --name-only <SHA>..HEAD -- data/gamslib/mcp/`), not a static list. For the Sprint-35 anchor `78ceaead` the current target set is **{turkey}** (was **∅** at Day-5 Checkpoint-1 — turkey's golden landed on Day 6). The Day-13 retest inherits this set plus the GAMS-version axis (v53 vs v54 baseline; [FOLLOWUPS_GAMS54_TRANSITION.md](FOLLOWUPS_GAMS54_TRANSITION.md)).
 
 ## 5. Epic-4 SUMMARY.md — row-35 groundwork
 
@@ -75,7 +75,7 @@ Filled `docs/planning/EPIC_4/SUMMARY.md` row 35 (was `(planned)`) with the throu
 
 **Checkpoint 2 = GO.** DB byte-unchanged (0 bucket), the sole golden drift (turkey) is the expected Day-6 landing and is testbed-only, genuine floor holds at 75, and the P7 fixture deliverable is satisfied by the turkey landing's own three fail-before/pass-after unit tests (no net-new fixture proportionate). Docs-only — no `src/`, no `*.py`, quality gate N/A.
 
-**Next (Days 11–12):** slack / carryforwards. **Day 13:** retest (GAMS-version axis — decide v53 vs v54 baseline; turkey's +1 needs a v54 testbed re-solve; markov `slow`-test triage, [[FOLLOWUPS_GAMS54_TRANSITION]] Follow-up 3).
+**Next (Days 11–12):** slack / carryforwards. **Day 13:** retest (GAMS-version axis — decide v53 vs v54 baseline; turkey's +1 needs a v54 testbed re-solve; markov `slow`-test triage, [FOLLOWUPS_GAMS54_TRANSITION.md](FOLLOWUPS_GAMS54_TRANSITION.md) Follow-up 3).
 
 ---
 
