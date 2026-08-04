@@ -2,7 +2,7 @@
 
 **Day:** 11 (REPLAN-slack + P6/P7 continuation) · **Date:** 2026-08-04 · **Owner:** Sprint 35 execution
 **Branch:** `planning/sprint35-day11-slack` · **Scope:** docs-only (no `src/`). **0 in-sprint bucket; a confirmed +1-floor lever discovered, diagnosed, and banked.**
-**Outcome: the Day-10 markov `slow`-test finding (Follow-up 3) resolves to a genuine cold-emit stationarity bug (`CASE_B`, `max|stat_z|` rel 13.3). markov is currently a *methodology* match (presolve-rescued); a correct cold emit would flip it methodology→genuine = genuine floor 75→76. The fix is a deep change to the shared multi-pattern (#1110) machinery that never emitted the correct form — high-blast-radius across the matching 2-D cohort — so it is BANKED to a dedicated Sprint-36 effort, not landed on a slack day.**
+**Outcome: the Day-10 markov `slow`-test finding (Follow-up 3) resolves to a genuine cold-emit stationarity bug (`CASE_B`, `max|stat_z|` rel 13.3). markov is currently a *methodology* match (presolve-rescued); a correct cold emit would flip it methodology→genuine = genuine floor 75→76. A leak-gated `src/` landing WAS attempted (§6): the diagonal-Kronecker split works and reduces the residual 13.3→1.55, but it exposed a SECOND, deeper bug — the off-diagonal enumeration cannot express markov's `σ=sp` coupling — so `CASE_A` is unreachable without a substantial rewrite. Reverted (src/ byte-identical to main); BANKED to a dedicated Sprint-36 effort with a now-sharpened two-part spec.**
 
 ---
 
@@ -66,9 +66,24 @@ For markov's `stat_z` first group the detection does **not** fire (`_multi_patte
 - **Fix surface:** the multi-pattern detection at `:6263–6293` (make it fire for markov's constr diagonal group) + the correction append at `:7187`; do **not** hand-special-case markov.
 - **Gates:** golden-staleness (only markov drifts; the 2-D cohort byte-identical), `--resolve-changed --since <SHA>` GO, determinism ×3, and the existing `test_markov_stationarity_has_correction_term` flips red→green (decide its `slow`/`xfail` disposition *with* the fix — the assertion is correct as-is).
 
+## 6. Leak-gated landing attempt (Day 11) — diagonal fix works, off-diagonal is a second bug → reverted
+
+Per direction, a careful, leak-gated `src/` attempt was made. Instrumenting `_add_indexed_jacobian_terms` confirmed the exact runtime state: markov's `stat_z/z` Jacobian splits into **45 offset groups** (#1045); the diagonal is its own group `offset_key=(0,0,999)`, **n=128, distinct_keys=1**, derivative `Binary(-, Const(1.0), b·pi)` — so #1110's within-group multi-pattern split never triggers.
+
+**The fix implemented (and its result):**
+- Added `_extract_additive_constant` + a gated split (zero-offset diagonal group **and** a mult/var index collision **and** a top-level additive constant): emit the fully-determined diagonal entry as a **direct** `(1 − b·pi(s,i,s,i,sp))·nu_constr(s,i)` term and suppress the spurious `sum((s__kkt1,j),…)`.
+- Emit became correct-looking (`term 1` = the direct form, no `s__kkt1` sum) and the KKT-residual **dropped monotonically 13.3 → 2.54 → 1.55** as the fix went from constant-only-split to full-direct-diagonal.
+- **But it stayed `CASE_B`** (rel 1.55 on `stat_z(empty,normal,*)`). Re-deriving: the off-diagonal contribution is `−b·Σ_τ pr(i,τ)·nu_constr(sp,τ)` — its constraint index **`σ = sp`, the variable's *3rd* (independent) index**. The emitter's offset machinery expresses `σ` as fixed offsets from `s` (the *1st* index), which **cannot** represent `σ=sp`; it degenerates into the 44 spurious `s__kkt2..45` offset groups with `ord()`/`sameas` guards. So the diagonal fix is **necessary but not sufficient** — the off-diagonal enumeration is a *second*, deeper bug.
+
+**Verdict: reverted** (`git checkout src/kkt/stationarity.py`; src/ byte-identical to main; markov back to `CASE_B` rel 13.3). Reaching `CASE_A` requires repairing how the emitter enumerates a multiplier index bound to a **non-first, independent variable index** (`σ=sp`) — a substantial rewrite of the offset/multi-pattern machinery, not a slack-day change. (Cohort leak-freedom was not even reachable: the cohort emits are minutes-scale, timing out at a 100 s cap — validation alone is a dedicated-effort concern.)
+
+**Sharpened Sprint-36 spec (two parts, both required):**
+1. **Diagonal-Kronecker split** (implemented, verified 13.3→1.55): pull the fully-determined diagonal group out of its spurious sum → direct `(1 − b·pi(s,i,s,i,sp))·nu_constr(s,i)`. The `_extract_additive_constant` + determined-multiplier approach is sound and gated (`_mult_var_collision and _all_zero_offset`).
+2. **Off-diagonal `σ=sp` coupling** (the new blocker): the multiplier index equals an *independent* variable index, not an offset of the first — the offset enumeration must represent `nu_constr(sp,τ)` summed over `τ` only, instead of exploding into 44 offset-from-`s` groups. This is the deeper, cohort-risky change.
+
 ## Outcome
 
-**0 in-sprint bucket** (docs-only, no `src/`), but the slack day converted a silently-red `slow` test into a **fully-diagnosed, control-confirmed +1 genuine-floor lever** — the sprint's only such lever. Banked to a dedicated Sprint-36 markov effort (deep multi-pattern-machinery repair, cohort-leak-proofed). P4 (ganges/gangesx ≥5-blocker cascade) and P6 residuals (turkpow/clearlak/dinam/indus, heavily multi-root) dispositions are unchanged — the slack was best spent discovering and de-risking this lever rather than re-litigating refuted tracks.
+**0 in-sprint bucket** (docs-only after revert; the `src/` attempt was made and reverted), but the slack day converted a silently-red `slow` test into a **fully-diagnosed, control-confirmed +1 genuine-floor lever** — the sprint's only such lever — **and** a leak-gated attempt that de-risked part 1 (a working diagonal fix) while pinpointing part 2 (the `σ=sp` off-diagonal enumeration) as the real depth. Banked to a dedicated Sprint-36 markov effort with the two-part spec above. P4 (ganges/gangesx ≥5-blocker cascade) and P6 residuals (turkpow/clearlak/dinam/indus, heavily multi-root) dispositions are unchanged.
 
 **Next (Day 12):** slack / carryforwards. **Day 13:** retest (GAMS-version axis; turkey +1 testbed re-solve). The markov lever + this note feed the Sprint-36 planning (a fourth banked track alongside the [FOLLOWUPS_GAMS54_TRANSITION.md](FOLLOWUPS_GAMS54_TRANSITION.md) items and the [CONSULTATION_BUNDLE](../SPRINT_36/CONSULTATION_BUNDLE.md)).
 
