@@ -36,6 +36,18 @@ a re-solve under 54 could shift buckets (a borderline model moving `model_optima
 
 ---
 
-**Document Status:** 🔵 Open follow-ups (both deferred from PR #1620)
+## Follow-up 3 — markov `slow` integration test failing on main (surfaced Day 9)
+
+**Symptom:** `tests/integration/kkt/test_markov_multi_pattern.py::TestMarkovMultiPatternIntegration::test_markov_stationarity_has_correction_term` **fails on clean main** (Day-9 fawley src/ attempt fully reverted; helper absent, `git diff main -- src/` empty). The assertion is `'1 -' not in <emitted markov stat>` ("Sum derivative should be pure off-diagonal, no Kronecker delta"), but the current emit contains `(1 - b * pi(s,i,s,i,s__kkt1)) * nu_constr(s,i)`.
+
+**Why it went unseen:** the module is marked `pytest.mark.slow` (line 17), so `make test` (`-m "not slow"`) **excludes** it — Day-6's full `make test` was green (5040/0) with this test never run. It surfaced only because the Day-9 KKT run filtered on `stationarity` (matching the test name) without the slow exclusion.
+
+**Not the fawley work:** fails with the fawley helper reverted; the fawley attempt separately *added* a `sameas(j,i)` to markov, but the `'1 -'` the assertion checks is present either way. This is **pre-existing and independent**.
+
+**Deferred question (Day-13 triage):** did the markov emit regress against this assertion at some earlier commit (a #1110 multi-pattern change reintroducing a Kronecker-delta term), or is the assertion stale relative to the intended emit? Either way the `slow` marker is hiding it from `make test` — decide whether to fix the emit, update the assertion, or (if intended) keep-and-document. Confirm on clean main at whichever commit last had this test green.
+
+---
+
+**Document Status:** 🔵 Open follow-ups (1–2 from PR #1620; 3 from the Day-9 fawley attempt)
 **Last Updated:** 2026-08-03
 **Owner:** Sprint 35 Execution Team
