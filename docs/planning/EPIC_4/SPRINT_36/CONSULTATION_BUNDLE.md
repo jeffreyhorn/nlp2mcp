@@ -47,6 +47,14 @@ Each was control-confirmed across multiple sprints as **not an emit defect** (th
 
 ---
 
-**Document Status:** ✅ Assembled — Sprint 35 Day 8 (P5 slot) · handed to Sprint 36
-**Last Updated:** 2026-08-03
+## Related Sprint-36 banked work (NOT a consultation — an emit fix)
+
+A fourth track was surfaced Sprint-35 Day 11 but is **categorically different** from the three above (whose emit is correct and whose blocker is a solver/forcing question): **markov is a genuine cold-emit bug** with a concrete +1 payoff, so it belongs to a Sprint-36 *emit-fix* effort, not this consultation bundle.
+
+- **markov** — `stat_z` diagonal-Kronecker emit bug (the `#1110` multi-pattern split was never emitted). KKT-residual control = `CASE_B`, `max|stat_z|` rel 13.3; markov is a *methodology* match today, and a correct cold emit ⇒ `CASE_A` ⇒ cold `model_optimal` ⇒ **genuine floor 75→76 (+1)**. Deep repair of the shared `_add_indexed_jacobian_terms` / `_multi_pattern_correction` machinery, high-blast-radius across the matching 2-D cohort (fawley Day-9 leak precedent) → dedicated effort. Full diagnosis + implementer-ready hand-off: `SPRINT_35/DAY11_MARKOV_DIAGONAL_LEVER.md`. This is the **only bucket-relevant lever found in Sprint 35** (all deep tracks refuted/banked as non-emit).
+
+---
+
+**Document Status:** ✅ Assembled — Sprint 35 Day 8 (P5 slot); markov emit-fix cross-ref added Day 11 · handed to Sprint 36
+**Last Updated:** 2026-08-04
 **Owner:** Sprint 35 Execution Team → Sprint 36
