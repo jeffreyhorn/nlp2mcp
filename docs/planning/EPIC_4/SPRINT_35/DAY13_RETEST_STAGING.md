@@ -12,7 +12,7 @@ Pre-stages the Day-13 final retest + closeout so Day 13 is execution, not discov
 - [ ] **PR25 genuine-vs-methodology final tally** — recompute over the 142 convex candidates. Expected: **Solve 108 / Match 93 / genuine floor 75** (DB byte-unchanged since the anchor → the S34 hand-partition carries forward verbatim; recompute confirmed Day 10).
 - [ ] **DB integrity** — `git diff 78ceaead..HEAD -- data/gamslib/gamslib_status.json` empty (0 bucket move).
 
-## 2. Expected close vs the bimodal projection (`../PLAN.md` §2)
+## 2. Expected close vs the bimodal projection ([PLAN.md](PLAN.md) §2)
 
 | KPI | flat branch | upside branch | **expected (FLAT)** |
 |---|---|---|---|
