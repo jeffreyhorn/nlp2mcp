@@ -96,8 +96,8 @@ Created `docs/planning/EPIC_4/SPRINT_36/KNOWN_UNKNOWNS.md` (30 unknowns across 7
 # The document exists and has the expected structure
 test -f docs/planning/EPIC_4/SPRINT_36/KNOWN_UNKNOWNS.md && echo "KU doc exists"
 # All seven priorities are represented
-for p in markov sarf fawley ganges rocket turkey "GAMS.54\|GAMS-54"; do
-  grep -qi "$p" docs/planning/EPIC_4/SPRINT_36/KNOWN_UNKNOWNS.md && echo "  covers: $p"
+for p in markov sarf fawley ganges rocket turkey "GAMS[.-]54"; do
+  grep -qiE "$p" docs/planning/EPIC_4/SPRINT_36/KNOWN_UNKNOWNS.md && echo "  covers: $p"
 done
 # Each unknown carries an assumption + verification + priority
 grep -ciE "assumption|verification|priority" docs/planning/EPIC_4/SPRINT_36/KNOWN_UNKNOWNS.md
@@ -244,7 +244,7 @@ To be completed.
 test -f docs/planning/EPIC_4/SPRINT_36/MARKOV_OFFDIAGONAL_DESIGN.md && echo "design exists"
 grep -qiE "sigma=sp|σ=sp|off-diagonal|CASE_A" docs/planning/EPIC_4/SPRINT_36/MARKOV_OFFDIAGONAL_DESIGN.md && echo "covers σ=sp + CASE_A gate"
 # Confirm the cited code surface still exists
-grep -n "_compute_index_offset_key\|_add_indexed_jacobian_terms" src/kkt/stationarity.py | head
+grep -nE "_compute_index_offset_key|_add_indexed_jacobian_terms" src/kkt/stationarity.py | head
 ```
 
 ### Deliverables
@@ -313,8 +313,8 @@ To be completed.
 test -f docs/planning/EPIC_4/SPRINT_36/FAWLEY_DISCRIMINATOR_DESIGN.md && echo "design exists"
 grep -qiE "derivative-structure|discriminator|_derivative_structure_key|leak" docs/planning/EPIC_4/SPRINT_36/FAWLEY_DISCRIMINATOR_DESIGN.md && echo "covers discriminator + leak"
 # Confirm the shared function + the fawley fixture reference still exist
-grep -n "_derivative_structure_key\|_add_indexed_jacobian_terms" src/kkt/stationarity.py | head
-grep -rn "shape_fawley_2d_second_index\|fawley" docs/planning/EPIC_4/SPRINT_35/FAWLEY_DIAGONAL_DESIGN.md | head
+grep -nE "_derivative_structure_key|_add_indexed_jacobian_terms" src/kkt/stationarity.py | head
+grep -rnE "shape_fawley_2d_second_index|fawley" docs/planning/EPIC_4/SPRINT_35/FAWLEY_DIAGONAL_DESIGN.md | head
 ```
 
 ### Deliverables
@@ -520,7 +520,7 @@ ls docs/planning/EPIC_4/SPRINT_35/FOLLOWUPS_GAMS54_TRANSITION.md docs/planning/E
 test -f docs/planning/EPIC_4/SPRINT_36/GAMS54_TESTBED_PLAN.md && echo "testbed plan exists"
 grep -qiE "1000-row|testbed|re-baseline|turkey|OBJ-GAP|54.2.1" docs/planning/EPIC_4/SPRINT_36/GAMS54_TESTBED_PLAN.md && echo "covers testbed scope"
 # The GAMS resolver + row-limit handling still present
-grep -rn "path_solve_license\|find_gams_executable\|Versions/Current" scripts/ src/ | head
+grep -rnE "path_solve_license|find_gams_executable|Versions/Current" scripts/ src/ | head
 ```
 
 ### Deliverables
