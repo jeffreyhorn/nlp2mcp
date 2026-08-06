@@ -120,7 +120,7 @@ grep -ciE "assumption|verification|priority" docs/planning/EPIC_4/SPRINT_36/KNOW
 
 ## Task 2: Re-Confirm the Sprint-35 Baseline & Banked-Diagnosis Fingerprints
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-06)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 36 Day 1
@@ -152,11 +152,11 @@ The S35-close anchor is `597d9d08`; the sprint anchor for `--resolve-changed` is
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_36/DAY0_TRACE_NOTES.md` (the Day-0 baseline & fingerprint re-confirmation: KPI recompute, DB/emit/golden integrity vs the anchor, the markov + fawley control outputs, the emit/AD code-surface integrity, and the ganges `$149`/`$141` surface confirmation). Marked Unknowns 1.1, 3.3, 3.4 → ✅ VERIFIED in `KNOWN_UNKNOWNS.md` (with Findings/Evidence/Decision), and added Task-2 contribution notes to Unknowns 4.1, 5.4, 7.5.
 
 ### Result
 
-To be completed.
+**GO — every fingerprint re-confirms exactly on current `main`.** KPI recompute over the 142 convex candidates = **Translate 135 / Solve 108 / Match 93 (63 cold + 30 presolve) / pse 7 / mi 7 / all-219 96 / genuine floor 75** (= S35 close). DB byte-unchanged vs `78ceaead`; the only `src/` delta is the turkey `original_symbols.py`; the only changed golden is `turkey_mcp.gms`. markov control = `CASE_B`, `max|stat_z|` rel **13.3**, dual CONSISTENT (exact S35 Day-11 match); markov stays methodology (`model_optimal_presolve`+match). fawley control = `CASE_B`, `stat_bq` rel **0.973**, harness max = the emit-correct H-b `stat_trans(tr-2)` rel 1.00. `stationarity.py` + `derivative_rules.py` are byte-identical to the S35 measurement tree, and the fawley/markov goldens are unchanged — so the banked reductions (markov 13.3→1.55; fawley 473→1.14e-13) reproduce on identical inputs. The `$149` `_diff_prod` surface (`derivative_rules.py:3276`) and the correct `$141` helper (`_expr_contains_varref_attribute`) are present and unchanged. **No drift detected.** Verifies Unknowns 1.1, 3.3, 3.4; contributes to 4.1, 5.4, 7.5.
 
 ### Verification
 
@@ -187,14 +187,14 @@ PY
 
 ### Acceptance Criteria
 
-- [ ] KPI baseline re-computed = 108 / 93 / 75 (Solve / Match / floor), Translate 135, pse 7 — or any drift documented
-- [ ] DB byte-unchanged vs `78ceaead`; `src/` delta = only the turkey fix
-- [ ] markov control reproduces `CASE_B` `max|stat_z|` rel ≈ 13.3 (dual transfer CONSISTENT)
-- [ ] fawley control reproduces `CASE_B` `stat_bq` ≈ 0.973 (H-b `stat_trans(tr-2)`)
-- [ ] The markov Part-1 diagonal split still reduces the residual to ≈ 1.55 (re-confirmed or re-measured)
-- [ ] The ganges `$149` `_diff_prod` fix surface is unchanged on `main`
-- [ ] Every re-confirmation recorded in the KU disposition slots
-- [ ] Unknowns 1.1, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] KPI baseline re-computed = 108 / 93 / 75 (Solve / Match / floor), Translate 135, pse 7 — exact S35-close match, no drift
+- [x] DB byte-unchanged vs `78ceaead`; `src/` delta = only the turkey fix (`original_symbols.py`)
+- [x] markov control reproduces `CASE_B` `max|stat_z|` rel ≈ 13.3 (dual transfer CONSISTENT)
+- [x] fawley control reproduces `CASE_B` `stat_bq` ≈ 0.973 (H-b `stat_trans(tr-2)` rel 1.00 the harness max)
+- [x] The markov Part-1 diagonal split still reduces the residual to ≈ 1.55 (reproduces deductively — `stationarity.py` + `markov_mcp.gms` byte-identical to the Day-11 tree)
+- [x] The ganges `$149` `_diff_prod` fix surface is unchanged on `main` (`derivative_rules.py:3276`)
+- [x] Every re-confirmation recorded in the KU disposition slots + `DAY0_TRACE_NOTES.md`
+- [x] Unknowns 1.1, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

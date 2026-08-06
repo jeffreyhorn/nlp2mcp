@@ -114,7 +114,15 @@ Run the markov control on current `main` (tiny model, seconds-scale, fully local
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 2 (Re-Confirm Baseline & Banked-Diagnosis Fingerprints)
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Re-Confirm the Sprint-35 Baseline & Banked-Diagnosis Fingerprints)
+**Date:** 2026-08-06
+
+**Findings:** The markov control reproduces the S35 Day-11 fingerprint exactly — `CASE_B`, `max|stat_z|` rel 13.3 on `stat_z(empty,disrupted,empty)`, dual CONSISTENT (dual scale 3.6e3). markov remains `verified_convex` + `model_optimal_presolve` + match (**methodology**) in the byte-unchanged DB, so the methodology→genuine +1 is still available. The emit/AD code path is byte-identical to the Day-11 measurement tree, so the documented Part-1 diagonal split's 13.3→1.55 reduction reproduces on identical code + golden.
+
+**Evidence:** `kkt_residual.py markov` → `verdict: CASE_B`, `max-residual stat_z(empty,disrupted,empty) rel 1.33e+01 (raw -4.79e+04)`. `git diff 78ceaead..HEAD -- src/kkt/stationarity.py src/ad/derivative_rules.py` = empty (both UNCHANGED); `git diff --name-only 78ceaead..HEAD -- data/gamslib/mcp/` = only `turkey_mcp.gms` (`markov_mcp.gms` unchanged). See `DAY0_TRACE_NOTES.md` §3.
+
+**Decision:** ✅ The Part-1 premise holds (13.3 baseline reproduced; the 13.3→1.55 reduction reproduces deductively on byte-identical emit code + golden). No full scratch re-apply was needed — the emit path is provably identical (the only `src/` delta since S35 is the unrelated turkey `original_symbols.py`). Task 3 designs Part-2 (`σ=sp`).
 
 ---
 
@@ -462,7 +470,15 @@ Re-run the fawley control on current `main`; re-apply the documented `/tmp` hand
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 2 (Re-Confirm Baseline & Banked-Diagnosis Fingerprints)
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Re-Confirm the Sprint-35 Baseline & Banked-Diagnosis Fingerprints)
+**Date:** 2026-08-06
+
+**Findings:** The fawley control reproduces the S35 fingerprint — `CASE_B`, `stat_bq` rel 0.973 (the qsb/pbal over-sum still present), dual CONSISTENT. The fawley emit code (`stationarity.py`) and goldens (`fawley_mcp.gms`, `fawley_mcp_presolve.gms`) are byte-identical to the Day-9 measurement tree, so the Day-9 `/tmp` hand-edit control (`max|stat_bq|` 473.4 → 1.14e-13) reproduces on identical inputs.
+
+**Evidence:** `kkt_residual.py fawley` → `verdict: CASE_B`; `stat_bq(res-arab-l,fuel-oil) rel 9.73e-01` (and siblings); `git diff 78ceaead..HEAD -- src/kkt/stationarity.py` empty; `fawley_mcp.gms` + `fawley_mcp_presolve.gms` unchanged since the anchor. See `DAY0_TRACE_NOTES.md` §4.
+
+**Decision:** ✅ The fawley correctness-fix premise holds (the qsb/pbal `sameas` gap is real and the control reproduces). Task 4 designs the derivative-structure discriminator that closes it without the markov #1110 leak.
 
 ---
 
@@ -492,7 +508,15 @@ Solve the corrected fawley MCP; assert `modelstat`; run the `--force` survey (cr
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 2 (H-b re-confirm) with the `--force` scoping in Task 8
+✅ **Status:** VERIFIED (H-b re-confirmed; the `--force` +Solve scoping remains a Task-8 item)
+**Verified by:** Task 2 (Re-Confirm the Sprint-35 Baseline & Banked-Diagnosis Fingerprints)
+**Date:** 2026-08-06
+
+**Findings:** fawley's harness max is the emit-correct `stat_trans(tr-2)` rel 1.00 — a *non-emit* divergence — dominating `stat_bq` (0.973). So even with `stat_bq` fully closed, the MCP's H-b divergence remains: the correctness fix yields 0 Solve/floor without a `--force`/continuation lever. This confirms fawley's +Solve is a forcing hand-off, not emit-reachable.
+
+**Evidence:** `kkt_residual.py fawley` → `max-residual row: stat_trans(tr-2) rel 1.00e+00 (raw -4.88e+02)` (above `stat_bq` 0.973). See `DAY0_TRACE_NOTES.md` §4.
+
+**Decision:** ✅ fawley's +Solve is H-b (0 bucket from the correctness fix alone). The `--force`/continuation survey (`CONSULTATION_BUNDLE.md` §3) is the +Solve avenue — scoped in Task 8. The P3 correctness fix is worth landing for the genuine floor (if fawley cold-matches) but the Solve gain is forcing-contingent.
 
 ---
 
@@ -525,6 +549,8 @@ Sprint 36 execution team
 
 ### Verification Results
 🔍 **Status:** INCOMPLETE — to be verified by Task 6 (ganges Cascade Re-Verification); Task 2 contributes the fix-surface-unchanged check
+
+**Task-2 contribution (2026-08-06):** `src/ad/derivative_rules.py` is **UNCHANGED** since the anchor and `_diff_prod` is present at `:3276` (dispatched at `:200`), so the banked `$149` `_diff_prod` fix still applies to the same surface. The existing `_expr_contains_varref_attribute` (for the `$141` helper) is present at `original_symbols.py:1392`; the buggy `_expr_contains_varref_attr` is absent. (Task 6 does the full scratch re-apply + `$149` 9→0 re-measure + the `$66`/`rPower` probe.) See `DAY0_TRACE_NOTES.md` §5.
 
 ---
 
@@ -770,6 +796,8 @@ Sprint 36 execution team
 ### Verification Results
 🔍 **Status:** INCOMPLETE — to be verified by Task 8 (Consultation Bundle Finalization); Task 2 contributes the DB re-confirm
 
+**Task-2 contribution (2026-08-06):** the committed DB is **byte-unchanged** since the anchor (`git diff 78ceaead..HEAD -- data/gamslib/gamslib_status.json` empty), so the S1∧S2∧S3 detector cohort is intact — no re-solve could have shifted the camcge signature. (Task 8 does the explicit per-model DB re-confirm.) See `DAY0_TRACE_NOTES.md` §6.
+
 ---
 
 # Category 6: turkey Testbed Re-Solve + Residual Multi-Root Cohort
@@ -1014,6 +1042,8 @@ Sprint 36 execution team
 
 ### Verification Results
 🔍 **Status:** INCOMPLETE — to be verified by Task 9 (genuine-floor tracking); Task 2 contributes the baseline recompute
+
+**Task-2 contribution (2026-08-06):** the PR25 recompute over the 142 convex candidates gives Solve 108 / Match 93 (63 cold-optimal + 30 presolve), and the DB is byte-unchanged since the anchor, so the S34/S35 methodology hand-partition carries forward → the genuine-floor anchor holds at **75**. (Task 9 does the full PR25 recompute + the SUMMARY row-36 groundwork.) See `DAY0_TRACE_NOTES.md` §1.
 
 ---
 
