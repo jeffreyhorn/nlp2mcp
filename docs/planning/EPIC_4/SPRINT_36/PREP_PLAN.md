@@ -49,7 +49,7 @@ This prep plan focuses on the research, design, and setup tasks that must comple
 
 ## Task 1: Create Sprint 36 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-06)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 36 Day 1
@@ -84,11 +84,11 @@ Each prior sprint's `KNOWN_UNKNOWNS.md` (e.g. `docs/planning/EPIC_4/SPRINT_35/KN
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_36/KNOWN_UNKNOWNS.md` (30 unknowns across 7 categories, numbered `X.Y` per category) following the Sprint-35 KNOWN_UNKNOWNS conventions: Executive Summary, How to Use This Document (with priority definitions), Summary Statistics, Table of Contents, the 7 category blocks, a Confirmed Knowledge section, the Template for New Unknowns, Next Steps, and an `## Appendix: Task-to-Unknown Mapping` table. Added a "Deferred-unknown lineage" note tracing each track to its Sprint-35 disposition. Also added the "**Unknowns Verified:**" metadata + a KNOWN_UNKNOWNS-update deliverable + acceptance criterion to PREP_PLAN.md Tasks 2–10.
 
 ### Result
 
-To be completed.
+30 unknowns documented (Critical 8 / High 12 / Medium 7 / Low 3 = ~27/40/23/10%; ~35h total research time — within the 28–36h target). Every unknown carries Priority, Assumption, 3–5 Research Questions, How to Verify, Risk if Wrong, Estimated Research Time, Owner, and a `🔍 Status: INCOMPLETE` Verification Results slot. The Task-to-Unknown mapping assigns every unknown (1.1–7.5) to ≥1 prep task (Tasks 2–9), with the 8 Critical unknowns front-loaded into Tasks 2–7. Zero Day-0 blockers remain unmapped. The two deep prep-phase design priorities (Unknown 1.2 markov `σ=sp`; Unknown 3.2 the fawley/markov shared-function collision) are called out in the Executive Summary and Next Steps.
 
 ### Verification
 
@@ -110,11 +110,11 @@ grep -ciE "assumption|verification|priority" docs/planning/EPIC_4/SPRINT_36/KNOW
 
 ### Acceptance Criteria
 
-- [ ] Document created covering all seven priorities (P1–P7)
-- [ ] Each unknown has an assumption, a verification method, a priority, and a target resolution point
-- [ ] Each unknown carries a disposition slot (VERIFIED / REPLAN / DESIGN-SPECIFIED / INCOMPLETE)
-- [ ] Day-0 blockers explicitly flagged (and a plan to clear each before Day 1)
-- [ ] The two deep unknowns (markov Part-2 `σ=sp`; fawley discriminator) are called out as the prep-phase design priorities
+- [x] Document created covering all seven priorities (P1–P7) — 30 unknowns
+- [x] Each unknown has an assumption, a verification method (How to Verify), a priority, and a target resolution point (the verifying prep task)
+- [x] Each unknown carries a disposition slot (`🔍 Status: INCOMPLETE`, to advance to VERIFIED / WRONG during prep)
+- [x] Day-0 blockers explicitly flagged (and mapped to Tasks 2–7; the Task-10 GO/NO-GO gates them)
+- [x] The two deep unknowns (Unknown 1.2 markov `σ=sp`; Unknown 3.2 fawley/markov shared-function collision) are called out as the prep-phase design priorities
 
 ---
 
@@ -126,6 +126,7 @@ grep -ciE "assumption|verification|priority" docs/planning/EPIC_4/SPRINT_36/KNOW
 **Deadline:** Before Sprint 36 Day 1
 **Owner:** Sprint 36 execution team
 **Dependencies:** Task 1
+**Unknowns Verified:** 1.1, 3.3, 3.4
 
 ### Objective
 
@@ -182,6 +183,7 @@ PY
 
 - A Day-0 baseline re-confirmation note (in the KU doc or a short `DAY0_TRACE_NOTES.md`): KPIs re-computed, DB/emit integrity vs anchor, and each banked fingerprint marked VERIFIED or drift-detected
 - The markov / fawley control outputs captured (verdict + max-residual rows)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 3.3, 3.4
 
 ### Acceptance Criteria
 
@@ -192,6 +194,7 @@ PY
 - [ ] The markov Part-1 diagonal split still reduces the residual to ≈ 1.55 (re-confirmed or re-measured)
 - [ ] The ganges `$149` `_diff_prod` fix surface is unchanged on `main`
 - [ ] Every re-confirmation recorded in the KU disposition slots
+- [ ] Unknowns 1.1, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -203,6 +206,7 @@ PY
 **Deadline:** Before Sprint 36 Day 1
 **Owner:** Sprint 36 execution team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 1.2, 1.3, 1.4
 
 ### Objective
 
@@ -247,6 +251,7 @@ grep -n "_compute_index_offset_key\|_add_indexed_jacobian_terms" src/kkt/station
 
 - `docs/planning/EPIC_4/SPRINT_36/MARKOV_OFFDIAGONAL_DESIGN.md` — the Part-2 `σ=sp` enumeration design: the representation-gap characterization, the chosen mechanism (+ 1–2 rejected alternatives), the exact code surface, the Phase-0 `CASE_A` control spec, and the leak-freedom gate
 - A go/no-go note on whether Part 2 is landable in the P1 budget (14–20h) or is a documented REPLAN exit
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.2, 1.3, 1.4
 
 ### Acceptance Criteria
 
@@ -255,6 +260,7 @@ grep -n "_compute_index_offset_key\|_add_indexed_jacobian_terms" src/kkt/station
 - [ ] The Phase-0 control that must reach `CASE_A` is specified (hand-edit / scratch-branch, `kkt_residual.py` gate)
 - [ ] The leak-freedom gate (2-D cohort byte-identical) is specified and coordinated with Task 4 (shared `_add_indexed_jacobian_terms`)
 - [ ] A REPLAN exit is defined (what to do if the `σ=sp` mechanism proves architectural)
+- [ ] Unknowns 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -266,6 +272,7 @@ grep -n "_compute_index_offset_key\|_add_indexed_jacobian_terms" src/kkt/station
 **Deadline:** Before Sprint 36 Day 1
 **Owner:** Sprint 36 execution team
 **Dependencies:** Tasks 1, 2, 3
+**Unknowns Verified:** 3.1, 3.2
 
 ### Objective
 
@@ -314,6 +321,7 @@ grep -rn "shape_fawley_2d_second_index\|fawley" docs/planning/EPIC_4/SPRINT_35/F
 
 - `docs/planning/EPIC_4/SPRINT_36/FAWLEY_DISCRIMINATOR_DESIGN.md` — the derivative-structure discriminator design, its co-existence proof with the Task-3 markov change, the Phase-0 `max|stat_bq|→0` control, and the leak-freedom (2-D-cohort byte-identical) gate
 - A joint markov/fawley change-surface map for `_add_indexed_jacobian_terms` (which branches each touches)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.1, 3.2
 
 ### Acceptance Criteria
 
@@ -322,6 +330,7 @@ grep -rn "shape_fawley_2d_second_index\|fawley" docs/planning/EPIC_4/SPRINT_35/F
 - [ ] Co-existence with the Task-3 markov change is demonstrated (non-overlapping branches; cohort byte-identical)
 - [ ] The Phase-0 `max|stat_bq|→0` control + the golden-staleness gate are specified
 - [ ] The H-b +Solve hand-off to the `--force` survey (Task 8) is cross-referenced
+- [ ] Unknowns 3.1, 3.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -333,6 +342,7 @@ grep -rn "shape_fawley_2d_second_index\|fawley" docs/planning/EPIC_4/SPRINT_35/F
 **Deadline:** Before Sprint 36 Day 1
 **Owner:** Sprint 36 execution team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 2.1, 2.2, 2.3, 2.4
 
 ### Objective
 
@@ -379,6 +389,7 @@ grep -rn "enumerate_variable_instances" src/ | head
 
 - `docs/planning/EPIC_4/SPRINT_36/SARF_DESIGN_REFRESH.md` — a refresh note: the re-measured blow-up (wall-clock at the cap), the re-validated 7-term `stat_task` derivation, the confirmed O(active=398) guarded-emit target, and the Phase-0 timing gate + regression harness
 - A go/no-go on whether the S35 design applies unchanged or needs an update for any `main` drift
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.2, 2.3, 2.4
 
 ### Acceptance Criteria
 
@@ -387,6 +398,7 @@ grep -rn "enumerate_variable_instances" src/ | head
 - [ ] The O(active=398) guarded-emit shape confirmed as the target
 - [ ] The Phase-0 timing gate + regression harness (byte-stable golden, determinism ×3, no set-name-literal indices) re-confirmed
 - [ ] The re-scope exit condition documented
+- [ ] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -398,6 +410,7 @@ grep -rn "enumerate_variable_instances" src/ | head
 **Deadline:** Before Sprint 36 Day 1
 **Owner:** Sprint 36 execution team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 4.1, 4.2, 4.3, 4.4, 4.5, 6.3
 
 ### Objective
 
@@ -445,6 +458,7 @@ grep -rn "_expr_contains_varref_attribute" src/ | head
 
 - `docs/planning/EPIC_4/SPRINT_36/GANGES_RECOVERY_SEQUENCING.md` — the re-verified cascade, the confirmed `$149`/`$141` fix surfaces, the ordered recovery plan with per-fix `--resolve-changed` gates, and the slow-golden regeneration budget slot
 - A cross-note to P6: the `$149` fix's unblocking of dinam/indus/turkpow/clearlak's `$149` half
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.1, 4.2, 4.3, 4.4, 4.5, 6.3
 
 ### Acceptance Criteria
 
@@ -454,6 +468,7 @@ grep -rn "_expr_contains_varref_attribute" src/ | head
 - [ ] The slow-CGE-golden regeneration cost estimated with a budget slot
 - [ ] An ordered recovery plan with per-fix `--resolve-changed` gates is produced
 - [ ] The P6 cross-track `$149`-unblock is noted
+- [ ] Unknowns 4.1, 4.2, 4.3, 4.4, 4.5, 6.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -465,6 +480,7 @@ grep -rn "_expr_contains_varref_attribute" src/ | head
 **Deadline:** Before Sprint 36 Day 1
 **Owner:** Sprint 36 execution team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 6.1, 6.2, 7.1, 7.2
 
 ### Objective
 
@@ -511,6 +527,7 @@ grep -rn "path_solve_license\|find_gams_executable\|Versions/Current" scripts/ s
 
 - `docs/planning/EPIC_4/SPRINT_36/GAMS54_TESTBED_PLAN.md` — the testbed access confirmation, the re-baseline diff scope (buckets + 5 OBJ-GAP models + PR19 canaries), the turkey solve invocation, the DB-version decision criteria, and the Day-slot for the async testbed run
 - A checklist of what stays local (emit-level gates) vs what needs the testbed (solve buckets)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 6.1, 6.2, 7.1, 7.2
 
 ### Acceptance Criteria
 
@@ -520,6 +537,7 @@ grep -rn "path_solve_license\|find_gams_executable\|Versions/Current" scripts/ s
 - [ ] The DB-version decision criteria + artifact are defined
 - [ ] The emit-level (local) vs solve (testbed) split is documented
 - [ ] The testbed Day-slot is identified
+- [ ] Unknowns 6.1, 6.2, 7.1, 7.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -531,6 +549,7 @@ grep -rn "path_solve_license\|find_gams_executable\|Versions/Current" scripts/ s
 **Deadline:** Before Sprint 36 Day 1
 **Owner:** Sprint 36 execution team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 5.1, 5.2, 5.3, 5.4
 
 ### Objective
 
@@ -575,6 +594,7 @@ grep -qiE "rocket|mine|camcge|Epic 5|primal-degenerate|Walras" docs/planning/EPI
 
 - `docs/planning/EPIC_4/SPRINT_36/P5_CONSULTATION_FINALIZATION.md` — a submission-readiness confirmation for rocket, the finalized mine primal-degenerate-LP question, the camcge Epic-5 `/tmp` gate scope, and the cross-reference to the fawley `--force` survey
 - A note confirming P5 is a submission/scoping day (no emit fix), feeding the Sprint-37 consultation
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 5.1, 5.2, 5.3, 5.4
 
 ### Acceptance Criteria
 
@@ -583,6 +603,7 @@ grep -qiE "rocket|mine|camcge|Epic 5|primal-degenerate|Walras" docs/planning/EPI
 - [ ] The camcge Walras Epic-5 `/tmp` gate is scoped (with the price-pin MS-4 fallback)
 - [ ] The fawley `--force` survey cross-reference (Task 4) is coherent
 - [ ] The Case-c sign flip + `x.up=inf` BANs are restated
+- [ ] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -594,6 +615,7 @@ grep -qiE "rocket|mine|camcge|Epic 5|primal-degenerate|Walras" docs/planning/EPI
 **Deadline:** Before Sprint 36 Day 1
 **Owner:** Sprint 36 execution team
 **Dependencies:** Tasks 1, 3, 4
+**Unknowns Verified:** 1.3, 1.5, 7.3, 7.4, 7.5
 
 ### Objective
 
@@ -638,6 +660,7 @@ grep -rn "robustlp" scripts/diagnostics/presolve_divergence_allowlist.txt
 
 - `docs/planning/EPIC_4/SPRINT_36/FIXTURE_AND_HARNESS_CATALOG.md` — the markov + fawley fixture specs (assertion + skip-if-absent), the 2-D-cohort golden-staleness regression harness, the markov `slow`-test disposition decision, the robustlp NA root survey + de-allowlist plan, and the genuine-floor tracking recompute note
 - A mapping of each fixture to the Task-3/Task-4 landing it guards
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.3, 1.5, 7.3, 7.4, 7.5
 
 ### Acceptance Criteria
 
@@ -647,6 +670,7 @@ grep -rn "robustlp" scripts/diagnostics/presolve_divergence_allowlist.txt
 - [ ] The markov `slow`-test disposition is decided (with the Task-3 fix)
 - [ ] The robustlp NA root is surveyed with a de-allowlist plan
 - [ ] The genuine-floor tracking recompute (anchor 75) + SUMMARY row-36 groundwork are noted
+- [ ] Unknowns 1.3, 1.5, 7.3, 7.4, 7.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -658,6 +682,7 @@ grep -rn "robustlp" scripts/diagnostics/presolve_divergence_allowlist.txt
 **Deadline:** Before Sprint 36 Day 1
 **Owner:** Sprint 36 execution team
 **Dependencies:** All tasks (1–9)
+**Unknowns Verified:** All (integrates every verified unknown 1.1–7.5)
 
 ### Objective
 
@@ -706,6 +731,7 @@ grep -qiE "168|≤ ?12|94–134|94-134" docs/planning/EPIC_4/SPRINT_36/PLAN.md &
 - `docs/planning/EPIC_4/SPRINT_36/PLAN.md` — the Day-0-through-Day-13 schedule: track sequencing (front-loaded P1/P2), the two checkpoints, the async testbed thread, per-track REPLAN exits, the ≤12h/day budget, and the Day-0 kickoff checklist
 - `docs/planning/EPIC_4/SPRINT_36/prompts/PLAN_PROMPTS.md` — the per-day execution prompts (Day 0 + Days 1–13), if following the S35 pattern
 - A one-line GO/NO-GO for Day 0 (all Day-0 blockers cleared)
+- Confirmation that all Unknowns 1.1–7.5 are resolved (✅ VERIFIED / ❌ WRONG-with-correction) in KNOWN_UNKNOWNS.md, with any residual carried as a REPLAN exit
 
 ### Acceptance Criteria
 
@@ -716,6 +742,7 @@ grep -qiE "168|≤ ?12|94–134|94-134" docs/planning/EPIC_4/SPRINT_36/PLAN.md &
 - [ ] Each track has an explicit REPLAN exit
 - [ ] The Day-0 kickoff checklist (fingerprint re-confirm + KU blocker clearance) is written
 - [ ] A GO/NO-GO for Day 0 is stated
+- [ ] All Unknowns 1.1–7.5 confirmed resolved (or carried as REPLAN exits) in KNOWN_UNKNOWNS.md
 
 ---
 
