@@ -155,7 +155,15 @@ Trace `_compute_index_offset_key` + the sub-group emission for markov's off-diag
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 3 (markov P1 — Part-2 `σ=sp` Off-Diagonal Enumeration Design)
+✅ **Status:** VERIFIED (a bounded mechanism is specified — a coordinated offset-key + emission change, not a trivial tweak)
+**Verified by:** Task 3 (markov P1 — Part-2 `σ=sp` Off-Diagonal Enumeration Design)
+**Date:** 2026-08-06
+
+**Findings:** Root-caused precisely: `_compute_index_offset_key`'s greedy first-canonical-match (`stationarity.py:5099`) binds constr's `sp` index to var **position 0 (`s`, canon-only)** instead of **position 2 (`sp`, exact-name)** — because `s`/`sp`/`spp` are aliases (same canon). `σ=sp` is then expressed as an **offset-from-`s`**, degenerating into 44 spurious groups. A scratch prototype (exact-declared-name-first matching) confirmed that changing the offset-key alone is **insufficient** (`ngroups` stayed 45) **and crashes the emission** → Part-2 is inherently a *coordinated* offset-key + emission change. The bounded mechanism is **Mechanism C** — a targeted additive off-diagonal correction (parallel to the verified Part-1 `_kronecker_diag_correction`), gated on the `σ=sp` signature, that suppresses the 44 groups and emits `− b·sum(j, pi(s,i,sp,j,sp)·nu_constr(sp,j))`, keeping the shared offset-key matcher untouched.
+
+**Evidence:** instrumentation `[OD] 44 off-diagonal offset keys (-7..+7,{-1,0,1},999); σ bound to var pos 0 (s)`; the sibling `equil(s,spp)` binds correctly (1 group `(0,999,0)`); the prototype `ngroups=45` + emission crash. See `MARKOV_OFFDIAGONAL_DESIGN.md` §1–§4.
+
+**Decision:** ✅ A bounded (additive, gated) mechanism exists (C); two higher-blast-radius alternatives (A: fix the shared matcher; B: a bound-to-var-index marker) are documented as fallbacks. Landable in the P1 budget with the Phase-0 `CASE_A` control (§5) as the gate + a REPLAN exit.
 
 ---
 
@@ -187,7 +195,15 @@ Instrument the markov gate to log every model it fires on; run `check_golden_sta
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 3 (design/gate) and Task 9 (2-D-cohort regression harness)
+✅ **Status:** VERIFIED (design-level — leak-free by construction; the golden-staleness confirmation is the Day-1 Phase-0 gate)
+**Verified by:** Task 3 (design + leak-freedom gate) — the empirical run is retained in Task 9's 2-D-cohort harness
+**Date:** 2026-08-06
+
+**Findings:** The recommended Mechanism C is **additive and gated on the markov-specific `σ=sp` signature** (a mult index whose canon matches ≥2 var positions, with a later exact-name position) and does **not** touch the shared `_compute_index_offset_key` matcher — so it cannot re-group cohort entries by construction. The leak-freedom gate is specified: `check_golden_staleness.py` over cesam2/camcge/ps2_f_s/ps2_s/ps3_s_gic/polygon must show **only markov drifts**. (The cohort emits are minutes-scale → a nightly/async or per-model diff, not an inline `make test` step.) Coordinated with Task 4 (fawley) via a joint change-surface map (both are additive gated branches with non-overlapping firing conditions).
+
+**Evidence:** Mechanism C's design (§3–§4) leaves `_compute_index_offset_key` untouched; the leak gate + cohort-cost caveat are specified in `MARKOV_OFFDIAGONAL_DESIGN.md` §6.
+
+**Decision:** ✅ Leak-free by design; the empirical golden-staleness run is the Day-1 Phase-0 gate (and the fallback Mechanisms A/B, which *do* touch the shared matcher, are only adopted if C's gate somehow leaks).
 
 ---
 
@@ -219,7 +235,15 @@ After a scratch `CASE_A` emit, run the cold MCP solve locally (markov is tiny); 
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 3 (design confirms cold-solve feasibility; Task 2 re-confirms the methodology classification)
+✅ **Status:** VERIFIED (design-level — markov is `verified_convex` + methodology, so `CASE_A` → cold `model_optimal` is expected; the cold solve is the Day-1 Phase-0 gate)
+**Verified by:** Task 3 (cold-solve feasibility) + Task 2 (methodology classification re-confirmed)
+**Date:** 2026-08-06
+
+**Findings:** markov is `verified_convex` and currently `model_optimal_presolve` + match (**methodology**; re-confirmed Task 2, DB byte-unchanged). A `CASE_A` cold emit ⇒ the cold MCP solves `model_optimal` ⇒ genuine match ⇒ **genuine floor 75→76 (+1)**. markov is tiny (2 vars / 3 eqns), so the cold solve is fully **local** (no testbed gate) and the Phase-0 `CASE_A` control includes a direct cold-solve confirmation.
+
+**Evidence:** Task-2 DB re-confirm (markov methodology, `model_optimal_presolve`+match); `MARKOV_OFFDIAGONAL_DESIGN.md` §5 (the Phase-0 `CASE_A` + cold-solve gate).
+
+**Decision:** ✅ The methodology→genuine +1 is expected and cheaply confirmable; the direct cold-solve is folded into the Phase-0 `CASE_A` control (Day 1). If the cold solve needs presolve even at `CASE_A`, the lever downgrades to correctness-only (the REPLAN exit).
 
 ---
 

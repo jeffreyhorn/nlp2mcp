@@ -200,7 +200,7 @@ PY
 
 ## Task 3: markov P1 — Part-2 (`σ=sp`) Off-Diagonal Enumeration Design
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-06)
 **Priority:** Critical
 **Estimated Time:** 5-7 hours
 **Deadline:** Before Sprint 36 Day 1
@@ -231,11 +231,11 @@ markov is the sprint's only fully-local +1-floor lever (methodology→genuine, n
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_36/MARKOV_OFFDIAGONAL_DESIGN.md` — the Part-2 design: the root-caused representation gap, the correct target form, three candidate mechanisms (+ blast radius), the recommendation + code surface, the Phase-0 `CASE_A` control spec, the leak-freedom gate, and the go/no-go + REPLAN exit. Marked Unknowns 1.2, 1.3, 1.4 → ✅ VERIFIED in `KNOWN_UNKNOWNS.md`. (A scratch `src/` prototype was used to gather evidence and then reverted — the branch is docs-only.)
 
 ### Result
 
-To be completed.
+**GO with a REPLAN exit.** Root cause pinned precisely: `_compute_index_offset_key`'s greedy first-canonical-match (`stationarity.py:5099`) binds constr's `sp` index to var position 0 (`s`, canon-only) instead of position 2 (`sp`, exact-name) — since `s`/`sp`/`spp` are aliases — so `σ=sp` is expressed as an offset-from-`s`, degenerating into **44 spurious off-diagonal groups** (instrumented: keys `(-7..+7,{-1,0,1},999)`; the sibling `equil` binds correctly to 1 group). A scratch prototype proved the offset-key-only change is insufficient (`ngroups` stayed 45) **and crashes emission** → Part-2 is a *coordinated* offset-key + emission change. **Recommended: Mechanism C** — a targeted additive off-diagonal correction (parallel to the verified Part-1), gated on the `σ=sp` signature, that suppresses the 44 groups and emits `−b·sum(j, pi(s,i,sp,j,sp)·nu_constr(sp,j))` **without touching the shared offset-key matcher** (the cohort-leak surface). Two higher-blast-radius alternatives (A: fix the matcher; B: a bound-to-var-index marker) are documented as fallbacks. The Phase-0 `/tmp` `CASE_A` control (local, seconds-scale on tiny markov) + the golden-staleness leak gate are specified. Landable in the P1 14–20h budget; front-load Days 1–3 with "ship Part-1 + bank Part-2" as the REPLAN exit. Verifies Unknowns 1.2, 1.3, 1.4.
 
 ### Verification
 
@@ -255,12 +255,12 @@ grep -nE "_compute_index_offset_key|_add_indexed_jacobian_terms" src/kkt/station
 
 ### Acceptance Criteria
 
-- [ ] The `σ=sp` representation gap is characterized against the exact code path
-- [ ] ≥ 2 candidate mechanisms sketched (emitted GAMS + blast radius) and one selected with rationale
-- [ ] The Phase-0 control that must reach `CASE_A` is specified (hand-edit / scratch-branch, `kkt_residual.py` gate)
-- [ ] The leak-freedom gate (2-D cohort byte-identical) is specified and coordinated with Task 4 (shared `_add_indexed_jacobian_terms`)
-- [ ] A REPLAN exit is defined (what to do if the `σ=sp` mechanism proves architectural)
-- [ ] Unknowns 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The `σ=sp` representation gap is characterized against the exact code path (`_compute_index_offset_key:5099` greedy canon-match; 44-group instrumentation)
+- [x] ≥ 2 candidate mechanisms sketched (emitted GAMS + blast radius) — Mechanism C recommended, A/B as fallbacks
+- [x] The Phase-0 control that must reach `CASE_A` is specified (`/tmp` hand-edit → `kkt_residual.py` gate, local/seconds-scale)
+- [x] The leak-freedom gate (2-D cohort byte-identical) is specified and coordinated with Task 4 (shared `_add_indexed_jacobian_terms`)
+- [x] A REPLAN exit is defined (ship Part-1 + bank Part-2 if the control can't reach `CASE_A` or the gate leaks)
+- [x] Unknowns 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
