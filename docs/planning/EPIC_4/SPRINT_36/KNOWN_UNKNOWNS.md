@@ -205,6 +205,8 @@ Sprint 36 execution team
 
 **Decision:** ✅ Leak-free by design; the empirical golden-staleness run is the Day-1 Phase-0 gate (and the fallback Mechanisms A/B, which *do* touch the shared matcher, are only adopted if C's gate somehow leaks).
 
+**Task-9 addendum (2026-08-07):** the shared leak-freedom harness is formalized — `check_golden_staleness.py --models cesam2,camcge,ps2_f_s,ps2_s,ps3_s_gic,polygon` (all six goldens present); minutes-scale → nightly/async, not inline `make test`. The fast per-fix fixture `shape_markov_diagonal_kronecker` is the inline guard. See `FIXTURE_AND_HARNESS_CATALOG.md` §2.
+
 ---
 
 ## Unknown 1.4: Does markov cold-solve to `model_optimal` once `CASE_A` is reached (is the +1 truly methodology→genuine)?
@@ -275,7 +277,13 @@ Run the test against the fixed emit; compare the assertion to the emitted `stat_
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 9 (Property-Fixture & Regression-Harness Catalog)
+✅ **Status:** VERIFIED — add a fast in-process fixture (primary guard) + flip & sharpen the integration test (kept `slow`).
+
+**Findings:** a markov emit via the subprocess CLI is **~12.4 s** (not minutes-scale — markov is 2 vars / 3 eqns; the `slow` mark is subprocess convention). The red-since-birth `test_markov_stationarity_has_correction_term` (`slow` + integration) will flip green with the Task-3 fix. **Disposition:** (1) add the fast in-process `shape_markov_diagonal_kronecker` fixture as the PRIMARY guard (runs in `make test`, closing the silent-regression window that let the test stay red-unnoticed since March); (2) flip the integration test red→green and sharpen its assertion to the `σ=sp` target form (S35 Follow-up-3) so it can't pass on a partially-correct emit; (3) keep it `slow` (subprocess end-to-end backstop). The "red since March" failure mode was *a slow test as the only guard* — the durable fix is the fast fixture, not merely un-marking.
+
+**Evidence:** markov emit 12.4 s (measured); the existing red integration test + assertion; the fast `test_multi_pattern_jacobian.py` precedent. See `FIXTURE_AND_HARNESS_CATALOG.md` §3.
+
+**Decision:** fast fixture (primary) + sharpened green integration test (kept `slow`). Ref: `FIXTURE_AND_HARNESS_CATALOG.md` §3.
 
 ---
 
@@ -1147,7 +1155,13 @@ Reproduce the EXECERROR-84 on the committed `robustlp_mcp_presolve.gms`; trace t
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 9 (Property-Fixture & robustlp NA Survey)
+✅ **Status:** VERIFIED (with a correction to the allowlist) — the root is an NA multiplier `.L` level, not an NA Jacobian coefficient; the fix is bounded and de-allowlistable this sprint.
+
+**Findings:** reproduced live (`robustlp_mcp_presolve.gms` + raw `$include`, GAMS 54.2.1 demo): `SOLVE … ABORTED, EXECERROR = 84` with repeated `Matrix error - illegal level value` on `lam_socpqcpcons(1..7)` and `piL_y(1..7)`, each `(.LO,.L,.UP = 0, NA, +INF)`. Range Statistics: `Matrix [1.0E-02, 4.974E+00]` (**finite**) vs `Bound [NA, NA]`. **So the NA is in the `.L` warm-start *level* of the emitted multiplier variables — NOT the Jacobian coefficients** (the allowlist's "Jacobian carries NA coefficients" is imprecise). The presolve marginal-transfer emits `<mult>.l = <var>.m` where the QCP marginal is NA; GAMS 54 rejects `.L=NA` as EXECERROR-84. `emit_post_assignment_na_cleanup` misses it (it only guards indexed *param* division-assignments, never the multiplier `.L` warm-start).
+
+**Evidence:** the live EXECERROR-84 listing (multiplier `.L=NA`; finite Matrix range); `original_symbols.py:152`. See `FIXTURE_AND_HARNESS_CATALOG.md` §4.
+
+**Decision:** bounded fix — NA-guard the presolve multiplier `.L` warm-start (reuse the #1322 `$(NOT (x>-inf and x<inf))=0` idiom in the marginal-transfer section), regen the golden, then **de-allowlist** robustlp from `presolve_divergence_allowlist.txt`. Feasible this sprint; does not touch korcge (different class). Ref: `FIXTURE_AND_HARNESS_CATALOG.md` §4.
 
 ---
 
@@ -1177,7 +1191,13 @@ Prototype the cohort golden-staleness invocation; spec each fixture's assertion 
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 9 (Property-Fixture & 2-D-Cohort Regression-Harness Catalog)
+✅ **Status:** VERIFIED — the shared harness is the existing `check_golden_staleness.py`; both fixtures specced with skip-if-absent + Task-mapping.
+
+**Findings:** (Q1) yes — `check_golden_staleness.py --models cesam2,camcge,ps2_f_s,ps2_s,ps3_s_gic,polygon` is the shared leak-freedom gate (all six goldens present; byte-diffs each emit vs its committed golden); minutes-scale → nightly/async, not inline `make test`. (Q2) the two fixture assertions: `shape_markov_diagonal_kronecker` (the `stat_z` direct `nu_constr(s,i)` + `σ=sp` off-diagonal `CASE_A` split, guards Task 3) and `shape_fawley_2d_second_index` (the second-index transpose term fires only when the summed constraint index is absent from the coefficient, guards Task 4). (Q3) yes — both `pytest.skip` when the gitignored raw source is absent (CI lacks `data/gamslib/raw/*.gms`). Each fixture maps 1:1 to its landing.
+
+**Evidence:** `check_golden_staleness.py` `--models` interface; the six goldens; the Task-3/Task-4 fixture names. See `FIXTURE_AND_HARNESS_CATALOG.md` §1, §2.
+
+**Decision:** (a) per-fix fast fixtures (inline `make test` guard) + (b) the shared cohort staleness harness (nightly leak backstop). Ref: `FIXTURE_AND_HARNESS_CATALOG.md` §1–§2.
 
 ---
 
@@ -1207,9 +1227,15 @@ Recompute the PR25 partition from the committed DB; confirm the floor anchor 75 
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 9 (genuine-floor tracking); Task 2 contributes the baseline recompute
+✅ **Status:** VERIFIED — the floor anchor holds at 75; markov ∈ methodology (the +1 is real); SUMMARY row-36 anchored.
 
-**Task-2 contribution (2026-08-06):** the PR25 recompute over the 142 convex candidates gives Solve 108 / Match 93 (63 cold-optimal + 30 presolve), and the DB is byte-unchanged since the anchor, so the S34/S35 methodology hand-partition carries forward → the genuine-floor anchor holds at **75**. (Task 9 does the full PR25 recompute + the SUMMARY row-36 groundwork.) See `DAY0_TRACE_NOTES.md` §1.
+**Findings:** recompute from the byte-unchanged DB: 142 candidates → Solve 108 / Match 93 (**63 cold-optimal + 30 presolve**), matching the S34/S35 baseline. **markov is in the 30-model presolve-match (methodology) partition** (`model_optimal_presolve` + match, `verified_convex`) — so the markov methodology→genuine lever (Task 3) is a **true +1**, not a double-count. The genuine-floor anchor **75** carries forward (DB byte-unchanged → S34/S35 hand-partition intact; the floor advances only via emit-changing cold-matches). SUMMARY row-36 groundwork: the ramp anchors the S36 row at floor 75 with the ≥76 target on the single tracked markov lever (no SUMMARY edit in prep — an execution-time update).
+
+**Evidence:** the DB partition recompute (108 / 93 = 63+30; markov ∈ presolve-methodology); `SUMMARY.md` floor ramp. See `FIXTURE_AND_HARNESS_CATALOG.md` §5.
+
+**Decision:** anchor 75 → ≥76 target (markov); SUMMARY row-36 written at close against this anchor. Ref: `FIXTURE_AND_HARNESS_CATALOG.md` §5.
+
+**Task-2 contribution (2026-08-06):** the PR25 recompute over the 142 convex candidates gives Solve 108 / Match 93 (63 cold-optimal + 30 presolve), and the DB is byte-unchanged since the anchor, so the S34/S35 methodology hand-partition carries forward → the genuine-floor anchor holds at **75**. (Task 9 did the full PR25 recompute + the SUMMARY row-36 groundwork above.) See `DAY0_TRACE_NOTES.md` §1.
 
 ---
 
