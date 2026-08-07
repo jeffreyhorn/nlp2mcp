@@ -815,7 +815,13 @@ Read `CONSULTATION_BUNDLE.md` §1 + `SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 8 (Consultation Bundle Finalization)
+✅ **Status:** VERIFIED — the rocket input is submission-ready.
+
+**Findings:** `../SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` (Status ✅ FINALIZED, Sprint 32 Day 9) has all four components: the concrete PATH question (§3), the ruled-out-lever survey (§2 7-row table + §4 sweep), the reproducible case (§3 runnable `--nlp-presolve` block), and the `--force` scaffold reference (§3 + §5). The renumber S33→S36 ×11 is confirmed (banner + all forward-target labels say S36; residual S32/S33/S35 mentions are intentional provenance). The reproducer is live: the `--force {homotopy,multistart,optfile}` scaffold is present at `src/cli.py:207`, and the Case-c signature is byte-stable (`src/` unchanged over the relevant paths since the anchor).
+
+**Evidence:** the four section headers; the renumber banner; `src/cli.py:207`. See `P5_CONSULTATION_FINALIZATION.md` §1.
+
+**Decision:** submission-ready — Sprint-36 P5 = submit (not re-author). Ref: `P5_CONSULTATION_FINALIZATION.md` §1.
 
 ---
 
@@ -845,7 +851,13 @@ Read `CONSULTATION_BUNDLE.md` §2 + the mine design doc; confirm the three eleme
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 8 (Consultation Bundle Finalization)
+✅ **Status:** VERIFIED — the mine question is precise and guarded.
+
+**Findings:** `../SPRINT_35/MINE_DUAL_ARCHITECTURE_DESIGN.md` frames it explicitly as a primal-degenerate-LP reconciliation question — "a primal-degenerate LP whose warm KKT point is not MCP-reconcilable by any emit reformulation"; the pointed form "how should a square MCP represent a primal-degenerate LP boundary?" It cites the S34 value-invariance proof ("No relabeling of the dual can create the missing +16000, because the scalar system is invariant under relabeling (S34)") and restates the `x.up=inf` BAN twice (the S31 measurement-error lesson).
+
+**Evidence:** the framing sentence (§6); the value-invariance quote; the two BAN restatements. See `P5_CONSULTATION_FINALIZATION.md` §2.
+
+**Decision:** precise + actionable — Sprint-36 P5 = pose the LP-degeneracy question; the only non-invariant lever is an LP-side reformulation (out of emit scope); 0 in-sprint bucket. Ref: `P5_CONSULTATION_FINALIZATION.md` §2.
 
 ---
 
@@ -876,7 +888,13 @@ Re-confirm the detector from the DB; attempt the Walras-redefinition `/tmp` cont
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 8 (camcge Epic-5 Gate Scoping)
+✅ **Status:** VERIFIED (with a correction to `DAY8`) — the Walras `/tmp` MS-1 gate is LOCALLY reachable on the demo; MS-1 itself remains the open Epic-5 experiment.
+
+**Findings:** **(Q3, corrected)** the camcge MCP golden generates **641 single (scalar) equations / 641 single variables** under GAMS 54.2.1 demo (listing: `BLOCKS OF EQUATIONS 85 / SINGLE EQUATIONS 641` — the 641 generated scalar equations grouped into 85 symbolic blocks, not additive; the demo size limit is on the generated single/scalar count) and PATH runs to SOLVER STATUS 1 / MODEL STATUS 4 (Infeasible) — **641 generated rows < the 1000-row demo limit**. This **supersedes the `DAY8` claim** that "camcge's MCP exceeds the demo 1000-row limit" — the generated MCP is demo-solvable, so the Walras `/tmp` MS-1 control is a **local demo step, NOT a licensed-testbed step** (contrast turkey/6.1). **(Q1)** the S1∧S2∧S3 detector still fires only camcge (cold MS-4 @ omega 191.7346), see 5.4. **(Q2)** the price-pin variant reaches the correct primal but stays MS-4 (row-redundancy nullspace, not fixed by a numéraire). **(Q4)** the per-model-numéraire declaration (`../../EPIC_5/CGE_DEGENERACY_SCOPING.md`) is the fallback if MS-1 is unreachable.
+
+**Evidence:** the 641/641 generated-size measurement + MS-4 demo solve; the byte-unchanged DB (5.4). See `P5_CONSULTATION_FINALIZATION.md` §3.2, §3.3.
+
+**Decision:** the gate is scoped and locally attemptable on the demo (the assumption holds — better than `DAY8` implied); reaching MS-1 is the open Epic-5 experiment, now demo-runnable; the per-model-numéraire declaration is the honest fallback. Ref: `P5_CONSULTATION_FINALIZATION.md` §3.
 
 ---
 
@@ -906,9 +924,15 @@ Re-confirm the detector cohort from `gamslib_status.json` (no re-solve needed �
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 8 (Consultation Bundle Finalization); Task 2 contributes the DB re-confirm
+✅ **Status:** VERIFIED — the detector fires only on camcge.
 
-**Task-2 contribution (2026-08-06):** the committed DB is **byte-unchanged** since the anchor (`git diff 78ceaead..HEAD -- data/gamslib/gamslib_status.json` empty), so the S1∧S2∧S3 detector cohort is intact — no re-solve could have shifted the camcge signature. (Task 8 does the explicit per-model DB re-confirm.) See `DAY0_TRACE_NOTES.md` §6.
+**Findings:** per-model DB re-confirm (`gamslib_status.json`, byte-unchanged since the anchor `78ceaead`): **camcge** = `model_infeasible` / MS-4 (cold @ omega 191.7346) — FIRES; **irscge / lrgcge / moncge / stdcge** = `model_optimal_presolve` + match / MS-1 — pass-through. Only camcge shows the cold MS-4 signature; the S3 false-positive guard holds. No DB drift could have shifted the cohort.
+
+**Evidence:** the 5-model DB bucket/modelstat table; `git diff 78ceaead..HEAD -- data/gamslib/gamslib_status.json` empty. See `P5_CONSULTATION_FINALIZATION.md` §3.1.
+
+**Decision:** the per-model-numéraire Epic-5 scope stays camcge-only (no sibling widens it). Ref: `P5_CONSULTATION_FINALIZATION.md` §3.1.
+
+**Task-2 contribution (2026-08-06):** the committed DB is **byte-unchanged** since the anchor (`git diff 78ceaead..HEAD -- data/gamslib/gamslib_status.json` empty), so the S1∧S2∧S3 detector cohort is intact — no re-solve could have shifted the camcge signature. (Task 8 did the explicit per-model DB re-confirm above.) See `DAY0_TRACE_NOTES.md` §6.
 
 ---
 
