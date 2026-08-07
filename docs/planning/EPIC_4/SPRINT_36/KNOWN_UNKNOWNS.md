@@ -308,7 +308,15 @@ Run a capped sarf emit; record the wall-clock at the cap; grep the enumeration p
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 5 (sarf P2 Design Refresh & Blow-Up Re-Measurement)
+✅ **Status:** VERIFIED
+**Verified by:** Task 5 (sarf P2 Design Refresh & Blow-Up Re-Measurement)
+**Date:** 2026-08-07
+
+**Findings:** The 369K blow-up is unchanged. **Timing re-measured:** the sarf emit is still running at a 330s cap without completing ⇒ **>303s / non-terminating** (identical to the S35 baseline — the O(369K) failure). Counts re-verified: g=16, t=24, mn=31 ⇒ 16·24·31·31 = **369,024** declared / **398** active (`taskposs∧tech`, runtime-computed). The 3 sites are re-confirmed and the code surfaces (`constraint_jacobian.py`, `index_mapping.py`, `stationarity.py`) are **byte-unchanged since the anchor `78ceaead`**; `enumerate_variable_instances` present at `index_mapping.py:327`. No fourth materialization site.
+
+**Evidence:** the capped-emit measurement (`>303s / non-terminating CONFIRMED`); the set re-count; `git diff 78ceaead..HEAD` empty for the three site files. See `SARF_DESIGN_REFRESH.md` §1.
+
+**Decision:** ✅ The blow-up + the 3 sites apply unchanged; the banked design's baseline holds.
 
 ---
 
@@ -340,7 +348,15 @@ Hand-construct the guarded `stat_task` + `task.fx` for a `/tmp` sarf MCP; compil
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 5 (sarf P2 Design Refresh)
+✅ **Status:** VERIFIED
+**Verified by:** Task 5 (sarf P2 Design Refresh)
+**Date:** 2026-08-07
+
+**Findings:** The O(active=398) guarded-emit shape is valid under GAMS 54.2.1. A `/tmp` fragment mirroring `stat_task(g,t,m,n)$taskposs(g,t)` + `task.fx(...)$(not (taskposs(g,t) and tech(g,m,n)))=0` **compiles clean** (no `****` errors) and GAMS natively prunes the instantiation: synthetic `ncart=54` (full Cartesian) vs `ndomain=18` (what `stat_task$taskposs` actually instantiates) vs `nactive=4` (the taskposs∧tech live set). So the equation scales O(taskposs-active), not O(Cartesian), and the per-term `$tech` guards + `task.fx` reduce to the fully-active set (the 398 analogue for sarf).
+
+**Evidence:** the GAMS-54 compile + `display` output (`ncart=54 / ndomain=18 / nactive=4`). See `SARF_DESIGN_REFRESH.md` §2.
+
+**Decision:** ✅ The guarded-emit shape achieves O(active) by construction under GAMS 54; the parametric emit's job is to *produce* it without materializing the 369K instances.
 
 ---
 
@@ -370,7 +386,15 @@ Re-derive `stat_task` from `sarf.gms` line-by-line against the banked 7-term der
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 5 (sarf P2 Design Refresh)
+✅ **Status:** VERIFIED
+**Verified by:** Task 5 (sarf P2 Design Refresh)
+**Date:** 2026-08-07
+
+**Findings:** The banked 7-term `stat_task` derivation is still valid — all seven constraint bodies are present and structurally unchanged in `sarf.gms`: `tbal(g,t)$taskposs(g,t)` (`:426`, terms 1–2 + the `tadj` harvest-c adjustment), `labor(t)` (`:438`, term 3), `equipb1(m,t)$equipposs` (`:442`, term 4), `equipb2(n,t)$equipposs` (`:445`, term 5), `acost3` (`:454`, term 6, the S1 parametric ∂), and `task.lo=0` (term 7). Line numbers drifted a few lines vs the S35 refs (the raw source is the gitignored corpus) but the structures are identical. Every multiplier is indexed by the stat equation's own domain — no set-name-literal indices.
+
+**Evidence:** the `grep` of the constraint bodies in `sarf.gms`. See `SARF_DESIGN_REFRESH.md` §3.
+
+**Decision:** ✅ The banked 7-term form applies unchanged; it is the correctness anchor at landing (a silently-wrong `stat_task` is the worst failure mode).
 
 ---
 
@@ -400,7 +424,15 @@ Emit under the three hashseeds and diff; run the set-name-literal scan; run `--r
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 5 (sarf P2 Design Refresh)
+✅ **Status:** VERIFIED (design-level — the 7-term form has no set-name-literal indices; the empirical determinism ×3 + the anti-pattern scan are landing gates)
+**Verified by:** Task 5 (sarf P2 Design Refresh)
+**Date:** 2026-08-07
+
+**Findings:** The banked 7-term `stat_task` uses own-domain multipliers (`nu_tbal(g,t)`, `lam_labor(t)`, `lam_equipb1(m,t)`, `lam_equipb2(n,t)`, `nu_acost3`, `piL_task(g,t,m,n)`) — **no set-name-literal (quoted-set-name) indices** (the reverted Sprint-26 `nu_slack("srn")` anti-pattern), so the landing scan `grep -E 'nu_[[:alnum:]_]+\("|lam_[[:alnum:]_]+\("' sarf_mcp.gms` will be empty. Determinism ×3 `{0,1,42}` + 141 byte-stable goldens + `--resolve-changed` GO are the full-corpus regression harness (the shippability / corpus-safety gate). These are **landing gates** (they need the fix's emitted output) — design-level VERIFIED, empirical at landing.
+
+**Evidence:** the 7-term derivation's own-domain multipliers (`SARF_DESIGN_REFRESH.md` §3–§4); the regression-harness spec (`../SPRINT_35/SARF_SYMBOLIC_EMIT_DESIGN.md` §7).
+
+**Decision:** ✅ No set-name-literal indices by design; the determinism ×3 + byte-stable-golden harness is the atomic-landing gate (retained in Task 9's catalog + the Task-10 schedule).
 
 ---
 
