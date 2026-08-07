@@ -1,6 +1,6 @@
 # Sprint 36 — markov P1 Part-2 (`σ=sp`) Off-Diagonal Enumeration Design (Prep Task 3)
 
-**Date:** 2026-08-06 · **Owner:** Sprint 36 execution team · **Branch:** `planning/sprint36-task3` · **Scope:** docs/analysis-only (src prototype reverted; branch byte-identical to `main`).
+**Date:** 2026-08-06 · **Owner:** Sprint 36 execution team · **Branch:** `planning/sprint36-task3` · **Scope:** docs/analysis-only — a scratch `src/` prototype was used for evidence and then reverted, so `src/` is byte-identical to `main` (only docs are added/changed on this branch).
 **Outcome: the `σ=sp` representation gap is precisely root-caused, a bounded (additive, gated) mechanism is specified with two alternatives, and the Phase-0 `CASE_A` control + the leak-freedom gate are defined. Go/no-go: GO with a REPLAN exit — Part-2 is landable but is the deepest single change in P1 (a coordinated offset-key + emission change), so it front-loads Days 1–3 with "ship Part-1 + bank Part-2" as the exit.** Verifies Unknowns 1.2, 1.3, 1.4.
 
 Reference: `DAY11_MARKOV_DIAGONAL_LEVER.md` §2–§6 (the diagnosis + Part-1 verified 13.3→1.55); `DAY0_TRACE_NOTES.md` (the fingerprints re-confirm). Code: `src/kkt/stationarity.py` — `_compute_index_offset_key` (`:4969`), the offset-grouping + emission in `_add_indexed_jacobian_terms` (`:5861+`).
