@@ -433,7 +433,15 @@ Compare the `_derivative_structure_key` output for fawley qsb/pbal vs markov off
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 4 (fawley P3 — Derivative-Structure Discriminator Design)
+✅ **Status:** VERIFIED
+**Verified by:** Task 4 (fawley P3 — Derivative-Structure Discriminator Design)
+**Date:** 2026-08-06
+
+**Findings:** A derivative-structure key distinguishes fawley's constraint-index-diagonal from markov's #1110 off-diagonal. The precise test: **fire the `$(sameas(cfq__,cf))` guard only when the summed constraint index is ABSENT from the derivative coefficient** (appears only in the multiplier + domain guards). fawley's qsb/pbal coefficients (`prop(c,s)·char(c,m)·1$(bposs(cf,c))` / `char(c,m)·1$(bposs(cf,c))`) do **not** contain `cfq__` → the sum is a pure over-count the diagonal guard corrects. markov's off-diagonal coefficient (`(-1)·b·pi(s,i,s,i-1,s__kkt2)`) **contains** the summed index `s__kkt2` (via `pi`) → the sum is genuine, so no `sameas` is added. This is exactly the derivative-structure refinement the S35 Day-9 *surface-pattern* predicate lacked (it checked position, not whether the derivative depends on the index).
+
+**Evidence:** the two committed goldens (`fawley_mcp_presolve.gms` `stat_bq` qsb/pbal terms; `markov_mcp.gms` `stat_z` off-diagonal). See `FAWLEY_DISCRIMINATOR_DESIGN.md` §1–§2.
+
+**Decision:** ✅ The discriminator is `summed_idx not in _collect_free_indices(deriv_coeff)`, layered on the existing constraint-index-diagonal orientation check. It fires on fawley and never on markov.
 
 ---
 
@@ -464,7 +472,15 @@ Build the joint change-surface map from the Task-3 and Task-4 designs; apply bot
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 4 (fawley discriminator design; depends on Task 3's markov design)
+✅ **Status:** VERIFIED (design-level — non-overlapping firing conditions; the golden-staleness confirmation is the Day-1 gate)
+**Verified by:** Task 4 (fawley discriminator design; builds on the Task-3 markov design)
+**Date:** 2026-08-06
+
+**Findings:** The fawley discriminator and the Task-3 markov change fire on **disjoint** structural signatures (joint change-surface map in `FAWLEY_DISCRIMINATOR_DESIGN.md` §3): markov's terms **all** carry the summed index in the derivative coefficient (via `pi`) and/or an additive `Const` (`1−b·pi`); fawley's qsb/pbal carry it in **neither**. The single `summed-index-in-coefficient` test cleanly partitions them — the fawley discriminator never fires on any markov term (this *is* the fix for the S35 leak), and the Task-3 markov mechanisms (gated on the additive `Const` / the `σ=sp` alias-collision) never fire on fawley. Both are additive gated branches; neither touches the shared `_compute_index_offset_key` matcher. Recommended land order: markov first, then fawley, with a golden-staleness gate between.
+
+**Evidence:** the joint change-surface map (§3) + the per-term structural table (§2); the coefficient contrast from the two goldens.
+
+**Decision:** ✅ Non-overlapping by construction ⇒ no interaction. The empirical leak-freedom gate (`check_golden_staleness` — only fawley drifts; markov + the 2-D cohort byte-identical) is the Day-1 Phase-0 confirmation (retained in Task 9's harness).
 
 ---
 

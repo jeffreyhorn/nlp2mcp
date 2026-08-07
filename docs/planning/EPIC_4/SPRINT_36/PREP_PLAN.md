@@ -266,7 +266,7 @@ grep -nE "_compute_index_offset_key|_add_indexed_jacobian_terms" src/kkt/station
 
 ## Task 4: fawley P3 — Derivative-Structure Discriminator Design
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-06)
 **Priority:** High
 **Estimated Time:** 4-6 hours
 **Deadline:** Before Sprint 36 Day 1
@@ -301,11 +301,11 @@ The fawley correctness fix is control-verified (`max|stat_bq|` 473→1.14e-13), 
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_36/FAWLEY_DISCRIMINATOR_DESIGN.md` — the derivative-structure discriminator design, the joint markov/fawley change-surface map, the Phase-0 `max|stat_bq|→0` control, the leak-freedom gate, the +Solve hand-off, and the go/no-go. Marked Unknowns 3.1, 3.2 → ✅ VERIFIED in `KNOWN_UNKNOWNS.md`. (Evidence gathered from the committed goldens — no `src/` change.)
 
 ### Result
 
-To be completed.
+**GO with a REPLAN exit.** The S35 Day-9 *surface-pattern* predicate leaked onto markov because it checked the *positional orientation* (a constraint index in the variable's stat position) but not whether the derivative depends on that index. The **derivative-structure discriminator** fixes this: **fire the `$(sameas(cfq__,cf))` guard only when the summed constraint index is ABSENT from the derivative coefficient** (present only in the multiplier + domain guards). Confirmed from both goldens — fawley's qsb/pbal coefficients (`prop·char·bposs`) lack `cfq__` (pure over-count → guard corrects it); markov's off-diagonal coefficient contains the summed index via `pi` (genuine sum → no guard). **Co-existence with the Task-3 markov change (Unknown 3.2):** disjoint firing conditions — markov's terms all carry the summed index in the coefficient and/or an additive `Const`; fawley's carry neither, so the `summed-index-in-coefficient` test alone partitions them (the fawley discriminator never fires on markov; the markov mechanisms never fire on fawley). Both are additive gated branches; neither touches the shared `_compute_index_offset_key`. The Phase-0 `max|stat_bq|→0` control + the golden-staleness leak gate + the `shape_fawley_2d_second_index` fixture are specified. fawley is **H-b** (Task 2 re-confirmed) → the +1 floor is cold-match-contingent (expected 0 in-sprint bucket); the +Solve is the Task-8 `--force` survey. Verifies Unknowns 3.1, 3.2.
 
 ### Verification
 
@@ -325,12 +325,12 @@ grep -rnE "shape_fawley_2d_second_index|fawley" docs/planning/EPIC_4/SPRINT_35/F
 
 ### Acceptance Criteria
 
-- [ ] The markov #1110 leak surface is characterized (why surface-pattern over-fires)
-- [ ] A derivative-structure discriminator is specified (predicate + code location)
-- [ ] Co-existence with the Task-3 markov change is demonstrated (non-overlapping branches; cohort byte-identical)
-- [ ] The Phase-0 `max|stat_bq|→0` control + the golden-staleness gate are specified
-- [ ] The H-b +Solve hand-off to the `--force` survey (Task 8) is cross-referenced
-- [ ] Unknowns 3.1, 3.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The markov #1110 leak surface is characterized (the surface predicate checked position, not derivative-dependence)
+- [x] A derivative-structure discriminator is specified (summed-index-absent-from-coefficient; `_collect_free_indices` on the coefficient in `_add_indexed_jacobian_terms`)
+- [x] Co-existence with the Task-3 markov change is demonstrated (disjoint firing conditions via the joint change-surface map; neither touches the shared matcher)
+- [x] The Phase-0 `max|stat_bq|→0` control + the golden-staleness gate are specified
+- [x] The H-b +Solve hand-off to the `--force` survey (Task 8) is cross-referenced
+- [x] Unknowns 3.1, 3.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
