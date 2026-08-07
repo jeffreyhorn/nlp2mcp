@@ -547,7 +547,7 @@ grep -rnE "path_solve_license|find_gams_executable|Versions/Current" scripts/ sr
 
 ## Task 8: Consultation Bundle Finalization (rocket/mine P5) + camcge Epic-5 Gate Scoping
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-07)
 **Priority:** Medium
 **Estimated Time:** 2-3 hours
 **Deadline:** Before Sprint 36 Day 1
@@ -578,11 +578,15 @@ P5 is not an emit-fix track — rocket and mine are *consultation submissions* (
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_36/P5_CONSULTATION_FINALIZATION.md` — rocket submission-readiness (§1), the finalized mine question (§2), the camcge Epic-5 `/tmp` Walras gate scope (§3), the fawley `--force` cross-reference (§4), and the P5-is-a-submission-day note (§5).
+- Dispatched an Explore agent to digest `../SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md`, `../SPRINT_35/MINE_DUAL_ARCHITECTURE_DESIGN.md`, `../SPRINT_35/DAY8_P5_CAMCGE_SPRINT36.md` — confirmed rocket's 4 components + renumber ×11, mine's framing + S34 value-invariance + `x.up=inf` BAN.
+- Re-confirmed the camcge S1∧S2∧S3 detector cohort from the byte-unchanged DB (camcge MS-4 @ omega 191.7346; irscge/lrgcge/moncge/stdcge MS-1 match).
+- **Measured the camcge MCP generated size:** 641 eqns / 641 vars under GAMS 54.2.1 demo, solves MS-4 — **< the 1000-row demo limit**, correcting `DAY8`'s stale "exceeds the demo limit" claim → the Walras `/tmp` gate is a local demo step, not testbed-gated.
+- Set KNOWN_UNKNOWNS.md 5.1/5.2/5.4 → ✅ VERIFIED, 5.3 → ✅ VERIFIED (with the `DAY8` correction).
 
 ### Result
 
-To be completed.
+**GO — P5 is a bounded submission/scoping day, no `src/`.** rocket is submission-ready (all four components, renumbered S33→S36 ×11, FINALIZED, reproducer live at `src/cli.py:207`); the mine primal-degenerate-LP question is precise + guarded (S34 value-invariance + `x.up=inf` BAN); the camcge detector fires only on camcge (DB-confirmed); and — correcting `DAY8` — the camcge Walras `/tmp` MS-1 gate is **locally demo-reachable** (641-row MCP < the 1000-row limit), not a licensed-testbed step. P5's product is submissions (rocket → PATH authors, mine → LP-degeneracy question) + a scoping decision (camcge Epic-5 gate, fawley `--force` survey), feeding the Sprint-37 consultation. No `*.py` changed → quality gate N/A.
 
 ### Verification
 
@@ -602,12 +606,12 @@ grep -qiE "rocket|mine|camcge|Epic 5|primal-degenerate|Walras" docs/planning/EPI
 
 ### Acceptance Criteria
 
-- [ ] The rocket consultation input is confirmed submission-ready (question + ruled-out survey + reproducer + `--force` scaffold)
-- [ ] The mine primal-degenerate-LP question is finalized (value-invariance + `x.up=inf` BAN stated)
-- [ ] The camcge Walras Epic-5 `/tmp` gate is scoped (with the price-pin MS-4 fallback)
-- [ ] The fawley `--force` survey cross-reference (Task 4) is coherent
-- [ ] The Case-c sign flip + `x.up=inf` BANs are restated
-- [ ] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The rocket consultation input is confirmed submission-ready (question + ruled-out survey + reproducer + `--force` scaffold) — §1, all four present + renumbered ×11
+- [x] The mine primal-degenerate-LP question is finalized (value-invariance + `x.up=inf` BAN stated) — §2
+- [x] The camcge Walras Epic-5 `/tmp` gate is scoped (with the price-pin MS-4 fallback) — §3; **locally demo-reachable** (641-row MCP), correcting `DAY8`
+- [x] The fawley `--force` survey cross-reference (Task 4) is coherent — §4 (disjoint-from-markov per `FAWLEY_DISCRIMINATOR_DESIGN.md`)
+- [x] The Case-c sign flip + `x.up=inf` BANs are restated — §2, §6 (bundle carries the Case-c BAN)
+- [x] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
