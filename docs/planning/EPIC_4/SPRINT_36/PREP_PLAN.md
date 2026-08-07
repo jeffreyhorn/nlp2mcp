@@ -404,7 +404,7 @@ grep -rn "enumerate_variable_instances" src/ | head
 
 ## Task 6: ganges/gangesx P4 — ≥5-Blocker Cascade Re-Verification & Recovery Sequencing
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-07)
 **Priority:** High
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 36 Day 1
@@ -435,11 +435,11 @@ ganges/gangesx is the largest potential bucket move (+2 Solve/Match/floor if bot
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_36/GANGES_RECOVERY_SEQUENCING.md` — the re-verified cascade, the confirmed `$149`/`$141` fix surfaces, the ordered recovery plan with per-fix `--resolve-changed` gates, the slow-golden regen budget, and the cross-track `$149`-unblock + residual-cohort notes. Marked Unknowns 4.1, 4.2, 4.3, 4.4, 4.5, 6.3 → ✅ VERIFIED in `KNOWN_UNKNOWNS.md`.
 
 ### Result
 
-To be completed.
+**GO — the cascade + fix surfaces re-confirm; disposition unchanged.** (4.1) `derivative_rules.py` byte-unchanged since the anchor → the banked `$149` `_diff_prod` §5 patch applies (`_diff_prod` at `:3276`). (4.2) the correct `$141` helper `_expr_contains_varref_attribute` is present (`:1392`); the buggy variant absent; the Day-1 `$141`/`$145` patches are in git at `a8ff626c`. (4.3) emitting ganges (**335s**) + compiling the cold MCP under GAMS 54.2.1 reproduces the documented cascade starting point (`$141`×15, `$145`, `$149`, `$257`); the `$66` (cold, unassigned calibration params) + `rPower` (presolve `$onMultiR` embedded-NLP `x**y,x=0,y<0`) terminals are structural to the byte-stable `ganges.gms` + emit code; the pipeline seal (presolve retry only on cold STATUS-5) means both the cold `$66` and presolve `rPower` paths must be solved. (4.4) the ganges emit is 335s → the slow-golden regen needs a **nightly/dedicated slot** (~35 min for both + determinism ×3), affordable in a dedicated effort. (4.5) the general `$149` fix unblocks the `$149` half of dinam/indus/turkpow/clearlak (necessary-not-sufficient — other roots remain). (6.3) the residual cohort roots (turkpow ragged-Table / clearlak dynamic-sets / dinam-indus `$140`+`$149`) hold; all still `path_syntax_error`. **Disposition unchanged:** a ≥5-blocker dedicated deep effort (16–22h); +2 Solve/Match/floor if both paths land, else 0 (the P4-flat branch); schedule so the `rPower` deep blocker surfaces early. Verifies Unknowns 4.1, 4.2, 4.3, 4.4, 4.5, 6.3.
 
 ### Verification
 
@@ -462,13 +462,13 @@ grep -rn "_expr_contains_varref_attribute" src/ | head
 
 ### Acceptance Criteria
 
-- [ ] The `$149` `_diff_prod` fix location is unchanged on `main` and the banked patch still applies
-- [ ] The `$141` helper plan uses the existing `_expr_contains_varref_attribute` (not the buggy variant)
-- [ ] The cascade order + terminal blockers (`$66` cold, `rPower` presolve) re-confirmed
-- [ ] The slow-CGE-golden regeneration cost estimated with a budget slot
-- [ ] An ordered recovery plan with per-fix `--resolve-changed` gates is produced
-- [ ] The P6 cross-track `$149`-unblock is noted
-- [ ] Unknowns 4.1, 4.2, 4.3, 4.4, 4.5, 6.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The `$149` `_diff_prod` fix location is unchanged on `main` and the banked patch still applies (`derivative_rules.py` byte-unchanged; `_diff_prod:3276`)
+- [x] The `$141` helper plan uses the existing `_expr_contains_varref_attribute` (`:1392`; the buggy variant absent)
+- [x] The cascade order + terminal blockers (`$66` cold, `rPower` presolve) re-confirmed (cold-MCP compile `$141`×15/`$145`/`$149`/`$257`; terminals structural)
+- [x] The slow-CGE-golden regeneration cost estimated with a budget slot (335s ganges emit → nightly/dedicated slot)
+- [x] An ordered recovery plan with per-fix `--resolve-changed` gates is produced
+- [x] The P6 cross-track `$149`-unblock is noted (dinam/indus/turkpow/clearlak)
+- [x] Unknowns 4.1, 4.2, 4.3, 4.4, 4.5, 6.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

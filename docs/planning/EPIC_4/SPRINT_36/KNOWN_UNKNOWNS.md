@@ -620,7 +620,15 @@ Diff the `_diff_prod` surface vs the S35-banked patch; re-apply on a scratch bra
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 6 (ganges Cascade Re-Verification); Task 2 contributes the fix-surface-unchanged check
+✅ **Status:** VERIFIED
+**Verified by:** Task 6 (ganges/gangesx Cascade Re-Verification & Recovery Sequencing)
+**Date:** 2026-08-07
+
+**Findings:** The banked `$149` `_diff_prod` fix applies cleanly on current `main`. `src/ad/derivative_rules.py` is **byte-unchanged since the anchor `78ceaead`** and `_diff_prod` is present at `:3276` (with the collapse-branch machinery `_sum_should_collapse`/`_apply_index_substitution`) → the banked §5 patch (rebind the collapsed prod-dummy → the original wrt index) still applies to the unchanged surface. Its correctness was proven at S35 (ganges `$149` 9→0; lmp2/camcge byte-identical; the full golden-staleness scan showed only ganges/gangesx/prolog drift).
+
+**Evidence:** `git diff 78ceaead..HEAD -- src/ad/derivative_rules.py` empty; `_diff_prod` at `:3276`; the S35 §5 patch. See `GANGES_RECOVERY_SEQUENCING.md` §2.
+
+**Decision:** ✅ The `$149` fix surface is unchanged and the banked patch applies; re-apply is step 2 of the recovery sequence.
 
 **Task-2 contribution (2026-08-06):** `src/ad/derivative_rules.py` is **UNCHANGED** since the anchor and `_diff_prod` is present at `:3276` (dispatched at `:200`), so the banked `$149` `_diff_prod` fix still applies to the same surface. The existing `_expr_contains_varref_attribute` (for the `$141` helper) is present at `original_symbols.py:1392`; the buggy `_expr_contains_varref_attr` is absent. (Task 6 does the full scratch re-apply + `$149` 9→0 re-measure + the `$66`/`rPower` probe.) See `DAY0_TRACE_NOTES.md` §5.
 
@@ -652,7 +660,15 @@ Grep for both helper names; confirm the existing one's behavior; scratch-apply t
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 6 (ganges Cascade Re-Verification)
+✅ **Status:** VERIFIED
+**Verified by:** Task 6 (ganges/gangesx Cascade Re-Verification & Recovery Sequencing)
+**Date:** 2026-08-07
+
+**Findings:** The `$141` helper plan is correct. The existing `_expr_contains_varref_attribute` (which traverses `VarRef`/`ParamRef`/`MultiplierRef` indices) is present at `src/emit/original_symbols.py:1392`; the buggy proposed `_expr_contains_varref_attr` is **absent**. The Day-1 `$141`/`$145` fixes are preserved in git at `a8ff626c` ("[WIP, not shipped]"). Re-apply must delegate to `_expr_contains_varref_attribute` (the PR-#1617 review catch — the Day-1 `_expr_contains_varref_attr` missed attributed `VarRef`s inside index exprs).
+
+**Evidence:** `grep def _expr_contains_varref_attribute` → `original_symbols.py:1392`; the buggy variant grep empty; `git log a8ff626c`. See `GANGES_RECOVERY_SEQUENCING.md` §2.
+
+**Decision:** ✅ Use the existing `_expr_contains_varref_attribute`; the Day-1 patch is recoverable from `a8ff626c`.
 
 ---
 
@@ -683,7 +699,15 @@ Scratch-apply the three banked fixes; attempt a ganges emit/compile within the e
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 6 (ganges Cascade Re-Verification)
+✅ **Status:** VERIFIED (starting cascade measured; the `$66`/`rPower` terminals are structural on byte-stable inputs)
+**Verified by:** Task 6 (ganges/gangesx Cascade Re-Verification & Recovery Sequencing)
+**Date:** 2026-08-07
+
+**Findings:** The cascade re-confirms on current `main`. Emitting `ganges.gms` (335s) + compiling the cold MCP under GAMS 54.2.1 reproduces the documented starting cascade: `$141`×15 (exact DAY3 count), `$145`, `$149`, `$257` (the `$66` cascade artifact). (The `$145`/`$149` counts are lower than DAY3's ×3/×9 because on the *unfixed* emit the `$141` errors abort compilation early — the "each root masks the next" behavior, which is why the per-model fix-then-recount protocol is mandatory.) The `$66` (cold — presolve-gated calibration params `aid`/`adst`/`deltax` unassigned) and `rPower` (presolve — the `$onMultiR` re-included `ganges0` hits `x**y,x=0,y<0`) terminals are structural to `ganges.gms` (unchanged, 59,311 bytes; it carries the `**` power ops + the `.l`-gated calibration params) and the byte-unchanged emit code → the DAY3 live cascade reproduces. The pipeline seal is unchanged (presolve retry fires only on cold STATUS-5/spurious, not cold `path_syntax_error`) → both the cold `$66` and presolve `rPower` paths must be solved.
+
+**Evidence:** the cold-MCP compile `{'141':15,'145':1,'149':1,'257':1}`; `ganges.gms` power ops + calibration params (`:347–351`, `:598–614`). See `GANGES_RECOVERY_SEQUENCING.md` §1.
+
+**Decision:** ✅ The cascade order + terminals hold; recovery needs `$141`+`$145`+`$149`+`$66` (cold) AND `rPower` (presolve) — a genuine ≥5-blocker.
 
 ---
 
@@ -713,7 +737,15 @@ Measure the ganges/gangesx emit time; identify a budget slot in the Day plan; co
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 6 (ganges Recovery Sequencing)
+✅ **Status:** VERIFIED (a scheduling requirement, not a blocker — a nightly/dedicated regen slot suffices)
+**Verified by:** Task 6 (ganges/gangesx Cascade Re-Verification & Recovery Sequencing)
+**Date:** 2026-08-07
+
+**Findings:** The ganges emit is **335s (~5.6 min)** measured this task (gangesx comparable — a sibling CGE). Regenerating both goldens + a determinism ×3 `{0,1,42}` re-emit is ~6 × 5.6 min ≈ **35 min of emit** — beyond an inline `make test`/CI-PR budget (the S35 ship-blocker), but affordable in a **nightly/dedicated regeneration step** (not the PR gate) followed by the `--resolve-changed` GO. This was the S35 in-sprint CI constraint; a dedicated recovery effort can afford it.
+
+**Evidence:** the 335s ganges emit measurement. See `GANGES_RECOVERY_SEQUENCING.md` §4.
+
+**Decision:** ✅ Regenerable in a nightly/dedicated slot; 4.4 is a scheduling requirement for the recovery effort, not a blocker.
 
 ---
 
@@ -743,7 +775,15 @@ Scratch-apply the `$149` fix; re-emit each of the four; confirm `$149` removed a
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 6 (ganges Cascade Re-Verification)
+✅ **Status:** VERIFIED (design-level — the `$149` fix is general; per-model `$149`-removal is a recovery-time recount)
+**Verified by:** Task 6 (ganges/gangesx Cascade Re-Verification & Recovery Sequencing)
+**Date:** 2026-08-07
+
+**Findings:** The `$149` `_diff_prod` fix is **general** (it repairs the cross-index CES/LES product-rule wherever it fires, not a ganges special-case), and the S35 golden-staleness scan proved it surgical (no non-collateral prod-in-stationarity model drifts). dinam/indus/turkpow/clearlak all share the CES/LES prod-in-stationarity pattern (DB: all `path_syntax_error`, unchanged), so the fix removes their `$149` blocker — **but each carries other roots** (Unknown 6.3), so `$149` removal is necessary-not-sufficient for their recovery.
+
+**Evidence:** the general `_diff_prod` fix (`GANGES_149_PRODUCT_RULE_ANALYSIS.md`); the S35 surgical golden-staleness scan. See `GANGES_RECOVERY_SEQUENCING.md` §5.
+
+**Decision:** ✅ The `$149` fix unblocks the `$149` half of the four models; the per-model `$149`-removal recount + the remaining roots are recovery-time steps.
 
 ---
 
@@ -961,7 +1001,15 @@ Re-emit each; confirm the root codes; check if the `$149` fix leaves a tractable
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 6 (ganges Cascade Re-Verification, which covers the residual `$149` cohort)
+✅ **Status:** VERIFIED (design-level — the DB + DAY7 characterization hold; per-model recounts at recovery)
+**Verified by:** Task 6 (ganges/gangesx Cascade Re-Verification & Recovery Sequencing)
+**Date:** 2026-08-07
+
+**Findings:** The residual cohort roots hold. The DB shows dinam/indus/turkpow/clearlak all still `translate=success` / `path_syntax_error` (unchanged). The DAY7 characterization holds structurally (source + emit unchanged): **turkpow** = a ragged fixed-width `Table mdatat` parse bug; **clearlak** = uninitialized dynamic/computed sets; **dinam/indus** = `$140`+`$149` multi-root. None is bounded-tractable like turkey's single quoting root; the `$149` fix (Unknown 4.5) reduces but does not eliminate their blocker set.
+
+**Evidence:** the DB re-confirm (all four `path_syntax_error`); `../SPRINT_35/DAY7_P6_TURKPOW_CLEARLAK.md`. See `GANGES_RECOVERY_SEQUENCING.md` §5.
+
+**Decision:** ✅ The cohort roots are unchanged; each is a per-model dedicated effort (the `$149` half unblocked by the P4 fix, the rest per-model), not a bounded in-sprint recovery.
 
 ---
 
