@@ -581,7 +581,7 @@ P5 is not an emit-fix track — rocket and mine are *consultation submissions* (
 - Created `docs/planning/EPIC_4/SPRINT_36/P5_CONSULTATION_FINALIZATION.md` — rocket submission-readiness (§1), the finalized mine question (§2), the camcge Epic-5 `/tmp` Walras gate scope (§3), the fawley `--force` cross-reference (§4), and the P5-is-a-submission-day note (§5).
 - Dispatched an Explore agent to digest `../SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md`, `../SPRINT_35/MINE_DUAL_ARCHITECTURE_DESIGN.md`, `../SPRINT_35/DAY8_P5_CAMCGE_SPRINT36.md` — confirmed rocket's 4 components + renumber ×11, mine's framing + S34 value-invariance + `x.up=inf` BAN.
 - Re-confirmed the camcge S1∧S2∧S3 detector cohort from the byte-unchanged DB (camcge MS-4 @ omega 191.7346; irscge/lrgcge/moncge/stdcge MS-1 match).
-- **Measured the camcge MCP generated size:** 641 eqns / 641 vars under GAMS 54.2.1 demo, solves MS-4 — **< the 1000-row demo limit**, correcting `DAY8`'s stale "exceeds the demo limit" claim → the Walras `/tmp` gate is a local demo step, not testbed-gated.
+- **Measured the camcge MCP generated size:** 641 single (scalar) equations / 641 single variables under GAMS 54.2.1 demo (listing `BLOCKS OF EQUATIONS 85 / SINGLE EQUATIONS 641`; the demo limit is on the generated single count, not blocks+singles), solves MS-4 — **< the 1000-row demo limit**, correcting `DAY8`'s stale "exceeds the demo limit" claim → the Walras `/tmp` gate is a local demo step, not testbed-gated.
 - Set KNOWN_UNKNOWNS.md 5.1/5.2/5.4 → ✅ VERIFIED, 5.3 → ✅ VERIFIED (with the `DAY8` correction).
 
 ### Result
