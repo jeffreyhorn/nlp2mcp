@@ -617,7 +617,7 @@ grep -qiE "rocket|mine|camcge|Epic 5|primal-degenerate|Walras" docs/planning/EPI
 
 ## Task 9: Property-Fixture & 2-D-Cohort Regression-Harness Catalog + robustlp NA Survey
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-07)
 **Priority:** Medium
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 36 Day 1
@@ -627,7 +627,7 @@ grep -qiE "rocket|mine|camcge|Epic 5|primal-degenerate|Walras" docs/planning/EPI
 
 ### Objective
 
-Catalog the property fixtures Sprint 36 will add (the markov diagonal-Kronecker fixture, the fawley 2-D second-index fixture), specify the 2-D-cohort golden-staleness regression harness that guards the shared `_add_indexed_jacobian_terms` changes, decide the markov `slow`-test disposition, and survey the robustlp NA-coefficient root term.
+Catalog the property fixtures Sprint 36 will add (the markov diagonal-Kronecker fixture, the fawley 2-D second-index fixture), specify the 2-D-cohort golden-staleness regression harness that guards the shared `_add_indexed_jacobian_terms` changes, decide the markov `slow`-test disposition, and survey the robustlp NA root term (the GAMS-54 EXECERROR-84 source — *this task's survey corrected the root to an NA multiplier `.L` warm-start level, not an NA Jacobian coefficient; see Changes / catalog §4*).
 
 ### Why This Matters
 
@@ -635,7 +635,7 @@ The markov (Task 3) and fawley (Task 4) fixes both touch the high-blast-radius `
 
 ### Background
 
-Sprint-35 P7 established that the sole `src/` landing (turkey) already carries its 3 fail-before/pass-after unit tests; Sprint 36 adds fixtures for the *landed* deep tracks. `DAY11_MARKOV_DIAGONAL_LEVER.md` §5 requires the markov `slow` test `test_markov_stationarity_has_correction_term` to flip red→green with the fix (its `slow`/`xfail` disposition decided then). `FAWLEY_DIAGONAL_DESIGN.md` §6 specifies `shape_fawley_2d_second_index`. `FOLLOWUPS_GAMS54_TRANSITION.md` Follow-up 1 records robustlp's NA matrix coeffs (#1322 class) — allowlisted, needing a real emit fix to de-allowlist. The 2-D cohort is cesam2/camcge/ps2_f_s/ps2_s/ps3_s_gic/polygon.
+Sprint-35 P7 established that the sole `src/` landing (turkey) already carries its 3 fail-before/pass-after unit tests; Sprint 36 adds fixtures for the *landed* deep tracks. `DAY11_MARKOV_DIAGONAL_LEVER.md` §5 requires the markov `slow` test `test_markov_stationarity_has_correction_term` to flip red→green with the fix (its `slow`/`xfail` disposition decided then). `FAWLEY_DIAGONAL_DESIGN.md` §6 specifies `shape_fawley_2d_second_index`. `FOLLOWUPS_GAMS54_TRANSITION.md` Follow-up 1 records robustlp's GAMS-54 NA as an NA-matrix-coefficient / #1322 class — allowlisted, needing a real emit fix to de-allowlist (**corrected by this task's live reproduction: the root is an NA multiplier `.L` warm-start level, not a Jacobian coefficient — see Changes / catalog §4**). The 2-D cohort is cesam2/camcge/ps2_f_s/ps2_s/ps3_s_gic/polygon.
 
 ### What Needs to Be Done
 
@@ -647,11 +647,16 @@ Sprint-35 P7 established that the sole `src/` landing (turkey) already carries i
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_36/FIXTURE_AND_HARNESS_CATALOG.md` — the two per-fix fixture specs (§1), the shared 2-D-cohort golden-staleness harness (§2), the markov `slow`-test disposition (§3), the robustlp NA root survey + de-allowlist plan (§4), and the genuine-floor recompute + SUMMARY row-36 groundwork (§5).
+- **Reproduced robustlp EXECERROR-84 live** (GAMS 54.2.1 demo) → **corrected the allowlist's root**: the NA is in the multiplier `.L` warm-start levels (`lam_socpqcpcons(1..7)`, `piL_y(1..7)` = NA; finite Matrix range), NOT the Jacobian coefficients; `emit_post_assignment_na_cleanup` misses it (indexed-param-division-only) → bounded fix in the presolve marginal-transfer emit + de-allowlist.
+- **Measured markov emit = 12.4 s** (subprocess) → disposition: add the fast in-process `shape_markov_diagonal_kronecker` fixture (primary `make test` guard) + flip & sharpen the integration test to the `σ=sp` target, kept `slow`.
+- Confirmed all six cohort goldens present; the shared gate is the existing `check_golden_staleness.py --models …`.
+- Recomputed the floor partition from the byte-unchanged DB (108 / 93 = 63+30; markov ∈ methodology → the +1 is real; anchor 75).
+- Set KNOWN_UNKNOWNS.md 1.5/7.3/7.4/7.5 → ✅ VERIFIED, added a Task-9 addendum to the already-VERIFIED 1.3.
 
 ### Result
 
-To be completed.
+**GO — the fixture/harness scaffolding + the robustlp fix are catalogued and bounded.** Two per-fix fixtures map 1:1 to the Task-3/Task-4 landings; the shared cohort golden-staleness harness is the mechanical leak backstop (leak-free by design, Day-1 gate); the markov `slow`-test disposition closes the silent-regression window with a fast in-process fixture; the **robustlp NA root is reproduced + corrected (NA multiplier `.L` level, not a Jacobian coefficient) + the de-allowlist fix bounded**; the genuine-floor anchor holds at 75 with markov the tracked +1. No `*.py` changed (the fixtures/fix land in execution) → quality gate N/A.
 
 ### Verification
 
@@ -672,13 +677,13 @@ grep -rn "robustlp" scripts/diagnostics/presolve_divergence_allowlist.txt
 
 ### Acceptance Criteria
 
-- [ ] The markov diagonal-Kronecker fixture is specified (fail-before/pass-after, skip-if-absent)
-- [ ] The fawley `shape_fawley_2d_second_index` fixture is specified
-- [ ] The 2-D-cohort golden-staleness regression harness (leak-freedom gate) is specified
-- [ ] The markov `slow`-test disposition is decided (with the Task-3 fix)
-- [ ] The robustlp NA root is surveyed with a de-allowlist plan
-- [ ] The genuine-floor tracking recompute (anchor 75) + SUMMARY row-36 groundwork are noted
-- [ ] Unknowns 1.3, 1.5, 7.3, 7.4, 7.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The markov diagonal-Kronecker fixture is specified (fail-before/pass-after, skip-if-absent) — §1 `shape_markov_diagonal_kronecker`
+- [x] The fawley `shape_fawley_2d_second_index` fixture is specified — §1 (guards Task 4, disjoint from markov)
+- [x] The 2-D-cohort golden-staleness regression harness (leak-freedom gate) is specified — §2 `check_golden_staleness.py --models …`
+- [x] The markov `slow`-test disposition is decided (with the Task-3 fix) — §3 (fast fixture primary + sharpened green integration test, kept slow)
+- [x] The robustlp NA root is surveyed with a de-allowlist plan — §4; **corrected**: NA multiplier `.L` level (not a Jacobian coefficient); bounded presolve-emit fix + de-allowlist
+- [x] The genuine-floor tracking recompute (anchor 75) + SUMMARY row-36 groundwork are noted — §5 (75; markov ∈ methodology → +1 real)
+- [x] Unknowns 1.3, 1.5, 7.3, 7.4, 7.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
