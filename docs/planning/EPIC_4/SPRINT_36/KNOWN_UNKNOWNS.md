@@ -941,7 +941,13 @@ Identify the testbed environment; document the invocation; confirm >1000-row sol
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 7 (GAMS-54 Licensed-Testbed Re-Baseline Harness Plan)
+❌ **Status:** WRONG (assumption false) — resolved to a **bounded Day-0 risk** by Task 7.
+
+**Findings:** There is **no licensed >1000-row GAMS-54 testbed** in the current infrastructure. Both environments probed on `main` are GAMS **demo** (1000-row solve limit): the local install (`Versions/54/Resources/gamslice.txt` line 1 = `GAMS_Demo`, renders as "GAMS Demo", 54.2.1, time-limited to Nov 26 2026) and **both** CI workflows (`pr19-emit-solve-validation.yml`, `presolve-divergence.yml`) run a step literally named "Install GAMS demo" (54.2.1 `linux_x64_64_sfx.exe`). **But the impact is narrow:** the Solve 108 / Match 93 baseline was itself built under a demo license (DB `gams_version` = `51.3.0`) → every *currently-solving* model is ≤ the 1000-row limit → the v54 re-baseline of the solving set is fully demo-runnable (local + CI). Only turkey (3,866-row MCP, `path_syntax_error`, *not* in the 108) is genuinely license-gated.
+
+**Evidence:** `gamslice.txt` = `GAMS_Demo`; both workflows' "Install GAMS demo" steps; DB `gams_version` `51.3.0`; the 142 candidates all demo-solved to build the DB. See `GAMS54_TESTBED_PLAN.md` §1.
+
+**Decision:** GO with a bounded Day-0 risk — the KPI-relevant re-baseline needs **no new infrastructure** (runs on the demo); only turkey's +1 needs a license (deferred, §3). Contingency = keep the v53(51.3.0)-built KPIs, defer turkey to a licensed cycle (a pre-existing S35 carryforward). Ref: `GAMS54_TESTBED_PLAN.md` §1, §7.
 
 ---
 
@@ -971,7 +977,13 @@ Run the turkey solve on the testbed (via `run_full_test.py`); record the bucket 
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 7 (GAMS-54 Testbed Harness Plan)
+🔍 **Status:** BLOCKED (license-gated) — untestable on the demo; deferred to a licensed testbed cycle.
+
+**Findings:** turkey's compile-recovery is real and landed (S35 Day 6, PR #1620 — the domain-less 2-D set `ao` arity fix; `$161` cleared, reaches PATH). But the emitted MCP (`data/gamslib/mcp/turkey_mcp.gms`, 852 golden lines) **generates 3,866 rows > the 1000-row demo limit**, so GAMS rejects it at generation on both the local demo and demo-CI — the solve is **untestable without a license**. Whether it reaches `model_optimal` + match cannot be determined this sprint.
+
+**Evidence:** `turkey_mcp.gms` 852 lines → 3,866 generated rows (S35 Day 6); the demo-only infra (Unknown 6.1). See `GAMS54_TESTBED_PLAN.md` §3.
+
+**Decision:** BLOCKED — deferred. Invocation on a licensed testbed is specified (single-model `run_full_test.py` emit+solve → assert `modelstat` → match → determinism ×3). turkey's potential +1 is the sole external dependency; carried forward (unchanged from S35). Ref: `GAMS54_TESTBED_PLAN.md` §3, §6.
 
 ---
 
@@ -1041,7 +1053,13 @@ Testbed re-solve the corpus under v54; diff the buckets for the 5 (and the whole
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 7 (GAMS-54 Testbed Harness Plan)
+✅ **Status:** VERIFIED — the re-check is demo-runnable in-sprint (NOT license-gated); the bucket-diff is the in-sprint execution step.
+
+**Findings:** All 5 OBJ-GAP models are **demo-solvable** — they are tiny (agreste 14 eqns, cesam 21, chain 3, fawley 10, rocket 6) and each produced a demo result in the DB (agreste/cesam/fawley/rocket `model_infeasible`, chain `model_optimal_presolve`). They were flagged *because* they solved under v54 demo. So the v53→v54 bucket re-check runs on the demo — no license needed (contrast Unknown 6.1's turkey). The bucket-stability *answer* (does the objective gap flip a Solve/Match bucket, or is it a benign within-tolerance difference?) is the in-sprint re-solve step, scheduled at the async Day-slot (§6).
+
+**Evidence:** `model_statistics` (small eqn/var counts); DB `outcome_category` for the 5 (all non-null → solved on demo); the S35 v54-transition flagging. See `GAMS54_TESTBED_PLAN.md` §2.2.
+
+**Decision:** the OBJ-GAP re-check is part of the demo-runnable v54 re-baseline (§2); its bucket-diff feeds the version decision (7.2). No new infra. Ref: `GAMS54_TESTBED_PLAN.md` §2.2, §6.
 
 ---
 
@@ -1071,7 +1089,11 @@ Combine the Unknown-7.1 re-solve result with the emit-level-gate confirmation; w
 Sprint 36 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — to be verified by Task 7 (GAMS-54 Testbed Harness Plan)
+✅ **Status:** VERIFIED — decision made; keep the v53(51.3.0)-built baseline, open the v54 re-baseline as an infra task, re-pin only on confirmed bucket stability.
+
+**Findings:** (Q1) the emit-level gates (determinism ×3 / `--resolve-changed` / golden-staleness / typecheck-lint-format-test) are **version-independent** — emit is solver-independent, so they need no re-baseline. (Q2) the v54 corpus re-solve is **demo-runnable** in-sprint (Unknown 7.1, §1) → the decision can be *made* on the demo, not deferred to a licensed cycle. (Q3) the artifact is a `GAMS54_REBASELINE_DIFF.md` (per-model v53→v54 bucket diff + OBJ-GAP dispositions + re-pin recommendation).
+
+**Decision:** **keep the v53(51.3.0)-built KPIs (108/93/75) as the S36 baseline; do NOT re-pin mid-sprint.** Re-pin to v54 only if the demo re-solve shows zero bucket regressions across the 142 candidates AND the team adopts v54 as canonical for S37+; else stay v53 and file any regression. Rationale: the KPI history + all sprint anchors are v53-referenced; re-pinning mid-sprint breaks the anchor chain. This is the decision record `FOLLOWUPS_GAMS54_TRANSITION.md` calls for at the Day-13 retest. Ref: `GAMS54_TESTBED_PLAN.md` §4, §5, §6.
 
 ---
 
