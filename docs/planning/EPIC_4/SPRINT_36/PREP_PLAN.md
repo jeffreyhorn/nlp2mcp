@@ -474,7 +474,7 @@ grep -rn "_expr_contains_varref_attribute" src/ | head
 
 ## Task 7: GAMS-54 Licensed-Testbed Re-Baseline Harness Plan (P7 + turkey P6)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-07)
 **Priority:** Medium
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 36 Day 1
@@ -505,11 +505,15 @@ The 108/93/75 baseline was built under GAMS 53; CI + local now validate under 54
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_36/GAMS54_TESTBED_PLAN.md` — the license probe (local + both CI workflows), the bounded Day-0 risk, the demo-runnable re-baseline scope, the turkey solve invocation, the DB-version decision + criteria, the local-vs-testbed checklist (§5), and the async Day-slot (§6).
+- Probed the GAMS license on `main`: local `Versions/54/Resources/gamslice.txt` = **`GAMS Demo`** (54.2.1, 1000-row limit, stops Nov 26 2026); **both** CI workflows (`pr19-emit-solve-validation.yml`, `presolve-divergence.yml`) run "Install GAMS demo" (54.2.1) → **no licensed >1000-row testbed exists.**
+- Established the load-bearing bound: DB `gams_version` = `51.3.0` (demo) → the whole Solve/Match baseline is demo-built → the v54 re-baseline of the solving set is demo-runnable; only turkey (3,866 rows) is license-gated.
+- Confirmed the 5 OBJ-GAP models are demo-solvable (tiny; all produced DB results) → their v54 bucket re-check is demo-runnable, not license-gated.
+- Set KNOWN_UNKNOWNS.md 6.1 → ❌ WRONG (bounded Day-0 risk), 6.2 → 🔍 BLOCKED (license-gated, deferred), 7.1 → ✅ VERIFIED (demo-runnable re-check), 7.2 → ✅ VERIFIED (keep-v53 decision made).
 
 ### Result
 
-To be completed.
+**GO with a bounded Day-0 risk.** No licensed >1000-row GAMS-54 testbed exists (6.1 wrong) — but because the KPI baseline is demo-built, the v54 corpus re-baseline + the 5 OBJ-GAP bucket re-check + the v53-vs-v54 version decision are **all demo-runnable in-sprint** (7.1/7.2 resolved on the demo, no new infra). Only turkey's +1 is license-gated (6.2 blocked/deferred — a pre-existing S35 carryforward). **Decision: keep the v53(51.3.0)-built KPIs (108/93/75) as the S36 baseline; open the v54 re-baseline as an async infra slot before Day-10; re-pin to v54 only on confirmed zero bucket regressions.** No `*.py` changed → quality gate N/A.
 
 ### Verification
 
@@ -531,13 +535,13 @@ grep -rnE "path_solve_license|find_gams_executable|Versions/Current" scripts/ sr
 
 ### Acceptance Criteria
 
-- [ ] A licensed GAMS-54 testbed capable of >1000-row solves is identified (or its absence flagged as a Day-0 risk)
-- [ ] The re-baseline diff scope is specified (buckets, 5 OBJ-GAP models, PR19 canaries)
-- [ ] The turkey solve invocation is specified
-- [ ] The DB-version decision criteria + artifact are defined
-- [ ] The emit-level (local) vs solve (testbed) split is documented
-- [ ] The testbed Day-slot is identified
-- [ ] Unknowns 6.1, 6.2, 7.1, 7.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] A licensed GAMS-54 testbed capable of >1000-row solves is identified (or its absence flagged as a Day-0 risk) — **absence flagged**: local + both CI are demo (1000-row); no licensed testbed. Bounded (§1)
+- [x] The re-baseline diff scope is specified (buckets, 5 OBJ-GAP models, PR19 canaries) — §2, demo-runnable
+- [x] The turkey solve invocation is specified — §3, license-gated/deferred
+- [x] The DB-version decision criteria + artifact are defined — §4 (keep-v53; `GAMS54_REBASELINE_DIFF.md`)
+- [x] The emit-level (local) vs solve (testbed) split is documented — §5 checklist
+- [x] The testbed Day-slot is identified — §6 (async, before Day-10; turkey gated on license, not calendar)
+- [x] Unknowns 6.1, 6.2, 7.1, 7.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
