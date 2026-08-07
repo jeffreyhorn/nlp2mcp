@@ -627,7 +627,7 @@ grep -qiE "rocket|mine|camcge|Epic 5|primal-degenerate|Walras" docs/planning/EPI
 
 ### Objective
 
-Catalog the property fixtures Sprint 36 will add (the markov diagonal-Kronecker fixture, the fawley 2-D second-index fixture), specify the 2-D-cohort golden-staleness regression harness that guards the shared `_add_indexed_jacobian_terms` changes, decide the markov `slow`-test disposition, and survey the robustlp NA-coefficient root term.
+Catalog the property fixtures Sprint 36 will add (the markov diagonal-Kronecker fixture, the fawley 2-D second-index fixture), specify the 2-D-cohort golden-staleness regression harness that guards the shared `_add_indexed_jacobian_terms` changes, decide the markov `slow`-test disposition, and survey the robustlp NA root term (the GAMS-54 EXECERROR-84 source — *this task's survey corrected the root to an NA multiplier `.L` warm-start level, not an NA Jacobian coefficient; see Changes / catalog §4*).
 
 ### Why This Matters
 
@@ -635,7 +635,7 @@ The markov (Task 3) and fawley (Task 4) fixes both touch the high-blast-radius `
 
 ### Background
 
-Sprint-35 P7 established that the sole `src/` landing (turkey) already carries its 3 fail-before/pass-after unit tests; Sprint 36 adds fixtures for the *landed* deep tracks. `DAY11_MARKOV_DIAGONAL_LEVER.md` §5 requires the markov `slow` test `test_markov_stationarity_has_correction_term` to flip red→green with the fix (its `slow`/`xfail` disposition decided then). `FAWLEY_DIAGONAL_DESIGN.md` §6 specifies `shape_fawley_2d_second_index`. `FOLLOWUPS_GAMS54_TRANSITION.md` Follow-up 1 records robustlp's NA matrix coeffs (#1322 class) — allowlisted, needing a real emit fix to de-allowlist. The 2-D cohort is cesam2/camcge/ps2_f_s/ps2_s/ps3_s_gic/polygon.
+Sprint-35 P7 established that the sole `src/` landing (turkey) already carries its 3 fail-before/pass-after unit tests; Sprint 36 adds fixtures for the *landed* deep tracks. `DAY11_MARKOV_DIAGONAL_LEVER.md` §5 requires the markov `slow` test `test_markov_stationarity_has_correction_term` to flip red→green with the fix (its `slow`/`xfail` disposition decided then). `FAWLEY_DIAGONAL_DESIGN.md` §6 specifies `shape_fawley_2d_second_index`. `FOLLOWUPS_GAMS54_TRANSITION.md` Follow-up 1 records robustlp's GAMS-54 NA as an NA-matrix-coefficient / #1322 class — allowlisted, needing a real emit fix to de-allowlist (**corrected by this task's live reproduction: the root is an NA multiplier `.L` warm-start level, not a Jacobian coefficient — see Changes / catalog §4**). The 2-D cohort is cesam2/camcge/ps2_f_s/ps2_s/ps3_s_gic/polygon.
 
 ### What Needs to Be Done
 

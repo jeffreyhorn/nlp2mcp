@@ -36,7 +36,7 @@ python scripts/sprint_audit/check_golden_staleness.py \
 
 ## 3. markov `slow`-test disposition (Unknown 1.5)
 
-**Measured:** a markov emit via the subprocess CLI is **~12.4 s** (not minutes-scale — markov is tiny, 2 vars / 3 eqns; the `slow` mark is subprocess-integration convention). The existing guard is `tests/integration/kkt/test_markov_multi_pattern.py::test_markov_stationarity_has_correction_term` (`pytest.mark.slow` + `integration`, **red since birth** — it asserts the `nu_constr(s,i)` correction the fix will emit).
+**Measured:** a markov emit via the subprocess CLI is **~12.4 s** (not minutes-scale — markov is tiny, 2 vars / 3 eqns; the `slow` mark is subprocess-integration convention). The existing guard is `tests/integration/kkt/test_markov_multi_pattern.py::TestMarkovMultiPatternIntegration::test_markov_stationarity_has_correction_term` (`pytest.mark.slow` + `integration`, **red since birth** — it asserts the `nu_constr(s,i)` correction the fix will emit).
 
 **Decision (disposition option 3, refined):**
 1. **Add the fast in-process `shape_markov_diagonal_kronecker` fixture (§1) as the PRIMARY guard** — it runs in `make test` (no subprocess), so it closes the silent-regression window that let the integration test stay red-and-unnoticed since March (a `slow` test doesn't run in the default `make test`).
