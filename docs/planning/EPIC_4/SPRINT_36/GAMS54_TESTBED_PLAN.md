@@ -14,7 +14,7 @@ Reference: `../SPRINT_35/FOLLOWUPS_GAMS54_TRANSITION.md` (the v53→v54 transiti
 
 | environment | GAMS | license | solve limit |
 |---|---|---|---|
-| **local** (`Versions/54/Resources/gams`) | 54.2.1 (`GAMSX … Jul 13, 2026`) | `gamslice.txt` = **`GAMS Demo`** (time-limited, stops Nov 26 2026) | **1000 rows/cols** |
+| **local** (`Versions/54/Resources/gams`) | 54.2.1 (`GAMSX … Jul 13, 2026`) | `gamslice.txt` line 1 = **`GAMS_Demo`** (renders as "GAMS Demo"; time-limited, stops Nov 26 2026) | **1000 rows/cols** |
 | **CI** `pr19-emit-solve-validation.yml` | 54.2.1 (`linux_x64_64_sfx.exe`) | step **"Install GAMS demo"** | **1000 rows/cols** |
 | **CI** `presolve-divergence.yml` | 54.2.1 (same installer) | step **"Install GAMS demo"** | **1000 rows/cols** |
 
@@ -46,7 +46,7 @@ Run `run_full_test.py --resolve-changed --since-commit <S36-anchor>` (GO/NO-GO, 
 **Decision: keep the v53(51.3.0)-built KPIs as the S36 baseline; do NOT re-pin the DB to v54 mid-sprint. Open the v54 re-baseline as an infra task; pin to v54 only if the demo re-solve confirms bucket stability.**
 
 Criteria / artifact:
-- **Keep v53 baseline (recommended default):** report Solve 108 / Match 93 / floor 75 unchanged; the v54 re-solve (§2) is a *verification* run producing a bucket-diff artifact, not a DB overwrite. Rationale: the KPI history + all sprint anchors (`--resolve-changed --since 78ceaead`) are v53-referenced; re-pinning mid-sprint would break the anchor chain and conflate a version change with sprint work.
+- **Keep v53 baseline (recommended default):** report Solve 108 / Match 93 / floor 75 unchanged; the v54 re-solve (§2) is a *verification* run producing a bucket-diff artifact, not a DB overwrite. Rationale: the KPI history + all sprint anchors (`--resolve-changed --since-commit 78ceaead`) are v53-referenced; re-pinning mid-sprint would break the anchor chain and conflate a version change with sprint work.
 - **Re-pin to v54 (only if):** the §2 demo re-solve shows **zero bucket regressions** across the 142 candidates (OBJ-GAPs benign, no Solve/Match losses) AND the team decides v54 is the canonical baseline for S37+. If any bucket regresses, file it (allowlist / follow-up) and stay on v53.
 - **Artifact:** a `GAMS54_REBASELINE_DIFF.md` (produced at the async Day-slot) — the per-model v53→v54 bucket diff + the OBJ-GAP dispositions + the re-pin recommendation. This is the decision record `../SPRINT_35/FOLLOWUPS_GAMS54_TRANSITION.md` calls for at the Day-13 retest.
 
