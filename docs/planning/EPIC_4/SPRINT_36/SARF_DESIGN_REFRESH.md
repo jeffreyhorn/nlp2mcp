@@ -1,7 +1,7 @@
 # Sprint 36 — sarf P2 Symbolic-Emit Subsystem Design Refresh (Prep Task 5)
 
 **Date:** 2026-08-07 · **Owner:** Sprint 36 execution team · **Branch:** `planning/sprint36-task5` · **Scope:** docs/analysis-only (measurements only; no `src/` change).
-**Outcome: the banked S35 design (`../SPRINT_35/SARF_SYMBOLIC_EMIT_DESIGN.md` + `PHASE_0_ACCEPTANCE_GATES.md`) applies UNCHANGED — every premise re-confirms on current `main`: the blow-up is still >303s / non-terminating; the 3 sites + counts (369,024 declared / 398 active) hold; the 7-term derivation's constraint bodies are present; and the O(active) guarded-emit shape compiles clean + instantiates O(active), not O(Cartesian), under GAMS 54.2.1. GO to carry the design as-is (a 20–28h atomic re-architecture with the standing REPLAN triggers).** Verifies Unknowns 2.1, 2.2, 2.3, 2.4.
+**Outcome: the banked S35 design (`../SPRINT_35/SARF_SYMBOLIC_EMIT_DESIGN.md` + `../SPRINT_35/PHASE_0_ACCEPTANCE_GATES.md`) applies UNCHANGED — every premise re-confirms on current `main`: the blow-up is still >303s / non-terminating; the 3 sites + counts (369,024 declared / 398 active) hold; the 7-term derivation's constraint bodies are present; and the O(active) guarded-emit shape compiles clean + instantiates O(active), not O(Cartesian), under GAMS 54.2.1. GO to carry the design as-is (a 20–28h atomic re-architecture with the standing REPLAN triggers).** Verifies Unknowns 2.1, 2.2, 2.3, 2.4.
 
 Reference: `../SPRINT_35/SARF_SYMBOLIC_EMIT_DESIGN.md` (the 3-site + 6-call-site + 7-term design), `../SPRINT_35/PHASE_0_ACCEPTANCE_GATES.md` (the O(active) timing gate). Code: `enumerate_variable_instances` (`src/ad/index_mapping.py:327`), the S1/S2/S3 sites (`constraint_jacobian.py`, `index_mapping.py`, `stationarity.py`).
 
@@ -9,7 +9,7 @@ Reference: `../SPRINT_35/SARF_SYMBOLIC_EMIT_DESIGN.md` (the 3-site + 6-call-site
 
 ## 1. Blow-up re-measured (Unknown 2.1)
 
-**Timing (this task, 2026-08-07):** `.venv/bin/python -m src.cli data/gamslib/raw/sarf.gms` — **still running at a 330s cap without completing** ⇒ **>303s / non-terminating CONFIRMED** (the O(369K) failure). Identical to the S35 baseline (`SARF_SYMBOLIC_EMIT_DESIGN.md` §6: ">303s, killed, no output"). No improvement, no regression — the emit remains non-terminating in any pipeline budget.
+**Timing (this task, 2026-08-07):** `.venv/bin/python -m src.cli data/gamslib/raw/sarf.gms` — **still running at a 330s cap without completing** ⇒ **>303s / non-terminating CONFIRMED** (the O(369K) failure). Identical to the S35 baseline (`../SPRINT_35/SARF_SYMBOLIC_EMIT_DESIGN.md` §6: ">303s, killed, no output"). No improvement, no regression — the emit remains non-terminating in any pipeline budget.
 
 **Counts re-verified (live from `sarf.gms`):** `g` = 16, `t` = 24 (`01*24`), `mn` = 31 (5 power sources + 3 harvesters + 23 implements). `task(g,t,mn,mn)` ⇒ **16·24·31·31 = 369,024** declared columns. Active = `taskposs(g,t) ∧ tech(g,m,n)`, both runtime-computed (`sarf.gms:371`, `tech` a data Table) — **not statically enumerable** (the fix genuinely cannot be "enumerate only the 398").
 
