@@ -336,7 +336,7 @@ grep -rnE "shape_fawley_2d_second_index|fawley" docs/planning/EPIC_4/SPRINT_35/F
 
 ## Task 5: sarf P2 — Symbolic-Emit Subsystem Design Refresh & Blow-Up Re-Measurement
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-07)
 **Priority:** High
 **Estimated Time:** 4-5 hours
 **Deadline:** Before Sprint 36 Day 1
@@ -367,11 +367,11 @@ sarf is the thrice-carried, highest-budget track (a corpus-wide re-architecture 
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_36/SARF_DESIGN_REFRESH.md` — the re-measured blow-up, the re-validated 7-term derivation, the O(active) guarded-emit GAMS-54 confirmation, the Phase-0 gate + regression harness, and the go/no-go. Marked Unknowns 2.1, 2.2, 2.3, 2.4 → ✅ VERIFIED in `KNOWN_UNKNOWNS.md`.
 
 ### Result
 
-To be completed.
+**GO — the S35 banked design applies UNCHANGED.** Every premise re-confirms on current `main`: (2.1) the sarf emit is **still >303s / non-terminating** (measured at a 330s cap — the O(369K) failure, identical to the S35 baseline); counts re-verified (16·24·31·31 = **369,024** declared / **398** active); the 3 sites' code surfaces (`constraint_jacobian.py`, `index_mapping.py`, `stationarity.py`) **byte-unchanged since the anchor**. (2.2) the O(active) guarded-emit shape **compiles clean under GAMS 54.2.1** and GAMS natively prunes the instantiation (synthetic `ncart=54` vs `ndomain=18` vs `nactive=4`) — O(active), not O(Cartesian). (2.3) the 7-term derivation's constraint bodies (tbal/labor/equipb1/equipb2/acost3/task.lo) are all present + structurally unchanged, own-domain multipliers (no set-name-literals). (2.4) no set-name-literal indices by design; the determinism ×3 + byte-stable-golden harness is the landing gate. **Disposition unchanged:** a 20–28h atomic, foundational re-architecture for +1 Translate (the 4×-failed path), not landable without the full-corpus regression harness; the standing REPLAN triggers hold. Schedule it early so a REPLAN surfaces before Day 12. Verifies Unknowns 2.1, 2.2, 2.3, 2.4.
 
 ### Verification
 
@@ -393,12 +393,12 @@ grep -rn "enumerate_variable_instances" src/ | head
 
 ### Acceptance Criteria
 
-- [ ] The 369K blow-up re-measured on current `main` (>303s / non-terminating confirmed, or drift documented)
-- [ ] The 7-term `stat_task` derivation re-validated against `sarf.gms`
-- [ ] The O(active=398) guarded-emit shape confirmed as the target
-- [ ] The Phase-0 timing gate + regression harness (byte-stable golden, determinism ×3, no set-name-literal indices) re-confirmed
-- [ ] The re-scope exit condition documented
-- [ ] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The 369K blow-up re-measured on current `main` (>303s / non-terminating confirmed at a 330s cap)
+- [x] The 7-term `stat_task` derivation re-validated against `sarf.gms` (all 7 constraint bodies present + structurally unchanged)
+- [x] The O(active=398) guarded-emit shape confirmed as the target (compiles + instantiates O(active) under GAMS 54.2.1)
+- [x] The Phase-0 timing gate + regression harness (byte-stable golden, determinism ×3, no set-name-literal indices) re-confirmed
+- [x] The re-scope exit condition documented (the standing REPLAN triggers)
+- [x] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
