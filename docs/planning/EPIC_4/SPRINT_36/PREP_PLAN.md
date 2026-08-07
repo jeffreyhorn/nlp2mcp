@@ -722,7 +722,7 @@ The per-priority budgets (P1 14–20h … P7 10–14h; 94–134h total) only fit
 ### Changes
 
 - Created `docs/planning/EPIC_4/SPRINT_36/PLAN.md` — the Day-0-through-Day-13 schedule: P1 markov front-loaded Days 1–3 (the one local +1-floor lever), P3 fawley co-scheduled Day 4 (shared `_add_indexed_jacobian_terms` + cohort gate), Checkpoint 1 Day 5, P2 sarf Days 6–7, P4 ganges Days 8–9 (rPower surfaced early), Checkpoint 2 + P7 robustlp de-allowlist Day 10, P5 consultation Day 11, carryforwards Day 12, final retest Day 13. Includes the async testbed thread, per-track REPLAN exits, the ≤12h/day (168h) budget (~111h nominal), the Day-0 kickoff checklist, the KU snapshot + GO/NO-GO, and the risk register.
-- Created `docs/planning/EPIC_4/SPRINT_36/prompts/PLAN_PROMPTS.md` — the 15 per-day execution prompts (Day 0 + Days 1–13) with the cross-cutting rules (anchor `78ceaead`, `/tmp`-before-`src/`, the BANs, the cohort golden-staleness gate).
+- Created `docs/planning/EPIC_4/SPRINT_36/prompts/PLAN_PROMPTS.md` — the 14 per-day execution prompts (Day 0 + Days 1–13) with the cross-cutting rules (anchor `78ceaead`, `/tmp`-before-`src/`, the BANs, the cohort golden-staleness gate).
 - **Final KU pass:** all 30 unknowns resolved — **zero INCOMPLETE** (28 ✅ VERIFIED; 6.1 ❌ WRONG→bounded Day-0 risk; 6.2 🔍 BLOCKED→deferred). The lone INCOMPLETE grep-hit is the KU template boilerplate, not a real unknown.
 - Verified every relative cross-reference in both new docs resolves (fixed four: the CONSULTATION_BUNDLE SPRINT_35→SPRINT_36 sibling, `../SUMMARY.md`, and the two prompts-dir depth paths `../../../EPIC_5/` + `../../SUMMARY.md`).
 
