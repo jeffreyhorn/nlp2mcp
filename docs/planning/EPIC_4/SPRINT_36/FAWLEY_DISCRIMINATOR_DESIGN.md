@@ -3,7 +3,7 @@
 **Date:** 2026-08-06 · **Owner:** Sprint 36 execution team · **Branch:** `planning/sprint36-task4` · **Scope:** docs/analysis-only (no `src/` change — evidence gathered from the committed goldens).
 **Outcome: the derivative-structure discriminator that the S35 Day-9 surface-pattern predicate lacked is specified and empirically grounded — "fire the constraint-index-diagonal `sameas(cfq__,cf)` guard only when the summed constraint index is ABSENT from the derivative coefficient." It cleanly distinguishes fawley's true constraint-index-diagonal from markov's #1110 off-diagonal, and co-exists with the Task-3 markov change by a disjoint firing condition. GO with a REPLAN exit (H-b: +1 floor contingent on a cold match; +Solve is a forcing hand-off).** Verifies Unknowns 3.1, 3.2.
 
-Reference: `DAY9_P3_FAWLEY_CONTROL_DEFER.md` (the leak), `FAWLEY_DIAGONAL_DESIGN.md` (the constraint-index-diagonal predicate + the fixture + H-b), `MARKOV_OFFDIAGONAL_DESIGN.md` (Task 3 — the co-existing markov change), `CONSULTATION_BUNDLE.md` §3 (the +Solve `--force` survey). Code: `_add_indexed_jacobian_terms` + `_derivative_structure_key` (`src/kkt/stationarity.py:5861+ / :5475`).
+Reference: `../SPRINT_35/DAY9_P3_FAWLEY_CONTROL_DEFER.md` (the leak), `../SPRINT_35/FAWLEY_DIAGONAL_DESIGN.md` (the constraint-index-diagonal predicate + the fixture + H-b), `MARKOV_OFFDIAGONAL_DESIGN.md` (Task 3 — the co-existing markov change), `CONSULTATION_BUNDLE.md` §3 (the +Solve `--force` survey). Code: `_add_indexed_jacobian_terms` + `_derivative_structure_key` (`src/kkt/stationarity.py:5861+ / :5475`).
 
 ---
 
@@ -29,7 +29,7 @@ S35 Day 9 added `_constraint_index_diagonal_guards` — a **surface/positional**
 - **fawley:** `cfq__` absent from the coefficient ⇒ the sum over `cfq__` repeats the *same* coefficient ⇒ a pure over-count the diagonal guard corrects. ✅ fire.
 - **markov off-diagonal:** the summed index (`s__kkt2`) is *in* the coefficient (via `pi`) ⇒ the sum ranges over *distinct* values (a genuine sum, not an over-count) ⇒ a `sameas` guard would wrongly restrict it. ❌ don't fire.
 
-**Implementation:** a predicate `_summed_index_only_in_multiplier(deriv_coeff, summed_idx)` = `summed_idx not in _collect_free_indices(deriv_coeff)` (the coefficient with the `MultiplierRef` and its `$` guards stripped). This is a **derivative-structure** test, not a positional one — exactly the refinement the S35 surface predicate lacked. It layers on top of the existing constraint-index-diagonal orientation check (`FAWLEY_DIAGONAL_DESIGN.md` §2): orientation gates *where* to look; the absence-from-coefficient test gates *whether the diagonal is real*.
+**Implementation:** a predicate `_summed_index_only_in_multiplier(deriv_coeff, summed_idx)` = `summed_idx not in _collect_free_indices(deriv_coeff)` (the coefficient with the `MultiplierRef` and its `$` guards stripped). This is a **derivative-structure** test, not a positional one — exactly the refinement the S35 surface predicate lacked. It layers on top of the existing constraint-index-diagonal orientation check (`../SPRINT_35/FAWLEY_DIAGONAL_DESIGN.md` §2): orientation gates *where* to look; the absence-from-coefficient test gates *whether the diagonal is real*.
 
 ## 3. Co-existence with the Task-3 markov change (Unknown 3.2)
 
@@ -49,9 +49,9 @@ Both the markov Part-2 change and the fawley discriminator live in `_add_indexed
 
 ## 4. Phase-0 control + leak-freedom gate
 
-**Phase-0 `/tmp` control (pre-`src/`, per `FAWLEY_DIAGONAL_DESIGN.md` §5):** hand-apply `$(sameas(cfq__,cf))` to fawley's emitted `stat_bq` qsb/pbal terms, re-run `kkt_residual.py fawley`, require **`max|stat_bq| → 0`** (machine zero, scoped to `stat_bq` — the emit-correct `stat_trans(tr-2)` H-b residual is *excluded* from the gate). Re-confirmed live in Task 2 (`stat_bq` rel 0.973 baseline; the goldens byte-identical to the Day-9 tree, so the 473→1.14e-13 hand-edit reproduces).
+**Phase-0 `/tmp` control (pre-`src/`, per `../SPRINT_35/FAWLEY_DIAGONAL_DESIGN.md` §5):** hand-apply `$(sameas(cfq__,cf))` to fawley's emitted `stat_bq` qsb/pbal terms, re-run `kkt_residual.py fawley`, require **`max|stat_bq| → 0`** (machine zero, scoped to `stat_bq` — the emit-correct `stat_trans(tr-2)` H-b residual is *excluded* from the gate). Re-confirmed live in Task 2 (`stat_bq` rel 0.973 baseline; the goldens byte-identical to the Day-9 tree, so the 473→1.14e-13 hand-edit reproduces).
 
-**Leak-freedom gate (Unknown 3.2):** `check_golden_staleness.py` after the `src/` change must show **only fawley drifts** — **markov** (the Day-9 leak target) **+ the 2-D cohort** (cesam2/camcge/ps2_f_s/ps2_s/ps3_s_gic/polygon) byte-identical. The discriminator is leak-free by construction (§3), but the empirical run is the confirmation. Cost caveat: the cohort + fawley emits are minutes-scale → a nightly/async or per-model diff, not an inline `make test` step. The `shape_fawley_2d_second_index` fixture (a fast synthetic, `test_ad_crossterm_shapes.py` pattern) lands *with* the fix (`FAWLEY_DIAGONAL_DESIGN.md` §6; catalogued in Task 9).
+**Leak-freedom gate (Unknown 3.2):** `check_golden_staleness.py` after the `src/` change must show **only fawley drifts** — **markov** (the Day-9 leak target) **+ the 2-D cohort** (cesam2/camcge/ps2_f_s/ps2_s/ps3_s_gic/polygon) byte-identical. The discriminator is leak-free by construction (§3), but the empirical run is the confirmation. Cost caveat: the cohort + fawley emits are minutes-scale → a nightly/async or per-model diff, not an inline `make test` step. The `shape_fawley_2d_second_index` fixture (a fast synthetic, `test_ad_crossterm_shapes.py` pattern) lands *with* the fix (`../SPRINT_35/FAWLEY_DIAGONAL_DESIGN.md` §6; catalogued in Task 9).
 
 ## 5. The +Solve hand-off (H-b — not an in-sprint P3 gain)
 
