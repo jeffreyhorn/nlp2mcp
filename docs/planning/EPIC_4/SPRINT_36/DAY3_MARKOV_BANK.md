@@ -22,7 +22,7 @@ The design's Day-2 REPLAN exit offered "land Part-1 correctness-only + bank Part
 
 ## 2. Why the discriminator is a dedicated effort (not an in-day change)
 
-Mechanism C fires when a mult-domain index exact-name-matches a *later* var position while canon-matching an *earlier* one — a **domain** property satisfied by any aliased-index-in-a-later-position model. markov's genuine `σ=sp` coupling is a **derivative-structure** property, and the three leaked models each have a *structurally distinct* off-diagonal derivative:
+Mechanism C fires when a multiplier-domain index (the `mult_domain` — the constraint's own domain) exact-name-matches a *later* var position while canon-matching an *earlier* one — a **domain** property satisfied by any aliased-index-in-a-later-position model. The genuine `σ=sp` coupling in markov is a **derivative-structure** property, and the three leaked models each have a *structurally distinct* off-diagonal derivative:
 
 - **markov (must fire):** `-b·pi(s,i,σ,τ,sp)` — a **parameter product** coupling the constraint index `σ` to the variable's independent index `sp` (nonzero only on `σ=sp`).
 - **sroute (must NOT fire):** `(1$(darc(ip,ipp)))` — a **`Const(1)` gated by a set-membership `$`**, no param coupling.
