@@ -689,7 +689,7 @@ grep -rn "robustlp" scripts/diagnostics/presolve_divergence_allowlist.txt
 
 ## Task 10: Plan Sprint 36 Detailed Schedule
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-07)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 36 Day 1
@@ -721,11 +721,14 @@ The per-priority budgets (P1 14–20h … P7 10–14h; 94–134h total) only fit
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_36/PLAN.md` — the Day-0-through-Day-13 schedule: P1 markov front-loaded Days 1–3 (the one local +1-floor lever), P3 fawley co-scheduled Day 4 (shared `_add_indexed_jacobian_terms` + cohort gate), Checkpoint 1 Day 5, P2 sarf Days 6–7, P4 ganges Days 8–9 (rPower surfaced early), Checkpoint 2 + P7 robustlp de-allowlist Day 10, P5 consultation Day 11, carryforwards Day 12, final retest Day 13. Includes the async testbed thread, per-track REPLAN exits, the ≤12h/day (168h) budget (~111h nominal), the Day-0 kickoff checklist, the KU snapshot + GO/NO-GO, and the risk register.
+- Created `docs/planning/EPIC_4/SPRINT_36/prompts/PLAN_PROMPTS.md` — the 14 per-day execution prompts (Day 0 + Days 1–13) with the cross-cutting rules (anchor `78ceaead`, `/tmp`-before-`src/`, the BANs, the cohort golden-staleness gate).
+- **Final KU pass:** all 30 unknowns resolved — **zero INCOMPLETE** (28 ✅ VERIFIED; 6.1 ❌ WRONG→bounded Day-0 risk; 6.2 🔍 BLOCKED→deferred). The lone INCOMPLETE grep-hit is the KU template boilerplate, not a real unknown.
+- Verified every relative cross-reference in both new docs resolves (fixed four: the CONSULTATION_BUNDLE SPRINT_35→SPRINT_36 sibling, `../SUMMARY.md`, and the two prompts-dir depth paths `../../../EPIC_5/` + `../../SUMMARY.md`).
 
 ### Result
 
-To be completed.
+**GO for Sprint 36 Day 0.** The schedule front-loads the one local bucket lever (markov +1 floor, Days 1–3) so its `σ=sp` REPLAN surfaces by the Day-5 checkpoint; P3 fawley is co-scheduled (Day 4) under the shared cohort leak gate; the deep/bimodal tracks (P2 sarf, P4 ganges) sit mid-sprint with explicit bank exits; the async GAMS-54 re-baseline is demo-runnable (only turkey's +1 is testbed-deferred); the two checkpoints (Day 5/10) + the Day-13 retest are placed; ~111h nominal fits the 168h cap. **Honest projection: genuine floor 75 or 76 (markov-contingent); Solve 108–110 (P4-bimodal); Translate 135 or 136 (sarf); robustlp de-allowlisted; turkey +1 testbed-deferred.** Docs-only → quality gate N/A.
 
 ### Verification
 
@@ -748,14 +751,14 @@ grep -qiE "168|≤ ?12|94–134|94-134" docs/planning/EPIC_4/SPRINT_36/PLAN.md &
 
 ### Acceptance Criteria
 
-- [ ] A day-by-day schedule (Day 0 + Days 1–13) is produced within the 168h / ≤12h-day budget
-- [ ] P1 markov + P2 sarf are front-loaded; P3 fawley is co-scheduled with P1 (shared function)
-- [ ] Checkpoints (Day 5 / Day 10) + the Day-13 retest are placed
-- [ ] The async testbed run (Task 7) is threaded to land by Day 10 / Day 13
-- [ ] Each track has an explicit REPLAN exit
-- [ ] The Day-0 kickoff checklist (fingerprint re-confirm + KU blocker clearance) is written
-- [ ] A GO/NO-GO for Day 0 is stated
-- [ ] All Unknowns 1.1–7.5 confirmed resolved (or carried as REPLAN exits) in KNOWN_UNKNOWNS.md
+- [x] A day-by-day schedule (Day 0 + Days 1–13) is produced within the 168h / ≤12h-day budget — `PLAN.md` §16 (~111h nominal)
+- [x] P1 markov + P2 sarf are front-loaded; P3 fawley is co-scheduled with P1 (shared function) — markov Days 1–3, fawley Day 4, sarf Days 6–7
+- [x] Checkpoints (Day 5 / Day 10) + the Day-13 retest are placed — §9, §12, §15
+- [x] The async testbed run (Task 7) is threaded to land by Day 10 / Day 13 — §3 async thread; demo-runnable re-baseline lands Day 10, decision Day 13
+- [x] Each track has an explicit REPLAN exit — §19 risk register + per-day exits
+- [x] The Day-0 kickoff checklist (fingerprint re-confirm + KU blocker clearance) is written — §4
+- [x] A GO/NO-GO for Day 0 is stated — §18 (GO)
+- [x] All Unknowns 1.1–7.5 confirmed resolved (or carried as REPLAN exits) in KNOWN_UNKNOWNS.md — 28 ✅ / 6.1 ❌→bounded / 6.2 🔍→deferred; zero INCOMPLETE
 
 ---
 
