@@ -25,8 +25,8 @@ stat_z(s,i,sp)..  c(s,sp,i)
 
 | MCP | KKT residual @ reference | cold solve (no warm-start) | `pvcost` | vs reference | partition |
 |---|---|---|---|---|---|
-| **committed (buggy)** | `CASE_B`, `max\|stat_z\|` rel **13.3** (`stat_z(empty,disrupted,empty)`; harness, dual transfer CONSISTENT) | MODEL STATUS 1, compl. 1.1e-13 | **2571.794** | **mismatch** (+170) | methodology |
-| **`CASE_A` (recon (a))** | → 0 (implied: cold-solves to the reference KKT point) | MODEL STATUS 1, compl. 3.7e-09 | **2401.577** | **match** (`max\|Δz\|` 4.6e-07) | **genuine** |
+| **committed (buggy)** | `CASE_B`, max `stat_z` residual rel **13.3** (`stat_z(empty,disrupted,empty)`; harness, dual transfer CONSISTENT) | MODEL STATUS 1, compl. 1.1e-13 | **2571.794** | **mismatch** (+170) | methodology |
+| **`CASE_A` (recon (a))** | → 0 (implied: cold-solves to the reference KKT point) | MODEL STATUS 1, compl. 3.7e-09 | **2401.577** | **match** (max `Δz` 4.6e-07) | **genuine** |
 | reference LP optimum | — | MODEL STATUS 1 Optimal | **2401.577** | — | — |
 
 - **Baseline `CASE_B` 13.3** re-confirmed authoritatively by `kkt_residual.py data/gamslib/raw/markov.gms` (verdict `CASE_B — emit_bug`, `stat_z(empty,disrupted,empty)` rel 1.33e+01, dual transfer CONSISTENT). **Part-1 → 1.55** stands from `DAY11_MARKOV_DIAGONAL_LEVER.md` §6 (verified there; `src/kkt/stationarity.py` + `src/ad/derivative_rules.py` byte-unchanged since — Day-0 §2 — so it reproduces deductively); the full `CASE_A` endpoint (the actual +1 gate) is directly measured here.
