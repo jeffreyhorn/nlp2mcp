@@ -1,4 +1,4 @@
-# Sprint 36 — Day 2: markov P1 Part-2 (`σ=sp`) Mechanism-C `/tmp` Control → REPLAN (emission PROVEN, gate leaks)
+# Sprint 36 — Day 2: markov P1 Part-2 (`σ=sp`) Mechanism C `/tmp` Control → REPLAN (emission PROVEN, gate leaks)
 
 **Date:** 2026-08-07 · **Branch:** `planning/sprint36-day2-markov-offdiag` · **Scope:** `/tmp`-only control (scratch `src/` prototype, **reverted** — `src/kkt/stationarity.py` byte-identical to `main`); no `src/` ships, no golden change.
 
@@ -60,5 +60,5 @@ The design's REPLAN branch is "land Part-1 correctness-only (Day 3) + bank Part-
 
 ---
 
-**Document Status:** ✅ Complete — Sprint 36 Day 2 (markov Part-2 Mechanism-C control; emission PROVEN, gate leaks → REPLAN with sharpened bank)
+**Document Status:** ✅ Complete — Sprint 36 Day 2 (markov Part-2 Mechanism C control; emission PROVEN, gate leaks → REPLAN with sharpened bank)
 **Last Updated:** 2026-08-07 · **Owner:** Sprint 36 Execution Team
