@@ -1,6 +1,6 @@
 # Sprint 36 — Day 5: Checkpoint 1 (markov + fawley verdict; no-regression GO)
 
-**Date:** 2026-08-08 · **Branch:** `planning/sprint36-day5-checkpoint1` · **Scope:** docs-only (checkpoint gates + verdicts); no `src/`, no golden change.
+**Date:** 2026-08-08 · **Branch:** `planning/sprint36-day5-checkpoint1` · **Scope:** docs-only (checkpoint gates + verdicts); no `src/`, no golden change in this PR. (The one golden changed *since the anchor* is `turkey_mcp.gms`, from the S35 Day-6 turkey landing — pre-existing, outside this PR; §1.)
 
 **Outcome: Checkpoint 1 = GO. Both front-loaded emit tracks resolved with ZERO `src/` shipped (markov P1 banked Day 3; fawley P3 deferred Day 4), so every no-regression gate is trivially green: the PR25 re-baseline is exactly the S35-close 108/93 (63+30)/75, the golden-staleness over markov + fawley + the 2-D cohort is clean (0 drift), the presolve-divergence allowlist is unchanged (korcge + robustlp), and `--resolve-changed --since-commit 78ceaead` finds only turkey changed (testbed-gated — no unchanged golden can regress since `src/` is byte-identical to the anchor). Genuine floor stays 75 (the honest projection's 75 branch). Freed budget → P2 sarf (Days 6–7) + P4 ganges (Days 8–9), the actual bucket tracks.** Verifies the no-regression invariant + the markov/fawley dispositions.
 
@@ -13,7 +13,7 @@ Reference: `DAY2_MARKOV_OFFDIAG_CONTROL.md` + `DAY3_MARKOV_BANK.md` (markov bank
 | gate | result |
 |---|---|
 | **Anchor integrity** (`git diff 78ceaead..HEAD -- src/`) | only `original_symbols.py` +52 (the S35 turkey delta); `stationarity.py` / `derivative_rules.py` byte-identical → Days 1–4 shipped **0 `src/`** |
-| **DB byte-unchanged** (`… -- data/gamslib/gamslib_status.json`) | empty → 0 bucket move |
+| **DB byte-unchanged** (`git diff 78ceaead..HEAD -- data/gamslib/gamslib_status.json`) | empty → 0 bucket move |
 | **PR25 re-baseline** (142 candidates) | **Solve 108 / Match 93 (63 cold + 30 presolve) / genuine floor 75** — exactly the S35-close baseline |
 | **Golden-staleness** (markov, fawley, cesam2, camcge, ps2_f_s, ps2_s, ps3_s_gic, polygon → 13 goldens) | **all clean, 0 drift** |
 | **Presolve-divergence allowlist** | korcge + robustlp (unchanged — no NEW divergence) |
