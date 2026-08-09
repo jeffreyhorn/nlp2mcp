@@ -12,7 +12,7 @@ Reference: `GANGES_RECOVERY_SEQUENCING.md` (Task 6 — the cascade + REPLAN trig
 
 Applied to scratch `src/`:
 - **`$141` + `$145`** from `a8ff626c` (`emit_post_assignment_na_cleanup` skips), **corrected** per DAY3 §5.1 / PR #1617: removed the divergent children()-only `_expr_contains_varref_attr` and delegated `_param_assignment_references_varref_attr` to the traversal-complete `_expr_contains_varref_attribute` (which descends into index exprs).
-- **`$149`** the `_diff_prod` §5 patch (`derivative_rules.py:3410`, the `symbolic_name_match` collapse branch): rebind the collapsed prod-dummy → the original wrt index when `effective_wrt != wrt_indices`.
+- **`$149`** the `_diff_prod` §5 patch (`src/ad/derivative_rules.py`, the `symbolic_name_match` branch — inserted just before its `return Binary("*", expr, log_term)`, ~`:3410`): rebind the collapsed prod-dummy → the original wrt index when `effective_wrt != wrt_indices`.
 
 **Cold compile result** (`gams a=c` on the fixed cold MCP): `$NNN` codes = **`{66: 17, 256: 1, 2: 1}`** — **`$141`/`$145`/`$149` are GONE (0)**. The cascade fixes work; `$66` now surfaces (×17: "Symbol declared but no values assigned" — the calibration params `aid`/`adst`/`deltax`/… presolve-gated, so absent from the cold MCP, referenced by `stat_ax`/`stat_invtot`). This is the documented 4th blocker, now unmasked by the fixes (each root masks the next).
 
@@ -23,7 +23,7 @@ Applied to scratch `src/`:
 **** Exec Error at line 2216: rPower: FUNC DOMAIN: x**y, x=0,y<0
 **** SOLVE from line 1665 ABORTED, EXECERROR = 1
 ```
-This is exactly the characterized `rPower` (Task 6 §1 blocker 5): under `--nlp-presolve` the emitted MCP `$include`s the source, which re-executes the `.l`-based power calibrations (`as(i) = s.l(i)*(deltas(i)*k(i)**(-rhos(i)) + …)**(1/rhos(i))`, `ganges.gms:602/617/…`). Under the `$onMultiR` re-inclusion the base is `0` with a negative exponent → `x**y, x=0, y<0` → generation aborts. The standalone NLP solves fine (MS-2 @ 6395.5444) because its state order differs; the re-inclusion is non-idempotent — **the #1378/#1424 embedded-NLP-divergence bug class, confirmed empirically** (the emitter already skips *some* presolve params for exactly this at `original_symbols.py:1868`, but not the power-op calibrations).
+This is exactly the characterized `rPower` (Task 6 §1 blocker 5): under `--nlp-presolve` the emitted MCP `$include`s the source, which re-executes the `.l`-based power calibrations (`as(i) = s.l(i)*(deltas(i)*k(i)**(-rhos(i)) + …)**(1/rhos(i))`, `ganges.gms:602/617/…`). Under the `$onMultiR` re-inclusion the base is `0` with a negative exponent → `x**y, x=0, y<0` → generation aborts. The standalone NLP solves fine (MS-2 @ 6395.5444) because its state order differs; the re-inclusion is non-idempotent — **the #1378/#1424 embedded-NLP-divergence bug class, confirmed empirically** (the emitter already skips *some* presolve params for exactly this at `src/emit/original_symbols.py:1832`–`1848` — the Issue #1378 self-referencing-assignment skip — but not the power-op calibrations).
 
 ## 3. Why BANK (the REPLAN trigger fires)
 
