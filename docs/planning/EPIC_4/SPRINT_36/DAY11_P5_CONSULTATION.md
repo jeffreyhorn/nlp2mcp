@@ -4,7 +4,7 @@
 
 **Outcome: P5 is a bounded submission/scoping day — 0 `src/`, 0 bucket, as designed. Both consultation submissions are confirmed ready (rocket → PATH authors; mine → the primal-degenerate-LP question), and both experiments ran with the honest expected results: the fawley `--force` survey is NEGATIVE (all of homotopy/multistart/optfile leave fawley MS-5 Locally Infeasible — no forcing closes the H-b divergence), and the camcge Walras `/tmp` control confirms MS-4 (the numéraire alone fixes the price-scaling ray but not the row-redundancy nullspace — the two-nullspaces diagnosis, empirically confirmed). All four feed the Sprint-37 consultation / Epic-5; none is an in-sprint bucket.** Verifies the P5 dispositions (Unknowns 5.1–5.4 executed).
 
-Reference: `P5_CONSULTATION_FINALIZATION.md` (Task 8) §1 rocket, §2 mine, §3 camcge, §4 fawley; `CONSULTATION_BUNDLE.md`; `../../../EPIC_5/CGE_DEGENERACY_SCOPING.md` (the camcge fallback).
+Reference: `P5_CONSULTATION_FINALIZATION.md` (Task 8) §1 rocket, §2 mine, §3 camcge, §4 fawley; `CONSULTATION_BUNDLE.md`; `../../EPIC_5/CGE_DEGENERACY_SCOPING.md` (the camcge fallback).
 
 ---
 
@@ -22,7 +22,7 @@ Reference: `P5_CONSULTATION_FINALIZATION.md` (Task 8) §1 rocket, §2 mine, §3 
 - **Baseline (cold MCP):** MODEL STATUS **4 Infeasible**, with a **uniform Walras residual** `INFES = 0.20224` across every `stat_cd` row (the S1∧S2∧S3 rank-deficiency signature — the redundant market's dual is unpinned).
 - **Numéraire control** (pin `p("ag-subsist") = 1`, the price-scaling ray): **STILL MODEL STATUS 4 Infeasible.**
 
-⇒ **The numéraire alone does NOT reach MS-1** — empirically confirming the S35 DAY8 **two-nullspaces** diagnosis: the numéraire fixes the *price-scaling ray*, but the **row-redundancy nullspace** (redundant by Walras' law → MS-4 even at the correct primal) is untouched. The full three-part dual-consistent Walras redefinition (keep every market-clearing row + the consumption-weighted numéraire `sum(i$cles(i), cles(i)·(p(i)−pd0(i)))=0` + **redefine the redundant market's dual via Walras' law**) — the row-redundancy dual redefinition being the hard part — is the **Epic-5 gate**, expected MS-4 (3+ sprints of variants all stayed MS-4). **Fallback (the deliverable):** the per-model-numéraire Epic-5 declaration (`../../../EPIC_5/CGE_DEGENERACY_SCOPING.md`) + the detector + the residual-singularity characterization. **0 in-sprint bucket** (camcge → Epic 5).
+⇒ **The numéraire alone does NOT reach MS-1** — empirically confirming the S35 DAY8 **two-nullspaces** diagnosis: the numéraire fixes the *price-scaling ray*, but the **row-redundancy nullspace** (redundant by Walras' law → MS-4 even at the correct primal) is untouched. The full three-part dual-consistent Walras redefinition (keep every market-clearing row + the consumption-weighted numéraire `sum(i$cles(i), cles(i)·(p(i)−pd0(i)))=0` + **redefine the redundant market's dual via Walras' law**) — the row-redundancy dual redefinition being the hard part — is the **Epic-5 gate**, expected MS-4 (3+ sprints of variants all stayed MS-4). **Fallback (the deliverable):** the per-model-numéraire Epic-5 declaration (`../../EPIC_5/CGE_DEGENERACY_SCOPING.md`) + the detector + the residual-singularity characterization. **0 in-sprint bucket** (camcge → Epic 5).
 
 ## 4. fawley — `--force` survey → NEGATIVE (H-b not forceable)
 
