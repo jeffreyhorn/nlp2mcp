@@ -125,7 +125,7 @@ grep -qiE "full-corpus|163" docs/planning/EPIC_4/SPRINT_37/KNOWN_UNKNOWNS.md && 
 
 ## Task 2: Re-Confirm the Sprint-36 Baseline & Banked-Diagnosis Fingerprints
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-09)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 37 Day 1
@@ -159,11 +159,11 @@ The anchor for `--resolve-changed` and the DB byte-check is `78ceaead` (S34 clos
 
 ### Changes
 
-To be completed.
+Ran the Sprint-37 Day-0 baseline re-confirmation on current `main` (`8db02e50`) against the anchor `78ceaead`: (a) recomputed the KPI baseline over the 142 convex candidates from the committed DB; (b) DB byte-check + the `stationarity.py`/`derivative_rules.py`/6-sarf-call-site byte-checks vs the anchor; (c) full golden-staleness across the 163 goldens; (d) the four proven-component fingerprint controls (markov + fawley via `kkt_residual.py`; ganges/gangesx cascade-fix-surface checks; sarf capped-emit blow-up). Produced `docs/planning/EPIC_4/SPRINT_37/BASELINE_RECONFIRMATION.md`. Advanced Unknowns 1.1, 2.1, 4.3, 5.1, 7.4 → ✅ VERIFIED in `KNOWN_UNKNOWNS.md`.
 
 ### Result
 
-To be completed.
+**All five checks pass — the baseline is measured reality, not a snapshot.** KPIs recompute **exactly**: Solve 108 / Match 93 (63 cold + 30 presolve) / Translate 135 / Parse 142 / mi 7 / pse 7 / all-219 96. The DB is **byte-identical to the anchor** (0 bucket move) and `src/kkt/stationarity.py` + `src/ad/derivative_rules.py` are **byte-identical to the anchor** (the only `src/` deltas since the anchor are the P7 `emit_gams.py` +37 and the turkey `original_symbols.py` +52 — both expected). **All four proven-component fingerprints re-confirm:** markov `CASE_B` rel 13.3 (`stat_z(empty,disrupted,empty)`) + DB methodology match @ 2401.5773 → the Day-2 `CASE_A`+cold-match reproduces deductively on byte-identical code; ganges cascade-fix surfaces byte-clean (`_diff_prod:3276` unchanged, `_expr_contains_varref_attribute` present, `a8ff626c` reachable); fawley `CASE_B` `stat_bq` 0.973 + H-b `stat_trans(tr-2)` 1.00; sarf >105s non-terminating (O(369K)). markov ∈ the 30-model methodology partition → the +1 lever (Task 4) is a true +1; floor anchor 75 carries forward. Golden-staleness clean across all 163 goldens. **Zero drift on any of the five unknowns → Sprint 37's Task-4/5/6/7 designs start from re-confirmed surfaces.**
 
 ### Verification
 
@@ -191,12 +191,12 @@ done
 
 ### Acceptance Criteria
 
-- [ ] KPIs recompute to Solve 108 / Match 93 / floor 75 / Translate 135 / mi 7 / pse 7 / all-219 96 on current `main`
-- [ ] `gamslib_status.json` byte-identical to `78ceaead` (0 bucket move)
-- [ ] Golden-staleness clean across all 163 goldens
-- [ ] All four proven-component fingerprints re-confirmed (markov emission, ganges cascade, fawley `stat_bq`, sarf blow-up) OR any drift documented with its delta
-- [ ] Every re-confirmed fingerprint's unknown advanced to VERIFIED in `KNOWN_UNKNOWNS.md`
-- [ ] Unknowns 1.1, 2.1, 4.3, 5.1, 7.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] KPIs recompute to Solve 108 / Match 93 / floor 75 / Translate 135 / mi 7 / pse 7 / all-219 96 on current `main`
+- [x] `gamslib_status.json` byte-identical to `78ceaead` (0 bucket move)
+- [x] Golden-staleness clean across all 163 goldens
+- [x] All four proven-component fingerprints re-confirmed (markov emission, ganges cascade, fawley `stat_bq`, sarf blow-up) OR any drift documented with its delta
+- [x] Every re-confirmed fingerprint's unknown advanced to VERIFIED in `KNOWN_UNKNOWNS.md`
+- [x] Unknowns 1.1, 2.1, 4.3, 5.1, 7.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
