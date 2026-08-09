@@ -45,7 +45,7 @@ Anchor: `78ceaead` (S34 close — the `--resolve-changed` / DB anchor; DB byte-u
 
 ## 2. Shipped in Sprint 36 (NOT carried)
 
-- **P7 robustlp NA-guard de-allowlist (Day 10, landed):** `_emit_nlp_presolve` NA-guards the presolve marginal→multiplier `.L` warm-start (incl. `_fx_`); robustlp de-allowlisted, v54-solvable (`model_optimal_presolve` + match). Phase-0 gated (`docs/issues/ISSUE_1322_*.md`). Not a bucket (already counted); a robustness win. Ref: `DAY10_P7_ROBUSTLP.md`.
+- **P7 robustlp NA-guard de-allowlist (Day 10, landed):** `_emit_nlp_presolve` NA-guards the presolve marginal→multiplier `.L` warm-start (incl. `_fx_`); robustlp de-allowlisted, v54-solvable (`model_optimal_presolve` + match). Phase-0 gated (`docs/issues/ISSUE_1322_na-multiplier-level-warmstart-guard.md`). Not a bucket (already counted); a robustness win. Ref: `DAY10_P7_ROBUSTLP.md`.
 
 ## 3. Day-13 retest staging
 
@@ -54,7 +54,7 @@ Anchor: `78ceaead` (S34 close — the `--resolve-changed` / DB anchor; DB byte-u
 **The Day-13 retest battery:**
 1. **Determinism ×3** `{0,1,42}` — a stable-model md5 set. Suggested stable models: a P7-touched presolve golden (`robustlp`, `ps2_s`) + a cold model (`markov`) + turkey (the S35 md5 reference `fd5b1f2b…`); each emitted under `PYTHONHASHSEED ∈ {0,1,42}` must be md5-identical.
 2. **`--resolve-changed --since-commit 78ceaead`** — re-solves the 17 P7 presolve goldens + turkey; **GO** iff every changed golden holds its bucket (robustlp `model_optimal_presolve` + match; turkey `path_solve_license` testbed-gated). (Confirmed GO twice during Day 10.)
-3. **Golden-staleness** (`check_golden_staleness.py`) — clean (no unintended drift).
+3. **Golden-staleness** (`scripts/sprint_audit/check_golden_staleness.py`) — clean (no unintended drift).
 4. **DB byte-check** — `git diff 78ceaead..HEAD -- data/gamslib/gamslib_status.json` empty (0 bucket move).
 5. **PR25 re-baseline** — Solve 108 / Match 93 / floor 75.
 6. **GAMS-54 version decision** — keep v53 baseline (per §1.9) unless the demo re-solve shows zero bucket regressions.
