@@ -116,6 +116,11 @@ piL_d.l(h)$(abs(d.l(h) - d.lo(h)) < 1e-6) = abs(d.m(h));
 piU_m.l(h)$(abs(m.l(h) - m.up(h)) < 1e-6) = abs(m.m(h));
 piU_t.l(h)$(abs(t.l(h) - t.up(h)) < 1e-6) = abs(t.m(h));
 
+* Transfer fixed-variable marginals to _fx_ multipliers (#1462)
+nu_v_fx_h0.l = v.m('h0');
+nu_ht_fx_h0.l = ht.m('h0');
+nu_m_fx_h0.l = m.m('h0');
+
 * Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
 nu_df.l(h)$(NOT (nu_df.l(h) > -inf and nu_df.l(h) < inf)) = 0;
 nu_gf.l(h)$(NOT (nu_gf.l(h) > -inf and nu_gf.l(h) < inf)) = 0;
@@ -131,11 +136,9 @@ piL_t.l(h)$(NOT (piL_t.l(h) > -inf and piL_t.l(h) < inf)) = 0;
 piL_d.l(h)$(NOT (piL_d.l(h) > -inf and piL_d.l(h) < inf)) = 0;
 piU_m.l(h)$(NOT (piU_m.l(h) > -inf and piU_m.l(h) < inf)) = 0;
 piU_t.l(h)$(NOT (piU_t.l(h) > -inf and piU_t.l(h) < inf)) = 0;
-
-* Transfer fixed-variable marginals to _fx_ multipliers (#1462)
-nu_v_fx_h0.l = v.m('h0');
-nu_ht_fx_h0.l = ht.m('h0');
-nu_m_fx_h0.l = m.m('h0');
+nu_v_fx_h0.l$(NOT (nu_v_fx_h0.l > -inf and nu_v_fx_h0.l < inf)) = 0;
+nu_ht_fx_h0.l$(NOT (nu_ht_fx_h0.l > -inf and nu_ht_fx_h0.l < inf)) = 0;
+nu_m_fx_h0.l$(NOT (nu_m_fx_h0.l > -inf and nu_m_fx_h0.l < inf)) = 0;
 
 * ============================================
 * #1449 (Layer 4): unfix elements fixed by the source $include but

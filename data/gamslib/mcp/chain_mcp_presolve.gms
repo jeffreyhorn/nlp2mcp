@@ -71,13 +71,15 @@ nu_length_eqn.l = length_eqn.m;
 
 * Transfer variable marginals to bound multipliers
 
-* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
-nu_x_eqn.l(i)$(NOT (nu_x_eqn.l(i) > -inf and nu_x_eqn.l(i) < inf)) = 0;
-nu_length_eqn.l$(NOT (nu_length_eqn.l > -inf and nu_length_eqn.l < inf)) = 0;
-
 * Transfer fixed-variable marginals to _fx_ multipliers (#1462)
 nu_x_fx_i0.l = x.m('i0');
 nu_x_fx_i50.l = x.m('i50');
+
+* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
+nu_x_eqn.l(i)$(NOT (nu_x_eqn.l(i) > -inf and nu_x_eqn.l(i) < inf)) = 0;
+nu_length_eqn.l$(NOT (nu_length_eqn.l > -inf and nu_length_eqn.l < inf)) = 0;
+nu_x_fx_i0.l$(NOT (nu_x_fx_i0.l > -inf and nu_x_fx_i0.l < inf)) = 0;
+nu_x_fx_i50.l$(NOT (nu_x_fx_i50.l > -inf and nu_x_fx_i50.l < inf)) = 0;
 
 * ============================================
 * #1449 (Layer 4): unfix elements fixed by the source $include but

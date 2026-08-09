@@ -74,14 +74,16 @@ nu_FBCalc.l(j) = FBCalc.m(j);
 piL_b.l(j)$(abs(b.l(j) - b.lo(j)) < 1e-6) = abs(b.m(j));
 piU_b.l(j)$(abs(b.l(j) - b.up(j)) < 1e-6) = abs(b.m(j));
 
+* Transfer fixed-variable marginals to _fx_ multipliers (#1462)
+nu_b_fx_s1.l = b.m('s1');
+nu_b_fx_s30.l = b.m('s30');
+
 * Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
 nu_FBCalc.l(j)$(NOT (nu_FBCalc.l(j) > -inf and nu_FBCalc.l(j) < inf)) = 0;
 piL_b.l(j)$(NOT (piL_b.l(j) > -inf and piL_b.l(j) < inf)) = 0;
 piU_b.l(j)$(NOT (piU_b.l(j) > -inf and piU_b.l(j) < inf)) = 0;
-
-* Transfer fixed-variable marginals to _fx_ multipliers (#1462)
-nu_b_fx_s1.l = b.m('s1');
-nu_b_fx_s30.l = b.m('s30');
+nu_b_fx_s1.l$(NOT (nu_b_fx_s1.l > -inf and nu_b_fx_s1.l < inf)) = 0;
+nu_b_fx_s30.l$(NOT (nu_b_fx_s30.l > -inf and nu_b_fx_s30.l < inf)) = 0;
 
 * ============================================
 * #1449 (Layer 4): unfix elements fixed by the source $include but

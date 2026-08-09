@@ -1638,17 +1638,6 @@ def _emit_nlp_presolve(
             )
         _na_guard_mults.append((qm, domain_str))
 
-    # Issue #1322 (robustlp de-allowlist, Sprint 36): reset any NA/UNDF
-    # warm-start multiplier level to 0. A no-op for finite levels; clears the
-    # GAMS-54 EXECERROR-84 ("illegal level value") when a source marginal was NA.
-    if _na_guard_mults:
-        sections.append("")
-        if add_comments:
-            sections.append("* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)")
-        for qm, domain_str in _na_guard_mults:
-            ref = f"{qm}.l{domain_str}"
-            sections.append(f"{ref}$(NOT ({ref} > -inf and {ref} < inf)) = 0;")
-
     # Issue #1462: warm-start the per-element `_fx_` equation multipliers from the
     # fixed variables' marginals (the general dual-transfer loop above skips them
     # because the `_fx_` equations are not original NLP equations).
@@ -1658,6 +1647,30 @@ def _emit_nlp_presolve(
     if fx_ws_lines:
         sections.append("")
         sections.extend(fx_ws_lines)
+        # The `_fx_` transfers (`<mult>.l = <var>.m;`) can also receive an NA
+        # marginal (the NLP may return no fix dual), so include them in the guard
+        # below. The `_fx_` multiplier name carries the element (`nu_<var>_fx_<idx>`),
+        # so the level is scalar (no domain).
+        for _ln in fx_ws_lines:
+            _s = _ln.strip()
+            if _s.startswith("*") or ".l" not in _s or "=" not in _s:
+                continue
+            _na_guard_mults.append((_s.split(".l", 1)[0].strip(), ""))
+
+    # Issue #1322 (robustlp de-allowlist, Sprint 36): reset any NA/UNDF warm-start
+    # multiplier level to 0 — covers the eq/ineq/bound transfers AND the `_fx_`
+    # transfers above (emitted after the `_fx_` block so both are guarded). A
+    # no-op for finite levels; clears the GAMS-54 EXECERROR-84 ("illegal level
+    # value") when a source marginal was NA. Placed after the `_fx_` block: for a
+    # model without any `_fx_` warm-start the block is empty, so this position is
+    # byte-identical to emitting the guard before it.
+    if _na_guard_mults:
+        sections.append("")
+        if add_comments:
+            sections.append("* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)")
+        for qm, domain_str in _na_guard_mults:
+            ref = f"{qm}.l{domain_str}"
+            sections.append(f"{ref}$(NOT ({ref} > -inf and {ref} < inf)) = 0;")
 
     sections.append("")
     return True
