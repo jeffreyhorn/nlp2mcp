@@ -1542,6 +1542,15 @@ def _emit_nlp_presolve(
     # use the original equation marginal directly, while inequality
     # multipliers use the original inequality equation marginal with abs()
     # so the initialized MCP multiplier is nonnegative.
+    # Issue #1322 (robustlp de-allowlist, Sprint 36): collect every multiplier
+    # that receives a warm-start level from a source marginal, so a single
+    # NA-guard pass below can reset any NA/UNDF level to 0. A source marginal is
+    # NA when the NLP solver returns no marginal for that row/bound (e.g.
+    # robustlp's socpqcpcons / y); GAMS 54 rejects an MCP variable with `.L = NA`
+    # as EXECERROR-84 ("Matrix error - illegal level value") — and that NA also
+    # propagates into any bilinear stationarity coefficient built from the
+    # multiplier (the `(NA)*v` terms). The guard is a no-op for finite levels.
+    _na_guard_mults: list[tuple[str, str]] = []
     for eq_name in nlp_eqs:
         # Resolve to the source-cased equation name (nlp_eqs is lowercased).
         orig_eq = eq_by_lower.get(eq_name.lower()) or ineq_by_lower.get(eq_name.lower()) or eq_name
@@ -1556,6 +1565,7 @@ def _emit_nlp_presolve(
                 qeq = _quote_symbol(orig_eq)
                 qm = _quote_symbol(mult_name)
                 sections.append(f"{qm}.l{domain_str} = {qeq}.m{domain_str};")
+                _na_guard_mults.append((qm, domain_str))
         elif eq_name.lower() in ineq_by_lower:
             mult_name = create_ineq_multiplier_name(orig_eq)
             if mult_name in kkt.multipliers_ineq:
@@ -1572,6 +1582,7 @@ def _emit_nlp_presolve(
                 # otherwise (helper returns None → domain_str).
                 marg_domain = head_offset_marginal_index_map(eq_def) if eq_def else None
                 sections.append(f"{qm}.l{domain_str} = abs({qeq}.m{marg_domain or domain_str});")
+                _na_guard_mults.append((qm, domain_str))
 
     # Transfer bound multipliers from variable marginals
     #
@@ -1607,6 +1618,7 @@ def _emit_nlp_presolve(
             sections.append(
                 f"{qm}.l{domain_str}$({pos} and {qv}.m{domain_str} > 0)" f" = {qv}.m{domain_str};"
             )
+        _na_guard_mults.append((qm, domain_str))
     for var_name in kkt.multipliers_bounds_up:
         vname = var_name if isinstance(var_name, str) else var_name[0]
         mult_name = create_bound_up_multiplier_name(vname)
@@ -1624,6 +1636,7 @@ def _emit_nlp_presolve(
                 f"{qm}.l{domain_str}$({pos} and {qv}.m{domain_str} < 0)"
                 f" = -({qv}.m{domain_str});"
             )
+        _na_guard_mults.append((qm, domain_str))
 
     # Issue #1462: warm-start the per-element `_fx_` equation multipliers from the
     # fixed variables' marginals (the general dual-transfer loop above skips them
@@ -1634,6 +1647,30 @@ def _emit_nlp_presolve(
     if fx_ws_lines:
         sections.append("")
         sections.extend(fx_ws_lines)
+        # The `_fx_` transfers (`<mult>.l = <var>.m;`) can also receive an NA
+        # marginal (the NLP may return no fix dual), so include them in the guard
+        # below. The `_fx_` multiplier name carries the element (`nu_<var>_fx_<idx>`),
+        # so the level is scalar (no domain).
+        for _ln in fx_ws_lines:
+            _s = _ln.strip()
+            if _s.startswith("*") or ".l" not in _s or "=" not in _s:
+                continue
+            _na_guard_mults.append((_s.split(".l", 1)[0].strip(), ""))
+
+    # Issue #1322 (robustlp de-allowlist, Sprint 36): reset any NA/UNDF warm-start
+    # multiplier level to 0 — covers the eq/ineq/bound transfers AND the `_fx_`
+    # transfers above (emitted after the `_fx_` block so both are guarded). A
+    # no-op for finite levels; clears the GAMS-54 EXECERROR-84 ("illegal level
+    # value") when a source marginal was NA. Placed after the `_fx_` block: for a
+    # model without any `_fx_` warm-start the block is empty, so this position is
+    # byte-identical to emitting the guard before it.
+    if _na_guard_mults:
+        sections.append("")
+        if add_comments:
+            sections.append("* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)")
+        for qm, domain_str in _na_guard_mults:
+            ref = f"{qm}.l{domain_str}"
+            sections.append(f"{ref}$(NOT ({ref} > -inf and {ref} < inf)) = 0;")
 
     sections.append("")
     return True

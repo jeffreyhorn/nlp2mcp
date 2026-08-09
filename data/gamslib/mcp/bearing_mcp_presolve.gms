@@ -153,6 +153,38 @@ piU_q.l$(abs(q.l - q.up) < 1e-6 and q.m < 0) = -(q.m);
 piU_p0.l$(abs(p0.l - p0.up) < 1e-6 and p0.m < 0) = -(p0.m);
 piU_delta_t.l$(abs(delta_t.l - delta_t.up) < 1e-6 and delta_t.m < 0) = -(delta_t.m);
 
+* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
+nu_pumping_energy.l$(NOT (nu_pumping_energy.l > -inf and nu_pumping_energy.l < inf)) = 0;
+nu_friction.l$(NOT (nu_friction.l > -inf and nu_friction.l < inf)) = 0;
+nu_temp_rise.l$(NOT (nu_temp_rise.l > -inf and nu_temp_rise.l < inf)) = 0;
+nu_load_capacity.l$(NOT (nu_load_capacity.l > -inf and nu_load_capacity.l < inf)) = 0;
+nu_inlet_pressure.l$(NOT (nu_inlet_pressure.l > -inf and nu_inlet_pressure.l < inf)) = 0;
+nu_oil_viscosity.l$(NOT (nu_oil_viscosity.l > -inf and nu_oil_viscosity.l < inf)) = 0;
+nu_temperature.l$(NOT (nu_temperature.l > -inf and nu_temperature.l < inf)) = 0;
+lam_radius.l$(NOT (lam_radius.l > -inf and lam_radius.l < inf)) = 0;
+lam_limit1.l$(NOT (lam_limit1.l > -inf and lam_limit1.l < inf)) = 0;
+lam_limit2.l$(NOT (lam_limit2.l > -inf and lam_limit2.l < inf)) = 0;
+nu_temp1.l$(NOT (nu_temp1.l > -inf and nu_temp1.l < inf)) = 0;
+nu_temp2.l$(NOT (nu_temp2.l > -inf and nu_temp2.l < inf)) = 0;
+piL_r.l$(NOT (piL_r.l > -inf and piL_r.l < inf)) = 0;
+piL_r0.l$(NOT (piL_r0.l > -inf and piL_r0.l < inf)) = 0;
+piL_mu.l$(NOT (piL_mu.l > -inf and piL_mu.l < inf)) = 0;
+piL_q.l$(NOT (piL_q.l > -inf and piL_q.l < inf)) = 0;
+piL_p0.l$(NOT (piL_p0.l > -inf and piL_p0.l < inf)) = 0;
+piL_ef.l$(NOT (piL_ef.l > -inf and piL_ef.l < inf)) = 0;
+piL_ep.l$(NOT (piL_ep.l > -inf and piL_ep.l < inf)) = 0;
+piL_h.l$(NOT (piL_h.l > -inf and piL_h.l < inf)) = 0;
+piL_t.l$(NOT (piL_t.l > -inf and piL_t.l < inf)) = 0;
+piL_w.l$(NOT (piL_w.l > -inf and piL_w.l < inf)) = 0;
+piL_tmp1.l$(NOT (piL_tmp1.l > -inf and piL_tmp1.l < inf)) = 0;
+piL_tmp2.l$(NOT (piL_tmp2.l > -inf and piL_tmp2.l < inf)) = 0;
+piU_r.l$(NOT (piU_r.l > -inf and piU_r.l < inf)) = 0;
+piU_r0.l$(NOT (piU_r0.l > -inf and piU_r0.l < inf)) = 0;
+piU_mu.l$(NOT (piU_mu.l > -inf and piU_mu.l < inf)) = 0;
+piU_q.l$(NOT (piU_q.l > -inf and piU_q.l < inf)) = 0;
+piU_p0.l$(NOT (piU_p0.l > -inf and piU_p0.l < inf)) = 0;
+piU_delta_t.l$(NOT (piU_delta_t.l > -inf and piU_delta_t.l < inf)) = 0;
+
 * ============================================
 * Equations
 * ============================================

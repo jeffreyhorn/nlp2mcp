@@ -75,6 +75,14 @@ piL_x.l(i)$(abs(x.l(i) - x.lo(i)) < 1e-6) = abs(x.m(i));
 piL_b.l(i)$(abs(b.l(i) - b.lo(i)) < 1e-6) = abs(b.m(i));
 piL_w.l(i)$(abs(w.l(i) - w.lo(i)) < 1e-6) = abs(w.m(i));
 
+* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
+nu_rev.l(i)$(NOT (nu_rev.l(i) > -inf and nu_rev.l(i) < inf)) = 0;
+lam_pc.l(i)$(NOT (lam_pc.l(i) > -inf and lam_pc.l(i) < inf)) = 0;
+lam_ic.l(i,j)$(NOT (lam_ic.l(i,j) > -inf and lam_ic.l(i,j) < inf)) = 0;
+piL_x.l(i)$(NOT (piL_x.l(i) > -inf and piL_x.l(i) < inf)) = 0;
+piL_b.l(i)$(NOT (piL_b.l(i) > -inf and piL_b.l(i) < inf)) = 0;
+piL_w.l(i)$(NOT (piL_w.l(i) > -inf and piL_w.l(i) < inf)) = 0;
+
 * ============================================
 * Equations
 * ============================================

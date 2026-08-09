@@ -275,6 +275,55 @@ piL_l.l(i,lc)$(abs(l.l(i,lc) - l.lo(i,lc)) < 1e-6) = abs(l.m(i,lc));
 piL_int.l(i)$(abs(int.l(i) - int.lo(i)) < 1e-6) = abs(int.m(i));
 piL_y.l$(abs(y.l - y.lo) < 1e-6) = abs(y.m);
 
+* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
+nu_pmdef.l(it)$(NOT (nu_pmdef.l(it) > -inf and nu_pmdef.l(it) < inf)) = 0;
+nu_pedef.l(it)$(NOT (nu_pedef.l(it) > -inf and nu_pedef.l(it) < inf)) = 0;
+nu_absorption.l(i)$(NOT (nu_absorption.l(i) > -inf and nu_absorption.l(i) < inf)) = 0;
+nu_sales.l(i)$(NOT (nu_sales.l(i) > -inf and nu_sales.l(i) < inf)) = 0;
+nu_actp.l(i)$(NOT (nu_actp.l(i) > -inf and nu_actp.l(i) < inf)) = 0;
+nu_pkdef.l(i)$(NOT (nu_pkdef.l(i) > -inf and nu_pkdef.l(i) < inf)) = 0;
+nu_pindexdef.l$(NOT (nu_pindexdef.l > -inf and nu_pindexdef.l < inf)) = 0;
+nu_activity.l(i)$(NOT (nu_activity.l(i) > -inf and nu_activity.l(i) < inf)) = 0;
+nu_profitmax.l(i,lc)$(NOT (nu_profitmax.l(i,lc) > -inf and nu_profitmax.l(i,lc) < inf)) = 0;
+nu_lmequil.l(lc)$(NOT (nu_lmequil.l(lc) > -inf and nu_lmequil.l(lc) < inf)) = 0;
+nu_cet.l(it)$(NOT (nu_cet.l(it) > -inf and nu_cet.l(it) < inf)) = 0;
+nu_esupply.l(it)$(NOT (nu_esupply.l(it) > -inf and nu_esupply.l(it) < inf)) = 0;
+nu_armington.l(it)$(NOT (nu_armington.l(it) > -inf and nu_armington.l(it) < inf)) = 0;
+nu_costmin.l(it)$(NOT (nu_costmin.l(it) > -inf and nu_costmin.l(it) < inf)) = 0;
+nu_xxdsn.l(in)$(NOT (nu_xxdsn.l(in) > -inf and nu_xxdsn.l(in) < inf)) = 0;
+nu_xsn.l(in)$(NOT (nu_xsn.l(in) > -inf and nu_xsn.l(in) < inf)) = 0;
+nu_inteq.l(i)$(NOT (nu_inteq.l(i) > -inf and nu_inteq.l(i) < inf)) = 0;
+nu_dsteq.l(i)$(NOT (nu_dsteq.l(i) > -inf and nu_dsteq.l(i) < inf)) = 0;
+nu_cdeq.l(i)$(NOT (nu_cdeq.l(i) > -inf and nu_cdeq.l(i) < inf)) = 0;
+nu_gdp.l$(NOT (nu_gdp.l > -inf and nu_gdp.l < inf)) = 0;
+nu_labory.l$(NOT (nu_labory.l > -inf and nu_labory.l < inf)) = 0;
+nu_capitaly.l$(NOT (nu_capitaly.l > -inf and nu_capitaly.l < inf)) = 0;
+nu_hhsaveq.l$(NOT (nu_hhsaveq.l > -inf and nu_hhsaveq.l < inf)) = 0;
+nu_greq.l$(NOT (nu_greq.l > -inf and nu_greq.l < inf)) = 0;
+nu_gruse.l$(NOT (nu_gruse.l > -inf and nu_gruse.l < inf)) = 0;
+nu_gdeq.l(i)$(NOT (nu_gdeq.l(i) > -inf and nu_gdeq.l(i) < inf)) = 0;
+nu_tariffdef.l$(NOT (nu_tariffdef.l > -inf and nu_tariffdef.l < inf)) = 0;
+nu_indtaxdef.l$(NOT (nu_indtaxdef.l > -inf and nu_indtaxdef.l < inf)) = 0;
+nu_netsubdef.l$(NOT (nu_netsubdef.l > -inf and nu_netsubdef.l < inf)) = 0;
+nu_premium.l$(NOT (nu_premium.l > -inf and nu_premium.l < inf)) = 0;
+nu_hhtaxdef.l$(NOT (nu_hhtaxdef.l > -inf and nu_hhtaxdef.l < inf)) = 0;
+nu_depreq.l$(NOT (nu_depreq.l > -inf and nu_depreq.l < inf)) = 0;
+nu_totsav.l$(NOT (nu_totsav.l > -inf and nu_totsav.l < inf)) = 0;
+nu_prodinv.l(i)$(NOT (nu_prodinv.l(i) > -inf and nu_prodinv.l(i) < inf)) = 0;
+nu_ieq.l(i)$(NOT (nu_ieq.l(i) > -inf and nu_ieq.l(i) < inf)) = 0;
+nu_caeq.l$(NOT (nu_caeq.l > -inf and nu_caeq.l < inf)) = 0;
+nu_equil.l(i)$(NOT (nu_equil.l(i) > -inf and nu_equil.l(i) < inf)) = 0;
+piL_pd.l(i)$(NOT (piL_pd.l(i) > -inf and piL_pd.l(i) < inf)) = 0;
+piL_pk.l(i)$(NOT (piL_pk.l(i) > -inf and piL_pk.l(i) < inf)) = 0;
+piL_px.l(i)$(NOT (piL_px.l(i) > -inf and piL_px.l(i) < inf)) = 0;
+piL_p.l(i)$(NOT (piL_p.l(i) > -inf and piL_p.l(i) < inf)) = 0;
+piL_x.l(i)$(NOT (piL_x.l(i) > -inf and piL_x.l(i) < inf)) = 0;
+piL_xd.l(i)$(NOT (piL_xd.l(i) > -inf and piL_xd.l(i) < inf)) = 0;
+piL_wa.l(lc)$(NOT (piL_wa.l(lc) > -inf and piL_wa.l(lc) < inf)) = 0;
+piL_l.l(i,lc)$(NOT (piL_l.l(i,lc) > -inf and piL_l.l(i,lc) < inf)) = 0;
+piL_int.l(i)$(NOT (piL_int.l(i) > -inf and piL_int.l(i) < inf)) = 0;
+piL_y.l$(NOT (piL_y.l > -inf and piL_y.l < inf)) = 0;
+
 * ============================================
 * Equations
 * ============================================

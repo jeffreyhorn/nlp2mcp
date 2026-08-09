@@ -59,6 +59,13 @@ COMP_PREFIX = "comp_"
 # A multiplier warm-start statement, e.g. `nu_diweight.l(s) = diweight.m(s);`.
 _MULT_RE = re.compile(r"^(nu|lam|piL|piU)_\w+\.l\b.*=.*;")
 
+# Sprint 36 (#1322): the NA-guard reset the presolve emit appends after the
+# marginal transfers — `<mult>.l...$(NOT (<mult>.l... > -inf and <mult>.l... <
+# inf)) = 0;`. It is a *reset*, not a dual transfer (it assigns 0, not a
+# marginal), so `extract_dual_transfer` must skip it (else the lam/nu buckets
+# pick up a non-`abs(`, non-`.m` line and the transfer-verification asserts fail).
+_NA_GUARD_RE = re.compile(r"\$\(\s*NOT\b.*>\s*-inf\b.*<\s*inf\b.*\)\s*=\s*0\s*;")
+
 # A free-equality-multiplier warm-start: `nu_<eq>.l(<idx>) = <rhs>;`. The Day-2
 # residual check negates the rhs (the production `nu = eq.m` is sign-flipped vs
 # the emitted stationarity convention — see the design §2 Day-2 correction).
@@ -112,6 +119,8 @@ def extract_dual_transfer(mcp_presolve_text: str) -> DualTransfer:
     }
     for raw in mcp_presolve_text.splitlines():
         line = raw.strip()
+        if _NA_GUARD_RE.search(line):
+            continue  # the #1322 NA-guard reset is not a dual transfer
         m = _MULT_RE.match(line)
         if m is not None:
             bucket[m.group(1)].append(line)

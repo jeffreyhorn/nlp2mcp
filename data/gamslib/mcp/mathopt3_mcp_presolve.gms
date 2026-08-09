@@ -65,6 +65,15 @@ lam_ineq3.l = abs(ineq3.m);
 
 * Transfer variable marginals to bound multipliers
 
+* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
+nu_eq1.l$(NOT (nu_eq1.l > -inf and nu_eq1.l < inf)) = 0;
+nu_eq2.l$(NOT (nu_eq2.l > -inf and nu_eq2.l < inf)) = 0;
+nu_eq3.l$(NOT (nu_eq3.l > -inf and nu_eq3.l < inf)) = 0;
+nu_eq4.l$(NOT (nu_eq4.l > -inf and nu_eq4.l < inf)) = 0;
+lam_ineq1.l$(NOT (lam_ineq1.l > -inf and lam_ineq1.l < inf)) = 0;
+lam_ineq2.l$(NOT (lam_ineq2.l > -inf and lam_ineq2.l < inf)) = 0;
+lam_ineq3.l$(NOT (lam_ineq3.l > -inf and lam_ineq3.l < inf)) = 0;
+
 * ============================================
 * Equations
 * ============================================

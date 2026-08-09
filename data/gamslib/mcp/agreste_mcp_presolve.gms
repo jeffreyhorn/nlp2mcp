@@ -183,6 +183,33 @@ piL_ndev.l(ty)$(abs(ndev.l(ty) - ndev.lo(ty)) < 1e-6) = abs(ndev.m(ty));
 piU_xcrop.l(p,s)$(abs(xcrop.l(p,s) - xcrop.up(p,s)) < 1e-6) = abs(xcrop.m(p,s));
 piU_flab.l(tm)$(abs(flab.l(tm) - flab.up(tm)) < 1e-6) = abs(flab.m(tm));
 
+* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
+lam_landb.l(s)$(NOT (lam_landb.l(s) > -inf and lam_landb.l(s) < inf)) = 0;
+nu_lbal.l$(NOT (nu_lbal.l > -inf and nu_lbal.l < inf)) = 0;
+nu_rliv.l$(NOT (nu_rliv.l > -inf and nu_rliv.l < inf)) = 0;
+lam_mbalc.l(c)$(NOT (lam_mbalc.l(c) > -inf and lam_mbalc.l(c) < inf)) = 0;
+nu_dprod.l(c)$(NOT (nu_dprod.l(c) > -inf and nu_dprod.l(c) < inf)) = 0;
+lam_labc.l(tm)$(NOT (lam_labc.l(tm) > -inf and lam_labc.l(tm) < inf)) = 0;
+nu_cond.l$(NOT (nu_cond.l > -inf and nu_cond.l < inf)) = 0;
+nu_ddev.l(ty)$(NOT (nu_ddev.l(ty) > -inf and nu_ddev.l(ty) < inf)) = 0;
+nu_arev.l$(NOT (nu_arev.l > -inf and nu_arev.l < inf)) = 0;
+nu_acrop.l$(NOT (nu_acrop.l > -inf and nu_acrop.l < inf)) = 0;
+nu_alab.l$(NOT (nu_alab.l > -inf and nu_alab.l < inf)) = 0;
+lam_awcc.l$(NOT (lam_awcc.l > -inf and lam_awcc.l < inf)) = 0;
+nu_avet.l$(NOT (nu_avet.l > -inf and nu_avet.l < inf)) = 0;
+piL_xcrop.l(p,s)$(NOT (piL_xcrop.l(p,s) > -inf and piL_xcrop.l(p,s) < inf)) = 0;
+piL_xliver.l(r)$(NOT (piL_xliver.l(r) > -inf and piL_xliver.l(r) < inf)) = 0;
+piL_lswitch.l(s)$(NOT (piL_lswitch.l(s) > -inf and piL_lswitch.l(s) < inf)) = 0;
+piL_cons.l(dr)$(NOT (piL_cons.l(dr) > -inf and piL_cons.l(dr) < inf)) = 0;
+piL_sales.l(c)$(NOT (piL_sales.l(c) > -inf and piL_sales.l(c) < inf)) = 0;
+piL_flab.l(tm)$(NOT (piL_flab.l(tm) > -inf and piL_flab.l(tm) < inf)) = 0;
+piL_tlab.l(tm)$(NOT (piL_tlab.l(tm) > -inf and piL_tlab.l(tm) < inf)) = 0;
+piL_plab.l$(NOT (piL_plab.l > -inf and piL_plab.l < inf)) = 0;
+piL_pdev.l(ty)$(NOT (piL_pdev.l(ty) > -inf and piL_pdev.l(ty) < inf)) = 0;
+piL_ndev.l(ty)$(NOT (piL_ndev.l(ty) > -inf and piL_ndev.l(ty) < inf)) = 0;
+piU_xcrop.l(p,s)$(NOT (piU_xcrop.l(p,s) > -inf and piU_xcrop.l(p,s) < inf)) = 0;
+piU_flab.l(tm)$(NOT (piU_flab.l(tm) > -inf and piU_flab.l(tm) < inf)) = 0;
+
 * ============================================
 * Equations
 * ============================================

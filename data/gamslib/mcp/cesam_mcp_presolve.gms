@@ -207,6 +207,25 @@ piU_a.l(ii,jj)$(abs(a.l(ii,jj) - a.up(ii,jj)) < 1e-6 and a.m(ii,jj) < 0) = -(a.m
 piU_w1.l(ii,jwt)$(abs(w1.l(ii,jwt) - w1.up(ii,jwt)) < 1e-6 and w1.m(ii,jwt) < 0) = -(w1.m(ii,jwt));
 piU_w2.l(macro,jwt)$(abs(w2.l(macro,jwt) - w2.up(macro,jwt)) < 1e-6 and w2.m(macro,jwt) < 0) = -(w2.m(macro,jwt));
 
+* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
+nu_SAMEQ.l(ii)$(NOT (nu_SAMEQ.l(ii) > -inf and nu_SAMEQ.l(ii) < inf)) = 0;
+nu_SAMMAKE.l(ii,jj)$(NOT (nu_SAMMAKE.l(ii,jj) > -inf and nu_SAMMAKE.l(ii,jj) < inf)) = 0;
+nu_ERROR1EQ.l(ii)$(NOT (nu_ERROR1EQ.l(ii) > -inf and nu_ERROR1EQ.l(ii) < inf)) = 0;
+nu_SUMW1.l(ii)$(NOT (nu_SUMW1.l(ii) > -inf and nu_SUMW1.l(ii) < inf)) = 0;
+nu_ROWSUM.l(ii)$(NOT (nu_ROWSUM.l(ii) > -inf and nu_ROWSUM.l(ii) < inf)) = 0;
+nu_COLSUM.l(jj)$(NOT (nu_COLSUM.l(jj) > -inf and nu_COLSUM.l(jj) < inf)) = 0;
+nu_GDPFCDEF.l$(NOT (nu_GDPFCDEF.l > -inf and nu_GDPFCDEF.l < inf)) = 0;
+nu_GDPDEF.l$(NOT (nu_GDPDEF.l > -inf and nu_GDPDEF.l < inf)) = 0;
+nu_ERROR2EQ.l(macro)$(NOT (nu_ERROR2EQ.l(macro) > -inf and nu_ERROR2EQ.l(macro) < inf)) = 0;
+nu_SUMW2.l(macro)$(NOT (nu_SUMW2.l(macro) > -inf and nu_SUMW2.l(macro) < inf)) = 0;
+piL_a.l(ii,jj)$(NOT (piL_a.l(ii,jj) > -inf and piL_a.l(ii,jj) < inf)) = 0;
+piL_tsam.l(ii,jj)$(NOT (piL_tsam.l(ii,jj) > -inf and piL_tsam.l(ii,jj) < inf)) = 0;
+piL_w1.l(ii,jwt)$(NOT (piL_w1.l(ii,jwt) > -inf and piL_w1.l(ii,jwt) < inf)) = 0;
+piL_w2.l(macro,jwt)$(NOT (piL_w2.l(macro,jwt) > -inf and piL_w2.l(macro,jwt) < inf)) = 0;
+piU_a.l(ii,jj)$(NOT (piU_a.l(ii,jj) > -inf and piU_a.l(ii,jj) < inf)) = 0;
+piU_w1.l(ii,jwt)$(NOT (piU_w1.l(ii,jwt) > -inf and piU_w1.l(ii,jwt) < inf)) = 0;
+piU_w2.l(macro,jwt)$(NOT (piU_w2.l(macro,jwt) > -inf and piU_w2.l(macro,jwt) < inf)) = 0;
+
 * ============================================
 * Equations
 * ============================================
