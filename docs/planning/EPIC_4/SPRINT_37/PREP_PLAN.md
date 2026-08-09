@@ -50,7 +50,7 @@ This prep plan focuses on the research, design, and setup tasks that must comple
 
 ## Task 1: Create Sprint 37 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-09)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 37 Day 1
@@ -85,11 +85,11 @@ Each prior sprint's `KNOWN_UNKNOWNS.md` (e.g. `docs/planning/EPIC_4/SPRINT_36/KN
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_37/KNOWN_UNKNOWNS.md` (27 unknowns across 7 categories, numbered `X.Y` per category) following the Sprint-36 KNOWN_UNKNOWNS conventions: Executive Summary, How to Use This Document (with priority definitions), Summary Statistics, Table of Contents, the 7 category blocks (P1 markov `σ=sp` discriminator · P2 ganges/gangesx recovery · P3 rocket/mine/camcge · P4 fawley · P5 sarf · P6 turkey/GAMS-54 · P7 infrastructure), a Confirmed Knowledge section, the Template for New Unknowns, Next Steps, and an `## Appendix: Task-to-Unknown Mapping` table. Added a "Deferred-unknown lineage" note tracing each track to its Sprint-36 disposition. Also added the "**Unknowns Verified:**" metadata + a KNOWN_UNKNOWNS-update deliverable + acceptance criterion to PREP_PLAN.md Tasks 2–10.
 
 ### Result
 
-To be completed.
+27 unknowns documented (Critical 7 / High 11 / Medium 7 / Low 2 = 26/41/26/7%; ~36h total research time — within the 28–36h target). Every unknown carries Priority, Assumption, 3–5 Research Questions, How to Verify, Risk if Wrong, Estimated Research Time, Owner, and a `🔍 Status: INCOMPLETE` Verification Results slot. The Task-to-Unknown mapping assigns every unknown (1.1–7.4) to ≥1 prep task (Tasks 2–10), with the 7 Critical unknowns (1.1, 1.2, 1.3, 2.1, 2.3, 4.2, 7.1) front-loaded into Tasks 2–8. Zero Day-0 blockers remain unmapped. The two deep prep-phase design priorities (Unknown 1.2 the markov `σ=sp` derivative-structure discriminator; Unknown 1.5/4.2 the markov/fawley shared-function collision) and the mandatory full-corpus (163-golden) leak gate (Unknowns 1.3/7.1) are called out in the Executive Summary and Next Steps.
 
 ### Verification
 
@@ -114,12 +114,12 @@ grep -qiE "full-corpus|163" docs/planning/EPIC_4/SPRINT_37/KNOWN_UNKNOWNS.md && 
 
 ### Acceptance Criteria
 
-- [ ] Document created covering all seven priorities (P1–P7) — 25+ unknowns across 7 categories
-- [ ] Each unknown has an assumption, a verification method (How to Verify), a priority, and a target resolution point (the verifying prep task)
-- [ ] Each unknown carries a disposition slot (`🔍 Status: INCOMPLETE`, to advance to VERIFIED / WRONG during prep)
-- [ ] Day-0 blockers explicitly flagged (and mapped to Tasks 2–7; the Task-11 GO/NO-GO gates them)
-- [ ] The deep prep-phase design priority (the markov `σ=sp` discriminator) and the markov/fawley shared-function collision are called out as prep-phase design priorities
-- [ ] The full-corpus (163-golden) leak gate is tracked as a Critical unknown
+- [x] Document created covering all seven priorities (P1–P7) — 27 unknowns across 7 categories
+- [x] Each unknown has an assumption, a verification method (How to Verify), a priority, and a target resolution point (the verifying prep task)
+- [x] Each unknown carries a disposition slot (`🔍 Status: INCOMPLETE`, to advance to VERIFIED / WRONG during prep)
+- [x] Day-0 blockers explicitly flagged (and mapped to Tasks 2–8; the Task-11 GO/NO-GO gates them)
+- [x] The deep prep-phase design priority (the markov `σ=sp` discriminator) and the markov/fawley shared-function collision are called out as prep-phase design priorities
+- [x] The full-corpus (163-golden) leak gate is tracked as a Critical unknown
 
 ---
 
@@ -131,6 +131,7 @@ grep -qiE "full-corpus|163" docs/planning/EPIC_4/SPRINT_37/KNOWN_UNKNOWNS.md && 
 **Deadline:** Before Sprint 37 Day 1
 **Owner:** Sprint 37 execution team
 **Dependencies:** Task 1 (Known Unknowns — the fingerprints to re-confirm are the Task-1 unknowns' assumptions)
+**Unknowns Verified:** 1.1, 2.1, 4.3, 5.1, 7.4
 
 ### Objective
 
@@ -186,6 +187,7 @@ done
 
 - A short `BASELINE_RECONFIRMATION.md` (or a Task-2 section in the Sprint-37 prep notes) recording: the recomputed KPIs, the DB byte-check result, the golden-staleness result, and the VERIFIED/DRIFTED disposition of each of the four proven-component fingerprints
 - Updated dispositions in `KNOWN_UNKNOWNS.md` (each re-confirmed assumption advanced from INCOMPLETE to VERIFIED, or flagged DRIFTED)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 2.1, 4.3, 5.1, 7.4
 
 ### Acceptance Criteria
 
@@ -194,6 +196,7 @@ done
 - [ ] Golden-staleness clean across all 163 goldens
 - [ ] All four proven-component fingerprints re-confirmed (markov emission, ganges cascade, fawley `stat_bq`, sarf blow-up) OR any drift documented with its delta
 - [ ] Every re-confirmed fingerprint's unknown advanced to VERIFIED in `KNOWN_UNKNOWNS.md`
+- [ ] Unknowns 1.1, 2.1, 4.3, 5.1, 7.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -205,6 +208,7 @@ done
 **Deadline:** Before Sprint 37 Day 1
 **Owner:** Sprint 37 execution team
 **Dependencies:** Tasks 1, 2 (the harness gates the P1/P4 designs; it must exist before they design their acceptance gates against it)
+**Unknowns Verified:** 1.3, 7.1
 
 ### Objective
 
@@ -256,6 +260,7 @@ grep -qiE "expect-drift|nightly|fast mode" docs/planning/EPIC_4/SPRINT_37/LEAK_H
 - `docs/planning/EPIC_4/SPRINT_37/LEAK_HARNESS_DESIGN.md` — the golden inventory (fast/medium/slow classification + wall-clock), the two-mode gate design, the path/function-scoped trigger, the `--expect-drift` pass criterion, and the draft `make` target + CI job spec
 - A confirmed clean full-corpus baseline (163 goldens, zero drift on current `main`) to gate against
 - The `make leak-check MODEL=<name>` invocation string the P1/P4 Phase-0 gates will reference
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.3, 7.1
 
 ### Acceptance Criteria
 
@@ -265,6 +270,7 @@ grep -qiE "expect-drift|nightly|fast mode" docs/planning/EPIC_4/SPRINT_37/LEAK_H
 - [ ] The `--expect-drift <model>` pass criterion designed (asserts only the intended model drifts)
 - [ ] The `make` target + CI job drafted (spec ready for P7 to wire in-sprint)
 - [ ] A clean full-corpus baseline confirmed on current `main` (zero drift, deterministic)
+- [ ] Unknowns 1.3, 7.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -276,6 +282,7 @@ grep -qiE "expect-drift|nightly|fast mode" docs/planning/EPIC_4/SPRINT_37/LEAK_H
 **Deadline:** Before Sprint 37 Day 1
 **Owner:** Sprint 37 execution team
 **Dependencies:** Tasks 1, 2 (the re-confirmed markov emission fingerprint), 3 (the leak gate the discriminator must pass)
+**Unknowns Verified:** 1.2, 1.3, 1.4, 1.5
 
 ### Objective
 
@@ -324,6 +331,7 @@ test -f docs/planning/EPIC_4/SPRINT_36/MARKOV_OFFDIAGONAL_DESIGN.md && echo "emi
 - `docs/planning/EPIC_4/SPRINT_37/MARKOV_DISCRIMINATOR_DESIGN.md` — the three-structure (markov/sroute/cesam) derivative-shape characterization, the discriminating predicate (against IR node types), the hook point in `_add_indexed_jacobian_terms`, the Phase-0 acceptance gate (harness + full-corpus leak-check + fixture), and the REPLAN exit
 - `docs/issues/ISSUE_<N>_markov-sigma-sp-discriminator.md` — the Phase-0 acceptance-gate skeleton (4 `### ` subsections), authored before the src commit
 - The `shape_markov_diagonal_kronecker` fixture spec (fail-before/pass-after), to land with the fix under P7
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.2, 1.3, 1.4, 1.5
 
 ### Acceptance Criteria
 
@@ -333,6 +341,7 @@ test -f docs/planning/EPIC_4/SPRINT_36/MARKOV_OFFDIAGONAL_DESIGN.md && echo "emi
 - [ ] The Phase-0 gate cites `kkt_residual.py markov` → CASE_A + cold match 2401.577 AND `make leak-check MODEL=markov` (only markov drifts full-corpus)
 - [ ] The `docs/issues/ISSUE_<N>_*.md` Phase-0 skeleton created with 4 `### ` subsections
 - [ ] The REPLAN exit documented (narrower per-signature allowlist fallback if the predicate over-generalizes)
+- [ ] Unknowns 1.2, 1.3, 1.4, 1.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -344,6 +353,7 @@ test -f docs/planning/EPIC_4/SPRINT_36/MARKOV_OFFDIAGONAL_DESIGN.md && echo "emi
 **Deadline:** Before Sprint 37 Day 1
 **Owner:** Sprint 37 execution team
 **Dependencies:** Tasks 1, 2 (the re-confirmed ganges cascade fingerprint)
+**Unknowns Verified:** 2.2, 2.3, 2.4
 
 ### Objective
 
@@ -390,6 +400,7 @@ grep -qiE "\\\$66|rPower|atomic" docs/planning/EPIC_4/SPRINT_37/GANGES_RECOVERY_
 - `docs/planning/EPIC_4/SPRINT_37/GANGES_RECOVERY_DESIGN.md` — the re-verified cascade-fix status on current `main`, the sharpened `$66` and `rPower` characterizations (bounded-fix vs deep-class verdict), the atomic recovery sequence with per-step Phase-0 gates, and the bounded P2 outcome (+2 target or `$149`-fix-plus-residual)
 - Updated dispositions in `KNOWN_UNKNOWNS.md` for the ganges unknowns
 - The dinam/indus/turkpow/clearlak `$149`-half spillover noted for P6's residual cohort
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.2, 2.3, 2.4
 
 ### Acceptance Criteria
 
@@ -398,6 +409,7 @@ grep -qiE "\\\$66|rPower|atomic" docs/planning/EPIC_4/SPRINT_37/GANGES_RECOVERY_
 - [ ] `rPower` characterized (confirmed #1378/#1424 class; NA-guard/reset feasibility assessed) with a bounded-fix vs deep verdict
 - [ ] The atomic recovery sequence defined with per-step Phase-0 gates (per-model emit→compile→count→solve cold+presolve→bucket→match; `--resolve-changed`; determinism ×3; 335s goldens nightly)
 - [ ] The P2 sprint outcome bounded (+2 target OR general `$149` fix + documented residual), with the `$149`-half spillover to the residual cohort noted
+- [ ] Unknowns 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -409,6 +421,7 @@ grep -qiE "\\\$66|rPower|atomic" docs/planning/EPIC_4/SPRINT_37/GANGES_RECOVERY_
 **Deadline:** Before Sprint 37 Day 1
 **Owner:** Sprint 37 execution team
 **Dependencies:** Tasks 1, 2 (the re-confirmed fawley `stat_bq` control), 3 (the leak gate), 4 (the markov discriminator — they share `_add_indexed_jacobian_terms` and must co-exist)
+**Unknowns Verified:** 4.1, 4.2, 4.4
 
 ### Objective
 
@@ -456,6 +469,7 @@ grep -c '^### ' docs/issues/ISSUE_*fawley-constraint-index*.md 2>/dev/null   # e
 - `docs/planning/EPIC_4/SPRINT_37/FAWLEY_DISCRIMINATOR_REFRESH.md` — the located `qsb`/`pbal` emission path, the rebuilt orientation predicate, the fawley/markov mutual-exclusion analysis (collision avoidance), the Phase-0 gate (`max|stat_bq|→0` + `make leak-check MODEL=fawley` + fixture), and the Sprint-38 +Solve consultation hand-off
 - `docs/issues/ISSUE_<N>_fawley-constraint-index-diagonal.md` — the Phase-0 acceptance-gate skeleton (4 `### ` subsections)
 - The `shape_fawley_2d_second_index` fixture spec (fail-before/pass-after), to land with the fix under P7
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.1, 4.2, 4.4
 
 ### Acceptance Criteria
 
@@ -465,6 +479,7 @@ grep -c '^### ' docs/issues/ISSUE_*fawley-constraint-index*.md 2>/dev/null   # e
 - [ ] The Phase-0 gate cites `max|stat_bq|→0` AND `make leak-check MODEL=fawley` (only fawley drifts) AND the `shape_fawley_2d_second_index` fixture
 - [ ] The `docs/issues/ISSUE_<N>_*.md` Phase-0 skeleton created (4 `### ` subsections)
 - [ ] The +Solve hand-off scoped for the Sprint-38 PATH consultation (H-b; NOT a Sprint-37 emit fix)
+- [ ] Unknowns 4.1, 4.2, 4.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -476,6 +491,7 @@ grep -c '^### ' docs/issues/ISSUE_*fawley-constraint-index*.md 2>/dev/null   # e
 **Deadline:** Before Sprint 37 Day 1
 **Owner:** Sprint 37 execution team
 **Dependencies:** Tasks 1, 2 (the re-confirmed sarf blow-up fingerprint)
+**Unknowns Verified:** 5.2, 5.3
 
 ### Objective
 
@@ -522,6 +538,7 @@ grep -qiE "full-corpus|regression harness|P7" docs/planning/EPIC_4/SPRINT_37/SAR
 - `docs/planning/EPIC_4/SPRINT_37/SARF_REARCH_REFRESH.md` — the re-measured blow-up (column count + timing), the refreshed 6-call-site inventory, the O(active=398) symbolic/parametric emit MODE spec, the explicit P7-harness precondition + ordering, the Phase-0 gate (PR20), and the REPLAN exit
 - Updated disposition in `KNOWN_UNKNOWNS.md` for the sarf blow-up unknown
 - The sarf-after-P7-harness ordering dependency flagged for the Task-11 schedule
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 5.2, 5.3
 
 ### Acceptance Criteria
 
@@ -531,6 +548,7 @@ grep -qiE "full-corpus|regression harness|P7" docs/planning/EPIC_4/SPRINT_37/SAR
 - [ ] The full-corpus-regression-harness (P7) precondition made explicit with the sarf-after-harness ordering
 - [ ] The Phase-0 gate (PR20) defined (O(active) not O(369K); single-digit-second emit; byte-stable; determinism ×3; full-corpus regression)
 - [ ] The REPLAN exit documented (re-scope if the parametric emit re-triggers the timeout)
+- [ ] Unknowns 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -542,6 +560,7 @@ grep -qiE "full-corpus|regression harness|P7" docs/planning/EPIC_4/SPRINT_37/SAR
 **Deadline:** Before Sprint 37 Day 1
 **Owner:** Sprint 37 execution team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 6.1, 6.2, 6.3
 
 ### Objective
 
@@ -587,6 +606,7 @@ gams --version 2>/dev/null | head -1 || echo "gams not on PATH (CI/testbed only)
 - `docs/planning/EPIC_4/SPRINT_37/GAMS54_REBASELINE_PLAN.md` — the v54 demo re-baseline procedure (invocation + bucket-diff + OBJ-GAP re-check), the canonical-version decision rule (re-pin only on zero regressions), the turkey testbed procurement verdict (procurable → plan / not → license-gated), and the residual-cohort scoping
 - Updated dispositions in `KNOWN_UNKNOWNS.md` for the turkey/GAMS-54 unknowns
 - A go/no-go on turkey's +1 for the sprint (testbed available vs deferred)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 6.1, 6.2, 6.3
 
 ### Acceptance Criteria
 
@@ -594,6 +614,7 @@ gams --version 2>/dev/null | head -1 || echo "gams not on PATH (CI/testbed only)
 - [ ] The canonical-version decision rule defined (re-pin to v54 only on zero bucket regressions; else keep v53)
 - [ ] The turkey testbed procurement verdict recorded (procurable → re-solve plan; not → license-gated with the exact blocker)
 - [ ] The residual multi-root cohort scoped (`$149`-half spillover from P2; any bounded per-model tail effort flagged)
+- [ ] Unknowns 6.1, 6.2, 6.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -605,6 +626,7 @@ gams --version 2>/dev/null | head -1 || echo "gams not on PATH (CI/testbed only)
 **Deadline:** Before Sprint 37 Day 1
 **Owner:** Sprint 37 execution team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 3.1, 3.2, 3.3, 3.4
 
 ### Objective
 
@@ -650,6 +672,7 @@ grep -qiE "Epic.?5|numéraire|numeraire" docs/planning/EPIC_4/SPRINT_37/CONSULTA
 - `docs/planning/EPIC_4/SPRINT_37/CONSULTATION_INTEGRATION_PREP.md` — the rocket reply-to-`--force`-homotopy integration staging, the mine question tracking (0-bucket), and the camcge three-part Walras Epic-5 gate scoping (with the per-model-numéraire fallback)
 - Updated dispositions in `KNOWN_UNKNOWNS.md` for the P3 unknowns (rocket reply arrived?, camcge Walras reachable?)
 - The P3 bucket expectations set (rocket +1 contingent / mine 0 / camcge Epic-5)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.1, 3.2, 3.3, 3.4
 
 ### Acceptance Criteria
 
@@ -657,6 +680,7 @@ grep -qiE "Epic.?5|numéraire|numeraire" docs/planning/EPIC_4/SPRINT_37/CONSULTA
 - [ ] The mine primal-degenerate-LP question confirmed posed and 0-bucket (`x.up=inf` BANNED)
 - [ ] The camcge three-part Walras redefinition scoped as an Epic-5 `/tmp` demo control (641 rows, MS-1 target) with the per-model-numéraire fallback — explicitly NOT a Sprint-37 bucket
 - [ ] The P3 bucket expectations recorded (rocket +1 contingent, mine 0, camcge Epic-5)
+- [ ] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -668,6 +692,7 @@ grep -qiE "Epic.?5|numéraire|numeraire" docs/planning/EPIC_4/SPRINT_37/CONSULTA
 **Deadline:** Before Sprint 37 Day 1
 **Owner:** Sprint 37 execution team
 **Dependencies:** Tasks 1, 3 (the leak harness), 4 (the markov fixture spec), 6 (the fawley fixture spec)
+**Unknowns Verified:** 7.2, 7.3, 7.4
 
 ### Objective
 
@@ -713,6 +738,7 @@ grep -qiE "Phase-0.*CI|genuine.?floor" docs/planning/EPIC_4/SPRINT_37/P7_INFRA_C
 - `docs/planning/EPIC_4/SPRINT_37/P7_INFRA_CATALOG.md` — the consolidated property-fixture catalog (`shape_markov_diagonal_kronecker` + `shape_fawley_2d_second_index`, fail-before/pass-after), the Phase-0-doc CI enforcement design (trigger + failure message), the genuine-floor tracking update spec (anchor 75 → ≥76 if markov lands), and the Epic-4 SUMMARY row-37 skeleton
 - The coherent "emit-PR gate" story (leak harness + fixtures + Phase-0 check) for the Task-11 schedule
 - Updated dispositions in `KNOWN_UNKNOWNS.md` for the P7 unknowns
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 7.2, 7.3, 7.4
 
 ### Acceptance Criteria
 
@@ -721,6 +747,7 @@ grep -qiE "Phase-0.*CI|genuine.?floor" docs/planning/EPIC_4/SPRINT_37/P7_INFRA_C
 - [ ] The genuine-floor tracking update specified (PR25 recompute; anchor 75 → ≥76 if markov lands; methodology→genuine bookkeeping)
 - [ ] The Epic-4 SUMMARY.md row-37 skeleton drafted
 - [ ] The leak harness + fixtures + Phase-0 check confirmed to compose into one coherent emit-PR gate for the schedule
+- [ ] Unknowns 7.2, 7.3, 7.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -826,7 +853,7 @@ Execute in this logical order:
 Before Sprint 37 Day 1, verify:
 
 ### Critical (Must Complete)
-- [ ] Task 1: Known Unknowns list created (25+ items across 7 priorities; full-corpus leak gate tracked)
+- [x] Task 1: Known Unknowns list created (27 items across 7 priorities; full-corpus leak gate tracked)
 - [ ] Task 2: Sprint-36 baseline (108/93/75/135) + the four proven-component fingerprints re-confirmed on current `main`
 - [ ] Task 3: Full-corpus (163-golden) leak-verification harness designed + clean baseline confirmed
 - [ ] Task 4: markov `σ=sp` derivative-structure discriminator designed + Phase-0 issue skeleton authored
@@ -868,7 +895,7 @@ git diff 78ceaead..HEAD -- data/gamslib/gamslib_status.json | head -1   # expect
 **Sprint 37 is ready to begin when:**
 
 ### Critical Criteria (ALL must be checked)
-- [ ] Task 1: Known Unknowns list created (25+ items, full-corpus leak gate tracked)
+- [x] Task 1: Known Unknowns list created (27 items, full-corpus leak gate tracked)
 - [ ] Task 2: Baseline 108/93/75/135 + the four proven-component fingerprints re-confirmed
 - [ ] Task 3: Full-corpus leak-verification harness designed + clean baseline confirmed
 - [ ] Task 4: markov discriminator designed + `ISSUE_<N>_markov-sigma-sp-discriminator.md` Phase-0 skeleton authored
