@@ -677,7 +677,7 @@ Sprint 37 execution team
 **Verified by:** Task 2 (Re-Confirm the Sprint-36 Baseline & Banked-Diagnosis Fingerprints)
 **Date:** 2026-08-09
 
-**Findings:** The 369K blow-up reproduces — a capped sarf emit on current `main` is **>105s / NON-TERMINATING** (killed at the 105.2s cap), the O(369K) failure identical to the S36 >303s baseline. The 6 call-site files (`src/ad/index_mapping.py`, `src/ad/constraint_jacobian.py`, `src/kkt/stationarity.py`) are **byte-unchanged since the anchor**; `enumerate_variable_instances` at `index_mapping.py:327`; set cardinalities g=16·t=24·mn=31 → **369,024** declared / 398 active, structural to the byte-stable `sarf.gms`.
+**Findings:** The 369K blow-up reproduces — a capped sarf emit on current `main` is **>105s / NON-TERMINATING** (killed at the 105.2s cap), the O(369K) failure identical to the S36 >303s baseline. The **6 call sites, spanning 3 files** (`src/ad/index_mapping.py`, `src/ad/constraint_jacobian.py`, `src/kkt/stationarity.py`), are **byte-unchanged since the anchor**; `enumerate_variable_instances` at `index_mapping.py:327`. The declared column count is `task(g,t,mn,mn)` (`sarf.gms:394` — dimensions 3 and 4 are **both** the `mn` set, with `m`/`n` its aliases), so |g|·|t|·|mn|² = 16·24·31·31 = **369,024** declared / 398 active (`taskposs ∧ tech`, runtime-computed) — structural to the byte-stable `sarf.gms`.
 
 **Evidence:** capped emit >105s non-terminating (105.2s cap); `git diff 78ceaead..HEAD -- src/ad/index_mapping.py src/ad/constraint_jacobian.py src/kkt/stationarity.py` empty. See `BASELINE_RECONFIRMATION.md` §3.4.
 

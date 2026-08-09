@@ -52,7 +52,8 @@ Definitions used: Solve = `outcome_category ∈ {model_optimal, model_optimal_pr
 
 ### 3.4 sarf (Unknown 5.1) — ✅ 369K blow-up reproduces
 - A capped sarf emit on current `main` is **>105s / NON-TERMINATING** (killed at the 105.2s cap) — the O(369K) blow-up (identical to the S36 >303s baseline).
-- The 6 call-site files (`src/ad/index_mapping.py`, `src/ad/constraint_jacobian.py`, `src/kkt/stationarity.py`) are **byte-unchanged since the anchor**; `enumerate_variable_instances` present at `index_mapping.py:327`. Set cardinalities (g=16 · t=24 · mn=31 → 16·24·31·31 = **369,024** declared / 398 active) structural to the byte-stable `sarf.gms`.
+- The **6 call sites, spanning 3 files** (`src/ad/index_mapping.py`, `src/ad/constraint_jacobian.py`, `src/kkt/stationarity.py`), are **byte-unchanged since the anchor**; `enumerate_variable_instances` present at `index_mapping.py:327`.
+- **Declared column count:** the variable is `task(g,t,mn,mn)` (`sarf.gms:394`) — dimensions 3 and 4 are **both** the `mn` set (`m` and `n` are its aliases), so the Cartesian size is |g|·|t|·|mn|² = 16 · 24 · 31 · 31 = **369,024** declared / **398** active (`taskposs ∧ tech`, runtime-computed) — structural to the byte-stable `sarf.gms`.
 - **Decision:** the blow-up reproduces; the Task-7 re-arch baseline holds.
 
 ## 4. Golden-staleness (163 goldens) — CLEAN
