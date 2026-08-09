@@ -114,7 +114,15 @@ Run the markov control on current `main` (tiny model, seconds-scale, fully local
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Re-Confirm the Sprint-36 Baseline & Banked-Diagnosis Fingerprints)
+**Date:** 2026-08-09
+
+**Findings:** The `CASE_B` baseline reproduces exactly on current `main` — `kkt_residual.py markov` → verdict **CASE_B**, max `stat_z(empty,disrupted,empty)` rel **1.33e+01** (raw −4.79e+04), dual **CONSISTENT** (scale 3.6e+03). markov is `verified_convex` + `model_optimal_presolve` + match @ **mcp_objective 2401.5773** (the reference) in the byte-unchanged DB. `src/kkt/stationarity.py` (`_add_indexed_jacobian_terms`) is **byte-identical to the anchor `78ceaead`**, so the Day-2 Mechanism C prototype's proven `CASE_B` 13.3 → `CASE_A` 2.8e-16 + cold-solve **2401.577 + match** reproduces **deductively on identical code + golden**.
+
+**Evidence:** `kkt_residual.py markov` → verdict CASE_B / `stat_z(empty,disrupted,empty)` rel 1.33e+01; `git diff 78ceaead..HEAD -- src/kkt/stationarity.py` empty; DB markov `model_optimal_presolve`+match @ 2401.5773. See `BASELINE_RECONFIRMATION.md` §3.1.
+
+**Decision:** ✅ The proven emission holds. No scratch re-apply of the reverted prototype was needed — the emit path is provably identical (the only `src/` delta since the anchor is the unrelated turkey `original_symbols.py` + the P7 `emit_gams.py`). Task 4 designs the discriminator (the sole blocker).
 
 ---
 
@@ -275,7 +283,15 @@ Diff the `_diff_prod` + helper surfaces vs the banked patches; scratch-apply on 
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Re-Confirm the Sprint-36 Baseline & Banked-Diagnosis Fingerprints)
+**Date:** 2026-08-09
+
+**Findings:** The `$141`/`$145`/`$149` cascade-fix surfaces are byte-clean on current `main`. `src/ad/derivative_rules.py` (`_diff_prod` at `:3276`) is **byte-unchanged since the anchor** → the banked `$149` `_diff_prod` §5 patch applies to the same surface. The correct `$141` helper `_expr_contains_varref_attribute` is present (`src/emit/original_symbols.py:1392`); the buggy `_expr_contains_varref_attr` (PR-#1617 catch) is **absent**. The banked `$141`/`$145` WIP patch is reachable at git **`a8ff626c`**. (The original_symbols.py +52 delta since the anchor is the turkey `$161` fix, NOT the ganges helper.)
+
+**Evidence:** `git diff 78ceaead..HEAD -- src/ad/derivative_rules.py` empty; `_diff_prod:3276`; `grep def _expr_contains_varref_attribute` → `original_symbols.py:1392`; `git cat-file -t a8ff626c` = commit. See `BASELINE_RECONFIRMATION.md` §3.2.
+
+**Decision:** ✅ The banked cascade fixes still apply byte-clean. The full cold-cascade re-apply + the 335s emit + GAMS compile (`$141`/`$145`/`$149` → 0; the `$66`/`rPower` terminals) is Task 5's deep re-verification — the S36 Day-8 result these byte-clean surfaces guarantee.
 
 ---
 
@@ -586,7 +602,15 @@ Re-run the fawley control on current `main`; re-apply the documented hand-edit a
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Re-Confirm the Sprint-36 Baseline & Banked-Diagnosis Fingerprints)
+**Date:** 2026-08-09
+
+**Findings:** The fawley control reproduces exactly on current `main` — `kkt_residual.py fawley` → verdict **CASE_B**, `stat_bq(res-arab-l,fuel-oil)` rel **9.73e-01** (the qsb/pbal over-sum still present), dual **CONSISTENT**; the harness max is the emit-correct **`stat_trans(tr-2)` rel 1.00e+00** (raw −4.88e+02) — the H-b non-emit divergence dominating `stat_bq`. The fawley emit code (`stationarity.py`) + goldens are byte-identical to the anchor, so the Day-4 `/tmp` hand-edit control (`max|stat_bq|` 473 → 1.14e-13) reproduces on identical inputs.
+
+**Evidence:** `kkt_residual.py fawley` → verdict CASE_B / `stat_bq` rel 9.73e-01 / max-residual `stat_trans(tr-2)` rel 1.00e+00; `git diff 78ceaead..HEAD -- src/kkt/stationarity.py` empty. See `BASELINE_RECONFIRMATION.md` §3.3.
+
+**Decision:** ✅ The fawley correctness-fix premise holds (the qsb/pbal `sameas` over-sum is real and reproduces) and the +Solve is H-b (`stat_trans` dominates → closing `stat_bq` yields 0 bucket without a `--force` lever). Task 6 designs the emission-path relocate + the discriminator.
 
 ---
 
@@ -649,7 +673,15 @@ Run a capped sarf emit; record the wall-clock at the cap; grep the enumeration p
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Re-Confirm the Sprint-36 Baseline & Banked-Diagnosis Fingerprints)
+**Date:** 2026-08-09
+
+**Findings:** The 369K blow-up reproduces — a capped sarf emit on current `main` is **>105s / NON-TERMINATING** (killed at the 105.2s cap), the O(369K) failure identical to the S36 >303s baseline. The 6 call-site files (`src/ad/index_mapping.py`, `src/ad/constraint_jacobian.py`, `src/kkt/stationarity.py`) are **byte-unchanged since the anchor**; `enumerate_variable_instances` at `index_mapping.py:327`; set cardinalities g=16·t=24·mn=31 → **369,024** declared / 398 active, structural to the byte-stable `sarf.gms`.
+
+**Evidence:** capped emit >105s non-terminating (105.2s cap); `git diff 78ceaead..HEAD -- src/ad/index_mapping.py src/ad/constraint_jacobian.py src/kkt/stationarity.py` empty. See `BASELINE_RECONFIRMATION.md` §3.4.
+
+**Decision:** ✅ The blow-up + the 6 sites apply unchanged; the Task-7 re-arch baseline holds.
 
 ---
 
@@ -931,7 +963,15 @@ Recompute the PR25 partition from the committed DB; confirm the floor anchor 75 
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Re-Confirm the Sprint-36 Baseline & Banked-Diagnosis Fingerprints)
+**Date:** 2026-08-09
+
+**Findings:** The PR25 recompute over the 142 convex candidates (verified_convex 54 + likely_convex 88) gives **Solve 108 / Match 93 (63 cold + 30 presolve) / Translate 135 / Parse 142 / mi 7 / pse 7 / all-219 96** — matching the S36 close exactly. The DB is **byte-identical to the anchor `78ceaead`** (0 bucket move), so the S34–S36 genuine-floor hand-partition carries forward → the anchor holds at **75**. markov is in the **30-model presolve-match (methodology) partition** (`model_optimal_presolve` + match, `verified_convex`), so the markov methodology→genuine lever (Task 4) is a **true +1** (75→76), not a double-count.
+
+**Evidence:** the DB partition recompute (108 / 93 = 63+30; the 30-model methodology partition; markov ∈ it); `git diff 78ceaead..HEAD -- data/gamslib/gamslib_status.json` empty. See `BASELINE_RECONFIRMATION.md` §1–§2.
+
+**Decision:** ✅ Floor anchor **75 → ≥76** target (markov); the Epic-4 SUMMARY row-37 groundwork (Task 10) anchors at 75.
 
 ---
 
