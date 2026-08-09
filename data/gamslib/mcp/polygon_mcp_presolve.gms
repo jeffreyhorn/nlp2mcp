@@ -67,6 +67,14 @@ piL_theta.l(i)$(abs(theta.l(i) - theta.lo(i)) < 1e-6) = abs(theta.m(i));
 piU_r.l(i)$(abs(r.l(i) - r.up(i)) < 1e-6) = abs(r.m(i));
 piU_theta.l(i)$(abs(theta.l(i) - theta.up(i)) < 1e-6) = abs(theta.m(i));
 
+* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
+lam_ordered.l(i)$(NOT (lam_ordered.l(i) > -inf and lam_ordered.l(i) < inf)) = 0;
+lam_distance.l(i,j)$(NOT (lam_distance.l(i,j) > -inf and lam_distance.l(i,j) < inf)) = 0;
+piL_r.l(i)$(NOT (piL_r.l(i) > -inf and piL_r.l(i) < inf)) = 0;
+piL_theta.l(i)$(NOT (piL_theta.l(i) > -inf and piL_theta.l(i) < inf)) = 0;
+piU_r.l(i)$(NOT (piU_r.l(i) > -inf and piU_r.l(i) < inf)) = 0;
+piU_theta.l(i)$(NOT (piU_theta.l(i) > -inf and piU_theta.l(i) < inf)) = 0;
+
 * Transfer fixed-variable marginals to _fx_ multipliers (#1462)
 nu_r_fx_i25.l = r.m('i25');
 nu_theta_fx_i25.l = theta.m('i25');

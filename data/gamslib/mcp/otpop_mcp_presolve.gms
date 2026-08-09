@@ -136,6 +136,17 @@ piL_x.l(tt)$(abs(x.l(tt) - x.lo(tt)) < 1e-6) = abs(x.m(tt));
 piL_p.l(tt)$(abs(p.l(tt) - p.lo(tt)) < 1e-6) = abs(p.m(tt));
 piU_x.l(tt)$(abs(x.l(tt) - x.up(tt)) < 1e-6) = abs(x.m(tt));
 
+* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
+nu_dem.l(t)$(NOT (nu_dem.l(t) > -inf and nu_dem.l(t) < inf)) = 0;
+nu_sup.l(t)$(NOT (nu_sup.l(t) > -inf and nu_sup.l(t) < inf)) = 0;
+nu_adef.l(tt)$(NOT (nu_adef.l(tt) > -inf and nu_adef.l(tt) < inf)) = 0;
+nu_pdef.l(tt)$(NOT (nu_pdef.l(tt) > -inf and nu_pdef.l(tt) < inf)) = 0;
+nu_kdef.l$(NOT (nu_kdef.l > -inf and nu_kdef.l < inf)) = 0;
+nu_zdef.l$(NOT (nu_zdef.l > -inf and nu_zdef.l < inf)) = 0;
+piL_x.l(tt)$(NOT (piL_x.l(tt) > -inf and piL_x.l(tt) < inf)) = 0;
+piL_p.l(tt)$(NOT (piL_p.l(tt) > -inf and piL_p.l(tt) < inf)) = 0;
+piU_x.l(tt)$(NOT (piU_x.l(tt) > -inf and piU_x.l(tt) < inf)) = 0;
+
 * Transfer fixed-variable marginals to _fx_ multipliers (#1462)
 nu_x_fx_1974.l = x.m('1974');
 

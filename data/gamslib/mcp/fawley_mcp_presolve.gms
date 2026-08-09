@@ -181,6 +181,29 @@ piL_sales.l(cf)$(abs(sales.l(cf) - sales.lo(cf)) < 1e-6) = abs(sales.m(cf));
 piU_u.l(c)$(abs(u.l(c) - u.up(c)) < 1e-6) = abs(u.m(c));
 piU_cap.l(k)$(abs(cap.l(k) - cap.up(k)) < 1e-6) = abs(cap.m(k));
 
+* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
+nu_mbal.l(c)$(NOT (nu_mbal.l(c) > -inf and nu_mbal.l(c) < inf)) = 0;
+nu_kbal.l(k)$(NOT (nu_kbal.l(k) > -inf and nu_kbal.l(k) < inf)) = 0;
+nu_dbal.l(cf)$(NOT (nu_dbal.l(cf) > -inf and nu_dbal.l(cf) < inf)) = 0;
+nu_qsb.l(cfq,l,s)$(NOT (nu_qsb.l(cfq,l,s) > -inf and nu_qsb.l(cfq,l,s) < inf)) = 0;
+nu_pbal.l(cfq,m)$(NOT (nu_pbal.l(cfq,m) > -inf and nu_pbal.l(cfq,m) < inf)) = 0;
+nu_drev.l$(NOT (nu_drev.l > -inf and nu_drev.l < inf)) = 0;
+nu_doper.l$(NOT (nu_doper.l > -inf and nu_doper.l < inf)) = 0;
+nu_dpur.l$(NOT (nu_dpur.l > -inf and nu_dpur.l < inf)) = 0;
+nu_dtran.l$(NOT (nu_dtran.l > -inf and nu_dtran.l < inf)) = 0;
+piL_u.l(c)$(NOT (piL_u.l(c) > -inf and piL_u.l(c) < inf)) = 0;
+piL_z.l(p)$(NOT (piL_z.l(p) > -inf and piL_z.l(p) < inf)) = 0;
+piL_cap.l(k)$(NOT (piL_cap.l(k) > -inf and piL_cap.l(k) < inf)) = 0;
+piL_trans.l(tr)$(NOT (piL_trans.l(tr) > -inf and piL_trans.l(tr) < inf)) = 0;
+piL_import.l(c)$(NOT (piL_import.l(c) > -inf and piL_import.l(c) < inf)) = 0;
+piL_bq.l(c,cf)$(NOT (piL_bq.l(c,cf) > -inf and piL_bq.l(c,cf) < inf)) = 0;
+piL_rb.l(cf,r)$(NOT (piL_rb.l(cf,r) > -inf and piL_rb.l(cf,r) < inf)) = 0;
+piL_q.l(cf,m)$(NOT (piL_q.l(cf,m) > -inf and piL_q.l(cf,m) < inf)) = 0;
+piL_ov.l(cf,l,s)$(NOT (piL_ov.l(cf,l,s) > -inf and piL_ov.l(cf,l,s) < inf)) = 0;
+piL_sales.l(cf)$(NOT (piL_sales.l(cf) > -inf and piL_sales.l(cf) < inf)) = 0;
+piU_u.l(c)$(NOT (piU_u.l(c) > -inf and piU_u.l(c) < inf)) = 0;
+piU_cap.l(k)$(NOT (piU_cap.l(k) > -inf and piU_cap.l(k) < inf)) = 0;
+
 * ============================================
 * Equations
 * ============================================

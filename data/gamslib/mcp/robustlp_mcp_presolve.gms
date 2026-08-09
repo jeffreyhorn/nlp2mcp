@@ -82,6 +82,12 @@ nu_defv.l(i,k) = defv.m(i,k);
 * Transfer variable marginals to bound multipliers
 piL_y.l(i)$(abs(y.l(i) - y.lo(i)) < 1e-6 and y.m(i) > 0) = y.m(i);
 
+* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
+lam_socpqcpcons.l(i)$(NOT (lam_socpqcpcons.l(i) > -inf and lam_socpqcpcons.l(i) < inf)) = 0;
+nu_defrhs.l(i)$(NOT (nu_defrhs.l(i) > -inf and nu_defrhs.l(i) < inf)) = 0;
+nu_defv.l(i,k)$(NOT (nu_defv.l(i,k) > -inf and nu_defv.l(i,k) < inf)) = 0;
+piL_y.l(i)$(NOT (piL_y.l(i) > -inf and piL_y.l(i) < inf)) = 0;
+
 * ============================================
 * Equations
 * ============================================

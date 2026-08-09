@@ -198,6 +198,37 @@ piU_t2w.l(s)$(abs(t2w.l(s) - t2w.up(s)) < 1e-6 and t2w.m(s) < 0) = -(t2w.m(s));
 piU_vfac.l(s)$(abs(vfac.l(s) - vfac.up(s)) < 1e-6 and vfac.m(s) < 0) = -(vfac.m(s));
 piU_vt.l$(abs(vt.l - vt.up) < 1e-6 and vt.m < 0) = -(vt.m);
 
+* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
+nu_diweight.l(s)$(NOT (nu_diweight.l(s) > -inf and nu_diweight.l(s) < inf)) = 0;
+nu_dweight.l(s)$(NOT (nu_dweight.l(s) > -inf and nu_dweight.l(s) < inf)) = 0;
+nu_dthrust.l(s)$(NOT (nu_dthrust.l(s) > -inf and nu_dthrust.l(s) < inf)) = 0;
+nu_t2wr.l(s)$(NOT (nu_t2wr.l(s) > -inf and nu_t2wr.l(s) < inf)) = 0;
+nu_msd.l(s)$(NOT (nu_msd.l(s) > -inf and nu_msd.l(s) < inf)) = 0;
+lam_pwlower.l(s)$(NOT (lam_pwlower.l(s) > -inf and lam_pwlower.l(s) < inf)) = 0;
+lam_pwupper.l(s)$(NOT (lam_pwupper.l(s) > -inf and lam_pwupper.l(s) < inf)) = 0;
+nu_defvfac.l(s)$(NOT (nu_defvfac.l(s) > -inf and nu_defvfac.l(s) < inf)) = 0;
+nu_defv.l(s)$(NOT (nu_defv.l(s) > -inf and nu_defv.l(s) < inf)) = 0;
+nu_defvt.l$(NOT (nu_defvt.l > -inf and nu_defvt.l < inf)) = 0;
+piL_aweight.l(s)$(NOT (piL_aweight.l(s) > -inf and piL_aweight.l(s) < inf)) = 0;
+piL_iweight.l(s)$(NOT (piL_iweight.l(s) > -inf and piL_iweight.l(s) < inf)) = 0;
+piL_pweight.l(s)$(NOT (piL_pweight.l(s) > -inf and piL_pweight.l(s) < inf)) = 0;
+piL_instweight.l$(NOT (piL_instweight.l > -inf and piL_instweight.l < inf)) = 0;
+piL_length.l(s)$(NOT (piL_length.l(s) > -inf and piL_length.l(s) < inf)) = 0;
+piL_thrust.l(s)$(NOT (piL_thrust.l(s) > -inf and piL_thrust.l(s) < inf)) = 0;
+piL_ethrust.l(s)$(NOT (piL_ethrust.l(s) > -inf and piL_ethrust.l(s) < inf)) = 0;
+piL_ms.l(s)$(NOT (piL_ms.l(s) > -inf and piL_ms.l(s) < inf)) = 0;
+piL_t2w.l(s)$(NOT (piL_t2w.l(s) > -inf and piL_t2w.l(s) < inf)) = 0;
+piL_t.l(s)$(NOT (piL_t.l(s) > -inf and piL_t.l(s) < inf)) = 0;
+piL_vfac.l(s)$(NOT (piL_vfac.l(s) > -inf and piL_vfac.l(s) < inf)) = 0;
+piL_v.l(s)$(NOT (piL_v.l(s) > -inf and piL_v.l(s) < inf)) = 0;
+piL_vt.l$(NOT (piL_vt.l > -inf and piL_vt.l < inf)) = 0;
+piU_instweight.l$(NOT (piU_instweight.l > -inf and piU_instweight.l < inf)) = 0;
+piU_length.l(s)$(NOT (piU_length.l(s) > -inf and piU_length.l(s) < inf)) = 0;
+piU_ms.l(s)$(NOT (piU_ms.l(s) > -inf and piU_ms.l(s) < inf)) = 0;
+piU_t2w.l(s)$(NOT (piU_t2w.l(s) > -inf and piU_t2w.l(s) < inf)) = 0;
+piU_vfac.l(s)$(NOT (piU_vfac.l(s) > -inf and piU_vfac.l(s) < inf)) = 0;
+piU_vt.l$(NOT (piU_vt.l > -inf and piU_vt.l < inf)) = 0;
+
 * ============================================
 * Equations
 * ============================================

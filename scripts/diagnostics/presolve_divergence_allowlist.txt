@@ -10,11 +10,11 @@
 # (OPEN, deferred). Remove this entry when #1439 is fixed.
 korcge
 #
-# robustlp: the MCP solve aborts with EXECERROR=84 ("Matrix error - coefficient
-# in variable below is NA") under GAMS 54 — the Jacobian carries NA coefficients
-# (the #1322 NA-propagation class). GAMS 53 tolerated them; GAMS 54's stricter
-# matrix generation rejects them. Surfaced by the 53.1.0->54.2.1 CI GAMS bump
-# (Sprint 35 Day 6); the emit is unchanged. Tracked in
-# docs/planning/EPIC_4/SPRINT_35/FOLLOWUPS_GAMS54_TRANSITION.md (the
-# NA-coefficient fix + the broader v53->v54 baseline review). Remove when fixed.
-robustlp
+# robustlp: FIXED + de-allowlisted (Sprint 36 Day 10). The GAMS-54 EXECERROR=84
+# ("Matrix error - illegal level value") was an NA *multiplier warm-start level*
+# (lam_socpqcpcons / piL_y received an NA source marginal), which also propagated
+# into the bilinear stationarity coefficients ((NA)*v) — NOT an NA Jacobian
+# coefficient (the earlier "NA-coefficient" characterization was imprecise; see
+# docs/planning/EPIC_4/SPRINT_36/DAY0_KICKOFF.md §3.1). Fixed by NA-guarding the
+# presolve marginal->multiplier .L transfer in _emit_nlp_presolve (#1322 idiom,
+# emit_gams.py); robustlp presolve now solves MODEL STATUS 1 Optimal.

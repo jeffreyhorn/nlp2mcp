@@ -301,6 +301,15 @@ nu_eqrdiff.l(i) = eqrdiff.m(i);
 piL_r.l(i)$(abs(r.l(i) - r.lo(i)) < 1e-6) = abs(r.m(i));
 piU_r.l(i)$(abs(r.l(i) - r.up(i)) < 1e-6) = abs(r.m(i));
 
+* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
+lam_convexity.l(i)$(NOT (lam_convexity.l(i) > -inf and lam_convexity.l(i) < inf)) = 0;
+lam_convex_edge1.l(i)$(NOT (lam_convex_edge1.l(i) > -inf and lam_convex_edge1.l(i) < inf)) = 0;
+lam_convex_edge3.l(i)$(NOT (lam_convex_edge3.l(i) > -inf and lam_convex_edge3.l(i) < inf)) = 0;
+lam_convex_edge4.l(i)$(NOT (lam_convex_edge4.l(i) > -inf and lam_convex_edge4.l(i) < inf)) = 0;
+nu_eqrdiff.l(i)$(NOT (nu_eqrdiff.l(i) > -inf and nu_eqrdiff.l(i) < inf)) = 0;
+piL_r.l(i)$(NOT (piL_r.l(i) > -inf and piL_r.l(i) < inf)) = 0;
+piU_r.l(i)$(NOT (piU_r.l(i) > -inf and piU_r.l(i) < inf)) = 0;
+
 * ============================================
 * Equations
 * ============================================

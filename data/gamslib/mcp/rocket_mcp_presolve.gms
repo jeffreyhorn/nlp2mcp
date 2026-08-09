@@ -116,6 +116,22 @@ piL_d.l(h)$(abs(d.l(h) - d.lo(h)) < 1e-6) = abs(d.m(h));
 piU_m.l(h)$(abs(m.l(h) - m.up(h)) < 1e-6) = abs(m.m(h));
 piU_t.l(h)$(abs(t.l(h) - t.up(h)) < 1e-6) = abs(t.m(h));
 
+* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
+nu_df.l(h)$(NOT (nu_df.l(h) > -inf and nu_df.l(h) < inf)) = 0;
+nu_gf.l(h)$(NOT (nu_gf.l(h) > -inf and nu_gf.l(h) < inf)) = 0;
+nu_h_eqn.l(h)$(NOT (nu_h_eqn.l(h) > -inf and nu_h_eqn.l(h) < inf)) = 0;
+nu_m_eqn.l(h)$(NOT (nu_m_eqn.l(h) > -inf and nu_m_eqn.l(h) < inf)) = 0;
+nu_v_eqn.l(h)$(NOT (nu_v_eqn.l(h) > -inf and nu_v_eqn.l(h) < inf)) = 0;
+piL_step.l$(NOT (piL_step.l > -inf and piL_step.l < inf)) = 0;
+piL_v.l(h)$(NOT (piL_v.l(h) > -inf and piL_v.l(h) < inf)) = 0;
+piL_ht.l(h)$(NOT (piL_ht.l(h) > -inf and piL_ht.l(h) < inf)) = 0;
+piL_g.l(h)$(NOT (piL_g.l(h) > -inf and piL_g.l(h) < inf)) = 0;
+piL_m.l(h)$(NOT (piL_m.l(h) > -inf and piL_m.l(h) < inf)) = 0;
+piL_t.l(h)$(NOT (piL_t.l(h) > -inf and piL_t.l(h) < inf)) = 0;
+piL_d.l(h)$(NOT (piL_d.l(h) > -inf and piL_d.l(h) < inf)) = 0;
+piU_m.l(h)$(NOT (piU_m.l(h) > -inf and piU_m.l(h) < inf)) = 0;
+piU_t.l(h)$(NOT (piU_t.l(h) > -inf and piU_t.l(h) < inf)) = 0;
+
 * Transfer fixed-variable marginals to _fx_ multipliers (#1462)
 nu_v_fx_h0.l = v.m('h0');
 nu_ht_fx_h0.l = ht.m('h0');
