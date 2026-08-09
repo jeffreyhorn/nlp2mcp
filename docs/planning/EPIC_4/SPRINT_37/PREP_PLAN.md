@@ -16,7 +16,7 @@
 2. **Priority 2 (High):** ganges/gangesx ≥5-blocker recovery — `$141`/`$145`/`$149` VERIFIED working; blocked on `$66` (cold, unassigned calibration params) + `rPower` (presolve, the #1378/#1424 embedded-NLP-divergence deep class). Atomic: +2 or 0 (bimodal).
 3. **Priority 3 (Medium):** the rocket/mine consultation cycle + camcge Walras (**Epic 5**) — integrate the PATH authors' rocket reply (+1 contingent); track the mine question; prototype the camcge three-part Walras redefinition.
 4. **Priority 4 (High):** fawley constraint-index-diagonal (#1111/#1112) — correctness confirmed (473→1.14e-13); relocate the `qsb`/`pbal` emission path + rebuild the orientation predicate + verify full-corpus. 0-bucket (H-b); the +Solve is a Sprint-38 consultation.
-5. **Priority 5 (Medium):** sarf symbolic-emit subsystem (#1385) — the 20–28h atomic re-architecture of the 369K-column materialization (O(active=398), not O(369K)); lowest-leverage (+1 Translate).
+5. **Priority 5 (High):** sarf symbolic-emit subsystem (#1385) — the 20–28h atomic re-architecture of the 369K-column materialization (O(active=398), not O(369K)); lowest-leverage in *bucket* terms (+1 Translate), but the prep-design work is High (the deepest re-arch spec, gated on the P7 harness).
 6. **Priority 6 (Medium):** turkey testbed +1 (licensed >1000-row solve) + the full GAMS-54 v54 re-baseline of the 142 candidates (demo-runnable) + the residual multi-root cohort.
 7. **Priority 7 (Medium — infrastructure):** the **full-corpus (163-golden) leak-verification harness** (the top process lesson) + Phase-0-doc CI enforcement + property fixtures + genuine-floor tracking.
 

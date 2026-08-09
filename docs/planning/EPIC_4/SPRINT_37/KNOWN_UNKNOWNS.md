@@ -1029,7 +1029,7 @@ This table shows which prep tasks (from `PREP_PLAN.md`) verify which unknowns. E
 
 ---
 
-**Document Status:** 🔵 DRAFT — Pre-Sprint 37
+**Document Status:** Active — Pre-Sprint 37 (register complete; unknowns advance from `🔍 INCOMPLETE` to ✅ VERIFIED / ❌ WRONG during prep Tasks 2–11)
 **Last Updated:** 2026-08-09
 **Owner:** Sprint 37 Planning Team
 **Review Frequency:** Daily during Sprint 37
