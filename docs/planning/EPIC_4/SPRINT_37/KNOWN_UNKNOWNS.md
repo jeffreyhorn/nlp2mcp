@@ -394,7 +394,15 @@ Reproduce `rPower` under presolve; prototype the NA-guard/reset idioms in a `/tm
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — bounded, but the bank's proposed fix was WRONG, and a second cold blocker exists
+**Verified by:** Task 5 (ganges/gangesx P2 Cascade Re-Verification & Recovery Sequencing)
+**Date:** 2026-08-10
+
+**Findings:** `$66` is **exactly 16 symbols** (measured from the GAMS-54 listing on both models): `deltax, aid, aex, adst, as, deltas, av, deltav, aq, deltaq, az, deltaz, an, deltan, pnm00, cg`, referenced by `stat_ax/deprec/exscale/invtot/ls/lw/m/n/nd/nm` + `fddef`. **They are computable cold:** every `.l` feeding them is *data-initialized* (`ganges.gms:557–745` from the `stock`/`dat` tables) and **the only `solve` is at line 1150 — after the whole calibration block (598–746)**. The cold MCP already carries those `.l` inputs (`ls.l`×14, `pk.l`×10, `s.l`×49, …) but drops the calibration assignments (0 occurrences) purely because they *syntactically* reference a `.l` attribute. **Correction to the bank:** `GANGES_RECOVERY_SEQUENCING.md` §3 proposed "a default cold assignment, e.g. `param(domain)=0`" — that is **wrong**, because `as`/`deltas`/`av`/`deltav` are CES/LES **share and scale** parameters; zeroing them degenerates the production functions, so the cold MCP would compile while encoding a *different model* and could not legitimately match. The correct fix is to emit the real assignments cold. **Second cold blocker found:** with the `$149` fix applied the emitted cold MCP **still contains `ac(i+2,r)`** in `stat_pc(i)` — `ac` is a data Table (`:211`), so the `+2` is a spurious index offset (the same `_compute_index_offset_key` family as markov's `σ=sp`). It compiles, so the `$NNN` protocol cannot see it, but it corrupts `stat_pc` ⇒ a **match-correctness** blocker surviving the `$66` fix.
+
+**Evidence:** the 16-symbol listing block; `ganges.gms` line numbers (593/598–746/1150); `grep` counts in `/tmp/gng/ganges_cold.gms`; `ac(i+2,r)` present in the emitted `stat_pc(i)`. See `GANGES_RECOVERY_DESIGN.md` §2.
+
+**Decision:** ✅ `$66` is bounded (emit the assignments, **not** a zero default). The cold path needs `$66` **and** `ac(i+2,r)` — the latter may ride on the P1 markov offset work, since it is the same misattribution family.
 
 ---
 
@@ -425,7 +433,15 @@ Map the per-step Phase-0 gate (emit → compile → count → solve cold+presolv
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — `rPower` is NOT the deep class; the deep class is one level behind it
+**Verified by:** Task 5 (two independent `/tmp` controls + a raw-source reference control)
+**Date:** 2026-08-10
+
+**Findings:** The bank recorded `rPower` as the #1378/#1424 embedded-divergence class caused by `.l`-based power calibrations re-running non-idempotently. **The measured root is different and bounded.** Reproduced on both models: `Exec Error … rPower: FUNC DOMAIN: x**y, x=0,y<0` with `Evaluation error(s) in equation "prods(...)"` for cons-good/cap-good/int-good/service. The failing object is the **equation** `prods(i).. s(i) =e= as(i)*(deltas(i)*k(i)**(-rhos(i)) + ((1-deltas(i))*ls(i)**(-rhos(i)))$(not si(i)))**(-1/rhos(i))`, where **`ls` is a variable** evaluated at its *level* during generation. The level is 0 because nlp2mcp hoists the source's `.l`-dependent bound statements into a *"Deferred Variable Bounds"* block emitted **before** the `$include` that assigns those `.l`s: source order is `ls.l(i)=stock(...)` at **593** → `ls.fx(i)$(not ls.l(i))=0` at **1071** (correct); emitted order is the guard at MCP **484** → `$include` at **515** (inverted), so the guard sees `ls.l=0` for *every* sector and fixes `ls` to 0. **Two independent controls eliminate it** — (A) move the block after `$offMulti`, (B) delete it (the `$include` supplies those statements) — both take the full run from **rc=3 to rc=0** with `rPower` gone. The emitter already has both halves of this pattern (#1378 skips `$include`-supplied statements; the #1449 Layer-4 block is already a post-`$include` correction pass), so neither control invents machinery. **But behind `rPower` sits the real blocker:** with it removed, the embedded `ganges0` solves **MS-5 Locally Infeasible @ −386785.5017** while the **raw source standalone solves MS-2 Locally Optimal @ 6395.5444** (reference control) — *that* divergence is the genuine #1378/#1424 class, previously masked.
+
+**Evidence:** the reproduction listings; the source-vs-emitted ordering table; controls A/B (`/tmp/gng/ganges_presolve_{FIXED,SKIP}.gms`, both rc=0); the raw-source reference run. See `GANGES_RECOVERY_DESIGN.md` §3–§4.
+
+**Decision:** ✅ `rPower` is a bounded emit-ordering fix (control-verified twice). The deep blocker is relocated to the embedded-NLP MS-5-vs-MS-2 divergence — a sharper, correctly-placed hand-off than the bank's.
 
 ---
 
@@ -458,7 +474,15 @@ Check the consultation channel for the reply; map the recommended options onto `
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 5
+**Date:** 2026-08-10
+
+**Findings:** Atomicity holds, with the blocker set now correctly enumerated: the **cold** bucket needs `$141`+`$145`+`$149` (✅ verified working) **+ `$66`** (bounded) **+ `ac(i+2,r)`** (match-correctness, newly surfaced); the **presolve** bucket needs the cascade **+ the `rPower` ordering fix** (control-verified) **+ the embedded-NLP MS-5 divergence** (the deep one). A partial landing churns the ganges/gangesx goldens (~9 collateral calibration goldens too) for **0 bucket** — the prohibition that banked S35 and S36. The pipeline seal is unchanged (the presolve retry fires only on a cold STATUS-5/spurious mismatch, not on a cold `path_syntax_error`), so a single-path fix cannot recover ganges. **`$149` spillover:** the `_diff_prod` fix is general and removes the `$149` blocker from dinam/indus/turkpow/clearlak — necessary-not-sufficient (turkpow ragged `Table`, clearlak dynamic sets, dinam/indus `$140`+`$149`); flagged for P6's residual cohort.
+
+**Evidence:** the per-model (ganges AND gangesx) compile matrix; the recovery sequence with per-step gates. See `GANGES_RECOVERY_DESIGN.md` §5–§6.
+
+**Decision:** ✅ Recovery stays atomic; **realistic in-sprint outcome 0 bucket**, but for a better-understood reason — 2 of 5 blockers are now bounded and specified, 2 remain deep (`ac(i+2,r)` possibly riding on P1's offset work; the embedded-NLP divergence).
 
 ---
 

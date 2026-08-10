@@ -347,7 +347,7 @@ test -f docs/planning/EPIC_4/SPRINT_36/MARKOV_OFFDIAGONAL_DESIGN.md && echo "emi
 
 ## Task 5: ganges/gangesx P2 — ≥5-Blocker Cascade Re-Verification & Recovery Sequencing
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-10)
 **Priority:** High
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 37 Day 1
@@ -377,11 +377,11 @@ Day 8 (`DAY8_P4_GANGES_BANK.md`): the corrected `$141` helper (`_expr_contains_v
 
 ### Changes
 
-To be completed.
+Applied the banked cascade fixes to a scratch `src/` (git `a8ff626c` `$141`/`$145` with the **corrected** `_expr_contains_varref_attribute` helper + the `$149` `_diff_prod` §5 patch at `derivative_rules.py:3410`), emitted **all four** artifacts (ganges/gangesx × cold/presolve — 293/284/259/262 s), compiled each under GAMS 54.2.1, ran the presolve MCPs to generation, and ran three `/tmp` controls (two rPower-elimination variants + a raw-source reference). **Reverted the scratch `src/`** (byte-identical to `main`; `stationarity.py`/`derivative_rules.py` byte-identical to the anchor). Produced `docs/planning/EPIC_4/SPRINT_37/GANGES_RECOVERY_DESIGN.md`. Advanced Unknowns 2.2, 2.3, 2.4 → ✅ VERIFIED.
 
 ### Result
 
-To be completed.
+**Cascade re-verified on both models; both terminals re-characterized — and both are corrections to the bank.** (1) **Cascade:** with the fixes applied, ganges *and* gangesx cold compiles drop `$141`/`$145`/`$149` to **0** (only `$66` remains), and both presolve MCPs compile **rc=0 clean**. (2) **`$66` — bounded, but the bank's fix was wrong:** exactly **16** symbols; every `.l` feeding them is *data-initialized* (`:557–745`) and the only `solve` is at **:1150**, *after* the calibration block — so they are computable cold and the fix is to **emit the real assignments**. The bank's proposed `param(domain)=0` default would degenerate CES/LES share/scale parameters, compiling a *different model* that could not legitimately match. (3) **A second cold blocker surfaced:** `ac(i+2,r)` in `stat_pc(i)` is **still present** with `$149` applied — a spurious index offset on a data Table (the same `_compute_index_offset_key` family as markov's `σ=sp`); it compiles, so the `$NNN` protocol is blind to it, but it corrupts `stat_pc` ⇒ a match-correctness blocker beyond `$66`. (4) **`rPower` is NOT the deep #1378/#1424 class:** the failing object is the *equation* `prods(i)`, whose `ls(i)**(-rhos(i))` is evaluated at a **zero variable level** because nlp2mcp hoists the source's `.l`-dependent bound statements into a "Deferred Variable Bounds" block emitted **before** the `$include` that assigns those `.l`s (source order 593→1071; emitted order 484→515, inverted). **Two independent controls** — move the block, or delete it — both take the full run from **rc=3 to rc=0** with `rPower` gone; the emitter already has both halves of the pattern (#1378 skip, #1449 post-include correction pass), so this is a bounded fix, not research. (5) **The real deep blocker is one level behind it:** with `rPower` removed, the embedded `ganges0` solves **MS-5 Locally Infeasible @ −386785.5** while the raw source standalone solves **MS-2 Locally Optimal @ 6395.5444** (reference control) — *that* is the genuine embedded-NLP divergence, previously masked. **Bounded P2 outcome: 0 bucket in-sprint** (unchanged verdict, better-understood reason) — 2 of 5 blockers are now bounded and specified, 2 remain deep, and +2 needs all five.
 
 ### Verification
 
@@ -404,12 +404,12 @@ grep -qiE "\\\$66|rPower|atomic" docs/planning/EPIC_4/SPRINT_37/GANGES_RECOVERY_
 
 ### Acceptance Criteria
 
-- [ ] `$141`/`$145`/`$149` re-confirmed → 0 on current `main` for both ganges and gangesx
-- [ ] `$66` characterized (which params, the presolve-gate mechanism, the `ac(i+2,r)` match risk quantified) with a bounded-fix vs deep verdict
-- [ ] `rPower` characterized (confirmed #1378/#1424 class; NA-guard/reset feasibility assessed) with a bounded-fix vs deep verdict
-- [ ] The atomic recovery sequence defined with per-step Phase-0 gates (per-model emit→compile→count→solve cold+presolve→bucket→match; `--resolve-changed`; determinism ×3; 335s goldens nightly)
-- [ ] The P2 sprint outcome bounded (+2 target OR general `$149` fix + documented residual), with the `$149`-half spillover to the residual cohort noted
-- [ ] Unknowns 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] `$141`/`$145`/`$149` re-confirmed → 0 on current `main` for both ganges and gangesx
+- [x] `$66` characterized (which params, the presolve-gate mechanism, the `ac(i+2,r)` match risk quantified) with a bounded-fix vs deep verdict
+- [x] `rPower` characterized (confirmed #1378/#1424 class; NA-guard/reset feasibility assessed) with a bounded-fix vs deep verdict
+- [x] The atomic recovery sequence defined with per-step Phase-0 gates (per-model emit→compile→count→solve cold+presolve→bucket→match; `--resolve-changed`; determinism ×3; 335s goldens nightly)
+- [x] The P2 sprint outcome bounded (+2 target OR general `$149` fix + documented residual), with the `$149`-half spillover to the residual cohort noted
+- [x] Unknowns 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
