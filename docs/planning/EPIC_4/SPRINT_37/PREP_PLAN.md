@@ -13,7 +13,7 @@
 `PROJECT_PLAN.md` (Sprint 37, Weeks 39–40) defines the Sprint-36 carryforward sprint. Sprint 36 closed **FLAT** (Solve 108 / Match 93 / genuine floor 75 / Translate 135 — the projection's 75 branch, the fourth consecutive modal-flat close), so each carryforward inherits an empirically-reproduced diagnosis with proven components rather than a raw problem. Sprint 37 will address (priority order per `SPRINT_36/SPRINT_RETROSPECTIVE.md` §5):
 
 1. **Priority 1 (Critical — the headline lever):** markov `σ=sp` derivative-structure discriminator — the +1-floor lever whose **emission is already PROVEN** (`CASE_B` rel 13.3 → `CASE_A` rel 2.8e-16; cold MCP solves to 2401.577 + match; methodology→genuine, floor 75→76, fully local, no testbed). The *sole* blocker: the domain-only gate leaks full-corpus (cesam/ferts/sroute); a leak-free gate needs a derivative-structure discriminator.
-2. **Priority 2 (High):** ganges/gangesx ≥5-blocker recovery — `$141`/`$145`/`$149` VERIFIED working; blocked on `$66` (cold, unassigned calibration params) + `rPower` (presolve, the #1378/#1424 embedded-NLP-divergence deep class). Atomic: +2 or 0 (bimodal).
+2. **Priority 2 (High):** ganges/gangesx ≥5-blocker recovery — `$141`/`$145`/`$149` VERIFIED working; blocked on `$66` (cold, unassigned calibration params) + `rPower` (presolve). Atomic: +2 or 0 (bimodal). *(Task 5 correction: `rPower` is a bounded emit-ordering bug, not the #1378/#1424 class; that divergence sits one level behind it.)*
 3. **Priority 3 (Medium):** the rocket/mine consultation cycle + camcge Walras (**Epic 5**) — integrate the PATH authors' rocket reply (+1 contingent); track the mine question; prototype the camcge three-part Walras redefinition.
 4. **Priority 4 (High):** fawley constraint-index-diagonal (#1111/#1112) — correctness confirmed (473→1.14e-13); relocate the `qsb`/`pbal` emission path + rebuild the orientation predicate + verify full-corpus. 0-bucket (H-b); the +Solve is a Sprint-38 consultation.
 5. **Priority 5 (High):** sarf symbolic-emit subsystem (#1385) — the 20–28h atomic re-architecture of the 369K-column materialization (O(active=398), not O(369K)); lowest-leverage in *bucket* terms (+1 Translate), but the prep-design work is High (the deepest re-arch spec, gated on the P7 harness).
@@ -347,7 +347,7 @@ test -f docs/planning/EPIC_4/SPRINT_36/MARKOV_OFFDIAGONAL_DESIGN.md && echo "emi
 
 ## Task 5: ganges/gangesx P2 — ≥5-Blocker Cascade Re-Verification & Recovery Sequencing
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-10)
 **Priority:** High
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 37 Day 1
@@ -361,27 +361,29 @@ Re-verify that the Sprint-36 ganges/gangesx cascade fixes (`$141`/`$145`/`$149`)
 
 ### Why This Matters
 
-ganges/gangesx is the sprint's +2-or-0 bimodal bucket lever (P2). The cascade fixes are VERIFIED but the recovery is *atomic* — landing `$141`/`$145`/`$149` without also clearing `$66` and `rPower` produces 0 bucket plus golden churn. The prep phase must decide, before Day 1, whether `rPower` (the #1378/#1424 embedded-NLP-divergence deep class) is tractable within the sprint or whether P2 should be scoped to "land the general `$149` fix (which also unblocks the dinam/indus/turkpow/clearlak `$149` halves) and document the `$66`/`rPower` residual."
+ganges/gangesx is the sprint's +2-or-0 bimodal bucket lever (P2). The cascade fixes are VERIFIED but the recovery is *atomic* — landing `$141`/`$145`/`$149` without also clearing `$66` and `rPower` produces 0 bucket plus golden churn. The prep phase must decide, before Day 1, whether `rPower` (*presumed* at planning time to be the #1378/#1424 embedded-NLP-divergence deep class — **the Result refuted this**) is tractable within the sprint or whether P2 should be scoped to "land the general `$149` fix (which also unblocks the dinam/indus/turkpow/clearlak `$149` halves) and document the `$66`/`rPower` residual."
 
 ### Background
 
 Day 8 (`DAY8_P4_GANGES_BANK.md`): the corrected `$141` helper (`_expr_contains_varref_attribute`) + the `$149` `_diff_prod` §5 patch (git `a8ff626c` + `SPRINT_35/DAY3_P4_BANK_CARRYFORWARD.md` §5) drive the cold compile's `$141`/`$145`/`$149` count → 0. Terminals: `$66` ×17 (cold — presolve-gated calibration params unassigned-but-referenced in stationarity; carries the `ac(i+2,r)` match-correctness risk) and `rPower` (presolve — the `.l`-based power calibrations `k(i)**(-rhos(i))` re-run non-idempotently under the presolve `$onMultiR` `$include`, producing `x**y, x=0, y<0` at generation). `GANGES_RECOVERY_SEQUENCING.md` (Sprint 36) holds the banked sequencing. The 335s slow-emit goldens need a nightly regen slot.
 
+> **⚠ Superseded by this task's Result (2026-08-10).** The `rPower` attribution above is the *pre-execution* characterization carried from Sprint 36. Measurement refuted it: `rPower` is a bounded emit-**ordering** bug (the deferred `.l`-dependent bound block is emitted *before* the `$include` that assigns those `.l` values), not the #1378/#1424 non-idempotent-`$onMultiR` class. The genuine #1378/#1424 divergence sits one level behind it (embedded NLP **MS-5** vs standalone **MS-2 @ 6395.5444**). See the Result section and `GANGES_RECOVERY_DESIGN.md` §3–§4.
+
 ### What Needs to Be Done
 
 1. **Re-apply the cascade fixes on current `main`** (in a `/tmp` copy) and confirm `$141`/`$145`/`$149` → 0 for both ganges AND gangesx (the git `a8ff626c` + `_diff_prod` §5 recipe from Task 2).
 2. **Characterize `$66` sharply:** which calibration params are unassigned-but-referenced in stationarity, why the presolve gate leaves them cold, and whether assigning them (or guarding the reference) is a bounded emit fix or a deeper divergence. Quantify the `ac(i+2,r)` match-correctness risk (does a naive fix change the matched solution?).
-3. **Characterize `rPower` sharply:** confirm it is the #1378/#1424 class (non-idempotent `$onMultiR` re-run of `.l`-based power calibrations); assess whether an NA-guard-style emit fix (cf. the P7 robustlp `.L`-guard idiom) or a re-declaration-reset could break the non-idempotency, or whether it needs the deep embedded-NLP-divergence treatment (out of a bounded sprint fix).
+3. **Characterize `rPower` sharply:** test (do not assume) the #1378/#1424 attribution — *this hypothesis was **refuted**; see the Result* — and assess whether an NA-guard-style emit fix (cf. the P7 robustlp `.L`-guard idiom) or a re-declaration-reset could break the non-idempotency, or whether it needs the deep embedded-NLP-divergence treatment (out of a bounded sprint fix).
 4. **Sequence the atomic recovery:** define the exact order (cascade fixes → `$66` → `rPower`) and the per-step Phase-0 gate: per-model (ganges AND gangesx) emit → compile → count `$NNN` (assert 0) → solve cold AND presolve (`modelstat` asserted) → bucket → match; each step `--resolve-changed`-gated; determinism ×3; the 335s goldens on a nightly slot.
 5. **Bound the sprint outcome:** decide the P2 target — full +2 (if `$66`/`rPower` look bounded) or "general `$149` fix + documented `$66`/`rPower` residual" — and note the dinam/indus/turkpow/clearlak `$149`-half spillover either way.
 
 ### Changes
 
-To be completed.
+Applied the banked cascade fixes to a scratch `src/` (git `a8ff626c` `$141`/`$145` with the **corrected** `_expr_contains_varref_attribute` helper + the `$149` `_diff_prod` §5 patch at `derivative_rules.py:3410`), emitted **all four** artifacts (ganges/gangesx × cold/presolve — 293/284/259/262 s), compiled each under GAMS 54.2.1, ran the presolve MCPs to generation, and ran three `/tmp` controls (two rPower-elimination variants + a raw-source reference). **Reverted the scratch `src/`** (byte-identical to `main`; `stationarity.py`/`derivative_rules.py` byte-identical to the anchor). Produced `docs/planning/EPIC_4/SPRINT_37/GANGES_RECOVERY_DESIGN.md`. Advanced Unknowns 2.2, 2.3, 2.4 → ✅ VERIFIED.
 
 ### Result
 
-To be completed.
+**Cascade re-verified on both models; both terminals re-characterized — and both are corrections to the bank.** (1) **Cascade:** with the fixes applied, ganges *and* gangesx cold compiles drop `$141`/`$145`/`$149` to **0** (only `$66` remains), and both presolve MCPs compile **rc=0 clean**. (2) **`$66` — bounded, but the bank's fix was wrong:** exactly **16** symbols; every `.l` feeding them is *data-initialized* (`:557–745`) and the only `solve` is at **:1150**, *after* the calibration block — so they are computable cold and the fix is to **emit the real assignments**. The bank's proposed `param(domain)=0` default would degenerate CES/LES share/scale parameters, compiling a *different model* that could not legitimately match. (3) **A second cold blocker surfaced:** `ac(i+2,r)` in `stat_pc(i)` is **still present** with `$149` applied — a spurious index offset on a data Table (the same `_compute_index_offset_key` family as markov's `σ=sp`); it compiles, so the `$NNN` protocol is blind to it, but it corrupts `stat_pc` ⇒ a match-correctness blocker beyond `$66`. (4) **`rPower` is NOT the deep #1378/#1424 class:** the failing object is the *equation* `prods(i)`, whose `ls(i)**(-rhos(i))` is evaluated at a **zero variable level** because nlp2mcp hoists the source's `.l`-dependent bound statements into a "Deferred Variable Bounds" block emitted **before** the `$include` that assigns those `.l`s (source order 593→1071; emitted order 484→515, inverted). **Two independent controls** — move the block, or delete it — both take the full run from **rc=3 to rc=0** with `rPower` gone; the emitter already has both halves of the pattern (#1378 skip, #1449 post-include correction pass), so this is a bounded fix, not research. (5) **The real deep blocker is one level behind it:** with `rPower` removed, the embedded `ganges0` solves **MS-5 Locally Infeasible @ −386785.5** while the raw source standalone solves **MS-2 Locally Optimal @ 6395.5444** (reference control) — *that* is the genuine embedded-NLP divergence, previously masked. **Bounded P2 outcome: 0 bucket in-sprint** (unchanged verdict, better-understood reason) — 2 of 5 blockers are now bounded and specified, 2 remain deep, and +2 needs all five.
 
 ### Verification
 
@@ -404,12 +406,12 @@ grep -qiE "\\\$66|rPower|atomic" docs/planning/EPIC_4/SPRINT_37/GANGES_RECOVERY_
 
 ### Acceptance Criteria
 
-- [ ] `$141`/`$145`/`$149` re-confirmed → 0 on current `main` for both ganges and gangesx
-- [ ] `$66` characterized (which params, the presolve-gate mechanism, the `ac(i+2,r)` match risk quantified) with a bounded-fix vs deep verdict
-- [ ] `rPower` characterized (confirmed #1378/#1424 class; NA-guard/reset feasibility assessed) with a bounded-fix vs deep verdict
-- [ ] The atomic recovery sequence defined with per-step Phase-0 gates (per-model emit→compile→count→solve cold+presolve→bucket→match; `--resolve-changed`; determinism ×3; 335s goldens nightly)
-- [ ] The P2 sprint outcome bounded (+2 target OR general `$149` fix + documented residual), with the `$149`-half spillover to the residual cohort noted
-- [ ] Unknowns 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] `$141`/`$145`/`$149` re-confirmed → 0 on current `main` for both ganges and gangesx
+- [x] `$66` characterized (which params, the presolve-gate mechanism, the `ac(i+2,r)` match risk quantified) with a bounded-fix vs deep verdict
+- [x] `rPower` characterized with a bounded-fix vs deep verdict — **verdict: BOUNDED, and the #1378/#1424 attribution was wrong.** Root is an emit-ordering bug (the deferred `.l`-dependent bound block emitted before the `$include` that assigns those `.l`s), eliminated by two independent controls; the genuine #1378/#1424 divergence sits one level behind it (embedded MS-5 vs standalone MS-2)
+- [x] The atomic recovery sequence defined with per-step Phase-0 gates (per-model emit→compile→count→solve cold+presolve→bucket→match; `--resolve-changed`; determinism ×3; 335s goldens nightly)
+- [x] The P2 sprint outcome bounded (+2 target OR general `$149` fix + documented residual), with the `$149`-half spillover to the residual cohort noted
+- [x] Unknowns 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
