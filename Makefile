@@ -76,6 +76,21 @@ regen-goldens:
 check-goldens:
 	$(PYTHON) scripts/sprint_audit/check_golden_staleness.py
 
+# Full-corpus LEAK GATE (Sprint 37 Prep Task 3) — the required Phase-0 check for
+# any change to a shared emit function (_add_indexed_jacobian_terms /
+# _compute_index_offset_key). Asserts that EXACTLY the intended model(s) drift:
+# an unexpected drift is a leak, a missing one is a no-op fix.
+#
+#   make leak-check MODEL=markov
+#   make leak-check MODEL=markov,fawley
+#
+# Unlike `make regen-goldens`, this never rewrites an unexpected golden — that
+# is precisely how a leak gets laundered into the corpus.
+.PHONY: leak-check
+leak-check:
+	@test -n "$(MODEL)" || { echo "usage: make leak-check MODEL=<model_id>[,<model_id>...]"; exit 2; }
+	$(PYTHON) scripts/sprint_audit/check_golden_staleness.py --expect-drift $(MODEL)
+
 # Run GAMSLib ingestion pipeline
 ingest-gamslib:
 	@echo "Starting GAMSLib ingestion pipeline..."

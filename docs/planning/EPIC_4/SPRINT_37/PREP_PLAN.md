@@ -202,7 +202,7 @@ done
 
 ## Task 3: Full-Corpus (163-Golden) Leak-Verification Harness Design & Setup
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-10)
 **Priority:** Critical
 **Estimated Time:** 4-5 hours
 **Deadline:** Before Sprint 37 Day 1
@@ -235,11 +235,11 @@ This is the Sprint-36 retrospective's **single biggest process lesson**: the pre
 
 ### Changes
 
-To be completed.
+Reproduced the actual state of the gate before designing (the "reproduce, don't trust the doc" rule) and **corrected the prep premise**: the full-corpus sweep **already existed** (`.github/workflows/golden-staleness.yml` runs `check_golden_staleness.py` with no `--models` restriction → all 163 in-scope goldens, 25-min ceiling, triggered on `src/{ad,kkt,emit,ir}/**` — which already covers both shared functions in `src/kkt/stationarity.py`). Implemented the **actual** missing piece: `--expect-drift` in `scripts/sprint_audit/check_golden_staleness.py` (exactly-the-expected-set semantics, anti-laundering `--fix`, no-op detection, unverified≠clean) plus a `leak-check` target in the `Makefile` (`make leak-check MODEL=<id>`). Verified against 4 simulated drift scenarios. Produced `docs/planning/EPIC_4/SPRINT_37/LEAK_HARNESS_DESIGN.md`. Advanced Unknowns 7.1, 1.3 → ✅ VERIFIED.
 
 ### Result
 
-To be completed.
+**The gate existed; its verdict was the gap.** The prep assumption ("build a full-corpus mode as a required gate") was wrong in three ways (§1 of the design doc): the sweep already runs on all 163 goldens within CI budget; the path trigger is already correct (narrowing to *function* scope would be fragile and strictly worse); and no fast/nightly split is warranted — splitting would reintroduce the very cohort-incompleteness that caused the Sprint-36 miss. **The real defect:** the gate answers *"did anything drift?"* when a shared-function change needs *"did **exactly** the intended model drift?"* — and its remediation advice (`make regen-goldens`) refreshes **every** drifted golden, so a markov fix leaking onto cesam/ferts/sroute is **laundered into the goldens** and the gate goes green. That is precisely how the Sprint-36 leak could have survived review. **Shipped `--expect-drift` / `make leak-check MODEL=<id>`**, verified against 4 scenarios: (A) clean tree → `NO-OP` (the fix changed nothing) exit 1; (B) markov-only drift → `LEAK GATE PASS` exit 0; (C) markov+cesam → `LEAK: cesam` exit 1 (the exact S36 shape); (D) the same under `--fix` → the expected golden refreshed, **the leaked golden left byte-untouched and named** (anti-laundering). Timeouts block the claim (unverified ≠ clean). Quality gate fully green (typecheck / format / lint / **`make test` 5040 passed, 10 skipped, 1 xfailed**); the corpus is byte-clean after the scenarios. **Tasks 4 and 6 can now cite a real, tested Phase-0 invocation** (`make leak-check MODEL=markov` / `MODEL=fawley`). Two items remain for P7 in-sprint: making `golden-staleness` a *required* check (branch protection shows `required_status_checks.contexts: []` — a maintainer setting) and wiring `leak-check` into the emit-PR Phase-0 rule.
 
 ### Verification
 
@@ -264,13 +264,13 @@ grep -qiE "expect-drift|nightly|fast mode" docs/planning/EPIC_4/SPRINT_37/LEAK_H
 
 ### Acceptance Criteria
 
-- [ ] All 163 goldens inventoried and cost-classified (fast/medium/slow) with a total-regen wall-clock estimate
-- [ ] Two-mode design specified (PR-blocking fast mode + nightly full mode) with the slow-tail budget
-- [ ] Path/function-scoped trigger defined (arms only on `_add_indexed_jacobian_terms`-relevant changes)
-- [ ] The `--expect-drift <model>` pass criterion designed (asserts only the intended model drifts)
-- [ ] The `make` target + CI job drafted (spec ready for P7 to wire in-sprint)
-- [ ] A clean full-corpus baseline confirmed on current `main` (zero drift, deterministic)
-- [ ] Unknowns 1.3, 7.1 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 163 goldens inventoried and cost-classified (fast/medium/slow) with a total-regen wall-clock estimate
+- [x] Two-mode design specified (PR-blocking fast mode + nightly full mode) with the slow-tail budget
+- [x] Path/function-scoped trigger defined (arms only on `_add_indexed_jacobian_terms`-relevant changes)
+- [x] The `--expect-drift <model>` pass criterion designed (asserts only the intended model drifts)
+- [x] The `make` target + CI job drafted (spec ready for P7 to wire in-sprint)
+- [x] A clean full-corpus baseline confirmed on current `main` (zero drift, deterministic)
+- [x] Unknowns 1.3, 7.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
