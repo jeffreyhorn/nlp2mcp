@@ -487,7 +487,7 @@ grep -c '^### ' docs/issues/ISSUE_*fawley-constraint-index*.md 2>/dev/null   # e
 
 ## Task 7: sarf P5 — Symbolic-Emit Re-Architecture Design Refresh & Blow-Up Re-Measurement
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-10)
 **Priority:** High
 **Estimated Time:** 4-5 hours
 **Deadline:** Before Sprint 37 Day 1
@@ -518,11 +518,11 @@ Day 6 (`DAY6_SARF_BANK.md`): the blow-up re-confirmed non-terminating (>100s cap
 
 ### Changes
 
-To be completed.
+Re-measured the blow-up on current `main` (capped emit), re-counted sarf's set cardinalities live, re-located the 6 `enumerate_variable_instances` call sites and re-checked the 3 materialization-site files against the anchor, compiled the O(active) guarded-emit shape under GAMS 54.2.1 **at sarf's real 369,024 scale**, and established the corpus-safety gate sarf actually needs. No `src/` change (a `/tmp` GAMS compile only). Produced `docs/planning/EPIC_4/SPRINT_37/SARF_REARCH_REFRESH.md`. Advanced Unknowns 5.2, 5.3 → ✅ VERIFIED.
 
 ### Result
 
-To be completed.
+**Every premise of the banked design re-confirms, and two findings are sharper than the bank.** **(Blow-up)** the capped emit is **`>330s / NON-TERMINATING at cap (330.2s)`** — identical in kind to the S35/S36 baselines (no improvement, no regression); counts re-verified live (`|g|`=16, `|t|`=24, `|mn|`=31 ⇒ **369,024** declared / 398 active, both guards runtime-computed). **(Sites)** the "3 sites vs 6 call sites" apparent discrepancy is **not a contradiction** — 3 *materialization* sites (S1/S2/S3, the surfaces to short-circuit) vs 6 *`enumerate_variable_instances` call sites* (the corpus-safety surface traversed by all 142 models); all 6 re-located live and the 3 site files are byte-unchanged since the anchor, so **no fourth site**. **(5.2 — stronger than S36)** S36 validated the guarded emit on a *synthetic* 54-cell analogue; this task compiled it under GAMS 54.2.1 with sarf's **actual cardinalities**: **`rc=0`, 0 errors, `ncart` = 369,024** (exactly sarf's Cartesian), instantiation restricted to the guard domain (46,128) then the live set (96) — the shape is valid **at the size that actually breaks**. **(5.3 — a correction the bank did not carry)** the P7 precondition is satisfied *today* (Task 3's harness is on `main`), **but `make leak-check MODEL=sarf` cannot work**: sarf has **no golden** (0 files; `translate: failure`), so `--expect-drift sarf` reports `NO-OP` and fails for a non-correctness reason. **sarf's gate is the inverse assertion — `make check-goldens` showing ZERO drift across all 163, plus sarf newly producing a golden.** Recorded because running the P1/P4 recipe here would produce a confusing false failure. **Disposition unchanged:** a 20–28h atomic re-architecture for the lowest-leverage bucket (+1 Translate) — the fifth consecutive deferral; everything needed to implement it exists, and the case against doing it in-sprint is risk/reward, not readiness.
 
 ### Verification
 
@@ -544,13 +544,13 @@ grep -qiE "full-corpus|regression harness|P7" docs/planning/EPIC_4/SPRINT_37/SAR
 
 ### Acceptance Criteria
 
-- [ ] The 369K blow-up re-measured on current `main` (>100s cap confirmed; column count recorded)
-- [ ] The 6 call sites re-located in the current tree (drift noted)
-- [ ] The O(active=398) symbolic/parametric emit MODE specified (active-instance iteration; symbolic `stat_task` 7-term reproduction)
-- [ ] The full-corpus-regression-harness (P7) precondition made explicit with the sarf-after-harness ordering
-- [ ] The Phase-0 gate (PR20) defined (O(active) not O(369K); single-digit-second emit; byte-stable; determinism ×3; full-corpus regression)
-- [ ] The REPLAN exit documented (re-scope if the parametric emit re-triggers the timeout)
-- [ ] Unknowns 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The 369K blow-up re-measured on current `main` (>100s cap confirmed; column count recorded)
+- [x] The 6 call sites re-located in the current tree (drift noted)
+- [x] The O(active=398) symbolic/parametric emit MODE specified (active-instance iteration; symbolic `stat_task` 7-term reproduction)
+- [x] The full-corpus-regression-harness (P7) precondition made explicit with the sarf-after-harness ordering
+- [x] The Phase-0 gate (PR20) defined (O(active) not O(369K); single-digit-second emit; byte-stable; determinism ×3; full-corpus regression)
+- [x] The REPLAN exit documented (re-scope if the parametric emit re-triggers the timeout)
+- [x] Unknowns 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
