@@ -417,7 +417,7 @@ grep -qiE "\\\$66|rPower|atomic" docs/planning/EPIC_4/SPRINT_37/GANGES_RECOVERY_
 
 ## Task 6: fawley P4 — Emission-Path Location & Constraint-Index-Diagonal Discriminator Design
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-10)
 **Priority:** High
 **Estimated Time:** 4-6 hours
 **Deadline:** Before Sprint 37 Day 1
@@ -443,16 +443,16 @@ Day 4 (`DAY4_FAWLEY_DEFER.md`): the `stat_bq` `sameas` correction drives `max|st
 2. **Rebuild the constraint-index-diagonal orientation predicate.** Re-specify the predicate that identifies fawley's constraint-index-diagonal structure at the located emission path, against current-tree IR node types.
 3. **Layer the discriminator + confirm markov co-existence.** Design the fawley predicate to fire only on fawley's structure; verify (on paper against Task 4's markov predicate) that the two predicates are mutually exclusive in `_add_indexed_jacobian_terms` — neither fires on the other's model. This is the collision-avoidance step.
 4. **Design the Phase-0 gate:** the discriminator drives `max|stat_bq| → 0`; `make leak-check MODEL=fawley` (Task 3) shows **only fawley drifts** full-corpus (markov + the 2-D cohort byte-identical); the `shape_fawley_2d_second_index` fixture fails-before/passes-after.
-5. **Write the Phase-0 issue doc skeleton** (`docs/issues/ISSUE_<N>_fawley-constraint-index-diagonal.md`, 4 `### ` subsections) before the src commit.
+5. **Write the Phase-0 issue doc skeleton** (`docs/issues/ISSUE_1111_fawley-constraint-index-diagonal.md`, 4 `### ` subsections) before the src commit.
 6. **Scope the +Solve hand-off:** frame the stronger-continuation/reformulation question for the Sprint-38 PATH consultation (the `--force` survey was NEGATIVE); note it is NOT a Sprint-37 emit fix.
 
 ### Changes
 
-To be completed.
+Instrumented `_add_indexed_jacobian_terms` to locate the `qsb`/`pbal` emission path (the Day-4 blocker), implemented the rebuilt orientation predicate in a scratch `src/`, verified the correctness target via `kkt_residual.py`, and ran **two full-corpus `make leak-check MODEL=fawley` sweeps** (Task 3's gate, first production use). **Reverted the scratch `src/`** (`stationarity.py` byte-identical to the anchor). Produced `FAWLEY_DISCRIMINATOR_REFRESH.md` + the Phase-0 doc `docs/issues/ISSUE_1111_fawley-constraint-index-diagonal.md` (4 `###` subsections) + the `shape_fawley_2d_second_index` fixture spec. Advanced Unknowns 4.1, 4.4 → ✅ VERIFIED and 4.2 → 🔶 PARTIAL.
 
 ### Result
 
-To be completed.
+**The path is located and the fix works — but the leak gate refused it, twice.** **(4.1, the Day-4 blocker — CLOSED)** instrumentation shows both `qsb` and `pbal` take the **"truly disjoint by NAME"** branch (`:7069–7096`), falling to `Sum(mult_domain, …)` at `:7096` with `dual_binding=None`. Root: the branch tests overlap **by name** and `cfq ∉ {c,cf}`, but `cfq` is **declared a subset of `cf`** — so it is not independent and the whole-domain sum over-counts. The handling already exists on the *scalar* branch (#1393 `_subset_alias_superset_index`, whose comment names fawley); it is absent from the indexed one. Two competing hypotheses were tested and rejected. **(Correctness — VERIFIED in `src/`)** the rebuilt predicate takes `stat_bq`'s `sameas` count **1 → 3** and removes `stat_bq` from the KKT residuals entirely (baseline rel 0.973) — the Day-9 target reached by a real code change, not a hand-edit. **(4.2 — markov co-existence ✅, leak-freedom ❌)** the two fixes are structurally exclusive in **both** directions (fawley's branch is under `elif not _did_dim_mismatch_alias_fix:` `:7060`; markov's path *sets* that flag `:6925` — and fawley has no aliases). **But `make leak-check MODEL=fawley` reported `LEAK: dinam, prolog, shale`**, and after adding the S36 discriminator as conjunct 2, still **`LEAK: dinam, shale`**. **`prolog` is a live `model_optimal` + *match* model**, so v1 could have cost a Match — and **all three leak models are outside the Sprint-36 6-model cohort**, i.e. a cohort-only check would have shown clean and shipped it. **(4.4)** with `stat_bq` corrected the harness max is still the emit-correct `stat_trans(tr-2)` rel 1.00 and the MCP stays MS-5; with S36's NEGATIVE `--force` survey this is **0 bucket by construction**. **Disposition: still deferred, but the remaining work is bounded** — narrow conjunct 2 (its name-based test misses the AD layer's `__`-suffixed re-symbolization), then re-run to an unqualified `LEAK GATE PASS`.
 
 ### Verification
 
@@ -469,19 +469,19 @@ grep -c '^### ' docs/issues/ISSUE_*fawley-constraint-index*.md 2>/dev/null   # e
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_37/FAWLEY_DISCRIMINATOR_REFRESH.md` — the located `qsb`/`pbal` emission path, the rebuilt orientation predicate, the fawley/markov mutual-exclusion analysis (collision avoidance), the Phase-0 gate (`max|stat_bq|→0` + `make leak-check MODEL=fawley` + fixture), and the Sprint-38 +Solve consultation hand-off
-- `docs/issues/ISSUE_<N>_fawley-constraint-index-diagonal.md` — the Phase-0 acceptance-gate skeleton (4 `### ` subsections)
+- `docs/issues/ISSUE_1111_fawley-constraint-index-diagonal.md` — the Phase-0 acceptance-gate skeleton (4 `### ` subsections)
 - The `shape_fawley_2d_second_index` fixture spec (fail-before/pass-after), to land with the fix under P7
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.1, 4.2, 4.4
 
 ### Acceptance Criteria
 
-- [ ] The actual `qsb`/`pbal` emission path located (the branch the Day-4 attempt found, ≠ the design's partial-overlap assumption)
-- [ ] The constraint-index-diagonal orientation predicate rebuilt against current-tree IR node types
-- [ ] The fawley/markov predicate mutual-exclusion confirmed on paper (neither fires on the other's model in the shared `_add_indexed_jacobian_terms`)
-- [ ] The Phase-0 gate cites `max|stat_bq|→0` AND `make leak-check MODEL=fawley` (only fawley drifts) AND the `shape_fawley_2d_second_index` fixture
-- [ ] The `docs/issues/ISSUE_<N>_*.md` Phase-0 skeleton created (4 `### ` subsections)
-- [ ] The +Solve hand-off scoped for the Sprint-38 PATH consultation (H-b; NOT a Sprint-37 emit fix)
-- [ ] Unknowns 4.1, 4.2, 4.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The actual `qsb`/`pbal` emission path located (the branch the Day-4 attempt found, ≠ the design's partial-overlap assumption)
+- [x] The constraint-index-diagonal orientation predicate rebuilt against current-tree IR node types
+- [x] The fawley/markov predicate mutual-exclusion confirmed on paper (neither fires on the other's model in the shared `_add_indexed_jacobian_terms`)
+- [x] The Phase-0 gate cites `max|stat_bq|→0` AND `make leak-check MODEL=fawley` (only fawley drifts) AND the `shape_fawley_2d_second_index` fixture
+- [x] `docs/issues/ISSUE_1111_fawley-constraint-index-diagonal.md` Phase-0 skeleton created (4 `### ` subsections)
+- [x] The +Solve hand-off scoped for the Sprint-38 PATH consultation (H-b; NOT a Sprint-37 emit fix)
+- [x] Unknowns 4.1, 4.2, 4.4 verified (4.2 → 🔶 PARTIAL: leak-freedom refuted, documented) and updated in KNOWN_UNKNOWNS.md
 
 ---
 

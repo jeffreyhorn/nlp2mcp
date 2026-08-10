@@ -599,7 +599,15 @@ Trace the `qsb`/`pbal` terms through `_add_indexed_jacobian_terms` (instrument t
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 6 (fawley P4 — Emission-Path Location & Discriminator Design)
+**Date:** 2026-08-10
+
+**Findings:** Located by instrumenting `_add_indexed_jacobian_terms` for `var_name == "bq"`. Both terms take the **"truly disjoint by NAME"** branch (`src/kkt/stationarity.py:7069–7096`) and fall through to the `else: term = Sum(mult_domain, term)` fallback at **`:7096`**, with `dual_binding=None`: `[BQ] DISJOINT branch: mult_domain=('cfq','l','s') var_domain=('c','cf') dual_binding=None` and `mult_domain=('cfq','m')`. **Root cause:** the branch tests domain overlap **by name**, and `cfq ∉ {c, cf}` — but `cfq` is **declared a subset of `cf`** (`model_ir.sets['cfq'].domain == ('cf',)`), so it is not an independent iteration index and summing the whole domain over-counts. The handling for exactly this shape already exists on the *scalar*-constraint branch (Issue #1393, `_subset_alias_superset_index` at `:7251` — whose comment names **fawley** explicitly); it is simply absent from the indexed disjoint branch. Two competing hypotheses were tested and **rejected**: the `:7120` uncontrolled-free-index branch (a `_subset_alias_superset_index` fallback there left the `sameas` count at 1) and the `:6946` fresh-alias branch (it mints `root__kktN`, markov's convention, not the AD layer's `cfq__`).
+
+**Evidence:** the instrumentation output; `model_ir.sets['cfq'].domain == ('cf',)`; `_subset_alias_superset_index('cfq__', ('c','cf')) → 'cf'`. See `FAWLEY_DISCRIMINATOR_REFRESH.md` §1.
+
+**Decision:** ✅ The Day-4 blocker ("locate the actual emission path") is closed. The fix is a subset-aware binding in the disjoint branch, not a rebuild from scratch.
 
 ---
 
@@ -630,7 +638,15 @@ Re-specify the predicate + discriminator; build the joint change-surface map wit
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIAL — predicate rebuilt ✅ and markov co-existence ✅, but **leak-freedom REFUTED (twice)**
+**Verified by:** Task 6 (scratch `src/` control + two full-corpus leak runs)
+**Date:** 2026-08-10
+
+**Findings:** **(Rebuilt + correctness ✅)** the orientation predicate — a multiplier index declared as a single-parent **subset** of a variable-domain index binds via `$(sameas(…))` rather than being summed — drives `stat_bq`'s `sameas` count **1 → 3** (`mbal` + `qsb` + `pbal`) and removes `stat_bq` from the KKT-residual rows entirely (baseline rel 0.973), reproducing the Day-9 target **from a real `src/` change**. **(markov co-existence ✅, structurally, both directions)** this fix sits under `elif not _did_dim_mismatch_alias_fix:` (`:7060`) while markov's `σ=sp` fix sits on the path that **sets that flag `True`** (`:6925`) — alternative branches of the same if/elif chain, so a term cannot reach both; and fawley declares **no aliases**, making markov's collision signature unsatisfiable there (Task 4). **(Leak-freedom ❌ REFUTED)** `make leak-check MODEL=fawley` — Task 3's gate, first production use — reported **`LEAK: dinam, prolog, shale`** (conjunct 1 alone) and, after adding conjunct 2 (the S36 discriminator: the coefficient must not depend on the summed index), still **`LEAK: dinam, shale`** (`prolog` excluded; `dinam` drift +190 → +40 B). **Severity is not uniform: `prolog` is a live `model_optimal` + *match* model**, so the v1 predicate could have cost a Match. All three leak models are **outside** the Sprint-36 6-model cohort — a cohort-only check would have shown clean.
+
+**Evidence:** the two `make leak-check` runs; the shale diff (`$(sameas(t, tf))` added to six `stat_z` sums); the DB statuses (prolog `model_optimal`+match; dinam `path_syntax_error`; shale `path_solve_license`). See `FAWLEY_DISCRIMINATOR_REFRESH.md` §2–§4.
+
+**Decision:** 🔶 Must **not** land. Remaining work is bounded and specified (`FAWLEY_DISCRIMINATOR_REFRESH.md` §6): narrow conjunct 2 — the current test is name-based and misses the AD layer's `__`-suffixed re-symbolization — then re-run to an unqualified `LEAK GATE PASS`. fawley is 0-bucket, so it must never ship at the cost of a shared-function regression.
 
 ---
 
@@ -699,7 +715,15 @@ Solve the corrected fawley MCP; assert `modelstat`; re-confirm the S36 `--force`
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 6 (re-confirmed with `stat_bq` corrected) + S36 Day-11 (`--force` survey)
+**Date:** 2026-08-10
+
+**Findings:** With the `stat_bq` correction applied in scratch `src/`, the KKT-residual harness max is **still `stat_trans(tr-2)` rel 1.00** — an **emit-correct** divergence, unchanged by the fix. fawley's MCP stays MS-5 (LP optimum 2899.25), and Sprint 36's `--force` survey was **NEGATIVE** (homotopy/multistart/optfile all MS-5). So the correctness fix is **0 bucket by construction**: Solve/Match/genuine floor must be asserted **unchanged** (108/93/75) when it eventually lands, and claiming a bucket gain would be wrong.
+
+**Evidence:** `kkt_residual.py fawley` with the control applied → `max-residual row: stat_trans(tr-2) rel = 1.00e+00`, no `stat_bq` row; `SPRINT_36/DAY11_P5_CONSULTATION.md` §4.
+
+**Decision:** ✅ H-b confirmed. The +Solve is a **stronger-continuation / reformulation** question for the Sprint-38 PATH consultation, not a Sprint-37 emit fix.
 
 ---
 
