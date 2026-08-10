@@ -874,7 +874,15 @@ Determine testbed availability; if available, plan the turkey re-solve; if not, 
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — the assumption is refuted; **no licensed environment exists or is procurable**
+**Verified by:** Task 8 (GAMS-54 v54 Re-Baseline Plan + turkey Testbed Procurement)
+**Date:** 2026-08-10
+
+**Findings:** Every candidate path checked: **all three local GAMS installs (51 / 53 / 54.2.1) are `GAMS_Demo`**, and CI holds only `PYPI_API_TOKEN` — **no GAMS license secret**; the workflows install the public demo. No licensed >1000-row GAMS-54 environment is available or procurable from within the repo (acquiring one is a purchasing decision outside the sprint's control). **turkey's block measured precisely:** compiling the committed `turkey_mcp.gms` under GAMS 54.2.1 gives `SINGLE EQUATIONS 3,866` / `SINGLE VARIABLES 3,753` and `**** The model exceeds the demo license limits for nonlinear models of more than 1000 rows or columns` — the banked 3,866 figure now **measured, not cited**. Critically the compile is otherwise **clean: zero `$NNN` errors**, so the S35 Day-6 `$161` compile-recovery genuinely worked and **the license is the only remaining blocker** — the +1 would be realized immediately on a licensed run. **Bonus finding:** turkey's DB row is **stale** — `path_syntax_error`, `solve_date 2026-06-20`, i.e. seven weeks *before* the `$161` fix landed (2026-08-03) — because `--resolve-changed` **deliberately never persists** (`run_full_test.py:1267`). A persisting re-solve moves turkey `path_syntax_error → path_solve_license`, i.e. **pse 7 → 6, with no Solve/Match change**.
+
+**Evidence:** the three `gamslice.txt` headers; `gh secret list`; the turkey compile listing (3,866 rows + the demo refusal + 0 `$NNN`); the DB row's `solve_date`; `run_full_test.py:1267`. See `GAMS54_REBASELINE_PLAN.md` §1.
+
+**Decision:** ❌ turkey's +1 is **NO-GO for this sprint — license-gated**, not technically blocked. Nothing further in prep can move it. The stale-DB finding is carried into the re-baseline decision rule (§3) so it is not miscounted as a v54 effect.
 
 ---
 
@@ -905,7 +913,15 @@ Run the `run_full_test.py` re-solve of the 142 candidates under GAMS 54 demo; di
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** DESIGN-VERIFIED — procedure + decision rule specified; the full 142-model diff is the gate
+**Verified by:** Task 8
+**Date:** 2026-08-10
+
+**Findings:** The re-baseline is **cheap and low-risk**: measured cost ~**12 s/model** (agreste 0.85 s, chain 10.5 s, fawley 12.7 s, rocket 31.9 s) ⇒ **~30 minutes for all 142** — not the blocker the bank implied. Procedure specified: snapshot the DB (with md5) → re-solve the 142 convex candidates under GAMS 54 demo → per-model bucket diff into `GAMS54_REBASELINE_DIFF.md` → re-check the 5 OBJ-GAP models → apply the decision rule → commit or restore. **The decision rule needs three categories, not two:** *Regression* (a bucket downgrade attributable to v54 — blocks the re-pin), *neutral churn* (in-tolerance jitter / lateral move — recorded, does not block), and **stale-entry correction** (the v53 row predates a landed fix, so the change reflects *our* code, not v54 — **turkey is exactly this**, and would otherwise be miscounted as a spurious v54 effect). **Rule: re-pin only if the diff contains zero Regressions.** **Gap noted:** the DB records `solver_version: None` for all 219 models — there is no per-row version provenance, which is why this question can only be answered by re-running; the re-baseline should populate it.
+
+**Evidence:** the measured per-model timings; the three-way classification derived from the turkey stale-row finding (6.1); `solver_version` null across all 219 rows. See `GAMS54_REBASELINE_PLAN.md` §3.
+
+**Decision:** 🔶 Deliberately **not** upgraded to VERIFIED — only **5 of 142** models were actually re-solved in this task (§6.3). The zero-regression claim over the full corpus requires the full run, which is an in-sprint execution step.
 
 ---
 
@@ -935,7 +951,15 @@ Re-check the 5 OBJ-GAP buckets in the v54 re-baseline (Unknown 6.2); emit the re
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — **none of the five shift**
+**Verified by:** Task 8 (live re-solve under GAMS 54.2.1)
+**Date:** 2026-08-10
+
+**Findings:** All 5 OBJ-GAP models re-solved under **GAMS 54.2.1** (DB snapshotted → mutated → **restored byte-identical**, md5 `6166acab…` before and after): `agreste` `model_infeasible` → **unchanged**; `cesam` `model_infeasible` → **unchanged**; `chain` `model_optimal_presolve` + mismatch, nlp **5.0723** / mcp **5.1199** → **unchanged, objectives byte-identical**; `fawley` `model_infeasible` → **unchanged**; `rocket` `model_infeasible` → **unchanged**. **Zero bucket changes and not even numerical drift** on the models Sprint 36 named as the v54-strictness risk set — materially de-risking the re-pin decision. **Residual cohort** (`turkpow`/`clearlak`/`dinam`/`indus`) re-confirmed all still `path_syntax_error`; the P2 general `$149` fix removes that blocker but each carries other roots (turkpow ragged `Table`, clearlak dynamic sets, dinam/indus `$140`+`$149`) ⇒ **necessary-not-sufficient**. Note `dinam` is also one of the models the fawley predicate leaks onto (Task 6), so it is touched by two open tracks and should not be worked in isolation.
+
+**Evidence:** the before/after bucket table; the DB md5 identical across the run; the residual-cohort DB statuses. See `GAMS54_REBASELINE_PLAN.md` §2, §4.
+
+**Decision:** ✅ The named risk set is clean under v54. No in-sprint effort on the residual cohort.
 
 ---
 
