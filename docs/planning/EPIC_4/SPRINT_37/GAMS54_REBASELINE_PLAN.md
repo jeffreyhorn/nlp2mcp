@@ -89,7 +89,7 @@ The re-pin decision needs three categories, not two — §1 shows why:
 
 ### A gap worth fixing while re-baselining
 
-The DB records **`solver_version: None` for all 219 models** — there is no per-row provenance for which GAMS version produced a result. That is why the v53/v54 question can only be answered by re-running rather than by querying. **Recommendation:** have the re-baseline populate `solver_version` (GAMS 54.2.1) so future version transitions are a DB query, not a 30-minute re-solve.
+The DB records **`"solver_version": null` for all 219 models** — there is no per-row provenance for which GAMS version produced a result. That is why the v53/v54 question can only be answered by re-running rather than by querying. **Recommendation:** have the re-baseline populate `solver_version` (GAMS 54.2.1) so future version transitions are a DB query, not a 30-minute re-solve.
 
 ## 4. Residual multi-root cohort
 
