@@ -794,7 +794,15 @@ Hand-construct the guarded `stat_task` + `task.fx` for a `/tmp` sarf MCP; compil
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — at sarf's **real** scale, strengthening the Sprint-36 result
+**Verified by:** Task 7 (sarf P5 — Symbolic-Emit Re-Architecture Design Refresh)
+**Date:** 2026-08-10
+
+**Findings:** Sprint 36 validated the guarded-emit shape on a *synthetic* 3·2·3·3 = 54-cell model (ncart 54 → nactive 4) — enough to establish the mechanism, not that it holds at the size that actually breaks. Re-ran under **GAMS 54.2.1 with sarf's actual cardinalities** (`g` 16 · `t` 24 · `mn` 31, re-counted live from `sarf.gms`): `stat_task(g,t,m,n)$taskposs(g,t)` + `task.fx(g,t,m,n)$(not (taskposs and tech)) = 0` **compiles clean (`rc=0`, 0 errors)** with `ncart` = **369,024** — exactly sarf's declared Cartesian — while instantiation is restricted to the guard domain (`ndomain` 46,128, an 8× cut from the `$taskposs` guard alone) and then to the live set (`nactive` 96) by the per-term `$tech` guard + `task.fx`. (The synthetic guards are denser than sarf's real ones, so those two figures are upper bounds on the 398 analogue; the *scaling behaviour* is the claim.) ⇒ **the guarded shape is valid GAMS 54 at 369,024 and instantiates O(guard), not O(Cartesian).**
+
+**Evidence:** `/tmp/sarf_scale.gms` compiled under GAMS 54.2.1 → `PARAMETER ncart = 369024.000 / ndomain = 46128.000 / nactive = 96.000`, rc=0. See `SARF_REARCH_REFRESH.md` §3.
+
+**Decision:** ✅ The emit shape is proven at real scale. The parametric emit's remaining job is to *produce* it without materializing the 369K instances (the S1/S2/S3 short-circuit).
 
 ---
 
@@ -825,7 +833,15 @@ Spec the symbolic-branch predicate; confirm the full-corpus regression is the ga
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — with a correction: **the corpus-safety gate is INVERTED for sarf**
+**Verified by:** Task 7 (sarf P5 — Symbolic-Emit Re-Architecture Design Refresh)
+**Date:** 2026-08-10
+
+**Findings:** The P7 precondition is **satisfied today** — Task 3's harness (`make leak-check MODEL=<id>`, `--expect-drift`) is on `main`, so the instrument the banked design demanded exists. **But the standard invocation cannot be used for sarf:** sarf has **no committed golden** (`data/gamslib/mcp/` contains **0** sarf files, because `nlp2mcp_translate: failure` — the emit never completes). So `--expect-drift sarf` would place sarf in the *expected* set but never in the *drifted* set and report **`NO-OP: expected drift on sarf but the emit was byte-identical`** → exit 1 — a failure with nothing to do with correctness. **sarf's gate is the inverse assertion:** `make check-goldens` must report **ZERO drift across all 163 goldens** (the symbolic-branch predicate fires on no existing model) **plus** sarf newly *producing* a golden (163 → 164). Since sarf contributes no golden, its corpus-safety proof is entirely the **absence** of drift elsewhere. Also re-located the **6** `enumerate_variable_instances` call sites live (`index_mapping.py:634`, `constraint_jacobian.py:78`, `gradient.py:287`/`:453`, `complementarity.py:367`/`:512`) and confirmed the 3 materialization-site files are byte-unchanged since the anchor — no fourth site.
+
+**Evidence:** `ls data/gamslib/mcp/ | grep sarf` → 0; DB `sarf.nlp2mcp_translate.status == "failure"`; the `--expect-drift` semantics in `check_golden_staleness.py`. See `SARF_REARCH_REFRESH.md` §2, §4.
+
+**Decision:** ✅ Ordering for the Task-11 schedule: sarf after the P7 **CI wiring** (the instrument itself is already available), and its Phase-0 corpus gate is **`make check-goldens`**, not `leak-check` — recorded because running the P1/P4 recipe here would produce a confusing false failure.
 
 ---
 
