@@ -151,8 +151,25 @@ def main() -> int:
     args = ap.parse_args()
 
     expected: set[str] = set()
-    if args.expect_drift:
+    if args.expect_drift is not None:
         expected = {m.strip() for m in args.expect_drift.split(",") if m.strip()}
+        if not expected:
+            # An empty value would silently disable the leak gate while leaving
+            # --fix unrestricted (i.e. plain `make regen-goldens` laundering) —
+            # exactly the failure mode this gate exists to prevent. Refuse.
+            print(
+                "ERROR: --expect-drift was given but names no model "
+                f"(got {args.expect_drift!r}). Pass at least one model id, "
+                "e.g. --expect-drift markov.",
+                file=sys.stderr,
+            )
+            return 2
+
+    # A leak claim is only as wide as the sweep: --models restricts which goldens
+    # are compared, so drift outside that subset is invisible. The combination is
+    # allowed (it is how the gate is iterated on), but the verdict is labelled a
+    # SUBSET claim and must never read as full-corpus.
+    subset_scope = bool(expected and args.models)
 
     allowlist = load_allowlist()
     goldens = discover_goldens()
@@ -212,6 +229,9 @@ def main() -> int:
                             "leaked": leaked,
                             "missing_expected": missing,
                             "unverified": [r["golden"] for r in timed_out],
+                            # "subset" => the sweep was restricted by --models, so
+                            # this is NOT a full-corpus leak claim.
+                            "leak_claim_scope": "subset" if subset_scope else "full-corpus",
                         }
                         if expected
                         else {}
@@ -237,6 +257,12 @@ def main() -> int:
 
     # ---- Leak gate (--expect-drift): did EXACTLY the intended set drift? ----
     if expected:
+        if subset_scope:
+            print(
+                f"  WARNING: --models restricted this sweep to {len(results)} golden(s); "
+                "drift outside that subset is NOT checked, so this cannot support a "
+                "full-corpus leak claim."
+            )
         for r in drifted:
             tag = "EXPECTED" if r["model"] in expected else "LEAK"
             print(f"    {tag} DRIFT: {r['golden']} ({r.get('delta_bytes', 0):+d} bytes)")
@@ -261,10 +287,19 @@ def main() -> int:
                 "to accept a partial claim)."
             )
         if ok and not unverified_blocks:
-            print(
-                f"  LEAK GATE PASS: exactly the expected model(s) drifted "
-                f"({', '.join(sorted(expected))}); all other in-scope goldens byte-identical."
-            )
+            if subset_scope:
+                print(
+                    f"  LEAK GATE PASS (SUBSET of {len(results)} golden(s) — NOT a full-corpus "
+                    f"leak claim): exactly the expected model(s) drifted "
+                    f"({', '.join(sorted(expected))}) within the --models subset. "
+                    "Drift outside the subset was NOT checked — re-run without --models "
+                    "for the Phase-0 gate."
+                )
+            else:
+                print(
+                    f"  LEAK GATE PASS: exactly the expected model(s) drifted "
+                    f"({', '.join(sorted(expected))}); all other in-scope goldens byte-identical."
+                )
             return 0
         return 1
 

@@ -59,19 +59,22 @@ Three properties matter:
 - **Anti-laundering.** Under `--expect-drift`, `--fix` refreshes **only** the expected models (`args.fix and (not expected or mid in expected)`). An unexpected drift is a leak to surface, never a golden to rewrite. The failure message explicitly says *"do NOT run `make regen-goldens` (that would launder the leak into the goldens)."*
 - **No-op detection.** A "clean" sweep is a **failure** when you asserted your fix changes an emit — this catches a predicate that never fires (the fix silently doing nothing), which a binary gate reports as success.
 - **Unverified ≠ clean.** A timed-out golden was never compared, so it cannot support a leak claim. `--expect-drift` treats timeouts as blocking (escape hatch: `--allow-unverified`, documented as voiding the claim). This is deliberately stricter than the base gate, where a timeout is a soft "couldn't verify in budget."
+- **No silently-degraded claim.** An empty `--expect-drift` value (`--expect-drift ,`) is **rejected (exit 2)** — it would otherwise disable the gate *and* leave `--fix` unrestricted, i.e. plain laundering under a leak-gate command line. And because a `--models` sweep cannot see drift outside its subset, that combination is labelled `LEAK GATE PASS (SUBSET … — NOT a full-corpus leak claim)` with a warning, and records `"leak_claim_scope": "subset"` in the JSON report, so a scoped run can never be pasted as the Phase-0 evidence.
 
 ### Verified behaviour (4 simulated scenarios, this branch)
 
-Drift was simulated by perturbing committed goldens (regen ≠ golden), then `git checkout --` restored them; the corpus is verified clean afterwards.
+Drift was simulated by perturbing committed goldens (regen ≠ golden), then `git checkout --` restored them; the corpus is verified clean afterwards. Scenarios A–C used the **markov + cesam** pair (the real S36 shape); scenario D re-ran the same logic on the **rbrock + trig** pair because `--fix` re-emits each drifted golden twice for its determinism guard and cesam's emit is too slow for that double pass.
 
 | Scenario | Setup | Result | Exit |
 |---|---|---|---|
 | **A — no-op fix** | clean tree, `--expect-drift markov` | `NO-OP: expected drift on markov but the emit was byte-identical` | 1 ✓ |
 | **B — clean landing** | markov perturbed, `--expect-drift markov` | `LEAK GATE PASS: exactly the expected model(s) drifted (markov)` | 0 ✓ |
 | **C — leak** | markov + cesam perturbed, `--expect-drift markov` | `LEAK DRIFT: cesam_mcp.gms` + `LEAK: 1 unexpected model(s) drifted: cesam` | 1 ✓ |
-| **D — anti-laundering** | as C, **with `--fix`** | rbrock (expected) refreshed; **trig (leak) byte-untouched** | 1 ✓ |
+| **D — anti-laundering** | **rbrock + trig** perturbed, `--expect-drift rbrock` **with `--fix`** | `EXPECTED DRIFT: rbrock_mcp.gms` refreshed; **`LEAK DRIFT: trig_mcp.gms` left byte-untouched** | 1 ✓ |
 
 Scenario D is the one that would have caught Sprint 36: the leaked golden is left dirty and named, so it cannot be silently absorbed.
+
+**Scope note.** These scenarios were run with `--models` to isolate the logic on a fast pair. Because a `--models` sweep cannot see drift outside its subset, the tool now labels that combination explicitly — `LEAK GATE PASS (SUBSET of N golden(s) — NOT a full-corpus leak claim)` plus a warning — so a scoped run can never be mistaken for the Phase-0 full-corpus claim. An empty `--expect-drift` value is rejected outright (exit 2): it would otherwise disable the gate while leaving `--fix` unrestricted, i.e. silent laundering.
 
 ## 4. Cost inventory & the two modes
 
@@ -97,14 +100,6 @@ Scenario D is the one that would have caught Sprint 36: the leaked golden is lef
 - **CI full sweep: green inside the existing 25-min ceiling** on every triggering PR (S35 Day-6, S36 Day-10 runs).
 
 > **Note on method.** A per-model profiling sweep was attempted twice on this branch but the host carried heavy external load (load avg 26–97, 22 sessions), which made fine-grained per-model timings unreliable; it was abandoned rather than reported as precise. It is not load-bearing: the design question is the *aggregate* budget (measured above, twice), and the recommendation is to keep the sweep whole — so a fast/medium/slow partition is never used to select a subset.
-
-**Mode design:**
-
-| Mode | Scope | Trigger | Budget |
-|---|---|---|---|
-| **PR gate** (exists) | all 163 in-scope goldens | PR touching `src/{ad,kkt,emit,ir}/**` or the checker/allowlist | 25-min CI ceiling (currently passing) |
-| **Leak gate** (new) | all 163, `--expect-drift <model>` | **manual/Phase-0**, run by the author *before* the `src/` commit — and re-run in the PR | same sweep, one extra assertion |
-| **Nightly full** (exists, adjacent) | determinism sweep | `nightly.yml` cron, 360-min ceiling | already provisioned for the slow tail |
 
 **Mode design:**
 

@@ -89,7 +89,7 @@ check-goldens:
 .PHONY: leak-check
 leak-check:
 	@test -n "$(MODEL)" || { echo "usage: make leak-check MODEL=<model_id>[,<model_id>...]"; exit 2; }
-	$(PYTHON) scripts/sprint_audit/check_golden_staleness.py --expect-drift $(MODEL)
+	$(PYTHON) scripts/sprint_audit/check_golden_staleness.py --expect-drift "$(MODEL)"
 
 # Run GAMSLib ingestion pipeline
 ingest-gamslib:
