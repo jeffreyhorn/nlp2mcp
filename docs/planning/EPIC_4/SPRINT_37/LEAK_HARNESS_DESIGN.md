@@ -50,16 +50,26 @@ python scripts/sprint_audit/check_golden_staleness.py --expect-drift markov
 | Outcome | Meaning | Exit |
 |---|---|---|
 | `LEAK GATE PASS` | exactly the expected model(s) drifted; every other in-scope golden byte-identical | 0 |
+| `LEAK GATE PASS (PARTIAL …)` | the expectation held, but something narrowed what was compared (`--models` subset and/or goldens accepted unverified) — byte-identity is **not** asserted corpus-wide | 0 |
 | `LEAK: <models>` | an **unexpected** model drifted — the change escaped its target | 1 |
 | `NO-OP: <models>` | an expected model **did not** drift — the fix didn't change the emit | 1 |
 | `UNVERIFIED: N` | goldens timed out — the leak claim is **inconclusive** (not "clean") | 1 |
 
-Three properties matter:
+Four properties matter:
 
 - **Anti-laundering.** Under `--expect-drift`, `--fix` refreshes **only** the expected models (`args.fix and (not expected or mid in expected)`). An unexpected drift is a leak to surface, never a golden to rewrite. The failure message explicitly says *"do NOT run `make regen-goldens` (that would launder the leak into the goldens)."*
 - **No-op detection.** A "clean" sweep is a **failure** when you asserted your fix changes an emit — this catches a predicate that never fires (the fix silently doing nothing), which a binary gate reports as success.
-- **Unverified ≠ clean.** A timed-out golden was never compared, so it cannot support a leak claim. `--expect-drift` treats timeouts as blocking (escape hatch: `--allow-unverified`, documented as voiding the claim). This is deliberately stricter than the base gate, where a timeout is a soft "couldn't verify in budget."
-- **No silently-degraded claim.** An empty `--expect-drift` value (`--expect-drift ,`) is **rejected (exit 2)** — it would otherwise disable the gate *and* leave `--fix` unrestricted, i.e. plain laundering under a leak-gate command line. And because a `--models` sweep cannot see drift outside its subset, that combination is labelled `LEAK GATE PASS (SUBSET … — NOT a full-corpus leak claim)` with a warning, and records `"leak_claim_scope": "subset"` in the JSON report, so a scoped run can never be pasted as the Phase-0 evidence.
+- **Unverified ≠ clean.** A timed-out golden was never compared, so it cannot support a leak claim. `--expect-drift` treats timeouts as **blocking** (exit 1). This is deliberately stricter than the base gate, where a timeout is a soft "couldn't verify in budget." The `--allow-unverified` escape hatch does **not** buy back the strong claim: it downgrades the verdict to `LEAK GATE PASS (PARTIAL …)` and lists the unverified goldens as a caveat.
+- **No silently-degraded claim.** An empty `--expect-drift` value (`--expect-drift ,`) is **rejected (exit 2)** — it would otherwise disable the gate *and* leave `--fix` unrestricted, i.e. plain laundering under a leak-gate command line. And **the verdict is only ever as strong as what was actually compared**: every gap becomes an explicit caveat, so the PASS line (which gets pasted as Phase-0 evidence) can never overstate byte-identity.
+
+| Run | Verdict | JSON `leak_claim_scope` |
+|---|---|---|
+| full sweep, no timeouts | `LEAK GATE PASS: … all other in-scope goldens byte-identical.` | `full-corpus` |
+| `--models` subset | `LEAK GATE PASS (PARTIAL — NOT a full-corpus leak claim)` + caveat naming the restriction | `partial` |
+| timeouts + `--allow-unverified` | `… (PARTIAL …)` + caveat naming each unverified golden | `partial` |
+| timeouts, no `--allow-unverified` | `UNVERIFIED … inconclusive` (exit 1) | — |
+
+  Every PARTIAL verdict ends with *"Byte-identity is NOT asserted for the models above. Re-run the full sweep … for the Phase-0 gate."*, and the JSON carries a `claim_caveats` list.
 
 ### Verified behaviour (4 simulated scenarios, this branch)
 
@@ -74,7 +84,7 @@ Drift was simulated by perturbing committed goldens (regen ≠ golden), then `gi
 
 Scenario D is the one that would have caught Sprint 36: the leaked golden is left dirty and named, so it cannot be silently absorbed.
 
-**Scope note.** These scenarios were run with `--models` to isolate the logic on a fast pair. Because a `--models` sweep cannot see drift outside its subset, the tool now labels that combination explicitly — `LEAK GATE PASS (SUBSET of N golden(s) — NOT a full-corpus leak claim)` plus a warning — so a scoped run can never be mistaken for the Phase-0 full-corpus claim. An empty `--expect-drift` value is rejected outright (exit 2): it would otherwise disable the gate while leaving `--fix` unrestricted, i.e. silent laundering.
+**Scope note.** A–D were run with `--models` to isolate the logic on a fast pair, against the pre-guardrail build — which is why row B's recorded line is the *strong* PASS. Under the shipped build those same scoped runs are labelled `LEAK GATE PASS (PARTIAL — NOT a full-corpus leak claim)` with a caveat naming the restriction; that behaviour, the `--allow-unverified` caveat, the blocking-timeout path, and the strong full-corpus PASS were each re-verified separately after the guardrails landed (§3 table). An empty `--expect-drift` value is rejected outright (exit 2): it would otherwise disable the gate while leaving `--fix` unrestricted, i.e. silent laundering.
 
 ## 4. Cost inventory & the two modes
 

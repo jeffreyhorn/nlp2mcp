@@ -215,6 +215,23 @@ def main() -> int:
     leaked = sorted(drifted_models - expected) if expected else []
     missing = sorted(expected - drifted_models) if expected else []
 
+    # Everything that narrows what this run actually compared. Each entry
+    # downgrades a PASS from a full-corpus claim to a partial one — the verdict
+    # line gets pasted as Phase-0 evidence, so it must never overstate
+    # byte-identity over goldens that were skipped or never compared.
+    claim_caveats: list[str] = []
+    if subset_scope:
+        claim_caveats.append(
+            f"--models restricted the sweep to {len(results)} of the in-scope goldens; "
+            "drift outside that subset was not checked"
+        )
+    if expected and timed_out and args.allow_unverified:
+        claim_caveats.append(
+            f"{len(timed_out)} golden(s) timed out and were accepted unverified via "
+            f"--allow-unverified ({', '.join(r['golden'] for r in timed_out)}); "
+            "they were never compared"
+        )
+
     if args.json_path:
         Path(args.json_path).write_text(
             json.dumps(
@@ -229,9 +246,12 @@ def main() -> int:
                             "leaked": leaked,
                             "missing_expected": missing,
                             "unverified": [r["golden"] for r in timed_out],
-                            # "subset" => the sweep was restricted by --models, so
-                            # this is NOT a full-corpus leak claim.
-                            "leak_claim_scope": "subset" if subset_scope else "full-corpus",
+                            # "full-corpus" only when nothing narrowed the sweep;
+                            # "partial" when a --models subset and/or goldens
+                            # accepted unverified mean byte-identity is not
+                            # asserted corpus-wide.
+                            "leak_claim_scope": ("partial" if claim_caveats else "full-corpus"),
+                            "claim_caveats": claim_caveats,
                         }
                         if expected
                         else {}
@@ -287,13 +307,21 @@ def main() -> int:
                 "to accept a partial claim)."
             )
         if ok and not unverified_blocks:
-            if subset_scope:
+            # A leak claim is only as strong as what was actually compared. Any
+            # gap (a --models subset, or timed-out goldens waved through with
+            # --allow-unverified) downgrades the verdict — this line gets pasted
+            # as Phase-0 evidence, so it must never overstate byte-identity.
+            if claim_caveats:
                 print(
-                    f"  LEAK GATE PASS (SUBSET of {len(results)} golden(s) — NOT a full-corpus "
-                    f"leak claim): exactly the expected model(s) drifted "
-                    f"({', '.join(sorted(expected))}) within the --models subset. "
-                    "Drift outside the subset was NOT checked — re-run without --models "
-                    "for the Phase-0 gate."
+                    f"  LEAK GATE PASS (PARTIAL — NOT a full-corpus leak claim): exactly the "
+                    f"expected model(s) drifted ({', '.join(sorted(expected))}) among the "
+                    f"goldens that were actually compared."
+                )
+                for c in claim_caveats:
+                    print(f"    caveat: {c}")
+                print(
+                    "    Byte-identity is NOT asserted for the models above. Re-run the full "
+                    "sweep (no --models, full budget, no --allow-unverified) for the Phase-0 gate."
                 )
             else:
                 print(
