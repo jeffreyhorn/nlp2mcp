@@ -1,7 +1,9 @@
-# ISSUE #1111/#1112 — fawley `stat_bq`: constraint-index-diagonal over-count
+# ISSUE #1111 — fawley `stat_bq`: constraint-index-diagonal over-count
 
-**Status:** 🔵 DESIGN COMPLETE — control-verified, Phase-0 gate defined, not yet landed
-**Sprint:** 37 (P4, 0-bucket / H-b) · **Prep:** Task 6
+> **Scope.** This doc addresses **#1111 only** (alias/subset-aware index matching). The Sprint-36/37 planning docs refer to the track as "fawley #1111/#1112" because it sits in that architectural family, but the defect fixed here is a *name-based* domain-overlap test missing a declared **subset** relationship — squarely #1111. **#1112** (dollar-condition propagation through the AD/stationarity pipeline) is *not* addressed: the `$(sameas(…))` guard is the fix's **mechanism**, not the broken machinery. No #1112 claim is made and no companion doc is implied.
+
+**Status:** 🔶 DESIGN COMPLETE, **NOT LANDABLE YET** — correctness control-verified, but the full-corpus leak gate **FAILED** (see *Leak status*). Do not implement as-is.
+**Sprint:** 37 (P4, 0-bucket / H-b) · **Prep:** Task 6 · **Issue:** #1111 (family: #1111/#1112)
 **File:** `src/kkt/stationarity.py` — `_add_indexed_jacobian_terms`, the "truly disjoint by NAME" branch (`:7069–7096`)
 **Design:** `docs/planning/EPIC_4/SPRINT_37/FAWLEY_DISCRIMINATOR_REFRESH.md`
 
@@ -31,6 +33,22 @@ from this branch.
 — `stat_bq` went from **1** `sameas` (the pre-existing `mbal` one) to **3** (`mbal` + `qsb` +
 `pbal`) — and `stat_bq` **dropped out of the KKT-residual top rows entirely** (baseline rel
 0.973), leaving only the emit-correct `stat_trans(tr-2)`.
+
+#### Leak status — the gate FAILED (measured, Prep Task 6)
+
+`make leak-check MODEL=fawley` was run twice against the scratch predicate:
+
+| predicate | verdict |
+|---|---|
+| conjunct 1 (subset-aware binding) alone | `LEAK: dinam, prolog, shale` |
+| + conjunct 2 (coefficient independent of the summed index) | `LEAK: dinam, shale` (`prolog` excluded; `dinam` +190 → +40 B) |
+
+**`prolog` is a live `model_optimal` + *match* model**, so conjunct 1 alone risked a Match
+regression. All three leak models are **outside** the Sprint-36 6-model cohort — a cohort-only
+check would have shown clean. The `shale` drift adds `$(sameas(t, tf))` to six `stat_z` sums;
+whether that is a correction or a regression is unresolved.
+
+**⇒ the predicate must be narrowed further before any `src/` commit.**
 
 ## Phase 0: Acceptance Gate
 
@@ -82,11 +100,16 @@ Recommended land order: markov (P1) → `make leak-check MODEL=markov` → fawle
 
 ## REPLAN exit
 
-If the subset-aware binding leaks full-corpus, narrow it to require the multiplier index to be a
-**single-parent** subset of a var-domain index *and* the coefficient to be independent of that
-index (the `_collect_free_indices` absence test from the Sprint-36 design). If that also leaks,
-re-defer — fawley is 0-bucket, so it must never be shipped at the cost of a shared-function
-regression.
+The first two rungs of this ladder have **already been tried and both leaked** (see *Leak
+status*): conjunct 1 alone, and conjunct 1 + the `_collect_free_indices` absence test from the
+Sprint-36 design. The next refinement to try is that conjunct-2 test's **name matching**: it
+compares the raw `mult_domain` index name, which misses the AD layer's `__`-suffixed
+re-symbolization (`cfq` vs `cfq__`), so it likely under-fires on `dinam`/`shale`. Compare on the
+suffix-stripped canonical name, and/or require the subset's parent to be the *specific* var-domain
+index the coefficient actually references.
+
+If that still leaks, **re-defer**. fawley is 0-bucket, so it must never be shipped at the cost of
+a shared-function regression — and `prolog` (a live match) is in the blast radius.
 
 ## References
 
