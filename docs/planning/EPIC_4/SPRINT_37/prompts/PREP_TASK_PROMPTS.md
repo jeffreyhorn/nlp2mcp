@@ -66,7 +66,7 @@ On a new branch `planning/sprint37-task4` (from `main`), execute Sprint-37 Prep 
 
 **Deliverables:**
 - `docs/planning/EPIC_4/SPRINT_37/MARKOV_DISCRIMINATOR_DESIGN.md` — the three-structure characterization, the discriminating predicate (against IR node types), the hook point, the Phase-0 gate (harness + full-corpus leak-check + fixture), and the REPLAN exit.
-- `docs/issues/ISSUE_<N>_markov-sigma-sp-discriminator.md` — the Phase-0 acceptance-gate skeleton (4 `### ` subsections), authored before the src commit.
+- `docs/issues/ISSUE_1110_markov-sigma-sp-discriminator.md` — the Phase-0 acceptance-gate skeleton (4 `### ` subsections), authored before the src commit. *(Created by Task 4; the number is now resolved.)*
 - The `shape_markov_diagonal_kronecker` fixture spec (fail-before/pass-after), to land with the fix under P7.
 - Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 1.2, 1.3, 1.4, 1.5.
 

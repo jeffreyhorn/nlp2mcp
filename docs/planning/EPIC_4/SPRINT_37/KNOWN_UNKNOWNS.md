@@ -155,7 +155,15 @@ Extract the three derivative structures from the committed goldens + a trace of 
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — with two corrections found by measurement
+**Verified by:** Task 4 (markov P1 — Derivative-Structure Discriminator Design)
+**Date:** 2026-08-10
+
+**Findings:** All three derivative structures were **extracted from the live Jacobian** (not assumed): markov's off-diagonal is `Unary(-, Binary(*, ParamRef b(), ParamRef pi(s,i,σ,τ,sp)))` — a value-branch parameter carrying the equation index σ (position 2) and the variable's own `sp` (position 4); sroute's is `DollarCond(VAL: Const(1.0), COND: ParamRef darc(...))` — the parameter appears **only in the `$`-condition**; cesam's is `Binary(+, VarRef x(...), VarRef err1(...))` — **no ParamRef at all**. They separate cleanly. **Correction 1:** the derivative test *alone* is far too broad — a corpus scan fires on **15** models (`agreste, ajax, cesam, cesam2, china, fawley, marco, markov, orani, prolog, shale, tfordy, tforss, twocge, uimp`); a parameter coupling an equation index to a variable index is an ordinary modelling pattern. It is only valid **conjoined** with the S36 domain-collision signature. **Correction 2:** the naive conjunction *still leaked* — on `iobalance`, whose `colbal(j)`/`a(i,j)` derivative `ParamRef x(1)` has a single index coincidentally equal to both the eq value and the collision value. The fix is to require the two matches at **distinct positions** of the parameter's own index tuple (markov's `pi` carries them at positions 2 and 4; a 1-index param cannot).
+
+**Evidence:** measured ASTs per model (§1 of the design doc); the two corpus scans (deriv-only → 15 fires; conjoined+distinct-position → `['markov']`). See `MARKOV_DISCRIMINATOR_DESIGN.md` §1–§3.
+
+**Decision:** ✅ The discriminator is the **conjunction** (1) domain-collision signature ∧ (2) value-branch parameter coupling **at distinct positions**. Both refutations were caught at design time, before any `src/` change — the S36 lesson applied.
 
 ---
 
@@ -227,7 +235,15 @@ After a scratch discriminated `CASE_A` emit, run the cold MCP solve locally (mar
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** DESIGN-VERIFIED (strong) — the empirical leak gate runs at landing
+**Verified by:** Task 4 (predicate scan) + Task 3 (the gate instrument)
+**Date:** 2026-08-10
+
+**Findings:** Scanning the conjoined discriminator across **142** of the 163 in-scope models, it fires on **exactly `['markov']`**. Fourteen models reach the domain-collision gate (`cesam, dyncge, iobalance, irscge, lrgcge, markov, mine, moncge, qsambal, quocge, sambal, sroute, stdcge, twocge`) — confirming S36's leak is faithfully reproduced — and the derivative conjunct excludes **13 of 14**. **Honest limits:** 6 models were excluded as pathologically slow (`sarf/ganges/gangesx/turkpow/egypt/indus`) and 4 timed out (`clearlak/dinam/ferts/tabora`) — so **10 of 163 are unverified at design time**, and `ferts` (the third S36 leak) is among them. Also, a predicate scan is **not** a golden byte-diff: it shows where the gate fires, not what the emit produces.
+
+**Evidence:** `/tmp/scan_all.json` (deriv-only) and `/tmp/scan2_all.json` (conjoined) — 142 models each. See `MARKOV_DISCRIMINATOR_DESIGN.md` §3.
+
+**Decision:** 🔶 Strong design-level evidence, deliberately **not** upgraded to VERIFIED. The definitive proof is `make leak-check MODEL=markov` (Task 3) at implementation time, which must print the unqualified `LEAK GATE PASS` over all 163 goldens. Per the S36 lesson, a design-time leak-freedom claim stays a hypothesis until the gate passes.
 
 ---
 
@@ -258,7 +274,15 @@ Build the joint change-surface map from the Task-4 (markov) and Task-6 (fawley) 
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 4 (design) + Task 2 (baseline re-confirmation) + S36 Day-2 (the proven emission)
+**Date:** 2026-08-10
+
+**Findings:** Sprint 36 Day 2 proved the emission end-to-end: Mechanism C drove markov `CASE_B` rel 13.3 → `CASE_A` rel 2.8e-16 **and** the **cold** MCP solved `MODEL STATUS 1 Optimal` with `pvcost = 2401.577` (the NLP reference) + match. Task 2 re-confirmed on current `main` that markov is `verified_convex`, `model_optimal_presolve` + match @ `mcp_objective 2401.5773`, and sits in the **30-model presolve-match (methodology) partition** — so the flip is a **true +1** (genuine floor **75 → 76**), not a double-count. markov is tiny, so the cold solve is fully local (no >1000-row testbed gate).
+
+**Evidence:** `SPRINT_36/DAY2_MARKOV_OFFDIAG_CONTROL.md` §2 (CASE_A + cold-match table); `SPRINT_37/BASELINE_RECONFIRMATION.md` §1–§3.1 (partition + fingerprint).
+
+**Decision:** ✅ The methodology→genuine +1 is real and locally confirmable; the cold-solve assertion is Phase-0 gate item 2 (`modelstat` asserted, not inferred).
 
 ---
 
@@ -331,7 +355,15 @@ After the cascade fixes (Unknown 2.1), attempt the cold ganges compile past `$14
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — disjoint by construction *and* by measurement
+**Verified by:** Task 4 (joint change-surface analysis)
+**Date:** 2026-08-10
+
+**Findings:** Stronger than "non-overlapping firing conditions": **fawley declares no aliases at all** (`ir.aliases == {}`), and the markov gate's conjunct (1) requires an alias-canon match across ≥2 variable positions — so it is **structurally unsatisfiable** on fawley. Measured: fawley's `domain_gate_pairs` is **empty**; the markov gate never even reaches it, let alone fires. Conversely the two predicates are logical complements on one axis: fawley's discriminator fires when the summed constraint index is **absent** from the derivative coefficient, whereas markov's requires a parameter carrying it **present** (at distinct positions). Their hook points also differ — markov gates the `offset_groups` construction (`:6136+`), fawley the constraint-index-diagonal `sameas` guard.
+
+**Evidence:** `parse_model_file("fawley.gms").aliases == {}`; the fawley scan → `{"domain_gate_pairs": [], "fires": false}`; fawley's domains `qsb(cfq,l,s)`/`pbal(cfq,m)` vs `bq(c,cf)`. See `MARKOV_DISCRIMINATOR_DESIGN.md` §8.
+
+**Decision:** ✅ No collision possible. Land order markov (Task 4) → fawley (Task 6) with `make leak-check` between them, per the S35 fawley→markov leak precedent; Task 6 re-checks the reverse direction on the fawley side.
 
 ---
 
