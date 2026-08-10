@@ -195,8 +195,8 @@ Run the Task-3 full-corpus leak harness (`make leak-check MODEL=markov`) after a
 Sprint 37 execution team
 
 ### Verification Results
-✅ **Status:** VERIFIED (the instrument is ready; the discriminator it gates is Task 4)
-**Verified by:** Task 3 (Full-Corpus Leak-Verification Harness Design & Setup)
+🔶 **Status:** DESIGN-VERIFIED — the instrument is ready and the predicate scan is strong, but the gate has not empirically run
+**Verified by:** Task 3 (the instrument) + Task 4 (the predicate scan) (Full-Corpus Leak-Verification Harness Design & Setup)
 **Date:** 2026-08-10
 
 **Findings:** The instrument that catches the cesam/ferts/sroute leaks the 6-model cohort missed now exists and is tested: **`make leak-check MODEL=markov`** (= `check_golden_staleness.py --expect-drift markov`) sweeps all 163 in-scope goldens and passes **only** if markov is the sole drifter. Verified against 4 simulated scenarios: **(A)** clean tree → `NO-OP` (the fix didn't change the emit) exit 1; **(B)** markov-only drift → `LEAK GATE PASS` exit 0; **(C)** markov + cesam drift → `LEAK DRIFT: cesam_mcp.gms` + `LEAK: 1 unexpected model(s) drifted: cesam` exit 1 — **the exact S36 leak shape**; **(D)** the same logic under `--fix`, re-run on the fast `rbrock`+`trig` pair (cesam's emit is too slow for `--fix`'s determinism double-emit) → the expected golden is refreshed while **the leaked golden is left byte-untouched and named**, so it cannot be silently absorbed (the laundering path that hid the leak). Timeouts block the claim (unverified ≠ clean), so a pass is conclusive. Guardrails close the remaining ways a claim could be silently degraded: an **empty** `--expect-drift` is rejected (exit 2 — it would otherwise disable the gate while leaving `--fix` unrestricted), and **any** narrowing of what was compared (a `--models` subset, or timed-out goldens waved through with `--allow-unverified`) downgrades the verdict to `LEAK GATE PASS (PARTIAL — NOT a full-corpus leak claim)` with an explicit caveat per gap, `leak_claim_scope: partial` + a `claim_caveats` list in the JSON, and the line *"Byte-identity is NOT asserted for the models above"* — so a degraded run can never be pasted as Phase-0 evidence.
@@ -204,6 +204,8 @@ Sprint 37 execution team
 **Evidence:** the 4 scenario runs on this branch (goldens perturbed then `git checkout --` restored; corpus verified clean afterwards). See `LEAK_HARNESS_DESIGN.md` §3.
 
 **Decision:** ✅ The full-corpus leak gate is the Task-4 Phase-0 acceptance criterion: markov's discriminator must produce `LEAK GATE PASS` on `make leak-check MODEL=markov`. Task 6 (fawley) cites the same instrument (`MODEL=fawley`, additionally proving markov untouched — the S35 fawley→markov precedent). The design-level "leak-free by construction" claim stays a hypothesis until this gate passes empirically.
+
+**Task-4 addendum (2026-08-10):** the predicate scan strengthens but does not close this. The conjoined discriminator fires on exactly `['markov']` across **142** of the 163 in-scope models, excluding 13 of the 14 that reach the domain gate (incl. `cesam`, `sroute`). **Still not a leak-gate pass:** 6 models were skipped as pathologically slow and 4 timed out (`clearlak/dinam/ferts/tabora` — `ferts` is the third S36 leak), so **10 of 163 are unverified at design time**, and a predicate scan is not a golden byte-diff. Status stays 🔶 DESIGN-VERIFIED until `make leak-check MODEL=markov` passes at landing. See `MARKOV_DISCRIMINATOR_DESIGN.md` §3.
 
 ---
 
@@ -235,15 +237,15 @@ After a scratch discriminated `CASE_A` emit, run the cold MCP solve locally (mar
 Sprint 37 execution team
 
 ### Verification Results
-🔶 **Status:** DESIGN-VERIFIED (strong) — the empirical leak gate runs at landing
-**Verified by:** Task 4 (predicate scan) + Task 3 (the gate instrument)
+✅ **Status:** VERIFIED
+**Verified by:** Task 4 (design) + Task 2 (baseline re-confirmation) + S36 Day-2 (the proven emission)
 **Date:** 2026-08-10
 
-**Findings:** Scanning the conjoined discriminator across **142** of the 163 in-scope models, it fires on **exactly `['markov']`**. Fourteen models reach the domain-collision gate (`cesam, dyncge, iobalance, irscge, lrgcge, markov, mine, moncge, qsambal, quocge, sambal, sroute, stdcge, twocge`) — confirming S36's leak is faithfully reproduced — and the derivative conjunct excludes **13 of 14**. **Honest limits:** 6 models were excluded as pathologically slow (`sarf/ganges/gangesx/turkpow/egypt/indus`) and 4 timed out (`clearlak/dinam/ferts/tabora`) — so **10 of 163 are unverified at design time**, and `ferts` (the third S36 leak) is among them. Also, a predicate scan is **not** a golden byte-diff: it shows where the gate fires, not what the emit produces.
+**Findings:** Sprint 36 Day 2 proved the emission end-to-end: Mechanism C drove markov `CASE_B` rel 13.3 → `CASE_A` rel 2.8e-16 **and** the **cold** MCP solved `MODEL STATUS 1 Optimal` with `pvcost = 2401.577` (the NLP reference) + match. Task 2 re-confirmed on current `main` that markov is `verified_convex`, `model_optimal_presolve` + match @ `mcp_objective 2401.5773`, and sits in the **30-model presolve-match (methodology) partition** — so the flip is a **true +1** (genuine floor **75 → 76**), not a double-count. markov is tiny, so the cold solve is fully local (no >1000-row testbed gate).
 
-**Evidence:** `/tmp/scan_all.json` (deriv-only) and `/tmp/scan2_all.json` (conjoined) — 142 models each. See `MARKOV_DISCRIMINATOR_DESIGN.md` §3.
+**Evidence:** `SPRINT_36/DAY2_MARKOV_OFFDIAG_CONTROL.md` §2 (CASE_A + cold-match table); `SPRINT_37/BASELINE_RECONFIRMATION.md` §1–§3.1 (partition + fingerprint).
 
-**Decision:** 🔶 Strong design-level evidence, deliberately **not** upgraded to VERIFIED. The definitive proof is `make leak-check MODEL=markov` (Task 3) at implementation time, which must print the unqualified `LEAK GATE PASS` over all 163 goldens. Per the S36 lesson, a design-time leak-freedom claim stays a hypothesis until the gate passes.
+**Decision:** ✅ The methodology→genuine +1 is real and locally confirmable; the cold-solve assertion is Phase-0 gate item 2 (`modelstat` asserted, not inferred).
 
 ---
 
@@ -274,15 +276,15 @@ Build the joint change-surface map from the Task-4 (markov) and Task-6 (fawley) 
 Sprint 37 execution team
 
 ### Verification Results
-✅ **Status:** VERIFIED
-**Verified by:** Task 4 (design) + Task 2 (baseline re-confirmation) + S36 Day-2 (the proven emission)
+✅ **Status:** VERIFIED — disjoint by construction *and* by measurement
+**Verified by:** Task 4 (joint change-surface analysis)
 **Date:** 2026-08-10
 
-**Findings:** Sprint 36 Day 2 proved the emission end-to-end: Mechanism C drove markov `CASE_B` rel 13.3 → `CASE_A` rel 2.8e-16 **and** the **cold** MCP solved `MODEL STATUS 1 Optimal` with `pvcost = 2401.577` (the NLP reference) + match. Task 2 re-confirmed on current `main` that markov is `verified_convex`, `model_optimal_presolve` + match @ `mcp_objective 2401.5773`, and sits in the **30-model presolve-match (methodology) partition** — so the flip is a **true +1** (genuine floor **75 → 76**), not a double-count. markov is tiny, so the cold solve is fully local (no >1000-row testbed gate).
+**Findings:** Stronger than "non-overlapping firing conditions": **fawley declares no aliases at all** (`ir.aliases == {}`), and the markov gate's conjunct (1) requires an alias-canon match across ≥2 variable positions — so it is **structurally unsatisfiable** on fawley. Measured: fawley's `domain_gate_pairs` is **empty**; the markov gate never even reaches it, let alone fires. Conversely the two predicates are logical complements on one axis: fawley's discriminator fires when the summed constraint index is **absent** from the derivative coefficient, whereas markov's requires a parameter carrying it **present** (at distinct positions). Their hook points also differ — markov gates the `offset_groups` construction (`:6136+`), fawley the constraint-index-diagonal `sameas` guard.
 
-**Evidence:** `SPRINT_36/DAY2_MARKOV_OFFDIAG_CONTROL.md` §2 (CASE_A + cold-match table); `SPRINT_37/BASELINE_RECONFIRMATION.md` §1–§3.1 (partition + fingerprint).
+**Evidence:** `parse_model_file("fawley.gms").aliases == {}`; the fawley scan → `{"domain_gate_pairs": [], "fires": false}`; fawley's domains `qsb(cfq,l,s)`/`pbal(cfq,m)` vs `bq(c,cf)`. See `MARKOV_DISCRIMINATOR_DESIGN.md` §8.
 
-**Decision:** ✅ The methodology→genuine +1 is real and locally confirmable; the cold-solve assertion is Phase-0 gate item 2 (`modelstat` asserted, not inferred).
+**Decision:** ✅ No collision possible. Land order markov (Task 4) → fawley (Task 6) with `make leak-check` between them, per the S35 fawley→markov leak precedent; Task 6 re-checks the reverse direction on the fawley side.
 
 ---
 
@@ -355,15 +357,15 @@ After the cascade fixes (Unknown 2.1), attempt the cold ganges compile past `$14
 Sprint 37 execution team
 
 ### Verification Results
-✅ **Status:** VERIFIED — disjoint by construction *and* by measurement
-**Verified by:** Task 4 (joint change-surface analysis)
+✅ **Status:** VERIFIED — bounded, but the bank's proposed fix was WRONG, and a second cold blocker exists
+**Verified by:** Task 5 (ganges/gangesx P2 Cascade Re-Verification & Recovery Sequencing)
 **Date:** 2026-08-10
 
-**Findings:** Stronger than "non-overlapping firing conditions": **fawley declares no aliases at all** (`ir.aliases == {}`), and the markov gate's conjunct (1) requires an alias-canon match across ≥2 variable positions — so it is **structurally unsatisfiable** on fawley. Measured: fawley's `domain_gate_pairs` is **empty**; the markov gate never even reaches it, let alone fires. Conversely the two predicates are logical complements on one axis: fawley's discriminator fires when the summed constraint index is **absent** from the derivative coefficient, whereas markov's requires a parameter carrying it **present** (at distinct positions). Their hook points also differ — markov gates the `offset_groups` construction (`:6136+`), fawley the constraint-index-diagonal `sameas` guard.
+**Findings:** `$66` is **exactly 16 symbols** (measured from the GAMS-54 listing on both models): `deltax, aid, aex, adst, as, deltas, av, deltav, aq, deltaq, az, deltaz, an, deltan, pnm00, cg`, referenced by `stat_ax/deprec/exscale/invtot/ls/lw/m/n/nd/nm` + `fddef`. **They are computable cold:** every `.l` feeding them is *data-initialized* (`ganges.gms:557–745` from the `stock`/`dat` tables) and **the only `solve` is at line 1150 — after the whole calibration block (598–746)**. The cold MCP already carries those `.l` inputs (`ls.l`×14, `pk.l`×10, `s.l`×49, …) but drops the calibration assignments (0 occurrences) purely because they *syntactically* reference a `.l` attribute. **Correction to the bank:** `GANGES_RECOVERY_SEQUENCING.md` §3 proposed "a default cold assignment, e.g. `param(domain)=0`" — that is **wrong**, because `as`/`deltas`/`av`/`deltav` are CES/LES **share and scale** parameters; zeroing them degenerates the production functions, so the cold MCP would compile while encoding a *different model* and could not legitimately match. The correct fix is to emit the real assignments cold. **Second cold blocker found:** with the `$149` fix applied the emitted cold MCP **still contains `ac(i+2,r)`** in `stat_pc(i)` — `ac` is a data Table (`:211`), so the `+2` is a spurious index offset (the same `_compute_index_offset_key` family as markov's `σ=sp`). It compiles, so the `$NNN` protocol cannot see it, but it corrupts `stat_pc` ⇒ a **match-correctness** blocker surviving the `$66` fix.
 
-**Evidence:** `parse_model_file("fawley.gms").aliases == {}`; the fawley scan → `{"domain_gate_pairs": [], "fires": false}`; fawley's domains `qsb(cfq,l,s)`/`pbal(cfq,m)` vs `bq(c,cf)`. See `MARKOV_DISCRIMINATOR_DESIGN.md` §8.
+**Evidence:** the 16-symbol listing block; `ganges.gms` line numbers (593/598–746/1150); `grep` counts in `/tmp/gng/ganges_cold.gms`; `ac(i+2,r)` present in the emitted `stat_pc(i)`. See `GANGES_RECOVERY_DESIGN.md` §2.
 
-**Decision:** ✅ No collision possible. Land order markov (Task 4) → fawley (Task 6) with `make leak-check` between them, per the S35 fawley→markov leak precedent; Task 6 re-checks the reverse direction on the fawley side.
+**Decision:** ✅ `$66` is bounded (emit the assignments, **not** a zero default). The cold path needs `$66` **and** `ac(i+2,r)` — the latter may ride on the P1 markov offset work, since it is the same misattribution family.
 
 ---
 
@@ -394,15 +396,15 @@ Reproduce `rPower` under presolve; prototype the NA-guard/reset idioms in a `/tm
 Sprint 37 execution team
 
 ### Verification Results
-✅ **Status:** VERIFIED — bounded, but the bank's proposed fix was WRONG, and a second cold blocker exists
-**Verified by:** Task 5 (ganges/gangesx P2 Cascade Re-Verification & Recovery Sequencing)
+✅ **Status:** VERIFIED — `rPower` is NOT the deep class; the deep class is one level behind it
+**Verified by:** Task 5 (two independent `/tmp` controls + a raw-source reference control)
 **Date:** 2026-08-10
 
-**Findings:** `$66` is **exactly 16 symbols** (measured from the GAMS-54 listing on both models): `deltax, aid, aex, adst, as, deltas, av, deltav, aq, deltaq, az, deltaz, an, deltan, pnm00, cg`, referenced by `stat_ax/deprec/exscale/invtot/ls/lw/m/n/nd/nm` + `fddef`. **They are computable cold:** every `.l` feeding them is *data-initialized* (`ganges.gms:557–745` from the `stock`/`dat` tables) and **the only `solve` is at line 1150 — after the whole calibration block (598–746)**. The cold MCP already carries those `.l` inputs (`ls.l`×14, `pk.l`×10, `s.l`×49, …) but drops the calibration assignments (0 occurrences) purely because they *syntactically* reference a `.l` attribute. **Correction to the bank:** `GANGES_RECOVERY_SEQUENCING.md` §3 proposed "a default cold assignment, e.g. `param(domain)=0`" — that is **wrong**, because `as`/`deltas`/`av`/`deltav` are CES/LES **share and scale** parameters; zeroing them degenerates the production functions, so the cold MCP would compile while encoding a *different model* and could not legitimately match. The correct fix is to emit the real assignments cold. **Second cold blocker found:** with the `$149` fix applied the emitted cold MCP **still contains `ac(i+2,r)`** in `stat_pc(i)` — `ac` is a data Table (`:211`), so the `+2` is a spurious index offset (the same `_compute_index_offset_key` family as markov's `σ=sp`). It compiles, so the `$NNN` protocol cannot see it, but it corrupts `stat_pc` ⇒ a **match-correctness** blocker surviving the `$66` fix.
+**Findings:** The bank recorded `rPower` as the #1378/#1424 embedded-divergence class caused by `.l`-based power calibrations re-running non-idempotently. **The measured root is different and bounded.** Reproduced on both models: `Exec Error … rPower: FUNC DOMAIN: x**y, x=0,y<0` with `Evaluation error(s) in equation "prods(...)"` for cons-good/cap-good/int-good/service. The failing object is the **equation** `prods(i).. s(i) =e= as(i)*(deltas(i)*k(i)**(-rhos(i)) + ((1-deltas(i))*ls(i)**(-rhos(i)))$(not si(i)))**(-1/rhos(i))`, where **`ls` is a variable** evaluated at its *level* during generation. The level is 0 because nlp2mcp hoists the source's `.l`-dependent bound statements into a *"Deferred Variable Bounds"* block emitted **before** the `$include` that assigns those `.l`s: source order is `ls.l(i)=stock(...)` at **593** → `ls.fx(i)$(not ls.l(i))=0` at **1071** (correct); emitted order is the guard at MCP **484** → `$include` at **515** (inverted), so the guard sees `ls.l=0` for *every* sector and fixes `ls` to 0. **Two independent controls eliminate it** — (A) move the block after `$offMulti`, (B) delete it (the `$include` supplies those statements) — both take the full run from **rc=3 to rc=0** with `rPower` gone. The emitter already has both halves of this pattern (#1378 skips `$include`-supplied statements; the #1449 Layer-4 block is already a post-`$include` correction pass), so neither control invents machinery. **But behind `rPower` sits the real blocker:** with it removed, the embedded `ganges0` solves **MS-5 Locally Infeasible @ −386785.5017** while the **raw source standalone solves MS-2 Locally Optimal @ 6395.5444** (reference control) — *that* divergence is the genuine #1378/#1424 class, previously masked.
 
-**Evidence:** the 16-symbol listing block; `ganges.gms` line numbers (593/598–746/1150); `grep` counts in `/tmp/gng/ganges_cold.gms`; `ac(i+2,r)` present in the emitted `stat_pc(i)`. See `GANGES_RECOVERY_DESIGN.md` §2.
+**Evidence:** the reproduction listings; the source-vs-emitted ordering table; controls A/B (`/tmp/gng/ganges_presolve_{FIXED,SKIP}.gms`, both rc=0); the raw-source reference run. See `GANGES_RECOVERY_DESIGN.md` §3–§4.
 
-**Decision:** ✅ `$66` is bounded (emit the assignments, **not** a zero default). The cold path needs `$66` **and** `ac(i+2,r)` — the latter may ride on the P1 markov offset work, since it is the same misattribution family.
+**Decision:** ✅ `rPower` is a bounded emit-ordering fix (control-verified twice). The deep blocker is relocated to the embedded-NLP MS-5-vs-MS-2 divergence — a sharper, correctly-placed hand-off than the bank's.
 
 ---
 
@@ -433,15 +435,15 @@ Map the per-step Phase-0 gate (emit → compile → count → solve cold+presolv
 Sprint 37 execution team
 
 ### Verification Results
-✅ **Status:** VERIFIED — `rPower` is NOT the deep class; the deep class is one level behind it
-**Verified by:** Task 5 (two independent `/tmp` controls + a raw-source reference control)
+✅ **Status:** VERIFIED
+**Verified by:** Task 5
 **Date:** 2026-08-10
 
-**Findings:** The bank recorded `rPower` as the #1378/#1424 embedded-divergence class caused by `.l`-based power calibrations re-running non-idempotently. **The measured root is different and bounded.** Reproduced on both models: `Exec Error … rPower: FUNC DOMAIN: x**y, x=0,y<0` with `Evaluation error(s) in equation "prods(...)"` for cons-good/cap-good/int-good/service. The failing object is the **equation** `prods(i).. s(i) =e= as(i)*(deltas(i)*k(i)**(-rhos(i)) + ((1-deltas(i))*ls(i)**(-rhos(i)))$(not si(i)))**(-1/rhos(i))`, where **`ls` is a variable** evaluated at its *level* during generation. The level is 0 because nlp2mcp hoists the source's `.l`-dependent bound statements into a *"Deferred Variable Bounds"* block emitted **before** the `$include` that assigns those `.l`s: source order is `ls.l(i)=stock(...)` at **593** → `ls.fx(i)$(not ls.l(i))=0` at **1071** (correct); emitted order is the guard at MCP **484** → `$include` at **515** (inverted), so the guard sees `ls.l=0` for *every* sector and fixes `ls` to 0. **Two independent controls eliminate it** — (A) move the block after `$offMulti`, (B) delete it (the `$include` supplies those statements) — both take the full run from **rc=3 to rc=0** with `rPower` gone. The emitter already has both halves of this pattern (#1378 skips `$include`-supplied statements; the #1449 Layer-4 block is already a post-`$include` correction pass), so neither control invents machinery. **But behind `rPower` sits the real blocker:** with it removed, the embedded `ganges0` solves **MS-5 Locally Infeasible @ −386785.5017** while the **raw source standalone solves MS-2 Locally Optimal @ 6395.5444** (reference control) — *that* divergence is the genuine #1378/#1424 class, previously masked.
+**Findings:** Atomicity holds, with the blocker set now correctly enumerated: the **cold** bucket needs `$141`+`$145`+`$149` (✅ verified working) **+ `$66`** (bounded) **+ `ac(i+2,r)`** (match-correctness, newly surfaced); the **presolve** bucket needs the cascade **+ the `rPower` ordering fix** (control-verified) **+ the embedded-NLP MS-5 divergence** (the deep one). A partial landing churns the ganges/gangesx goldens (~9 collateral calibration goldens too) for **0 bucket** — the prohibition that banked S35 and S36. The pipeline seal is unchanged (the presolve retry fires only on a cold STATUS-5/spurious mismatch, not on a cold `path_syntax_error`), so a single-path fix cannot recover ganges. **`$149` spillover:** the `_diff_prod` fix is general and removes the `$149` blocker from dinam/indus/turkpow/clearlak — necessary-not-sufficient (turkpow ragged `Table`, clearlak dynamic sets, dinam/indus `$140`+`$149`); flagged for P6's residual cohort.
 
-**Evidence:** the reproduction listings; the source-vs-emitted ordering table; controls A/B (`/tmp/gng/ganges_presolve_{FIXED,SKIP}.gms`, both rc=0); the raw-source reference run. See `GANGES_RECOVERY_DESIGN.md` §3–§4.
+**Evidence:** the per-model (ganges AND gangesx) compile matrix; the recovery sequence with per-step gates. See `GANGES_RECOVERY_DESIGN.md` §5–§6.
 
-**Decision:** ✅ `rPower` is a bounded emit-ordering fix (control-verified twice). The deep blocker is relocated to the embedded-NLP MS-5-vs-MS-2 divergence — a sharper, correctly-placed hand-off than the bank's.
+**Decision:** ✅ Recovery stays atomic; **realistic in-sprint outcome 0 bucket**, but for a better-understood reason — 2 of 5 blockers are now bounded and specified, 2 remain deep (`ac(i+2,r)` possibly riding on P1's offset work; the embedded-NLP divergence).
 
 ---
 
@@ -474,15 +476,7 @@ Check the consultation channel for the reply; map the recommended options onto `
 Sprint 37 execution team
 
 ### Verification Results
-✅ **Status:** VERIFIED
-**Verified by:** Task 5
-**Date:** 2026-08-10
-
-**Findings:** Atomicity holds, with the blocker set now correctly enumerated: the **cold** bucket needs `$141`+`$145`+`$149` (✅ verified working) **+ `$66`** (bounded) **+ `ac(i+2,r)`** (match-correctness, newly surfaced); the **presolve** bucket needs the cascade **+ the `rPower` ordering fix** (control-verified) **+ the embedded-NLP MS-5 divergence** (the deep one). A partial landing churns the ganges/gangesx goldens (~9 collateral calibration goldens too) for **0 bucket** — the prohibition that banked S35 and S36. The pipeline seal is unchanged (the presolve retry fires only on a cold STATUS-5/spurious mismatch, not on a cold `path_syntax_error`), so a single-path fix cannot recover ganges. **`$149` spillover:** the `_diff_prod` fix is general and removes the `$149` blocker from dinam/indus/turkpow/clearlak — necessary-not-sufficient (turkpow ragged `Table`, clearlak dynamic sets, dinam/indus `$140`+`$149`); flagged for P6's residual cohort.
-
-**Evidence:** the per-model (ganges AND gangesx) compile matrix; the recovery sequence with per-step gates. See `GANGES_RECOVERY_DESIGN.md` §5–§6.
-
-**Decision:** ✅ Recovery stays atomic; **realistic in-sprint outcome 0 bucket**, but for a better-understood reason — 2 of 5 blockers are now bounded and specified, 2 remain deep (`ac(i+2,r)` possibly riding on P1's offset work; the embedded-NLP divergence).
+🔍 **Status:** INCOMPLETE
 
 ---
 

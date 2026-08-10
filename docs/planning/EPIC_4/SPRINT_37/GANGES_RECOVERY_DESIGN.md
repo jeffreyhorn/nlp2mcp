@@ -36,7 +36,7 @@ stat_nm      → pnm00       fddef        → cg
 
 Confirmed in the emitted artifacts: the cold MCP **does** carry the `.l` inputs (`ls.l` ×14, `pk.l` ×10, `s.l` ×49, `lw.l` ×10, `id.l` ×3, `dst.l` ×2) but **not** the calibration assignments (`deltas/as/aid/adst/deltax/aex` — 0 occurrences each). nlp2mcp drops them purely because they *syntactically* reference a `.l` attribute.
 
-> **Correction to the bank.** `GANGES_RECOVERY_SEQUENCING.md` §3 step 3 proposed "a default cold assignment, e.g. `param(domain) = 0`". That would be **wrong**: `as`, `deltas`, `av`, `deltav`, … are CES/LES **share and scale** parameters; zeroing them degenerates the production functions, so the cold MCP would compile while encoding a *different model* than the NLP — it could not legitimately match. The correct fix is to **emit the real assignments cold** (their inputs are present), not to default them.
+> **Correction to the bank.** `SPRINT_36/GANGES_RECOVERY_SEQUENCING.md` §3 step 3 proposed "a default cold assignment, e.g. `param(domain) = 0`". That would be **wrong**: `as`, `deltas`, `av`, `deltav`, … are CES/LES **share and scale** parameters; zeroing them degenerates the production functions, so the cold MCP would compile while encoding a *different model* than the NLP — it could not legitimately match. The correct fix is to **emit the real assignments cold** (their inputs are present), not to default them.
 
 ### A second cold blocker the bank did not carry: `ac(i+2,r)`
 
