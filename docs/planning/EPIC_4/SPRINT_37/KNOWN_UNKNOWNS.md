@@ -187,7 +187,15 @@ Run the Task-3 full-corpus leak harness (`make leak-check MODEL=markov`) after a
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (the instrument is ready; the discriminator it gates is Task 4)
+**Verified by:** Task 3 (Full-Corpus Leak-Verification Harness Design & Setup)
+**Date:** 2026-08-10
+
+**Findings:** The instrument that catches the cesam/ferts/sroute leaks the 6-model cohort missed now exists and is tested: **`make leak-check MODEL=markov`** (= `check_golden_staleness.py --expect-drift markov`) sweeps all 163 in-scope goldens and passes **only** if markov is the sole drifter. Verified against 4 simulated scenarios: **(A)** clean tree → `NO-OP` (the fix didn't change the emit) exit 1; **(B)** markov-only drift → `LEAK GATE PASS` exit 0; **(C)** markov + cesam drift → `LEAK DRIFT: cesam_mcp.gms` + `LEAK: 1 unexpected model(s) drifted: cesam` exit 1 — **the exact S36 leak shape**; **(D)** the same logic under `--fix`, re-run on the fast `rbrock`+`trig` pair (cesam's emit is too slow for `--fix`'s determinism double-emit) → the expected golden is refreshed while **the leaked golden is left byte-untouched and named**, so it cannot be silently absorbed (the laundering path that hid the leak). Timeouts block the claim (unverified ≠ clean), so a pass is conclusive. Guardrails close the remaining ways a claim could be silently degraded: an **empty** `--expect-drift` is rejected (exit 2 — it would otherwise disable the gate while leaving `--fix` unrestricted), and **any** narrowing of what was compared (a `--models` subset, or timed-out goldens waved through with `--allow-unverified`) downgrades the verdict to `LEAK GATE PASS (PARTIAL — NOT a full-corpus leak claim)` with an explicit caveat per gap, `leak_claim_scope: partial` + a `claim_caveats` list in the JSON, and the line *"Byte-identity is NOT asserted for the models above"* — so a degraded run can never be pasted as Phase-0 evidence.
+
+**Evidence:** the 4 scenario runs on this branch (goldens perturbed then `git checkout --` restored; corpus verified clean afterwards). See `LEAK_HARNESS_DESIGN.md` §3.
+
+**Decision:** ✅ The full-corpus leak gate is the Task-4 Phase-0 acceptance criterion: markov's discriminator must produce `LEAK GATE PASS` on `make leak-check MODEL=markov`. Task 6 (fawley) cites the same instrument (`MODEL=fawley`, additionally proving markov untouched — the S35 fawley→markov precedent). The design-level "leak-free by construction" claim stays a hypothesis until this gate passes empirically.
 
 ---
 
@@ -871,7 +879,15 @@ Inventory + cost-classify the 163 goldens; time a full regen + the fast subset; 
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — with a correction to the premise
+**Verified by:** Task 3 (Full-Corpus Leak-Verification Harness Design & Setup)
+**Date:** 2026-08-10
+
+**Findings:** The premise ("a full-corpus mode must be built as a required gate within CI budget") is **partly wrong**. (1) The full-corpus sweep **already exists**: `.github/workflows/golden-staleness.yml` runs `check_golden_staleness.py` with **no `--models` restriction** → all 163 in-scope goldens, on every PR touching `src/{ad,kkt,emit,ir}/**`, inside a **25-min** ceiling, and it has been green on every triggering PR (S35 Day-6, S36 Day-10). **Budget is not the constraint, and no fast/nightly split is warranted** — splitting would reintroduce exactly the cohort-incompleteness that caused the S36 miss. (2) The **path trigger is already correct**: both shared functions live in `src/kkt/stationarity.py` (`_add_indexed_jacobian_terms:5861`, `_compute_index_offset_key:4969`), covered by `src/kkt/**/*.py`; narrowing to *function* scope would be fragile and strictly worse. (3) The **real gaps**: the gate is **not a required check** (`branches/main/protection` → `required_status_checks.contexts` = `[]`), and its verdict is binary — it answers "did anything drift?" when a shared-function change needs "did *exactly* the intended model drift?". Its remediation advice (`make regen-goldens`) refreshes **every** drifted golden, so a leak is **laundered into the corpus** and the gate goes green (the S36 markov failure mode, traced step-by-step).
+
+**Evidence:** `golden-staleness.yml` (no `--models`, 25-min timeout, `src/{ad,kkt,emit,ir}/**` paths); `gh api .../branches/main/protection` → `contexts: []`; `check_one(..., fix=args.fix)` applied to all in-scope models + the printed "Run `make regen-goldens`" advice. See `LEAK_HARNESS_DESIGN.md` §1–§2.
+
+**Decision:** ✅ Implemented `--expect-drift` + `make leak-check MODEL=<id>` — exactly-the-expected-set semantics with **anti-laundering** (`--fix` refreshes only expected models), **no-op detection** (an expected model that *doesn't* drift fails), and **unverified≠clean** (timeouts block the claim). Verified against 4 simulated scenarios (§3). Two items remain for P7 in-sprint: making `golden-staleness` a *required* check (a maintainer branch-protection setting) and wiring `leak-check` into the emit-PR Phase-0 rule.
 
 ---
 
