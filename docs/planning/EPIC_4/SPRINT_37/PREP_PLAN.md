@@ -302,7 +302,7 @@ markov's `σ=sp` off-diagonal correction (reconciliation (a), `MARKOV_OFFDIAGONA
 2. **Design the discriminating predicate.** Define a structural key computed from the derivative term that is TRUE for markov's `−b·pi(...)` param-coupling and FALSE for sroute's conditional-constant and cesam's variable-bilinear. Candidate: "the off-diagonal coefficient is a *parameter reference* whose index tuple contains both the constraint's aliased index and the variable's independent index in the coupling positions." Specify it against the IR node types (`ParamRef`, `IndexOffset`, `SubsetIndex`, conditional `$`).
 3. **Locate the hook point** in `_add_indexed_jacobian_terms` / `_compute_index_offset_key` where the predicate gates the Mechanism C emission; confirm it composes with the existing diagonal-Kronecker path without disturbing the 63 cold-optimal / 30 presolve matches.
 4. **Design the Phase-0 acceptance gate** (PR24/PR27 + Task 3): the discriminator drives `kkt_residual.py markov` → `CASE_A` + cold `model_optimal` + match (2401.577); `make leak-check MODEL=markov` (Task 3) shows **only markov drifts** across the full corpus (cesam/ferts/sroute/polygon/ps2/ps3 byte-identical); the `shape_markov_diagonal_kronecker` fixture + the sharpened `test_markov_stationarity_has_correction_term` fail-before/pass-after.
-5. **Write the Phase-0 issue doc skeleton** (`docs/issues/ISSUE_<N>_markov-sigma-sp-discriminator.md`) with the 4 `### ` Acceptance-Gate subsections — authored *before* the Day-1 src commit (the Sprint-36 P7 lesson).
+5. **Write the Phase-0 issue doc skeleton** (`docs/issues/ISSUE_1110_markov-sigma-sp-discriminator.md`) with the 4 `### ` Acceptance-Gate subsections — authored *before* the Day-1 src commit (the Sprint-36 P7 lesson).
 6. **Define the REPLAN exit:** if no structural key cleanly separates all three (the discriminator over-generalizes or the three structures are not separable by a local predicate), document the residual and bank a narrower per-signature allowlist as the fallback.
 
 ### Changes
@@ -321,7 +321,7 @@ grep -qiE "param.*coupl|conditional-constant|variable-bilinear" docs/planning/EP
 # The Phase-0 gate cites the full-corpus leak-check + the fixture
 grep -qiE "leak-check|expect-drift|shape_markov" docs/planning/EPIC_4/SPRINT_37/MARKOV_DISCRIMINATOR_DESIGN.md && echo "gate specified"
 # The Phase-0 issue skeleton exists with the 4 subsections
-grep -c '^### ' docs/issues/ISSUE_*markov-sigma-sp*.md 2>/dev/null   # expect >= 4
+grep -c '^### ' docs/issues/ISSUE_1110_markov-sigma-sp-discriminator.md   # expect 4
 # The banked emission fingerprint is reproducible (from Task 2)
 test -f docs/planning/EPIC_4/SPRINT_36/MARKOV_OFFDIAGONAL_DESIGN.md && echo "emission design banked"
 ```
@@ -329,7 +329,7 @@ test -f docs/planning/EPIC_4/SPRINT_36/MARKOV_OFFDIAGONAL_DESIGN.md && echo "emi
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_37/MARKOV_DISCRIMINATOR_DESIGN.md` — the three-structure (markov/sroute/cesam) derivative-shape characterization, the discriminating predicate (against IR node types), the hook point in `_add_indexed_jacobian_terms`, the Phase-0 acceptance gate (harness + full-corpus leak-check + fixture), and the REPLAN exit
-- `docs/issues/ISSUE_<N>_markov-sigma-sp-discriminator.md` — the Phase-0 acceptance-gate skeleton (4 `### ` subsections), authored before the src commit
+- `docs/issues/ISSUE_1110_markov-sigma-sp-discriminator.md` — the Phase-0 acceptance-gate skeleton (4 `### ` subsections), authored before the src commit
 - The `shape_markov_diagonal_kronecker` fixture spec (fail-before/pass-after), to land with the fix under P7
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.2, 1.3, 1.4, 1.5
 
@@ -339,7 +339,7 @@ test -f docs/planning/EPIC_4/SPRINT_36/MARKOV_OFFDIAGONAL_DESIGN.md && echo "emi
 - [x] A discriminating predicate designed that is TRUE for markov and FALSE for both leak structures, specified against concrete IR node types
 - [x] The hook point in `_add_indexed_jacobian_terms` identified; composition with the diagonal-Kronecker path confirmed non-disturbing to the 63+30 matches
 - [x] The Phase-0 gate cites `kkt_residual.py markov` → CASE_A + cold match 2401.577 AND `make leak-check MODEL=markov` (only markov drifts full-corpus)
-- [x] The `docs/issues/ISSUE_<N>_*.md` Phase-0 skeleton created with 4 `### ` subsections
+- [x] `docs/issues/ISSUE_1110_markov-sigma-sp-discriminator.md` Phase-0 skeleton created with 4 `### ` subsections
 - [x] The REPLAN exit documented (narrower per-signature allowlist fallback if the predicate over-generalizes)
 - [x] Unknowns 1.2, 1.3, 1.4, 1.5 verified and updated in KNOWN_UNKNOWNS.md
 
@@ -898,7 +898,7 @@ git diff 78ceaead..HEAD -- data/gamslib/gamslib_status.json | head -1   # expect
 - [x] Task 1: Known Unknowns list created (27 items, full-corpus leak gate tracked)
 - [ ] Task 2: Baseline 108/93/75/135 + the four proven-component fingerprints re-confirmed
 - [ ] Task 3: Full-corpus leak-verification harness designed + clean baseline confirmed
-- [ ] Task 4: markov discriminator designed + `ISSUE_<N>_markov-sigma-sp-discriminator.md` Phase-0 skeleton authored
+- [ ] Task 4: markov discriminator designed + `ISSUE_1110_markov-sigma-sp-discriminator.md` Phase-0 skeleton authored
 - [ ] Task 11: Sprint 37 schedule created with the Day-0 GO/NO-GO gate
 
 ### Decision
