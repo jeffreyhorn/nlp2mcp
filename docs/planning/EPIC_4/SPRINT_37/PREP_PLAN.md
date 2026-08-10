@@ -276,7 +276,7 @@ grep -qiE "expect-drift|nightly|fast mode" docs/planning/EPIC_4/SPRINT_37/LEAK_H
 
 ## Task 4: markov P1 — Derivative-Structure Discriminator Design
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-10)
 **Priority:** Critical
 **Estimated Time:** 5-7 hours
 **Deadline:** Before Sprint 37 Day 1
@@ -307,11 +307,11 @@ markov's `σ=sp` off-diagonal correction (reconciliation (a), `MARKOV_OFFDIAGONA
 
 ### Changes
 
-To be completed.
+Extracted the three off-diagonal derivative ASTs **from the live Jacobian** (`compute_constraint_jacobian` → `get_derivative`) rather than assuming them, prototyped the discriminating predicate, and **scanned it across 142 of the 163 in-scope models** — twice, because the first two designs were refuted by that scan. Produced `docs/planning/EPIC_4/SPRINT_37/MARKOV_DISCRIMINATOR_DESIGN.md`, the Phase-0 gate doc `docs/issues/ISSUE_1110_markov-sigma-sp-discriminator.md` (4 `###` subsections), and the `shape_markov_diagonal_kronecker` fixture spec with its fail-before condition measured on the committed golden. Advanced Unknowns 1.2, 1.4, 1.5 → ✅ VERIFIED and 1.3 → 🔶 DESIGN-VERIFIED.
 
 ### Result
 
-To be completed.
+**The discriminator is designed and corpus-validated — and measurement refuted two designs before settling one.** The three structures separate cleanly: markov's off-diagonal is `ParamRef pi(s,i,σ,τ,sp)` (a value-branch parameter carrying the equation index σ *and* the variable's own `sp`); sroute's is `DollarCond(VAL: Const(1.0), COND: ParamRef darc(...))` — parameter **only in the condition**; cesam's is `VarRef x + VarRef err1` — **no parameter at all**. **Refutation 1:** the obvious derivative-only predicate fires on **15** models (agreste/ajax/cesam/cesam2/china/fawley/marco/markov/orani/prolog/shale/tfordy/tforss/twocge/uimp) — a param coupling an eq index to a var index is an ordinary pattern, so the test is only valid *conjoined* with S36's domain-collision signature. **Refutation 2:** that conjunction *still* leaked, on `iobalance`, whose `ParamRef x(1)` has one index coincidentally equal to both the eq value and the collision value; the fix is to require the matches at **distinct positions** of the parameter's index tuple. **Final result:** the conjoined, distinct-position predicate fires on **exactly `['markov']`** across 142 models, while **14** models reach the domain gate (reproducing S36's leak — `cesam`, `sroute` among them) and **13 of 14** are excluded by the derivative conjunct. Hook point located (`offset_groups` `:6136–6158`, correction append `:7214+`); `_compute_index_offset_key` untouched. **Unknown 1.5 resolved more strongly than expected:** fawley declares **no aliases**, so conjunct (1) is structurally unsatisfiable there — the markov gate never reaches fawley (measured `domain_gate_pairs: []`). **Honest limit:** 10 of 163 models are unverified at design time (6 skipped as pathologically slow, 4 timed out — including `ferts`, the third S36 leak), and a predicate scan is not a golden byte-diff, so 1.3 is deliberately left DESIGN-VERIFIED; `make leak-check MODEL=markov` at landing is the definitive gate.
 
 ### Verification
 
@@ -335,13 +335,13 @@ test -f docs/planning/EPIC_4/SPRINT_36/MARKOV_OFFDIAGONAL_DESIGN.md && echo "emi
 
 ### Acceptance Criteria
 
-- [ ] The three off-diagonal derivative structures (markov genuine, sroute conditional-constant, cesam variable-bilinear) characterized at the IR/AST level
-- [ ] A discriminating predicate designed that is TRUE for markov and FALSE for both leak structures, specified against concrete IR node types
-- [ ] The hook point in `_add_indexed_jacobian_terms` identified; composition with the diagonal-Kronecker path confirmed non-disturbing to the 63+30 matches
-- [ ] The Phase-0 gate cites `kkt_residual.py markov` → CASE_A + cold match 2401.577 AND `make leak-check MODEL=markov` (only markov drifts full-corpus)
-- [ ] The `docs/issues/ISSUE_<N>_*.md` Phase-0 skeleton created with 4 `### ` subsections
-- [ ] The REPLAN exit documented (narrower per-signature allowlist fallback if the predicate over-generalizes)
-- [ ] Unknowns 1.2, 1.3, 1.4, 1.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The three off-diagonal derivative structures (markov genuine, sroute conditional-constant, cesam variable-bilinear) characterized at the IR/AST level
+- [x] A discriminating predicate designed that is TRUE for markov and FALSE for both leak structures, specified against concrete IR node types
+- [x] The hook point in `_add_indexed_jacobian_terms` identified; composition with the diagonal-Kronecker path confirmed non-disturbing to the 63+30 matches
+- [x] The Phase-0 gate cites `kkt_residual.py markov` → CASE_A + cold match 2401.577 AND `make leak-check MODEL=markov` (only markov drifts full-corpus)
+- [x] The `docs/issues/ISSUE_<N>_*.md` Phase-0 skeleton created with 4 `### ` subsections
+- [x] The REPLAN exit documented (narrower per-signature allowlist fallback if the predicate over-generalizes)
+- [x] Unknowns 1.2, 1.3, 1.4, 1.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
