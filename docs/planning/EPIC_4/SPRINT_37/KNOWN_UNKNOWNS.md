@@ -1227,6 +1227,10 @@ When adding unknowns during Sprint 37:
 
 ## Next Steps
 
+> **✅ Prep complete (Task 11, 2026-08-11) — every unknown is resolved AND mapped to the sprint day that consumes or closes it.** The five "Before Sprint 37 Day 1" items below are all discharged: (1) all Critical/High unknowns verified via Tasks 2–10; (2) the controls ran and the full-corpus leak harness shipped to `main` in Task 3 (and caught a real leak on its first production use, Task 6); (3) every Verification Results block is filled; (4) scope was adjusted where assumptions proved wrong — **three refutations changed the plan**: 3.1 (the rocket consultation was never sent → a **Day-0** action, not a Day-11 integration), 6.1 (no licensed testbed → turkey removed from the projection), 7.3 (skip-if-absent fixtures are inert in CI → both re-specified corpus-free); (5) **zero Day-0 blockers — GO** (`PLAN.md` §18).
+>
+> **The four 🔶 DESIGN-VERIFIED unknowns each map to the day that closes them:** **1.3** markov leak-freedom → **Day 2** (`make leak-check MODEL=markov`); **4.2** fawley leak-freedom → **Day 7** (narrow conjunct 2, then re-gate); **6.2** the v54 diff → **Days 9–10** (async re-baseline + the three-way decision rule); **3.3** camcge MS-1 → **Day 10** (the `/tmp` Walras control, expected MS-4 → the Epic-5 fallback). None is an open question; each is a specified experiment with a scheduled slot and a REPLAN exit.
+
 **Before Sprint 37 Day 1:**
 1. Research and verify all Critical and High priority unknowns (18 total) via prep Tasks 2–10
 2. Execute the markov + fawley + ganges controls (local) and the `/tmp` `CASE_A` / `max|stat_bq|→0` / cascade experiments; stand up the full-corpus leak harness (Task 3)
