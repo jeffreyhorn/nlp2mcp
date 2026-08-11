@@ -14,7 +14,14 @@ import tempfile
 
 import pytest
 
-pytestmark = [pytest.mark.integration, pytest.mark.slow]
+# `determinism` is required, not decorative: ci.yml selects
+# `-m "not slow and not determinism"` and nightly.yml selects
+# `-m "slow and determinism"`, so a [integration, slow] test runs in NEITHER
+# lane. This test was red-and-unnoticed for months for exactly that reason
+# (SPRINT_37/P7_INFRA_CATALOG.md §1). The fast in-process guard is
+# tests/unit/kkt/test_shape_markov_diagonal_kronecker.py; this is the
+# end-to-end backstop.
+pytestmark = [pytest.mark.integration, pytest.mark.slow, pytest.mark.determinism]
 
 
 class TestMarkovMultiPatternIntegration:
@@ -73,19 +80,34 @@ class TestMarkovMultiPatternIntegration:
         else:
             pytest.fail("stat_z equation not found in MCP output")
 
-        # The correction term nu_constr(s,i) should appear as a direct
-        # (non-summed) term, separate from the sum over (s__kkt1,j).
-        assert (
-            "nu_constr(s,i)" in stat_z
-        ), f"Expected direct nu_constr(s,i) correction term in stat_z, got:\n{stat_z}"
+        # Sharpened to the σ=sp target form (Sprint 37 Day 3). The previous
+        # assertions expected a `sum(...) * nu_constr(s__kkt1,...)` shape, which
+        # was the *partially* corrected emit: it still carried one spurious
+        # offset group per set element. The landed fix collapses those entirely,
+        # so asserting on `s__kkt1` would now be asserting on the bug.
 
-        # The sum should use the off-diagonal derivative (no +1 Kronecker).
-        # It should NOT contain "(1 - b * pi" inside the sum.
-        sum_match = re.search(r"sum\([^)]+\),\s*(.+?)\s*\*\s*nu_constr\(s__kkt1", stat_z)
-        assert (
-            sum_match is not None
-        ), f"Expected sum(...) * nu_constr(s__kkt1,...) pattern in stat_z, got:\n{stat_z}"
-        sum_deriv = sum_match.group(1)
-        assert (
-            "1 -" not in sum_deriv and "1 +" not in sum_deriv
-        ), f"Sum derivative should be pure off-diagonal (no Kronecker delta), got: {sum_deriv}"
+        # 1. The Kronecker diagonal is a bare additive term, not summed over
+        #    indices it does not depend on.
+        assert re.search(
+            r"\+ nu_constr\(s,i\)(?!\))", stat_z
+        ), f"Expected a bare additive nu_constr(s,i) diagonal in stat_z, got:\n{stat_z}"
+
+        # 2. The off-diagonal collapses to a single sum over j, at the σ=sp
+        #    slice, with the coupling parameter carrying the variable's own
+        #    third index at both positions 2 and 4.
+        assert re.search(
+            r"sum\(j,[^;]*pi\(s,i,sp,j,sp\)[^;]*nu_constr\(sp,j\)", stat_z
+        ), f"Expected the collapsed σ=sp off-diagonal sum in stat_z, got:\n{stat_z}"
+
+        # 3. No spurious offset groups remain (45 before the fix, 0 after).
+        assert not re.search(r"s__kkt\d+", stat_z), (
+            "stat_z still contains s__kktN offset groups — the σ=sp entries are "
+            f"being enumerated per set element, got:\n{stat_z}"
+        )
+
+        # 4. The Kronecker `1` is no longer fused into the off-diagonal
+        #    coefficient.
+        assert "1 - b *" not in stat_z, (
+            "the Kronecker delta is still fused into the off-diagonal "
+            f"coefficient, got:\n{stat_z}"
+        )
