@@ -201,7 +201,15 @@ Run the Task-3 full-corpus leak harness (`make leak-check MODEL=markov`) after a
 Sprint 37 execution team
 
 ### Verification Results
-🔶 **Status:** DESIGN-VERIFIED — the instrument is ready and the predicate scan is strong, but the gate has not empirically run
+✅ **Status:** VERIFIED — the design-verified claim was re-earned empirically at the Day-2 landing
+**Verified by:** Sprint 37 Day 2 (P1 markov landing)
+**Date:** 2026-08-11
+
+**Findings:** `make leak-check MODEL=markov` against the landed tree returned the **unqualified `LEAK GATE PASS`** — `checked 163 in-scope golden(s) (7 allowlisted)`, `EXPECTED DRIFT: markov_mcp.gms (-11619 bytes)`, **0 unverified**, all other in-scope goldens byte-identical. All three Sprint-36 leak models (`cesam`, `ferts`, `sroute`) verified clean, as were the six 2-D cohort models and the 18 goldens CI was silently skipping before the `--min-scope` fix. `--resolve-changed --since-commit 78ceaead` returned **GO** across 19 changed-golden models, with markov shifting `model_optimal_presolve` → **`model_optimal`** (match retained).
+
+**Gate-capacity caveat (new, not a markov result):** the sweep's verdict is **load-dependent at the default 6 workers** — the same command produced 0, 2 and 4 timeouts across three runs, because `ganges` and `clearlak` sit near the hardcoded 600 s emit cap (`batch_translate.py:265`). The PASS above was obtained at **3 workers with zero timeouts**. `--allow-unverified` was deliberately NOT used: the unverified tail included `ferts`, the model the claim most depends on.
+
+**Decision:** ✅ Leak-freedom established on the landed tree. The worker/cap interaction is logged as a **P7 Day-9 item** — `golden-staleness` is now a *required* check and `ganges`/`gangesx` are the subject of Days 4–6, so the same models that blow the budget are next up against the gate.
 **Verified by:** Task 3 (the instrument) + Task 4 (the predicate scan) (Full-Corpus Leak-Verification Harness Design & Setup)
 **Date:** 2026-08-10
 
