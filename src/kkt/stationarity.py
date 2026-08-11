@@ -5850,6 +5850,17 @@ def _try_build_sigma_sp_crossterm(
     if not mult_domain or not var_domain or len(mult_domain) < 2:
         return None
 
+    # Refuse to fire on a conditioned constraint. This early-out bypasses the
+    # main loop's condition-propagation, so a ``$``-conditioned equation would
+    # have its condition silently dropped from the emitted terms. markov's
+    # ``constr`` carries no condition (measured), so this changes nothing today —
+    # it is a structural guarantee that the bypass can never lose a condition,
+    # rather than a property that happens to hold for the one model that fires.
+    # A conditioned constraint falls through to the standard path unchanged.
+    _eqdef = kkt.model_ir.equations.get(eq_name_base)
+    if _eqdef is not None and getattr(_eqdef, "condition", None) is not None:
+        return None
+
     aliases = getattr(kkt.model_ir, "aliases", {}) or {}
 
     def canon(n: str) -> str:

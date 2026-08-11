@@ -25,6 +25,22 @@ The design (Task 4 §4) prescribed: *detect at the `offset_groups` construction,
 
 Rationale: the offset-group machinery is *precisely what mis-groups this shape*. Suppressing after construction means reaching into a dict that every other model also flows through; an early-out means non-firing pairs observe **no change at all**. Same output — byte-identical to the Day-1 control — with a strictly smaller blast radius. `_compute_index_offset_key` is untouched under either shape.
 
+### Condition-propagation guard (added under review)
+
+The early-out bypasses the main loop's condition propagation, so a `$`-conditioned
+constraint would have its condition **silently dropped** from the emitted terms.
+markov's `constr` carries no condition (measured: `constr.condition = None`), so
+nothing is lost today — but that is a property of markov, not of the helper. The
+helper therefore **refuses to fire when the constraint carries a condition**,
+returning `None` so the standard path handles it. Emit verified byte-identical
+after the change. This converts an accidental absence into a structural guarantee.
+
+*(Separately, the membership guards `$(sp(s) and j(i))` / `$(sp(sp) and j(j))` in
+the golden are added by the **emit layer**, downstream of
+`build_stationarity_equations` — instrumented and confirmed. Both the early-out and
+the main loop feed into it identically, which is why the golden — this path's own
+output — carries them.)*
+
 ### A correctness detail that is load-bearing
 
 The representative-entry search **rejects any candidate whose index elements are not pairwise distinct**. Most markov entries repeat one — `var=('12','normal','12')` puts the same element at positions 0 and 2, so `'12'` would map to both `s` and `sp`. A wrong element→symbol map yields **silently incorrect parameter indices that still compile**, which is the worst failure mode available here. This was found by tracing on Day 1, not predicted by the design.
