@@ -556,7 +556,7 @@ grep -qiE "full-corpus|regression harness|P7" docs/planning/EPIC_4/SPRINT_37/SAR
 
 ## Task 8: GAMS-54 v54 Re-Baseline Harness Plan + turkey Testbed Procurement (P6)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-10)
 **Priority:** Medium
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 37 Day 1
@@ -585,11 +585,11 @@ Sprint 36 kept the v53(51.3.0) KPIs pending a full v54 re-baseline showing zero 
 
 ### Changes
 
-To be completed.
+Probed every licensed-testbed path (three local GAMS installs + CI secrets), compiled turkey's committed MCP under GAMS 54.2.1 to measure its row count and exact refusal, **live re-solved all 5 OBJ-GAP models under v54** (DB snapshotted → mutated → **restored byte-identical**, md5 verified), measured per-model re-solve cost, and specified the re-baseline procedure + a three-way decision rule. No `src/` change; DB unchanged. Produced `docs/planning/EPIC_4/SPRINT_37/GAMS54_REBASELINE_PLAN.md`. Advanced Unknowns 6.1 → ❌ WRONG (refuted), 6.2 → 🔶 DESIGN-VERIFIED, 6.3 → ✅ VERIFIED.
 
 ### Result
 
-To be completed.
+**turkey is definitively license-gated; the v54 risk set is clean; and the re-baseline is far cheaper than assumed.** **(6.1 — REFUTED)** all three local GAMS installs (51/53/**54.2.1**) are `GAMS_Demo` and CI holds only `PYPI_API_TOKEN` — **no licensed >1000-row environment exists or is procurable from the repo**. turkey measured: **3,866 single equations / 3,753 variables**, the exact refusal *"exceeds the demo license limits for nonlinear models of more than 1000 rows or columns"*, and — critically — a compile that is **otherwise clean (zero `$NNN`)**. So the S35 `$161` recovery worked and **the license is the only blocker**: the +1 is real but unrealizable. **(Bonus, no bank carried it)** turkey's DB row is **stale** — `path_syntax_error` dated **2026-06-20**, seven weeks *before* the `$161` fix landed — because `--resolve-changed` deliberately never persists (`run_full_test.py:1267`). A persisting re-solve moves turkey `path_syntax_error → path_solve_license`, i.e. **pse 7 → 6 with no Solve/Match change**. **(6.3 — VERIFIED, none shift)** all 5 OBJ-GAP models re-solved under v54 are **identical**, with chain's objectives **byte-identical** (5.0723 / 5.1199) — zero bucket changes and not even numerical drift on the named risk set. **(6.2 — procedure + rule)** measured cost **~12 s/model ⇒ ~30 min for all 142** — not a blocker. The decision rule needs **three** categories, not two: *Regression* (a v54-attributable downgrade — blocks the re-pin), *neutral churn*, and **stale-entry correction** (the v53 row predates a landed fix — **turkey is exactly this**), which would otherwise be miscounted as a spurious v54 effect. **Re-pin only on zero Regressions.** Also surfaced: the DB records `"solver_version": null` for all 219 rows — no per-row version provenance, which is why this can only be answered by re-running; the re-baseline should populate it. **P6 verdict: turkey NO-GO (license); re-baseline GO (cheap, low-risk); residual cohort no in-sprint effort** (`$149` necessary-not-sufficient, and `dinam` overlaps the open fawley track).
 
 ### Verification
 
@@ -612,11 +612,11 @@ gams --version 2>/dev/null | head -1 || echo "gams not on PATH (CI/testbed only)
 
 ### Acceptance Criteria
 
-- [ ] The v54 demo re-baseline procedure specified (invocation, bucket-diff vs v53 DB, 5-OBJ-GAP re-check, `GAMS54_REBASELINE_DIFF.md` output)
-- [ ] The canonical-version decision rule defined (re-pin to v54 only on zero bucket regressions; else keep v53)
-- [ ] The turkey testbed procurement verdict recorded (procurable → re-solve plan; not → license-gated with the exact blocker)
-- [ ] The residual multi-root cohort scoped (`$149`-half spillover from P2; any bounded per-model tail effort flagged)
-- [ ] Unknowns 6.1, 6.2, 6.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The v54 demo re-baseline procedure specified (invocation, bucket-diff vs v53 DB, 5-OBJ-GAP re-check, `GAMS54_REBASELINE_DIFF.md` output)
+- [x] The canonical-version decision rule defined (re-pin to v54 only on zero bucket regressions; else keep v53)
+- [x] The turkey testbed procurement verdict recorded (procurable → re-solve plan; not → license-gated with the exact blocker)
+- [x] The residual multi-root cohort scoped (`$149`-half spillover from P2; any bounded per-model tail effort flagged)
+- [x] Unknowns 6.1, 6.2, 6.3 verified (6.1 → ❌ WRONG/refuted, 6.2 → 🔶 DESIGN-VERIFIED, 6.3 → ✅) and updated in KNOWN_UNKNOWNS.md
 
 ---
 
