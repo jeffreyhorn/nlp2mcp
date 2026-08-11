@@ -5597,9 +5597,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-06-20T22:02:21.374023+00:00",
+        "parse_date": "2026-08-11T20:36:26.512019+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.011,
+        "parse_time_seconds": 1.0679,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -5611,34 +5611,32 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-06-20T22:02:26.568407+00:00",
+        "translate_date": "2026-08-11T20:36:29.520291+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 5.1885,
+        "translate_time_seconds": 2.917,
         "output_file": "data/gamslib/mcp/markov_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-06-20T22:02:33.641016+00:00",
+        "solve_date": "2026-08-11T20:36:30.100477+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
         "solver_status_text": "Normal Completion",
         "model_status": 1,
         "model_status_text": "Optimal",
-        "objective_value": 2401.5773,
-        "solve_time_seconds": 1.0367,
-        "iterations": 38,
-        "outcome_category": "model_optimal_presolve",
-        "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/markov_mcp_presolve.gms"
+        "objective_value": 2401.577,
+        "solve_time_seconds": 0.5623,
+        "iterations": 1280,
+        "outcome_category": "model_optimal"
       },
       "solution_comparison": {
         "comparison_status": "match",
-        "comparison_date": "2026-06-20T22:02:33.642134+00:00",
+        "comparison_date": "2026-08-11T20:36:30.100615+00:00",
         "nlp_objective": 2401.5773,
-        "mcp_objective": 2401.5773,
-        "absolute_difference": 0.0,
-        "relative_difference": 0.0,
+        "mcp_objective": 2401.577,
+        "absolute_difference": 0.00029999999969732016,
+        "relative_difference": 1.2491790278718914e-07,
         "objective_match": true,
         "tolerance_absolute": 1e-08,
         "tolerance_relative": 0.002,
@@ -5648,7 +5646,7 @@
         "mcp_model_status": 1,
         "status_match": true,
         "comparison_result": "compare_objective_match",
-        "notes": "Match within tolerance (diff=0.00e+00, tol=4.80e+00)"
+        "notes": "Match within tolerance (diff=3.00e-04, tol=4.80e+00)"
       }
     },
     {

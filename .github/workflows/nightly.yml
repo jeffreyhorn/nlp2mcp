@@ -47,6 +47,16 @@ jobs:
           pytest -m "slow and determinism" -v --tb=short \
             tests/integration/test_pipeline_determinism.py
 
+      # Sprint 37 Day 3: the determinism sweep above is path-scoped, so markers
+      # cannot route anything into it. This file's end-to-end markov σ=sp
+      # backstop is `slow` and therefore excluded from ci.yml's fast suite in
+      # both branches — without this step it runs in no CI lane at all, which is
+      # how it stayed red from March until Sprint 37.
+      - name: Run markov σ=sp end-to-end backstop
+        run: |
+          pytest -m "slow" -v --tb=short \
+            tests/integration/kkt/test_markov_multi_pattern.py
+
       - name: Upload diff artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4
