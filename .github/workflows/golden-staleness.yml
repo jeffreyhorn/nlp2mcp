@@ -96,9 +96,19 @@ jobs:
           pip install -e .
 
       # The GAMSLib raw corpus is gitignored; the check skips any golden whose
-      # raw source is absent. Provision it (the in-scope convex models that have
-      # committed goldens) so the gate is NOT a silent no-op. No GAMS needed —
-      # this is emit-only (no solve).
+      # raw source is absent. Provision it so the gate is NOT a silent no-op.
+      # No GAMS needed — this is emit-only (no solve).
+      #
+      # Sprint 37 P7: this used to run in the script's DEFAULT `convex` mode,
+      # which selects 135 models by design — so the sweep discovered 148 of the
+      # 170 committed goldens and reported PASS, silently skipping 18. Those 18
+      # are not incidental: they include `iobalance` (the model whose value
+      # coincidence refuted the second markov discriminator design), `orani` (in
+      # the 15-model false-positive set of the naive predicate), and the 2-D
+      # cohort members ps2_f_s / ps2_s / ps3_s_gic. A markov or fawley predicate
+      # regressing onto exactly those models would have passed CI. `--all`
+      # provisions the full 219 (~1 extra minute); `--min-scope` below asserts it
+      # actually happened.
       - name: Download GAMSLib raw corpus
         if: steps.gate.outputs.run == 'true'
         # download_gamslib_raw.sh exits non-zero if ANY model fails to download;
@@ -106,18 +116,25 @@ jobs:
         # transient gams.com/network hiccup doesn't fail the gate — the next step
         # still fails fast if ZERO models were provisioned.
         run: |
-          if ! ./scripts/download_gamslib_raw.sh; then
+          if ! ./scripts/download_gamslib_raw.sh --all; then
             echo "::warning::download_gamslib_raw.sh reported one or more download failures; continuing with whatever was fetched."
           fi
 
-      - name: Fail if corpus missing (guard against a silent no-op gate)
+      - name: Report provisioned corpus size
         if: steps.gate.outputs.run == 'true'
         run: |
           n=$(ls data/gamslib/raw/*.gms 2>/dev/null | wc -l)
           echo "Provisioned $n raw model(s)."
           test "$n" -gt 0 || { echo "ERROR: no raw corpus — the staleness gate would be a no-op."; exit 1; }
 
+      # --min-scope is the coverage floor: discover_goldens() drops any golden
+      # whose raw source is absent, so an under-provisioned corpus narrows the
+      # sweep while still reporting PASS. 170 = the committed goldens with a raw
+      # source. It is a FLOOR, so adding a golden (e.g. sarf, 170 -> 171) never
+      # trips it; deliberately REMOVING one requires lowering this number, which
+      # is the intended forcing function.
       - name: Run golden-staleness check
         if: steps.gate.outputs.run == 'true'
         run: |
-          python scripts/sprint_audit/check_golden_staleness.py --json golden-staleness.json
+          python scripts/sprint_audit/check_golden_staleness.py \
+            --min-scope 170 --json golden-staleness.json

@@ -148,6 +148,17 @@ def main() -> int:
         action="store_true",
         help="under --expect-drift, do not fail on timed-out (unverified) goldens",
     )
+    ap.add_argument(
+        "--min-scope",
+        dest="min_scope",
+        type=int,
+        help=(
+            "coverage floor: fail if fewer than N committed goldens are discoverable. "
+            "discover_goldens() silently drops any golden whose raw source is absent, "
+            "so a partial corpus yields a narrower sweep that still reports PASS. "
+            "Use in CI to assert the corpus was actually provisioned."
+        ),
+    )
     args = ap.parse_args()
 
     expected: set[str] = set()
@@ -173,6 +184,37 @@ def main() -> int:
 
     allowlist = load_allowlist()
     goldens = discover_goldens()
+
+    # Coverage floor, asserted on DISCOVERY (before --models narrowing): a golden
+    # whose raw source is absent is dropped by discover_goldens() without comment,
+    # so an under-provisioned corpus produces a narrower sweep that still reports
+    # PASS. That is the same "unverified is not clean" failure --expect-drift
+    # guards against, one level earlier — and it is invisible in the summary,
+    # which reports the count it happened to check rather than the count it should
+    # have. A floor (not an equality) so adding goldens never trips it.
+    if args.min_scope is not None and len(goldens) < args.min_scope:
+        have = {mid for (mid, _pre, _gp) in goldens}
+        missing = sorted(
+            {
+                p.name[: -len("_mcp_presolve.gms")]
+                if p.name.endswith("_mcp_presolve.gms")
+                else p.name[: -len("_mcp.gms")]
+                for p in MCP_DIR.glob("*_mcp*.gms")
+            }
+            - have
+        )
+        print(
+            f"ERROR: coverage floor not met — discovered {len(goldens)} golden(s), "
+            f"expected at least {args.min_scope}. The sweep would silently skip "
+            f"{len(missing)} model(s) whose raw source is absent from "
+            f"{RAW_DIR}/, and still report PASS.\n"
+            f"  missing raw source: {', '.join(missing) if missing else '(none)'}\n"
+            "  Provision the corpus (scripts/download_gamslib_raw.sh --all) or "
+            "lower --min-scope deliberately.",
+            file=sys.stderr,
+        )
+        return 2
+
     if args.models:
         wanted = {m.strip() for m in args.models.split(",") if m.strip()}
         goldens = [g for g in goldens if g[0] in wanted]
