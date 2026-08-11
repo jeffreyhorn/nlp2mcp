@@ -38,6 +38,13 @@ camcge translates and compiles cleanly (post-#1245), and the **emitted KKT syste
 
 ## 3. The named transformation + solution-preservation argument (Unknown 5.2)
 
+> **⚠ SUPERSEDED IN PART — the drop-row half was REFUTED (Sprint 30 Day 11, 2026-07-08; re-confirmed S34/S36).** This section's *"drop-one-redundant-row + fix-one-numéraire"* is **primal-correct but breaks the MCP dual**: every market-clearing multiplier is a needed price/wage in the stationarity, so dropping a row **orphans its multiplier** → **omega 299, MS-4** (not the 191.7346 §3 concludes). The price-pin half is sound in isolation — pinning the price ray reaches the correct **primal** (omega 191.7346) — but stays **MS-4**, because the numéraire fixes only the *price-scaling ray*, not the *row-redundancy nullspace* (the **two-nullspaces** diagnosis, empirically re-confirmed S36 Day 11).
+>
+> **The current formulation is three-part and keeps every row:** (1) **keep every market-clearing row** (no orphaned dual), (2) the **consumption-weighted numéraire** `sum(i$cles(i), cles(i)·(p(i) − pd0(i))) = 0`, and (3) **redefine the redundant market's dual via Walras' law** so the reduced system is full-rank *while that dual stays available in the stationarity*. Part (3) is the hard piece and the actual Epic-5 research. Refs: `EPIC_4/SPRINT_34/CAMCGE_ROCKET_PLAN.md` §4, `EPIC_4/SPRINT_36/DAY11_P5_CONSULTATION.md` §3, `EPIC_4/SPRINT_37/CONSULTATION_INTEGRATION_PREP.md`.
+>
+> **Banked evidence is discouraging:** price-pin → MS-4; single-dual-pin → MS-4; drop-row → corrupt @ omega 299. Three-plus sprints of variants have all stayed MS-4. Read §3 below as the *original* reasoning, not the current plan.
+
+
 **Transformation (CGE-domain structural preprocessing):**
 1. **Redundant-row drop** — remove **one** market-clearing row (e.g. the labor-market `lmequil(lc)`, or one goods-market `equil(i)`). By Walras' law it is linearly dependent on the remaining market-clearing rows + household budget balance, so it carries no independent information; the dropped market clears automatically at the solution.
 2. **Price-numéraire fix** — fix one price as the numéraire (e.g. a consumer price index `cpi = 1`, or a chosen good's price `p('numéraire-good') = 1`). This removes the price-level indeterminacy.

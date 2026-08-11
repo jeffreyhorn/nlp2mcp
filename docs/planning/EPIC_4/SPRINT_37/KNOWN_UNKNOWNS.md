@@ -476,7 +476,15 @@ Check the consultation channel for the reply; map the recommended options onto `
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — no reply, because **the submission was never sent**
+**Verified by:** Task 9 (Consultation Reply-Integration Prep)
+**Date:** 2026-08-10
+
+**Findings:** The prior question is unmet. `CONSULTATION_BUNDLE.md`'s hand-off checklist has every *preparation* item `[x]` but its single **action** item — `- [ ] **Sprint 36:** submit rocket to PATH authors; pose the mine LP-degeneracy question; run the fawley --force survey` — **unchecked**. S36 Day-11 §1 says the package "is **ready to submit**" (ready, not sent); issue **#1462** has one comment, the Sprint-28 bisect, and no submission or reply record; a repo-wide grep for a send/reply record finds nothing. The input was **FINALIZED 2026-07-15** and its own renumbering note records the consultation slipping **S33 → S34 → S35** before being retargeted to S36 — so it has been submission-ready across four sprint boundaries without transmission. The wording that enabled the drift is in the input doc itself: *"Submitted as part of the Sprint-36 consultation bundle"* means *packaged into the bundle document*, and reads as *sent*; this unknown's own original text inherited that misreading. **The integration staging remains correct and bounded** — a recommended option-set/regularization schedule plugs into `--nlp-presolve --force homotopy` (`proximal_perturbation` μ-continuation + `optfile = 1`, scaffold at `src/cli.py:207`); a recommended *reformulation* would be a new track. Case-c sign flip stays **BANNED**.
+
+**Evidence:** the unchecked bundle checkbox; S36 Day-11 §1 wording; `gh issue view 1462` (1 comment, Sprint-28); the input doc's FINALIZED date + slip history. See `CONSULTATION_INTEGRATION_PREP.md` §1.
+
+**Decision:** ❌ The +1 is contingent on **sending**, then on the reply. The blocker is neither technical nor PATH-author latency — **nobody has pressed send**, and no further prep can move it. Track as an owner-assigned action, not another banked hand-off.
 
 ---
 
@@ -506,7 +514,15 @@ Re-read the mine dual-architecture design; confirm the LP-side lever is out of e
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — 0-bucket confirmed (with the same never-sent caveat)
+**Verified by:** Task 9
+**Date:** 2026-08-10
+
+**Findings:** The technical claim holds: the Sprint-34 **value-invariance proof** settles it — no relabeling of the dual can create the missing +16000, because the scalar system is invariant under relabeling. The only non-invariant lever is an **LP-side reformulation**, which is outside emit scope ⇒ mine is **0 bucket regardless of the consultation outcome**. `x.up=inf` stays **BANNED** (control-refuted). DB unchanged: `model_infeasible`. **Caveat:** the same unchecked action item (see 3.1) covers *"pose the mine LP-degeneracy question"* — so the question is **specified** (`SPRINT_35/MINE_DUAL_ARCHITECTURE_DESIGN.md`) but never **posed**. Because mine is 0-bucket either way this costs no KPI, but it should be batched with the rocket send rather than carried separately.
+
+**Evidence:** the S34 value-invariance proof; the unchecked bundle action item; DB `model_infeasible`. See `CONSULTATION_INTEGRATION_PREP.md` §2.
+
+**Decision:** ✅ 0 bucket, confirmed independently of the consultation. Batch the posing with the rocket send.
 
 ---
 
@@ -536,7 +552,15 @@ Prototype the three-part redefinition in a `/tmp` demo control; solve; assert `m
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** DESIGN-VERIFIED — the control reproduces; MS-1 is expected **not** reachable
+**Verified by:** Task 9 (live `/tmp` camcge control, GAMS 54.2.1)
+**Date:** 2026-08-10
+
+**Findings:** The premise reproduces exactly on current `main`: emit (`--nlp-presolve`) **18 s**; the embedded NLP `camcge` solves **MS-2 Locally Optimal @ omega 191.7346** (the documented optimum); the MCP `mcp_model` is **MS-4 Infeasible**; size **641 single equations / 641 single variables**, confirming demo-reachable (<1000 rows). So the structural Walras rank-deficiency — not an emit defect — is intact. **The three-part dual-consistent Walras redefinition is the Epic-5 gate and was deliberately not attempted:** (1) keep every market-clearing row (no orphaned dual), (2) the consumption-weighted numéraire `sum(i$cles(i), cles(i)·(p(i) − pd0(i))) = 0`, (3) redefine the redundant market's dual via Walras' law — part (3) being a from-scratch CGE-aware emit layer. Expected **MS-4**: price-pin → MS-4, single-dual-pin → MS-4, drop-row → corrupt @ omega 299; **3+ sprints of variants have all failed to reach MS-1**. Running it in a prep task would re-run a refuted experiment.
+
+**Evidence:** the `/tmp` control listing (both SOLVE SUMMARY blocks: `camcge` MS-2 @ 191.7346, `mcp_model` MS-4; 641/641). See `CONSULTATION_INTEGRATION_PREP.md` §3.
+
+**Decision:** 🔶 camcge stays **0 bucket → Epic 5**. The gate is cheap to re-run (18 s emit, demo-reachable) whenever Epic 5 picks it up.
 
 ---
 
@@ -566,7 +590,15 @@ Re-read the S36 camcge Day-11 findings + the Epic-5 scoping doc; confirm the two
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — and a **stale-spec defect found and fixed**
+**Verified by:** Task 9
+**Date:** 2026-08-10
+
+**Findings:** The per-model-numéraire fallback is correct and well-argued: the Walras-redundancy + price-homogeneity argument is generic to closed CGE models, but *which* row is redundant and *which* price is the natural numéraire is **per-model** (closure + SAM dependent), so Epic 5 needs a **per-model numéraire-selection rule**, not a hard-coded one. The narrow scope is DB-confirmed — **camcge is the only inherent Walras singularity**; `irscge`/`lrgcge`/`moncge`/`stdcge`/`quocge` all **match**, and the other "CGE cohort" issues are ordinary emit bugs. **Defect found:** `EPIC_5/CGE_DEGENERACY_SCOPING.md` — explicitly designated "the Epic-5 handoff spec" — still prescribed **drop-one-redundant-row + fix-one-numéraire** in §3 and concluded it "yields a nonsingular square MCP whose unique solution is camcge's NLP equilibrium (191.7346)". **Sprint 30 Day 11 refuted the drop-row half**: it is primal-correct but **breaks the MCP dual** (every market-clearing multiplier is a needed price/wage in the stationarity; dropping a row orphans it → **omega 299, MS-4**). The document contained **zero** occurrences of "refut" — the finding never propagated from the sprint docs into the spec Epic 5 will start from. **Fixed in this task:** a `⚠ SUPERSEDED IN PART` note at §3 recording the refutation, the two-nullspaces diagnosis, the current three-part formulation, and the discouraging banked evidence.
+
+**Evidence:** `EPIC_5/CGE_DEGENERACY_SCOPING.md` §3 (pre-fix) vs `PROJECT_PLAN.md:1419` and `SPRINT_34/CAMCGE_ROCKET_PLAN.md` §4 (the refutation); `grep -c refut` = 0 before the fix; the CGE-cohort DB statuses. See `CONSULTATION_INTEGRATION_PREP.md` §4.
+
+**Decision:** ✅ Fallback correct; handoff spec corrected. Same failure mode as 3.1 — **information living in sprint docs that never reaches the document actually used**.
 
 ---
 
