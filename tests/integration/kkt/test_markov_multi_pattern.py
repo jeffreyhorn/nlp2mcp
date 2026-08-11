@@ -14,14 +14,17 @@ import tempfile
 
 import pytest
 
-# `determinism` is required, not decorative: ci.yml selects
-# `-m "not slow and not determinism"` and nightly.yml selects
-# `-m "slow and determinism"`, so a [integration, slow] test runs in NEITHER
-# lane. This test was red-and-unnoticed for months for exactly that reason
-# (SPRINT_37/P7_INFRA_CATALOG.md §1). The fast in-process guard is
+# This test ran in NO CI lane for months, which is why it stayed red unnoticed:
+# ci.yml excludes `slow` in both its branches, and nightly.yml's determinism
+# sweep is PATH-SCOPED to tests/integration/test_pipeline_determinism.py, so
+# markers alone cannot route anything into it. nightly.yml now carries an
+# explicit step for this file (see "Run markov σ=sp end-to-end backstop").
+# The `determinism` marker is deliberately NOT used: it is registered for
+# byte-stability-across-PYTHONHASHSEED tests, which this is not.
+# The fast in-process guard is
 # tests/unit/kkt/test_shape_markov_diagonal_kronecker.py; this is the
 # end-to-end backstop.
-pytestmark = [pytest.mark.integration, pytest.mark.slow, pytest.mark.determinism]
+pytestmark = [pytest.mark.integration, pytest.mark.slow]
 
 
 class TestMarkovMultiPatternIntegration:
