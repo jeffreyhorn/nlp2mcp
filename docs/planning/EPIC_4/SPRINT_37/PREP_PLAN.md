@@ -690,7 +690,7 @@ grep -qiE "Epic.?5|numéraire|numeraire" docs/planning/EPIC_4/SPRINT_37/CONSULTA
 
 ## Task 10: Property-Fixture Catalog + Phase-0-Doc-Enforcement + Genuine-Floor Tracking (P7)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Medium
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 37 Day 1
@@ -720,11 +720,21 @@ P7 turns the Sprint-36 process lessons into enforced infrastructure. The full-co
 
 ### Changes
 
-To be completed.
+- **Created** `docs/planning/EPIC_4/SPRINT_37/P7_INFRA_CATALOG.md` — the property-fixture catalog (both fixtures re-specified corpus-free, with measured fail-before), the Phase-0-doc CI enforcement design (trigger, doc resolution, failure message, reference implementation), the composed emit-PR gate story with per-track gate assignment, the genuine-floor tracking spec, and the Epic-4 SUMMARY row-37 skeleton.
+- **Remediated** `docs/issues/ISSUE_1110_markov-sigma-sp-discriminator.md` and `docs/issues/ISSUE_1111_fawley-constraint-index-diagonal.md` — restructured both Phase-0 sections to carry CONTRIBUTING's four canonical `###` subsections (adding the hand-derived Lagrangian/stationarity, the expected emit pattern, the verification commands, and a `PROCEED/REPLAN Signal` with the mandatory **`Traced Fix-Surface (Day-0)`** line that neither doc had), retaining the four acceptance criteria as additional subsections; corrected both Regression-guard sections to the corpus-free fixture spec.
+- **Corrected** `MARKOV_DISCRIMINATOR_DESIGN.md` §5–§6 and `FAWLEY_DISCRIMINATOR_REFRESH.md` §7 — struck the refuted skip-if-absent clauses with `⚠ SUPERSEDED IN PART` notes, so the correction reaches the docs the sprint will actually implement from.
+- **Fixed** `docs/planning/EPIC_4/SUMMARY.md` — row 37 carried the *pre-renumbering* theme (now Sprint 40's) and rows 38–40 were missing; PR #1651's renumbering had swept `PROJECT_PLAN.md` only.
+- **Updated** `KNOWN_UNKNOWNS.md` — 7.2 ✅, 7.3 ❌ (refuted), 7.4 Task-10 addendum; added a by-resolution-status block (all 27 resolved).
 
 ### Result
 
-To be completed.
+**Both banked P7 premises were wrong in the same direction — each specified a guard that would have been silently inert.**
+
+1. **The property fixtures (7.3 — REFUTED).** The banked spec's `pytest.skip` when the raw source is absent makes both fixtures **skip on every CI run**: `ci.yml` provisions the corpus via `download_gamslib_raw.sh --fast`, whose manifest lists exactly 5 models (`chenery, abel, partssupply, ps2_f, himmel11`) — neither markov nor fawley. The existing markov integration test is doubly silenced: `[integration, slow]` is excluded by `ci.yml` (`not slow`) **and** by `nightly.yml` (`slow and determinism`), so it runs in **no lane at all** — the precise mechanism behind "red since March". Both shapes were then **reproduced corpus-free and in-process** (refuting that test's own docstring): the markov analogue yields the `CASE_B` collapse with `nu_constr(s,i)` trapped inside a `sum` in **0.61 s**, the fawley analogue the unguarded `sum((cfq,m), … nu_pbal(cfq,m))` in **0.14 s**. Fail-before confirmed for both; two spec constraints forced by measurement (no group-count assertion — 15 synthetic vs 45 real; `cfq\w*` not literal `cfq__`).
+2. **The Phase-0-doc check (7.2 — VERIFIED, two corrections).** The rule needed calibration against the real corpus: *exactly 4 `###`* fails `ISSUE_1224` (6), and `$`-anchoring the heading regex drops `ISSUE_1330` (suffixed heading) — adopted **prefix heading match + the 4 canonical names present, extras allowed**. More seriously, the check **rejected `ISSUE_1110` and `ISSUE_1111`** — Sprint 37's own P1/P4 Phase-0 docs — so landing it unremediated would have made the sprint's first emit PR red on its own gate; auditing them also surfaced that **neither carried the mandatory `Traced Fix-Surface (Day-0)` line**. Both restructured here → **PASS 21 / FAIL 0**. Enforcement is warranted: of 3 recent emit-touching PRs, **1 complied**, and only after a reviewer asked. Resolution must be **PR-level** (#1647's doc landed in a later commit of the same PR), as a **CI job not pre-commit** (PR24: the fix surface is unknown at commit time).
+3. **Genuine-floor tracking (7.4 — re-confirmed) + a third stale-doc defect.** Anchor holds at **75** (DB byte-identical to `78ceaead`); the markov landing is **+1 genuine floor and a partition transfer (presolve-match 30→29, cold-optimal 63→64) with Match unchanged at 93** — not "+1 Match". `SUMMARY.md` row 37 still carried the pre-renumbering theme and rows 38–40 were absent: the **third** instance this prep cycle of a finding that lives in one document and never reaches the one someone will use (Task 9 found the other two).
+
+**The three P7 instruments compose** — Phase-0 doc (before the fix) → property fixture (fail-before/pass-after) → `leak-check` (after) — with two tracks inverting the standard recipe (sarf uses `make check-goldens`; fawley's leak gate currently **fails**). **The gap none of them closes is owner-assigned:** `golden-staleness` is still not a *required* status check, so every gate here remains advisory and a red PR can merge.
 
 ### Verification
 
@@ -746,12 +756,13 @@ grep -qiE "Phase-0.*CI|genuine.?floor" docs/planning/EPIC_4/SPRINT_37/P7_INFRA_C
 
 ### Acceptance Criteria
 
-- [ ] Both property fixtures cataloged (`shape_markov_diagonal_kronecker`, `shape_fawley_2d_second_index`), each fail-before/pass-after, landing with its fix
-- [ ] The Phase-0-doc CI enforcement designed (changed-path trigger + the `## Phase 0: Acceptance Gate` + 4-`### ` check + failure message)
-- [ ] The genuine-floor tracking update specified (PR25 recompute; anchor 75 → ≥76 if markov lands; methodology→genuine bookkeeping)
-- [ ] The Epic-4 SUMMARY.md row-37 skeleton drafted
-- [ ] The leak harness + fixtures + Phase-0 check confirmed to compose into one coherent emit-PR gate for the schedule
-- [ ] Unknowns 7.2, 7.3, 7.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Both property fixtures cataloged (`shape_markov_diagonal_kronecker`, `shape_fawley_2d_second_index`), each fail-before/pass-after, landing with its fix — **and re-specified corpus-free**: the banked skip-if-absent spec was refuted (inert in CI), with both fail-befores measured on prototypes (0.61 s / 0.14 s)
+- [x] The Phase-0-doc CI enforcement designed (changed-path trigger + the `## Phase 0: Acceptance Gate` + 4-`### ` check + failure message) — rule calibrated against all 21 Phase-0 docs (prefix heading match + canonical names present, extras allowed), PR-level doc resolution, CI-job-not-pre-commit, `skip-phase0` escape hatch, reference implementation included
+- [x] The genuine-floor tracking update specified (PR25 recompute; anchor 75 → ≥76 if markov lands; methodology→genuine bookkeeping) — markov is a **partition transfer with Match unchanged at 93**, not "+1 Match"
+- [x] The Epic-4 SUMMARY.md row-37 skeleton drafted — **and the stale row 37 fixed** (it carried Sprint 40's theme; rows 38–40 were missing after PR #1651's renumbering)
+- [x] The leak harness + fixtures + Phase-0 check confirmed to compose into one coherent emit-PR gate for the schedule — with per-track gate assignment (sarf and fawley both invert or fail the standard recipe) and the structural markov→fawley land order
+- [x] Unknowns 7.2, 7.3, 7.4 verified and updated in KNOWN_UNKNOWNS.md — 7.2 ✅, **7.3 ❌ refuted**, 7.4 re-confirmed with a Task-10 addendum
+- [x] `ISSUE_1110` and `ISSUE_1111` remediated so the drafted check is landable (**PASS 21 / FAIL 0**), each gaining the mandatory `Traced Fix-Surface (Day-0)` line
 
 ---
 

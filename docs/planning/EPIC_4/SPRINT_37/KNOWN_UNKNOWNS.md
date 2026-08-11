@@ -70,6 +70,12 @@ This document identifies every open question, assumption, and risk across the se
 
 **Estimated Research Time:** ~36 hours (within the 28–36 hour target; spread across prep Tasks 2–10)
 
+**By Resolution Status (all 27 resolved as of Prep Task 10, 2026-08-10):**
+- ✅ VERIFIED: 20
+- 🔶 DESIGN-VERIFIED (specified; the empirical gate runs in-sprint): 4 — 1.3, 3.3, 6.2, and the partial 4.2
+- ❌ WRONG / refuted: 3 — **3.1** (the rocket consultation was never sent), **6.1** (no licensed >1000-row testbed is procurable), **7.3** (skip-if-absent fixtures are inert in CI)
+- 🔍 INCOMPLETE: 0
+
 ---
 
 ## Table of Contents
@@ -1064,7 +1070,21 @@ Prototype the changed-path trigger + the heading/subsection check on a sample em
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — with two corrections
+**Verified by:** Task 10 (P7 Infrastructure Catalog)
+**Date:** 2026-08-10
+
+**Findings:** The trigger is `src/ad/**/*.py`, `src/kkt/**/*.py`, `src/emit/**/*.py` — deliberately **narrower** than the leak gate's, which also arms on `src/ir/**`; CONTRIBUTING §392 names only the three. Doc resolution must be **PR-level, not commit-level**: only 6 of the last 25 emit-touching *commits* carry an issue doc, but PR #1647's doc landed in a *later commit of the same PR*, so PR-level evaluation gives the desired red→author-adds-doc→green behaviour. Accept either a changed conforming `docs/issues/ISSUE_*.md` **or** a PR-body `ISSUE_<N>`/`#<N>` reference resolving to an existing conforming doc (CONTRIBUTING already requires the PR description to cite the PROCEED signal). Hook as a **CI job, not pre-commit** — PR24 requires the Day-0 trace to establish the fix surface, which is unknown at commit time. `skip-phase0` label as an auditable escape hatch, mirroring `skip-golden-staleness`.
+
+**Correction 1 — the rule must be calibrated.** Measured over the 21 Phase-0 docs: *exactly 4 `###`* fails `ISSUE_1224` (6 — the canonical 4 plus two narrative refresh sections); *the 4 canonical names exactly and in order* fails 3 docs; and `$`-anchoring the heading regex silently drops `ISSUE_1330` (its heading carries a parenthetical suffix). Adopted: **prefix heading match + the 4 canonical names present, extras allowed** (18/20 pre-remediation).
+
+**Correction 2 — the check as specified would have blocked its own sprint.** It **rejects `ISSUE_1110` and `ISSUE_1111`** — Sprint 37's own P1/P4 Phase-0 docs, which use a criteria-based decomposition (`Correctness`/`Bucket & KPI`/`Leak-freedom`/`Regression guard`). Auditing them also surfaced that **neither carried the `Traced Fix-Surface (Day-0)` line CONTRIBUTING §447 makes mandatory**, though Tasks 4 and 6 had both established the surface by tracing.
+
+**Enforcement gap quantified:** of 3 recent emit-touching PRs, **1 complied** (#1647 — and only after a reviewer asked); #1620 (turkey `$161`) and #1596 (S34 P4 bound transfer) carried no Phase-0 doc and fall outside CONTRIBUTING's exception scope.
+
+**Evidence:** `golden-staleness.yml` path block; `gh pr view --json files` over merged PRs; the rule-variant prototype run against `docs/issues/*.md`; the post-remediation run → **PASS 21 / FAIL 0**. See `P7_INFRA_CATALOG.md` §2.
+
+**Decision:** ✅ Check drafted (trigger + resolution + failure message + reference implementation) for in-sprint wiring; **both issue docs restructured in this task** so the check is landable. CONTRIBUTING's "exactly these 4" wording should be reworded to "these 4 … extras permitted" when the check lands.
 
 ---
 
@@ -1095,7 +1115,19 @@ Spec each fixture's assertion against the discriminated target form (from Tasks 
 Sprint 37 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG (refuted) — "skip-if-absent" makes both fixtures inert in CI; re-specified corpus-free
+**Verified by:** Task 10 (P7 Infrastructure Catalog)
+**Date:** 2026-08-10
+
+**Findings:** The assumption's skip-if-absent clause defeats the fixtures. `ci.yml` provisions the raw corpus with `download_gamslib_raw.sh --fast`, whose manifest (`tests/integration/determinism_fast_fixtures.txt`) lists **exactly 5 models — `chenery, abel, partssupply, ps2_f, himmel11`**. **Neither markov nor fawley is among them**, so a fixture guarded on `data/gamslib/raw/<model>.gms` **skips on every CI run** — a local-only guard wearing the costume of an inline `make test` guard. The existing markov integration test is worse: marked `[integration, slow]`, it is excluded by `ci.yml` (`-m "not slow ..."`) **and** by `nightly.yml` (`-m "slow and determinism"`) ⇒ it runs in **no CI lane at all**, and would skip even if one selected it. That is the precise mechanism behind "red since March" — and swapping a `slow` guard for a `skip-if-absent` guard just exchanges one silencer for the other.
+
+**Both shapes reproduce corpus-free** — refuting the existing test's docstring ("difficult to reproduce with an inline minimal fixture without also needing the full AD + KKT pipeline"): that pipeline is callable **in-process** (`parse_model_text` → `normalize_model` → gradient/Jacobian → `assemble_kkt_system` → `build_stationarity_equations`), exactly as `test_stationarity_gradient_condition.py` already does. Measured on current `main`: the **markov** analogue (`|s|`=3, `pi(s,i,sp,j,sp)`) reproduces the `CASE_B` collapse — 15 spurious `s__kktN` groups with `nu_constr(s,i)` **trapped inside** `sum((s__kkt16,j), …)` — in **0.61 s**; the **fawley** analogue (`cfq(cf)` ⊂ `cf`, `bq(c,cf)`, `pbal(cfq,m)`) reproduces the over-count `sum((cfq,m), ((-1)*char(c,m)) * nu_pbal(cfq,m))` with no `sameas`, in **0.14 s**. Fail-before regex-confirmed for both.
+
+**Two spec constraints the measurement forced:** the markov fixture must **not** assert the `s__kktN` group count (15 synthetic vs 45 real — scale-dependent), only the structural diagonal/off-diagonal split; and the fawley fixture must match **`cfq\w*`**, not the literal `cfq__` (the synthetic has no alias collision to force the AD layer's `__` suffix — the same blindness Task 6 flagged as the likely cause of conjunct 2 under-firing).
+
+**Evidence:** `ci.yml` / `nightly.yml` pytest selectors + `--fast` manifest; the two `/tmp` prototypes and their timings. See `P7_INFRA_CATALOG.md` §1.
+
+**Decision:** ❌ Skip-if-absent **dropped**. Both fixtures re-specified in `tests/unit/kkt/`, `pytest.mark.unit`, **no skip guard**, structural assertions only; `ISSUE_1110`, `ISSUE_1111`, `MARKOV_DISCRIMINATOR_DESIGN.md` §6 and `FAWLEY_DISCRIMINATOR_REFRESH.md` §7 all corrected in this task. Separately, the raw-corpus integration test should gain the `determinism` marker (so `nightly.yml` reaches it) or be explicitly recorded as local-only.
 
 ---
 
@@ -1134,6 +1166,8 @@ Sprint 37 execution team
 **Evidence:** the DB partition recompute (108 / 93 = 63+30; the 30-model methodology partition; markov ∈ it); `git diff 78ceaead..HEAD -- data/gamslib/gamslib_status.json` empty. See `BASELINE_RECONFIRMATION.md` §1–§2.
 
 **Decision:** ✅ Floor anchor **75 → ≥76** target (markov); the Epic-4 SUMMARY row-37 groundwork (Task 10) anchors at 75.
+
+**Addendum — Task 10 (2026-08-10), re-confirmed + a stale-SUMMARY defect fixed:** the anchor holds (DB still byte-identical to `78ceaead`). Bookkeeping sharpened: the markov landing moves **presolve-match 30 → 29 and cold-optimal 63 → 64 with Match unchanged at 93** — it is **+1 genuine floor and a partition transfer, NOT +1 Match**; reporting it as a Match gain would double-count. markov is the only S37 track that can move the floor (fawley 0-bucket by construction, sarf +1 Translate only, ganges +2 Solve or 0, turkey license-gated). **Defect found:** `SUMMARY.md` row 37 still carried the *pre-renumbering* theme ("v2.0.0 release & Epic 5 planning" — now Sprint **40**) because PR #1651's renumbering swept `PROJECT_PLAN.md` but not `SUMMARY.md`, and rows 38–40 were absent entirely. **Fixed in this task**; row-37 skeleton drafted with pre-registered fill rules (`P7_INFRA_CATALOG.md` §5).
 
 ---
 
@@ -1231,7 +1265,7 @@ This table shows which prep tasks (from `PREP_PLAN.md`) verify which unknowns. E
 
 ---
 
-**Document Status:** Active — Pre-Sprint 37 (register complete; unknowns advance from `🔍 INCOMPLETE` to ✅ VERIFIED / ❌ WRONG during prep Tasks 2–11)
-**Last Updated:** 2026-08-09
+**Document Status:** Active — Pre-Sprint 37. **Register complete and fully resolved:** all 27 unknowns carry a verdict as of Prep Task 10 (✅ 20 · 🔶 4 · ❌ 3 · 🔍 0). Task 11 consumes this register to build the schedule; the 🔶 four carry an in-sprint empirical gate rather than an open question.
+**Last Updated:** 2026-08-10
 **Owner:** Sprint 37 Planning Team
 **Review Frequency:** Daily during Sprint 37

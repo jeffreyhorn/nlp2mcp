@@ -52,6 +52,97 @@ whether that is a correction or a regression is unresolved.
 
 ## Phase 0: Acceptance Gate
 
+> Restructured in Sprint-37 Prep Task 10 to carry the four `### ` subsections
+> CONTRIBUTING.md §392–447 requires (the prior criteria-only decomposition failed
+> the drafted Phase-0 CI check — see `SPRINT_37/P7_INFRA_CATALOG.md` §2.4). The
+> four acceptance criteria are retained verbatim below as additional subsections.
+
+### Hand-Derived KKT Shape
+
+Declarations and constraints (`fawley.gms`), with `cfq` a **declared subset** of `cf`:
+
+```
+Set  cfq(cf) 'final products quality blended';
+Variable bq(c,cf);
+qsb(cfq,l,s)$specs(cfq,l,s).. sum(c$bposs(cfq,c), prop(c,s)*sum(m$ms(m,s), char(c,m)*bq(c,cfq))) + ... =e= ...;
+pbal(cfq,m)$cfm(cfq,m)..      q(cfq,m) =e= sum(c$bposs(cfq,c), char(c,m)*bq(c,cfq));
+```
+
+Both rows reference `bq` at `bq(c, cfq)` — the variable's **second** index is
+bound to the row's own first index. So for a fixed `(c,cf)`:
+
+```
+∂qsb(cfq,l,s)/∂bq(c,cf)  =  prop(c,s)*sum(m$ms(m,s), char(c,m)) * 1$bposs(cf,c)   iff cfq = cf, else 0
+∂pbal(cfq,m)/∂bq(c,cf)   =  -char(c,m) * 1$bposs(cf,c)                            iff cfq = cf, else 0
+```
+
+The derivative is **diagonal in `cfq`**: nonzero only on the slice `cfq = cf`.
+
+**Stationarity (target)** — each multiplier term carries that diagonal binding:
+
+```
+stat_bq(c,cf).. sum(cfq, ((-1)*1$bposs(cfq,c)) * nu_mbal(c))$(sameas(cfq,cf))
+              + sum((cfq,l,s), (prop(c,s)*sum(m$ms(m,s), char(c,m))*1$bposs(cf,c) * nu_qsb(cfq,l,s))$(sameas(cfq,cf)))
+              + sum((cfq,m),   ((-1)*(char(c,m)*1$bposs(cf,c))) * nu_pbal(cfq,m))$(sameas(cfq,cf))
+              - piL_bq(c,cf)  =e= 0
+```
+
+The `mbal` term already carries `$(sameas(cfq__, cf))`; `qsb` and `pbal` do not,
+so each is summed over the **whole** `cfq` domain — a pure over-count
+(`max|stat_bq|` = 473.4, rel 0.973).
+
+### Expected Emit Pattern
+
+`fawley_mcp.gms` after the fix: the `sameas` count inside `stat_bq` goes from
+**1** (the pre-existing `mbal` guard) to **3**, with `nu_qsb(cfq__,l,s)` and
+`nu_pbal(cfq__,m)` each gaining `$(sameas(cfq__, cf))`:
+
+```bash
+grep -o 'sameas(cfq__, cf)' data/gamslib/mcp/fawley_mcp.gms | wc -l   # 1 -> 3
+```
+
+Note the AD layer re-symbolises the summed index as **`cfq__`**, not `cfq`; any
+pattern match must be suffix-tolerant. **This is the prep-doc hypothesis**
+(PR24) — the `file:line` surface is the one traced below.
+
+### Verification Methodology
+
+1. **Emit-bug vs non-convexity discriminator:**
+   ```bash
+   .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/fawley.gms
+   ```
+   No `stat_bq` row may appear among the reported residuals (baseline:
+   `stat_bq(res-arab-l,fuel-oil)` rel **9.73e-01** plus siblings). The verdict
+   **remains `CASE_B`** — expected, not a failure: the harness max is the
+   *emit-correct* `stat_trans(tr-2)` rel 1.00, an H-b divergence outside this
+   issue's scope (see *Bucket / KPI*).
+2. **Pattern match:** the `sameas` count above (1 → 3).
+3. **Full-corpus byte-diff:** `make leak-check MODEL=fawley` — **the binding
+   gate**, currently FAILING (see *Leak status*).
+
+### PROCEED/REPLAN Signal
+
+**REPLAN — do NOT begin Phase 1.** The correctness half is control-verified in
+`src/`, but *Leak-freedom* is **refuted twice** (`dinam`, `prolog`, `shale` →
+`dinam`, `shale`), and `prolog` is a live `model_optimal` + **match** model. A
+PROCEED requires an unqualified `LEAK GATE PASS` first; the next refinement to
+try is in *REPLAN exit* below.
+
+**Traced Fix-Surface (Day-0):** `src/kkt/stationarity.py`,
+`_add_indexed_jacobian_terms` — the **"truly disjoint by NAME"** branch at
+**`:7069–7096`**, falling through to the `else: term = Sum(mult_domain, term)`
+fallback at **`:7096`**. Established by instrumenting the function for
+`var_name == "bq"` (Prep Task 6), which printed
+`[BQ] DISJOINT branch: mult_domain=('cfq','l','s') var_domain=('c','cf') dual_binding=None`
+for `qsb` and the `('cfq','m')` analogue for `pbal` — i.e. `_dual_binding_map`
+returns `None` and the name-based overlap test misses `cfq ⊂ cf`. Two competing
+hypotheses were traced and **rejected**: the `:7120` uncontrolled-free-index
+branch (a `_subset_alias_superset_index` fallback there left the `sameas` count
+at 1) and the `:6946` fresh-alias branch (it mints `root__kktN`, markov's
+convention, not the AD layer's `cfq__`). The mechanism to reuse already exists on
+the *scalar*-constraint branch: `_subset_alias_superset_index` (`:7251`, Issue
+#1393), whose own comment names fawley's `pcr(cr)`.
+
 ### Correctness
 
 `python scripts/diagnostics/kkt_residual.py data/gamslib/raw/fawley.gms` must show **no
@@ -78,11 +169,23 @@ would be wrong; the +Solve is a Sprint-38 PATH-consultation question.
 
 ### Regression guard
 
-`shape_fawley_2d_second_index` (fast, in-process) must **fail before** and **pass after**,
-asserting `stat_bq`'s `qsb` and `pbal` terms each carry `$(sameas(cfq__, cf))` — i.e. the
-`sameas` count in `stat_bq` is **3**, not 1. It must `pytest.skip` when
-`data/gamslib/raw/fawley.gms` is absent (CI lacks the raw corpus). Full quality gate
-(`make typecheck && make format && make lint && make test`) green.
+`tests/unit/kkt/test_shape_fawley_2d_second_index.py` must **fail before** and
+**pass after**, asserting that the multiplier term is no longer summed over the
+whole subset domain without a diagonal binding — i.e. `nu_pbal`/`nu_qsb` acquire
+`$(sameas(cfq…, cf))` (in the real emit: the `stat_bq` `sameas` count goes 1 → 3).
+
+**Corpus-free, not skip-if-absent** (corrected in Prep Task 10): the fixture
+builds an inline synthetic — a variable `bq(c,cf)` and a row `pbal(cfq,m)` over a
+declared subset `cfq(cf)` — via `parse_model_text` → `assemble_kkt_system` →
+`build_stationarity_equations`, **measured at 0.14 s**, reproducing the
+unguarded `sum((cfq,m), ((-1)*char(c,m)) * nu_pbal(cfq,m))`. A `pytest.skip`
+guard on `data/gamslib/raw/fawley.gms` would make it **inert in CI**: `ci.yml`
+provisions only the 5 `--fast` models and fawley is not among them. The
+assertion must match **`cfq\w*`**, not the literal `cfq__` — the synthetic has no
+alias collision to force the suffix, and that same `__`-blindness is the likely
+reason conjunct 2 under-fires (see *REPLAN exit*). Full quality gate
+(`make typecheck && make format && make lint && make test`) green. See
+`SPRINT_37/P7_INFRA_CATALOG.md` §1.2.
 
 ## Mutual exclusion with the markov P1 change (both touch `_add_indexed_jacobian_terms`)
 
