@@ -5929,7 +5929,8 @@ def _try_build_sigma_sp_crossterm(
         if isinstance(e, Unary):
             return Unary(e.op, symbolize(e.child))
         if isinstance(e, Call):
-            return Call(e.name, tuple(symbolize(a) for a in e.args))
+            # NB: Call stores the function name in `func`, not `name`.
+            return Call(e.func, tuple(symbolize(a) for a in e.args))
         return e
 
     mult_name = name_func(eq_name_base)
