@@ -8,7 +8,7 @@
 
 ## 1. What was built
 
-Mechanism C as a **gated, additive early-out** in `_add_indexed_jacobian_terms`, mirroring the existing `_try_build_param_offset_crossterm` precedent (`:5936`): when the conjoined discriminator fires for a `(constraint, variable)` pair, the two hand-derived terms are appended and the pair `continue`s — bypassing the offset-group machinery entirely. Every non-firing pair takes the untouched path.
+Mechanism C as a **gated, additive early-out** in `_add_indexed_jacobian_terms`, mirroring the existing `_try_build_param_offset_crossterm` precedent (`src/kkt/stationarity.py:5933–5938` on `main` at `32322ee1` — the call at `:5933`, the `if … is not None: expr = Binary("+", …); continue` early-out at `:5936–5938`): when the conjoined discriminator fires for a `(constraint, variable)` pair, the two hand-derived terms are appended and the pair `continue`s — bypassing the offset-group machinery entirely. Every non-firing pair takes the untouched path.
 
 **`_compute_index_offset_key` was NOT touched.** That shared matcher is the whole cohort-leak surface, and leaving it alone is Mechanism C's premise (Task 4 §4).
 
@@ -38,7 +38,7 @@ distinct offset_key groups       : 45              <- the blow-up, reproduced
 
 ## 3. Correctness — `CASE_A` reached
 
-| | baseline | control |
+| measurement | baseline | control |
 |---|---|---|
 | `kkt_residual.py markov` | `CASE_B` — emit_bug | **`CASE_A` — healthy (KKT correct, PATH converges)** |
 | max stationarity row | `stat_z(empty,disrupted,empty)` rel **1.33e+01** | `stat_z(6,normal,empty)` rel **2.84e-16** |
@@ -56,7 +56,7 @@ control  stat_z(s,i,sp).. c(s,sp,i) + nu_constr(s,i)$(sp(s) and j(i))
                         + [equil term, unchanged] - piL_z(s,i,sp)
 ```
 
-| | golden | control |
+| measurement | golden | control |
 |---|---|---|
 | `stat_z` characters | 14,695 | **3,967** |
 | distinct `s__kktN` groups | **45** | **0** |
@@ -105,7 +105,7 @@ Wall: 1,885 s over 142 models. The 6 pathologically-slow models (`sarf, ganges, 
 
 ## 7. Phase-0 status (`ISSUE_1110`)
 
-| criterion | required | measured | |
+| criterion | required | measured | status |
 |---|---|---|---|
 | Correctness | `CASE_A`, rel < 1e-3 | `CASE_A`, **2.84e-16** | ✅ |
 | Bucket / KPI | cold `MODEL STATUS 1`, `pvcost` 2401.577, match | **1 Optimal, 2401.5774, match** | ✅ |
