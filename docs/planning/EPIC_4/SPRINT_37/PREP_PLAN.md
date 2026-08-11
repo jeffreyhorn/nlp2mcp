@@ -768,7 +768,7 @@ grep -qiE "Phase-0.*CI|genuine.?floor" docs/planning/EPIC_4/SPRINT_37/P7_INFRA_C
 
 ## Task 11: Plan Sprint 37 Detailed Schedule
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-11)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 37 Day 1
@@ -798,11 +798,24 @@ The Sprint-36 schedule (`SPRINT_36/PLAN.md`) front-loaded markov to Days 1–3, 
 
 ### Changes
 
-To be completed.
+- **Created** `docs/planning/EPIC_4/SPRINT_37/PLAN.md` — the Day-0 + Days-1–13 schedule (20 sections): goal, honest KPI projection, sequencing constraints, the 14 day-blocks, the budget summary, Phase-0 coverage, the unknowns snapshot + GO/NO-GO, and the risk register.
+- **Created** `docs/planning/EPIC_4/SPRINT_37/prompts/PLAN_PROMPTS.md` — the per-day execution prompts (Day 0 + Days 1–13) with the cross-cutting rules.
+- **Corrected** `PROJECT_PLAN.md` Priority 3 — it asserted the rocket input "was submitted from the Sprint-36 carryforward", which Task 9 refuted; now records that nothing was sent and that the send is a **Day-0** action.
+- **Updated** `KNOWN_UNKNOWNS.md` — a Next-Steps completion block discharging all five pre-Day-1 items and mapping each of the four 🔶 unknowns to the day that closes it (1.3 → Day 2, 4.2 → Day 7, 6.2 → Days 9–10, 3.3 → Day 10).
 
 ### Result
 
-To be completed.
+**GO for Sprint 37 Day 0.** All 11 prep tasks complete; all 27 unknowns resolved (✅ 20 · 🔶 4 · ❌ 3 · 🔍 0); zero unmapped Day-0 blockers.
+
+**The schedule's three structural decisions, each forced by a prep finding rather than preference:**
+
+1. **The P3 send moves from Day 11 to Day 0.** Task 9 found the rocket consultation was never transmitted — "ready to submit" since 2026-07-15, slipped across four sprint boundaries, the bundle's one action checkbox still unchecked. Sprint 36 had scheduled it Day 11, a slack-absorbing day, which is *why* it did not happen. It costs ~30 minutes and is the only way a reply can plausibly arrive inside the sprint.
+2. **P4 fawley enters Day 7 with a knowingly-failing gate, and Day 7's job is narrowing, not landing.** `make leak-check MODEL=fawley` reports `LEAK: dinam, shale` even with conjunct 2, and `prolog` — a live `model_optimal` + match model — was drifted by conjunct 1 alone. Day 8 is explicitly *land-or-defer*, and since fawley is 0-bucket by construction a defer costs nothing.
+3. **P5 sarf's sixth deferral becomes an explicit Day-10 fork rather than a drift.** Prep measured **two** PROJECT_PLAN budgets down: P3 from 12–16h to ~3.5h (no reply can have arrived, so there is nothing to integrate) and P6 from 10–14h to ~2.5h (turkey is license-gated NO-GO; the re-baseline measured at ~12 s/model ⇒ ~30 min). That frees ~20h — exactly what makes sarf reachable at Days 11–12 at the *bottom* of its 20–28h band. The schedule states the contingency and the trigger.
+
+**Nominal ~116h against the 168h cap, ≤12h/day, heaviest day 11h (Day 2 — the P1 land + full-corpus leak verify + cold-solve gate).**
+
+**Four claims the projection deliberately refuses to make**, each a mis-reporting risk the prep phase surfaced: markov is **+1 floor, not +1 Match** (it already counts in Match 93 — the landing is a partition transfer, presolve-match 30→29 / cold-optimal 63→64); the `path_syntax_error` 7→6 move is a **stale-entry correction, not a recovery** (turkey's DB row predates the S35 `$161` fix by seven weeks); **fawley cannot contribute a bucket** (H-b, MS-5, `--force` NEGATIVE); and **rocket's +1 is contingent on a human action, not on engineering**.
 
 ### Verification
 
@@ -824,13 +837,14 @@ grep -qiE "106|142|168|≤ ?12|<= ?12" docs/planning/EPIC_4/SPRINT_37/PLAN.md &&
 
 ### Acceptance Criteria
 
-- [ ] Plan created with all 14 days (Day 0 + Days 1–13), each with tasks, integration risks, and complexity estimates
-- [ ] markov P1 front-loaded (Days 1–3, early PROCEED/REPLAN gate); fawley P4 sequenced after markov P1; sarf P5 sequenced after the P7 leak harness
-- [ ] Per-priority budgets assigned (106–142h total, ≤12h/day, heaviest day identified)
-- [ ] Checkpoints placed (Day 5, Day 10) with `--resolve-changed` + no-regression gates
-- [ ] Per-priority REPLAN exits written (each pointing at its design's documented exit)
-- [ ] The Day-0 GO/NO-GO readiness gate defined (baseline re-confirmed + leak harness wired + Phase-0 docs exist)
-- [ ] Every remaining INCOMPLETE known unknown mapped to a resolving sprint day
+- [x] Plan created with all 14 days (Day 0 + Days 1–13), each with tasks, integration risks, and complexity estimates
+- [x] markov P1 front-loaded (Days 1–3, leak gate Day 2); fawley P4 after markov P1 — **structural, not preference** (same `if/elif` chain: markov's path sets `_did_dim_mismatch_alias_fix` at `:6925`, fawley's branch is `elif not …` at `:7060`); sarf P5 after the P7 harness, whose precondition is **already satisfied** (Task 3 shipped it to `main`)
+- [x] Per-priority budgets assigned (nominal ~116h of the 106–142h band, ≤12h/day, heaviest day **11h = Day 2**) — **including the finding that P3 and P6 were measured down (~20h freed), which is what makes sarf reachable**
+- [x] Checkpoints placed (Day 5, Day 10) with `--resolve-changed --since-commit 78ceaead` + the no-regression NO-GO rule
+- [x] Per-priority REPLAN exits written, each citing its design's documented exit (P1 → `ISSUE_1110` narrower allowlist; P2 → the embedded MS-5 divergence bank; P4 → re-defer as a **carryforward, not a landing**; P5 → the four bank triggers; P6 → license-gated)
+- [x] The Day-0 GO/NO-GO readiness gate defined — four conditions (baseline re-confirmed · `make leak-check` working on `main` · `ISSUE_1110`/`ISSUE_1111` conforming · zero INCOMPLETE unknowns)
+- [x] Every unknown mapped to a resolving sprint day — **zero INCOMPLETE remain**; the four 🔶 map to Days 2, 7, 9–10 and 10
+- [x] `prompts/PLAN_PROMPTS.md` created (Day 0 + Days 1–13) with the cross-cutting rules (leak-gate discipline, Phase-0-before-`src/`, the BANNED list)
 
 ---
 
@@ -869,20 +883,20 @@ Before Sprint 37 Day 1, verify:
 
 ### Critical (Must Complete)
 - [x] Task 1: Known Unknowns list created (27 items across 7 priorities; full-corpus leak gate tracked)
-- [ ] Task 2: Sprint-36 baseline (108/93/75/135) + the four proven-component fingerprints re-confirmed on current `main`
-- [ ] Task 3: Full-corpus (163-golden) leak-verification harness designed + clean baseline confirmed
-- [ ] Task 4: markov `σ=sp` derivative-structure discriminator designed + Phase-0 issue skeleton authored
-- [ ] Task 11: Sprint 37 detailed schedule created with the Day-0 GO/NO-GO gate
+- [x] Task 2: Sprint-36 baseline (108/93/75/135) + the four proven-component fingerprints re-confirmed on current `main`
+- [x] Task 3: Full-corpus (163-golden) leak-verification harness designed + clean baseline confirmed — **shipped `--expect-drift` / `make leak-check` to `main`**
+- [x] Task 4: markov `σ=sp` derivative-structure discriminator designed + Phase-0 issue authored — fires on exactly `['markov']` across 142 models
+- [x] Task 11: Sprint 37 detailed schedule created with the Day-0 GO/NO-GO gate
 
 ### High Priority (Should Complete)
-- [ ] Task 5: ganges/gangesx cascade re-verified + recovery sequenced + P2 outcome bounded
-- [ ] Task 6: fawley emission path located + discriminator designed + markov co-existence confirmed
-- [ ] Task 7: sarf re-arch refreshed + blow-up re-measured + P7-harness precondition explicit
+- [x] Task 5: ganges/gangesx cascade re-verified + recovery sequenced + P2 outcome bounded (+2 or 0, modal 0)
+- [x] Task 6: fawley emission path located + discriminator designed + markov co-existence confirmed — **leak gate FAILS; Day 7 narrows before landing**
+- [x] Task 7: sarf re-arch refreshed + blow-up re-measured + P7-harness precondition explicit — **gate inverted to `make check-goldens`**
 
 ### Medium Priority (Can Complete Later in Prep)
-- [ ] Task 8: GAMS-54 v54 re-baseline planned + turkey testbed verdict
-- [ ] Task 9: rocket/mine consultation staged + camcge Epic-5 Walras scoped
-- [ ] Task 10: property fixtures cataloged + Phase-0-doc CI check designed + genuine-floor tracking
+- [x] Task 8: GAMS-54 v54 re-baseline planned (~30 min, zero regressions in the risk set) + turkey verdict **NO-GO, license-gated**
+- [x] Task 9: rocket/mine consultation staged + camcge Epic-5 Walras scoped — **the consultation was never sent; the send is a Day-0 action**
+- [x] Task 10: property fixtures cataloged (**re-specified corpus-free**) + Phase-0-doc CI check designed + genuine-floor tracking
 
 ### Verification
 
@@ -901,7 +915,7 @@ ls docs/issues/ISSUE_*markov-sigma-sp*.md docs/issues/ISSUE_*fawley-constraint-i
 git diff 78ceaead..HEAD -- data/gamslib/gamslib_status.json | head -1   # expect empty
 ```
 
-**When all Critical items are checked: Sprint 37 is ready to begin.**
+**All Critical items are checked ⇒ Sprint 37 is ready to begin.**
 
 ---
 
@@ -911,13 +925,13 @@ git diff 78ceaead..HEAD -- data/gamslib/gamslib_status.json | head -1   # expect
 
 ### Critical Criteria (ALL must be checked)
 - [x] Task 1: Known Unknowns list created (27 items, full-corpus leak gate tracked)
-- [ ] Task 2: Baseline 108/93/75/135 + the four proven-component fingerprints re-confirmed
-- [ ] Task 3: Full-corpus leak-verification harness designed + clean baseline confirmed
-- [ ] Task 4: markov discriminator designed + `ISSUE_1110_markov-sigma-sp-discriminator.md` Phase-0 skeleton authored
-- [ ] Task 11: Sprint 37 schedule created with the Day-0 GO/NO-GO gate
+- [x] Task 2: Baseline 108/93/75/135 + the four proven-component fingerprints re-confirmed
+- [x] Task 3: Full-corpus leak-verification harness designed + clean baseline confirmed — shipped to `main`
+- [x] Task 4: markov discriminator designed + `ISSUE_1110_markov-sigma-sp-discriminator.md` Phase-0 gate authored
+- [x] Task 11: Sprint 37 schedule created with the Day-0 GO/NO-GO gate
 
 ### Decision
-- **✅ GO:** All Critical criteria checked → Sprint 37 begins
+- **✅ GO — DECIDED 2026-08-11.** All Critical criteria checked; all 11 prep tasks complete; all 27 unknowns resolved (✅ 20 · 🔶 4 · ❌ 3 · 🔍 0), each 🔶 mapped to the sprint day that closes it. **Sprint 37 begins at Day 0** (`PLAN.md` §4).
 - **❌ NO-GO:** Any Critical criterion unchecked → complete missing items first (especially the markov discriminator design and the leak harness — the head of the critical path)
 
 ---
