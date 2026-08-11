@@ -87,7 +87,13 @@ Re-confirmed this task: with `stat_bq` fully corrected, the harness max is still
 
 ## 7. `shape_fawley_2d_second_index` fixture spec
 
-- **Type:** fast, in-process (runs in `make test`); `pytest.skip` when `data/gamslib/raw/fawley.gms` is absent (CI lacks the raw corpus).
+> **⚠ SUPERSEDED IN PART by Prep Task 10** (`P7_INFRA_CATALOG.md` §1.2): the
+> skip-if-absent clause is **wrong** — `ci.yml` provisions only the 5 `--fast`
+> models and fawley is not among them, so a skip-guarded fixture is **inert in
+> CI**. Re-specified **corpus-free** (an inline `cfq(cf)` ⊂ `cf` synthetic,
+> measured 0.14 s), matching `cfq\w*` rather than the literal `cfq__`.
+
+- **Type:** fast, in-process (runs in `make test`); ~~`pytest.skip` when `data/gamslib/raw/fawley.gms` is absent (CI lacks the raw corpus)~~ — **refuted; no skip guard** (see above).
 - **Asserts:** `stat_bq`'s `qsb` (`nu_qsb(cfq__,l,s)`) and `pbal` (`nu_pbal(cfq__,m)`) terms each carry `$(sameas(cfq__, cf))` — i.e. the `sameas` count in `stat_bq` is **3**, not 1.
 - **Fail-before (measured, not assumed):** the committed golden has exactly **1** `sameas` in `stat_bq`, so the assertion fails today and passes after.
 

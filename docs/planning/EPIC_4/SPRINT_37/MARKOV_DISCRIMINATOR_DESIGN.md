@@ -110,7 +110,7 @@ The domain gate reaching 14 models (including `cesam` and `sroute`) confirms the
 
 ## 5. Phase-0 acceptance gate
 
-Full text: `docs/issues/ISSUE_1110_markov-sigma-sp-discriminator.md` (4 `###` subsections). Summary:
+Full text: `docs/issues/ISSUE_1110_markov-sigma-sp-discriminator.md`, which Prep Task 10 restructured to carry CONTRIBUTING's four canonical `###` subsections — Hand-Derived KKT Shape / Expected Emit Pattern / Verification Methodology / PROCEED-REPLAN Signal, the last now citing the traced `file:line` surface — with the four acceptance criteria below retained as additional subsections. Summary:
 
 1. **Correctness** — `kkt_residual.py markov` → `CASE_A` (rel ≈ 2.8e-16, from `CASE_B` 13.3), dual CONSISTENT.
 2. **Bucket/KPI** — cold MCP `MODEL STATUS 1 Optimal`, `pvcost = 2401.577`, match ⇒ **genuine floor 75 → 76** (`modelstat` asserted).
@@ -119,8 +119,16 @@ Full text: `docs/issues/ISSUE_1110_markov-sigma-sp-discriminator.md` (4 `###` su
 
 ## 6. `shape_markov_diagonal_kronecker` fixture spec (lands with the fix, P7)
 
+> **⚠ SUPERSEDED IN PART by Prep Task 10** (`P7_INFRA_CATALOG.md` §1.1): the
+> skip-if-absent bullet below is **wrong** — `ci.yml` provisions only the 5
+> `--fast` models and markov is not among them, so a skip-guarded fixture is
+> **inert in CI**. The fixture is re-specified **corpus-free** (an inline
+> synthetic through `parse_model_text` → `build_stationarity_equations`,
+> measured 0.61 s), and assertion (c) must **not** be a group *count* — that
+> figure is scale-dependent (15 at `|s|`=3 vs 45 at `|s|`=8).
+
 - **Type:** fast, in-process (no subprocess CLI) so it runs in `make test` — the durable fix for the "red since March" window where a `slow` integration test was the *only* guard.
-- **Skip-if-absent:** `pytest.skip` when `data/gamslib/raw/markov.gms` is missing (CI lacks the raw corpus).
+- ~~**Skip-if-absent:** `pytest.skip` when `data/gamslib/raw/markov.gms` is missing (CI lacks the raw corpus).~~ **Refuted — see the note above; no skip guard.**
 - **Asserts on the emitted `stat_z`:** (a) exactly one off-diagonal sum of the shape `sum(j, …pi(s,i,sp,j,sp)… * nu_constr(sp,j))`; (b) the Kronecker `nu_constr(s,i)` present; (c) **zero** `s__kkt*` synthetic-alias groups (the 44 spurious groups gone).
 - **Fail-before (measured on the committed golden, not assumed):** `markov_mcp.gms` contains **45 distinct `s__kkt*` aliases** (the 44 spurious off-diagonal groups + the diagonal) and **zero** occurrences of `nu_constr(sp,j)` — so assertions (a) and (c) both fail today and must pass after.
 
