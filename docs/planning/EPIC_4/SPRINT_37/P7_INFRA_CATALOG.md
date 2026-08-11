@@ -88,15 +88,17 @@ At the **commit** level only 6 of the last 25 emit-touching commits carry an iss
 
 ### 2.2 The rule must be calibrated, not assumed — three variants measured
 
-Prototyped against all **21** docs in `docs/issues/` carrying a Phase-0 heading:
+**The population is 21** — the docs in `docs/issues/` carrying a Phase-0 heading, discovered with a **prefix** heading match. That qualifier is itself the first calibration finding: anchoring the regex with `$` (`^## Phase 0: Acceptance Gate\s*$`) discovers only **20**, silently dropping **`ISSUE_1330`**, whose heading carries a parenthetical suffix (`… (Sprint 28 Prep Task 5 — Priority 6 camcge)`). A `$`-anchored check would call that doc "missing Phase 0" when it has one, so every figure below is measured over the full 21.
+
+Rule variants, all against **pre-remediation** content (`HEAD~1`) so the two Sprint-37 docs are still in their original form:
 
 | rule | passes | fails |
 |---|---|---|
-| **A** — exactly 4 `###` subsections | 19/20 | `ISSUE_1224` (**6** — the canonical 4 plus two narrative refresh sections) |
-| **B** — the 4 canonical names, exactly and in order | 17/20 | `ISSUE_1224`, **`ISSUE_1110`**, **`ISSUE_1111`** |
-| **C** — the 4 canonical names present (prefix-match), extras allowed | 18/20 | **`ISSUE_1110`**, **`ISSUE_1111`** |
+| **A** — exactly 4 `###` subsections | 20/21 | `ISSUE_1224` (**6** — the canonical 4 plus two narrative refresh sections) |
+| **B** — the 4 canonical names, exactly and in order | 17/21 | `ISSUE_1224`, `ISSUE_1330` (suffixed subsection names — *"Expected Emit Pattern (hypothesis — PR24)"*), **`ISSUE_1110`**, **`ISSUE_1111`** |
+| **C** — the 4 canonical names present (prefix-match), extras allowed | 19/21 | **`ISSUE_1110`**, **`ISSUE_1111`** |
 
-Plus a fourth calibration: anchoring the heading regex with `$` (`^## Phase 0: Acceptance Gate\s*$`) silently drops **`ISSUE_1330`**, whose heading carries a parenthetical suffix (`… (Sprint 28 Prep Task 5 — Priority 6 camcge)`). The heading match must be a **prefix** match — otherwise the check under-counts by one and calls a doc "missing Phase 0" when it has one.
+Rule B fails `ISSUE_1330` for the same reason the `$`-anchor does, one level down: its *subsection* names also carry parenthetical suffixes. Prefix-matching must apply at both levels.
 
 **Adopted: rule C** + prefix heading match. It reflects CONTRIBUTING's actual intent (*"must contain exactly these 4 subsections … verification grep matches the literal `### <name>` form"*) while tolerating the additional sections `ISSUE_1224` legitimately carries.
 

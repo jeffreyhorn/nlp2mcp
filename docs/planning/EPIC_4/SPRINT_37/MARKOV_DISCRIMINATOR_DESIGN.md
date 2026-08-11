@@ -110,7 +110,7 @@ The domain gate reaching 14 models (including `cesam` and `sroute`) confirms the
 
 ## 5. Phase-0 acceptance gate
 
-Full text: `docs/issues/ISSUE_1110_markov-sigma-sp-discriminator.md`. (Prep Task 10 restructured that doc to carry CONTRIBUTING's four canonical `###` subsections — Hand-Derived KKT Shape / Expected Emit Pattern / Verification Methodology / PROCEED-REPLAN Signal, the last now citing the traced `file:line` surface — with the four acceptance criteria below retained as additional subsections.) Summary:
+Full text: `docs/issues/ISSUE_1110_markov-sigma-sp-discriminator.md`, which Prep Task 10 restructured to carry CONTRIBUTING's four canonical `###` subsections — Hand-Derived KKT Shape / Expected Emit Pattern / Verification Methodology / PROCEED-REPLAN Signal, the last now citing the traced `file:line` surface — with the four acceptance criteria below retained as additional subsections. Summary:
 
 1. **Correctness** — `kkt_residual.py markov` → `CASE_A` (rel ≈ 2.8e-16, from `CASE_B` 13.3), dual CONSISTENT.
 2. **Bucket/KPI** — cold MCP `MODEL STATUS 1 Optimal`, `pvcost = 2401.577`, match ⇒ **genuine floor 75 → 76** (`modelstat` asserted).

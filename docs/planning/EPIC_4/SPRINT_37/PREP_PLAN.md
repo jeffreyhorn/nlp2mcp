@@ -690,7 +690,7 @@ grep -qiE "Epic.?5|numéraire|numeraire" docs/planning/EPIC_4/SPRINT_37/CONSULTA
 
 ## Task 10: Property-Fixture Catalog + Phase-0-Doc-Enforcement + Genuine-Floor Tracking (P7)
 
-**Status:** ✅ COMPLETE
+**Status:** ✅ COMPLETE (2026-08-10)
 **Priority:** Medium
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 37 Day 1
