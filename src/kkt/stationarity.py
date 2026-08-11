@@ -5709,6 +5709,231 @@ def _reindex_condition_symbols(expr: Expr, name_map: dict[str, Any]) -> Expr:
     return sub(expr)
 
 
+def _sigma_sp_domain_collision(
+    mult_domain: tuple[str, ...], var_domain: tuple[str, ...], canon
+) -> tuple[int, int] | None:
+    """Issue #1110 Part 2 — conjunct 1 of the ``σ=sp`` discriminator.
+
+    A multiplier(constraint)-domain index whose alias-canon matches >=2 variable
+    positions, where a LATER position is an exact declared-name match and an
+    EARLIER one is canon-only.
+
+    markov: ``constr(sp,j)`` vs ``z(s,i,sp)`` -> ``sp`` matches var position 2 by
+    name and position 0 by canon (``s``/``sp``/``spp`` are aliases), giving
+    ``(0, 2)``.
+
+    This conjunct alone is the Sprint-36 gate, which leaked onto ``cesam``,
+    ``ferts`` and ``sroute``; it is necessary but nowhere near sufficient
+    (measured: 15 of 142 models reach it).  Conjunct 2 does the discriminating.
+
+    Returns ``(mult_pos, var_pos)``, or None when the signature is absent.
+    """
+    for mi, m in enumerate(mult_domain or ()):
+        mc = canon(m)
+        canon_hits = [vi for vi, v in enumerate(var_domain or ()) if canon(v) == mc]
+        if len(canon_hits) < 2:
+            continue
+        exact = [vi for vi in canon_hits if var_domain[vi] == m]
+        if not exact:
+            continue
+        later = max(exact)
+        if any(vi < later for vi in canon_hits):
+            return (mi, later)
+    return None
+
+
+def _sigma_sp_value_param_refs(expr) -> list:
+    """Collect ParamRefs reachable through **value** positions only.
+
+    A ``$``-condition and a ``Sum``/``Prod`` condition are deliberately NOT
+    walked: a parameter that merely *gates* a term does not couple indices.
+    This is what excludes sroute's ``1$(darc(ip,ipp))`` structurally — its only
+    ParamRef lives in the condition while the value is a bare ``Const(1.0)``.
+    """
+    out: list = []
+
+    def walk(e):
+        if e is None:
+            return
+        if isinstance(e, ParamRef):
+            out.append(e)
+            return
+        if isinstance(e, DollarConditional):
+            walk(e.value_expr)
+            return
+        if isinstance(e, Binary):
+            walk(e.left)
+            walk(e.right)
+            return
+        if isinstance(e, Unary):
+            walk(e.child)
+            return
+        if isinstance(e, Call):
+            for a in e.args:
+                walk(a)
+            return
+        if isinstance(e, (Sum, Prod)):
+            walk(e.body)
+            return
+
+    walk(expr)
+    return out
+
+
+def _sigma_sp_param_couples(deriv, eq_idx, var_idx, var_pos: int) -> bool:
+    """Issue #1110 Part 2 — conjunct 2, with the DISTINCT-POSITION requirement.
+
+    Fires when a value-branch ParamRef carries an equation-index value AND the
+    variable's collision-position value at **two distinct positions of its own
+    index tuple** (hence at least two indices).
+
+    The distinct-position clause is load-bearing, not a tightening.  Without it
+    the test admits a *value coincidence*: iobalance's ``colbal(j)`` vs
+    ``a(i,j)`` has derivative ``ParamRef x(1)`` — a single-index parameter whose
+    lone index ``'1'`` happens to equal both the equation value and the
+    variable's collision value, so a naive "carries both" test fires on it.
+    markov's coupling is structural: ``pi(s,i,σ,τ,sp)`` carries σ at position 2
+    and sp at position 4 — two distinct positions of the same parameter, which
+    is what "couples" actually means.
+    """
+    if var_pos >= len(var_idx):
+        return False
+    target = var_idx[var_pos]
+    eqvals = set(eq_idx)
+    for pr in _sigma_sp_value_param_refs(deriv):
+        names = [str(getattr(x, "base", x)) for x in (pr.indices or ())]
+        if len(names) < 2:
+            continue
+        eq_pos = {p for p, n in enumerate(names) if n in eqvals}
+        tgt_pos = {p for p, n in enumerate(names) if n == target}
+        if any(p != q for p in eq_pos for q in tgt_pos):
+            return True
+    return False
+
+
+def _try_build_sigma_sp_crossterm(
+    kkt: KKTSystem,
+    jacobian,
+    entries,
+    eq_name_base: str,
+    var_name: str,
+    var_domain: tuple[str, ...],
+    mult_domain: tuple[str, ...],
+    name_func,
+) -> Expr | None:
+    """Issue #1110 Part 2 (Mechanism C): the ``σ=sp`` off-diagonal cross-term.
+
+    When a constraint references a variable both directly and inside a sum, and
+    the off-diagonal coefficient is a parameter coupling the constraint index to
+    the variable's own independent index, ``_compute_index_offset_key`` sees each
+    ``σ`` value as a distinct lead/lag offset and produces one spurious group per
+    set element (markov: **45**).  The Kronecker ``1`` from the direct reference
+    is then fused into the off-diagonal coefficient and the whole product is
+    summed over indices it does not depend on — a ``CASE_B`` emit bug.
+
+    The hand-derived shape (see ``docs/issues/ISSUE_1110_*.md``) is two terms::
+
+        + nu_constr(s,i)                                    [Kronecker diagonal]
+        + sum(j, (-b*pi(s,i,sp,j,sp)) * nu_constr(sp,j))    [σ=sp off-diagonal]
+
+    Gated on the conjoined discriminator (``_sigma_sp_domain_collision`` AND
+    ``_sigma_sp_param_couples``), which was scanned across 142 corpus models and
+    fires on exactly ``['markov']``.
+
+    ``_compute_index_offset_key`` is deliberately NOT touched: that shared
+    matcher is the cohort-leak surface, and leaving it alone is Mechanism C's
+    premise.  This helper is an additive early-out, so every non-firing
+    (constraint, variable) pair takes the pre-existing path unchanged.
+
+    Returns the combined Expr, or None when the gate does not fire.
+    """
+    if not mult_domain or not var_domain or len(mult_domain) < 2:
+        return None
+
+    aliases = getattr(kkt.model_ir, "aliases", {}) or {}
+
+    def canon(n: str) -> str:
+        n = str(n).lower()
+        seen: set[str] = set()
+        while n in aliases and n not in seen:
+            seen.add(n)
+            a = aliases[n]
+            nxt = str(getattr(a, "target", a)).lower()
+            if nxt == n:
+                break
+            n = nxt
+        return n
+
+    dc = _sigma_sp_domain_collision(mult_domain, var_domain, canon)
+    if dc is None:
+        return None
+    mult_pos, var_pos = dc
+
+    im = jacobian.index_mapping
+    # Pick a representative entry on the σ=sp slice whose index ELEMENTS are
+    # pairwise distinct.  This is required for correctness, not tidiness: the
+    # element->symbol map below is keyed by element value, and most markov
+    # entries repeat one (e.g. var=('12','normal','12') puts the same element at
+    # positions 0 and 2, so '12' would map to both `s` and `sp`).  A wrong
+    # mapping yields silently incorrect parameter indices that still compile.
+    rep = None
+    for rid, cid in entries:
+        _, ei = im.row_to_eq[rid]
+        _, vi = im.col_to_var[cid]
+        if len(ei) != len(mult_domain) or len(vi) != len(var_domain):
+            continue
+        if ei[mult_pos] != vi[var_pos]:
+            continue  # not on the σ=sp slice
+        others = [ei[k] for k in range(len(ei)) if k != mult_pos]
+        vals = list(vi) + others
+        if len(set(vals)) != len(vals):
+            continue  # ambiguous element->symbol mapping
+        d = jacobian.get_derivative(rid, cid)
+        if d is not None and _sigma_sp_param_couples(d, ei, vi, var_pos):
+            rep = (ei, vi, d)
+            break
+    if rep is None:
+        return None
+
+    ei, vi, deriv = rep
+    elem_to_sym: dict[str, str] = {}
+    for k, v in enumerate(vi):
+        elem_to_sym[v] = var_domain[k]
+    for k, e in enumerate(ei):
+        if k == mult_pos:
+            elem_to_sym[e] = var_domain[var_pos]  # σ -> the variable's own index
+        else:
+            elem_to_sym.setdefault(e, mult_domain[k])
+
+    def symbolize(e):
+        if e is None:
+            return None
+        if isinstance(e, ParamRef):
+            return ParamRef(
+                e.name,
+                tuple(elem_to_sym.get(str(getattr(x, "base", x)), x) for x in (e.indices or ())),
+            )
+        if isinstance(e, Binary):
+            return Binary(e.op, symbolize(e.left), symbolize(e.right))
+        if isinstance(e, Unary):
+            return Unary(e.op, symbolize(e.child))
+        if isinstance(e, Call):
+            return Call(e.name, tuple(symbolize(a) for a in e.args))
+        return e
+
+    mult_name = name_func(eq_name_base)
+    offdiag_mult_idx = tuple(
+        var_domain[var_pos] if k == mult_pos else mult_domain[k] for k in range(len(mult_domain))
+    )
+    summed = tuple(mult_domain[k] for k in range(len(mult_domain)) if k != mult_pos)
+    offdiag = Sum(
+        summed,
+        Binary("*", symbolize(deriv), MultiplierRef(mult_name, offdiag_mult_idx)),
+    )
+    diag = MultiplierRef(mult_name, tuple(var_domain[: len(mult_domain)]))
+    return Binary("+", diag, offdiag)
+
+
 def _try_build_param_offset_crossterm(
     kkt: KKTSystem,
     eq_name_base: str,
@@ -5943,6 +6168,27 @@ def _add_indexed_jacobian_terms(
             mult_domain = _get_constraint_domain(kkt, eq_name_base)
 
             if mult_domain:
+                # Issue #1110 Part 2 (Mechanism C): the σ=sp off-diagonal.
+                # Additive early-out gated on the conjoined discriminator, which
+                # fires on exactly one corpus model (markov). Placed before the
+                # offset_groups machinery because that machinery is precisely
+                # what mis-groups this shape (45 spurious lead/lag groups); the
+                # shared _compute_index_offset_key matcher is left untouched.
+                # Mirrors the _try_build_param_offset_crossterm early-out below.
+                _sigma_sp_term = _try_build_sigma_sp_crossterm(
+                    kkt,
+                    jacobian,
+                    entries,
+                    eq_name_base,
+                    var_name,
+                    var_domain,
+                    mult_domain,
+                    name_func,
+                )
+                if _sigma_sp_term is not None:
+                    expr = Binary("+", expr, _sigma_sp_term)
+                    continue
+
                 # Sprint 25 Day 6 #1306 / Sprint 26 Day 1 Phase A (Pattern C
                 # Bug #1): decide up-front whether non-zero offset groups are
                 # semantically legitimate for this (constraint, variable) pair.
