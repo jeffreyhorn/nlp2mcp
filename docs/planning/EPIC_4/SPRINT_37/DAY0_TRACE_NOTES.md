@@ -8,7 +8,7 @@
 
 ## 1. Day-0 baseline — CONFIRMED exactly (142 convex candidates)
 
-| KPI | measured | expected (S36 close) | |
+| KPI | measured | expected (S36 close) | status |
 |---|---|---|---|
 | convex candidates | 142 | 142 | ✅ |
 | Parse | 142 | 142 | ✅ |
@@ -38,7 +38,7 @@ git diff --stat 78ceaead..HEAD -- src/
 
 ## 2. Banked fingerprints — all four reproduce live
 
-| # | model | expected (banked) | **measured today** | |
+| # | model | expected (banked) | **measured today** | status |
 |---|---|---|---|---|
 | 1 | **markov** | `CASE_B`, `stat_z` rel ≈ 13.3, dual CONSISTENT | `CASE_B`; max `stat_z(empty,disrupted,empty)` rel **1.33e+01** (raw −4.79e+04); dual **CONSISTENT** (comp infeas 0.00e+00, equality resid 5.97e-16); dual scale 3.6e+03 | ✅ |
 | 2 | **fawley** | `CASE_B`, `stat_bq` rel ≈ 0.973, max = `stat_trans(tr-2)` rel 1.00 | `CASE_B`; max **`stat_trans(tr-2)` rel 1.00e+00** (raw −4.88e+02); **`stat_bq(res-arab-l,fuel-oil)` rel 9.73e-01** + siblings; dual CONSISTENT | ✅ |
@@ -69,7 +69,14 @@ Two P7 items the Day-9 slot budgeted for are **already on `main`**, and one is n
 
 **Day-9 impact:** its P7 scope shrinks to the Phase-0-doc CI check + CONTRIBUTING rewording + floor tracking; the leak-harness wiring is done.
 
-**Still unverified:** CI has exercised the *RUN* path (this branch's predecessor swept 163 green) but **not yet the SKIP path** (a docs-only PR reporting green in seconds). That logic was validated by local replay against PR #1661's real file list, not by a live run. This Day-0 PR is docs-only, so it is the first live exercise of that path — under a now-required gate.
+**Both paths now verified live** (this section previously recorded the SKIP path as untested — it was, until this PR exercised it):
+
+| path | PR | result |
+|---|---|---|
+| **RUN** (emit-affecting) | #1662 | `Emit-affecting change detected (1)` → `Provisioned 219` → `checked 163 in-scope golden(s) (7 allowlisted)`, all clean — **pass in 7m17s** |
+| **SKIP** (docs-only) | **this one, #1663** | `##[notice] No emit-affecting paths in 2 changed file(s) — reporting success without sweeping.`; Checkout / Set up Python / Install / Download / Report / Run all **skipped** — **pass in 15s** |
+
+The SKIP path had only been validated by local replay against PR #1661's file list; it is now confirmed on a live run under the required gate, which is what makes the gate safe for docs-only PRs (a non-reporting check would block them unoverridably given `enforce_admins: true`).
 
 ## 5. ⚠ The consultation send — NOT DONE (needs the owner)
 
@@ -95,5 +102,5 @@ Day 1 is the **P1 markov discriminator control, `/tmp` only** — no `src/`. Pre
 
 ---
 
-**Document Status:** ✅ Complete — Sprint 37 Day 0 (GO for Day 1; the consultation send is outstanding and owner-assigned).
+**Document Status:** Sprint 37 Day 0 — **GO for Day 1**, with **one Day-0 deliverable outstanding**: the consultation send (§5), which is owner-assigned. The verification half of Day 0 is finished; the day is not.
 **Last Updated:** 2026-08-11 · **Owner:** Sprint 37 execution team
