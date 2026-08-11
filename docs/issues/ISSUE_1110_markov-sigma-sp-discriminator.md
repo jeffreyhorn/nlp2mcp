@@ -1,6 +1,6 @@
 # ISSUE #1110 (Part 2) — markov `σ=sp` off-diagonal: derivative-structure discriminator
 
-**Status:** 🔵 DESIGN COMPLETE — Phase-0 gate defined, not yet implemented
+**Status:** ✅ **LANDED** (Sprint 37 Day 2, `3190c74f`) — all four Phase-0 criteria measured on the landed tree; the `shape_markov_diagonal_kronecker` regression fixture follows on Day 3
 **Sprint:** 37 (P1, the +1-floor lever) · **Prep:** Task 4
 **Files:** `src/kkt/stationarity.py` (`_add_indexed_jacobian_terms`, the `offset_groups` region `:6136+`)
 **Design:** `docs/planning/EPIC_4/SPRINT_37/MARKOV_DISCRIMINATOR_DESIGN.md`
