@@ -622,7 +622,7 @@ gams --version 2>/dev/null | head -1 || echo "gams not on PATH (CI/testbed only)
 
 ## Task 9: Consultation Reply-Integration Prep (rocket/mine P3) + camcge Epic-5 Walras Gate Scoping
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-10)
 **Priority:** Medium
 **Estimated Time:** 2-3 hours
 **Deadline:** Before Sprint 37 Day 1
@@ -640,22 +640,24 @@ The rocket +1 Solve is contingent on the PATH authors' reply, which arrives on a
 
 ### Background
 
-Day 11 (`DAY11_P5_CONSULTATION.md` + `CONSULTATION_BUNDLE.md`): the rocket FINALIZED input (`SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md`) was submitted; the reply's recommended option-set/continuation schedule plugs into `--force homotopy` (+1 contingent). The Case-c sign flip stays BANNED. mine #1443: the primal-degenerate-LP question is posed; the only non-invariant lever is an LP-side reformulation (out of emit scope) → 0 bucket; `x.up=inf` stays BANNED. camcge #1330: the Walras `/tmp` control (641 rows, demo-reachable) confirmed MS-4 with a numéraire alone insufficient (fixes the price-scaling ray, not the row-redundancy nullspace); the full three-part redefinition (numéraire + Walras-law dual redefinition) is the Epic-5 gate (`../../EPIC_5/CGE_DEGENERACY_SCOPING.md`).
+Day 11 (`DAY11_P5_CONSULTATION.md` + `CONSULTATION_BUNDLE.md`): the rocket FINALIZED input (`SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md`) was ~~submitted~~ **prepared for submission** — *see the ⚠ note below*; the reply's recommended option-set/continuation schedule plugs into `--force homotopy` (+1 contingent). The Case-c sign flip stays BANNED. mine #1443: the primal-degenerate-LP question is ~~posed~~ **specified**; the only non-invariant lever is an LP-side reformulation (out of emit scope) → 0 bucket; `x.up=inf` stays BANNED. camcge #1330: the Walras `/tmp` control (641 rows, demo-reachable) confirmed MS-4 with a numéraire alone insufficient (fixes the price-scaling ray, not the row-redundancy nullspace); the full three-part redefinition (numéraire + Walras-law dual redefinition) is the Epic-5 gate (`../../EPIC_5/CGE_DEGENERACY_SCOPING.md`).
+
+> **⚠ Corrected by this task's Result (2026-08-10).** The pre-execution text above (carried from the Sprint-36 hand-off) states that the rocket input "was submitted" and the mine question "is posed". **Both are false** — the audit found `CONSULTATION_BUNDLE.md`'s single *action* checkbox still unchecked, no submission or reply on issue #1462, and no send record anywhere; S36 Day-11 says only "**ready to submit**". The misreading traces to the input doc's phrase *"Submitted as part of the Sprint-36 consultation bundle"*, which means *packaged into the bundle document*. See the Result and `CONSULTATION_INTEGRATION_PREP.md` §1–§2.
 
 ### What Needs to Be Done
 
 1. **Stage the rocket reply integration:** document how a recommended PATH option-set / continuation schedule maps into the `--force homotopy` scaffold, so the reply (whenever it arrives) can be integrated in a bounded step; keep the Case-c sign flip BANNED. Check whether the reply has arrived (update the Task-1 unknown).
-2. **Track the mine question:** confirm the primal-degenerate-LP reconciliation question (`SPRINT_35/MINE_DUAL_ARCHITECTURE_DESIGN.md`) is posed and 0-bucket; `x.up=inf` stays BANNED. No emit fix.
+2. **Track the mine question:** check (do not assume) whether the primal-degenerate-LP reconciliation question (`SPRINT_35/MINE_DUAL_ARCHITECTURE_DESIGN.md`) is actually posed, and confirm 0-bucket — *the audit found it specified but **never posed***; `x.up=inf` stays BANNED. No emit fix.
 3. **Scope the camcge Epic-5 Walras gate:** specify the three-part dual-consistent Walras redefinition (numéraire + the Walras-law dual redefinition, the row-redundancy fix) as a `/tmp` demo control (641 rows) targeting MS-1; expected MS-4 → the per-model-numéraire Epic-5 declaration. Frame it as an Epic-5 deliverable in `../../EPIC_5/CGE_DEGENERACY_SCOPING.md`, NOT a Sprint-37 bucket.
 4. **Set the P3 expectations:** rocket +1 contingent (external reply); mine 0-bucket (tracked); camcge Epic-5 (MS-1 stretch or the per-model-numéraire finding).
 
 ### Changes
 
-To be completed.
+Audited whether the rocket/mine consultation submissions were actually transmitted (bundle checklist, issue #1462 comments, repo-wide grep), ran a `/tmp` camcge control under GAMS 54.2.1 to reproduce the Walras baseline, re-read the Epic-5 handoff spec against the Sprint-30/34/36 findings, and **corrected a stale prescription in that spec**. No `src/` change; DB untouched. Produced `docs/planning/EPIC_4/SPRINT_37/CONSULTATION_INTEGRATION_PREP.md` and amended `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md`. Advanced Unknowns 3.1 → ❌ WRONG (refuted), 3.2 → ✅, 3.3 → 🔶, 3.4 → ✅.
 
 ### Result
 
-To be completed.
+**The headline is not technical: the rocket consultation has never been sent.** **(3.1 — REFUTED)** the bundle's hand-off checklist has every *preparation* item `[x]` but its single **action** item — *"submit rocket to PATH authors; pose the mine LP-degeneracy question; run the fawley --force survey"* — **unchecked**; S36 Day-11 says "**ready to submit**"; issue #1462's only comment is the Sprint-28 bisect; a repo-wide grep finds no send or reply record. The package was **FINALIZED 2026-07-15** and its own renumbering note records the consultation slipping **S33 → S34 → S35** before retargeting to S36 — submission-ready across four sprint boundaries without transmission. The enabling wording is in the input doc: *"Submitted as part of the Sprint-36 consultation bundle"* means *packaged into the bundle*, and reads as *sent* — a misreading this sprint's own Unknown 3.1 inherited. **The +1 is contingent on sending, then on the reply; the blocker is neither technical nor PATH-author latency.** The integration staging itself is correct and bounded (option-set → `--force homotopy` μ-continuation + `optfile=1`; Case-c flip BANNED). **(3.2)** mine is **0 bucket** independent of the consultation (the S34 value-invariance proof; LP-side reformulation out of emit scope; `x.up=inf` BANNED) — though the same unchecked item means its question was never posed either; batch it with the send. **(3.3)** the camcge control reproduces exactly — emit 18 s, embedded NLP **MS-2 @ omega 191.7346**, MCP **MS-4**, **641 rows** (demo-reachable confirmed); the three-part Walras redefinition is the **Epic-5** gate and was deliberately not attempted (price-pin → MS-4, single-dual-pin → MS-4, drop-row → corrupt @ 299; 3+ sprints of variants all stayed MS-4). **(3.4 — a stale-spec defect found and fixed)** the per-model-numéraire fallback is correct and DB-confirmed narrow (camcge is the only inherent Walras singularity; irscge/lrgcge/moncge/stdcge/quocge all match) — **but `EPIC_5/CGE_DEGENERACY_SCOPING.md`, explicitly "the Epic-5 handoff spec", still prescribed the drop-one-row transformation that Sprint 30 refuted** (breaks the MCP dual → omega 299, MS-4), with **zero** refutation notes. Added a `⚠ SUPERSEDED IN PART` note carrying the refutation, the two-nullspaces diagnosis, and the current three-part formulation. **Both headline findings are the same failure mode: information that lives in sprint docs but never reaches the document that will actually be used.** **P3 contributes no Sprint-37 bucket** (rocket +1 contingent on sending / mine 0 / camcge Epic-5 / fawley +Solve → Sprint 38).
 
 ### Verification
 
@@ -678,11 +680,11 @@ grep -qiE "Epic.?5|numéraire|numeraire" docs/planning/EPIC_4/SPRINT_37/CONSULTA
 
 ### Acceptance Criteria
 
-- [ ] The rocket reply integration staged (option-set → `--force homotopy` mapping documented; Case-c sign flip BANNED; reply-arrival status checked)
-- [ ] The mine primal-degenerate-LP question confirmed posed and 0-bucket (`x.up=inf` BANNED)
-- [ ] The camcge three-part Walras redefinition scoped as an Epic-5 `/tmp` demo control (641 rows, MS-1 target) with the per-model-numéraire fallback — explicitly NOT a Sprint-37 bucket
-- [ ] The P3 bucket expectations recorded (rocket +1 contingent, mine 0, camcge Epic-5)
-- [ ] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The rocket reply integration staged (option-set → `--force homotopy` mapping documented; Case-c sign flip BANNED; reply-arrival status checked)
+- [x] The mine primal-degenerate-LP question confirmed 0-bucket (and found **never posed** — same unchecked action item) (`x.up=inf` BANNED)
+- [x] The camcge three-part Walras redefinition scoped as an Epic-5 `/tmp` demo control (641 rows, MS-1 target) with the per-model-numéraire fallback — explicitly NOT a Sprint-37 bucket
+- [x] The P3 bucket expectations recorded (rocket +1 contingent, mine 0, camcge Epic-5)
+- [x] Unknowns 3.1, 3.2, 3.3, 3.4 verified (3.1 → ❌ refuted, 3.3 → 🔶) and updated in KNOWN_UNKNOWNS.md
 
 ---
 
