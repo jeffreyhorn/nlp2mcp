@@ -7351,6 +7351,52 @@ def _add_indexed_jacobian_terms(
                                 if reduced_sum_indices:
                                     term = Sum(reduced_sum_indices, term)
                             else:
+                                # Issue #1111: a multiplier-domain index may be a
+                                # declared SUBSET of a variable-domain index, which
+                                # the name-based disjointness test above cannot see
+                                # (fawley: `Set cfq(cf)` vs `bq(c,cf)` — `cfq` is not
+                                # literally in {c,cf}). It is not an independent
+                                # iteration index: the per-cell derivative already
+                                # collapsed to the diagonal, so summing the whole
+                                # subset domain over-counts by |cfq|. Bind it with a
+                                # `sameas` guard, mirroring the #1393 handling on the
+                                # scalar-constraint branch below.
+                                #
+                                # The guard is deliberately narrow. Conjunct 1 alone
+                                # (subset-parent relation) leaked onto dinam/prolog/
+                                # shale; adding only "the coefficient omits the summed
+                                # index" still leaked onto dinam/shale (Sprint 37
+                                # Task 6). Conjunct 2 here additionally requires the
+                                # coefficient to reference the subset's PARENT index —
+                                # i.e. the derivative really is diagonal in this pair —
+                                # and compares on the suffix-stripped name so the AD
+                                # layer's `__` re-symbolization cannot hide a reference.
+                                _sub_guards: list[tuple[str, str]] = []
+                                if not has_offset:
+                                    _free = {
+                                        f.lower()
+                                        for f in _collect_free_indices(indexed_deriv, kkt.model_ir)
+                                    }
+                                    for _mi in mult_domain:
+                                        if not isinstance(_mi, str):
+                                            continue
+                                        _sup = _subset_alias_superset_index(
+                                            _mi, var_domain, kkt.model_ir
+                                        )
+                                        if _sup is None:
+                                            continue
+                                        _base = _mi[:-2] if _mi.endswith("__") else _mi
+                                        if (
+                                            _sup.lower() in _free
+                                            and _base.lower() not in _free
+                                            and _mi.lower() not in _free
+                                        ):
+                                            _sub_guards.append((_mi, _sup))
+                                for _mi, _sup in _sub_guards:
+                                    term = DollarConditional(
+                                        value_expr=term,
+                                        condition=Call("sameas", (SymbolRef(_mi), SymbolRef(_sup))),
+                                    )
                                 term = Sum(mult_domain, term)
                         else:
                             # Partial overlap: domains share some indices but each has unique ones
