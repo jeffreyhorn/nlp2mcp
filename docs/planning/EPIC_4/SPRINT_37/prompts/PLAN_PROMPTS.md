@@ -89,7 +89,7 @@ Then `make leak-check MODEL=fawley` to an **unqualified PASS** — recall `prolo
 > genuine floor moved to **76** on Day 3 when markov landed. The correct assertion is
 > **Solve 108 / Match 93 / floor 76 unchanged**.
 
-Branch `planning/sprint37-day8-fawley-land`. If Day 7 reached an unqualified `LEAK GATE PASS`: land it, add the corpus-free `tests/unit/kkt/test_shape_fawley_2d_second_index.py` (`pytest.mark.unit`, no skip guard, matching **`cfq\w*`** not the literal `cfq__` — `../P7_INFRA_CATALOG.md` §1.2), and assert **KPIs unchanged (108/93/~~75~~ → **76**)**: fawley is H-b and 0-bucket by construction, so claiming a bucket gain here would be wrong.
+Branch `planning/sprint37-day8-fawley-land`. If Day 7 reached an unqualified `LEAK GATE PASS`: land it, add the corpus-free `tests/unit/kkt/test_shape_fawley_2d_second_index.py` (`pytest.mark.unit`, no skip guard, matching **`cfq\w*`** not the literal `cfq__` — `../P7_INFRA_CATALOG.md` §1.2), and assert **KPIs unchanged — 108 / 93 / floor ~~75~~ 76**: fawley is H-b and 0-bucket by construction, so claiming a bucket gain here would be wrong.
 
 **REPLAN exit:** still leaking → **re-defer**, and record it as a **carryforward, not a landing**. fawley is 0-bucket, so it must never ship at the cost of a shared-function regression. A deferred fawley is the correct outcome, not a failure. Quality gate if Python touched. Emit-touching PR IF it lands; else docs/defer. Then wait for reviewer comments.
 
