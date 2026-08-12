@@ -84,7 +84,20 @@ The consequence is unchanged and now demonstrated: **this whole document existed
 
 **Recommendation:** make it a P7 follow-up with a concrete surface — `run_full_test.py`'s solve-result writer — rather than a re-baseline instruction, since the re-baseline is not where the field gets set.
 
-## 6. Reproduction
+## 6. A process failure this run exposed
+
+**`git add -A` after a GAMS run in the repo root committed 20 runtime artifacts** — `MINOS.SPC`, `MODEL.{COR,ERR,FLN,INP,MAP,OBJ,SCR,SO2,SOG,SOL,SPA,STG,STO,TIM}`, `decis.lic`, `decism.opt`, `listA1.csv`, `repdat.put`, `solution_lic.csv`. Two are materially bad: **`decis.lic` is license material**, and `MODEL.SOL` carries a third-party copyright header (*"D E C I S Copyright (c) 1989–2007 by Dr. Gerd Infanger"*). PR review caught 4 of the 20.
+
+**It also swept in 36 unintended presolve goldens** (17 → 53), written by the presolve retry. That is not a cosmetic problem: it would have expanded the golden corpus 170 → 206 and **changed what `check-goldens` sweeps**, using references generated in this very run rather than reviewed ones — a self-certifying reference set.
+
+All 56 removed from the PR; the 20 artifacts are now in `.gitignore` so a solve run from the project directory cannot repeat it.
+
+**Two process notes worth carrying:**
+
+1. **The re-baseline must be run from a scratch directory**, or `git add -A` must never follow it. GAMS writes solver scratch files to `cwd`, and `cwd` here is the repo root.
+2. **The 36 presolve goldens are arguably the *fix* for the Day-4 coverage asymmetry** (153 cold vs 17 presolve). But adopting them must be a deliberate, reviewed change — generating references and committing them in the same unreviewed step is how a gate stops being a gate.
+
+## 7. Reproduction
 
 ```bash
 cp data/gamslib/gamslib_status.json /tmp/db_before_v54.json   # md5 e997e4ea…

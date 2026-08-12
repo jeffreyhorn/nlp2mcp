@@ -72,3 +72,19 @@ tmp*/
 
 # Forcing-scaffold (--force optfile) GAMS runtime artifact
 path.opt
+
+# GAMS / DECIS runtime artifacts written to the repo root when a solve is run
+# from the project directory (Sprint 37 Day 9: a `git add -A` swept 20 of these
+# into a commit, including `decis.lic` and DECIS solver output carrying a
+# third-party copyright header). These are generated, never source.
+MINOS.SPC
+MODEL.*
+decis.lic
+decism.opt
+solution_lic.csv
+listA1.csv
+repdat.put
+*.SOL
+*.SCR
+*.STG
+*.STO

@@ -79,8 +79,14 @@ def issue_docs_from_body(body: str) -> list[Path]:
     PROCEED signal, so this adds no authoring burden — and it lets a follow-on
     fix cite a doc that landed in an earlier PR.
     """
+    # A bare `#<N>` is NOT accepted. PR bodies routinely cite *pull requests*
+    # that way, and `docs/issues/` is dense enough that an unrelated citation
+    # resolves: a body mentioning PR #747 would match `ISSUE_747_*.md` and
+    # satisfy the gate without any Phase-0 doc being written for the change.
+    # (This PR's own body cites #1620 and #1596 as historical PRs.) Require an
+    # explicit issue reference — `ISSUE_<N>` or `Issue #<N>` / `issue #<N>`.
     nums = set(re.findall(r"ISSUE_(\d+)", body or "")) | set(
-        re.findall(r"#(\d+)", body or "")
+        re.findall(r"\bissues?\s*#\s*(\d+)", body or "", re.IGNORECASE)
     )
     out: list[Path] = []
     for n in sorted(nums, key=int):
