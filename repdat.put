@@ -1,0 +1,14 @@
+low/high i          j                  x(i,j)
+
+low      seattle    new-york     325   25    0    0  275  275
+high     seattle    new-york       0  300    0  325    0  275
+low      seattle    chicago        0  300    0  325    0  275
+high     seattle    chicago      300    0    0   25  300  275
+low      seattle    topeka         0   75  275  325  225    0
+high     seattle    topeka         0  300    0  325    0  275
+low      san-diego  new-york       0  300    0  325    0  275
+high     san-diego  new-york     325   25    0    0  275  275
+low      san-diego  chicago      325    0    0    0  300  275
+high     san-diego  chicago       50  300    0  275    0  275
+low      san-diego  topeka        50  300    0  275    0  275
+high     san-diego  topeka         0  300   50  325    0  225
