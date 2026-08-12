@@ -391,7 +391,7 @@ Paste `/tmp/sprint_retest_surface.md` into the retest entry in `SPRINT_LOG.md`. 
 
 **Any issue whose Phase 1 design touches `src/ad/`, `src/kkt/`, or `src/emit/` MUST have a `## Phase 0: Acceptance Gate` section in its `docs/issues/ISSUE_<N>_*.md` file BEFORE any `src/` commit lands for that issue.**
 
-The Phase 0 section must contain exactly these 4 subsections, each rendered as a markdown `###` heading (do NOT use bold text or `####` — verification grep matches the literal `### <name>` form):
+The Phase 0 section must contain **these 4 subsections** — additional `### ` subsections are permitted — each rendered as a markdown `###` heading (do NOT use bold text or `####` — verification grep matches the literal `### <name>` form):
 
 - `### Hand-Derived KKT Shape` — formal Lagrangian + stationarity / primal-feasibility / complementarity equations for the target equation(s)
 - `### Expected Emit Pattern` — what the regenerated `<model>_mcp.gms` should contain (by equation name + index pattern). **This is the prep-doc *hypothesis*, not an established fix surface** — under PR24 (below) the actual `file:line` surface is established by a Day-0 trace and confirmed before any `src/` change.
@@ -405,6 +405,16 @@ The Phase 0 section must contain exactly these 4 subsections, each rendered as a
 
   It warm-starts the MCP from the NLP KKT point (reusing `--nlp-presolve`), evaluates the per-row residuals at `iterlim=0`, and classifies: **Case a** (clean residual + cold PATH converges — healthy); **Case b** (a stationarity row's *relative* residual `|F|/dual_scale` exceeds `tol` — **emit bug**; the `max_residual_row` is the prime-suspect *model row*); **Case c** (clean residual but cold PATH diverges — **non-convexity**, needs a warm-start, *not* an emit fix); or `dual_transfer_inconsistent` (the §2 self-check fails — fix the transfer, re-run). The verdict drives the decision — **Case b ⇒ proceed** toward an emit fix; **Case c ⇒ REPLAN** toward warm-start — and the `max_residual_row` *localizes* which emitted row to investigate. **It does not, by itself, satisfy the `Traced Fix-Surface (Day-0)` requirement below:** the row is a model-row identifier (e.g. `stat_r('i1')`), not a `file:line`; the Day-0 trace must still follow it back to the code path that builds it and cite that `file:line` in `### PROCEED/REPLAN Signal`. (Validated against trnsport → a, camshape → b `stat_r('i1')`≈396, cclinpts → b `stat_fb`, launch → c.) Once the **golden-staleness check** ships (**forthcoming Sprint 28 Priority 8, PR26**), emit-touching PRs must also pass it.
 - `### PROCEED/REPLAN Signal` — binary criteria for whether Phase 1 `src/` implementation may begin. **Must include a `Traced Fix-Surface (Day-0)` line** citing the `file:line` surface established by the Day-0 trace plus the trace command/evidence (PR24); a PROCEED that cites only the prep-doc surface is invalid.
+
+**On "these 4" vs "exactly 4"** (corrected Sprint 37, PR #1670 review). This rule previously read
+*"exactly these 4 subsections"*. It was measured against the whole corpus in Sprint 37 Prep Task 10:
+an *exactly-4* check fails `ISSUE_1224`, which has carried 6 since Sprint 28, and the adopted
+Phase-0 CI check is therefore **"the 4 canonical names present (prefix-matched), extras allowed"**
+(`SPRINT_37/P7_INFRA_CATALOG.md` §2.2). Five docs now carry extras — commonly a
+`### Bucket / KPI` and a `### Regression guard`, which are useful and should not be demoted to
+bold to satisfy a rule the corpus never followed. Prefix-matching also applies at the *heading*
+level: `ISSUE_1330`'s `## Phase 0: Acceptance Gate (Sprint 28 …)` carries a parenthetical suffix,
+so a `$`-anchored match silently drops it.
 
 ### Why this exists
 

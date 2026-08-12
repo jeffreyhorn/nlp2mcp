@@ -62,13 +62,21 @@ OUT=/tmp/i1289/ganges_mcp.gms
 mkdir -p /tmp/i1289
 .venv/bin/python -m src.cli data/gamslib/raw/ganges.gms -o "$OUT"
 
-# each calibration symbol is assigned at least once
+# each calibration symbol is assigned at least once.
+# NB `[[:space:]]`, not `\s`: POSIX ERE does not define `\s`, so `grep -E` support
+# is platform-dependent (it happens to work under ugrep, not under BSD grep).
+rc=0
 for p in deltax aid aex adst as deltas av deltav aq deltaq az deltaz an deltan pnm00 cg; do
-  test "$(grep -cE "^\s*${p}\(" "$OUT")" -ge 1 || echo "FAIL: ${p} still unassigned"
+  if [ "$(grep -cE "^[[:space:]]*${p}\(" "$OUT")" -lt 1 ]; then
+    echo "FAIL: ${p} still unassigned"; rc=1
+  fi
 done
 
 # and the assignment follows the .l init it reads
-awk '/^\s*ls\.l\(/{seen=1} /^\s*deltas\(/{ if(!seen) {print "FAIL: deltas assigned before ls.l"; exit 1} }' "$OUT"
+awk '/^[[:space:]]*ls\.l\(/{seen=1}
+     /^[[:space:]]*deltas\(/{ if(!seen){print "FAIL: deltas assigned before ls.l"; exit 1} }' "$OUT" || rc=1
+
+exit $rc
 ```
 
 The **presolve** emit must be **byte-identical** — the calibration block already
