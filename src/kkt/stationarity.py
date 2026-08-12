@@ -7372,7 +7372,14 @@ def _add_indexed_jacobian_terms(
                                 # and compares on the suffix-stripped name so the AD
                                 # layer's `__` re-symbolization cannot hide a reference.
                                 _sub_guards: list[tuple[str, str]] = []
-                                if not has_offset:
+                                # `has_real_offset`, not `has_offset`: the latter
+                                # is also true when `offset_key` merely carries a
+                                # `_SENTINEL_UNMATCHED` dimension-mismatch marker,
+                                # which is not a lead/lag offset. Using it would
+                                # decline the binding on dim-mismatch shapes that
+                                # have no real offset at all — narrower than the
+                                # intent, and a silent false negative.
+                                if not has_real_offset:
                                     _free = {
                                         f.lower()
                                         for f in _collect_free_indices(indexed_deriv, kkt.model_ir)

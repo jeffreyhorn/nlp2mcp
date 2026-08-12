@@ -93,12 +93,12 @@ def test_multiplier_is_still_summed_not_rewritten():
     """
     text = _stat(_SUBSET_DIAGONAL, "stat_bq")
 
-    assert re.search(r"nu_pbal\(cfq\w*,\s*m\)", text), (
-        f"the multiplier index was rewritten rather than guarded; got: {text}"
-    )
-    assert re.search(r"sum\(\(?cfq\w*", text), (
-        f"the summation over the subset domain was removed entirely; got: {text}"
-    )
+    assert re.search(
+        r"nu_pbal\(cfq\w*,\s*m\)", text
+    ), f"the multiplier index was rewritten rather than guarded; got: {text}"
+    assert re.search(
+        r"sum\(\(?cfq\w*", text
+    ), f"the summation over the subset domain was removed entirely; got: {text}"
 
 
 def test_binding_does_not_fire_without_the_subset_relation():

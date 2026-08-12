@@ -21,7 +21,7 @@ The decisive addition is a **positive** requirement rather than another negative
 Two smaller guards matter:
 
 - **Suffix-stripped comparison.** The AD layer re-symbolises subset indices with a `__` suffix (`cfq` → `cfq__`). Attempt 2 compared raw names, so a reference through the re-symbolised form was invisible — the specific reason it under-fired on `dinam`/`shale`.
-- **Offset skip.** The binding is meaningless when the term already carries a lead/lag offset, so the predicate declines there rather than stacking guards.
+- **Offset skip.** The binding is meaningless when the term already carries a lead/lag offset, so the predicate declines there rather than stacking guards. It tests **`has_real_offset`**, not `has_offset` — the latter is also true when `offset_key` merely carries a `_SENTINEL_UNMATCHED` dimension-mismatch marker, which is not an offset at all. The first version used `has_offset` and was therefore *narrower than its own comment claimed*, silently declining on dim-mismatch shapes with no real offset (caught in PR #1671 review). Corrected and re-gated: the broader form drifts **no** golden — `check-goldens` reports all 163 clean, and fawley's own emit is byte-identical.
 
 **Implementation reuses `_subset_alias_superset_index`** (Issue #1393, `:7708`) rather than adding a parallel walker — it already performs the subset-parent lookup *and* the `__`-stripping, and its own docstring names fawley's `pcr(cr)`. The emitted guard mirrors the `mbal` term that was already correct in the golden: a `sameas` condition on a retained `Sum`, not an index rewrite.
 
