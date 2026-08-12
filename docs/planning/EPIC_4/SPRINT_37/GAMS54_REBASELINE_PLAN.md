@@ -72,7 +72,7 @@ Sprint 36 named the 5 OBJ-GAP models (`agreste`, `cesam`, `chain`, `fawley`, `ro
 2. **Re-solve** the 142 convex candidates under GAMS 54 demo:
    `PATH=/Library/Frameworks/GAMS.framework/Versions/54/Resources:$PATH scripts/gamslib/run_full_test.py --only-solve` (scoped to the convex corpus). ~30 min.
 3. **Diff buckets** against the v53 DB snapshot, per model, into **`GAMS54_REBASELINE_DIFF.md`**.
-4. **Re-check** the 5 OBJ-GAP models explicitly (§2 gives the expected answer: no change).
+4. **Re-check** the OBJ-GAP models explicitly (§2 gives the expected answer: no change). ⚠ **The set is 8, not 5** — corrected at Sprint 37 Checkpoint 1 (Day 5). Beyond the five named in §2 (`agreste`, `cesam`, `chain`, `fawley`, `rocket`), the detector also reports **`ps2_f_s`, `ps2_s`, `ps3_s_gic`**. Their goldens changed in `ac391bb6` — Sprint 36 Day 10's own robustlp NA-guard landing — so S36 closed reporting the *pre-landing* count. All three still `model_optimal_presolve` + match (no bucket harm), but the re-baseline must re-check all **8**; the three additions are exactly the 2-D cohort members.
 5. **Apply the decision rule** below; either commit the re-pinned DB or restore the snapshot.
 
 ### Classifying a "regression" (the rule)
