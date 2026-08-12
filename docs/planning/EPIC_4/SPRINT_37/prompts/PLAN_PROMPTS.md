@@ -79,11 +79,37 @@ Then `make leak-check MODEL=fawley` to an **unqualified PASS** — recall `prolo
 
 ## Day 8 Prompt — P4 fawley: land-or-defer + fixture (~7 h)
 
-Branch `planning/sprint37-day8-fawley-land`. If Day 7 reached an unqualified `LEAK GATE PASS`: land it, add the corpus-free `tests/unit/kkt/test_shape_fawley_2d_second_index.py` (`pytest.mark.unit`, no skip guard, matching **`cfq\w*`** not the literal `cfq__` — `../P7_INFRA_CATALOG.md` §1.2), and assert **KPIs unchanged (108/93/75)**: fawley is H-b and 0-bucket by construction, so claiming a bucket gain here would be wrong.
+> **✅ COMPLETED ON DAY 6** (pulled forward with P2's freed budget; landed in PR #1671,
+> `main` `eb89d0df`). The leak gate returned an unqualified `LEAK GATE PASS` — 163 goldens,
+> 0 unverified, fawley only — so the *land* branch was taken, not the defer branch. The
+> corpus-free fixture shipped with it (3 tests, 0 executable `pytest.skip()` calls).
+> **Do not re-execute this day.**
+>
+> ⚠ **The KPI figure below was stale even when written:** it says `108/93/75`, but the
+> genuine floor moved to **76** on Day 3 when markov landed. The correct assertion is
+> **Solve 108 / Match 93 / floor 76 unchanged**.
+
+Branch `planning/sprint37-day8-fawley-land`. If Day 7 reached an unqualified `LEAK GATE PASS`: land it, add the corpus-free `tests/unit/kkt/test_shape_fawley_2d_second_index.py` (`pytest.mark.unit`, no skip guard, matching **`cfq\w*`** not the literal `cfq__` — `../P7_INFRA_CATALOG.md` §1.2), and assert **KPIs unchanged — 108 / 93 / floor ~~75~~ 76**: fawley is H-b and 0-bucket by construction, so claiming a bucket gain here would be wrong.
 
 **REPLAN exit:** still leaking → **re-defer**, and record it as a **carryforward, not a landing**. fawley is 0-bucket, so it must never ship at the cost of a shared-function regression. A deferred fawley is the correct outcome, not a failure. Quality gate if Python touched. Emit-touching PR IF it lands; else docs/defer. Then wait for reviewer comments.
 
 ## Day 9 Prompt — P7 infra + the P6 v54 re-baseline (async) (~9 h)
+
+> **Scope changed during execution.** **P7(b) is already done** — CONTRIBUTING §392 was
+> reworded to rule C in PR #1670 (Day 5 review), and all 23 Phase-0 docs verify clean
+> against it. **P7(c)'s floor tracking is resolved** — the floor is **76**, not contingent.
+> **Three items were discovered during execution and belong to this day:**
+> 1. **Leak-gate load-dependence** — the sweep's verdict varies with machine load at its
+>    default 6 workers (measured 4 / 2 / 0 timeouts across three runs on Day 2), because
+>    `ganges`/`clearlak` sit near the hardcoded 600 s emit budget
+>    (`scripts/gamslib/batch_translate.py:265`). Every Sprint-37 gate run needed
+>    `MAX_WORKERS = 3`. Fix: lower the default, raise the cap, or route the full sweep
+>    to a nightly lane. This is now load-bearing — `golden-staleness` is a *required* check.
+> 2. **Golden coverage is asymmetric** — **153 cold goldens vs 17 presolve** (Day 4). A
+>    presolve-only emit change is far less protected than the "163 in-scope goldens"
+>    headline implies; ganges/gangesx carry **no** presolve golden at all.
+> 3. **The Phase-0 CI check (P7(a)) would now enforce rule C**, which CONTRIBUTING already
+>    states — so the check and the doc agree before it lands, rather than after.
 
 Branch `planning/sprint37-day9-p7-infra`. **P7(a):** wire the **Phase-0-doc CI check** from `../P7_INFRA_CATALOG.md` §2.3 — trigger `src/{ad,kkt,emit}/**/*.py` (deliberately narrower than the leak gate's, which also arms on `src/ir/**`); PR-level doc resolution (a changed conforming `docs/issues/ISSUE_*.md` **or** a PR-body `ISSUE_<N>`/`#<N>` reference); **prefix matching at both the heading and subsection level**; the 4 canonical names required with extras allowed; `skip-phase0` label escape hatch; **CI job, not pre-commit**. The reference implementation is in §2.3 and passes 21/21 on the remediated corpus. **P7(b):** reword CONTRIBUTING §392 from "exactly these 4" to "these 4 … extras permitted" so the doc and the gate agree. **P7(c):** recompute the genuine-floor tracking + draft the SUMMARY row-37 fill (§5.2's pre-registered rules).
 
@@ -95,11 +121,19 @@ Branch `planning/sprint37-day10-checkpoint2`. **Checkpoint 2 (~4 h):** `--resolv
 
 **The v54 decision (~2 h)** using the **three-way** rule (`../GAMS54_REBASELINE_PLAN.md` §3): *Regression* (a v54-attributable bucket downgrade → **blocks** the re-pin), *neutral churn* (recorded), and **stale-entry correction** (the v53 row predates a landed fix — **turkey is exactly this**, `path_syntax_error → path_solve_license`, `pse` 7 → 6 with **no Solve/Match change**; call it out separately or it will be miscounted as a v54 effect). **Re-pin only on zero Regressions.** While re-baselining, populate `solver_version` (currently `null` for all 219 rows).
 
-**P3 camcge (~3 h):** the `/tmp` Walras control (641 rows, demo-reachable; emit ~18 s; embedded NLP MS-2 @ omega 191.7346; MCP MS-4 — `../CONSULTATION_INTEGRATION_PREP.md` §3). **Expected MS-4** → confirms the Epic-5 per-model-numéraire fallback. **The drop-row half is BANNED** (primal-correct but breaks the MCP dual → omega 299). Also record the **Day-10 budget fork** (`../PLAN.md` §17): if the sprint is ≥ 10 h over, sarf is formally deferred a sixth time and Days 11–12 become carryforward + slack. PR. Then wait for reviewer comments.
+**P3 camcge (~3 h):** the `/tmp` Walras control (641 rows, demo-reachable; emit ~18 s; embedded NLP MS-2 @ omega 191.7346; MCP MS-4 — `../CONSULTATION_INTEGRATION_PREP.md` §3). **Expected MS-4** → confirms the Epic-5 per-model-numéraire fallback. **The drop-row half is BANNED** (primal-correct but breaks the MCP dual → omega 299). ~~Also record the **Day-10 budget fork** (`../PLAN.md` §17)~~ — **already resolved on Day 7**: sarf was profiled and deferred a sixth time on *measured* grounds (a constant-factor fix was tried and bought only ~5 % throughput against the ~66× needed), so Days 11–12 are already free. Record the fork as **closed**, not open. PR. Then wait for reviewer comments.
 
 ## Day 11 Prompt — P5 sarf: symbolic-emit re-architecture, part 1 (~10 h)
 
-Branch `planning/sprint37-day11-sarf-rearch`. **Only if the Day-10 fork said GO.** **Author the P5 Phase-0 doc first** — P5 has none yet.
+> **⚠ The Day-10 fork already resolved to DEFER (Day 7).** sarf was profiled and the cheap
+> alternative measured and refuted; the 20–28 h atomic re-architecture was not started.
+> **`ISSUE_1385` now exists** (`docs/issues/ISSUE_1385_sarf-symbolic-emit-o-active.md`) with
+> the four canonical Phase-0 subsections, the three materialisation sites re-located on
+> current `main`, the **inverted gate**, and the constraint that **sarf cannot be its own
+> fixture model** (at 369,024 columns the fail-before state does not terminate). Execute
+> this day only on an explicit decision to re-open P5.
+
+Branch `planning/sprint37-day11-sarf-rearch`. ~~**Only if the Day-10 fork said GO.** **Author the P5 Phase-0 doc first** — P5 has none yet.~~ **The Phase-0 doc exists** (see the banner); start from its PROCEED/REPLAN signal.
 
 The 369,024-column `task(g,t,mn,mn)` blow-up (`|g|`=16, `|t|`=24, `|mn|`=31; active = 398, both runtime-computed, so static enumeration of the 398 is not available — `../SARF_REARCH_REFRESH.md`). The O(active) guarded emit is **validated at real scale** (GAMS 54.2.1, `ncart` = 369,024, `rc=0`). Short-circuit the three materialisation sites — `constraint_jacobian.py:78` (S1), `index_mapping.py:634` (S2), and `stationarity.py`'s per-column `stat_task` (S3) — while leaving all **six** `enumerate_variable_instances` call sites provably unperturbed (the other three: `gradient.py:287`/`:453`, `complementarity.py:367`/`:512`).
 
@@ -115,10 +149,10 @@ Branch `planning/sprint37-day12-sarf-verdict`. If Day 11's control passed, land 
 
 ## Day 13 Prompt — Final Retest + Closeout (~8 h)
 
-Branch `planning/sprint37-day13-close`. Determinism ×3 `{0,1,42}` (a stable-model md5); `--resolve-changed --since-commit 78ceaead` GO; DB byte-check; `make check-goldens` clean; the PR25 floor recompute (75 or 76). Write `SPRINT_LOG.md` + `SPRINT_RETROSPECTIVE.md`; fill `../../SUMMARY.md` **row 37** using the pre-registered rules (`../P7_INFRA_CATALOG.md` §5.2):
+Branch `planning/sprint37-day13-close`. Determinism ×3 `{0,1,42}` (a stable-model md5); `--resolve-changed --since-commit 78ceaead` GO; DB byte-check; `make check-goldens` clean; the PR25 floor recompute (**76** — no longer contingent; markov cold-matched on Day 2 with `modelstat` asserted, and Day 3 persisted the row). Write `SPRINT_LOG.md` + `SPRINT_RETROSPECTIVE.md`; fill `../../SUMMARY.md` **row 37** using the pre-registered rules (`../P7_INFRA_CATALOG.md` §5.2):
 
-- floor **76 only** if markov cold-matched with `modelstat` asserted; else 75 with the methodology partition still at 30;
-- a track counts as a **firm landing** only if it passed all three gates (Phase-0 doc → fixture → leak gate). A correctness fix that never passed its leak gate is a **carryforward** — fawley is the live candidate for exactly this mislabelling;
+- floor **76** — resolved, not contingent: markov cold-matched (`modelstat` asserted, `pvcost` 2401.5774), the DB row was persisted Day 3, and the partition is presolve-match **29** / cold-optimal **64** with Match unchanged at 93;
+- a track counts as a **firm landing** only if it passed all three gates (Phase-0 doc → fixture → leak gate). A correctness fix that never passed its leak gate is a **carryforward** — ~~fawley is the live candidate~~ **fawley passed its gate on Day 6 and is a firm landing**; the rule now applies to the *ganges* cascade, which is verified-working but **blocked by #1668** and must be recorded as a carryforward, not a landing;
 - carryforwards carry the *bounded next step*, not the track name;
 - state the DB byte-status explicitly — it is what makes "flat" a measurement rather than an absence.
 
@@ -126,4 +160,19 @@ Docs/DB PR. Then wait for reviewer comments.
 
 ---
 
-**Covers:** Sprint 37 Day 0 + Days 1–13. The honest projection: **genuine floor 75 or 76 (markov-contingent); Solve 108 or 110 (P2-bimodal); Match 93 or 95; Translate 135 or 136 (sarf); `path_syntax_error` 7 → 6 as a stale-entry correction, 5 if P2 lands; turkey +1 license-deferred; rocket +1 contingent on the Day-0 send.**
+**Covers:** Sprint 37 Day 0 + Days 1–13.
+
+**Projection as written (prep Task 11):** genuine floor 75 or 76 (markov-contingent); Solve 108 or 110 (P2-bimodal); Match 93 or 95; Translate 135 or 136 (sarf); `path_syntax_error` 7 → 6 as a stale-entry correction, 5 if P2 lands; turkey +1 license-deferred; rocket +1 contingent on the Day-0 send.
+
+**Actuals through Day 8** — most contingencies are now settled:
+
+| KPI | projected | actual |
+|---|---|---|
+| genuine floor | 75 **or 76** | **76** — markov landed (Day 2–3) |
+| Solve | 108 **or 110** | **108** — P2 REPLAN'd, blocked by #1668 |
+| Match | 93 **or 95** | **93** (64 cold + 29 presolve) |
+| Translate | 135 **or 136** | **135** — sarf deferred on measured grounds (Day 7) |
+| `path_syntax_error` | 7 → 6 or 5 | **7** — the turkey correction needs a persisting v54 re-solve (Day 9/10) |
+| rocket +1 | contingent on the send | **still unsent — owner-assigned** |
+
+Landed: **P1 markov** (+1 floor) and **P4 fawley** (0 bucket, leak-free). Deferred with banked Phase-0 gates: **P2 ganges** (#1667, #1289, blocked by #1668) and **P5 sarf** (#1385).
