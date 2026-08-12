@@ -1,6 +1,6 @@
 # ISSUE #1111 — fawley `stat_bq`: constraint-index-diagonal over-count
 
-> **Scope.** This doc addresses **#1111 only** (alias/subset-aware index matching). The Sprint-36/37 planning docs refer to the track as "fawley #1111/#1112" because it sits in that architectural family, but the defect fixed here is a *name-based* domain-overlap test missing a declared **subset** relationship — squarely #1111. **#1112** (dollar-condition propagation through the AD/stationarity pipeline) is *not* addressed: the `$(sameas(…))` guard is the fix's **mechanism**, not the broken machinery. No #1112 claim is made and no companion doc is implied.
+**Status:** ✅ **LANDED** (Sprint 37 Day 6) — all four Phase-0 criteria met, including the full-corpus leak gate that refused the two prior attempts. **0 bucket by construction** (H-b): fawley stays `model_infeasible`, Solve 108 / Match 93 / floor 76 unchanged.
 
 **Status:** 🔶 DESIGN COMPLETE, **NOT LANDABLE YET** — correctness control-verified, but the full-corpus leak gate **FAILED** (see *Leak status*). Do not implement as-is.
 **Sprint:** 37 (P4, 0-bucket / H-b) · **Prep:** Task 6 · **Issue:** #1111 (family: #1111/#1112)
@@ -34,7 +34,22 @@ from this branch.
 `pbal`) — and `stat_bq` **dropped out of the KKT-residual top rows entirely** (baseline rel
 0.973), leaving only the emit-correct `stat_trans(tr-2)`.
 
-#### Leak status — the gate FAILED (measured, Prep Task 6)
+#### Leak status — RESOLVED (Sprint 37 Day 6)
+
+The narrowing succeeded. `make leak-check MODEL=fawley` now returns the **unqualified
+`LEAK GATE PASS`** — 163 in-scope goldens, 0 unverified, only `fawley_mcp.gms` and
+`fawley_mcp_presolve.gms` drift (+44 B each). **`dinam`, `shale` and `prolog` are all
+byte-identical.**
+
+**What changed vs the two failed attempts.** Both earlier predicates only *subtracted* —
+conjunct 1 (the subset-parent relation) alone, then conjunct 1 plus "the coefficient omits
+the summed index". The landed conjunct 2 adds a **positive** requirement: the coefficient
+must **reference the subset's parent index**, i.e. the derivative genuinely is diagonal in
+that pair. It also compares on the **suffix-stripped** name so the AD layer's `__`
+re-symbolization cannot hide a reference (the specific blindness that let the second attempt
+under-fire), and declines entirely when the term carries an offset.
+
+#### Leak status at design time — the gate FAILED (historical, Prep Task 6)
 
 `make leak-check MODEL=fawley` was run twice against the scratch predicate:
 
