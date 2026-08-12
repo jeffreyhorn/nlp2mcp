@@ -63,6 +63,8 @@ Golden staleness: checked 163 in-scope golden(s) (7 allowlisted, 3 workers).
 
 Both were **diagnosed, not assumed**.
 
+**A coverage bound on this result, found in PR review.** ganges and gangesx have **no committed presolve golden** — only 17 of the 153 golden-carrying models do, and theirs are cold-only. So `--expect-drift ganges,gangesx` compared their **cold** emits; the *presolve* output that #1667 actually changes is **not golden-tracked at all**. The presolve verification in this document is direct (`rc`, `$NNN`, `rPower` counts on freshly-emitted files), not gate-backed. korcge's drift was visible precisely because korcge *does* carry a presolve golden — had it not, the rPower gate's blast radius would have gone unmeasured.
+
 ### `korcge` — benign, and the fix correctly co-applies
 
 The drift is entirely the `rPower` gate: **18 lines removed, 0 added**, all deferred bounds. Its statements *are* in the source (`er.fx`, `pindex.fx`, `k.fx(i)`, `mps.fx` each appear in `korcge.gms`), so the `$include` re-supplies them — the gate's premise holds. Verified by solving: still **`MODEL STATUS 1 Optimal`** at objective **339.2130**, exactly the DB's recorded match.

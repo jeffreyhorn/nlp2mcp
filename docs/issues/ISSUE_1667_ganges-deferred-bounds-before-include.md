@@ -65,14 +65,31 @@ apply any `.l`-dependent bound statement before the `$include` establishes those
 
 ### Expected Emit Pattern
 
-`ganges_mcp_presolve.gms` (and `gangesx_`) must contain **no**
+The emitted presolve MCP must contain **no**
 `* Deferred Variable Bounds (depend on .l values)` section, and no
-`ls.fx(...)$(not ls.l(...))` statement ahead of the `$include`:
+`ls.fx(...)$(not ls.l(...))` statement ahead of the `$include`.
+
+⚠ **Run these against a freshly-emitted file, not a golden: ganges and gangesx
+have no committed presolve golden** (only 17 of the 153 golden-carrying models
+do). This also bounds what the leak gate can see — `--expect-drift ganges,gangesx`
+compares their **cold** goldens only, so the presolve output this issue changes
+is not golden-tracked at all and must be checked directly.
 
 ```bash
-grep -c "Deferred Variable Bounds" data/gamslib/mcp/ganges_mcp_presolve.gms      # 0
-awk '/\$include/{exit} /ls\.fx.*not ls\.l/{f=1} END{exit !f}' …                   # no match before $include
+OUT=/tmp/i1667/ganges_mcp_presolve.gms
+mkdir -p /tmp/i1667
+.venv/bin/python -m src.cli data/gamslib/raw/ganges.gms --nlp-presolve -o "$OUT"
+
+# 1. no deferred-bounds section at all
+test "$(grep -c 'Deferred Variable Bounds' "$OUT")" -eq 0 || echo "FAIL: block still emitted"
+
+# 2. no .l-dependent guard ahead of the $include (exits 1 and names the line if found)
+awk '/\$include/{exit 0}
+     /ls\.fx.*not ls\.l/{printf "FAIL: pre-$include guard at line %d\n", NR; exit 1}' "$OUT"
 ```
+
+Both checks verified against the real before/after emits: pre-fix the awk reports
+`FAIL: pre-$include guard at line 500` and exits 1; post-fix it exits 0.
 
 The **cold** (non-presolve) emit must be **byte-identical** — the block is only
 redundant when an `$include` re-supplies it, so the change is gated on
