@@ -473,7 +473,11 @@
         },
         "solver_version": {
           "type": ["string", "null"],
-          "description": "Version of the solver extracted from .lst file (e.g., '5.2.01'). Null if not found."
+          "description": "PATH solver version extracted from the .lst file (e.g., '5.2.01'). Null if not found."
+        },
+        "gams_version": {
+          "type": ["string", "null"],
+          "description": "GAMS version that produced this row (e.g., '54.2.1'), extracted from the .lst header. Distinct from the top-level gams_version, which records the version the models were SOURCED with. Added Sprint 37 Day 10 so a version transition is a DB query rather than a corpus re-solve."
         },
         "solver_status": {
           "type": ["integer", "null"],

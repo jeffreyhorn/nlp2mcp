@@ -339,12 +339,37 @@ def extract_path_version(lst_content: str) -> str | None:
     Returns:
         Version string (e.g., "5.2.01") if found, None otherwise
     """
-    # Look for PATH version in solver output
-    # Format: "PATH Version: 5.2.01 (Mon Oct 27 13:31:58 2025)"
-    match = re.search(r"PATH\s+Version:\s*(\d+\.\d+(?:\.\d+)?)", lst_content)
+    # Sprint 37 Day 10: this regex had NEVER matched — every one of the 219 DB
+    # rows carried `solver_version: null`, and two sprints of "populate
+    # solver_version" instructions could not fix a broken extractor. The
+    # docstring's format ("PATH Version: 5.2.01") is not what GAMS emits; the
+    # listing carries `Path 5.2.01 (Mon Jul 13 19:47:36 2026)` — different
+    # capitalisation, and no "Version:" at all. Accept both spellings.
+    match = re.search(
+        r"\bPATH\s+Version:\s*(\d+\.\d+(?:\.\d+)?)", lst_content, re.IGNORECASE
+    ) or re.search(r"^\s*Path\s+(\d+\.\d+(?:\.\d+)?)\s*\(", lst_content, re.M)
     if match:
         return match.group(1)
     return None
+
+
+def extract_gams_version(lst_content: str) -> str | None:
+    """Extract the GAMS version from a .lst file.
+
+    Distinct from `extract_path_version`: that records the **PATH solver**
+    version (e.g. "5.2.01"), which does not answer the question Sprint 36/37
+    actually needed — *which GAMS version produced this row* (v53 vs v54).
+    Without it, the v54 re-baseline diff (Sprint 37 Day 9) could only classify
+    three moved rows by re-solving the corpus and doing per-model `git log`
+    archaeology.
+
+    Listing header format: ``GAMS 54.2.1  d9889eb3 Jul 13, 2026   DEX-DEG …``
+
+    Returns:
+        Version string (e.g. "54.2.1") if found, None otherwise.
+    """
+    match = re.search(r"^GAMS\s+(\d+\.\d+(?:\.\d+)?)\s", lst_content, re.M)
+    return match.group(1) if match else None
 
 
 def categorize_solve_outcome(
@@ -1027,6 +1052,7 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
 
         # Extract PATH solver version from .lst file
         path_version = extract_path_version(lst_content)
+        gams_version = extract_gams_version(lst_content)
 
         # Get objective value (try explicit line first, then variable extraction)
         objective = parsed.get("objective_value")
@@ -1052,6 +1078,9 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
         result: dict[str, Any] = {
             "status": "success" if is_success else "failure",
             "solver_version": path_version,
+            # Sprint 37 Day 10: per-row GAMS provenance. `solver_version` is
+            # PATH's version and cannot answer "which GAMS produced this row".
+            "gams_version": gams_version,
             "solver_status": solver_status,
             "solver_status_text": (
                 SOLVER_STATUS_DESCRIPTIONS.get(solver_status, "Unknown") if solver_status else None
@@ -1096,6 +1125,7 @@ def update_model_solve_result(
         "solve_date": datetime.now(UTC).isoformat(),
         "solver": "PATH",
         "solver_version": solve_result.get("solver_version"),
+        "gams_version": solve_result.get("gams_version"),
         "solver_status": solve_result["solver_status"],
         "solver_status_text": solve_result["solver_status_text"],
         "model_status": solve_result["model_status"],
