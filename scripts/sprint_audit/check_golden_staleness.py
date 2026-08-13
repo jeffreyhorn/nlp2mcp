@@ -49,7 +49,18 @@ from scripts.gamslib.batch_translate import translate_single_model  # noqa: E402
 MCP_DIR = PROJECT_ROOT / "data" / "gamslib" / "mcp"
 RAW_DIR = PROJECT_ROOT / "data" / "gamslib" / "raw"
 ALLOWLIST_PATH = Path(__file__).resolve().parent / "golden_staleness_allowlist.txt"
-MAX_WORKERS = 6
+# Sprint 37 Day 9: lowered 6 -> 3. At 6 the sweep's verdict is LOAD-DEPENDENT:
+# the same command produced 4, then 2, then 0 timeouts across three runs on
+# Day 2, because `ganges`/`clearlak` emit in 259-293 s standalone and the
+# per-model budget is a hardcoded 600 s (`scripts/gamslib/batch_translate.py`),
+# so under 6-way contention they exceed it and the gate reports UNVERIFIED
+# rather than clean. That is not a false PASS — `--expect-drift` correctly
+# refuses to certify an unverified sweep — but it makes a REQUIRED check fail
+# open on a busy machine, and every Sprint-37 gate run needed this override
+# applied by hand. At 3 workers the sweep completed with ZERO timeouts on every
+# attempt (Days 2, 4, 6, 9). The wall-clock cost is modest: the sweep is bounded
+# by its slowest single model, not by total work.
+MAX_WORKERS = 3
 
 
 def load_allowlist() -> set[str]:
