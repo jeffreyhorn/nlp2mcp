@@ -328,10 +328,26 @@ def extract_objective_from_variables(lst_content: str) -> float | None:
 
 
 def extract_path_version(lst_content: str) -> str | None:
-    """Extract PATH solver version from .lst file.
+    """Extract the PATH solver version from a .lst file.
 
-    Looks for version string in the format "PATH Version: X.X.XX"
-    that appears in the solver output section of the .lst file.
+    Accepts **two** spellings, because GAMS does not emit the one this
+    function's docstring originally claimed:
+
+    * ``Path 5.2.01 (Mon Jul 13 19:47:36 2026)`` — what GAMS actually writes
+      (capitalised "Path", no "Version:"). This is the form that matters.
+    * ``PATH Version: 5.2.01`` — the legacy/documented form, still accepted
+      case-insensitively in case a future GAMS release emits it.
+
+    History (Sprint 37 Day 10): the original implementation matched only the
+    second form, so it had **never** matched real output and every one of the
+    219 DB rows carried ``solver_version: null``. Two sprints of "populate
+    solver_version" instructions failed because they assumed a missing *write*
+    when the defect was a failed *read* — and this docstring, which asserted a
+    format GAMS does not produce, is why the code looked correct in review.
+    Keep it describing what is actually parsed.
+
+    Note this is the **PATH solver** version, not the GAMS version; for
+    per-row GAMS provenance see :func:`extract_gams_version`.
 
     Args:
         lst_content: Contents of the .lst file
@@ -339,12 +355,6 @@ def extract_path_version(lst_content: str) -> str | None:
     Returns:
         Version string (e.g., "5.2.01") if found, None otherwise
     """
-    # Sprint 37 Day 10: this regex had NEVER matched — every one of the 219 DB
-    # rows carried `solver_version: null`, and two sprints of "populate
-    # solver_version" instructions could not fix a broken extractor. The
-    # docstring's format ("PATH Version: 5.2.01") is not what GAMS emits; the
-    # listing carries `Path 5.2.01 (Mon Jul 13 19:47:36 2026)` — different
-    # capitalisation, and no "Version:" at all. Accept both spellings.
     match = re.search(
         r"\bPATH\s+Version:\s*(\d+\.\d+(?:\.\d+)?)", lst_content, re.IGNORECASE
     ) or re.search(r"^\s*Path\s+(\d+\.\d+(?:\.\d+)?)\s*\(", lst_content, re.M)

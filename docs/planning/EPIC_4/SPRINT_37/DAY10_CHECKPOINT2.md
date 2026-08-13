@@ -23,7 +23,7 @@ Day 9 and Task 8 both recorded *"populate `solver_version` (currently `null` for
 `extract_path_version` (`scripts/gamslib/test_solve.py:330`) searched for:
 
 ```
-PATH Version: 5.2.01          <- what the docstring says GAMS emits
+PATH Version: 5.2.01          <- what the docstring CLAIMED GAMS emits
 ```
 
 GAMS actually emits:
@@ -34,7 +34,7 @@ Path 5.2.01 (Mon Jul 13 19:47:36 2026)     <- different case, and no "Version:"
 
 The regex has **never matched**, which is why every row was null. Two sprints of re-baseline instructions assumed a missing write; the defect was a failed extraction, and the docstring documented a format that isn't produced — which is presumably how it survived review.
 
-**Fixed:** the matcher now accepts both spellings (`re.IGNORECASE` on the legacy form, plus the actual `^Path <ver> (`). Verified against a real listing: `extract_path_version → '5.2.01'`.
+**Fixed:** the matcher now accepts both spellings (`re.IGNORECASE` on the legacy form, plus the actual `^Path <ver> (`). Verified against a real listing: `extract_path_version → '5.2.01'`. **The docstring was rewritten too** — leaving it asserting a format the code does not parse would re-create the exact trap that caused this bug, and PR review caught that I had fixed the implementation while leaving the docstring stale.
 
 ## 3. The deeper gap — `solver_version` would not have answered the question anyway
 
@@ -93,7 +93,7 @@ Every figure reproduces. The MCP is MS-4 against a correct NLP optimum — the s
 
 ## 7. A process note carried from Day 9
 
-Day 9's `git add -A` after a GAMS run swept 20 runtime artifacts (including `decis.lic`) and 36 unintended presolve goldens into a commit. Today's full re-solve regenerated the same 36 presolve goldens; they were **deleted rather than staged**, and the artifacts did not reappear because they are now `.gitignore`d. The staged change is exactly four files: the DB, the schema, and the two writers.
+Day 9's `git add -A` after a GAMS run swept 20 runtime artifacts (including `decis.lic`) and 36 unintended presolve goldens into a commit. Today's full re-solve regenerated the same 36 presolve goldens; they were **deleted rather than staged**, and the artifacts did not reappear because they are now `.gitignore`d. The staged change is six files — the DB, the schema, the two writers, this note and the CHANGELOG — and **no** runtime artifact or regenerated golden among them.
 
 ---
 
