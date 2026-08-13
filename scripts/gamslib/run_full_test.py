@@ -549,6 +549,7 @@ def run_solve_stage(
         "solve_date": solve_date,
         "solver": "PATH",
         "solver_version": result.get("solver_version"),
+        "gams_version": result.get("gams_version"),
         "solver_status": result.get("solver_status"),
         "solver_status_text": result.get("solver_status_text"),
         "model_status": result.get("model_status"),
