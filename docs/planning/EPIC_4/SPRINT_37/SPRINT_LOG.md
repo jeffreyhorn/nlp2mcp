@@ -104,9 +104,9 @@ A path-filtered required check blocks a PR forever at *"Expected — waiting for
 
 ## 7. Carryforwards → Sprint 38
 
-Each carries the **bounded next step**, not the track name.
+**Full detail: [`SPRINT_38_CARRYFORWARDS.md`](SPRINT_38_CARRYFORWARDS.md)** — the file Sprint 38's prep picks up, matching the S33→S37 convention. Summary below; each carries the **bounded next step**, not the track name.
 
-- **P2 ganges** — the cascade is verified working (`rc=0`, both models). **Next step:** re-scope `$149`'s rebind so it cannot fire on `prolog` — the over-fire is in the *rebind predicate*, not the fix; `$149` is load-bearing and cannot be dropped. **#1668** + `ISSUE_1667`; `$66`/`ISSUE_1289` needs a Phase-0 section before it is implementable at all. **+2 or 0.**
+- **P2 ganges** — the cascade is verified working (`rc=0`, both models). **Next step:** re-scope `$149`'s rebind so it cannot fire on `prolog` — the over-fire is in the *rebind predicate*, not the fix; `$149` is load-bearing and cannot be dropped. **#1668** + `ISSUE_1667`; `$66`/`ISSUE_1289` needs a Phase-0 section before it is implementable at all. **0 bucket** — the prep-era "+2 or 0" was refuted on Days 4–5: the 6th blocker (embedded `ganges0` MS-5 vs standalone MS-2 @ 6395.5444) is untouched and `mcp_model` stays MS-4, so a fully clean cascade buys only the lateral `path_syntax_error → model_infeasible` (pse 6 → 4, mi 7 → 9). A genuine +2 additionally needs the #1378/#1424 embedded-divergence class, which is not scoped.
 - **P5 sarf** — **next step:** the O(active) atomic re-arch at all three sites (20–28 h). Measured: constant-factor fixes are dead (~5% vs ~66× needed). `ISSUE_1385`. **+1 Translate.**
 - **P3 rocket/mine** — the consultation bundle is finalized and **UNSENT**. **Next step:** a human names a recipient and channel. Not executable by the execution agent, and it has now carried across three sprints on that basis.
 - **camcge** — Epic 5, per-model numéraire. The three-part Walras redefinition has been refuted across 3+ sprints; **drop-row remains BANNED**.
