@@ -32,7 +32,7 @@ Recomputed directly from `data/gamslib/gamslib_status.json` using `model_id` as 
 
 ## 2. The genuine floor — and a provenance defect
 
-**Mechanical count: 65. Recorded floor: 76. Gap: 11.** Both figures confirmed at `84fbe43c`, as expected — the floor is not DB-derivable.
+**Mechanical count: 65. Recorded floor: 76. Gap: 11.** The mechanical count is **confirmed** at `84fbe43c`. The 76 is **re-observed from the hand-partition, not validated** — §2.1 shows its provenance credits three out-of-corpus models, so the correct target may be 73. Both figures behave as expected in one respect: the floor is not DB-derivable.
 
 The documented provenance chain (`SPRINT_32/BASELINE_METRICS.md` §3, extended):
 
@@ -94,7 +94,7 @@ Attributable from the documented chain, all verified present in the DB at `84fbe
 
 **14 of the 76 are attributable by name.** The remaining ~62 come from the unnamed "S28 genuine 68" block and have **no per-model record anywhere** — which is precisely why the floor cannot be audited today. Task 3 must either reconstruct them or accept the block as an opaque baseline and say so.
 
-## 3. ganges cascade fingerprint — ❌ does not reproduce as banked
+## 3. ganges cascade fingerprint — ❌ the banked baseline does not reproduce (the `rc=0` claim is untested)
 
 **`src/` is byte-identical to the S37 close (`8cffec29`)** — `git diff 8cffec29..HEAD -- src/` is empty, so the cascade is **not** on `main`, as expected.
 
@@ -124,7 +124,9 @@ The presolve run also shows `$140`×63, `$318`×47, `$300`, `$282`, `$257`, `$18
 
 ### 3.4 What was NOT tested
 
-**The cascade was not re-applied.** Unknown 1.1's core claim — that the four fixes take both models to `rc=0` — is **untested here**; re-applying the banked patch is a scratch-branch exercise that Task 4 owns. What this task establishes is the *baseline that patch starts from*, and that baseline has drifted in one of three counts.
+**The cascade was not re-applied.** Unknown 1.1's core question — do the four fixes still take both models to `rc=0`? — is **untested here**; re-applying the banked patch is a scratch-branch exercise that Task 4 owns. What this task establishes is the *baseline that patch starts from*, and that baseline has drifted in one of three counts.
+
+**Unknown 1.1 is therefore recorded 🔍 INCOMPLETE, not ❌ WRONG.** Marking it WRONG would assert that the cascade *fails* to reach `rc=0` — a claim no measurement here supports. The refuted item is the banked fingerprint, not the cascade's behaviour. (This distinction was caught in PR review; the original status overstated the evidence, which is the same verify-a-component / assert-a-property error the sprint keeps surfacing.)
 
 ## 4. sarf sites — ✅ intact
 
@@ -183,13 +185,16 @@ spatequ   stdcge    tforss    trig      weapons   worst
 .venv/bin/python -c "import json; d=json.load(open('data/gamslib/gamslib_status.json')); ..."   # §1
 
 # ganges/gangesx cold + presolve (SLOW: 325s / 243s emit)
+# NOTE: the CLI writes directly to the output path and does NOT create parent
+# directories — create them first or the command fails on a clean machine.
+mkdir -p /tmp/w /tmp/w2
 .venv/bin/python -m src.cli data/gamslib/raw/ganges.gms -o /tmp/w/ganges_mcp.gms
 .venv/bin/python -m src.cli data/gamslib/raw/ganges.gms --nlp-presolve -o /tmp/w2/ganges_mcp.gms
 ( cd /tmp/w && gams ganges_mcp.gms lo=0 o=ganges.lst )
 grep -o '\$[0-9]\{3\}' /tmp/w/ganges.lst | sort | uniq -c | sort -rn   # occurrences, NOT grep -c
 
 # the 36 presolve goldens — ALWAYS from a scratch directory, NEVER git add -A after
-mkdir -p /tmp/scratch && cd /tmp/scratch
+mkdir -p /tmp/task2_scratch && cd /tmp/task2_scratch
 PATH=/Library/Frameworks/GAMS.framework/Versions/54/Resources:$PATH \
   <repo>/.venv/bin/python <repo>/scripts/gamslib/run_full_test.py --only-solve --quiet
 cd <repo> && git checkout -- data/gamslib/gamslib_status.json && git clean -fq data/gamslib/mcp/

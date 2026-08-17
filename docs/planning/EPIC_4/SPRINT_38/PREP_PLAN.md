@@ -244,7 +244,7 @@ Baseline as recorded at Sprint 37 close (`main` `8cffec29`; plan insert at `d9bc
 ### Changes
 
 - **Created** `docs/planning/EPIC_4/SPRINT_38/BASELINE_RECONFIRMATION.md` — every figure carrying the SHA it was measured at (`84fbe43c`).
-- **Updated** `KNOWN_UNKNOWNS.md`: **1.1 → ❌ WRONG** (banked fingerprint does not reproduce), **2.1 → ✅ VERIFIED**, **4.1 → ✅ VERIFIED**; Summary Statistics resolution block updated; a Task-2 input note added to **Unknown 6.2**.
+- **Updated** `KNOWN_UNKNOWNS.md`: **1.1 → 🔍 INCOMPLETE** (its `rc=0` question is untested — Task 4 owns re-applying the cascade — though the banked *baseline* is refuted), **2.1 → ✅ VERIFIED**, **4.1 → ✅ VERIFIED**; Summary Statistics resolution block updated; a Task-2 input note added to **Unknown 6.2**.
 - **No `src/`, DB or golden change.** The re-solve ran from `/tmp/task2_scratch`; the DB was restored to md5 `2ed0a42ba6861fd5837399ae88646d76` and the 36 regenerated goldens `git clean`'d.
 
 ### Result
@@ -311,16 +311,19 @@ sed -n '634p' src/ad/index_mapping.py
 ### Acceptance Criteria
 
 - [x] Every KPI re-derived from the DB with the correct keys, and matching the recorded block (or the discrepancy documented as a finding) — **all 10 lines matched exactly**
-- [ ] ~~The genuine floor confirmed at 76 from the hand-partition~~, and the mechanical count confirmed at 65 — both recorded → **PARTIAL: the mechanical count is confirmed at 65, but the floor could NOT be confirmed at 76.** Its provenance credits three `non_convex`, out-of-corpus models, and only 14 of the 76 are attributable by name. **This is the finding, not an omission** — see Result above and `BASELINE_RECONFIRMATION.md` §2. Resolving the target figure is Task 3's precondition.
-- [ ] ~~`$141`/`$145`/`$149` = 78/3/9 by *specific signature*~~ → **PARTIAL: cascade confirmed absent from `src/` ✅ and `$145`×3 / `$149`×9 reproduce exactly ✅, but `$141` does not** (15 cold / 49 presolve vs 78 banked). **This is the finding.** Task 4 designs against the measured baseline.
+- [x] The mechanical floor count confirmed at **65** and recorded
+- [ ] The genuine floor confirmed at **76** from the hand-partition → **NOT confirmed.** Its provenance credits three `non_convex`, out-of-corpus models, and only 14 of the 76 are attributable by name, so the correct target may be **73**. See `BASELINE_RECONFIRMATION.md` §2; resolving the figure is Task 3's precondition.
+- [x] ganges cascade confirmed **absent** from `src/` (byte-identical to the S37 close)
+- [x] `$145` = 3 and `$149` = 9 confirmed by *specific signature*, in both cold and presolve variants, on both models
+- [ ] `$141` = 78 by *specific signature* → **does NOT reproduce** (15 cold / 49 presolve). Task 4 designs against the measured baseline and determines whether the Day-6 fawley landing caused the drift.
 - [x] `prolog` confirmed `model_optimal` + match (the leak target the rebind must not disturb)
 - [x] sarf's three sites and six call sites confirmed intact at their recorded locations
 - [x] Golden/gate inventory confirmed: 170 discovered / 7 allowlisted / 163 in-scope / 17 presolve / min-scope 170 / 3 workers
 - [x] Every figure in `BASELINE_RECONFIRMATION.md` carries its measurement SHA (`84fbe43c`)
 - [x] Any drifted figure is corrected in the plan **before** Day 1, not carried — both corrections are recorded here, in `KNOWN_UNKNOWNS.md`, and as explicit preconditions on Tasks 3 and 4
-- [x] Unknowns 1.1, 2.1, 4.1 verified and updated in KNOWN_UNKNOWNS.md (1.1 ❌ WRONG, 2.1 ✅, 4.1 ✅)
+- [x] Unknowns 1.1, 2.1, 4.1 investigated and updated in KNOWN_UNKNOWNS.md (**1.1 🔍 INCOMPLETE** — its `rc=0` question is untested and owned by Task 4, though the banked baseline is refuted; **2.1 ✅**, **4.1 ✅**)
 
-**On the two unchecked boxes:** Task 2's objective was to *re-derive and report*, and that is complete. These two criteria were drafted assuming the banked figures would hold; they did not, and the boxes stay unchecked to keep that visible rather than reworded to match the outcome. Both feed forward as named preconditions — the floor target to Task 3, the ganges baseline to Task 4.
+**On the two unchecked boxes:** Task 2's objective was to *re-derive and report*, and that is complete. Both criteria were drafted assuming the banked figures would hold; they did not, and the boxes stay unchecked to keep that visible rather than reworded to match the outcome. Each compound criterion has been **split** so every checkbox is a single, unambiguous claim — the verified halves (mechanical count 65; cascade absent; `$145`/`$149` exact) are checked, and only the two genuinely-unmet claims remain open. Both feed forward as named preconditions — the floor target to Task 3, the ganges baseline to Task 4.
 
 ---
 

@@ -82,8 +82,8 @@ That inheritance is itself the sprint's principal risk. The Sprint-37 retrospect
 
 **By Resolution Status (as of Prep Task 2, 2026-08-17):**
 - ✅ VERIFIED: 2 — **2.1** (sarf sites intact), **4.1** (all 36 presolve goldens reproducible)
-- ❌ WRONG: 1 — **1.1** (the ganges `$141` count does not reproduce: 15 cold / 49 presolve vs 78 banked; `$145`×3 and `$149`×9 *do* reproduce exactly)
-- 🔍 INCOMPLETE: 25
+- 🔍 INCOMPLETE: 26 — including **1.1**, which Task 2 **partially investigated**: its `rc=0` question is untested (the cascade was not re-applied — Task 4 owns that), but the banked **baseline** it starts from is refuted (`$141` = 15 cold / 49 presolve vs 78 banked; `$145`×3 and `$149`×9 *do* reproduce exactly). Task 4 closes it against the corrected baseline.
+- ❌ WRONG: 0
 
 **⚠ Task 2 surfaced a finding that lands on Unknown 6.2 early:** the genuine floor's provenance chain credits **three models that are outside the 142-candidate corpus** the floor is reported over (`ps2_f_s`, `ps2_s`, `ps3_s_gic` are `non_convex`, and were already so at the S32 anchor, immediately after the S31 sprint that credited them). Either the floor has been **overstated by 3 since Sprint 31** (true in-corpus floor **73**), or the floor's scope legitimately differs from Solve/Match's and that has never been written down. **Task 3 must resolve this before designing the provenance file** — a tracker that reproduces 76 and one that reproduces 73 are different artifacts, and the wrong one silently entrenches the error. See `BASELINE_RECONFIRMATION.md` §2.
 
@@ -133,8 +133,8 @@ Cold-compile both raw models on current `main` and count error signatures by **s
 Sprint 38 execution team
 
 ### Verification Results
-❌ **Status:** WRONG (in part) — the banked baseline does not reproduce
-**Verified by:** Task 2 (Re-Derive the Sprint-37 Baseline & Carryforward Fingerprints)
+🔍 **Status:** INCOMPLETE — the `rc=0` question is **untested**; the banked *baseline* is refuted
+**Partially investigated by:** Task 2 (Re-Derive the Sprint-37 Baseline & Carryforward Fingerprints)
 **Date:** 2026-08-17 · **Measured at:** `84fbe43c`
 
 **Findings:** The *premise* holds but the *fingerprint* does not. `src/` is byte-identical to the S37 close (`8cffec29`), so the cascade is confirmed absent from `main`, and both models still fail with `rc=2`. But of the three banked error counts, **only two reproduce**:
@@ -152,7 +152,7 @@ Two measurement notes: (a) the banked figure came from the **presolve** run — 
 
 **Evidence:** `git diff 8cffec29..HEAD -- src/` empty · ganges emit 325.5s, gangesx 242.9s, both `rc=2` · `grep -o '\$[0-9]\{3\}' ganges.lst | sort | uniq -c` · `prolog` confirmed `model_optimal`+match. See `BASELINE_RECONFIRMATION.md` §3.
 
-**Decision:** ❌ on the fingerprint, and **the rc=0 half is UNTESTED** — the cascade was not re-applied, since that is a scratch-patch exercise Task 4 owns. Task 4 must (i) design against the **measured** baseline, not the banked one, and (ii) determine whether the `$141` delta is caused by the Day-6 fawley landing, which added **+53 lines to `stationarity.py` after** the Day-4 measurement and touches the same emit surface. That is a plausible cause, **not an established one**. The `$149` work is unaffected: its target count reproduces exactly.
+**Decision:** 🔍 **INCOMPLETE, not WRONG.** This unknown asks whether the four-fix cascade still reaches **`rc=0`** — and the cascade was **not re-applied**, so that question is untested; re-applying the banked patch is a scratch-branch exercise Task 4 owns. What *is* refuted is the **baseline the patch starts from**: the banked `78 / 3 / 9` fingerprint. Recording this as ❌ WRONG would assert that the cascade fails to reach `rc=0`, which no measurement here supports — the same verify-a-component / assert-a-property error this sprint keeps catching. **Task 4 closes the unknown** by re-applying the cascade against the corrected baseline. Task 4 must (i) design against the **measured** baseline, not the banked one, and (ii) determine whether the `$141` delta is caused by the Day-6 fawley landing, which added **+53 lines to `stationarity.py` after** the Day-4 measurement and touches the same emit surface. That is a plausible cause, **not an established one**. The `$149` work is unaffected: its target count reproduces exactly.
 
 ---
 
