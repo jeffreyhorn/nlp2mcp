@@ -33,7 +33,7 @@ This prep plan focuses on research, design, and survey tasks that must complete 
 
 | # | Task | Priority | Est. Time | Dependencies | Sprint 38 Goal Addressed |
 |---|------|----------|-----------|--------------|--------------------------|
-| 1 | Create Sprint 38 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 8 priorities |
+| 1 | ✅ Create Sprint 38 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 8 priorities |
 | 2 | Re-Derive the Sprint-37 Baseline & Carryforward Fingerprints | Critical | 3-4 hours | Task 1 | Verify 108/94/76/135 and every banked fingerprint on current `main` |
 | 3 | Measurement-Integrity Design: Gate Scope, Floor Provenance & Re-Anchoring (P6) | Critical | 4-5 hours | Tasks 1, 2 | P6 — and the measurement substrate every other task's gate asserts against |
 | 4 | ganges P1 — `$149` Rebind-Predicate Design & Leak-Surface Analysis | Critical | 5-7 hours | Tasks 1, 2, 3 | P1 ganges/gangesx cascade |
@@ -51,18 +51,20 @@ This prep plan focuses on research, design, and survey tasks that must complete 
 
 The path runs through P6 rather than around it: Task 3 re-anchors the DB checkpoint and fixes the two known gate-narrowing modes, and **every subsequent task's acceptance gate is expressed in terms of those gates**. Task 4 (ganges) must precede Task 6 (presolve goldens) because P4 changes what `check-goldens` sweeps, and the plan schedules it *after* P1's gate run for exactly that reason — the prep ordering mirrors the sprint ordering.
 
-**Note:** Task 1 (Known Unknowns) is the standing first prep task; it must exist before the design tasks (3–10) so each design is scoped against an explicit risk register. Task 9 (Phase-0 survey) precedes Task 10 (backlog catalog) because a backlog candidate without a Phase-0 section is **not implementable** under CONTRIBUTING §392–447 — the survey determines which candidates are even eligible.
+**Note:** Task 1 (Known Unknowns) is ✅ **COMPLETE** as of 2026-08-17 — `SPRINT_38/KNOWN_UNKNOWNS.md`, **28 unknowns across 8 categories** (7 Critical / 11 High / 7 Medium / 3 Low; 33.5h research). It is the standing first prep task; it must exist before the design tasks (3–10) so each design is scoped against an explicit risk register. Task 9 (Phase-0 survey) precedes Task 10 (backlog catalog) because a backlog candidate without a Phase-0 section is **not implementable** under CONTRIBUTING §392–447 — the survey determines which candidates are even eligible.
 
 ---
 
 ## Task 1: Create Sprint 38 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-08-17)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
+**Time Spent:** 3 hours
 **Deadline:** Before Sprint 38 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** n/a — this task *creates* all 28 unknowns; Tasks 2–10 verify them
 
 ### Objective
 
@@ -102,42 +104,83 @@ Sprint 38 carries an unusually high proportion of **inherited** assumptions — 
 
 ### Changes
 
-*To be completed*
+- **Created** `docs/planning/EPIC_4/SPRINT_38/KNOWN_UNKNOWNS.md` — **28 unknowns across 8 categories**, one category per sprint priority.
+- **Added** the Task-to-Unknown mapping table (Appendix), assigning all 28 unknowns to the prep task that verifies each.
+- **Updated** this `PREP_PLAN.md`: Tasks 2–10 each gained an `**Unknowns Verified:**` metadata line, a KNOWN_UNKNOWNS deliverable, and a matching acceptance criterion.
 
 ### Result
 
-*To be completed*
+**28 unknowns**, all at 🔍 INCOMPLETE pending Tasks 2–10.
+
+| metric | result | target |
+|---|---|---|
+| Total unknowns | **28** | 22–30 (aim 25+) ✓ |
+| Critical | **7 (25%)** | ~25% ✓ |
+| High | **11 (39%)** | ~40% ✓ |
+| Medium | **7 (25%)** | ~25% ✓ |
+| Low | **3 (11%)** | ~10% ✓ |
+| Research time | **33.5h** | 28–36h ✓ |
+| Categories | **8** | one per priority ✓ |
+
+**By category:** Cat 1 ganges (5) · Cat 2 sarf (5) · Cat 3 consultation (3) · Cat 4 presolve goldens (4) · Cat 5 camcge/turkey (3) · Cat 6 measurement integrity (4) · Cat 7 Phase-0 (2) · Cat 8 backlog sweep (2).
+
+**Two unknowns are not resolvable by an execution agent** and are marked as such: **3.1** (consultation recipient and channel — requires a human decision-maker; the strike branch executes by default if unanswered by Day 0) and **5.1** (testbed procurement — may require a purchasing decision).
+
+**Every inherited Sprint-37 figure is registered as an unknown pending Task 2's re-derivation** — the ganges cascade counts (1.1), the sarf site locations (2.1), and the presolve-golden reproducibility (4.1) — per the retrospective's banked-staleness finding.
 
 ### Verification
 
 ```bash
-# Document exists with the expected structure
+# Document exists
 test -f docs/planning/EPIC_4/SPRINT_38/KNOWN_UNKNOWNS.md && echo "✓ exists"
 
-# Unknown count and category coverage
-grep -c "^## Unknown \|^### Unknown " docs/planning/EPIC_4/SPRINT_38/KNOWN_UNKNOWNS.md
+# Unknown count, excluding the "Unknown X.Y" template placeholder
+grep -c "^## Unknown " docs/planning/EPIC_4/SPRINT_38/KNOWN_UNKNOWNS.md   # 29 incl. template
+grep "^## Unknown " docs/planning/EPIC_4/SPRINT_38/KNOWN_UNKNOWNS.md | grep -vc "X.Y"  # EXPECT 28
 
-# Every category present (one per sprint priority)
-grep -n "^## Category" docs/planning/EPIC_4/SPRINT_38/KNOWN_UNKNOWNS.md
+# All 8 categories present (the document uses a single '#' for category headers)
+grep -c "^# Category " docs/planning/EPIC_4/SPRINT_38/KNOWN_UNKNOWNS.md   # EXPECT 8
 
-# No Critical unknown lacks a verification method
-grep -A4 "Priority.*Critical" docs/planning/EPIC_4/SPRINT_38/KNOWN_UNKNOWNS.md | grep -c "Verification"
+# Every unknown carries all 8 required sections
+.venv/bin/python -c "
+import re
+t=open('docs/planning/EPIC_4/SPRINT_38/KNOWN_UNKNOWNS.md').read()
+bs=[b for b in re.split(r'^## Unknown ', t, flags=re.M)[1:] if not b.startswith('X.Y')]
+req=['### Priority','### Assumption','### Research Questions','### How to Verify',
+     '### Risk if Wrong','### Estimated Research Time','### Owner','### Verification Results']
+bad=[b.split(':')[0] for b in bs if any(r not in b for r in req)]
+print('unknowns:', len(bs), '| incomplete:', bad or 'none')"
+
+# Mapping table covers every unknown
+.venv/bin/python -c "
+import re
+t=open('docs/planning/EPIC_4/SPRINT_38/KNOWN_UNKNOWNS.md').read()
+allu={b.split(':')[0].strip() for b in re.split(r'^## Unknown ',t,flags=re.M)[1:] if not b.startswith('X.Y')}
+mapped=set(re.findall(r'\b(\d\.\d)\b', t.split('## Appendix: Task-to-Unknown Mapping')[1]))
+print('unmapped:', sorted(allu-mapped) or 'none')"
+
+# Tasks 2-10 all carry Unknowns Verified metadata
+grep -c "^\*\*Unknowns Verified:\*\*" docs/planning/EPIC_4/SPRINT_38/PREP_PLAN.md  # EXPECT 10 (Tasks 1-10)
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_38/KNOWN_UNKNOWNS.md` — 25–35 unknowns across 7 categories
-- Each unknown: assumption, priority, verification method, resolving prep task
-- A count of Critical unknowns with their resolution deadline (prep or Day 0)
+- `docs/planning/EPIC_4/SPRINT_38/KNOWN_UNKNOWNS.md` — **28 unknowns across 8 categories** (one per sprint priority)
+- Each unknown: priority, assumption, 3–5 research questions, how to verify, risk if wrong, research time, owner, verification results
+- The **Task-to-Unknown mapping table** (Appendix), covering all 28
+- `PREP_PLAN.md` Tasks 2–10 updated with `**Unknowns Verified:**` metadata, deliverables, and acceptance criteria
+- A count of Critical unknowns (7) with their resolution deadline (prep or Day 0)
 
 ### Acceptance Criteria
 
-- [ ] Document created with ≥25 unknowns across 7 categories (one per sprint priority)
-- [ ] All unknowns carry assumption, priority, verification method, and resolving task
-- [ ] Every Critical unknown resolves in prep or on Day 0 — none deferred to mid-sprint
-- [ ] Every inherited Sprint-37 figure (ganges cascade counts, sarf profile numbers, the 36 goldens) is registered as an unknown pending Task 2
-- [ ] Categories cover all 8 sprint priorities
-- [ ] Research time estimated and compared against the prep budget
+- [x] Document created with ≥25 unknowns across 8 categories (one per sprint priority) — **28 across 8**
+- [x] All unknowns carry assumption, priority, verification method, and resolving task — verified programmatically, 0 incomplete
+- [x] Every Critical unknown resolves in prep or on Day 0 — none deferred to mid-sprint (3.1 is Day 0 with a default branch)
+- [x] Every inherited Sprint-37 figure (ganges cascade counts, sarf profile numbers, the 36 goldens) is registered as an unknown pending Task 2 — 1.1, 2.1, 4.1
+- [x] Categories cover all 8 sprint priorities
+- [x] Research time estimated and compared against the prep budget — **33.5h**, within the 28–36h target
+- [x] Task-to-Unknown mapping table created; all 28 unknowns assigned
+- [x] `PREP_PLAN.md` Tasks 2–10 updated with Unknowns Verified metadata
 
 ---
 
@@ -149,6 +192,7 @@ grep -A4 "Priority.*Critical" docs/planning/EPIC_4/SPRINT_38/KNOWN_UNKNOWNS.md |
 **Deadline:** Before Sprint 38 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1 (Known Unknowns)
+**Unknowns Verified:** 1.1, 2.1, 4.1
 
 ### Objective
 
@@ -251,6 +295,7 @@ sed -n '634p' src/ad/index_mapping.py
 - Fingerprint verdicts for the ganges cascade, the sarf sites, and the golden/gate inventory
 - A per-model floor-provenance draft (input to Task 3's P6c design)
 - An updated `KNOWN_UNKNOWNS.md` with every inherited-figure unknown resolved or corrected
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 2.1, 4.1
 
 ### Acceptance Criteria
 
@@ -262,6 +307,7 @@ sed -n '634p' src/ad/index_mapping.py
 - [ ] Golden/gate inventory confirmed: 170 discovered / 7 allowlisted / 163 in-scope / 17 presolve / min-scope 170 / 3 workers
 - [ ] Every figure in `BASELINE_RECONFIRMATION.md` carries its measurement SHA
 - [ ] Any drifted figure is corrected in the plan **before** Day 1, not carried
+- [ ] Unknowns 1.1, 2.1, 4.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -273,6 +319,7 @@ sed -n '634p' src/ad/index_mapping.py
 **Deadline:** Before Sprint 38 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 6.1, 6.2, 6.3, 6.4
 
 ### Objective
 
@@ -359,6 +406,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/MEASUREMENT_INTEGRITY_DESIGN.md && echo "
 - Exact assertion semantics and failure messages for both gate-narrowing modes, with false-positive modes named
 - The floor-provenance schema, validated to reproduce **76** from Task 2's partition
 - The re-anchor commit chosen, with what it selects and what re-anchoring costs
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 6.1, 6.2, 6.3, 6.4
 
 ### Acceptance Criteria
 
@@ -369,6 +417,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/MEASUREMENT_INTEGRITY_DESIGN.md && echo "
 - [ ] The provenance tracker fails loudly on divergence rather than reporting its own number
 - [ ] The re-anchor commit chosen and justified, with the cost of losing S34–S37 drift re-checking stated
 - [ ] Every other priority's acceptance gate can be expressed against these gates (checked against Tasks 4, 5, 6)
+- [ ] Unknowns 6.1, 6.2, 6.3, 6.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -380,6 +429,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/MEASUREMENT_INTEGRITY_DESIGN.md && echo "
 **Deadline:** Before Sprint 38 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2, 3
+**Unknowns Verified:** 1.2, 1.3, 1.4, 1.5
 
 ### Objective
 
@@ -460,6 +510,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/GANGES_REBIND_PREDICATE_DESIGN.md && echo
 - The Phase-0 acceptance gate, expressed against Task 3's assertions
 - A stated REPLAN exit and what it banks
 - **A restated bucket expectation of 0** (lateral pse → mi), so the sprint cannot drift back to "+2 or 0"
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.2, 1.3, 1.4, 1.5
 
 ### Acceptance Criteria
 
@@ -471,6 +522,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/GANGES_REBIND_PREDICATE_DESIGN.md && echo
 - [ ] `prolog` byte-identical is an explicit gate criterion
 - [ ] Bucket expectation stated as **0 (lateral, mi rises to 9)** with the refuted "+2 or 0" called out
 - [ ] REPLAN exit defined with its banked artifact
+- [ ] Unknowns 1.2, 1.3, 1.4, 1.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -482,6 +534,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/GANGES_REBIND_PREDICATE_DESIGN.md && echo
 **Deadline:** Before Sprint 38 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 2.2, 2.3, 2.4, 2.5
 
 ### Objective
 
@@ -568,6 +621,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/SARF_REARCH_DESIGN.md && echo "✓"
 - A **surrogate fixture** design (since sarf cannot be its own fixture)
 - The golden-creation step and its interaction with Task 6's scope change
 - The Phase-0 gate (PR20) and a REPLAN exit with a named trigger day
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.2, 2.3, 2.4, 2.5
 
 ### Acceptance Criteria
 
@@ -579,6 +633,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/SARF_REARCH_DESIGN.md && echo "✓"
 - [ ] The `NO-OP`-is-not-a-pass problem handled — the real gate specified as `check-goldens` + new golden
 - [ ] Golden-count interaction with Task 6 resolved (both tasks move the scope)
 - [ ] REPLAN exit has a named trigger day and observable, per the plan's "early rather than nursed" instruction
+- [ ] Unknowns 2.2, 2.3, 2.4, 2.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -590,6 +645,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/SARF_REARCH_DESIGN.md && echo "✓"
 **Deadline:** Before Sprint 38 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2, 3, 4
+**Unknowns Verified:** 4.2, 4.3, 4.4
 
 ### Objective
 
@@ -662,6 +718,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/PRESOLVE_GOLDEN_ADOPTION_PLAN.md && echo 
 - Measured sweep runtime at 163 and a projection at 199, with a mitigation if timeouts appear
 - The `--min-scope` 170 → 206 change specified, applied atomically with adoption
 - The P1 → P4 sequencing handoff
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.2, 4.3, 4.4
 
 ### Acceptance Criteria
 
@@ -671,6 +728,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/PRESOLVE_GOLDEN_ADOPTION_PLAN.md && echo 
 - [ ] `--min-scope` raise to 206 specified in the same change as adoption
 - [ ] The self-certification hazard explicitly addressed in the protocol
 - [ ] P1's gate run sequenced before the scope change
+- [ ] Unknowns 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -682,6 +740,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/PRESOLVE_GOLDEN_ADOPTION_PLAN.md && echo 
 **Deadline:** Before Sprint 38 Day 1
 **Owner:** **Requires a human decision-maker — cannot be completed by an execution agent alone**
 **Dependencies:** Task 1
+**Unknowns Verified:** 3.1, 3.2, 3.3
 
 ### Objective
 
@@ -747,6 +806,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/CONSULTATION_DECISION_BRIEF.md && echo "�
 - The strike branch's reclassification wording, executable same-day
 - The tracking-record specification for a send
 - **An explicit statement of the single question a human must answer**
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.1, 3.2, 3.3
 
 ### Acceptance Criteria
 
@@ -756,6 +816,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/CONSULTATION_DECISION_BRIEF.md && echo "�
 - [ ] The specific human question is stated: **who receives this, by what channel**
 - [ ] Both branches are executable on Day 0 without further preparation
 - [ ] Tracking record specified for the send branch
+- [ ] Unknowns 3.1, 3.2, 3.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -767,6 +828,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/CONSULTATION_DECISION_BRIEF.md && echo "�
 **Deadline:** Before Sprint 38 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 5.1, 5.2, 5.3
 
 ### Objective
 
@@ -836,6 +898,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/CAMCGE_EPIC5_HANDOFF.md && echo "✓"
 - The per-model-numéraire fallback scoped for Epic 5
 - A concrete turkey testbed determination: obtainable (with cost/date) or blocked
 - Reclassification wording if turkey remains blocked
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 5.1, 5.2, 5.3
 
 ### Acceptance Criteria
 
@@ -845,6 +908,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/CAMCGE_EPIC5_HANDOFF.md && echo "✓"
 - [ ] Per-model-numéraire fallback scoped with what it does and does not buy
 - [ ] turkey testbed determined concretely — not carried as "pending" for a fourth sprint
 - [ ] If both branches are negative, P5's deliverable is honestly stated as documentation
+- [ ] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -856,6 +920,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/CAMCGE_EPIC5_HANDOFF.md && echo "✓"
 **Deadline:** Before Sprint 38 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
+**Unknowns Verified:** 7.1, 7.2
 
 ### Objective
 
@@ -922,6 +987,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/PHASE0_COMPLIANCE_CATALOG.md && echo "✓
 - A three-way classification of the open backlog (compliant / doc-without-gate / no doc)
 - A prioritised backfill list, with Sprint 38's P8 candidates ranked first
 - Confirmation that `$66`/#1289's gate is complete
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 7.1, 7.2
 
 ### Acceptance Criteria
 
@@ -931,6 +997,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/PHASE0_COMPLIANCE_CATALOG.md && echo "✓
 - [ ] `$66`/#1289 confirmed complete or finished in this task
 - [ ] The catalog is filterable by Task 10 (eligibility for the P8 sweep)
 - [ ] A compliance count recorded, so P7's sprint work has a measurable target
+- [ ] Unknowns 7.1, 7.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -942,6 +1009,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/PHASE0_COMPLIANCE_CATALOG.md && echo "✓
 **Deadline:** Before Sprint 38 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2, 9
+**Unknowns Verified:** 8.1, 8.2
 
 ### Objective
 
@@ -1013,6 +1081,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/BACKLOG_CANDIDATE_CATALOG.md && echo "✓
 - Selection-rule verdicts: eligible / rejected, with the rejection reason
 - Reproduced fingerprints for the top candidates, asserting mechanism not pattern
 - A stated finding on whether P8 has ≥2 eligible candidates, and a budget recommendation if not
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 8.1, 8.2
 
 ### Acceptance Criteria
 
@@ -1022,6 +1091,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/BACKLOG_CANDIDATE_CATALOG.md && echo "✓
 - [ ] Structural blockers (turkpow ragged table, clearlak dynamic sets) excluded unless P1 demonstrably unblocks them
 - [ ] Cross-referenced against Task 9's Phase-0 catalog for eligibility
 - [ ] A clear verdict on whether P8 is viable, with a budget recommendation if it is not
+- [ ] Unknowns 8.1, 8.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -1131,7 +1201,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 
 ### Critical Path (Must Complete Before Sprint 38 Day 1)
 
-1. **Task 1: Known Unknowns** (3-4 hours) — CRITICAL
+1. ✅ **Task 1: Known Unknowns** (COMPLETE — 2026-08-17, 3 hours) — CRITICAL
 2. **Task 2: Re-Derive the Baseline** (3-4 hours) — CRITICAL
 3. **Task 3: Measurement-Integrity Design** (4-5 hours) — CRITICAL
 4. **Task 4: ganges Rebind Predicate** (5-7 hours) — CRITICAL
@@ -1160,7 +1230,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 
 ## Success Criteria for Prep Phase
 
-- [ ] Known Unknowns document created (≥25 unknowns, 7 categories), every Critical one resolved in prep or Day 0
+- [x] ✅ Known Unknowns document created (**28 unknowns, 8 categories**), every Critical one resolved in prep or Day 0
 - [ ] The Sprint-37 baseline **re-derived**, not re-read, with every figure carrying its measurement SHA
 - [ ] Measurement-integrity design complete for all four sub-deliverables, with both gate-narrowing modes reproduced live
 - [ ] ganges `$149` rebind predicate designed as a **positive requirement**, with a full-corpus leak surface
