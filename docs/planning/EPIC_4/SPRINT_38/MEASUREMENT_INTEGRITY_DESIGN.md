@@ -27,7 +27,7 @@
 **Design.** A `scripts/sprint_audit/kpi_block.py` entry point:
 
 ```
-usage: kpi_block.py [--json] [--sha]
+usage: kpi_block.py [--json] [--at-sha <commit>]
 ```
 
 - **Human form** (default) — a paste-ready block:
@@ -36,7 +36,10 @@ usage: kpi_block.py [--json] [--sha]
   measured at 1a252648
   ```
 - **Machine form** (`--json`) — `{"solve":108,"match":94,"cold":65,"presolve":29,...,"sha":"1a252648"}` for templates and CI.
-- **Always emits the SHA.** There is no mode that produces a figure without its provenance.
+- **`--at-sha <commit>` selects *which commit to measure*** — it reads the DB at that revision (`git show <commit>:data/gamslib/gamslib_status.json`) instead of the working tree. Default is `HEAD`. Useful for regenerating a historical figure *with its correct provenance* rather than re-quoting one.
+- **The measured-at SHA is ALWAYS in the output, in both forms. There is no flag that selects, suppresses or overrides it** — it is derived from whatever revision was actually read. A figure without provenance is exactly what this helper exists to prevent, so no mode can produce one.
+
+**Note on the flag name:** an earlier draft called this `--sha`, which was ambiguous between "print the sha" and "select a commit". The rename resolves that: `--at-sha` *only* selects, and printing is unconditional.
 
 **Derivation contract (fixed here so it cannot drift):** corpus = `convexity.status ∈ {likely_convex, verified_convex}`; keys = **`model_id`** (never `model_name`, which holds the description); fields = `mcp_solve.outcome_category` + `solution_comparison.comparison_status`; Translate = `nlp2mcp_translate.status == 'success'`. These are the exact keys whose misuse produced the S37 Day-0 "Solve 0 / Match 0" error.
 
