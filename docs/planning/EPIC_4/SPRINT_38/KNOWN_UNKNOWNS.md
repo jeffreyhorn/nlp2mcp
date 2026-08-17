@@ -80,9 +80,12 @@ That inheritance is itself the sprint's principal risk. The Sprint-37 retrospect
 
 **Estimated Research Time:** ~33.5 hours (within the 28–36 hour target; spread across prep Tasks 2–10)
 
-**By Resolution Status (as of creation, Prep Task 1):**
-- ✅ VERIFIED: 0
-- 🔍 INCOMPLETE: 28
+**By Resolution Status (as of Prep Task 2, 2026-08-17):**
+- ✅ VERIFIED: 2 — **2.1** (sarf sites intact), **4.1** (all 36 presolve goldens reproducible)
+- ❌ WRONG: 1 — **1.1** (the ganges `$141` count does not reproduce: 15 cold / 49 presolve vs 78 banked; `$145`×3 and `$149`×9 *do* reproduce exactly)
+- 🔍 INCOMPLETE: 25
+
+**⚠ Task 2 surfaced a finding that lands on Unknown 6.2 early:** the genuine floor's provenance chain credits **three models that are outside the 142-candidate corpus** the floor is reported over (`ps2_f_s`, `ps2_s`, `ps3_s_gic` are `non_convex`, and were already so at the S32 anchor, immediately after the S31 sprint that credited them). Either the floor has been **overstated by 3 since Sprint 31** (true in-corpus floor **73**), or the floor's scope legitimately differs from Solve/Match's and that has never been written down. **Task 3 must resolve this before designing the provenance file** — a tracker that reproduces 76 and one that reproduces 73 are different artifacts, and the wrong one silently entrenches the error. See `BASELINE_RECONFIRMATION.md` §2.
 
 ---
 
@@ -130,7 +133,26 @@ Cold-compile both raw models on current `main` and count error signatures by **s
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG (in part) — the banked baseline does not reproduce
+**Verified by:** Task 2 (Re-Derive the Sprint-37 Baseline & Carryforward Fingerprints)
+**Date:** 2026-08-17 · **Measured at:** `84fbe43c`
+
+**Findings:** The *premise* holds but the *fingerprint* does not. `src/` is byte-identical to the S37 close (`8cffec29`), so the cascade is confirmed absent from `main`, and both models still fail with `rc=2`. But of the three banked error counts, **only two reproduce**:
+
+| run | `$141` | `$145` | `$149` | rc |
+|---|---|---|---|---|
+| **banked** (S37 Day 4, presolve) | **78** | 3 | 9 | 2 |
+| cold, ganges | **15** | 3 ✅ | 9 ✅ | 2 ✅ |
+| cold, gangesx | **15** | 3 ✅ | 9 ✅ | 2 ✅ |
+| presolve, ganges | **49** | 3 ✅ | 9 ✅ | 2 ✅ |
+
+`$145`×3 and `$149`×9 reproduce **exactly, in both variants, on both models**. `$141` reproduces in **neither** (15 cold / 49 presolve vs 78 banked). The presolve run also surfaces `$140`×63 and `$318`×47, error classes the banked figure never mentions.
+
+Two measurement notes: (a) the banked figure came from the **presolve** run — `DAY4_GANGES_CONTROL.md` §1 says so explicitly — while this unknown's prompt asked for a *cold* compile; that instruction was wrong, so both variants were measured. (b) `grep -c` counts **lines**, not occurrences, and understated `$145`/`$149` on the first pass; all counts use `grep -o … | wc -l`.
+
+**Evidence:** `git diff 8cffec29..HEAD -- src/` empty · ganges emit 325.5s, gangesx 242.9s, both `rc=2` · `grep -o '\$[0-9]\{3\}' ganges.lst | sort | uniq -c` · `prolog` confirmed `model_optimal`+match. See `BASELINE_RECONFIRMATION.md` §3.
+
+**Decision:** ❌ on the fingerprint, and **the rc=0 half is UNTESTED** — the cascade was not re-applied, since that is a scratch-patch exercise Task 4 owns. Task 4 must (i) design against the **measured** baseline, not the banked one, and (ii) determine whether the `$141` delta is caused by the Day-6 fawley landing, which added **+53 lines to `stationarity.py` after** the Day-4 measurement and touches the same emit surface. That is a plausible cause, **not an established one**. The `$149` work is unaffected: its target count reproduces exactly.
 
 ---
 
@@ -293,7 +315,19 @@ Read each site directly and confirm it does what the design assumes — the S27 
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Re-Derive the Sprint-37 Baseline & Carryforward Fingerprints)
+**Date:** 2026-08-17 · **Measured at:** `84fbe43c`
+
+**Findings:** All three materialization sites are intact and all six corpus-safety call sites located. **S1 `constraint_jacobian.py:78`** and **S2 `index_mapping.py:634`** both hold the `enumerate_variable_instances(var_def, model_ir)` call the design targets; **S3** is present in `stationarity.py`. The six call sites are `index_mapping.py:634`, `constraint_jacobian.py:78`, `gradient.py:287`, `gradient.py:453`, `complementarity.py:367`, `complementarity.py:512`.
+
+Drift since the S34 anchor `78ceaead`: `index_mapping.py`, `constraint_jacobian.py`, `gradient.py` and `complementarity.py` are **byte-unchanged**. Only `stationarity.py` moved (+311 — markov +259, fawley +54, less deletions), and its site survived, exactly as Sprint 37 recorded.
+
+Also confirmed: the blow-up is still non-terminating (killed at a 100 s cap, not profiled — Task 5 owns profiling), and **no `sarf_mcp.gms` golden exists**, so `make leak-check MODEL=sarf` reports `NO-OP` and fails for a non-correctness reason — the gate peculiarity the design records.
+
+**Evidence:** `sed -n '78p' src/ad/constraint_jacobian.py` and `sed -n '634p' src/ad/index_mapping.py` show the target call · `grep -rn enumerate_variable_instances src/` yields exactly 6 non-definition call sites · `git diff --stat 78ceaead..HEAD` per file. See `BASELINE_RECONFIRMATION.md` §4.
+
+**Decision:** ✅ Task 5 can design against the recorded locations without re-tracing. The S37 "one stale precondition" note needs no further correction for Sprint 38.
 
 ---
 
@@ -555,7 +589,19 @@ Run a clean re-solve in a scratch directory (**never** `git add -A` afterward �
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Re-Derive the Sprint-37 Baseline & Carryforward Fingerprints)
+**Date:** 2026-08-17 · **Measured at:** `84fbe43c`
+
+**Findings:** A clean `--only-solve` regenerated **exactly 36** presolve goldens (17 → **53**; discovered 170 → **206**), matching the Sprint-37 Day-9 figures precisely. All 36 models recorded in `BASELINE_RECONFIRMATION.md` §6 for Task 6's review protocol. Run time 607.8 s, inflated by concurrent ganges compiles (S37 measured 445 s unloaded) — **not** a runtime finding.
+
+**Zero bucket moves:** the re-solve changed no `outcome_category` and no `comparison_status` for any of the 219 models; the DB delta was metadata only.
+
+**The scratch-directory mitigation works.** Sprint 37 Day 9's in-repo re-solve plus `git add -A` swept 20 runtime artifacts including `decis.lic`. Running from `/tmp/task2_scratch` produced **zero** repo-root artifacts, verified by `git status` before restoring. The tree was then restored to pristine: DB `git checkout`'d back to md5 `2ed0a42ba6861fd5837399ae88646d76`, the 36 untracked goldens `git clean`'d, scratch directory removed.
+
+**Evidence:** golden count 170 → 206 and presolve 17 → 53 during the run · `git status --porcelain data/gamslib/mcp/` listed exactly 36 `??` entries · per-model DB diff showed 0 moves · post-restore `git status` clean. See `BASELINE_RECONFIRMATION.md` §6.
+
+**Decision:** ✅ All 36 are adoptable on reproducibility grounds. Task 6 inherits the model list and can proceed straight to the per-model *expected-emit* review — which is the harder half, and the one that decides whether the reference set is self-certifying.
 
 ---
 
@@ -787,6 +833,8 @@ Sprint 38 execution team
 ---
 
 ## Unknown 6.2: Can a provenance file reproduce the genuine floor of 76 exactly?
+
+> **⚠ Task 2 input (2026-08-17):** the target may not be 76. Three models in the documented provenance chain (`ps2_f_s`, `ps2_s`, `ps3_s_gic`) are `non_convex` and outside the 142-candidate corpus, and only **14 of the 76** are attributable by name at all — the rest come from an unnamed "S28 genuine 68" block with no per-model record. **Resolve the target figure before building the tracker.** See `BASELINE_RECONFIRMATION.md` §2.
 
 ### Priority
 **Critical** — if the provenance file cannot reproduce 76, the floor remains hand-maintained and unverifiable, and every future report of it is unauditable (>8h).
