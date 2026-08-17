@@ -35,7 +35,7 @@ This prep plan focuses on research, design, and survey tasks that must complete 
 |---|------|----------|-----------|--------------|--------------------------|
 | 1 | ✅ Create Sprint 38 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 8 priorities |
 | 2 | ✅ Re-Derive the Sprint-37 Baseline & Carryforward Fingerprints | Critical | 3-4 hours | Task 1 | Verify 108/94/76/135 and every banked fingerprint on current `main` |
-| 3 | Measurement-Integrity Design: Gate Scope, Floor Provenance & Re-Anchoring (P6) | Critical | 4-5 hours | Tasks 1, 2 | P6 — and the measurement substrate every other task's gate asserts against |
+| 3 | ✅ Measurement-Integrity Design: Gate Scope, Floor Provenance & Re-Anchoring (P6) | Critical | 4-5 hours | Tasks 1, 2 | P6 — and the measurement substrate every other task's gate asserts against |
 | 4 | ganges P1 — `$149` Rebind-Predicate Design & Leak-Surface Analysis | Critical | 5-7 hours | Tasks 1, 2, 3 | P1 ganges/gangesx cascade |
 | 5 | sarf P2 — O(active) Re-Architecture Design Refresh & Atomicity Plan | Critical | 5-7 hours | Tasks 1, 2 | P2 sarf — the only KPI mover |
 | 6 | Presolve-Golden Adoption Plan & Runtime Impact (P4) | High | 3-4 hours | Tasks 1, 2, 3, 4 | P4 coverage asymmetry |
@@ -329,9 +329,10 @@ sed -n '634p' src/ad/index_mapping.py
 
 ## Task 3: Measurement-Integrity Design — Gate Scope, Floor Provenance & Re-Anchoring (P6)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-08-17)
 **Priority:** Critical
 **Estimated Time:** 4-5 hours
+**Time Spent:** 5 hours
 **Deadline:** Before Sprint 38 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
@@ -382,11 +383,23 @@ Four sub-deliverables, each traced to a specific S37 defect:
 
 ### Changes
 
-*To be completed*
+- **Created** `docs/planning/EPIC_4/SPRINT_38/MEASUREMENT_INTEGRITY_DESIGN.md` — all four sub-deliverables (6a–6d), with both gate-narrowing modes **reproduced live** as fail-before evidence.
+- **Updated** `KNOWN_UNKNOWNS.md`: **6.1 → 🔶 PARTIALLY WRONG**, **6.2 → ❌ WRONG**, **6.3 → ✅ VERIFIED (conditional)**, **6.4 → ✅ VERIFIED**; Summary Statistics updated.
+- **No `src/`, `scripts/`, DB or golden change** — design-only, so no quality gate.
 
 ### Result
 
-*To be completed*
+**🔶 DESIGN COMPLETE, WITH TWO ASSUMPTIONS REFUTED.** Both refutations make P6 *smaller and sharper*.
+
+**❌ `leak-check` already fails correctly (6.1, partial).** The premise that its `NO-OP` is "mistakable for a pass" is **wrong**: `make leak-check MODEL=sarf` **exits 2**. The real defect is the *diagnostic* — for a model with no golden, nothing was compared, yet the message asserts "the emit was byte-identical" and blames an inert fix. **A message asserting a property never measured** — in the tool built to catch exactly that. **P6b is ~half the planned work**: `--resolve-changed` needs a full assertion, `leak-check` needs only a message split.
+
+**✅ `--resolve-changed`'s silent defect is CONFIRMED (6.1).** With a golden modified in the working tree, `_changed_golden_model_ids()` returns `[]` — invisible, because it diffs committed history only — and an empty selection currently reports **GO**.
+
+**❌ The floor cannot be reproduced from existing artifacts (6.2).** Three derivations, three answers: mechanical **65**, golden-changed-ever **93**, documented chain **76**. The new evidence is the middle one — 28 of 29 presolve goldens have >1 commit, so "did the golden change?" is mechanical while "did a *real fix* change it *for this model's correctness*?" is a judgement no artifact records. **The tracker is redesigned as append-only** (`floor = baseline.count + len(entries)`), asserting against a committed `expected_floor` and failing loudly on divergence. **The baseline value is escalated to the owner: 73 or 76.**
+
+**✅ Re-anchor to `8cffec29`, conditional on 6b (6.3).** Selections: `78ceaead` → **19**, `935d94b7` → 2, `8cffec29` → **0**. The candidate selecting zero is precisely 6b's hazard — re-anchoring first would trade a slow checkpoint for a silent one. **Sequence 6b → 6d.**
+
+**✅ Four false-positive modes enumerated, all expressible (6.4).** The riskiest — an empty selection at sprint start — is *guaranteed* by 6d, so it is handled by construction.
 
 ### Verification
 
@@ -426,14 +439,16 @@ test -f docs/planning/EPIC_4/SPRINT_38/MEASUREMENT_INTEGRITY_DESIGN.md && echo "
 
 ### Acceptance Criteria
 
-- [ ] All four sub-deliverables (6a–6d) designed to implementation detail
-- [ ] Both gate-narrowing modes **reproduced live** as fail-before evidence, not merely described
-- [ ] The `NO-OP`-is-not-a-pass semantics specified, including sarf's case explicitly
-- [ ] The floor-provenance schema reproduces 76 exactly from the hand-partition
-- [ ] The provenance tracker fails loudly on divergence rather than reporting its own number
-- [ ] The re-anchor commit chosen and justified, with the cost of losing S34–S37 drift re-checking stated
-- [ ] Every other priority's acceptance gate can be expressed against these gates (checked against Tasks 4, 5, 6)
-- [ ] Unknowns 6.1, 6.2, 6.3, 6.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All four sub-deliverables (6a–6d) designed to implementation detail
+- [x] Both gate-narrowing modes **reproduced live** as fail-before evidence, not merely described — `--resolve-changed` returns `[]` for a working-tree golden edit; `make leak-check MODEL=sarf` exits 2
+- [x] The `NO-OP`-is-not-a-pass semantics specified, including sarf's case explicitly — **and found already satisfied on the exit code**; the specified change is a *message* split (`UNVERIFIABLE` for golden-less vs `NO-OP` for exists-but-unchanged)
+- [ ] The floor-provenance schema reproduces **76** exactly from the hand-partition → **NOT possible, and that is the finding.** Three derivations give 65 / 93 / 76; the limb-2 qualifier is a judgement no repo artifact records. The schema is redesigned as **append-only from a declared baseline**, and the baseline value (73 or 76) is escalated to the owner. See `MEASUREMENT_INTEGRITY_DESIGN.md` §4.
+- [x] The provenance tracker fails loudly on divergence rather than reporting its own number — asserts against a committed `expected_floor`, exits non-zero, and never emits a DB-derived figure
+- [x] The re-anchor commit chosen and justified (`8cffec29`), with the cost stated — 19 models of settled S34–S37 drift stop being re-verified each run; **conditional on 6b landing first**, since the candidate selects 0
+- [x] Every other priority's acceptance gate can be expressed against these gates — checked against Tasks 4 (full-corpus `--expect-drift` with `prolog` byte-identical), 5 (zero drift ×163 **plus** sarf newly producing a golden — this need drove the `--expect-new` flag in §6), and 6 (`--min-scope` raise)
+- [x] Unknowns 6.1, 6.2, 6.3, 6.4 investigated and updated in KNOWN_UNKNOWNS.md (**6.1 🔶 PARTIALLY WRONG**, **6.2 ❌ WRONG**, **6.3 ✅ conditional**, **6.4 ✅**)
+
+**On the unchecked box:** the criterion assumed the floor was reconstructible. It is not — three derivations give three answers, and the qualifier that distinguishes them is a judgement no artifact records. The box stays unchecked rather than reworded to match the outcome. The design adapts (append-only rather than reconstructing) and **one decision is escalated: the baseline is 73 or 76, which changes six sprints of reported history and is the owner's call.**
 
 ---
 
@@ -1219,7 +1234,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 
 1. ✅ **Task 1: Known Unknowns** (COMPLETE — 2026-08-17, 3 hours) — CRITICAL
 2. ✅ **Task 2: Re-Derive the Baseline** (COMPLETE — 2026-08-17, 4 hours) — CRITICAL
-3. **Task 3: Measurement-Integrity Design** (4-5 hours) — CRITICAL
+3. ✅ **Task 3: Measurement-Integrity Design** (COMPLETE — 2026-08-17, 5 hours) — CRITICAL
 4. **Task 4: ganges Rebind Predicate** (5-7 hours) — CRITICAL
 5. **Task 6: Presolve-Golden Adoption** (3-4 hours) — HIGH (gated on Task 4)
 6. **Task 11: Plan Sprint 38** (3-4 hours) — CRITICAL
