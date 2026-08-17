@@ -80,12 +80,13 @@ That inheritance is itself the sprint's principal risk. The Sprint-37 retrospect
 
 **Estimated Research Time:** ~33.5 hours (within the 28–36 hour target; spread across prep Tasks 2–10)
 
-**By Resolution Status (as of Prep Task 2, 2026-08-17):**
-- ✅ VERIFIED: 2 — **2.1** (sarf sites intact), **4.1** (all 36 presolve goldens reproducible)
-- 🔍 INCOMPLETE: 26 — including **1.1**, which Task 2 **partially investigated**: its `rc=0` question is untested (the cascade was not re-applied — Task 4 owns that), but the banked **baseline** it starts from is refuted (`$141` = 15 cold / 49 presolve vs 78 banked; `$145`×3 and `$149`×9 *do* reproduce exactly). Task 4 closes it against the corrected baseline.
-- ❌ WRONG: 0
+**By Resolution Status (as of Prep Task 3, 2026-08-17):**
+- ✅ VERIFIED: 4 — **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes)
+- ❌ WRONG: 1 — **6.2** (the floor cannot be reproduced from existing artifacts at 76 *or any figure*: three derivations give 65 / 93 / 76)
+- 🔶 PARTIALLY WRONG: 1 — **6.1** (`--resolve-changed` silent defect CONFIRMED; but `leak-check` already **exits 2**, so its NO-OP is *not* mistakable for a pass — the defect is the misleading message)
+- 🔍 INCOMPLETE: 22 — including **1.1**, which Task 2 **partially investigated**: its `rc=0` question is untested (the cascade was not re-applied — Task 4 owns that), but the banked **baseline** it starts from is refuted (`$141` = 15 cold / 49 presolve vs 78 banked; `$145`×3 and `$149`×9 *do* reproduce exactly). Task 4 closes it against the corrected baseline.
 
-**⚠ Task 2 surfaced a finding that lands on Unknown 6.2 early:** the genuine floor's provenance chain credits **three models that are outside the 142-candidate corpus** the floor is reported over (`ps2_f_s`, `ps2_s`, `ps3_s_gic` are `non_convex`, and were already so at the S32 anchor, immediately after the S31 sprint that credited them). Either the floor has been **overstated by 3 since Sprint 31** (true in-corpus floor **73**), or the floor's scope legitimately differs from Solve/Match's and that has never been written down. **Task 3 must resolve this before designing the provenance file** — a tracker that reproduces 76 and one that reproduces 73 are different artifacts, and the wrong one silently entrenches the error. See `BASELINE_RECONFIRMATION.md` §2.
+**⚠ Task 2 surfaced a finding that lands on Unknown 6.2 early:** the genuine floor's provenance chain credits **three models that are outside the 142-candidate corpus** the floor is reported over (`ps2_f_s`, `ps2_s`, `ps3_s_gic` are `non_convex`, and were already so at the S32 anchor, immediately after the S31 sprint that credited them). Either the floor has been **overstated by 3 since Sprint 31** (true in-corpus floor **73**), or the floor's scope legitimately differs from Solve/Match's and that has never been written down. **Task 3 resolved the design question and escalated the figure.** A *reconstructing* tracker is impossible (three derivations give 65 / 93 / 76), so the tracker is now **append-only from a declared baseline**. **The baseline value — 73 (in-corpus only) or 76 (keep the historical figure) — is an owner decision**, since it changes six sprints of reported history. See `BASELINE_RECONFIRMATION.md` §2 and `MEASUREMENT_INTEGRITY_DESIGN.md` §4.3.
 
 ---
 
@@ -828,7 +829,21 @@ Reproduce both modes deliberately: stage an uncommitted golden change and run th
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — one mode confirmed, one assumption refuted
+**Verified by:** Task 3 (Measurement-Integrity Design)
+**Date:** 2026-08-17 · **Measured at:** `1a252648`
+
+**Findings:** Both modes were **reproduced live**, not described.
+
+**`--resolve-changed` — ❌ the silent defect is CONFIRMED.** With `data/gamslib/mcp/chenery_mcp.gms` modified in the working tree, `_changed_golden_model_ids('8cffec29')` returns `[]` — the edit is **invisible**, because the function runs `git diff --name-only <since>..HEAD`, which sees committed history only. An empty selection currently yields a **GO**. This is the mechanism behind the Sprint-37 false GO.
+
+**`leak-check` — ⚠ the assumption is WRONG.** The premise was that a `NO-OP` is "mistakable for a pass". It is not: `make leak-check MODEL=sarf` **exits 2**. `missing = expected - drifted_models`, and a golden-less model can never enter `drifted_models`, so it lands in `missing` and drives `ok = False`. **The exit code is already correct.**
+
+The real defect is the **diagnostic**: for sarf there is no golden at all, so nothing was compared — yet the message asserts *"the emit was byte-identical"* and diagnoses *"the fix did not change the emit"*. Both claims describe a comparison that never happened, sending a maintainer to look for an inert fix when the answer is "this model has no golden". **A message asserting a property that was never measured** — the sprint's recurring shape, in the tool built to catch it.
+
+**Evidence:** `_changed_golden_model_ids` returns `[]` with a dirty tree (both `8cffec29` and HEAD anchors) · `make leak-check MODEL=sarf` → `NO-OP: … the emit was byte-identical`, `make: *** [leak-check] Error 1`, exit **2** · `missing` computation at `check_golden_staleness.py:269`. See `MEASUREMENT_INTEGRITY_DESIGN.md` §3.
+
+**Decision:** 🔶 **P6b is roughly half the planned work.** `--resolve-changed` needs the full empty-selection assertion; `leak-check` needs only a **message split** (`UNVERIFIABLE` for golden-less vs `NO-OP` for exists-but-unchanged), not an exit-code change. The saving is recorded rather than silently absorbed.
 
 ---
 
@@ -863,7 +878,23 @@ Build the partition from Task 2's draft and reconcile to 76. Any model that cann
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — the floor cannot be reproduced from existing artifacts, at 76 or any figure
+**Verified by:** Task 3 (Measurement-Integrity Design)
+**Date:** 2026-08-17 · **Measured at:** `1a252648`
+
+**Findings:** Three independent derivations give **three different answers**:
+
+| method | result | why it fails |
+|---|---|---|
+| mechanical `Match − (presolve ∧ match)` | **65** | drops the "a fix changed the cold emit" limb |
+| golden-changed-ever (git log per golden) | **93** | 28 of 29 presolve goldens have >1 commit — regeneration happens for many reasons unrelated to a correctness fix |
+| the documented provenance chain | **76** | credits 3 **out-of-corpus** models (Task 2); only **14 of 76** attributable by name; ~62 sit in an unnamed "S28 genuine 68" block with no per-model record |
+
+The middle row is this task's new evidence and it is decisive: *"did the golden change?"* is mechanical, but *"did a **real fix** change it **for this model's correctness**?"* is a **judgement**, and no repo artifact records it.
+
+**Evidence:** per-golden `git log` over all 29 in-corpus presolve+match models → 28 with >1 commit (65 + 28 = 93) · mechanical count 65 · documented chain 76. See `MEASUREMENT_INTEGRITY_DESIGN.md` §4.
+
+**Decision:** ❌ **A reconstructing tracker is impossible; an append-only one is straightforward.** Design changed to `floor = baseline.count + len(entries)`, where the baseline is an **opaque, declared** block and every future movement adds an entry with its evidence. The tracker asserts against a committed `expected_floor` and **exits non-zero on divergence**, never emitting a DB-derived figure (that path gives 65 and looks authoritative). **One decision is escalated to the owner: baseline 73 (in-corpus only — implies six sprints were overstated by 3) or 76 (keep the historical figure — requires writing the scope difference into `reference_match_kpi_corpus_scope`).** Task 3 recommends 73 but does not choose; it changes reported history and is the owner's call.
 
 ---
 
@@ -895,7 +926,25 @@ Run the checkpoint selection at both anchors and compare the model sets. Grep fo
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — conditional on 6b landing first
+**Verified by:** Task 3 (Measurement-Integrity Design)
+**Date:** 2026-08-17 · **Measured at:** `1a252648`
+
+**Findings:** `8cffec29` (the S37 close) is the correct re-anchor. Selections measured:
+
+| anchor | selects |
+|---|---|
+| `78ceaead` (S34 close — current, 4 sprints old) | **19** models |
+| `935d94b7` (S36 close) | 2 |
+| **`8cffec29` (S37 close — candidate)** | **0** |
+
+DB-modifying commits: `78ceaead..HEAD` = 3, `8cffec29..HEAD` = 0.
+
+**But the candidate selects zero — which is exactly the hazard 6b addresses.** Re-anchoring today makes the checkpoint **vacuous at sprint start**: it would report GO while checking nothing. That is *semantically correct* (nothing has drifted) but *operationally dangerous* under current code, which cannot distinguish "nothing changed" from "I looked in the wrong place".
+
+**Evidence:** `_changed_golden_model_ids()` at each anchor · `git log --oneline <anchor>..HEAD -- data/gamslib/gamslib_status.json`. See `MEASUREMENT_INTEGRITY_DESIGN.md` §5.
+
+**Decision:** ✅ Re-anchor to `8cffec29`, **but only after 6b lands** — sequencing 6d before 6b trades a slow checkpoint for a silent one. **Cost:** the S34–S37 drift (19 models) stops being re-verified every run; that drift is already settled at each sprint's close, so the cost is re-verification of history, not loss of signal.
 
 ---
 
@@ -927,7 +976,22 @@ Enumerate legitimate empty/narrow states from recent PR history and confirm each
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — four legitimate states enumerated, all expressible
+**Verified by:** Task 3 (Measurement-Integrity Design)
+**Date:** 2026-08-17 · **Measured at:** `1a252648`
+
+**Findings:** Four legitimate states would be broken by a naive assertion, and each has a design response:
+
+1. **Empty selection at sprint start** — the *normal* state right after re-anchoring (6.3 measured `8cffec29` → 0 models). A naive "fail on empty" would fail every run until the first golden lands. ⇒ `GO (VACUOUS)` at exit 0, distinguished by a **clean working tree**; only empty-selection-**with-dirty-goldens** fails.
+2. **A golden-less model in `--expect-drift`** — sarf, legitimately, until its re-arch lands. ⇒ distinct `UNVERIFIABLE` verdict plus a `--expect-new` flag, rather than a hard fail that invites a blanket bypass.
+3. **Docs-only PRs** — must not trip a required check. ⇒ scope assertions apply only when `--expect-drift`/`--since-commit` is given.
+4. **Deliberately narrowed local sweeps** (`--models`) — **already handled**: `subset_scope` downgrades the claim to `PARTIAL` rather than failing.
+
+**Escape-hatch policy:** any bypass must **print its caveat into the verdict line**, as `subset_scope` already does (`LEAK GATE PASS (PARTIAL — NOT a full-corpus leak claim)`). A bypass leaving no trace in the pasted evidence is how a gate quietly stops being one. Over-use is countable in CI, per the `skip-phase0` precedent.
+
+**Evidence:** state 4's existing handling at `check_golden_staleness.py:333` (`subset_scope` warning) and the `claim_caveats` verdict path. See `MEASUREMENT_INTEGRITY_DESIGN.md` §6.
+
+**Decision:** ✅ No assertion in the design fires on a legitimate state. The riskiest is state 1, which is *guaranteed* to occur immediately after 6d — so it is handled by construction rather than discovered in the sprint.
 
 ---
 
