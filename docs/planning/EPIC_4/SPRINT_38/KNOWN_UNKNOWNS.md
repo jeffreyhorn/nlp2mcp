@@ -80,9 +80,9 @@ That inheritance is itself the sprint's principal risk. The Sprint-37 retrospect
 
 **Estimated Research Time:** ~33.5 hours (within the 28–36 hour target; spread across prep Tasks 2–10)
 
-**By Resolution Status (as of Prep Task 3, 2026-08-17):**
-- ✅ VERIFIED: 4 — **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes)
-- ❌ WRONG: 1 — **6.2** (the floor cannot be reproduced from existing artifacts at 76 *or any figure*: three derivations give 65 / 93 / 76)
+**By Resolution Status (as of Prep Task 4, 2026-08-17):**
+- ✅ VERIFIED: 5 — **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes), **1.4** (bucket 0; no gate treats a rising `model_infeasible` as a regression)
+- ❌ WRONG: 2 — **6.2** (the floor cannot be reproduced from existing artifacts at 76 *or any figure*: three derivations give 65 / 93 / 76) · **1.2** (**no positive requirement is expressible at the `$149` rebind site** — ganges and `prolog` are *locally indistinguishable*; #1668 direction 2 is closed)
 - 🔶 PARTIALLY WRONG: 1 — **6.1** (`--resolve-changed` silent defect CONFIRMED; but `leak-check` already **exits 2**, so its NO-OP is *not* mistakable for a pass — the defect is the misleading message)
 - 🔍 INCOMPLETE: 22 — including **1.1**, which Task 2 **partially investigated**: its `rc=0` question is untested (the cascade was not re-applied — Task 4 owns that), but the banked **baseline** it starts from is refuted (`$141` = 15 cold / 49 presolve vs 78 banked; `$145`×3 and `$149`×9 *do* reproduce exactly). Task 4 closes it against the corrected baseline.
 
@@ -134,26 +134,31 @@ Cold-compile both raw models on current `main` and count error signatures by **s
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — the `rc=0` question is **untested**; the banked *baseline* is refuted
-**Partially investigated by:** Task 2 (Re-Derive the Sprint-37 Baseline & Carryforward Fingerprints)
-**Date:** 2026-08-17 · **Measured at:** `84fbe43c`
+🔍 **Status:** INCOMPLETE — the `rc=0` question is **untested**; the earlier "baseline refuted" finding is **RETRACTED**
+**Partially investigated by:** Task 2 · **corrected by Task 4** (2026-08-17)
+**Date:** 2026-08-17 · **Measured at:** `84fbe43c` / `f04c3a44`
 
-**Findings:** The *premise* holds but the *fingerprint* does not. `src/` is byte-identical to the S37 close (`8cffec29`), so the cascade is confirmed absent from `main`, and both models still fail with `rc=2`. But of the three banked error counts, **only two reproduce**:
+**Findings:** The `src/` premise holds — the cascade is confirmed **absent** from `main` and both models fail `rc=2`.
 
-| run | `$141` | `$145` | `$149` | rc |
-|---|---|---|---|---|
-| **banked** (S37 Day 4, presolve) | **78** | 3 | 9 | 2 |
-| cold, ganges | **15** | 3 ✅ | 9 ✅ | 2 ✅ |
-| cold, gangesx | **15** | 3 ✅ | 9 ✅ | 2 ✅ |
-| presolve, ganges | **49** | 3 ✅ | 9 ✅ | 2 ✅ |
+**⚠ Task 2's "the `$141` count does not reproduce" finding is RETRACTED. The measurement was invalid.**
 
-`$145`×3 and `$149`×9 reproduce **exactly, in both variants, on both models**. `$141` reproduces in **neither** (15 cold / 49 presolve vs 78 banked). The presolve run also surfaces `$140`×63 and `$318`×47, error classes the banked figure never mentions.
+Concurrency was ruled out first: a **serial** ganges cold run with nothing else executing produced a **byte-identical emit** (md5 `72c5d5f268e9dad458f61f58491872c5`) and **identical counts** to the loaded run — load affects **runtime only** (325 s → 162 s).
 
-Two measurement notes: (a) the banked figure came from the **presolve** run — `DAY4_GANGES_CONTROL.md` §1 says so explicitly — while this unknown's prompt asked for a *cold* compile; that instruction was wrong, so both variants were measured. (b) `grep -c` counts **lines**, not occurrences, and understated `$145`/`$149` on the first pass; all counts use `grep -o … | wc -l`.
+The real defect is that **GAMS truncates its own error listing**: `**** 300  Remaining errors not printed for this line` appears ×2, and `errmsg=1` does **not** lift it.
 
-**Evidence:** `git diff 8cffec29..HEAD -- src/` empty · ganges emit 325.5s, gangesx 242.9s, both `rc=2` · `grep -o '\$[0-9]\{3\}' ganges.lst | sort | uniq -c` · `prolog` confirmed `model_optimal`+match. See `BASELINE_RECONFIRMATION.md` §3.
+| run | printed `$141` | printed total | **GAMS total** | suppressed | true `$141` |
+|---|---|---|---|---|---|
+| cold | 15 | 29 | **51** | 22 | ≤ 37 |
+| presolve | 49 | 175 | **199** | 24 | **≤ 73** |
+| banked (S37 Day 4) | — | — | — | — | **78** |
 
-**Decision:** 🔍 **INCOMPLETE, not WRONG.** This unknown asks whether the four-fix cascade still reaches **`rc=0`** — and the cascade was **not re-applied**, so that question is untested; re-applying the banked patch is a scratch-branch exercise Task 4 owns. What *is* refuted is the **baseline the patch starts from**: the banked `78 / 3 / 9` fingerprint. Recording this as ❌ WRONG would assert that the cascade fails to reach `rc=0`, which no measurement here supports — the same verify-a-component / assert-a-property error this sprint keeps catching. **Task 4 closes the unknown** by re-applying the cascade against the corrected baseline. Task 4 must (i) design against the **measured** baseline, not the banked one, and (ii) determine whether the `$141` delta is caused by the Day-6 fawley landing, which added **+53 lines to `stationarity.py` after** the Day-4 measurement and touches the same emit surface. That is a plausible cause, **not an established one**. The `$149` work is unaffected: its target count reproduces exactly.
+**Every `grep -o '\$NNN'` count counts only PRINTED markers.** The authoritative figure is GAMS's `**** N ERROR(S)` line. Decisively, the cold run has only **51 errors of all kinds**, so `78 × $141` cannot describe a cold compile — confirming the banked figure came from the **presolve** run, as `DAY4_GANGES_CONTROL.md` §1 states.
+
+**`$145`×3 and `$149`×9 do reproduce exactly** in both variants on both models — and those are the classes the `$149` work depends on.
+
+**Evidence:** serial-vs-loaded emit md5 + counts; `**** N ERROR(S)` and truncation-marker census across cold/presolve listings. See `GANGES_REBIND_PREDICATE_DESIGN.md` §7.
+
+**Decision:** 🔍 **INCOMPLETE, not WRONG.** The cascade was never re-applied, so the `rc=0` question stands untested. A residual gap may exist (**≤73 vs 78**) but is far smaller and differently shaped than the retracted "15 vs 78", and nothing is concludable until a **truncation-free census** exists. Three counting errors accumulated on this one figure: `grep -c` counting lines → the wrong variant → printed-markers-under-a-cap.
 
 ---
 
@@ -186,7 +191,28 @@ Reproduce the `prolog` drift and capture which rebind fires on which expression 
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — no positive requirement is expressible at the rebind site
+**Verified by:** Task 4 (ganges P1 — `$149` Rebind-Predicate Design)
+**Date:** 2026-08-17 · **Measured at:** `f04c3a44`
+
+**Findings:** A **read-only probe** at the exact rebind site shows ganges and `prolog` are **indistinguishable on every locally-available field**:
+
+| field | `prolog` (over-fires) | `ganges` (correct) |
+|---|---|---|
+| rebind | `gp -> food` | `j -> agricult` |
+| `e ∈ bound_indices` | False | False |
+| `bound_indices` | **`[]`** | **`[]`** |
+| `e ∈ expr.index_sets` | True | True |
+| occurs in retained `expr` | `[ParamRef, VarRef]` | `[ParamRef, VarRef]` |
+| occurs in `log_term` | `[ParamRef, VarRef]` | `[ParamRef, VarRef]` |
+
+The obvious candidate — *"fire only when the index is genuinely free"*, using the `bound_indices` parameter `_diff_prod` already receives — is **refuted**: `bound_indices` is **empty for both**. The enclosing `sum(gp, …)` that Day 4 identified is **stripped before differentiation reaches `_diff_prod`**, so the site cannot determine freeness at all.
+
+**This is the fawley lesson inverted.** fawley succeeded because a positive requirement existed *in the information available at its site*. Here the correct and incorrect cases are **locally identical**, so no predicate over that tuple can separate them.
+
+**Evidence:** probe v1 (`e_in_bound`, `bound`) and v2 (`prod_binder`, occurrence profile) across both models; 2 prolog sites and 6 ganges sites, all identical. `src/` reverted byte-identical. See `GANGES_REBIND_PREDICATE_DESIGN.md` §2.
+
+**Decision:** ❌ **#1668 direction 2 is closed** — do not re-attempt it. The blocker is **missing context, not a missing predicate**, so P1 is a plumbing/relocation problem. Three replacement directions are named (§3), with **direction C (#1668 direction 1 — rebind parameter indices consistently) recommended first**: it is cheapest to test and was prematurely deprioritised on intent grounds in favour of the direction now refuted.
 
 ---
 
@@ -219,7 +245,17 @@ Map the leak surface from the emit path, not from a hand-picked cohort. Run the 
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔍 **Status:** INCOMPLETE — not reachable; there is no predicate to gate
+**Partially investigated by:** Task 4 (ganges P1)
+**Date:** 2026-08-17
+
+**Findings:** This unknown asks whether *the narrowed predicate* passes the full-corpus gate with `prolog` byte-identical. **Unknown 1.2 established that no such predicate exists at the rebind site**, so there is nothing to run the gate against. Running a full-corpus sweep now would measure the unpatched tree and prove nothing.
+
+What **is** established and carried forward: the gate specification itself does not depend on which replacement direction is chosen, and is recorded in full — `--expect-drift ganges,gangesx,korcge` with **`prolog` byte-identical** as an explicit criterion, scope asserted via `--min-scope` per Task 3 §3.1, determinism ×3, and the measured slow-emit budget (ganges **325 s**, gangesx **243 s**) on a nightly slot rather than the PR gate. `korcge` belongs in `--expect-drift`, not the leak set: Day 4 verified its drift is the benign `rPower` gate and it still solves `MODEL STATUS 1 Optimal` @ 339.2130.
+
+**Evidence:** `GANGES_REBIND_PREDICATE_DESIGN.md` §4–§5.
+
+**Decision:** 🔍 Closes with whichever direction (§3) is chosen. The gate is pre-specified so that effort runs it rather than designing it.
 
 ---
 
@@ -252,7 +288,19 @@ Re-measure the embedded-vs-standalone divergence. Grep the acceptance criteria, 
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the bucket is 0, and nothing treats a rising `model_infeasible` as a regression
+**Verified by:** Task 4 (ganges P1)
+**Date:** 2026-08-17 · **Measured at:** `f04c3a44`
+
+**Findings:** Swept `.github/workflows/`, `scripts/sprint_audit/` and `scripts/gamslib/run_full_test.py` for any assertion, threshold or regression check on `model_infeasible`: **none exists**. No gate would fail on mi 7 → 9.
+
+The Sprint-38 acceptance criterion already states it correctly — *"`model_infeasible:` ≤ 7, **or ≤ 9 if the ganges cascade lands** — an increase here is a **lateral move from path_syntax_error, not a regression**, and must be reported as such"* — as does the S38 Rolling-KPIs column. Earlier sprints' rows read "≤ 7 (maintain; −1 per recovery)", but those are **historical targets, not live gates**, and bind nothing.
+
+Bucket confirmed **0**: a clean cascade gives **pse 6 → 4, mi 7 → 9**, Solve 108 and Match 94 unchanged. The 6th blocker (embedded `ganges0` MS-5 @ −386785.5017 vs standalone MS-2 @ 6395.5444; `mcp_model` MS-4) is untouched, and a genuine +2 needs the unscoped #1378/#1424 class.
+
+**Evidence:** grep over workflows/scripts → no monotonicity assertion; `PROJECT_PLAN.md` Sprint-38 acceptance criteria + KPI column. See `GANGES_REBIND_PREDICATE_DESIGN.md` §6.
+
+**Decision:** ✅ A correct P1 landing cannot be misreported as a regression by any automated gate. The remaining risk is **narrative** — a human reading "mi rose" — which the pre-registered close rule already addresses.
 
 ---
 
@@ -283,7 +331,17 @@ Cold-compile all four with the scratch predicate applied and count remaining err
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔍 **Status:** INCOMPLETE — untestable without the cascade applied
+**Partially investigated by:** Task 4 (ganges P1)
+**Date:** 2026-08-17
+
+**Findings:** Whether the general `$149` fix clears the `$149` half of dinam/indus/turkpow/clearlak can only be measured **with the fix applied**, and Unknown 1.2 established there is no landable fix yet. Measuring the four models unpatched would restate their current failure, not the question asked.
+
+**A method correction applies here and was not known when this unknown was written.** Any per-model `$NNN` census must read GAMS's own `**** N ERROR(S)` line and check for `Remaining errors not printed for this line` — `grep -o '\$NNN'` counts only *printed* markers and undercounts (see 1.1's retraction and `GANGES_REBIND_PREDICATE_DESIGN.md` §7). The earlier plan to "count `$149` per model" would have produced undercounts for exactly the same reason the `$141` finding was withdrawn.
+
+**Evidence:** `GANGES_REBIND_PREDICATE_DESIGN.md` §7; probe results §2.
+
+**Decision:** 🔍 Carries to whichever direction (§3) produces a landable fix. **Task 10 must not assume these four are unblocked** — its candidate pool should treat them as untested, not as pending-unblock.
 
 ---
 

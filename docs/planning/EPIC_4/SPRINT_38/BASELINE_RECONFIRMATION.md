@@ -4,7 +4,7 @@
 
 **Verdict: 🔶 PROCEED WITH TWO CORRECTIONS.** The KPI block re-derives **exactly** on every line, and the sarf and inventory fingerprints hold. Two things do **not** hold as banked, and both change what a later task must do:
 
-1. **The ganges `$141` count does not reproduce** — banked 78, measured **15** (cold) / **49** (presolve). `$145`×3 and `$149`×9 reproduce *exactly* in both variants.
+1. ~~**The ganges `$141` count does not reproduce**~~ — **RETRACTED 2026-08-17 (Task 4): the measurement counted only *printed* markers under a GAMS listing-truncation cap.** `$145`×3 and `$149`×9 reproduce *exactly* in both variants, and that part stands. See §3.
 2. **The genuine floor's provenance chain credits three models that are outside the corpus the floor is reported over** — `ps2_f_s`, `ps2_s`, `ps3_s_gic` are `non_convex`, and were already so at the S32 anchor immediately after the S31 sprint that credited them.
 
 Every figure below carries the SHA it was measured at, per the retrospective's banked-staleness remedy.
@@ -94,7 +94,9 @@ Attributable from the documented chain, all verified present in the DB at `84fbe
 
 **14 of the 76 are attributable by name.** The remaining ~62 come from the unnamed "S28 genuine 68" block and have **no per-model record anywhere** — which is precisely why the floor cannot be audited today. Task 3 must either reconstruct them or accept the block as an opaque baseline and say so.
 
-## 3. ganges cascade fingerprint — ❌ the banked baseline does not reproduce (the `rc=0` claim is untested)
+## 3. ganges cascade fingerprint — ⚠ **THIS SECTION'S HEADLINE FINDING IS RETRACTED**
+
+> **RETRACTED 2026-08-17 by Prep Task 4.** The `$141` comparison below is **invalid**: GAMS truncates its error listing (`**** 300 Remaining errors not printed for this line`, ×2; `errmsg=1` does not lift it), so every `grep -o '$NNN'` figure counts only **printed markers**. GAMS's own totals are **51** (cold) and **199** (presolve), giving true `$141` ≤ 37 and ≤ 73 respectively against the banked 78. Concurrency was ruled out — a serial run gave a byte-identical emit and identical counts. **What still holds:** the cascade is absent from `src/`, `rc=2` on both models, and `$145`×3 / `$149`×9 reproduce exactly. See `GANGES_REBIND_PREDICATE_DESIGN.md` §7.
 
 **`src/` is byte-identical to the S37 close (`8cffec29`)** — `git diff 8cffec29..HEAD -- src/` is empty, so the cascade is **not** on `main`, as expected.
 

@@ -36,7 +36,7 @@ This prep plan focuses on research, design, and survey tasks that must complete 
 | 1 | ✅ Create Sprint 38 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 8 priorities |
 | 2 | ✅ Re-Derive the Sprint-37 Baseline & Carryforward Fingerprints | Critical | 3-4 hours | Task 1 | Verify 108/94/76/135 and every banked fingerprint on current `main` |
 | 3 | ✅ Measurement-Integrity Design: Gate Scope, Floor Provenance & Re-Anchoring (P6) | Critical | 4-5 hours | Tasks 1, 2 | P6 — and the measurement substrate every other task's gate asserts against |
-| 4 | ganges P1 — `$149` Rebind-Predicate Design & Leak-Surface Analysis | Critical | 5-7 hours | Tasks 1, 2, 3 | P1 ganges/gangesx cascade |
+| 4 | ✅ ganges P1 — `$149` Rebind-Predicate Design & Leak-Surface Analysis | Critical | 5-7 hours | Tasks 1, 2, 3 | P1 ganges/gangesx cascade |
 | 5 | sarf P2 — O(active) Re-Architecture Design Refresh & Atomicity Plan | Critical | 5-7 hours | Tasks 1, 2 | P2 sarf — the only KPI mover |
 | 6 | Presolve-Golden Adoption Plan & Runtime Impact (P4) | High | 3-4 hours | Tasks 1, 2, 3, 4 | P4 coverage asymmetry |
 | 7 | Consultation Ownership Decision Package (P3) | High | 2-3 hours | Task 1 | P3 — the Day-0 send-or-strike decision |
@@ -253,7 +253,7 @@ Baseline as recorded at Sprint 37 close (`main` `8cffec29`; plan insert at `d9bc
 
 **✅ Reproduced exactly:** Parse 142 · Translate 135 · Solve 108 · Match 94 (65 cold + 29 presolve) · mi 7 · pse 6 · all-219 97 · goldens 170/7 allowlisted/163 in-scope/17 presolve · `--min-scope 170` · `MAX_WORKERS 3` · the mechanical floor proxy 65 against the recorded 76.
 
-**❌ Correction 1 — the ganges `$141` count does not reproduce.** Banked 78; measured **15** (cold) / **49** (presolve), on both models. `$145`×3 and `$149`×9 reproduce *exactly* in both variants — so this is not a different run. `stationarity.py` gained **+53 lines after** the Day-4 measurement (the Day-6 fawley landing, same emit surface), which is a **plausible but unestablished** cause. Task 4 must design against the measured baseline and determine causation. Also: the banked figure came from the **presolve** run, while this task's prompt asked for a *cold* compile — a prompt error, so both variants were measured.
+**⚠ Correction 1 — RETRACTED 2026-08-17 by Task 4** (the measurement counted only *printed* markers under a GAMS listing-truncation cap; concurrency was ruled out). Originally reported as: *the ganges `$141` count does not reproduce.* Banked 78; measured **15** (cold) / **49** (presolve), on both models. `$145`×3 and `$149`×9 reproduce *exactly* in both variants — so this is not a different run. `stationarity.py` gained **+53 lines after** the Day-4 measurement (the Day-6 fawley landing, same emit surface), which is a **plausible but unestablished** cause. Task 4 must design against the measured baseline and determine causation. Also: the banked figure came from the **presolve** run, while this task's prompt asked for a *cold* compile — a prompt error, so both variants were measured.
 
 **❌ Correction 2 — the floor's provenance credits three out-of-corpus models.** `ps2_f_s`, `ps2_s`, `ps3_s_gic` are `non_convex` and outside the 142 candidates the floor is reported over, and were **already `non_convex` at the S32 anchor**, immediately after the S31 sprint that credited them. Either the floor has been **overstated by 3 since Sprint 31** (true in-corpus floor **73**) or its scope differs from Solve/Match's and that was never written down. Only **14 of the 76** are attributable by name at all. **Task 3 must resolve the target figure before building the provenance tracker.**
 
@@ -315,7 +315,7 @@ sed -n '634p' src/ad/index_mapping.py
 - [ ] The genuine floor confirmed at **76** from the hand-partition → **NOT confirmed.** Its provenance credits three `non_convex`, out-of-corpus models, and only 14 of the 76 are attributable by name, so the correct target may be **73**. See `BASELINE_RECONFIRMATION.md` §2; resolving the figure is Task 3's precondition.
 - [x] ganges cascade confirmed **absent** from `src/` (byte-identical to the S37 close)
 - [x] `$145` = 3 and `$149` = 9 confirmed by *specific signature*, in both cold and presolve variants, on both models
-- [ ] `$141` = 78 by *specific signature* → **does NOT reproduce** (15 cold / 49 presolve). Task 4 designs against the measured baseline and determines whether the Day-6 fawley landing caused the drift.
+- [ ] `$141` = 78 by *specific signature* → **UNRESOLVED. The Task-2 claim that it "does not reproduce" is RETRACTED** (Task 4): the counts were printed-marker undercounts under a GAMS truncation cap (true ≤37 cold / ≤73 presolve vs banked 78). A truncation-free census is required before any comparison.
 - [x] `prolog` confirmed `model_optimal` + match (the leak target the rebind must not disturb)
 - [x] sarf's three sites and six call sites confirmed intact at their recorded locations
 - [x] Golden/gate inventory confirmed: 170 discovered / 7 allowlisted / 163 in-scope / 17 presolve / min-scope 170 / 3 workers
@@ -454,9 +454,10 @@ test -f docs/planning/EPIC_4/SPRINT_38/MEASUREMENT_INTEGRITY_DESIGN.md && echo "
 
 ## Task 4: ganges P1 — `$149` Rebind-Predicate Design & Leak-Surface Analysis
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE — 🔶 REPLAN outcome** (2026-08-17)
 **Priority:** Critical
 **Estimated Time:** 5-7 hours
+**Time Spent:** 6 hours
 **Deadline:** Before Sprint 38 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2, 3
@@ -503,11 +504,26 @@ Sprint 37's fawley track produced the directly applicable lesson: **two narrowin
 
 ### Changes
 
-*To be completed*
+- **Created** `GANGES_REBIND_PREDICATE_DESIGN.md` — the refutation, the probe methodology, three replacement directions, the Phase-0 gate, the 0-bucket restatement, and the `$141` retraction.
+- **Updated** `KNOWN_UNKNOWNS.md`: **1.2 → ❌ WRONG**, **1.3 → 🔍 unreachable**, **1.4 → ✅ VERIFIED**, **1.5 → 🔍 untestable**, and **1.1 corrected** (its retracted finding replaced).
+- **Corrected the merged Task-2 records** (per the owner's "fold it into Task 4"): `BASELINE_RECONFIRMATION.md` §3 + verdict, this file's Task-2 Result and acceptance criterion, and the CHANGELOG.
+- **No `src/` change** — a read-only probe was inserted, measured and reverted; `src/` is byte-identical to `main`.
 
 ### Result
 
-*To be completed*
+**🔶 REPLAN — #1668 direction 2 is not implementable as specified.**
+
+A **read-only probe** at the exact rebind site shows ganges and `prolog` are **indistinguishable on every locally-available field**: `bound_indices` is `[]` for *both*, both have `e ∈ expr.index_sets`, and both show the same `[ParamRef, VarRef]` occurrence profile in the retained `expr` and in `log_term`.
+
+The obvious candidate — *"fire only when the index is genuinely free"*, using the `bound_indices` parameter `_diff_prod` already receives — is **refuted**: the enclosing `sum(gp, …)` Day 4 identified is **stripped before differentiation reaches `_diff_prod`**, so the site cannot determine freeness at all. **The blocker is missing context, not a missing predicate**, which changes P1 from a predicate tweak into a plumbing or relocation problem.
+
+**This is the fawley lesson inverted:** fawley worked because a positive requirement existed *in the information available at its site*. Here the correct and incorrect cases are locally identical.
+
+**Three replacement directions named**, with **direction C (#1668 direction 1 — rebind parameter indices consistently) recommended first**: cheapest to test, and prematurely deprioritised in favour of the direction now refuted.
+
+**Recommended re-budget:** P1 from 18–24 h to a **~4–6 h direction-C evaluation** using the banked probe, with the remainder to **P2 sarf** (the only KPI mover) or P8. The sprint has no floor lever either way.
+
+**Also verified: 1.4 ✅** — no gate, workflow or script asserts monotonicity on `model_infeasible`, so a correct landing (mi 7 → 9) cannot be misreported as a regression by automation.
 
 ### Verification
 
@@ -545,15 +561,17 @@ test -f docs/planning/EPIC_4/SPRINT_38/GANGES_REBIND_PREDICATE_DESIGN.md && echo
 
 ### Acceptance Criteria
 
-- [ ] The `prolog` over-fire reproduced and characterised structurally, not by model name
-- [ ] The predicate is expressed as a **positive requirement**, not a set of subtracted exclusions
-- [ ] No name-based or domain-only discriminator in the design (the S35–S37 leak pattern)
-- [ ] Leak surface mapped **full-corpus**, not to a hand-picked cohort
-- [ ] Phase-0 gate specified per-model for ganges AND gangesx, with `modelstat` asserted
-- [ ] `prolog` byte-identical is an explicit gate criterion
-- [ ] Bucket expectation stated as **0 (lateral, mi rises to 9)** with the refuted "+2 or 0" called out
-- [ ] REPLAN exit defined with its banked artifact
-- [ ] Unknowns 1.2, 1.3, 1.4, 1.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The `prolog` over-fire reproduced and characterised structurally, not by model name — reproduced by live probe; characterised as **locally indistinguishable from ganges**, which is a stronger and more useful result than a structural difference would have been
+- [ ] The predicate is expressed as a **positive requirement** → **no predicate exists to express.** The candidate positive requirement was built and **refuted by measurement**: `bound_indices` is `[]` for both models. This is the finding, not an omission.
+- [x] No name-based or domain-only discriminator in the design — none was adopted; the refuted candidate was structural, and all three replacement directions are structural
+- [ ] Leak surface mapped **full-corpus** → **deliberately deferred with a reason.** The rebind path itself moves under each of the three replacement directions, so mapping the current path would produce a figure stale on the day a direction is picked — the banked-staleness failure this sprint keeps correcting. The two known members (ganges/gangesx intended, `prolog` must-not-drift) and `korcge`'s benign `rPower` drift are recorded.
+- [x] Phase-0 gate specified per-model for ganges AND gangesx, with `modelstat` asserted — and it is direction-independent, so it survives the REPLAN
+- [x] `prolog` byte-identical is an explicit gate criterion
+- [x] Bucket expectation stated as **0 (lateral, mi rises to 9)** with the refuted "+2 or 0" called out — and **1.4 independently verifies no gate treats the mi rise as a regression**
+- [x] REPLAN exit defined with its banked artifact — exit **taken**; banks the refutation, the probe methodology, three named directions, the gate and the bucket expectation
+- [x] Unknowns 1.2, 1.3, 1.4, 1.5 investigated and updated in KNOWN_UNKNOWNS.md (**1.2 ❌ WRONG**, **1.3 🔍 unreachable**, **1.4 ✅**, **1.5 🔍 untestable**) — plus **1.1 corrected** with the `$141` retraction
+
+**On the two unchecked boxes:** both presuppose that a workable predicate exists. Task 4's result is that it does not — the correct and over-firing cases are **locally identical** — so the boxes stay unchecked rather than reworded to match the outcome. The REPLAN is the deliverable: direction 2 is closed, three replacements are named, and P1's budget should drop from 18–24 h to a ~4–6 h direction-C evaluation.
 
 ---
 
@@ -1235,7 +1253,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 1. ✅ **Task 1: Known Unknowns** (COMPLETE — 2026-08-17, 3 hours) — CRITICAL
 2. ✅ **Task 2: Re-Derive the Baseline** (COMPLETE — 2026-08-17, 4 hours) — CRITICAL
 3. ✅ **Task 3: Measurement-Integrity Design** (COMPLETE — 2026-08-17, 5 hours) — CRITICAL
-4. **Task 4: ganges Rebind Predicate** (5-7 hours) — CRITICAL
+4. ✅ **Task 4: ganges Rebind Predicate** (COMPLETE — 2026-08-17, 6 h; **REPLAN outcome**) — CRITICAL
 5. **Task 6: Presolve-Golden Adoption** (3-4 hours) — HIGH (gated on Task 4)
 6. **Task 11: Plan Sprint 38** (3-4 hours) — CRITICAL
 
