@@ -34,7 +34,7 @@ This prep plan focuses on research, design, and survey tasks that must complete 
 | # | Task | Priority | Est. Time | Dependencies | Sprint 38 Goal Addressed |
 |---|------|----------|-----------|--------------|--------------------------|
 | 1 | ✅ Create Sprint 38 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 8 priorities |
-| 2 | Re-Derive the Sprint-37 Baseline & Carryforward Fingerprints | Critical | 3-4 hours | Task 1 | Verify 108/94/76/135 and every banked fingerprint on current `main` |
+| 2 | ✅ Re-Derive the Sprint-37 Baseline & Carryforward Fingerprints | Critical | 3-4 hours | Task 1 | Verify 108/94/76/135 and every banked fingerprint on current `main` |
 | 3 | Measurement-Integrity Design: Gate Scope, Floor Provenance & Re-Anchoring (P6) | Critical | 4-5 hours | Tasks 1, 2 | P6 — and the measurement substrate every other task's gate asserts against |
 | 4 | ganges P1 — `$149` Rebind-Predicate Design & Leak-Surface Analysis | Critical | 5-7 hours | Tasks 1, 2, 3 | P1 ganges/gangesx cascade |
 | 5 | sarf P2 — O(active) Re-Architecture Design Refresh & Atomicity Plan | Critical | 5-7 hours | Tasks 1, 2 | P2 sarf — the only KPI mover |
@@ -186,9 +186,10 @@ grep -c "^\*\*Unknowns Verified:\*\*" docs/planning/EPIC_4/SPRINT_38/PREP_PLAN.m
 
 ## Task 2: Re-Derive the Sprint-37 Baseline & Carryforward Fingerprints
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-08-17)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
+**Time Spent:** 4 hours
 **Deadline:** Before Sprint 38 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1 (Known Unknowns)
@@ -242,11 +243,21 @@ Baseline as recorded at Sprint 37 close (`main` `8cffec29`; plan insert at `d9bc
 
 ### Changes
 
-*To be completed*
+- **Created** `docs/planning/EPIC_4/SPRINT_38/BASELINE_RECONFIRMATION.md` — every figure carrying the SHA it was measured at (`84fbe43c`).
+- **Updated** `KNOWN_UNKNOWNS.md`: **1.1 → 🔍 INCOMPLETE** (its `rc=0` question is untested — Task 4 owns re-applying the cascade — though the banked *baseline* is refuted), **2.1 → ✅ VERIFIED**, **4.1 → ✅ VERIFIED**; Summary Statistics resolution block updated; a Task-2 input note added to **Unknown 6.2**.
+- **No `src/`, DB or golden change.** The re-solve ran from `/tmp/task2_scratch`; the DB was restored to md5 `2ed0a42ba6861fd5837399ae88646d76` and the 36 regenerated goldens `git clean`'d.
 
 ### Result
 
-*To be completed*
+**🔶 PROCEED WITH TWO CORRECTIONS.** The KPI block re-derives exactly on every line; the sarf and inventory fingerprints hold; two banked figures do not, and both change what a later task must do.
+
+**✅ Reproduced exactly:** Parse 142 · Translate 135 · Solve 108 · Match 94 (65 cold + 29 presolve) · mi 7 · pse 6 · all-219 97 · goldens 170/7 allowlisted/163 in-scope/17 presolve · `--min-scope 170` · `MAX_WORKERS 3` · the mechanical floor proxy 65 against the recorded 76.
+
+**❌ Correction 1 — the ganges `$141` count does not reproduce.** Banked 78; measured **15** (cold) / **49** (presolve), on both models. `$145`×3 and `$149`×9 reproduce *exactly* in both variants — so this is not a different run. `stationarity.py` gained **+53 lines after** the Day-4 measurement (the Day-6 fawley landing, same emit surface), which is a **plausible but unestablished** cause. Task 4 must design against the measured baseline and determine causation. Also: the banked figure came from the **presolve** run, while this task's prompt asked for a *cold* compile — a prompt error, so both variants were measured.
+
+**❌ Correction 2 — the floor's provenance credits three out-of-corpus models.** `ps2_f_s`, `ps2_s`, `ps3_s_gic` are `non_convex` and outside the 142 candidates the floor is reported over, and were **already `non_convex` at the S32 anchor**, immediately after the S31 sprint that credited them. Either the floor has been **overstated by 3 since Sprint 31** (true in-corpus floor **73**) or its scope differs from Solve/Match's and that was never written down. Only **14 of the 76** are attributable by name at all. **Task 3 must resolve the target figure before building the provenance tracker.**
+
+**Two method notes:** `grep -c` counts *lines*, not occurrences, and understated two of three error classes on the first pass; and the scratch-directory mitigation for the S37 Day-9 artifact incident **works** — zero repo-root artifacts, verified before restoring.
 
 ### Verification
 
@@ -299,15 +310,20 @@ sed -n '634p' src/ad/index_mapping.py
 
 ### Acceptance Criteria
 
-- [ ] Every KPI re-derived from the DB with the correct keys, and matching the recorded block (or the discrepancy documented as a finding)
-- [ ] The genuine floor confirmed at 76 from the hand-partition, and the mechanical count confirmed at 65 — both recorded
-- [ ] ganges cascade confirmed absent from `src/`; `$141`/`$145`/`$149` = 78/3/9 by *specific signature*, not pattern hit
-- [ ] `prolog` confirmed `model_optimal` + match (the leak target the rebind must not disturb)
-- [ ] sarf's three sites and six call sites confirmed intact at their recorded locations
-- [ ] Golden/gate inventory confirmed: 170 discovered / 7 allowlisted / 163 in-scope / 17 presolve / min-scope 170 / 3 workers
-- [ ] Every figure in `BASELINE_RECONFIRMATION.md` carries its measurement SHA
-- [ ] Any drifted figure is corrected in the plan **before** Day 1, not carried
-- [ ] Unknowns 1.1, 2.1, 4.1 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Every KPI re-derived from the DB with the correct keys, and matching the recorded block (or the discrepancy documented as a finding) — **all 10 lines matched exactly**
+- [x] The mechanical floor count confirmed at **65** and recorded
+- [ ] The genuine floor confirmed at **76** from the hand-partition → **NOT confirmed.** Its provenance credits three `non_convex`, out-of-corpus models, and only 14 of the 76 are attributable by name, so the correct target may be **73**. See `BASELINE_RECONFIRMATION.md` §2; resolving the figure is Task 3's precondition.
+- [x] ganges cascade confirmed **absent** from `src/` (byte-identical to the S37 close)
+- [x] `$145` = 3 and `$149` = 9 confirmed by *specific signature*, in both cold and presolve variants, on both models
+- [ ] `$141` = 78 by *specific signature* → **does NOT reproduce** (15 cold / 49 presolve). Task 4 designs against the measured baseline and determines whether the Day-6 fawley landing caused the drift.
+- [x] `prolog` confirmed `model_optimal` + match (the leak target the rebind must not disturb)
+- [x] sarf's three sites and six call sites confirmed intact at their recorded locations
+- [x] Golden/gate inventory confirmed: 170 discovered / 7 allowlisted / 163 in-scope / 17 presolve / min-scope 170 / 3 workers
+- [x] Every figure in `BASELINE_RECONFIRMATION.md` carries its measurement SHA (`84fbe43c`)
+- [x] Any drifted figure is corrected in the plan **before** Day 1, not carried — both corrections are recorded here, in `KNOWN_UNKNOWNS.md`, and as explicit preconditions on Tasks 3 and 4
+- [x] Unknowns 1.1, 2.1, 4.1 investigated and updated in KNOWN_UNKNOWNS.md (**1.1 🔍 INCOMPLETE** — its `rc=0` question is untested and owned by Task 4, though the banked baseline is refuted; **2.1 ✅**, **4.1 ✅**)
+
+**On the two unchecked boxes:** Task 2's objective was to *re-derive and report*, and that is complete. Both criteria were drafted assuming the banked figures would hold; they did not, and the boxes stay unchecked to keep that visible rather than reworded to match the outcome. Each compound criterion has been **split** so every checkbox is a single, unambiguous claim — the verified halves (mechanical count 65; cascade absent; `$145`/`$149` exact) are checked, and only the two genuinely-unmet claims remain open. Both feed forward as named preconditions — the floor target to Task 3, the ganges baseline to Task 4.
 
 ---
 
@@ -1202,7 +1218,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 ### Critical Path (Must Complete Before Sprint 38 Day 1)
 
 1. ✅ **Task 1: Known Unknowns** (COMPLETE — 2026-08-17, 3 hours) — CRITICAL
-2. **Task 2: Re-Derive the Baseline** (3-4 hours) — CRITICAL
+2. ✅ **Task 2: Re-Derive the Baseline** (COMPLETE — 2026-08-17, 4 hours) — CRITICAL
 3. **Task 3: Measurement-Integrity Design** (4-5 hours) — CRITICAL
 4. **Task 4: ganges Rebind Predicate** (5-7 hours) — CRITICAL
 5. **Task 6: Presolve-Golden Adoption** (3-4 hours) — HIGH (gated on Task 4)
