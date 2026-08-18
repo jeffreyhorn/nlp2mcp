@@ -37,7 +37,7 @@ This prep plan focuses on research, design, and survey tasks that must complete 
 | 2 | ✅ Re-Derive the Sprint-37 Baseline & Carryforward Fingerprints | Critical | 3-4 hours | Task 1 | Verify 108/94/76/135 and every banked fingerprint on current `main` |
 | 3 | ✅ Measurement-Integrity Design: Gate Scope, Floor Provenance & Re-Anchoring (P6) | Critical | 4-5 hours | Tasks 1, 2 | P6 — and the measurement substrate every other task's gate asserts against |
 | 4 | ✅ ganges P1 — `$149` Rebind-Predicate Design & Leak-Surface Analysis | Critical | 5-7 hours | Tasks 1, 2, 3 | P1 ganges/gangesx cascade |
-| 5 | sarf P2 — O(active) Re-Architecture Design Refresh & Atomicity Plan | Critical | 5-7 hours | Tasks 1, 2 | P2 sarf — the only KPI mover |
+| 5 | ✅ sarf P2 — O(active) Re-Architecture Design Refresh & Atomicity Plan | Critical | 5-7 hours | Tasks 1, 2 | P2 sarf — the only KPI mover |
 | 6 | Presolve-Golden Adoption Plan & Runtime Impact (P4) | High | 3-4 hours | Tasks 1, 2, 3, 4 | P4 coverage asymmetry |
 | 7 | Consultation Ownership Decision Package (P3) | High | 2-3 hours | Task 1 | P3 — the Day-0 send-or-strike decision |
 | 8 | camcge Epic-5 Handoff Scoping + turkey Testbed Procurement (P5) | Medium | 3-4 hours | Tasks 1, 2 | P5 camcge (Epic 5) + turkey |
@@ -577,9 +577,10 @@ test -f docs/planning/EPIC_4/SPRINT_38/GANGES_REBIND_PREDICATE_DESIGN.md && echo
 
 ## Task 5: sarf P2 — O(active) Re-Architecture Design Refresh & Atomicity Plan
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-08-17)
 **Priority:** Critical
 **Estimated Time:** 5-7 hours
+**Time Spent:** 6 hours
 **Deadline:** Before Sprint 38 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
@@ -633,11 +634,31 @@ Profile (Sprint 37 Day 7, 180 s cap; `compute_constraint_jacobian` = **137 s**):
 
 ### Changes
 
-*To be completed*
+- **Created** `docs/planning/EPIC_4/SPRINT_38/SARF_REARCH_DESIGN.md` — profile-validated premise, the atomic change set site-by-site, the six call sites with their unperturbed-proof, the surrogate fixture, the golden/scope interaction, a **revised** Phase-0 gate, and a REPLAN exit with a named trigger.
+- **Updated** `KNOWN_UNKNOWNS.md`: **2.2 → ✅**, **2.3 → ❌ WRONG**, **2.4 → ✅**, **2.5 → ✅**.
+- **No `src/` change** — a read-only probe was inserted at `constraint_jacobian.py:1013`, measured and reverted; `src/` is byte-identical to `main`.
 
 ### Result
 
-*To be completed*
+**🔶 PROCEED, WITH THE PHASE-0 THRESHOLD REFUTED.**
+
+**✅ The premise (2.2) is confirmed decisively.** The sparsity check in the hot loop is **variable-level only** — once a variable is referenced in a row, the loop differentiates w.r.t. **every declared instance**. A read-only counter shows that after 75 s and 250,000 calls sarf is **still on `rows=1`**, with ~100 % of calls against `task`, at **~3,343 calls/s**. One row costs 369,024 calls ≈ **110 s**. So the short-circuit removes volume proportionally, not merely enumeration.
+
+**❌ The timing claim (2.3) is refuted.** The row count is the other half of the product and the short-circuit does not touch it: **1,183 rows reference `task`** (equipb1 648 · tbal 384 · equipb2 120 · labor 24 · cbal 6 · acost3 1).
+
+| | differentiations | at 3,343/s |
+|---|---|---|
+| current | **436,555,392** | **~36.3 hours** |
+| O(active) | **470,834** | **~141 seconds** |
+| gate (PR20) | — | single-digit seconds |
+
+The 36.3-hour figure **explains the non-termination directly**. The short-circuit delivers its full **927×** and still lands **~16× short** of the gate.
+
+**The threshold, not the design, is what fails — and the KPI does not require it.** The KPI is **+1 Translate**: sarf only needs to **complete**, and 141 s does. The 100 s cap that kills it today is a *test-harness* cap. **Recommended: revise the gate to "sarf completes and produces a byte-stable golden, ≤ 300 s on a nightly slot."** Holding single-digit seconds would require **also gating the 1,183 rows** — scope not in the 20–28 h estimate — and would convert a 927× win into a REPLAN.
+
+**✅ Surrogate fixture (2.4) sized from the measured rate:** ~5,000 declared columns, ~1.5 s un-gated — a genuine terminating fail-before — corpus-free, and asserting the **emitted shape** (symbolic multiplier indices) rather than only wall-clock.
+
+**✅ Scope arithmetic (2.5) is order-independent:** P2 and P4 both finish at **207 discovered / 200 in-scope** in either order, so `--min-scope` ends at 207. A separate dependency does exist: **P6b should precede P2's gate run**, since `leak-check MODEL=sarf` otherwise reports a misleading `NO-OP`.
 
 ### Verification
 
@@ -674,15 +695,18 @@ test -f docs/planning/EPIC_4/SPRINT_38/SARF_REARCH_DESIGN.md && echo "✓"
 
 ### Acceptance Criteria
 
-- [ ] The design premise re-validated against the *profile*, not the superseded 369K-column framing
-- [ ] The refuted memoization explicitly marked do-not-retry, with its measured ~5% recorded
-- [ ] The atomic change set specified as one unit, with a stated reason a partial landing is a REPLAN
-- [ ] All three sites confirmed at their recorded lines and all six call sites enumerated
-- [ ] Surrogate fixture designed with a terminating fail-before state
-- [ ] The `NO-OP`-is-not-a-pass problem handled — the real gate specified as `check-goldens` + new golden
-- [ ] Golden-count interaction with Task 6 resolved (both tasks move the scope)
-- [ ] REPLAN exit has a named trigger day and observable, per the plan's "early rather than nursed" instruction
-- [ ] Unknowns 2.2, 2.3, 2.4, 2.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The design premise re-validated against the *profile*, not the superseded 369K-column framing — and **re-measured at the call site**, which is stronger: the sparsity check is variable-level only, so volume is per-declared-column
+- [x] The refuted memoization explicitly marked do-not-retry, with its measured ~5% recorded — carried in `ISSUE_1385` and the prompt; **not re-attempted**
+- [x] The atomic change set specified as one unit, with a stated reason a partial landing is a REPLAN — S1 and S2 must move together or `get_col_id` silently drops live columns
+- [x] All three sites confirmed at their recorded lines and all six call sites enumerated, with the unperturbed-proof for the four out-of-scope ones
+- [x] Surrogate fixture designed with a terminating fail-before state — **sized from the measured 3,343 calls/s** (~5,000 columns ⇒ ~1.5 s un-gated), corpus-free, asserting the emitted *shape* not just wall-clock
+- [x] The `NO-OP`-is-not-a-pass problem handled — real gate is `check-goldens` + new golden; **flagged that P6b must precede P2's gate run** so `leak-check MODEL=sarf` gives `UNVERIFIABLE` rather than a misleading `NO-OP`
+- [x] Golden-count interaction with Task 6 resolved — **order-independent**: both orders end at 207 discovered / 200 in-scope
+- [x] REPLAN exit has a named trigger day and observable — end of implementation day 2; observable is the per-row call count falling from 369,024 toward ~398, visible in minutes via the probe
+- [x] Unknowns 2.2, 2.3, 2.4, 2.5 investigated and updated in KNOWN_UNKNOWNS.md (**2.2 ✅**, **2.3 ❌ WRONG**, **2.4 ✅**, **2.5 ✅**)
+- [ ] *(added by this task)* The Phase-0 timing gate is achievable as written → **NO. Refuted at ~141 s projected vs "single-digit seconds".** The 927× column win is real; the 1,183 rows are untouched. The KPI (+1 Translate) does **not** require single-digit seconds, so the recommendation is to revise the gate to "completes, byte-stable golden, ≤ 300 s nightly" rather than expand scope to gate rows.
+
+**On the unchecked box:** it is a criterion this task *added* after measurement, because the original criteria assumed the timing target was reachable and none of them tested it. Left unchecked so the refutation is visible: the design proceeds, the **threshold** needs an owner decision.
 
 ---
 
@@ -1261,7 +1285,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 
 ### Also Critical (Parallelisable)
 
-- **Task 5: sarf Re-Architecture Design** (5-7 hours) — the only KPI mover; runs parallel to Task 4
+- ✅ **Task 5: sarf Re-Architecture Design** (COMPLETE — 2026-08-17, 6 h) — the only KPI mover; ran parallel to Task 4
 
 ### High Priority (Should Complete Before Sprint 38)
 
