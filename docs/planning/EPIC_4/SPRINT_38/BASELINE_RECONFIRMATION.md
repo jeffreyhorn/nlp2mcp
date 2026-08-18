@@ -97,6 +97,8 @@ Attributable from the documented chain, all verified present in the DB at `84fbe
 ## 3. ganges cascade fingerprint — ⚠ **THIS SECTION'S HEADLINE FINDING IS RETRACTED**
 
 > **RETRACTED 2026-08-17 by Prep Task 4.** The `$141` comparison below is **invalid**: GAMS truncates its error listing (`**** 300 Remaining errors not printed for this line`, ×2; `errmsg=1` does not lift it), so every `grep -o '$NNN'` figure counts only **printed markers**. GAMS's own totals are **51** (cold) and **199** (presolve), giving true `$141` ≤ 37 and ≤ 73 respectively against the banked 78. Concurrency was ruled out — a serial run gave a byte-identical emit and identical counts. **What still holds:** the cascade is absent from `src/`, `rc=2` on both models, and `$145`×3 / `$149`×9 reproduce exactly. See `GANGES_REBIND_PREDICATE_DESIGN.md` §7.
+>
+> **⚠ Every `$NNN` figure in the rest of §3 is a count of *printed markers* and is an UNDERCOUNT.** Those numbers are preserved **only as a record of what was measured and how the error was made** — they are **not** a valid reproducibility claim, and no comparison against the banked 78 should be drawn from them. GAMS's own totals are **51** (cold) and **199** (presolve); the true `$141` is **≤ 37** and **≤ 73** respectively.
 
 **`src/` is byte-identical to the S37 close (`8cffec29`)** — `git diff 8cffec29..HEAD -- src/` is empty, so the cascade is **not** on `main`, as expected.
 

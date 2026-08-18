@@ -504,7 +504,7 @@ Sprint 37's fawley track produced the directly applicable lesson: **two narrowin
 
 ### Changes
 
-- **Created** `GANGES_REBIND_PREDICATE_DESIGN.md` — the refutation, the probe methodology, three replacement directions, the Phase-0 gate, the 0-bucket restatement, and the `$141` retraction.
+- **Created** `docs/planning/EPIC_4/SPRINT_38/GANGES_REBIND_PREDICATE_DESIGN.md` — the refutation, the probe methodology, three replacement directions, the Phase-0 gate, the 0-bucket restatement, and the `$141` retraction.
 - **Updated** `KNOWN_UNKNOWNS.md`: **1.2 → ❌ WRONG**, **1.3 → 🔍 unreachable**, **1.4 → ✅ VERIFIED**, **1.5 → 🔍 untestable**, and **1.1 corrected** (its retracted finding replaced).
 - **Corrected the merged Task-2 records** (per the owner's "fold it into Task 4"): `BASELINE_RECONFIRMATION.md` §3 + verdict, this file's Task-2 Result and acceptance criterion, and the CHANGELOG.
 - **No `src/` change** — a read-only probe was inserted, measured and reverted; `src/` is byte-identical to `main`.
