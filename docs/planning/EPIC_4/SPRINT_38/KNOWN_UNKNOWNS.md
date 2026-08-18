@@ -80,11 +80,11 @@ That inheritance is itself the sprint's principal risk. The Sprint-37 retrospect
 
 **Estimated Research Time:** ~33.5 hours (within the 28–36 hour target; spread across prep Tasks 2–10)
 
-**By Resolution Status (as of Prep Task 7, 2026-08-18):**
-- ✅ VERIFIED: 12 — **3.1** (**channel supplied by the owner 2026-08-18: email to `ferris@cs.wisc.edu` + `steve@gams.com`/`sdirkse@gams.com`; Branch A SEND unblocked after five carries**), **3.2** (strike ⇒ Sprint 39 survives, but rocket/fawley become unreachable, not deferred), **4.3** (presolve-golden sweep fits CI with headroom; the *local* 26.3 min was a 2× trap), **4.4** (derive `--min-scope` from `git ls-files`, not the filesystem), **2.2** (sarf premise confirmed: volume is per-column, measured), **2.4** (corpus-free surrogate sized), **2.5** (P2/P4 scope arithmetic order-independent), **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes), **1.4** (bucket 0; no gate treats a rising `model_infeasible` as a regression)
-- ❌ WRONG: 4 — **4.2** (**14 of the 36 would pin emits that do not reproduce their NLP solution** — 7 mismatch, 6 skipped, 1 model_infeasible ⇒ two-tier adoption), **2.3** (**the sarf timing gate is refuted: ~141 s projected, not single-digit seconds** — the 927× column win is real but rows are untouched; **gate REVISED to ≤300 s nightly, owner decision 2026-08-18**), **6.2** (the floor cannot be reproduced from existing artifacts at 76 *or any figure*: three derivations give 65 / 93 / 76) · **1.2** (**no positive requirement is expressible at the `$149` rebind site** — ganges and `prolog` are *locally indistinguishable*; #1668 direction 2 is closed)
+**By Resolution Status (as of Prep Task 8, 2026-08-18):**
+- ✅ VERIFIED: 13 — **5.3** (per-model numéraire still correct, re-confirmed and stamped under GAMS 54.2.1), **3.1** (**channel supplied by the owner 2026-08-18: email to `ferris@cs.wisc.edu` + `steve@gams.com`/`sdirkse@gams.com`; Branch A SEND unblocked after five carries**), **3.2** (strike ⇒ Sprint 39 survives, but rocket/fawley become unreachable, not deferred), **4.3** (presolve-golden sweep fits CI with headroom; the *local* 26.3 min was a 2× trap), **4.4** (derive `--min-scope` from `git ls-files`, not the filesystem), **2.2** (sarf premise confirmed: volume is per-column, measured), **2.4** (corpus-free surrogate sized), **2.5** (P2/P4 scope arithmetic order-independent), **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes), **1.4** (bucket 0; no gate treats a rising `model_infeasible` as a regression)
+- ❌ WRONG: 5 — **5.2** (**the Epic-5 handoff was already written** — three narrow gaps, not a document; writing one would have duplicated ~90 %), **4.2** (**14 of the 36 would pin emits that do not reproduce their NLP solution** — 7 mismatch, 6 skipped, 1 model_infeasible ⇒ two-tier adoption), **2.3** (**the sarf timing gate is refuted: ~141 s projected, not single-digit seconds** — the 927× column win is real but rows are untouched; **gate REVISED to ≤300 s nightly, owner decision 2026-08-18**), **6.2** (the floor cannot be reproduced from existing artifacts at 76 *or any figure*: three derivations give 65 / 93 / 76) · **1.2** (**no positive requirement is expressible at the `$149` rebind site** — ganges and `prolog` are *locally indistinguishable*; #1668 direction 2 is closed)
 - 🔶 PARTIALLY WRONG: 2 — **3.3** (the case reproduces under GAMS 54.2.1, but the bundle is **unstamped** and its figures predate the re-pin by 9 days — one-line fix, do not send without it) · **6.1** (`--resolve-changed` silent defect CONFIRMED; but `leak-check` already **exits 2**, so its NO-OP is *not* mistakable for a pass — the defect is the misleading message)
-- 🔍 INCOMPLETE: 10 — including **1.1**, whose `rc=0` question is **untested** (the cascade was never re-applied). **Task 2's "the banked baseline is refuted" claim is RETRACTED by Task 4**: the `$141` counts were *printed-marker undercounts* under a GAMS listing-truncation cap, not a reproduction failure. `$145`×3 and `$149`×9 *do* reproduce exactly. Nothing about `$141` is concludable until a truncation-free census exists — see 1.1.
+- 🔍 INCOMPLETE: 8 — including **5.1** (**turkey is a procurement decision requiring a human**; default = reclassify BLOCKED, since it has been carried since S35 and was already refuted once in S37 prep) — including **1.1**, whose `rc=0` question is **untested** (the cascade was never re-applied). **Task 2's "the banked baseline is refuted" claim is RETRACTED by Task 4**: the `$141` counts were *printed-marker undercounts* under a GAMS listing-truncation cap, not a reproduction failure. `$145`×3 and `$149`×9 *do* reproduce exactly. Nothing about `$141` is concludable until a truncation-free census exists — see 1.1.
 
 **⚠ Task 2 surfaced a finding that lands on Unknown 6.2 early:** the genuine floor's provenance chain credits **three models that are outside the 142-candidate corpus** the floor is reported over (`ps2_f_s`, `ps2_s`, `ps3_s_gic` are `non_convex`, and were already so at the S32 anchor, immediately after the S31 sprint that credited them). Either the floor has been **overstated by 3 since Sprint 31** (true in-corpus floor **73**), or the floor's scope legitimately differs from Solve/Match's and that has never been written down. **Task 3 resolved the design question; the figure is now decided — `baseline.count = 73` (owner, 2026-08-18).** A *reconstructing* tracker is impossible (three derivations give 65 / 93 / 76), so the tracker is now **append-only from a declared baseline**. **The baseline is 73** (in-corpus only), decided 2026-08-18; the S31–S37 series was overstated by 3. See `BASELINE_RECONFIRMATION.md` §2 and `MEASUREMENT_INTEGRITY_DESIGN.md` §4.3.
 
@@ -953,7 +953,26 @@ Investigate licensing options concretely and record cost/timeline or a definitiv
 Sprint 38 execution team (**procurement decision may require a human**)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔍 **Status:** INCOMPLETE — **procurement, requires a human**; default is to reclassify as BLOCKED
+**Partially investigated by:** Task 8 (camcge Epic-5 Handoff + turkey Testbed Determination)
+**Date:** 2026-08-18 · **Measured at:** `860b0e7b` · **Owner:** requires a human (purchasing/licensing)
+
+**Findings:** What is establishable without a human is established, and it narrows the question:
+
+| fact | evidence |
+|---|---|
+| the local licence is **GAMS_Demo** | `gamslice.txt` → `GAMS_Demo, for EULA and demo limitations…`, `O_DEMO` |
+| turkey's MCP is **3,866 rows** vs the **1000-row** demo nonlinear limit | S35–S37 record |
+| turkey **never reaches PATH** | DB: `path_solve_license` with **`solver_version: None`** — rejected at *generation*, so no solver is invoked |
+| the compile-recovery **works** | the S35 `$161` fix moved it `path_syntax_error → path_solve_license` |
+
+**turkey is blocked on licence capacity alone** — the emit is correct enough to reach the size check, and nothing else stands between it and a solve.
+
+**Options, and what each buys:** a commercial, academic or evaluation licence, or a hosted runner, would each earn the +1 (cost and timeline all require a human). **A reduced turkey instance would NOT** — it could raise confidence that the emit solves, but the KPI requires **turkey itself** to solve and match. That option is worth naming explicitly because it is the tempting engineering workaround and it does not deliver the thing being carried.
+
+**Evidence:** `gamslice.txt`; DB row for turkey; `CAMCGE_EPIC5_HANDOFF.md` §4.
+
+**Decision:** 🔍 **Cannot be resolved here — it is a purchasing decision.** **Default: reclassify as BLOCKED**, with wording drafted verbatim (§4.3). turkey's +1 has been carried as *"pending a testbed"* since **Sprint 35** and was **already refuted once in Sprint 37 prep**; a fourth carry on the same unexamined assumption is the phantom-upside failure mode. **If a licence is being procured, the only additional need is a date.**
 
 ---
 
@@ -985,7 +1004,25 @@ Audit the existing Epic-5 scoping doc against the S32–S37 refutation history a
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — the handoff was **already written**; three narrow gaps, not a document
+**Verified by:** Task 8 (camcge Epic-5 Handoff + turkey Testbed Determination)
+**Date:** 2026-08-18 · **Measured at:** `860b0e7b`
+
+**Findings:** The assumption was that the Epic-5 handoff needed assembling from the S32–S37 refutation history. **It did not.** `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` already carried every substantive item — price-pin → MS-4 (×4), single-dual-pin → MS-4 (×2), drop-row → corrupt @ omega 299 (×4), the **two-nullspaces** diagnosis, the three-part formulation (×3), 191.7346 (×7), 641 rows, per-model numéraire generality, a `⚠ SUPERSEDED IN PART` banner on §3, and **§5 Q3 marked ✅ ANSWERED — NO with an explicit "Do not re-run this experiment."**
+
+**Writing a second document would have duplicated ~90 % of it and created a second artifact to keep in sync.**
+
+**The three real gaps, all now fixed in the scoping doc itself:**
+
+1. emit time recorded as **18 s**; the S37 Day-10 control measured **19 s**
+2. **zero mentions of GAMS 54.2.1** — every figure predated the re-pin with no toolchain attribution
+3. no **consolidated BANNED list** — the bans were correct but spread through prose, so a reader skimming for *"what must I not do"* had to reconstruct them
+
+**Gap 2 is the second occurrence of the same defect in one prep cycle** — Task 7 found an unstamped consultation bundle whose figures predated the same re-pin. Measurements written before a toolchain change, carrying no version attribution, is now a recognised pattern rather than an isolated slip.
+
+**Evidence:** per-item grep census of the scoping doc; `CAMCGE_EPIC5_HANDOFF.md` §1.
+
+**Decision:** ❌ **Do not write a parallel handoff.** The scoping doc is patched in place (stamp, 19 s, new §4a BANNED list with per-sprint attribution), and `CAMCGE_EPIC5_HANDOFF.md` records the audit and the turkey determination rather than restating the diagnosis. **B1 (drop-row) is flagged as *primal-correct*** — a reader checking only the primal concludes it works, and the failure is silent in the dual.
 
 ---
 
@@ -1015,7 +1052,19 @@ Re-read the two-nullspaces diagnosis against the S37 Day-10 control figures and 
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — still the right recommendation, and now stamped under v54
+**Verified by:** Task 8 (camcge Epic-5 Handoff + turkey Testbed Determination)
+**Date:** 2026-08-18 · **Measured at:** `860b0e7b`
+
+**Findings:** Nothing since Sprint 32 has changed the two-nullspaces analysis, and the **Sprint-37 Day-10 control reproduced every predicted figure under GAMS 54.2.1 / PATH 5.2.01**: emit **19 s**, **641 single equations / 641 variables**, embedded NLP **MS-2 @ omega 191.7346**, `mcp_model` **MS-4 Infeasible**.
+
+**The MCP is MS-4 against a *correct* NLP optimum** — structural rank-deficiency, **not an emit defect**. That distinction is what keeps camcge in Epic 5 rather than the emit backlog, and it survives the toolchain change.
+
+**What the per-model-numéraire fallback buys:** a *selection* on the price ray rather than a perturbation, reproducing the documented optimum exactly. **What it does not buy:** closure of the **row-redundancy nullspace** — that is the three-part formulation's part (3), and it is the actual Epic-5 research. Recommending the fallback is therefore recommending a *partial* remedy knowingly, which the scoping doc now states rather than implies.
+
+**Evidence:** S37 Day-10 control figures vs the Task-9 predictions; the two-nullspaces diagnosis in `CGE_DEGENERACY_SCOPING.md` §3 and the new §4a.
+
+**Decision:** ✅ Unchanged and re-confirmed. The recommendation now carries its toolchain stamp, so the next reader does not have to ask whether it predates the re-pin — the question Task 7 and Task 8 both had to answer the hard way.
 
 ---
 

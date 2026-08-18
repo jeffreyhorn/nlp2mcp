@@ -1,5 +1,10 @@
 # Epic 5 Scoping — CGE Walras' Law Degeneracy (camcge #1330)
 
+> **Toolchain stamp (added 2026-08-18, Sprint 38 Prep Task 8).** Figures in this document originate under **GAMS 51.3.0 / PATH 5.2.01**.
+> **Re-confirmed 2026-08-18 under GAMS 54.2.1 / PATH 5.2.01** (the corpus was re-pinned 2026-08-12): camcge emits in **19 s**,
+> is **641 single equations / 641 variables**, its embedded NLP reaches **MS-2 @ omega 191.7346**, and `mcp_model` is **MS-4 Infeasible**.
+> The diagnosis and every refutation below hold on the current toolchain.
+
 **Status:** FINALIZED scoping write-up (authored Sprint 29 Prep Task 7, 2026-06-27; **finalized Sprint 29 Day 11 Priority 5, 2026-06-30**). Not an Epic-5 implementation plan — the structure + evidence so the in-sprint Priority-5 task is a write-up only (no `src/`).
 **Origin:** #1330 camcge, REPLAN'd to Epic 5 at the Sprint 28 Day-11 Task-6 gate (2026-06-19) — see `docs/issues/ISSUE_1330_*.md` + `docs/planning/EPIC_4/SPRINT_28/SPRINT_LOG.md` §"Day 11".
 
@@ -67,12 +72,29 @@ camcge translates and compiles cleanly (post-#1245), and the **emitted KKT syste
 
 ---
 
+## 4a. BANNED variants — consolidated (added 2026-08-18, Sprint 38 Prep Task 8)
+
+**Do not attempt any of these. Each was measured, not argued.**
+
+| # | variant | outcome | first refuted | re-confirmed |
+|---|---|---|---|---|
+| **B1** | Drop a redundant market-clearing row (`lmequil` or one `equil(i)`) | **corrupt @ omega 299, MS-4** — primal-correct, but the dropped market's multiplier is **orphaned out of the stationarity**, breaking the MCP *dual* | S30 Day 11 | S34, S36, S37 |
+| **B2** | Price-pin / numéraire **alone** | correct **primal** (omega 191.7346) but still **MS-4** — a numéraire closes the *price-scaling ray*, not the *row-redundancy nullspace* | S32 | S36 Day 11, S37 Day 10 |
+| **B3** | Single-dual-pin | **MS-4** | S32 | S36 |
+| **B4** | Objective-gradient sign flip (`ν_objective` reduction) | inert on the CGE cluster; control-refuted | S31 Day 10 | `ISSUE_1236` closed |
+
+**B1 deserves its own warning: it is *primal-correct*.** A reader checking only the primal will conclude it works; the failure is in the dual and is silent unless the orphaned multiplier is looked for.
+
+**The reusable insight (why every single-mechanism variant returns MS-4) — the two-nullspaces diagnosis:** the KKT Jacobian has **two** independent sources of singularity, a **price-scaling ray** and a **row-redundancy nullspace**. **A numéraire closes the first only.** Any fix addressing one and not the other leaves the system singular.
+
+---
+
 ## 5. Open questions for the Epic-5 task
 
 1. **Numéraire-selection rule.** Is there a robust automatic rule (e.g. fix the price of the SAM's largest sector, or a CPI aggregate), or must each CGE model declare its numéraire?
 2. **Degeneracy detection.** How does the preprocessing layer *detect* Walras-degeneracy (PATH basis-singularity report? a rank check on the market-clearing block? a model-structure heuristic?) without falsely flagging a well-posed model?
 3. ~~**Empirical confirmation.** Does drop-`lmequil` + fix-`cpi=1` actually drive camcge to MODEL STATUS 1 at 191.7346 (the §3 paper argument verified in GAMS)?~~
-   **✅ ANSWERED — NO (Sprint 30 Day 11; re-confirmed S34/S36/S37).** The drop-row variant measures **omega 299, MS-4** — primal-correct, but the dropped market's multiplier is orphaned out of the stationarity, breaking the MCP *dual*. The price-pin half alone reaches the correct **primal** (191.7346) yet stays **MS-4**. Do **not** re-run this experiment. **The live open question is instead:** does the *three-part* formulation (keep every row + consumption-weighted numéraire + **Walras-law dual redefinition**) reach MS-1? Banked evidence is discouraging — price-pin MS-4, single-dual-pin MS-4, drop-row corrupt @ 299; **3+ sprints of variants have all stayed MS-4**. The control is cheap to re-run (Sprint-37 measurement: 18 s emit, 641 rows, demo-reachable; embedded NLP MS-2 @ 191.7346, MCP MS-4).
+   **✅ ANSWERED — NO (Sprint 30 Day 11; re-confirmed S34/S36/S37).** The drop-row variant measures **omega 299, MS-4** — primal-correct, but the dropped market's multiplier is orphaned out of the stationarity, breaking the MCP *dual*. The price-pin half alone reaches the correct **primal** (191.7346) yet stays **MS-4**. Do **not** re-run this experiment. **The live open question is instead:** does the *three-part* formulation (keep every row + consumption-weighted numéraire + **Walras-law dual redefinition**) reach MS-1? Banked evidence is discouraging — price-pin MS-4, single-dual-pin MS-4, drop-row corrupt @ 299; **3+ sprints of variants have all stayed MS-4**. The control is cheap to re-run (Sprint-37 Day-10 measurement, **GAMS 54.2.1 / PATH 5.2.01**: **19 s** emit, 641 single equations / 641 variables, demo-reachable; embedded NLP MS-2 @ omega 191.7346, `mcp_model` MS-4).
 4. **Cohort generality.** Does the same transformation (with a per-model row/numéraire) recover any *other* genuinely Walras-degenerate model, or is camcge the only one in the corpus? (The §2 survey suggests camcge is currently the sole inherent case.)
 5. **CES conditioning (#1070 family).** Is the CES singular-Jacobian-near-bounds conditioning a separate Epic-5 sub-topic (scaling / bound-init), or fully resolved now that prolog matches?
 
