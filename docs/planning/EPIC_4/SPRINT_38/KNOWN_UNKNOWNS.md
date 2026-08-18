@@ -80,11 +80,11 @@ That inheritance is itself the sprint's principal risk. The Sprint-37 retrospect
 
 **Estimated Research Time:** ~33.5 hours (within the 28–36 hour target; spread across prep Tasks 2–10)
 
-**By Resolution Status (as of Prep Task 4, 2026-08-17):**
-- ✅ VERIFIED: 5 — **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes), **1.4** (bucket 0; no gate treats a rising `model_infeasible` as a regression)
-- ❌ WRONG: 2 — **6.2** (the floor cannot be reproduced from existing artifacts at 76 *or any figure*: three derivations give 65 / 93 / 76) · **1.2** (**no positive requirement is expressible at the `$149` rebind site** — ganges and `prolog` are *locally indistinguishable*; #1668 direction 2 is closed)
+**By Resolution Status (as of Prep Task 5, 2026-08-17):**
+- ✅ VERIFIED: 8 — **2.2** (sarf premise confirmed: volume is per-column, measured), **2.4** (corpus-free surrogate sized), **2.5** (P2/P4 scope arithmetic order-independent), **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes), **1.4** (bucket 0; no gate treats a rising `model_infeasible` as a regression)
+- ❌ WRONG: 3 — **2.3** (**the sarf timing gate is refuted: ~141 s projected, not single-digit seconds** — the 927× column win is real but rows are untouched; threshold decision pre-registered), **6.2** (the floor cannot be reproduced from existing artifacts at 76 *or any figure*: three derivations give 65 / 93 / 76) · **1.2** (**no positive requirement is expressible at the `$149` rebind site** — ganges and `prolog` are *locally indistinguishable*; #1668 direction 2 is closed)
 - 🔶 PARTIALLY WRONG: 1 — **6.1** (`--resolve-changed` silent defect CONFIRMED; but `leak-check` already **exits 2**, so its NO-OP is *not* mistakable for a pass — the defect is the misleading message)
-- 🔍 INCOMPLETE: 20 — including **1.1**, whose `rc=0` question is **untested** (the cascade was never re-applied). **Task 2's "the banked baseline is refuted" claim is RETRACTED by Task 4**: the `$141` counts were *printed-marker undercounts* under a GAMS listing-truncation cap, not a reproduction failure. `$145`×3 and `$149`×9 *do* reproduce exactly. Nothing about `$141` is concludable until a truncation-free census exists — see 1.1.
+- 🔍 INCOMPLETE: 16 — including **1.1**, whose `rc=0` question is **untested** (the cascade was never re-applied). **Task 2's "the banked baseline is refuted" claim is RETRACTED by Task 4**: the `$141` counts were *printed-marker undercounts* under a GAMS listing-truncation cap, not a reproduction failure. `$145`×3 and `$149`×9 *do* reproduce exactly. Nothing about `$141` is concludable until a truncation-free census exists — see 1.1.
 
 **⚠ Task 2 surfaced a finding that lands on Unknown 6.2 early:** the genuine floor's provenance chain credits **three models that are outside the 142-candidate corpus** the floor is reported over (`ps2_f_s`, `ps2_s`, `ps3_s_gic` are `non_convex`, and were already so at the S32 anchor, immediately after the S31 sprint that credited them). Either the floor has been **overstated by 3 since Sprint 31** (true in-corpus floor **73**), or the floor's scope legitimately differs from Solve/Match's and that has never been written down. **Task 3 resolved the design question and escalated the figure.** A *reconstructing* tracker is impossible (three derivations give 65 / 93 / 76), so the tracker is now **append-only from a declared baseline**. **The baseline value — 73 (in-corpus only) or 76 (keep the historical figure) — is an owner decision**, since it changes six sprints of reported history. See `BASELINE_RECONFIRMATION.md` §2 and `MEASUREMENT_INTEGRITY_DESIGN.md` §4.3.
 
@@ -419,7 +419,24 @@ Trace the call path from column enumeration to `differentiate_expr` and establis
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the short-circuit removes differentiation volume, not merely enumeration
+**Verified by:** Task 5 (sarf P2 — O(active) Re-Architecture Design Refresh)
+**Date:** 2026-08-17 · **Measured at:** `949a4587`
+
+**Findings:** Confirmed **structurally and by measurement**. In `constraint_jacobian.py`'s hot loop the sparsity check is at **variable-name level only** — once a variable is referenced in a row, the loop differentiates w.r.t. **every declared instance**, with no active-column filter. So `differentiate_expr` volume is **directly proportional to declared columns**.
+
+A read-only counter at that exact call site (120 s cap):
+
+```
+calls=75000   rows=1 elapsed=20.2s rate=3712/s byvar=[('task', 74994), ('sales', 6)]
+calls=250000  rows=1 elapsed=74.8s rate=3343/s byvar=[('task', 249994), ('sales', 6)]
+```
+
+Three decisive facts: **`rows=1`** after 75 s and a quarter-million calls (still the *first* constraint row); **~100 % of calls are `task`**; **rate ≈ 3,343/s**. One row costs 369,024 calls ≈ **110 s**.
+
+**Evidence:** the loop at `constraint_jacobian.py:1002–1013`; probe output above; `src/` reverted byte-identical. See `SARF_REARCH_DESIGN.md` §1.
+
+**Decision:** ✅ The premise a 20–28 h atomic build rests on is sound — restricting to 398 active columns removes the volume proportionally (927×). **But see 2.3: this does not by itself reach the pre-registered timing gate.**
 
 ---
 
@@ -452,7 +469,25 @@ Derive the predicted time from the profile's per-function costs scaled by the ac
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — the projection is **~141 s**, not single-digit seconds
+**Verified by:** Task 5 (sarf P2 — O(active) Re-Architecture Design Refresh)
+**Date:** 2026-08-17 · **Measured at:** `949a4587`
+
+**Findings:** The column count is only half the product; the **row** count is the other half, and the short-circuit does not touch it.
+
+Row census derived from the IR: **1,183 rows reference `task`** — `equipb1` 648, `tbal` 384, `equipb2` 120, `labor` 24, `cbal` 6, `acost3` 1. Columns: `task(g,t,mn,mn)` = 16×24×31×31 = **369,024** ✓.
+
+| | differentiations | at the measured 3,343/s |
+|---|---|---|
+| current | 1,183 × 369,024 = **436,555,392** | **~36.3 hours** |
+| O(active) columns | 1,183 × 398 = **470,834** | **~141 seconds** |
+| Phase-0 gate (PR20) | — | **single-digit seconds** |
+
+The 36.3-hour figure **explains the non-termination directly** — not a pathological hang, but 436 million differentiations. The short-circuit delivers its full **927×** and still lands **~16× short** of the gate.
+
+**Evidence:** IR-derived row census (`eq.lhs_rhs` walked for `VarRef('task')`, multiplied by `eq.domain` set sizes); measured call rate. See `SARF_REARCH_DESIGN.md` §2.
+
+**Decision:** ❌ **The threshold — not the design — is what fails, and the decision is pre-registered here rather than argued in-sprint.** The KPI is **+1 Translate**: sarf only needs to **complete**, and 141 s does that; the 100 s cap that currently kills it is a *test-harness* cap, not a product requirement. **Recommended: revise the Phase-0 gate to "sarf completes and produces a byte-stable golden, wall-clock ≤ 300 s on a nightly slot."** Holding single-digit seconds would require **also gating rows** (1,183 → tens) — scope not in the 20–28 h estimate — and would convert a 927× win into a REPLAN.
 
 ---
 
@@ -484,7 +519,17 @@ Construct candidate surrogates and confirm fail-before/pass-after against the sc
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — a corpus-free surrogate is constructible, with a genuine terminating fail-before
+**Verified by:** Task 5 (sarf P2)
+**Date:** 2026-08-17
+
+**Findings:** sarf cannot be its own fixture (at 369,024 columns the fail-before state does not terminate), but the measured call rate makes a surrogate straightforward to size. At **3,343 calls/s**, a surrogate with **~5,000 declared columns and a handful of rows** costs **~1.5 s un-gated** and is near-instant gated — a genuine, fast fail-before/pass-after.
+
+Four requirements, each traced to a prior failure: **corpus-free** (constructed in-test, not read from `data/gamslib/raw/`, which is absent in CI — a skip-if-absent fixture is **inert** and guards nothing, the S37 Unknown 7.3 refutation); **terminating fail-before**; **same guarded path** (a 4-D variable with a 2-D activity set, so the predicate is exercised rather than just the arithmetic); and **asserts the shape, not only the time** — the emitted `stat_*` must carry **symbolic** multiplier indices (`grep -E 'nu_[[:alnum:]_]+\("|lam_[[:alnum:]_]+\("'` empty), since a timing-only fixture would pass a wrong-but-fast emit.
+
+**Evidence:** call-rate measurement (2.2); `SARF_REARCH_DESIGN.md` §4.2.
+
+**Decision:** ✅ Sized and specified. The shape assertion is the part that matters — it is what distinguishes this from a benchmark.
 
 ---
 
@@ -515,7 +560,25 @@ Emit sarf three times under the three seeds and compare md5s. Work through both 
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the scope arithmetic is order-independent; determinism is design-verified
+**Verified by:** Task 5 (sarf P2)
+**Date:** 2026-08-17 · **Measured at:** `949a4587`
+
+**Findings:** Both P2 (sarf's new golden) and P4 (the 36 presolve goldens) move the corpus, and **the end state does not depend on the order**:
+
+| | discovered | in-scope |
+|---|---|---|
+| start | 170 | 163 |
+| P2 → P4 | 171 → **207** | 164 → **200** |
+| P4 → P2 | 206 → **207** | 199 → **200** |
+
+Both orders finish at **207 discovered / 200 in-scope**, so `--min-scope` must end at **207**. The only hazard is an intermediate commit where the assertion lags the corpus — mitigated by each landing raising `--min-scope` **in the same change**, as Task 6 specifies.
+
+**Determinism ×3 is DESIGN-VERIFIED only:** the sarf golden does not exist yet, so `PYTHONHASHSEED {0,1,42}` byte-stability is an in-sprint gate, not a prep result. Recorded as such rather than claimed.
+
+**Evidence:** golden/allowlist inventory (Task 2, re-derived); `SARF_REARCH_DESIGN.md` §4.3.
+
+**Decision:** ✅ No ordering constraint between P2 and P4 on scope grounds. **A separate sequencing dependency does exist:** P2's gate needs Task 3's `--expect-new` / `UNVERIFIABLE` verdict, since `leak-check MODEL=sarf` otherwise reports a misleading `NO-OP` — so **P6b should precede P2's gate run**.
 
 ---
 
