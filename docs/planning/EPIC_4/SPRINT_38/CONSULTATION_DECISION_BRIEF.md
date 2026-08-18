@@ -119,11 +119,11 @@ If Branch B is chosen, apply verbatim:
 
 **`PROJECT_PLAN.md`**, Sprint 38 P3 deliverable:
 
-> **P3 STRUCK 2026-08-__.** The rocket/mine consultation was not sent; after five carries (S33–S37) no channel was established. **rocket's +1 Solve and fawley's +Solve are removed from all projections** and reclassified as **consultation-gated — unreachable without external input**, since every emittable-GAMS lever is exhausted for both. mine is unaffected (0 bucket). **Sprint 39 remains viable** — its consultation compiles the Sprint-22 case studies and loses one input, not its premise. **The channel gap is NOT closed by this strike**: Sprint 39's own "Submit and Follow Up" step carries the identical gap and must establish a channel independently.
+> **P3 STRUCK `<FILL: YYYY-MM-DD>`.** The rocket/mine consultation was not sent; after five carries (S33–S37) no channel was established. **rocket's +1 Solve and fawley's +Solve are removed from all projections** and reclassified as **consultation-gated — unreachable without external input**, since every emittable-GAMS lever is exhausted for both. mine is unaffected (0 bucket). **Sprint 39 remains viable** — its consultation compiles the Sprint-22 case studies and loses one input, not its premise. **The channel gap is NOT closed by this strike**: Sprint 39's own "Submit and Follow Up" step carries the identical gap and must establish a channel independently.
 
 **`CONSULTATION_BUNDLE.md`**, line 46 — replace the unchecked box with:
 
-> - [x] **STRUCK (Sprint 38, 2026-08-__)** — not sent; no channel established across S33–S37. rocket/fawley +Solve reclassified consultation-gated.
+> - [x] **STRUCK (Sprint 38, `<FILL: YYYY-MM-DD>`)** — not sent; no channel established across S33–S37. rocket/fawley +Solve reclassified consultation-gated.
 
 ## 7. Tracking record — for the SEND branch
 
@@ -131,7 +131,7 @@ If Branch B is chosen, apply verbatim:
 
 **Comment to post at send time:**
 
-> **Consultation sent 2026-08-__** to `<recipients>` via `<channel>`. Package: `docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` + `rocket.gms` + reproduction commands (GAMS 54.2.1 / PATH 5.2.01). Awaiting reply. Actionable reply = an option set / `optfile`, a regularization or continuation schedule, or a named reformulation class.
+> **Consultation sent `<FILL: YYYY-MM-DD>`** to `<FILL: recipients>` via `<FILL: channel>`. Package: `docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` + `rocket.gms` + reproduction commands (GAMS 54.2.1 / PATH 5.2.01). Awaiting reply. Actionable reply = an option set / `optfile`, a regularization or continuation schedule, or a named reformulation class.
 
 **Follow-up rule:** if no reply within **one sprint** (14 days), post a follow-up comment and treat rocket's +1 as consultation-gated for planning purposes — **without** re-opening the send decision.
 
