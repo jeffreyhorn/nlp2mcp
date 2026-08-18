@@ -40,7 +40,7 @@ This prep plan focuses on research, design, and survey tasks that must complete 
 | 5 | ✅ sarf P2 — O(active) Re-Architecture Design Refresh & Atomicity Plan | Critical | 5-7 hours | Tasks 1, 2 | P2 sarf — the only KPI mover |
 | 6 | ✅ Presolve-Golden Adoption Plan & Runtime Impact (P4) | High | 3-4 hours | Tasks 1, 2, 3, 4 | P4 coverage asymmetry |
 | 7 | ✅ Consultation Ownership Decision Package (P3) | High | 2-3 hours | Task 1 | P3 — the Day-0 send-or-strike decision |
-| 8 | ✅ camcge Epic-5 Handoff Scoping + turkey Testbed Procurement (P5) | Medium | 3-4 hours | Tasks 1, 2 | P5 camcge (Epic 5) + turkey |
+| 8 | ✅ camcge Epic-5 Handoff + the 10-Model Licence-Gated Cohort (P5) | Medium | 3-4 hours | Tasks 1, 2 | P5 camcge (Epic 5) + turkey |
 | 9 | Phase-0 Compliance Survey over the Open Backlog (P7) | Medium | 3-4 hours | Task 1 | P7 Phase-0 backfill |
 | 10 | Emit-Backlog Candidate Catalog & Selection-Rule Dry Run (P8) | Medium | 3-4 hours | Tasks 1, 2, 9 | P8 slack absorber — with drift prevention |
 | 11 | Plan Sprint 38 Detailed Schedule | Critical | 3-4 hours | All tasks (1–10) | Day-by-day schedule + REPLAN exits + budget |
@@ -925,7 +925,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/CONSULTATION_DECISION_BRIEF.md && echo "�
 
 ## Task 8: camcge Epic-5 Handoff Scoping + turkey Testbed Procurement (P5)
 
-**Status:** ✅ **COMPLETE** (2026-08-18) — **turkey's licence decision remains with the owner**
+**Status:** ✅ **COMPLETE** (2026-08-18) — **licence pursuit active (owner, with Dirkse/Ferris)**
 **Time Spent:** 3 hours
 **Priority:** Medium
 **Estimated Time:** 3-4 hours
@@ -982,7 +982,7 @@ Scope the camcge Epic-5 handoff so Epic 5 starts from Sprint 32–37's refutatio
 
 **✅ 5.3.** The per-model-numéraire fallback stands, re-confirmed under **GAMS 54.2.1 / PATH 5.2.01** (19 s, 641/641, NLP MS-2 @ 191.7346, MCP MS-4). The MCP is MS-4 against a *correct* NLP optimum — structural rank-deficiency, not an emit defect. Recorded plainly: the fallback closes the **price-scaling ray** only, not the **row-redundancy nullspace**, so it is a knowingly *partial* remedy.
 
-**🔍 5.1 — turkey is a procurement decision.** The local licence is **GAMS_Demo**; turkey's MCP is **3,866 rows** vs the 1000-row limit and is rejected at **generation** (`solver_version: None` — PATH never runs). The emit is correct. **A reduced instance cannot substitute** — the KPI requires turkey itself to solve and match. **Default: reclassify BLOCKED** (wording drafted verbatim), since it has been carried since Sprint 35 and was already refuted once in Sprint 37 prep.
+**🔶 5.1 — not turkey alone: a 10-model licence-gated cohort.** The first draft singled turkey out; **the owner corrected the scope**, and a DB census confirms **ten models carry the identical block** — `egypt`, `ferts`, `glider`, `robot`, `shale`, `sroute`, `srpchase`, `tabora`, `tfordy`, `turkey` — **7 % of the 142 candidates**. All are `path_solve_license` with **`solver_version: None`**, rejected at *generation* by the demo 1000-row limit, and **all ten have committed goldens**: the emit is verified, only the solve is blocked. **One licence problem, not ten model problems.** **Ceiling Solve 108 → 118**, unlocked as a **single batch**. **Classification `licence-gated`, uniform:** excluded from KPI projections (the phantom-upside mode turkey showed across S35–S37) but **not written off**, since capacity is being actively pursued — **with Dirkse/Ferris, the same recipients as the P3 consultation**, so the two conversations can be one.
 
 **P5's Sprint-38 deliverable is documentation, not bucket movement — 0 bucket**, as the plan already states.
 
@@ -1023,7 +1023,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/CAMCGE_EPIC5_HANDOFF.md && echo "✓"
 - [x] Drop-row recorded as **BANNED** with the primal-correct/dual-breaking reason — **and flagged as the dangerous one**: a reader checking only the primal concludes it works, and the failure is silent in the dual
 - [x] The two-nullspaces diagnosis stated reusably — *a numéraire closes the price-scaling ray only, not the row-redundancy nullspace*, which is why **every** single-mechanism variant returns MS-4
 - [x] Per-model-numéraire fallback scoped with what it does and does not buy — explicitly a **partial** remedy; part (3) of the three-part formulation is the real Epic-5 research
-- [x] turkey testbed determined **as far as is possible without a human** — licence is `GAMS_Demo`, 3,866 rows, rejected at *generation*, and **a reduced instance cannot earn the +1**; **default reclassification to BLOCKED drafted verbatim**
+- [x] turkey testbed determined — **and the scope corrected by the owner**: not turkey alone but a **10-model `licence-gated` cohort** (7 % of the corpus, all emitting correctly, all rejected at *generation*), classified uniformly, **excluded from projections but not written off** since capacity is being pursued; **ceiling +10 Solve** recorded, and **a reduced instance cannot earn any member's +1**
 - [x] If both branches are negative, P5's deliverable is honestly stated as documentation — **0 bucket**, stated
 - [x] Unknowns 5.1, 5.2, 5.3 investigated and updated in KNOWN_UNKNOWNS.md (**5.1 🔍 procurement**, **5.2 ❌ WRONG**, **5.3 ✅**)
 
@@ -1337,7 +1337,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 
 ### Medium Priority (Complete Before Day 1, or by Mid-Sprint)
 
-- ✅ **Task 8: camcge Epic-5 + turkey Testbed** (COMPLETE — 2026-08-18, 3 h)
+- ✅ **Task 8: camcge Epic-5 + the Licence-Gated Cohort** (COMPLETE — 2026-08-18, 3 h)
 - **Task 9: Phase-0 Compliance Survey** (3-4 hours) — gates Task 10
 - **Task 10: Backlog Candidate Catalog** (3-4 hours)
 

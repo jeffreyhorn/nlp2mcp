@@ -4,7 +4,7 @@
 
 **Verdict: 🔶 THE HANDOFF IS ALREADY WRITTEN — THREE GAPS, NOT A DOCUMENT.** The task assumed the camcge refutation record needed assembling. **It does not**: `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` already carries the diagnosis, every refuted variant, the two-nullspaces analysis, the three-part formulation, and an explicit *do-not-re-run* instruction. Writing a second document would have duplicated ~90 % of it and created a second thing to keep in sync.
 
-**turkey is a different matter: it is a procurement decision, and the default is to reclassify it as blocked.**
+**turkey is not a special case: ten models share the identical licence block, and §4 treats them as one cohort.**
 
 ---
 
@@ -69,41 +69,47 @@ Gap 2 is the same defect Task 7 found in the consultation bundle: **measurements
 
 **The per-model-numéraire fallback remains the right recommendation.** Nothing since Sprint 32 has changed the two-nullspaces analysis, and the S37 control reproduced every predicted figure under the new toolchain. What it buys: a *selection* on the price ray rather than a perturbation, reproducing the documented optimum exactly. What it does **not** buy: closure of the row-redundancy nullspace — that is the three-part formulation's part (3), and it is the actual Epic-5 research.
 
-## 4. turkey (5.1) — a procurement decision, defaulting to BLOCKED
+## 4. The licence-gated cohort (5.1) — **10 models, treated uniformly**
 
-### 4.1 What is established
+**Corrected scope (owner, 2026-08-18): turkey is not a special case.** An earlier draft of this task singled turkey out for reclassification. That was wrong — **ten models carry the identical block**, and they should be treated as one cohort rather than one model plus nine unexamined others.
 
-| fact | evidence |
+### 4.1 The cohort
+
+| | |
 |---|---|
-| Local licence is **GAMS_Demo** | `gamslice.txt` → `GAMS_Demo, for EULA and demo limitations…`, `O_DEMO` |
-| turkey's MCP is **3,866 rows** vs the **1000-row** demo nonlinear limit | S35–S37 record |
-| turkey **never reaches PATH** | DB: `outcome_category = path_solve_license`, **`solver_version: None`** — rejected at *generation*, so no solver was invoked |
-| The compile-recovery **works** | the S35 `$161` fix moved it `path_syntax_error → path_solve_license`; S37 Day 9 corrected the stale row and Day 10 confirmed it stable |
-| **No licensed >1000-row environment exists** in local or CI infrastructure | S36 prep (Task 7), re-confirmed S37 prep |
+| **Models (10)** | `egypt` · `ferts` · `glider` · `robot` · `shale` · `sroute` · `srpchase` · `tabora` · `tfordy` · `turkey` |
+| Share of the corpus | **10 of 142 convex candidates (7 %)** |
+| Outcome | all `path_solve_license`, all `comparison_status: not_tested` |
+| **Rejected at** | **generation** — `solver_version: None` on all ten; **PATH is never invoked** |
+| Toolchain | all recorded under GAMS **54.2.1** |
+| **Emit status** | **all ten have committed goldens** — translate succeeded; only the *solve* is blocked |
 
-**turkey is blocked on one thing only: licence capacity.** The emit is correct enough to reach the size check, and nothing else stands between it and a solve.
+The shared signature is exact: same outcome, same null solver version, same cause. **This is one licence problem, not ten model problems.**
 
-### 4.2 The options, and what each would actually buy
+### 4.2 What the cohort is worth
 
-| option | buys the +1? | note |
-|---|---|---|
-| Commercial GAMS licence | ✅ yes | cost/timeline unknown to this session — **requires a human** |
-| Academic licence | ✅ yes, if eligible | eligibility is an institutional question |
-| Time-limited evaluation licence | ✅ yes, if it covers >1000 nonlinear rows | would need to cover a single re-solve; unverified |
-| Hosted/cloud GAMS runner | ✅ yes | introduces CI/secret-management scope |
-| **Reduced turkey instance** | ❌ **no** | a smaller instance under 1000 rows would raise *confidence* that the emit solves, but the KPI requires **turkey itself** to solve and match. **It cannot earn the +1.** |
+**Ceiling: Solve 108 → 118** if all ten solve and match. Realistically fewer will match, but **the emit for all ten is already verified** — goldens are committed and swept by the leak gate — so nothing stands between them and a solve attempt except licence capacity.
 
-**The last row is the one worth stating explicitly**, because a reduced instance is the tempting engineering workaround and it does not deliver the thing being carried.
+**One licence unlocks all ten as a batch.** That is the operative fact for the pursuit: the ask is worth ~10 models, not 1. A single `--only-solve` pass over the cohort is all that's needed once capacity exists.
 
-### 4.3 Recommendation: reclassify as BLOCKED
+### 4.3 The treatment — uniform, and neither inflated nor written off
 
-turkey's +1 has been carried as *"pending a testbed"* since **Sprint 35** and was **already refuted once in Sprint 37 prep** ("no licensed >1000-row testbed is procurable"). Carrying it a fourth time on the same unexamined assumption is the phantom-upside failure mode.
+**Classification: `licence-gated`.** For all ten, identically:
 
-**Unless a licence is actually being procured, reclassify. Wording, applicable verbatim:**
+1. **Not counted in sprint KPI projections.** No sprint may claim any of these as reachable upside. This is the phantom-upside failure mode that turkey alone exhibited across S35–S37.
+2. **Not written off as blocked-indefinitely.** A licence is being **actively pursued** — the owner is raising it with Dirkse and Ferris. "Blocked" would misstate that.
+3. **Tracked as a named, quantified cohort** with its ceiling stated (+10 Solve), so the value of the licence is visible rather than implicit.
+4. **Re-tested as a batch** the moment capacity exists — one `--only-solve` over the ten, not ten separate efforts.
 
-> **turkey — RECLASSIFIED BLOCKED (Sprint 38, 2026-08-__).** turkey's +1 Solve/+1 Match is **not "pending a testbed"** but **blocked on licence capacity**: its MCP is 3,866 rows against the GAMS demo 1000-row nonlinear limit, and the model is rejected at *generation* (`solver_version: None` — PATH is never invoked). The emit is correct; the `$161` compile-recovery landed in Sprint 35. **Removed from sprint projections** until a licensed >1000-row environment exists. A reduced instance cannot substitute — the KPI requires turkey itself to solve and match.
+**Wording, applicable verbatim wherever these models are projected:**
 
-**If a licence *is* being procured**, the only additional need is a date, and turkey returns to the projection with that date attached.
+> **Licence-gated cohort (10 models):** `egypt`, `ferts`, `glider`, `robot`, `shale`, `sroute`, `srpchase`, `tabora`, `tfordy`, `turkey`. All emit correctly (goldens committed) and all are rejected at **generation** by the GAMS demo 1000-row nonlinear limit — `solver_version: None`, PATH never invoked. **Excluded from KPI projections** until a larger licence exists; **not** written off, as one is being pursued. **Ceiling +10 Solve (108 → 118).** Re-test as a single batch on capacity.
+
+### 4.4 A convergence worth using
+
+**The licence ask and the P3 consultation go to the same people.** Task 7 resolved the consultation channel as email to Ferris (`ferris@cs.wisc.edu`) and Dirkse (`steve@gams.com` / `sdirkse@gams.com`), and the owner is meeting them about licence capacity. **The two conversations can be one**, and the cohort figure — *"10 models, 7 % of our corpus, blocked only by the 1000-row demo limit"* — is a concrete, quantified ask rather than a general request.
+
+**What a reduced instance would buy: nothing for the KPI.** A smaller instance of any cohort member could raise confidence that its emit solves, but the KPI requires **the model itself** to solve and match. Worth stating because it is the tempting engineering workaround, and it does not deliver.
 
 ## 5. What P5 delivers, stated honestly
 
@@ -111,11 +117,11 @@ With camcge Epic-5-scoped and turkey blocked, **P5's Sprint-38 deliverable is do
 
 - the three scoping-doc corrections (§1), so Epic 5 inherits stamped, consolidated refutations
 - the BANNED list (§2), with B1 flagged as primal-correct-but-dual-breaking
-- the turkey determination (§4) and its reclassification wording
+- the **licence-gated cohort** treatment (§4) — 10 models, uniform classification, ceiling +10 Solve
 
-**0 bucket for Sprint 38**, and the plan already says so. The value is that Epic 5 starts from four refuted variants rather than rediscovering them, and that turkey stops inflating projections.
+**0 bucket for Sprint 38**, and the plan already says so. The value is that Epic 5 starts from four refuted variants rather than rediscovering them, and that **ten** licence-gated models stop inflating projections while remaining visible as a quantified, actively-pursued opportunity.
 
 ---
 
-**Document Status:** ✅ Complete — Sprint 38 Prep Task 8. **5.2 ❌ WRONG** (the handoff was already written; three narrow gaps, not a document) · **5.3 ✅ VERIFIED** (per-model numéraire still correct, now stamped under v54) · **5.1 🔍 open — procurement, requires a human**, defaulting to BLOCKED.
-**Last Updated:** 2026-08-18 · **Owner:** Sprint 38 execution team · **turkey licence decision:** requires a human
+**Document Status:** ✅ Complete — Sprint 38 Prep Task 8. **5.2 ❌ WRONG** (the handoff was already written; three narrow gaps, not a document) · **5.3 ✅ VERIFIED** (per-model numéraire still correct, now stamped under v54) · **5.1 🔶 reframed — a 10-model licence-gated cohort**, excluded from projections but actively pursued; ceiling +10 Solve.
+**Last Updated:** 2026-08-18 · **Owner:** Sprint 38 execution team · **Licence pursuit:** active (owner, with Dirkse/Ferris)

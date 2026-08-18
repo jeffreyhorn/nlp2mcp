@@ -83,8 +83,8 @@ That inheritance is itself the sprint's principal risk. The Sprint-37 retrospect
 **By Resolution Status (as of Prep Task 8, 2026-08-18):**
 - ✅ VERIFIED: 13 — **5.3** (per-model numéraire still correct, re-confirmed and stamped under GAMS 54.2.1), **3.1** (**channel supplied by the owner 2026-08-18: email to `ferris@cs.wisc.edu` + `steve@gams.com`/`sdirkse@gams.com`; Branch A SEND unblocked after five carries**), **3.2** (strike ⇒ Sprint 39 survives, but rocket/fawley become unreachable, not deferred), **4.3** (presolve-golden sweep fits CI with headroom; the *local* 26.3 min was a 2× trap), **4.4** (derive `--min-scope` from `git ls-files`, not the filesystem), **2.2** (sarf premise confirmed: volume is per-column, measured), **2.4** (corpus-free surrogate sized), **2.5** (P2/P4 scope arithmetic order-independent), **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes), **1.4** (bucket 0; no gate treats a rising `model_infeasible` as a regression)
 - ❌ WRONG: 5 — **5.2** (**the Epic-5 handoff was already written** — three narrow gaps, not a document; writing one would have duplicated ~90 %), **4.2** (**14 of the 36 would pin emits that do not reproduce their NLP solution** — 7 mismatch, 6 skipped, 1 model_infeasible ⇒ two-tier adoption), **2.3** (**the sarf timing gate is refuted: ~141 s projected, not single-digit seconds** — the 927× column win is real but rows are untouched; **gate REVISED to ≤300 s nightly, owner decision 2026-08-18**), **6.2** (the floor cannot be reproduced from existing artifacts at 76 *or any figure*: three derivations give 65 / 93 / 76) · **1.2** (**no positive requirement is expressible at the `$149` rebind site** — ganges and `prolog` are *locally indistinguishable*; #1668 direction 2 is closed)
-- 🔶 PARTIALLY WRONG: 2 — **3.3** (the case reproduces under GAMS 54.2.1, but the bundle is **unstamped** and its figures predate the re-pin by 9 days — one-line fix, do not send without it) · **6.1** (`--resolve-changed` silent defect CONFIRMED; but `leak-check` already **exits 2**, so its NO-OP is *not* mistakable for a pass — the defect is the misleading message)
-- 🔍 INCOMPLETE: 8 — including **5.1** (**turkey is a procurement decision requiring a human**; default = reclassify BLOCKED, since it has been carried since S35 and was already refuted once in S37 prep) — including **1.1**, whose `rc=0` question is **untested** (the cascade was never re-applied). **Task 2's "the banked baseline is refuted" claim is RETRACTED by Task 4**: the `$141` counts were *printed-marker undercounts* under a GAMS listing-truncation cap, not a reproduction failure. `$145`×3 and `$149`×9 *do* reproduce exactly. Nothing about `$141` is concludable until a truncation-free census exists — see 1.1.
+- 🔶 PARTIALLY WRONG: 3 — **5.1** (**not turkey alone — a 10-model `licence-gated` cohort**, 7 % of the corpus, all emitting correctly and all rejected at generation; excluded from projections but actively pursued, ceiling +10 Solve) · **3.3** (the case reproduces under GAMS 54.2.1, but the bundle is **unstamped** and its figures predate the re-pin by 9 days — one-line fix, do not send without it) · **6.1** (`--resolve-changed` silent defect CONFIRMED; but `leak-check` already **exits 2**, so its NO-OP is *not* mistakable for a pass — the defect is the misleading message)
+- 🔍 INCOMPLETE: 7 — including **1.1**, whose `rc=0` question is **untested** (the cascade was never re-applied). **Task 2's "the banked baseline is refuted" claim is RETRACTED by Task 4**: the `$141` counts were *printed-marker undercounts* under a GAMS listing-truncation cap, not a reproduction failure. `$145`×3 and `$149`×9 *do* reproduce exactly. Nothing about `$141` is concludable until a truncation-free census exists — see 1.1.
 
 **⚠ Task 2 surfaced a finding that lands on Unknown 6.2 early:** the genuine floor's provenance chain credits **three models that are outside the 142-candidate corpus** the floor is reported over (`ps2_f_s`, `ps2_s`, `ps3_s_gic` are `non_convex`, and were already so at the S32 anchor, immediately after the S31 sprint that credited them). Either the floor has been **overstated by 3 since Sprint 31** (true in-corpus floor **73**), or the floor's scope legitimately differs from Solve/Match's and that has never been written down. **Task 3 resolved the design question; the figure is now decided — `baseline.count = 73` (owner, 2026-08-18).** A *reconstructing* tracker is impossible (three derivations give 65 / 93 / 76), so the tracker is now **append-only from a declared baseline**. **The baseline is 73** (in-corpus only), decided 2026-08-18; the S31–S37 series was overstated by 3. See `BASELINE_RECONFIRMATION.md` §2 and `MEASUREMENT_INTEGRITY_DESIGN.md` §4.3.
 
@@ -953,26 +953,26 @@ Investigate licensing options concretely and record cost/timeline or a definitiv
 Sprint 38 execution team (**procurement decision may require a human**)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — **procurement, requires a human**; default is to reclassify as BLOCKED
-**Partially investigated by:** Task 8 (camcge Epic-5 Handoff + turkey Testbed Determination)
-**Date:** 2026-08-18 · **Measured at:** `860b0e7b` · **Owner:** requires a human (purchasing/licensing)
+🔶 **Status:** PARTIALLY WRONG — the unknown asked about **turkey**; the real subject is a **10-model cohort**
+**Verified by:** Task 8 · **scope corrected by the owner 2026-08-18**
+**Date:** 2026-08-18 · **Measured at:** `860b0e7b`
 
-**Findings:** What is establishable without a human is established, and it narrows the question:
+**Findings:** This unknown, and Task 8's first draft, treated turkey as a single model needing a testbed. **It is one of ten**, and singling it out would have left nine unexamined.
 
-| fact | evidence |
+| | |
 |---|---|
-| the local licence is **GAMS_Demo** | `gamslice.txt` → `GAMS_Demo, for EULA and demo limitations…`, `O_DEMO` |
-| turkey's MCP is **3,866 rows** vs the **1000-row** demo nonlinear limit | S35–S37 record |
-| turkey **never reaches PATH** | DB: `path_solve_license` with **`solver_version: None`** — rejected at *generation*, so no solver is invoked |
-| the compile-recovery **works** | the S35 `$161` fix moved it `path_syntax_error → path_solve_license` |
+| **Cohort (10)** | `egypt` · `ferts` · `glider` · `robot` · `shale` · `sroute` · `srpchase` · `tabora` · `tfordy` · `turkey` |
+| Share | **10 of 142 convex candidates (7 %)** |
+| Signature | all `path_solve_license`, all `not_tested`, all **`solver_version: None`** — rejected at *generation*, PATH never invoked |
+| **Emit** | **all ten have committed goldens** — translate succeeded; only the solve is blocked |
 
-**turkey is blocked on licence capacity alone** — the emit is correct enough to reach the size check, and nothing else stands between it and a solve.
+**The shared signature is exact, so this is one licence problem rather than ten model problems.** Ceiling: **Solve 108 → 118**, and **one licence unlocks all ten as a batch** — a single `--only-solve` pass once capacity exists.
 
-**Options, and what each buys:** a commercial, academic or evaluation licence, or a hosted runner, would each earn the +1 (cost and timeline all require a human). **A reduced turkey instance would NOT** — it could raise confidence that the emit solves, but the KPI requires **turkey itself** to solve and match. That option is worth naming explicitly because it is the tempting engineering workaround and it does not deliver the thing being carried.
+**The procurement question is answered in principle: a licence is being actively pursued** (the owner is raising capacity with Dirkse and Ferris). So the earlier draft's recommendation — reclassify turkey as *blocked* — was **wrong on both counts**: wrong scope (one model, not ten) and wrong status ("blocked" misstates an active pursuit).
 
-**Evidence:** `gamslice.txt`; DB row for turkey; `CAMCGE_EPIC5_HANDOFF.md` §4.
+**Evidence:** DB census of `path_solve_license` (10 models, all `solver_version: None`, all GAMS 54.2.1); golden presence verified for all ten; `gamslice.txt` → `GAMS_Demo`. See `CAMCGE_EPIC5_HANDOFF.md` §4.
 
-**Decision:** 🔍 **Cannot be resolved here — it is a purchasing decision.** **Default: reclassify as BLOCKED**, with wording drafted verbatim (§4.3). turkey's +1 has been carried as *"pending a testbed"* since **Sprint 35** and was **already refuted once in Sprint 37 prep**; a fourth carry on the same unexamined assumption is the phantom-upside failure mode. **If a licence is being procured, the only additional need is a date.**
+**Decision:** 🔶 **Classification: `licence-gated`, applied uniformly to all ten.** (1) **Excluded from KPI projections** — this is the phantom-upside failure mode turkey exhibited across S35–S37; (2) **not written off**, since a licence is being pursued; (3) **tracked as a named cohort with its ceiling stated (+10 Solve)**, so the licence's value is visible; (4) **re-tested as one batch** on capacity. **A reduced instance cannot substitute for any member** — the KPI requires the model itself to solve and match. **Convergence worth using:** the licence ask and the P3 consultation go to the **same people**, so the two conversations can be one, with *"10 models, 7 % of our corpus, blocked only by the 1000-row demo limit"* as a concrete ask.
 
 ---
 
