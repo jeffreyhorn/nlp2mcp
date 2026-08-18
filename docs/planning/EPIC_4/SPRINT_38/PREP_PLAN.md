@@ -737,7 +737,7 @@ This task depends on Task 4 because **P4 changes the gate P1 runs against**, and
 
 - The 36 were written by the presolve retry during a full `--only-solve` (S37 Day 9), taking presolve goldens 17 → 53.
 - Current inventory: **170** golden files discovered, **7** allowlisted, **163** in-scope, **17** presolve.
-- `--min-scope 170` is asserted on **discovery** (before allowlist narrowing), so adoption requires raising it to **206** or the assertion silently under-guards.
+- `--min-scope 170` is asserted on **discovery** (before allowlist narrowing), so adoption requires raising it or the assertion silently under-guards. *(Written assuming wholesale adoption ⇒ 206. **The reviewed outcome is Tier-1 only ⇒ 192**, or better, a value **derived from `git ls-files`** — see Result.)*
 - The leak sweep is already the slowest gate; it runs at 3 workers after Sprint 37 fixed load-dependent timeouts at 6.
 
 ### What Needs to Be Done
@@ -753,7 +753,7 @@ This task depends on Task 4 because **P4 changes the gate P1 runs against**, and
    - Time `make check-goldens` at 163 in-scope today; project 199 and confirm the 3-worker default still yields **0 timeouts**
    - If it does not, decide the mitigation (worker count, nightly split) **in prep**, not mid-sprint
 4. **Specify the `--min-scope` change and its ordering** (~30 min)
-   - 170 → 206, applied in the same change as the adoption so the assertion never lags the corpus
+   - Raised in the same change as the adoption so the assertion never lags the corpus. *(Planned as 170 → 206 for wholesale adoption; **delivered as 170 → 192** for Tier-1, with a derivation from `git ls-files` recommended over any literal.)*
    - Confirm the assertion still fires on discovery, before narrowing
 5. **Sequence against P1** (~15 min)
    - P1's full-corpus gate run must complete at the *old* scope first; specify the handoff
@@ -786,7 +786,11 @@ grep -vc "^#\|^$" scripts/sprint_audit/golden_staleness_allowlist.txt # 7 allowl
 time make check-goldens 2>&1 | tail -3
 
 # The min-scope assertion fires on discovery
-grep -o "min-scope [0-9]*" .github/workflows/golden-staleness.yml     # 170 -> must become 206
+grep -o "min-scope [0-9]*" .github/workflows/golden-staleness.yml     # 170 -> 192 (Tier 1)
+
+# ...or better, derive it from an INDEPENDENT source rather than hard-coding:
+git ls-files 'data/gamslib/mcp/*.gms' | wc -l    # 170 — independent of raw-source provisioning
+ls data/gamslib/mcp/*_mcp*.gms          | wc -l    # 170 — VACUOUS as a floor (same source discover_goldens() uses)
 
 # Plan doc
 test -f docs/planning/EPIC_4/SPRINT_38/PRESOLVE_GOLDEN_ADOPTION_PLAN.md && echo "✓"
@@ -798,7 +802,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/PRESOLVE_GOLDEN_ADOPTION_PLAN.md && echo 
 - The 36 goldens inventoried by model, with reproducibility confirmed
 - A per-model review protocol with triage order and rejection criterion
 - Measured sweep runtime at 163 and a projection at 199, with a mitigation if timeouts appear
-- The `--min-scope` 170 → 206 change specified, applied atomically with adoption
+- The `--min-scope` change specified, applied atomically with adoption — **170 → 192** (Tier-1 outcome; 206 was the pre-review wholesale figure), with a **`git ls-files` derivation recommended** over a literal
 - The P1 → P4 sequencing handoff
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.2, 4.3, 4.4
 

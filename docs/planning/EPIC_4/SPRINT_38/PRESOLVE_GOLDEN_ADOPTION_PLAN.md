@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-18 · **Branch:** `planning/sprint38-task6` · **Measured at:** `cc8acf6c` · **Scope:** measurement + design. No `src/`, DB or golden change.
 
-**Verdict: 🔶 ADOPT IN TWO TIERS, NOT WHOLESALE.** The runtime is safe with room to spare, `--min-scope` can be made self-maintaining, and the review protocol produced a finding the prompt anticipated: **14 of the 36 would pin an emit that does not currently reproduce its NLP solution** — 6 `mismatch`, 7 `skipped`, and one `model_infeasible`. Those are exactly the "freeze a bug into the reference set" cases, and they should not be adopted on the same terms as the other 22.
+**Verdict: 🔶 ADOPT IN TWO TIERS, NOT WHOLESALE.** The runtime is safe with room to spare, `--min-scope` can be made self-maintaining, and the review protocol produced a finding the prompt anticipated: **14 of the 36 would pin an emit that does not currently reproduce its NLP solution** — **7** `mismatch`, **6** `skipped`, and one `model_infeasible`. Those are exactly the "freeze a bug into the reference set" cases, and they should not be adopted on the same terms as the other 22.
 
 ---
 
