@@ -76,7 +76,7 @@ The bundle was authored **2026-08-03**; the corpus was re-pinned to **GAMS 54.2.
 
 **But the bundle carries no version stamp at all**, and its quoted figures (`INFES 477 → 382`, objective `1.0128`, `nh=10`) were measured under the **pre-re-pin** toolchain. A recipient attempting to reproduce `382` on 54.2.1 may get a different number and conclude the report is unreliable.
 
-**✅ APPLIED 2026-08-18** to `SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` §1, as a marked toolchain-stamp note. The wording drafted here was:
+**✅ APPLIED 2026-08-18** to `docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` §1, as a marked toolchain-stamp note. The wording drafted here was:
 
 ```
 Measured under GAMS 51.3.0 / PATH 5.2.01. Re-confirmed model_infeasible
@@ -88,7 +88,7 @@ That was the whole remediation, and it is done. Nothing else in the package is s
 
 ## 5. The send package — ✅ COMPLETE AND READY
 
-**Attach:** `SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` (§3 question, §2 ruled-out-lever survey, §4 remaining-lever sweep) + `data/gamslib/raw/rocket.gms` + the two reproduction commands.
+**Attach:** `docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` (§3 question, §2 ruled-out-lever survey, §4 remaining-lever sweep) + `data/gamslib/raw/rocket.gms` + the two reproduction commands.
 
 **Covering message — READY TO SEND.** Addresses filled; the §4 version stamp is applied to the attachment. Copy-paste as-is:
 
@@ -131,7 +131,7 @@ If Branch B is chosen, apply verbatim:
 
 **Comment to post at send time:**
 
-> **Consultation sent 2026-08-__** to `<recipients>` via `<channel>`. Package: `SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` + `rocket.gms` + reproduction commands (GAMS 54.2.1 / PATH 5.2.01). Awaiting reply. Actionable reply = an option set / `optfile`, a regularization or continuation schedule, or a named reformulation class.
+> **Consultation sent 2026-08-__** to `<recipients>` via `<channel>`. Package: `docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` + `rocket.gms` + reproduction commands (GAMS 54.2.1 / PATH 5.2.01). Awaiting reply. Actionable reply = an option set / `optfile`, a regularization or continuation schedule, or a named reformulation class.
 
 **Follow-up rule:** if no reply within **one sprint** (14 days), post a follow-up comment and treat rocket's +1 as consultation-gated for planning purposes — **without** re-opening the send decision.
 

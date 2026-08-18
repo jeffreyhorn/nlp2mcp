@@ -51,7 +51,7 @@ This prep plan focuses on research, design, and survey tasks that must complete 
 
 The path runs through P6 rather than around it: Task 3 re-anchors the DB checkpoint and fixes the two known gate-narrowing modes, and **every subsequent task's acceptance gate is expressed in terms of those gates**. Task 4 (ganges) must precede Task 6 (presolve goldens) because P4 changes what `check-goldens` sweeps, and the plan schedules it *after* P1's gate run for exactly that reason — the prep ordering mirrors the sprint ordering.
 
-**Note:** Task 1 (Known Unknowns) is ✅ **COMPLETE** as of 2026-08-17 — `SPRINT_38/KNOWN_UNKNOWNS.md`, **28 unknowns across 8 categories** (7 Critical / 11 High / 7 Medium / 3 Low; 33.5h research). It is the standing first prep task; it must exist before the design tasks (3–10) so each design is scoped against an explicit risk register. Task 9 (Phase-0 survey) precedes Task 10 (backlog catalog) because a backlog candidate without a Phase-0 section is **not implementable** under CONTRIBUTING §392–447 — the survey determines which candidates are even eligible.
+**Note:** Task 1 (Known Unknowns) is ✅ **COMPLETE** as of 2026-08-17 — `docs/planning/EPIC_4/SPRINT_38/KNOWN_UNKNOWNS.md`, **28 unknowns across 8 categories** (7 Critical / 11 High / 7 Medium / 3 Low; 33.5h research). It is the standing first prep task; it must exist before the design tasks (3–10) so each design is scoped against an explicit risk register. Task 9 (Phase-0 survey) precedes Task 10 (backlog catalog) because a backlog candidate without a Phase-0 section is **not implementable** under CONTRIBUTING §392–447 — the survey determines which candidates are even eligible.
 
 ---
 
@@ -78,9 +78,9 @@ Sprint 38 carries an unusually high proportion of **inherited** assumptions — 
 
 ### Background
 
-- `SPRINT_37/SPRINT_RETROSPECTIVE.md` §7 lists six recommendations, all of which became Sprint 38 priorities.
-- `SPRINT_37/SPRINT_38_CARRYFORWARDS.md` §1 gives each carryforward a **bounded next step**; each bounded step embeds assumptions worth registering.
-- `SPRINT_37/KNOWN_UNKNOWNS.md` is the format precedent (30 unknowns, 7 categories, all resolved).
+- `docs/planning/EPIC_4/SPRINT_37/SPRINT_RETROSPECTIVE.md` §7 lists six recommendations, all of which became Sprint 38 priorities.
+- `docs/planning/EPIC_4/SPRINT_37/SPRINT_38_CARRYFORWARDS.md` §1 gives each carryforward a **bounded next step**; each bounded step embeds assumptions worth registering.
+- `docs/planning/EPIC_4/SPRINT_37/KNOWN_UNKNOWNS.md` is the format precedent (30 unknowns, 7 categories, all resolved).
 - Two Sprint-37 findings are themselves standing unknowns for any sprint: the floor is **not** DB-derivable, and two gates have silent-narrowing modes.
 
 ### What Needs to Be Done
@@ -881,7 +881,7 @@ Carrying it a fourth time without an owner converts a task into a permanent fixt
 
 **Recommendation: Branch A (send)** — the missing input is one address, and the alternative permanently forfeits two models' only remaining lever.
 
-**✅ RESOLVED 2026-08-18 — the owner supplied the channel. Branch A adopted.** Email to `ferris@cs.wisc.edu` and `steve@gams.com`/`sdirkse@gams.com` (both addressed; a bounce is silent). The pre-send blocker from 3.3 — the missing toolchain stamp — **is applied** to `SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` §1, and the `CONSULTATION_BUNDLE.md` checkbox has been **split into its three real actions** (the fawley survey was already done in S36). **Unknown 3.1 → ✅ VERIFIED after five carries.** **Two human actions remain, neither performable in this session:** send the §5 message (no email capability here) and post §7's tracking comment to #1462.
+**✅ RESOLVED 2026-08-18 — the owner supplied the channel. Branch A adopted.** Email to `ferris@cs.wisc.edu` and `steve@gams.com`/`sdirkse@gams.com` (both addressed; a bounce is silent). The pre-send blocker from 3.3 — the missing toolchain stamp — **is applied** to `docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` §1, and the `CONSULTATION_BUNDLE.md` checkbox has been **split into its three real actions** (the fawley survey was already done in S36). **Unknown 3.1 → ✅ VERIFIED after five carries.** **Two human actions remain, neither performable in this session:** send the §5 message (no email capability here) and post §7's tracking comment to #1462.
 
 ### Verification
 
@@ -920,7 +920,6 @@ test -f docs/planning/EPIC_4/SPRINT_38/CONSULTATION_DECISION_BRIEF.md && echo "�
 - [x] Unknowns 3.1, 3.2, 3.3 investigated and updated in KNOWN_UNKNOWNS.md (**3.1 🔍 narrowed**, **3.2 ✅**, **3.3 🔶**)
 
 **On Task 7's completion vs the decision's:** the preparation is complete, and **the owner made the decision the same day — Branch A (SEND)** — so 3.1 closed ✅ rather than riding to Day 0. The strike wording (§6) is retained unused in case delivery fails.
-- [ ] Unknowns 3.1, 3.2, 3.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -1210,7 +1209,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/BACKLOG_CANDIDATE_CATALOG.md && echo "✓
 
 ### Objective
 
-Produce `SPRINT_38/PLAN.md` and `SPRINT_38/prompts/PLAN_PROMPTS.md` — a Day-0-through-Day-13 schedule with per-priority budgets, checkpoints, REPLAN exits, and a Day-0 GO/NO-GO gate — consuming the designs and findings from Tasks 1–10.
+Produce `docs/planning/EPIC_4/SPRINT_38/PLAN.md` and `docs/planning/EPIC_4/SPRINT_38/prompts/PLAN_PROMPTS.md` — a Day-0-through-Day-13 schedule with per-priority budgets, checkpoints, REPLAN exits, and a Day-0 GO/NO-GO gate — consuming the designs and findings from Tasks 1–10.
 
 ### Why This Matters
 
@@ -1344,7 +1343,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 - [ ] camcge Epic-5 handoff scoped; turkey testbed determined concretely
 - [ ] Phase-0 compliance catalog produced; `$66`/#1289 confirmed
 - [ ] P8 viability determined (≥2 eligible candidates, or a budget recommendation)
-- [ ] `SPRINT_38/PLAN.md` and `prompts/PLAN_PROMPTS.md` complete, budget mechanically verified
+- [ ] `docs/planning/EPIC_4/SPRINT_38/PLAN.md` and `prompts/PLAN_PROMPTS.md` complete, budget mechanically verified
 
 **Overall Goal:** No blockers, no surprises, high-confidence sprint start — and **no inherited figure carried without re-derivation**.
 

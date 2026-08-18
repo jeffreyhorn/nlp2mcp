@@ -632,7 +632,7 @@ Two addresses were supplied for Dirkse as alternatives without a preference; **t
 
 **Evidence:** owner message 2026-08-18; `CONSULTATION_DECISION_BRIEF.md` §1 and §5 (send package, addresses filled).
 
-**Decision:** ✅ **Branch A (SEND).** The pre-send blocker from 3.3 — the missing toolchain stamp — **has been applied** to `SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` §1, so the attachment is correct. **Two human actions remain**, neither performable in this session: (1) send the §5 message (no email capability here), and (2) post §7's tracking comment to **#1462** at send time. The strike wording (§6) is retained unused in case delivery fails.
+**Decision:** ✅ **Branch A (SEND).** The pre-send blocker from 3.3 — the missing toolchain stamp — **has been applied** to `docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` §1, so the attachment is correct. **Two human actions remain**, neither performable in this session: (1) send the §5 message (no email capability here), and (2) post §7's tracking comment to **#1462** at send time. The strike wording (§6) is retained unused in case delivery fails.
 
 ---
 
@@ -720,7 +720,7 @@ Sprint 38 execution team
 
 **Evidence:** per-model `mcp_solve.gams_version` = 54.2.1 and `solver_version` = 5.2.01 for rocket/mine/fawley; `git log` authoring date 2026-08-03 vs the S37 Day-9 re-pin; no version string in either document. See `CONSULTATION_DECISION_BRIEF.md` §4.
 
-**Decision:** 🔶 **Actionable after a one-line version stamp — ✅ APPLIED 2026-08-18** to `SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` §1, so the attachment is now correct and sendable. Also recorded: `CONSULTATION_BUNDLE.md`'s single unchecked box **conflates three actions** (*submit rocket · pose the mine question · run the fawley survey*), and **the fawley survey was completed in Sprint 36** (NEGATIVE). A checkbox spanning three actions, one already done, is part of why it was never ticked — **split it on send or strike.**
+**Decision:** 🔶 **Actionable after a one-line version stamp — ✅ APPLIED 2026-08-18** to `docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` §1, so the attachment is now correct and sendable. Also recorded: `CONSULTATION_BUNDLE.md`'s single unchecked box **conflates three actions** (*submit rocket · pose the mine question · run the fawley survey*), and **the fawley survey was completed in Sprint 36** (NEGATIVE). A checkbox spanning three actions, one already done, is part of why it was never ticked — **split it on send or strike.**
 
 ---
 
