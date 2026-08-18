@@ -1,7 +1,8 @@
 # Epic 5 Scoping — CGE Walras' Law Degeneracy (camcge #1330)
 
-> **Toolchain stamp (added 2026-08-18, Sprint 38 Prep Task 8).** Figures in this document originate under **GAMS 51.3.0 / PATH 5.2.01**.
-> **Re-confirmed 2026-08-18 under GAMS 54.2.1 / PATH 5.2.01** (the corpus was re-pinned 2026-08-12): camcge emits in **19 s**,
+> **Toolchain stamp (added 2026-08-18, Sprint 38 Prep Task 8).** **Original measurements** throughout this document — including the refutations in §3 and §4a — were taken under **GAMS 51.3.0 / PATH 5.2.01**.
+> **The current toolchain is GAMS 54.2.1 / PATH 5.2.01** (the corpus was re-pinned 2026-08-12); figures explicitly dated 2026-08-18 or later are from it.
+> **Re-confirmed 2026-08-18 under the current toolchain:** camcge emits in **19 s**,
 > is **641 single equations / 641 variables**, its embedded NLP reaches **MS-2 @ omega 191.7346**, and `mcp_model` is **MS-4 Infeasible**.
 > The diagnosis and every refutation below hold on the current toolchain.
 
