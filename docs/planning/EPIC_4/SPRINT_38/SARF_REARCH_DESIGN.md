@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-17 · **Branch:** `planning/sprint38-task5` · **Measured at:** `949a4587` · **Scope:** control-only — a **read-only probe** was inserted at S1's per-column call site, measured, and **reverted**. `src/` is byte-identical to `main`; DB and goldens untouched.
 
-**Verdict: 🔶 PROCEED, WITH THE PHASE-0 THRESHOLD REFUTED.** The design premise (2.2) is **confirmed decisively** — and the timing claim (2.3) is **not**. The O(active) short-circuit buys a **927× reduction**, taking sarf from **~36 hours to ~141 seconds**. That is enough to earn the **+1 Translate KPI**, and roughly **16× short of the pre-registered "single-digit seconds" gate**.
+**Verdict: 🔶 PROCEED, WITH THE PHASE-0 THRESHOLD REFUTED — and now REVISED.** *(Update 2026-08-18: the owner adopted option (a), ≤ 300 s nightly; §2.3, §5.)* The design premise (2.2) is **confirmed decisively** — and the timing claim (2.3) is **not**. The O(active) short-circuit buys a **927× reduction**, taking sarf from **~36 hours to ~141 seconds**. That is enough to earn the **+1 Translate KPI**, and roughly **16× short of the pre-registered "single-digit seconds" gate**.
 
 The prompt asked for a fallback threshold to be pre-registered *"so a 40 s result is a decision, not an argument"*. The measurement says the result will be ~141 s, so **that decision is needed now, not in-sprint**.
 
@@ -85,9 +85,9 @@ Equations referencing `task`:
 | (b) hold single-digit seconds | unchanged | Requires **also gating rows** (the 2-D constraint gate must cut 1,183 → ~tens), which is additional scope not in the 20–28 h estimate |
 | (c) abandon | — | Forfeits the sprint's only KPI mover for a threshold the KPI does not require |
 
-**Recommendation: (a).** The Phase-0 gate should assert **"sarf completes and produces a byte-stable golden"** with a **generous wall-clock ceiling (e.g. ≤ 300 s, nightly slot)**, not single-digit seconds. Holding a threshold the KPI does not need would convert a 927× win into a REPLAN.
+**✅ DECIDED 2026-08-18 (owner): option (a).** The Phase-0 gate asserts **"sarf completes and produces a byte-stable golden"** with a **generous wall-clock ceiling (e.g. ≤ 300 s, nightly slot)**, not single-digit seconds. Holding a threshold the KPI does not need would convert a 927× win into a REPLAN.
 
-**If (b) is preferred**, the row side must be scoped explicitly and the 20–28 h estimate revisited — that is a materially different piece of work and should not be discovered mid-build.
+Option (b) is **not** taken, so the 1,183-row side stays out of scope and the 20–28 h estimate stands. Recorded because a future effort seeing ~141 s should read it as **the accepted result**, not a shortfall.
 
 ## 3. The atomic change set
 
@@ -158,7 +158,7 @@ sarf newly produces a golden, and Task 6 adopts 36 presolve goldens. **Both move
 
 ## 5. Phase-0 acceptance gate (PR20), revised
 
-- **sarf completes** and produces `data/gamslib/mcp/sarf_mcp.gms` — wall-clock **≤ 300 s** on a nightly slot (**revised from "single-digit seconds"** per §2.3; the original threshold is refuted at ~141 s projected).
+- **sarf completes** and produces `data/gamslib/mcp/sarf_mcp.gms` — wall-clock **≤ 300 s** on a nightly slot. **✅ DECIDED 2026-08-18 (owner)**, revised from "single-digit seconds" per §2.3; the original threshold is refuted at ~141 s projected. **`PROJECT_PLAN.md`'s Sprint-38 P2 gate has been updated to match.**
 - **`stat_task` matches the banked 7-term derivation** with **symbolic** multiplier indices — `grep -E 'nu_[[:alnum:]_]+\("|lam_[[:alnum:]_]+\("' sarf_mcp.gms` **empty**.
 - **Atomic:** the 2-D constraint gate + S1/S2/S3 + `task.fx` in one change; a partial landing is a REPLAN.
 - **Byte-stable golden**, determinism ×3 `{0,1,42}`.
