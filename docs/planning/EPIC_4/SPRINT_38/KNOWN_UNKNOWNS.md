@@ -80,11 +80,11 @@ That inheritance is itself the sprint's principal risk. The Sprint-37 retrospect
 
 **Estimated Research Time:** ~33.5 hours (within the 28–36 hour target; spread across prep Tasks 2–10)
 
-**By Resolution Status (as of Prep Task 6, 2026-08-18):**
-- ✅ VERIFIED: 10 — **4.3** (presolve-golden sweep fits CI with headroom; the *local* 26.3 min was a 2× trap), **4.4** (derive `--min-scope` from `git ls-files`, not the filesystem), **2.2** (sarf premise confirmed: volume is per-column, measured), **2.4** (corpus-free surrogate sized), **2.5** (P2/P4 scope arithmetic order-independent), **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes), **1.4** (bucket 0; no gate treats a rising `model_infeasible` as a regression)
+**By Resolution Status (as of Prep Task 7, 2026-08-18):**
+- ✅ VERIFIED: 11 — **3.2** (strike ⇒ Sprint 39 survives, but rocket/fawley become unreachable, not deferred), **4.3** (presolve-golden sweep fits CI with headroom; the *local* 26.3 min was a 2× trap), **4.4** (derive `--min-scope` from `git ls-files`, not the filesystem), **2.2** (sarf premise confirmed: volume is per-column, measured), **2.4** (corpus-free surrogate sized), **2.5** (P2/P4 scope arithmetic order-independent), **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes), **1.4** (bucket 0; no gate treats a rising `model_infeasible` as a regression)
 - ❌ WRONG: 4 — **4.2** (**14 of the 36 would pin emits that do not reproduce their NLP solution** — 7 mismatch, 6 skipped, 1 model_infeasible ⇒ two-tier adoption), **2.3** (**the sarf timing gate is refuted: ~141 s projected, not single-digit seconds** — the 927× column win is real but rows are untouched; **gate REVISED to ≤300 s nightly, owner decision 2026-08-18**), **6.2** (the floor cannot be reproduced from existing artifacts at 76 *or any figure*: three derivations give 65 / 93 / 76) · **1.2** (**no positive requirement is expressible at the `$149` rebind site** — ganges and `prolog` are *locally indistinguishable*; #1668 direction 2 is closed)
-- 🔶 PARTIALLY WRONG: 1 — **6.1** (`--resolve-changed` silent defect CONFIRMED; but `leak-check` already **exits 2**, so its NO-OP is *not* mistakable for a pass — the defect is the misleading message)
-- 🔍 INCOMPLETE: 13 — including **1.1**, whose `rc=0` question is **untested** (the cascade was never re-applied). **Task 2's "the banked baseline is refuted" claim is RETRACTED by Task 4**: the `$141` counts were *printed-marker undercounts* under a GAMS listing-truncation cap, not a reproduction failure. `$145`×3 and `$149`×9 *do* reproduce exactly. Nothing about `$141` is concludable until a truncation-free census exists — see 1.1.
+- 🔶 PARTIALLY WRONG: 2 — **3.3** (the case reproduces under GAMS 54.2.1, but the bundle is **unstamped** and its figures predate the re-pin by 9 days — one-line fix, do not send without it) · **6.1** (`--resolve-changed` silent defect CONFIRMED; but `leak-check` already **exits 2**, so its NO-OP is *not* mistakable for a pass — the defect is the misleading message)
+- 🔍 INCOMPLETE: 11 — including **3.1**, where the gap is **narrower than described**: the recipients *are* named in `PROJECT_PLAN.md` (Ferris/Dirkse); only the **channel/address** is missing, and **Sprint 39 carries the identical gap** so a strike relocates rather than resolves it — including **1.1**, whose `rc=0` question is **untested** (the cascade was never re-applied). **Task 2's "the banked baseline is refuted" claim is RETRACTED by Task 4**: the `$141` counts were *printed-marker undercounts* under a GAMS listing-truncation cap, not a reproduction failure. `$145`×3 and `$149`×9 *do* reproduce exactly. Nothing about `$141` is concludable until a truncation-free census exists — see 1.1.
 
 **⚠ Task 2 surfaced a finding that lands on Unknown 6.2 early:** the genuine floor's provenance chain credits **three models that are outside the 142-candidate corpus** the floor is reported over (`ps2_f_s`, `ps2_s`, `ps3_s_gic` are `non_convex`, and were already so at the S32 anchor, immediately after the S31 sprint that credited them). Either the floor has been **overstated by 3 since Sprint 31** (true in-corpus floor **73**), or the floor's scope legitimately differs from Solve/Match's and that has never been written down. **Task 3 resolved the design question; the figure is now decided — `baseline.count = 73` (owner, 2026-08-18).** A *reconstructing* tracker is impossible (three derivations give 65 / 93 / 76), so the tracker is now **append-only from a declared baseline**. **The baseline is 73** (in-corpus only), decided 2026-08-18; the S31–S37 series was overstated by 3. See `BASELINE_RECONFIRMATION.md` §2 and `MEASUREMENT_INTEGRITY_DESIGN.md` §4.3.
 
@@ -613,7 +613,24 @@ This is answered by a **person**, not an experiment. Task 7 prepares both branch
 **Requires a human decision-maker — not resolvable by an execution agent**
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔍 **Status:** INCOMPLETE — needs a human; **but the gap is narrower than stated**
+**Partially investigated by:** Task 7 (Consultation Ownership Decision Package)
+**Date:** 2026-08-18 · **Measured at:** `6c517315` · **Owner:** requires a human decision-maker
+
+**Findings:** The standing description — repeated in Sprint 37 Day 0, this unknown, and Task 7's own prompt — is that *"the bundle names no recipient, address, or channel."* That is true of the **bundle**, and **false of the project**:
+
+| | status |
+|---|---|
+| recipient identity | ✅ **known** — Michael Ferris and Steven Dirkse, named **four times** in `PROJECT_PLAN.md` (S39 component, S39 acceptance criterion, S40 feedback integration, External Dependencies) |
+| address / channel | ❌ **missing everywhere** |
+
+**The blocker is one fact, not two.** That reframing matters: *"nobody knows who to send it to"* invites a research task; *"we know who, we lack an address"* is a two-minute answer from whoever has it.
+
+**And it is not only P3's problem.** **Sprint 39 carries the identical gap** — its "Submit and Follow Up" step reads *"Send document to Michael Ferris and Steven Dirkse"*, named recipients and no channel, for a broader Sprint-22 case-study document. **So striking P3 relocates the problem rather than resolving it**, and Sprint 39's send would then slip for the same reason this one has slipped five times.
+
+**Evidence:** `grep -rn "Ferris\|Dirkse" PROJECT_PLAN.md` → 4 hits; no address/channel anywhere in `ROCKET_PATH_CONSULTATION_INPUT.md` or `CONSULTATION_BUNDLE.md`; Sprint 39's submit step at `PROJECT_PLAN.md`. See `CONSULTATION_DECISION_BRIEF.md` §1–§2.
+
+**Decision:** 🔍 Open — **the one question is: by what channel/address?** Both branches are prepared and executable the same day (§5 send package, §6 strike wording). **The channel should be established on Day 0 even if the strike branch is chosen**, because Sprint 39 needs it regardless. If Day 0 passes with no answer, the **strike executes by default** — a sixth carry is not an acceptable outcome.
 
 ---
 
@@ -646,7 +663,19 @@ Trace every projection that depends on the consultation through `PROJECT_PLAN.md
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the strike is cheaper than feared for Sprint 39, and more expensive than feared for rocket/fawley
+**Verified by:** Task 7 (Consultation Ownership Decision Package)
+**Date:** 2026-08-18 · **Measured at:** `6c517315`
+
+**Findings:** The assumption was that striking might invalidate Sprint 39, whose title is *"PATH Author Consultation & Solution Forcing"*. **It does not.**
+
+Sprint 39's consultation component (~8–10 h of 22–28 h) compiles the **Sprint-22 case studies** into a *broader* document; the rocket input **feeds** it as one input. Solution Forcing Strategies (~6–8 h), Remaining Pipeline Fixes (~6–8 h) and the retest (~2 h) are untouched. **Sprint 39 loses an input, not its premise.**
+
+**The real cost sits elsewhere, and it is larger than "a deferred +1".** rocket and fawley have **no other lever**: §4 of the consultation input records the remaining-lever sweep as returning **none** — PATH options exhausted (best INFES 382, MS-5), μ-continuation exhausted (MS-5 every step), multistart superseded (warm-from-optimum already fails), and the division-by-variable reformulation exhausted (MS-5). fawley is the same class — the S36 `--force` survey was **NEGATIVE** across homotopy/multistart/optfile. **Striking makes both +Solve unreachable indefinitely, not merely deferred.** mine is unaffected (0 bucket; the only non-invariant lever is an LP-side reformulation, out of emit scope).
+
+**Evidence:** Sprint 39's component breakdown and effort split in `PROJECT_PLAN.md`; §4 of `ROCKET_PATH_CONSULTATION_INPUT.md`; the S36 `--force` survey result. See `CONSULTATION_DECISION_BRIEF.md` §3.
+
+**Decision:** ✅ Both branches costed. **Strike ⇒ Sprint 39 survives; rocket and fawley are reclassified consultation-gated and unreachable.** Reclassification wording is drafted and applies verbatim (§6).
 
 ---
 
@@ -677,7 +706,19 @@ Re-read the bundle against current state and list anything stale. Confirm at lea
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — the case reproduces, but the bundle is unstamped
+**Verified by:** Task 7 (Consultation Ownership Decision Package)
+**Date:** 2026-08-18 · **Measured at:** `6c517315`
+
+**Findings:** The assumption was that the bundle is complete and a reply would be actionable as-is. **The failure state does reproduce** — under **GAMS 54.2.1 / PATH 5.2.01**, rocket, mine and fawley are all `model_infeasible`, the bucket the question describes. The question set, the ruled-out-lever survey and the reproduction commands are all intact.
+
+**But the bundle carries no version stamp at all**, and the corpus was **re-pinned to GAMS 54.2.1 on 2026-08-12** — **nine days after** the input was authored (2026-08-03). Its quoted figures (`INFES 477 → 382`, objective `1.0128`, `nh=10`) come from the **pre-re-pin** toolchain. A recipient attempting to reproduce `382` under 54.2.1 could get a different number and conclude the report is unreliable — a credibility cost on a one-shot external message.
+
+**Fix is one line** in §1 of the input, drafted verbatim in the brief: state the original toolchain and the re-confirmation under 54.2.1. Nothing else in the package is stale.
+
+**Evidence:** per-model `mcp_solve.gams_version` = 54.2.1 and `solver_version` = 5.2.01 for rocket/mine/fawley; `git log` authoring date 2026-08-03 vs the S37 Day-9 re-pin; no version string in either document. See `CONSULTATION_DECISION_BRIEF.md` §4.
+
+**Decision:** 🔶 **Actionable after a one-line version stamp — do not send without it.** Also recorded: `CONSULTATION_BUNDLE.md`'s single unchecked box **conflates three actions** (*submit rocket · pose the mine question · run the fawley survey*), and **the fawley survey was completed in Sprint 36** (NEGATIVE). A checkbox spanning three actions, one already done, is part of why it was never ticked — **split it on send or strike.**
 
 ---
 
