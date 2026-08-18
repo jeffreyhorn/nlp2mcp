@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-17 · **Branch:** `planning/sprint38-task3` · **Measured at:** `1a252648` · **Scope:** design + live fail-before reproduction. No `src/`, DB, golden or `scripts/` change.
 
-**Verdict: 🔶 DESIGN COMPLETE, WITH TWO ASSUMPTIONS REFUTED.** All four sub-deliverables are specified. Two of the four unknowns did **not** hold as written, and both make P6 *smaller and sharper* than planned:
+**Verdict: 🔶 DESIGN COMPLETE, WITH TWO ASSUMPTIONS REFUTED.** *(Update 2026-08-18: the escalated baseline decision is resolved — **73**, §4.3.)* All four sub-deliverables are specified. Two of the four unknowns did **not** hold as written, and both make P6 *smaller and sharper* than planned:
 
 1. **`leak-check` already fails correctly.** The banked premise — that a `NO-OP` is "mistakable for a pass" — is **wrong**: `make leak-check MODEL=sarf` exits **2**. The real defect is the *diagnostic*, which asserts a byte-identity that was never measured.
 2. **The floor provenance file cannot reproduce 76 — or any figure — from existing artifacts.** Three independent derivations give **65**, **93** and **76**, and the 76 credits three out-of-corpus models while leaving ~62 unattributed. The tracker must be **append-only from a declared baseline**, not reconstructed.
@@ -145,9 +145,24 @@ Task 2 established the floor's provenance credits three out-of-corpus models. Th
 | **(a) in-corpus only** | **73** | the floor has been overstated by 3 since Sprint 31; every S31–S37 report is off by 3 |
 | **(b) keep the historical figure** | **76** | the floor's scope differs from Solve/Match's, and that must be written into `reference_match_kpi_corpus_scope` |
 
-**This task does not choose.** Both are defensible; the choice changes six sprints of reported history and is the owner's. **Recommendation: (a)**, because the floor is reported in the same breath as Solve and Match, which are strictly in-corpus, and a metric whose corpus differs silently from its neighbours is the more dangerous of the two states. But (b) with an explicit written scope is also coherent, and cheaper.
+**✅ DECIDED 2026-08-18 (owner): option (a) — `baseline.count = 73`.** The in-corpus reading is adopted, which means the **S31–S37 series was overstated by 3** and the current genuine floor is **73**, not 76. Sprint 37's advance re-reads as **72 → 73**. **Recommendation: (a)**, because the floor is reported in the same breath as Solve and Match, which are strictly in-corpus, and a metric whose corpus differs silently from its neighbours is the more dangerous of the two states. But (b) with an explicit written scope is also coherent, and cheaper.
 
-**Whichever is chosen, it must be recorded in the file's `baseline.note` with the reasoning** — that record is the artifact that stops this recurring.
+**Recorded in the file's `baseline.note` with the reasoning** — that record is the artifact that stops this recurring:
+
+```yaml
+baseline:
+  count: 73
+  as_of: S37-close
+  decided: 2026-08-18
+  note: >
+    In-corpus only. The historical figure 76 credited three non_convex,
+    out-of-corpus models (ps2_f_s, ps2_s, ps3_s_gic) from the S31 +4.
+    76 - 3 = 73. The S31-S37 series was overstated by 3; S37's advance
+    re-reads as 72 -> 73. Per-model records for the opaque "S28 genuine
+    68" block were never kept and are NOT reconstructible.
+```
+
+**P6c additionally owns re-baselining the downstream reports**, which this decision invalidates: the `PROJECT_PLAN.md` Rolling-KPIs column and **footnote ⁸'s genuine-floor ramp**, `SUMMARY.md` **row 37**, and the memory topic files. Historical CHANGELOG and per-sprint close docs are **left as written** — they record what was believed at the time, and rewriting them would destroy the evidence trail this decision rests on.
 
 ## 5. 6d — the re-anchor
 
