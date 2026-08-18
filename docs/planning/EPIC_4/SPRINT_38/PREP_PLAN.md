@@ -820,7 +820,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/PRESOLVE_GOLDEN_ADOPTION_PLAN.md && echo 
 
 ## Task 7: Consultation Ownership Decision Package (P3)
 
-**Status:** ✅ **COMPLETE** (2026-08-18) — *the decision itself remains with the owner*
+**Status:** ✅ **COMPLETE** (2026-08-18) — **decision made: Branch A (SEND); channel supplied by the owner**
 **Time Spent:** 3 hours
 **Priority:** High
 **Estimated Time:** 2-3 hours
@@ -881,6 +881,8 @@ Carrying it a fourth time without an owner converts a task into a permanent fixt
 
 **Recommendation: Branch A (send)** — the missing input is one address, and the alternative permanently forfeits two models' only remaining lever.
 
+**✅ RESOLVED 2026-08-18 — the owner supplied the channel. Branch A adopted.** Email to `ferris@cs.wisc.edu` and `steve@gams.com`/`sdirkse@gams.com` (both addressed; a bounce is silent). The pre-send blocker from 3.3 — the missing toolchain stamp — **is applied** to `SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` §1, and the `CONSULTATION_BUNDLE.md` checkbox has been **split into its three real actions** (the fawley survey was already done in S36). **Unknown 3.1 → ✅ VERIFIED after five carries.** **Two human actions remain, neither performable in this session:** send the §5 message (no email capability here) and post §7's tracking comment to #1462.
+
 ### Verification
 
 ```bash
@@ -917,7 +919,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/CONSULTATION_DECISION_BRIEF.md && echo "�
 - [x] Tracking record specified for the send branch — a comment on #1462 (which today has **one** comment and no send record), plus a 14-day follow-up rule
 - [x] Unknowns 3.1, 3.2, 3.3 investigated and updated in KNOWN_UNKNOWNS.md (**3.1 🔍 narrowed**, **3.2 ✅**, **3.3 🔶**)
 
-**On Task 7's completion vs the decision's:** the *preparation* is complete and both branches execute same-day. **The decision is not this task's to make** and stays with the owner; 3.1 remains 🔍 by design, with the strike armed as the Day-0 default.
+**On Task 7's completion vs the decision's:** the preparation is complete, and **the owner made the decision the same day — Branch A (SEND)** — so 3.1 closed ✅ rather than riding to Day 0. The strike wording (§6) is retained unused in case delivery fails.
 - [ ] Unknowns 3.1, 3.2, 3.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
@@ -1318,7 +1320,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 
 ### High Priority (Should Complete Before Sprint 38)
 
-- ✅ **Task 7: Consultation Decision Package** (COMPLETE — 2026-08-18, 3 h) — prepared; **the decision still requires a human**
+- ✅ **Task 7: Consultation Decision Package** (COMPLETE — 2026-08-18, 3 h) — **decision made: SEND**; channel supplied, package ready, send is a human action
 
 ### Medium Priority (Complete Before Day 1, or by Mid-Sprint)
 

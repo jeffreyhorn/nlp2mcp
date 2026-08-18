@@ -43,7 +43,11 @@ Each was control-confirmed across multiple sprints as **not an emit defect** (th
 - [x] mine primal-degenerate-LP question specified (Task 6 design + the value-invariance findings)
 - [x] fawley H-b `--force` survey scoped (Task 8 design + the live re-measurement)
 - [x] The Case-c sign flip + `x.up=inf` BANs restated
-- [ ] **Sprint 36:** submit rocket to PATH authors; pose the mine LP-degeneracy question; run the fawley `--force` survey
+- [x] **fawley `--force` survey — DONE (Sprint 36).** Result: **NEGATIVE** (homotopy/multistart/optfile all leave MS-5).
+- [ ] **Submit rocket to the PATH authors.** *(Sprint 38: channel resolved 2026-08-18 — email to `ferris@cs.wisc.edu`, `steve@gams.com`/`sdirkse@gams.com`. Package ready: `SPRINT_38/CONSULTATION_DECISION_BRIEF.md` §5. Tick on send and record it on #1462.)*
+- [ ] **Pose the mine LP-degeneracy question.** *(0 bucket; can ride along with the rocket send.)*
+
+> **Split 2026-08-18 (Sprint 38 Prep Task 7).** This was one checkbox covering three actions, **one of which was already complete** — part of why it went un-ticked across S33–S37.
 
 ---
 

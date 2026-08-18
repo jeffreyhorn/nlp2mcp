@@ -6,18 +6,31 @@
 
 ---
 
-## 1. The single question
+## 1. The single question — ✅ ANSWERED 2026-08-18
 
-> **By what channel — and to what address — should the rocket PATH-consultation be sent to Michael Ferris and Steven Dirkse?**
+> ~~By what channel — and to what address — should the rocket PATH-consultation be sent to Michael Ferris and Steven Dirkse?~~
 
-**The gap is narrower than it has been described.** Every prior write-up, including this task's own prompt, says *"the bundle names no recipient, address, or channel."* That is true of the **bundle**, but not of the project:
+**✅ RESOLVED (owner, 2026-08-18). Channel: email.**
+
+| recipient | address |
+|---|---|
+| **Michael Ferris** | `ferris@cs.wisc.edu` |
+| **Steven Dirkse** | `steve@gams.com` *or* `sdirkse@gams.com` |
+
+**Note on Dirkse's address:** two were supplied as alternatives without a preference. **Recommend addressing both** — a bounce on one is silent, and this is a one-shot message after five carries. Cost of including both is zero.
+
+**⇒ Branch A (SEND) is unblocked. §5's package is ready; only the pre-send version stamp was outstanding, and it is now applied.**
+
+**⚠ The send itself is a human action.** This session has no email capability (the claude.ai Gmail connector is unauthenticated and unavailable here), so the message in §5 is prepared to copy-paste. **§7's tracking comment should be posted to #1462 at send time.**
+
+**Why the gap was narrower than described** *(the finding that led here — retained as the record):* every prior write-up, including this task's own prompt, said *"the bundle names no recipient, address, or channel."* That was true of the **bundle**, but not of the project:
 
 | | status |
 |---|---|
 | **Recipient identity** | ✅ **known** — Michael Ferris and Steven Dirkse, named four times in `PROJECT_PLAN.md` (S39 component, S39 acceptance criterion, S40 feedback integration, External Dependencies) |
-| **Address / channel** | ❌ **missing everywhere** |
+| **Address / channel** | ~~❌ missing everywhere~~ → ✅ **supplied by the owner 2026-08-18** (email; see above) |
 
-So the blocker is **one fact, not two**. That matters: "nobody knows who to send it to" invites a research task; "we know who, we lack an address" is a two-minute answer from someone who has it.
+So the blocker was **one fact, not two** — and it was answered in a single message, which is what that reframing predicted. *"Nobody knows who to send it to"* invites a research task; *"we know who, we lack an address"* is a two-minute answer.
 
 ## 2. Why this cannot be deferred again — it is not only P3's problem
 
@@ -25,13 +38,13 @@ So the blocker is **one fact, not two**. That matters: "nobody knows who to send
 
 **Consequence: striking P3 relocates the problem rather than resolving it.** The channel must be established for Sprint 39 regardless of which branch is chosen here. A strike buys one sprint, and Sprint 39's send then slips for the same reason this one has slipped five times.
 
-**⇒ The channel question should be answered on Day 0 even if the strike branch is taken.**
+**⇒ The channel question needed answering regardless of branch. It now is — which also unblocks Sprint 39's own send**, so that gap is closed too rather than deferred.
 
 ## 3. The two branches, costed
 
 ### Branch A — SEND
 
-**Needs:** the address/channel. Nothing else — §5's package is complete.
+**Needs:** ~~the address/channel~~ — **✅ supplied 2026-08-18.** Nothing outstanding; §5's package is complete and the §4 version stamp is applied.
 
 **Buys:**
 
@@ -51,9 +64,9 @@ So the blocker is **one fact, not two**. That matters: "nobody knows who to send
 
 **Real cost:** rocket and fawley have **no other lever**. Every emittable-GAMS avenue is exhausted for both (§4 of the input: PATH options, μ-continuation, multistart, and the division-by-variable reformulation all fail). Striking means their +Solve is **unreachable indefinitely**, not merely deferred.
 
-### Recommendation
+### Recommendation → ✅ ADOPTED
 
-**Branch A**, on the narrow grounds that the missing input is one address and the alternative permanently forfeits two models' only remaining lever. But **the decisive action either way is establishing the channel**, because Sprint 39 needs it regardless (§2).
+**Branch A (SEND).** The owner supplied the channel on 2026-08-18, unblocking it. Branch B's wording (§6) is retained unused, in case a send proves undeliverable.
 
 ## 4. What is *actually* stale in the bundle — one thing, and it is fixable in a line
 
@@ -63,7 +76,7 @@ The bundle was authored **2026-08-03**; the corpus was re-pinned to **GAMS 54.2.
 
 **But the bundle carries no version stamp at all**, and its quoted figures (`INFES 477 → 382`, objective `1.0128`, `nh=10`) were measured under the **pre-re-pin** toolchain. A recipient attempting to reproduce `382` on 54.2.1 may get a different number and conclude the report is unreliable.
 
-**Fix before sending:** add one line to §1 of the input —
+**✅ APPLIED 2026-08-18** to `SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` §1, as a marked toolchain-stamp note. The wording drafted here was:
 
 ```
 Measured under GAMS 51.3.0 / PATH 5.2.01. Re-confirmed model_infeasible
@@ -71,16 +84,15 @@ under GAMS 54.2.1 / PATH 5.2.01 (2026-08-18); the INFES and objective
 figures below are from the original toolchain.
 ```
 
-That is the whole remediation. Nothing else in the package is stale.
+That was the whole remediation, and it is done. Nothing else in the package is stale — the attachment is ready to send as-is.
 
-## 5. The send package — complete except one field
+## 5. The send package — ✅ COMPLETE AND READY
 
 **Attach:** `SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` (§3 question, §2 ruled-out-lever survey, §4 remaining-lever sweep) + `data/gamslib/raw/rocket.gms` + the two reproduction commands.
 
-**Covering message (fill the two bracketed fields, add the version line from §4, send):**
+**Covering message — READY TO SEND.** Addresses filled; the §4 version stamp is applied to the attachment. Copy-paste as-is:
 
-> **To:** `[ADDRESS — Michael Ferris, Steven Dirkse]`
-> **Channel:** `[EMAIL / GitHub issue / mailing list — TO BE NAMED]`
+> **To:** `ferris@cs.wisc.edu`, `steve@gams.com`, `sdirkse@gams.com`
 > **Subject:** PATH convergence on a discretized optimal-control MCP (Goddard rocket, COPS) — option-set / regularization guidance
 >
 > We generate MCPs from GAMS NLP models (KKT stationarity + complementarity) and solve them with PATH. One model resists every lever we can reach from the emitter, and we would value your guidance.
@@ -127,5 +139,5 @@ Also tick `CONSULTATION_BUNDLE.md` line 46. **Note that box conflates three acti
 
 ---
 
-**Document Status:** ✅ Complete — Sprint 38 Prep Task 7. Both branches executable; **the decision needs one fact: the channel/address.** Recipient identity is already known.
-**Last Updated:** 2026-08-18 · **Owner:** **Requires a human decision-maker**
+**Document Status:** ✅ Complete — Sprint 38 Prep Task 7. **The channel was supplied by the owner on 2026-08-18 and Branch A (SEND) is unblocked.** The package is ready to copy-paste; the send is a human action.
+**Last Updated:** 2026-08-18 · **Owner:** Sprint 38 execution team · **Remaining human action:** send the §5 message, then post §7's comment to #1462
