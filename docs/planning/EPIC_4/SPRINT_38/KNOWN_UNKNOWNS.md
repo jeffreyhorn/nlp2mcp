@@ -1310,9 +1310,9 @@ Sprint 38 execution team
 **Two structural findings:**
 
 1. **The problem is current.** 43 of 56 un-gated docs are **open** — **69 % of the open backlog**. Only 13 are closed, so this is not a legacy artifact that stopped accruing.
-2. **Compliance is binary — zero partial gates.** Every doc has either all four canonical subsections or no Phase-0 heading at all. **Nobody has ever written half a gate.** The backfill is therefore "write one", not "audit and complete", and the count is exact rather than a judgement call.
+2. **Compliance is binary — zero partial gates.** Every doc has either all four canonical subsections or no Phase-0 heading at all. **Measured as a three-way classification** (`COMPLETE` / `PARTIAL` / `NO-GATE`, naming every partial found): **`{'NO-GATE': 56, 'COMPLETE': 24}`**, `PARTIAL` absent — a two-way split would have folded partials into the un-gated count and left the claim uncheckable. **Nobody has ever written half a gate.** The backfill is therefore "write one", not "audit and complete", and the count is exact rather than a judgement call.
 
-**Rule C confirmed in practice:** extras are permitted and used — `ISSUE_1110` carries eight subsections, `ISSUE_1289` six. **The script agreed with a manual read on every doc inspected**; no false positives or negatives.
+**Rule C confirmed in practice:** extras are permitted and used — `ISSUE_1110` carries eight subsections, `ISSUE_1289` **seven** (six as surveyed, plus the `Prerequisite` 7.2 adds). **The script agreed with a manual read on every doc inspected**; no false positives or negatives.
 
 **Evidence:** the census script (reproduction in `PHASE0_COMPLIANCE_CATALOG.md` §5); `gh issue list --state all --limit 400`.
 
@@ -1351,7 +1351,7 @@ Sprint 38 execution team
 **Verified by:** Task 9 (Phase-0 Compliance Survey)
 **Date:** 2026-08-18 · **Measured at:** `fd3ec910`
 
-**Findings:** `ISSUE_1289`'s gate is **structurally complete** — all four canonical subsections plus `Bucket / KPI` and `Regression guard`; it passes the script. It carries the **`ac(i+2,r)`** match-correctness risk and the 6th blocker (embedded `ganges0` **MS-5 @ −386785.5017** vs standalone **MS-2 @ 6395.5444**), correctly framing the fix as **0-bucket**.
+**Findings:** `ISSUE_1289`'s gate is **structurally complete** — all four canonical subsections plus `Bucket / KPI` and `Regression guard`, **six as surveyed**; it passes the script. **The `Prerequisite` fix below takes it to seven**, re-checked at 0 missing. It carries the **`ac(i+2,r)`** match-correctness risk and the 6th blocker (embedded `ganges0` **MS-5 @ −386785.5017** vs standalone **MS-2 @ 6395.5444**), correctly framing the fix as **0-bucket**.
 
 **Two things were wrong:**
 
@@ -1362,7 +1362,7 @@ Sprint 38 execution team
 
 **Same pattern checked elsewhere:** `ISSUE_1110` (CLOSED, markov) records *"genuine floor 75 → 76"* — correct when written, a historical record of a landed fix, **left as written**. `ISSUE_1111` carries no KPI assertion. **The stale-figure problem is confined to the one doc.**
 
-**Evidence:** `phase0_subsections(ISSUE_1289)` → 6 subsections, 0 missing; the corrected lines; `gh issue view` states for #1110/#1111/#1289.
+**Evidence:** `phase0_subsections(ISSUE_1289)` → **6 subsections, 0 missing as surveyed; 7 and 0 missing after the `Prerequisite` fix**; the corrected lines; `gh issue view` states for #1110/#1111/#1289.
 
 **Decision:** ✅ `$66`'s gate is complete and now accurate. **But #1289 being closed while `$66` is undone means issue state is not a reliable proxy for work state in this repo** — worth knowing before any future automation keys on it.
 

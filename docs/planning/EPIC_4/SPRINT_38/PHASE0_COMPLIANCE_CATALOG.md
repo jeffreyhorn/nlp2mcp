@@ -21,11 +21,11 @@
 
 **The problem is current, not historical.** 43 of the 56 un-gated docs belong to **open** issues. Only 13 are closed — so this is not a legacy artifact that stopped accruing; **69 % of the open backlog (43 of 62) is un-gated today.**
 
-**Compliance is binary — there are zero partial gates.** Every doc either has a `## Phase 0: Acceptance Gate` heading with all four canonical subsections, or has no Phase-0 heading at all. **Nobody has ever written half a gate.** That is a useful property: the backfill is "write one" rather than "audit and complete", and it means the count above is exact rather than a judgement call.
+**Compliance is binary — there are zero partial gates.** Every doc either has a `## Phase 0: Acceptance Gate` heading with all four canonical subsections, or has no Phase-0 heading at all. **This is a measured three-way result, not a two-way one:** §5's census classifies `COMPLETE` / `PARTIAL` / `NO-GATE` separately and names every partial it finds, reporting **`{'NO-GATE': 56, 'COMPLETE': 24}`** — `PARTIAL` absent. A two-way `gate`/`no-gate` split would have hidden partials inside the un-gated count and made this claim unfalsifiable. **Nobody has ever written half a gate.** That is a useful property: the backfill is "write one" rather than "audit and complete", and it means the count above is exact rather than a judgement call.
 
 ### 1.2 Rule C confirmed in practice
 
-The four canonical subsections are matched by **prefix**, with extras permitted. The compliant docs exercise that: `ISSUE_1110` carries eight subsections (the four plus `Correctness`, `Bucket / KPI`, `Leak-freedom (full corpus — MANDATORY)`, `Regression guard`), and `ISSUE_1289` carries six. **The script's classification agreed with a manual read on every doc inspected** — no false positives or negatives found.
+The four canonical subsections are matched by **prefix**, with extras permitted. The compliant docs exercise that: `ISSUE_1110` carries eight subsections (the four plus `Correctness`, `Bucket / KPI`, `Leak-freedom (full corpus — MANDATORY)`, `Regression guard`), and `ISSUE_1289` carries **seven** — six as surveyed, plus the `Prerequisite` §3 adds below, which the prefix rule accepts without complaint. **The script's classification agreed with a manual read on every doc inspected** — no false positives or negatives found.
 
 ## 2. The prioritised backfill list
 
@@ -63,7 +63,7 @@ The remainder are genuine gaps but on models no current sprint touches.
 
 ## 3. `$66` / #1289 — the gate is complete, with two corrections applied (7.2)
 
-**Structurally complete.** All four canonical subsections present, plus `Bucket / KPI` and `Regression guard`. Passes the script.
+**Structurally complete.** All four canonical subsections present, plus `Bucket / KPI` and `Regression guard` — **six as surveyed**. Passes the script. **After this task's `Prerequisite` fix (below) it carries seven**; re-checked after the edit, still 0 missing.
 
 **It carries the `ac(i+2,r)` match-correctness risk** and the 6th blocker (embedded `ganges0` **MS-5 @ −386785.5017** vs standalone **MS-2 @ 6395.5444**), correctly framing the fix as **0-bucket**.
 
@@ -84,17 +84,27 @@ P7 is budgeted at **8–10 h**. Against **43** open un-gated issues that is roug
 
 ## 5. Reproduction
 
+**The census must classify THREE ways, not two.** A two-way `gate`/`NONE` split collapses *"has a Phase-0 heading but is missing required subsections"* into *"has no Phase-0 section"* — which makes §1.1's **"zero partial gates"** claim unfalsifiable from its own reproduction. The snippet below separates them, so the claim is independently checkable rather than asserted:
+
 ```bash
 # The census, using the gate script's OWN semantics (not an approximation)
 .venv/bin/python - <<'EOF'
-import sys, pathlib
+import sys, pathlib, collections
 sys.path.insert(0, 'scripts/sprint_audit')
 from check_phase0_doc import phase0_subsections, missing_subsections
+tally = collections.Counter()
 for f in sorted(pathlib.Path('docs/issues').glob('ISSUE_*.md')):
     t = f.read_text()
-    gated = phase0_subsections(t) is not None and not missing_subsections(t)
-    print(f"{'gate' if gated else 'NONE'}  {f.name}")
+    subs = phase0_subsections(t)
+    if subs is None:             cls = 'NO-GATE'    # no "## Phase 0" heading at all
+    elif missing_subsections(t): cls = 'PARTIAL'    # heading present, canonical subsections missing
+    else:                        cls = 'COMPLETE'   # all four present (extras permitted)
+    tally[cls] += 1
+    if cls == 'PARTIAL':                            # name every partial, so 0 is checkable
+        print(f"  PARTIAL {f.name}: missing {missing_subsections(t)}")
+print(dict(tally))
 EOF
+#   -> {'NO-GATE': 56, 'COMPLETE': 24}      <- PARTIAL absent, and no per-file lines printed
 
 # Cross-reference with GitHub state
 gh issue list --state all --limit 400 --json number,state --jq '.[] | [.number,.state] | @tsv'
