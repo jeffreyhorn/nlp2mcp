@@ -38,7 +38,7 @@ This prep plan focuses on research, design, and survey tasks that must complete 
 | 3 | ✅ Measurement-Integrity Design: Gate Scope, Floor Provenance & Re-Anchoring (P6) | Critical | 4-5 hours | Tasks 1, 2 | P6 — and the measurement substrate every other task's gate asserts against |
 | 4 | ✅ ganges P1 — `$149` Rebind-Predicate Design & Leak-Surface Analysis | Critical | 5-7 hours | Tasks 1, 2, 3 | P1 ganges/gangesx cascade |
 | 5 | ✅ sarf P2 — O(active) Re-Architecture Design Refresh & Atomicity Plan | Critical | 5-7 hours | Tasks 1, 2 | P2 sarf — the only KPI mover |
-| 6 | Presolve-Golden Adoption Plan & Runtime Impact (P4) | High | 3-4 hours | Tasks 1, 2, 3, 4 | P4 coverage asymmetry |
+| 6 | ✅ Presolve-Golden Adoption Plan & Runtime Impact (P4) | High | 3-4 hours | Tasks 1, 2, 3, 4 | P4 coverage asymmetry |
 | 7 | Consultation Ownership Decision Package (P3) | High | 2-3 hours | Task 1 | P3 — the Day-0 send-or-strike decision |
 | 8 | camcge Epic-5 Handoff Scoping + turkey Testbed Procurement (P5) | Medium | 3-4 hours | Tasks 1, 2 | P5 camcge (Epic 5) + turkey |
 | 9 | Phase-0 Compliance Survey over the Open Backlog (P7) | Medium | 3-4 hours | Task 1 | P7 Phase-0 backfill |
@@ -712,9 +712,10 @@ test -f docs/planning/EPIC_4/SPRINT_38/SARF_REARCH_DESIGN.md && echo "✓"
 
 ## Task 6: Presolve-Golden Adoption Plan & Runtime Impact (P4)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-08-18)
 **Priority:** High
 **Estimated Time:** 3-4 hours
+**Time Spent:** 4 hours
 **Deadline:** Before Sprint 38 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2, 3, 4
@@ -736,7 +737,7 @@ This task depends on Task 4 because **P4 changes the gate P1 runs against**, and
 
 - The 36 were written by the presolve retry during a full `--only-solve` (S37 Day 9), taking presolve goldens 17 → 53.
 - Current inventory: **170** golden files discovered, **7** allowlisted, **163** in-scope, **17** presolve.
-- `--min-scope 170` is asserted on **discovery** (before allowlist narrowing), so adoption requires raising it to **206** or the assertion silently under-guards.
+- `--min-scope 170` is asserted on **discovery** (before allowlist narrowing), so adoption requires raising it or the assertion silently under-guards. *(Written assuming wholesale adoption ⇒ 206. **The reviewed outcome is Tier-1 only ⇒ 192**, or better, a value **derived from `git ls-files`** — see Result.)*
 - The leak sweep is already the slowest gate; it runs at 3 workers after Sprint 37 fixed load-dependent timeouts at 6.
 
 ### What Needs to Be Done
@@ -752,18 +753,26 @@ This task depends on Task 4 because **P4 changes the gate P1 runs against**, and
    - Time `make check-goldens` at 163 in-scope today; project 199 and confirm the 3-worker default still yields **0 timeouts**
    - If it does not, decide the mitigation (worker count, nightly split) **in prep**, not mid-sprint
 4. **Specify the `--min-scope` change and its ordering** (~30 min)
-   - 170 → 206, applied in the same change as the adoption so the assertion never lags the corpus
+   - Raised in the same change as the adoption so the assertion never lags the corpus. *(Planned as 170 → 206 for wholesale adoption; **delivered as 170 → 192** for Tier-1, with a derivation from `git ls-files` recommended over any literal.)*
    - Confirm the assertion still fires on discovery, before narrowing
 5. **Sequence against P1** (~15 min)
    - P1's full-corpus gate run must complete at the *old* scope first; specify the handoff
 
 ### Changes
 
-*To be completed*
+- **Created** `docs/planning/EPIC_4/SPRINT_38/PRESOLVE_GOLDEN_ADOPTION_PLAN.md` — the tier split, the review protocol, measured CI runtime, the `--min-scope` derivation, and the P1/P2 sequencing.
+- **Updated** `KNOWN_UNKNOWNS.md`: **4.2 → ❌ WRONG**, **4.3 → ✅**, **4.4 → ✅**.
+- **No `src/`, DB or golden change.**
 
 ### Result
 
-*To be completed*
+**🔶 ADOPT IN TWO TIERS, NOT WHOLESALE.**
+
+**❌ 4.2 — 14 of the 36 would pin an emit that does not reproduce its NLP solution.** Reviewing them split the set: **Tier 1 (22)** where the presolve path is load-bearing for a match, and **Tier 2 (14)** — 7 `mismatch`, 6 `skipped` (never compared), and **`mine`**, which is `model_infeasible`. Pinning a wrong-but-stable emit is defensible as drift detection, but when someone later fixes `circle`'s emit the gate flags it as drift and the reflex is `make regen-goldens` — the laundering path the leak gate exists to prevent. **Adopt Tier 1 now (in-scope 163 → 185, presolve 17 → 39, ratio 9.0:1 → 3.9:1); Tier 2 behind per-model sign-off, defaulting to defer.**
+
+**✅ 4.3 — safe, and the local measurement was a 2× trap.** Local sweep at 163: **26.3 min**. Real **CI**: **11.9–12.9 min** across 29 sweeps, against a **25-minute** budget. Extrapolating from local would have projected ~32 min and concluded "adoption blocks every PR" — **wrong**, since golden-staleness is a required check. At 199 the projection is **14.3–15.5 min (62 % of budget)**, 0 timeouts, no mitigation needed; none of the known slow-emit models is among the 36. **Follow-up recorded:** raise `timeout-minutes` or split the sweep before scope exceeds ~250.
+
+**✅ 4.4 — derive it, but not from the filesystem.** Deriving from `ls data/gamslib/mcp/` is **vacuous** — it is the same quantity `discover_goldens()` starts from, so the assertion would compare a number to itself. That is the self-certification defect this task is about, reappearing inside the guard. **Derive from `git ls-files`** instead, which is independent of raw-source provisioning; both report 170 today, so the substitution is verifiable as a no-op before the goldens land.
 
 ### Verification
 
@@ -777,7 +786,11 @@ grep -vc "^#\|^$" scripts/sprint_audit/golden_staleness_allowlist.txt # 7 allowl
 time make check-goldens 2>&1 | tail -3
 
 # The min-scope assertion fires on discovery
-grep -o "min-scope [0-9]*" .github/workflows/golden-staleness.yml     # 170 -> must become 206
+grep -o "min-scope [0-9]*" .github/workflows/golden-staleness.yml     # 170 -> 192 (Tier 1)
+
+# ...or better, derive it from an INDEPENDENT source rather than hard-coding:
+git ls-files 'data/gamslib/mcp/*.gms' | wc -l    # 170 — independent of raw-source provisioning
+ls data/gamslib/mcp/*_mcp*.gms          | wc -l    # 170 — VACUOUS as a floor (same source discover_goldens() uses)
 
 # Plan doc
 test -f docs/planning/EPIC_4/SPRINT_38/PRESOLVE_GOLDEN_ADOPTION_PLAN.md && echo "✓"
@@ -789,19 +802,19 @@ test -f docs/planning/EPIC_4/SPRINT_38/PRESOLVE_GOLDEN_ADOPTION_PLAN.md && echo 
 - The 36 goldens inventoried by model, with reproducibility confirmed
 - A per-model review protocol with triage order and rejection criterion
 - Measured sweep runtime at 163 and a projection at 199, with a mitigation if timeouts appear
-- The `--min-scope` 170 → 206 change specified, applied atomically with adoption
+- The `--min-scope` change specified, applied atomically with adoption — **170 → 192** (Tier-1 outcome; 206 was the pre-review wholesale figure), with a **`git ls-files` derivation recommended** over a literal
 - The P1 → P4 sequencing handoff
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.2, 4.3, 4.4
 
 ### Acceptance Criteria
 
-- [ ] All 36 goldens regenerated and confirmed reproducible; any non-reproducible one excluded with a reason
-- [ ] The review protocol requires checking against **expected** emit, not the generating run
-- [ ] Sweep runtime measured at the current scope and projected at the new one, with 0 timeouts confirmed or a mitigation chosen
-- [ ] `--min-scope` raise to 206 specified in the same change as adoption
-- [ ] The self-certification hazard explicitly addressed in the protocol
-- [ ] P1's gate run sequenced before the scope change
-- [ ] Unknowns 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 36 goldens regenerated and confirmed reproducible (Task 2, Unknown 4.1); **none excluded for non-reproducibility — 14 are deferred on a different ground**, that they would pin non-reproducing emits
+- [x] The review protocol requires checking against **expected** emit, not the generating run — four concrete checks incl. the **#1322 NA-guard**, whose absence would freeze the pre-S37 `robustlp` defect
+- [x] Sweep runtime measured at the current scope and projected at the new one, with 0 timeouts confirmed — **measured on CI, not locally**; the local figure is 2× the runner and would have produced a false "blocks every PR" alarm
+- [x] `--min-scope` raise specified in the same change as adoption — **and improved to a derivation** from `git ls-files`; the literal moves 170 → **192** (Tier 1) if the derivation is deferred, not 206, since Tier 2 is not adopted
+- [x] The self-certification hazard explicitly addressed in the protocol — **and found a second instance of it**: deriving `--min-scope` from the filesystem would make the guard compare a number to itself
+- [x] P1's gate run sequenced before the scope change — P1 gates at 163, lands, then P4 adopts and raises the floor in one commit
+- [x] Unknowns 4.2, 4.3, 4.4 investigated and updated in KNOWN_UNKNOWNS.md (**4.2 ❌ WRONG**, **4.3 ✅**, **4.4 ✅**)
 
 ---
 
@@ -1278,7 +1291,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 2. ✅ **Task 2: Re-Derive the Baseline** (COMPLETE — 2026-08-17, 4 hours) — CRITICAL
 3. ✅ **Task 3: Measurement-Integrity Design** (COMPLETE — 2026-08-17, 5 hours) — CRITICAL
 4. ✅ **Task 4: ganges Rebind Predicate** (COMPLETE — 2026-08-17, 6 h; **REPLAN outcome**) — CRITICAL
-5. **Task 6: Presolve-Golden Adoption** (3-4 hours) — HIGH (gated on Task 4)
+5. ✅ **Task 6: Presolve-Golden Adoption** (COMPLETE — 2026-08-18, 4 h) — HIGH (was gated on Task 4)
 6. **Task 11: Plan Sprint 38** (3-4 hours) — CRITICAL
 
 **Total Critical Path Time:** ~21-28 hours (~3-4 working days)
