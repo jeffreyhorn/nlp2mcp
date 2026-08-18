@@ -10,7 +10,7 @@ This is the control-first discipline working as designed: the refutation cost on
 
 ## 1. What was being designed
 
-The banked `$149` fix (`SPRINT_35/DAY3_P4_BANK_CARRYFORWARD.md` §5) inserts a rebind into `_diff_prod`, just before `return Binary("*", expr, log_term)`:
+The banked `$149` fix (`docs/planning/EPIC_4/SPRINT_35/DAY3_P4_BANK_CARRYFORWARD.md` §5) inserts a rebind into `_diff_prod`, just before `return Binary("*", expr, log_term)`:
 
 ```python
 if (wrt_indices is not None and effective_wrt is not None

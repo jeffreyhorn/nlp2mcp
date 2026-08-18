@@ -39,7 +39,7 @@ This prep plan focuses on research, design, and survey tasks that must complete 
 | 4 | ✅ ganges P1 — `$149` Rebind-Predicate Design & Leak-Surface Analysis | Critical | 5-7 hours | Tasks 1, 2, 3 | P1 ganges/gangesx cascade |
 | 5 | ✅ sarf P2 — O(active) Re-Architecture Design Refresh & Atomicity Plan | Critical | 5-7 hours | Tasks 1, 2 | P2 sarf — the only KPI mover |
 | 6 | ✅ Presolve-Golden Adoption Plan & Runtime Impact (P4) | High | 3-4 hours | Tasks 1, 2, 3, 4 | P4 coverage asymmetry |
-| 7 | Consultation Ownership Decision Package (P3) | High | 2-3 hours | Task 1 | P3 — the Day-0 send-or-strike decision |
+| 7 | ✅ Consultation Ownership Decision Package (P3) | High | 2-3 hours | Task 1 | P3 — the Day-0 send-or-strike decision |
 | 8 | camcge Epic-5 Handoff Scoping + turkey Testbed Procurement (P5) | Medium | 3-4 hours | Tasks 1, 2 | P5 camcge (Epic 5) + turkey |
 | 9 | Phase-0 Compliance Survey over the Open Backlog (P7) | Medium | 3-4 hours | Task 1 | P7 Phase-0 backfill |
 | 10 | Emit-Backlog Candidate Catalog & Selection-Rule Dry Run (P8) | Medium | 3-4 hours | Tasks 1, 2, 9 | P8 slack absorber — with drift prevention |
@@ -51,7 +51,7 @@ This prep plan focuses on research, design, and survey tasks that must complete 
 
 The path runs through P6 rather than around it: Task 3 re-anchors the DB checkpoint and fixes the two known gate-narrowing modes, and **every subsequent task's acceptance gate is expressed in terms of those gates**. Task 4 (ganges) must precede Task 6 (presolve goldens) because P4 changes what `check-goldens` sweeps, and the plan schedules it *after* P1's gate run for exactly that reason — the prep ordering mirrors the sprint ordering.
 
-**Note:** Task 1 (Known Unknowns) is ✅ **COMPLETE** as of 2026-08-17 — `SPRINT_38/KNOWN_UNKNOWNS.md`, **28 unknowns across 8 categories** (7 Critical / 11 High / 7 Medium / 3 Low; 33.5h research). It is the standing first prep task; it must exist before the design tasks (3–10) so each design is scoped against an explicit risk register. Task 9 (Phase-0 survey) precedes Task 10 (backlog catalog) because a backlog candidate without a Phase-0 section is **not implementable** under CONTRIBUTING §392–447 — the survey determines which candidates are even eligible.
+**Note:** Task 1 (Known Unknowns) is ✅ **COMPLETE** as of 2026-08-17 — `docs/planning/EPIC_4/SPRINT_38/KNOWN_UNKNOWNS.md`, **28 unknowns across 8 categories** (7 Critical / 11 High / 7 Medium / 3 Low; 33.5h research). It is the standing first prep task; it must exist before the design tasks (3–10) so each design is scoped against an explicit risk register. Task 9 (Phase-0 survey) precedes Task 10 (backlog catalog) because a backlog candidate without a Phase-0 section is **not implementable** under CONTRIBUTING §392–447 — the survey determines which candidates are even eligible.
 
 ---
 
@@ -78,9 +78,9 @@ Sprint 38 carries an unusually high proportion of **inherited** assumptions — 
 
 ### Background
 
-- `SPRINT_37/SPRINT_RETROSPECTIVE.md` §7 lists six recommendations, all of which became Sprint 38 priorities.
-- `SPRINT_37/SPRINT_38_CARRYFORWARDS.md` §1 gives each carryforward a **bounded next step**; each bounded step embeds assumptions worth registering.
-- `SPRINT_37/KNOWN_UNKNOWNS.md` is the format precedent (30 unknowns, 7 categories, all resolved).
+- `docs/planning/EPIC_4/SPRINT_37/SPRINT_RETROSPECTIVE.md` §7 lists six recommendations, all of which became Sprint 38 priorities.
+- `docs/planning/EPIC_4/SPRINT_37/SPRINT_38_CARRYFORWARDS.md` §1 gives each carryforward a **bounded next step**; each bounded step embeds assumptions worth registering.
+- `docs/planning/EPIC_4/SPRINT_37/KNOWN_UNKNOWNS.md` is the format precedent (30 unknowns, 7 categories, all resolved).
 - Two Sprint-37 findings are themselves standing unknowns for any sprint: the floor is **not** DB-derivable, and two gates have silent-narrowing modes.
 
 ### What Needs to Be Done
@@ -820,7 +820,8 @@ test -f docs/planning/EPIC_4/SPRINT_38/PRESOLVE_GOLDEN_ADOPTION_PLAN.md && echo 
 
 ## Task 7: Consultation Ownership Decision Package (P3)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-08-18) — **decision made: Branch A (SEND); channel supplied by the owner**
+**Time Spent:** 3 hours
 **Priority:** High
 **Estimated Time:** 2-3 hours
 **Deadline:** Before Sprint 38 Day 1
@@ -862,11 +863,25 @@ Carrying it a fourth time without an owner converts a task into a permanent fixt
 
 ### Changes
 
-*To be completed*
+- **Created** `docs/planning/EPIC_4/SPRINT_38/CONSULTATION_DECISION_BRIEF.md` — the single question, both branches costed, the send package (complete but for one field), the verbatim strike wording, and the tracking-record spec.
+- **Updated** `KNOWN_UNKNOWNS.md`: **3.1 → 🔍 (narrowed)**, **3.2 → ✅**, **3.3 → 🔶 PARTIALLY WRONG**.
+- **No `src/`, DB or golden change.**
 
 ### Result
 
-*To be completed*
+**Both branches are executable the same day. Three findings change the decision's shape.**
+
+**1. The gap is one fact, not two (3.1).** Every prior write-up — including this task's prompt — says *"the bundle names no recipient, address, or channel."* True of the **bundle**; **false of the project**: Ferris and Dirkse are named **four times** in `PROJECT_PLAN.md`. **Only the channel/address is missing.** *"Nobody knows who to send it to"* invites a research task; *"we know who, we lack an address"* is a two-minute answer.
+
+**2. Striking relocates the problem rather than resolving it (3.1).** **Sprint 39 carries the identical gap** — *"Send document to Michael Ferris and Steven Dirkse"*, named recipients, no channel. **The channel must be established on Day 0 even under the strike branch.**
+
+**3. The strike is cheaper for Sprint 39 and more expensive for the models than assumed (3.2).** Sprint 39 **survives** — its consultation compiles Sprint-22 case studies and loses one *input*, not its premise. But rocket and fawley have **no other lever** (the remaining-lever sweep returns none; fawley's `--force` survey was NEGATIVE), so striking makes both +Solve **unreachable indefinitely, not deferred**.
+
+**4. Do not send without a one-line version stamp (3.3).** The case still reproduces under **GAMS 54.2.1 / PATH 5.2.01**, but the bundle is **unstamped** and its figures (`INFES 477 → 382`, `1.0128`) predate the re-pin by nine days. A recipient reproducing `382` on 54.2.1 could get a different number and discount the report.
+
+**Recommendation: Branch A (send)** — the missing input is one address, and the alternative permanently forfeits two models' only remaining lever.
+
+**✅ RESOLVED 2026-08-18 — the owner supplied the channel. Branch A adopted.** Email to `ferris@cs.wisc.edu` and `steve@gams.com`/`sdirkse@gams.com` (both addressed; a bounce is silent). The pre-send blocker from 3.3 — the missing toolchain stamp — **is applied** to `docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` §1, and the `CONSULTATION_BUNDLE.md` checkbox has been **split into its three real actions** (the fawley survey was already done in S36). **Unknown 3.1 → ✅ VERIFIED after five carries.** **Two human actions remain, neither performable in this session:** send the §5 message (no email capability here) and post §7's tracking comment to #1462.
 
 ### Verification
 
@@ -896,13 +911,15 @@ test -f docs/planning/EPIC_4/SPRINT_38/CONSULTATION_DECISION_BRIEF.md && echo "�
 
 ### Acceptance Criteria
 
-- [ ] Send package assembled and complete except recipient/channel
-- [ ] Strike branch costed: rocket +1, fawley +Solve, and the S39 dependency named
-- [ ] Decision brief is one page and states the fifth-carry history plainly
-- [ ] The specific human question is stated: **who receives this, by what channel**
-- [ ] Both branches are executable on Day 0 without further preparation
-- [ ] Tracking record specified for the send branch
-- [ ] Unknowns 3.1, 3.2, 3.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Send package assembled and complete except recipient/channel — **and one required fix found**: a version stamp, without which the figures misrepresent the current toolchain
+- [x] Strike branch costed: rocket +1, fawley +Solve, and the S39 dependency named — **and the S39 fear refuted**; Sprint 39 survives a strike, but rocket/fawley become *unreachable*, not deferred
+- [x] Decision brief is one page and states the fifth-carry history plainly
+- [x] The specific human question is stated — **and narrowed**: recipient identity is already known (Ferris/Dirkse, in `PROJECT_PLAN.md` ×4); **only the channel/address is missing**
+- [x] Both branches are executable on Day 0 without further preparation — send package §5, strike wording §6 verbatim
+- [x] Tracking record specified for the send branch — a comment on #1462 (which today has **one** comment and no send record), plus a 14-day follow-up rule
+- [x] Unknowns 3.1, 3.2, 3.3 investigated and updated in KNOWN_UNKNOWNS.md (**3.1 🔍 narrowed**, **3.2 ✅**, **3.3 🔶**)
+
+**On Task 7's completion vs the decision's:** the preparation is complete, and **the owner made the decision the same day — Branch A (SEND)** — so 3.1 closed ✅ rather than riding to Day 0. The strike wording (§6) is retained unused in case delivery fails.
 
 ---
 
@@ -1192,7 +1209,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/BACKLOG_CANDIDATE_CATALOG.md && echo "✓
 
 ### Objective
 
-Produce `SPRINT_38/PLAN.md` and `SPRINT_38/prompts/PLAN_PROMPTS.md` — a Day-0-through-Day-13 schedule with per-priority budgets, checkpoints, REPLAN exits, and a Day-0 GO/NO-GO gate — consuming the designs and findings from Tasks 1–10.
+Produce `docs/planning/EPIC_4/SPRINT_38/PLAN.md` and `docs/planning/EPIC_4/SPRINT_38/prompts/PLAN_PROMPTS.md` — a Day-0-through-Day-13 schedule with per-priority budgets, checkpoints, REPLAN exits, and a Day-0 GO/NO-GO gate — consuming the designs and findings from Tasks 1–10.
 
 ### Why This Matters
 
@@ -1302,7 +1319,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 
 ### High Priority (Should Complete Before Sprint 38)
 
-- **Task 7: Consultation Decision Package** (2-3 hours) — **requires a human**; start early to leave time for an answer
+- ✅ **Task 7: Consultation Decision Package** (COMPLETE — 2026-08-18, 3 h) — **decision made: SEND**; channel supplied, package ready, send is a human action
 
 ### Medium Priority (Complete Before Day 1, or by Mid-Sprint)
 
@@ -1326,7 +1343,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 - [ ] camcge Epic-5 handoff scoped; turkey testbed determined concretely
 - [ ] Phase-0 compliance catalog produced; `$66`/#1289 confirmed
 - [ ] P8 viability determined (≥2 eligible candidates, or a budget recommendation)
-- [ ] `SPRINT_38/PLAN.md` and `prompts/PLAN_PROMPTS.md` complete, budget mechanically verified
+- [ ] `docs/planning/EPIC_4/SPRINT_38/PLAN.md` and `prompts/PLAN_PROMPTS.md` complete, budget mechanically verified
 
 **Overall Goal:** No blockers, no surprises, high-confidence sprint start — and **no inherited figure carried without re-derivation**.
 

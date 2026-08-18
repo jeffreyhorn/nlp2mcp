@@ -34,7 +34,7 @@ Recomputed directly from `data/gamslib/gamslib_status.json` using `model_id` as 
 
 **Mechanical count: 65. Recorded floor: 76. Gap: 11.** The mechanical count is **confirmed** at `84fbe43c`. The 76 is **re-observed from the hand-partition, not validated** — §2.1 shows its provenance credits three out-of-corpus models, so the correct target may be 73. Both figures behave as expected in one respect: the floor is not DB-derivable.
 
-The documented provenance chain (`SPRINT_32/BASELINE_METRICS.md` §3, extended):
+The documented provenance chain (`docs/planning/EPIC_4/SPRINT_32/BASELINE_METRICS.md` §3, extended):
 
 ```
 S28 genuine 68  (otpop/chakra/chenery/kand/srkandw + the 6 non-methodology presolve matches)

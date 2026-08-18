@@ -15,6 +15,16 @@
 
 ## §1. Case-c scope guard — re-confirmed (harness, current tree)
 
+> **Toolchain stamp (added 2026-08-18, Sprint 38 Prep Task 7 — required before sending).**
+> The measurements in this document — including `INFES 477 → 382`, the NLP optimum `1.0128`, and the `nh=10`
+> discretization — were taken under **GAMS 51.3.0 / PATH 5.2.01**. The corpus was re-pinned to **GAMS 54.2.1**
+> on 2026-08-12, *after* this document was authored (2026-08-03).
+>
+> **Re-confirmed 2026-08-18 under GAMS 54.2.1 / PATH 5.2.01: rocket is still `model_infeasible` (MODEL STATUS 5).**
+> The failure this document describes reproduces on the current toolchain; the specific INFES and objective
+> figures above are from the original one and may differ slightly on 54.2.1.
+
+
 `kkt_residual.py data/gamslib/raw/rocket.gms` on the current tree:
 
 ```
