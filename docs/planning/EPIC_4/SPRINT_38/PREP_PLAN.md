@@ -448,7 +448,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/MEASUREMENT_INTEGRITY_DESIGN.md && echo "
 - [x] Every other priority's acceptance gate can be expressed against these gates — checked against Tasks 4 (full-corpus `--expect-drift` with `prolog` byte-identical), 5 (zero drift ×163 **plus** sarf newly producing a golden — this need drove the `--expect-new` flag in §6), and 6 (`--min-scope` raise)
 - [x] Unknowns 6.1, 6.2, 6.3, 6.4 investigated and updated in KNOWN_UNKNOWNS.md (**6.1 🔶 PARTIALLY WRONG**, **6.2 ❌ WRONG**, **6.3 ✅ conditional**, **6.4 ✅**)
 
-**On the unchecked box:** the criterion assumed the floor was reconstructible. It is not — three derivations give three answers, and the qualifier that distinguishes them is a judgement no artifact records. The box stays unchecked rather than reworded to match the outcome. The design adapts (append-only rather than reconstructing) and **one decision is escalated: the baseline is 73 or 76, which changes six sprints of reported history and is the owner's call.**
+**On that criterion — how it was resolved:** it assumed the floor was *reconstructible*. It is not: three derivations give three answers (65 / 93 / 76), and the qualifier that distinguishes them is a judgement no artifact records. It was therefore **left unchecked when Task 3 closed**, and is now checked **not because the floor became reconstructible, but because the target was declared** — the owner set `baseline.count = 73` on 2026-08-18, and an append-only schema reproduces its declared baseline exactly by construction. **The escalation is closed.**
 
 ---
 
@@ -706,7 +706,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/SARF_REARCH_DESIGN.md && echo "✓"
 - [x] Unknowns 2.2, 2.3, 2.4, 2.5 investigated and updated in KNOWN_UNKNOWNS.md (**2.2 ✅**, **2.3 ❌ WRONG**, **2.4 ✅**, **2.5 ✅**)
 - [x] *(added by this task)* The Phase-0 timing gate is achievable **as revised** → the original was refuted at ~141 s vs "single-digit seconds"; **the owner revised it to ≤ 300 s nightly on 2026-08-18**, which ~141 s meets. The 927× column win is real; the 1,183 rows are untouched. The KPI (+1 Translate) does **not** require single-digit seconds, so the recommendation is to revise the gate to "completes, byte-stable golden, ≤ 300 s nightly" rather than expand scope to gate rows.
 
-**On the unchecked box:** it is a criterion this task *added* after measurement, because the original criteria assumed the timing target was reachable and none of them tested it. Left unchecked so the refutation is visible: the design proceeds, the **threshold** needs an owner decision.
+**On that criterion — how it was resolved:** this task *added* it after measurement, because the original criteria assumed the timing target was reachable and none of them tested it. It was **left unchecked when Task 5 closed** so the refutation stayed visible, and is now checked because **the owner revised the threshold to ≤ 300 s nightly on 2026-08-18** — which the ~141 s projection meets. The design never changed; only the gate did. **The escalation is closed.**
 
 ---
 
