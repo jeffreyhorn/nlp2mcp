@@ -104,6 +104,10 @@ emits there (`emit_gams.py:2768`), so this change must only add the cold path.
 4. **KKT-residual harness** — *not applicable and not run*: the failure is at
    compile, before any solve. Recorded rather than silently skipped.
 
+### Prerequisite (added 2026-08-18, Sprint 38 Prep Task 9)
+
+**`$66` is not reachable until the `$149` cascade lands.** The cascade is verified working but **unlandable** — `$149`'s rebind drifts `prolog`, a live match, and `$149` cannot be dropped (#1668). Sprint-38 Prep Task 4 further established that **#1668 direction 2 is not implementable at the rebind site**, so this gate cannot be exercised until a replacement direction lands. **Do not budget `$66` as independently schedulable.**
+
 ### PROCEED/REPLAN Signal
 
 **PROCEED** iff `$66` reaches **0** on ganges **and** gangesx independently, the
@@ -132,7 +136,7 @@ than ganges/gangesx.
 `ganges0` **MS-5 @ −386785.5017** vs the standalone source's **MS-2 @
 6395.5444**. A second cold blocker (`ac(i+2,r)` in `stat_pc(i)`) also remains
 (`GANGES_RECOVERY_DESIGN.md` §2). So this must land as a **0-bucket** compile
-correction: Solve stays 108, Match stays 93, and ganges/gangesx stay out of the
+correction: Solve stays 108, Match stays **94** (corrected 2026-08-18 — the figure read 93 before the Sprint-37 Day-9 GAMS-54 re-baseline), and ganges/gangesx stay out of the
 recovered set.
 
 ### Regression guard

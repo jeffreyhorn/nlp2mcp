@@ -80,11 +80,11 @@ That inheritance is itself the sprint's principal risk. The Sprint-37 retrospect
 
 **Estimated Research Time:** ~33.5 hours (within the 28–36 hour target; spread across prep Tasks 2–10)
 
-**By Resolution Status (as of Prep Task 8, 2026-08-18):**
-- ✅ VERIFIED: 13 — **5.3** (per-model numéraire still correct, re-confirmed and stamped under GAMS 54.2.1), **3.1** (**channel supplied by the owner 2026-08-18: email to `ferris@cs.wisc.edu` + `steve@gams.com`/`sdirkse@gams.com`; Branch A SEND unblocked after five carries**), **3.2** (strike ⇒ Sprint 39 survives, but rocket/fawley become unreachable, not deferred), **4.3** (presolve-golden sweep fits CI with headroom; the *local* 26.3 min was a 2× trap), **4.4** (derive `--min-scope` from `git ls-files`, not the filesystem), **2.2** (sarf premise confirmed: volume is per-column, measured), **2.4** (corpus-free surrogate sized), **2.5** (P2/P4 scope arithmetic order-independent), **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes), **1.4** (bucket 0; no gate treats a rising `model_infeasible` as a regression)
+**By Resolution Status (as of Prep Task 9, 2026-08-18):**
+- ✅ VERIFIED: 15 — **7.1** (**43 open issues lack a Phase-0 gate** — current, not historical; compliance is binary, zero partial gates; P7 is under-budgeted), **7.2** (#1289's gate complete, with a stale KPI and a missing prerequisite fixed), **5.3** (per-model numéraire still correct, re-confirmed and stamped under GAMS 54.2.1), **3.1** (**channel supplied by the owner 2026-08-18: email to `ferris@cs.wisc.edu` + `steve@gams.com`/`sdirkse@gams.com`; Branch A SEND unblocked after five carries**), **3.2** (strike ⇒ Sprint 39 survives, but rocket/fawley become unreachable, not deferred), **4.3** (presolve-golden sweep fits CI with headroom; the *local* 26.3 min was a 2× trap), **4.4** (derive `--min-scope` from `git ls-files`, not the filesystem), **2.2** (sarf premise confirmed: volume is per-column, measured), **2.4** (corpus-free surrogate sized), **2.5** (P2/P4 scope arithmetic order-independent), **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes), **1.4** (bucket 0; no gate treats a rising `model_infeasible` as a regression)
 - ❌ WRONG: 5 — **5.2** (**the Epic-5 handoff was already written** — three narrow gaps, not a document; writing one would have duplicated ~90 %), **4.2** (**14 of the 36 would pin emits that do not reproduce their NLP solution** — 7 mismatch, 6 skipped, 1 model_infeasible ⇒ two-tier adoption), **2.3** (**the sarf timing gate is refuted: ~141 s projected, not single-digit seconds** — the 927× column win is real but rows are untouched; **gate REVISED to ≤300 s nightly, owner decision 2026-08-18**), **6.2** (the floor cannot be reproduced from existing artifacts at 76 *or any figure*: three derivations give 65 / 93 / 76) · **1.2** (**no positive requirement is expressible at the `$149` rebind site** — ganges and `prolog` are *locally indistinguishable*; #1668 direction 2 is closed)
 - 🔶 PARTIALLY WRONG: 3 — **5.1** (**not turkey alone — a 10-model `licence-gated` cohort**, 7 % of the corpus, all emitting correctly and all rejected at generation; excluded from projections but actively pursued, ceiling +10 Solve) · **3.3** (the case reproduces under GAMS 54.2.1, but the bundle is **unstamped** and its figures predate the re-pin by 9 days — one-line fix, do not send without it) · **6.1** (`--resolve-changed` silent defect CONFIRMED; but `leak-check` already **exits 2**, so its NO-OP is *not* mistakable for a pass — the defect is the misleading message)
-- 🔍 INCOMPLETE: 7 — including **1.1**, whose `rc=0` question is **untested** (the cascade was never re-applied). **Task 2's "the banked baseline is refuted" claim is RETRACTED by Task 4**: the `$141` counts were *printed-marker undercounts* under a GAMS listing-truncation cap, not a reproduction failure. `$145`×3 and `$149`×9 *do* reproduce exactly. Nothing about `$141` is concludable until a truncation-free census exists — see 1.1.
+- 🔍 INCOMPLETE: 5 — including **1.1**, whose `rc=0` question is **untested** (the cascade was never re-applied). **Task 2's "the banked baseline is refuted" claim is RETRACTED by Task 4**: the `$141` counts were *printed-marker undercounts* under a GAMS listing-truncation cap, not a reproduction failure. `$145`×3 and `$149`×9 *do* reproduce exactly. Nothing about `$141` is concludable until a truncation-free census exists — see 1.1.
 
 **⚠ Task 2 surfaced a finding that lands on Unknown 6.2 early:** the genuine floor's provenance chain credits **three models that are outside the 142-candidate corpus** the floor is reported over (`ps2_f_s`, `ps2_s`, `ps3_s_gic` are `non_convex`, and were already so at the S32 anchor, immediately after the S31 sprint that credited them). Either the floor has been **overstated by 3 since Sprint 31** (true in-corpus floor **73**), or the floor's scope legitimately differs from Solve/Match's and that has never been written down. **Task 3 resolved the design question; the figure is now decided — `baseline.count = 73` (owner, 2026-08-18).** A *reconstructing* tracker is impossible (three derivations give 65 / 93 / 76), so the tracker is now **append-only from a declared baseline**. **The baseline is 73** (in-corpus only), decided 2026-08-18; the S31–S37 series was overstated by 3. See `BASELINE_RECONFIRMATION.md` §2 and `MEASUREMENT_INTEGRITY_DESIGN.md` §4.3.
 
@@ -1294,7 +1294,29 @@ Run the CI gate's own semantics across `docs/issues/ISSUE_*.md` and cross-refere
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — **43 open issues lack a gate; the problem is current, not historical**
+**Verified by:** Task 9 (Phase-0 Compliance Survey)
+**Date:** 2026-08-18 · **Measured at:** `fd3ec910`
+
+**Findings:** Census run using the gate script's **own** functions (`phase0_subsections`, `missing_subsections`), so the classification matches what CI would decide rather than an approximation.
+
+| | compliant | **no gate** | total |
+|---|---|---|---|
+| **OPEN** | 19 | **43** | 62 |
+| CLOSED | 3 | 13 | 16 |
+| unknown | 2 | 0 | 2 |
+| **total** | 24 | 56 | **80** |
+
+**Two structural findings:**
+
+1. **The problem is current.** 43 of 56 un-gated docs are **open** — **69 % of the open backlog**. Only 13 are closed, so this is not a legacy artifact that stopped accruing.
+2. **Compliance is binary — zero partial gates.** Every doc has either all four canonical subsections or no Phase-0 heading at all. **Nobody has ever written half a gate.** The backfill is therefore "write one", not "audit and complete", and the count is exact rather than a judgement call.
+
+**Rule C confirmed in practice:** extras are permitted and used — `ISSUE_1110` carries eight subsections, `ISSUE_1289` six. **The script agreed with a manual read on every doc inspected**; no false positives or negatives.
+
+**Evidence:** the census script (reproduction in `PHASE0_COMPLIANCE_CATALOG.md` §5); `gh issue list --state all --limit 400`.
+
+**Decision:** ✅ **P7 is under-budgeted at 8–10 h against 43 issues** — roughly 12 minutes each, not credible for a gate requiring a hand-derived KKT shape and a verification methodology. **Realistic sprint scope: Tier 1 (11 P8-pool issues), probably its twocge/elec core (6).** The catalog is ordered so P7 works top-down and stops at budget; **the remaining 32 are a standing backlog item to be reported, not quietly dropped.** Tier 2 (4 licence-gated) is deliberately deprioritised — a gate on a model that cannot be solve-verified cannot be exercised. Tier 3 includes several **effective duplicates** whose working gate lives in a different compliant doc (`sarf` #885 vs `ISSUE_1385`; `ganges` #929/#930 vs `ISSUE_1667`), so triage precedes writing.
 
 ---
 
@@ -1325,7 +1347,24 @@ Run the gate against the doc and read the section against rule C.
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the gate is complete, and **two defects in it were found and fixed**
+**Verified by:** Task 9 (Phase-0 Compliance Survey)
+**Date:** 2026-08-18 · **Measured at:** `fd3ec910`
+
+**Findings:** `ISSUE_1289`'s gate is **structurally complete** — all four canonical subsections plus `Bucket / KPI` and `Regression guard`; it passes the script. It carries the **`ac(i+2,r)`** match-correctness risk and the 6th blocker (embedded `ganges0` **MS-5 @ −386785.5017** vs standalone **MS-2 @ 6395.5444**), correctly framing the fix as **0-bucket**.
+
+**Two things were wrong:**
+
+1. **A stale KPI assertion** — it read *"Solve stays 108, Match stays 93"*. **Match has been 94 since the Sprint-37 Day-9 GAMS-54 re-baseline.** A gate asserting an outdated KPI would fail its own acceptance check. Corrected, with the reason recorded inline.
+2. **The cascade prerequisite was absent** — this unknown asks whether the gate records that `$66` is reachable only after the cascade lands. It did not. A **Prerequisite** section now states it, including Task 4's finding that **#1668 direction 2 is not implementable at the rebind site**, so the gate cannot be exercised until a replacement direction lands. **`$66` must not be budgeted as independently schedulable.**
+
+**A correction to this task's own reasoning, recorded because the inference was wrong.** I justified the fix on the grounds that #1289 was an *open* live specification. **It is CLOSED** — and **#1111, which I assumed closed because fawley landed, is OPEN** (it is a broader AD-engine issue; the fawley landing is recorded *within* it). The edit stands on its merits, but **open/closed does not map onto pending/landed** the way I assumed, and any future audit keying on issue state should not make that inference.
+
+**Same pattern checked elsewhere:** `ISSUE_1110` (CLOSED, markov) records *"genuine floor 75 → 76"* — correct when written, a historical record of a landed fix, **left as written**. `ISSUE_1111` carries no KPI assertion. **The stale-figure problem is confined to the one doc.**
+
+**Evidence:** `phase0_subsections(ISSUE_1289)` → 6 subsections, 0 missing; the corrected lines; `gh issue view` states for #1110/#1111/#1289.
+
+**Decision:** ✅ `$66`'s gate is complete and now accurate. **But #1289 being closed while `$66` is undone means issue state is not a reliable proxy for work state in this repo** — worth knowing before any future automation keys on it.
 
 ---
 

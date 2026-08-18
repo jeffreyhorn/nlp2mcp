@@ -41,7 +41,7 @@ This prep plan focuses on research, design, and survey tasks that must complete 
 | 6 | ✅ Presolve-Golden Adoption Plan & Runtime Impact (P4) | High | 3-4 hours | Tasks 1, 2, 3, 4 | P4 coverage asymmetry |
 | 7 | ✅ Consultation Ownership Decision Package (P3) | High | 2-3 hours | Task 1 | P3 — the Day-0 send-or-strike decision |
 | 8 | ✅ camcge Epic-5 Handoff + the 10-Model Licence-Gated Cohort (P5) | Medium | 3-4 hours | Tasks 1, 2 | P5 camcge (Epic 5) + turkey |
-| 9 | Phase-0 Compliance Survey over the Open Backlog (P7) | Medium | 3-4 hours | Task 1 | P7 Phase-0 backfill |
+| 9 | ✅ Phase-0 Compliance Survey over the Open Backlog (P7) | Medium | 3-4 hours | Task 1 | P7 Phase-0 backfill |
 | 10 | Emit-Backlog Candidate Catalog & Selection-Rule Dry Run (P8) | Medium | 3-4 hours | Tasks 1, 2, 9 | P8 slack absorber — with drift prevention |
 | 11 | Plan Sprint 38 Detailed Schedule | Critical | 3-4 hours | All tasks (1–10) | Day-by-day schedule + REPLAN exits + budget |
 
@@ -1031,7 +1031,8 @@ test -f docs/planning/EPIC_4/SPRINT_38/CAMCGE_EPIC5_HANDOFF.md && echo "✓"
 
 ## Task 9: Phase-0 Compliance Survey over the Open Backlog (P7)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-08-18) — **43 open issues un-gated; P7 is under-budgeted**
+**Time Spent:** 3 hours
 **Priority:** Medium
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 38 Day 1
@@ -1074,11 +1075,30 @@ An issue without a Phase-0 gate is not schedulable work; it is an idea. Finding 
 
 ### Changes
 
-*To be completed*
+- **Created** `docs/planning/EPIC_4/SPRINT_38/PHASE0_COMPLIANCE_CATALOG.md` — the census, the three-tier backfill list, and the `$66`/#1289 finding.
+- **Patched** `docs/issues/ISSUE_1289_ganges-family-calibration-assignment-stripping.md`: stale `Match stays 93` → `Match stays **94**`, and a new **Prerequisite** section recording that `$66` is unreachable until the `$149` cascade lands.
+- **Updated** `KNOWN_UNKNOWNS.md`: **7.1 → ✅**, **7.2 → ✅**.
+- **`check_phase0_doc.py` was *run*, not edited** — no `src/`/`scripts/` change, so the quality gate is N/A.
 
 ### Result
 
-*To be completed*
+**✅ SURVEY COMPLETE — 43 open issues lack a Phase-0 gate, and the problem is CURRENT, not historical.**
+
+The census used the gate script's **own** functions (`phase0_subsections`, `missing_subsections`), so the classification is what CI would decide rather than an approximation of it. **80 issue docs → 24 compliant / 56 un-gated**, cross-referenced against 400 GitHub issues:
+
+| | compliant | no gate | total |
+|---|---|---|---|
+| **OPEN** | 19 | **43** | 62 |
+| CLOSED | 3 | 13 | 16 |
+| unknown | 2 | 0 | 2 |
+
+**✅ 7.1 — two structural findings.** **(a) The problem is current:** 43 of the 56 un-gated docs are **open** — **69 % of the open backlog**; only 13 are closed, so this is still accruing rather than a legacy artifact. **(b) Compliance is binary — zero partial gates:** every doc has either all four canonical subsections or no Phase-0 heading at all. **Nobody has ever written half a gate**, which makes the backfill "write one" rather than "audit and complete" and makes the count exact rather than a judgement call. Rule C is confirmed in practice — extras are used (`ISSUE_1110` has eight subsections, `ISSUE_1289` six) — and the script agreed with a manual read on every doc inspected.
+
+**The consequence for the sprint: P7 is under-budgeted.** 8–10 h against 43 issues is ~12 minutes each, not credible for a gate requiring a hand-derived KKT shape and a verification methodology. The catalog is therefore **ordered so P7 works top-down and stops at budget**: **Tier 1 = the 11 P8-pool issues** (twocge ×4, elec ×2, tricp ×2, dinam, clearlak, turkpow — **two models are over half the tier**, so gating them first has the best eligibility-per-hour), **Tier 2 = the 4 licence-gated** (deliberately last — a gate on a model that cannot be solve-verified cannot be exercised), **Tier 3 = the other 28**, several of them **duplicates in effect** whose working gate already lives in a compliant doc (`sarf` #885 vs `ISSUE_1385`; `ganges` #929/#930 vs `ISSUE_1667`). **Realistic sprint scope: Tier 1, probably its twocge/elec core (6) — and the remaining 32 reported as a standing backlog item, not quietly dropped.**
+
+**✅ 7.2 — #1289's gate is complete, and two defects in it were found and fixed.** It is structurally complete (four canonical subsections plus `Bucket / KPI` and `Regression guard`) and correctly frames the fix as **0-bucket**, carrying the `ac(i+2,r)` match-correctness risk and the embedded-vs-standalone divergence. But **it asserted a stale KPI** — *"Match stays 93"*, when Match has been **94** since the Sprint-37 Day-9 v54 re-baseline, so the gate would have failed its own acceptance check — and **it did not record the cascade prerequisite**. Both fixed, the second including Task 4's finding that **#1668 direction 2 is not implementable at the rebind site**, so `$66` must not be budgeted as independently schedulable.
+
+**A correction to this task's own reasoning, recorded because the inference was wrong.** I justified the #1289 edit on the grounds that it was an *open* live spec. **It is CLOSED** — and **#1111, which I assumed closed because fawley landed, is OPEN** (a broader AD-engine issue; the fawley landing is recorded *within* it). The edit stands on its merits, but **issue state is not a proxy for work state in this repo**, and any future audit keying on it will be wrong. Checked for the same stale-figure pattern elsewhere: `ISSUE_1110` records *"floor 75 → 76"* as a correct historical record of a landed fix (**left as written**) and `ISSUE_1111` asserts no KPI — **the staleness is confined to the one doc.**
 
 ### Verification
 
@@ -1108,13 +1128,13 @@ test -f docs/planning/EPIC_4/SPRINT_38/PHASE0_COMPLIANCE_CATALOG.md && echo "✓
 
 ### Acceptance Criteria
 
-- [ ] Open backlog enumerated for emit/AD/KKT-touching issues
-- [ ] Every issue classified three ways, using the CI gate's own semantics
-- [ ] Backfill list prioritised by scheduling likelihood
-- [ ] `$66`/#1289 confirmed complete or finished in this task
-- [ ] The catalog is filterable by Task 10 (eligibility for the P8 sweep)
-- [ ] A compliance count recorded, so P7's sprint work has a measurable target
-- [ ] Unknowns 7.1, 7.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Open backlog enumerated for emit/AD/KKT-touching issues — **80 issue docs cross-referenced against 400 GitHub issues**, so the open/closed split is real rather than inferred from the docs
+- [x] Every issue classified three ways, using the CI gate's own semantics — `phase0_subsections` / `missing_subsections` imported directly, **not reimplemented**; the third class turned out to be **empty (zero partial gates)**, which is itself the finding
+- [x] Backfill list prioritised by scheduling likelihood — **three tiers**, P8-pool first (11), licence-gated deliberately last (4), the rest (28) with duplicates flagged for triage before writing
+- [x] `$66`/#1289 confirmed complete or finished in this task — **complete, and two defects in it fixed**: a stale `Match 93 → 94` and a missing cascade **Prerequisite**
+- [x] The catalog is filterable by Task 10 (eligibility for the P8 sweep) — Tier 1 *is* the P8 pool, tabulated per issue and model
+- [x] A compliance count recorded, so P7's sprint work has a measurable target — **43 open un-gated**, against which **P7's 8–10 h is under-budgeted**; scope stated as Tier 1 with the remaining 32 reported, not dropped
+- [x] Unknowns 7.1, 7.2 verified and updated in KNOWN_UNKNOWNS.md (**7.1 ✅**, **7.2 ✅**)
 
 ---
 
@@ -1338,7 +1358,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 ### Medium Priority (Complete Before Day 1, or by Mid-Sprint)
 
 - ✅ **Task 8: camcge Epic-5 + the Licence-Gated Cohort** (COMPLETE — 2026-08-18, 3 h)
-- **Task 9: Phase-0 Compliance Survey** (3-4 hours) — gates Task 10
+- ✅ **Task 9: Phase-0 Compliance Survey** (COMPLETE — 2026-08-18, 3 h) — **43 open issues un-gated; P7 under-budgeted → Tier 1 (11) is the realistic scope**; gates Task 10
 - **Task 10: Backlog Candidate Catalog** (3-4 hours)
 
 ### Overall Prep Time: 37-50 hours (~5-6 working days)
