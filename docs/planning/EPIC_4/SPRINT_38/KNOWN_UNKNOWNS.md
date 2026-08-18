@@ -80,11 +80,11 @@ That inheritance is itself the sprint's principal risk. The Sprint-37 retrospect
 
 **Estimated Research Time:** ~33.5 hours (within the 28–36 hour target; spread across prep Tasks 2–10)
 
-**By Resolution Status (as of Prep Task 5, 2026-08-17):**
-- ✅ VERIFIED: 8 — **2.2** (sarf premise confirmed: volume is per-column, measured), **2.4** (corpus-free surrogate sized), **2.5** (P2/P4 scope arithmetic order-independent), **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes), **1.4** (bucket 0; no gate treats a rising `model_infeasible` as a regression)
-- ❌ WRONG: 3 — **2.3** (**the sarf timing gate is refuted: ~141 s projected, not single-digit seconds** — the 927× column win is real but rows are untouched; **gate REVISED to ≤300 s nightly, owner decision 2026-08-18**), **6.2** (the floor cannot be reproduced from existing artifacts at 76 *or any figure*: three derivations give 65 / 93 / 76) · **1.2** (**no positive requirement is expressible at the `$149` rebind site** — ganges and `prolog` are *locally indistinguishable*; #1668 direction 2 is closed)
+**By Resolution Status (as of Prep Task 6, 2026-08-18):**
+- ✅ VERIFIED: 10 — **4.3** (presolve-golden sweep fits CI with headroom; the *local* 26.3 min was a 2× trap), **4.4** (derive `--min-scope` from `git ls-files`, not the filesystem), **2.2** (sarf premise confirmed: volume is per-column, measured), **2.4** (corpus-free surrogate sized), **2.5** (P2/P4 scope arithmetic order-independent), **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes), **1.4** (bucket 0; no gate treats a rising `model_infeasible` as a regression)
+- ❌ WRONG: 4 — **4.2** (**14 of the 36 would pin emits that do not reproduce their NLP solution** — 7 mismatch, 6 skipped, 1 model_infeasible ⇒ two-tier adoption), **2.3** (**the sarf timing gate is refuted: ~141 s projected, not single-digit seconds** — the 927× column win is real but rows are untouched; **gate REVISED to ≤300 s nightly, owner decision 2026-08-18**), **6.2** (the floor cannot be reproduced from existing artifacts at 76 *or any figure*: three derivations give 65 / 93 / 76) · **1.2** (**no positive requirement is expressible at the `$149` rebind site** — ganges and `prolog` are *locally indistinguishable*; #1668 direction 2 is closed)
 - 🔶 PARTIALLY WRONG: 1 — **6.1** (`--resolve-changed` silent defect CONFIRMED; but `leak-check` already **exits 2**, so its NO-OP is *not* mistakable for a pass — the defect is the misleading message)
-- 🔍 INCOMPLETE: 16 — including **1.1**, whose `rc=0` question is **untested** (the cascade was never re-applied). **Task 2's "the banked baseline is refuted" claim is RETRACTED by Task 4**: the `$141` counts were *printed-marker undercounts* under a GAMS listing-truncation cap, not a reproduction failure. `$145`×3 and `$149`×9 *do* reproduce exactly. Nothing about `$141` is concludable until a truncation-free census exists — see 1.1.
+- 🔍 INCOMPLETE: 13 — including **1.1**, whose `rc=0` question is **untested** (the cascade was never re-applied). **Task 2's "the banked baseline is refuted" claim is RETRACTED by Task 4**: the `$141` counts were *printed-marker undercounts* under a GAMS listing-truncation cap, not a reproduction failure. `$145`×3 and `$149`×9 *do* reproduce exactly. Nothing about `$141` is concludable until a truncation-free census exists — see 1.1.
 
 **⚠ Task 2 surfaced a finding that lands on Unknown 6.2 early:** the genuine floor's provenance chain credits **three models that are outside the 142-candidate corpus** the floor is reported over (`ps2_f_s`, `ps2_s`, `ps3_s_gic` are `non_convex`, and were already so at the S32 anchor, immediately after the S31 sprint that credited them). Either the floor has been **overstated by 3 since Sprint 31** (true in-corpus floor **73**), or the floor's scope legitimately differs from Solve/Match's and that has never been written down. **Task 3 resolved the design question; the figure is now decided — `baseline.count = 73` (owner, 2026-08-18).** A *reconstructing* tracker is impossible (three derivations give 65 / 93 / 76), so the tracker is now **append-only from a declared baseline**. **The baseline is 73** (in-corpus only), decided 2026-08-18; the S31–S37 series was overstated by 3. See `BASELINE_RECONFIRMATION.md` §2 and `MEASUREMENT_INTEGRITY_DESIGN.md` §4.3.
 
@@ -756,7 +756,21 @@ Define the review protocol first, then apply it to a pilot subset before committ
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — 14 of the 36 would pin an emit that does not reproduce its NLP solution
+**Verified by:** Task 6 (Presolve-Golden Adoption Plan)
+**Date:** 2026-08-18 · **Measured at:** `cc8acf6c`
+
+**Findings:** The assumption was that each of the 36 could be reviewed against its model's expected presolve emit and adopted. **Reviewing them split the set in two**, and the second half is exactly the hazard this unknown was written to catch.
+
+**Tier 1 — 22 models where the presolve path is load-bearing for a match** (`model_optimal_presolve` **+ match**): catmix, cpack, etamac, harker, hhfair, himmel16, irscge, like, lrgcge, marco, mathopt1, mathopt4, maxmin, mingamma, moncge, paperco, qsambal, sambal, stdcge, tforss, weapons, worst. The presolve emit *produces the recorded match*, so a golden guards something the KPI depends on.
+
+**Tier 2 — 14 models with a presolve golden but no presolve match:** 7 **`mismatch`** (china, circle, imsl, lmp2, prodsp2, spatequ, trig) whose emit demonstrably does **not** reproduce the NLP solution; 6 **`skipped`** (aircraft, apl1p, apl1pca, ps10_s_mn, ps5_s_mn, senstran) never compared at all; and **`mine`**, which is **`model_infeasible`** — a presolve golden for a model that does not solve.
+
+Pinning a wrong-but-stable emit is *defensible* as drift detection, but it carries a real cost: **when someone later fixes `circle`'s presolve emit the gate flags it as drift**, and the reflex is `make regen-goldens` — the laundering path the leak gate exists to prevent.
+
+**Evidence:** the 36 cross-referenced against `outcome_category` + `comparison_status` in the DB; the existing 17 are a different population (dominated by presolve-match models). See `PRESOLVE_GOLDEN_ADOPTION_PLAN.md` §1–§2.
+
+**Decision:** ❌ **Do not adopt wholesale. Adopt Tier 1 (22) in Sprint 38; put Tier 2 (14) behind a per-model sign-off, defaulting to defer.** That takes in-scope 163 → **185** and closes most of the asymmetry (presolve 17 → 39, ratio 9.0:1 → 3.9:1) without pinning known-wrong emits. The review protocol is specified in §2, with exclusions recorded in the **allowlist** — next to the mechanism rather than in a planning doc.
 
 ---
 
@@ -788,7 +802,32 @@ Time the sweep at the current scope, identify the slow-emit members of the new b
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — comfortable headroom, **and the local measurement was a trap**
+**Verified by:** Task 6 (Presolve-Golden Adoption Plan)
+**Date:** 2026-08-18 · **Measured at:** `cc8acf6c`
+
+**Findings:** The measurement that matters is **CI, not the dev machine**, and they disagree by ~2×.
+
+| | at 163 in-scope |
+|---|---|
+| local (3 workers, quiet) | **1578.9 s = 26.3 min** |
+| **CI** (`ubuntu-latest`, 3 workers) | **11.9 – 12.9 min** (29 real sweeps) |
+
+The CI job's budget is **`timeout-minutes: 25`**. **Extrapolating from the local number would have produced a false alarm** — 26.3 min → ~32 min projected → "adoption blocks every PR", since golden-staleness is a **required status check**. That conclusion would have been wrong.
+
+Projection (the `--all` corpus download ~1 min is fixed; only the sweep scales by 199/163 = 1.22×):
+
+| scope | typical | worst observed | budget used | headroom |
+|---|---|---|---|---|
+| 163 today | 11.9 min | 12.9 min | 52 % | 12.1 min |
+| **199** | **14.3 min** | **15.5 min** | **62 %** | **9.5 min** |
+| 185 (Tier 1) | ~13.0 min | ~14.1 min | ~56 % | ~10.9 min |
+
+**0 timeouts expected at the 3-worker default.** Per-golden timeout risk comes from slow-emit models, and **none of the known slow-emit class (ganges, gangesx, clearlak, turkpow, dinam) is among the 36**; the allowlist already carries that tail. No mitigation needed.
+
+**Evidence:** `/usr/bin/time -p make check-goldens` locally; `gh run list --workflow="Golden Staleness Check" --limit 60` for real CI durations — the ~0.1-min runs are the **skip path** (the "Decide whether to run" gate), only the 29 runs over 5 minutes are real sweeps. See `PRESOLVE_GOLDEN_ADOPTION_PLAN.md` §3.
+
+**Decision:** ✅ Adoption is safe on runtime. **One follow-up recorded:** at 199 the job uses **62 % of a 25-minute budget** and the corpus only grows — **raise `timeout-minutes` or split the sweep before scope exceeds ~250**, rather than discovering it when a required check starts timing out.
 
 ---
 
@@ -820,7 +859,24 @@ Read the assertion's implementation to confirm where it fires. Work through the 
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — derive it, but only from an independent source
+**Verified by:** Task 6 (Presolve-Golden Adoption Plan)
+**Date:** 2026-08-18 · **Measured at:** `cc8acf6c`
+
+**Findings:** `--min-scope` is compared against the **pre-narrowing discovery count**, which is the property that lets it catch an under-provisioned corpus (`discover_goldens()` silently drops any golden whose raw source is absent). Adoption moves discovered 170 → **206** (both tiers) or **192** (Tier 1), so the hard-coded `170` would under-guard the moment the goldens land.
+
+**Deriving the value is right — but the obvious source makes the check vacuous:**
+
+| candidate | verdict |
+|---|---|
+| filesystem `ls data/gamslib/mcp/*_mcp*.gms` | ❌ **vacuous** — the same quantity `discover_goldens()` starts from, so the assertion compares a number to itself and always passes. **The self-certification defect this task is about, reappearing inside the guard.** |
+| **`git ls-files data/gamslib/mcp/*.gms`** | ✅ **independent** — the git index knows how many goldens are *committed* regardless of raw-source provisioning, which is exactly the failure mode `--min-scope` exists to catch |
+
+Both currently report **170**, so the substitution is verifiable as a no-op *before* the goldens land.
+
+**Evidence:** the `--min-scope` help text and its comparison point in `check_golden_staleness.py`; both counts measured at 170. See `PRESOLVE_GOLDEN_ADOPTION_PLAN.md` §4.
+
+**Decision:** ✅ **Replace the literal with a value derived from `git ls-files`**, so the floor tracks the corpus automatically and the "raise it in the same change" discipline becomes unnecessary. If deferred, the literal must move **170 → 192** (Tier 1) in the adoption commit itself. Applied atomically either way.
 
 ---
 
