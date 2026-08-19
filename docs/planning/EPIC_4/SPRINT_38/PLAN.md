@@ -1,7 +1,7 @@
 # Sprint 38 Detailed Schedule (Day 0 + Days 1–13)
 
 **Prep:** Tasks 1–11 complete (10 design/scoping docs + this schedule). **Anchor:** Day-0 *code* state = S37 close `8cffec29` plus the prep commits (docs-only). The `--resolve-changed --since-commit` / DB anchor is **still `78ceaead`** and **P6d re-anchors it to the S37 close** — see §3, where the ordering matters.
-**Budget:** ≤ 12 h/day over 14 days; 168 h cap; nominal **116 h**, max day **10 h** (§8, verified mechanically). Risk **MEDIUM-HIGH** — P2 is a re-architecture that lands atomically or not at all, and P1 enters the sprint **without an implementable fix**.
+**Budget:** ≤ 12 h/day over 14 days; 168 h cap; nominal **112 h** (re-planned from 116 h on Day 1 — see the block below), max day **10 h** (§8, re-verified mechanically). Risk **MEDIUM-HIGH** — P2 is a re-architecture that lands atomically or not at all, and P1 enters the sprint **without an implementable fix**.
 
 > ## ⚠ RE-PLANNED 2026-08-19 (Day 1 REPLAN + owner decision)
 >
@@ -211,9 +211,9 @@ Branch `planning/sprint38-day13-close`. Final pipeline retest under **≥3 `PYTH
 
 ## 7. Known Unknowns Status
 
-**28 unknowns: 17 ✅ VERIFIED · 5 ❌ WRONG · 3 🔶 PARTIALLY WRONG · 3 🔍 INCOMPLETE.**
+**28 unknowns, as of Day 1 (2026-08-19): 17 ✅ VERIFIED · 6 ❌ WRONG · 4 🔶 PARTIALLY WRONG · 1 🔍 INCOMPLETE.** *(Prep closed at 17/5/3/3; Day 1 moved **1.1 → 🔶**, **1.3 → ❌**, and left **1.5** as the only open item.)*
 
-**The 3 INCOMPLETE, and why none is an oversight:**
+**The three that were INCOMPLETE at prep close, and their Day-1 disposition:**
 
 | # | priority | why it is open | closes |
 |---|---|---|---|
@@ -303,5 +303,5 @@ Branch `planning/sprint38-day13-close`. Final pipeline retest under **≥3 `PYTH
 
 ---
 
-**Document Status:** ✅ Complete — Sprint 38 Prep Task 11. Budget verified mechanically (116 h, max day 10 h). **P1 enters as an evaluation, not a landing** — two Critical unknowns are unanswerable until Day 1 runs, and that is recorded as a NO-GO for the track rather than scheduled around.
+**Document Status:** ✅ Complete — Sprint 38 Prep Task 11, **re-planned 2026-08-19 after the Day-1 P1 REPLAN**. Budget re-verified mechanically (**112 h**, max day 10 h; was 116 h). **P1 entered as an evaluation, not a landing** — two Critical unknowns were unanswerable until Day 1 ran, recorded as a NO-GO for the track rather than scheduled around; **Day 1 refuted the only untested direction and the track REPLAN'd**.
 **Last Updated:** 2026-08-18 · **Owner:** Sprint 38 execution team

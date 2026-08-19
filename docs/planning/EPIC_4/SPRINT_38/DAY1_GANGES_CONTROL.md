@@ -116,7 +116,7 @@ The Day-1 exit fires on **either** clause, and **both** fire:
 | direction C misses `rc=0` on either model | **fires** — and it cannot do otherwise: direction C is a no-op, so its emit is byte-identical to the banked rebind's |
 | perturbs anything outside `{ganges, gangesx, korcge}` | **fires** — the full-corpus sweep (§4a) drifts **exactly one** model outside the set: `prolog`, **−3 bytes**, a live `model_optimal` + match model. Direction C cannot change that. |
 
-**Exit taken. `src/` reverted; the working tree is byte-identical to `main`** (verified by checksum, §7).
+**Exit taken. `src/` reverted; the working tree is byte-identical to `main`** (verified by checksum, §7 — `4923a97d6c6edaee328c567a9167fd76`).
 
 **Budget:** P1's remaining **~14 h moves to P8**, whose catalog was built in prep for exactly this (`BACKLOG_CANDIDATE_CATALOG.md`, 5 eligible candidates). **P8 is gated by P7**, so the reallocation lands on Days 11–12 as scheduled, not earlier.
 
@@ -172,7 +172,7 @@ Move the rebind to a stage that still holds the equation's free-index context. �
 | **Pull P7 forward to Days 2–3** ← *recommended* | P8 becomes startable earlier; the Days 9–10 P7 slot frees for P8 | P7 is **under-budgeted at 8–10 h against 43 issues** (Task 9), so extra hours are genuinely useful, not make-work |
 | Pull P6a/P6b forward | harmless, but 6b already precedes its two dependents on Day 4 | buys no ordering |
 | Extend P8 at the end | **blocked** — P8 cannot start before P7 | this is the trap |
-| Leave Days 2–3 unfilled | honest, and costs 14 h of a 116 h sprint | acceptable if the owner prefers not to re-plan mid-sprint |
+| Leave Days 2–3 unfilled | honest, and costs 14 h of the then-116 h sprint | acceptable if the owner prefers not to re-plan mid-sprint |
 
 **No option is applied here.** Re-planning the sprint is not Day 1's authority, and the plan's §6 pre-registers where budget goes precisely so it is not improvised.
 
@@ -206,7 +206,8 @@ grep -c 'bound_indices=' src/kkt/stationarity.py           # 0
 grep -n 'differentiate_expr(sum_node.body' src/kkt/stationarity.py
 
 # working tree restored
-md5 -q src/ad/derivative_rules.py                          # == pristine
+# checksum — portable across macOS and Linux
+(md5sum src/ad/derivative_rules.py 2>/dev/null || md5 -q src/ad/derivative_rules.py)   # == pristine
 ```
 
 ---
