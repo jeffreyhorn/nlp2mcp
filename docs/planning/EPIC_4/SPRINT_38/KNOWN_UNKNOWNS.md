@@ -80,11 +80,11 @@ That inheritance is itself the sprint's principal risk. The Sprint-37 retrospect
 
 **Estimated Research Time:** ~33.5 hours (within the 28–36 hour target; spread across prep Tasks 2–10)
 
-**By Resolution Status (as of Prep Task 9, 2026-08-18):**
-- ✅ VERIFIED: 15 — **7.1** (**43 open issues lack a Phase-0 gate** — current, not historical; compliance is binary, zero partial gates; P7 is under-budgeted), **7.2** (#1289's gate complete, with a stale KPI and a missing prerequisite fixed), **5.3** (per-model numéraire still correct, re-confirmed and stamped under GAMS 54.2.1), **3.1** (**channel supplied by the owner 2026-08-18: email to `ferris@cs.wisc.edu` + `steve@gams.com`/`sdirkse@gams.com`; Branch A SEND unblocked after five carries**), **3.2** (strike ⇒ Sprint 39 survives, but rocket/fawley become unreachable, not deferred), **4.3** (presolve-golden sweep fits CI with headroom; the *local* 26.3 min was a 2× trap), **4.4** (derive `--min-scope` from `git ls-files`, not the filesystem), **2.2** (sarf premise confirmed: volume is per-column, measured), **2.4** (corpus-free surrogate sized), **2.5** (P2/P4 scope arithmetic order-independent), **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes), **1.4** (bucket 0; no gate treats a rising `model_infeasible` as a regression)
+**By Resolution Status (as of Prep Task 10, 2026-08-18):**
+- ✅ VERIFIED: 17 — **8.1** (**5 candidates satisfy the rule vs a threshold of 2**, but **0 have a Phase-0 gate ⇒ P7 gates P8**; Task 9's Tier 1 needs correcting both ways), **8.2** (the rule **does** admit pattern matches; four-part criterion from three self-produced false positives, one 83 % wrong), **7.1** (**43 open issues lack a Phase-0 gate** — current, not historical; compliance is binary, zero partial gates; P7 is under-budgeted), **7.2** (#1289's gate complete, with a stale KPI and a missing prerequisite fixed), **5.3** (per-model numéraire still correct, re-confirmed and stamped under GAMS 54.2.1), **3.1** (**channel supplied by the owner 2026-08-18: email to `ferris@cs.wisc.edu` + `steve@gams.com`/`sdirkse@gams.com`; Branch A SEND unblocked after five carries**), **3.2** (strike ⇒ Sprint 39 survives, but rocket/fawley become unreachable, not deferred), **4.3** (presolve-golden sweep fits CI with headroom; the *local* 26.3 min was a 2× trap), **4.4** (derive `--min-scope` from `git ls-files`, not the filesystem), **2.2** (sarf premise confirmed: volume is per-column, measured), **2.4** (corpus-free surrogate sized), **2.5** (P2/P4 scope arithmetic order-independent), **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes), **1.4** (bucket 0; no gate treats a rising `model_infeasible` as a regression)
 - ❌ WRONG: 5 — **5.2** (**the Epic-5 handoff was already written** — three narrow gaps, not a document; writing one would have duplicated ~90 %), **4.2** (**14 of the 36 would pin emits that do not reproduce their NLP solution** — 7 mismatch, 6 skipped, 1 model_infeasible ⇒ two-tier adoption), **2.3** (**the sarf timing gate is refuted: ~141 s projected, not single-digit seconds** — the 927× column win is real but rows are untouched; **gate REVISED to ≤300 s nightly, owner decision 2026-08-18**), **6.2** (the floor cannot be reproduced from existing artifacts at 76 *or any figure*: three derivations give 65 / 93 / 76) · **1.2** (**no positive requirement is expressible at the `$149` rebind site** — ganges and `prolog` are *locally indistinguishable*; #1668 direction 2 is closed)
 - 🔶 PARTIALLY WRONG: 3 — **5.1** (**not turkey alone — a 10-model `licence-gated` cohort**, 7 % of the corpus, all emitting correctly and all rejected at generation; excluded from projections but actively pursued, ceiling +10 Solve) · **3.3** (the case reproduces under GAMS 54.2.1, but the bundle is **unstamped** and its figures predate the re-pin by 9 days — one-line fix, do not send without it) · **6.1** (`--resolve-changed` silent defect CONFIRMED; but `leak-check` already **exits 2**, so its NO-OP is *not* mistakable for a pass — the defect is the misleading message)
-- 🔍 INCOMPLETE: 5 — including **1.1**, whose `rc=0` question is **untested** (the cascade was never re-applied). **Task 2's "the banked baseline is refuted" claim is RETRACTED by Task 4**: the `$141` counts were *printed-marker undercounts* under a GAMS listing-truncation cap, not a reproduction failure. `$145`×3 and `$149`×9 *do* reproduce exactly. Nothing about `$141` is concludable until a truncation-free census exists — see 1.1.
+- 🔍 INCOMPLETE: 3 — including **1.1**, whose `rc=0` question is **untested** (the cascade was never re-applied). **Task 2's "the banked baseline is refuted" claim is RETRACTED by Task 4**: the `$141` counts were *printed-marker undercounts* under a GAMS listing-truncation cap, not a reproduction failure. `$145`×3 and `$149`×9 *do* reproduce exactly. Nothing about `$141` is concludable until a truncation-free census exists — see 1.1.
 
 **⚠ Task 2 surfaced a finding that lands on Unknown 6.2 early:** the genuine floor's provenance chain credits **three models that are outside the 142-candidate corpus** the floor is reported over (`ps2_f_s`, `ps2_s`, `ps3_s_gic` are `non_convex`, and were already so at the S32 anchor, immediately after the S31 sprint that credited them). Either the floor has been **overstated by 3 since Sprint 31** (true in-corpus floor **73**), or the floor's scope legitimately differs from Solve/Match's and that has never been written down. **Task 3 resolved the design question; the figure is now decided — `baseline.count = 73` (owner, 2026-08-18).** A *reconstructing* tracker is impossible (three derivations give 65 / 93 / 76), so the tracker is now **append-only from a declared baseline**. **The baseline is 73** (in-corpus only), decided 2026-08-18; the S31–S37 series was overstated by 3. See `BASELINE_RECONFIRMATION.md` §2 and `MEASUREMENT_INTEGRITY_DESIGN.md` §4.3.
 
@@ -1398,7 +1398,29 @@ Query the DB for the pool, apply the pre-registered rule to each candidate, and 
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — **5 eligible on the pre-registered rule (threshold 2). But 0 eligible today: none has a Phase-0 gate, so P7 gates P8.**
+**Verified by:** Task 10 (Backlog Candidate Catalog)
+**Date:** 2026-08-18 · **Measured at:** `32a839d5` · **Toolchain:** GAMS 54.2.1 / PATH 5.2.01
+
+**Findings:** The pool is **17 models, 6 deep-track ⇒ 11 candidates**. **All 11 have committed goldens** — emit succeeds for every one, so every failure is at GAMS-compile, GAMS-execution or PATH stage, never at translate.
+
+**Five satisfy the rule (reproduced fingerprint AND named fix surface):**
+
+| model | reproduced fingerprint | terminal state | fix surface |
+|---|---|---|---|
+| **twocge** | 8 × empty-equation-unfixed over 2 pairs (`eqpw.nu_eqpw`, `eqw.nu_eqw`) | `ABORTED, EXECERROR = 8` | **#1331**, names both |
+| **tricp** | 108 × `Unmatched variable not free or fixed` | `ABORTED, EXECERROR = 108` | **#1062** |
+| **elec** | div-by-zero at lines 99/100/101 → 30 × `Evaluation error(s) in equation "stat_x(iN)"` | `ABORTED, EXECERROR = 3` | **#983 / #1325** |
+| **dyncge** | 4 × empty-equation-unfixed on `eqpf2.nu_eqpf2` | `ABORTED, EXECERROR = 4` | #1331's mechanism, **no own doc** |
+| **lnts** | **NEW** — `y.lo = y.up = 0` at `('y2','h50')`/`('y3','h50')` while `y_fx_*` equations demand **5** and **45** | **MS-4 at ITERATION COUNT 0** | pruned-instance `.fx` zeroing in `emit_gams.py`, **no own doc** |
+
+**Rejected (6), with reasons:** **agreste** — new diagnosis (MS-5 after 9,734 iterations; *banked as the highest-value item* — an **LP**, `verified_convex`, NLP MS-1 @ 17706.43, and a *locally* infeasible LCP is structurally odd); **cesam** — new diagnosis (MS-4 at 0 iterations, the same signature as lnts, so it was **checked not assumed**: **0 `_fx_` equations**, so lnts's mechanism cannot apply); **indus** — 31 errors spanning `$130/$140/$141/$148/$149/$408/$409`, broad not bounded; **dinam** — 22 errors, and **1.5 directs treating the `$149` family as untested, not pending-unblock**; **turkpow**, **clearlak** — structurally excluded by the pre-registered exclusions.
+
+**Two findings the DB does not show.** (1) **Its category names mislead on 4 of 11:** `path_solve_terminated` reads as *"PATH gave up"*, but dyncge/elec/tricp/twocge all carry `solver_version: None` and abort at **GAMS execution before PATH is invoked** — they are emit defects, not solver-tuning work. (2) **5 of 11 have no owning issue doc at all** (agreste, cesam, lnts, dyncge, indus), and their DB messages are the generic `Parse error: compilation_error` / `no_solve_summary` / `Model: Infeasible (status 4)` — **no fingerprint whatsoever**, so each had to be reproduced from scratch.
+
+**Evidence:** `BACKLOG_CANDIDATE_CATALOG.md` §1–§3; per-model `.lst` runs from a scratch directory; the lnts runtime bound probe.
+
+**Decision:** ✅ **P8 clears its threshold with room — but P7 is its prerequisite, which neither priority currently states.** **Task 9's Tier 1 needs correcting in both directions:** clearlak #1291 and turkpow #1316 are **structurally excluded** from P8 and should drop out of Tier-1 priority, while **dyncge and lnts are missing entirely** and need a doc *created*, not merely gated. **Recommended P7 order = P8's shortlist:** #1331 → #1062 → #983/#1325 → dyncge (new doc) → lnts (new doc). **Worth stating honestly:** all five are Translate-stable and Solve-uncertain, with **Match unclaimed** — P8 is a slack absorber, not a KPI projection, consistent with Sprint 38 being deliberately not floor-targeted.
 
 ---
 
@@ -1429,7 +1451,28 @@ Re-read the S37 Day-0 false positive and derive the operational criterion. Apply
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — **yes, and the rule as written admits them.** Criterion derived from **three** false positives this task produced, one of them **83 % wrong**
+**Verified by:** Task 10 (Backlog Candidate Catalog)
+**Date:** 2026-08-18 · **Measured at:** `32a839d5`
+
+**Findings:** The assumption was right and the guard was missing. *"Reproduced fingerprint"* is **silent on what counts as reproduction**, and every trap below satisfies a plain reading of it. All three were produced *inside this task*, which is why the criterion is concrete rather than a slogan.
+
+**(a) A grep that matched the emitter's own comment.** `grep -c 'division by zero'` returns **1** for dyncge, twocge and tricp — none of which has such an error. The hit is a **comment in the generated MCP source** (`* Initialize variables to avoid division by zero during model generation.`). **A `.lst` contains the echoed source as well as the diagnostics**, so an unanchored search over it reads the model's own text as evidence about its behaviour.
+
+**(b) A structural pattern that is wrong 5 times in 6.** Sizing lnts's defect by scanning for the co-occurrence (a variable with **both** a `_fx_` equation and a blanket pruned zeroing) matches **6 models — lnts plus catmix, otpop, springchain, ganges, gangesx. Five of them solve fine.** Tightening to *"nonzero `_fx_` RHS"* does **not** help: catmix (1), otpop (29.4) and springchain (2) all still match. **The discriminator is whether the pruning guard actually covers the fixed tuple — a runtime property of `ord`/`card` against the model's own set sizes, unreadable from source.** Negative control: probing otpop shows `x.lo` unset at `1974`, `x.up = 32.25`, never zeroed, **MS-1 Optimal**.
+
+**(c) Marker counting undercounts even with no truncation.** clearlak **8** errors vs 5 printed marker lines; dinam **22** vs 9; indus **31** vs 25; turkpow **14** vs 5 — **all with zero truncation notices**. This generalises Task 2's `$141` retraction: that was attributed to listing *truncation*, but marker counting is wrong **even when nothing is truncated**, because one printed line can carry several codes.
+
+**The operational criterion — a fingerprint is REPRODUCED only if all four hold:**
+
+1. **The evidence is a GAMS diagnostic, not echoed source** — match anchored `^\*\*\*\*` lines (trap a).
+2. **A terminal state is asserted** — `MODEL STATUS n`, `SOLVE ... ABORTED, EXECERROR = n`, or `**** N ERROR(S)` **read from GAMS's own line**, never a marker or line count (trap c).
+3. **The mechanism is observed, not inferred from structure** — where the defect is a runtime property (a guard firing, a bound collapsing), **probe it at runtime** (`display var.lo, var.up` before the solve). A source pattern is a hypothesis to test (trap b).
+4. **A negative control passes** — at least one model matching the pattern but *not* exhibiting the defect is probed and shown clean. Without it, an 83 %-wrong pattern looks like a finding.
+
+**Evidence:** `BACKLOG_CANDIDATE_CATALOG.md` §4; the otpop control probe; the four-model marker-vs-total table.
+
+**Decision:** ✅ **Amend the rule with the four criteria.** Every catalog entry carries its reproduction command, and each was **run for this catalog** rather than quoted from a prior sprint — which is what the S37 Day-0 `$141` false positive (`_expr_contains_varref_attribute`, actually from `25feacd3`, an unrelated cesam fix) would have required to be caught at the time.
 
 ---
 
