@@ -51,9 +51,9 @@ These cover models in Sprint 38's own P8 sweep pool. **An issue here without a g
 
 **twocge holds 4 of the 11** and **elec 2** — so two models account for over half of Tier 1. Gating those two first has the best ratio of effort to eligibility gained.
 
-### Tier 2 — the licence-gated cohort (4 issues)
+### Tier 2 — the license-gated cohort (4 issues)
 
-`sroute` #919 · `egypt` #927 · `ferts` #928, #1290. **Deliberately low priority:** these models cannot be solve-verified until licence capacity exists (Task 8's cohort), so a gate on them cannot be exercised. Backfill *after* a licence lands, not before.
+`sroute` #919 · `egypt` #927 · `ferts` #928, #1290. **Deliberately low priority:** these models cannot be solve-verified until license capacity exists (Task 8's cohort), so a gate on them cannot be exercised. Backfill *after* a license lands, not before.
 
 ### Tier 3 — everything else (28 issues)
 

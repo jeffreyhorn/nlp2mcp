@@ -4,7 +4,7 @@
 
 **Verdict: 🔶 THE HANDOFF IS ALREADY WRITTEN — THREE GAPS, NOT A DOCUMENT.** The task assumed the camcge refutation record needed assembling. **It does not**: `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` already carries the diagnosis, every refuted variant, the two-nullspaces analysis, the three-part formulation, and an explicit *do-not-re-run* instruction. Writing a second document would have duplicated ~90 % of it and created a second thing to keep in sync.
 
-**turkey is not a special case: ten models share the identical licence block, and §4 treats them as one cohort.**
+**turkey is not a special case: ten models share the identical license block, and §4 treats them as one cohort.**
 
 ---
 
@@ -69,7 +69,7 @@ Gap 2 is the same defect Task 7 found in the consultation bundle: **measurements
 
 **The per-model-numéraire fallback remains the right recommendation.** Nothing since Sprint 32 has changed the two-nullspaces analysis, and the S37 control reproduced every predicted figure under the new toolchain. What it buys: a *selection* on the price ray rather than a perturbation, reproducing the documented optimum exactly. What it does **not** buy: closure of the row-redundancy nullspace — that is the three-part formulation's part (3), and it is the actual Epic-5 research.
 
-## 4. The licence-gated cohort (5.1) — **10 models, treated uniformly**
+## 4. The license-gated cohort (5.1) — **10 models, treated uniformly**
 
 **Corrected scope (owner, 2026-08-18): turkey is not a special case.** An earlier draft of this task singled turkey out for reclassification. That was wrong — **ten models carry the identical block**, and they should be treated as one cohort rather than one model plus nine unexamined others.
 
@@ -84,30 +84,30 @@ Gap 2 is the same defect Task 7 found in the consultation bundle: **measurements
 | Toolchain | all recorded under GAMS **54.2.1** |
 | **Emit status** | **all ten have committed goldens** — translate succeeded; only the *solve* is blocked |
 
-The shared signature is exact: same outcome, same null solver version, same cause. **This is one licence problem, not ten model problems.**
+The shared signature is exact: same outcome, same null solver version, same cause. **This is one license problem, not ten model problems.**
 
 ### 4.2 What the cohort is worth
 
-**Ceiling: Solve 108 → 118** if all ten solve and match. Realistically fewer will match, but **the emit for all ten is already verified** — goldens are committed and swept by the leak gate — so nothing stands between them and a solve attempt except licence capacity.
+**Ceiling: Solve 108 → 118** if all ten solve and match. Realistically fewer will match, but **the emit for all ten is already verified** — goldens are committed and swept by the leak gate — so nothing stands between them and a solve attempt except license capacity.
 
-**One licence unlocks all ten as a batch.** That is the operative fact for the pursuit: the ask is worth ~10 models, not 1. A single `--only-solve` pass over the cohort is all that's needed once capacity exists.
+**One license unlocks all ten as a batch.** That is the operative fact for the pursuit: the ask is worth ~10 models, not 1. A single `--only-solve` pass over the cohort is all that's needed once capacity exists.
 
 ### 4.3 The treatment — uniform, and neither inflated nor written off
 
-**Classification: `licence-gated`.** For all ten, identically:
+**Classification: `license-gated`.** For all ten, identically:
 
 1. **Not counted in sprint KPI projections.** No sprint may claim any of these as reachable upside. This is the phantom-upside failure mode that turkey alone exhibited across S35–S37.
-2. **Not written off as blocked-indefinitely.** A licence is being **actively pursued** — the owner is raising it with Dirkse and Ferris. "Blocked" would misstate that.
-3. **Tracked as a named, quantified cohort** with its ceiling stated (+10 Solve), so the value of the licence is visible rather than implicit.
+2. **Not written off as blocked-indefinitely.** A license is being **actively pursued** — the owner is raising it with Dirkse and Ferris. "Blocked" would misstate that.
+3. **Tracked as a named, quantified cohort** with its ceiling stated (+10 Solve), so the value of the license is visible rather than implicit.
 4. **Re-tested as a batch** the moment capacity exists — one `--only-solve` over the ten, not ten separate efforts.
 
 **Wording, applicable verbatim wherever these models are projected:**
 
-> **Licence-gated cohort (10 models):** `egypt`, `ferts`, `glider`, `robot`, `shale`, `sroute`, `srpchase`, `tabora`, `tfordy`, `turkey`. All emit correctly (goldens committed) and all are rejected at **generation** by the GAMS demo 1000-row nonlinear limit — `solver_version: None`, PATH never invoked. **Excluded from KPI projections** until a larger licence exists; **not** written off, as one is being pursued. **Ceiling +10 Solve (108 → 118).** Re-test as a single batch on capacity.
+> **License-gated cohort (10 models):** `egypt`, `ferts`, `glider`, `robot`, `shale`, `sroute`, `srpchase`, `tabora`, `tfordy`, `turkey`. All emit correctly (goldens committed) and all are rejected at **generation** by the GAMS demo 1000-row nonlinear limit — `solver_version: None`, PATH never invoked. **Excluded from KPI projections** until a larger license exists; **not** written off, as one is being pursued. **Ceiling +10 Solve (108 → 118).** Re-test as a single batch on capacity.
 
 ### 4.4 A convergence worth using
 
-**The licence ask and the P3 consultation go to the same people.** Task 7 resolved the consultation channel as email to Ferris (`ferris@cs.wisc.edu`) and Dirkse (`steve@gams.com` / `sdirkse@gams.com`), and the owner is meeting them about licence capacity. **The two conversations can be one**, and the cohort figure — *"10 models, 7 % of our corpus, blocked only by the 1000-row demo limit"* — is a concrete, quantified ask rather than a general request.
+**The license ask and the P3 consultation go to the same people.** Task 7 resolved the consultation channel as email to Ferris (`ferris@cs.wisc.edu`) and Dirkse (`steve@gams.com` / `sdirkse@gams.com`), and the owner is meeting them about license capacity. **The two conversations can be one**, and the cohort figure — *"10 models, 7 % of our corpus, blocked only by the 1000-row demo limit"* — is a concrete, quantified ask rather than a general request.
 
 **What a reduced instance would buy: nothing for the KPI.** A smaller instance of any cohort member could raise confidence that its emit solves, but the KPI requires **the model itself** to solve and match. Worth stating because it is the tempting engineering workaround, and it does not deliver.
 
@@ -117,11 +117,11 @@ With camcge Epic-5-scoped and turkey blocked, **P5's Sprint-38 deliverable is do
 
 - the three scoping-doc corrections (§1), so Epic 5 inherits stamped, consolidated refutations
 - the BANNED list (§2), with B1 flagged as primal-correct-but-dual-breaking
-- the **licence-gated cohort** treatment (§4) — 10 models, uniform classification, ceiling +10 Solve
+- the **license-gated cohort** treatment (§4) — 10 models, uniform classification, ceiling +10 Solve
 
-**0 bucket for Sprint 38**, and the plan already says so. The value is that Epic 5 starts from four refuted variants rather than rediscovering them, and that **ten** licence-gated models stop inflating projections while remaining visible as a quantified, actively-pursued opportunity.
+**0 bucket for Sprint 38**, and the plan already says so. The value is that Epic 5 starts from four refuted variants rather than rediscovering them, and that **ten** license-gated models stop inflating projections while remaining visible as a quantified, actively-pursued opportunity.
 
 ---
 
-**Document Status:** ✅ Complete — Sprint 38 Prep Task 8. **5.2 ❌ WRONG** (the handoff was already written; three narrow gaps, not a document) · **5.3 ✅ VERIFIED** (per-model numéraire still correct, now stamped under v54) · **5.1 🔶 reframed — a 10-model licence-gated cohort**, excluded from projections but actively pursued; ceiling +10 Solve.
-**Last Updated:** 2026-08-18 · **Owner:** Sprint 38 execution team · **Licence pursuit:** active (owner, with Dirkse/Ferris)
+**Document Status:** ✅ Complete — Sprint 38 Prep Task 8. **5.2 ❌ WRONG** (the handoff was already written; three narrow gaps, not a document) · **5.3 ✅ VERIFIED** (per-model numéraire still correct, now stamped under v54) · **5.1 🔶 reframed — a 10-model license-gated cohort**, excluded from projections but actively pursued; ceiling +10 Solve.
+**Last Updated:** 2026-08-18 · **Owner:** Sprint 38 execution team · **License pursuit:** active (owner, with Dirkse/Ferris)

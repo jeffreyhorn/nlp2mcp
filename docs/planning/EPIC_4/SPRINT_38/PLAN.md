@@ -3,7 +3,7 @@
 **Prep:** Tasks 1–11 complete (10 design/scoping docs + this schedule). **Anchor:** Day-0 *code* state = S37 close `8cffec29` plus the prep commits (docs-only). The `--resolve-changed --since-commit` / DB anchor is **still `78ceaead`** and **P6d re-anchors it to the S37 close** — see §3, where the ordering matters.
 **Budget:** ≤ 12 h/day over 14 days; 168 h cap; nominal **116 h**, max day **10 h** (§8, verified mechanically). Risk **MEDIUM-HIGH** — P2 is a re-architecture that lands atomically or not at all, and P1 enters the sprint **without an implementable fix**.
 
-**This sprint is deliberately NOT floor-targeted, and this schedule does not reinstate a floor target.** No carryforward can move the genuine floor: P1 is 0-bucket by construction, P2 is +1 Translate, P5 is licence-gated, camcge is Epic-5. Naming that absence is the mitigation — it is the pressure to produce a floor gain that generated Sprint 36's reverted landing attempt.
+**This sprint is deliberately NOT floor-targeted, and this schedule does not reinstate a floor target.** No carryforward can move the genuine floor: P1 is 0-bucket by construction, P2 is +1 Translate, P5 is license-gated, camcge is Epic-5. Naming that absence is the mitigation — it is the pressure to produce a floor gain that generated Sprint 36's reverted landing attempt.
 
 ---
 
@@ -48,7 +48,7 @@ Five constraints, each from a measurement rather than a preference. **Four are o
 
 ## 4. Day 0 — Baseline re-confirm + GO/NO-GO + the P3 send (~3 h)
 
-Re-confirm Day-0 = S37 close: **Solve 108 · Match 94 (65 cold + 29 presolve) · Translate 135 · mi 7 · pse 6 · all-219 97 · genuine floor 73** (the re-baselined figure, not the 76 in older docs). **Derive every figure from the DB at execution time** — do not quote this paragraph (P6a; §9).
+Re-confirm Day-0 = S37 close: **Solve 108 · Match 94 (65 cold + 29 presolve) · Translate 135 · mi 7 · pse 6 · all-219 97 · genuine floor 73** (the re-baselined figure, not the 76 in older docs). **Derive every figure from `data/gamslib/gamslib_status.json` at execution time** — do not quote this paragraph (P6a; §9). *("The DB" means that file throughout this plan.)*
 
 **Then execute P3.** The decision was made in prep: **SEND** (Task 7). The package is complete and the channel is known — email to `ferris@cs.wisc.edu`, `steve@gams.com`, `sdirkse@gams.com`. **The send itself is a human action**; the agent's job is to confirm the package is unchanged, then post the §7 tracking comment to **#1462** once the send is confirmed.
 
@@ -160,7 +160,7 @@ Branch `planning/sprint38-day10-checkpoint2-p5`. **Checkpoint 2**, figures deriv
 
 ### Day 11 — P5 close (~2 h) + P8 sweep day 1 (~8 h)
 
-Branch `planning/sprint38-day11-p8-sweep`. **P5 closes** by recording the **10-model `licence-gated` cohort** — `egypt`, `ferts`, `glider`, `robot`, `shale`, `sroute`, `srpchase`, `tabora`, `tfordy`, `turkey`: **7 % of the corpus**, all emitting correctly with committed goldens, all rejected at **generation** (`solver_version: None`, PATH never invoked). **Excluded from KPI projections but NOT written off** — capacity is being pursued with the same people as the P3 consultation. **Ceiling Solve 108 → 118**, re-tested as **one batch**.
+Branch `planning/sprint38-day11-p8-sweep`. **P5 closes** by recording the **10-model `license-gated` cohort** — `egypt`, `ferts`, `glider`, `robot`, `shale`, `sroute`, `srpchase`, `tabora`, `tfordy`, `turkey`: **7 % of the corpus**, all emitting correctly with committed goldens, all rejected at **generation** (`solver_version: None`, PATH never invoked). **Excluded from KPI projections but NOT written off** — capacity is being pursued with the same people as the P3 consultation. **Ceiling Solve 108 → 118**, re-tested as **one batch**.
 
 **P8 begins**, working the pre-registered rule: **reproduced fingerprint AND named fix surface**. Order: **twocge** (#1331), **tricp** (#1062), **elec** (#983/#1325). Take any Day-3 `$149` clears first if they materialised.
 

@@ -40,7 +40,7 @@ This prep plan focuses on research, design, and survey tasks that must complete 
 | 5 | ✅ sarf P2 — O(active) Re-Architecture Design Refresh & Atomicity Plan | Critical | 5-7 hours | Tasks 1, 2 | P2 sarf — the only KPI mover |
 | 6 | ✅ Presolve-Golden Adoption Plan & Runtime Impact (P4) | High | 3-4 hours | Tasks 1, 2, 3, 4 | P4 coverage asymmetry |
 | 7 | ✅ Consultation Ownership Decision Package (P3) | High | 2-3 hours | Task 1 | P3 — the Day-0 send-or-strike decision |
-| 8 | ✅ camcge Epic-5 Handoff + the 10-Model Licence-Gated Cohort (P5) | Medium | 3-4 hours | Tasks 1, 2 | P5 camcge (Epic 5) + turkey |
+| 8 | ✅ camcge Epic-5 Handoff + the 10-Model License-Gated Cohort (P5) | Medium | 3-4 hours | Tasks 1, 2 | P5 camcge (Epic 5) + turkey |
 | 9 | ✅ Phase-0 Compliance Survey over the Open Backlog (P7) | Medium | 3-4 hours | Task 1 | P7 Phase-0 backfill |
 | 10 | ✅ Emit-Backlog Candidate Catalog & Selection-Rule Dry Run (P8) | Medium | 3-4 hours | Tasks 1, 2, 9 | P8 slack absorber — with drift prevention |
 | 11 | ✅ Plan Sprint 38 Detailed Schedule | Critical | 3-4 hours | All tasks (1–10) | Day-by-day schedule + REPLAN exits + budget |
@@ -925,7 +925,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/CONSULTATION_DECISION_BRIEF.md && echo "�
 
 ## Task 8: camcge Epic-5 Handoff Scoping + turkey Testbed Procurement (P5)
 
-**Status:** ✅ **COMPLETE** (2026-08-18) — **licence pursuit active (owner, with Dirkse/Ferris)**
+**Status:** ✅ **COMPLETE** (2026-08-18) — **license pursuit active (owner, with Dirkse/Ferris)**
 **Time Spent:** 3 hours
 **Priority:** Medium
 **Estimated Time:** 3-4 hours
@@ -982,7 +982,7 @@ Scope the camcge Epic-5 handoff so Epic 5 starts from Sprint 32–37's refutatio
 
 **✅ 5.3.** The per-model-numéraire fallback stands, re-confirmed under **GAMS 54.2.1 / PATH 5.2.01** (19 s, 641/641, NLP MS-2 @ 191.7346, MCP MS-4). The MCP is MS-4 against a *correct* NLP optimum — structural rank-deficiency, not an emit defect. Recorded plainly: the fallback closes the **price-scaling ray** only, not the **row-redundancy nullspace**, so it is a knowingly *partial* remedy.
 
-**🔶 5.1 — not turkey alone: a 10-model licence-gated cohort.** The first draft singled turkey out; **the owner corrected the scope**, and a DB census confirms **ten models carry the identical block** — `egypt`, `ferts`, `glider`, `robot`, `shale`, `sroute`, `srpchase`, `tabora`, `tfordy`, `turkey` — **7 % of the 142 candidates**. All are `path_solve_license` with **`solver_version: None`**, rejected at *generation* by the demo 1000-row limit, and **all ten have committed goldens**: the emit is verified, only the solve is blocked. **One licence problem, not ten model problems.** **Ceiling Solve 108 → 118**, unlocked as a **single batch**. **Classification `licence-gated`, uniform:** excluded from KPI projections (the phantom-upside mode turkey showed across S35–S37) but **not written off**, since capacity is being actively pursued — **with Dirkse/Ferris, the same recipients as the P3 consultation**, so the two conversations can be one.
+**🔶 5.1 — not turkey alone: a 10-model license-gated cohort.** The first draft singled turkey out; **the owner corrected the scope**, and a DB census confirms **ten models carry the identical block** — `egypt`, `ferts`, `glider`, `robot`, `shale`, `sroute`, `srpchase`, `tabora`, `tfordy`, `turkey` — **7 % of the 142 candidates**. All are `path_solve_license` with **`solver_version: None`**, rejected at *generation* by the demo 1000-row limit, and **all ten have committed goldens**: the emit is verified, only the solve is blocked. **One license problem, not ten model problems.** **Ceiling Solve 108 → 118**, unlocked as a **single batch**. **Classification `license-gated`, uniform:** excluded from KPI projections (the phantom-upside mode turkey showed across S35–S37) but **not written off**, since capacity is being actively pursued — **with Dirkse/Ferris, the same recipients as the P3 consultation**, so the two conversations can be one.
 
 **P5's Sprint-38 deliverable is documentation, not bucket movement — 0 bucket**, as the plan already states.
 
@@ -1023,7 +1023,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/CAMCGE_EPIC5_HANDOFF.md && echo "✓"
 - [x] Drop-row recorded as **BANNED** with the primal-correct/dual-breaking reason — **and flagged as the dangerous one**: a reader checking only the primal concludes it works, and the failure is silent in the dual
 - [x] The two-nullspaces diagnosis stated reusably — *a numéraire closes the price-scaling ray only, not the row-redundancy nullspace*, which is why **every** single-mechanism variant returns MS-4
 - [x] Per-model-numéraire fallback scoped with what it does and does not buy — explicitly a **partial** remedy; part (3) of the three-part formulation is the real Epic-5 research
-- [x] turkey testbed determined — **and the scope corrected by the owner**: not turkey alone but a **10-model `licence-gated` cohort** (7 % of the corpus, all emitting correctly, all rejected at *generation*), classified uniformly, **excluded from projections but not written off** since capacity is being pursued; **ceiling +10 Solve** recorded, and **a reduced instance cannot earn any member's +1**
+- [x] turkey testbed determined — **and the scope corrected by the owner**: not turkey alone but a **10-model `license-gated` cohort** (7 % of the corpus, all emitting correctly, all rejected at *generation*), classified uniformly, **excluded from projections but not written off** since capacity is being pursued; **ceiling +10 Solve** recorded, and **a reduced instance cannot earn any member's +1**
 - [x] If both branches are negative, P5's deliverable is honestly stated as documentation — **0 bucket**, stated
 - [x] Unknowns 5.1, 5.2, 5.3 investigated and updated in KNOWN_UNKNOWNS.md (**5.1 🔍 procurement**, **5.2 ❌ WRONG**, **5.3 ✅**)
 
@@ -1094,7 +1094,7 @@ The census used the gate script's **own** functions (`phase0_subsections`, `miss
 
 **✅ 7.1 — two structural findings.** **(a) The problem is current:** 43 of the 56 un-gated docs are **open** — **69 % of the open backlog**; only 13 are closed, so this is still accruing rather than a legacy artifact. **(b) Compliance is binary — zero partial gates:** every doc has either all four canonical subsections or no Phase-0 heading at all. **Nobody has ever written half a gate**, which makes the backfill "write one" rather than "audit and complete" and makes the count exact rather than a judgement call. Rule C is confirmed in practice — extras are used (`ISSUE_1110` has eight subsections, `ISSUE_1289` six) — and the script agreed with a manual read on every doc inspected.
 
-**The consequence for the sprint: P7 is under-budgeted.** 8–10 h against 43 issues is ~12 minutes each, not credible for a gate requiring a hand-derived KKT shape and a verification methodology. The catalog is therefore **ordered so P7 works top-down and stops at budget**: **Tier 1 = the 11 P8-pool issues** (twocge ×4, elec ×2, tricp ×2, dinam, clearlak, turkpow — **two models are over half the tier**, so gating them first has the best eligibility-per-hour), **Tier 2 = the 4 licence-gated** (deliberately last — a gate on a model that cannot be solve-verified cannot be exercised), **Tier 3 = the other 28**, several of them **duplicates in effect** whose working gate already lives in a compliant doc (`sarf` #885 vs `ISSUE_1385`; `ganges` #929/#930 vs `ISSUE_1667`). **Realistic sprint scope: Tier 1, probably its twocge/elec core (6) — and the remaining 32 reported as a standing backlog item, not quietly dropped.**
+**The consequence for the sprint: P7 is under-budgeted.** 8–10 h against 43 issues is ~12 minutes each, not credible for a gate requiring a hand-derived KKT shape and a verification methodology. The catalog is therefore **ordered so P7 works top-down and stops at budget**: **Tier 1 = the 11 P8-pool issues** (twocge ×4, elec ×2, tricp ×2, dinam, clearlak, turkpow — **two models are over half the tier**, so gating them first has the best eligibility-per-hour), **Tier 2 = the 4 license-gated** (deliberately last — a gate on a model that cannot be solve-verified cannot be exercised), **Tier 3 = the other 28**, several of them **duplicates in effect** whose working gate already lives in a compliant doc (`sarf` #885 vs `ISSUE_1385`; `ganges` #929/#930 vs `ISSUE_1667`). **Realistic sprint scope: Tier 1, probably its twocge/elec core (6) — and the remaining 32 reported as a standing backlog item, not quietly dropped.**
 
 **✅ 7.2 — #1289's gate is complete, and two defects in it were found and fixed.** It is structurally complete (four canonical subsections plus `Bucket / KPI` and `Regression guard` — **six as surveyed; seven after this task added `Prerequisite`**, re-checked at 0 missing) and correctly frames the fix as **0-bucket**, carrying the `ac(i+2,r)` match-correctness risk and the embedded-vs-standalone divergence. But **it asserted a stale KPI** — *"Match stays 93"*, when Match has been **94** since the Sprint-37 Day-9 v54 re-baseline, so the gate would have failed its own acceptance check — and **it did not record the cascade prerequisite**. Both fixed, the second including Task 4's finding that **#1668 direction 2 is not implementable at the rebind site**, so `$66` must not be budgeted as independently schedulable.
 
@@ -1130,7 +1130,7 @@ test -f docs/planning/EPIC_4/SPRINT_38/PHASE0_COMPLIANCE_CATALOG.md && echo "✓
 
 - [x] Open backlog enumerated for emit/AD/KKT-touching issues — **80 issue docs cross-referenced against 400 GitHub issues**, so the open/closed split is real rather than inferred from the docs
 - [x] Every issue classified three ways, using the CI gate's own semantics — `phase0_subsections` / `missing_subsections` imported directly, **not reimplemented**; the third class turned out to be **empty (zero partial gates)**, which is itself the finding
-- [x] Backfill list prioritised by scheduling likelihood — **three tiers**, P8-pool first (11), licence-gated deliberately last (4), the rest (28) with duplicates flagged for triage before writing
+- [x] Backfill list prioritised by scheduling likelihood — **three tiers**, P8-pool first (11), license-gated deliberately last (4), the rest (28) with duplicates flagged for triage before writing
 - [x] `$66`/#1289 confirmed complete or finished in this task — **complete, and two defects in it fixed**: a stale `Match 93 → 94` and a missing cascade **Prerequisite**
 - [x] The catalog is filterable by Task 10 (eligibility for the P8 sweep) — Tier 1 *is* the P8 pool, tabulated per issue and model
 - [x] A compliance count recorded, so P7's sprint work has a measurable target — **43 open un-gated**, against which **P7's 8–10 h is under-budgeted**; scope stated as Tier 1 with the remaining 32 reported, not dropped
@@ -1386,7 +1386,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 
 ### Medium Priority (Complete Before Day 1, or by Mid-Sprint)
 
-- ✅ **Task 8: camcge Epic-5 + the Licence-Gated Cohort** (COMPLETE — 2026-08-18, 3 h)
+- ✅ **Task 8: camcge Epic-5 + the License-Gated Cohort** (COMPLETE — 2026-08-18, 3 h)
 - ✅ **Task 9: Phase-0 Compliance Survey** (COMPLETE — 2026-08-18, 3 h) — **43 open issues un-gated; P7 under-budgeted → Tier 1 (11) is the realistic scope**; gates Task 10
 - ✅ **Task 10: Backlog Candidate Catalog** (COMPLETE — 2026-08-18, 4 h) — **5 eligible vs a threshold of 2, but 0 gated ⇒ P7 is P8's prerequisite**
 
@@ -1403,7 +1403,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 - [x] sarf re-architecture design refreshed against the profile — Task 5, with a surrogate fixture and a **named REPLAN trigger** (end of Day 6); its **timing threshold was refuted** (~141 s, not single-digit seconds) and **revised by owner decision**
 - [x] Presolve-golden adoption planned with a review protocol and a measured runtime projection — Task 6; **14 of the 36 would pin non-reproducing emits**, so adoption is **two-tier** (22 now, 14 behind a per-model sign-off)
 - [x] Consultation decision package ready — **decision MADE (SEND)**, channel supplied by the owner; the send is a **human action**
-- [x] camcge Epic-5 handoff scoped — Task 8 found it **already written**; turkey determined **not to be a special case** but one of a **10-model licence-gated cohort**
+- [x] camcge Epic-5 handoff scoped — Task 8 found it **already written**; turkey determined **not to be a special case** but one of a **10-model license-gated cohort**
 - [x] Phase-0 compliance catalog produced; `$66`/#1289 confirmed — Task 9; **43 open issues un-gated**, and #1289's gate had **two defects that were fixed**
 - [x] P8 viability determined — Task 10: **5 eligible against a threshold of 2**, but **0 have a Phase-0 gate**, so **P7 gates P8**
 - [x] `PLAN.md` and `prompts/PLAN_PROMPTS.md` complete, budget mechanically verified — **116 h, max day 10 h**, checked against the daily cap, the 168 h cap, the 100–134 h band, and every per-priority range
