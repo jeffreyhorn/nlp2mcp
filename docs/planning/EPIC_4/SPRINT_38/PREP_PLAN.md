@@ -43,7 +43,7 @@ This prep plan focuses on research, design, and survey tasks that must complete 
 | 8 | ✅ camcge Epic-5 Handoff + the 10-Model Licence-Gated Cohort (P5) | Medium | 3-4 hours | Tasks 1, 2 | P5 camcge (Epic 5) + turkey |
 | 9 | ✅ Phase-0 Compliance Survey over the Open Backlog (P7) | Medium | 3-4 hours | Task 1 | P7 Phase-0 backfill |
 | 10 | ✅ Emit-Backlog Candidate Catalog & Selection-Rule Dry Run (P8) | Medium | 3-4 hours | Tasks 1, 2, 9 | P8 slack absorber — with drift prevention |
-| 11 | Plan Sprint 38 Detailed Schedule | Critical | 3-4 hours | All tasks (1–10) | Day-by-day schedule + REPLAN exits + budget |
+| 11 | ✅ Plan Sprint 38 Detailed Schedule | Critical | 3-4 hours | All tasks (1–10) | Day-by-day schedule + REPLAN exits + budget |
 
 **Total Estimated Time:** ~37-50 hours (~5-6 working days)
 
@@ -1247,7 +1247,8 @@ test -f docs/planning/EPIC_4/SPRINT_38/BACKLOG_CANDIDATE_CATALOG.md && echo "✓
 
 ## Task 11: Plan Sprint 38 Detailed Schedule
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-08-18) — **116 h / max day 10 h; P1 enters as an EVALUATION, not a landing**
+**Time Spent:** 4 hours
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 38 Day 1
@@ -1297,11 +1298,26 @@ The plan states the sprint is **deliberately NOT floor-targeted**. The schedule 
 
 ### Changes
 
-*To be completed*
+- **Created** `docs/planning/EPIC_4/SPRINT_38/PLAN.md` — Day 0 + Days 1–13, per-priority budgets, five sequencing constraints, six REPLAN exits, the GO/NO-GO gate, four pre-registered close rules, and a risk register.
+- **Created** `docs/planning/EPIC_4/SPRINT_38/prompts/PLAN_PROMPTS.md` — one prompt per day, **no KPI quoted anywhere** (P6a).
+- **Corrected** this file's first Success Criterion, which asserted every Critical unknown resolves in prep or Day 0 — **that is now false** and is restated rather than left checked.
+- **No `src/`, DB or golden change.**
 
 ### Result
 
-*To be completed*
+**✅ SCHEDULE COMPLETE — 116 h over 14 days, max day 10 h, verified mechanically rather than by eye.**
+
+**The finding that shapes the sprint: P1 enters WITHOUT an implementable fix, and the schedule says so instead of working around it.** Two **Critical** unknowns — **1.1** (does the cascade still reach `rc=0`) and **1.3** (does the narrowed predicate pass the full-corpus gate) — remain 🔍 INCOMPLETE. Per the standing rule, a Critical unknown left INCOMPLETE is a **NO-GO condition**, and it is recorded as one. **Scoped correctly, it is a NO-GO for P1 as a landing track, not for the sprint:** both are **unanswerable by construction** (each is contingent on a landable fix existing, and Task 4 proved direction 2 unbuildable), no further prep resolves them, and the other seven priorities depend on neither. **P1 is therefore scheduled as an EVALUATION** whose Day-1 `/tmp` control *is* the answer to both — with a same-day REPLAN exit sending ~14 h to P8 rather than nursing it across Days 2–3.
+
+**Four ordering constraints, each from a measurement, three of which a plausible schedule would violate:** **P1's gate runs at the OLD scope (163) before P4 adopts** — otherwise a clean P1 result is unattributable; **P6b precedes P2's gate run** — otherwise `leak-check MODEL=sarf` returns a misleading `NO-OP` that looks like a P2 failure; **P6b precedes P6d** — the re-anchor selects **0 models**, so re-anchoring first makes the checkpoint silent; and **P7 gates P8** (new from Task 10) — **none of P8's 11 candidates has a Phase-0 gate and 5 have no doc at all**, so P7's first block must be P8's shortlist.
+
+**Two priorities were measured DOWN by prep, and the freed 10 h is re-allocated on evidence.** **P3: 4–6 h → 1 h** — the plan budgeted a *decision*; prep **made** it (SEND), the owner supplied the channel, and what remains is a **human action of ~30 minutes**. **P5: 10–14 h → 6 h** — the plan budgeted *writing* the Epic-5 handoff; Task 8 found it **already written**, and prep patched the three real gaps in place. Both freed blocks go to the two priorities prep showed were **under**-budgeted: **P7** (43 un-gated issues against 8–10 h) and **P8** (the REPLAN absorber), each now at the top of its band.
+
+**Budget:** P1 21 · P2 24 · P3 1 · P4 12 · P5 6 · P6 16 · P7 10 · P8 16 · retest 4 · overhead 6 = **116 h**. **≤12 h/day PASS** (max 10) · **<168 h PASS** · **within the 100–134 h band PASS**.
+
+**Four close rules pre-registered so a Day-13 result is read rather than argued:** the **three-gate firm-landing rule** (per-model Phase-0 + an **unqualified** leak-gate pass — a `PARTIAL` fails — + in `main`); **`model_infeasible` may rise to 9 and that is success**, reported as a lateral move in the same sentence as the `pse` fall; **the floor is read from the provenance file at baseline 73**, never re-derived by hand (a mechanical count yields 65 and looks authoritative); and **every figure is derived at execution time**.
+
+**The two constraints the prompt named are honoured:** Day 13 explicitly names **`SPRINT_39_CARRYFORWARDS.md`** as the fourth closeout artifact, with the reason (Sprint 37's prompt omitted it and it was missed at close); and **no floor target is reinstated** — the acceptance table shows the floor **flat at 73 in every column**, including the both-land column.
 
 ### Verification
 
@@ -1335,15 +1351,15 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 
 ### Acceptance Criteria
 
-- [ ] Day 0 + Days 1–13 all scheduled, with the P3 decision on Day 0
-- [ ] P1's gate run scheduled before P4's scope change
-- [ ] P2's REPLAN trigger day named explicitly (per the plan's "early rather than nursed")
-- [ ] Checkpoints at Day 5 and Day 10; final retest Day 13
-- [ ] No day exceeds 12h and the total is under 168h — verified by count, not by eye
-- [ ] Day 13's prompt names `SPRINT_39_CARRYFORWARDS.md` explicitly
-- [ ] Day prompts derive figures rather than quoting them
-- [ ] The schedule does **not** reinstate a genuine-floor target
-- [ ] REPLAN exits defined for every deep track; GO/NO-GO conditions defined from Task 2
+- [x] Day 0 + Days 1–13 all scheduled, with the P3 decision on Day 0 — **the decision was already made in prep**, so Day 0 *executes* it: confirm the package, flag the human send, post the #1462 tracking comment
+- [x] P1's gate run scheduled before P4's scope change — **Day 2 at scope 163, P4 adopts Day 8**; stated as a constraint with its reason (a mid-track scope change makes a clean P1 result unattributable)
+- [x] P2's REPLAN trigger day named explicitly — **end of Day 6**, as a single observable number (per-row calls dropping 369,024 → ~398), visible in minutes and **not requiring the change to be complete**
+- [x] Checkpoints at Day 5 and Day 10; final retest Day 13 — scheduled, with checkpoint figures **derived** via the Day-4 helper
+- [x] No day exceeds 12h and the total is under 168h — **verified by count, not by eye**: 116 h, max day 10 h, and also checked against the 100–134 h band and every per-priority range
+- [x] Day 13's prompt names `SPRINT_39_CARRYFORWARDS.md` explicitly — as the **fourth** closeout artifact, with the reason recorded (S37's prompt omitted it, so it was missed at close)
+- [x] Day prompts derive figures rather than quoting them — **no prompt in `PLAN_PROMPTS.md` quotes a KPI**, and that is stated as deliberate in the cross-cutting rules
+- [x] The schedule does **not** reinstate a genuine-floor target — the acceptance table holds the floor **flat at 73 in all four columns**, with "do not promise floor > 73" written out
+- [x] REPLAN exits defined for every deep track; GO/NO-GO conditions defined from Task 2 — **six exits, each naming where its budget goes** (P8 absorbs all of them), and the GO/NO-GO reports **condition (d) as FAILING**, scoped to P1 rather than the sprint
 
 ---
 
@@ -1356,7 +1372,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 3. ✅ **Task 3: Measurement-Integrity Design** (COMPLETE — 2026-08-17, 5 hours) — CRITICAL
 4. ✅ **Task 4: ganges Rebind Predicate** (COMPLETE — 2026-08-17, 6 h; **REPLAN outcome**) — CRITICAL
 5. ✅ **Task 6: Presolve-Golden Adoption** (COMPLETE — 2026-08-18, 4 h) — HIGH (was gated on Task 4)
-6. **Task 11: Plan Sprint 38** (3-4 hours) — CRITICAL
+6. ✅ **Task 11: Plan Sprint 38** (COMPLETE — 2026-08-18, 4 h) — CRITICAL; **116 h / max day 10 h**, and **P1 scheduled as an evaluation** because two Critical unknowns are unanswerable until Day 1 runs
 
 **Total Critical Path Time:** ~21-28 hours (~3-4 working days)
 
@@ -1380,17 +1396,17 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 
 ## Success Criteria for Prep Phase
 
-- [x] ✅ Known Unknowns document created (**28 unknowns, 8 categories**), every Critical one resolved in prep or Day 0
-- [ ] The Sprint-37 baseline **re-derived**, not re-read, with every figure carrying its measurement SHA
-- [ ] Measurement-integrity design complete for all four sub-deliverables, with both gate-narrowing modes reproduced live
-- [ ] ganges `$149` rebind predicate designed as a **positive requirement**, with a full-corpus leak surface
-- [ ] sarf re-architecture design refreshed against the profile, with a surrogate fixture and a named REPLAN trigger
-- [ ] Presolve-golden adoption planned with a review protocol and a measured runtime projection
-- [ ] Consultation decision package ready — **both branches executable on Day 0**
-- [ ] camcge Epic-5 handoff scoped; turkey testbed determined concretely
-- [ ] Phase-0 compliance catalog produced; `$66`/#1289 confirmed
-- [ ] P8 viability determined (≥2 eligible candidates, or a budget recommendation)
-- [ ] `docs/planning/EPIC_4/SPRINT_38/PLAN.md` and `prompts/PLAN_PROMPTS.md` complete, budget mechanically verified
+- [x] ✅ Known Unknowns document created (**28 unknowns, 8 categories**) — **but the "every Critical one resolved in prep or Day 0" clause does NOT hold, and is corrected rather than left checked.** **1.1 and 1.3 are Critical and remain INCOMPLETE**, because both are **unanswerable by construction**: each is contingent on a landable P1 fix, and Task 4 proved direction 2 unbuildable. They close on **Days 1 and 2**, not Day 0. This is recorded as a **NO-GO for P1 as a landing track** (`PLAN.md` §4), which is why P1 is scheduled as an evaluation with a same-day REPLAN exit.
+- [x] The Sprint-37 baseline **re-derived**, not re-read — Task 2; and it **retracted its own `$141` finding** as an invalid measurement (GAMS truncates its listing; marker counting undercounts even without truncation)
+- [x] Measurement-integrity design complete for all four sub-deliverables — Task 3; both gate-narrowing modes are **design-verified**, with the live fail-before evidence produced on **Day 4** (Unknown 6.1)
+- [x] ganges `$149` rebind predicate designed as a **positive requirement** — Task 4, which **REFUTED the direction**: #1668 direction 2 is unimplementable (ganges and `prolog` locally indistinguishable, `bound_indices` empty for both), so **direction C is Day 1's job**
+- [x] sarf re-architecture design refreshed against the profile — Task 5, with a surrogate fixture and a **named REPLAN trigger** (end of Day 6); its **timing threshold was refuted** (~141 s, not single-digit seconds) and **revised by owner decision**
+- [x] Presolve-golden adoption planned with a review protocol and a measured runtime projection — Task 6; **14 of the 36 would pin non-reproducing emits**, so adoption is **two-tier** (22 now, 14 behind a per-model sign-off)
+- [x] Consultation decision package ready — **decision MADE (SEND)**, channel supplied by the owner; the send is a **human action**
+- [x] camcge Epic-5 handoff scoped — Task 8 found it **already written**; turkey determined **not to be a special case** but one of a **10-model licence-gated cohort**
+- [x] Phase-0 compliance catalog produced; `$66`/#1289 confirmed — Task 9; **43 open issues un-gated**, and #1289's gate had **two defects that were fixed**
+- [x] P8 viability determined — Task 10: **5 eligible against a threshold of 2**, but **0 have a Phase-0 gate**, so **P7 gates P8**
+- [x] `PLAN.md` and `prompts/PLAN_PROMPTS.md` complete, budget mechanically verified — **116 h, max day 10 h**, checked against the daily cap, the 168 h cap, the 100–134 h band, and every per-priority range
 
 **Overall Goal:** No blockers, no surprises, high-confidence sprint start — and **no inherited figure carried without re-derivation**.
 
