@@ -3,6 +3,14 @@
 **Prep:** Tasks 1–11 complete (10 design/scoping docs + this schedule). **Anchor:** Day-0 *code* state = S37 close `8cffec29` plus the prep commits (docs-only). The `--resolve-changed --since-commit` / DB anchor is **still `78ceaead`** and **P6d re-anchors it to the S37 close** — see §3, where the ordering matters.
 **Budget:** ≤ 12 h/day over 14 days; 168 h cap; nominal **116 h**, max day **10 h** (§8, verified mechanically). Risk **MEDIUM-HIGH** — P2 is a re-architecture that lands atomically or not at all, and P1 enters the sprint **without an implementable fix**.
 
+> ## ⚠ RE-PLANNED 2026-08-19 (Day 1 REPLAN + owner decision)
+>
+> **P1 REPLAN'd on Day 1 at 7 h of its 21 h** — #1668 direction 1 is a **no-op** (its premise is false; 265 fires, zero residual) and the asymmetry is manufactured downstream by positional re-symbolization, so **neither #1668 direction is implementable at the rebind site** (`DAY1_GANGES_CONTROL.md`). Direction A is **banked, located at three call sites, untested**; the owner decided to **HOLD** it rather than pursue it in this sprint.
+>
+> **Days 2–3 were void** (their content was "P1 land + gate" and "P1 verdict"). **Owner decision: pull P7 forward to Days 2–3.** That is the only reallocation that converts freed hours into later capacity — P7 gates P8, so starting it early lets **P8 begin on Day 9 instead of Day 11**, and P8 absorbs P1's freed hours as the pre-registered REPLAN absorber.
+>
+> **Totals: 116 h → 112 h**, max day still 10 h. **P1 7 h · P7 10 h (Days 2–3) · P8 26 h (Days 9–12).** Unknown **1.5 loses its window** and carries — Day 3 was to measure it *"while the fix is in the tree"*, and there is now no fix in the tree.
+
 **This sprint is deliberately NOT floor-targeted, and this schedule does not reinstate a floor target.** No carryforward can move the genuine floor: P1 is 0-bucket by construction, P2 is +1 Translate, P5 is license-gated, camcge is Epic-5. Naming that absence is the mitigation — it is the pressure to produce a floor gain that generated Sprint 36's reverted landing attempt.
 
 ---
@@ -38,10 +46,10 @@ Land the Sprint-37 carryforwards. The prep phase changed this sprint's shape mor
 
 Five constraints, each from a measurement rather than a preference. **Four are ordering constraints that a plausible-looking schedule would violate.**
 
-1. **P1's full-corpus gate must run at the OLD scope (163), before P4 adopts** (Task 6 §5). P1 asserts *"only ganges/gangesx drift, `prolog` byte-identical"*; adding 22 goldens mid-track changes the comparison set and makes a clean P1 result **unattributable**. ⇒ P1 Days 1–3, P4 Day 8.
+1. ~~**P1's full-corpus gate must run at the OLD scope (163), before P4 adopts**~~ — **MOOT as of Day 1.** P1 REPLAN'd without landing, so no P1 gate runs and nothing constrains P4's scope change. The constraint is retained here because it re-applies the moment any future effort attempts the cascade.
 2. **P6b must precede P2's gate run** (banked Task 3/5). `make leak-check MODEL=sarf` reports **`NO-OP`** because sarf has no golden — it fails for a non-correctness reason. Running P2's gate before 6b gives a **misleading NO-OP** that looks like a P2 failure. ⇒ P6b Day 4, P2's gate Day 7.
 3. **P6b must precede P6d** (banked Task 3). The re-anchor selects **0 models**, so re-anchoring first makes the checkpoint **silent** — it would pass by measuring nothing. 6b's scope assertion is what makes that failure loud. ⇒ 6b Day 4, 6d Day 9.
-4. **P7 gates P8** (Task 10 §5 — *new this prep cycle*). **Not one of P8's 11 candidates has a Phase-0 gate, and 5 have no issue doc at all**, so under CONTRIBUTING §392–447 **zero are implementable**. P7's first block must be P8's shortlist. ⇒ P7 Days 9–10, P8 Days 11–12.
+4. **P7 gates P8** (Task 10 §5). **Not one of P8's 11 candidates has a Phase-0 gate, and 5 have no issue doc at all**, so under CONTRIBUTING §392–447 **zero are implementable**. P7's first block must be P8's shortlist. ⇒ **P7 Days 2–3 (pulled forward), P8 Days 9–12** — the re-plan preserves this constraint with a six-day margin instead of one.
 5. **P2 is atomic.** The 2-D constraint gate + S1/S2/S3 + `task.fx` land as **one unit**; a partial landing leaves multipliers with no stationarity coupling — an inconsistent MCP, and an explicit REPLAN rather than partial progress (Task 5 §3).
 
 **Standing bans, unchanged:** `modelstat` asserted before every objective read · `x.up=inf` **BANNED** (mine) · the Case-c objective-gradient sign flip **BANNED** (refuted ×4) · the camcge **drop-row BANNED** (primal-correct, breaks the MCP dual — Task 8 §2 B1) · **never clear drift with `make regen-goldens`**.
@@ -81,24 +89,27 @@ Then, per-model and never inferred across the pair: emit ganges **and** gangesx,
 
 **Closes:** Unknown **1.1**. `/tmp`-only. Docs/control-notes PR.
 
-### Day 2 — P1: `src/` land + full-corpus leak gate **at scope 163** (~9 h)
+### Day 2 — P7: Phase-0 backfill, day 1 (~6 h) ← **pulled forward from Day 9**
 
-Branch `planning/sprint38-day2-ganges-land`. Land direction C. Then the gate that refused Sprint 37, run **at the old scope of 163 goldens** (constraint 1 — P4 has not adopted yet):
+Branch `planning/sprint38-day2-phase0-backfill`. *(Was "P1 `src/` land + leak gate" — void after the Day-1 REPLAN.)*
 
-- `make check-goldens` shows **ONLY ganges/gangesx drift**, with **`prolog` byte-identical** — the explicit criterion, since `prolog` is a live `model_optimal` + match model
-- `--expect-drift ganges,gangesx,korcge` — `korcge` belongs in expect-drift, not the leak set: its drift is the benign `rPower` gate and it still solves **MS-1 Optimal @ 339.2130**
-- **`--min-scope` asserted on discovery**, so a silent narrowing fails loudly
-- slow-emit goldens (ganges **325 s**, gangesx **243 s**) on a **nightly** slot, not the PR gate; determinism ×3
+Task 9 measured **43 open issues with no Phase-0 gate**; against 8–10 h that is ~12 minutes each, **which is not credible** for a gate needing a hand-derived KKT shape and a verification methodology. **Work top-down and stop at budget**, in P8's shortlist order — because an un-gated issue **is not eligible for the P8 sweep**, so this is what unblocks Days 9–12:
 
-**Closes:** Unknown **1.3**. **REPLAN exit:** any leak outside the expect-drift set, or `prolog` drifting ⇒ revert, bank on #1668, and re-scope P1 to documentation.
+1. **#1331** (twocge — the two empty MCP pairs `eqpw.nu_eqpw` / `eqw.nu_eqw`)
+2. **#1062** (tricp — 108 unmatched variables)
+3. **#983 / #1325** (elec — division by zero → evaluation errors in `stat_x`)
 
-### Day 3 — P1: per-model Phase-0 gate + bucket verdict / REPLAN absorption (~5 h)
+**Docs-only** — writing a Phase-0 gate touches no `src/`.
 
-Branch `planning/sprint38-day3-ganges-verdict`. Run `ISSUE_1667`'s Phase-0 gate per model: emit → compile → `$NNN` = 0 → solve **cold AND presolve** with `modelstat` asserted → bucket. Expect the **lateral** move: `path_syntax_error → model_infeasible`, **pse 6 → 4, mi 7 → 9, Solve and Match unchanged**.
+### Day 3 — P7: Phase-0 backfill, day 2 + close (~4 h) ← **pulled forward from Day 10**
 
-**Then close Unknown 1.5 while the fix is in the tree** — re-compile **dinam, indus, turkpow, clearlak** and record whether the general `$149` fix clears their `$149` half. 1.5 has been unanswerable all prep for want of an applied fix; this is the one hour in the sprint when it is answerable. **Read GAMS's own error total per model.** Any model that clears feeds P8's pool on Day 11.
+Branch `planning/sprint38-day3-phase0-backfill2`. The two candidates that need a doc **created**, not merely gated — **dyncge** (empty-equation-unfixed on `eqpf2.nu_eqpf2`; it can borrow #1331's shape) and **lnts** (the new defect: two `.fx` mechanisms contradicting, `y.lo = y.up = 0` against equations demanding 5 and 45).
 
-**⚠ Do not re-scope P1 upward on a good result.** The bucket is **0** and the prep-era *"+2 or 0"* was refuted in Sprint 37 — the 6th blocker (embedded `ganges0` **MS-5 @ −386785.5017** vs standalone **MS-2 @ 6395.5444**) is untouched and `mcp_model` stays MS-4.
+**Also demote clearlak #1291 and turkpow #1316 out of Tier-1 priority** — both are **structurally excluded** from P8, so gating them buys P8 nothing.
+
+**Report the remaining ~32 un-gated issues** as a standing backlog item. **Do not silently drop them** — that count is P7's honest deliverable alongside the five gates.
+
+**⚠ Unknown 1.5 is NOT measurable here any more.** Day 3 was to re-compile dinam/indus/turkpow/clearlak *"while the fix is in the tree"*. There is no fix in the tree. **1.5 stays 🔍 INCOMPLETE and carries**, same disposition and same reason as Task 4 gave it.
 
 ### Day 4 — P6a derived-figure helper + P6b the two gate-scope assertions (~10 h)
 
@@ -144,21 +155,23 @@ Per golden: regenerated from a clean `--only-solve` **from a scratch directory**
 
 **Scope 163 → 185, discovered 170 → 192.** CI runtime projects **~13.0–14.1 min against a 25-min budget**. **The local number is a trap** — 26.3 min here, ~2× the runner; extrapolating from it would have falsely concluded "adoption blocks every PR".
 
-### Day 9 — P4 close (~2 h) + P6d re-anchor (~2 h) + P7 backfill day 1 (~6 h)
+### Day 9 — P4 close (~2 h) + P6d re-anchor (~2 h) + **P8 sweep day 1** (~6 h)
 
 Branch `planning/sprint38-day9-reanchor-phase0`. **P6d re-anchors the DB checkpoint** from `78ceaead` (four sprints stale) to the **S37 close** — **after 6b**, because the re-anchor selects **0 models** and would otherwise pass silently by measuring nothing (constraint 3).
 
-**P7 begins, and its ordering is Task 10's finding.** Task 9 measured **43 open issues with no Phase-0 gate** — against 8–10 h that is ~12 min each, **not credible**. So P7 works top-down and **stops at budget**, in P8's shortlist order: **#1331** (twocge) → **#1062** (tricp) → **#983/#1325** (elec).
+**P8 begins here rather than Day 11** — the whole point of pulling P7 forward. Its gates were written Days 2–3, so the shortlist is now eligible. Work the pre-registered rule: **reproduced fingerprint AND named fix surface**; anything needing a new diagnosis is **banked, not started**. Start with **twocge** (#1331).
 
-### Day 10 — Checkpoint 2 (~1 h) + P7 close (~4 h) + P5 (~4 h)
+**Note the scope change P8 now runs after.** P4 adopts on Day 8, so P8's leak gates run at **185 in-scope, not 163**. That is expected and harmless — P8's own models drift by design — but state the scope in each gate result so a later reader is not comparing against 163.
+
+### Day 10 — Checkpoint 2 (~1 h) + P5 (~4 h) + **P8 sweep day 2** (~4 h)
 
 Branch `planning/sprint38-day10-checkpoint2-p5`. **Checkpoint 2**, figures derived not quoted.
 
-**P7 closes** with the two candidates that need a doc **created**, not merely gated — **dyncge** and **lnts**. Task 9's Tier 1 missed both, and demoting **clearlak #1291** and **turkpow #1316** out of Tier-1 priority is part of this: both are **structurally excluded** from P8, so gating them buys P8 nothing.
+**P8 continues** with **tricp** (#1062) and **elec** (#983/#1325). *(P7 closed on Day 3.)*
 
 **P5 (4 h).** camcge is **Epic-5-scoped, not fixed here** — MS-4 against a *correct* NLP optimum is structural rank-deficiency. The refutations are already consolidated (**B1–B4**, with B1 flagged as the dangerous one: *primal-correct, breaks the MCP dual*). Confirm #1330 is Epic-5-scoped and re-triage ≥1 residual model.
 
-### Day 11 — P5 close (~2 h) + P8 sweep day 1 (~8 h)
+### Day 11 — P5 close (~2 h) + P8 sweep day 3 (~8 h)
 
 Branch `planning/sprint38-day11-p8-sweep`. **P5 closes** by recording the **10-model `license-gated` cohort** — `egypt`, `ferts`, `glider`, `robot`, `shale`, `sroute`, `srpchase`, `tabora`, `tfordy`, `turkey`: **7 % of the corpus**, all emitting correctly with committed goldens, all rejected at **generation** (`solver_version: None`, PATH never invoked). **Excluded from KPI projections but NOT written off** — capacity is being pursued with the same people as the P3 consultation. **Ceiling Solve 108 → 118**, re-tested as **one batch**.
 
@@ -166,7 +179,7 @@ Branch `planning/sprint38-day11-p8-sweep`. **P5 closes** by recording the **10-m
 
 **Every fingerprint must be re-reproduced, not quoted** — under Task 10 §4.1: anchored `^****` GAMS diagnostics (not echoed source — a `.lst` contains both); an asserted terminal state read from **GAMS's own line**; **runtime observation** for runtime properties; and **a passing negative control**.
 
-### Day 12 — P8 sweep day 2 (~8 h)
+### Day 12 — P8 sweep day 4 (~8 h)
 
 Branch `planning/sprint38-day12-p8-sweep2`. Continue: **dyncge** (empty-equation-unfixed on `eqpf2.nu_eqpf2`, #1331's mechanism) and **lnts** (the new defect — two `.fx` mechanisms contradicting, `y.lo = y.up = 0` while the `_fx_` equations demand **5** and **45**, giving **MS-4 at iteration 0**). lnts's fix surface is the `fix_rhs = "0"` fallback in `emit_gams.py`, which must skip tuples already carrying a `<var>_fx_<labels>` equation — **the same shape as the Sprint-33 P6 fix**, and its line numbers are **a hypothesis to trace**, not a finding.
 
@@ -187,12 +200,12 @@ Branch `planning/sprint38-day13-close`. Final pipeline retest under **≥3 `PYTH
 
 | track | trigger | day | budget reallocation |
 |---|---|---|---|
-| **P1** | direction C misses `rc=0` on either model, or perturbs anything outside `{ganges, gangesx, korcge}` | **Day 1** | ~14 h → **P8** |
-| **P1** | any leak outside expect-drift, or `prolog` drifts | Day 2 | ~5 h → **P8** |
+| **P1** | direction C misses `rc=0` on either model, or perturbs anything outside `{ganges, gangesx, korcge}` | **Day 1** | ✅ **FIRED 2026-08-19** — both clauses. ~14 h → **P8** (via P7 pulled to Days 2–3, so P8 can start Day 9) |
+| ~~**P1**~~ | ~~any leak outside expect-drift, or `prolog` drifts~~ | ~~Day 2~~ | **moot** — the Day-1 exit fired first; no Day-2 landing was attempted |
 | **P2** | S1+S2 do not agree on the active column set — per-row calls not dropping 369,024 → ~398 | **Day 6, end of day** | ~6 h → **P8** |
 | **P4** | a golden is non-reproducible or structurally missing an idiom its model requires | Day 8 | exclude it in `golden_staleness_allowlist.txt` **with a one-line reason**; continue |
-| **P7** | budget exhausted before the shortlist completes | Day 10 | **report the remainder**; do not silently drop it |
-| **P8** | a candidate's fingerprint fails re-reproduction under §4.1 | Days 11–12 | drop it, take the next; **no new diagnosis** |
+| **P7** | budget exhausted before the shortlist completes | **Day 3** | **report the remainder**; do not silently drop it |
+| **P8** | a candidate's fingerprint fails re-reproduction under §4.1 | **Days 9–12** | drop it, take the next; **no new diagnosis** |
 
 **P8 is the designated absorber for every REPLAN**, which is why its catalog was built in prep with five eligible candidates against a threshold of two.
 
@@ -204,9 +217,9 @@ Branch `planning/sprint38-day13-close`. Final pipeline retest under **≥3 `PYTH
 
 | # | priority | why it is open | closes |
 |---|---|---|---|
-| **1.1** | **Critical** | contingent on a landable fix; Task 4 showed direction 2 unbuildable | **Day 1** |
-| **1.3** | **Critical** | there is no predicate to gate | **Day 2** |
-| 1.5 | Medium | unanswerable without the cascade applied | **Day 3** |
+| **1.1** | **Critical** | contingent on a landable fix; Task 4 showed direction 2 unbuildable | **Day 1 — ANSWERED for the `$149` component** (199→178 errors, `$149`→0 on both models); the full four-fix `rc=0` claim is **not** re-established |
+| **1.3** | **Critical** | there is no predicate to gate | **CLOSED as unreachable** — P1 REPLAN'd Day 1, so no predicate was ever built to gate |
+| 1.5 | Medium | unanswerable without the cascade applied | **CARRIES** — Day 3's window required a fix in the tree; there is none |
 
 **The two Critical ones are a NO-GO for P1 as a landing track (§4), stated rather than scheduled around.**
 
@@ -217,35 +230,41 @@ Branch `planning/sprint38-day13-close`. Final pipeline retest under **≥3 `PYTH
 | day | content | h |
 |---|---|---|
 | 0 | baseline + GO/NO-GO + P3 send | 3 |
-| 1 | P1 direction-C control | 7 |
-| 2 | P1 land + leak gate @163 | 9 |
-| 3 | P1 verdict + Unknown 1.5 | 5 |
+| 1 | P1 direction-C control → **REPLAN** | 7 |
+| 2 | **P7** Phase-0 backfill 1 *(was P1 land, 9 h)* | 6 |
+| 3 | **P7** Phase-0 backfill 2 + close *(was P1 verdict, 5 h)* | 4 |
 | 4 | P6a + P6b | 10 |
 | 5 | Checkpoint 1 + P2 impl 1 | 9 |
 | 6 | P2 impl 2 + REPLAN trigger | 10 |
 | 7 | P2 gate + P6c | 10 |
 | 8 | P4 Tier-1 adoption | 10 |
-| 9 | P4 close + P6d + P7 | 10 |
-| 10 | Checkpoint 2 + P7 close + P5 | 9 |
-| 11 | P5 close + P8 day 1 | 10 |
-| 12 | P8 day 2 | 8 |
+| 9 | P4 close + P6d + **P8 day 1** *(was P7)* | 10 |
+| 10 | Checkpoint 2 + P5 + **P8 day 2** *(was P7 close)* | 9 |
+| 11 | P5 close + P8 day 3 | 10 |
+| 12 | P8 day 4 | 8 |
 | 13 | final retest + closeout | 6 |
-| | **total** | **116** |
+| | **total** | **112** |
 
 **≤ 12 h/day: PASS (max 10) · < 168 h: PASS · within the 100–134 h band: PASS.**
 
 | priority | scheduled | plan band | |
 |---|---|---|---|
-| P1 | 21 | 18–24 | ✅ |
+| **P1** | **7** | 18–24 | ⬇ **REPLAN'd Day 1** |
 | P2 | 24 | 20–28 | ✅ |
-| **P3** | **1** | 4–6 | ⬇ **measured down** |
+| **P3** | **1** | 4–6 | ⬇ measured down in prep |
 | P4 | 12 | 10–14 | ✅ |
-| **P5** | **6** | 10–14 | ⬇ **measured down** |
+| **P5** | **6** | 10–14 | ⬇ measured down in prep |
 | P6 | 16 | 14–18 | ✅ |
-| P7 | 10 | 8–10 | ✅ top of band |
-| P8 | 16 | 12–16 | ✅ top of band |
+| P7 | 10 | 8–10 | ✅ top of band, **Days 2–3** |
+| **P8** | **26** | 12–16 | ⬆ **absorbs P1's freed hours** |
 | retest | 4 | 4 | ✅ |
 | overhead | 6 | — | baseline + closeout |
+
+**Re-verified mechanically after the re-plan: total 112 h, max day 10 h, ≤12 h/day PASS, <168 h PASS, 100–134 h band PASS.** Ordering re-checked: **P7 ends Day 3, P8 starts Day 9** (six days of margin, up from one); **P6b Day 4 still precedes both P2's gate (Day 7) and P6d (Day 9)**.
+
+**P8 at 26 h is above its band by design.** It is the **pre-registered REPLAN absorber**, and P1's 14 h landed there per §6 — not by improvisation. Against **five eligible candidates** that is ~5 h each, which is a realistic figure for an emit fix plus its Phase-0 gate, leak gate and solve check. **It remains Translate-stable / Solve-uncertain / Match-unclaimed** — a bigger slack absorber is still not a KPI projection.
+
+**P1 at 7 h is below its band because it REPLAN'd on Day 1**, exactly as the exit intended: the day's gate refuted the only untested direction, and the track stopped rather than being nursed across Days 2–3.
 
 **The two priorities prep measured down, and where the 10 h went.**
 

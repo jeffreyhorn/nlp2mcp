@@ -80,11 +80,11 @@ That inheritance is itself the sprint's principal risk. The Sprint-37 retrospect
 
 **Estimated Research Time:** ~33.5 hours (within the 28–36 hour target; spread across prep Tasks 2–10)
 
-**By Resolution Status (as of Prep Task 10, 2026-08-18):**
-- ✅ VERIFIED: 17 — **8.1** (**5 candidates satisfy the rule vs a threshold of 2**, but **0 have a Phase-0 gate ⇒ P7 gates P8**; Task 9's Tier 1 needs correcting both ways), **8.2** (the rule **does** admit pattern matches; four-part criterion from three self-produced false positives, one 83 % wrong), **7.1** (**43 open issues lack a Phase-0 gate** — current, not historical; compliance is binary, zero partial gates; P7 is under-budgeted), **7.2** (#1289's gate complete, with a stale KPI and a missing prerequisite fixed), **5.3** (per-model numéraire still correct, re-confirmed and stamped under GAMS 54.2.1), **3.1** (**channel supplied by the owner 2026-08-18: email to `ferris@cs.wisc.edu` + `steve@gams.com`/`sdirkse@gams.com`; Branch A SEND unblocked after five carries**), **3.2** (strike ⇒ Sprint 39 survives, but rocket/fawley become unreachable, not deferred), **4.3** (presolve-golden sweep fits CI with headroom; the *local* 26.3 min was a 2× trap), **4.4** (derive `--min-scope` from `git ls-files`, not the filesystem), **2.2** (sarf premise confirmed: volume is per-column, measured), **2.4** (corpus-free surrogate sized), **2.5** (P2/P4 scope arithmetic order-independent), **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes), **1.4** (bucket 0; no gate treats a rising `model_infeasible` as a regression)
-- ❌ WRONG: 5 — **5.2** (**the Epic-5 handoff was already written** — three narrow gaps, not a document; writing one would have duplicated ~90 %), **4.2** (**14 of the 36 would pin emits that do not reproduce their NLP solution** — 7 mismatch, 6 skipped, 1 model_infeasible ⇒ two-tier adoption), **2.3** (**the sarf timing gate is refuted: ~141 s projected, not single-digit seconds** — the 927× column win is real but rows are untouched; **gate REVISED to ≤300 s nightly, owner decision 2026-08-18**), **6.2** (the floor cannot be reproduced from existing artifacts at 76 *or any figure*: three derivations give 65 / 93 / 76) · **1.2** (**no positive requirement is expressible at the `$149` rebind site** — ganges and `prolog` are *locally indistinguishable*; #1668 direction 2 is closed)
-- 🔶 PARTIALLY WRONG: 3 — **5.1** (**not turkey alone — a 10-model `license-gated` cohort**, 7 % of the corpus, all emitting correctly and all rejected at generation; excluded from projections but actively pursued, ceiling +10 Solve) · **3.3** (the case reproduces under GAMS 54.2.1, but the bundle is **unstamped** and its figures predate the re-pin by 9 days — one-line fix, do not send without it) · **6.1** (`--resolve-changed` silent defect CONFIRMED; but `leak-check` already **exits 2**, so its NO-OP is *not* mistakable for a pass — the defect is the misleading message)
-- 🔍 INCOMPLETE: 3 — including **1.1**, whose `rc=0` question is **untested** (the cascade was never re-applied). **Task 2's "the banked baseline is refuted" claim is RETRACTED by Task 4**: the `$141` counts were *printed-marker undercounts* under a GAMS listing-truncation cap, not a reproduction failure. `$145`×3 and `$149`×9 *do* reproduce exactly. Nothing about `$141` is concludable until a truncation-free census exists — see 1.1.
+**By Resolution Status (as of Sprint 38 Day 1, 2026-08-19):**
+- ✅ VERIFIED: 17 (unchanged on Day 1) — **8.1** (**5 candidates satisfy the rule vs a threshold of 2**, but **0 have a Phase-0 gate ⇒ P7 gates P8**; Task 9's Tier 1 needs correcting both ways), **8.2** (the rule **does** admit pattern matches; four-part criterion from three self-produced false positives, one 83 % wrong), **7.1** (**43 open issues lack a Phase-0 gate** — current, not historical; compliance is binary, zero partial gates; P7 is under-budgeted), **7.2** (#1289's gate complete, with a stale KPI and a missing prerequisite fixed), **5.3** (per-model numéraire still correct, re-confirmed and stamped under GAMS 54.2.1), **3.1** (**channel supplied by the owner 2026-08-18: email to `ferris@cs.wisc.edu` + `steve@gams.com`/`sdirkse@gams.com`; Branch A SEND unblocked after five carries**), **3.2** (strike ⇒ Sprint 39 survives, but rocket/fawley become unreachable, not deferred), **4.3** (presolve-golden sweep fits CI with headroom; the *local* 26.3 min was a 2× trap), **4.4** (derive `--min-scope` from `git ls-files`, not the filesystem), **2.2** (sarf premise confirmed: volume is per-column, measured), **2.4** (corpus-free surrogate sized), **2.5** (P2/P4 scope arithmetic order-independent), **2.1** (sarf sites intact), **4.1** (36 presolve goldens reproducible), **6.3** (re-anchor `8cffec29`, *conditional on 6b*), **6.4** (no false-positive modes), **1.4** (bucket 0; no gate treats a rising `model_infeasible` as a regression)
+- ❌ WRONG: 6 — **1.3** (CLOSED as unreachable: no predicate ever existed to gate; **#1668 direction 1 is a no-op** — 265 fires, zero residual — and `prolog` drifts −3 bytes in the full sweep), **5.2** (**the Epic-5 handoff was already written** — three narrow gaps, not a document; writing one would have duplicated ~90 %), **4.2** (**14 of the 36 would pin emits that do not reproduce their NLP solution** — 7 mismatch, 6 skipped, 1 model_infeasible ⇒ two-tier adoption), **2.3** (**the sarf timing gate is refuted: ~141 s projected, not single-digit seconds** — the 927× column win is real but rows are untouched; **gate REVISED to ≤300 s nightly, owner decision 2026-08-18**), **6.2** (the floor cannot be reproduced from existing artifacts at 76 *or any figure*: three derivations give 65 / 93 / 76) · **1.2** (**no positive requirement is expressible at the `$149` rebind site** — ganges and `prolog` are *locally indistinguishable*; #1668 direction 2 is closed)
+- 🔶 PARTIALLY WRONG: 4 — **1.1** (the **`$149` component reproduces** on current `main`, 199→178 errors on both models; the full four-fix `rc=0` claim is **not** re-established, and that is stated as a bounded gap), **5.1** (**not turkey alone — a 10-model `license-gated` cohort**, 7 % of the corpus, all emitting correctly and all rejected at generation; excluded from projections but actively pursued, ceiling +10 Solve) · **3.3** (the case reproduces under GAMS 54.2.1, but the bundle is **unstamped** and its figures predate the re-pin by 9 days — one-line fix, do not send without it) · **6.1** (`--resolve-changed` silent defect CONFIRMED; but `leak-check` already **exits 2**, so its NO-OP is *not* mistakable for a pass — the defect is the misleading message)
+- 🔍 INCOMPLETE: 1 — **1.5** (the general `$149` fix's reach; **carries** — its Day-3 window closed with the Day-1 P1 REPLAN, and measuring an unpatched tree would restate the failure, not answer the question). Formerly listed: including **1.1**, whose `rc=0` question is **untested** (the cascade was never re-applied). **Task 2's "the banked baseline is refuted" claim is RETRACTED by Task 4**: the `$141` counts were *printed-marker undercounts* under a GAMS listing-truncation cap, not a reproduction failure. `$145`×3 and `$149`×9 *do* reproduce exactly. Nothing about `$141` is concludable until a truncation-free census exists — see 1.1.
 
 **⚠ Task 2 surfaced a finding that lands on Unknown 6.2 early:** the genuine floor's provenance chain credits **three models that are outside the 142-candidate corpus** the floor is reported over (`ps2_f_s`, `ps2_s`, `ps3_s_gic` are `non_convex`, and were already so at the S32 anchor, immediately after the S31 sprint that credited them). Either the floor has been **overstated by 3 since Sprint 31** (true in-corpus floor **73**), or the floor's scope legitimately differs from Solve/Match's and that has never been written down. **Task 3 resolved the design question; the figure is now decided — `baseline.count = 73` (owner, 2026-08-18).** A *reconstructing* tracker is impossible (three derivations give 65 / 93 / 76), so the tracker is now **append-only from a declared baseline**. **The baseline is 73** (in-corpus only), decided 2026-08-18; the S31–S37 series was overstated by 3. See `BASELINE_RECONFIRMATION.md` §2 and `MEASUREMENT_INTEGRITY_DESIGN.md` §4.3.
 
@@ -134,32 +134,26 @@ Cold-compile both raw models on current `main` and count error signatures by **s
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — the `rc=0` question is **untested**; the earlier "baseline refuted" finding is **RETRACTED**
-**Partially investigated by:** Task 2 · **corrected by Task 4** (2026-08-17)
-**Date:** 2026-08-17 · **Measured at:** `84fbe43c` / `f04c3a44`
+🔶 **Status:** PARTIALLY ANSWERED — the **`$149` component reproduces** on current `main`; the full four-fix `rc=0` claim is **not** re-established
+**Verified by:** Sprint 38 Day 1 · **Date:** 2026-08-19 · **Measured at:** `1e7b5023`
 
-**Findings:** The `src/` premise holds — the cascade is confirmed **absent** from `main` and both models fail `rc=2`.
+**Findings:** With the banked `$149` rebind applied as a scratch patch, per model and never inferred across the pair:
 
-**⚠ Task 2's "the `$141` count does not reproduce" finding is RETRACTED. The measurement was invalid.**
+| | ganges | gangesx |
+|---|---|---|
+| **GAMS total errors** | **199 → 178** | **199 → 178** |
+| `$149` printed markers | 1 → **0** | 1 → **0** |
+| `gams rc` | 2 → 2 | 2 → 2 |
 
-Concurrency was ruled out first: a **serial** ganges cold run with nothing else executing produced a **byte-identical emit** (md5 `72c5d5f268e9dad458f61f58491872c5`) and **identical counts** to the loaded run — load affects **runtime only** (325 s → 162 s).
+**21 errors cleared on each model and `$149` driven to zero — the component still works.** `rc` remains 2 **only because `$141` and `$145` were not applied**; this control tested #1668 direction 1, not the cascade.
 
-The real defect is that **GAMS truncates its own error listing**: `**** 300  Remaining errors not printed for this line` appears ×2, and `errmsg=1` does **not** lift it.
+**Why the full claim was not re-established, stated rather than papered over:** doing so means re-applying `a8ff626c` — a patch S37 Day 4 had to **correct mid-flight** as known-defective — to confirm a figure Day 4 already measured per-model. **The cascade was never P1's blocker**; the `prolog` leak is. Reconstructing it is the "nursing" the plan's Day-1 exit exists to prevent.
 
-| run | printed `$141` | printed total | **GAMS total** | suppressed | true `$141` |
-|---|---|---|---|---|---|
-| cold | 15 | 29 | **51** | 22 | ≤ 37 |
-| presolve | 49 | 175 | **199** | 24 | **≤ 73** |
-| banked (S37 Day 4) | — | — | — | — | **78** |
+**Counting note.** The baseline shows **199 errors against ~50 printed markers**, with 2 `Remaining errors not printed` notices. The banked per-code figures (78/3/9) are printed-marker counts and are **undercounts**; the totals above are read from GAMS's own `**** N ERROR(S)` line.
 
-**Every `grep -o '\$NNN'` count counts only PRINTED markers.** The authoritative figure is GAMS's `**** N ERROR(S)` line. Decisively, the cold run has only **51 errors of all kinds**, so `78 × $141` cannot describe a cold compile — confirming the banked figure came from the **presolve** run, as `DAY4_GANGES_CONTROL.md` §1 states.
+**Evidence:** `DAY1_GANGES_CONTROL.md` §4.
 
-**`$145`×3 and `$149`×9 do reproduce exactly** in both variants on both models — and those are the classes the `$149` work depends on.
-
-**Evidence:** serial-vs-loaded emit md5 + counts; `**** N ERROR(S)` and truncation-marker census across cold/presolve listings. See `GANGES_REBIND_PREDICATE_DESIGN.md` §7.
-
-**Decision:** 🔍 **INCOMPLETE, not WRONG.** The cascade was never re-applied, so the `rc=0` question stands untested. A residual gap may exist (**≤73 vs 78**) but is far smaller and differently shaped than the retracted "15 vs 78", and nothing is concludable until a **truncation-free census** exists. Three counting errors accumulated on this one figure: `grep -c` counting lines → the wrong variant → printed-markers-under-a-cap.
-
+**Decision:** 🔶 The `$149` half is live. **P1 REPLAN'd regardless** — the blocker is the leak, not the cascade.
 ---
 
 ## Unknown 1.2: Can the `$149` rebind be narrowed by a POSITIVE requirement that excludes `prolog` while preserving `rc=0`?
@@ -245,18 +239,25 @@ Map the leak surface from the emit path, not from a hand-picked cohort. Run the 
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — not reachable; there is no predicate to gate
-**Partially investigated by:** Task 4 (ganges P1)
-**Date:** 2026-08-17
+❌ **Status:** CLOSED AS UNREACHABLE — there was never a predicate to gate
+**Verified by:** Sprint 38 Day 1 · **Date:** 2026-08-19 · **Measured at:** `1e7b5023`
 
-**Findings:** This unknown asks whether *the narrowed predicate* passes the full-corpus gate with `prolog` byte-identical. **Unknown 1.2 established that no such predicate exists at the rebind site**, so there is nothing to run the gate against. Running a full-corpus sweep now would measure the unpatched tree and prove nothing.
+**Findings:** This unknown asks whether *the narrowed predicate* passes the full-corpus gate with `prolog` byte-identical. **No narrowed predicate exists.** Task 4 refuted #1668 direction 2 (the information is not present at the site), and **Day 1 refuted direction 1 as a no-op** — its premise is false: measured over **265 rebind fires across three models, zero residual**, so `ParamRef` and `VarRef` are *already* rewritten together. **Neither #1668 direction is implementable at the rebind site.**
 
-What **is** established and carried forward: the gate specification itself does not depend on which replacement direction is chosen, and is recorded in full — `--expect-drift ganges,gangesx,korcge` with **`prolog` byte-identical** as an explicit criterion, scope asserted via `--min-scope` per Task 3 §3.1, determinism ×3, and the measured slow-emit budget (ganges **325 s**, gangesx **243 s**) on a nightly slot rather than the PR gate. `korcge` belongs in `--expect-drift`, not the leak set: Day 4 verified its drift is the benign `rPower` gate and it still solves `MODEL STATUS 1 Optimal` @ 339.2130.
+**What was measured instead — the gate run against the banked rebind**, which is the same emit direction 1 would produce:
 
-**Evidence:** `GANGES_REBIND_PREDICATE_DESIGN.md` §4–§5.
+```
+checked 163 in-scope golden(s) (7 allowlisted)
+  DRIFTED: ganges_mcp.gms (-37)  gangesx_mcp.gms (-37)  prolog_mcp.gms (-3)
+```
 
-**Decision:** 🔍 Closes with whichever direction (§3) is chosen. The gate is pre-specified so that effort runs it rather than designing it.
+**`prolog` is NOT byte-identical — it drifts −3 bytes.** So the property this unknown asks about is **false** for every predicate available today, and the leak is **exactly one model**, confirming S37 Day 4.
 
+**The mechanism, newly identified:** the asymmetry is manufactured **downstream**, not in `_diff_prod`. The AD layer substitutes consistently; `_replace_indices_in_expr` then lifts concrete elements back to symbolic names **positionally against the declared domain**, and under prolog's `Alias (g,gp)` with `eta(g,gp,h)` the parameter's index **moves back to `gp`** while the variable's stays at `g`.
+
+**Evidence:** `DAY1_GANGES_CONTROL.md` §2, §3, §4a.
+
+**Decision:** ❌ Unreachable as posed. **It re-opens only if direction A lands** (banked, located at `stationarity.py:659/877/1130`, **untested** — owner decision 2026-08-19: **HOLD**).
 ---
 
 ## Unknown 1.4: Is P1's bucket really 0, and does any gate or report assume `model_infeasible` is monotone non-increasing?
@@ -331,18 +332,16 @@ Cold-compile all four with the scratch predicate applied and count remaining err
 Sprint 38 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE — untestable without the cascade applied
-**Partially investigated by:** Task 4 (ganges P1)
-**Date:** 2026-08-17
+🔍 **Status:** INCOMPLETE — CARRIES; its measurement window closed with the Day-1 REPLAN
+**Verified by:** Sprint 38 Day 1 (disposition) · **Date:** 2026-08-19
 
-**Findings:** Whether the general `$149` fix clears the `$149` half of dinam/indus/turkpow/clearlak can only be measured **with the fix applied**, and Unknown 1.2 established there is no landable fix yet. Measuring the four models unpatched would restate their current failure, not the question asked.
+**Findings:** The plan scheduled this for Day 3, to be measured *"while the fix is in the tree"*. **P1 REPLAN'd on Day 1, so no fix is in the tree** and Days 2–3 were re-purposed to P7 (owner decision 2026-08-19). Measuring dinam/indus/turkpow/clearlak unpatched would **restate their current failure, not answer the question** — the same reason Task 4 gave, unchanged.
 
-**A method correction applies here and was not known when this unknown was written.** Any per-model `$NNN` census must read GAMS's own `**** N ERROR(S)` line and check for `Remaining errors not printed for this line` — `grep -o '\$NNN'` counts only *printed* markers and undercounts (see 1.1's retraction and `GANGES_REBIND_PREDICATE_DESIGN.md` §7). The earlier plan to "count `$149` per model" would have produced undercounts for exactly the same reason the `$141` finding was withdrawn.
+**What is known, from Day 1's baseline compile of the pool:** all four remain broad rather than bounded — indus **31** errors spanning `$130/$140/$141/$148/$149/$408/$409`, dinam **22**, turkpow **14**, clearlak **8** (GAMS totals, not marker counts). Task 10 rejected all four from the P8 pool on exactly this basis.
 
-**Evidence:** `GANGES_REBIND_PREDICATE_DESIGN.md` §7; probe results §2.
+**Evidence:** `DAY1_GANGES_CONTROL.md` §6.4; `BACKLOG_CANDIDATE_CATALOG.md` §2.2.
 
-**Decision:** 🔍 Carries to whichever direction (§3) produces a landable fix. **Task 10 must not assume these four are unblocked** — its candidate pool should treat them as untested, not as pending-unblock.
-
+**Decision:** 🔍 **Carries to whichever effort lands a `$149` fix.** **Sprint 38 will not answer it**, and the Day-3 prompt now says so explicitly so it is not attempted against an unpatched tree.
 ---
 
 # Category 2: sarf #1385 — the O(active) Atomic Re-Architecture
