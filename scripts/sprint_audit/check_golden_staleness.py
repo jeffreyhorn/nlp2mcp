@@ -141,34 +141,53 @@ def check_one(model_id: str, is_presolve: bool, golden: Path, fix: bool) -> dict
 
 def classify_missing_expected(
     missing: list[str],
-    corpus_models: set[str],
+    discovered_models: set[str],
+    swept_models: set[str],
     allowlisted_models: set[str],
-) -> tuple[list[str], list[str], list[str]]:
-    """Split "expected to drift but did not" into its three causes (Sprint 38 P6b).
+) -> tuple[list[str], list[str], list[str], list[str]]:
+    """Split "expected to drift but did not" into its four causes (Sprint 38 P6b).
 
     They have **opposite meanings** and were previously all reported as
     ``NO-OP: … the fix did not change the emit`` — a *correctness* claim:
 
-    * ``no_golden``   — the model has no golden in the corpus, so it was never
-      compared. This says nothing about the emit. ``sarf`` is the standing case:
-      ``make leak-check MODEL=sarf`` reported that its fix did not change the
-      emit, on a run that never looked at sarf.
-    * ``allowlisted`` — the model HAS a golden but sits in the allowlist, so it
-      was skipped. Also not a statement about the emit.
-    * ``no_op``       — the model has a golden, was compared, and was
+    * ``no_golden``   — the model has no golden **anywhere in the discovered
+      corpus**, so it could never have been compared. This says nothing about the
+      emit. ``sarf`` is the standing case: ``make leak-check MODEL=sarf`` reported
+      that its fix did not change the emit, on a run that never looked at sarf.
+    * ``excluded``    — the model HAS a golden but was filtered out by
+      ``--models``. A property of *this invocation*, not of the corpus or the
+      emit. Reporting it as ``no_golden`` would state a corpus fact that is false.
+    * ``allowlisted`` — the model HAS a golden and was in scope, but sits in the
+      allowlist, so it was skipped. Also not a statement about the emit.
+    * ``no_op``       — the model has a golden, was actually swept, and was
       byte-identical. This is the genuine no-op fix.
 
-    All three still fail the gate (an unmet expectation is unmet either way), but
+    All four still fail the gate (an unmet expectation is unmet either way), but
     conflating them sends an engineer to debug an emit that was never swept.
 
-    Returns ``(no_golden, allowlisted, no_op)``; the three partition ``missing``.
+    ``discovered_models`` must be the corpus **before** ``--models`` narrowing and
+    ``swept_models`` the set actually compared; passing the filtered list as both
+    reintroduces the very misattribution this function exists to prevent.
+
+    Returns ``(no_golden, excluded, allowlisted, no_op)``, which partition ``missing``.
     """
-    no_golden = sorted(m for m in missing if m not in corpus_models)
-    allowlisted = sorted(m for m in missing if m in allowlisted_models)
-    no_op = sorted(
-        m for m in missing if m in corpus_models and m not in allowlisted_models
-    )
-    return no_golden, allowlisted, no_op
+    # Precedence matters and is asserted by a partition test: an allowlisted model
+    # is also absent from `swept_models` (in_scope excludes it), so `allowlisted`
+    # must be decided BEFORE `excluded` or a model would land in both classes.
+    no_golden: list[str] = []
+    excluded: list[str] = []
+    allowlisted: list[str] = []
+    no_op: list[str] = []
+    for m in missing:
+        if m not in discovered_models:
+            no_golden.append(m)
+        elif m in allowlisted_models:
+            allowlisted.append(m)
+        elif m not in swept_models:
+            excluded.append(m)
+        else:
+            no_op.append(m)
+    return sorted(no_golden), sorted(excluded), sorted(allowlisted), sorted(no_op)
 
 
 def main() -> int:
@@ -227,6 +246,11 @@ def main() -> int:
 
     allowlist = load_allowlist()
     goldens = discover_goldens()
+    # The corpus as DISCOVERED, before any --models narrowing. The missing-expected
+    # classification must be made against this: judging it against the filtered list
+    # would report a model the user excluded as "has NO golden in the corpus", which
+    # is a claim about the corpus derived from a property of the invocation.
+    discovered_models = {mid for (mid, _pre, _gp) in goldens}
 
     # Coverage floor, asserted on DISCOVERY (before --models narrowing): a golden
     # whose raw source is absent is dropped by discover_goldens() without comment,
@@ -300,9 +324,10 @@ def main() -> int:
     leaked = sorted(drifted_models - expected) if expected else []
     missing = sorted(expected - drifted_models) if expected else []
 
-    no_golden, skipped_allowlisted, no_op = classify_missing_expected(
+    no_golden, excluded_by_models, skipped_allowlisted, no_op = classify_missing_expected(
         missing,
-        corpus_models={mid for (mid, _pre, _gp) in goldens},
+        discovered_models=discovered_models,
+        swept_models={mid for (mid, _pre, _gp) in in_scope},
         allowlisted_models={mid for (mid, _pre, _gp) in allowlisted},
     )
 
@@ -337,6 +362,7 @@ def main() -> int:
                             "leaked": leaked,
                             "missing_expected": missing,
                             "missing_no_golden": no_golden,
+                            "missing_excluded_by_models": excluded_by_models,
                             "missing_allowlisted": skipped_allowlisted,
                             "missing_no_op": no_op,
                             "unverified": [r["golden"] for r in timed_out],
@@ -393,6 +419,13 @@ def main() -> int:
             print(
                 f"  NO-OP: expected drift on {', '.join(no_op)} but the emit was byte-identical "
                 "— the fix did not change the emit."
+            )
+        if excluded_by_models:
+            print(
+                f"  EXCLUDED-BY-MODELS: expected drift on {', '.join(excluded_by_models)}, "
+                "but --models filtered that model out of this sweep. It HAS a golden — this "
+                "is a property of the invocation, not of the corpus or the emit. Widen "
+                "--models (or drop it) to gate that model."
             )
         if skipped_allowlisted:
             print(

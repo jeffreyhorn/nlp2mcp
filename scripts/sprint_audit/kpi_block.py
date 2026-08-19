@@ -67,18 +67,30 @@ def _measured_at() -> str:
         return "unknown"
 
 
-def _dirty_db() -> bool:
-    """True if the DB has uncommitted changes — the block would not be reproducible."""
+def _dirty_db(db_path: Path | None = None) -> bool:
+    """True if *db_path* has uncommitted changes — the block would not be reproducible.
+
+    Must be asked about the DB actually read. Checking the default path while
+    ``--db`` pointed elsewhere would report the dirtiness of a file that did not
+    produce these figures — a false clean (no warning on a dirty alternate DB) or
+    a false dirty (warning about an unrelated file).
+    """
+    target = Path(db_path) if db_path is not None else DATABASE_PATH
+    try:
+        rel = target.resolve().relative_to(PROJECT_ROOT)
+    except ValueError:
+        # Outside the repo: git cannot speak to it, so make no claim.
+        return False
     try:
         proc = subprocess.run(
-            ["git", "status", "--porcelain", "--", str(DATABASE_PATH.relative_to(PROJECT_ROOT))],
+            ["git", "status", "--porcelain", "--", str(rel)],
             capture_output=True,
             text=True,
             cwd=str(PROJECT_ROOT),
             check=True,
         )
         return bool(proc.stdout.strip())
-    except (subprocess.CalledProcessError, FileNotFoundError, OSError, ValueError):
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
         return False
 
 
@@ -207,7 +219,7 @@ def main() -> int:
 
     kpis = compute_kpis(db)
     sha = _measured_at()
-    dirty = _dirty_db()
+    dirty = _dirty_db(db_path)
 
     if args.json:
         print(json.dumps({**kpis, "measured_at": sha, "db_dirty": dirty}, indent=2))

@@ -211,60 +211,103 @@ class TestExpectDriftMissingClassification:
     """
 
     @staticmethod
-    def _classify(expected: set[str], drifted: set[str], corpus: set[str], allow: set[str]):
+    def _classify(
+        expected: set[str],
+        drifted: set[str],
+        discovered: set[str],
+        allow: set[str],
+        swept: set[str] | None = None,
+    ):
         """Call the SHIPPED classifier — deliberately not a local mirror.
 
         A test that re-implements the logic it is checking proves only that two
         copies agree; it would pass against the pre-fix code, which is exactly
         the "verify a component, assert a system property" defect P6b exists to
         catch. Importing the real function makes this fail-before.
+
+        ``swept`` defaults to everything discovered that is not allowlisted —
+        i.e. no ``--models`` narrowing.
         """
         from scripts.sprint_audit.check_golden_staleness import classify_missing_expected
 
         return classify_missing_expected(
             sorted(expected - drifted),
-            corpus_models=corpus,
+            discovered_models=discovered,
+            swept_models=discovered - allow if swept is None else swept,
             allowlisted_models=allow,
         )
 
     def test_model_with_no_golden_is_not_reported_as_a_no_op(self):
-        no_golden, allowlisted, no_op = self._classify(
-            expected={"sarf"}, drifted=set(), corpus={"markov", "fawley"}, allow=set()
+        no_golden, excluded, allowlisted, no_op = self._classify(
+            expected={"sarf"}, drifted=set(), discovered={"markov", "fawley"}, allow=set()
         )
         assert no_golden == ["sarf"], "sarf has no golden — it was never compared"
         assert no_op == [], "must NOT claim the emit was byte-identical"
-        assert allowlisted == []
+        assert allowlisted == [] and excluded == []
 
     def test_allowlisted_model_is_distinguished_from_having_no_golden(self):
         """It HAS a golden — it was skipped. Reporting 'no golden' would be wrong."""
-        no_golden, allowlisted, no_op = self._classify(
+        no_golden, excluded, allowlisted, no_op = self._classify(
             expected={"indus"},
             drifted=set(),
-            corpus={"indus", "markov"},
+            discovered={"indus", "markov"},
             allow={"indus"},
         )
         assert allowlisted == ["indus"]
-        assert no_golden == [] and no_op == []
+        assert no_golden == [] and no_op == [] and excluded == []
 
     def test_genuine_no_op_still_reported_as_no_op(self):
         """The real case must survive: compared, in scope, byte-identical."""
-        no_golden, allowlisted, no_op = self._classify(
-            expected={"markov"}, drifted=set(), corpus={"markov"}, allow=set()
+        no_golden, excluded, allowlisted, no_op = self._classify(
+            expected={"markov"}, drifted=set(), discovered={"markov"}, allow=set()
         )
         assert no_op == ["markov"]
-        assert no_golden == [] and allowlisted == []
+        assert no_golden == [] and allowlisted == [] and excluded == []
 
-    def test_the_three_classes_partition_missing(self):
-        """No expected-but-undrifted model may fall through unreported."""
-        expected = {"sarf", "indus", "markov", "fawley"}
-        corpus = {"indus", "markov", "fawley"}
+    def test_model_excluded_by_models_is_not_reported_as_no_golden(self):
+        """A `--models` subset is a property of the INVOCATION, not of the corpus.
+
+        FAIL-BEFORE (of the review fix): `corpus_models` was derived from the
+        already-filtered golden list, so a model the user excluded via `--models`
+        was reported as "has NO golden in the corpus" — a corpus claim that is
+        factually false, and the same misattribution this classifier exists to
+        prevent, one level up.
+        """
+        no_golden, excluded, allowlisted, no_op = self._classify(
+            expected={"fawley"},
+            drifted=set(),
+            discovered={"fawley", "markov"},
+            allow=set(),
+            swept={"markov"},  # --models markov
+        )
+        assert excluded == ["fawley"], "it HAS a golden; --models filtered it out"
+        assert no_golden == [], "must not claim the corpus lacks a golden for it"
+        assert no_op == [] and allowlisted == []
+
+    def test_the_four_classes_partition_missing(self):
+        """No expected-but-undrifted model may fall through OR land in two classes.
+
+        Precedence is load-bearing: an allowlisted model is also absent from the
+        swept set, so `allowlisted` must be decided before `excluded`.
+        """
+        expected = {"sarf", "indus", "markov", "fawley", "prolog"}
+        discovered = {"indus", "markov", "fawley", "prolog"}
         allow = {"indus"}
-        no_golden, allowlisted, no_op = self._classify(expected, {"fawley"}, corpus, allow)
-        assert set(no_golden) | set(allowlisted) | set(no_op) == {"sarf", "indus", "markov"}
-        # disjoint
-        assert not (set(no_golden) & set(allowlisted))
-        assert not (set(no_golden) & set(no_op))
-        assert not (set(allowlisted) & set(no_op))
+        swept = {"markov", "prolog"}  # fawley excluded by --models
+        no_golden, excluded, allowlisted, no_op = self._classify(
+            expected, {"prolog"}, discovered, allow, swept=swept
+        )
+        classes = [set(no_golden), set(excluded), set(allowlisted), set(no_op)]
+        union = set().union(*classes)
+        assert union == {"sarf", "indus", "markov", "fawley"}, "nothing may fall through"
+        total = sum(len(c) for c in classes)
+        assert total == len(union), "classes must be disjoint — no model in two"
+        assert (no_golden, excluded, allowlisted, no_op) == (
+            ["sarf"],
+            ["fawley"],
+            ["indus"],
+            ["markov"],
+        )
 
 
 class TestKpiBlockDerivation:
@@ -340,6 +383,38 @@ class TestKpiBlockDerivation:
         k = compute_kpis(self._db())
         assert "abc1234" in _render_markdown(k, "abc1234", dirty=False)
         assert "abc1234" in _render_line(k, "abc1234", dirty=False)
+
+    def test_dirty_check_targets_the_db_actually_read(self, tmp_path, monkeypatch):
+        """`--db` must be honoured: never report on a file that produced no figures.
+
+        FAIL-BEFORE (of the review fix): `_dirty_db()` always stat-ed the default
+        DATABASE_PATH, so pointing `--db` elsewhere produced a dirtiness verdict
+        about an unrelated file.
+        """
+        import subprocess
+
+        from scripts.sprint_audit import kpi_block
+
+        seen: list[list[str]] = []
+
+        def fake_run(cmd, *a, **kw):
+            seen.append(list(cmd))
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+        monkeypatch.setattr(subprocess, "run", fake_run)
+        alt = kpi_block.PROJECT_ROOT / "data" / "gamslib" / "alt_db.json"
+        kpi_block._dirty_db(alt)
+        assert seen and seen[-1][-1].endswith(
+            "alt_db.json"
+        ), "the dirty check must name the DB that was actually read"
+
+    def test_dirty_check_makes_no_claim_for_a_db_outside_the_repo(self, tmp_path):
+        """git cannot speak to it — return False rather than guess."""
+        from scripts.sprint_audit.kpi_block import _dirty_db
+
+        outside = tmp_path / "elsewhere.json"
+        outside.write_text("{}")
+        assert _dirty_db(outside) is False
 
     def test_dirty_db_is_flagged_in_both_renderings(self):
         """A block derived from an uncommitted DB is not reproducible from its SHA."""
