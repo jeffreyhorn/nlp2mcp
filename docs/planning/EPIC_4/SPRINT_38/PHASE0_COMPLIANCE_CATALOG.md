@@ -49,25 +49,29 @@ Ranked by likelihood of being scheduled, which is what makes a gate *needed* rat
 
 **Remaining open un-gated (39), derived at `2723c22a` — not hand-listed:** #765 #871 #885 #906 #907 #918 #919 #926 #927 #928 #929 #930 #931 #932 #933 #945 #970 #1038 #1041 #1061 #1070 #1169 #1177 #1185 #1225 #1226 #1228 #1251 #1268 #1269 #1279 #1290 #1291 #1307 #1316 #1324 #1354 #1355 #1439
 
-### Tier 1 — the P8 candidate pool (11 issues) ← **backfill first**### Tier 1 — the P8 candidate pool (11 issues) ← **backfill first**
+### Tier 1 — the P8 candidate pool (11 issues) — ✅ **P8's shortlist is backfilled**
 
 These cover models in Sprint 38's own P8 sweep pool. **An issue here without a gate is not eligible for the sweep**, so backfilling directly enlarges P8's candidate set.
 
-| # | model | issue |
-|---|---|---|
-| 906 | twocge | missing USA SAM post-solve trade equations |
-| 926 | dinam | MCP compilation errors |
-| 933 | tricp | MCP compilation errors |
-| 970 | twocge | MCP locally infeasible |
-| 983 | elec | division by zero (distance) |
-| 1062 | tricp | unmatched slp/sln variables |
-| 1251 | twocge | empty trade equations `r = rr` |
-| 1291 | clearlak | statement ordering hoists set use before init |
-| 1316 | turkpow | table data mis-emission on empty cells |
-| 1325 | elec | residual pairwise distance zero after #1320 |
-| 1331 | twocge | empty MCP pair `eqpw`/`eqw` |
+| # | model | issue | gate |
+|---|---|---|---|
+| **1331** | twocge | empty MCP pair `eqpw`/`eqw` | ✅ **Day 2** |
+| **1062** | tricp | unmatched slp/sln variables | ✅ **Day 2** |
+| **1325** | elec | residual pairwise distance zero after #1320 | ✅ **Day 2** |
+| **983** | elec | division by zero (distance) | ✅ **Day 2** |
+| **1693** | dyncge | empty pair `eqpf2` (diagonal self-cancellation) | ✅ **Day 3 — issue filed + gated** |
+| **1694** | lnts | contradictory `.fx` mechanisms | ✅ **Day 3 — issue filed + gated** |
+| 906 | twocge | missing USA SAM post-solve trade equations | ❌ |
+| 970 | twocge | MCP locally infeasible | ❌ |
+| 1251 | twocge | empty trade equations `r = rr` | ❌ |
+| 933 | tricp | MCP compilation errors | ❌ |
+| 926 | dinam | MCP compilation errors | ❌ — `$149`-family, **untested per Unknown 1.5** |
+| ~~1291~~ | clearlak | statement ordering | ⬇ **DEMOTED** — structurally excluded from P8 |
+| ~~1316~~ | turkpow | table data mis-emission | ⬇ **DEMOTED** — structurally excluded from P8 |
 
-**twocge holds 4 of the 11** and **elec 2** — so two models account for over half of Tier 1. Gating those two first has the best ratio of effort to eligibility gained.
+**The six gated issues ARE P8's shortlist**, in sweep order: #1331 → #1062 → #983/#1325 → #1693 → #1694. The five ungated Tier-1 entries are **not** P8 candidates — Task 10's selection rule rejected them (twocge #906/#970/#1251 and tricp #933 are covered by the gated issue for the same model; dinam is `$149`-family). **Gating them buys P8 nothing and they are not scheduled.**
+
+*(Superseded by the Day-2/3 outcome above: the original ordering reasoning — "twocge holds 4 of 11, elec 2, so gate those first" — was right about priority but counted **issues**, not **models**. What P8 needs is **one gated issue per candidate model**, which is why six gates covering five models completed the shortlist while five Tier-1 issues remain ungated and unscheduled.)*
 
 ### Tier 2 — the license-gated cohort (4 issues)
 
