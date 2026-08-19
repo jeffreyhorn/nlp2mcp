@@ -31,6 +31,8 @@ The four canonical subsections are matched by **prefix**, with extras permitted.
 
 Ranked by likelihood of being scheduled, which is what makes a gate *needed* rather than merely absent.
 
+> **✅ DAY-2 PROGRESS (2026-08-19).** Four gates authored — **#1331, #1062, #1325, #983** — covering the first three P8 shortlist entries (twocge, tricp, elec). **Census 24 → 28 complete, 56 → 52 un-gated.** Fingerprints were **re-reproduced at `b823a9a5`**, not quoted. **Two stale claims were found and flagged while gating:** `ISSUE_1062`'s headline **"760 MCP errors" does not reproduce — the measured count is 108**, and its note that `$148`/`$149` compile errors block reproduction is also stale (the model compiles cleanly today); and `ISSUE_983`'s section *"Why Division-by-Zero No Longer Occurs"* is **contradicted by measurement** — it still occurs, at lines 99/100/101. Remaining P8 shortlist: **dyncge** and **lnts**, both needing a doc *created* (Day 3).
+
 ### Tier 1 — the P8 candidate pool (11 issues) ← **backfill first**
 
 These cover models in Sprint 38's own P8 sweep pool. **An issue here without a gate is not eligible for the sweep**, so backfilling directly enlarges P8's candidate set.
