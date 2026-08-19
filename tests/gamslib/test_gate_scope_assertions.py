@@ -164,25 +164,64 @@ class TestResolveChangedMinScope:
 class TestUncommittedGoldenDetection:
     """The porcelain parse itself — it decides whether the assertion can fire."""
 
-    def test_parses_modified_and_untracked_entries(self, monkeypatch):
+    @staticmethod
+    def _with_porcelain(monkeypatch, payload: str):
+        """Feed a literal `git status --porcelain -z` payload to the parser."""
         import subprocess
 
-        porcelain = (
-            " M data/gamslib/mcp/markov_mcp.gms\n"
-            "?? data/gamslib/mcp/newmodel_mcp.gms\n"
-            " M data/gamslib/mcp/rocket_mcp_presolve.gms\n"
-            " M src/emit/emit_gams.py\n"
-        )
-
         def fake_run(*a, **kw):
-            return subprocess.CompletedProcess(a, 0, stdout=porcelain, stderr="")
+            return subprocess.CompletedProcess(a, 0, stdout=payload, stderr="")
 
         monkeypatch.setattr(subprocess, "run", fake_run)
         from scripts.gamslib.run_full_test import _uncommitted_golden_model_ids
 
-        got = _uncommitted_golden_model_ids()
+        return _uncommitted_golden_model_ids()
+
+    def test_parses_modified_and_untracked_entries(self, monkeypatch):
+        payload = (
+            " M data/gamslib/mcp/markov_mcp.gms\0"
+            "?? data/gamslib/mcp/newmodel_mcp.gms\0"
+            " M data/gamslib/mcp/rocket_mcp_presolve.gms\0"
+            " M src/emit/emit_gams.py\0"
+        )
         # Presolve goldens map to their model id; non-golden paths are ignored.
-        assert got == ["markov", "newmodel", "rocket"]
+        assert self._with_porcelain(monkeypatch, payload) == ["markov", "newmodel", "rocket"]
+
+    def test_rename_reports_BOTH_ends(self, monkeypatch):
+        """A renamed golden must not slip past the assertion.
+
+        FAIL-BEFORE: porcelain v1 emits `R  old -> new` on one line, so a
+        `line[3:]` slice yielded `"old -> new"`, which maps to no model id at
+        all — the rename was invisible and the checkpoint would certify around
+        it. Under `-z` the source path is its own NUL-separated field.
+
+        Both ends count: the old golden vanished and the new one appeared, and
+        each is an uncommitted change to the emit corpus.
+        """
+        payload = "R  data/gamslib/mcp/beta_mcp.gms\0data/gamslib/mcp/alpha_mcp.gms\0"
+        assert self._with_porcelain(monkeypatch, payload) == ["alpha", "beta"]
+
+    def test_copy_is_handled_like_a_rename(self, monkeypatch):
+        payload = "C  data/gamslib/mcp/new_mcp.gms\0data/gamslib/mcp/src_mcp.gms\0"
+        assert self._with_porcelain(monkeypatch, payload) == ["new", "src"]
+
+    def test_path_containing_a_space_is_not_lost(self, monkeypatch):
+        """FAIL-BEFORE: without `-z` git C-quotes such a path, defeating the parse."""
+        payload = "?? data/gamslib/mcp/has space_mcp.gms\0"
+        assert self._with_porcelain(monkeypatch, payload) == ["has space"]
+
+    def test_rename_followed_by_another_entry_stays_aligned(self, monkeypatch):
+        """The source field must be consumed, or the next record is misread.
+
+        This is the parser's real hazard: a rename consumes TWO fields, so an
+        off-by-one would swallow the following entry and silently drop a
+        genuinely modified golden.
+        """
+        payload = (
+            "R  data/gamslib/mcp/beta_mcp.gms\0data/gamslib/mcp/alpha_mcp.gms\0"
+            " M data/gamslib/mcp/markov_mcp.gms\0"
+        )
+        assert self._with_porcelain(monkeypatch, payload) == ["alpha", "beta", "markov"]
 
     def test_git_failure_does_not_fabricate_a_clean_tree(self, monkeypatch):
         """If git is unavailable the helper returns empty — documented, not silent.

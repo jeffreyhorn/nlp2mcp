@@ -1126,7 +1126,14 @@ def _uncommitted_golden_model_ids() -> list[str]:
 
     try:
         proc = subprocess.run(
-            ["git", "status", "--porcelain", "--", "data/gamslib/mcp/"],
+            # -z is not cosmetic. Without it git C-quotes any path containing a
+            # space or non-ASCII byte (`?? "data/gamslib/mcp/has space_mcp.gms"`),
+            # and renames arrive as `R  old -> new` on one line. Both forms defeat
+            # a naive `line[3:]` slice, and a golden this parser fails to see is a
+            # golden the checkpoint certifies around — the exact false GO this
+            # assertion exists to prevent. Under -z paths are never quoted and a
+            # rename's source arrives as its own NUL-separated field.
+            ["git", "status", "--porcelain", "-z", "--", "data/gamslib/mcp/"],
             capture_output=True,
             text=True,
             cwd=str(PROJECT_ROOT),
@@ -1136,13 +1143,29 @@ def _uncommitted_golden_model_ids() -> list[str]:
         # Never let the scope assertion itself become a silent pass: if git is
         # unavailable the caller cannot establish scope, and says so.
         return []
+
+    fields = proc.stdout.split("\0")
     seen: list[str] = []
-    for line in proc.stdout.splitlines():
-        # porcelain v1: 2 status chars, a space, then the path
-        path = line[3:].strip() if len(line) > 3 else ""
-        mid = _model_id_from_golden_path(path)
-        if mid and mid not in seen:
-            seen.append(mid)
+    idx = 0
+    while idx < len(fields):
+        record = fields[idx]
+        idx += 1
+        if not record:
+            continue
+        # `XY <path>` — two status chars, a space, then the (unquoted) path.
+        status, path = record[:2], record[3:]
+        paths = [path]
+        # For a rename/copy, the NEXT field is the ORIGINAL path. Both matter:
+        # the old golden vanished and the new one appeared, and each is an
+        # uncommitted change to the emit corpus.
+        if status and status[0] in ("R", "C"):
+            if idx < len(fields) and fields[idx]:
+                paths.append(fields[idx])
+            idx += 1
+        for candidate in paths:
+            mid = _model_id_from_golden_path(candidate.strip())
+            if mid and mid not in seen:
+                seen.append(mid)
     return sorted(seen)
 
 
