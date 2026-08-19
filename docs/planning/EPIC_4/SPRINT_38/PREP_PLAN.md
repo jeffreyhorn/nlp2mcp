@@ -42,7 +42,7 @@ This prep plan focuses on research, design, and survey tasks that must complete 
 | 7 | ✅ Consultation Ownership Decision Package (P3) | High | 2-3 hours | Task 1 | P3 — the Day-0 send-or-strike decision |
 | 8 | ✅ camcge Epic-5 Handoff + the 10-Model Licence-Gated Cohort (P5) | Medium | 3-4 hours | Tasks 1, 2 | P5 camcge (Epic 5) + turkey |
 | 9 | ✅ Phase-0 Compliance Survey over the Open Backlog (P7) | Medium | 3-4 hours | Task 1 | P7 Phase-0 backfill |
-| 10 | Emit-Backlog Candidate Catalog & Selection-Rule Dry Run (P8) | Medium | 3-4 hours | Tasks 1, 2, 9 | P8 slack absorber — with drift prevention |
+| 10 | ✅ Emit-Backlog Candidate Catalog & Selection-Rule Dry Run (P8) | Medium | 3-4 hours | Tasks 1, 2, 9 | P8 slack absorber — with drift prevention |
 | 11 | Plan Sprint 38 Detailed Schedule | Critical | 3-4 hours | All tasks (1–10) | Day-by-day schedule + REPLAN exits + budget |
 
 **Total Estimated Time:** ~37-50 hours (~5-6 working days)
@@ -1140,7 +1140,8 @@ test -f docs/planning/EPIC_4/SPRINT_38/PHASE0_COMPLIANCE_CATALOG.md && echo "✓
 
 ## Task 10: Emit-Backlog Candidate Catalog & Selection-Rule Dry Run (P8)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-08-18) — **5 eligible on the rule, 0 with a Phase-0 gate ⇒ P7 gates P8**
+**Time Spent:** 4 hours
 **Priority:** Medium
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 38 Day 1
@@ -1179,11 +1180,23 @@ The plan therefore pre-registers a selection rule: **a model enters the sweep on
 
 ### Changes
 
-*To be completed*
+- **Created** `docs/planning/EPIC_4/SPRINT_38/BACKLOG_CANDIDATE_CATALOG.md` — the 11-model pool, per-candidate reproduced fingerprints, selection-rule verdicts, the new lnts defect, and the operational reproduction criterion.
+- **Updated** `KNOWN_UNKNOWNS.md`: **8.1 → ✅**, **8.2 → ✅**.
+- **No `src/`, DB or golden change.** GAMS was run from a scratch directory (`/tmp`), never the repo root — the S37 Day-9 artifact-sweep lesson.
 
 ### Result
 
-*To be completed*
+**✅ P8 CLEARS ITS ≥2 THRESHOLD WITH ROOM — 5 of 11 candidates satisfy the pre-registered rule. But none is eligible today, because not one has a Phase-0 gate.**
+
+**✅ 8.1.** The pool is **17 models, 6 deep-track ⇒ 11 candidates**, and **all 11 have committed goldens** — emit succeeds for every one, so every failure is at GAMS-compile, GAMS-execution or PATH stage, never at translate. **Eligible (5):** **twocge** (8 × empty-equation-unfixed over `eqpw.nu_eqpw`/`eqw.nu_eqw`, `EXECERROR = 8`, named by **#1331**) · **tricp** (108 × `Unmatched variable not free or fixed`, `EXECERROR = 108`, **#1062**) · **elec** (div-by-zero at lines 99/100/101 → 30 × `Evaluation error(s) in equation "stat_x(iN)"`, `EXECERROR = 3`, **#983/#1325**) · **dyncge** (4 × empty-equation-unfixed on `eqpf2.nu_eqpf2`, `EXECERROR = 4`; #1331's mechanism but **no own doc**) · **lnts** (**new, found here**). **Rejected (6):** agreste and cesam need a new diagnosis; indus is broad rather than bounded (31 errors across `$130/$140/$141/$148/$149/$408/$409`); dinam is `$149`-family, which **Unknown 1.5 directs be treated as untested, not pending-unblock**; turkpow and clearlak are the pre-registered structural exclusions.
+
+**Two facts the DB does not show.** Its **category names mislead on 4 of 11** — `path_solve_terminated` reads as *"PATH gave up"*, but dyncge/elec/tricp/twocge all carry `solver_version: None` and abort at **GAMS execution before PATH is invoked**, so they are emit defects, not solver-tuning work. And **5 of 11 have no owning issue doc at all**, with generic DB messages carrying **no fingerprint whatsoever** — each had to be reproduced from scratch.
+
+**The new candidate — lnts.** The emitter turns a labelled `.fx` into an equation+multiplier pair (`y_fx_y2_h50.. y("y2","h50") - 5 =E= 0`), which is correct. But a **second, independent mechanism** blanket-zeroes pruned instances (`y.fx(c,h)$(not(...)) = 0`), and with `card(h) = 51` the guard fires on **exactly the cells those equations constrain**. A runtime probe confirms `y.lo = y.up = 0` at `('y2','h50')`/`('y3','h50')` while the equations demand **5** and **45** — hence **MS-4 at iteration 0**, the signature of a contradiction found during setup rather than a numerical failure. Fix surface: the `fix_rhs = "0"` fallback in `emit_gams.py` must skip tuples already carrying a `<var>_fx_<labels>` equation — **the same shape as the Sprint-33 P6 fix**. **The line numbers in the catalog are flagged as a hypothesis**, per the standing lesson that prep-doc `file:line` surfaces were wrong ~4× in Sprint 27.
+
+**✅ 8.2 — the rule as written DOES admit pattern matches, and this task produced three false positives proving it.** (a) `grep -c 'division by zero'` returns 1 for dyncge/twocge/tricp — the hit is the emitter's **own comment** in the generated source, because a `.lst` contains echoed source as well as diagnostics. (b) Sizing lnts's defect by structural co-occurrence matches **6 models of which 5 solve fine — 83 % wrong** — and tightening to "nonzero RHS" does not help (catmix 1, otpop 29.4, springchain 2 all still match); **the discriminator is whether the pruning guard covers the fixed tuple, a runtime property unreadable from source**, confirmed by a negative control on otpop (`x.lo` unset at 1974, **MS-1 Optimal**). (c) Marker counting undercounts **even with zero truncation notices** (clearlak 8 vs 5, dinam 22 vs 9, indus 31 vs 25, turkpow 14 vs 5) — generalising Task 2's `$141` retraction, which was attributed to truncation but is wrong even without it. **Criterion:** anchored `^****` diagnostics · an asserted terminal state read from GAMS's own line · runtime observation for runtime properties · **a passing negative control**.
+
+**The scheduling consequence — P7 gates P8, which neither priority currently states.** With **0 of 11 gated and 5 having no doc at all**, no candidate is implementable under CONTRIBUTING §392–447. **Task 9's Tier 1 is wrong in both directions:** clearlak #1291 and turkpow #1316 are **structurally excluded** from P8 and should drop out of Tier-1 priority, while **dyncge and lnts are missing entirely** and need a doc *created*, not merely gated. **Recommended P7 order = P8's shortlist:** #1331 → #1062 → #983/#1325 → dyncge → lnts. **Stated honestly:** all five are Translate-stable, **Solve-uncertain, Match-unclaimed** — a slack absorber, not a KPI projection.
 
 ### Verification
 
@@ -1222,13 +1235,13 @@ test -f docs/planning/EPIC_4/SPRINT_38/BACKLOG_CANDIDATE_CATALOG.md && echo "✓
 
 ### Acceptance Criteria
 
-- [ ] Candidate pool assembled from the DB, deep tracks excluded
-- [ ] The pre-registered rule applied to every candidate, with rejections reasoned
-- [ ] "Reproduced fingerprint" means the specific mechanism — false-positive risk explicitly handled
-- [ ] Structural blockers (turkpow ragged table, clearlak dynamic sets) excluded unless P1 demonstrably unblocks them
-- [ ] Cross-referenced against Task 9's Phase-0 catalog for eligibility
-- [ ] A clear verdict on whether P8 is viable, with a budget recommendation if it is not
-- [ ] Unknowns 8.1, 8.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Candidate pool assembled from the DB, deep tracks excluded — **17 in the three categories, 6 deep-track ⇒ 11 candidates**, each with its outcome category, NLP reference and owning doc
+- [x] The pre-registered rule applied to every candidate, with rejections reasoned — **5 eligible, 6 rejected**, each rejection naming its class (new diagnosis / broad-not-bounded / `$149`-untested per 1.5 / structural exclusion)
+- [x] "Reproduced fingerprint" means the specific mechanism — false-positive risk explicitly handled — **and demonstrated, not asserted:** three false positives produced *inside this task*, one of them **83 % wrong**, yielding a four-part criterion whose fourth clause is **a passing negative control**
+- [x] Structural blockers (turkpow ragged table, clearlak dynamic sets) excluded unless P1 demonstrably unblocks them — **excluded; P1 does not unblock them**, and Unknown 1.5 directs the whole `$149` family be treated as **untested rather than pending-unblock**, which also rejects dinam and indus
+- [x] Cross-referenced against Task 9's Phase-0 catalog for eligibility — **0 of 11 gated and 5 with no doc at all ⇒ P7 gates P8**, and **Task 9's Tier 1 corrected in both directions** (clearlak/turkpow demoted as structurally excluded; dyncge/lnts added, needing docs *created*)
+- [x] A clear verdict on whether P8 is viable, with a budget recommendation if it is not — **viable (5 vs a threshold of 2)**, with the budget caveat that P7's first block must be P8's shortlist, and an honest **Translate-stable / Solve-uncertain / Match-unclaimed** statement of worth
+- [x] Unknowns 8.1, 8.2 verified and updated in KNOWN_UNKNOWNS.md (**8.1 ✅**, **8.2 ✅**)
 
 ---
 
@@ -1359,7 +1372,7 @@ grep -in "floor 76 → 77\|floor.*target\|+1 floor" docs/planning/EPIC_4/SPRINT_
 
 - ✅ **Task 8: camcge Epic-5 + the Licence-Gated Cohort** (COMPLETE — 2026-08-18, 3 h)
 - ✅ **Task 9: Phase-0 Compliance Survey** (COMPLETE — 2026-08-18, 3 h) — **43 open issues un-gated; P7 under-budgeted → Tier 1 (11) is the realistic scope**; gates Task 10
-- **Task 10: Backlog Candidate Catalog** (3-4 hours)
+- ✅ **Task 10: Backlog Candidate Catalog** (COMPLETE — 2026-08-18, 4 h) — **5 eligible vs a threshold of 2, but 0 gated ⇒ P7 is P8's prerequisite**
 
 ### Overall Prep Time: 37-50 hours (~5-6 working days)
 
