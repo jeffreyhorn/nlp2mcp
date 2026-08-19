@@ -184,3 +184,74 @@ emitter pass that doesn't yet exist. Plan for Sprint 27+ if Approach
   bounds-collapsed (their `.lo`/`.up` are unconstrained for x/y/z).
 - **#1245**, **#1243**, **#1320 follow-up (gtm NA propagation)** —
   related runtime div-by-zero family.
+
+## Phase 0: Acceptance Gate
+
+**Authored:** Sprint 38 Day 2 (P7 backfill) · **Fingerprint re-reproduced at `b823a9a5`**, GAMS 54.2.1 / PATH 5.2.01.
+
+### Hand-Derived KKT Shape
+
+The objective sums over the **strictly upper-triangular** pair set `ut(i,j)` (so `i ≠ j` always):
+
+```gams
+obj.. potential =e= sum{ut(i,j), 1.0/sqrt(sqr(x[i]-x[j]) + sqr(y[i]-y[j]) + sqr(z[i]-z[j]))};
+```
+
+Write `d(a,b) = sqrt(sqr(x_a-x_b) + sqr(y_a-y_b) + sqr(z_a-z_b))`. A given point `p` appears in a pair **either as the first member or as the second**, so
+
+> ∂/∂x_p Σ_{ut(a,b)} 1/d(a,b)  =  **Σ_{b : ut(p,b)}** −(x_p−x_b)/d(p,b)³  **+**  **Σ_{a : ut(a,p)}** +(x_a−x_p)/d(a,p)³
+
+**Both sums must be restricted to pairs that actually contain `p`**, and because `ut` is strictly upper-triangular, **every surviving term has `a ≠ b`, so `d > 0` and the expression is finite.** That is the whole correctness argument: `ut` guarantees the divisor is non-zero, and any emitted term whose index pair can collapse to `(p,p)` is outside the mathematics.
+
+### Expected Emit Pattern
+
+```gams
+stat_x(i).. sum(j$(ut(i,j)), -(x(i)-x(j)) / power(dist(i,j),3))
+          + sum(i__$(ut(i__,i)), (x(i__)-x(i)) / power(dist(i__,i),3))
+          + 2*x(i)*nu_ball(i) =E= 0;
+```
+
+**The invariant to assert: every condition's index tuple must be exactly the summation index paired with the free index** — `ut(i,j)` under `sum(j,…)`, `ut(i__,i)` under `sum(i__,…)`. **No condition may name a pair that excludes its own summation index.**
+
+**What is emitted today is wrong on exactly that invariant** (emitted `stat_x(i)`, `b823a9a5`):
+
+```gams
+sum(j, sum(j__$(ut(i,i)), … x(i) - x(j__) …)          ← ut(i,i): the DIAGONAL of a strictly
+     + sum(i__$(ut(i,j)),  … x(i__) - x(i) …))          upper-triangular set — always FALSE
+                                                        ← ut(i,j) does not constrain i__ at all,
+                                                          so i__ = i is admitted → d = 0
+```
+
+Two distinct defects: the first condition is `ut(i,i)` (**structurally empty**, so that half of the gradient is silently dropped), and the second conditions on `(i,j)` while summing over `i__` (**unconstrained**, so `i__ = i` reaches the divisor). The spurious outer `sum(j, …)` wrapper is a third symptom of the same index-binding confusion.
+
+**Traced fix-surface (Day-2):** the stationarity term-assembly that pairs a derivative's summation index with the originating equation's condition — the condition is being carried over verbatim from the objective's `ut(i,j)` instead of being **re-indexed to the summation variable**. **⚠ Traced hypothesis; confirm before implementing.**
+
+### Verification Methodology
+
+Run from a **scratch directory**.
+
+1. **Fail-before** (`b823a9a5`): `gams elec_mcp.gms lo=0 errmsg=1` → `rc=3`, with anchored diagnostics
+   ```
+   **** Exec Error at line  99: division by zero (0)      ← stat_x
+   **** Exec Error at line 100: division by zero (0)      ← stat_y
+   **** Exec Error at line 101: division by zero (0)      ← stat_z
+   **** SOLVE from line 133 ABORTED, EXECERROR = 3
+   ```
+   plus **30 × `Evaluation error(s) in equation "stat_x(iN)"`**. **The line↔equation mapping is part of the fingerprint** — 99/100/101 are exactly `stat_x`/`stat_y`/`stat_z`, so an exec error at a *different* line is a different defect.
+2. **Structural assertion, stronger than the error count:** `grep -c 'ut(i,i)' elec_mcp.gms` must go **from non-zero to 0**, and every `$(ut(...))` must name its own enclosing summation index. A run that merely stops erroring while keeping `ut(i,i)` has **dropped half the gradient** and is a false pass.
+3. **Correctness, not just termination:** the KKT residual at the NLP optimum must be clean (`kkt_residual.py elec` → `CASE_A`). **This is the check that separates "no longer divides by zero" from "computes the right gradient".**
+4. **Pass-after:** zero exec errors; no `ABORTED`; `modelstat` asserted before any objective read. **Leak gate:** only `elec` drifts, **stating the in-scope count** (185 post-P4). Determinism ×3.
+
+### PROCEED/REPLAN Signal
+
+**PROCEED** — zero division-by-zero exec errors, **no `ut(i,i)` remains**, the residual reaches `CASE_A`, and nothing outside `elec` drifts.
+
+**REPLAN** — the residual stays `CASE_B` (the gradient is still structurally wrong even if it evaluates), or the index re-binding perturbs another model in the sweep. **A merely non-erroring emit is NOT a pass** — that is precisely how #983 came to be recorded as resolved while the defect persisted (see below).
+
+### Bucket / KPI
+
+**0 bucket expected.** `elec` is `path_solve_terminated` with `solver_version: None` — it aborts at **GAMS execution before PATH is invoked**. Clearing it lets `elec` *reach* PATH. `elec` is non-convex, so **no Solve or Match gain may be projected**.
+
+### Relationship to #983
+
+**#983 and this issue are the same defect at different stages.** #983's doc contains a section titled *"Why Division-by-Zero No Longer Occurs"* — **that is stale: division by zero reproduces today at `b823a9a5`**, at lines 99/100/101. Treat **this** gate as the live specification for both, and do not read #983's resolved-sounding narrative as current state.

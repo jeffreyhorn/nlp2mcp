@@ -185,3 +185,66 @@ fragile (relies on emit format).
   class of issue; may share the fix).
 - **#826** — Empty stationarity equations (also related but for the
   stat_X side).
+
+## Phase 0: Acceptance Gate
+
+**Authored:** Sprint 38 Day 2 (P7 backfill) · **Fingerprint re-reproduced at `b823a9a5`**, GAMS 54.2.1 / PATH 5.2.01 — not quoted from a prior sprint.
+
+### Hand-Derived KKT Shape
+
+`twocge` declares both equations with the condition on the **body**, not the head:
+
+```gams
+eqpw(i,r,rr)..  (pWe(i,r) - pWm(i,rr))$(ord(r) <> ord(rr)) =e= 0;
+eqw(i,r,rr)..   (E(i,r)   - M(i,rr))  $(ord(r) <> ord(rr)) =e= 0;
+```
+
+With `i = {BRD, MLK}` and `r = {JPN, USA}`, the domain `(i,r,rr)` has 8 instances each, of which the **4 diagonal instances `ord(r) = ord(rr)` have an empty body**.
+
+An MCP pairs each equation instance with one variable instance. For a *complementarity* pair to be well-formed, an **empty row must be paired with a FIXED column** — otherwise the column is a free variable with no defining relation. The KKT multiplier for a conditioned-away equality instance is not merely unconstrained, it is **meaningless**: there is no constraint for it to price. The correct shape is therefore
+
+> `nu_eqpw(i,r,rr)` **must be fixed to 0 exactly where the equation body is conditioned away**, i.e. where `not (ord(r) <> ord(rr))`.
+
+Identically for `nu_eqw`. This is a **0-bucket well-formedness fix**: it removes an abort, it does not change the mathematics of any instance that actually exists.
+
+### Expected Emit Pattern
+
+Two guard lines, alongside the multiplier-fixing guards the emitter already produces for head-conditioned equations:
+
+```gams
+nu_eqpw.fx(i,r,rr)$(not (ord(r) <> ord(rr))) = 0;
+nu_eqw.fx(i,r,rr) $(not (ord(r) <> ord(rr))) = 0;
+```
+
+**Currently the emitted model contains ZERO `nu_*.fx(` guards** — that absence is the defect.
+
+**Traced fix-surface (Day-2, `b823a9a5`) — `src/emit/emit_gams.py`, the §3 equality-multiplier fixing loop (~`3255–3273`).** It bails at `if eq_def.condition is None: continue`, and for `eqpw` the IR carries **`condition = None`** with the condition living inside the body instead:
+
+```
+domain   = ('i','r','rr')
+condition= None
+lhs_rhs  = (DollarConditional(Binary(-, VarRef(pwe(i,r)), VarRef(pwm(i,rr))) $ Binary(<>, ord(r), ord(rr))), …)
+```
+
+So the guard must **also** fire when the equation's entire LHS is a top-level `DollarConditional` against a constant RHS, lifting that condition. **⚠ The line numbers are a traced hypothesis, not a result** — prep-doc fix surfaces were wrong ~4× in Sprint 27; confirm before implementing.
+
+### Verification Methodology
+
+Run from a **scratch directory**, never the repo root.
+
+1. **Fail-before** (`b823a9a5`): `gams twocge_mcp.gms lo=0 errmsg=1` → `rc=3`, and anchored diagnostics show **4 × `**** MCP pair eqpw.nu_eqpw has empty equation but associated variable is NOT fixed`**, **4 × the same for `eqw.nu_eqw`**, terminating in **`**** SOLVE from line 692 ABORTED, EXECERROR = 8`**. The count is *derived*: 4 = card(i) × card(r) diagonal instances, and 4+4 = the EXECERROR total.
+2. **Pass-after:** the two guard lines are present; **zero** `has empty equation but associated variable is NOT fixed` lines; no `ABORTED, EXECERROR`; `modelstat` asserted before any objective is read.
+3. **Leak gate:** `make check-goldens` must show **only `twocge` drifting**. State the in-scope count in the result — it is **185 after P4's Day-8 adoption, not 163**.
+4. **Determinism:** byte-stable golden across `PYTHONHASHSEED {0,1,42}`.
+
+**Count errors from GAMS's own `**** N ERROR(S)` / `EXECERROR = n` line, never from `grep -o '$NNN'`** — marker counting undercounts even when nothing is truncated.
+
+### PROCEED/REPLAN Signal
+
+**PROCEED** — the 8 empty-pair messages disappear, `twocge` reaches PATH (any `modelstat`), and no model outside `twocge` drifts.
+
+**REPLAN** — any of: the guard fires on instances where the body is **non**-empty (over-fixing a live multiplier silently changes the solution); a model outside `twocge` drifts; or the emitted guard changes `twocge`'s **non**-diagonal rows. **REPLAN is not failure here** — the atomic alternative is to bank the body-condition-lifting requirement on this issue and leave the head-condition path untouched.
+
+### Bucket / KPI
+
+**0 bucket expected.** `twocge` is `path_solve_terminated` with `solver_version: None` — it aborts at **GAMS execution before PATH is invoked**. Clearing the abort lets it *reach* PATH; whether it then solves or matches is **unclaimed**. **Do not project a Solve or Match gain from this fix.**
