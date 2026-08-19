@@ -10,7 +10,13 @@ Paste one day's prompt per session. Each references the prep docs in `docs/plann
 
 ## Cross-Cutting Rules (every day)
 
-- **DERIVE FIGURES, DO NOT QUOTE THEM.** This is the sprint whose retrospective demanded it, and it is P6a's whole point. **The source of truth is `data/gamslib/gamslib_status.json`** — read the current KPI block from it directly, and from **Day 4 onward prefer the `scripts/sprint_audit/` helper**, which derives from that same file. *("The DB" throughout these prompts means `gamslib_status.json`; it is the only KPI source, and the helper is a convenience over it, not a second one.)* **Any figure that must be quoted carries the commit it was measured at.** Sprint 37 corrected six stale figures in a prompt sweep and was re-staled by its own re-baseline **within 24 hours**; the same defect then reached its closeout twice. **No prompt in this file quotes a KPI — that is deliberate.**
+- **DERIVE FIGURES, DO NOT QUOTE THEM.** This is the sprint whose retrospective demanded it, and it is P6a's whole point. **The source of truth is `data/gamslib/gamslib_status.json`.** ✅ **The helper shipped on Day 4 — use it:**
+  ```bash
+  .venv/bin/python scripts/sprint_audit/kpi_block.py                 # markdown table
+  .venv/bin/python scripts/sprint_audit/kpi_block.py --format line   # one-line summary
+  .venv/bin/python scripts/sprint_audit/kpi_block.py --json          # machine-readable
+  ```
+  Every block it emits **carries the commit it was derived at**, and warns if the DB is uncommitted (the figures would not be reproducible from that SHA). **It deliberately does NOT emit the genuine floor** — that is not DB-derivable; it prints the mechanical count under a `NOT the floor` label and points at the provenance file (P6c). *("The DB" throughout these prompts means `gamslib_status.json`; it is the only KPI source, and the helper is a convenience over it, not a second one.)* **Any figure that must be quoted carries the commit it was measured at.** Sprint 37 corrected six stale figures in a prompt sweep and was re-staled by its own re-baseline **within 24 hours**; the same defect then reached its closeout twice. **No prompt in this file quotes a KPI — that is deliberate.**
 - **The genuine floor baseline is 73**, not the 76 still written in older docs (owner decision, PR #1683 — S31–S37 overstated it by 3 via three out-of-corpus `non_convex` models). **Sprint 38 has no floor lever and no floor target.** Do not introduce one.
 - **The leak gate is the defining discipline.** Emit-touching PRs must reach an **unqualified `LEAK GATE PASS`** — a `PARTIAL` verdict **fails** (the sweep narrowed), as does any `LEAK:` or `NO-OP:` line. **Never clear drift with `make regen-goldens`** — it launders the leak into the corpus. **sarf is the exception:** it has no golden, so `leak-check MODEL=sarf` reports `NO-OP`; its gate is `make check-goldens` (zero drift) **plus sarf newly producing a golden**.
 - **`/tmp` control BEFORE `src/`** on every emit-touching change (PR24/PR27). **Run GAMS from a scratch directory, never the repo root** — GAMS writes scratch files to `cwd`, and a `git add -A` there swept 20 artifacts in Sprint 37.
@@ -77,7 +83,7 @@ Branch `planning/sprint38-day3-phase0-backfill2`. The two candidates that need a
 
 Branch `planning/sprint38-day4-measurement-integrity`. **This day unblocks Days 7 and 9 — it is not an infrastructure aside. Do not reorder it later.**
 
-**6a (~4 h).** Ship a `scripts/sprint_audit/` helper that emits the **current** KPI block on demand, derived from the DB. Convert the day-prompt and sprint-doc templates from quoted figures to derived ones, and require any figure that must be quoted to **carry the commit it was measured at**.
+**6a (~4 h). ✅ SHIPPED as `scripts/sprint_audit/kpi_block.py`.** Emits the **current** KPI block on demand, derived from the DB. Convert the day-prompt and sprint-doc templates from quoted figures to derived ones, and require any figure that must be quoted to **carry the commit it was measured at**.
 
 **6b (~6 h).** Give both known narrowing modes an asserted scope and a **non-zero exit on an empty selection**:
 - **`--resolve-changed` selects by git diff**, so uncommitted goldens are invisible — this produced a **false GO** in Sprint 37

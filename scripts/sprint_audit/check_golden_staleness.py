@@ -139,6 +139,38 @@ def check_one(model_id: str, is_presolve: bool, golden: Path, fix: bool) -> dict
     return rec
 
 
+def classify_missing_expected(
+    missing: list[str],
+    corpus_models: set[str],
+    allowlisted_models: set[str],
+) -> tuple[list[str], list[str], list[str]]:
+    """Split "expected to drift but did not" into its three causes (Sprint 38 P6b).
+
+    They have **opposite meanings** and were previously all reported as
+    ``NO-OP: … the fix did not change the emit`` — a *correctness* claim:
+
+    * ``no_golden``   — the model has no golden in the corpus, so it was never
+      compared. This says nothing about the emit. ``sarf`` is the standing case:
+      ``make leak-check MODEL=sarf`` reported that its fix did not change the
+      emit, on a run that never looked at sarf.
+    * ``allowlisted`` — the model HAS a golden but sits in the allowlist, so it
+      was skipped. Also not a statement about the emit.
+    * ``no_op``       — the model has a golden, was compared, and was
+      byte-identical. This is the genuine no-op fix.
+
+    All three still fail the gate (an unmet expectation is unmet either way), but
+    conflating them sends an engineer to debug an emit that was never swept.
+
+    Returns ``(no_golden, allowlisted, no_op)``; the three partition ``missing``.
+    """
+    no_golden = sorted(m for m in missing if m not in corpus_models)
+    allowlisted = sorted(m for m in missing if m in allowlisted_models)
+    no_op = sorted(
+        m for m in missing if m in corpus_models and m not in allowlisted_models
+    )
+    return no_golden, allowlisted, no_op
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Golden-staleness checker (Priority 8).")
     ap.add_argument("--fix", action="store_true", help="overwrite drifted goldens in place")
@@ -268,6 +300,12 @@ def main() -> int:
     leaked = sorted(drifted_models - expected) if expected else []
     missing = sorted(expected - drifted_models) if expected else []
 
+    no_golden, skipped_allowlisted, no_op = classify_missing_expected(
+        missing,
+        corpus_models={mid for (mid, _pre, _gp) in goldens},
+        allowlisted_models={mid for (mid, _pre, _gp) in allowlisted},
+    )
+
     # Everything that narrows what this run actually compared. Each entry
     # downgrades a PASS from a full-corpus claim to a partial one — the verdict
     # line gets pasted as Phase-0 evidence, so it must never overstate
@@ -298,6 +336,9 @@ def main() -> int:
                             "expected_drift": sorted(expected),
                             "leaked": leaked,
                             "missing_expected": missing,
+                            "missing_no_golden": no_golden,
+                            "missing_allowlisted": skipped_allowlisted,
+                            "missing_no_op": no_op,
                             "unverified": [r["golden"] for r in timed_out],
                             # "full-corpus" only when nothing narrowed the sweep;
                             # "partial" when a --models subset and/or goldens
@@ -348,10 +389,24 @@ def main() -> int:
                 "  The change is NOT confined to its target — do NOT run `make regen-goldens` "
                 "(that would launder the leak into the goldens). Narrow the predicate."
             )
-        if missing:
+        if no_op:
             print(
-                f"  NO-OP: expected drift on {', '.join(missing)} but the emit was byte-identical "
+                f"  NO-OP: expected drift on {', '.join(no_op)} but the emit was byte-identical "
                 "— the fix did not change the emit."
+            )
+        if skipped_allowlisted:
+            print(
+                f"  ALLOWLISTED: expected drift on {', '.join(skipped_allowlisted)}, but that "
+                "model is in golden_staleness_allowlist.txt, so it was never compared. Remove "
+                "it from the allowlist to gate it, or drop it from --expect-drift."
+            )
+        if no_golden:
+            print(
+                f"  NO-GOLDEN: expected drift on {', '.join(no_golden)}, but that model has NO "
+                "golden in the corpus, so this sweep never compared it. This is NOT a statement "
+                "about the emit — the gate is being asked about a model outside its scope.\n"
+                "  For a model with no golden the correct gate is `make check-goldens` (zero "
+                "drift across the corpus) PLUS the model newly producing a golden."
             )
         if unverified_blocks:
             print(
