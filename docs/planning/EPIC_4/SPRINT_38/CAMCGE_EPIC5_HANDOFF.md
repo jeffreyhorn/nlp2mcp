@@ -75,7 +75,7 @@ Gap 2 is the same defect Task 7 found in the consultation bundle: **measurements
 
 ### 4.1 The cohort
 
-| | |
+| property | value |
 |---|---|
 | **Models (10)** | `egypt` · `ferts` · `glider` · `robot` · `shale` · `sroute` · `srpchase` · `tabora` · `tfordy` · `turkey` |
 | Share of the corpus | **10 of 142 convex candidates (7 %)** |

@@ -154,7 +154,7 @@ This is the Sprint-38 Task-2 lesson generalised: the `$141` retraction was attri
 
 Task 9 built Tier 1 from the *then-assumed* P8 pool. Measured against the actual pool it is wrong in both directions:
 
-| | |
+| verdict on Task 9's Tier 1 | issues affected |
 |---|---|
 | **Correctly in Tier 1** | twocge (#1331 specifically), tricp (#1062), elec (#983/#1325) |
 | **Wrongly prioritised** | **clearlak #1291** and **turkpow #1316** — both **structurally excluded** from P8. Gating them buys P8 nothing; they should drop to Tier 3 priority. |
@@ -188,22 +188,33 @@ for m in d['models']:
 
 # Per-candidate fingerprint — run from a SCRATCH directory, never the repo root
 #   (S37 Day 9: GAMS writes scratch files to cwd; a git add -A there swept 20 artifacts)
-mkdir -p /tmp/t10/<model> && cd /tmp/t10/<model>
-cp <repo>/data/gamslib/mcp/<model>_mcp.gms .
-gams <model>_mcp.gms lo=0 errmsg=1
+REPO=/path/to/nlp2mcp
+MODEL=lnts                      # or twocge | tricp | elec | dyncge | ...
+mkdir -p /tmp/t10/$MODEL && cd /tmp/t10/$MODEL
+cp $REPO/data/gamslib/mcp/${MODEL}_mcp.gms .
+gams ${MODEL}_mcp.gms lo=0 errmsg=1
 
 # Criterion 1+2: anchored diagnostics and a terminal state — NOT a marker count
-grep -E '^\*\*\*\* [0-9]+ ERROR\(S\)|^\*\*\*\* (MODEL|SOLVER) STATUS|ABORTED, EXECERROR' <model>_mcp.lst
+grep -E '^\*\*\*\* [0-9]+ ERROR\(S\)|^\*\*\*\* (MODEL|SOLVER) STATUS|ABORTED, EXECERROR' ${MODEL}_mcp.lst
 
-# Criterion 3: the runtime probe (lnts) — insert before the SOLVE, not before the
-#   "Solve Statement" comment header
+# Criterion 3: the runtime probe (lnts). NOTE the two easy ways to get this wrong:
+#   - probe.gms must be COPIED from the golden first; it is not created by the steps above
+#   - insert before the SOLVE STATEMENT, not before the "Solve Statement" comment
+#     header that precedes it — matching the header splits a comment block and
+#     produces $140/$241/$257 errors that look like a real finding
+cp ${MODEL}_mcp.gms probe.gms
 python3 - <<'EOF'
-s=open('probe.gms').read(); i=s.index('Solve mcp_model using MCP;')
-open('probe.gms','w').write(s[:i]+'display "PROBE", y.lo, y.up;\n\n'+s[i:])
+s = open('probe.gms').read()
+i = s.index('Solve mcp_model using MCP;')
+open('probe.gms','w').write(s[:i] + 'display "PROBE", y.lo, y.up;\n\n' + s[i:])
 EOF
-gams probe.gms lo=0 errmsg=1 && grep -A6 'VARIABLE y.Lo' probe.lst
+gams probe.gms lo=0 errmsg=1
+grep -A6 'VARIABLE y.Lo' probe.lst        # -> y2/h50 and y3/h50 read 0.000
 
-# Criterion 4: the negative control — otpop matches the pattern and is MS-1 Optimal
+# Criterion 4: the negative control — otpop matches the pattern but is NOT defective.
+#   Same three steps with MODEL=otpop and 'x.lo, x.up' in place of 'y.lo, y.up':
+#   x.lo is unset at 1974 and x.up = 32.250 (never zeroed), and the run reports
+#   **** MODEL STATUS      1 Optimal
 ```
 
 ---

@@ -959,7 +959,7 @@ Sprint 38 execution team (**procurement decision may require a human**)
 
 **Findings:** This unknown, and Task 8's first draft, treated turkey as a single model needing a testbed. **It is one of ten**, and singling it out would have left nine unexamined.
 
-| | |
+| property | value |
 |---|---|
 | **Cohort (10)** | `egypt` · `ferts` · `glider` · `robot` · `shale` · `sroute` · `srpchase` · `tabora` · `tfordy` · `turkey` |
 | Share | **10 of 142 convex candidates (7 %)** |
