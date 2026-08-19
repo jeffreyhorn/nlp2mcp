@@ -31,9 +31,25 @@ The four canonical subsections are matched by **prefix**, with extras permitted.
 
 Ranked by likelihood of being scheduled, which is what makes a gate *needed* rather than merely absent.
 
-> **✅ DAY-2 PROGRESS (2026-08-19).** Four gates authored — **#1331, #1062, #1325, #983** — covering the first three P8 shortlist entries (twocge, tricp, elec). **Census 24 → 28 complete, 56 → 52 un-gated.** Fingerprints were **re-reproduced at `b823a9a5`**, not quoted. **Two stale claims were found and flagged while gating:** `ISSUE_1062`'s headline **"760 MCP errors" does not reproduce — the measured count is 108**, and its note that `$148`/`$149` compile errors block reproduction is also stale (the model compiles cleanly today); and `ISSUE_983`'s section *"Why Division-by-Zero No Longer Occurs"* is **contradicted by measurement** — it still occurs, at lines 99/100/101. Remaining P8 shortlist: **dyncge** and **lnts**, both needing a doc *created* (Day 3).
+> **✅ P7 COMPLETE (Days 2–3, 2026-08-19) — 6 gates authored, census 24 → 30 complete, open un-gated 43 → 39.**
+>
+> **Day 2 — 4 gates on existing docs:** **#1331** (twocge), **#1062** (tricp), **#1325** + **#983** (elec). **Day 3 — 2 issues FILED and gated**, because the last two P8 shortlist entries had no issue at all: **#1693** (dyncge) and **#1694** (lnts).
+>
+> **All six fingerprints were re-reproduced at `2723c22a` / `b823a9a5`, not quoted**, and every gate marks its traced fix-surface **explicitly as a hypothesis**.
+>
+> **Three stale claims were found and corrected while gating** — `ISSUE_1062`'s headline **"760 MCP errors" does not reproduce (measured: 108)** and its `$148`/`$149` compile-blocker note is also stale; `ISSUE_983`'s section *"Why Division-by-Zero No Longer Occurs"* is **contradicted by measurement**.
+>
+> **One prompt assumption was corrected by measurement:** the Day-3 prompt said dyncge could *"borrow #1331's shape"*. **It cannot.** The symptom is identical (empty equation + unfixed multiplier) but the cause is not: twocge's rows are emptied by a `$`-condition, **dyncge's by algebraic self-cancellation on the diagonal** (`pf(h_mob,j) =e= pf(h_mob,i)` at `i = j`), with `condition = None` and no `DollarConditional` anywhere in its IR. A condition-lifting fix will not detect dyncge.
 
-### Tier 1 — the P8 candidate pool (11 issues) ← **backfill first**
+### The standing backlog — 39 open issues remain un-gated
+
+**This is P7's honest second deliverable and it is reported, not dropped.** The plan anticipated *"~32 remaining"*, which assumed **all 11** Tier-1 issues would be gated; **6 were**, so **39 remain** (43 measured at prep close, minus the 4 existing docs gated on Day 2 — #1693/#1694 were newly filed and arrived gated, so they do not reduce the count).
+
+**P7's budget finding, now measured rather than projected.** Task 9 argued 8–10 h against 43 issues was *"not credible"* at ~12 minutes each. Actual: **10 h for 6 gates ≈ 1.7 h per gate**, because each required reproducing the fingerprint, hand-deriving the KKT shape and tracing a fix surface. **Extrapolated, the remaining 39 are ~65 h — not a sprint slot.** The under-budget claim is confirmed empirically, and the backfill should be treated as a standing programme rather than a task.
+
+**Remaining open un-gated (39), derived at `2723c22a` — not hand-listed:** #765 #871 #885 #906 #907 #918 #919 #926 #927 #928 #929 #930 #931 #932 #933 #945 #970 #1038 #1041 #1061 #1070 #1169 #1177 #1185 #1225 #1226 #1228 #1251 #1268 #1269 #1279 #1290 #1291 #1307 #1316 #1324 #1354 #1355 #1439
+
+### Tier 1 — the P8 candidate pool (11 issues) ← **backfill first**### Tier 1 — the P8 candidate pool (11 issues) ← **backfill first**
 
 These cover models in Sprint 38's own P8 sweep pool. **An issue here without a gate is not eligible for the sweep**, so backfilling directly enlarges P8's candidate set.
 
