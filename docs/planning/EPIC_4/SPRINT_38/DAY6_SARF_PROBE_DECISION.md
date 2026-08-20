@@ -1,6 +1,6 @@
 # Sprint 38 Day 6 — P2 sarf: counter-only probe → **PROCEED**
 
-**Date:** 2026-08-20 · **Branch:** `planning/sprint38-day6-sarf-impl2` · **Measured at:** `dfc2ae6d` · **Toolchain:** GAMS **54.2.1** · **Scope:** measurement only. **`src/` was probed and reverted** — byte-identical (`c7e1d14142048ffecdfa59b601dd49f9`).
+**Date:** 2026-08-20 · **Branch:** `planning/sprint38-day6-sarf-impl2` · **Measured at:** `dfc2ae6d` · **Toolchain:** GAMS **54.2.1** · **Scope:** measurement only. **`src/` was probed and reverted** — byte-identical (`c7e1d14142048ffecdfa59b601dd49f9`; verify with §6's portable checksum).
 
 **Verdict: ✅ PROCEED. The per-row referenced-column count drops from 369,024 to 24–136 on most rows, measured on real instantiated expressions.** Total **259,728** differentiations ≈ **78 s** — inside the owner's ≤300 s gate, and **1.8× better than the design's O(active)** while needing **none** of the machinery Day 5 found missing.
 
@@ -103,8 +103,60 @@ Sweeping every row (815 `(row, var)` pairs; 391 of them `task`) before the run w
 ## 6. Reproduction
 
 ```bash
-# §3 — the structural bound, from the IR alone (no conditions evaluated)
-.venv/bin/python /tmp/d6_struct.py     # script inlined in this PR's description
+# §3 — the structural bound, from the IR alone (no conditions evaluated).
+#   Self-contained: paste and run from the repo root. Prints 259,728.
+.venv/bin/python - <<'EOF'
+import sys; sys.setrecursionlimit(50000)
+from src.ir.parser import parse_model_file
+from src.ir.ast import VarRef, Sum
+ir = parse_model_file('data/gamslib/raw/sarf.gms')
+card = {k: len(v.members) for k, v in ir.sets.items() if getattr(v, 'members', None)}
+
+def children(e):
+    for a in getattr(e, '__dict__', {}).values():
+        if hasattr(a, '__dict__'):
+            yield a
+        elif isinstance(a, tuple):
+            for x in a:
+                if hasattr(x, '__dict__'):
+                    yield x
+
+# Iterative DFS carrying the Sum indices in scope. Nested recursive walks are
+# O(n^2) on these expressions and will appear to hang.
+def task_refs(root):
+    out, stack = [], [(root, frozenset())]
+    while stack:
+        node, binders = stack.pop()
+        if isinstance(node, Sum):
+            binders = binders | frozenset(node.index_sets)
+        if isinstance(node, VarRef) and node.name == 'task':
+            out.append((node.indices, binders))
+        for c in children(node):
+            stack.append((c, binders))
+    return out
+
+rows_total = diffs_total = 0
+for n in ('tbal', 'equipb1', 'equipb2', 'labor', 'cbal', 'acost3'):
+    e = ir.equations[n]
+    rowdom = set(e.domain)
+    rows = 1
+    for d in e.domain:
+        rows *= card.get(d, 1)
+    cols = 0
+    for side in e.lhs_rhs:
+        for idxs, binders in task_refs(side):
+            c = 1
+            for ix in idxs:
+                sym = ix if isinstance(ix, str) else getattr(ix, 'base', str(ix))
+                # quoted literal or fixed by the row -> 1; otherwise full cardinality
+                m = 1 if (sym.startswith('"') or sym in rowdom) else card.get(sym, 1)
+                c *= m
+            cols += c
+    rows_total += rows
+    diffs_total += rows * cols
+    print(f"{n:10s} rows={rows:<6d} referenced/row={cols:<7d} total={rows*cols:,}")
+print(f"TOTAL rows={rows_total} diffs={diffs_total:,}  (~{diffs_total/3343:.0f} s at 3,343/s)")
+EOF
 
 # §4 — the counter-only probe. Insert immediately before
 #   `for var_indices in var_instances:` in constraint_jacobian.py, gated on
@@ -113,9 +165,14 @@ cd /tmp/d6run
 D6_PROBE=1 .venv/bin/python -m src.cli data/gamslib/raw/sarf.gms -o sarf_mcp.gms 2>probe.log
 grep D6PROBE probe.log
 
-# revert + verify
+# revert + verify — portable, and NORMALISED to a bare hash.
+#   md5sum (Linux) prints "<hash>  <file>"; md5 -q (macOS) prints "<hash>".
+#   The awk strips the filename so the output matches the value quoted below
+#   on both platforms.
 git checkout -- src/ad/constraint_jacobian.py
-md5 -q src/ad/constraint_jacobian.py      # c7e1d14142048ffecdfa59b601dd49f9
+{ md5sum src/ad/constraint_jacobian.py 2>/dev/null \
+  || md5 -q src/ad/constraint_jacobian.py; } | awk '{print $1}'
+#   -> c7e1d14142048ffecdfa59b601dd49f9
 ```
 
 ---
