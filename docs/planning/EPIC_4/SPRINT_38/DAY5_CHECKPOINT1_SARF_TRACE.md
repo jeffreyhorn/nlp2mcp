@@ -117,7 +117,7 @@ the surviving `task` columns are exactly the `(m,n)` for which `tech(g,m,n)` is 
 
 **⚠ Not established — state plainly:**
 
-1. **4,532 is a projection from a static support count, not a measured run.** It must be confirmed by the §1.2 probe before any claim is made.
+1. **4,532 is a projection from a static support count, not a measured run.** It must be confirmed by the **per-call-site counter probe** — the one Prep Task 5 used to produce the 3,343 diff/s rate, described in `SARF_REARCH_DESIGN.md` **§1.2 "Measured, on a bounded run"** — before any claim is made. *(That §1.2 is in the design doc, not in this one.)*
 2. **I have not verified the collector can be written cheaply** at that call site, only that the inputs are present.
 3. **Rows are untouched** (1,183), exactly as the design noted for O(active). This reduces columns only.
 4. **`tech`'s keys are stored dotted** — `('plough.f-plow-6', 'tractor-l')`, a 3-D table held as `(g.m, n)` 2-tuples. **A consumer assuming 3-tuples silently gets nothing.** My own first count fell into this and reported "33 distinct g" for a 16-member set; splitting on `.` gives 44 nonzero, which then matched GAMS's `nTech` exactly. Any implementation must handle it explicitly.
@@ -126,7 +126,7 @@ the surviving `task` columns are exactly the `(m,n)` for which `tech(g,m,n)` is 
 
 **Do not implement S1/S2 or S3 as written.** Both are blocked on machinery that does not exist, and building either is a new subsystem rather than the scoped re-architecture.
 
-**Prove or kill the §5 route first, with a probe rather than an implementation** — the same shape as Day 1. Insert the instance collector as a *counter only* (no behaviour change) at `constraint_jacobian.py:1013`, and confirm the per-row referenced-column count drops from 369,024 toward **≤ 44**. That is observable in minutes and does not require the change to be complete.
+**Prove or kill the §5 route first, with a probe rather than an implementation** — the same shape as Day 1, and reusing the counter harness from `SARF_REARCH_DESIGN.md` §1.2. Insert the instance collector as a *counter only* (no behaviour change) at `constraint_jacobian.py:1013`, and confirm the per-row referenced-column count drops from 369,024 toward **≤ 44**. That is observable in minutes and does not require the change to be complete.
 
 **The Day-6 REPLAN trigger still applies and is now sharper.** The plan's trigger — *"S1+S2 do not agree on the active column set"* — is already unreachable, because **the active column set cannot be formed**. Restate it as: *if the per-row collector does not drop the count to ≤ 44 by end of Day 6, take the exit.*
 
