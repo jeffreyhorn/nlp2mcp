@@ -75,13 +75,26 @@ def mechanical_count(db: dict[str, Any]) -> int:
     eventually, and it is safer for it to appear here, labelled, than to be
     rediscovered and trusted.
     """
+    models = db.get("models")
+    if not isinstance(models, list):
+        return 0
     total = 0
-    for model in db.get("models", []):
-        if (model.get("convexity") or {}).get("status") not in CONVEX_STATUSES:
+    for model in models:
+        # Type-guarded on purpose. This path is ADVISORY -- it exists only so the
+        # DB-derived number appears labelled rather than being rediscovered and
+        # trusted. The tracker must stay fail-loud for provenance/floor
+        # divergence and nothing else; a malformed DB entry must not take down
+        # the floor report it is merely annotating.
+        if not isinstance(model, dict):
             continue
-        if (model.get("solution_comparison") or {}).get("comparison_status") != "match":
+        convexity = model.get("convexity")
+        if not isinstance(convexity, dict) or convexity.get("status") not in CONVEX_STATUSES:
             continue
-        if (model.get("mcp_solve") or {}).get("outcome_category") == "model_optimal_presolve":
+        comparison = model.get("solution_comparison")
+        if not isinstance(comparison, dict) or comparison.get("comparison_status") != "match":
+            continue
+        solve = model.get("mcp_solve")
+        if isinstance(solve, dict) and solve.get("outcome_category") == "model_optimal_presolve":
             continue
         total += 1
     return total
@@ -150,7 +163,9 @@ def main() -> int:
         if db_path.exists():
             try:
                 mech = mechanical_count(json.loads(db_path.read_text()))
-            except (OSError, json.JSONDecodeError):
+            except (OSError, json.JSONDecodeError, AttributeError, TypeError, ValueError):
+                # Advisory only -- report "unavailable" rather than failing the
+                # floor assertion this tool actually exists to make.
                 mech = None
 
     diverged = not isinstance(expected, int) or expected != floor

@@ -133,21 +133,21 @@ def _referenced_index_tuples(
     is always safe; returning a set that is too small silently drops derivatives,
     so every uncertain case resolves toward ``None`` or toward a wider set.
     """
+    # Traversal uses the AST's own `Expr.children()` rather than `__dict__`
+    # introspection: it is the established API, it survives AST changes, and it
+    # deliberately does NOT descend into `VarRef.indices` (which hold
+    # `str | IndexOffset`, not `Expr`). Index handling belongs to the
+    # classification below, not to the walk.
     refs: list[tuple[tuple[str | IndexOffset, ...], frozenset[str]]] = []
-    stack: list[tuple[object, frozenset[str]]] = [(constraint_expr, frozenset())]
+    stack: list[tuple[Expr, frozenset[str]]] = [(constraint_expr, frozenset())]
     while stack:
         node, binders = stack.pop()
         if isinstance(node, (Sum, Prod)):
             binders = binders | frozenset(node.index_sets)
         if isinstance(node, VarRef) and node.name == var_name:
             refs.append((node.indices, binders))
-        for attr in getattr(node, "__dict__", {}).values():
-            if hasattr(attr, "__dict__"):
-                stack.append((attr, binders))
-            elif isinstance(attr, tuple):
-                for item in attr:
-                    if hasattr(item, "__dict__"):
-                        stack.append((item, binders))
+        for child in node.children():
+            stack.append((child, binders))
 
     if not refs:
         # Referenced by name (the caller's sparsity check) but no VarRef found --
@@ -200,6 +200,10 @@ def _referenced_index_tuples(
                 # using the 2-tuple directly yields garbage labels.
                 members, _resolved = resolve_set_members(bare, model_ir, quiet=True)
                 if not members:
+                    return None
+                if len(members) > _REFERENCED_TUPLE_CAP:
+                    # One position already exceeds the cap, so the Cartesian
+                    # product must too. Bail before materialising the strings.
                     return None
                 per_position.append([str(m) for m in members])
                 continue
