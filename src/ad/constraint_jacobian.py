@@ -53,7 +53,9 @@ if TYPE_CHECKING:
     from ..config import Config
     from ..ir.model_ir import ModelIR
 
-from ..ir.ast import Const, Expr, IndexOffset
+import itertools
+
+from ..ir.ast import Const, Expr, IndexOffset, Prod, Sum, VarRef
 from ..ir.normalize import NormalizedEquation
 from ..ir.symbols import EquationDef
 from .ad_core import apply_simplification, get_simplification_mode
@@ -78,6 +80,149 @@ def _precompute_variable_instances(
         var_instances = enumerate_variable_instances(var_def, model_ir)
         result.append((var_name, var_instances))
     return result
+
+
+#: Above this many candidate tuples the referenced-set filter costs more than
+#: it saves, so the loop falls back to the declared enumeration it would have
+#: used anyway. Chosen well above sarf's worst row (51,840).
+_REFERENCED_TUPLE_CAP = 200_000
+
+
+def _declared_domain_labels(var_name: str, position: int, model_ir: ModelIR) -> dict[str, str]:
+    """Case-folded label -> canonical spelling, at *position* of ``var_name``'s domain.
+
+    Two jobs, both load-bearing:
+
+    * decide whether a bare index symbol is a genuine concrete label (from an
+      instantiated row) rather than a symbol this function failed to recognise --
+      guessing "literal" for an unrecognised symbol silently empties the
+      referenced set;
+    * CANONICALISE its case. GAMS labels are case-insensitive, the IR is not:
+      cesam2's `GDPDEF` references ``tsam("gov","com")`` in source case while the
+      declared enumeration holds ``('GOV', 'COM')``. Matching literally drops the
+      tuple, and with it the ``nu_GDPDEF`` / ``nu_GDPFCDEF`` stationarity terms --
+      the model still solves, to a different objective (0.50796 -> 0.513).
+    """
+    var_def = model_ir.variables.get(var_name)
+    if var_def is None or position >= len(var_def.domain):
+        return {}
+    members, _resolved = resolve_set_members(var_def.domain[position], model_ir, quiet=True)
+    return {str(m).casefold(): str(m) for m in members}
+
+
+def _referenced_index_tuples(
+    constraint_expr: Expr,
+    var_name: str,
+    model_ir: ModelIR,
+) -> set[tuple[str, ...]] | None:
+    """Index tuples of ``var_name`` that this row's expression can possibly reference.
+
+    Sprint 38 P2 (#1385). The Jacobian hot loop differentiates a row w.r.t. every
+    *declared* instance of each referenced variable. For a variable like sarf's
+    ``task(g,t,mn,mn)`` that is 369,024 columns per row against ~24-2,160 the row
+    can actually mention -- 436M differentiations, i.e. the emit never terminates.
+
+    The bound comes from the expression's own index binding, and needs no data:
+
+    * an index fixed by the instantiated row is already a concrete label -> 1 value
+    * an index bound by an enclosing ``Sum``/``Prod`` ranges over that set
+    * a quoted literal -> 1 value
+
+    Returns ``None`` when the set cannot be established **conservatively**, and the
+    caller must then fall back to the full declared enumeration. Returning ``None``
+    is always safe; returning a set that is too small silently drops derivatives,
+    so every uncertain case resolves toward ``None`` or toward a wider set.
+    """
+    refs: list[tuple[tuple[str | IndexOffset, ...], frozenset[str]]] = []
+    stack: list[tuple[object, frozenset[str]]] = [(constraint_expr, frozenset())]
+    while stack:
+        node, binders = stack.pop()
+        if isinstance(node, (Sum, Prod)):
+            binders = binders | frozenset(node.index_sets)
+        if isinstance(node, VarRef) and node.name == var_name:
+            refs.append((node.indices, binders))
+        for attr in getattr(node, "__dict__", {}).values():
+            if hasattr(attr, "__dict__"):
+                stack.append((attr, binders))
+            elif isinstance(attr, tuple):
+                for item in attr:
+                    if hasattr(item, "__dict__"):
+                        stack.append((item, binders))
+
+    if not refs:
+        # Referenced by name (the caller's sparsity check) but no VarRef found --
+        # the walk missed a shape. Do not claim an empty column set.
+        return None
+
+    out: set[tuple[str, ...]] = set()
+    for indices, binders in refs:
+        per_position: list[list[str]] = []
+        for position, idx in enumerate(indices):
+            if not isinstance(idx, str):
+                # IndexOffset and anything else: the offset target is not resolved
+                # here, so no conservative claim is available.
+                return None
+            quoted = idx[:1] in ('"', "'")
+            bare = idx.strip("\"'")
+
+            if quoted:
+                # An explicit literal, e.g. task("harvest-c", ...). Canonicalise
+                # its case against the declared domain -- see the helper.
+                canonical = _declared_domain_labels(var_name, position, model_ir).get(
+                    bare.casefold()
+                )
+                if canonical is None:
+                    # A literal that is not a member of this position's domain.
+                    # Rather than emit a tuple that can never match, decline.
+                    return None
+                per_position.append([canonical])
+                continue
+
+            if (
+                idx in binders
+                or bare in binders
+                or bare in model_ir.sets
+                or bare in model_ir.aliases
+            ):
+                # Bound by an enclosing Sum/Prod, or a set/ALIAS name. All widen to
+                # the members: an index symbol read as a single label would silently
+                # drop columns.
+                #
+                # `model_ir.aliases` is checked explicitly. An alias is NOT in
+                # `model_ir.sets`, so without this it fell to the literal branch
+                # below -- cesam2's `Alias(jj, ii)` made `jj` the literal string
+                # "jj", which matches no declared instance, emptying the referenced
+                # set and dropping EVERY derivative for the variable. It still
+                # solved, to a different objective (0.50796 -> 0.513): a wrong
+                # answer, not a crash.
+                #
+                # NOTE: resolve_set_members returns (members, resolved_name);
+                # using the 2-tuple directly yields garbage labels.
+                members, _resolved = resolve_set_members(bare, model_ir, quiet=True)
+                if not members:
+                    return None
+                per_position.append([str(m) for m in members])
+                continue
+
+            # Not quoted, not a binder, not a set or alias. It may be a concrete
+            # label from an instantiated row -- but only if it really is a member
+            # of this position's declared domain. Anything else is a symbol this
+            # function does not understand, and guessing "literal" is precisely
+            # how columns get dropped, so fall back to the declared enumeration.
+            canonical = _declared_domain_labels(var_name, position, model_ir).get(bare.casefold())
+            if canonical is not None:
+                per_position.append([canonical])
+            else:
+                return None
+        total = 1
+        for choices in per_position:
+            total *= len(choices)
+            if total > _REFERENCED_TUPLE_CAP:
+                # Building the product would cost more than it saves.
+                return None
+        for combo in itertools.product(*per_position):
+            out.add(tuple(combo))
+    return out
 
 
 def _is_zero_const(expr: Expr | None) -> bool:
@@ -935,6 +1080,14 @@ def _compute_equality_jacobian(
     if var_instances_cache is None:
         var_instances_cache = _precompute_variable_instances(model_ir)
 
+    # Declared-order position maps, built ONCE per call (not per row, and not in
+    # module-level state where two models sharing a variable name could collide).
+    # Used to emit the referenced subset in declared order so the Jacobian -- and
+    # the emitted model -- stay byte-identical to the unfiltered path.
+    position_maps: dict[str, dict[tuple[str, ...], int]] = {
+        name: {t: i for i, t in enumerate(instances)} for name, instances in var_instances_cache
+    }
+
     simp_mode = get_simplification_mode(config)
 
     # LP fast path: use basic simplification instead of advanced for LP models
@@ -1004,7 +1157,27 @@ def _compute_equality_jacobian(
                 if var_name not in referenced_vars:
                     continue
 
-                for var_indices in var_instances:
+                # Sprint 38 P2 (#1385): narrow to the instances this row can
+                # actually reference. `None` means "could not establish
+                # conservatively" and falls back to the full declared list.
+                #
+                # Order is taken from the DECLARED enumeration so the emit stays
+                # byte-identical, but it is applied by SORTING the referenced set
+                # against a precomputed position map -- NOT by filtering the
+                # declared list. Filtering is O(declared) per row, which for sarf
+                # is 369,024 membership tests x 1,183 rows: it trades 436M
+                # differentiations for 436M lookups and still does not terminate.
+                referenced = _referenced_index_tuples(constraint_expr, var_name, model_ir)
+                if referenced is None:
+                    effective_instances: list[tuple[str, ...]] = var_instances
+                else:
+                    position = position_maps[var_name]
+                    effective_instances = sorted(
+                        (t for t in referenced if t in position),
+                        key=position.__getitem__,
+                    )
+
+                for var_indices in effective_instances:
                     col_id = index_mapping.get_col_id(var_name, var_indices)
                     if col_id is None:
                         continue

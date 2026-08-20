@@ -1,0 +1,36 @@
+{
+  "_README": [
+    "Genuine-floor provenance (Sprint 38 P6c). JSON, not YAML, deliberately:",
+    "PyYAML is not a declared dependency, and a tracker that dies on CI for a",
+    "missing import is a gate that does not gate.",
+    "",
+    "The genuine floor is NOT derivable from the results DB. A mechanical",
+    "`Match - (presolve AND match)` count over the convex candidates yields 65",
+    "and looks authoritative, because the qualifier that actually defines the",
+    "floor -- 'the cold emit is byte-identical to pre-fix, so the match is a",
+    "methodology artifact rather than a genuine one' -- lives only in a",
+    "hand-maintained partition. Three independent derivations of the historical",
+    "figure give three different answers (65, 93, 76): the floor cannot be",
+    "RECONSTRUCTED.",
+    "",
+    "It can be ACCUMULATED. This file declares an opaque baseline and appends",
+    "one auditable entry per movement:   floor = baseline.count + len(entries).",
+    "The baseline is never re-litigated."
+  ],
+  "baseline": {
+    "count": 73,
+    "as_of": "S37-close",
+    "decided": "2026-08-18",
+    "decided_by": "owner",
+    "note": "In-corpus only. The historical figure 76 credited three non_convex, OUT-OF-CORPUS models (ps2_f_s, ps2_s, ps3_s_gic) from the Sprint-31 +4; 76 - 3 = 73. The S31-S37 series was therefore overstated by 3, and Sprint 37's advance re-reads as 72 -> 73. Per-model records for the opaque 'S28 genuine 68' block were never kept and are NOT reconstructible -- only 14 of the 76 were ever attributable by name. Option (a) (in-corpus) was chosen over (b) (keep 76 with a documented scope) because the floor is reported in the same breath as Solve and Match, which are strictly in-corpus; a metric whose corpus differs silently from its neighbours is the more dangerous of the two states."
+  },
+  "expected_floor": 73,
+  "entries": [],
+  "_entry_schema": {
+    "model_id": "the model that moved",
+    "limb": "which partition it moved INTO (e.g. cold-match), so a later reader can tell a genuine cold match from a methodology one without re-deriving it",
+    "since_sprint": "sprint number in which it landed",
+    "evidence": "what changed, in one line",
+    "pr": "the PR that landed it"
+  }
+}
