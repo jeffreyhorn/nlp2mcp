@@ -1111,6 +1111,64 @@ def _changed_golden_model_ids(since_commit: str) -> list[str]:
     return sorted(seen)
 
 
+def _uncommitted_golden_model_ids() -> list[str]:
+    """Model ids whose emit golden is modified/untracked in the WORKING TREE.
+
+    ``_changed_golden_model_ids`` selects via ``git diff <since>..HEAD``, which by
+    construction sees only *committed* goldens. A golden that has been regenerated
+    but not committed is therefore invisible to the checkpoint — it reports GO
+    having never re-solved the very model whose emit changed. That is a
+    false-negative generator, and it produced a false GO in Sprint 37.
+
+    This surfaces those goldens so the caller can refuse to certify around them.
+    """
+    import subprocess
+
+    try:
+        proc = subprocess.run(
+            # -z is not cosmetic. Without it git C-quotes any path containing a
+            # space or non-ASCII byte (`?? "data/gamslib/mcp/has space_mcp.gms"`),
+            # and renames arrive as `R  old -> new` on one line. Both forms defeat
+            # a naive `line[3:]` slice, and a golden this parser fails to see is a
+            # golden the checkpoint certifies around — the exact false GO this
+            # assertion exists to prevent. Under -z paths are never quoted and a
+            # rename's source arrives as its own NUL-separated field.
+            ["git", "status", "--porcelain", "-z", "--", "data/gamslib/mcp/"],
+            capture_output=True,
+            text=True,
+            cwd=str(PROJECT_ROOT),
+            check=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        # Never let the scope assertion itself become a silent pass: if git is
+        # unavailable the caller cannot establish scope, and says so.
+        return []
+
+    fields = proc.stdout.split("\0")
+    seen: list[str] = []
+    idx = 0
+    while idx < len(fields):
+        record = fields[idx]
+        idx += 1
+        if not record:
+            continue
+        # `XY <path>` — two status chars, a space, then the (unquoted) path.
+        status, path = record[:2], record[3:]
+        paths = [path]
+        # For a rename/copy, the NEXT field is the ORIGINAL path. Both matter:
+        # the old golden vanished and the new one appeared, and each is an
+        # uncommitted change to the emit corpus.
+        if status and status[0] in ("R", "C"):
+            if idx < len(fields) and fields[idx]:
+                paths.append(fields[idx])
+            idx += 1
+        for candidate in paths:
+            mid = _model_id_from_golden_path(candidate.strip())
+            if mid and mid not in seen:
+                seen.append(mid)
+    return sorted(seen)
+
+
 def _extract_bucket(model: dict[str, Any]) -> dict[str, str | None]:
     """The (solve outcome, compare) bucket used for the checkpoint diff."""
     return {
@@ -1224,19 +1282,70 @@ def run_resolve_changed(args: argparse.Namespace) -> dict[str, Any]:
             "error": f"--resolve-changed: committed DB at HEAD:{db_rel} is not valid "
             f"JSON: {exc}"
         }
+    # ---- Scope assertion (Sprint 38 P6b) --------------------------------
+    # An empty selection is NOT evidence of health: it is the checkpoint
+    # reporting on nothing. Sprint 37 took a GO from exactly this path while
+    # the goldens it should have re-solved sat uncommitted in the working
+    # tree. Selection is by `git diff <since>..HEAD`, so uncommitted goldens
+    # are invisible by construction — surface them rather than certify around
+    # them.
+    uncommitted = _uncommitted_golden_model_ids()
+    if uncommitted:
+        return {
+            "error": (
+                f"--resolve-changed: {len(uncommitted)} emit golden(s) are modified "
+                f"or untracked in the working tree and are INVISIBLE to this "
+                f"checkpoint, which selects via `git diff {since}..HEAD`: "
+                f"{', '.join(uncommitted)}. Commit them (so they are selected) or "
+                f"revert them (so the tree matches HEAD). Re-solving the committed "
+                f"set while uncommitted goldens exist would certify a tree that was "
+                f"never measured."
+            )
+        }
+
+    if args.min_scope is not None and len(model_ids) < args.min_scope:
+        return {
+            "error": (
+                f"--resolve-changed: selected {len(model_ids)} changed-golden model(s) "
+                f"since {since}, below --min-scope {args.min_scope}. The checkpoint "
+                f"narrowed silently — a sweep that measures fewer models than expected "
+                f"still reports GO, which is a false-negative generator. Selected: "
+                f"{', '.join(model_ids) or '(none)'}."
+            )
+        }
+
     if not model_ids:
+        # NO-GO, not GO. The checkpoint established nothing, and a verdict that
+        # reads as health must never be produced by an empty measurement.
+        # `--allow-empty` is the explicit opt-in for the legitimate case (a
+        # docs-only sprint day) so the default cannot pass by accident.
+        if not getattr(args, "allow_empty", False):
+            return {
+                "error": (
+                    f"--resolve-changed: no emit goldens changed since {since}, so the "
+                    f"checkpoint measured NOTHING and cannot certify anything. This is "
+                    f"not a GO. If an empty selection is expected (e.g. a docs-only "
+                    f"day), pass --allow-empty to say so explicitly."
+                )
+            }
         result = {
             "mode": "resolve-changed",
             "since_commit": since,
             "changed_models": [],
             "rows": [],
             "verdict": "GO",
-            "note": f"no emit goldens changed since {since}",
+            "empty_selection": True,
+            "note": (
+                f"no emit goldens changed since {since}; --allow-empty was passed, so "
+                f"an EMPTY measurement is being reported as GO. This certifies nothing."
+            ),
         }
         if args.json:
             print(json.dumps(result, indent=2))
         else:
-            logger.info(f"GO: no emit goldens changed since {since}")
+            logger.info(
+                f"GO (EMPTY — certifies nothing): no emit goldens changed since {since}"
+            )
         return result
 
     if args.dry_run:
@@ -1881,6 +1990,21 @@ def main() -> int:
         type=str,
         default=None,
         help="Baseline commit SHA for --resolve-changed (e.g. the sprint Day-0 SHA).",
+    )
+    convenience_group.add_argument(
+        "--min-scope",
+        type=int,
+        default=None,
+        help="Scope floor for --resolve-changed: fail if fewer than N changed-golden "
+        "models are selected. A silently narrowed checkpoint still reports GO, so "
+        "assert the count you expect.",
+    )
+    convenience_group.add_argument(
+        "--allow-empty",
+        action="store_true",
+        help="Permit --resolve-changed to report GO on an EMPTY selection (it then "
+        "certifies nothing). Without this, an empty selection is an error, because "
+        "measuring no models is not evidence of health.",
     )
 
     # Output
