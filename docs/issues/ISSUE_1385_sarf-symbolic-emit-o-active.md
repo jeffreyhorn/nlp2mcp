@@ -9,7 +9,73 @@
 
 ## Phase 0: Acceptance Gate
 
+> ### ⚠ AMENDED 2026-08-20 (Sprint 38 Day 7) — READ FIRST
+>
+> **The `[SUPERSEDED]` subsections further down describe the S1/S2/S3 parametric-emit design, which Sprint 38 Days 5–6 REFUTED.** They are retained as the target for the **remaining** work; they are **not** the acceptance criteria for what landed.
+>
+> **Why unbuildable as written.** S1/S2 need `taskposs`'s active set — `resolve_set_members('taskposs')` **falls back to the parent set**, returning **16 members of `g`** instead of the **129 active `(g,t)` pairs**, at **arity 1 for a 2-D subset**. The data is in the IR but **no evaluator exists**, and that function is called corpus-wide from the AD layer. S3 needs symbolic-instance machinery that **does not exist** (`symbolic_instance`/`SymbolicInstance` return nothing in `src/`).
+>
+> **The four subsections immediately below are the live gate.**
+
 ### Hand-Derived KKT Shape
+
+**Unchanged mathematically.** The stationarity row is exactly as in the superseded section, and the banked **7-term** `stat_task` anchor still governs. What changed is **which columns the Jacobian differentiates**:
+
+> ∂h_j/∂task(g,t,m,n) is **structurally zero** for every column the row's expression cannot mention, and that set is bounded by the expression's own index binding — a row-domain index is fixed by the row (**1** value), a `Sum`/`Prod`-bound index ranges over its set, a quoted literal is **1**. This requires **no** condition evaluation, hence no `taskposs`.
+
+| equation | rows | referenced/row |
+|---|---|---|
+| `tbal` | 384 | 136 |
+| `equipb1` | 648 | 80 |
+| `equipb2` | 120 | 432 |
+| `labor` | 24 | 2,160 |
+| `cbal` | 6 | 24 |
+| `acost3` | 1 | 51,840 |
+| | **1,183** | **259,728 total** |
+
+against **436,555,392** today (1,183 × 369,024).
+
+### Expected Emit Pattern
+
+**The emit must be BYTE-IDENTICAL corpus-wide.** This narrows only *which columns are differentiated*; every column with a non-zero derivative must still be visited, so the collector is a **superset by construction**:
+
+- an unbound **set** name widens to its members — guessing "literal" where the truth is "set" silently drops columns, guessing the other way only costs time;
+- **aliases** resolve to their target set (`model_ir.aliases`, not only `model_ir.sets`);
+- **literals are canonicalised against the declared domain's own spelling** — GAMS labels are case-insensitive, the IR is not;
+- anything not establishable — `IndexOffset`, an unresolvable set, a product above the cap, a literal outside its position's domain — returns **`None`**: *fall back to the full declared enumeration*.
+
+Declared iteration **order** is preserved by sorting the referenced set against a position map, so the emit is unchanged rather than merely equivalent.
+
+### Verification Methodology
+
+1. **Corpus safety is the defining gate here** — not timing. `make check-goldens` must report **zero drift across the 163 in-scope goldens**; drift on any model other than sarf means a derivative changed, which for every model except sarf is a defect.
+2. **`make test`** green, and the **e2e match assertions** specifically: this defect class does not crash a model, it **changes its answer**.
+3. **Control models byte-identical**, including deep-expression shapes (camcge, cesam2, korcge).
+4. **Timing:** sarf completes with a byte-stable golden, **≤ 300 s** (owner decision 2026-08-18, revising "single-digit seconds").
+
+### PROCEED/REPLAN Signal
+
+**✅ PROCEED on correctness · ❌ NOT MET on timing.** Measured 2026-08-20 (`84ad5f99`):
+
+| criterion | result |
+|---|---|
+| `check-goldens` zero drift ×163 | ✅ **`All in-scope goldens clean`** |
+| `make test` | ✅ **5075 passed** |
+| 10 control models byte-identical | ✅ |
+| typecheck · format · lint | ✅ |
+| sarf produces a golden (163 → 164) | ❌ **none** |
+| sarf ≤ 300 s | ❌ **killed at 28 m 40 s**, ~98 % CPU, RSS 390 MB climbing |
+
+**⇒ The change is emit-preserving and lands; `+1 Translate` is NOT delivered, and P2's KPI is 0.**
+
+**Why sarf still does not complete — located, not suspected.** This change narrowed the Jacobian's call site; **`gradient.py:287`, `gradient.py:453`, `complementarity.py:367` and `complementarity.py:512` still enumerate all 369,024 instances.** The "corpus-safety surface" note in the superseded section treats those four as a *constraint to leave alone* — they are **also the remaining cost**, which is why neither Day 5 nor Day 6 surfaced it.
+
+**Bounded next step:** apply the same narrowing at those four sites and re-measure. **#1385 is re-scoped, not closed.**
+
+**Four defects were found getting here; three produced a wrong ANSWER rather than a crash** — `resolve_set_members` returning `(members, name)`; an alias not being in `model_ir.sets`; and **case-insensitive labels** (cesam2's `GDPDEF` references `tsam("gov","com")` while the enumeration holds `('GOV','COM')`, dropping `nu_GDPDEF`/`nu_GDPFCDEF` and moving the objective from **0.507960 to 0.513**). Seven control models were byte-identical *before* that last one was found, and **only the e2e match assertion caught it.**
+
+
+### [SUPERSEDED — parametric-emit design] Hand-Derived KKT Shape
 
 Not a KKT-correctness defect — the emitted shape is *right*, there is simply too much of it. The formal object is the **cardinality** of the emitted stationarity system.
 
@@ -37,7 +103,7 @@ task.fx(g,t,m,n)$(not (taskposs(g,t) and tech(g,m,n))) = 0;
 
 The correctness anchor is the banked **7-term** `stat_task` derivation (tbal ×2, labor, equipb1, equipb2, acost3, `task.lo`). A silently-wrong `stat_task` is the worst available failure mode here, because the model currently produces no golden at all to diff against.
 
-### Expected Emit Pattern
+### [SUPERSEDED — parametric-emit design] Expected Emit Pattern
 
 `sarf_mcp.gms` exists (it does not today), completes in **single-digit seconds**, and contains a **parametric** `stat_task` carrying the `$taskposs`/`$tech` guards rather than 369,024 enumerated rows.
 
@@ -49,7 +115,7 @@ grep -E 'nu_[[:alnum:]_]+\("|lam_[[:alnum:]_]+\("' data/gamslib/mcp/sarf_mcp.gms
 
 **This is the prep-doc hypothesis** (PR24); the traced surfaces are below.
 
-### Verification Methodology
+### [SUPERSEDED — parametric-emit design] Verification Methodology
 
 1. **Timing — the defining gate.** The re-emit completes in **single-digit seconds** (baseline: `>330 s` non-terminating; the srpchase ~2.9 s reference). *A partial improvement that does not cross the threshold is a REPLAN, not progress* — see the profile below for why.
 2. **Correctness.** The emitted `stat_task` matches the banked 7-term derivation term-for-term.
@@ -58,7 +124,7 @@ grep -E 'nu_[[:alnum:]_]+\("|lam_[[:alnum:]_]+\("' data/gamslib/mcp/sarf_mcp.gms
 4. **Determinism** ×3 `{0,1,42}`, byte-identical.
 5. **KKT-residual harness** — *not applicable until an emit exists*; run it once sarf produces one.
 
-### PROCEED/REPLAN Signal
+### [SUPERSEDED — parametric-emit design] PROCEED/REPLAN Signal
 
 **PROCEED** iff the emit completes in single-digit seconds, `stat_task` matches the 7-term derivation, `make check-goldens` shows **zero** drift across 163 while sarf newly produces a golden, and determinism ×3 holds.
 
