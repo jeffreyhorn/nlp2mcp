@@ -129,12 +129,24 @@ jobs:
 
       # --min-scope is the coverage floor: discover_goldens() drops any golden
       # whose raw source is absent, so an under-provisioned corpus narrows the
-      # sweep while still reporting PASS. 170 = the committed goldens with a raw
-      # source. It is a FLOOR, so adding a golden (e.g. sarf, 170 -> 171) never
-      # trips it; deliberately REMOVING one requires lowering this number, which
-      # is the intended forcing function.
+      # sweep while still reporting PASS.
+      #
+      # DERIVED from `git ls-files`, not hard-coded, and not from the filesystem.
+      # The filesystem count is the SAME quantity discover_goldens() starts from
+      # (it globs data/gamslib/mcp/), so asserting against it would compare a
+      # number to itself and always pass -- the self-certification defect this
+      # gate exists to prevent, reappearing inside its own guard. `git ls-files`
+      # is independent: it counts what is COMMITTED regardless of whether the raw
+      # corpus was provisioned, which is precisely the failure being caught.
+      #
+      # Self-maintaining: adopting goldens raises the floor in the same commit
+      # that adds them, so the assertion can never lag the corpus. Deleting a
+      # committed golden lowers it, which remains the intended forcing function.
       - name: Run golden-staleness check
         if: steps.gate.outputs.run == 'true'
         run: |
+          MIN_SCOPE=$(git ls-files 'data/gamslib/mcp/*.gms' | wc -l | tr -d ' ')
+          test "$MIN_SCOPE" -gt 0 || { echo "ERROR: git ls-files found no goldens — the floor would be vacuous."; exit 1; }
+          echo "Coverage floor derived from git ls-files: $MIN_SCOPE committed golden(s)."
           python scripts/sprint_audit/check_golden_staleness.py \
-            --min-scope 170 --json golden-staleness.json
+            --min-scope "$MIN_SCOPE" --json golden-staleness.json
