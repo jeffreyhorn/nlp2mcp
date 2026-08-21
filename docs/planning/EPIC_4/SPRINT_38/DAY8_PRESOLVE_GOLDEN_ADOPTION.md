@@ -56,7 +56,7 @@ Raised **in the same commit that adds the goldens**, so the assertion cannot lag
 
 **It is derived from `git ls-files`, not from the filesystem, and that distinction is load-bearing.** `discover_goldens()` **globs `data/gamslib/mcp/`** — so a filesystem count is *the same quantity it starts from*, and asserting against it would compare a number to itself and always pass. **That is the self-certification defect this whole priority is about, reappearing inside its own guard.** `git ls-files` is independent: it counts what is **committed**, regardless of whether the raw corpus was provisioned — precisely the failure `--min-scope` exists to catch.
 
-```yaml
+```bash
 MIN_SCOPE=$(git ls-files 'data/gamslib/mcp/*.gms' | wc -l | tr -d ' ')
 test "$MIN_SCOPE" -gt 0 || { echo "ERROR: git ls-files found no goldens — the floor would be vacuous."; exit 1; }
 python scripts/sprint_audit/check_golden_staleness.py --min-scope "$MIN_SCOPE" --json golden-staleness.json
@@ -85,9 +85,9 @@ Tier 1 alone closes most of the gap. The remaining 14 would buy ratio at the cos
 
 **Deliberately not measured locally.** Task 6 established this machine is **~2× the CI runner**: the local 163-golden sweep is 26.3 min against a real CI 11.9–12.9 min. Extrapolating locally would project ~32 min against a **25-minute `timeout-minutes`** and falsely conclude *"adoption blocks every PR"*.
 
-**The projection to check against, from Task 6:** at 185 in-scope, ~**13.0–14.1 min**, ≈ 56 % of the budget. **The actual figure must be taken from this PR's own `Golden staleness` job**, and is recorded in §8 once it runs.
+**The projection to check against, from Task 6:** at 185 in-scope, ~**13.0–14.1 min**, ≈ 56 % of the budget. **✅ Measured in §8: the actual is 7 m 54 s (≈ 32 %)** — the projection was conservative by ~1.7×.
 
-**A standing caveat worth repeating:** at ~62 % of a 25-minute budget the job is comfortable now, but the corpus only grows. **`timeout-minutes` should be raised, or the sweep split, before scope exceeds ~250** — rather than discovering it when a required check starts timing out.
+**A standing caveat worth repeating:** at the measured ~32 % of a 25-minute budget the job is comfortable, but the corpus only grows. **`timeout-minutes` should be raised, or the sweep split, before scope exceeds ~250** — rather than discovering it when a required check starts timing out.
 
 ## 8. Results
 
@@ -100,7 +100,26 @@ Golden staleness: checked 185 in-scope golden(s) (7 allowlisted, 3 workers).
 
 **185 checked, zero drift** — the 22 newly adopted goldens match their fresh emit (by construction) *and* the pre-existing 163 are unperturbed, which is the assertion that actually matters: adopting goldens must not disturb the models already under the gate.
 
-**CI duration:** to be read from this PR's own `Golden staleness` job and compared against Task 6's projection of **~13.0–14.1 min** (≈ 56 % of the 25-minute budget). **It is deliberately not extrapolated from the local sweep**, which took ~30 min on a machine Task 6 measured at ~2× the runner.
+**CI duration — MEASURED, and Task 6's projection was conservative.**
+
+| | projected (Task 6) | **actual (this PR, run `32432079690`)** |
+|---|---|---|
+| sweep step | — | **5 m 59 s** |
+| whole job (incl. ~1 m 39 s corpus download) | ~13.0–14.1 min | **7 m 54 s** |
+| share of the 25-minute `timeout-minutes` | ≈ 56 % | **≈ 32 %** |
+
+**The scope was verified in the job log, not assumed.** A green check proves nothing if the sweep silently narrowed — the exact failure mode P6b exists to catch — so the log was read for all three facts:
+
+```
+Provisioned 219 raw model(s).
+Coverage floor derived from git ls-files: 192 committed golden(s).
+Golden staleness: checked 185 in-scope golden(s) (7 allowlisted, 3 workers).
+  All in-scope goldens clean.
+```
+
+That confirms the corpus was fully provisioned, **the `git ls-files` derivation works in CI** (192, not a hard-coded literal), and **the full 185 were swept** rather than the skip path being taken.
+
+**Headroom is larger than planned for:** ~17 min spare rather than ~11. The §7 caveat still stands — the corpus only grows — but the ~250 threshold is further off than the projection implied.
 
 ## 9. Reproduction
 
