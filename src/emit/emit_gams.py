@@ -922,6 +922,44 @@ def _compute_suppressed_fx_equations(kkt: KKTSystem) -> set[str]:
     return suppressed
 
 
+def _whole_body_condition(eq_def: "EquationDef") -> Expr | None:
+    """The condition under which this equation's row is structurally EMPTY, or None.
+
+    Issue #1331 (twocge). Section 3 below fixes an equality's multiplier to 0
+    wherever the equation is conditioned away, but it reads only ``eq_def.condition``
+    — the condition on the equation *head*::
+
+        eqpw(i,r,rr)$(ord(r) <> ord(rr))..  pwe(i,r) - pwm(i,rr) =e= 0;
+
+    twocge writes the same restriction on the *body* instead::
+
+        eqpw(i,r,rr)..  (pwe(i,r) - pwm(i,rr))$(ord(r) <> ord(rr)) =e= 0;
+
+    which is semantically identical — the row is empty on the diagonal either way —
+    but leaves ``eq_def.condition is None``, so the loop skips it and the multiplier
+    is never fixed. GAMS then rejects the pair: *"MCP pair eqpw.nu_eqpw has empty
+    equation but associated variable is NOT fixed"*.
+
+    **The condition is only liftable when it spans the WHOLE side and the other side
+    is zero.** If the other side were a non-zero constant, a false condition would
+    give ``0 =e= 5`` — an *infeasible* row, not an empty one — and fixing the
+    multiplier would silently discard a real (if unsatisfiable) constraint rather
+    than tidy an empty one.
+    """
+    sides = getattr(eq_def, "lhs_rhs", None)
+    if not sides or len(sides) != 2:
+        return None
+
+    def _is_zero(expr: Expr) -> bool:
+        return isinstance(expr, Const) and expr.value == 0
+
+    left, right = sides
+    for conditioned, other in ((left, right), (right, left)):
+        if isinstance(conditioned, DollarConditional) and _is_zero(other):
+            return conditioned.condition
+    return None
+
+
 def _will_emit_nlp_presolve(
     kkt: KKTSystem,
     source_file: str | None,
@@ -3261,15 +3299,22 @@ def emit_gams_mcp(
         # pairs with proper parent-set remapping.
         if any(d.lower() in dynamic_map for d in eq_def.domain):
             continue
-        # Only fix multipliers for equations with explicit parsed conditions
-        if eq_def.condition is None or not isinstance(eq_def.condition, Expr):
+        # Fix multipliers for equations conditioned away. The condition may sit on
+        # the equation HEAD (`eq(i)$c..`) or span the whole BODY against a zero other
+        # side (`eq(i).. (expr)$c =e= 0`) — both leave the row structurally empty, so
+        # both need the multiplier pinned. #1331: reading only the head silently
+        # skipped twocge and GAMS rejected the pair.
+        condition = eq_def.condition
+        if condition is None or not isinstance(condition, Expr):
+            condition = _whole_body_condition(eq_def)
+        if condition is None or not isinstance(condition, Expr):
             continue
         mult_name = create_eq_multiplier_name(eq_name)
         if ref_mults is not None and mult_name not in ref_mults:
             continue
         domain_str = ",".join(eq_def.domain)
         domain_vars = frozenset(eq_def.domain)
-        cond_gams = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
+        cond_gams = expr_to_gams(condition, domain_vars=domain_vars)
         fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
 
     # 3a. Issue #1084: Fix equality multipliers for equations with head-domain
