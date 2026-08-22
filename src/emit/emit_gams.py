@@ -923,7 +923,13 @@ def _compute_suppressed_fx_equations(kkt: KKTSystem) -> set[str]:
 
 
 def _whole_body_condition(eq_def: "EquationDef") -> Expr | None:
-    """The condition under which this equation's row is structurally EMPTY, or None.
+    """The whole-body ``$`` condition under which this row is ACTIVE, or ``None``.
+
+    ⚠ Sense: the returned condition is the one under which the row **exists**, i.e.
+    exactly what the source wrote after ``$``. It is *not* the emptiness condition.
+    Callers emit the complement themselves — ``mult.fx(dom)$(not (cond)) = 0`` — so a
+    call site that used the value directly would fix the multiplier on precisely the
+    instances that are live, which is a silent wrong answer rather than an error.
 
     Issue #1331 (twocge). Section 3 below fixes an equality's multiplier to 0
     wherever the equation is conditioned away, but it reads only ``eq_def.condition``
@@ -956,6 +962,7 @@ def _whole_body_condition(eq_def: "EquationDef") -> Expr | None:
     left, right = sides
     for conditioned, other in ((left, right), (right, left)):
         if isinstance(conditioned, DollarConditional) and _is_zero(other):
+            # The ACTIVE condition, as written after `$`. The caller negates it.
             return conditioned.condition
     return None
 

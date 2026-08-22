@@ -111,12 +111,12 @@ That distinction is the whole reason P6c exists. A mechanical count would have r
 | `make typecheck` · `format` · `lint` | ✅ |
 | `make test` | ✅ **5075 passed**, 10 skipped, 1 xfailed |
 | 8 control models byte-identical (incl. camcge, cesam2, korcge) | ✅ |
-| **leak gate, 186 in-scope** | ✅ **all clean** — see §5 (the first run was UNVERIFIED) |
+| **leak gate, 186 in-scope** (185 after the §7 revert) | ✅ **all clean** — see §5 (the first run was UNVERIFIED) |
 | P4-close checkpoint, 22 models | ✅ **GO, 0 bucket moves** |
 
 **The leak gate is the decisive check, and 8 byte-identical controls are not a substitute for it.** This fix changes emit for *any* equality carrying a whole-body condition against a zero side — a shape that is not confined to twocge. Day 7's case-sensitivity defect was invisible to seven byte-identical controls and surfaced only in the full sweep; the same reasoning applies here.
 
-**⚠ Scope note, per the plan:** the gate now runs at **186 in-scope, not 163** — P4 adopted 22 goldens on Day 8 (→185), and twocge's new **presolve** golden adds one more (→186, discovered 193). Any later reader comparing this result against a 163- or 185-scope run is comparing different sweeps.
+**⚠ Scope note, and it moved twice in one day.** P4 adopted 22 goldens on Day 8 (163 → **185**); twocge's new **presolve** golden added one (→ **186**, discovered 193); then **`weapons_mcp_presolve.gms` was reverted** (§7), taking it back to **185** (discovered 192). **The leak gate below was run at 186, i.e. with weapons present** — removing a golden cannot introduce drift in the others, so that result subsumes the 185-scope corpus. Any reader comparing against a 163-, 185- or 186-scope run is comparing different sweeps, so each result here states the scope it was measured at.
 
 ## 4. The DB was written mid-sprint — deliberately
 
@@ -152,6 +152,31 @@ checked 186 in-scope golden(s)
 
 **Worth carrying:** turkpow is **not allowlisted** and is a known slow-emit model. It verifies at 3 workers on a quiet machine and times out under load — so a leak claim made while other work is running can be inconclusive for reasons that have nothing to do with the change under test.
 
+## 7. `weapons`' presolve golden — REVERTED (owner decision, 2026-08-21)
+
+**Day 8 adopted `weapons_mcp_presolve.gms`; this PR removes it.** Adopting it brought weapons into the **presolve-divergence** check's scope, where it fails CI. Reverting restores the pre-Day-8 state for that one model and prejudges nothing.
+
+**My Day-8 review protocol had a gap.** It checked the warm-start block, agreement with the DB row, the NA-guard and determinism ×3 — but **never that the presolve emit actually runs**. weapons passes every one of those and still aborts.
+
+**What the emit actually does** (run with `cwd` at the repo root, so the `$include` resolves):
+
+| | |
+|---|---|
+| embedded `$include` NLP | **solves correctly** — MS-2 @ **1735.5696**, matching the reference |
+| `Solve mcp_model using MCP` (line 238) | **ABORTED, `EXECERROR = 1`** — no `MODEL STATUS` produced |
+
+**The CI message misattributes it.** `check_presolve_divergence.py`'s first branch returns *"embedded presolve run aborted (EXECERROR) — the `$include` re-run diverged"* for **any** `EXECERROR`. Here the **embedded NLP was fine** and the **MCP** aborted, so the diagnosis points at the wrong half of the file. Recorded for Day 10.
+
+**And it exposed something larger, which is now Day 10's P8 slot.** The listing contains **exactly one `MODEL STATUS`** — the embedded NLP's. The MCP produced none. Yet the DB records `model_optimal_presolve` + **match** @ 1735.5696, and a fresh pipeline run reproduces it. The mechanism appears to be:
+
+```gams
+$include "…/weapons.gms"      * solves the NLP, sets tetd.l
+Solve mcp_model using MCP;     * ABORTS — tetd.l untouched
+nlp2mcp_obj_val = tetd.l;      * still the NLP's own answer
+```
+
+**If the MCP aborts, the objective read returns the NLP's warm-started value and the comparison matches itself.** Whether that affects other presolve models is **measured on Day 10**, not asserted here. **Cold matches cannot be affected — there is no warm start to read back — so the genuine floor of 73 is not at risk either way.**
+
 ## 6. Reproduction
 
 ```bash
@@ -173,7 +198,7 @@ grep -c "has empty equation but associated variable is NOT fixed" twocge_mcp.lst
 #   raw twocge has TWO solves (55.5085 base, 56.7778 counterfactual)
 .venv/bin/python scripts/gamslib/run_full_test.py --model twocge
 
-# §3 — the decisive gate, at 185 in-scope
+# §3 — the decisive gate (run at 186 in-scope; 185 after the weapons revert, §7)
 .venv/bin/python scripts/sprint_audit/check_golden_staleness.py --expect-drift twocge
 ```
 
