@@ -931,9 +931,9 @@ def _whole_body_condition(eq_def: "EquationDef") -> Expr | None:
     call site that used the value directly would fix the multiplier on precisely the
     instances that are live, which is a silent wrong answer rather than an error.
 
-    Issue #1331 (twocge). Section 3 below fixes an equality's multiplier to 0
-    wherever the equation is conditioned away, but it reads only ``eq_def.condition``
-    — the condition on the equation *head*::
+    Issue #1331 (twocge), FIXED. Section 3 below fixes an equality's multiplier to
+    0 wherever the equation is conditioned away. It used to read only
+    ``eq_def.condition`` — the condition on the equation *head*::
 
         eqpw(i,r,rr)$(ord(r) <> ord(rr))..  pwe(i,r) - pwm(i,rr) =e= 0;
 
@@ -942,9 +942,10 @@ def _whole_body_condition(eq_def: "EquationDef") -> Expr | None:
         eqpw(i,r,rr)..  (pwe(i,r) - pwm(i,rr))$(ord(r) <> ord(rr)) =e= 0;
 
     which is semantically identical — the row is empty on the diagonal either way —
-    but leaves ``eq_def.condition is None``, so the loop skips it and the multiplier
-    is never fixed. GAMS then rejects the pair: *"MCP pair eqpw.nu_eqpw has empty
-    equation but associated variable is NOT fixed"*.
+    but leaves ``eq_def.condition is None``. The loop therefore **skipped** it and the
+    multiplier was never fixed, so GAMS rejected the pair: *"MCP pair eqpw.nu_eqpw has
+    empty equation but associated variable is NOT fixed"*. Section 3 now consults this
+    helper as well, so both spellings are covered.
 
     **The condition is only liftable when it spans the WHOLE side and the other side
     is zero.** If the other side were a non-zero constant, a false condition would
@@ -3288,13 +3289,19 @@ def emit_gams_mcp(
     # Build dynamic subset map once, used by sections 3 and 3b.
     dynamic_map = _build_dynamic_subset_map(kkt.model_ir)
 
-    # 3. Fix equality multipliers (nu_*) whose equation has an explicit condition.
-    # Original model equalities no longer get inferred lead/lag conditions
-    # (GAMS evaluates out-of-range lag refs as 0), so we only fix multipliers
-    # for equations with explicit parsed $-conditions.
+    # 3. Fix equality multipliers (nu_*) whose equation is conditioned away.
+    # Two spellings qualify, and they are semantically identical — the row is
+    # structurally empty under the same instances either way:
+    #   (a) an explicit condition on the equation HEAD, `eq(i)$c..`
+    #   (b) #1331: a whole-body condition against a zero other side,
+    #       `eq(i).. (expr)$c =e= 0`, recovered by _whole_body_condition()
+    # A condition is NOT lifted from a body whose other side is non-zero:
+    # `(expr)$c =e= 5` with c false is an INFEASIBLE row, not an empty one.
     # Note: Inferred lead/lag .fx generation was removed — it incorrectly
     # fixed multipliers for equations that GAMS evaluates at all domain
-    # elements (e.g., whouse sb(t) with stock(t-1)).
+    # elements (e.g., whouse sb(t) with stock(t-1)). Original model equalities
+    # therefore get no inferred lead/lag conditions (GAMS evaluates
+    # out-of-range lag refs as 0).
     for eq_name in sorted(kkt.model_ir.equalities):
         if eq_name not in kkt.model_ir.equations:
             continue
