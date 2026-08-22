@@ -167,6 +167,28 @@ checked 186 in-scope golden(s)
 
 **The CI message misattributes it.** `check_presolve_divergence.py`'s first branch returns *"embedded presolve run aborted (EXECERROR) — the `$include` re-run diverged"* for **any** `EXECERROR`. Here the **embedded NLP was fine** and the **MCP** aborted, so the diagnosis points at the wrong half of the file. Recorded for Day 10.
 
+### 6.1 `mcp_file_used` now dangles for weapons — but it already dangled for 13 others
+
+Review flagged that weapons' DB row still carries `mcp_file_used: "data/gamslib/mcp/weapons_mcp_presolve.gms"`, a file this PR deletes. **True, and the fix is not weapons-specific.**
+
+`mcp_file_used` records the presolve artifact the solve **generated and used** (`run_full_test.py:954`, written from `presolve_path` at the moment of the retry). Whether that path *also* happens to be a committed golden is a separate question, settled later by whether anyone adopted it. So the field dangles for every model that solved via presolve without an adopted golden:
+
+| | count |
+|---|---|
+| rows with `outcome_category: model_optimal_presolve` | **47** |
+| of those, `mcp_file_used` points at a **non-existent** file | **14** |
+| — pre-existing, and **exactly Day 8's Tier 2** | **13** |
+| — added by this PR's weapons revert | **1** |
+
+The 13 are `aircraft`, `apl1p`, `apl1pca`, `china`, `circle`, `imsl`, `lmp2`, `prodsp2`, `ps10_s_mn`, `ps5_s_mn`, `senstran`, `spatequ`, `trig` — precisely the models Day 8 **deliberately did not adopt**. weapons joins an existing class; it does not create one.
+
+**Why weapons' row is NOT edited here.** Both suggested remedies are wrong in this context:
+
+- **Re-classifying `outcome_category` away from `model_optimal_presolve`** would **prejudge Day 10's investigation**, which exists to determine whether these presolve rows are trustworthy at all — and it would move Solve/Match on an assumption rather than a measurement.
+- **Removing `mcp_file_used` for weapons alone** would make it **inconsistent with 13 identical peers**, trading a visible dangling pointer for an invisible special case.
+
+**Routed to Day 10**, whose P8 slot is already *"are these presolve rows trustworthy?"* — the dangling-pointer census is the same population, measured the same way. **A systemic fix, if one is wanted, belongs there and covers all 14.**
+
 **And it exposed something larger, which is now Day 10's P8 slot.** The listing contains **exactly one `MODEL STATUS`** — the embedded NLP's. The MCP produced none. Yet the DB records `model_optimal_presolve` + **match** @ 1735.5696, and a fresh pipeline run reproduces it. The mechanism appears to be:
 
 ```gams

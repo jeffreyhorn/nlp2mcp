@@ -190,6 +190,8 @@ nlp2mcp_obj_val = <objvar>.l;                * still holds the NLP's own answer
 
 **A secondary defect to record (not necessarily fix):** `check_presolve_divergence.py`'s first branch returns *"embedded presolve run aborted (EXECERROR) — the `$include` re-run diverged"* for **any** `EXECERROR`. For weapons the embedded NLP solved **correctly** and the **MCP** aborted, so the message points at the wrong half of the file.
 
+**Second, cheaper measurement on the same population — `mcp_file_used` dangles for 14 of 47 presolve rows.** The field records the presolve artifact the solve *generated* (`run_full_test.py:954`), not a committed golden, so it points at a non-existent file for every model that solved via presolve without an adopted golden: **13 pre-existing (exactly Day 8's Tier 2) + weapons** (Day 9's revert). Report it alongside the status census — **it is the same population and the same question**: how much of the presolve record describes artifacts that no longer exist. **Do not fix it model-by-model**; a systemic remedy covers all 14 or none.
+
 **Blast radius:** up to **30 presolve matches** (Match 95 = 65 cold + 30 presolve). **Cold matches are unaffected** — they have no warm start to read back — so the **genuine floor of 73 is not at risk** either way. Say that explicitly in the write-up, because "some matches may be false" will otherwise be heard as "the floor may be false".
 
 **P5 (4 h).** camcge is **Epic-5-scoped, not fixed here** — MS-4 against a *correct* NLP optimum is structural rank-deficiency. The refutations are already consolidated (**B1–B4**, with B1 flagged as the dangerous one: *primal-correct, breaks the MCP dual*). Confirm #1330 is Epic-5-scoped and re-triage ≥1 residual model.

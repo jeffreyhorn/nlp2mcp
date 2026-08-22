@@ -173,6 +173,8 @@ nlp2mcp_obj_val = <objvar>.l;              * still the NLP's own answer
 
 **REPLAN exit:** if the discriminator cannot be established from the listing alone, **say so and stop**. A partial heuristic applied to 30 models would manufacture a worse number than the one being checked.
 
+**Second, cheaper measurement on the same population — `mcp_file_used` dangles for 14 of 47 presolve rows.** The field records the presolve artifact the solve *generated* (`run_full_test.py:954`), not a committed golden, so it points at a non-existent file for every model that solved via presolve without an adopted golden: **13 pre-existing (exactly Day 8's Tier 2) + weapons** (Day 9's revert). Report it alongside the status census — **it is the same population and the same question**: how much of the presolve record describes artifacts that no longer exist. **Do not fix it model-by-model**; a systemic remedy covers all 14 or none.
+
 **State the blast radius precisely, because it will be misread otherwise:** up to **30 presolve matches** are in question (Match 95 = 65 cold + 30 presolve). **Cold matches are unaffected** — there is no warm start to read back — so **the genuine floor of 73 is not at risk either way.** Say that explicitly.
 
 **P5 (`../CAMCGE_EPIC5_HANDOFF.md`).** camcge is **Epic-5-scoped, not fixed here**: MS-4 against a *correct* NLP optimum is structural rank-deficiency, not an emit defect. The refutations are already consolidated as **B1–B4** — **B1 (drop-row) is the dangerous one: it is *primal-correct* and breaks the MCP dual silently.** Do **not** re-run any of them. Confirm #1330 is Epic-5-scoped and re-triage ≥1 residual model. Then wait for reviewer comments.
