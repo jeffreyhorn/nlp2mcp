@@ -368,7 +368,18 @@ _SOLVE_OUTCOME_CATEGORIES = frozenset(
 #: (`run_full_test.py` normalises it by stripping the suffix).
 _PRESOLVE_SUFFIX = "_presolve"
 
-_COMPARISON_STATUSES = frozenset({"match", "mismatch", "not_tested", "skipped"})
+#: From ``data/gamslib/schema.json`` (``solution_comparison_result``), **not**
+#: from the values that happen to be in the DB today.
+#:
+#: ⚠ An earlier revision omitted ``error`` because no current row uses it — a
+#: valid row would then have been rejected as an unknown enum. **Derive an
+#: allow-list from the declared schema, never from observed data.**
+#: `test_comparison_status_allowlist_matches_the_schema` fails on drift.
+_COMPARISON_STATUSES = frozenset({"match", "mismatch", "skipped", "error", "not_tested"})
+
+#: From ``data/gamslib/schema.json`` (``mcp_solve_result``), where it is
+#: **required** whenever the object is present.
+_MCP_SOLVE_STATUSES = frozenset({"success", "failure", "timeout", "not_tested"})
 
 
 def _outcome_is_known(value: str) -> bool:
@@ -433,6 +444,11 @@ def presolve_match_models(db_path: Path | None = None) -> list[str]:
         # row rather than reject it, which is the opposite of validating it.
         solve = m.get("mcp_solve")
         cmp_ = m.get("solution_comparison")
+        # Presence is tracked separately from the defaulted value: `{}` is falsey,
+        # so a present-but-empty object would otherwise be indistinguishable from
+        # an absent one and would skip the required-field checks below.
+        has_solve = solve is not None
+        has_cmp = cmp_ is not None
         solve = {} if solve is None else solve
         cmp_ = {} if cmp_ is None else cmp_
         if not isinstance(solve, dict) or not isinstance(cmp_, dict):
@@ -445,6 +461,24 @@ def presolve_match_models(db_path: Path | None = None) -> list[str]:
         # drops the row and the audit runs on a quietly incomplete cohort. Per
         # CONTRIBUTING §Schema validation an unknown enum is a hard error naming
         # the entry index, never a downgrade.
+        # `status` is REQUIRED by the schema whenever `mcp_solve` is present, so
+        # a row missing it is malformed even though our predicate never reads it.
+        # Validating only the fields we consume is how an incomplete cohort goes
+        # unnoticed — the thing this validation exists to prevent.
+        if has_solve:
+            solve_status = solve.get("status")
+            if not isinstance(solve_status, str) or solve_status not in _MCP_SOLVE_STATUSES:
+                raise InputError(
+                    f"{db_path}: models[{i}] ({model_id}) has missing or unknown "
+                    f"mcp_solve.status {solve_status!r} "
+                    f"(required; known: {', '.join(sorted(_MCP_SOLVE_STATUSES))})"
+                )
+        if has_cmp and cmp_.get("comparison_status") is None:
+            raise InputError(
+                f"{db_path}: models[{i}] ({model_id}) has a solution_comparison "
+                "without the required 'comparison_status'"
+            )
+
         outcome = solve.get("outcome_category")
         if outcome is not None:
             if not isinstance(outcome, str) or not _outcome_is_known(outcome):
@@ -768,17 +802,30 @@ def main(argv: list[str] | None = None) -> int:
     # Preflight the report destination BEFORE the sweep. Discovering an
     # unwritable path after a multi-hour run is a poor trade even with the
     # stderr fallback at the end.
-    if args.json_out:
-        out_path = Path(args.json_out)
-        if out_path.is_dir():
-            print(f"ERROR: --json {args.json_out} is a directory", file=sys.stderr)
+    #
+    # `is not None`, not truthiness — consistent with --models and --workdir:
+    # `--json ""` is a supplied-but-blank path, not an omitted flag, and
+    # silently writing nothing while exiting 0 is the wrong answer.
+    if args.json_out is not None:
+        if not args.json_out.strip():
+            print("ERROR: --json was given an empty path", file=sys.stderr)
             return 2
-        parent = out_path.parent if str(out_path.parent) else Path(".")
-        if not parent.is_dir():
-            print(
-                f"ERROR: --json parent directory does not exist: {parent}",
-                file=sys.stderr,
-            )
+        out_path = Path(args.json_out)
+        try:
+            # `is_dir()` touches the filesystem, so it can raise on an
+            # inaccessible parent — that must be the exit-2 path, not a traceback.
+            if out_path.is_dir():
+                print(f"ERROR: --json {args.json_out} is a directory", file=sys.stderr)
+                return 2
+            parent = out_path.parent if str(out_path.parent) else Path(".")
+            if not parent.is_dir():
+                print(
+                    f"ERROR: --json parent directory does not exist: {parent}",
+                    file=sys.stderr,
+                )
+                return 2
+        except OSError as exc:
+            print(f"ERROR: cannot use --json path {args.json_out}: {exc}", file=sys.stderr)
             return 2
 
     # Printed because artifacts are kept for inspection and are no longer at a
@@ -856,7 +903,12 @@ def main(argv: list[str] | None = None) -> int:
         print()
         print("MCP RAN AND FAILED — attributed, but not a usable answer:")
         for r in mcp_failed:
-            statuses = ", ".join(f"MS-{s.model_status}" for s in r.mcp_summaries)
+            # Both statuses: the success gate requires SOLVER STATUS 1 too, so a
+            # run with SOLVER STATUS 3 / MODEL STATUS 1 would otherwise print
+            # "(MS-1)" and give the reader no visible reason for the failure.
+            statuses = ", ".join(
+                f"solver {s.solver_status}/MS-{s.model_status}" for s in r.mcp_summaries
+            )
             print(f"  {r.model_id} ({statuses})")
     if indeterminate:
         print()
@@ -879,6 +931,15 @@ def main(argv: list[str] | None = None) -> int:
             },
             indent=2,
         )
+        # Always keep a per-run copy first. `--workdir` is made unique per
+        # invocation, but `--json` is a caller-chosen path: two concurrent runs
+        # pointing at the same file would otherwise leave only the last writer's
+        # report. The run-local copy means no invocation's result is ever lost.
+        try:
+            (run_dir / "attribution.json").write_text(report)
+        except OSError as exc:  # pragma: no cover - the shared path still tries
+            print(f"WARNING: could not write the per-run report copy: {exc}", file=sys.stderr)
+
         try:
             Path(args.json_out).write_text(report)
         except OSError as exc:

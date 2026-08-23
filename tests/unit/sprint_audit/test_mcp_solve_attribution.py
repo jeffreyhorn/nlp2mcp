@@ -648,9 +648,15 @@ def _write_db(tmp_path, rows):
 
 
 def _row(model_id, outcome="model_optimal_presolve", comparison="match"):
+    """A schema-valid row.
+
+    ``mcp_solve.status`` is REQUIRED by ``data/gamslib/schema.json`` even though
+    the selection predicate never reads it, so the fixture must carry it — a
+    fixture that omits a required field cannot exercise the validation.
+    """
     return {
         "model_id": model_id,
-        "mcp_solve": {"outcome_category": outcome},
+        "mcp_solve": {"status": "success", "outcome_category": outcome},
         "solution_comparison": {"comparison_status": comparison},
     }
 
@@ -1105,3 +1111,158 @@ def test_find_gams_returns_an_absolute_path(monkeypatch):
 
     assert found is not None
     assert Path(found).is_absolute(), f"expected an absolute path, got {found!r}"
+
+
+@pytest.mark.unit
+def test_comparison_status_allowlist_matches_the_schema():
+    """The allow-list must come from schema.json, not from today's DB contents.
+
+    An earlier revision omitted `error` because no current row uses it — which
+    would have rejected a perfectly valid row as an unknown enum. This test is
+    the guard against deriving an allow-list from observed data again.
+    """
+    import json
+
+    from scripts.sprint_audit.check_mcp_solve_attribution import (
+        _COMPARISON_STATUSES,
+        PROJECT_ROOT,
+    )
+
+    schema = json.loads((PROJECT_ROOT / "data" / "gamslib" / "schema.json").read_text())
+    declared = schema["definitions"]["solution_comparison_result"]["properties"][
+        "comparison_status"
+    ]["enum"]
+
+    assert _COMPARISON_STATUSES == frozenset(
+        declared
+    ), "the comparison_status allow-list has drifted from data/gamslib/schema.json"
+
+
+@pytest.mark.unit
+def test_mcp_solve_status_allowlist_matches_the_schema():
+    import json
+
+    from scripts.sprint_audit.check_mcp_solve_attribution import (
+        _MCP_SOLVE_STATUSES,
+        PROJECT_ROOT,
+    )
+
+    schema = json.loads((PROJECT_ROOT / "data" / "gamslib" / "schema.json").read_text())
+    declared = schema["definitions"]["mcp_solve_result"]["properties"]["status"]["enum"]
+
+    assert _MCP_SOLVE_STATUSES == frozenset(declared)
+
+
+@pytest.mark.unit
+def test_comparison_status_error_is_accepted(tmp_path):
+    """`error` is declared valid, so a row using it must not be rejected."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    row = _row("errored", comparison="error")
+    db = _write_db(tmp_path, [_row("ok"), row])
+
+    assert mod.presolve_match_models(db) == ["ok"], "the errored row is excluded, not rejected"
+
+
+@pytest.mark.unit
+def test_a_row_missing_the_required_mcp_solve_status_is_rejected(tmp_path):
+    """`status` is required by the schema even though our predicate never reads it.
+
+    Validating only the fields we consume is how an incomplete cohort goes
+    unnoticed.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    row = _row("bad")
+    del row["mcp_solve"]["status"]
+    db = _write_db(tmp_path, [row])
+
+    with pytest.raises(mod.InputError, match="mcp_solve.status"):
+        mod.presolve_match_models(db)
+
+
+@pytest.mark.unit
+def test_a_solution_comparison_without_its_required_status_is_rejected(tmp_path):
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    db = _write_db(
+        tmp_path,
+        [{"model_id": "bad", "mcp_solve": {"status": "success"}, "solution_comparison": {}}],
+    )
+
+    with pytest.raises(mod.InputError, match="comparison_status"):
+        mod.presolve_match_models(db)
+
+
+@pytest.mark.unit
+def test_main_rejects_an_empty_json_path(tmp_path, capsys):
+    """`--json ""` must not read as an omitted flag.
+
+    Silently writing no report and exiting 0 is inconsistent with the explicit
+    handling already given to `--models` and `--workdir`.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    assert mod.main(["--models", "x", "--workdir", str(tmp_path / "wd"), "--json", ""]) == 2
+    assert "--json was given an empty path" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_the_failed_list_shows_the_solver_status_too(tmp_path, monkeypatch, capsys):
+    """A SOLVER STATUS 3 / MODEL STATUS 1 run must not print a bare "(MS-1)".
+
+    The success gate requires solver_status == 1, so without it the reader sees
+    a failure labelled with an apparently successful model status and no reason.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    resource_interrupt = """
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  1
+
+**** SOLVER STATUS     3 Resource Interrupt
+**** MODEL STATUS      1 Optimal
+"""
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+    monkeypatch.setattr(
+        mod,
+        "run_one",
+        lambda mid, wd, **kw: Attribution(mid, summaries=parse_solve_summaries(resource_interrupt)),
+    )
+
+    mod.main(["--models", "x", "--workdir", str(tmp_path / "wd")])
+    out = capsys.readouterr().out
+
+    assert "solver 3/MS-1" in out, f"the solver status must be visible; got:\n{out}"
+
+
+@pytest.mark.unit
+def test_the_report_is_also_written_per_run(tmp_path, monkeypatch, capsys):
+    """`--json` is a caller-chosen path, so two runs could target the same file.
+
+    The run-local copy means no invocation's result is lost to the other.
+    """
+    import json as _json
+
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+    monkeypatch.setattr(
+        mod,
+        "run_one",
+        lambda mid, wd, **kw: Attribution(mid, summaries=parse_solve_summaries(_TWOCGE)),
+    )
+
+    shared_json = tmp_path / "shared.json"
+    mod.main(["--models", "x", "--workdir", str(tmp_path / "wd"), "--json", str(shared_json)])
+    run_line = [ln for ln in capsys.readouterr().out.splitlines() if ln.startswith("artifacts:")]
+
+    assert run_line, "the run dir must be announced"
+    run_dir = Path(run_line[0].split("artifacts:", 1)[1].strip())
+    per_run = run_dir / "attribution.json"
+
+    assert per_run.is_file(), "a per-run copy must exist alongside the shared --json"
+    assert _json.loads(per_run.read_text()) == _json.loads(shared_json.read_text())
