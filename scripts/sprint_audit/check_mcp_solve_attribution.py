@@ -331,13 +331,19 @@ class InputError(Exception):
     """Bad input — reported with a concrete message and exit code 2, never a traceback."""
 
 
-def presolve_match_models(db_path: Path = DB_PATH) -> list[str]:
+def presolve_match_models(db_path: Path | None = None) -> list[str]:
     """Every model recorded ``model_optimal_presolve`` **and** match.
+
+    ``db_path`` defaults to :data:`DB_PATH` **resolved at call time**, not as a
+    default-argument value — a ``db_path: Path = DB_PATH`` default binds at
+    import and would silently ignore any later reassignment of the module
+    global, which makes the function untestable against a fixture DB.
 
     The DB is hand-editable, so its shape is checked before it is indexed: a
     malformed file must produce an actionable error, not a ``KeyError`` from
     inside a list comprehension.
     """
+    db_path = DB_PATH if db_path is None else db_path
     try:
         raw = db_path.read_text(encoding="utf-8")
     except OSError as exc:
@@ -362,7 +368,16 @@ def presolve_match_models(db_path: Path = DB_PATH) -> list[str]:
     for i, m in enumerate(models):
         if not isinstance(m, dict):
             raise InputError(f"{db_path}: models[{i}] must be an object, got {type(m).__name__}")
+        # Validate the id for EVERY row, before the selection predicate. Doing it
+        # inside the predicate meant a malformed id on a non-matching row was
+        # silently ignored — so a corrupted DB could quietly drop a model from
+        # the default cohort while this function advertised per-entry validation.
         model_id = m.get("model_id")
+        if not isinstance(model_id, str) or not model_id:
+            raise InputError(f"{db_path}: models[{i}] has a missing or non-string 'model_id'")
+        if not _is_safe_model_id(model_id):
+            raise InputError(f"{db_path}: models[{i}] has an unsafe model_id {model_id!r}")
+
         # Default ONLY on missing/null. `or {}` would swallow `mcp_solve: []` or
         # `solution_comparison: ""` — falsey but malformed — and silently skip the
         # row rather than reject it, which is the opposite of validating it.
@@ -379,10 +394,6 @@ def presolve_match_models(db_path: Path = DB_PATH) -> list[str]:
             solve.get("outcome_category") == "model_optimal_presolve"
             and cmp_.get("comparison_status") == "match"
         ):
-            if not isinstance(model_id, str) or not model_id:
-                raise InputError(f"{db_path}: models[{i}] has a missing or non-string 'model_id'")
-            if not _is_safe_model_id(model_id):
-                raise InputError(f"{db_path}: models[{i}] has an unsafe model_id {model_id!r}")
             out.append(model_id)
     return sorted(out)
 
@@ -400,8 +411,14 @@ def find_gams() -> str | None:
         "/opt/gams/gams",
         "C:\\GAMS\\win64\\gams.exe",
     ):
-        if Path(candidate).exists():
-            return candidate
+        # `shutil.which` on an absolute path checks it is an EXECUTABLE FILE.
+        # `Path.exists()` would happily return a directory or a non-executable,
+        # and the preflight would then report GAMS as available — every
+        # translation would run before each model failed with the same OSError,
+        # which is exactly what the preflight exists to prevent.
+        resolved = shutil.which(candidate)
+        if resolved:
+            return resolved
     return shutil.which("gams")
 
 
@@ -447,6 +464,16 @@ def run_one(
 
     emitted = workdir / f"{model_id}_mcp_presolve.gms"
     lst = workdir / f"{model_id}.lst"
+
+    # Clear the emit target too, for the same reason the listing is cleared
+    # below. If a later `src.cli` returns 0 without recreating its output, a
+    # surviving file makes `emitted.exists()` succeed and GAMS runs the PREVIOUS
+    # translation — the audit then attributes an older model's listing. Clearing
+    # it is also what makes the "wrote no file" check below mean anything.
+    try:
+        emitted.unlink(missing_ok=True)
+    except OSError as exc:
+        return Attribution(model_id, error=f"cannot clear stale emit {emitted}: {exc}")
 
     try:
         emit = subprocess.run(
@@ -546,12 +573,19 @@ def run_one(
             model_id,
             error=f"no listing produced (gams rc={proc.returncode})"
             + (f": {detail}" if detail else ""),
+            # GAMS DID run, so keep the code structured rather than only inside
+            # the free-form message — the JSON report is what gets analysed.
+            gams_returncode=proc.returncode,
         )
 
     try:
         content = lst.read_text(errors="replace")
     except OSError as exc:
-        return Attribution(model_id, error=f"cannot read listing {lst}: {exc}")
+        return Attribution(
+            model_id,
+            error=f"cannot read listing {lst}: {exc}",
+            gams_returncode=proc.returncode,
+        )
 
     return Attribution(
         model_id,
@@ -636,9 +670,21 @@ def main(argv: list[str] | None = None) -> int:
             else Path(tempfile.mkdtemp(prefix="mcp_attr_"))
         )
         workdir.mkdir(parents=True, exist_ok=True)
+
+        # Per-INVOCATION subdirectory, per CONTRIBUTING "Marker uniqueness".
+        # `<workdir>/<model>.gms` and `<workdir>/<model>.lst` are deterministic,
+        # so two runs sharing a --workdir would unlink and overwrite each other's
+        # artifacts and could attribute the OTHER invocation's listing — the
+        # cross-run form of the very bug this script detects. `mkdtemp` is unique
+        # by construction, so no token scheme is needed.
+        run_dir = Path(tempfile.mkdtemp(dir=str(workdir), prefix="run-"))
     except OSError as exc:
         print(f"ERROR: cannot create workdir {args.workdir!r}: {exc}", file=sys.stderr)
         return 2
+
+    # Printed because artifacts are kept for inspection and are no longer at a
+    # path the caller can guess.
+    print(f"artifacts: {run_dir}", flush=True)
 
     # Resolve GAMS ONCE, before any translation runs. Resolving it per-model
     # inside `run_one` meant a runner without GAMS still paid for every emit —
@@ -655,7 +701,7 @@ def main(argv: list[str] | None = None) -> int:
 
     results: list[Attribution] = []
     for i, mid in enumerate(models, 1):
-        res = run_one(mid, workdir, reslim=args.reslim, gams=gams)
+        res = run_one(mid, run_dir, reslim=args.reslim, gams=gams)
         results.append(res)
         detail = ", ".join(
             f"{s.model}/{s.type}"

@@ -155,7 +155,7 @@ Neither was used as the discriminator — both were derived afterwards and agree
 
 ## 3. The second measurement — `mcp_file_used` dangles for 14 of 47
 
-Same population, same question: **how much of the presolve record describes artifacts that no longer exist?**
+**⚠ Read the population carefully — it is NOT §2's.** §2 audits the **33** rows that are `model_optimal_presolve` **and** match; this measurement covers **all 47 `model_optimal_presolve` rows**, matches and non-matches alike, because the question is about the *record*, not the verdict. The two overlap only in `weapons`. Same underlying cohort, wider slice — and it asks: **how much of the presolve record describes artifacts that no longer exist?**
 
 `mcp_file_used` records the presolve artifact the solve *generated* (`run_full_test.py:954`), not a committed golden — so it points at a non-existent path for every model that solved via presolve without an adopted golden.
 
@@ -242,7 +242,10 @@ stat_tm(i,r).. ... + (((-1) * (pq(i+1,r) * mu(i+1,r) / sqr(pq(i+1,r)))) * nu_eqX
 # "raw source absent". Provision first (the script now names this in its error).
 ./scripts/download_gamslib_raw.sh --all
 
-# §2 — the discriminator over every presolve+match row (33)
+# §2 — the discriminator over every presolve+match row (33).
+# Each invocation allocates its own `run-*` subdirectory under --workdir (two
+# runs sharing a workdir would otherwise overwrite each other's artifacts) and
+# prints it as `artifacts: <path>`; the emits and listings are kept there.
 .venv/bin/python scripts/sprint_audit/check_mcp_solve_attribution.py \
     --workdir /tmp/d10/sweep --json /tmp/d10/attribution.json
 
@@ -259,9 +262,9 @@ gams /tmp/d10/emit/camcge_mcp.gms o=/tmp/d10/lst/camcge.lst lo=2 ScrDir=$(mktemp
 grep -E "SINGLE EQUATIONS|MODEL STATUS" /tmp/d10/lst/camcge.lst
 
 # §4.3 — #1317's fingerprint. The §2 sweep already wrote twocge's presolve emit
-# into ITS workdir, so read it from there rather than /tmp/d10/emit (which the
-# sweep never populates).
-grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/twocge_mcp_presolve.gms
+# into the `run-*` directory it announced, so read it from there rather than
+# /tmp/d10/emit (which the sweep never populates).
+grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/run-*/twocge_mcp_presolve.gms
 ```
 
 > **GAMS is run with `cwd` at the repo root** — the emitted `$include "data/gamslib/raw/<id>.gms"` is repo-relative — **but always with `ScrDir` pointing outside the tree**. Sprint 37 Day 9 swept GAMS scratch files into a commit; `ScrDir` is what prevents it. Because the child's `cwd` is the repo root, `--workdir` is **resolved to an absolute path** before use; a relative one would have the child write where the parent never looks.
@@ -278,7 +281,7 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/twocge_mcp_presolve.gms
 |---|---|
 | `make typecheck` | ✅ no issues, 99 source files |
 | `make format` / `make lint` | ✅ clean — **plus explicit `black` + `ruff` on the new script**, since the Makefile targets cover only `src/` and `tests/` |
-| `make test` | ✅ **5112 passed, 10 skipped** (see below) |
+| `make test` | ✅ **5125 passed, 10 skipped** (see below) |
 | full-corpus leak gate | **deliberately NOT run** |
 
 **Why no leak gate:** the PR touches no `src/` file and no golden, so the emit cannot have moved and a 185-model sweep would assert nothing about this diff. Stating the reason rather than the omission — a silently skipped gate is the failure mode P6b exists to catch.
@@ -307,7 +310,7 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/twocge_mcp_presolve.gms
 
 **The pattern is worth naming rather than re-diagnosing each time:** this suite has two known wall-clock/subprocess flakes (`test_performance_overhead_acceptable`, `test_validate_simple_nlp_golden`) and its skip count drifts by a few under `-n auto`. **The count is only trustworthy from a run with nothing else competing for the machine**, and the check that settles it is `-rs` — a skip list that names every skip beats any arithmetic on the totals.
 
-**Round 3 passed first time on a quiet machine: 5112 passed, 10 skipped, exit 0** = 5098 + the 14 tests added that round, with `-rs` naming the same 10 pre-existing skips. Applying the rule above rather than re-deriving it saved the re-run.
+**Rounds 3 and 4 both passed first time on a quiet machine** — 5112 then **5125 passed, 10 skipped, exit 0**, each exactly the previous total plus that round's new tests, with `-rs` naming the same 10 pre-existing skips. Applying the rule above rather than re-deriving it saved the re-run.
 
 > **A process note, since it cost time.** The baseline was first measured with `git stash` running *concurrently* with another full-suite run over the same tree — the two interfere, and the concurrent run's numbers were meaningless. Re-measured serially. **Do not stash the working tree while another job is reading it.**
 

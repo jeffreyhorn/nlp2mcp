@@ -626,3 +626,285 @@ def test_run_one_rejects_an_unsafe_id_without_touching_the_filesystem(tmp_path, 
 
     assert result.verdict == "ERROR"
     assert "unsafe model id" in (result.error or "")
+
+
+# ---------------------------------------------------------------------------
+# `main` — the CLI selection, validation and exit-code branches.
+#
+# Nothing above calls it, so the selection logic and every exit path could
+# regress while the unit tests stayed green.
+# ---------------------------------------------------------------------------
+
+
+def _write_db(tmp_path, rows):
+    """A minimal results DB in the real schema shape."""
+    import json
+
+    db = tmp_path / "db.json"
+    db.write_text(json.dumps({"models": rows}))
+    return db
+
+
+def _row(model_id, outcome="model_optimal_presolve", comparison="match"):
+    return {
+        "model_id": model_id,
+        "mcp_solve": {"outcome_category": outcome},
+        "solution_comparison": {"comparison_status": comparison},
+    }
+
+
+@pytest.mark.unit
+def test_main_default_selection_reads_the_db_cohort(tmp_path, monkeypatch, capsys):
+    """No --models ⇒ every presolve+match row, and the heading says so."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    db = _write_db(tmp_path, [_row("alpha"), _row("beta"), _row("gamma", comparison="mismatch")])
+    monkeypatch.setattr(mod, "DB_PATH", db)
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+    seen = []
+    monkeypatch.setattr(
+        mod,
+        "run_one",
+        lambda mid, wd, **kw: seen.append(mid)
+        or Attribution(mid, summaries=parse_solve_summaries(_TWOCGE)),
+    )
+
+    rc = mod.main(["--workdir", str(tmp_path / "wd")])
+
+    assert rc == 0
+    assert seen == ["alpha", "beta"], "the mismatch row is not in the cohort"
+    assert "recorded model_optimal_presolve + match" in capsys.readouterr().out
+
+
+@pytest.mark.unit
+def test_main_explicit_selection_does_not_claim_the_db_population(tmp_path, monkeypatch, capsys):
+    """`--models camcge` audits what was named — not the presolve+match cohort."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+    monkeypatch.setattr(
+        mod,
+        "run_one",
+        lambda mid, wd, **kw: Attribution(mid, summaries=parse_solve_summaries(_TWOCGE)),
+    )
+
+    rc = mod.main(["--models", "anything", "--workdir", str(tmp_path / "wd")])
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert "named explicitly via --models" in out
+    assert "recorded model_optimal_presolve + match" not in out, "that claim would be false here"
+
+
+@pytest.mark.unit
+def test_main_empty_explicit_selection_does_not_fall_back_to_the_cohort(
+    tmp_path, monkeypatch, capsys
+):
+    """`--models ""` is an empty selection, not an omitted flag."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    db = _write_db(tmp_path, [_row("alpha")])
+    monkeypatch.setattr(mod, "DB_PATH", db)
+
+    def explode(*a, **k):  # pragma: no cover - must never run
+        raise AssertionError("an empty --models must not audit the DB cohort")
+
+    monkeypatch.setattr(mod, "run_one", explode)
+
+    rc = mod.main(["--models", "", "--workdir", str(tmp_path / "wd")])
+
+    assert rc == 2
+    assert "selection is empty" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_main_allow_empty_says_it_certifies_nothing(tmp_path, monkeypatch, capsys):
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+
+    rc = mod.main(["--models", "", "--allow-empty", "--workdir", str(tmp_path / "wd")])
+
+    assert rc == 0
+    assert "CERTIFIES NOTHING" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_main_exits_1_when_an_mcp_ran_and_FAILED(tmp_path, monkeypatch):
+    """A disproven match must not look like a passing audit."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    failed = """
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  1
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      4 Infeasible
+"""
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+    monkeypatch.setattr(
+        mod,
+        "run_one",
+        lambda mid, wd, **kw: Attribution(mid, summaries=parse_solve_summaries(failed)),
+    )
+
+    rc = mod.main(["--models", "x", "--workdir", str(tmp_path / "wd")])
+
+    assert rc == 1, "MCP-FAILED must be a nonzero exit"
+
+
+@pytest.mark.unit
+def test_main_exits_0_on_a_spurious_finding(tmp_path, monkeypatch):
+    """The finding the audit exists to produce is not a tool failure."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+    monkeypatch.setattr(
+        mod,
+        "run_one",
+        lambda mid, wd, **kw: Attribution(mid, summaries=parse_solve_summaries(_WEAPONS)),
+    )
+
+    rc = mod.main(["--models", "weapons", "--workdir", str(tmp_path / "wd")])
+
+    assert rc == 0
+
+
+@pytest.mark.unit
+def test_main_fails_fast_when_gams_is_missing(tmp_path, monkeypatch, capsys):
+    """No translation may run when the dependency is absent."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    monkeypatch.setattr(mod, "find_gams", lambda: None)
+
+    def explode(*a, **k):  # pragma: no cover - must never run
+        raise AssertionError("no model may be processed without GAMS")
+
+    monkeypatch.setattr(mod, "run_one", explode)
+
+    rc = mod.main(["--models", "x", "--workdir", str(tmp_path / "wd")])
+
+    assert rc == 2
+    assert "gams executable not found" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_main_rejects_a_negative_reslim(tmp_path, capsys):
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    assert mod.main(["--models", "x", "--reslim", "-5", "--workdir", str(tmp_path)]) == 2
+    assert "--reslim must be a positive" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_main_gives_each_invocation_its_own_scratch_dir(tmp_path, monkeypatch, capsys):
+    """Two runs sharing --workdir must not share artifact paths.
+
+    Deterministic `<model>.gms` / `<model>.lst` names mean concurrent runs would
+    unlink and overwrite each other's files, and could attribute the OTHER
+    invocation's listing — this script's own bug, one level up.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+    dirs = []
+    monkeypatch.setattr(
+        mod,
+        "run_one",
+        lambda mid, wd, **kw: dirs.append(wd)
+        or Attribution(mid, summaries=parse_solve_summaries(_TWOCGE)),
+    )
+
+    shared = str(tmp_path / "shared")
+    mod.main(["--models", "x", "--workdir", shared])
+    mod.main(["--models", "x", "--workdir", shared])
+
+    assert len(dirs) == 2
+    assert dirs[0] != dirs[1], f"both invocations used {dirs[0]}"
+    assert all(d.name.startswith("run-") for d in dirs)
+    assert "artifacts:" in capsys.readouterr().out, "the run dir must be discoverable"
+
+
+@pytest.mark.unit
+def test_main_reports_a_malformed_db_rather_than_raising(tmp_path, monkeypatch, capsys):
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    db = tmp_path / "db.json"
+    db.write_text('{"models": [{"model_id": "ok", "mcp_solve": []}]}')
+    monkeypatch.setattr(mod, "DB_PATH", db)
+
+    rc = mod.main(["--workdir", str(tmp_path / "wd")])
+
+    assert rc == 2
+    err = capsys.readouterr().err
+    assert "malformed" in err and "list" in err, err
+
+
+@pytest.mark.unit
+def test_db_validation_covers_rows_outside_the_selection(tmp_path):
+    """A bad id on a NON-matching row must still be an error.
+
+    Validating only inside the predicate let a corrupted DB quietly drop a model
+    from the cohort while the function advertised per-entry validation.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    db = _write_db(tmp_path, [_row("good"), _row("../evil", comparison="mismatch")])
+
+    with pytest.raises(mod.InputError, match="unsafe model_id"):
+        mod.presolve_match_models(db)
+
+
+@pytest.mark.unit
+def test_find_gams_resolves_through_which_not_exists(monkeypatch):
+    """A candidate must be an EXECUTABLE FILE, not merely a path that exists.
+
+    `Path.exists()` accepts a directory or a non-executable, and returning one
+    defeats the fail-fast preflight: `main` would believe GAMS is available and
+    run every (sometimes multi-minute) translation before each model hit the
+    same OSError.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    # `shutil.which` is what performs the executability check. Stub it away and
+    # nothing may resolve — even though the macOS candidate path exists on this
+    # machine, which is precisely what an `exists()`-based lookup would return.
+    monkeypatch.setattr(mod.shutil, "which", lambda _p: None)
+
+    assert mod.find_gams() is None
+
+
+@pytest.mark.unit
+def test_run_one_clears_a_stale_EMIT_before_translating(tmp_path, monkeypatch):
+    """The emit target is cleared for the same reason the listing is.
+
+    If a later `src.cli` returns 0 without recreating its output, a surviving
+    file makes `emitted.exists()` succeed and GAMS runs the PREVIOUS model's
+    translation — the audit then attributes an older model's listing.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    raw_dir = tmp_path / "data" / "gamslib" / "raw"
+    raw_dir.mkdir(parents=True)
+    (raw_dir / "demo.gms").write_text("* stand-in\n")
+    monkeypatch.setattr(mod, "PROJECT_ROOT", tmp_path)
+
+    workdir = tmp_path / "wd"
+    workdir.mkdir()
+    stale = workdir / "demo_mcp_presolve.gms"
+    stale.write_text("* a PREVIOUS model's translation\n")
+
+    # `src.cli` "succeeds" but writes nothing — the exact regression shape.
+    monkeypatch.setattr(mod.subprocess, "run", lambda cmd, **kw: _completed())
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+
+    result = mod.run_one("demo", workdir)
+
+    assert not stale.exists(), "the stale emit must have been removed"
+    assert result.verdict == "ERROR"
+    assert "wrote no file" in (result.error or ""), (
+        "with the stale file cleared, the silent-emit check is meaningful; " f"got {result.error!r}"
+    )
