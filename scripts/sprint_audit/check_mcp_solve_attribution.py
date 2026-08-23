@@ -72,6 +72,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -383,6 +384,32 @@ _COMPARISON_STATUSES = frozenset({"match", "mismatch", "skipped", "error", "not_
 #: **required** whenever the object is present.
 _MCP_SOLVE_STATUSES = frozenset({"success", "failure", "timeout", "not_tested"})
 
+#: ``schema_version`` is a MAJOR.MINOR.PATCH string; ``"2.2"``, ``null`` and
+#: ``[]`` are all malformed. From ``data/gamslib/schema.json``.
+_SCHEMA_VERSION = re.compile(r"\d+\.\d+\.\d+")
+
+#: ``model_entry.gamslib_type`` enum, from ``data/gamslib/schema.json``.
+#: `test_gamslib_type_allowlist_matches_the_schema` fails on drift.
+_GAMSLIB_TYPES = frozenset(
+    {
+        "LP",
+        "NLP",
+        "QCP",
+        "MIP",
+        "MINLP",
+        "MIQCP",
+        "MCP",
+        "CNS",
+        "DNLP",
+        "MPEC",
+        "RMPEC",
+        "EMP",
+        "RMIP",
+        "RMINLP",
+        "RMIQCP",
+    }
+)
+
 
 def _outcome_is_known(value: str) -> bool:
     """Strict membership of the schema's enum.
@@ -432,6 +459,12 @@ def presolve_match_models(db_path: Path | None = None) -> list[str]:
     # `{"models": [...]}` would let an incompatible file pass the input gate.
     if "schema_version" not in db:
         raise InputError(f"results DB {db_path} has no top-level 'schema_version'")
+    version = db["schema_version"]
+    if not isinstance(version, str) or not _SCHEMA_VERSION.fullmatch(version):
+        raise InputError(
+            f"results DB {db_path} has a malformed 'schema_version' {version!r} "
+            "(expected a MAJOR.MINOR.PATCH string)"
+        )
     models = db.get("models")
     if not isinstance(models, list):
         raise InputError(f"results DB {db_path} has no top-level 'models' list")
@@ -444,10 +477,22 @@ def presolve_match_models(db_path: Path | None = None) -> list[str]:
         # inside the predicate meant a malformed id on a non-matching row was
         # silently ignored — so a corrupted DB could quietly drop a model from
         # the default cohort while this function advertised per-entry validation.
-        # `model_id`, `model_name` and `gamslib_type` are all required per entry.
+        # `model_id`, `model_name` and `gamslib_type` are all required per entry —
+        # and validated for TYPE and ENUM, not merely presence: `model_name: null`
+        # or `gamslib_type: "NLPX"` would otherwise be audited as valid.
         for required in ("model_id", "model_name", "gamslib_type"):
             if required not in m:
                 raise InputError(f"{db_path}: models[{i}] is missing required '{required}'")
+        model_name = m.get("model_name")
+        if not isinstance(model_name, str) or not model_name:
+            raise InputError(
+                f"{db_path}: models[{i}] has a missing or empty 'model_name' {model_name!r}"
+            )
+        gamslib_type = m.get("gamslib_type")
+        if not isinstance(gamslib_type, str) or gamslib_type not in _GAMSLIB_TYPES:
+            raise InputError(
+                f"{db_path}: models[{i}] has an unknown 'gamslib_type' {gamslib_type!r}"
+            )
         model_id = m.get("model_id")
         if not isinstance(model_id, str) or not model_id:
             raise InputError(f"{db_path}: models[{i}] has a missing or non-string 'model_id'")
@@ -459,11 +504,20 @@ def presolve_match_models(db_path: Path | None = None) -> list[str]:
         # row rather than reject it, which is the opposite of validating it.
         solve = m.get("mcp_solve")
         cmp_ = m.get("solution_comparison")
+        # Both are `$ref`s to object definitions, so an explicitly present `null`
+        # is schema-INVALID — only an omitted optional property is absent.
+        # Treating null as "missing" would silently drop a malformed row.
+        for key in ("mcp_solve", "solution_comparison"):
+            if key in m and m[key] is None:
+                raise InputError(
+                    f"{db_path}: models[{i}] ({model_id}) has an explicit null '{key}'; "
+                    "omit the key instead"
+                )
         # Presence is tracked separately from the defaulted value: `{}` is falsey,
         # so a present-but-empty object would otherwise be indistinguishable from
         # an absent one and would skip the required-field checks below.
-        has_solve = solve is not None
-        has_cmp = cmp_ is not None
+        has_solve = "mcp_solve" in m
+        has_cmp = "solution_comparison" in m
         solve = {} if solve is None else solve
         cmp_ = {} if cmp_ is None else cmp_
         if not isinstance(solve, dict) or not isinstance(cmp_, dict):
@@ -494,6 +548,13 @@ def presolve_match_models(db_path: Path | None = None) -> list[str]:
                 "without the required 'comparison_status'"
             )
 
+        # `outcome_category` is a `$ref` to a string enum and is not nullable, so
+        # an explicit null is malformed rather than omitted.
+        if "outcome_category" in solve and solve["outcome_category"] is None:
+            raise InputError(
+                f"{db_path}: models[{i}] ({model_id}) has an explicit null "
+                "'mcp_solve.outcome_category'; omit the key instead"
+            )
         outcome = solve.get("outcome_category")
         if outcome is not None:
             if not isinstance(outcome, str) or not _outcome_is_known(outcome):
@@ -735,7 +796,7 @@ def main(argv: list[str] | None = None) -> int:
         help="comma-separated model ids (default: every presolve+match row in the DB)",
     )
     ap.add_argument("--workdir", default=None, help="where to keep emits and listings")
-    ap.add_argument("--reslim", type=int, default=300, help="GAMS resource limit, seconds (> 0)")
+    ap.add_argument("--reslim", type=int, default=300, help="GAMS resource limit, seconds (>= 0)")
     ap.add_argument("--json", dest="json_out", help="write the full record here")
     ap.add_argument(
         "--allow-empty",
@@ -857,14 +918,26 @@ def main(argv: list[str] | None = None) -> int:
             # read-only parent when the file is absent) would pass the checks
             # above and only fail after the whole sweep.
             if out_path.exists():
-                # Open for append so the probe cannot truncate a file the caller
-                # may still want.
+                # A FIFO or other special file passes `is_dir()` and would then
+                # block `open()` indefinitely waiting for a reader — which
+                # defeats the whole point of preflighting.
+                if not out_path.is_file():
+                    print(
+                        f"ERROR: --json {args.json_out} exists but is not a regular file",
+                        file=sys.stderr,
+                    )
+                    return 2
+                # Append, so the probe cannot truncate a file the caller may
+                # still want.
                 with out_path.open("a"):
                     pass
             else:
-                probe = parent / f".{out_path.name}.writetest"
-                probe.touch()
-                probe.unlink()
+                # A UNIQUE probe, removed by fd: a deterministic name could
+                # clobber an unrelated file the caller already has, and this
+                # only ever unlinks the path it just created.
+                probe_fd, probe_name = tempfile.mkstemp(dir=str(parent), prefix=".writetest-")
+                os.close(probe_fd)
+                os.unlink(probe_name)
         except OSError as exc:
             print(f"ERROR: cannot use --json path {args.json_out}: {exc}", file=sys.stderr)
             return 2
@@ -981,8 +1054,23 @@ def main(argv: list[str] | None = None) -> int:
         except OSError as exc:  # pragma: no cover - the shared path still tries
             print(f"WARNING: could not write the per-run report copy: {exc}", file=sys.stderr)
 
+        # Atomic replace rather than `write_text`, which truncates first: two
+        # concurrent runs could otherwise interleave and leave a reader with
+        # invalid half-written JSON. Same discipline as the repository's DB
+        # writers. The temp file is in the destination's own directory so the
+        # replace stays on one filesystem.
         try:
-            Path(args.json_out).write_text(report)
+            dest = Path(args.json_out)
+            tmp_fd, tmp_name = tempfile.mkstemp(dir=str(dest.parent), prefix=f".{dest.name}.")
+            try:
+                with os.fdopen(tmp_fd, "w") as fh:
+                    fh.write(report)
+                os.replace(tmp_name, dest)
+            except BaseException:
+                # Never leave the temp file behind on a failure path.
+                if os.path.exists(tmp_name):
+                    os.unlink(tmp_name)
+                raise
         except OSError as exc:
             # This runs AFTER every GAMS solve. Losing hours of work to an
             # unwritable path would be absurd — dump to stderr, then exit 2.

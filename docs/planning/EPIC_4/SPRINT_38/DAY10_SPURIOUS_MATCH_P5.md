@@ -288,7 +288,7 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/run-*/twocge_mcp_presolve.gms
 |---|---|
 | `make typecheck` | ✅ no issues, 99 source files |
 | `make format` / `make lint` | ✅ clean — **plus explicit `black` + `ruff` on the new script**, since the Makefile targets cover only `src/` and `tests/` |
-| `make test` | ✅ **5154 passed, 10 skipped** (see below) |
+| `make test` | ✅ **5166 passed, 10 skipped** (see below) |
 | full-corpus leak gate | **deliberately NOT run** |
 
 **Why no leak gate:** the PR touches no `src/` file and no golden, so the emit cannot have moved and a 185-model sweep would assert nothing about this diff. Stating the reason rather than the omission — a silently skipped gate is the failure mode P6b exists to catch.
@@ -307,7 +307,7 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/run-*/twocge_mcp_presolve.gms
 
 **A skip-count discrepancy chased down rather than waved through** (review round). After the review fixes the suite read `5085 passed, 13 skipped` where the previous run read `5085 passed, 10 skipped` — collection had risen by exactly the 3 tests added, so **3 tests that previously passed appeared to have stopped running**. A gate going green while tests quietly stop executing is the same failure mode this PR is about, so it was measured, not assumed:
 
-- `tests/unit` alone → **3725 passed, 0 skipped**: every attribution test ran (9 at the time of that check; the module has since grown to **67 collected cases** across the review rounds).
+- `tests/unit` alone → **3725 passed, 0 skipped**: every attribution test ran (9 at the time of that check; the module has since grown to **87 collected cases** across the review rounds).
 - the parent commit → **5085 passed, 10 skipped** (baseline).
 - a clean full run with `-rs` → **5088 passed, 10 skipped** = baseline + the 3 new tests, exactly as expected.
 
@@ -315,9 +315,25 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/run-*/twocge_mcp_presolve.gms
 
 **It recurred once more in review round 2 and again did not survive a re-run** — that round reported `1 failed, 5095 passed, 12 skipped`, the failure being `test_gams_check.py::test_validate_simple_nlp_golden` (**the Day-7 flake**, a GAMS-invoking validation test, distinct from the Day-9 one). Clean re-run: **5098 passed, 10 skipped, exit 0** — exactly 5088 + the 10 tests added in round 2, with the same 10 pre-existing skips enumerated by `-rs`.
 
-**The pattern is worth naming rather than re-diagnosing each time:** this suite has two known wall-clock/subprocess flakes (`test_performance_overhead_acceptable`, `test_validate_simple_nlp_golden`) and its skip count drifts by a few under `-n auto`. **The count is only trustworthy from a run with nothing else competing for the machine**, and the check that settles it is `-rs` — a skip list that names every skip beats any arithmetic on the totals.
+**The pattern is worth naming rather than re-diagnosing each time:** this suite has two known wall-clock/subprocess flakes (`test_performance_overhead_acceptable`, `test_validate_simple_nlp_golden`) and its skip count drifts by a few under `-n auto`. **The count is only trustworthy from a run with nothing else competing for the machine**, and the check that settles it is `-rs` — a skip list that names every skip beats any arithmetic on the totals. (**`-rs` reports skips only**; naming a *failure* needs `-rf`, which cost a whole extra run to learn in round 8.)
 
-**Rounds 3–7 each passed first time on a quiet machine** — 5112, 5125, 5138, 5146, then **5154 passed, 10 skipped, exit 0**, each exactly the previous total plus that round's new tests, with `-rs` naming the same 10 pre-existing skips. Applying the rule above rather than re-deriving it saved the re-run.
+### ⚠ One of those "flakes" is a locatable defect, and it should be fixed rather than re-tolerated
+
+Round 8 saw `test_validate_simple_nlp_golden` fail **twice consecutively**, which is past the point where "flaky" is an acceptable answer. It was traced rather than re-run away:
+
+**`validate_gams_syntax` (`src/validation/gams_check.py`) runs GAMS with `cwd=gams_path.parent` — the *shared* `tests/golden/` directory — and passes no `ScrDir`.** Under `-n auto`, several workers write `.lst` and scratch files into that one directory. The sibling test in the same file copies its golden **"to tmp_path for isolation in parallel execution"**, so the hazard is already understood in this repo; this test simply does not do it.
+
+| experiment | result |
+|---|---|
+| the test alone | **passes**, 0.51 s |
+| `tests/validation` + `tests/unit/sprint_audit` together, ×3 | **144 passed** — no interaction with this PR's tests |
+| full suite **without** this PR's test file | **5079 passed, 0 failures** |
+| full suite **with** it, on a loaded machine | 1 failed, twice |
+| full suite **with** it, on an idle machine | **5166 passed, 0 failures** |
+
+**So the defect is pre-existing and this PR's exposure of it is incidental** — 12 extra tests raise load and therefore collision probability. The fix is small (run the compile check in a temp directory, or pass `ScrDir`) but it is a `src/` change with no bearing on the spurious-match investigation, so it is **reported here rather than bundled**. It is the same class as the Sprint-37 Day-9 incident: GAMS writing scratch into a directory that something else owns.
+
+**Rounds 3–7 each passed first time on a quiet machine** — 5112, 5125, 5138, 5146, 5154, then **5166 passed, 10 skipped, exit 0**, each exactly the previous total plus that round's new tests, with `-rs` naming the same 10 pre-existing skips. Applying the rule above rather than re-deriving it saved the re-run.
 
 > **A process note, since it cost time.** The baseline was first measured with `git stash` running *concurrently* with another full-suite run over the same tree — the two interfere, and the concurrent run's numbers were meaningless. Re-measured serially. **Do not stash the working tree while another job is reading it.**
 

@@ -24,6 +24,7 @@ that does not occur in the current corpus, so there is no real listing to quote.
 They are labelled as such at each use.
 """
 
+import os
 from pathlib import Path
 
 import pytest
@@ -1402,17 +1403,15 @@ def test_the_emitted_model_name_is_pinned_not_inherited(tmp_path, monkeypatch):
 
 
 @pytest.mark.unit
-def test_a_read_only_json_destination_fails_before_the_sweep(tmp_path, monkeypatch, capsys):
-    """Existence is not writability.
+def test_an_unwritable_json_destination_fails_before_the_sweep(tmp_path, monkeypatch, capsys):
+    """Existence is not writability, and the failure must precede the sweep.
 
-    A read-only parent passed the old `is_dir()` check, so the failure was
-    deferred until after every model had been solved.
+    The write failure is MOCKED rather than produced with `chmod(0o500)`: a root
+    process — and some Windows configurations — can write to a mode-500
+    directory anyway, so that fixture would let `main` reach the exploding
+    `run_one` and fail for a reason unrelated to the preflight.
     """
     import scripts.sprint_audit.check_mcp_solve_attribution as mod
-
-    readonly = tmp_path / "ro"
-    readonly.mkdir()
-    readonly.chmod(0o500)
 
     monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
 
@@ -1421,11 +1420,171 @@ def test_a_read_only_json_destination_fails_before_the_sweep(tmp_path, monkeypat
 
     monkeypatch.setattr(mod, "run_one", explode)
 
+    def deny(*a, **k):
+        raise PermissionError(13, "Permission denied")
+
+    monkeypatch.setattr(mod.tempfile, "mkstemp", deny)
+
+    rc = mod.main(
+        ["--models", "x", "--workdir", str(tmp_path / "wd"), "--json", str(tmp_path / "r.json")]
+    )
+
+    assert rc == 2
+    assert "--json" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_the_write_probe_does_not_touch_an_unrelated_file(tmp_path, monkeypatch):
+    """The probe must be uniquely named and remove only what it created.
+
+    A deterministic `.<name>.writetest` would clobber a caller's file of that
+    name and then delete it.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    bystander = tmp_path / ".r.json.writetest"
+    bystander.write_text("someone else's data")
+
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+    monkeypatch.setattr(
+        mod,
+        "run_one",
+        lambda mid, wd, **kw: Attribution(mid, summaries=parse_solve_summaries(_TWOCGE)),
+    )
+
+    rc = mod.main(
+        ["--models", "x", "--workdir", str(tmp_path / "wd"), "--json", str(tmp_path / "r.json")]
+    )
+
+    assert rc == 0
+    assert bystander.exists(), "the probe deleted an unrelated file"
+    assert bystander.read_text() == "someone else's data"
+
+
+@pytest.mark.unit
+def test_a_fifo_json_destination_is_rejected_rather_than_opened(tmp_path, monkeypatch, capsys):
+    """Opening a FIFO blocks until a reader appears — the opposite of a preflight."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    fifo = tmp_path / "pipe.json"
     try:
-        rc = mod.main(
-            ["--models", "x", "--workdir", str(tmp_path / "wd"), "--json", str(readonly / "r.json")]
-        )
-        assert rc == 2
-        assert "--json" in capsys.readouterr().err
-    finally:
-        readonly.chmod(0o700)
+        os.mkfifo(fifo)
+    except (AttributeError, OSError):  # pragma: no cover - platform without FIFOs
+        pytest.skip("platform does not support FIFOs")
+
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+
+    def explode(*a, **k):  # pragma: no cover - must never run
+        raise AssertionError("the sweep must not start with a FIFO destination")
+
+    monkeypatch.setattr(mod, "run_one", explode)
+
+    rc = mod.main(["--models", "x", "--workdir", str(tmp_path / "wd"), "--json", str(fifo)])
+
+    assert rc == 2
+    assert "not a regular file" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_the_json_report_is_written_atomically(tmp_path, monkeypatch):
+    """`write_text` truncates first, so a concurrent reader can see partial JSON.
+
+    Pinned by asserting the destination is replaced rather than opened for
+    writing in place.
+    """
+    import json as _json
+
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+    monkeypatch.setattr(
+        mod,
+        "run_one",
+        lambda mid, wd, **kw: Attribution(mid, summaries=parse_solve_summaries(_TWOCGE)),
+    )
+
+    replaced = []
+    real_replace = mod.os.replace
+    monkeypatch.setattr(
+        mod.os, "replace", lambda a, b: replaced.append((a, b)) or real_replace(a, b)
+    )
+
+    dest = tmp_path / "r.json"
+    dest.write_text("PRIOR CONTENT")
+    rc = mod.main(["--models", "x", "--workdir", str(tmp_path / "wd"), "--json", str(dest)])
+
+    assert rc == 0
+    assert replaced, "the report must be moved into place, not written in situ"
+    assert _json.loads(dest.read_text())["checked"] == 1
+    leftovers = [p.name for p in tmp_path.iterdir() if p.name.startswith(".r.json.")]
+    assert not leftovers, f"temp files left behind: {leftovers}"
+
+
+@pytest.mark.unit
+def test_schema_version_must_be_a_semver_string(tmp_path):
+    """Presence is not validity: `null`, `[]` and `"2.2"` are all malformed."""
+    import json
+
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    for bad in (None, [], "2.2", 22):
+        db = tmp_path / "db.json"
+        db.write_text(json.dumps({"schema_version": bad, "models": [_row("ok")]}))
+        with pytest.raises(mod.InputError, match="schema_version"):
+            mod.presolve_match_models(db)
+
+
+@pytest.mark.unit
+def test_gamslib_type_allowlist_matches_the_schema():
+    import json
+
+    from scripts.sprint_audit.check_mcp_solve_attribution import _GAMSLIB_TYPES, PROJECT_ROOT
+
+    schema = json.loads((PROJECT_ROOT / "data" / "gamslib" / "schema.json").read_text())
+    declared = schema["definitions"]["model_entry"]["properties"]["gamslib_type"]["enum"]
+
+    assert _GAMSLIB_TYPES == frozenset(declared)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "field,value",
+    [("model_name", None), ("model_name", ""), ("gamslib_type", "NLPX"), ("gamslib_type", None)],
+)
+def test_required_entry_fields_are_type_and_enum_checked(tmp_path, field, value):
+    """Presence alone would accept `model_name: null` or `gamslib_type: "NLPX"`."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    row = _row("ok")
+    row[field] = value
+
+    with pytest.raises(mod.InputError, match=field):
+        mod.presolve_match_models(_write_db(tmp_path, [row]))
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("key", ["mcp_solve", "solution_comparison"])
+def test_an_explicit_null_object_is_rejected_not_treated_as_absent(tmp_path, key):
+    """Both are `$ref`s, so a present `null` is schema-invalid.
+
+    Treating it as "missing" would silently drop the malformed row from the
+    cohort — the failure mode this validation exists to prevent.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    row = _row("ok")
+    row[key] = None
+
+    with pytest.raises(mod.InputError, match="explicit null"):
+        mod.presolve_match_models(_write_db(tmp_path, [row]))
+
+
+@pytest.mark.unit
+def test_an_explicit_null_outcome_category_is_rejected(tmp_path):
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    row = _row("ok")
+    row["mcp_solve"]["outcome_category"] = None
+
+    with pytest.raises(mod.InputError, match="explicit null"):
+        mod.presolve_match_models(_write_db(tmp_path, [row]))
