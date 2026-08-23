@@ -8,6 +8,12 @@ generated file, then solves the MCP and reads the objective back::
     Solve mcp_model using MCP;                 * if this ABORTS, .l is untouched
     nlp2mcp_obj_val = <objvar>.l;              * still the NLP's own answer
 
+On a **successful** run that listing therefore holds *two or more* solve
+summaries — the embedded source's, then ours. **The failing case holds only
+one**, and that asymmetry is the whole point: an MCP that aborts before its
+solve never emits a summary at all, so the listing looks exactly like a
+single-solve run whose one status happens to be someone else's.
+
 **If the MCP solve aborts, the objective read returns the NLP's own value and
 the comparison matches itself.** The recorded status is wrong the same way:
 ``parse_gams_listing`` takes the *last* ``MODEL STATUS`` in the listing, which
@@ -88,10 +94,15 @@ DB_PATH = PROJECT_ROOT / "data" / "gamslib" / "gamslib_status.json"
 #: that ours ran.
 EMITTED_MCP_MODEL = "mcp_model"
 
-_SUMMARY_HEADER = re.compile(r"^\s+S O L V E {6}S U M M A R Y\s*$", re.MULTILINE)
-_MODEL_LINE = re.compile(r"^\s+MODEL\s+(\S+)", re.MULTILINE)
-_TYPE_LINE = re.compile(r"^\s+TYPE\s+(\S+)", re.MULTILINE)
-_SOLVER_LINE = re.compile(r"^\s+SOLVER\s+(\S+)", re.MULTILINE)
+#: Indentation is optional throughout. Real GAMS listings indent these lines,
+#: but attribution must not depend on that: a column-0 header (the shape
+#: `scripts/gamslib/test_solve.py` already accepts, and that
+#: `tests/gamslib/test_test_solve.py` exercises) would otherwise parse as
+#: **zero** summaries and report a perfectly good run as ``NO-SOLVE``.
+_SUMMARY_HEADER = re.compile(r"^[ \t]*S O L V E {6}S U M M A R Y\s*$", re.MULTILINE)
+_MODEL_LINE = re.compile(r"^[ \t]*MODEL\s+(\S+)", re.MULTILINE)
+_TYPE_LINE = re.compile(r"^[ \t]*TYPE\s+(\S+)", re.MULTILINE)
+_SOLVER_LINE = re.compile(r"^[ \t]*SOLVER\s+(\S+)", re.MULTILINE)
 _SOLVER_STATUS = re.compile(r"^\*\*\*\* SOLVER STATUS\s+(\d+)\s*(.*?)$", re.MULTILINE)
 _MODEL_STATUS = re.compile(r"^\*\*\*\* MODEL STATUS\s+(\d+)\s*(.*?)$", re.MULTILINE)
 
@@ -159,6 +170,23 @@ def parse_solve_summaries(lst_content: str) -> list[SolveSummary]:
 #: Infeasible, 6 Intermediate Infeasible, …) is a failure.
 _SUCCESS_MODEL_STATUS = frozenset({1, 2})
 
+#: GAMS SOLVER STATUS 1 = "Normal Completion". Required alongside the model
+#: status, matching `scripts/gamslib/test_solve.py`'s solve gate.
+_NORMAL_COMPLETION = 1
+
+#: Model ids become filesystem path components (`<raw>/<id>.gms`,
+#: `<workdir>/<id>_mcp_presolve.gms`). Validated against the repository's safe
+#: pattern so a `../` or a separator cannot escape either directory — and
+#: validated at BOTH the CLI boundary and the consumer that builds the path,
+#: per CONTRIBUTING's defense-in-depth rule.
+_SAFE_MODEL_ID = re.compile(r"^[A-Za-z0-9_.-]+$")
+
+
+def _is_safe_model_id(model_id: str) -> bool:
+    """Reject anything that could traverse out of the directories we build."""
+    return bool(_SAFE_MODEL_ID.match(model_id)) and model_id not in {".", ".."}
+
+
 #: Verdicts that conclude nothing. Counted as failures of the *check*, never as
 #: evidence either way about the model.
 _INDETERMINATE_VERDICTS = frozenset({"ERROR", "NO-SOLVE", "MCP-NO-STATUS"})
@@ -214,8 +242,18 @@ class Attribution:
 
     @property
     def mcp_succeeded(self) -> bool:
-        """Our MCP reported a *success* status (MS-1 Optimal / MS-2 Locally Optimal)."""
-        return any(s.model_status in _SUCCESS_MODEL_STATUS for s in self.mcp_summaries)
+        """Our MCP produced a usable answer — **both** statuses must be good.
+
+        Matches the repository's existing solve gate
+        (`scripts/gamslib/test_solve.py`: ``solver_status == 1 and model_status
+        in (1, 2)``). MODEL STATUS alone is not enough: a solver that hits a
+        resource or iteration limit can report a stale-but-plausible model
+        status alongside SOLVER STATUS 3/4, and that is not a solved model.
+        """
+        return any(
+            s.solver_status == _NORMAL_COMPLETION and s.model_status in _SUCCESS_MODEL_STATUS
+            for s in self.mcp_summaries
+        )
 
     @property
     def embedded_produced_status(self) -> bool:
@@ -281,18 +319,53 @@ class Attribution:
         }
 
 
+class InputError(Exception):
+    """Bad input — reported with a concrete message and exit code 2, never a traceback."""
+
+
 def presolve_match_models(db_path: Path = DB_PATH) -> list[str]:
-    """Every model recorded ``model_optimal_presolve`` **and** match."""
-    db = json.loads(db_path.read_text())
+    """Every model recorded ``model_optimal_presolve`` **and** match.
+
+    The DB is hand-editable, so its shape is checked before it is indexed: a
+    malformed file must produce an actionable error, not a ``KeyError`` from
+    inside a list comprehension.
+    """
+    try:
+        raw = db_path.read_text()
+    except OSError as exc:
+        raise InputError(f"cannot read results DB {db_path}: {exc}") from exc
+
+    try:
+        db = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise InputError(f"results DB {db_path} is not valid JSON: {exc}") from exc
+
+    if not isinstance(db, dict):
+        raise InputError(f"results DB {db_path} must be a JSON object, got {type(db).__name__}")
+    models = db.get("models")
+    if not isinstance(models, list):
+        raise InputError(f"results DB {db_path} has no top-level 'models' list")
+
     out = []
-    for m in db["models"]:
+    for i, m in enumerate(models):
+        if not isinstance(m, dict):
+            raise InputError(f"{db_path}: models[{i}] must be an object, got {type(m).__name__}")
+        model_id = m.get("model_id")
         solve = m.get("mcp_solve") or {}
         cmp_ = m.get("solution_comparison") or {}
+        if not isinstance(solve, dict) or not isinstance(cmp_, dict):
+            raise InputError(
+                f"{db_path}: models[{i}] has a malformed mcp_solve/solution_comparison"
+            )
         if (
             solve.get("outcome_category") == "model_optimal_presolve"
             and cmp_.get("comparison_status") == "match"
         ):
-            out.append(m["model_id"])
+            if not isinstance(model_id, str) or not model_id:
+                raise InputError(f"{db_path}: models[{i}] has a missing or non-string 'model_id'")
+            if not _is_safe_model_id(model_id):
+                raise InputError(f"{db_path}: models[{i}] has an unsafe model_id {model_id!r}")
+            out.append(model_id)
     return sorted(out)
 
 
@@ -326,6 +399,11 @@ def run_one(model_id: str, workdir: Path, reslim: int = 300) -> Attribution:
     below are handed to subprocesses whose ``cwd`` is ``PROJECT_ROOT``, so a
     relative one would have the child write somewhere the parent never looks.
     """
+    # Defense in depth: `main` validates too, but this is the consumer that
+    # actually builds the paths, and it is importable on its own.
+    if not _is_safe_model_id(model_id):
+        return Attribution(model_id, error=f"unsafe model id {model_id!r}")
+
     raw = PROJECT_ROOT / "data" / "gamslib" / "raw" / f"{model_id}.gms"
     if not raw.exists():
         return Attribution(model_id, error=f"raw source absent: {raw}")
@@ -353,6 +431,10 @@ def run_one(model_id: str, workdir: Path, reslim: int = 300) -> Attribution:
         # One slow translation must not abort the whole sweep before it can
         # write its report — `sarf` alone runs for ~28 minutes.
         return Attribution(model_id, error="emit timeout after 600s")
+    except OSError as exc:
+        # A missing/unexecutable interpreter is one model's problem, not the
+        # sweep's: return a structured indeterminate result and carry on.
+        return Attribution(model_id, error=f"emit could not be launched: {exc}")
 
     if emit.returncode != 0 or not emitted.exists():
         return Attribution(model_id, error=f"emit failed (rc={emit.returncode})")
@@ -365,31 +447,45 @@ def run_one(model_id: str, workdir: Path, reslim: int = 300) -> Attribution:
     # before writing (licensing, startup), a stale file would be parsed as this
     # run's result — a status attributed to the wrong invocation, which is the
     # very defect this script exists to detect, one level up.
-    lst.unlink(missing_ok=True)
+    try:
+        lst.unlink(missing_ok=True)
+    except OSError as exc:
+        return Attribution(model_id, error=f"cannot clear stale listing {lst}: {exc}")
 
-    with tempfile.TemporaryDirectory(dir=str(workdir)) as scr:
-        try:
-            proc = subprocess.run(
-                [
-                    gams,
-                    str(emitted),
-                    f"o={lst}",
-                    "lo=2",
-                    f"reslim={reslim}",
-                    f"ScrDir={scr}",
-                ],
-                capture_output=True,
-                text=True,
-                cwd=str(PROJECT_ROOT),
-                timeout=reslim + 120,
-            )
-        except subprocess.TimeoutExpired:
-            return Attribution(model_id, error=f"GAMS timeout after {reslim}s")
+    try:
+        with tempfile.TemporaryDirectory(dir=str(workdir)) as scr:
+            try:
+                proc = subprocess.run(
+                    [
+                        gams,
+                        str(emitted),
+                        f"o={lst}",
+                        "lo=2",
+                        f"reslim={reslim}",
+                        f"ScrDir={scr}",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    cwd=str(PROJECT_ROOT),
+                    timeout=reslim + 120,
+                )
+            except subprocess.TimeoutExpired:
+                return Attribution(model_id, error=f"GAMS timeout after {reslim}s")
+            except OSError as exc:
+                # `find_gams` returned a path that is gone, a directory, or not
+                # executable. One runner problem, not a dead sweep.
+                return Attribution(model_id, error=f"GAMS could not be launched ({gams}): {exc}")
+    except OSError as exc:
+        return Attribution(model_id, error=f"cannot create scratch dir under {workdir}: {exc}")
 
     if not lst.exists():
         return Attribution(model_id, error=f"no listing produced (gams rc={proc.returncode})")
 
-    content = lst.read_text(errors="replace")
+    try:
+        content = lst.read_text(errors="replace")
+    except OSError as exc:
+        return Attribution(model_id, error=f"cannot read listing {lst}: {exc}")
+
     return Attribution(
         model_id,
         summaries=parse_solve_summaries(content),
@@ -404,23 +500,71 @@ def main(argv: list[str] | None = None) -> int:
         help="comma-separated model ids (default: every presolve+match row in the DB)",
     )
     ap.add_argument("--workdir", default=None, help="where to keep emits and listings")
-    ap.add_argument("--reslim", type=int, default=300)
+    ap.add_argument("--reslim", type=int, default=300, help="GAMS resource limit, seconds (> 0)")
     ap.add_argument("--json", dest="json_out", help="write the full record here")
+    ap.add_argument(
+        "--allow-empty",
+        action="store_true",
+        help=(
+            "permit a selection of zero models. The run then CERTIFIES NOTHING — "
+            "use only when an empty selection is the expected state."
+        ),
+    )
     args = ap.parse_args(argv)
 
-    models = (
-        [m.strip() for m in args.models.split(",") if m.strip()]
-        if args.models
-        else presolve_match_models()
-    )
+    # Range, not just type: `reslim` is handed to GAMS and also derives the
+    # subprocess timeout (`reslim + 120`), where a negative would be nonsense.
+    if args.reslim <= 0:
+        print(
+            f"ERROR: --reslim must be a positive number of seconds, got {args.reslim}",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        if args.models:
+            models = [m.strip() for m in args.models.split(",") if m.strip()]
+            unsafe = [m for m in models if not _is_safe_model_id(m)]
+            if unsafe:
+                raise InputError(
+                    "unsafe model id(s) "
+                    + ", ".join(repr(m) for m in unsafe)
+                    + " — must match [A-Za-z0-9_.-]+ (no separators, no '..')"
+                )
+        else:
+            models = presolve_match_models()
+    except InputError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
+
+    # An empty selection is NOT a pass. Every bucket would be empty, the
+    # partition assertion would hold vacuously, and the run would exit 0 having
+    # checked nothing — which is exactly how an unprovisioned or stale DB turns
+    # into a green report. Same rule as `run_full_test.py --resolve-changed`.
+    if not models:
+        if not args.allow_empty:
+            source = "--models" if args.models else f"{DB_PATH} (model_optimal_presolve + match)"
+            print(
+                f"ERROR: selection is empty — nothing to audit from {source}.\n"
+                "       An empty run certifies nothing. Pass --allow-empty if that is expected.",
+                file=sys.stderr,
+            )
+            return 2
+        print("WARNING: selection is empty; this run CERTIFIES NOTHING.", file=sys.stderr)
 
     # Resolve before use: these paths are handed to subprocesses running with
     # `cwd=PROJECT_ROOT`, so a relative --workdir would send the child's output
     # somewhere the parent never looks.
-    workdir = (
-        Path(args.workdir).resolve() if args.workdir else Path(tempfile.mkdtemp(prefix="mcp_attr_"))
-    )
-    workdir.mkdir(parents=True, exist_ok=True)
+    try:
+        workdir = (
+            Path(args.workdir).resolve()
+            if args.workdir
+            else Path(tempfile.mkdtemp(prefix="mcp_attr_"))
+        )
+        workdir.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        print(f"ERROR: cannot create workdir {args.workdir!r}: {exc}", file=sys.stderr)
+        return 2
 
     results: list[Attribution] = []
     for i, mid in enumerate(models, 1):
@@ -470,18 +614,25 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  {r.model_id} [{r.verdict}] {r.error or ''}".rstrip())
 
     if args.json_out:
-        Path(args.json_out).write_text(
-            json.dumps(
-                {
-                    "checked": len(results),
-                    "spurious": [r.model_id for r in spurious],
-                    "mcp_failed": [r.model_id for r in mcp_failed],
-                    "indeterminate": [r.model_id for r in indeterminate],
-                    "results": [r.as_dict() for r in results],
-                },
-                indent=2,
-            )
+        report = json.dumps(
+            {
+                "checked": len(results),
+                "spurious": [r.model_id for r in spurious],
+                "mcp_failed": [r.model_id for r in mcp_failed],
+                "indeterminate": [r.model_id for r in indeterminate],
+                "results": [r.as_dict() for r in results],
+            },
+            indent=2,
         )
+        try:
+            Path(args.json_out).write_text(report)
+        except OSError as exc:
+            # This runs AFTER every GAMS solve. Losing hours of work to an
+            # unwritable path would be absurd — dump to stderr, then exit 2.
+            print(f"ERROR: cannot write report to {args.json_out}: {exc}", file=sys.stderr)
+            print("--- report follows on stderr so the run is not lost ---", file=sys.stderr)
+            print(report, file=sys.stderr)
+            return 2
 
     # Exit non-zero when a determination FAILED — including a listing with no
     # recognised solve at all, which concludes nothing and must not exit 0.

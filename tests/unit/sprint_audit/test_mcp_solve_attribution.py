@@ -1,19 +1,27 @@
 """A `MODEL STATUS` belongs to the solve above it, not to the listing.
 
 Sprint 38 Day 10. A ``--nlp-presolve`` emit runs the original model inside the
-generated file before solving the MCP, so its listing contains **two or more**
-solve summaries. If the MCP solve aborts, the listing still holds the embedded
-NLP's ``MODEL STATUS`` — and anything that searches the listing globally will
-report that status as the MCP's.
+generated file before solving the MCP, so a **successful** run's listing holds
+two or more solve summaries. **When the MCP aborts it holds only one** — the
+embedded source's — because an MCP that dies before its solve emits no summary
+at all. The listing is then indistinguishable, to a global search, from a
+single-solve run; anything that greps for ``MODEL STATUS`` reports the embedded
+model's status as the MCP's.
 
 `weapons` is the real instance: its listing has exactly ONE summary (the NLP's,
 MS-2 @ 1735.5696), the MCP aborted with ``EXECERROR = 1``, and the DB recorded
 ``model_optimal_presolve`` + match at 1735.5696.
 
-**The fixtures below are verbatim excerpts of real GAMS 54.2.1 listings**, not
-hand-written approximations of what a listing looks like. A parser test built
-from an idealised fixture proves only that the parser matches the author's
-mental model of the format.
+**`_WEAPONS` and `_TWOCGE` are verbatim excerpts of real GAMS 54.2.1 listings**,
+not hand-written approximations of what a listing looks like — a parser test
+built only from idealised fixtures proves that the parser matches the author's
+mental model of the format, and nothing more. They carry the two cases the
+audit turns on, so they are the ones that must be real.
+
+The smaller fixtures further down (`infeasible`, `truncated`, `foreign`,
+`lp_source`, the column-0 header) are **synthetic**: each isolates one edge case
+that does not occur in the current corpus, so there is no real listing to quote.
+They are labelled as such at each use.
 """
 
 import pytest
@@ -122,6 +130,8 @@ def test_an_attributed_but_FAILING_mcp_is_not_MCP_SOLVED():
     An MCP that returns MS-4 leaves the warm-started `.l` values in place just as
     an abort does, so counting it as solved would launder a failure into a match.
     """
+    # SYNTHETIC — no corpus model currently emits an MCP reporting MS-4, so
+    # there is no real listing to quote for this case.
     infeasible = """
                S O L V E      S U M M A R Y
 
@@ -181,6 +191,8 @@ def test_a_summary_without_a_status_does_not_count_as_solved():
     GAMS emits the header during model generation; a solver that dies before
     reporting leaves the block statusless.
     """
+    # SYNTHETIC — a solver dying between the header and its status has not
+    # been observed in this corpus.
     truncated = """
                S O L V E      S U M M A R Y
 
@@ -211,6 +223,8 @@ def test_a_raw_models_OWN_mcp_solve_is_not_ours():
     presolve emit `$include`s the raw source. Reading that summary as ours would
     reinstate the very bug this script exists to catch, one level up.
     """
+    # SYNTHETIC — modelled on `spatequ`/`cesam`, which do solve their own MCP,
+    # but neither is in the presolve+match population, so no real listing exists.
     foreign = """
                S O L V E      S U M M A R Y
 
@@ -246,6 +260,7 @@ def test_the_spurious_label_does_not_assert_the_solve_KIND():
     LP, QCP and DNLP sources in the sweep, so the label is provenance-based and
     the *type* is carried on the summary instead.
     """
+    # SYNTHETIC — shaped after `marco`'s embedded LP solve.
     lp_source = """
                S O L V E      S U M M A R Y
 
@@ -276,3 +291,82 @@ def test_empty_listing_is_NO_SOLVE_and_counts_as_indeterminate():
     assert attribution.verdict == "NO-SOLVE"
     assert not attribution.is_spurious
     assert attribution.is_indeterminate, "must be counted as a failed determination"
+
+
+@pytest.mark.unit
+def test_a_bad_SOLVER_status_is_not_a_solved_MCP():
+    """MODEL STATUS alone is not the gate — SOLVER STATUS must be 1 too.
+
+    Mirrors `scripts/gamslib/test_solve.py`'s own solve gate. A solver that hits
+    a resource limit can report a stale-but-plausible MODEL STATUS beside
+    SOLVER STATUS 3, and that is not a solved model.
+    """
+    # SYNTHETIC — every MCP in the current sweep reports SOLVER STATUS 1, so
+    # this combination has no real listing to quote.
+    resource_interrupt = """
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  1124
+
+**** SOLVER STATUS     3 Resource Interrupt
+**** MODEL STATUS      1 Optimal
+"""
+    attribution = Attribution("limit-hit", summaries=parse_solve_summaries(resource_interrupt))
+
+    assert attribution.mcp_produced_status, "the status is ours — attribution succeeded"
+    assert not attribution.mcp_succeeded, "SOLVER STATUS 3 disqualifies it despite MS-1"
+    assert attribution.verdict == "MCP-FAILED"
+
+
+@pytest.mark.unit
+def test_a_column_zero_summary_header_still_parses():
+    """Attribution must not depend on indentation.
+
+    `scripts/gamslib/test_solve.py` already accepts an unindented header, and
+    `tests/gamslib/test_test_solve.py` exercises that shape. Requiring leading
+    whitespace would parse such a listing as ZERO summaries and report a
+    perfectly good run as NO-SOLVE.
+    """
+    # SYNTHETIC — real GAMS 54.2.1 listings indent, but the repo's own fixtures
+    # do not, and a formatting detail must not decide attribution.
+    unindented = """
+S O L V E      S U M M A R Y
+
+MODEL   mcp_model
+TYPE    MCP
+SOLVER  PATH                FROM LINE  1124
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+"""
+    attribution = Attribution("flush-left", summaries=parse_solve_summaries(unindented))
+
+    assert len(attribution.summaries) == 1, "the header must parse without indentation"
+    assert attribution.verdict == "MCP-SOLVED"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "model_id",
+    ["../escape", "a/b", "..", ".", "with space", "abs\\path", ""],
+)
+def test_unsafe_model_ids_are_rejected(model_id):
+    """Model ids become path components, so they are validated before use.
+
+    `run_one` builds both `data/gamslib/raw/<id>.gms` and
+    `<workdir>/<id>_mcp_presolve.gms`; a separator or `..` escapes either one.
+    """
+    from scripts.sprint_audit.check_mcp_solve_attribution import _is_safe_model_id
+
+    assert not _is_safe_model_id(model_id), f"{model_id!r} must be rejected"
+
+
+@pytest.mark.unit
+def test_ordinary_model_ids_are_accepted():
+    """The guard must not reject the corpus it exists to audit."""
+    from scripts.sprint_audit.check_mcp_solve_attribution import _is_safe_model_id
+
+    for model_id in ("weapons", "twocge", "ps2_f_s", "ps10_s_mn", "mathopt1", "cclinpts"):
+        assert _is_safe_model_id(model_id), f"{model_id!r} is a real corpus model"

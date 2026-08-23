@@ -261,10 +261,20 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/twocge_mcp_presolve.gms
 |---|---|
 | `make typecheck` | ✅ no issues, 99 source files |
 | `make format` / `make lint` | ✅ clean — **plus explicit `black` + `ruff` on the new script**, since the Makefile targets cover only `src/` and `tests/` |
-| `make test` | ✅ **5088 passed, 10 skipped** (see below) |
+| `make test` | ✅ **5098 passed, 10 skipped** (see below) |
 | full-corpus leak gate | **deliberately NOT run** |
 
-**Why no leak gate:** `git diff --stat HEAD -- src/ data/` is **empty**. There is no `src/` change and no golden change, so the emit cannot have moved and a 185-model sweep would assert nothing about this diff. Stating the reason rather than the omission — a silently skipped gate is the failure mode P6b exists to catch.
+**Why no leak gate:** the PR touches no `src/` file and no golden, so the emit cannot have moved and a 185-model sweep would assert nothing about this diff. Stating the reason rather than the omission — a silently skipped gate is the failure mode P6b exists to catch.
+
+> **⚠ The command originally cited here could not have established that claim** (caught at review). `git diff --stat HEAD -- src/ data/` compares the **working tree** against `HEAD`, so it is empty the moment the work is committed — *including* when `HEAD` itself changed those paths. It would have printed the reassuring answer no matter what the PR did. The check has to run against the merge-base:
+>
+> ```bash
+> BASE=$(git merge-base origin/main HEAD)
+> git diff --stat "$BASE"..HEAD -- src/ data/   # empty — verified
+> git diff --name-only "$BASE"..HEAD            # 5 files: 1 script, 1 test, 3 docs
+> ```
+>
+> Re-checked properly: **the conclusion holds** — the PR's five files are one script, its tests, and three documents. But the evidence for it was worthless, which is the more useful half of the correction.
 
 **One flaky failure, re-run in full rather than in isolation.** The first `make test` reported `1 failed, 5084 passed` — `test_metrics_integration.py::TestMetricsWithSimplificationPipeline::test_performance_overhead_acceptable`. It is a **wall-clock ratio** test (`time.perf_counter()` over 100 pipeline runs) executed under `-n auto`, it touches nothing in this diff, and it is **the same test that flaked on Day 9**. Re-run of the whole suite: **5085 passed**.
 
@@ -275,6 +285,10 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/twocge_mcp_presolve.gms
 - a clean full run with `-rs` → **5088 passed, 10 skipped** = baseline + the 3 new tests, exactly as expected.
 
 **The 13-skip reading did not reproduce**, and every one of the 10 skips is a pre-existing `pytest.skip` for an unimplemented feature (nested subset indexing, Sprint-10/11 items, a memory-usage test disabled in CI). None is in this diff.
+
+**It recurred once more in review round 2 and again did not survive a re-run** — that round reported `1 failed, 5095 passed, 12 skipped`, the failure being `test_gams_check.py::test_validate_simple_nlp_golden` (**the Day-7 flake**, a GAMS-invoking validation test, distinct from the Day-9 one). Clean re-run: **5098 passed, 10 skipped, exit 0** — exactly 5088 + the 10 tests added in round 2, with the same 10 pre-existing skips enumerated by `-rs`.
+
+**The pattern is worth naming rather than re-diagnosing each time:** this suite has two known wall-clock/subprocess flakes (`test_performance_overhead_acceptable`, `test_validate_simple_nlp_golden`) and its skip count drifts by a few under `-n auto`. **The count is only trustworthy from a run with nothing else competing for the machine**, and the check that settles it is `-rs` — a skip list that names every skip beats any arithmetic on the totals.
 
 > **A process note, since it cost time.** The baseline was first measured with `git stash` running *concurrently* with another full-suite run over the same tree — the two interfere, and the concurrent run's numbers were meaningless. Re-measured serially. **Do not stash the working tree while another job is reading it.**
 
