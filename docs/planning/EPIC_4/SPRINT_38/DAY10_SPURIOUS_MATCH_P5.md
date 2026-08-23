@@ -288,7 +288,7 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/run-*/twocge_mcp_presolve.gms
 |---|---|
 | `make typecheck` | ✅ no issues, 99 source files |
 | `make format` / `make lint` | ✅ clean — **plus explicit `black` + `ruff` on the new script**, since the Makefile targets cover only `src/` and `tests/` |
-| `make test` | ✅ **5146 passed, 10 skipped** (see below) |
+| `make test` | ✅ **5154 passed, 10 skipped** (see below) |
 | full-corpus leak gate | **deliberately NOT run** |
 
 **Why no leak gate:** the PR touches no `src/` file and no golden, so the emit cannot have moved and a 185-model sweep would assert nothing about this diff. Stating the reason rather than the omission — a silently skipped gate is the failure mode P6b exists to catch.
@@ -317,7 +317,7 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/run-*/twocge_mcp_presolve.gms
 
 **The pattern is worth naming rather than re-diagnosing each time:** this suite has two known wall-clock/subprocess flakes (`test_performance_overhead_acceptable`, `test_validate_simple_nlp_golden`) and its skip count drifts by a few under `-n auto`. **The count is only trustworthy from a run with nothing else competing for the machine**, and the check that settles it is `-rs` — a skip list that names every skip beats any arithmetic on the totals.
 
-**Rounds 3–6 each passed first time on a quiet machine** — 5112, 5125, 5138, then **5146 passed, 10 skipped, exit 0**, each exactly the previous total plus that round's new tests, with `-rs` naming the same 10 pre-existing skips. Applying the rule above rather than re-deriving it saved the re-run.
+**Rounds 3–7 each passed first time on a quiet machine** — 5112, 5125, 5138, 5146, then **5154 passed, 10 skipped, exit 0**, each exactly the previous total plus that round's new tests, with `-rs` naming the same 10 pre-existing skips. Applying the rule above rather than re-deriving it saved the re-run.
 
 > **A process note, since it cost time.** The baseline was first measured with `git stash` running *concurrently* with another full-suite run over the same tree — the two interfere, and the concurrent run's numbers were meaningless. Re-measured serially. **Do not stash the working tree while another job is reading it.**
 

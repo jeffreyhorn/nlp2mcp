@@ -337,10 +337,20 @@ class Attribution:
         }
 
 
-#: Mirrors `scripts/gamslib/error_taxonomy.SOLVE_OUTCOME_CATEGORIES`. Duplicated
-#: rather than imported because this script is run as a file (``python
-#: scripts/sprint_audit/...``), where ``scripts.gamslib`` is not importable —
-#: and `test_outcome_allowlist_matches_the_producer` fails if the two drift.
+#: From ``data/gamslib/schema.json`` (``solve_outcome_category``) — the enum
+#: declared for **this field**.
+#:
+#: ⚠ An earlier revision mirrored `error_taxonomy.SOLVE_OUTCOME_CATEGORIES`,
+#: which is a **broader union** spanning several fields. That was wrong in both
+#: directions: it **rejected** the schema-valid ``permanent_exclusion`` (which
+#: would abort the audit on real data) and **accepted** seven ``compare_*``
+#: values that are invalid for this field. Same mistake as the round-6
+#: ``comparison_status`` bug, one level over — a producer's constant is not the
+#: field's contract.
+#:
+#: ``model_optimal_presolve`` is listed here directly, so no suffix stripping is
+#: needed: `run_full_test.py` writes exactly that literal.
+#: `test_outcome_allowlist_matches_the_schema` fails on drift.
 _SOLVE_OUTCOME_CATEGORIES = frozenset(
     {
         "path_solve_normal",
@@ -351,22 +361,14 @@ _SOLVE_OUTCOME_CATEGORIES = frozenset(
         "path_solve_license",
         "path_syntax_error",
         "model_optimal",
+        "model_optimal_presolve",
         "model_locally_optimal",
         "model_infeasible",
         "model_unbounded",
-        "compare_objective_match",
-        "compare_objective_mismatch",
-        "compare_status_mismatch",
-        "compare_nlp_failed",
-        "compare_mcp_failed",
-        "compare_both_infeasible",
-        "compare_multi_solve_skip",
+        "permanent_exclusion",
     }
 )
 
-#: The presolve-retry variant appends this to a base category
-#: (`run_full_test.py` normalises it by stripping the suffix).
-_PRESOLVE_SUFFIX = "_presolve"
 
 #: From ``data/gamslib/schema.json`` (``solution_comparison_result``), **not**
 #: from the values that happen to be in the DB today.
@@ -383,9 +385,14 @@ _MCP_SOLVE_STATUSES = frozenset({"success", "failure", "timeout", "not_tested"})
 
 
 def _outcome_is_known(value: str) -> bool:
-    """A base category, or a base category with the presolve-retry suffix."""
-    base = value[: -len(_PRESOLVE_SUFFIX)] if value.endswith(_PRESOLVE_SUFFIX) else value
-    return base in _SOLVE_OUTCOME_CATEGORIES
+    """Strict membership of the schema's enum.
+
+    No suffix stripping: the schema lists ``model_optimal_presolve`` itself, and
+    tolerating an arbitrary ``<base>_presolve`` would accept values the DB
+    contract does not permit — the same over-permissiveness that let the
+    ``compare_*`` categories through.
+    """
+    return value in _SOLVE_OUTCOME_CATEGORIES
 
 
 class InputError(Exception):
@@ -421,6 +428,10 @@ def presolve_match_models(db_path: Path | None = None) -> list[str]:
 
     if not isinstance(db, dict):
         raise InputError(f"results DB {db_path} must be a JSON object, got {type(db).__name__}")
+    # The schema requires BOTH top-level keys. Accepting a bare
+    # `{"models": [...]}` would let an incompatible file pass the input gate.
+    if "schema_version" not in db:
+        raise InputError(f"results DB {db_path} has no top-level 'schema_version'")
     models = db.get("models")
     if not isinstance(models, list):
         raise InputError(f"results DB {db_path} has no top-level 'models' list")
@@ -433,6 +444,10 @@ def presolve_match_models(db_path: Path | None = None) -> list[str]:
         # inside the predicate meant a malformed id on a non-matching row was
         # silently ignored — so a corrupted DB could quietly drop a model from
         # the default cohort while this function advertised per-entry validation.
+        # `model_id`, `model_name` and `gamslib_type` are all required per entry.
+        for required in ("model_id", "model_name", "gamslib_type"):
+            if required not in m:
+                raise InputError(f"{db_path}: models[{i}] is missing required '{required}'")
         model_id = m.get("model_id")
         if not isinstance(model_id, str) or not model_id:
             raise InputError(f"{db_path}: models[{i}] has a missing or non-string 'model_id'")
@@ -560,6 +575,11 @@ def run_one(
     if not _is_safe_model_id(model_id):
         return Attribution(model_id, error=f"unsafe model id {model_id!r}")
 
+    # Likewise for `reslim` — a direct caller bypasses `main`'s range check, and
+    # the value reaches GAMS *and* derives the wall-clock timeout (`reslim + 120`).
+    if reslim < 0:
+        return Attribution(model_id, error=f"reslim must be >= 0 seconds, got {reslim}")
+
     raw = PROJECT_ROOT / "data" / "gamslib" / "raw" / f"{model_id}.gms"
     if not raw.exists():
         return Attribution(
@@ -591,6 +611,12 @@ def run_one(
                 "src.cli",
                 str(raw.relative_to(PROJECT_ROOT)),
                 "--nlp-presolve",
+                # Pinned, not inherited: attribution recognises only this name,
+                # so if `src.cli`'s default ever changed, every genuine MCP solve
+                # would lose its matching summary and be reported as
+                # indeterminate or embedded-only.
+                "--model-name",
+                EMITTED_MCP_MODEL,
                 "-o",
                 str(emitted),
             ],
@@ -723,9 +749,11 @@ def main(argv: list[str] | None = None) -> int:
 
     # Range, not just type: `reslim` is handed to GAMS and also derives the
     # subprocess timeout (`reslim + 120`), where a negative would be nonsense.
-    if args.reslim <= 0:
+    # `int >= 0` per CONTRIBUTING; `scripts/ci/run_pr19_solves.py` accepts 0 and
+    # GAMS treats reslim=0 as valid, so only a NEGATIVE value is an input error.
+    if args.reslim < 0:
         print(
-            f"ERROR: --reslim must be a positive number of seconds, got {args.reslim}",
+            f"ERROR: --reslim must be >= 0 seconds, got {args.reslim}",
             file=sys.stderr,
         )
         return 2
@@ -824,6 +852,19 @@ def main(argv: list[str] | None = None) -> int:
                     file=sys.stderr,
                 )
                 return 2
+
+            # Existence is not writability. A read-only destination (or a
+            # read-only parent when the file is absent) would pass the checks
+            # above and only fail after the whole sweep.
+            if out_path.exists():
+                # Open for append so the probe cannot truncate a file the caller
+                # may still want.
+                with out_path.open("a"):
+                    pass
+            else:
+                probe = parent / f".{out_path.name}.writetest"
+                probe.touch()
+                probe.unlink()
         except OSError as exc:
             print(f"ERROR: cannot use --json path {args.json_out}: {exc}", file=sys.stderr)
             return 2

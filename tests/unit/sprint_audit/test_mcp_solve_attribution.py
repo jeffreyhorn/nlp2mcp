@@ -639,11 +639,16 @@ def test_run_one_rejects_an_unsafe_id_without_touching_the_filesystem(tmp_path, 
 
 
 def _write_db(tmp_path, rows):
-    """A minimal results DB in the real schema shape."""
+    """A **schema-valid** results DB.
+
+    `schema.json` requires the top-level `schema_version` as well as `models`;
+    a fixture missing it is not the repository's DB contract and cannot
+    exercise validation of it.
+    """
     import json
 
     db = tmp_path / "db.json"
-    db.write_text(json.dumps({"models": rows}))
+    db.write_text(json.dumps({"schema_version": "2.2.1", "models": rows}))
     return db
 
 
@@ -656,6 +661,9 @@ def _row(model_id, outcome="model_optimal_presolve", comparison="match"):
     """
     return {
         "model_id": model_id,
+        # `model_name` and `gamslib_type` are required per entry.
+        "model_name": f"{model_id} test model",
+        "gamslib_type": "NLP",
         "mcp_solve": {"status": "success", "outcome_category": outcome},
         "solution_comparison": {"comparison_status": comparison},
     }
@@ -804,7 +812,7 @@ def test_main_rejects_a_negative_reslim(tmp_path, capsys):
     import scripts.sprint_audit.check_mcp_solve_attribution as mod
 
     assert mod.main(["--models", "x", "--reslim", "-5", "--workdir", str(tmp_path)]) == 2
-    assert "--reslim must be a positive" in capsys.readouterr().err
+    assert "--reslim must be >= 0" in capsys.readouterr().err
 
 
 @pytest.mark.unit
@@ -840,8 +848,9 @@ def test_main_gives_each_invocation_its_own_scratch_dir(tmp_path, monkeypatch, c
 def test_main_reports_a_malformed_db_rather_than_raising(tmp_path, monkeypatch, capsys):
     import scripts.sprint_audit.check_mcp_solve_attribution as mod
 
-    db = tmp_path / "db.json"
-    db.write_text('{"models": [{"model_id": "ok", "mcp_solve": []}]}')
+    row = _row("ok")
+    row["mcp_solve"] = []
+    db = _write_db(tmp_path, [row])
     monkeypatch.setattr(mod, "DB_PATH", db)
 
     rc = mod.main(["--workdir", str(tmp_path / "wd")])
@@ -919,20 +928,37 @@ def test_run_one_clears_a_stale_EMIT_before_translating(tmp_path, monkeypatch):
 
 
 @pytest.mark.unit
-def test_outcome_allowlist_matches_the_producer():
-    """The local allow-list mirrors `error_taxonomy`; drift must fail here.
+def test_outcome_allowlist_matches_the_schema():
+    """The allow-list must mirror the SCHEMA's field enum, not the producer's union.
 
-    It is duplicated rather than imported because this script runs as a file,
-    where `scripts.gamslib` is not importable. That duplication is only safe if
-    something notices when the producer changes.
+    `error_taxonomy.SOLVE_OUTCOME_CATEGORIES` spans several fields: it omits the
+    schema-valid `permanent_exclusion` and includes seven `compare_*` values that
+    are invalid for `outcome_category`. Mirroring it was wrong in both
+    directions.
     """
-    from scripts.gamslib.error_taxonomy import SOLVE_OUTCOME_CATEGORIES
-    from scripts.sprint_audit.check_mcp_solve_attribution import _SOLVE_OUTCOME_CATEGORIES
+    import json
 
-    assert _SOLVE_OUTCOME_CATEGORIES == frozenset(SOLVE_OUTCOME_CATEGORIES), (
-        "the mirrored allow-list has drifted from "
-        "scripts/gamslib/error_taxonomy.SOLVE_OUTCOME_CATEGORIES"
+    from scripts.sprint_audit.check_mcp_solve_attribution import (
+        _SOLVE_OUTCOME_CATEGORIES,
+        PROJECT_ROOT,
     )
+
+    schema = json.loads((PROJECT_ROOT / "data" / "gamslib" / "schema.json").read_text())
+    declared = schema["definitions"]["solve_outcome_category"]["enum"]
+
+    assert _SOLVE_OUTCOME_CATEGORIES == frozenset(declared), (
+        "the outcome allow-list has drifted from "
+        "data/gamslib/schema.json definitions.solve_outcome_category"
+    )
+
+
+@pytest.mark.unit
+def test_permanent_exclusion_is_accepted_and_compare_values_are_not():
+    """Both directions of the round-7 bug, pinned explicitly."""
+    from scripts.sprint_audit.check_mcp_solve_attribution import _outcome_is_known
+
+    assert _outcome_is_known("permanent_exclusion"), "schema-valid; rejecting it aborts the audit"
+    assert not _outcome_is_known("compare_objective_match"), "not valid for this field"
 
 
 @pytest.mark.unit
@@ -966,13 +992,21 @@ def test_a_typo_in_a_db_enum_is_an_error_not_a_silent_drop(tmp_path, field, valu
 
 
 @pytest.mark.unit
-def test_the_presolve_suffix_variant_is_accepted(tmp_path):
-    """`<base>_presolve` is a legitimate runtime variant, not an unknown enum."""
+def test_model_optimal_presolve_is_a_schema_value_not_a_suffix_trick(tmp_path):
+    """The schema lists `model_optimal_presolve` itself, so no stripping is needed.
+
+    An earlier revision accepted an arbitrary `<base>_presolve`, which admitted
+    values the DB contract does not permit.
+    """
     import scripts.sprint_audit.check_mcp_solve_attribution as mod
 
-    db = _write_db(tmp_path, [_row("ok"), _row("infeas", outcome="model_infeasible_presolve")])
+    assert "model_optimal_presolve" in mod._SOLVE_OUTCOME_CATEGORIES
+    assert mod.presolve_match_models(_write_db(tmp_path, [_row("ok")])) == ["ok"]
 
-    assert mod.presolve_match_models(db) == ["ok"]
+    with pytest.raises(mod.InputError, match="unknown"):
+        mod.presolve_match_models(
+            _write_db(tmp_path, [_row("x", outcome="model_infeasible_presolve")])
+        )
 
 
 @pytest.mark.unit
@@ -1185,10 +1219,9 @@ def test_a_row_missing_the_required_mcp_solve_status_is_rejected(tmp_path):
 def test_a_solution_comparison_without_its_required_status_is_rejected(tmp_path):
     import scripts.sprint_audit.check_mcp_solve_attribution as mod
 
-    db = _write_db(
-        tmp_path,
-        [{"model_id": "bad", "mcp_solve": {"status": "success"}, "solution_comparison": {}}],
-    )
+    row = _row("bad")
+    row["solution_comparison"] = {}
+    db = _write_db(tmp_path, [row])
 
     with pytest.raises(mod.InputError, match="comparison_status"):
         mod.presolve_match_models(db)
@@ -1266,3 +1299,133 @@ def test_the_report_is_also_written_per_run(tmp_path, monkeypatch, capsys):
 
     assert per_run.is_file(), "a per-run copy must exist alongside the shared --json"
     assert _json.loads(per_run.read_text()) == _json.loads(shared_json.read_text())
+
+
+@pytest.mark.unit
+def test_reslim_zero_is_accepted(tmp_path, monkeypatch):
+    """CONTRIBUTING defines reslim as `int >= 0`, and GAMS accepts 0.
+
+    `scripts/ci/run_pr19_solves.py` accepts zero too, so rejecting it made this
+    CLI inconsistent with the repository contract.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+    monkeypatch.setattr(
+        mod,
+        "run_one",
+        lambda mid, wd, **kw: Attribution(mid, summaries=parse_solve_summaries(_TWOCGE)),
+    )
+
+    assert mod.main(["--models", "x", "--reslim", "0", "--workdir", str(tmp_path / "wd")]) == 0
+
+
+@pytest.mark.unit
+def test_run_one_guards_reslim_at_its_own_boundary(tmp_path, monkeypatch):
+    """`run_one` is importable and callable directly, bypassing `main`'s check.
+
+    The value reaches GAMS *and* derives the wall-clock timeout, so a direct
+    caller must get a structured error rather than an invalid run.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    def explode(*a, **k):  # pragma: no cover - must never run
+        raise AssertionError("no subprocess may run with a negative reslim")
+
+    monkeypatch.setattr(mod.subprocess, "run", explode)
+
+    result = mod.run_one("demo", tmp_path, reslim=-1)
+
+    assert result.verdict == "ERROR"
+    assert "reslim must be >= 0" in (result.error or "")
+
+
+@pytest.mark.unit
+def test_a_db_without_schema_version_is_rejected(tmp_path):
+    """`schema_version` is required top-level; a bare {"models": [...]} is not the contract."""
+    import json
+
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    db = tmp_path / "db.json"
+    db.write_text(json.dumps({"models": [_row("ok")]}))
+
+    with pytest.raises(mod.InputError, match="schema_version"):
+        mod.presolve_match_models(db)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("missing", ["model_name", "gamslib_type"])
+def test_a_row_missing_a_required_entry_key_is_rejected(tmp_path, missing):
+    """Required per-entry keys are validated even though the predicate ignores them."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    row = _row("ok")
+    del row[missing]
+
+    with pytest.raises(mod.InputError, match=missing):
+        mod.presolve_match_models(_write_db(tmp_path, [row]))
+
+
+@pytest.mark.unit
+def test_the_emitted_model_name_is_pinned_not_inherited(tmp_path, monkeypatch):
+    """Attribution recognises only `mcp_model`, so the emit must pin it.
+
+    Relying on `src.cli`'s default means a change there would silently strip
+    every genuine MCP solve of its matching summary.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    raw_dir = tmp_path / "data" / "gamslib" / "raw"
+    raw_dir.mkdir(parents=True)
+    (raw_dir / "demo.gms").write_text("* stand-in\n")
+    monkeypatch.setattr(mod, "PROJECT_ROOT", tmp_path)
+
+    seen = {}
+
+    def fake_run(cmd, **kw):
+        if "src.cli" in cmd:
+            seen["cmd"] = cmd
+            (tmp_path / "demo_mcp_presolve.gms").write_text("* emitted\n")
+        else:
+            (tmp_path / "demo.lst").write_text(_TWOCGE)
+        return _completed()
+
+    monkeypatch.setattr(mod.subprocess, "run", fake_run)
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+
+    mod.run_one("demo", tmp_path)
+
+    cmd = seen["cmd"]
+    assert "--model-name" in cmd, f"the model name must be pinned; got {cmd}"
+    assert cmd[cmd.index("--model-name") + 1] == mod.EMITTED_MCP_MODEL
+
+
+@pytest.mark.unit
+def test_a_read_only_json_destination_fails_before_the_sweep(tmp_path, monkeypatch, capsys):
+    """Existence is not writability.
+
+    A read-only parent passed the old `is_dir()` check, so the failure was
+    deferred until after every model had been solved.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    readonly = tmp_path / "ro"
+    readonly.mkdir()
+    readonly.chmod(0o500)
+
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+
+    def explode(*a, **k):  # pragma: no cover - must never run
+        raise AssertionError("the sweep must not start with an unwritable --json path")
+
+    monkeypatch.setattr(mod, "run_one", explode)
+
+    try:
+        rc = mod.main(
+            ["--models", "x", "--workdir", str(tmp_path / "wd"), "--json", str(readonly / "r.json")]
+        )
+        assert rc == 2
+        assert "--json" in capsys.readouterr().err
+    finally:
+        readonly.chmod(0o700)
