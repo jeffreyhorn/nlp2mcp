@@ -100,7 +100,19 @@ SPURIOUS MATCHES — the recorded objective is the embedded solve's own value:
 
 **Attribution is kept separate from success, and the label does not assert a solve kind.** A `MODEL STATUS` proves the status is *ours*, not that the solve worked — an MCP returning MS-4 leaves the warm-started `.l` values in place exactly as an abort does, so it is reported as **`MCP-FAILED`**, never as solved. And the spurious verdict is **`EMBEDDED-ONLY`** rather than "NLP-only" because the population is not all NLP: `marco`/`paperco`/`tforss` are **LP**, `cpack`/`qsambal` **QCP**, `maxmin` **DNLP**, `robustlp` mixed. The solve *kind* is carried on the summary; the verdict names only provenance.
 
-**Three indeterminate verdicts are kept distinct from the spurious one** — `MCP-NO-STATUS` (our block exists but reported nothing), `NO-SOLVE` (no recognised solve at all) and `ERROR`. Folding them into "spurious" would report *"the embedded model solved and ours did not"* when **nothing** solved — a fabricated finding of exactly the kind this script exists to catch. They exit **1**; a spurious match exits **0**, because it is a finding, not a failure of the check.
+**Three indeterminate verdicts are kept distinct from the spurious one** — `MCP-NO-STATUS` (our block exists but reported nothing), `NO-SOLVE` (no recognised solve at all) and `ERROR`. Folding them into "spurious" would report *"the embedded model solved and ours did not"* when **nothing** solved — a fabricated finding of exactly the kind this script exists to catch.
+
+**Exit codes.** `MCP-FAILED` and the three indeterminate verdicts exit **1**; a spurious match exits **0**, because it is the finding the audit is *for* and a successful investigation must not look like a broken tool. Verified against a real MS-4 model:
+
+```
+$ ... --models camcge
+[ 1/1] camcge       MCP-FAILED     camcge/NLP MS-2, mcp_model/MCP MS-4
+Checked 1 model(s) named explicitly via --models.
+  our MCP ran but FAILED              : 1
+exit=1
+```
+
+That run also re-confirms §4.1's camcge measurement from a second direction, and shows the population heading tracking the selection source — an explicit `--models` list is not "recorded `model_optimal_presolve` + match".
 
 **weapons** — one summary in the whole listing (`war` / NLP / CONOPT, MS-2 @ 1735.5696); the MCP aborted:
 
@@ -225,6 +237,11 @@ stat_tm(i,r).. ... + (((-1) * (pq(i+1,r) * mu(i+1,r) / sqr(pq(i+1,r)))) * nu_eqX
 .venv/bin/python scripts/sprint_audit/kpi_block.py
 .venv/bin/python scripts/sprint_audit/floor_tracker.py
 
+# §0 — PREREQUISITE. `data/gamslib/raw/*.gms` is GITIGNORED, so a clean
+# checkout has none of the 219 sources and every model below would return
+# "raw source absent". Provision first (the script now names this in its error).
+./scripts/download_gamslib_raw.sh --all
+
 # §2 — the discriminator over every presolve+match row (33)
 .venv/bin/python scripts/sprint_audit/check_mcp_solve_attribution.py \
     --workdir /tmp/d10/sweep --json /tmp/d10/attribution.json
@@ -261,7 +278,7 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/twocge_mcp_presolve.gms
 |---|---|
 | `make typecheck` | ✅ no issues, 99 source files |
 | `make format` / `make lint` | ✅ clean — **plus explicit `black` + `ruff` on the new script**, since the Makefile targets cover only `src/` and `tests/` |
-| `make test` | ✅ **5098 passed, 10 skipped** (see below) |
+| `make test` | ✅ **5112 passed, 10 skipped** (see below) |
 | full-corpus leak gate | **deliberately NOT run** |
 
 **Why no leak gate:** the PR touches no `src/` file and no golden, so the emit cannot have moved and a 185-model sweep would assert nothing about this diff. Stating the reason rather than the omission — a silently skipped gate is the failure mode P6b exists to catch.
@@ -289,6 +306,8 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/twocge_mcp_presolve.gms
 **It recurred once more in review round 2 and again did not survive a re-run** — that round reported `1 failed, 5095 passed, 12 skipped`, the failure being `test_gams_check.py::test_validate_simple_nlp_golden` (**the Day-7 flake**, a GAMS-invoking validation test, distinct from the Day-9 one). Clean re-run: **5098 passed, 10 skipped, exit 0** — exactly 5088 + the 10 tests added in round 2, with the same 10 pre-existing skips enumerated by `-rs`.
 
 **The pattern is worth naming rather than re-diagnosing each time:** this suite has two known wall-clock/subprocess flakes (`test_performance_overhead_acceptable`, `test_validate_simple_nlp_golden`) and its skip count drifts by a few under `-n auto`. **The count is only trustworthy from a run with nothing else competing for the machine**, and the check that settles it is `-rs` — a skip list that names every skip beats any arithmetic on the totals.
+
+**Round 3 passed first time on a quiet machine: 5112 passed, 10 skipped, exit 0** = 5098 + the 14 tests added that round, with `-rs` naming the same 10 pre-existing skips. Applying the rule above rather than re-deriving it saved the re-run.
 
 > **A process note, since it cost time.** The baseline was first measured with `git stash` running *concurrently* with another full-suite run over the same tree — the two interfere, and the concurrent run's numbers were meaningless. Re-measured serially. **Do not stash the working tree while another job is reading it.**
 

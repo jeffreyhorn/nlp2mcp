@@ -370,3 +370,259 @@ def test_ordinary_model_ids_are_accepted():
 
     for model_id in ("weapons", "twocge", "ps2_f_s", "ps10_s_mn", "mathopt1", "cclinpts"):
         assert _is_safe_model_id(model_id), f"{model_id!r} is a real corpus model"
+
+
+@pytest.mark.unit
+def test_indented_status_lines_still_attach_to_their_summary():
+    """The status patterns must tolerate indentation like the header ones do.
+
+    An otherwise valid listing with indented ``****`` lines would otherwise yield
+    a *statusless* summary — reported as MCP-NO-STATUS or, worse, as spurious.
+    """
+    # SYNTHETIC — GAMS 54.2.1 writes these flush left; this pins that the parser
+    # does not depend on that, consistently with the header patterns.
+    indented = """
+    S O L V E      S U M M A R Y
+
+    MODEL   mcp_model
+    TYPE    MCP
+    SOLVER  PATH                FROM LINE  1124
+
+    **** SOLVER STATUS     1 Normal Completion
+    **** MODEL STATUS      1 Optimal
+"""
+    attribution = Attribution("indented", summaries=parse_solve_summaries(indented))
+
+    (summary,) = attribution.summaries
+    assert summary.solver_status == 1, "indented SOLVER STATUS must be picked up"
+    assert summary.model_status == 1, "indented MODEL STATUS must be picked up"
+    assert attribution.verdict == "MCP-SOLVED"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("model_id", ["weapons\n", "weapons\r\n", "\nweapons", "weapons\t"])
+def test_model_ids_with_trailing_whitespace_are_rejected(model_id):
+    """`$` matches before a final newline, so the guard uses `\\Z` + `fullmatch`.
+
+    `"weapons\\n"` passing a check whose whole purpose is to reject whitespace
+    would be a silent hole in a path guard.
+    """
+    from scripts.sprint_audit.check_mcp_solve_attribution import _is_safe_model_id
+
+    assert not _is_safe_model_id(model_id), f"{model_id!r} must be rejected"
+
+
+# ---------------------------------------------------------------------------
+# `run_one`'s subprocess/filesystem path.
+#
+# The parser tests above never touch it, so its timeout, OSError and
+# output-path handling could regress silently. These drive it with mocked
+# subprocesses: no GAMS, no translation, no corpus.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def _raw_source(monkeypatch, tmp_path):
+    """Point PROJECT_ROOT at a tmp tree holding one raw model."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    raw_dir = tmp_path / "data" / "gamslib" / "raw"
+    raw_dir.mkdir(parents=True)
+    (raw_dir / "demo.gms").write_text("* a stand-in for a real GAMS model\n")
+    monkeypatch.setattr(mod, "PROJECT_ROOT", tmp_path)
+    return tmp_path
+
+
+def _completed(returncode=0, stdout="", stderr=""):
+    import subprocess
+
+    return subprocess.CompletedProcess(
+        args=["x"], returncode=returncode, stdout=stdout, stderr=stderr
+    )
+
+
+@pytest.mark.unit
+def test_run_one_happy_path_parses_the_listing_it_just_wrote(_raw_source, tmp_path, monkeypatch):
+    """A successful emit + GAMS run is attributed from the fresh listing."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    workdir = tmp_path / "wd"
+    workdir.mkdir()
+    calls = []
+
+    def fake_run(cmd, **kwargs):
+        calls.append(cmd)
+        if "src.cli" in cmd:
+            (workdir / "demo_mcp_presolve.gms").write_text("* emitted\n")
+        else:
+            (workdir / "demo.lst").write_text(_TWOCGE)
+        return _completed()
+
+    monkeypatch.setattr(mod.subprocess, "run", fake_run)
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+
+    result = mod.run_one("demo", workdir)
+
+    assert result.error is None, result.error
+    assert result.verdict == "MCP-SOLVED"
+    assert result.gams_returncode == 0
+    assert len(calls) == 2, "one translation, one GAMS run"
+
+
+@pytest.mark.unit
+def test_run_one_reports_a_stale_listing_is_removed_before_gams(_raw_source, tmp_path, monkeypatch):
+    """A previous run's listing must not answer for this one.
+
+    Here GAMS "fails" without writing, so if the stale file survived it would be
+    parsed as this run's result and report a solved MCP.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    workdir = tmp_path / "wd"
+    workdir.mkdir()
+    (workdir / "demo.lst").write_text(_TWOCGE)  # a stale MCP-SOLVED listing
+
+    def fake_run(cmd, **kwargs):
+        if "src.cli" in cmd:
+            (workdir / "demo_mcp_presolve.gms").write_text("* emitted\n")
+            return _completed()
+        return _completed(returncode=3, stderr="*** licensing failure")
+
+    monkeypatch.setattr(mod.subprocess, "run", fake_run)
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+
+    result = mod.run_one("demo", workdir)
+
+    assert result.verdict == "ERROR", "no listing means nothing can be concluded"
+    assert "no listing produced" in (result.error or "")
+    assert "licensing failure" in (result.error or ""), "GAMS output must reach the error"
+
+
+@pytest.mark.unit
+def test_run_one_emit_timeout_is_a_structured_result_not_an_exception(
+    _raw_source, tmp_path, monkeypatch
+):
+    """A hung translation must not abort the sweep before it can report."""
+    import subprocess
+
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    def fake_run(cmd, **kwargs):
+        raise subprocess.TimeoutExpired(cmd=cmd, timeout=600)
+
+    monkeypatch.setattr(mod.subprocess, "run", fake_run)
+
+    result = mod.run_one("demo", tmp_path)
+
+    assert result.verdict == "ERROR"
+    assert "emit timeout" in (result.error or "")
+
+
+@pytest.mark.unit
+def test_run_one_gams_launch_OSError_is_a_structured_result(_raw_source, tmp_path, monkeypatch):
+    """A vanished or non-executable GAMS binary is one model's problem."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    workdir = tmp_path / "wd"
+    workdir.mkdir()
+
+    def fake_run(cmd, **kwargs):
+        if "src.cli" in cmd:
+            (workdir / "demo_mcp_presolve.gms").write_text("* emitted\n")
+            return _completed()
+        raise OSError(13, "Permission denied")
+
+    monkeypatch.setattr(mod.subprocess, "run", fake_run)
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+
+    result = mod.run_one("demo", workdir)
+
+    assert result.verdict == "ERROR"
+    assert "could not be launched" in (result.error or "")
+
+
+@pytest.mark.unit
+def test_run_one_gams_timeout_reports_the_WALL_CLOCK_limit(_raw_source, tmp_path, monkeypatch):
+    """The message must name the limit that actually fired, not GAMS's reslim.
+
+    They differ by the 120 s launch allowance; quoting the smaller one makes a
+    harness timeout look like a solver limit.
+    """
+    import subprocess
+
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    workdir = tmp_path / "wd"
+    workdir.mkdir()
+
+    def fake_run(cmd, **kwargs):
+        if "src.cli" in cmd:
+            (workdir / "demo_mcp_presolve.gms").write_text("* emitted\n")
+            return _completed()
+        raise subprocess.TimeoutExpired(cmd=cmd, timeout=420)
+
+    monkeypatch.setattr(mod.subprocess, "run", fake_run)
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+
+    result = mod.run_one("demo", workdir, reslim=300)
+
+    assert "420s" in (result.error or ""), f"must name the real limit, got {result.error!r}"
+    assert "reslim=300" in (result.error or ""), "and still report GAMS's own reslim"
+
+
+@pytest.mark.unit
+def test_run_one_emit_failure_carries_the_translation_output(_raw_source, tmp_path, monkeypatch):
+    """`emit failed (rc=1)` alone is not actionable."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    def fake_run(cmd, **kwargs):
+        return _completed(returncode=1, stderr="ParseError: unexpected token at line 12")
+
+    monkeypatch.setattr(mod.subprocess, "run", fake_run)
+
+    result = mod.run_one("demo", tmp_path)
+
+    assert result.verdict == "ERROR"
+    assert "ParseError" in (result.error or ""), "the translator's own message must survive"
+
+
+@pytest.mark.unit
+def test_run_one_distinguishes_silent_emit_from_failed_emit(_raw_source, tmp_path, monkeypatch):
+    """rc=0 but no output file points at the path, not the model."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    monkeypatch.setattr(mod.subprocess, "run", lambda cmd, **kw: _completed())
+
+    result = mod.run_one("demo", tmp_path)
+
+    assert result.verdict == "ERROR"
+    assert "wrote no file" in (result.error or "")
+
+
+@pytest.mark.unit
+def test_run_one_names_the_provisioning_command_when_the_corpus_is_absent(tmp_path, monkeypatch):
+    """`data/gamslib/raw/*.gms` is gitignored, so this is the common first failure."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    monkeypatch.setattr(mod, "PROJECT_ROOT", tmp_path)
+
+    result = mod.run_one("demo", tmp_path)
+
+    assert result.verdict == "ERROR"
+    assert "download_gamslib_raw.sh" in (result.error or ""), "tell the caller how to fix it"
+
+
+@pytest.mark.unit
+def test_run_one_rejects_an_unsafe_id_without_touching_the_filesystem(tmp_path, monkeypatch):
+    """Defense in depth — `run_one` is importable and callable on its own."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    def explode(*a, **k):  # pragma: no cover - must never run
+        raise AssertionError("no subprocess may run for an unsafe id")
+
+    monkeypatch.setattr(mod.subprocess, "run", explode)
+
+    result = mod.run_one("../escape", tmp_path)
+
+    assert result.verdict == "ERROR"
+    assert "unsafe model id" in (result.error or "")

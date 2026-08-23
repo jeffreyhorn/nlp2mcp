@@ -103,8 +103,12 @@ _SUMMARY_HEADER = re.compile(r"^[ \t]*S O L V E {6}S U M M A R Y\s*$", re.MULTIL
 _MODEL_LINE = re.compile(r"^[ \t]*MODEL\s+(\S+)", re.MULTILINE)
 _TYPE_LINE = re.compile(r"^[ \t]*TYPE\s+(\S+)", re.MULTILINE)
 _SOLVER_LINE = re.compile(r"^[ \t]*SOLVER\s+(\S+)", re.MULTILINE)
-_SOLVER_STATUS = re.compile(r"^\*\*\*\* SOLVER STATUS\s+(\d+)\s*(.*?)$", re.MULTILINE)
-_MODEL_STATUS = re.compile(r"^\*\*\*\* MODEL STATUS\s+(\d+)\s*(.*?)$", re.MULTILINE)
+#: Same rule for the status lines — the header patterns above tolerate
+#: indentation, and it would be incoherent for these not to: an otherwise valid
+#: listing with indented ``****`` lines would yield a *statusless* summary and be
+#: reported as indeterminate, or worse as spurious.
+_SOLVER_STATUS = re.compile(r"^[ \t]*\*\*\*\* SOLVER STATUS\s+(\d+)\s*(.*?)$", re.MULTILINE)
+_MODEL_STATUS = re.compile(r"^[ \t]*\*\*\*\* MODEL STATUS\s+(\d+)\s*(.*?)$", re.MULTILINE)
 
 
 @dataclass
@@ -179,12 +183,16 @@ _NORMAL_COMPLETION = 1
 #: pattern so a `../` or a separator cannot escape either directory — and
 #: validated at BOTH the CLI boundary and the consumer that builds the path,
 #: per CONTRIBUTING's defense-in-depth rule.
-_SAFE_MODEL_ID = re.compile(r"^[A-Za-z0-9_.-]+$")
+#:
+#: ⚠ Anchored with ``\Z`` and matched with ``fullmatch``, **not** ``$``/``match``:
+#: ``$`` also matches immediately *before* a trailing newline, so ``"weapons\n"``
+#: would slip through a guard whose whole job is to reject whitespace.
+_SAFE_MODEL_ID = re.compile(r"[A-Za-z0-9_.-]+\Z")
 
 
 def _is_safe_model_id(model_id: str) -> bool:
     """Reject anything that could traverse out of the directories we build."""
-    return bool(_SAFE_MODEL_ID.match(model_id)) and model_id not in {".", ".."}
+    return bool(_SAFE_MODEL_ID.fullmatch(model_id)) and model_id not in {".", ".."}
 
 
 #: Verdicts that conclude nothing. Counted as failures of the *check*, never as
@@ -331,9 +339,13 @@ def presolve_match_models(db_path: Path = DB_PATH) -> list[str]:
     inside a list comprehension.
     """
     try:
-        raw = db_path.read_text()
+        raw = db_path.read_text(encoding="utf-8")
     except OSError as exc:
         raise InputError(f"cannot read results DB {db_path}: {exc}") from exc
+    except UnicodeError as exc:
+        # A DB with invalid UTF-8 must still produce the promised exit-2 error
+        # rather than a UnicodeDecodeError traceback.
+        raise InputError(f"results DB {db_path} is not valid UTF-8: {exc}") from exc
 
     try:
         db = json.loads(raw)
@@ -351,11 +363,17 @@ def presolve_match_models(db_path: Path = DB_PATH) -> list[str]:
         if not isinstance(m, dict):
             raise InputError(f"{db_path}: models[{i}] must be an object, got {type(m).__name__}")
         model_id = m.get("model_id")
-        solve = m.get("mcp_solve") or {}
-        cmp_ = m.get("solution_comparison") or {}
+        # Default ONLY on missing/null. `or {}` would swallow `mcp_solve: []` or
+        # `solution_comparison: ""` — falsey but malformed — and silently skip the
+        # row rather than reject it, which is the opposite of validating it.
+        solve = m.get("mcp_solve")
+        cmp_ = m.get("solution_comparison")
+        solve = {} if solve is None else solve
+        cmp_ = {} if cmp_ is None else cmp_
         if not isinstance(solve, dict) or not isinstance(cmp_, dict):
             raise InputError(
-                f"{db_path}: models[{i}] has a malformed mcp_solve/solution_comparison"
+                f"{db_path}: models[{i}] has a malformed mcp_solve/solution_comparison "
+                f"(got {type(solve).__name__}/{type(cmp_).__name__}, expected object or null)"
             )
         if (
             solve.get("outcome_category") == "model_optimal_presolve"
@@ -387,7 +405,17 @@ def find_gams() -> str | None:
     return shutil.which("gams")
 
 
-def run_one(model_id: str, workdir: Path, reslim: int = 300) -> Attribution:
+def _tail(text: str | None, limit: int = 400) -> str:
+    """Last ``limit`` characters of subprocess output, flattened for one-line errors."""
+    if not text:
+        return ""
+    flat = " ".join(text.split())
+    return flat if len(flat) <= limit else "…" + flat[-limit:]
+
+
+def run_one(
+    model_id: str, workdir: Path, reslim: int = 300, gams: str | None = None
+) -> Attribution:
     """Emit ``--nlp-presolve`` for one model, run GAMS, and attribute the solves.
 
     GAMS runs with ``cwd`` at the project root — the emitted
@@ -398,6 +426,9 @@ def run_one(model_id: str, workdir: Path, reslim: int = 300) -> Attribution:
     ``workdir`` **must already be absolute** (``main`` resolves it): the paths
     below are handed to subprocesses whose ``cwd`` is ``PROJECT_ROOT``, so a
     relative one would have the child write somewhere the parent never looks.
+
+    ``gams`` may be passed in so the sweep resolves the executable **once**,
+    before any translation runs; omitted, it is resolved here.
     """
     # Defense in depth: `main` validates too, but this is the consumer that
     # actually builds the paths, and it is importable on its own.
@@ -406,7 +437,13 @@ def run_one(model_id: str, workdir: Path, reslim: int = 300) -> Attribution:
 
     raw = PROJECT_ROOT / "data" / "gamslib" / "raw" / f"{model_id}.gms"
     if not raw.exists():
-        return Attribution(model_id, error=f"raw source absent: {raw}")
+        return Attribution(
+            model_id,
+            error=(
+                f"raw source absent: {raw} — the corpus is gitignored; "
+                "run ./scripts/download_gamslib_raw.sh --all"
+            ),
+        )
 
     emitted = workdir / f"{model_id}_mcp_presolve.gms"
     lst = workdir / f"{model_id}.lst"
@@ -436,10 +473,23 @@ def run_one(model_id: str, workdir: Path, reslim: int = 300) -> Attribution:
         # sweep's: return a structured indeterminate result and carry on.
         return Attribution(model_id, error=f"emit could not be launched: {exc}")
 
-    if emit.returncode != 0 or not emitted.exists():
-        return Attribution(model_id, error=f"emit failed (rc={emit.returncode})")
+    if emit.returncode != 0:
+        detail = _tail(emit.stderr) or _tail(emit.stdout)
+        return Attribution(
+            model_id,
+            error=f"emit failed (rc={emit.returncode})" + (f": {detail}" if detail else ""),
+        )
+    if not emitted.exists():
+        # Distinct from a nonzero rc: the translation claimed success but wrote
+        # nothing, which points at the output path rather than the model.
+        detail = _tail(emit.stderr) or _tail(emit.stdout)
+        return Attribution(
+            model_id,
+            error=f"emit reported success but wrote no file at {emitted}"
+            + (f": {detail}" if detail else ""),
+        )
 
-    gams = find_gams()
+    gams = gams or find_gams()
     if not gams:
         return Attribution(model_id, error="gams executable not found")
 
@@ -470,7 +520,17 @@ def run_one(model_id: str, workdir: Path, reslim: int = 300) -> Attribution:
                     timeout=reslim + 120,
                 )
             except subprocess.TimeoutExpired:
-                return Attribution(model_id, error=f"GAMS timeout after {reslim}s")
+                # Report the WALL-CLOCK limit that actually fired, not GAMS's
+                # own `reslim` — they differ by the 120 s launch allowance, and
+                # quoting the smaller one makes a timeout look like a solver
+                # limit when it was the harness.
+                return Attribution(
+                    model_id,
+                    error=(
+                        f"GAMS wall-clock timeout after {reslim + 120}s "
+                        f"(GAMS reslim={reslim}s + 120s launch allowance)"
+                    ),
+                )
             except OSError as exc:
                 # `find_gams` returned a path that is gone, a directory, or not
                 # executable. One runner problem, not a dead sweep.
@@ -479,7 +539,14 @@ def run_one(model_id: str, workdir: Path, reslim: int = 300) -> Attribution:
         return Attribution(model_id, error=f"cannot create scratch dir under {workdir}: {exc}")
 
     if not lst.exists():
-        return Attribution(model_id, error=f"no listing produced (gams rc={proc.returncode})")
+        # Licensing and startup failures surface only here, so carry GAMS's own
+        # output — an rc alone is not actionable.
+        detail = _tail(proc.stderr) or _tail(proc.stdout)
+        return Attribution(
+            model_id,
+            error=f"no listing produced (gams rc={proc.returncode})"
+            + (f": {detail}" if detail else ""),
+        )
 
     try:
         content = lst.read_text(errors="replace")
@@ -521,8 +588,13 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
 
+    # `is not None`, NOT truthiness: `--models ""` is an explicitly empty
+    # selection and must hit the empty-selection guard, not silently fall
+    # through to auditing the entire DB cohort.
+    explicit_models = args.models is not None
+
     try:
-        if args.models:
+        if explicit_models:
             models = [m.strip() for m in args.models.split(",") if m.strip()]
             unsafe = [m for m in models if not _is_safe_model_id(m)]
             if unsafe:
@@ -543,7 +615,9 @@ def main(argv: list[str] | None = None) -> int:
     # into a green report. Same rule as `run_full_test.py --resolve-changed`.
     if not models:
         if not args.allow_empty:
-            source = "--models" if args.models else f"{DB_PATH} (model_optimal_presolve + match)"
+            source = (
+                "--models" if explicit_models else f"{DB_PATH} (model_optimal_presolve + match)"
+            )
             print(
                 f"ERROR: selection is empty — nothing to audit from {source}.\n"
                 "       An empty run certifies nothing. Pass --allow-empty if that is expected.",
@@ -566,9 +640,22 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR: cannot create workdir {args.workdir!r}: {exc}", file=sys.stderr)
         return 2
 
+    # Resolve GAMS ONCE, before any translation runs. Resolving it per-model
+    # inside `run_one` meant a runner without GAMS still paid for every emit —
+    # and some take minutes — before reporting the same missing dependency N
+    # times. A missing tool should fail fast.
+    gams = find_gams()
+    if not gams and models:
+        print(
+            "ERROR: gams executable not found (checked the versioned install paths, then PATH).\n"
+            "       Every model would fail identically after a full translation, so stopping now.",
+            file=sys.stderr,
+        )
+        return 2
+
     results: list[Attribution] = []
     for i, mid in enumerate(models, 1):
-        res = run_one(mid, workdir, reslim=args.reslim)
+        res = run_one(mid, workdir, reslim=args.reslim, gams=gams)
         results.append(res)
         detail = ", ".join(
             f"{s.model}/{s.type}"
@@ -586,7 +673,13 @@ def main(argv: list[str] | None = None) -> int:
     solved = [r for r in results if r.verdict == "MCP-SOLVED"]
 
     print()
-    print(f"Checked {len(results)} model(s) recorded model_optimal_presolve + match.")
+    # The population claim must match the selection actually used: an explicit
+    # `--models camcge` audits whatever was named, which need not be recorded
+    # `model_optimal_presolve` + match at all.
+    if explicit_models:
+        print(f"Checked {len(results)} model(s) named explicitly via --models.")
+    else:
+        print(f"Checked {len(results)} model(s) recorded model_optimal_presolve + match.")
     print(f"  our MCP solved (MS-1/MS-2)          : {len(solved)}")
     print(f"  our MCP ran but FAILED              : {len(mcp_failed)}")
     print(f"  ONLY an embedded solve reported     : {len(spurious)}")
@@ -634,10 +727,17 @@ def main(argv: list[str] | None = None) -> int:
             print(report, file=sys.stderr)
             return 2
 
-    # Exit non-zero when a determination FAILED — including a listing with no
-    # recognised solve at all, which concludes nothing and must not exit 0.
-    # A spurious match is a FINDING to report, not this script's failure.
-    return 1 if indeterminate else 0
+    # Exit non-zero when a determination FAILED (a listing with no recognised
+    # solve concludes nothing) **or when a selected model's MCP ran and failed**.
+    #
+    # `MCP-FAILED` used to print and still exit 0, so automation could read a
+    # disproven match as a successful audit — the same "green while wrong" shape
+    # this script was written to expose.
+    #
+    # `EMBEDDED-ONLY` deliberately stays exit 0: it is the finding the audit is
+    # *for*, and making it non-zero would mean a successful investigation looked
+    # like a broken tool.
+    return 1 if (indeterminate or mcp_failed) else 0
 
 
 if __name__ == "__main__":
