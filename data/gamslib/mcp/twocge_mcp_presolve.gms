@@ -267,128 +267,144 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Initialization
+* NLP Pre-Solve (warm-start for MCP duals)
 * ============================================
 
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
+$onMultiR
+$include "data/gamslib/raw/twocge.gms"
+$offMulti
 
-Y.l(j,r) = Y0(j,r);
-Y.l('BRD','JPN') = max(Y.l('BRD','JPN'), 1e-05);
-Y.l('BRD','USA') = max(Y.l('BRD','USA'), 1e-05);
-Y.l('MLK','JPN') = max(Y.l('MLK','JPN'), 1e-05);
-Y.l('MLK','USA') = max(Y.l('MLK','USA'), 1e-05);
-F.l(h,j,r) = F0(h,j,r);
-F.l('CAP','BRD','JPN') = max(F.l('CAP','BRD','JPN'), 1e-05);
-F.l('CAP','BRD','USA') = max(F.l('CAP','BRD','USA'), 1e-05);
-F.l('CAP','MLK','JPN') = max(F.l('CAP','MLK','JPN'), 1e-05);
-F.l('CAP','MLK','USA') = max(F.l('CAP','MLK','USA'), 1e-05);
-F.l('LAB','BRD','JPN') = max(F.l('LAB','BRD','JPN'), 1e-05);
-F.l('LAB','BRD','USA') = max(F.l('LAB','BRD','USA'), 1e-05);
-F.l('LAB','MLK','JPN') = max(F.l('LAB','MLK','JPN'), 1e-05);
-F.l('LAB','MLK','USA') = max(F.l('LAB','MLK','USA'), 1e-05);
-X.l(i,j,r) = X0(i,j,r);
-X.l('BRD','BRD','JPN') = max(X.l('BRD','BRD','JPN'), 1e-05);
-X.l('BRD','BRD','USA') = max(X.l('BRD','BRD','USA'), 1e-05);
-X.l('BRD','MLK','JPN') = max(X.l('BRD','MLK','JPN'), 1e-05);
-X.l('BRD','MLK','USA') = max(X.l('BRD','MLK','USA'), 1e-05);
-X.l('MLK','BRD','JPN') = max(X.l('MLK','BRD','JPN'), 1e-05);
-X.l('MLK','BRD','USA') = max(X.l('MLK','BRD','USA'), 1e-05);
-X.l('MLK','MLK','JPN') = max(X.l('MLK','MLK','JPN'), 1e-05);
-X.l('MLK','MLK','USA') = max(X.l('MLK','MLK','USA'), 1e-05);
-Z.l(j,r) = Z0(j,r);
-Z.l('BRD','JPN') = max(Z.l('BRD','JPN'), 1e-05);
-Z.l('BRD','USA') = max(Z.l('BRD','USA'), 1e-05);
-Z.l('MLK','JPN') = max(Z.l('MLK','JPN'), 1e-05);
-Z.l('MLK','USA') = max(Z.l('MLK','USA'), 1e-05);
-Xp.l(i,r) = Xp0(i,r);
-Xp.l('BRD','JPN') = max(Xp.l('BRD','JPN'), 1e-05);
-Xp.l('BRD','USA') = max(Xp.l('BRD','USA'), 1e-05);
-Xp.l('MLK','JPN') = max(Xp.l('MLK','JPN'), 1e-05);
-Xp.l('MLK','USA') = max(Xp.l('MLK','USA'), 1e-05);
-Xg.l(i,r) = Xg0(i,r);
-Xg.l('BRD','JPN') = max(Xg.l('BRD','JPN'), 1e-05);
-Xg.l('BRD','USA') = max(Xg.l('BRD','USA'), 1e-05);
-Xg.l('MLK','JPN') = max(Xg.l('MLK','JPN'), 1e-05);
-Xg.l('MLK','USA') = max(Xg.l('MLK','USA'), 1e-05);
-Xv.l(i,r) = Xv0(i,r);
-Xv.l('BRD','JPN') = max(Xv.l('BRD','JPN'), 1e-05);
-Xv.l('BRD','USA') = max(Xv.l('BRD','USA'), 1e-05);
-Xv.l('MLK','JPN') = max(Xv.l('MLK','JPN'), 1e-05);
-Xv.l('MLK','USA') = max(Xv.l('MLK','USA'), 1e-05);
-E.l(i,r) = E0(i,r);
-E.l('BRD','JPN') = max(E.l('BRD','JPN'), 1e-05);
-E.l('BRD','USA') = max(E.l('BRD','USA'), 1e-05);
-E.l('MLK','JPN') = max(E.l('MLK','JPN'), 1e-05);
-E.l('MLK','USA') = max(E.l('MLK','USA'), 1e-05);
-M.l(i,r) = M0(i,r);
-M.l('BRD','JPN') = max(M.l('BRD','JPN'), 1e-05);
-M.l('BRD','USA') = max(M.l('BRD','USA'), 1e-05);
-M.l('MLK','JPN') = max(M.l('MLK','JPN'), 1e-05);
-M.l('MLK','USA') = max(M.l('MLK','USA'), 1e-05);
-Q.l(i,r) = Q0(i,r);
-Q.l('BRD','JPN') = max(Q.l('BRD','JPN'), 1e-05);
-Q.l('BRD','USA') = max(Q.l('BRD','USA'), 1e-05);
-Q.l('MLK','JPN') = max(Q.l('MLK','JPN'), 1e-05);
-Q.l('MLK','USA') = max(Q.l('MLK','USA'), 1e-05);
-D.l(i,r) = D0(i,r);
-D.l('BRD','JPN') = max(D.l('BRD','JPN'), 1e-05);
-D.l('BRD','USA') = max(D.l('BRD','USA'), 1e-05);
-D.l('MLK','JPN') = max(D.l('MLK','JPN'), 1e-05);
-D.l('MLK','USA') = max(D.l('MLK','USA'), 1e-05);
-pf.l('CAP','JPN') = 1.0;
-pf.l('CAP','USA') = 1.0;
-pf.l('LAB','JPN') = 1.0;
-pf.l('LAB','USA') = 1.0;
-pf.l('LAB','JPN') = 1;
-pf.l('LAB','USA') = 1;
-py.l('BRD','JPN') = 1.0;
-py.l('BRD','USA') = 1.0;
-py.l('MLK','JPN') = 1.0;
-py.l('MLK','USA') = 1.0;
-pz.l('BRD','JPN') = 1.0;
-pz.l('BRD','USA') = 1.0;
-pz.l('MLK','JPN') = 1.0;
-pz.l('MLK','USA') = 1.0;
-pq.l('BRD','JPN') = 1.0;
-pq.l('BRD','USA') = 1.0;
-pq.l('MLK','JPN') = 1.0;
-pq.l('MLK','USA') = 1.0;
-pe.l('BRD','JPN') = 1.0;
-pe.l('BRD','USA') = 1.0;
-pe.l('MLK','JPN') = 1.0;
-pe.l('MLK','USA') = 1.0;
-pm.l('BRD','JPN') = 1.0;
-pm.l('BRD','USA') = 1.0;
-pm.l('MLK','JPN') = 1.0;
-pm.l('MLK','USA') = 1.0;
-pd.l('BRD','JPN') = 1.0;
-pd.l('BRD','USA') = 1.0;
-pd.l('MLK','JPN') = 1.0;
-pd.l('MLK','USA') = 1.0;
-epsilon.l('JPN') = 1.0;
-epsilon.l('USA') = 1.0;
-epsilon.l('USA') = 1;
-pWe.l('BRD','JPN') = 1.0;
-pWe.l('BRD','USA') = 1.0;
-pWe.l('MLK','JPN') = 1.0;
-pWe.l('MLK','USA') = 1.0;
-pWm.l('BRD','JPN') = 1.0;
-pWm.l('BRD','USA') = 1.0;
-pWm.l('MLK','JPN') = 1.0;
-pWm.l('MLK','USA') = 1.0;
-Sp.l(r) = Sp0(r);
-Sp.l('JPN') = max(Sp.l('JPN'), 1e-05);
-Sp.l('USA') = max(Sp.l('USA'), 1e-05);
-Sg.l(r) = Sg0(r);
-Sg.l('JPN') = max(Sg.l('JPN'), 1e-05);
-Sg.l('USA') = max(Sg.l('USA'), 1e-05);
-Td.l(r) = Td0(r);
-Td.l('JPN') = max(Td.l('JPN'), 1e-05);
-Td.l('USA') = max(Td.l('USA'), 1e-05);
-Tz.l(i,r) = Tz0(i,r);
-Tm.l(i,r) = Tm0(i,r);
+* Transfer NLP duals to MCP multiplier initialization
+nu_eqpy.l(j,r) = eqpy.m(j,r);
+nu_eqX.l(i,j,r) = eqX.m(i,j,r);
+nu_eqY.l(j,r) = eqY.m(j,r);
+nu_eqF.l(h,j,r) = eqF.m(h,j,r);
+nu_eqpzs.l(j,r) = eqpzs.m(j,r);
+nu_eqTd.l(r) = eqTd.m(r);
+nu_eqTz.l(i,r) = eqTz.m(i,r);
+nu_eqTm.l(i,r) = eqTm.m(i,r);
+nu_eqXg.l(i,r) = eqXg.m(i,r);
+nu_eqXv.l(i,r) = eqXv.m(i,r);
+nu_eqSp.l(r) = eqSp.m(r);
+nu_eqSg.l(r) = eqSg.m(r);
+nu_eqXp.l(i,r) = eqXp.m(i,r);
+nu_eqpe.l(i,r) = eqpe.m(i,r);
+nu_eqpm.l(i,r) = eqpm.m(i,r);
+nu_eqepsilon.l(r) = eqepsilon.m(r);
+nu_eqpqs.l(i,r) = eqpqs.m(i,r);
+nu_eqM.l(i,r) = eqM.m(i,r);
+nu_eqD.l(i,r) = eqD.m(i,r);
+nu_eqpzd.l(i,r) = eqpzd.m(i,r);
+nu_eqE.l(i,r) = eqE.m(i,r);
+nu_eqDs.l(i,r) = eqDs.m(i,r);
+nu_eqpqd.l(i,r) = eqpqd.m(i,r);
+nu_eqpf.l(h,r) = eqpf.m(h,r);
+nu_eqpw.l(i,r,rr) = eqpw.m(i,r,rr);
+nu_eqw.l(i,r,rr) = eqw.m(i,r,rr);
+nu_eqUU.l(r) = eqUU.m(r);
+
+* Transfer variable marginals to bound multipliers
+piL_y.l(j,r)$(abs(y.l(j,r) - y.lo(j,r)) < 1e-6) = abs(y.m(j,r));
+piL_f.l(h,j,r)$(abs(f.l(h,j,r) - f.lo(h,j,r)) < 1e-6) = abs(f.m(h,j,r));
+piL_x.l(i,j,r)$(abs(x.l(i,j,r) - x.lo(i,j,r)) < 1e-6) = abs(x.m(i,j,r));
+piL_z.l(j,r)$(abs(z.l(j,r) - z.lo(j,r)) < 1e-6) = abs(z.m(j,r));
+piL_xp.l(i,r)$(abs(xp.l(i,r) - xp.lo(i,r)) < 1e-6) = abs(xp.m(i,r));
+piL_xg.l(i,r)$(abs(xg.l(i,r) - xg.lo(i,r)) < 1e-6) = abs(xg.m(i,r));
+piL_xv.l(i,r)$(abs(xv.l(i,r) - xv.lo(i,r)) < 1e-6) = abs(xv.m(i,r));
+piL_e.l(i,r)$(abs(e.l(i,r) - e.lo(i,r)) < 1e-6) = abs(e.m(i,r));
+piL_m.l(i,r)$(abs(m.l(i,r) - m.lo(i,r)) < 1e-6) = abs(m.m(i,r));
+piL_q.l(i,r)$(abs(q.l(i,r) - q.lo(i,r)) < 1e-6) = abs(q.m(i,r));
+piL_d.l(i,r)$(abs(d.l(i,r) - d.lo(i,r)) < 1e-6) = abs(d.m(i,r));
+piL_pf.l(h,r)$(abs(pf.l(h,r) - pf.lo(h,r)) < 1e-6) = abs(pf.m(h,r));
+piL_py.l(j,r)$(abs(py.l(j,r) - py.lo(j,r)) < 1e-6) = abs(py.m(j,r));
+piL_pz.l(i,r)$(abs(pz.l(i,r) - pz.lo(i,r)) < 1e-6) = abs(pz.m(i,r));
+piL_pq.l(i,r)$(abs(pq.l(i,r) - pq.lo(i,r)) < 1e-6) = abs(pq.m(i,r));
+piL_pe.l(i,r)$(abs(pe.l(i,r) - pe.lo(i,r)) < 1e-6) = abs(pe.m(i,r));
+piL_pm.l(i,r)$(abs(pm.l(i,r) - pm.lo(i,r)) < 1e-6) = abs(pm.m(i,r));
+piL_pd.l(i,r)$(abs(pd.l(i,r) - pd.lo(i,r)) < 1e-6) = abs(pd.m(i,r));
+piL_epsilon.l(r)$(abs(epsilon.l(r) - epsilon.lo(r)) < 1e-6) = abs(epsilon.m(r));
+piL_pwe.l(i,r)$(abs(pwe.l(i,r) - pwe.lo(i,r)) < 1e-6) = abs(pwe.m(i,r));
+piL_pwm.l(i,r)$(abs(pwm.l(i,r) - pwm.lo(i,r)) < 1e-6) = abs(pwm.m(i,r));
+piL_sp.l(r)$(abs(sp.l(r) - sp.lo(r)) < 1e-6) = abs(sp.m(r));
+piL_sg.l(r)$(abs(sg.l(r) - sg.lo(r)) < 1e-6) = abs(sg.m(r));
+piL_td.l(r)$(abs(td.l(r) - td.lo(r)) < 1e-6) = abs(td.m(r));
+piL_tz.l(j,r)$(abs(tz.l(j,r) - tz.lo(j,r)) < 1e-6) = abs(tz.m(j,r));
+piL_tm.l(i,r)$(abs(tm.l(i,r) - tm.lo(i,r)) < 1e-6) = abs(tm.m(i,r));
+
+* Transfer fixed-variable marginals to _fx_ multipliers (#1462)
+nu_pf_fx_LAB_JPN.l = pf.m('LAB','JPN');
+nu_pf_fx_LAB_USA.l = pf.m('LAB','USA');
+nu_epsilon_fx_USA.l = epsilon.m('USA');
+
+* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
+nu_eqpy.l(j,r)$(NOT (nu_eqpy.l(j,r) > -inf and nu_eqpy.l(j,r) < inf)) = 0;
+nu_eqX.l(i,j,r)$(NOT (nu_eqX.l(i,j,r) > -inf and nu_eqX.l(i,j,r) < inf)) = 0;
+nu_eqY.l(j,r)$(NOT (nu_eqY.l(j,r) > -inf and nu_eqY.l(j,r) < inf)) = 0;
+nu_eqF.l(h,j,r)$(NOT (nu_eqF.l(h,j,r) > -inf and nu_eqF.l(h,j,r) < inf)) = 0;
+nu_eqpzs.l(j,r)$(NOT (nu_eqpzs.l(j,r) > -inf and nu_eqpzs.l(j,r) < inf)) = 0;
+nu_eqTd.l(r)$(NOT (nu_eqTd.l(r) > -inf and nu_eqTd.l(r) < inf)) = 0;
+nu_eqTz.l(i,r)$(NOT (nu_eqTz.l(i,r) > -inf and nu_eqTz.l(i,r) < inf)) = 0;
+nu_eqTm.l(i,r)$(NOT (nu_eqTm.l(i,r) > -inf and nu_eqTm.l(i,r) < inf)) = 0;
+nu_eqXg.l(i,r)$(NOT (nu_eqXg.l(i,r) > -inf and nu_eqXg.l(i,r) < inf)) = 0;
+nu_eqXv.l(i,r)$(NOT (nu_eqXv.l(i,r) > -inf and nu_eqXv.l(i,r) < inf)) = 0;
+nu_eqSp.l(r)$(NOT (nu_eqSp.l(r) > -inf and nu_eqSp.l(r) < inf)) = 0;
+nu_eqSg.l(r)$(NOT (nu_eqSg.l(r) > -inf and nu_eqSg.l(r) < inf)) = 0;
+nu_eqXp.l(i,r)$(NOT (nu_eqXp.l(i,r) > -inf and nu_eqXp.l(i,r) < inf)) = 0;
+nu_eqpe.l(i,r)$(NOT (nu_eqpe.l(i,r) > -inf and nu_eqpe.l(i,r) < inf)) = 0;
+nu_eqpm.l(i,r)$(NOT (nu_eqpm.l(i,r) > -inf and nu_eqpm.l(i,r) < inf)) = 0;
+nu_eqepsilon.l(r)$(NOT (nu_eqepsilon.l(r) > -inf and nu_eqepsilon.l(r) < inf)) = 0;
+nu_eqpqs.l(i,r)$(NOT (nu_eqpqs.l(i,r) > -inf and nu_eqpqs.l(i,r) < inf)) = 0;
+nu_eqM.l(i,r)$(NOT (nu_eqM.l(i,r) > -inf and nu_eqM.l(i,r) < inf)) = 0;
+nu_eqD.l(i,r)$(NOT (nu_eqD.l(i,r) > -inf and nu_eqD.l(i,r) < inf)) = 0;
+nu_eqpzd.l(i,r)$(NOT (nu_eqpzd.l(i,r) > -inf and nu_eqpzd.l(i,r) < inf)) = 0;
+nu_eqE.l(i,r)$(NOT (nu_eqE.l(i,r) > -inf and nu_eqE.l(i,r) < inf)) = 0;
+nu_eqDs.l(i,r)$(NOT (nu_eqDs.l(i,r) > -inf and nu_eqDs.l(i,r) < inf)) = 0;
+nu_eqpqd.l(i,r)$(NOT (nu_eqpqd.l(i,r) > -inf and nu_eqpqd.l(i,r) < inf)) = 0;
+nu_eqpf.l(h,r)$(NOT (nu_eqpf.l(h,r) > -inf and nu_eqpf.l(h,r) < inf)) = 0;
+nu_eqpw.l(i,r,rr)$(NOT (nu_eqpw.l(i,r,rr) > -inf and nu_eqpw.l(i,r,rr) < inf)) = 0;
+nu_eqw.l(i,r,rr)$(NOT (nu_eqw.l(i,r,rr) > -inf and nu_eqw.l(i,r,rr) < inf)) = 0;
+nu_eqUU.l(r)$(NOT (nu_eqUU.l(r) > -inf and nu_eqUU.l(r) < inf)) = 0;
+piL_y.l(j,r)$(NOT (piL_y.l(j,r) > -inf and piL_y.l(j,r) < inf)) = 0;
+piL_f.l(h,j,r)$(NOT (piL_f.l(h,j,r) > -inf and piL_f.l(h,j,r) < inf)) = 0;
+piL_x.l(i,j,r)$(NOT (piL_x.l(i,j,r) > -inf and piL_x.l(i,j,r) < inf)) = 0;
+piL_z.l(j,r)$(NOT (piL_z.l(j,r) > -inf and piL_z.l(j,r) < inf)) = 0;
+piL_xp.l(i,r)$(NOT (piL_xp.l(i,r) > -inf and piL_xp.l(i,r) < inf)) = 0;
+piL_xg.l(i,r)$(NOT (piL_xg.l(i,r) > -inf and piL_xg.l(i,r) < inf)) = 0;
+piL_xv.l(i,r)$(NOT (piL_xv.l(i,r) > -inf and piL_xv.l(i,r) < inf)) = 0;
+piL_e.l(i,r)$(NOT (piL_e.l(i,r) > -inf and piL_e.l(i,r) < inf)) = 0;
+piL_m.l(i,r)$(NOT (piL_m.l(i,r) > -inf and piL_m.l(i,r) < inf)) = 0;
+piL_q.l(i,r)$(NOT (piL_q.l(i,r) > -inf and piL_q.l(i,r) < inf)) = 0;
+piL_d.l(i,r)$(NOT (piL_d.l(i,r) > -inf and piL_d.l(i,r) < inf)) = 0;
+piL_pf.l(h,r)$(NOT (piL_pf.l(h,r) > -inf and piL_pf.l(h,r) < inf)) = 0;
+piL_py.l(j,r)$(NOT (piL_py.l(j,r) > -inf and piL_py.l(j,r) < inf)) = 0;
+piL_pz.l(i,r)$(NOT (piL_pz.l(i,r) > -inf and piL_pz.l(i,r) < inf)) = 0;
+piL_pq.l(i,r)$(NOT (piL_pq.l(i,r) > -inf and piL_pq.l(i,r) < inf)) = 0;
+piL_pe.l(i,r)$(NOT (piL_pe.l(i,r) > -inf and piL_pe.l(i,r) < inf)) = 0;
+piL_pm.l(i,r)$(NOT (piL_pm.l(i,r) > -inf and piL_pm.l(i,r) < inf)) = 0;
+piL_pd.l(i,r)$(NOT (piL_pd.l(i,r) > -inf and piL_pd.l(i,r) < inf)) = 0;
+piL_epsilon.l(r)$(NOT (piL_epsilon.l(r) > -inf and piL_epsilon.l(r) < inf)) = 0;
+piL_pwe.l(i,r)$(NOT (piL_pwe.l(i,r) > -inf and piL_pwe.l(i,r) < inf)) = 0;
+piL_pwm.l(i,r)$(NOT (piL_pwm.l(i,r) > -inf and piL_pwm.l(i,r) < inf)) = 0;
+piL_sp.l(r)$(NOT (piL_sp.l(r) > -inf and piL_sp.l(r) < inf)) = 0;
+piL_sg.l(r)$(NOT (piL_sg.l(r) > -inf and piL_sg.l(r) < inf)) = 0;
+piL_td.l(r)$(NOT (piL_td.l(r) > -inf and piL_td.l(r) < inf)) = 0;
+piL_tz.l(j,r)$(NOT (piL_tz.l(j,r) > -inf and piL_tz.l(j,r) < inf)) = 0;
+piL_tm.l(i,r)$(NOT (piL_tm.l(i,r) > -inf and piL_tm.l(i,r) < inf)) = 0;
+nu_pf_fx_LAB_JPN.l$(NOT (nu_pf_fx_LAB_JPN.l > -inf and nu_pf_fx_LAB_JPN.l < inf)) = 0;
+nu_pf_fx_LAB_USA.l$(NOT (nu_pf_fx_LAB_USA.l > -inf and nu_pf_fx_LAB_USA.l < inf)) = 0;
+nu_epsilon_fx_USA.l$(NOT (nu_epsilon_fx_USA.l > -inf and nu_epsilon_fx_USA.l < inf)) = 0;
+
+* ============================================
+* #1449 (Layer 4): unfix elements fixed by the source $include but
+* enforced in the MCP via an active _fx_ complementarity equation
+* (else PATH drops the fixed column, leaving the _fx_ row unmatched).
+* ============================================
+pf.lo('LAB','JPN') = -inf;
+pf.up('LAB','JPN') = +inf;
+pf.lo('LAB','USA') = -inf;
+pf.up('LAB','USA') = +inf;
+epsilon.lo('USA') = -inf;
+epsilon.up('USA') = +inf;
 
 * ============================================
 * Equations
@@ -494,6 +510,7 @@ Equations
 Alias(h, h__);
 Alias(i, i__);
 
+$onMultiR
 * Stationarity equations
 stat_d(i,r).. ((-1) * (gamma(i, r) * (deltam(i,r) * m(i,r) ** eta(i) + deltad(i,r) * d(i,r) ** eta(i)) ** (1 / eta(i)) * 1 / eta(i) / (deltam(i,r) * m(i,r) ** eta(i) + deltad(i,r) * d(i,r) ** eta(i)) * deltad(i,r) * d(i,r) ** eta(i) * eta(i) / d(i,r))) * nu_eqpqs(i,r) + nu_eqD(i,r) + ((-1) * (theta(i,r) * (xie(i,r) * e(i,r) ** phi(i) + xid(i,r) * d(i,r) ** phi(i)) ** (1 / phi(i)) * 1 / phi(i) / (xie(i,r) * e(i,r) ** phi(i) + xid(i,r) * d(i,r) ** phi(i)) * xid(i,r) * d(i,r) ** phi(i) * phi(i) / d(i,r))) * nu_eqpzd(i,r) + nu_eqDs(i,r) - piL_d(i,r) =E= 0;
 stat_e(i,r).. pwe(i,r) * nu_eqepsilon(r) + ((-1) * (theta(i,r) * (xie(i,r) * e(i,r) ** phi(i) + xid(i,r) * d(i,r) ** phi(i)) ** (1 / phi(i)) * 1 / phi(i) / (xie(i,r) * e(i,r) ** phi(i) + xid(i,r) * d(i,r) ** phi(i)) * xie(i,r) * e(i,r) ** phi(i) * phi(i) / e(i,r))) * nu_eqpzd(i,r) + nu_eqE(i,r) + sum(rr, 1$(ord(r) <> ord(rr)) * nu_eqw(i,r,rr)) - piL_e(i,r) =E= 0;
@@ -584,6 +601,7 @@ pf_fx_LAB_JPN.. pf("LAB","JPN") - 1 =E= 0;
 pf_fx_LAB_USA.. pf("LAB","USA") - 1 =E= 0;
 epsilon_fx_USA.. epsilon("USA") - 1 =E= 0;
 
+$offMulti
 
 * ============================================
 * Fix inactive variable instances

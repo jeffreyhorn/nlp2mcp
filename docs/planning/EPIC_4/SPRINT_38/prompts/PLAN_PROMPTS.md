@@ -147,17 +147,39 @@ Branch `planning/sprint38-day9-reanchor-phase0`.
 
 **⚠ P8 now runs AFTER P4's scope change.** P4 adopted on Day 8, so leak gates run at **185 in-scope, not 163**. Expected and harmless — P8's own models drift by design — but **state the scope in every gate result**, so a later reader is not silently comparing against 163. Then wait for reviewer comments.
 
-## Day 10 Prompt — Checkpoint 2 (~1 h) + P5 (~4 h) + P8 sweep day 2 (~4 h)
+## Day 10 Prompt — Checkpoint 2 (~1 h) + P5 (~4 h) + P8: the spurious-match investigation (~4 h)
 
 Branch `planning/sprint38-day10-checkpoint2-p5`.
 
-**Checkpoint 2.** Full pipeline via the re-anchored checkpoint; **figures derived, not quoted**.
+**Checkpoint 2.** Full pipeline via the **re-anchored** checkpoint (`--since-commit 8cffec29`); **figures derived, not quoted** — use `scripts/sprint_audit/kpi_block.py`.
 
-**P8 continues** with **tricp** (#1062) and **elec** (#983/#1325). *(P7 closed on Day 3.)*
+> **⚠ RE-PLANNED 2026-08-21 (owner decision): Day 10's P8 slot is NOT tricp/elec.** It is an investigation into whether some recorded **presolve matches are spurious**. tricp moves to Day 11, elec to Day 12 — both already funded from P8's remaining 16 h.
+
+**The hypothesis, from Day 9's CI failure.** A presolve emit warm-starts by writing the NLP's solution into the variables **before** the MCP solve, and reads the objective *after* it:
+
+```gams
+$include "data/gamslib/raw/<model>.gms"   * solves the NLP, sets <objvar>.l
+Solve mcp_model using MCP;                 * if this ABORTS, .l is untouched
+nlp2mcp_obj_val = <objvar>.l;              * still the NLP's own answer
+```
+
+**If the MCP aborts, the objective read returns the NLP's value and the comparison matches itself.** `weapons` is the discovered instance: **one `MODEL STATUS` in the whole listing** (the embedded NLP's, MS-2 @ 1735.5696), the MCP aborted with `EXECERROR = 1` and produced none — yet the DB records `model_optimal_presolve` + **match** @ 1735.5696, and a fresh pipeline run reproduces it.
+
+**Do this, in this order:**
+
+1. **Establish the discriminator first** — distinguish *"the MCP produced its own `MODEL STATUS`"* from *"only the embedded NLP did"*. **Do not key on `EXECERROR`**: `check_presolve_divergence.py`'s first branch already conflates MCP-side and NLP-side aborts, which is how weapons got reported as an *embedded-NLP* divergence when its embedded NLP solved correctly.
+2. **Apply it to every model recorded `model_optimal_presolve`** (**30** as of Day 9) and report how many never produced an MCP status.
+3. **Report before changing anything.** A non-zero count means the Match KPI is overstated — **that is a finding for the owner, not a number to quietly correct. Do NOT edit the DB or re-classify any model on Day 10.**
+
+**REPLAN exit:** if the discriminator cannot be established from the listing alone, **say so and stop**. A partial heuristic applied to 30 models would manufacture a worse number than the one being checked.
+
+**Second, cheaper measurement on the same population — `mcp_file_used` dangles for 14 of 47 presolve rows.** The field records the presolve artifact the solve *generated* (`run_full_test.py:954`), not a committed golden, so it points at a non-existent file for every model that solved via presolve without an adopted golden: **13 pre-existing (exactly Day 8's Tier 2) + weapons** (Day 9's revert). Report it alongside the status census — **it is the same population and the same question**: how much of the presolve record describes artifacts that no longer exist. **Do not fix it model-by-model**; a systemic remedy covers all 14 or none.
+
+**State the blast radius precisely, because it will be misread otherwise:** up to **30 presolve matches** are in question (Match 95 = 65 cold + 30 presolve). **Cold matches are unaffected** — there is no warm start to read back — so **the genuine floor of 73 is not at risk either way.** Say that explicitly.
 
 **P5 (`../CAMCGE_EPIC5_HANDOFF.md`).** camcge is **Epic-5-scoped, not fixed here**: MS-4 against a *correct* NLP optimum is structural rank-deficiency, not an emit defect. The refutations are already consolidated as **B1–B4** — **B1 (drop-row) is the dangerous one: it is *primal-correct* and breaks the MCP dual silently.** Do **not** re-run any of them. Confirm #1330 is Epic-5-scoped and re-triage ≥1 residual model. Then wait for reviewer comments.
 
-## Day 11 Prompt — P5 close (~2 h) + P8 sweep day 3 (~8 h)
+## Day 11 Prompt — P5 close (~2 h) + P8 sweep day 3 (~8 h): tricp #1062
 
 Branch `planning/sprint38-day11-p8-sweep`.
 
@@ -167,7 +189,7 @@ Branch `planning/sprint38-day11-p8-sweep`.
 
 **Re-reproduce every fingerprint; do not quote it.** Apply §4.1's four criteria: **anchored `^****` GAMS diagnostics** (a `.lst` contains echoed source too — an unanchored grep matched the emitter's own comment in prep); **a terminal state read from GAMS's own line**; **runtime observation** for runtime properties; and **a passing negative control**. The structural pattern behind the lnts defect was **wrong 5 times out of 6**. Then wait for reviewer comments.
 
-## Day 12 Prompt — P8 sweep day 4 (~8 h)
+## Day 12 Prompt — P8 sweep day 4 (~8 h): elec #983/#1325
 
 Branch `planning/sprint38-day12-p8-sweep2`. Continue with **dyncge** (4 × empty-equation-unfixed on `eqpf2.nu_eqpf2` — #1331's mechanism, so it can borrow that shape) and **lnts**.
 
