@@ -24,6 +24,8 @@ that does not occur in the current corpus, so there is no real listing to quote.
 They are labelled as such at each use.
 """
 
+from pathlib import Path
+
 import pytest
 
 from scripts.sprint_audit.check_mcp_solve_attribution import (
@@ -908,3 +910,198 @@ def test_run_one_clears_a_stale_EMIT_before_translating(tmp_path, monkeypatch):
     assert "wrote no file" in (result.error or ""), (
         "with the stale file cleared, the silent-emit check is meaningful; " f"got {result.error!r}"
     )
+
+
+@pytest.mark.unit
+def test_outcome_allowlist_matches_the_producer():
+    """The local allow-list mirrors `error_taxonomy`; drift must fail here.
+
+    It is duplicated rather than imported because this script runs as a file,
+    where `scripts.gamslib` is not importable. That duplication is only safe if
+    something notices when the producer changes.
+    """
+    from scripts.gamslib.error_taxonomy import SOLVE_OUTCOME_CATEGORIES
+    from scripts.sprint_audit.check_mcp_solve_attribution import _SOLVE_OUTCOME_CATEGORIES
+
+    assert _SOLVE_OUTCOME_CATEGORIES == frozenset(SOLVE_OUTCOME_CATEGORIES), (
+        "the mirrored allow-list has drifted from "
+        "scripts/gamslib/error_taxonomy.SOLVE_OUTCOME_CATEGORIES"
+    )
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("outcome", "model_optimal_presolvee"),
+        ("outcome", "not_a_category"),
+        ("status", "matc"),
+        ("status", "MATCH"),
+    ],
+)
+def test_a_typo_in_a_db_enum_is_an_error_not_a_silent_drop(tmp_path, field, value):
+    """Comparing only against the wanted pair hides typos.
+
+    `model_optimal_presolvee` would simply not equal the target, the row would
+    vanish from the cohort, and the audit would report a confident result over a
+    quietly incomplete population.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    row = _row("typo")
+    if field == "outcome":
+        row["mcp_solve"]["outcome_category"] = value
+    else:
+        row["solution_comparison"]["comparison_status"] = value
+    db = _write_db(tmp_path, [row])
+
+    with pytest.raises(mod.InputError, match="unknown"):
+        mod.presolve_match_models(db)
+
+
+@pytest.mark.unit
+def test_the_presolve_suffix_variant_is_accepted(tmp_path):
+    """`<base>_presolve` is a legitimate runtime variant, not an unknown enum."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    db = _write_db(tmp_path, [_row("ok"), _row("infeas", outcome="model_infeasible_presolve")])
+
+    assert mod.presolve_match_models(db) == ["ok"]
+
+
+@pytest.mark.unit
+def test_embedded_status_comes_from_the_LAST_source_solve():
+    """An early success followed by a statusless final solve is INDETERMINATE.
+
+    The warm-start value is set by the solve immediately before our MCP. With
+    `any()`, this listing would be reported as a spurious match — a finding
+    invented out of a run that established nothing.
+    """
+    # SYNTHETIC — shaped after `harker`/`mathopt4`, which run several source
+    # solves before the MCP.
+    early_then_statusless = """
+               S O L V E      S U M M A R Y
+
+     MODEL   src                 OBJECTIVE  z
+     TYPE    NLP                 DIRECTION  MINIMIZE
+     SOLVER  CONOPT              FROM LINE  10
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   src                 OBJECTIVE  z
+     TYPE    NLP                 DIRECTION  MINIMIZE
+     SOLVER  CONOPT              FROM LINE  20
+
+"""
+    attribution = Attribution(
+        "late-failure", summaries=parse_solve_summaries(early_then_statusless)
+    )
+
+    assert len(attribution.embedded_summaries) == 2
+    assert attribution.embedded_summaries[0].model_status == 2, "an EARLIER solve did report"
+    assert attribution.embedded_summaries[-1].model_status is None, "the LAST one did not"
+
+    assert not attribution.embedded_produced_status, "the last source solve is what counts"
+    assert attribution.verdict == "NO-SOLVE"
+    assert not attribution.is_spurious, "reporting a spurious match here would invent a finding"
+    assert attribution.is_indeterminate
+
+
+@pytest.mark.unit
+def test_explicit_selection_does_not_call_a_result_a_spurious_MATCH(tmp_path, monkeypatch, capsys):
+    """`--models` audits arbitrary models, which were never claimed to match.
+
+    The attribution verdict is unchanged; only the "spurious match" framing is
+    withheld, because there is no recorded match for it to contradict.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+    monkeypatch.setattr(
+        mod,
+        "run_one",
+        lambda mid, wd, **kw: Attribution(mid, summaries=parse_solve_summaries(_WEAPONS)),
+    )
+    out_json = tmp_path / "r.json"
+
+    rc = mod.main(
+        ["--models", "anything", "--workdir", str(tmp_path / "wd"), "--json", str(out_json)]
+    )
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert "EMBEDDED-ONLY — our MCP produced no status of its own" in out
+    assert "SPURIOUS MATCHES" not in out, "no recorded match exists to be spurious"
+
+    import json as _json
+
+    record = _json.loads(out_json.read_text())
+    assert record["selection"] == "explicit"
+    assert record["embedded_only"] == ["anything"], "the verdict is still reported"
+    assert record["spurious"] == [], "but not as a spurious match"
+
+
+@pytest.mark.unit
+def test_db_cohort_selection_DOES_call_it_a_spurious_match(tmp_path, monkeypatch, capsys):
+    """The counterpart: for the recorded cohort the framing is correct."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    monkeypatch.setattr(mod, "DB_PATH", _write_db(tmp_path, [_row("weapons")]))
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+    monkeypatch.setattr(
+        mod,
+        "run_one",
+        lambda mid, wd, **kw: Attribution(mid, summaries=parse_solve_summaries(_WEAPONS)),
+    )
+
+    rc = mod.main(["--workdir", str(tmp_path / "wd")])
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert "SPURIOUS MATCHES" in out
+
+
+@pytest.mark.unit
+def test_main_rejects_an_empty_workdir(tmp_path, capsys):
+    """`--workdir ""` must not be read as omitted."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    assert mod.main(["--models", "x", "--workdir", ""]) == 2
+    assert "empty path" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("kind", ["directory", "missing-parent"])
+def test_main_preflights_the_json_destination_before_the_sweep(tmp_path, monkeypatch, capsys, kind):
+    """A bad --json path must fail before hours of solves, not after."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+
+    def explode(*a, **k):  # pragma: no cover - must never run
+        raise AssertionError("the sweep must not start with an unusable --json path")
+
+    monkeypatch.setattr(mod, "run_one", explode)
+
+    target = str(tmp_path) if kind == "directory" else str(tmp_path / "nope" / "r.json")
+    rc = mod.main(["--models", "x", "--workdir", str(tmp_path / "wd"), "--json", target])
+
+    assert rc == 2
+    assert "--json" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_find_gams_returns_an_absolute_path(monkeypatch):
+    """A relative `PATH` entry would validate here and fail under cwd=PROJECT_ROOT."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    monkeypatch.setattr(mod.shutil, "which", lambda p: "relative/gams" if p == "gams" else None)
+
+    found = mod.find_gams()
+
+    assert found is not None
+    assert Path(found).is_absolute(), f"expected an absolute path, got {found!r}"

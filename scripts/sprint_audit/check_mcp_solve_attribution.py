@@ -265,8 +265,18 @@ class Attribution:
 
     @property
     def embedded_produced_status(self) -> bool:
-        """Some non-emitted solve reported a status — the value a warm start leaves behind."""
-        return any(s.model_status is not None for s in self.embedded_summaries)
+        """The **last** non-emitted solve reported a status.
+
+        ⚠ Deliberately not ``any()``. The value a warm start leaves behind is
+        set by the solve immediately preceding our MCP — not by any earlier one.
+        `harker` runs 4 source solves and `mathopt4` 4, so with ``any()`` an
+        early success followed by a *statusless* final source solve would be
+        reported as a spurious match when the truth is that nothing usable was
+        established: that is indeterminate, and inventing a finding there is the
+        error this whole script exists to avoid.
+        """
+        last = self.embedded_summaries[-1] if self.embedded_summaries else None
+        return last is not None and last.model_status is not None
 
     @property
     def verdict(self) -> str:
@@ -325,6 +335,46 @@ class Attribution:
             ],
             "error": self.error,
         }
+
+
+#: Mirrors `scripts/gamslib/error_taxonomy.SOLVE_OUTCOME_CATEGORIES`. Duplicated
+#: rather than imported because this script is run as a file (``python
+#: scripts/sprint_audit/...``), where ``scripts.gamslib`` is not importable —
+#: and `test_outcome_allowlist_matches_the_producer` fails if the two drift.
+_SOLVE_OUTCOME_CATEGORIES = frozenset(
+    {
+        "path_solve_normal",
+        "path_solve_iteration_limit",
+        "path_solve_time_limit",
+        "path_solve_terminated",
+        "path_solve_eval_error",
+        "path_solve_license",
+        "path_syntax_error",
+        "model_optimal",
+        "model_locally_optimal",
+        "model_infeasible",
+        "model_unbounded",
+        "compare_objective_match",
+        "compare_objective_mismatch",
+        "compare_status_mismatch",
+        "compare_nlp_failed",
+        "compare_mcp_failed",
+        "compare_both_infeasible",
+        "compare_multi_solve_skip",
+    }
+)
+
+#: The presolve-retry variant appends this to a base category
+#: (`run_full_test.py` normalises it by stripping the suffix).
+_PRESOLVE_SUFFIX = "_presolve"
+
+_COMPARISON_STATUSES = frozenset({"match", "mismatch", "not_tested", "skipped"})
+
+
+def _outcome_is_known(value: str) -> bool:
+    """A base category, or a base category with the presolve-retry suffix."""
+    base = value[: -len(_PRESOLVE_SUFFIX)] if value.endswith(_PRESOLVE_SUFFIX) else value
+    return base in _SOLVE_OUTCOME_CATEGORIES
 
 
 class InputError(Exception):
@@ -390,10 +440,28 @@ def presolve_match_models(db_path: Path | None = None) -> list[str]:
                 f"{db_path}: models[{i}] has a malformed mcp_solve/solution_comparison "
                 f"(got {type(solve).__name__}/{type(cmp_).__name__}, expected object or null)"
             )
-        if (
-            solve.get("outcome_category") == "model_optimal_presolve"
-            and cmp_.get("comparison_status") == "match"
-        ):
+        # Validate the enums BEFORE comparing them. Comparing only against the
+        # wanted pair means a typo — `model_optimal_presolvee`, `matc` — silently
+        # drops the row and the audit runs on a quietly incomplete cohort. Per
+        # CONTRIBUTING §Schema validation an unknown enum is a hard error naming
+        # the entry index, never a downgrade.
+        outcome = solve.get("outcome_category")
+        if outcome is not None:
+            if not isinstance(outcome, str) or not _outcome_is_known(outcome):
+                raise InputError(
+                    f"{db_path}: models[{i}] ({model_id}) has unknown "
+                    f"mcp_solve.outcome_category {outcome!r}"
+                )
+        status = cmp_.get("comparison_status")
+        if status is not None:
+            if not isinstance(status, str) or status not in _COMPARISON_STATUSES:
+                raise InputError(
+                    f"{db_path}: models[{i}] ({model_id}) has unknown "
+                    f"solution_comparison.comparison_status {status!r} "
+                    f"(known: {', '.join(sorted(_COMPARISON_STATUSES))})"
+                )
+
+        if outcome == "model_optimal_presolve" and status == "match":
             out.append(model_id)
     return sorted(out)
 
@@ -418,8 +486,14 @@ def find_gams() -> str | None:
         # which is exactly what the preflight exists to prevent.
         resolved = shutil.which(candidate)
         if resolved:
-            return resolved
-    return shutil.which("gams")
+            return str(Path(resolved).resolve())
+
+    found = shutil.which("gams")
+    # Absolutise: a relative `PATH` entry (`.`) makes `which` return a relative
+    # path, which the preflight would validate against the CALLER's directory
+    # while every launch resolves it under `cwd=PROJECT_ROOT` — succeeding here
+    # and failing there.
+    return str(Path(found).resolve()) if found else None
 
 
 def _tail(text: str | None, limit: int = 400) -> str:
@@ -663,10 +737,17 @@ def main(argv: list[str] | None = None) -> int:
     # Resolve before use: these paths are handed to subprocesses running with
     # `cwd=PROJECT_ROOT`, so a relative --workdir would send the child's output
     # somewhere the parent never looks.
+    # `is not None`, not truthiness: `--workdir ""` is a supplied-but-empty path.
+    # Treating it as omitted would silently ignore the caller and scatter the
+    # artifacts into a system temp dir they never asked for.
+    if args.workdir is not None and not args.workdir.strip():
+        print("ERROR: --workdir was given an empty path", file=sys.stderr)
+        return 2
+
     try:
         workdir = (
             Path(args.workdir).resolve()
-            if args.workdir
+            if args.workdir is not None
             else Path(tempfile.mkdtemp(prefix="mcp_attr_"))
         )
         workdir.mkdir(parents=True, exist_ok=True)
@@ -678,9 +759,27 @@ def main(argv: list[str] | None = None) -> int:
         # cross-run form of the very bug this script detects. `mkdtemp` is unique
         # by construction, so no token scheme is needed.
         run_dir = Path(tempfile.mkdtemp(dir=str(workdir), prefix="run-"))
-    except OSError as exc:
+    except (OSError, RuntimeError) as exc:
+        # `Path.resolve()` raises RuntimeError — not OSError — on a symlink loop,
+        # which would otherwise escape as a traceback and exit 1.
         print(f"ERROR: cannot create workdir {args.workdir!r}: {exc}", file=sys.stderr)
         return 2
+
+    # Preflight the report destination BEFORE the sweep. Discovering an
+    # unwritable path after a multi-hour run is a poor trade even with the
+    # stderr fallback at the end.
+    if args.json_out:
+        out_path = Path(args.json_out)
+        if out_path.is_dir():
+            print(f"ERROR: --json {args.json_out} is a directory", file=sys.stderr)
+            return 2
+        parent = out_path.parent if str(out_path.parent) else Path(".")
+        if not parent.is_dir():
+            print(
+                f"ERROR: --json parent directory does not exist: {parent}",
+                file=sys.stderr,
+            )
+            return 2
 
     # Printed because artifacts are kept for inspection and are no longer at a
     # path the caller can guess.
@@ -713,10 +812,18 @@ def main(argv: list[str] | None = None) -> int:
             flush=True,
         )
 
-    spurious = [r for r in results if r.is_spurious]
+    embedded_only = [r for r in results if r.is_spurious]
     indeterminate = [r for r in results if r.is_indeterminate]
     mcp_failed = [r for r in results if r.verdict == "MCP-FAILED"]
     solved = [r for r in results if r.verdict == "MCP-SOLVED"]
+
+    # "Spurious match" is a claim about a RECORDED match, so it only applies to
+    # the DB-derived cohort. An explicit `--models` run audits arbitrary named
+    # models — a mismatch or unrecorded model has no match to be spurious about,
+    # and calling it one would manufacture the very kind of false claim this
+    # script exists to catch. The attribution verdict is unchanged either way;
+    # only the label and the JSON key differ.
+    spurious = [] if explicit_models else embedded_only
 
     print()
     # The population claim must match the selection actually used: an explicit
@@ -728,17 +835,22 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Checked {len(results)} model(s) recorded model_optimal_presolve + match.")
     print(f"  our MCP solved (MS-1/MS-2)          : {len(solved)}")
     print(f"  our MCP ran but FAILED              : {len(mcp_failed)}")
-    print(f"  ONLY an embedded solve reported     : {len(spurious)}")
+    print(f"  ONLY an embedded solve reported     : {len(embedded_only)}")
     print(f"  could not be determined             : {len(indeterminate)}")
 
     # Every result lands in exactly one bucket, asserted rather than assumed —
     # a verdict added later must not fall through the reporting unnoticed.
-    assert len(solved) + len(mcp_failed) + len(spurious) + len(indeterminate) == len(results)
+    assert len(solved) + len(mcp_failed) + len(embedded_only) + len(indeterminate) == len(results)
 
-    if spurious:
+    if embedded_only:
         print()
-        print("SPURIOUS MATCHES — the recorded objective is the embedded solve's own value:")
-        for r in spurious:
+        if spurious:
+            print("SPURIOUS MATCHES — the recorded objective is the embedded solve's own value:")
+        else:
+            # Explicit selection: the verdict stands, the "spurious match"
+            # framing does not — these models were never claimed to match.
+            print("EMBEDDED-ONLY — our MCP produced no status of its own:")
+        for r in embedded_only:
             print(f"  {r.model_id}")
     if mcp_failed:
         print()
@@ -756,6 +868,10 @@ def main(argv: list[str] | None = None) -> int:
         report = json.dumps(
             {
                 "checked": len(results),
+                "selection": "explicit" if explicit_models else "db-cohort",
+                "embedded_only": [r.model_id for r in embedded_only],
+                # Only a DB-cohort run can call an EMBEDDED-ONLY result a
+                # spurious *match*; an explicit selection has no recorded match.
                 "spurious": [r.model_id for r in spurious],
                 "mcp_failed": [r.model_id for r in mcp_failed],
                 "indeterminate": [r.model_id for r in indeterminate],

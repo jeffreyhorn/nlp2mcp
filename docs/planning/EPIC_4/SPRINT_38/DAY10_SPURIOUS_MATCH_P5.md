@@ -176,7 +176,14 @@ Neither was used as the discriminator — both were derived afterwards and agree
 
 ## 4. P5 — #1330 confirmed Epic-5, and the cohort survey re-triaged
 
-> **Doc-name correction:** the Day-10 prompt cites `../CAMCGE_EPIC5_HANDOFF.md`. **No such file exists and none should be written** — prep Task 8 found `EPIC_5/CGE_DEGENERACY_SCOPING.md` already carried every substantive item, and a second document would duplicate ~90 % of it. That is the doc used below.
+> **⚠ CORRECTION (review round 5) — an earlier revision of this note was wrong.** It said the prompt's `../CAMCGE_EPIC5_HANDOFF.md` did not exist. **It does**: `docs/planning/EPIC_4/SPRINT_38/CAMCGE_EPIC5_HANDOFF.md`, written by prep Task 8 on 2026-08-18. I had checked `EPIC_4/` rather than `EPIC_4/SPRINT_38/`, which is where the prompt's relative path actually resolves, and then asserted a conclusion from the miss.
+>
+> **The two documents have distinct jobs, and both were used:**
+>
+> - **`SPRINT_38/CAMCGE_EPIC5_HANDOFF.md`** — the prompt's referent: Task 8's *audit* of the scoping doc, the consolidated **B1–B4** BANNED list with per-sprint attribution, camcge's stamped status, and the **license-gated cohort** (§4) that P5 closes on Day 11.
+> - **`EPIC_5/CGE_DEGENERACY_SCOPING.md`** — the *diagnosis*: Walras degeneracy, the two-nullspaces analysis, the §2 cohort survey. Task 8 deliberately did **not** restate any of it, recording instead that a parallel handoff should not be written.
+>
+> So the re-triage below belongs in the **scoping doc** (§2 is the cohort survey it amends), and that is where it was recorded — but the handoff is the prompt's referent and is not superseded.
 
 ### 4.1 #1330 — re-confirmed by measurement, not quotation
 
@@ -281,7 +288,7 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/run-*/twocge_mcp_presolve.gms
 |---|---|
 | `make typecheck` | ✅ no issues, 99 source files |
 | `make format` / `make lint` | ✅ clean — **plus explicit `black` + `ruff` on the new script**, since the Makefile targets cover only `src/` and `tests/` |
-| `make test` | ✅ **5125 passed, 10 skipped** (see below) |
+| `make test` | ✅ **5138 passed, 10 skipped** (see below) |
 | full-corpus leak gate | **deliberately NOT run** |
 
 **Why no leak gate:** the PR touches no `src/` file and no golden, so the emit cannot have moved and a 185-model sweep would assert nothing about this diff. Stating the reason rather than the omission — a silently skipped gate is the failure mode P6b exists to catch.
@@ -310,7 +317,7 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/run-*/twocge_mcp_presolve.gms
 
 **The pattern is worth naming rather than re-diagnosing each time:** this suite has two known wall-clock/subprocess flakes (`test_performance_overhead_acceptable`, `test_validate_simple_nlp_golden`) and its skip count drifts by a few under `-n auto`. **The count is only trustworthy from a run with nothing else competing for the machine**, and the check that settles it is `-rs` — a skip list that names every skip beats any arithmetic on the totals.
 
-**Rounds 3 and 4 both passed first time on a quiet machine** — 5112 then **5125 passed, 10 skipped, exit 0**, each exactly the previous total plus that round's new tests, with `-rs` naming the same 10 pre-existing skips. Applying the rule above rather than re-deriving it saved the re-run.
+**Rounds 3, 4 and 5 each passed first time on a quiet machine** — 5112, 5125, then **5138 passed, 10 skipped, exit 0**, each exactly the previous total plus that round's new tests, with `-rs` naming the same 10 pre-existing skips. Applying the rule above rather than re-deriving it saved the re-run.
 
 > **A process note, since it cost time.** The baseline was first measured with `git stash` running *concurrently* with another full-suite run over the same tree — the two interfere, and the concurrent run's numbers were meaningless. Re-measured serially. **Do not stash the working tree while another job is reading it.**
 
