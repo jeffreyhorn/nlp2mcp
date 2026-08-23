@@ -89,13 +89,18 @@ Every model recorded `model_optimal_presolve` **+ match** was re-emitted and re-
 
 ```
 Checked 33 model(s) recorded model_optimal_presolve + match.
-  MCP produced its own MODEL STATUS : 32
-  ONLY the embedded NLP solved      : 1
-  could not be determined           : 0
+  our MCP solved (MS-1/MS-2)          : 32
+  our MCP ran but FAILED              : 0
+  ONLY an embedded solve reported     : 1
+  could not be determined             : 0
 
-SPURIOUS MATCHES — the recorded objective is the NLP's own value:
+SPURIOUS MATCHES — the recorded objective is the embedded solve's own value:
   weapons
 ```
+
+**Attribution is kept separate from success, and the label does not assert a solve kind.** A `MODEL STATUS` proves the status is *ours*, not that the solve worked — an MCP returning MS-4 leaves the warm-started `.l` values in place exactly as an abort does, so it is reported as **`MCP-FAILED`**, never as solved. And the spurious verdict is **`EMBEDDED-ONLY`** rather than "NLP-only" because the population is not all NLP: `marco`/`paperco`/`tforss` are **LP**, `cpack`/`qsambal` **QCP**, `maxmin` **DNLP**, `robustlp` mixed. The solve *kind* is carried on the summary; the verdict names only provenance.
+
+**Three indeterminate verdicts are kept distinct from the spurious one** — `MCP-NO-STATUS` (our block exists but reported nothing), `NO-SOLVE` (no recognised solve at all) and `ERROR`. Folding them into "spurious" would report *"the embedded model solved and ours did not"* when **nothing** solved — a fabricated finding of exactly the kind this script exists to catch. They exit **1**; a spurious match exits **0**, because it is a finding, not a failure of the check.
 
 **weapons** — one summary in the whole listing (`war` / NLP / CONOPT, MS-2 @ 1735.5696); the MCP aborted:
 
@@ -228,16 +233,23 @@ stat_tm(i,r).. ... + (((-1) * (pq(i+1,r) * mu(i+1,r) / sqr(pq(i+1,r)))) * nu_eqX
 for f in data/gamslib/mcp/*_mcp_presolve.gms; do grep -o "^Model [A-Za-z_0-9]*" $f; done | sort | uniq -c
 grep -Ril 'using[[:space:]]\+mcp' data/gamslib/raw/    # → cesam.gms, spatequ.gms (NOT ours)
 
-# §4 — camcge baseline, WITHOUT re-running any banned variant
+# §4 — camcge baseline, WITHOUT re-running any banned variant.
+# `src.cli` writes with `Path.write_text` and does NOT create the output parent,
+# so the directories must exist first or the emit fails before it starts.
+mkdir -p /tmp/d10/emit /tmp/d10/lst
 .venv/bin/python -m src.cli data/gamslib/raw/camcge.gms -o /tmp/d10/emit/camcge_mcp.gms
 gams /tmp/d10/emit/camcge_mcp.gms o=/tmp/d10/lst/camcge.lst lo=2 ScrDir=$(mktemp -d)
 grep -E "SINGLE EQUATIONS|MODEL STATUS" /tmp/d10/lst/camcge.lst
 
-# §4.3 — #1317's fingerprint on today's emit
-grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/emit/twocge_mcp_presolve.gms
+# §4.3 — #1317's fingerprint. The §2 sweep already wrote twocge's presolve emit
+# into ITS workdir, so read it from there rather than /tmp/d10/emit (which the
+# sweep never populates).
+grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/twocge_mcp_presolve.gms
 ```
 
-> **GAMS is run with `cwd` at the repo root** — the emitted `$include "data/gamslib/raw/<id>.gms"` is repo-relative — **but always with `ScrDir` pointing outside the tree**. Sprint 37 Day 9 swept GAMS scratch files into a commit; `ScrDir` is what prevents it.
+> **GAMS is run with `cwd` at the repo root** — the emitted `$include "data/gamslib/raw/<id>.gms"` is repo-relative — **but always with `ScrDir` pointing outside the tree**. Sprint 37 Day 9 swept GAMS scratch files into a commit; `ScrDir` is what prevents it. Because the child's `cwd` is the repo root, `--workdir` is **resolved to an absolute path** before use; a relative one would have the child write where the parent never looks.
+>
+> **A nonzero GAMS exit code is recorded but never acted on.** `weapons` — the entire finding — exits **3** (`USER ERROR(S) ENCOUNTERED`) *because* its MCP aborted. Treating a nonzero rc as an untrustworthy listing would discard the only spurious match in the corpus.
 
 ---
 
@@ -249,12 +261,22 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/emit/twocge_mcp_presolve.gms
 |---|---|
 | `make typecheck` | ✅ no issues, 99 source files |
 | `make format` / `make lint` | ✅ clean — **plus explicit `black` + `ruff` on the new script**, since the Makefile targets cover only `src/` and `tests/` |
-| `make test` | ✅ (see below) |
+| `make test` | ✅ **5088 passed, 10 skipped** (see below) |
 | full-corpus leak gate | **deliberately NOT run** |
 
 **Why no leak gate:** `git diff --stat HEAD -- src/ data/` is **empty**. There is no `src/` change and no golden change, so the emit cannot have moved and a 185-model sweep would assert nothing about this diff. Stating the reason rather than the omission — a silently skipped gate is the failure mode P6b exists to catch.
 
 **One flaky failure, re-run in full rather than in isolation.** The first `make test` reported `1 failed, 5084 passed` — `test_metrics_integration.py::TestMetricsWithSimplificationPipeline::test_performance_overhead_acceptable`. It is a **wall-clock ratio** test (`time.perf_counter()` over 100 pipeline runs) executed under `-n auto`, it touches nothing in this diff, and it is **the same test that flaked on Day 9**. Re-run of the whole suite: **5085 passed**.
+
+**A skip-count discrepancy chased down rather than waved through** (review round). After the review fixes the suite read `5085 passed, 13 skipped` where the previous run read `5085 passed, 10 skipped` — collection had risen by exactly the 3 tests added, so **3 tests that previously passed appeared to have stopped running**. A gate going green while tests quietly stop executing is the same failure mode this PR is about, so it was measured, not assumed:
+
+- `tests/unit` alone → **3725 passed, 0 skipped**: all 9 attribution tests run.
+- the parent commit → **5085 passed, 10 skipped** (baseline).
+- a clean full run with `-rs` → **5088 passed, 10 skipped** = baseline + the 3 new tests, exactly as expected.
+
+**The 13-skip reading did not reproduce**, and every one of the 10 skips is a pre-existing `pytest.skip` for an unimplemented feature (nested subset indexing, Sprint-10/11 items, a memory-usage test disabled in CI). None is in this diff.
+
+> **A process note, since it cost time.** The baseline was first measured with `git stash` running *concurrently* with another full-suite run over the same tree — the two interfere, and the concurrent run's numbers were meaningless. Re-measured serially. **Do not stash the working tree while another job is reading it.**
 
 ---
 

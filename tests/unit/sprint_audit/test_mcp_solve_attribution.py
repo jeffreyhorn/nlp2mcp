@@ -80,7 +80,7 @@ _TWOCGE = """
 
 
 @pytest.mark.unit
-def test_weapons_listing_is_NLP_ONLY_despite_holding_a_model_status():
+def test_weapons_listing_is_EMBEDDED_ONLY_despite_holding_a_model_status():
     """The discriminating case: a status is present, but not the MCP's.
 
     Any check that greps the listing for ``MODEL STATUS`` calls this MCP-SOLVED.
@@ -94,7 +94,50 @@ def test_weapons_listing_is_NLP_ONLY_despite_holding_a_model_status():
 
     assert attribution.mcp_summaries == [], "there is no MCP-typed solve at all"
     assert not attribution.mcp_produced_status
-    assert attribution.verdict == "NLP-ONLY"
+    assert attribution.verdict == "EMBEDDED-ONLY"
+    assert attribution.is_spurious, "this is the spurious case the audit reports"
+    assert not attribution.is_indeterminate, "it is a finding, not a failed determination"
+
+
+@pytest.mark.unit
+def test_a_nonzero_gams_returncode_does_NOT_invalidate_the_finding():
+    """weapons exits 3 *because* its MCP aborted — the rc is the symptom.
+
+    Treating a nonzero GAMS exit as an untrustworthy listing would discard the
+    only spurious match in the corpus. It is recorded, never acted on.
+    """
+    attribution = Attribution(
+        "weapons", summaries=parse_solve_summaries(_WEAPONS), gams_returncode=3
+    )
+
+    assert attribution.gams_returncode == 3
+    assert attribution.verdict == "EMBEDDED-ONLY", "the rc must not change the verdict"
+    assert attribution.as_dict()["gams_returncode"] == 3, "but it must be reported"
+
+
+@pytest.mark.unit
+def test_an_attributed_but_FAILING_mcp_is_not_MCP_SOLVED():
+    """A status proves attribution, not success.
+
+    An MCP that returns MS-4 leaves the warm-started `.l` values in place just as
+    an abort does, so counting it as solved would launder a failure into a match.
+    """
+    infeasible = """
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  1124
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      4 Infeasible
+"""
+    attribution = Attribution("camcge-like", summaries=parse_solve_summaries(infeasible))
+
+    assert attribution.mcp_produced_status, "the status IS ours — attribution succeeded"
+    assert not attribution.mcp_succeeded, "...but MS-4 is not a usable answer"
+    assert attribution.verdict == "MCP-FAILED"
+    assert not attribution.is_spurious, "our MCP did run; nothing was read back from a warm start"
 
 
 @pytest.mark.unit
@@ -151,7 +194,13 @@ def test_a_summary_without_a_status_does_not_count_as_solved():
     assert len(attribution.mcp_summaries) == 1, "the MCP block is present..."
     assert attribution.mcp_summaries[0].model_status is None, "...but reported no status"
     assert not attribution.mcp_produced_status
-    assert attribution.verdict == "NLP-ONLY"
+
+    # And it must NOT be reported as spurious: no embedded solve reported a
+    # status either, so there is nothing a warm start could have read back.
+    # Claiming "only the embedded model solved" here would invent a finding.
+    assert attribution.verdict == "MCP-NO-STATUS"
+    assert not attribution.is_spurious
+    assert attribution.is_indeterminate
 
 
 @pytest.mark.unit
@@ -181,13 +230,49 @@ def test_a_raw_models_OWN_mcp_solve_is_not_ours():
     assert attribution.mcp_summaries == [], "so it must not count toward our MCP"
     assert len(attribution.foreign_mcp_summaries) == 1, "and it must be surfaced, not dropped"
     assert not attribution.mcp_produced_status
-    assert attribution.verdict == "NLP-ONLY"
+
+    # It IS spurious: a status exists for the warm start to read back, and it is
+    # not ours. The label is provenance-based, which is why it stays correct even
+    # though the other solve is itself an MCP.
+    assert attribution.verdict == "EMBEDDED-ONLY"
+    assert attribution.is_spurious
 
 
 @pytest.mark.unit
-def test_empty_listing_is_NO_SOLVE_not_NLP_ONLY():
-    """No solve at all is a distinct outcome from 'the NLP solved, the MCP did not'."""
+def test_the_spurious_label_does_not_assert_the_solve_KIND():
+    """The population is not all NLP — `marco`/`paperco`/`tforss` are LPs.
+
+    A verdict literally named "NLP-ONLY" would misreport the solve kind on the
+    LP, QCP and DNLP sources in the sweep, so the label is provenance-based and
+    the *type* is carried on the summary instead.
+    """
+    lp_source = """
+               S O L V E      S U M M A R Y
+
+     MODEL   oil                 OBJECTIVE  profit
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  120
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+"""
+    attribution = Attribution("marco-like", summaries=parse_solve_summaries(lp_source))
+
+    assert attribution.verdict == "EMBEDDED-ONLY", "provenance, not model type"
+    assert attribution.embedded_summaries[0].type == "LP", "the kind is preserved, not asserted"
+    assert "NLP" not in attribution.verdict
+
+
+@pytest.mark.unit
+def test_empty_listing_is_NO_SOLVE_and_counts_as_indeterminate():
+    """No solve at all is distinct from 'the embedded model solved, ours did not'.
+
+    It must also be *indeterminate*: a listing with nothing in it concludes
+    nothing, so it cannot silently pass through the totals and exit 0.
+    """
     attribution = Attribution("empty", summaries=parse_solve_summaries("no solves here"))
 
     assert attribution.summaries == []
     assert attribution.verdict == "NO-SOLVE"
+    assert not attribution.is_spurious
+    assert attribution.is_indeterminate, "must be counted as a failed determination"

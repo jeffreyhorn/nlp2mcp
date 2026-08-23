@@ -35,6 +35,27 @@ finding a summary that is ``TYPE MCP`` **for our emitted model** and which
 carries a ``MODEL STATUS`` — see ``EMITTED_MCP_MODEL`` for why the model name
 matters and ``TYPE`` alone is not enough.
 
+**Attribution is not success, and the verdicts keep them apart:**
+
+===================  ===========================================================
+``MCP-SOLVED``       our MCP reported MS-1/MS-2 — a usable answer
+``MCP-FAILED``       our MCP reported a status, but a failing one (MS-4, MS-5…)
+``EMBEDDED-ONLY``    **spurious** — only a non-emitted solve reported a status,
+                     so the warm-start value is what gets read back
+``MCP-NO-STATUS``    our MCP block exists but reported nothing — indeterminate
+``NO-SOLVE``         no recognised solve at all — indeterminate
+``ERROR``            could not be run — indeterminate
+===================  ===========================================================
+
+The three indeterminate verdicts are distinct on purpose. Folding them into the
+spurious bucket would report "the embedded model solved and ours did not" when
+*nothing* solved — a fabricated finding of exactly the kind this script exists
+to catch.
+
+``EMBEDDED-ONLY`` is named for provenance rather than model type: the population
+includes LP, QCP and DNLP sources, so "NLP-ONLY" would misreport the solve kind
+on a quarter of it.
+
 **Deliberately NOT keyed on ``EXECERROR``.** `check_presolve_divergence.py`'s
 first branch treats any execution error as an *embedded-NLP* divergence, which
 is how weapons — whose embedded NLP solved perfectly — got reported against the
@@ -132,6 +153,17 @@ def parse_solve_summaries(lst_content: str) -> list[SolveSummary]:
     return summaries
 
 
+#: GAMS MODEL STATUS values that mean the solve produced a usable answer.
+#: PATH reports **1 Optimal** for a solved complementarity problem; 2 is
+#: CONOPT's "Locally Optimal". Anything else (4 Infeasible, 5 Locally
+#: Infeasible, 6 Intermediate Infeasible, …) is a failure.
+_SUCCESS_MODEL_STATUS = frozenset({1, 2})
+
+#: Verdicts that conclude nothing. Counted as failures of the *check*, never as
+#: evidence either way about the model.
+_INDETERMINATE_VERDICTS = frozenset({"ERROR", "NO-SOLVE", "MCP-NO-STATUS"})
+
+
 @dataclass
 class Attribution:
     """Whether a listing shows the MCP solving in its own right."""
@@ -139,6 +171,11 @@ class Attribution:
     model_id: str
     summaries: list[SolveSummary] = field(default_factory=list)
     error: str | None = None
+    #: GAMS's own exit code, recorded for transparency. **Deliberately not used
+    #: to invalidate a listing:** `weapons` — the whole finding — exits **3**
+    #: (`USER ERROR(S) ENCOUNTERED`) precisely *because* its MCP aborted. Keying
+    #: on it would discard the case this script was written to detect.
+    gams_returncode: int | None = None
 
     @property
     def mcp_summaries(self) -> list[SolveSummary]:
@@ -155,25 +192,77 @@ class Attribution:
         return [s for s in self.summaries if s.is_mcp and not s.is_emitted_mcp]
 
     @property
+    def embedded_summaries(self) -> list[SolveSummary]:
+        """Every solve that is not our emitted MCP.
+
+        Named for its *provenance*, not its model type: the population includes
+        LP (`marco`, `paperco`, `tforss`), QCP (`cpack`, `qsambal`), DNLP
+        (`maxmin`) and mixed (`robustlp`) sources, so calling this "the NLP" would
+        misreport the solve kind on a quarter of the corpus.
+        """
+        return [s for s in self.summaries if not s.is_emitted_mcp]
+
+    @property
     def mcp_produced_status(self) -> bool:
-        """The discriminator: *our* MCP solve reported a MODEL STATUS."""
+        """**Attribution only:** *our* MCP reported a MODEL STATUS.
+
+        ⚠ This says the status belongs to our model — **not** that the solve
+        succeeded. Keep it separate from the verdict: an MCP that returns MS-4
+        has been attributed and has still not produced a usable answer.
+        """
         return any(s.model_status is not None for s in self.mcp_summaries)
 
     @property
+    def mcp_succeeded(self) -> bool:
+        """Our MCP reported a *success* status (MS-1 Optimal / MS-2 Locally Optimal)."""
+        return any(s.model_status in _SUCCESS_MODEL_STATUS for s in self.mcp_summaries)
+
+    @property
+    def embedded_produced_status(self) -> bool:
+        """Some non-emitted solve reported a status — the value a warm start leaves behind."""
+        return any(s.model_status is not None for s in self.embedded_summaries)
+
+    @property
     def verdict(self) -> str:
+        """One of six outcomes. Only ``EMBEDDED-ONLY`` means *spurious*.
+
+        The three indeterminate verdicts are deliberately distinct rather than
+        folded into the spurious bucket: reporting "the embedded model solved and
+        ours did not" when *nothing* solved would be a fabricated finding, which
+        is the same error this script exists to catch.
+        """
         if self.error:
             return "ERROR"
         if self.mcp_produced_status:
-            return "MCP-SOLVED"
-        if self.summaries:
-            return "NLP-ONLY"
+            return "MCP-SOLVED" if self.mcp_succeeded else "MCP-FAILED"
+        if self.mcp_summaries:
+            # Our MCP block exists but reported nothing — GAMS emits the header
+            # during generation, so a solver that dies before reporting lands
+            # here. Not attributable either way.
+            return "MCP-NO-STATUS"
+        if self.embedded_produced_status:
+            # The spurious case: a status exists for the warm start to read back,
+            # and it is not ours.
+            return "EMBEDDED-ONLY"
         return "NO-SOLVE"
+
+    @property
+    def is_spurious(self) -> bool:
+        """A recorded match that cannot have come from our MCP."""
+        return self.verdict == "EMBEDDED-ONLY"
+
+    @property
+    def is_indeterminate(self) -> bool:
+        """Nothing can be concluded — must not be silently counted as a pass."""
+        return self.verdict in _INDETERMINATE_VERDICTS
 
     def as_dict(self) -> dict:
         return {
             "model_id": self.model_id,
             "verdict": self.verdict,
             "mcp_produced_status": self.mcp_produced_status,
+            "mcp_succeeded": self.mcp_succeeded,
+            "gams_returncode": self.gams_returncode,
             "n_summaries": len(self.summaries),
             "n_mcp_summaries": len(self.mcp_summaries),
             "n_foreign_mcp_summaries": len(self.foreign_mcp_summaries),
@@ -207,6 +296,24 @@ def presolve_match_models(db_path: Path = DB_PATH) -> list[str]:
     return sorted(out)
 
 
+def find_gams() -> str | None:
+    """Locate GAMS the way the rest of the repo does.
+
+    Versioned install paths are preferred over a bare ``PATH`` lookup — mirrors
+    `scripts/gamslib/test_solve.py`, where the comment explains why: a `PATH`
+    entry may point at an older version whose time-limited license has expired.
+    ``Current`` follows whatever version was installed last.
+    """
+    for candidate in (
+        "/Library/Frameworks/GAMS.framework/Versions/Current/Resources/gams",
+        "/opt/gams/gams",
+        "C:\\GAMS\\win64\\gams.exe",
+    ):
+        if Path(candidate).exists():
+            return candidate
+    return shutil.which("gams")
+
+
 def run_one(model_id: str, workdir: Path, reslim: int = 300) -> Attribution:
     """Emit ``--nlp-presolve`` for one model, run GAMS, and attribute the solves.
 
@@ -214,6 +321,10 @@ def run_one(model_id: str, workdir: Path, reslim: int = 300) -> Attribution:
     ``$include "data/gamslib/raw/<id>.gms"`` is repo-relative — while every
     scratch artifact goes to ``workdir``. Never run GAMS *from* the repo root
     without ``ScrDir``: Sprint 37 Day 9 swept the scratch files into a commit.
+
+    ``workdir`` **must already be absolute** (``main`` resolves it): the paths
+    below are handed to subprocesses whose ``cwd`` is ``PROJECT_ROOT``, so a
+    relative one would have the child write somewhere the parent never looks.
     """
     raw = PROJECT_ROOT / "data" / "gamslib" / "raw" / f"{model_id}.gms"
     if not raw.exists():
@@ -222,31 +333,43 @@ def run_one(model_id: str, workdir: Path, reslim: int = 300) -> Attribution:
     emitted = workdir / f"{model_id}_mcp_presolve.gms"
     lst = workdir / f"{model_id}.lst"
 
-    emit = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "src.cli",
-            str(raw.relative_to(PROJECT_ROOT)),
-            "--nlp-presolve",
-            "-o",
-            str(emitted),
-        ],
-        capture_output=True,
-        text=True,
-        cwd=str(PROJECT_ROOT),
-        timeout=600,
-    )
+    try:
+        emit = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "src.cli",
+                str(raw.relative_to(PROJECT_ROOT)),
+                "--nlp-presolve",
+                "-o",
+                str(emitted),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(PROJECT_ROOT),
+            timeout=600,
+        )
+    except subprocess.TimeoutExpired:
+        # One slow translation must not abort the whole sweep before it can
+        # write its report — `sarf` alone runs for ~28 minutes.
+        return Attribution(model_id, error="emit timeout after 600s")
+
     if emit.returncode != 0 or not emitted.exists():
         return Attribution(model_id, error=f"emit failed (rc={emit.returncode})")
 
-    gams = shutil.which("gams")
+    gams = find_gams()
     if not gams:
         return Attribution(model_id, error="gams executable not found")
 
+    # Never let a previous run's listing answer for this one. If GAMS dies
+    # before writing (licensing, startup), a stale file would be parsed as this
+    # run's result — a status attributed to the wrong invocation, which is the
+    # very defect this script exists to detect, one level up.
+    lst.unlink(missing_ok=True)
+
     with tempfile.TemporaryDirectory(dir=str(workdir)) as scr:
         try:
-            subprocess.run(
+            proc = subprocess.run(
                 [
                     gams,
                     str(emitted),
@@ -264,10 +387,14 @@ def run_one(model_id: str, workdir: Path, reslim: int = 300) -> Attribution:
             return Attribution(model_id, error=f"GAMS timeout after {reslim}s")
 
     if not lst.exists():
-        return Attribution(model_id, error="no listing produced")
+        return Attribution(model_id, error=f"no listing produced (gams rc={proc.returncode})")
 
     content = lst.read_text(errors="replace")
-    return Attribution(model_id, summaries=parse_solve_summaries(content))
+    return Attribution(
+        model_id,
+        summaries=parse_solve_summaries(content),
+        gams_returncode=proc.returncode,
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -287,7 +414,12 @@ def main(argv: list[str] | None = None) -> int:
         else presolve_match_models()
     )
 
-    workdir = Path(args.workdir) if args.workdir else Path(tempfile.mkdtemp(prefix="mcp_attr_"))
+    # Resolve before use: these paths are handed to subprocesses running with
+    # `cwd=PROJECT_ROOT`, so a relative --workdir would send the child's output
+    # somewhere the parent never looks.
+    workdir = (
+        Path(args.workdir).resolve() if args.workdir else Path(tempfile.mkdtemp(prefix="mcp_attr_"))
+    )
     workdir.mkdir(parents=True, exist_ok=True)
 
     results: list[Attribution] = []
@@ -300,25 +432,42 @@ def main(argv: list[str] | None = None) -> int:
             for s in res.summaries
         )
         print(
-            f"[{i:>2}/{len(models)}] {mid:<12} {res.verdict:<10} " f"{res.error or detail}",
+            f"[{i:>2}/{len(models)}] {mid:<12} {res.verdict:<14} " f"{res.error or detail}",
             flush=True,
         )
 
-    spurious = [r for r in results if r.verdict == "NLP-ONLY"]
-    errors = [r for r in results if r.verdict == "ERROR"]
+    spurious = [r for r in results if r.is_spurious]
+    indeterminate = [r for r in results if r.is_indeterminate]
+    mcp_failed = [r for r in results if r.verdict == "MCP-FAILED"]
+    solved = [r for r in results if r.verdict == "MCP-SOLVED"]
 
     print()
     print(f"Checked {len(results)} model(s) recorded model_optimal_presolve + match.")
-    print(
-        f"  MCP produced its own MODEL STATUS : {sum(1 for r in results if r.verdict == 'MCP-SOLVED')}"
-    )
-    print(f"  ONLY the embedded NLP solved      : {len(spurious)}")
-    print(f"  could not be determined           : {len(errors)}")
+    print(f"  our MCP solved (MS-1/MS-2)          : {len(solved)}")
+    print(f"  our MCP ran but FAILED              : {len(mcp_failed)}")
+    print(f"  ONLY an embedded solve reported     : {len(spurious)}")
+    print(f"  could not be determined             : {len(indeterminate)}")
+
+    # Every result lands in exactly one bucket, asserted rather than assumed —
+    # a verdict added later must not fall through the reporting unnoticed.
+    assert len(solved) + len(mcp_failed) + len(spurious) + len(indeterminate) == len(results)
+
     if spurious:
         print()
-        print("SPURIOUS MATCHES — the recorded objective is the NLP's own value:")
+        print("SPURIOUS MATCHES — the recorded objective is the embedded solve's own value:")
         for r in spurious:
             print(f"  {r.model_id}")
+    if mcp_failed:
+        print()
+        print("MCP RAN AND FAILED — attributed, but not a usable answer:")
+        for r in mcp_failed:
+            statuses = ", ".join(f"MS-{s.model_status}" for s in r.mcp_summaries)
+            print(f"  {r.model_id} ({statuses})")
+    if indeterminate:
+        print()
+        print("INDETERMINATE — the check concluded nothing for these:")
+        for r in indeterminate:
+            print(f"  {r.model_id} [{r.verdict}] {r.error or ''}".rstrip())
 
     if args.json_out:
         Path(args.json_out).write_text(
@@ -326,16 +475,18 @@ def main(argv: list[str] | None = None) -> int:
                 {
                     "checked": len(results),
                     "spurious": [r.model_id for r in spurious],
-                    "errors": [r.model_id for r in errors],
+                    "mcp_failed": [r.model_id for r in mcp_failed],
+                    "indeterminate": [r.model_id for r in indeterminate],
                     "results": [r.as_dict() for r in results],
                 },
                 indent=2,
             )
         )
 
-    # Exit non-zero only when a determination failed: a spurious match is a
-    # FINDING to report, not this script's failure.
-    return 1 if errors else 0
+    # Exit non-zero when a determination FAILED — including a listing with no
+    # recognised solve at all, which concludes nothing and must not exit 0.
+    # A spurious match is a FINDING to report, not this script's failure.
+    return 1 if indeterminate else 0
 
 
 if __name__ == "__main__":
