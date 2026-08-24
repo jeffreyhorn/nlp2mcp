@@ -1151,11 +1151,17 @@ def test_main_preflights_the_json_destination_before_the_sweep(tmp_path, monkeyp
 
 
 @pytest.mark.unit
-def test_find_gams_returns_an_absolute_path(monkeypatch):
+def test_find_gams_returns_an_absolute_path(tmp_path, monkeypatch):
     """A relative `PATH` entry would validate here and fail under cwd=PROJECT_ROOT."""
     import scripts.sprint_audit.check_mcp_solve_attribution as mod
 
-    monkeypatch.setattr(mod.shutil, "which", lambda p: "relative/gams" if p == "gams" else None)
+    # A REAL file, referred to by a relative path — `find_gams` now also requires
+    # `is_file()`, so a made-up path would fail for the wrong reason.
+    real = tmp_path / "gams"
+    real.write_text("#!/bin/sh\n")
+    real.chmod(0o755)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(mod.shutil, "which", lambda p: "gams" if p == "gams" else None)
 
     found = mod.find_gams()
 
@@ -1974,3 +1980,113 @@ def test_run_one_rejects_a_workdir_containing_a_NUL(tmp_path, monkeypatch):
 
     assert result.verdict == "ERROR"
     assert "NUL" in (result.error or "")
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "timestamp",
+    [
+        "2026-02-31T10:00:00Z",  # 31 February
+        "2026-01-01T25:00:00Z",  # hour 25
+        "2026-01-01T10:99:00Z",  # minute 99
+        "2026-02-31T25:99:00+99:99",  # impossible on every axis
+    ],
+)
+def test_a_lexically_valid_but_IMPOSSIBLE_timestamp_is_detected(tmp_path, capsys, timestamp):
+    """A regex validates shape, not calendar or offset ranges.
+
+    Every value here matches the RFC-3339 *pattern* exactly, so a shape-only
+    check passes them — and because format violations are downgraded to
+    warnings, they would not even be reported. The range check comes from
+    `fromisoformat`, which the shape check in turn covers for the offset the
+    parser accepts as optional. Neither alone is sufficient.
+    """
+    import json
+
+    pytest.importorskip("jsonschema")
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    assert mod._RFC3339.fullmatch(timestamp), "the SHAPE is valid — that is the point"
+
+    db = tmp_path / "db.json"
+    db.write_text(
+        json.dumps({"schema_version": "2.2.1", "created_date": timestamp, "models": [_row("ok")]})
+    )
+
+    assert mod.presolve_match_models(db) == ["ok"]
+    assert "format violation" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_a_schema_with_an_unresolvable_ref_is_reported(tmp_path, monkeypatch):
+    """`check_schema` does not resolve `$ref`s — validation is where it blows up."""
+    import json
+
+    pytest.importorskip("jsonschema")
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    dangling = tmp_path / "schema.json"
+    dangling.write_text(json.dumps({"$ref": "#/definitions/does_not_exist"}))
+    monkeypatch.setattr(mod, "SCHEMA_PATH", dangling)
+
+    with pytest.raises(mod.InputError, match="could not be applied"):
+        mod.presolve_match_models(_write_db(tmp_path, [_row("ok")]))
+
+
+@pytest.mark.unit
+def test_a_missing_schema_is_reported_even_without_jsonschema(tmp_path, monkeypatch):
+    """The contract is mandatory regardless of the optional library.
+
+    Returning early on ImportError meant the "schema is mandatory" promise held
+    only on machines that happened to have `jsonschema` installed.
+    """
+    import builtins
+
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    real_import = builtins.__import__
+
+    def no_jsonschema(name, *args, **kwargs):
+        if name == "jsonschema":
+            raise ImportError("simulated")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", no_jsonschema)
+    monkeypatch.setattr(mod, "SCHEMA_PATH", tmp_path / "absent.json")
+
+    with pytest.raises(mod.InputError, match="cannot read the schema contract"):
+        mod.presolve_match_models(_write_db(tmp_path, [_row("ok")]))
+
+
+@pytest.mark.unit
+def test_a_non_utf8_schema_names_the_encoding_not_the_json(tmp_path, monkeypatch):
+    """`UnicodeDecodeError` IS a `ValueError`, so it was caught — and mislabelled.
+
+    Reporting "not valid JSON" for an encoding fault points at the wrong problem.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    bad = tmp_path / "schema.json"
+    bad.write_bytes(b'{"type": "\xff\xfe object"}')
+    monkeypatch.setattr(mod, "SCHEMA_PATH", bad)
+
+    with pytest.raises(mod.InputError, match="not valid UTF-8"):
+        mod.presolve_match_models(_write_db(tmp_path, [_row("ok")]))
+
+
+@pytest.mark.unit
+def test_find_gams_rejects_an_executable_directory(tmp_path, monkeypatch):
+    """`which` checks the execute bit, not that the target is a regular file.
+
+    A directory named `gams` on PATH would otherwise pass the fail-fast
+    preflight, and every model would die on `IsADirectoryError` after paying for
+    its translation.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    fake = tmp_path / "gams"
+    fake.mkdir()  # a directory, and directories carry the execute bit
+
+    monkeypatch.setattr(mod.shutil, "which", lambda _p: str(fake))
+
+    assert mod.find_gams() is None, "a directory must not be accepted as the GAMS binary"

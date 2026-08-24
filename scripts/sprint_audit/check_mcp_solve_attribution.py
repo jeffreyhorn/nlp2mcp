@@ -71,6 +71,7 @@ wrong side. An abort tells you *something* failed, not *which model*.
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import os
 import re
@@ -471,22 +472,31 @@ def _validate_against_schema(db: object, db_path: Path) -> str | None:
     **Absent `jsonschema`, this is a no-op** — the targeted checks that follow
     still run, so the audit degrades in coverage rather than failing outright.
     """
+    # `schema.json` is NOT optional the way `jsonschema` is: it is the repo's
+    # checked-in contract. Read it FIRST, so its absence is reported even when
+    # the optional library is missing — otherwise the "the schema is mandatory"
+    # promise held only on machines that happened to have `jsonschema`.
+    try:
+        raw_schema = SCHEMA_PATH.read_text(encoding="utf-8")
+    except OSError as exc:
+        return f"cannot read the schema contract {SCHEMA_PATH}: {exc}"
+    except UnicodeError as exc:
+        # Caught before the JSON branch: `UnicodeDecodeError` IS a `ValueError`,
+        # so it was already handled — but reported as "not valid JSON", which
+        # points at the wrong problem.
+        return f"schema contract {SCHEMA_PATH} is not valid UTF-8: {exc}"
+
+    try:
+        schema = json.loads(raw_schema)
+    except ValueError as exc:
+        return f"schema contract {SCHEMA_PATH} is not valid JSON: {exc}"
+
     try:
         from jsonschema import Draft7Validator, FormatChecker
     except ImportError:  # pragma: no cover - depends on the environment
-        # `jsonschema` is an OPTIONAL, undeclared dependency — degrade quietly.
+        # `jsonschema` is genuinely optional and undeclared: skip Draft-7
+        # validation, having already established the contract is present.
         return None
-
-    # `schema.json` is NOT optional the way `jsonschema` is: it is the repo's
-    # checked-in contract. If it is missing or corrupt, the backstop is silently
-    # disabled and a schema-only violation (a misspelled key) would sail through
-    # — so this is reported as an error rather than treated as a pass.
-    try:
-        schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
-    except OSError as exc:
-        return f"cannot read the schema contract {SCHEMA_PATH}: {exc}"
-    except ValueError as exc:
-        return f"schema contract {SCHEMA_PATH} is not valid JSON: {exc}"
 
     # A syntactically valid file need not be a valid Draft-7 *schema*, and
     # `iter_errors` then raises from inside jsonschema rather than reporting.
@@ -512,12 +522,29 @@ def _validate_against_schema(db: object, db_path: Path) -> str | None:
     def _is_date_time(value: object) -> bool:
         if not isinstance(value, str):
             return True  # the `type` keyword owns non-strings
-        return bool(_RFC3339.fullmatch(value))
+        # BOTH checks are needed, and neither alone is sufficient:
+        #   - the regex enforces the RFC-3339 *shape* (`T` separator, required
+        #     offset) that `fromisoformat` is too lenient about;
+        #   - `fromisoformat` enforces the *ranges* a regex cannot — month 02-31,
+        #     hour 25, minute 99, offset +99:99 all match the shape happily.
+        if not _RFC3339.fullmatch(value):
+            return False
+        try:
+            datetime.datetime.fromisoformat(value.replace("Z", "+00:00").replace("z", "+00:00"))
+        except ValueError:
+            return False
+        return True
 
-    errors = sorted(
-        Draft7Validator(schema, format_checker=format_checker).iter_errors(db),
-        key=lambda e: list(e.absolute_path),
-    )
+    # `check_schema` does not resolve `$ref`s, so `{"$ref": "#/definitions/gone"}`
+    # passes it and then raises during validation. A corrupt contract must report,
+    # not traceback.
+    try:
+        errors = sorted(
+            Draft7Validator(schema, format_checker=format_checker).iter_errors(db),
+            key=lambda e: list(e.absolute_path),
+        )
+    except Exception as exc:  # RefResolutionError et al. live under jsonschema
+        return f"schema contract {SCHEMA_PATH} could not be applied: {exc}"
 
     # Format violations are WARNED about, not fatal; everything else is fatal.
     #
@@ -740,10 +767,16 @@ def find_gams() -> str | None:
         # translation would run before each model failed with the same OSError,
         # which is exactly what the preflight exists to prevent.
         resolved = shutil.which(candidate)
-        if resolved:
+        if resolved and Path(resolved).is_file():
+            # `which` checks the execute bit, not that the target is a regular
+            # file — an executable DIRECTORY named `gams` would otherwise pass
+            # the fail-fast preflight and every model would die on
+            # `IsADirectoryError` after its translation.
             return str(Path(resolved).resolve())
 
     found = shutil.which("gams")
+    if found and not Path(found).is_file():
+        return None
     # Absolutise: a relative `PATH` entry (`.`) makes `which` return a relative
     # path, which the preflight would validate against the CALLER's directory
     # while every launch resolves it under `cwd=PROJECT_ROOT` — succeeding here

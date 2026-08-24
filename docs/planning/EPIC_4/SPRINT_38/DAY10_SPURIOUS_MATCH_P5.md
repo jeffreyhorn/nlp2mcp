@@ -288,7 +288,7 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/run-*/twocge_mcp_presolve.gms
 |---|---|
 | `make typecheck` | ✅ no issues, 99 source files |
 | `make format` / `make lint` | ✅ clean — **plus explicit `black` + `ruff` on the new script**, since the Makefile targets cover only `src/` and `tests/` |
-| `make test` | ✅ **5187 passed, 10 skipped** (see below) |
+| `make test` | ✅ **5195 passed, 10 skipped** (see below) |
 | full-corpus leak gate | **deliberately NOT run** |
 
 **Why no leak gate:** the PR touches no `src/` file and no golden, so the emit cannot have moved and a 185-model sweep would assert nothing about this diff. Stating the reason rather than the omission — a silently skipped gate is the failure mode P6b exists to catch.
@@ -307,7 +307,7 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/run-*/twocge_mcp_presolve.gms
 
 **A skip-count discrepancy chased down rather than waved through** (review round). After the review fixes the suite read `5085 passed, 13 skipped` where the previous run read `5085 passed, 10 skipped` — collection had risen by exactly the 3 tests added, so **3 tests that previously passed appeared to have stopped running**. A gate going green while tests quietly stop executing is the same failure mode this PR is about, so it was measured, not assumed:
 
-- `tests/unit` alone → **3725 passed, 0 skipped**: every attribution test ran (9 at the time of that check; the module has since grown to **108 collected cases** across the review rounds).
+- `tests/unit` alone → **3725 passed, 0 skipped**: every attribution test ran (9 at the time of that check; the module has since grown to **116 collected cases** across the review rounds).
 - the parent commit → **5085 passed, 10 skipped** (baseline).
 - a clean full run with `-rs` → **5088 passed, 10 skipped** = baseline + the 3 new tests, exactly as expected.
 
@@ -333,7 +333,7 @@ Round 8 saw `test_validate_simple_nlp_golden` fail **twice consecutively**, whic
 
 **So the defect is pre-existing and this PR's exposure of it is incidental** — 12 extra tests raise load and therefore collision probability. The fix is small (run the compile check in a temp directory, or pass `ScrDir`) but it is a `src/` change with no bearing on the spurious-match investigation, so it is **reported here rather than bundled**. It is the same class as the Sprint-37 Day-9 incident: GAMS writing scratch into a directory that something else owns.
 
-**Rounds 3–7 each passed first time on a quiet machine** — 5112, 5125, 5138, 5146, 5154, 5166, 5170, 5177, 5182, then **5187 passed, 10 skipped, exit 0**, each exactly the previous total plus that round's new tests, with `-rs` naming the same 10 pre-existing skips. Applying the rule above rather than re-deriving it saved the re-run.
+**Rounds 3–7 each passed first time on a quiet machine** — 5112, 5125, 5138, 5146, 5154, 5166, 5170, 5177, 5182, 5187, then **5195 passed, 10 skipped, exit 0**, each exactly the previous total plus that round's new tests, with `-rs` naming the same 10 pre-existing skips. Applying the rule above rather than re-deriving it saved the re-run.
 
 > **A process note, since it cost time.** The baseline was first measured with `git stash` running *concurrently* with another full-suite run over the same tree — the two interfere, and the concurrent run's numbers were meaningless. Re-measured serially. **Do not stash the working tree while another job is reading it.**
 
