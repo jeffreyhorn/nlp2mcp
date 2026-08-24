@@ -1916,11 +1916,10 @@ def test_a_malformed_timestamp_is_detected(tmp_path, capsys, timestamp):
         json.dumps({"schema_version": "2.2.1", "created_date": timestamp, "models": [_row("ok")]})
     )
 
-    # A format violation WARNS rather than aborting — see the next test for why.
-    assert mod.presolve_match_models(db) == ["ok"]
-    stderr = capsys.readouterr().err  # read ONCE; readouterr() drains the capture
-    assert "format violation" in stderr
-    assert "date-time" in stderr, f"the message must name the format; got: {stderr}"
+    # `created_date` is NOT the tolerated field, so this is fatal (the tolerance
+    # is scoped to `convexity.updated_date`).
+    with pytest.raises(mod.InputError, match="schema.json"):
+        mod.presolve_match_models(db)
 
 
 @pytest.mark.unit
@@ -1938,11 +1937,11 @@ def test_a_format_violation_warns_but_a_structural_one_is_fatal(tmp_path, capsys
     pytest.importorskip("jsonschema")
     import scripts.sprint_audit.check_mcp_solve_attribution as mod
 
+    tolerated = _row("ok")
+    tolerated["convexity"] = {"status": "likely_convex", "updated_date": "2026-04-25"}
     fmt_only = tmp_path / "fmt.json"
-    fmt_only.write_text(
-        json.dumps({"schema_version": "2.2.1", "created_date": "nope", "models": [_row("ok")]})
-    )
-    assert mod.presolve_match_models(fmt_only) == ["ok"], "format alone must not abort"
+    fmt_only.write_text(json.dumps({"schema_version": "2.2.1", "models": [tolerated]}))
+    assert mod.presolve_match_models(fmt_only) == ["ok"], "the tolerated field must not abort"
     assert "WARNING" in capsys.readouterr().err
 
     structural = _row("ok")
@@ -2044,8 +2043,8 @@ def test_a_lexically_valid_but_IMPOSSIBLE_timestamp_is_detected(tmp_path, capsys
         json.dumps({"schema_version": "2.2.1", "created_date": timestamp, "models": [_row("ok")]})
     )
 
-    assert mod.presolve_match_models(db) == ["ok"]
-    assert "format violation" in capsys.readouterr().err
+    with pytest.raises(mod.InputError, match="schema.json"):
+        mod.presolve_match_models(db)
 
 
 @pytest.mark.unit
@@ -2313,52 +2312,35 @@ def test_run_one_records_the_unattributed_abort(_raw_source, tmp_path, monkeypat
 
 
 @pytest.mark.unit
-def test_only_date_time_format_errors_are_downgraded(tmp_path, monkeypatch):
-    """The tolerance is for `date-time` ONLY; other formats stay fatal.
+def test_only_convexity_updated_date_is_tolerated(tmp_path, capsys):
+    """The tolerance is scoped to ONE field, not to `date-time` everywhere.
 
-    It exists for 8 known date-only `convexity.updated_date` values. Extending
-    it to every `format` would silently accept, say, a malformed URL.
-
-    Exercised with `format: date`, which jsonschema DOES enforce out of the box.
-    (`schema.json` also declares `format: uri`, but — like `date-time` — that is
-    inert without the optional `rfc3987`, so it cannot demonstrate the split.)
+    It exists for 8 pre-existing date-only `convexity.updated_date` values. A
+    malformed `mcp_solve.solve_date` has no such excuse — accepting it would let
+    the audit proceed over a schema-invalid database.
     """
     import json
 
     pytest.importorskip("jsonschema")
     import scripts.sprint_audit.check_mcp_solve_attribution as mod
 
-    schema = tmp_path / "schema.json"
-    schema.write_text(
-        json.dumps(
-            {
-                "type": "object",
-                "required": ["schema_version", "models"],
-                "properties": {
-                    "schema_version": {"type": "string"},
-                    "stamp": {"type": "string", "format": "date"},
-                    "when": {"type": "string", "format": "date-time"},
-                    "models": {"type": "array"},
-                },
-            }
-        )
-    )
-    monkeypatch.setattr(mod, "SCHEMA_PATH", schema)
+    # The tolerated field: warns, audit continues.
+    tolerated = _row("ok")
+    tolerated["convexity"] = {"status": "likely_convex", "updated_date": "2026-04-25"}
+    db_ok = tmp_path / "ok.json"
+    db_ok.write_text(json.dumps({"schema_version": "2.2.1", "models": [tolerated]}))
 
-    # A bad `date-time` warns and the audit continues...
-    tolerated = tmp_path / "tolerated.json"
-    tolerated.write_text(
-        json.dumps({"schema_version": "2.2.1", "when": "2026-04-25", "models": [_row("ok")]})
-    )
-    assert mod.presolve_match_models(tolerated) == ["ok"]
+    assert mod.presolve_match_models(db_ok) == ["ok"]
+    assert "convexity.updated_date" in capsys.readouterr().err
 
-    # ...while a bad `date` is fatal.
-    fatal = tmp_path / "fatal.json"
-    fatal.write_text(
-        json.dumps({"schema_version": "2.2.1", "stamp": "not-a-date", "models": [_row("ok")]})
-    )
+    # A DIFFERENT date-time field: fatal.
+    bad = _row("ok")
+    bad["mcp_solve"]["solve_date"] = "2026-04-25"
+    db_bad = tmp_path / "bad.json"
+    db_bad.write_text(json.dumps({"schema_version": "2.2.1", "models": [bad]}))
+
     with pytest.raises(mod.InputError, match="schema.json"):
-        mod.presolve_match_models(fatal)
+        mod.presolve_match_models(db_bad)
 
 
 @pytest.mark.unit
@@ -2395,3 +2377,163 @@ def test_main_rejects_a_negative_emit_timeout(tmp_path, capsys):
 
     assert mod.main(["--models", "x", "--emit-timeout", "-1", "--workdir", str(tmp_path)]) == 2
     assert "--emit-timeout must be >= 0" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_an_INDENTED_abort_is_still_detected():
+    """The abort pattern must tolerate indentation like every other pattern here.
+
+    It was the one diagnostic still anchored at column 0, so an indented abort
+    would leave an aborted MCP reading as solved — and lose the unmatched-abort
+    evidence at the same time.
+    """
+    indented = """
+    S O L V E      S U M M A R Y
+
+    MODEL   mcp_model
+    TYPE    MCP
+    SOLVER  PATH                FROM LINE  1124
+
+    **** SOLVER STATUS     1 Normal Completion
+    **** MODEL STATUS      1 Optimal
+
+    **** SOLVE from line 1124 ABORTED, EXECERROR = 1
+"""
+    (mcp,) = parse_solve_summaries(indented)
+
+    assert mcp.aborted, "an indented abort must still be attributed"
+    assert Attribution("indented", summaries=[mcp]).verdict == "MCP-FAILED"
+
+
+@pytest.mark.unit
+def test_a_repeated_FROM_LINE_makes_an_abort_AMBIGUOUS():
+    """`FROM LINE` names a solve STATEMENT, not one execution of it.
+
+    Real in this corpus: `paperco` emits line 211 three times and `tforss` line
+    246 four times — solves inside loops. With one abort at that line we cannot
+    tell WHICH execution died, so we neither blame a specific summary nor let
+    any of them count as solved.
+    """
+    looped = """
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  211
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  211
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+
+**** SOLVE from line 211 ABORTED, EXECERROR = 1
+"""
+    summaries = parse_solve_summaries(looped)
+    attribution = Attribution("looped", summaries=summaries)
+
+    assert len(summaries) == 2
+    assert not any(s.aborted for s in summaries), "we must not blame a specific execution"
+    assert all(s.abort_ambiguous for s in summaries), "but neither may count as solved"
+    assert not attribution.mcp_succeeded
+    assert attribution.verdict == "MCP-FAILED"
+    assert attribution.as_dict()["summaries"][0]["abort_ambiguous"] is True
+
+
+@pytest.mark.unit
+def test_a_repeated_FROM_LINE_without_an_abort_is_unaffected():
+    """paperco/tforss have duplicate lines and no aborts — they must stay solved."""
+    looped_ok = """
+               S O L V E      S U M M A R Y
+
+     MODEL   wood                OBJECTIVE  profit
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  211
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  211
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+"""
+    summaries = parse_solve_summaries(looped_ok)
+
+    assert not any(s.abort_ambiguous for s in summaries)
+    assert Attribution("ok", summaries=summaries).verdict == "MCP-SOLVED"
+
+
+@pytest.mark.unit
+def test_run_one_validates_emit_timeout_at_its_own_boundary(tmp_path, monkeypatch):
+    """`main` checks it; a direct caller bypassed that and reached subprocess."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    def explode(*a, **k):  # pragma: no cover - must never run
+        raise AssertionError("no subprocess may run with a negative emit_timeout")
+
+    monkeypatch.setattr(mod.subprocess, "run", explode)
+
+    result = mod.run_one("demo", tmp_path, emit_timeout=-1)
+
+    assert result.verdict == "ERROR"
+    assert "emit_timeout must be >= 0" in (result.error or "")
+
+
+@pytest.mark.unit
+def test_run_one_resolves_gams_BEFORE_the_translation(_raw_source, tmp_path, monkeypatch):
+    """A direct caller must not pay a 28-minute translation to learn GAMS is absent."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    def explode(*a, **k):  # pragma: no cover - must never run
+        raise AssertionError("the translation must not run when GAMS is missing")
+
+    monkeypatch.setattr(mod.subprocess, "run", explode)
+    monkeypatch.setattr(mod, "find_gams", lambda: None)
+
+    result = mod.run_one("demo", tmp_path)
+
+    assert result.verdict == "ERROR"
+    assert "gams executable not found" in (result.error or "")
+
+
+@pytest.mark.unit
+def test_a_read_only_json_destination_is_accepted_when_the_parent_is_writable(
+    tmp_path, monkeypatch
+):
+    """`os.replace` never opens the destination — only the parent must be writable.
+
+    Probing the destination with `open("a")` rejected a read-only regular file
+    that the atomic write can replace perfectly well, failing a valid target
+    before the sweep.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    dest = tmp_path / "r.json"
+    dest.write_text("{}")
+    dest.chmod(0o444)  # read-only FILE, writable parent
+
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+    monkeypatch.setattr(
+        mod,
+        "run_one",
+        lambda mid, wd, **kw: Attribution(mid, summaries=parse_solve_summaries(_TWOCGE)),
+    )
+
+    try:
+        rc = mod.main(["--models", "x", "--workdir", str(tmp_path / "wd"), "--json", str(dest)])
+        assert rc == 0, "a read-only file in a writable parent is a valid target"
+    finally:
+        dest.chmod(0o644)

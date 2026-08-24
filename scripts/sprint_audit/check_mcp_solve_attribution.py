@@ -114,7 +114,7 @@ _FROM_LINE = re.compile(r"^[ \t]*SOLVER\s+\S+\s+FROM LINE\s+(\d+)", re.MULTILINE
 #: `**** SOLVE from line n ABORTED, EXECERROR = k`. Keyed on the ABORT, not on
 #: "EXECERROR": GAMS also prints a benign `EXECERROR AT LINE n CLEARED
 #: (EXECERROR=0)`, which `check_presolve_divergence.py` learned to ignore.
-_SOLVE_ABORTED = re.compile(r"^\*\*\*\* SOLVE from line (\d+) ABORTED", re.MULTILINE)
+_SOLVE_ABORTED = re.compile(r"^[ \t]*\*\*\*\* SOLVE from line (\d+) ABORTED", re.MULTILINE)
 #: Same rule for the status lines — the header patterns above tolerate
 #: indentation, and it would be incoherent for these not to: an otherwise valid
 #: listing with indented ``****`` lines would yield a *statusless* summary and be
@@ -135,6 +135,10 @@ class SolveSummary:
     model_status_text: str | None
     #: The source line of the `solve` statement that produced this summary.
     from_line: int | None = None
+    #: The aborted line is shared with another summary, so WHICH execution
+    #: aborted cannot be established. Treated as not-successfully-solved: this
+    #: tool must not claim a solve worked when the evidence is ambiguous.
+    abort_ambiguous: bool = False
     #: This solve was reported ABORTED. ⚠ Attributed by `FROM LINE`, never by
     #: proximity: `weapons` prints `SOLVE from line 238 ABORTED` *after* the
     #: embedded NLP's summary (`FROM LINE 138`), because the aborting solve is
@@ -169,6 +173,18 @@ def parse_solve_summaries(lst_content: str) -> list[SolveSummary]:
     aborted_lines = parse_aborted_lines(lst_content)
     summaries: list[SolveSummary] = []
 
+    # ⚠ `FROM LINE n` identifies the solve STATEMENT, not one execution of it.
+    # A solve inside a loop reports the same line every iteration — real here:
+    # `paperco` emits line 211 three times, `tforss` line 246 four times. If such
+    # a line is aborted we cannot tell WHICH execution died, so we neither blame
+    # a specific summary nor let any of them count as solved.
+    line_counts: dict[int, int] = {}
+    for i, start in enumerate(starts):
+        end = starts[i + 1] if i + 1 < len(starts) else len(lst_content)
+        m = _FROM_LINE.search(lst_content[start:end])
+        if m:
+            line_counts[int(m.group(1))] = line_counts.get(int(m.group(1)), 0) + 1
+
     for i, start in enumerate(starts):
         end = starts[i + 1] if i + 1 < len(starts) else len(lst_content)
         block = lst_content[start:end]
@@ -191,7 +207,16 @@ def parse_solve_summaries(lst_content: str) -> list[SolveSummary]:
                 model_status=int(mstat.group(1)) if mstat else None,
                 model_status_text=mstat.group(2).strip() if mstat else None,
                 from_line=from_line,
-                aborted=from_line is not None and from_line in aborted_lines,
+                aborted=(
+                    from_line is not None
+                    and from_line in aborted_lines
+                    and line_counts.get(from_line, 0) == 1
+                ),
+                abort_ambiguous=(
+                    from_line is not None
+                    and from_line in aborted_lines
+                    and line_counts.get(from_line, 0) > 1
+                ),
             )
         )
 
@@ -293,6 +318,7 @@ class Attribution:
         """
         return any(
             not s.aborted
+            and not s.abort_ambiguous
             and s.solver_status == _NORMAL_COMPLETION
             and s.model_status in _SUCCESS_MODEL_STATUS
             for s in self.mcp_summaries
@@ -320,6 +346,7 @@ class Attribution:
         # answer was ever established.
         return (
             not last.aborted
+            and not last.abort_ambiguous
             and last.solver_status == _NORMAL_COMPLETION
             and last.model_status in _SUCCESS_MODEL_STATUS
         )
@@ -389,6 +416,7 @@ class Attribution:
                     # reader cannot re-derive.
                     "from_line": s.from_line,
                     "aborted": s.aborted,
+                    "abort_ambiguous": s.abort_ambiguous,
                 }
                 for s in self.summaries
             ],
@@ -604,12 +632,19 @@ def _validate_against_schema(db: object, db_path: Path) -> str | None:
     # `convexity.updated_date` values. `schema.json` also declares
     # `format: uri` on `source_url`/`web_page_url`; downgrading *those* would
     # silently accept a malformed URL, which no measured defect justifies.
-    format_errors = [
-        e for e in errors if e.validator == "format" and e.validator_value == "date-time"
-    ]
-    errors = [
-        e for e in errors if not (e.validator == "format" and e.validator_value == "date-time")
-    ]
+    def _is_tolerated(e: object) -> bool:
+        # ONLY `convexity.updated_date`, and only for `date-time`. The tolerance
+        # exists for 8 pre-existing date-only values in THAT field; a malformed
+        # `mcp_solve.solve_date`, `solution_comparison.comparison_date` or
+        # top-level `created_date` has no such excuse and stays fatal.
+        return (
+            getattr(e, "validator", None) == "format"
+            and getattr(e, "validator_value", None) == "date-time"
+            and list(getattr(e, "absolute_path", []))[-2:] == ["convexity", "updated_date"]
+        )
+
+    format_errors = [e for e in errors if _is_tolerated(e)]
+    errors = [e for e in errors if not _is_tolerated(e)]
     if format_errors:
         shown = format_errors[:3]
         detail = "; ".join(
@@ -617,8 +652,8 @@ def _validate_against_schema(db: object, db_path: Path) -> str | None:
         )
         more = f" (+{len(format_errors) - len(shown)} more)" if len(format_errors) > 3 else ""
         print(
-            f"WARNING: {db_path} has {len(format_errors)} format violation(s) "
-            f"against schema.json — {detail}{more}",
+            f"WARNING: {db_path} has {len(format_errors)} tolerated "
+            f"convexity.updated_date format violation(s) — {detail}{more}",
             file=sys.stderr,
         )
     if not errors:
@@ -886,6 +921,9 @@ def run_one(
     if reslim < 0:
         return Attribution(model_id, error=f"reslim must be >= 0 seconds, got {reslim}")
 
+    if emit_timeout < 0:
+        return Attribution(model_id, error=f"emit_timeout must be >= 0 seconds, got {emit_timeout}")
+
     # And the docstring's absolute-`workdir` precondition is ENFORCED, not merely
     # documented. A relative one splits the run in two: `src.cli`'s `-o`, GAMS's
     # `o=` and `ScrDir` resolve under `cwd=PROJECT_ROOT`, while `emitted.exists()`,
@@ -928,6 +966,13 @@ def run_one(
         emitted.unlink(missing_ok=True)
     except OSError as exc:
         return Attribution(model_id, error=f"cannot clear stale emit {emitted}: {exc}")
+
+    # Resolve GAMS BEFORE the translation. `main` preflights it, but a direct
+    # caller with the default `gams=None` would otherwise pay the whole emit
+    # timeout — up to ~28 minutes for `sarf` — only to be told GAMS is missing.
+    gams = gams or find_gams()
+    if not gams:
+        return Attribution(model_id, error="gams executable not found")
 
     try:
         emit = subprocess.run(
@@ -983,10 +1028,6 @@ def run_one(
             error=f"emit reported success but wrote no file at {emitted}"
             + (f": {detail}" if detail else ""),
         )
-
-    gams = gams or find_gams()
-    if not gams:
-        return Attribution(model_id, error="gams executable not found")
 
     # Never let a previous run's listing answer for this one. If GAMS dies
     # before writing (licensing, startup), a stale file would be parsed as this
@@ -1240,10 +1281,12 @@ def main(argv: list[str] | None = None) -> int:
                         file=sys.stderr,
                     )
                     return 2
-                # Append, so the probe cannot truncate a file the caller may
-                # still want.
-                with out_path.open("a"):
-                    pass
+                # NO write-probe on the destination itself: the final write is
+                # `mkstemp` in the parent + `os.replace`, which never opens the
+                # destination. Probing it with `open("a")` would reject a
+                # read-only regular file that `os.replace` can perfectly well
+                # replace, failing a valid target before the sweep. The parent
+                # probe below is the one that matches how we actually write.
 
             # ALWAYS probe the parent, existing destination or not: the final
             # write is atomic (`mkstemp` in this directory, then `os.replace`),
