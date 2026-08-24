@@ -105,6 +105,13 @@ _SUMMARY_HEADER = re.compile(r"^[ \t]*S O L V E {6}S U M M A R Y\s*$", re.MULTIL
 _MODEL_LINE = re.compile(r"^[ \t]*MODEL\s+(\S+)", re.MULTILINE)
 _TYPE_LINE = re.compile(r"^[ \t]*TYPE\s+(\S+)", re.MULTILINE)
 _SOLVER_LINE = re.compile(r"^[ \t]*SOLVER\s+(\S+)", re.MULTILINE)
+#: `FROM LINE n` identifies WHICH solve statement produced a summary — the key
+#: to attributing an abort, since an aborted solve emits no summary of its own.
+_FROM_LINE = re.compile(r"^[ \t]*SOLVER\s+\S+\s+FROM LINE\s+(\d+)", re.MULTILINE)
+#: `**** SOLVE from line n ABORTED, EXECERROR = k`. Keyed on the ABORT, not on
+#: "EXECERROR": GAMS also prints a benign `EXECERROR AT LINE n CLEARED
+#: (EXECERROR=0)`, which `check_presolve_divergence.py` learned to ignore.
+_SOLVE_ABORTED = re.compile(r"^\*\*\*\* SOLVE from line (\d+) ABORTED", re.MULTILINE)
 #: Same rule for the status lines — the header patterns above tolerate
 #: indentation, and it would be incoherent for these not to: an otherwise valid
 #: listing with indented ``****`` lines would yield a *statusless* summary and be
@@ -123,6 +130,14 @@ class SolveSummary:
     solver_status: int | None
     model_status: int | None
     model_status_text: str | None
+    #: The source line of the `solve` statement that produced this summary.
+    from_line: int | None = None
+    #: This solve was reported ABORTED. ⚠ Attributed by `FROM LINE`, never by
+    #: proximity: `weapons` prints `SOLVE from line 238 ABORTED` *after* the
+    #: embedded NLP's summary (`FROM LINE 138`), because the aborting solve is
+    #: the MCP — which produced no summary at all. Blaming the nearest block
+    #: above would tar the NLP and dissolve the finding.
+    aborted: bool = False
 
     @property
     def is_mcp(self) -> bool:
@@ -143,6 +158,7 @@ def parse_solve_summaries(lst_content: str) -> list[SolveSummary]:
     ``MODEL STATUS`` cannot tell you which model produced it.
     """
     starts = [m.start() for m in _SUMMARY_HEADER.finditer(lst_content)]
+    aborted_lines = {int(m.group(1)) for m in _SOLVE_ABORTED.finditer(lst_content)}
     summaries: list[SolveSummary] = []
 
     for i, start in enumerate(starts):
@@ -155,6 +171,8 @@ def parse_solve_summaries(lst_content: str) -> list[SolveSummary]:
         solver = _SOLVER_LINE.search(block)
         sstat = _SOLVER_STATUS.search(block)
         mstat = _MODEL_STATUS.search(block)
+        from_line_m = _FROM_LINE.search(block)
+        from_line = int(from_line_m.group(1)) if from_line_m else None
 
         summaries.append(
             SolveSummary(
@@ -164,6 +182,8 @@ def parse_solve_summaries(lst_content: str) -> list[SolveSummary]:
                 solver_status=int(sstat.group(1)) if sstat else None,
                 model_status=int(mstat.group(1)) if mstat else None,
                 model_status_text=mstat.group(2).strip() if mstat else None,
+                from_line=from_line,
+                aborted=from_line is not None and from_line in aborted_lines,
             )
         )
 
@@ -261,7 +281,9 @@ class Attribution:
         status alongside SOLVER STATUS 3/4, and that is not a solved model.
         """
         return any(
-            s.solver_status == _NORMAL_COMPLETION and s.model_status in _SUCCESS_MODEL_STATUS
+            not s.aborted
+            and s.solver_status == _NORMAL_COMPLETION
+            and s.model_status in _SUCCESS_MODEL_STATUS
             for s in self.mcp_summaries
         )
 
@@ -286,7 +308,9 @@ class Attribution:
         # warm-start value would report a spurious match where no successful
         # answer was ever established.
         return (
-            last.solver_status == _NORMAL_COMPLETION and last.model_status in _SUCCESS_MODEL_STATUS
+            not last.aborted
+            and last.solver_status == _NORMAL_COMPLETION
+            and last.model_status in _SUCCESS_MODEL_STATUS
         )
 
     @property
@@ -773,6 +797,16 @@ def find_gams() -> str | None:
             # the fail-fast preflight and every model would die on
             # `IsADirectoryError` after its translation.
             return str(Path(resolved).resolve())
+
+    # Walk PATH ourselves rather than trusting `which`'s first hit: it checks
+    # existence and the execute bit, not regular-file-ness, so a DIRECTORY named
+    # `gams` earlier on PATH would otherwise mask a real binary behind it.
+    for directory in os.environ.get("PATH", "").split(os.pathsep):
+        if not directory:
+            continue
+        candidate_path = Path(directory) / "gams"
+        if candidate_path.is_file() and os.access(candidate_path, os.X_OK):
+            return str(candidate_path.resolve())
 
     found = shutil.which("gams")
     if found and not Path(found).is_file():

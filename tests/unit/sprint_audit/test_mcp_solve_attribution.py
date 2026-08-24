@@ -469,15 +469,41 @@ def test_run_one_happy_path_parses_the_listing_it_just_wrote(_raw_source, tmp_pa
             (workdir / "demo.lst").write_text(_TWOCGE)
         return _completed()
 
-    monkeypatch.setattr(mod.subprocess, "run", fake_run)
+    kwargs_seen = []
+    real_run = fake_run
+
+    def recording_run(cmd, **kwargs):
+        kwargs_seen.append(kwargs)
+        return real_run(cmd, **kwargs)
+
+    monkeypatch.setattr(mod.subprocess, "run", recording_run)
     monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
 
-    result = mod.run_one("demo", workdir)
+    result = mod.run_one("demo", workdir, reslim=123)
 
     assert result.error is None, result.error
     assert result.verdict == "MCP-SOLVED"
     assert result.gams_returncode == 0
     assert len(calls) == 2, "one translation, one GAMS run"
+
+    # Assert the GAMS invocation itself. Every one of these is load-bearing and
+    # a regression dropping any of them would otherwise pass this test:
+    #   cwd=PROJECT_ROOT  — the emitted `$include` is repo-relative
+    #   o=<abs listing>   — the parent reads this exact file back
+    #   ScrDir=<temp>     — keeps GAMS scratch OUT of the repo (S37 Day 9)
+    gams_cmd, gams_kwargs = calls[1], kwargs_seen[1]
+    assert gams_cmd[0] == "/fake/gams"
+    assert gams_cmd[1] == str(workdir / "demo_mcp_presolve.gms")
+    assert f"o={workdir / 'demo.lst'}" in gams_cmd, f"listing path must be explicit: {gams_cmd}"
+    assert "reslim=123" in gams_cmd, "the caller's reslim must reach GAMS"
+    scrdir = [a for a in gams_cmd if a.startswith("ScrDir=")]
+    assert scrdir, f"ScrDir is required to keep scratch out of the repo: {gams_cmd}"
+    # Under the WORKDIR — which is what keeps scratch out of the repo in a real
+    # run. (This fixture points PROJECT_ROOT at tmp_path, so comparing against
+    # PROJECT_ROOT would assert nothing here.)
+    assert scrdir[0].removeprefix("ScrDir=").startswith(str(workdir))
+    assert gams_kwargs["cwd"] == str(mod.PROJECT_ROOT), "the repo-relative $include needs this"
+    assert gams_kwargs["timeout"] == 123 + 120, "wall-clock allowance on top of reslim"
 
 
 @pytest.mark.unit
@@ -898,14 +924,16 @@ def test_find_gams_resolves_through_which_not_exists(monkeypatch):
     # `shutil.which` is what performs the executability check. Stub it away and
     # nothing may resolve — even though the macOS candidate path exists on this
     # machine, which is precisely what an `exists()`-based lookup would return.
-    # Force a candidate path to "exist" while `which` finds nothing. An
-    # `exists()`-based lookup would return that candidate; the `which`-based one
-    # returns None. Without forcing `exists()`, this test passes vacuously on any
-    # runner that has no GAMS installed at a hard-coded path.
-    monkeypatch.setattr(mod.shutil, "which", lambda _p: None)
+    # Force every hard-coded install path to "exist" while nothing is actually
+    # runnable. An `exists()`-based lookup returns the first candidate; a
+    # file-and-executable check returns None. Without forcing `exists()` this
+    # would pass vacuously on any runner with no GAMS at a hard-coded path.
     monkeypatch.setattr(mod.Path, "exists", lambda _self: True)
+    monkeypatch.setattr(mod.Path, "is_file", lambda _self: False)
+    monkeypatch.setattr(mod.shutil, "which", lambda _p: None)
+    monkeypatch.setenv("PATH", "")
 
-    assert mod.find_gams() is None, "must resolve via which(), not exists()"
+    assert mod.find_gams() is None, "existence alone must not qualify a candidate"
 
 
 @pytest.mark.unit
@@ -1160,8 +1188,11 @@ def test_find_gams_returns_an_absolute_path(tmp_path, monkeypatch):
     real = tmp_path / "gams"
     real.write_text("#!/bin/sh\n")
     real.chmod(0o755)
+    monkeypatch.setattr(mod.shutil, "which", lambda _p: None)  # skip install paths
+    # A RELATIVE PATH entry — a relative result would resolve against the child's
+    # cwd rather than the caller's.
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(mod.shutil, "which", lambda p: "gams" if p == "gams" else None)
+    monkeypatch.setenv("PATH", ".")
 
     found = mod.find_gams()
 
@@ -2084,9 +2115,151 @@ def test_find_gams_rejects_an_executable_directory(tmp_path, monkeypatch):
     """
     import scripts.sprint_audit.check_mcp_solve_attribution as mod
 
-    fake = tmp_path / "gams"
-    fake.mkdir()  # a directory, and directories carry the execute bit
+    (tmp_path / "gams").mkdir()  # a directory, and directories carry the execute bit
 
-    monkeypatch.setattr(mod.shutil, "which", lambda _p: str(fake))
+    monkeypatch.setenv("PATH", str(tmp_path))
+    # `which` happily returns the directory — that is the bug under test.
+    monkeypatch.setattr(
+        mod.shutil, "which", lambda p: str(tmp_path / "gams") if p == "gams" else None
+    )
 
     assert mod.find_gams() is None, "a directory must not be accepted as the GAMS binary"
+
+
+#: Verbatim from `weapons` — the abort names line **238** while the only summary
+#: is `FROM LINE 138`. The aborting solve is the MCP, which emitted no summary.
+_WEAPONS_ABORT_LINES = """
+               S O L V E      S U M M A R Y
+
+     MODEL   war                 OBJECTIVE  tetd
+     TYPE    NLP                 DIRECTION  MAXIMIZE
+     SOLVER  CONOPT              FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+
+**** SOLVE from line 238 ABORTED, EXECERROR = 1
+**** USER ERROR(S) ENCOUNTERED
+"""
+
+
+@pytest.mark.unit
+def test_an_abort_is_attributed_by_FROM_LINE_not_by_proximity():
+    """The abort sits below the NLP's summary but belongs to the MCP.
+
+    This is the whole finding's load-bearing case. Blaming the nearest summary
+    above would mark weapons' embedded NLP as aborted, drop it out of the
+    warm-start gate, and turn EMBEDDED-ONLY into NO-SOLVE — dissolving the
+    spurious match into "nothing solved".
+    """
+    (nlp,) = parse_solve_summaries(_WEAPONS_ABORT_LINES)
+
+    assert nlp.from_line == 138, "the summary names its own solve statement"
+    assert not nlp.aborted, "the abort names line 238 — a DIFFERENT solve"
+
+    attribution = Attribution("weapons", summaries=[nlp])
+    assert attribution.embedded_produced_status, "the NLP genuinely produced an answer"
+    assert attribution.verdict == "EMBEDDED-ONLY"
+
+
+@pytest.mark.unit
+def test_an_aborted_MCP_with_a_status_is_not_MCP_SOLVED():
+    """A summary plus a matching abort is a failure, whatever the statuses say.
+
+    The repo's own solve gate requires `error_type is None` alongside the two
+    statuses; this is the attribution-aware equivalent.
+    """
+    # SYNTHETIC — an MCP that reports statuses and is then aborted.
+    aborted_mcp = """
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  1124
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+
+**** SOLVE from line 1124 ABORTED, EXECERROR = 1
+"""
+    (mcp,) = parse_solve_summaries(aborted_mcp)
+    attribution = Attribution("aborted", summaries=[mcp])
+
+    assert mcp.aborted, "the abort names THIS summary's line"
+    assert attribution.mcp_produced_status, "attribution still succeeded..."
+    assert not attribution.mcp_succeeded, "...but an aborted solve is not a usable answer"
+    assert attribution.verdict == "MCP-FAILED"
+
+
+@pytest.mark.unit
+def test_an_aborted_embedded_solve_is_not_a_usable_warm_start():
+    """The same rule on the embedded side — a spurious match needs a real answer."""
+    aborted_source = """
+               S O L V E      S U M M A R Y
+
+     MODEL   src                 OBJECTIVE  z
+     TYPE    NLP                 DIRECTION  MINIMIZE
+     SOLVER  CONOPT              FROM LINE  10
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+
+**** SOLVE from line 10 ABORTED, EXECERROR = 1
+"""
+    attribution = Attribution("src-aborted", summaries=parse_solve_summaries(aborted_source))
+
+    assert attribution.embedded_summaries[-1].aborted
+    assert not attribution.embedded_produced_status
+    assert attribution.verdict == "NO-SOLVE"
+    assert not attribution.is_embedded_only, "no warm-start answer means no spurious match"
+
+
+@pytest.mark.unit
+def test_a_CLEARED_execerror_is_not_an_abort():
+    """GAMS prints `EXECERROR AT LINE n CLEARED (EXECERROR=0)` benignly.
+
+    Both real listings in this file contain one; keying on "EXECERROR" rather
+    than the ABORT would mark every healthy run as failed.
+    """
+    benign = """
+**** EXECERROR AT LINE 34 CLEARED (EXECERROR=0)
+
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  1124
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+"""
+    (mcp,) = parse_solve_summaries(benign)
+
+    assert not mcp.aborted
+    assert Attribution("benign", summaries=[mcp]).verdict == "MCP-SOLVED"
+
+
+@pytest.mark.unit
+def test_find_gams_skips_a_directory_earlier_on_PATH(tmp_path, monkeypatch):
+    """A directory named `gams` must not mask a real binary behind it.
+
+    Returning None on the first non-file hit would reject a runnable
+    environment.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    decoy = tmp_path / "first"
+    decoy.mkdir()
+    (decoy / "gams").mkdir()  # a DIRECTORY named gams, earlier on PATH
+
+    real_dir = tmp_path / "second"
+    real_dir.mkdir()
+    real = real_dir / "gams"
+    real.write_text("#!/bin/sh\n")
+    real.chmod(0o755)
+
+    monkeypatch.setenv("PATH", f"{decoy}{os.pathsep}{real_dir}")
+    # The install-path loop resolves through `which`, so stub that to skip it.
+    monkeypatch.setattr(mod.shutil, "which", lambda _p: None)
+
+    assert mod.find_gams() == str(real.resolve())
