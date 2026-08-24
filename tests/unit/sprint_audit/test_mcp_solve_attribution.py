@@ -548,6 +548,9 @@ def test_run_one_emit_timeout_is_a_structured_result_not_an_exception(
         raise subprocess.TimeoutExpired(cmd=cmd, timeout=600)
 
     monkeypatch.setattr(mod.subprocess, "run", fake_run)
+    # GAMS is resolved BEFORE the translation, so this must be stubbed or the
+    # test depends on whether the runner happens to have GAMS installed.
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
 
     result = mod.run_one("demo", tmp_path)
 
@@ -616,6 +619,7 @@ def test_run_one_emit_failure_carries_the_translation_output(_raw_source, tmp_pa
         return _completed(returncode=1, stderr="ParseError: unexpected token at line 12")
 
     monkeypatch.setattr(mod.subprocess, "run", fake_run)
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
 
     result = mod.run_one("demo", tmp_path)
 
@@ -629,6 +633,7 @@ def test_run_one_distinguishes_silent_emit_from_failed_emit(_raw_source, tmp_pat
     import scripts.sprint_audit.check_mcp_solve_attribution as mod
 
     monkeypatch.setattr(mod.subprocess, "run", lambda cmd, **kw: _completed())
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
 
     result = mod.run_one("demo", tmp_path)
 
@@ -2363,6 +2368,7 @@ def test_the_emit_timeout_is_configurable_and_named_in_the_error(
         raise subprocess.TimeoutExpired(cmd=cmd, timeout=kwargs.get("timeout"))
 
     monkeypatch.setattr(mod.subprocess, "run", fake_run)
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
 
     result = mod.run_one("demo", tmp_path, emit_timeout=1800)
 

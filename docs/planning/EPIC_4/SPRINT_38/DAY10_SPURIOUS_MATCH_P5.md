@@ -315,6 +315,26 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/run-*/twocge_mcp_presolve.gms
 
 **It recurred once more in review round 2 and again did not survive a re-run** — that round reported `1 failed, 5095 passed, 12 skipped`, the failure being `test_gams_check.py::test_validate_simple_nlp_golden` (**the Day-7 flake**, a GAMS-invoking validation test, distinct from the Day-9 one). Clean re-run: **5098 passed, 10 skipped, exit 0** — exactly 5088 + the 10 tests added in round 2, with the same 10 pre-existing skips enumerated by `-rs`.
 
+### ⚠ CI caught a host-dependent test that my machine could not — and I wrote it
+
+Round 16 moved the GAMS lookup **before** the translation (so a direct caller does not pay a 28-minute emit to learn the binary is missing). Four `run_one` tests exercise the *emit* path and never stubbed `find_gams`, so they suddenly depended on whether the runner has GAMS installed:
+
+```
+FAILED test_run_one_emit_timeout_is_a_structured_result_not_an_exception
+  assert 'emit timeout' in 'gams executable not found'
+```
+
+**They passed locally and failed in CI purely because this machine has GAMS.** That is the same class of defect this PR keeps surfacing — a test whose result depends on host state — and this time I introduced it.
+
+**Fixed, then verified against the CI condition rather than assumed.** Clearing `PATH` does *not* reproduce it, because `find_gams` also probes hardcoded install paths. So the module was run under a session plugin forcing `find_gams() → None`:
+
+| run | result |
+|---|---|
+| GAMS absent (CI-equivalent) | **130 passed**, 2 deselected |
+| GAMS present (this machine) | **132 passed** |
+
+The 2 deselected are `find_gams`'s own tests, which the harness necessarily stubs. **Everything else is now host-independent in both directions** — which is the property that was missing, not merely "the four failures are fixed".
+
 **The pattern is worth naming rather than re-diagnosing each time:** this suite has two known wall-clock/subprocess flakes (`test_performance_overhead_acceptable`, `test_validate_simple_nlp_golden`) and its skip count drifts by a few under `-n auto`. **The count is only trustworthy from a run with nothing else competing for the machine**, and the check that settles it is `-rs` — a skip list that names every skip beats any arithmetic on the totals. (**`-rs` reports skips only**; naming a *failure* needs `-rf`, which cost a whole extra run to learn in round 8.)
 
 ### ⚠ One of those "flakes" is a locatable defect, and it should be fixed rather than re-tolerated
