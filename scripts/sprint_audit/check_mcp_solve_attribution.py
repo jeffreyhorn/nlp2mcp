@@ -71,6 +71,7 @@ wrong side. An abort tells you *something* failed, not *which model*.
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import os
 import re
@@ -460,16 +461,41 @@ def _validate_against_schema(db: object, db_path: Path) -> str | None:
     still run, so the audit degrades in coverage rather than failing outright.
     """
     try:
-        from jsonschema import Draft7Validator
+        from jsonschema import Draft7Validator, FormatChecker
     except ImportError:  # pragma: no cover - depends on the environment
+        # `jsonschema` is an OPTIONAL, undeclared dependency — degrade quietly.
         return None
 
+    # `schema.json` is NOT optional the way `jsonschema` is: it is the repo's
+    # checked-in contract. If it is missing or corrupt, the backstop is silently
+    # disabled and a schema-only violation (a misspelled key) would sail through
+    # — so this is reported as an error rather than treated as a pass.
     try:
         schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
-    except (OSError, ValueError):  # pragma: no cover - schema ships with the repo
-        return None
+    except OSError as exc:
+        return f"cannot read the schema contract {SCHEMA_PATH}: {exc}"
+    except ValueError as exc:
+        return f"schema contract {SCHEMA_PATH} is not valid JSON: {exc}"
 
-    errors = sorted(Draft7Validator(schema).iter_errors(db), key=lambda e: list(e.absolute_path))
+    # ⚠ `format` keywords are inert unless a FormatChecker is supplied — and
+    # even then `date-time` is a NO-OP here, because jsonschema delegates it to
+    # the optional `rfc3339-validator` package, which is not installed.
+    # (Measured: an invalid timestamp passed both with and without a bare
+    # `FormatChecker()`.) Rather than add a second undeclared dependency, the
+    # check is registered locally from the stdlib.
+    format_checker = FormatChecker()
+
+    @format_checker.checks("date-time", raises=(ValueError, TypeError))
+    def _is_date_time(value: object) -> bool:
+        if not isinstance(value, str):
+            return True  # the `type` keyword owns non-strings
+        datetime.datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return True
+
+    errors = sorted(
+        Draft7Validator(schema, format_checker=format_checker).iter_errors(db),
+        key=lambda e: list(e.absolute_path),
+    )
     if not errors:
         return None
 
@@ -721,6 +747,13 @@ def run_one(
     # `lst.exists()` and `TemporaryDirectory(dir=...)` resolve under the caller's
     # CWD — so the child writes somewhere the parent never looks and the run
     # reports a missing emit that was in fact produced.
+    # A NUL passes `is_absolute()` and then makes `emitted.unlink()` raise
+    # `ValueError`, which the `OSError` handlers below do not catch. Same
+    # pre-filesystem string check `main` uses — applied here because `run_one`
+    # is importable and validates its other direct inputs already.
+    if "\x00" in str(workdir):
+        return Attribution(model_id, error="workdir path contains an embedded NUL character")
+
     workdir = Path(workdir)
     if not workdir.is_absolute():
         return Attribution(

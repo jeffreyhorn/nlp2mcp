@@ -2,11 +2,17 @@
 
 Sprint 38 Day 10. A ``--nlp-presolve`` emit runs the original model inside the
 generated file before solving the MCP, so a **successful** run's listing holds
-two or more solve summaries. **When the MCP aborts it holds only one** — the
-embedded source's — because an MCP that dies before its solve emits no summary
-at all. The listing is then indistinguishable, to a global search, from a
-single-solve run; anything that greps for ``MODEL STATUS`` reports the embedded
-model's status as the MCP's.
+two or more solve summaries. **When the MCP aborts *before its header* it holds
+only one** — the embedded source's — because no summary is emitted at all. The
+listing is then indistinguishable, to a global search, from a single-solve run;
+anything that greps for ``MODEL STATUS`` reports the embedded model's status as
+the MCP's.
+
+(That is the `weapons` shape. A solver that dies *after* GAMS writes the header
+but before reporting leaves a **second, statusless** summary instead — a
+distinct failure mode, covered by
+`test_a_summary_without_a_status_does_not_count_as_solved` and classified
+`MCP-NO-STATUS`.)
 
 `weapons` is the real instance: its listing has exactly ONE summary (the NLP's,
 MS-2 @ 1735.5696), the MCP aborted with ``EXECERROR = 1``, and the DB recorded
@@ -1806,3 +1812,97 @@ def test_run_one_rejects_a_relative_workdir(tmp_path, monkeypatch):
 
     assert result.verdict == "ERROR"
     assert "absolute path" in (result.error or "")
+
+
+@pytest.mark.unit
+def test_a_missing_schema_contract_is_reported_not_silently_skipped(tmp_path, monkeypatch):
+    """`schema.json` is the checked-in contract, unlike the optional `jsonschema`.
+
+    Silently disabling the backstop would let a schema-only violation — a
+    misspelled key — pass, which is exactly what the backstop exists to catch.
+    """
+    pytest.importorskip("jsonschema")
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    monkeypatch.setattr(mod, "SCHEMA_PATH", tmp_path / "absent-schema.json")
+
+    with pytest.raises(mod.InputError, match="schema contract|cannot read the schema"):
+        mod.presolve_match_models(_write_db(tmp_path, [_row("ok")]))
+
+
+@pytest.mark.unit
+def test_a_malformed_schema_contract_is_reported(tmp_path, monkeypatch):
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    pytest.importorskip("jsonschema")
+    broken = tmp_path / "schema.json"
+    broken.write_text("{ not json")
+    monkeypatch.setattr(mod, "SCHEMA_PATH", broken)
+
+    with pytest.raises(mod.InputError, match="not valid JSON"):
+        mod.presolve_match_models(_write_db(tmp_path, [_row("ok")]))
+
+
+@pytest.mark.unit
+def test_an_invalid_timestamp_is_caught_by_the_format_checker(tmp_path):
+    """`format` is inert without a FormatChecker — and `date-time` is inert even
+    with a bare one, because jsonschema delegates it to the optional
+    `rfc3339-validator`, which is not installed. The checker is registered
+    locally from the stdlib so the contract is actually enforced.
+    """
+    import json
+
+    pytest.importorskip("jsonschema")
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    db = tmp_path / "db.json"
+    db.write_text(
+        json.dumps(
+            {"schema_version": "2.2.1", "created_date": "NOT-A-TIMESTAMP", "models": [_row("ok")]}
+        )
+    )
+
+    with pytest.raises(mod.InputError, match="date-time"):
+        mod.presolve_match_models(db)
+
+
+@pytest.mark.unit
+def test_a_valid_timestamp_still_passes(tmp_path):
+    """The format check must not reject the shape the real DB actually uses."""
+    import json
+
+    pytest.importorskip("jsonschema")
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    db = tmp_path / "db.json"
+    db.write_text(
+        json.dumps(
+            {
+                "schema_version": "2.2.1",
+                "created_date": "2026-01-01T07:55:03Z",  # the real DB's format
+                "models": [_row("ok")],
+            }
+        )
+    )
+
+    assert mod.presolve_match_models(db) == ["ok"]
+
+
+@pytest.mark.unit
+def test_run_one_rejects_a_workdir_containing_a_NUL(tmp_path, monkeypatch):
+    """An absolute path with a NUL passes `is_absolute()`, then `unlink()` raises.
+
+    `ValueError` is not caught by the `OSError` handlers, so a direct caller
+    would get a traceback instead of a structured result.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    def explode(*a, **k):  # pragma: no cover - must never run
+        raise AssertionError("no subprocess may run with a NUL in the workdir")
+
+    monkeypatch.setattr(mod.subprocess, "run", explode)
+
+    result = mod.run_one("demo", Path("/tmp/bad\x00dir"))
+
+    assert result.verdict == "ERROR"
+    assert "NUL" in (result.error or "")
