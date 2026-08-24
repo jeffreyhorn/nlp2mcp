@@ -431,8 +431,54 @@ def _outcome_is_known(value: str) -> bool:
     return value in _SOLVE_OUTCOME_CATEGORIES
 
 
+def _reject_nul(value: str, flag: str) -> str | None:
+    """A NUL in a path is an input error, reported before any filesystem call.
+
+    ⚠ It cannot be detected by probing: ``Path.is_dir()``, ``.exists()`` and
+    ``.is_symlink()`` **swallow** the ``ValueError`` and return ``False``, so a
+    preflight built from them sails past a NUL and the run only dies at the
+    final ``open``/``os.replace`` — after the whole sweep. Checking the string is
+    the only reliable point.
+    """
+    if "\x00" in value:
+        return f"ERROR: {flag} path contains an embedded NUL character"
+    return None
+
+
 class InputError(Exception):
     """Bad input — reported with a concrete message and exit code 2, never a traceback."""
+
+
+SCHEMA_PATH = PROJECT_ROOT / "data" / "gamslib" / "schema.json"
+
+
+def _validate_against_schema(db: object, db_path: Path) -> str | None:
+    """Validate the whole DB against ``schema.json``; ``None`` if it passes.
+
+    Returns a message rather than raising so the caller keeps one error path.
+    **Absent `jsonschema`, this is a no-op** — the targeted checks that follow
+    still run, so the audit degrades in coverage rather than failing outright.
+    """
+    try:
+        from jsonschema import Draft7Validator
+    except ImportError:  # pragma: no cover - depends on the environment
+        return None
+
+    try:
+        schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):  # pragma: no cover - schema ships with the repo
+        return None
+
+    errors = sorted(Draft7Validator(schema).iter_errors(db), key=lambda e: list(e.absolute_path))
+    if not errors:
+        return None
+
+    shown = errors[:5]
+    lines = [
+        f"  {'.'.join(str(p) for p in e.absolute_path) or '(root)'}: {e.message}" for e in shown
+    ]
+    more = f"\n  ... and {len(errors) - len(shown)} more" if len(errors) > len(shown) else ""
+    return f"results DB {db_path} does not match schema.json:\n" + "\n".join(lines) + more
 
 
 def presolve_match_models(db_path: Path | None = None) -> list[str]:
@@ -583,6 +629,24 @@ def presolve_match_models(db_path: Path | None = None) -> list[str]:
 
         if outcome == "model_optimal_presolve" and status == "match":
             out.append(model_id)
+
+    # Full-schema validation as a BACKSTOP, deliberately AFTER the targeted
+    # checks above rather than before them.
+    #
+    # The targeted checks give a better error — they name the model and say what
+    # to do ("omit the key instead") — so they get first refusal. What only the
+    # schema can catch is what they cannot see: `additionalProperties: false` is
+    # set on the top level and on the model / mcp_solve / solution_comparison
+    # objects, so a MISSPELLED key (`mcp_solves`, `outcome_catagory`) reads as
+    # "field absent" to any check that looks up fields by name.
+    #
+    # Imported lazily and optionally, exactly as `scripts/gamslib/db_manager.py`
+    # does: `jsonschema` is NOT a declared dependency, so absent it the audit
+    # still runs — with the narrower guarantee rather than none.
+    schema_error = _validate_against_schema(db, db_path)
+    if schema_error:
+        raise InputError(schema_error)
+
     return sorted(out)
 
 
@@ -650,6 +714,19 @@ def run_one(
     # the value reaches GAMS *and* derives the wall-clock timeout (`reslim + 120`).
     if reslim < 0:
         return Attribution(model_id, error=f"reslim must be >= 0 seconds, got {reslim}")
+
+    # And the docstring's absolute-`workdir` precondition is ENFORCED, not merely
+    # documented. A relative one splits the run in two: `src.cli`'s `-o`, GAMS's
+    # `o=` and `ScrDir` resolve under `cwd=PROJECT_ROOT`, while `emitted.exists()`,
+    # `lst.exists()` and `TemporaryDirectory(dir=...)` resolve under the caller's
+    # CWD — so the child writes somewhere the parent never looks and the run
+    # reports a missing emit that was in fact produced.
+    workdir = Path(workdir)
+    if not workdir.is_absolute():
+        return Attribution(
+            model_id,
+            error=f"workdir must be an absolute path, got {str(workdir)!r}",
+        )
 
     raw = PROJECT_ROOT / "data" / "gamslib" / "raw" / f"{model_id}.gms"
     if not raw.exists():
@@ -873,9 +950,14 @@ def main(argv: list[str] | None = None) -> int:
     # `is not None`, not truthiness: `--workdir ""` is a supplied-but-empty path.
     # Treating it as omitted would silently ignore the caller and scatter the
     # artifacts into a system temp dir they never asked for.
-    if args.workdir is not None and not args.workdir.strip():
-        print("ERROR: --workdir was given an empty path", file=sys.stderr)
-        return 2
+    if args.workdir is not None:
+        if not args.workdir.strip():
+            print("ERROR: --workdir was given an empty path", file=sys.stderr)
+            return 2
+        nul = _reject_nul(args.workdir, "--workdir")
+        if nul:
+            print(nul, file=sys.stderr)
+            return 2
 
     try:
         workdir = (
@@ -892,9 +974,10 @@ def main(argv: list[str] | None = None) -> int:
         # cross-run form of the very bug this script detects. `mkdtemp` is unique
         # by construction, so no token scheme is needed.
         run_dir = Path(tempfile.mkdtemp(dir=str(workdir), prefix="run-"))
-    except (OSError, RuntimeError) as exc:
+    except (OSError, RuntimeError, ValueError) as exc:
         # `Path.resolve()` raises RuntimeError — not OSError — on a symlink loop,
-        # which would otherwise escape as a traceback and exit 1.
+        # and an embedded NUL in the path raises ValueError. Both would otherwise
+        # escape as a traceback and exit 1 instead of the promised exit 2.
         print(f"ERROR: cannot create workdir {args.workdir!r}: {exc}", file=sys.stderr)
         return 2
 
@@ -908,6 +991,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.json_out is not None:
         if not args.json_out.strip():
             print("ERROR: --json was given an empty path", file=sys.stderr)
+            return 2
+        nul = _reject_nul(args.json_out, "--json")
+        if nul:
+            print(nul, file=sys.stderr)
             return 2
         out_path = Path(args.json_out)
         try:
@@ -927,6 +1014,17 @@ def main(argv: list[str] | None = None) -> int:
             # Existence is not writability. A read-only destination (or a
             # read-only parent when the file is absent) would pass the checks
             # above and only fail after the whole sweep.
+            if out_path.is_symlink():
+                # `is_file()` follows the link but `os.replace(tmp, dest)` replaces
+                # the LINK — so this would pass preflight, leave the link's target
+                # untouched, and silently turn the symlink into a regular file.
+                # Refusing is better than picking one of two surprising behaviours.
+                print(
+                    f"ERROR: --json {args.json_out} is a symlink; "
+                    "the atomic write would replace the link itself, not its target",
+                    file=sys.stderr,
+                )
+                return 2
             if out_path.exists():
                 # A FIFO or other special file passes `is_dir()` and would then
                 # block `open()` indefinitely waiting for a reader — which
@@ -953,7 +1051,9 @@ def main(argv: list[str] | None = None) -> int:
             probe_fd, probe_name = tempfile.mkstemp(dir=str(parent), prefix=".writetest-")
             os.close(probe_fd)
             os.unlink(probe_name)
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
+            # ValueError: an embedded NUL makes `exists()`/`is_file()`/`open()`
+            # raise rather than return False.
             print(f"ERROR: cannot use --json path {args.json_out}: {exc}", file=sys.stderr)
             return 2
 

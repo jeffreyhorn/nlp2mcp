@@ -1683,3 +1683,126 @@ def test_the_malformed_object_error_matches_the_contract(tmp_path):
     message = str(excinfo.value)
     assert "expected an object" in message
     assert "or null" not in message, "present null is rejected, so it is not a valid alternative"
+
+
+@pytest.mark.unit
+def test_a_misspelled_key_is_caught_by_the_schema_backstop(tmp_path):
+    """`additionalProperties: false` catches what field lookups cannot.
+
+    A misspelled key reads as "field absent" to any check that looks fields up
+    by name, so the row would be audited as valid. Only whole-schema validation
+    sees it.
+    """
+    pytest.importorskip("jsonschema")
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    row = _row("ok")
+    row["mcp_solve"]["outcome_catagory"] = "model_optimal_presolve"  # typo
+
+    with pytest.raises(mod.InputError, match="schema.json"):
+        mod.presolve_match_models(_write_db(tmp_path, [row]))
+
+
+@pytest.mark.unit
+def test_the_targeted_checks_report_before_the_schema_backstop(tmp_path):
+    """Ordering is deliberate: the actionable message wins.
+
+    Both checks would reject this row, but the targeted one names the model and
+    says what to do, so it must be the one the caller sees.
+    """
+    pytest.importorskip("jsonschema")
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    row = _row("ok")
+    row["mcp_solve"]["outcome_category"] = "model_optimal_presolvee"
+
+    with pytest.raises(mod.InputError) as excinfo:
+        mod.presolve_match_models(_write_db(tmp_path, [row]))
+
+    message = str(excinfo.value)
+    assert "unknown" in message and "ok" in message, "the targeted, model-named error"
+    assert "schema.json" not in message, "the backstop must not pre-empt it"
+
+
+@pytest.mark.unit
+def test_the_audit_still_runs_without_jsonschema(tmp_path, monkeypatch):
+    """`jsonschema` is not a declared dependency, so absent it we degrade, not fail."""
+    import builtins
+
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    real_import = builtins.__import__
+
+    def no_jsonschema(name, *args, **kwargs):
+        if name == "jsonschema":
+            raise ImportError("simulated: jsonschema not installed")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", no_jsonschema)
+
+    assert mod.presolve_match_models(_write_db(tmp_path, [_row("ok")])) == ["ok"]
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("flag", ["--workdir", "--json"])
+def test_a_path_containing_a_NUL_is_an_input_error_not_a_traceback(tmp_path, capsys, flag):
+    """An embedded NUL makes `exists()`/`mkdir()` raise `ValueError`, not return False."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    args = ["--models", "x", "--workdir", str(tmp_path / "wd")]
+    if flag == "--workdir":
+        args = ["--models", "x", "--workdir", "bad\x00dir"]
+    else:
+        args += ["--json", "bad\x00file.json"]
+
+    assert mod.main(args) == 2
+    assert flag in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_a_symlink_json_destination_is_rejected(tmp_path, monkeypatch, capsys):
+    """`is_file()` follows the link but `os.replace` replaces the LINK.
+
+    Left alone this passes preflight, leaves the link's target untouched, and
+    silently converts the symlink into a regular file after the sweep.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    target = tmp_path / "real.json"
+    target.write_text("{}")
+    link = tmp_path / "link.json"
+    link.symlink_to(target)
+
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+
+    def explode(*a, **k):  # pragma: no cover - must never run
+        raise AssertionError("the sweep must not start with a symlink destination")
+
+    monkeypatch.setattr(mod, "run_one", explode)
+
+    rc = mod.main(["--models", "x", "--workdir", str(tmp_path / "wd"), "--json", str(link)])
+
+    assert rc == 2
+    assert "symlink" in capsys.readouterr().err
+    assert link.is_symlink(), "the link must be left intact"
+    assert target.read_text() == "{}", "and its target untouched"
+
+
+@pytest.mark.unit
+def test_run_one_rejects_a_relative_workdir(tmp_path, monkeypatch):
+    """The docstring's absolute-path precondition is enforced, not just documented.
+
+    A relative workdir splits the run: the child resolves `-o`/`o=`/`ScrDir`
+    under PROJECT_ROOT while the parent checks paths under its own CWD.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    def explode(*a, **k):  # pragma: no cover - must never run
+        raise AssertionError("no subprocess may run with a relative workdir")
+
+    monkeypatch.setattr(mod.subprocess, "run", explode)
+
+    result = mod.run_one("demo", Path("relative-wd"))
+
+    assert result.verdict == "ERROR"
+    assert "absolute path" in (result.error or "")
