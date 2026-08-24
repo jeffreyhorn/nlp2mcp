@@ -277,7 +277,16 @@ class Attribution:
         error this whole script exists to avoid.
         """
         last = self.embedded_summaries[-1] if self.embedded_summaries else None
-        return last is not None and last.model_status is not None
+        if last is None:
+            return False
+        # The SAME gate as `mcp_succeeded`, and for the same reason: a status is
+        # not a usable answer. A resource- or iteration-interrupted source can
+        # leave a stale MS-1/MS-2 beside SOLVER STATUS 3/4, and calling that a
+        # warm-start value would report a spurious match where no successful
+        # answer was ever established.
+        return (
+            last.solver_status == _NORMAL_COMPLETION and last.model_status in _SUCCESS_MODEL_STATUS
+        )
 
     @property
     def verdict(self) -> str:
@@ -523,7 +532,8 @@ def presolve_match_models(db_path: Path | None = None) -> list[str]:
         if not isinstance(solve, dict) or not isinstance(cmp_, dict):
             raise InputError(
                 f"{db_path}: models[{i}] has a malformed mcp_solve/solution_comparison "
-                f"(got {type(solve).__name__}/{type(cmp_).__name__}, expected object or null)"
+                f"(got {type(solve).__name__}/{type(cmp_).__name__}, expected an object; "
+                "omit the key entirely if absent)"
             )
         # Validate the enums BEFORE comparing them. Comparing only against the
         # wanted pair means a typo — `model_optimal_presolvee`, `matc` — silently
@@ -931,13 +941,18 @@ def main(argv: list[str] | None = None) -> int:
                 # still want.
                 with out_path.open("a"):
                     pass
-            else:
-                # A UNIQUE probe, removed by fd: a deterministic name could
-                # clobber an unrelated file the caller already has, and this
-                # only ever unlinks the path it just created.
-                probe_fd, probe_name = tempfile.mkstemp(dir=str(parent), prefix=".writetest-")
-                os.close(probe_fd)
-                os.unlink(probe_name)
+
+            # ALWAYS probe the parent, existing destination or not: the final
+            # write is atomic (`mkstemp` in this directory, then `os.replace`),
+            # so a writable file inside a READ-ONLY parent would otherwise pass
+            # here and fail only after the whole sweep. The round-8 atomic-write
+            # change is what made the parent the thing that matters.
+            #
+            # A UNIQUE probe, removed by the path it created: a deterministic
+            # name could clobber an unrelated file the caller already has.
+            probe_fd, probe_name = tempfile.mkstemp(dir=str(parent), prefix=".writetest-")
+            os.close(probe_fd)
+            os.unlink(probe_name)
         except OSError as exc:
             print(f"ERROR: cannot use --json path {args.json_out}: {exc}", file=sys.stderr)
             return 2

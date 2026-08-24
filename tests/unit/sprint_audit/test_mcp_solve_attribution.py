@@ -1588,3 +1588,98 @@ def test_an_explicit_null_outcome_category_is_rejected(tmp_path):
 
     with pytest.raises(mod.InputError, match="explicit null"):
         mod.presolve_match_models(_write_db(tmp_path, [row]))
+
+
+@pytest.mark.unit
+def test_an_interrupted_embedded_solve_is_not_a_usable_warm_start():
+    """The embedded side gets the SAME success gate as the MCP side.
+
+    A resource- or iteration-interrupted source can leave a stale MS-1 beside
+    SOLVER STATUS 3. Calling that a warm-start value would report a spurious
+    match where no successful answer was ever established — the attribution-vs-
+    success distinction, applied to the embedded solve rather than only ours.
+    """
+    # SYNTHETIC — no corpus source currently interrupts this way.
+    interrupted_source = """
+               S O L V E      S U M M A R Y
+
+     MODEL   src                 OBJECTIVE  z
+     TYPE    NLP                 DIRECTION  MINIMIZE
+     SOLVER  CONOPT              FROM LINE  10
+
+**** SOLVER STATUS     3 Resource Interrupt
+**** MODEL STATUS      1 Optimal
+"""
+    attribution = Attribution("interrupted", summaries=parse_solve_summaries(interrupted_source))
+
+    assert attribution.embedded_summaries[-1].model_status == 1, "a status IS present..."
+    assert not attribution.embedded_produced_status, "...but SOLVER STATUS 3 disqualifies it"
+    assert attribution.verdict == "NO-SOLVE"
+    assert not attribution.is_spurious, "no successful warm-start answer was established"
+    assert attribution.is_indeterminate
+
+
+@pytest.mark.unit
+def test_weapons_still_passes_the_tightened_embedded_gate():
+    """The finding must survive the round-9 tightening.
+
+    weapons' embedded NLP reports SOLVER STATUS 1 / MODEL STATUS 2 — a genuine
+    warm-start answer — so it remains the spurious case rather than becoming
+    indeterminate.
+    """
+    attribution = Attribution("weapons", summaries=parse_solve_summaries(_WEAPONS))
+
+    (embedded,) = attribution.embedded_summaries
+    assert (embedded.solver_status, embedded.model_status) == (1, 2)
+    assert attribution.embedded_produced_status
+    assert attribution.verdict == "EMBEDDED-ONLY"
+
+
+@pytest.mark.unit
+def test_a_writable_file_in_a_read_only_parent_fails_before_the_sweep(
+    tmp_path, monkeypatch, capsys
+):
+    """The atomic write needs the PARENT, not just the destination.
+
+    Round 8 changed the final write to `mkstemp(dir=dest.parent)` + `os.replace`,
+    which made the parent the thing that matters — but the preflight still only
+    probed it when the destination was absent. A writable existing file inside a
+    read-only parent therefore passed and failed only after the whole sweep.
+    """
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    dest = tmp_path / "r.json"
+    dest.write_text("{}")  # exists and is appendable
+
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+
+    def explode(*a, **k):  # pragma: no cover - must never run
+        raise AssertionError("the sweep must not start when the parent is unwritable")
+
+    monkeypatch.setattr(mod, "run_one", explode)
+
+    def deny(*a, **k):
+        raise PermissionError(13, "Permission denied")
+
+    monkeypatch.setattr(mod.tempfile, "mkstemp", deny)
+
+    rc = mod.main(["--models", "x", "--workdir", str(tmp_path / "wd"), "--json", str(dest)])
+
+    assert rc == 2
+    assert "--json" in capsys.readouterr().err
+
+
+@pytest.mark.unit
+def test_the_malformed_object_error_matches_the_contract(tmp_path):
+    """`null` is rejected earlier, so the message must not offer it as valid."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    row = _row("bad")
+    row["mcp_solve"] = []
+
+    with pytest.raises(mod.InputError) as excinfo:
+        mod.presolve_match_models(_write_db(tmp_path, [row]))
+
+    message = str(excinfo.value)
+    assert "expected an object" in message
+    assert "or null" not in message, "present null is rejected, so it is not a valid alternative"
