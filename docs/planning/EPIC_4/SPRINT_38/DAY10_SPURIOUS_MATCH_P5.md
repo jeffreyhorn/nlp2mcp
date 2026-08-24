@@ -232,7 +232,7 @@ stat_tm(i,r).. ... + (((-1) * (pq(i+1,r) * mu(i+1,r) / sqr(pq(i+1,r)))) * nu_eqX
 - twocge's Day-9 bucket move rests on an emit with a known-wrong coefficient in `stat_tz`. The Day-9 result stands — the MCP genuinely solved (§2.3 confirms MS-1) and the objective genuinely matched — but the comparison is an **objective** comparison and would not detect a wrong **dual**. Same shape as B1's standing warning.
 - The masking is a property of *this model's data* (2 goods, near-equal prices), not of the fix. A wider set or a larger price spread would surface it.
 
-**#1317 has no `docs/issues/` file and no Phase-0 gate** — it is one of the ungated Tier-1 issues P7's Task-10 rule deliberately left unscheduled. **Recommend gating it and scheduling it ahead of the remaining P8 shortlist**: it is the only known-live *numerical* mis-emit on a model already counted in the KPI.
+**#1317 has no *dedicated* `ISSUE_1317_*` file and no Phase-0 gate** — but its analysis is **not** missing: the issue body points at `docs/issues/ISSUE_1277_twocge_pattern_c_plain_alias_sum_post_day6.md` (#1317 is the re-validation of #1277), which documents this exact plain-alias `stat_tz`/`stat_tx` defect. It is one of the ungated Tier-1 issues P7's Task-10 rule left unscheduled. **Recommend gating it and scheduling it ahead of the remaining P8 shortlist**: it is the only known-live *numerical* mis-emit on a model already counted in the KPI.
 
 ---
 
@@ -288,7 +288,7 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/run-*/twocge_mcp_presolve.gms
 |---|---|
 | `make typecheck` | ✅ no issues, 99 source files |
 | `make format` / `make lint` | ✅ clean — **plus explicit `black` + `ruff` on the new script**, since the Makefile targets cover only `src/` and `tests/` |
-| `make test` | ✅ **5200 passed, 10 skipped** (see below) |
+| `make test` | ✅ **5205 passed, 10 skipped** (see below) |
 | full-corpus leak gate | **deliberately NOT run** |
 
 **Why no leak gate:** the PR touches no `src/` file and no golden, so the emit cannot have moved and a 185-model sweep would assert nothing about this diff. Stating the reason rather than the omission — a silently skipped gate is the failure mode P6b exists to catch.
@@ -307,7 +307,7 @@ grep -o 'stat_tz(j,r)\.\..*;' /tmp/d10/sweep/run-*/twocge_mcp_presolve.gms
 
 **A skip-count discrepancy chased down rather than waved through** (review round). After the review fixes the suite read `5085 passed, 13 skipped` where the previous run read `5085 passed, 10 skipped` — collection had risen by exactly the 3 tests added, so **3 tests that previously passed appeared to have stopped running**. A gate going green while tests quietly stop executing is the same failure mode this PR is about, so it was measured, not assumed:
 
-- `tests/unit` alone → **3725 passed, 0 skipped**: every attribution test ran (9 at the time of that check; the module has since grown to **121 collected cases** across the review rounds).
+- `tests/unit` alone → **3725 passed, 0 skipped**: every attribution test ran (9 at the time of that check; the module has since grown to **126 collected cases** across the review rounds).
 - the parent commit → **5085 passed, 10 skipped** (baseline).
 - a clean full run with `-rs` → **5088 passed, 10 skipped** = baseline + the 3 new tests, exactly as expected.
 
@@ -333,7 +333,7 @@ Round 8 saw `test_validate_simple_nlp_golden` fail **twice consecutively**, whic
 
 **So the defect is pre-existing and this PR's exposure of it is incidental** — 12 extra tests raise load and therefore collision probability. The fix is small (run the compile check in a temp directory, or pass `ScrDir`) but it is a `src/` change with no bearing on the spurious-match investigation, so it is **reported here rather than bundled**. It is the same class as the Sprint-37 Day-9 incident: GAMS writing scratch into a directory that something else owns.
 
-**Rounds 3–7 each passed first time on a quiet machine** — 5112, 5125, 5138, 5146, 5154, 5166, 5170, 5177, 5182, 5187, 5195, then **5200 passed, 10 skipped, exit 0**, each exactly the previous total plus that round's new tests, with `-rs` naming the same 10 pre-existing skips. Applying the rule above rather than re-deriving it saved the re-run.
+**Rounds 3–7 each passed first time on a quiet machine** — 5112, 5125, 5138, 5146, 5154, 5166, 5170, 5177, 5182, 5187, 5195, 5200, then **5205 passed, 10 skipped, exit 0**, each exactly the previous total plus that round's new tests, with `-rs` naming the same 10 pre-existing skips. Applying the rule above rather than re-deriving it saved the re-run.
 
 > **A process note, since it cost time.** The baseline was first measured with `git stash` running *concurrently* with another full-suite run over the same tree — the two interfere, and the concurrent run's numbers were meaningless. Re-measured serially. **Do not stash the working tree while another job is reading it.**
 

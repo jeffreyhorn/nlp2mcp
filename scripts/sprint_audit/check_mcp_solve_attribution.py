@@ -9,10 +9,13 @@ generated file, then solves the MCP and reads the objective back::
     nlp2mcp_obj_val = <objvar>.l;              * still the NLP's own answer
 
 On a **successful** run that listing therefore holds *two or more* solve
-summaries — the embedded source's, then ours. **The failing case holds only
-one**, and that asymmetry is the whole point: an MCP that aborts before its
-solve never emits a summary at all, so the listing looks exactly like a
-single-solve run whose one status happens to be someone else's.
+summaries — the embedded source's, then ours. **When the MCP aborts *before its
+header*, only one remains**, and that asymmetry is the whole point: no summary
+is emitted at all, so the listing looks exactly like a single-solve run whose
+one status happens to be someone else's. (`weapons` is that shape.)
+
+A solver dying *after* GAMS writes the header leaves a **second, statusless**
+summary instead — a distinct mode, classified ``MCP-NO-STATUS``.
 
 **If the MCP solve aborts, the objective read returns the NLP's own value and
 the comparison matches itself.** The recorded status is wrong the same way:
@@ -150,6 +153,11 @@ class SolveSummary:
         return self.is_mcp and self.model == EMITTED_MCP_MODEL
 
 
+def parse_aborted_lines(lst_content: str) -> set[int]:
+    """Source lines of solves GAMS reported ABORTED."""
+    return {int(m.group(1)) for m in _SOLVE_ABORTED.finditer(lst_content)}
+
+
 def parse_solve_summaries(lst_content: str) -> list[SolveSummary]:
     """Split a GAMS listing into solve summaries, each owning its status lines.
 
@@ -158,7 +166,7 @@ def parse_solve_summaries(lst_content: str) -> list[SolveSummary]:
     ``MODEL STATUS`` cannot tell you which model produced it.
     """
     starts = [m.start() for m in _SUMMARY_HEADER.finditer(lst_content)]
-    aborted_lines = {int(m.group(1)) for m in _SOLVE_ABORTED.finditer(lst_content)}
+    aborted_lines = parse_aborted_lines(lst_content)
     summaries: list[SolveSummary] = []
 
     for i, start in enumerate(starts):
@@ -229,6 +237,9 @@ class Attribution:
     model_id: str
     summaries: list[SolveSummary] = field(default_factory=list)
     error: str | None = None
+    #: Abort lines that match no summary — i.e. a solve that died before
+    #: emitting a header. `weapons`'s line 238 is exactly this.
+    unattributed_abort_lines: set[int] = field(default_factory=set)
     #: GAMS's own exit code, recorded for transparency. **Deliberately not used
     #: to invalidate a listing:** `weapons` — the whole finding — exits **3**
     #: (`USER ERROR(S) ENCOUNTERED`) precisely *because* its MCP aborted. Keying
@@ -372,9 +383,19 @@ class Attribution:
                     "solver_status": s.solver_status,
                     "model_status": s.model_status,
                     "model_status_text": s.model_status_text,
+                    # Load-bearing: `from_line` is HOW a status is attributed to
+                    # a solve, and `aborted` is WHY an otherwise statusful solve
+                    # was rejected. Without them the report states a verdict the
+                    # reader cannot re-derive.
+                    "from_line": s.from_line,
+                    "aborted": s.aborted,
                 }
                 for s in self.summaries
             ],
+            # Aborts naming a line with no summary of its own — `weapons`'s
+            # `SOLVE from line 238 ABORTED` is the whole finding, and it belongs
+            # to no block, so it would vanish from the record entirely.
+            "unattributed_abort_lines": sorted(self.unattributed_abort_lines),
             "error": self.error,
         }
 
@@ -579,8 +600,16 @@ def _validate_against_schema(db: object, db_path: Path) -> str | None:
     # refusing to run over it would break the tool on the production database to
     # police a timestamp. Structure, enums and `additionalProperties` stay hard
     # errors, since those are what can silently shrink the cohort.
-    format_errors = [e for e in errors if e.validator == "format"]
-    errors = [e for e in errors if e.validator != "format"]
+    # ONLY `date-time` is tolerated — and only because of the 8 known date-only
+    # `convexity.updated_date` values. `schema.json` also declares
+    # `format: uri` on `source_url`/`web_page_url`; downgrading *those* would
+    # silently accept a malformed URL, which no measured defect justifies.
+    format_errors = [
+        e for e in errors if e.validator == "format" and e.validator_value == "date-time"
+    ]
+    errors = [
+        e for e in errors if not (e.validator == "format" and e.validator_value == "date-time")
+    ]
     if format_errors:
         shown = format_errors[:3]
         detail = "; ".join(
@@ -827,7 +856,11 @@ def _tail(text: str | None, limit: int = 400) -> str:
 
 
 def run_one(
-    model_id: str, workdir: Path, reslim: int = 300, gams: str | None = None
+    model_id: str,
+    workdir: Path,
+    reslim: int = 300,
+    gams: str | None = None,
+    emit_timeout: int = 600,
 ) -> Attribution:
     """Emit ``--nlp-presolve`` for one model, run GAMS, and attribute the solves.
 
@@ -916,12 +949,20 @@ def run_one(
             capture_output=True,
             text=True,
             cwd=str(PROJECT_ROOT),
-            timeout=600,
+            timeout=emit_timeout,
         )
     except subprocess.TimeoutExpired:
         # One slow translation must not abort the whole sweep before it can
-        # write its report — `sarf` alone runs for ~28 minutes.
-        return Attribution(model_id, error="emit timeout after 600s")
+        # write its report. ⚠ The 600 s default is NOT enough for every model —
+        # `sarf` alone translates in ~28 minutes — so `--emit-timeout` exists and
+        # the error names it rather than leaving the caller to guess.
+        return Attribution(
+            model_id,
+            error=(
+                f"emit timeout after {emit_timeout}s "
+                "(raise --emit-timeout; e.g. sarf needs ~28 minutes)"
+            ),
+        )
     except OSError as exc:
         # A missing/unexecutable interpreter is one model's problem, not the
         # sweep's: return a structured indeterminate result and carry on.
@@ -1014,9 +1055,12 @@ def run_one(
             gams_returncode=proc.returncode,
         )
 
+    summaries = parse_solve_summaries(content)
+    matched = {s.from_line for s in summaries if s.from_line is not None}
     return Attribution(
         model_id,
-        summaries=parse_solve_summaries(content),
+        summaries=summaries,
+        unattributed_abort_lines=parse_aborted_lines(content) - matched,
         gams_returncode=proc.returncode,
     )
 
@@ -1029,6 +1073,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     ap.add_argument("--workdir", default=None, help="where to keep emits and listings")
     ap.add_argument("--reslim", type=int, default=300, help="GAMS resource limit, seconds (>= 0)")
+    ap.add_argument(
+        "--emit-timeout",
+        type=int,
+        default=600,
+        help=(
+            "seconds allowed for one --nlp-presolve translation (>= 0, default 600). "
+            "Some models need far more: sarf translates in ~28 minutes."
+        ),
+    )
     ap.add_argument("--json", dest="json_out", help="write the full record here")
     ap.add_argument(
         "--allow-empty",
@@ -1044,6 +1097,13 @@ def main(argv: list[str] | None = None) -> int:
     # subprocess timeout (`reslim + 120`), where a negative would be nonsense.
     # `int >= 0` per CONTRIBUTING; `scripts/ci/run_pr19_solves.py` accepts 0 and
     # GAMS treats reslim=0 as valid, so only a NEGATIVE value is an input error.
+    if args.emit_timeout < 0:
+        print(
+            f"ERROR: --emit-timeout must be >= 0 seconds, got {args.emit_timeout}",
+            file=sys.stderr,
+        )
+        return 2
+
     if args.reslim < 0:
         print(
             f"ERROR: --reslim must be >= 0 seconds, got {args.reslim}",
@@ -1221,7 +1281,7 @@ def main(argv: list[str] | None = None) -> int:
 
     results: list[Attribution] = []
     for i, mid in enumerate(models, 1):
-        res = run_one(mid, run_dir, reslim=args.reslim, gams=gams)
+        res = run_one(mid, run_dir, reslim=args.reslim, gams=gams, emit_timeout=args.emit_timeout)
         results.append(res)
         detail = ", ".join(
             f"{s.model}/{s.type}"

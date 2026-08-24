@@ -2263,3 +2263,135 @@ def test_find_gams_skips_a_directory_earlier_on_PATH(tmp_path, monkeypatch):
     monkeypatch.setattr(mod.shutil, "which", lambda _p: None)
 
     assert mod.find_gams() == str(real.resolve())
+
+
+@pytest.mark.unit
+def test_the_json_record_carries_the_attribution_evidence():
+    """A verdict the reader cannot re-derive is an assertion, not a record.
+
+    `from_line` is HOW a status is attributed to a solve; `aborted` is WHY an
+    otherwise statusful solve was rejected; and an abort matching no summary is
+    the `weapons` case itself — omitting it drops the entire reason the verdict
+    is EMBEDDED-ONLY.
+    """
+    attribution = Attribution(
+        "weapons",
+        summaries=parse_solve_summaries(_WEAPONS_ABORT_LINES),
+        unattributed_abort_lines={238},
+    )
+    record = attribution.as_dict()
+
+    (summary,) = record["summaries"]
+    assert summary["from_line"] == 138
+    assert summary["aborted"] is False
+    assert record["unattributed_abort_lines"] == [238], "the MCP's abort must survive into the JSON"
+
+
+@pytest.mark.unit
+def test_run_one_records_the_unattributed_abort(_raw_source, tmp_path, monkeypatch):
+    """End-to-end: the abort with no summary of its own reaches the record."""
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    workdir = tmp_path / "wd"
+    workdir.mkdir()
+
+    def fake_run(cmd, **kwargs):
+        if "src.cli" in cmd:
+            (workdir / "demo_mcp_presolve.gms").write_text("* emitted\n")
+        else:
+            (workdir / "demo.lst").write_text(_WEAPONS_ABORT_LINES)
+        return _completed()
+
+    monkeypatch.setattr(mod.subprocess, "run", fake_run)
+    monkeypatch.setattr(mod, "find_gams", lambda: "/fake/gams")
+
+    result = mod.run_one("demo", workdir)
+
+    assert result.verdict == "EMBEDDED-ONLY"
+    assert result.unattributed_abort_lines == {238}
+    assert result.as_dict()["unattributed_abort_lines"] == [238]
+
+
+@pytest.mark.unit
+def test_only_date_time_format_errors_are_downgraded(tmp_path, monkeypatch):
+    """The tolerance is for `date-time` ONLY; other formats stay fatal.
+
+    It exists for 8 known date-only `convexity.updated_date` values. Extending
+    it to every `format` would silently accept, say, a malformed URL.
+
+    Exercised with `format: date`, which jsonschema DOES enforce out of the box.
+    (`schema.json` also declares `format: uri`, but — like `date-time` — that is
+    inert without the optional `rfc3987`, so it cannot demonstrate the split.)
+    """
+    import json
+
+    pytest.importorskip("jsonschema")
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    schema = tmp_path / "schema.json"
+    schema.write_text(
+        json.dumps(
+            {
+                "type": "object",
+                "required": ["schema_version", "models"],
+                "properties": {
+                    "schema_version": {"type": "string"},
+                    "stamp": {"type": "string", "format": "date"},
+                    "when": {"type": "string", "format": "date-time"},
+                    "models": {"type": "array"},
+                },
+            }
+        )
+    )
+    monkeypatch.setattr(mod, "SCHEMA_PATH", schema)
+
+    # A bad `date-time` warns and the audit continues...
+    tolerated = tmp_path / "tolerated.json"
+    tolerated.write_text(
+        json.dumps({"schema_version": "2.2.1", "when": "2026-04-25", "models": [_row("ok")]})
+    )
+    assert mod.presolve_match_models(tolerated) == ["ok"]
+
+    # ...while a bad `date` is fatal.
+    fatal = tmp_path / "fatal.json"
+    fatal.write_text(
+        json.dumps({"schema_version": "2.2.1", "stamp": "not-a-date", "models": [_row("ok")]})
+    )
+    with pytest.raises(mod.InputError, match="schema.json"):
+        mod.presolve_match_models(fatal)
+
+
+@pytest.mark.unit
+def test_the_emit_timeout_is_configurable_and_named_in_the_error(
+    _raw_source, tmp_path, monkeypatch
+):
+    """600 s is not enough for every model — `sarf` translates in ~28 minutes.
+
+    An explicit `--models sarf` audit would otherwise always return ERROR before
+    attribution could run, with nothing telling the caller why.
+    """
+    import subprocess
+
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    seen = {}
+
+    def fake_run(cmd, **kwargs):
+        seen["timeout"] = kwargs.get("timeout")
+        raise subprocess.TimeoutExpired(cmd=cmd, timeout=kwargs.get("timeout"))
+
+    monkeypatch.setattr(mod.subprocess, "run", fake_run)
+
+    result = mod.run_one("demo", tmp_path, emit_timeout=1800)
+
+    assert seen["timeout"] == 1800, "the caller's emit timeout must reach the subprocess"
+    assert "1800s" in (result.error or "")
+    assert "--emit-timeout" in (result.error or ""), "the error must name the remedy"
+
+
+@pytest.mark.unit
+def test_main_rejects_a_negative_emit_timeout(tmp_path, capsys):
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    assert mod.main(["--models", "x", "--emit-timeout", "-1", "--workdir", str(tmp_path)]) == 2
+    assert "--emit-timeout must be >= 0" in capsys.readouterr().err
