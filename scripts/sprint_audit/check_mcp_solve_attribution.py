@@ -71,7 +71,6 @@ wrong side. An abort tells you *something* failed, not *which model*.
 from __future__ import annotations
 
 import argparse
-import datetime
 import json
 import os
 import re
@@ -314,8 +313,15 @@ class Attribution:
         return "NO-SOLVE"
 
     @property
-    def is_spurious(self) -> bool:
-        """A recorded match that cannot have come from our MCP."""
+    def is_embedded_only(self) -> bool:
+        """Only a non-emitted solve reported a usable status.
+
+        ⚠ Deliberately NOT called ``is_spurious``. "Spurious *match*" is a claim
+        about a **recorded** match, and an ``Attribution`` carries no
+        selection-source context — for an explicit ``--models`` audit there is no
+        recorded match to contradict. Provenance lives in ``main``, which is the
+        only place that knows it, so that is where ``spurious`` is derived.
+        """
         return self.verdict == "EMBEDDED-ONLY"
 
     @property
@@ -452,6 +458,11 @@ class InputError(Exception):
 
 SCHEMA_PATH = PROJECT_ROOT / "data" / "gamslib" / "schema.json"
 
+#: RFC 3339 ``date-time`` — what JSON Schema's ``format: date-time`` means.
+#: **Deliberately stricter than ``datetime.fromisoformat``**, which accepts a
+#: missing UTC offset, a space instead of ``T``, and bare dates.
+_RFC3339 = re.compile(r"\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}:\d{2}(\.\d+)?([Zz]|[+-]\d{2}:\d{2})")
+
 
 def _validate_against_schema(db: object, db_path: Path) -> str | None:
     """Validate the whole DB against ``schema.json``; ``None`` if it passes.
@@ -477,25 +488,59 @@ def _validate_against_schema(db: object, db_path: Path) -> str | None:
     except ValueError as exc:
         return f"schema contract {SCHEMA_PATH} is not valid JSON: {exc}"
 
+    # A syntactically valid file need not be a valid Draft-7 *schema*, and
+    # `iter_errors` then raises from inside jsonschema rather than reporting.
+    try:
+        Draft7Validator.check_schema(schema)
+    except Exception as exc:  # jsonschema raises SchemaError; keep this broad
+        return f"schema contract {SCHEMA_PATH} is not a valid Draft-7 schema: {exc}"
+
     # ⚠ `format` keywords are inert unless a FormatChecker is supplied — and
     # even then `date-time` is a NO-OP here, because jsonschema delegates it to
     # the optional `rfc3339-validator` package, which is not installed.
     # (Measured: an invalid timestamp passed both with and without a bare
-    # `FormatChecker()`.) Rather than add a second undeclared dependency, the
-    # check is registered locally from the stdlib.
+    # `FormatChecker()`.) Registered locally rather than taking a second
+    # undeclared dependency.
+    #
+    # ⚠ And `datetime.fromisoformat` is NOT RFC 3339: it accepts a missing
+    # offset, a space separator, and date-only values. The full shape is matched
+    # instead — see `_RFC3339` — because a looser check silently passes the
+    # malformed timestamps this exists to catch.
     format_checker = FormatChecker()
 
-    @format_checker.checks("date-time", raises=(ValueError, TypeError))
+    @format_checker.checks("date-time", raises=())
     def _is_date_time(value: object) -> bool:
         if not isinstance(value, str):
             return True  # the `type` keyword owns non-strings
-        datetime.datetime.fromisoformat(value.replace("Z", "+00:00"))
-        return True
+        return bool(_RFC3339.fullmatch(value))
 
     errors = sorted(
         Draft7Validator(schema, format_checker=format_checker).iter_errors(db),
         key=lambda e: list(e.absolute_path),
     )
+
+    # Format violations are WARNED about, not fatal; everything else is fatal.
+    #
+    # This is not squeamishness: the checked-in DB carries **8** date-only
+    # `convexity.updated_date` values in a `format: date-time` field (abel,
+    # ps10_s, ps2_f_s, ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps3_s_scp). That is a
+    # real, pre-existing data defect — but it is not this audit's business, and
+    # refusing to run over it would break the tool on the production database to
+    # police a timestamp. Structure, enums and `additionalProperties` stay hard
+    # errors, since those are what can silently shrink the cohort.
+    format_errors = [e for e in errors if e.validator == "format"]
+    errors = [e for e in errors if e.validator != "format"]
+    if format_errors:
+        shown = format_errors[:3]
+        detail = "; ".join(
+            f"{'.'.join(str(p) for p in e.absolute_path)}: {e.message}" for e in shown
+        )
+        more = f" (+{len(format_errors) - len(shown)} more)" if len(format_errors) > 3 else ""
+        print(
+            f"WARNING: {db_path} has {len(format_errors)} format violation(s) "
+            f"against schema.json — {detail}{more}",
+            file=sys.stderr,
+        )
     if not errors:
         return None
 
@@ -1121,7 +1166,7 @@ def main(argv: list[str] | None = None) -> int:
             flush=True,
         )
 
-    embedded_only = [r for r in results if r.is_spurious]
+    embedded_only = [r for r in results if r.is_embedded_only]
     indeterminate = [r for r in results if r.is_indeterminate]
     mcp_failed = [r for r in results if r.verdict == "MCP-FAILED"]
     solved = [r for r in results if r.verdict == "MCP-SOLVED"]

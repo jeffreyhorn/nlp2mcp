@@ -112,7 +112,7 @@ def test_weapons_listing_is_EMBEDDED_ONLY_despite_holding_a_model_status():
     assert attribution.mcp_summaries == [], "there is no MCP-typed solve at all"
     assert not attribution.mcp_produced_status
     assert attribution.verdict == "EMBEDDED-ONLY"
-    assert attribution.is_spurious, "this is the spurious case the audit reports"
+    assert attribution.is_embedded_only, "this is the case the audit reports"
     assert not attribution.is_indeterminate, "it is a finding, not a failed determination"
 
 
@@ -156,7 +156,9 @@ def test_an_attributed_but_FAILING_mcp_is_not_MCP_SOLVED():
     assert attribution.mcp_produced_status, "the status IS ours — attribution succeeded"
     assert not attribution.mcp_succeeded, "...but MS-4 is not a usable answer"
     assert attribution.verdict == "MCP-FAILED"
-    assert not attribution.is_spurious, "our MCP did run; nothing was read back from a warm start"
+    assert (
+        not attribution.is_embedded_only
+    ), "our MCP did run; nothing was read back from a warm start"
 
 
 @pytest.mark.unit
@@ -220,7 +222,7 @@ def test_a_summary_without_a_status_does_not_count_as_solved():
     # status either, so there is nothing a warm start could have read back.
     # Claiming "only the embedded model solved" here would invent a finding.
     assert attribution.verdict == "MCP-NO-STATUS"
-    assert not attribution.is_spurious
+    assert not attribution.is_embedded_only
     assert attribution.is_indeterminate
 
 
@@ -258,7 +260,7 @@ def test_a_raw_models_OWN_mcp_solve_is_not_ours():
     # not ours. The label is provenance-based, which is why it stays correct even
     # though the other solve is itself an MCP.
     assert attribution.verdict == "EMBEDDED-ONLY"
-    assert attribution.is_spurious
+    assert attribution.is_embedded_only
 
 
 @pytest.mark.unit
@@ -298,7 +300,7 @@ def test_empty_listing_is_NO_SOLVE_and_counts_as_indeterminate():
 
     assert attribution.summaries == []
     assert attribution.verdict == "NO-SOLVE"
-    assert not attribution.is_spurious
+    assert not attribution.is_embedded_only
     assert attribution.is_indeterminate, "must be counted as a failed determination"
 
 
@@ -896,9 +898,14 @@ def test_find_gams_resolves_through_which_not_exists(monkeypatch):
     # `shutil.which` is what performs the executability check. Stub it away and
     # nothing may resolve — even though the macOS candidate path exists on this
     # machine, which is precisely what an `exists()`-based lookup would return.
+    # Force a candidate path to "exist" while `which` finds nothing. An
+    # `exists()`-based lookup would return that candidate; the `which`-based one
+    # returns None. Without forcing `exists()`, this test passes vacuously on any
+    # runner that has no GAMS installed at a hard-coded path.
     monkeypatch.setattr(mod.shutil, "which", lambda _p: None)
+    monkeypatch.setattr(mod.Path, "exists", lambda _self: True)
 
-    assert mod.find_gams() is None
+    assert mod.find_gams() is None, "must resolve via which(), not exists()"
 
 
 @pytest.mark.unit
@@ -1054,7 +1061,9 @@ def test_embedded_status_comes_from_the_LAST_source_solve():
 
     assert not attribution.embedded_produced_status, "the last source solve is what counts"
     assert attribution.verdict == "NO-SOLVE"
-    assert not attribution.is_spurious, "reporting a spurious match here would invent a finding"
+    assert (
+        not attribution.is_embedded_only
+    ), "reporting a spurious match here would invent a finding"
     assert attribution.is_indeterminate
 
 
@@ -1621,7 +1630,7 @@ def test_an_interrupted_embedded_solve_is_not_a_usable_warm_start():
     assert attribution.embedded_summaries[-1].model_status == 1, "a status IS present..."
     assert not attribution.embedded_produced_status, "...but SOLVER STATUS 3 disqualifies it"
     assert attribution.verdict == "NO-SOLVE"
-    assert not attribution.is_spurious, "no successful warm-start answer was established"
+    assert not attribution.is_embedded_only, "no successful warm-start answer was established"
     assert attribution.is_indeterminate
 
 
@@ -1844,11 +1853,21 @@ def test_a_malformed_schema_contract_is_reported(tmp_path, monkeypatch):
 
 
 @pytest.mark.unit
-def test_an_invalid_timestamp_is_caught_by_the_format_checker(tmp_path):
-    """`format` is inert without a FormatChecker — and `date-time` is inert even
-    with a bare one, because jsonschema delegates it to the optional
-    `rfc3339-validator`, which is not installed. The checker is registered
-    locally from the stdlib so the contract is actually enforced.
+@pytest.mark.parametrize(
+    "timestamp",
+    [
+        "NOT-A-TIMESTAMP",
+        "2026-01-01T07:55:03",  # RFC3339 requires an offset; fromisoformat accepts this
+        "2026-01-01 07:55:03Z",  # space instead of T
+        "2026-01-01",  # date only
+    ],
+)
+def test_a_malformed_timestamp_is_detected(tmp_path, capsys, timestamp):
+    """`datetime.fromisoformat` is NOT RFC 3339 — the last three all pass it.
+
+    JSON Schema's `date-time` is RFC 3339, which requires the `T` separator and
+    a UTC offset. A `fromisoformat`-based check silently accepts every case
+    below except the first, so the full shape is matched instead.
     """
     import json
 
@@ -1857,13 +1876,62 @@ def test_an_invalid_timestamp_is_caught_by_the_format_checker(tmp_path):
 
     db = tmp_path / "db.json"
     db.write_text(
-        json.dumps(
-            {"schema_version": "2.2.1", "created_date": "NOT-A-TIMESTAMP", "models": [_row("ok")]}
-        )
+        json.dumps({"schema_version": "2.2.1", "created_date": timestamp, "models": [_row("ok")]})
     )
 
-    with pytest.raises(mod.InputError, match="date-time"):
-        mod.presolve_match_models(db)
+    # A format violation WARNS rather than aborting — see the next test for why.
+    assert mod.presolve_match_models(db) == ["ok"]
+    stderr = capsys.readouterr().err  # read ONCE; readouterr() drains the capture
+    assert "format violation" in stderr
+    assert "date-time" in stderr, f"the message must name the format; got: {stderr}"
+
+
+@pytest.mark.unit
+def test_a_format_violation_warns_but_a_structural_one_is_fatal(tmp_path, capsys):
+    """Formats warn; structure aborts. The split is deliberate.
+
+    The checked-in DB carries 8 date-only `convexity.updated_date` values in a
+    `format: date-time` field — a real, pre-existing data defect. Refusing to run
+    over it would break this audit on the production database to police a
+    timestamp. What CAN silently shrink the cohort — enums, required fields,
+    `additionalProperties` — stays fatal.
+    """
+    import json
+
+    pytest.importorskip("jsonschema")
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    fmt_only = tmp_path / "fmt.json"
+    fmt_only.write_text(
+        json.dumps({"schema_version": "2.2.1", "created_date": "nope", "models": [_row("ok")]})
+    )
+    assert mod.presolve_match_models(fmt_only) == ["ok"], "format alone must not abort"
+    assert "WARNING" in capsys.readouterr().err
+
+    structural = _row("ok")
+    structural["mcp_solve"]["outcome_catagory"] = "typo"  # additionalProperties: false
+    with pytest.raises(mod.InputError, match="schema.json"):
+        mod.presolve_match_models(_write_db(tmp_path, [structural]))
+
+
+@pytest.mark.unit
+def test_a_structurally_invalid_schema_is_reported(tmp_path, monkeypatch):
+    """A file can be valid JSON and still not be a valid Draft-7 schema.
+
+    `iter_errors` then raises from inside jsonschema, escaping `main` as a
+    traceback instead of the promised exit-2 path.
+    """
+    import json
+
+    pytest.importorskip("jsonschema")
+    import scripts.sprint_audit.check_mcp_solve_attribution as mod
+
+    bogus = tmp_path / "schema.json"
+    bogus.write_text(json.dumps({"type": "not-a-real-type"}))
+    monkeypatch.setattr(mod, "SCHEMA_PATH", bogus)
+
+    with pytest.raises(mod.InputError, match="not a valid Draft-7 schema"):
+        mod.presolve_match_models(_write_db(tmp_path, [_row("ok")]))
 
 
 @pytest.mark.unit
