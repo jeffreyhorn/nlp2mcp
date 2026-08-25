@@ -191,3 +191,47 @@ Run from a **scratch directory**.
 ### Bucket / KPI
 
 **0 bucket expected.** `tricp` is `path_solve_terminated` with `solver_version: None` — it aborts at **GAMS execution before PATH runs**. **Translate-stable, Solve-uncertain, Match-unclaimed.**
+
+---
+
+## Resolution — Sprint 38 Day 11 (2026-08-25)
+
+**Status: FIXED (structurally verified) · 0 bucket moves · `tricp` moves `path_solve_terminated` → `path_solve_license`.**
+
+**Fingerprint re-reproduced at `3f2a2067`** (fresh translate byte-identical to the committed golden): rc 3 · **108** anchored `**** Unmatched variable not free or fixed` (54 `slp` + 54 `sln`, all **on-edge**) · `**** SOLVE from line 205 ABORTED, EXECERROR = 108` · `---- stat_slp =E= NONE` and `---- stat_sln =E= NONE`.
+
+**After:** **0** unmatched · `stat_slp` **54 rows** · `stat_sln` **54 rows** · rows carry the hand-derived shape `1 − nu_eq1 − piL_slp = 0`.
+
+### The gate's traced fix surface was the wrong layer
+
+The Day-2 gate traced this to the head-domain emission in `src/emit/emit_gams.py`. The head domain is not decided there — it is `domain=var_def.domain` in `src/kkt/stationarity.py`, and the **body** is built positionally from the same repeated tuple, so a head-only rename would leave the body binding `n` twice. The collapse also reaches back **before** KKT assembly: the objective gradient came out as `sum(i, 1$(e(n,i)))` because position 2 had no symbol to bind.
+
+**The change is a pre-differentiation IR pass** — `src/kkt/repeated_domain.py::dedupe_repeated_variable_domains`, wired into `src/cli.py` as step 2.7 — which rewrites the second and later occurrences of a repeated domain symbol to a freshly minted alias (`slp(n,n)` → `slp(n,n__)`, `Alias(n, n__)` registered). It is an exact identity for any variable whose domain has no repeat.
+
+A second defect surfaced with it: `_remap_condition_to_domain` still emitted the diagonal guard `$(e(n,n))`, because `e` is **itself** declared `e(n,n)` and #1350's parent-set lookup answered "the var_domain index with root `n`" identically at both positions. Each domain slot is now claimed by at most one condition index; for domains with no two entries sharing a root the scan is unchanged.
+
+### Two corrections to this document
+
+1. **The title's "760 MCP errors" does not reproduce** — 108 does, and has since Sprint 24's Fix 1. Left in place for provenance; the measured figure is 108.
+2. **The Sprint-24 "Remaining: 108 unmatched variables" diagnosis is wrong.** It claims the 108 are edge instances whose stationarity "doesn't reference the paired variable", and calls this "a fundamental MCP formulation issue" needing a `0*slp(n,n)` dummy term. GAMS does **not** require the paired variable to appear in its row. The 108 were unmatched because `stat_slp` generated **zero rows at all** — a collapsed head domain, not a missing reference. **The proposed `0*slp` workaround would not have fixed it.**
+
+### Why the gate's third PROCEED clause is not met
+
+The gate reads "…`tricp` reaches PATH". It does not. Removing the collapse takes the MCP from **387 rows to 1,255**, past the GAMS demo limit of 1000 nonlinear rows:
+
+```
+**** The model exceeds the demo license limits for nonlinear models of more than 1000 rows or columns
+**** Terminated due to a licensing error
+```
+
+Classified by `scripts/gamslib/test_solve.py` (not by eye): `license_limit` → `path_solve_license`. The original NLP is *under* the limit and solves (`model_status 2 @ 3838.2686`); the KKT expansion is what crosses it. **`tricp` therefore joins the license-gated cohort as its 11th member** and re-tests with that batch on capacity.
+
+### Blast radius
+
+**Exactly two models** in the corpus have a repeated-symbol variable domain: `tricp` and **`ferts`** (`xi(c,i,i)`). The gate's "only `tricp` drifts" expectation was one model short. `ferts` is `path_solve_license`, so its drift **cannot** move a bucket — but its `stat_xi` body was emitting conjunctions like `sameas(i,'assiout') and sameas(i,'aswan')`, which are **identically false**, silently dropping every off-diagonal `_fx_` multiplier term. That is now `sameas(i__,'aswan')`.
+
+### Regression guard
+
+- `tests/unit/kkt/test_repeated_domain_dedupe.py` (8) — no-op on unrepeated domains, alias minting/sharing/collision-avoidance, case-insensitivity.
+- `tests/unit/kkt/test_remap_condition_to_domain.py` (+2) — slot-claiming against a repeated-domain condition set; #1350's srkandw shape unaffected.
+- `tests/integration/emit/test_tricp_repeated_domain_head.py` (2) — the emitted `stat_*` / `comp_lo_*` heads must not repeat a symbol, and `$(e(n,n))` must not appear.

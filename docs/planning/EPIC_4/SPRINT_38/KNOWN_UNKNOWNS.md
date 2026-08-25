@@ -974,6 +974,15 @@ Sprint 38 execution team (**procurement decision may require a human**)
 
 **Decision:** 🔶 **Classification: `license-gated`, applied uniformly to all ten.** (1) **Excluded from KPI projections** — this is the phantom-upside failure mode turkey exhibited across S35–S37; (2) **not written off**, since a license is being pursued; (3) **tracked as a named cohort with its ceiling stated (+10 Solve)**, so the license's value is visible; (4) **re-tested as one batch** on capacity. **A reduced instance cannot substitute for any member** — the KPI requires the model itself to solve and match. **Convergence worth using:** the license ask and the P3 consultation go to the **same people**, so the two conversations can be one, with *"10 models, 7 % of our corpus, blocked only by the 1000-row demo limit"* as a concrete ask.
 
+### Close — Sprint 38 Day 11 (2026-08-25)
+
+🔒 **CLOSED as a tracked procurement item.** No engineering result closes this unknown, and none was sought: the block is capacity, the pursuit is live, and the cohort record (`CAMCGE_EPIC5_HANDOFF.md` §4) is now the standing wording wherever these models are projected.
+
+**Two amendments from the same day's P8 work, both measured:**
+
+1. **The cohort is 11.** `tricp` joins it. Sprint 38 Day 11 fixed #1062 (a stationarity head domain collapsed onto the diagonal by a repeated set symbol); removing the collapse takes tricp's MCP from **387 rows to 1,255**, past the demo limit. Classified by `scripts/gamslib/test_solve.py`: `path_solve_terminated` → **`path_solve_license`**. tricp is `likely_convex`, so it is inside the 142. **Ceiling is +11 Solve against the then-current Solve, as one batch.**
+2. **"All ten have committed goldens" is not the same claim as "all ten emit correctly", and only the first was ever true.** `ferts` is the *other* model carrying #1062's defect. Its `stat_xi` body emitted conjunctions of the form `sameas(i,'assiout') and sameas(i,'aswan')` — **identically false**, silently dropping every off-diagonal `_fx_` multiplier term. Nothing caught it, because **no cohort member's emit has ever been exercised by a solve**. A license buys not only ten solve attempts but the first real test of ten goldens.
+
 ---
 
 ## Unknown 5.2: Does the camcge Epic-5 handoff need anything not already measured?

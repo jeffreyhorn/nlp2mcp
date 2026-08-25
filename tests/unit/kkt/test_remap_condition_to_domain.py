@@ -49,3 +49,45 @@ class TestRemapConditionToDomain:
 
         result = _remap_condition_to_domain(Const(1.0), ("n", "n"))
         assert isinstance(result, Const)
+
+    def test_repeated_set_domain_claims_each_slot_once(self):
+        """Issue #1062: `e(n,i)` against the DE-DUPLICATED domain `(n,n__)`.
+
+        `e` is itself declared `e(n,n)`, so #1350's parent-set lookup asks for
+        "the var_domain index whose root is `n`" at BOTH positions.  A
+        first-match scan answers `n` twice and re-collapses the guard onto the
+        diagonal — `e(n,n)` — which is exactly the row-generation failure
+        `dedupe_repeated_variable_domains` was introduced to remove.  Each
+        var_domain slot must be claimed by at most one condition index.
+        """
+        from src.ir.model_ir import ModelIR
+        from src.ir.symbols import AliasDef, SetDef
+
+        model_ir = ModelIR()
+        model_ir.add_set(SetDef(name="n", members=["n0", "n1"]))
+        model_ir.add_set(SetDef(name="e", members=[], domain=("n", "n")))
+        model_ir.add_alias(AliasDef(name="i", target="n"))
+        model_ir.add_alias(AliasDef(name="n__", target="n"))
+
+        cond = SetMembershipTest("e", (SymbolRef("n"), SymbolRef("i")))
+        result = _remap_condition_to_domain(cond, ("n", "n__"), model_ir)
+
+        assert isinstance(result, SetMembershipTest)
+        assert [ix.name for ix in result.indices] == ["n", "n__"]
+
+    def test_distinct_root_positions_are_unaffected(self):
+        """#1350's srkandw shape still remaps by parent set, not by position."""
+        from src.ir.model_ir import ModelIR
+        from src.ir.symbols import SetDef
+
+        model_ir = ModelIR()
+        for s in ("t", "n", "j"):
+            model_ir.add_set(SetDef(name=s, members=[]))
+        model_ir.add_set(SetDef(name="tn", members=[], domain=("t", "n")))
+
+        # tn(t,sn) against y's domain (j,t,n): `sn` must become `n`, NOT `t`.
+        cond = SetMembershipTest("tn", (SymbolRef("t"), SymbolRef("sn")))
+        result = _remap_condition_to_domain(cond, ("j", "t", "n"), model_ir)
+
+        assert isinstance(result, SetMembershipTest)
+        assert [ix.name for ix in result.indices] == ["t", "n"]

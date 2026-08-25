@@ -29,6 +29,7 @@ from src.ir.normalize import normalize_model
 from src.ir.parser import parse_model_file
 from src.kkt.assemble import assemble_kkt_system
 from src.kkt.reformulation import reformulate_model
+from src.kkt.repeated_domain import dedupe_repeated_variable_domains
 from src.kkt.scaling import byvar_scaling, curtis_reid_scaling
 from src.kkt.sqr_reformulation import reformulate_sqr_equalities
 from src.logging_config import setup_logging
@@ -465,6 +466,14 @@ def main(
                         f"  Reformulated {len(sqr_reformulated)} sqr equality(s): "
                         f"{', '.join(sqr_reformulated)}"
                     )
+
+        # Step 2.7: De-duplicate repeated set symbols in variable domains
+        # (Issue #1062).  Must run BEFORE differentiation: the AD layer and the
+        # KKT builders take their index symbols positionally from
+        # `VariableDef.domain`, and a repeated symbol there collapses every
+        # generated equation head onto the diagonal.  Identity for models with
+        # no repeated-symbol domain.
+        dedupe_repeated_variable_domains(model)
 
         # Step 3: Compute derivatives (IR Generation stage)
         if verbose:

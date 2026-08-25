@@ -24,6 +24,7 @@ Sets
 Alias(n, i);
 Alias(n, j);
 Alias(k, kp);
+Alias(n, n__);
 
 Parameters
     fx(n,k) /n0.k0 10, n0.k1 10, n19.k0 20, n19.k1 10, n9.k0 15, n9.k1 20/
@@ -52,14 +53,14 @@ Variables
 Positive Variables
     x(n,k)
     r(n)
-    slp(n,n)
-    sln(n,n)
+    slp(n,n__)
+    sln(n,n__)
     z
     lam_eq2(n,n)
     piL_x(n,k)
     piL_r(n)
-    piL_slp(n,n)
-    piL_sln(n,n)
+    piL_slp(n,n__)
+    piL_sln(n,n__)
     piL_z
     piU_x(n,k)
 ;
@@ -86,10 +87,10 @@ x.l(n,k) = myScale * uniform(0, smax(i, fx(i,k)));
 x.l(n,k) = min(max(x.l(n,k), 1e-6), x.up(n,k));
 r.l(n) = myScale * 1;
 r.l(n) = min(max(r.l(n), 1e-6), r.up(n));
-slp.l(n,n) = 1;
-slp.l(n,n) = min(slp.l(n,n), slp.up(n,n));
-sln.l(n,n) = 1;
-sln.l(n,n) = min(sln.l(n,n), sln.up(n,n));
+slp.l(n,n__) = 1;
+slp.l(n,n__) = min(slp.l(n,n__), slp.up(n,n__));
+sln.l(n,n__) = 1;
+sln.l(n,n__) = min(sln.l(n,n__), sln.up(n,n__));
 z.l = 1;
 z.l = min(z.l, z.up);
 
@@ -103,14 +104,14 @@ z.l = min(z.l, z.up);
 
 Equations
     stat_r(n)
-    stat_sln(n,n)
-    stat_slp(n,n)
+    stat_sln(n,n__)
+    stat_slp(n,n__)
     stat_x(n,k)
     stat_z
     comp_eq2(n,n)
     comp_lo_r(n)
-    comp_lo_sln(n,n)
-    comp_lo_slp(n,n)
+    comp_lo_sln(n,n__)
+    comp_lo_slp(n,n__)
     comp_lo_x(n,k)
     comp_lo_z
     comp_up_x(n,k)
@@ -124,8 +125,8 @@ Equations
 
 * Stationarity equations
 stat_r(n).. (sum((i,j), ((((-1) * (2 * (r(i) + r(j)))) * nu_eq1(i,j))$(i(i) and j(j)))$(e(i,j))) + sum((i,j), ((2 * (r(i) + r(j)) * lam_eq2(i,j))$(i(i) and j(j)))$((not e(i,j)) and ord(i) < ord(j))) - piL_r(n))$(r.up(n) - r.lo(n) > 1e-10) =E= 0;
-stat_sln(n,n).. (sum(i, 1$(e(n,i))) + (nu_eq1(n,n)$(i(n) and j(n)))$(e(n,n)) - piL_sln(n,n))$(e(n,n)) =E= 0;
-stat_slp(n,n).. (sum(i, 1$(e(n,i))) + (((-1) * nu_eq1(n,n))$(i(n) and j(n)))$(e(n,n)) - piL_slp(n,n))$(e(n,n)) =E= 0;
+stat_sln(n,n__).. (1$(e(n,n__)) + (nu_eq1(n,n__)$(i(n) and j(n__)))$(e(n,n__)) - piL_sln(n,n__))$(e(n,n__)) =E= 0;
+stat_slp(n,n__).. (1$(e(n,n__)) + (((-1) * nu_eq1(n,n__))$(i(n) and j(n__)))$(e(n,n__)) - piL_slp(n,n__))$(e(n,n__)) =E= 0;
 stat_x(n,k).. (sum((i,j), ((2 * (x(i,k) - x(j,k)) * nu_eq1(i,j))$(i(i) and j(j)))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-1,j))$(i(i-1) and j(j)))$(ord(i) > 1))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-4,j))$(i(i-4) and j(j)))$(ord(i) > 4))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-2,j))$(i(i-2) and j(j)))$(ord(i) > 2))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-11,j))$(i(i-11) and j(j)))$(ord(i) > 11))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-5,j))$(i(i-5) and j(j)))$(ord(i) > 5))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-3,j))$(i(i-3) and j(j)))$(ord(i) > 3))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-6,j))$(i(i-6) and j(j)))$(ord(i) > 6))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-9,j))$(i(i-9) and j(j)))$(ord(i) > 9))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-19,j))$(i(i-19) and j(j)))$(ord(i) > 19))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-8,j))$(i(i-8) and j(j)))$(ord(i) > 8))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-10,j))$(i(i-10) and j(j)))$(ord(i) > 10))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-7,j))$(i(i-7) and j(j)))$(ord(i) > 7))$(e(i,j))) + sum((i,j), ((((-1) * (2 * (x(i,k) - x(j,k)))) * lam_eq2(i,j))$(i(i) and j(j)))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-10,j))$(i(i-10) and j(j)))$(ord(i) > 10))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-9,j))$(i(i-9) and j(j)))$(ord(i) > 9))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-8,j))$(i(i-8) and j(j)))$(ord(i) > 8))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-7,j))$(i(i-7) and j(j)))$(ord(i) > 7))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-6,j))$(i(i-6) and j(j)))$(ord(i) > 6))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-5,j))$(i(i-5) and j(j)))$(ord(i) > 5))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-3,j))$(i(i-3) and j(j)))$(ord(i) > 3))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-4,j))$(i(i-4) and j(j)))$(ord(i) > 4))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-12,j))$(i(i-12) and j(j)))$(ord(i) > 12))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-11,j))$(i(i-11) and j(j)))$(ord(i) > 11))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-2,j))$(i(i-2) and j(j)))$(ord(i) > 2))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-13,j))$(i(i-13) and j(j)))$(ord(i) > 13))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-14,j))$(i(i-14) and j(j)))$(ord(i) > 14))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-15,j))$(i(i-15) and j(j)))$(ord(i) > 15))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-16,j))$(i(i-16) and j(j)))$(ord(i) > 16))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-17,j))$(i(i-17) and j(j)))$(ord(i) > 17))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-18,j))$(i(i-18) and j(j)))$(ord(i) > 18))$((not e(i,j)) and ord(i) < ord(j))) - piL_x(n,k) + piU_x(n,k))$(x.up(n,k) - x.lo(n,k) > 1e-10) =E= 0;
 stat_z.. 100 + sum((i,j)$((not e(i,j)) and ord(i) < ord(j)), ((-1) * lam_eq2(i,j))$(i(i) and j(j))) - piL_z =E= 0;
 
@@ -134,8 +135,8 @@ comp_eq2(i,j)$((not e(i,j)) and ord(i) < ord(j)).. sum(k, sqr(x(i,k) - x(j,k))) 
 
 * Lower bound complementarity equations
 comp_lo_r(n)$(myScale * 0.001 > -inf).. r(n) - myScale * 0.001 =G= 0;
-comp_lo_sln(n,n).. sln(n,n) - 0 =G= 0;
-comp_lo_slp(n,n).. slp(n,n) - 0 =G= 0;
+comp_lo_sln(n,n__).. sln(n,n__) - 0 =G= 0;
+comp_lo_slp(n,n__).. slp(n,n__) - 0 =G= 0;
 comp_lo_x(n,k).. x(n,k) - 0 =G= 0;
 comp_lo_z.. z - 0 =G= 0;
 
@@ -154,10 +155,10 @@ defobj.. obj =E= 100 * z + sum((n,i)$(e(n,i)), slp(n,i) + sln(n,i));
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-sln.fx(n,n)$(not (e(n,n))) = 0;
-piL_sln.fx(n,n)$(not (e(n,n))) = 0;
-slp.fx(n,n)$(not (e(n,n))) = 0;
-piL_slp.fx(n,n)$(not (e(n,n))) = 0;
+sln.fx(n,n__)$(not (e(n,n__))) = 0;
+piL_sln.fx(n,n__)$(not (e(n,n__))) = 0;
+slp.fx(n,n__)$(not (e(n,n__))) = 0;
+piL_slp.fx(n,n__)$(not (e(n,n__))) = 0;
 r.fx(n)$(not (r.up(n) - r.lo(n) > 1e-10)) = r.lo(n);
 piL_r.fx(n)$(not (r.up(n) - r.lo(n) > 1e-10)) = 0;
 x.fx(n,k)$(not (x.up(n,k) - x.lo(n,k) > 1e-10)) = x.lo(n,k);
