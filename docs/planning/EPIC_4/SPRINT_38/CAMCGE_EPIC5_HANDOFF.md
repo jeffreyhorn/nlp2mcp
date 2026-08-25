@@ -111,6 +111,20 @@ The shared signature is exact: same outcome, same null solver version, same caus
 
 **What a reduced instance would buy: nothing for the KPI.** A smaller instance of any cohort member could raise confidence that its emit solves, but the KPI requires **the model itself** to solve and match. Worth stating because it is the tempting engineering workaround, and it does not deliver.
 
+### 4.5 Amendments at P5 close (Sprint 38 Day 11, 2026-08-25)
+
+**The cohort is 11.** `tricp` joins it. Day 11 fixed #1062 — `slp(n,n)`/`sln(n,n)` gave stationarity heads whose repeated controlling index binds to the same element, so `stat_slp` and `stat_sln` generated **zero** rows and all 108 on-edge columns were unmatched. Removing the collapse takes the MCP from **387 rows to 1,255**, past the demo 1000-row nonlinear limit; the project's own taxonomy reclassifies it `path_solve_terminated` → **`path_solve_license`**. `tricp` is `likely_convex`, so it is inside the 142. **The ceiling is +11 Solve, and it re-tests with the same single batch.**
+
+**"All eleven have committed goldens" ≠ "all eleven emit correctly" — and only the first has ever been true.** `ferts` is the *other* model that carried #1062's defect. Its `stat_xi` body emitted conjunctions of the form
+
+```gams
+nu_xi_fx_ammonia_assiout_aswan$(sameas(c,'ammonia') and sameas(i,'assiout') and sameas(i,'aswan'))
+```
+
+— **identically false**, one symbol cannot equal two labels — silently dropping every off-diagonal `_fx_` multiplier term. Nothing caught it, because **no cohort member's emit has ever been exercised by a solve.** §4.1's "translate succeeded" is accurate as written and should not be read as "the emit is correct".
+
+**This raises what the license is worth.** The ask is not only eleven solve attempts; it is the first real test of eleven goldens that today are checked by nothing stronger than byte-stability against themselves.
+
 ## 5. What P5 delivers, stated honestly
 
 With camcge Epic-5-scoped and turkey blocked, **P5's Sprint-38 deliverable is documentation, not bucket movement**:

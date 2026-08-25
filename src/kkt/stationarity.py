@@ -1481,6 +1481,22 @@ def _remap_condition_to_domain(
 
     new_indices: list[Expr] = []
     domain_lower = {d.lower() for d in var_domain}
+    # Issue #1062: a var_domain slot may be claimed by at most one condition
+    # index.  Without this, a condition over a set whose OWN domain repeats
+    # (e.g. `e(n,n)` against slp's de-duplicated domain `(n,n__)`) sends every
+    # position to the first root match — `e(n,n)` — collapsing the guard onto
+    # the diagonal.  For domains with no two entries sharing a root this is
+    # identical to the historical first-match scan.
+    used_slots: set[int] = set()
+
+    def _claim(predicate) -> str | None:
+        for slot, vd in enumerate(var_domain):
+            if slot in used_slots or not predicate(vd):
+                continue
+            used_slots.add(slot)
+            return vd
+        return None
+
     for pos, idx in enumerate(cond.indices):
         if isinstance(idx, SymbolRef) and idx.name.lower() not in domain_lower:
             replacement: Expr | None = None
@@ -1489,10 +1505,17 @@ def _remap_condition_to_domain(
             # that shares that alias root (or is a subset of it).
             if model_ir is not None and pos < len(set_declared_domain):
                 parent_name = set_declared_domain[pos]
-                for vd in var_domain:
-                    if _shares_alias_root(vd, parent_name, model_ir):
-                        replacement = SymbolRef(vd)
-                        break
+                claimed = _claim(lambda vd: _shares_alias_root(vd, parent_name, model_ir))
+                if claimed is not None:
+                    replacement = SymbolRef(claimed)
+                else:
+                    # Every root match is already claimed: keep the historical
+                    # first-match result rather than falling through to the
+                    # positional remap #1350 exists to avoid.
+                    for vd in var_domain:
+                        if _shares_alias_root(vd, parent_name, model_ir):
+                            replacement = SymbolRef(vd)
+                            break
             # Fallback: historical position-based remap.
             if replacement is None and pos < len(var_domain):
                 replacement = SymbolRef(var_domain[pos])
@@ -1500,6 +1523,10 @@ def _remap_condition_to_domain(
                 replacement = idx
             new_indices.append(replacement)
         else:
+            # An index already in the domain claims its own slot, so a later
+            # position cannot be remapped onto it.
+            if isinstance(idx, SymbolRef):
+                _claim(lambda vd: vd.lower() == idx.name.lower())
             new_indices.append(idx)
 
     if any(
