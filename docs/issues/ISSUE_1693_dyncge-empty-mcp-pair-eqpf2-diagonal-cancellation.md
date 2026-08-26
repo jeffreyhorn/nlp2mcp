@@ -77,3 +77,53 @@ Run from a **scratch directory**, never the repo root (GAMS writes scratch files
 ### Regression guard
 
 A fixture asserting that a reflexive equality equation (`e(i,j).. v(j) =e= v(i)`) yields a multiplier fixed on the diagonal and free off it. **The fixture must be a minimal synthetic model, not dyncge** — dyncge's emit is slow enough to make it a poor unit fixture.
+
+---
+
+## Resolution — Sprint 38 Day 12 (2026-08-25)
+
+**Status: FIXED as specified.** `dyncge` `path_solve_terminated` → **`model_optimal`** (Solve +1). **Match NOT claimed** — see the new finding below.
+
+**Fingerprint re-reproduced at `cf8c0284`** (fresh translate byte-identical to the committed golden): rc 3 · **4 × `**** MCP pair eqpf2.nu_eqpf2 has empty equation but associated variable is NOT fixed`** · `**** SOLVE from line 569 ABORTED, EXECERROR = 4`. The count is derived, not counted: `card(h_mob) × card(i)` diagonal = 1 × 4 = 4 = the `EXECERROR`.
+
+### ⚠ The gate was wrong that this needs new logic
+
+The gate says *"Detecting this case requires recognising that the equation's LHS and RHS become the same expression under an index identification … which is **new logic** rather than a widened condition-lift."*
+
+**That logic already existed.** Section **2c** (`emit_gams.py`, #942 / #1021 / #1104) has performed exactly this diagonal-triviality test — substitute `d_j → d_i`, then four escalating emptiness checks — since Sprint 24. **It was never inequality-specific; it was only ever *applied* to `kkt.complementarity_ineq`.** dyncge's `eqpf2` is an equality, so it never reached the loop.
+
+The change is therefore a **reuse**, not new machinery:
+
+- `_diagonal_instance_is_trivial(eq_def, d_i, d_j, model_ir)` — 2c's four checks, extracted verbatim.
+- `_same_set_domain_pairs(domain, resolve_canonical)` — the alias-root pairing, extracted.
+- **Section 3c** — the equality analogue, emitting `nu_<eq>.fx(<domain>)$(ord(d_i) = ord(d_j)) = 0;`.
+- Section 2c now calls the helper, so both populations share one implementation and one hardening history.
+
+The emitted guard uses `ord(i) = ord(j)` rather than the gate's `sameas(i,j)`; they select the same instances, and `ord` matches what 2c has always emitted.
+
+**Soundness, stated explicitly:** the test is **sufficient, not necessary**. It may miss an empty row, but it must never call a live row empty — pinning the multiplier of a constraint that actually binds is a *silent wrong answer*, not an error. That is #1693's own REPLAN condition, and it is why the negative-control test (`v(j) =e= 2*v(i)`, whose diagonal `v = 2v` is informative) asserts that **no** guard is emitted.
+
+### Verification
+
+| gate criterion | before | after |
+|---|---|---|
+| `has empty equation but associated variable is NOT fixed` | **4** | **0** |
+| `eqpf2` rows generated | — | **12**, and **0 diagonal** (counted from the equation listing) |
+| terminal state | `ABORTED, EXECERROR = 4` | rc **0**, no `ABORTED` |
+| modelstat (GAMS's own line) | — | **`MODEL STATUS 1 Optimal`** |
+
+**Leak gate PASS at 186 in-scope** (7 allowlisted; scope is 186 after Day 12 adopted `elec_mcp_presolve.gms`) — **exactly `dyncge` drifted** (+46 bytes). Section 3c fires on **one model in the whole corpus**.
+
+Regression guard: `tests/unit/emit/test_equality_diagonal_multiplier_fix.py` (4) — a **minimal synthetic** reflexive equality (per the gate: *not* dyncge) yields a diagonal-only guard; the guard is never unconditional; a non-reflexive equality gets none; a single-index equality is untouched.
+
+### ⚠ NEW FINDING — dyncge has a SECOND, independent emit defect
+
+`scripts/diagnostics/kkt_residual.py data/gamslib/raw/dyncge.gms` → **`CASE_B — emit_bug`**, max relative stationarity residual **6.22e-02** (tol 1e-3) at `stat_pf(CAP,SRV)`; dual transfer CONSISTENT.
+
+Warm-started at the NLP's own KKT point, dyncge's stationarity rows do **not** evaluate to zero. The empty-pair abort was real and is fixed, but it was **masking** a gradient defect underneath. Consequences:
+
+- The cold MCP solves to `MODEL STATUS 1 Optimal` at **381401.119** against the NLP's **539570.5027** — a **29.3 %** mismatch, recorded as `mismatch`.
+- The presolve retry also fails to match (`0/1`), so there is **no spurious match** to adjudicate here.
+- **Solve +1 is genuine; Match is 0 and must not be claimed.** #1693's own Bucket/KPI note anticipated exactly this: *"Clearing the abort lets it reach PATH; whether it then solves or matches is unclaimed."*
+
+**This needs a new issue and a new diagnosis** — it is not #1693, and #1693 should be closed on its own terms rather than widened to cover it. The top residual rows are `stat_pf(CAP,SRV)`, `stat_pq(HMN)`, `stat_pf(LAB,SRV)`, `stat_pf(LAB,HMN)`, `stat_pf(CAP,LMN)`, which points at the `pf`/`pq` block rather than at `eqpf2`.

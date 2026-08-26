@@ -485,6 +485,7 @@ eqPRICE.. price =E= sum(j, pq(j) * Q00(j) / sum(i, Q00(i)));
 * fixed for excluded instances to satisfy MCP matching.
 
 ff.fx(h)$(not (h_mob(h))) = 0;
+nu_eqpf2.fx(h_mob,i,j)$(ord(i) = ord(j)) = 0;
 nu_eqpf1.fx(h)$(not (h_mob(h))) = 0;
 
 * ============================================

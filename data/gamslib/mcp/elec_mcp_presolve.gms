@@ -59,16 +59,20 @@ Variables
 ;
 
 * ============================================
-* Variable Initialization
+* NLP Pre-Solve (warm-start for MCP duals)
 * ============================================
 
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
+$onMultiR
+$include "data/gamslib/raw/elec.gms"
+$offMulti
 
-x.l(i) = cos(theta(i)) * sin(phi(i));
-y.l(i) = sin(theta(i)) * sin(phi(i));
-z.l(i) = cos(phi(i));
+* Transfer NLP duals to MCP multiplier initialization
+nu_ball.l(i) = ball.m(i);
+
+* Transfer variable marginals to bound multipliers
+
+* Reset any NA/UNDF warm-start multiplier levels to 0 (#1322)
+nu_ball.l(i)$(NOT (nu_ball.l(i) > -inf and nu_ball.l(i) < inf)) = 0;
 
 * ============================================
 * Equations
@@ -95,6 +99,7 @@ Equations
 Alias(i, j__);
 Alias(i, i__);
 
+$onMultiR
 * Stationarity equations
 stat_x(i).. sum(j__$(ut(i,j__)), ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j__)) + sqr(y(i) - y(j__)) + sqr(z(i) - z(j__)))) * 2 * (x(i) - x(j__)))) / sqr(sqrt(sqr(x(i) - x(j__)) + sqr(y(i) - y(j__)) + sqr(z(i) - z(j__))))) + sum(i__$(ut(i__,i)), ((-1) * (1 / (2 * sqrt(sqr(x(i__) - x(i)) + sqr(y(i__) - y(i)) + sqr(z(i__) - z(i)))) * 2 * (x(i__) - x(i)) * (-1))) / sqr(sqrt(sqr(x(i__) - x(i)) + sqr(y(i__) - y(i)) + sqr(z(i__) - z(i))))) + 2 * x(i) * nu_ball(i) =E= 0;
 stat_y(i).. sum(j__$(ut(i,j__)), ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j__)) + sqr(y(i) - y(j__)) + sqr(z(i) - z(j__)))) * 2 * (y(i) - y(j__)))) / sqr(sqrt(sqr(x(i) - x(j__)) + sqr(y(i) - y(j__)) + sqr(z(i) - z(j__))))) + sum(i__$(ut(i__,i)), ((-1) * (1 / (2 * sqrt(sqr(x(i__) - x(i)) + sqr(y(i__) - y(i)) + sqr(z(i__) - z(i)))) * 2 * (y(i__) - y(i)) * (-1))) / sqr(sqrt(sqr(x(i__) - x(i)) + sqr(y(i__) - y(i)) + sqr(z(i__) - z(i))))) + 2 * y(i) * nu_ball(i) =E= 0;
@@ -104,6 +109,7 @@ stat_z(i).. sum(j__$(ut(i,j__)), ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j__)) + sqr
 obj.. potential =E= sum((i,j)$(ut(i,j)), 1 / sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j))));
 ball(i).. sqr(x(i)) + sqr(y(i)) + sqr(z(i)) =E= 1;
 
+$offMulti
 
 * ============================================
 * Model MCP Declaration

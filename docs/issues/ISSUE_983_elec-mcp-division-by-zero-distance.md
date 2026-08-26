@@ -102,3 +102,12 @@ Every `$(ut(...))` condition must name **its own enclosing summation index** pai
 ### Bucket / KPI
 
 **0 bucket.** `elec` is `path_solve_terminated` with `solver_version: None` (aborts before PATH) and is **non-convex** — no Solve or Match gain may be projected.
+
+
+---
+
+## Resolution — Sprint 38 Day 12 (2026-08-25)
+
+**FIXED together with #1325 — they are the same defect at different stages.** See `ISSUE_1325`'s *Resolution* section for the full record: two independent defects (`_diff_sum`'s partial-collapse condition substitution in `src/ad/derivative_rules.py`, and the self-mapped-sum-index misclassification in `_replace_indices_in_expr` in `src/kkt/stationarity.py`), both required, verified by `kkt_residual.py` reaching **`CASE_A`** and by a leak gate that drifted **exactly `elec`** of 185 in-scope goldens.
+
+**⚠ This document's section *"Why Division-by-Zero No Longer Occurs"* was WRONG and stayed wrong for four sprints.** Division by zero reproduced at `b823a9a5` and again at `cf8c0284`, at lines 99/100/101 (`stat_x`/`stat_y`/`stat_z`). It is fixed now — but by the changes described above, not by anything that section claims. **Do not read that section as history; it was never accurate.** The lesson recorded in Sprint 38 Day 2's gate stands: *a merely non-erroring emit is not a pass* — the structural assertion (every `$(ut(...))` naming its own summation index) is what distinguishes a fix from a coincidence.
