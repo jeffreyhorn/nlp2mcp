@@ -634,6 +634,13 @@ Two addresses were supplied for Dirkse as alternatives without a preference; **t
 
 **Decision:** ✅ **Branch A (SEND).** The pre-send blocker from 3.3 — the missing toolchain stamp — **has been applied** to `docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` §1, so the attachment is correct. **Two human actions remain**, neither performable in this session: (1) send the §5 message (no email capability here), and (2) post §7's tracking comment to **#1462** at send time. The strike wording (§6) is retained unused in case delivery fails.
 
+> ### ✅ CLOSED 2026-08-26 — both human actions complete.
+> The consultation was **sent by email** to `ferris@cs.wisc.edu`, `steve@gams.com`, `sdirkse@gams.com`; tracking comments posted to **#1462** (rocket + the send record) and **#1443** (the mine/agreste question); both `SPRINT_36/CONSULTATION_BUNDLE.md` boxes ticked. **The strike wording (§6) was never used.**
+>
+> **The package sent was not the package prepared** — see the banner on `CONSULTATION_DECISION_BRIEF.md` §5. The prepared failure description had gone stale (`EXIT — other error` no longer reproduces; rocket now completes normally to MS-5 after 9,241 iterations), the internal input doc was replaced by an externally-scoped extract, and the NLP source by the generated MCP. **Five carries of a prepared package is long enough for its own contents to rot; re-measure at send time, not only at authoring time.**
+>
+> **Next checkpoint: 2026-09-09** — follow up if no reply, without re-opening the send decision.
+
 ---
 
 ## Unknown 3.2: What does the strike branch actually cost, and what depends on it?
