@@ -95,15 +95,21 @@ A secondary question, if the first has no good answer: **is there a principled w
 
 ## 6. Reproducing it
 
-```bash
-# Generate the warm-started MCP from the GAMSLib source (seq 319)
-python -m src.cli data/gamslib/raw/rocket.gms -o rocket_mcp_presolve.gms --nlp-presolve
+**The generated MCP is attached**, so nothing needs to be built or installed to inspect or re-solve it:
 
-# Solve: embedded NLP reaches MODEL STATUS 2; the MCP reaches MODEL STATUS 5
+```bash
+gams rocket_mcp_presolve.gms      # embedded NLP -> MODEL STATUS 2; the MCP -> MODEL STATUS 5
+```
+
+To regenerate it from source instead, with nlp2mcp checked out (the model is GAMSLib seq 319):
+
+```bash
+gamslib rocket                                                  # fetch rocket.gms
+python -m src.cli rocket.gms -o rocket_mcp_presolve.gms --nlp-presolve
 gams rocket_mcp_presolve.gms
 ```
 
-The generated MCP is attached so no build is needed to inspect it. The forcing scaffold is `--force homotopy` / `--force optfile` on the same command.
+Both write to the current directory. The forcing scaffold — the μ-continuation driver plus a PATH `optfile`, into which a recommended option set would plug — is `--force homotopy` or `--force optfile` on the same command.
 
 ---
 
