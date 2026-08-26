@@ -88,3 +88,8 @@ repdat.put
 *.SCR
 *.STG
 *.STO
+
+# GAMS artifacts written by corpus model sources themselves (dyncge, epscm,
+# qp1x, scenmerge all `execute_unload "result.gdx"`), so a pipeline run from the
+# repo root drops one here.
+result.gdx

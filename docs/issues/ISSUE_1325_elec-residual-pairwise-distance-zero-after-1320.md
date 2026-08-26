@@ -255,3 +255,49 @@ Run from a **scratch directory**.
 ### Relationship to #983
 
 **#983 and this issue are the same defect at different stages.** #983's doc contains a section titled *"Why Division-by-Zero No Longer Occurs"* — **that is stale: division by zero reproduces today at `b823a9a5`**, at lines 99/100/101. Treat **this** gate as the live specification for both, and do not read #983's resolved-sounding narrative as current state.
+
+---
+
+## Resolution — Sprint 38 Day 12 (2026-08-25)
+
+**Status: FIXED.** `Solve 109 → 110 · Match 95 → 96 · all-219 98 → 99`. **Genuine floor unchanged at 73** (the match is a *presolve* match; cold stays 65).
+
+**Fingerprint re-reproduced at `cf8c0284`** (fresh translate byte-identical to the committed golden): rc 3 · `**** Exec Error at line 99/100/101: division by zero (0)` — lines 99/100/101 verified by reading the `.gms` to *be* `stat_x`/`stat_y`/`stat_z` · **30** `Evaluation error(s)` · `**** SOLVE from line 133 ABORTED, EXECERROR = 3`.
+
+### The traced fix surface named the wrong layer, twice over
+
+The gate traced this to "the stationarity term-assembly". **Two independent defects, in two different files, and neither is that.**
+
+**1. `src/ad/derivative_rules.py` — `_diff_sum`, partial-collapse path.** `working_condition` had only the *remaining* sum indices renamed (`j` → `j__`, #1111); its *matched* positions still carried the original sum-index name, which the enclosing `Sum` does not bind. The condition was substituted differently from the body it guards. The gradient was already wrong before KKT assembly ran:
+
+```
+d(obj)/d x("i1") = sum(j__$(ut(i,j__)), …)   ← `i` free
+                 + sum(i__$(ut(i__,j)), …)   ← `j` free
+```
+
+Fixed by applying the same `sub_sym → sub_concrete` substitution to the condition. This is **not** the #1085 case in the sibling `else` branch, where the sum collapses fully and every index is re-symbolized as one unit.
+
+**2. `src/kkt/stationarity.py` — `_replace_indices_in_expr`, `SetMembershipTest` branch.** The `Sum` branch overlays `{idx: idx}` self-mappings so AD names like `j__` survive — which also puts them in `element_to_set`, the very membership the `SetMembershipTest` branch uses to decide *"concrete element ⇒ resolve positionally against the declared domain"*. Since elec declares `Set ut(i,i)`, both declared positions are `i`, so `ut(i,j__)` collapsed to **`ut(i,i)`**. Fixed by requiring `element_to_set[idx.name] != idx.name` — a self-mapping means *bound index*, never *element*.
+
+**Both are required** (measured): fix 1 alone → `ut(i,i)`, `ut(i,i)`; fix 2 alone → `ut(i,j__)`, `ut(i__,j)`; both → `ut(i,j__)`, `ut(i__,i)`.
+
+### Verification
+
+Zero exec errors · zero evaluation errors · rc 0 · cold MCP solve reports its own `TYPE MCP` / `SOLVER PATH` / **`MODEL STATUS 1 Optimal`** (218 iterations) · **`kkt_residual.py` → `CASE_A`, max relative 1.69e-08** · leak gate **PASS at 185 in-scope, exactly `elec` drifted** · determinism ×3 identical.
+
+### Two corrections to this gate
+
+1. **"`grep -c 'ut(i,i)'` must go to 0" is unsatisfiable.** It goes **4 → 1**; the survivor is the source's own `Set ut(i,i)` **declaration**, re-emitted verbatim. A repeated *declaration* domain is the full product and is correct. The gate's stated intent — every `$(ut(...))` names its own summation index — is met, and is what the regression tests assert instead.
+2. **"elec is non-convex, so no Solve or Match gain may be projected" is stale** — the DB has elec as `likely_convex`. (The caution's spirit was still sound: the Thomson problem has many KKT points, which is why the cold MCP lands at 244.624 rather than the NLP's 243.8128.)
+
+### On the presolve retry
+
+The pipeline summary prints *"Pre-solve retry: 1/1 recovered from STATUS 5"* — **wrong about the trigger.** elec's cold solve *succeeded*; the retry fired on `_cold_objective_mismatches_nlp`. **That string is hardcoded for both trigger paths** (`run_full_test.py` ~1826).
+
+The resulting presolve match was checked for the Day-10 spurious signature and is **genuine**: `check_mcp_solve_attribution.py` → `MCP-SOLVED — elec/NLP MS-2, mcp_model/MCP MS-1`, and `check_presolve_divergence.py --model elec` passes. `elec_mcp_presolve.gms` is therefore adopted (presolve goldens 39 → 40, leak scope 185 → 186).
+
+### Regression guard
+
+- `tests/unit/ad/test_partial_collapse_sum_condition.py` (3) — no Sum condition may name a symbol its Sum does not bind; every guard names its own summation index; unconditioned sums unaffected. **Confirmed to fail without the fix.**
+- `tests/unit/kkt/test_smt_sum_index_not_positional.py` (2) — a self-mapped sum index survives against a repeated declared domain; genuine concrete elements still resolve positionally (#1086 preserved).
+- `tests/integration/emit/test_elec_ut_guard_indices.py` (3) — no `$(ut(i,i))`; every `sum(<idx>$(ut(a,b)))` has `<idx> ∈ {a,b}`; both halves of the gradient present; the `Set ut(i,i)` declaration preserved.

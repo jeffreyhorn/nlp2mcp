@@ -968,6 +968,69 @@ def _whole_body_condition(eq_def: "EquationDef") -> Expr | None:
     return None
 
 
+def _diagonal_instance_is_trivial(
+    eq_def: "EquationDef",
+    d_i: str,
+    d_j: str,
+    model_ir: ModelIR,
+) -> bool:
+    """Does identifying two same-set domain indices make the row identically empty?
+
+    Substitutes ``d_j -> d_i`` in both sides and applies the four triviality
+    checks Section 2c has used for inequality multipliers since #942/#1021/#1104.
+    Factored out so **equality** multipliers can use the same test (#1693): the
+    logic was never inequality-specific, it was only ever *applied* to
+    inequalities.
+
+    dyncge: ``eqpf2(h_mob,i,j).. pf(h_mob,j) =e= pf(h_mob,i)`` with
+    ``Alias (i,j)``. At ``i = j`` both sides are the same expression, so GAMS
+    generates an empty row while ``nu_eqpf2`` stays free — hence
+    *"MCP pair eqpf2.nu_eqpf2 has empty equation but associated variable is NOT
+    fixed"*, four times (card(h_mob) x card(i) diagonal = 1 x 4).
+
+    The test is deliberately SUFFICIENT rather than necessary: it may miss an
+    empty row, but it must never call a live row empty — fixing the multiplier
+    of a constraint that actually binds is a silent wrong answer, not an error.
+    """
+    sides = getattr(eq_def, "lhs_rhs", None)
+    if not sides or len(sides) != 2:
+        return False
+    lhs, rhs = sides
+    subst_lhs = _substitute_index(lhs, d_j, d_i)
+    subst_rhs = _substitute_index(rhs, d_j, d_i)
+
+    # 1: both sides became the same expression (`x =e= x` / `x =g= x`).
+    if subst_lhs == subst_rhs:
+        return True
+    # 2: LHS is `A - B` with A == B, against a zero other side.
+    if (
+        isinstance(subst_lhs, Binary)
+        and subst_lhs.op == "-"
+        and subst_lhs.left == subst_lhs.right
+        and isinstance(subst_rhs, Const)
+        and subst_rhs.value == 0.0
+    ):
+        return True
+    # 2b (#1104): LHS is provably zero after substitution.
+    if isinstance(subst_rhs, Const) and subst_rhs.value == 0.0 and _is_provably_zero(subst_lhs):
+        return True
+    # 3 (#1021): additive terms cancel, remainder provably zero on the diagonal.
+    return _is_trivial_after_cancellation(subst_lhs, subst_rhs, model_ir=model_ir)
+
+
+def _same_set_domain_pairs(
+    domain: tuple[str, ...],
+    resolve_canonical,
+) -> list[tuple[str, str]]:
+    """Domain index pairs drawn from the same canonical set (via alias chains)."""
+    canonical = [resolve_canonical(idx) for idx in domain]
+    return [
+        (domain[a], domain[b])
+        for a, b in combinations(range(len(domain)), 2)
+        if canonical[a] == canonical[b]
+    ]
+
+
 def _will_emit_nlp_presolve(
     kkt: KKTSystem,
     source_file: str | None,
@@ -3199,44 +3262,9 @@ def emit_gams_mcp(
             d_j = eq_def.domain[idx_b]
             # Verify the diagonal is actually empty: substitute d_j → d_i in the
             # AST and check if the constraint becomes trivially satisfied.
-            lhs, rhs = eq_def.lhs_rhs
-            subst_lhs = _substitute_index(lhs, d_j, d_i)
-            subst_rhs = _substitute_index(rhs, d_j, d_i)
-            # Check 1: LHS == RHS after substitution (constraint is x ≥ x)
-            is_trivial = subst_lhs == subst_rhs
-            # Check 2: LHS = A - B with A == B and RHS = 0 (common pattern:
-            # f(i) - f(j) =G= 0 becomes f(i) - f(i) =G= 0, i.e., 0 ≥ 0)
-            if (
-                not is_trivial
-                and isinstance(subst_lhs, Binary)
-                and subst_lhs.op == "-"
-                and subst_lhs.left == subst_lhs.right
-                and isinstance(subst_rhs, Const)
-                and subst_rhs.value == 0.0
-            ):
-                is_trivial = True
-            # Check 2b (Issue #1104): LHS is structurally zero after substitution.
-            # Handles: (-1) * (z(s,"disrupted",s) * (ord(s) - ord(s))) =G= 0
-            # where the (ord(s) - ord(s)) factor is provably zero, making the
-            # entire product zero regardless of the VarRef factor.
-            if (
-                not is_trivial
-                and isinstance(subst_rhs, Const)
-                and subst_rhs.value == 0.0
-                and _is_provably_zero(subst_lhs)
-            ):
-                is_trivial = True
-            # Check 3 (Issue #1021): Collect additive terms, cancel matching
-            # VarRef pairs, and verify remaining terms are provably zero
-            # (Const(0) or ParamRef with all-zero diagonal data).
-            # Handles: p(r,c) + TCost(r,r,c) - p(r,c) =G= 0
-            # where VarRef(p) cancels, leaving ParamRef(TCost) which is 0
-            # on the diagonal (verified against actual parameter data).
-            if not is_trivial:
-                is_trivial = _is_trivial_after_cancellation(
-                    subst_lhs, subst_rhs, model_ir=kkt.model_ir
-                )
-            if not is_trivial:
+            # (#1693 factored these checks into a helper so the equality
+            # multipliers in section 3c can apply the identical test.)
+            if not _diagonal_instance_is_trivial(eq_def, d_i, d_j, kkt.model_ir):
                 continue
             mult_name = comp_pair.variable
             domain_str = ",".join(eq_def.domain)
@@ -3330,6 +3358,38 @@ def emit_gams_mcp(
         domain_vars = frozenset(eq_def.domain)
         cond_gams = expr_to_gams(condition, domain_vars=domain_vars)
         fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+
+    # 3c. Issue #1693: Fix equality multipliers on diagonal instances that are
+    # structurally tautological — the equality analogue of section 2c.
+    #
+    # dyncge: `eqpf2(h_mob,i,j).. pf(h_mob,j) =e= pf(h_mob,i)` with `Alias (i,j)`.
+    # The relation is reflexive, so at `i = j` it reads `pf = pf`: no constraint,
+    # and therefore nothing for a multiplier to price. GAMS generates an empty
+    # row, `nu_eqpf2` stays free, and the pair is rejected —
+    # `**** MCP pair eqpf2.nu_eqpf2 has empty equation but associated variable
+    # is NOT fixed`, once per diagonal element.
+    #
+    # Sections 3/3a/3b all key off a CONDITION (head, whole-body, or inferred
+    # lead/lag). dyncge has none anywhere — the emptiness is a property of the
+    # equation's own algebra under an index identification, which is exactly what
+    # section 2c already tests for inequalities. The test is not
+    # inequality-specific; it was only ever applied to inequalities.
+    for eq_name in sorted(kkt.model_ir.equalities):
+        if eq_name not in kkt.model_ir.equations:
+            continue
+        eq_def = kkt.model_ir.equations[eq_name]
+        if not eq_def.domain or len(eq_def.domain) < 2:
+            continue
+        if any(d.lower() in dynamic_map for d in eq_def.domain):
+            continue
+        mult_name = create_eq_multiplier_name(eq_name)
+        if ref_mults is not None and mult_name not in ref_mults:
+            continue
+        for d_i, d_j in _same_set_domain_pairs(eq_def.domain, _resolve_canonical):
+            if not _diagonal_instance_is_trivial(eq_def, d_i, d_j, kkt.model_ir):
+                continue
+            domain_str = ",".join(eq_def.domain)
+            fx_lines.append(f"{mult_name}.fx({domain_str})$(ord({d_i}) = ord({d_j})) = 0;")
 
     # 3a. Issue #1084: Fix equality multipliers for equations with head-domain
     # offsets (e.g., ode1(nh(i+1))). These equations are restricted to fewer

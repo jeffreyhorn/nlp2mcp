@@ -2894,7 +2894,34 @@ def _partial_collapse_sum(
 
         # If there are remaining sum indices, wrap in a Sum (preserving condition)
         if final_remaining:
-            term: Expr = Sum(tuple(final_remaining), result_body, working_condition)
+            # Issue #983/#1325: the condition must be substituted the SAME way
+            # the body was. `working_condition` has only had the *remaining*
+            # sum indices renamed (j -> j__); its *matched* positions still
+            # carry the original sum-index name, which the enclosing Sum does
+            # NOT bind — so it is a free symbol with no binder.
+            #
+            # elec: `sum(ut(i,j), 1/d(i,j))` differentiated w.r.t. `x("i1")`
+            # produced `sum(j__$(ut(i,j__)), ...)` (i free) and
+            # `sum(i__$(ut(i__,j)), ...)` (j free). Downstream those became
+            # `ut(i,i)` — the diagonal of a strictly upper-triangular set, so
+            # always false, silently dropping half the gradient — and
+            # `ut(i,j)`, which fails to constrain `i__` at all, admitting
+            # `i__ = i` and driving `d = 0` into a divisor.
+            #
+            # Substituting matched -> concrete makes the condition agree with
+            # the body (which already reads `x("i1")`), so the same downstream
+            # re-symbolization maps both to the stationarity domain together:
+            # `sum(j__$(ut(i,j__)), ...)` with `i` BOUND by the head.
+            #
+            # This is NOT the #1085 case handled in the `else` branch below:
+            # there the sum collapses fully and every index is re-symbolized as
+            # one unit, so keeping the condition symbolic is correct.
+            condition_for_sum = working_condition
+            if condition_for_sum is not None and sub_sym:
+                condition_for_sum = _substitute_sum_indices(
+                    condition_for_sum, tuple(sub_sym), tuple(sub_concrete)
+                )
+            term: Expr = Sum(tuple(final_remaining), result_body, condition_for_sum)
         else:
             # Issue #720: Preserve dollar condition when sum fully collapses.
             # Multiply by condition rather than using DollarConditional.

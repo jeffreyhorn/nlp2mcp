@@ -4052,6 +4052,18 @@ def _replace_indices_in_expr(
                     # not for indices that are already set/alias names
                     and idx.name not in model_ir.sets
                     and idx.name not in model_ir.aliases
+                    # Issue #983/#1325: nor for an AD-generated sum index. The
+                    # Sum branch above overlays `{idx: idx}` self-mappings so
+                    # names like `j__` survive `_replace_matching_indices`; that
+                    # ALSO puts them in `element_to_set`, and without this check
+                    # they are mistaken for concrete elements and resolved to
+                    # `smt_domain[pos]`. For elec's `Set ut(i,i)` both positions
+                    # of the declared domain are `i`, so the guard on
+                    # `sum(j__, ...)` collapsed to `ut(i,i)` — the diagonal of a
+                    # strictly upper-triangular set, identically false, silently
+                    # dropping half the gradient. A self-mapping means "this is
+                    # a bound index, leave it alone", never "this is an element".
+                    and element_to_set[idx.name] != idx.name
                 ):
                     # Issue #1086: If the element maps via element_to_set to a
                     # set name that is in the equation domain, use that mapping
