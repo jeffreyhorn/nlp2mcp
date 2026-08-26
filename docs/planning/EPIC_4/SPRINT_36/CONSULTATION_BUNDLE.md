@@ -44,8 +44,8 @@ Each was control-confirmed across multiple sprints as **not an emit defect** (th
 - [x] fawley H-b `--force` survey scoped (Task 8 design + the live re-measurement)
 - [x] The Case-c sign flip + `x.up=inf` BANs restated
 - [x] **fawley `--force` survey — DONE (Sprint 36).** Result: **NEGATIVE** (homotopy/multistart/optfile all leave MS-5).
-- [ ] **Submit rocket to the PATH authors.** *(Sprint 38: channel resolved 2026-08-18 — email to `ferris@cs.wisc.edu`, `steve@gams.com`/`sdirkse@gams.com`. Package ready: `SPRINT_38/CONSULTATION_DECISION_BRIEF.md` §5. Tick on send and record it on #1462.)*
-- [ ] **Pose the mine LP-degeneracy question.** *(0 bucket; can ride along with the rocket send.)*
+- [x] **Submit rocket to the PATH authors — SENT 2026-08-26** (Sprint 38 Day 12). Email to `ferris@cs.wisc.edu`, `steve@gams.com`, `sdirkse@gams.com`. Sent package: **`SPRINT_38/ROCKET_CONSULTATION_EXTERNAL.md`** + **`data/gamslib/mcp/rocket_mcp_presolve.gms`** — *not* the prepared §5 package; the internal input doc was replaced by an externally-scoped extract and the NLP source by the generated MCP. Recorded on **#1462**. Follow-up due **2026-09-09**.
+- [x] **Pose the mine LP-degeneracy question — POSED 2026-08-26**, riding along with the rocket send as planned. Reframed around the signature `mine` **shares with `agreste`** (both verified-convex LPs; MCPs MS-5 Locally Infeasible after 10,662 / 9,734 iterations) rather than posed per-model. Recorded on **#1443**.
 
 > **Split 2026-08-18 (Sprint 38 Prep Task 7).** This was one checkbox covering three actions, **one of which was already complete** — part of why it went un-ticked across S33–S37.
 

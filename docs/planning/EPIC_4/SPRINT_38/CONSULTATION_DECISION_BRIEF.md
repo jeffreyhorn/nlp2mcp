@@ -90,7 +90,19 @@ That was the whole remediation, and it is done. Nothing else in the package is s
 
 **Attach:** `docs/planning/EPIC_4/SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` (§3 question, §2 ruled-out-lever survey, §4 remaining-lever sweep) + `data/gamslib/raw/rocket.gms` + the two reproduction commands.
 
-**Covering message — READY TO SEND.** Addresses filled; the §4 version stamp is applied to the attachment. Copy-paste as-is:
+> ## ✅ SENT 2026-08-26 — and the package below was NOT what went out.
+>
+> Email to `ferris@cs.wisc.edu`, `steve@gams.com`, `sdirkse@gams.com`. Recorded on **#1462**; the mine question on **#1443**. Follow-up due **2026-09-09**.
+>
+> **Three corrections were made at send time, all from live re-measurement on GAMS 54.2.1 / PATH 5.2.01:**
+>
+> 1. **The failure description below is STALE.** It says `EXIT — other error` at an ill-conditioned initial Jacobian. rocket now gives `SOLVER STATUS 1 Normal Completion` / `MODEL STATUS 5 Locally Infeasible` after **9,241 iterations**, 0 evaluation errors — PATH completes and reports infeasibility, it does not abort.
+> 2. **The attachments changed.** `SPRINT_32/ROCKET_PATH_CONSULTATION_INPUT.md` is an internal planning doc (sprint numbering, deferral history, unresolvable cross-references, and a `CASE_B — emit_bug` label that reads as *our* bug); it was replaced by **`ROCKET_CONSULTATION_EXTERNAL.md`**, an externally-scoped extract. `rocket.gms` was replaced by **`data/gamslib/mcp/rocket_mcp_presolve.gms`** — the NLP source solves fine and is GAMSLib seq 319, so it was never the artifact in question.
+> 3. **Two further threads rode along**, since they go to the same recipients: the **license-capacity request** for the 11-model cohort, and the **`agreste` + `mine`** LP-derived-MCP question, reframed around the signature the two share.
+>
+> The §5 text below is retained **as authored** for provenance. **Do not re-send it.**
+
+**Covering message — as prepared (superseded; see the banner above).** Addresses filled; the §4 version stamp is applied to the attachment.
 
 > **To:** `ferris@cs.wisc.edu`, `steve@gams.com`, `sdirkse@gams.com`
 > **Subject:** PATH convergence on a discretized optimal-control MCP (Goddard rocket, COPS) — option-set / regularization guidance
@@ -140,4 +152,4 @@ Also tick `CONSULTATION_BUNDLE.md` line 46. **Note that box conflates three acti
 ---
 
 **Document Status:** ✅ Complete — Sprint 38 Prep Task 7. **The channel was supplied by the owner on 2026-08-18 and Branch A (SEND) is unblocked.** The package is ready to copy-paste; the send is a human action.
-**Last Updated:** 2026-08-18 · **Owner:** Sprint 38 execution team · **Remaining human action:** send the §5 message, then post §7's comment to #1462
+**Last Updated:** 2026-08-26 · **Owner:** Sprint 38 execution team · **Remaining human action:** ✅ **NONE — both complete.** Sent 2026-08-26; tracking comments posted to #1462 and #1443; `SPRINT_36/CONSULTATION_BUNDLE.md` boxes ticked. **Next checkpoint: 2026-09-09 follow-up if no reply.**
