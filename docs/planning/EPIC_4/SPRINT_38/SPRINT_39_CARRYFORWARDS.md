@@ -41,7 +41,7 @@ Day 12's budget went to elec and dyncge. lnts was not started.
 
 **Stated hypothesis, untraced:** two `.fx` mechanisms act on the same cells — the correct one emits `y_fx_y2_h50.. y("y2","h50") - 5 =E= 0`, while a blanket pruned-instance zeroing fires on exactly those cells, giving `y.lo = y.up = 0` against equations demanding **5** and **45** ⇒ **MS-4 at iteration 0**. Fix surface named as the `fix_rhs = "0"` fallback in `emit_gams.py`.
 
-**⚠ Treat the fix surface as a hypothesis, and re-trace it from `stationarity.py` / the AD entry points outward.** A gate's traced surface was wrong about the *layer* on three consecutive days in Sprint 38 (§7). Confirm with a **runtime bound probe**, not a source read.
+**⚠ Treat the fix surface as a hypothesis, and re-trace it from `stationarity.py` / the AD entry points outward.** Three of Sprint 38's four P8 gates were wrong about the *layer* (§7). Confirm with a **runtime bound probe**, not a source read.
 
 ## 4. P2 sarf — emit-preserving, KPI undelivered
 
@@ -68,7 +68,7 @@ Sent 2026-08-26 to `ferris@cs.wisc.edu`, `steve@gams.com`, `sdirkse@gams.com`. T
 
 ## 7. Standing process findings — carry these into Sprint 39's prep
 
-1. **A gate's traced fix surface was wrong about the LAYER on three consecutive days.** tricp, elec (×2) under-scoped — naming `emit_gams.py` for defects decided upstream in AD/KKT. dyncge **over**-scoped — demanding "new logic" for a diagonal-triviality test that had existed since #942 and was merely applied to the wrong population. **Corollary worth acting on: before writing new emit logic, check whether the logic already exists for a different population.**
+1. **Three of the four P8 gates were wrong about the LAYER** — tricp (D11), elec (D12), dyncge (D12): **two consecutive days**. tricp and elec under-scoped, naming `emit_gams.py` for defects decided upstream in AD/KKT (elec's one gate covered two separate defects in two files). dyncge **over**-scoped — demanding "new logic" for a diagonal-triviality test that had existed since #942 and was merely applied to the wrong population. **`twocge` (D9) traced correctly**, so this is a strong tendency, not a universal law. **Corollary worth acting on: before writing new emit logic, check whether the logic already exists for a different population.**
 2. **A repeated symbol in a DECLARATION domain is safe until something resolves an index "positionally against the declared domain."** Bit twice in two days — `slp(n,n)` as a variable domain (tricp), `Set ut(i,i)` as a set domain (elec). **Audit the remaining positional-vs-declared-domain resolutions in `stationarity.py`.**
 3. **Re-measure at the moment of USE, not only at authoring.** The consultation package's failure description had gone stale over five carries; prep re-verified the conclusion and stamped the toolchain, but not the description.
 4. **An internal planning doc is not an external deliverable.** Sending one requires a separate extract, not a trim — sprint numbering, deferral history, and internal classifier labels (`emit_bug`) all mislead an outside reader.

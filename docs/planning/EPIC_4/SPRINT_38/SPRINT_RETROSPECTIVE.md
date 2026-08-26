@@ -12,9 +12,11 @@
 
 **The irony is that it may have moved the floor anyway** — §4.
 
-## 2. The thing worth generalising: gates got the LAYER wrong, three days running
+## 2. The thing worth generalising: three of four P8 gates got the LAYER wrong
 
-Four Phase-0 gates named a fix surface. **All four were wrong, and in two different directions.**
+**Four P8 gates were exercised this sprint. One was accurate; the other three were wrong about the *layer*, and in two different directions.**
+
+**The accurate one is worth naming first, because it shows the pattern is not universal:** `twocge` (#1331, Day 9) predicted `src/emit/emit_gams.py`'s §3 equality-multiplier loop, and that is exactly where the fix landed. The three that follow are all from **Days 11–12** — two consecutive days, not three.
 
 | day | model | gate said | actually |
 |---|---|---|---|
@@ -22,7 +24,7 @@ Four Phase-0 gates named a fix surface. **All four were wrong, and in two differ
 | 12 | elec | "the stationarity term-assembly" | **two** defects: one in `src/ad/derivative_rules.py` (upstream of stationarity entirely), one in a *different function* of `stationarity.py`. |
 | 12 | dyncge | "requires **new logic** rather than a widened condition-lift" | **over**-scoped — section 2c had performed exactly that diagonal-triviality test since #942; it was only ever *applied to inequalities*. |
 
-**Three under-scoped by naming the emitter for defects decided upstream; one over-scoped by demanding new machinery for logic that already existed.** The standing rule ("prep-doc `file:line` fix-surfaces are hypotheses") held, but it under-describes the failure: the error was not the *line*, it was the *layer*.
+**Two under-scoped by naming the emitter for defects decided upstream; one over-scoped by demanding new machinery for logic that already existed.** The standing rule ("prep-doc `file:line` fix-surfaces are hypotheses") held, but it under-describes the failure: the error was not the *line*, it was the *layer*.
 
 **Two operational corollaries, both cheap:**
 
