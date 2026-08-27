@@ -955,7 +955,7 @@ There is a second, subtler risk. The package sent on 2026-08-26 was itself corre
 **Sent 2026-08-26** to `ferris@cs.wisc.edu`, `steve@gams.com`, `sdirkse@gams.com`, carrying three threads:
 
 1. **rocket** — the discretized optimal-control MCP: `SOLVER STATUS 1 Normal Completion` / `MODEL STATUS 5 Locally Infeasible` after **9,241 iterations**, 0 evaluation errors; residual concentrated on `stat_step` under three of PATH's four final norms. Attached: `../SPRINT_38/ROCKET_CONSULTATION_EXTERNAL.md` + the generated MCP.
-2. **The 11-model licence-capacity ask** — `egypt`, `ferts`, `glider`, `robot`, `shale`, `sroute`, `srpchase`, `tabora`, `tfordy`, `tricp`, `turkey`, all rejected at *generation* by the demo 1000-row nonlinear limit.
+2. **The 11-model license-capacity ask** — `egypt`, `ferts`, `glider`, `robot`, `shale`, `sroute`, `srpchase`, `tabora`, `tfordy`, `tricp`, `turkey`, all rejected at *generation* by the demo 1000-row nonlinear limit.
 3. **`agreste` + `mine` as one question** — two verified-convex **LPs** whose MCPs PATH declares MS-5 *Locally* Infeasible after **9,734** / **10,662** iterations. Structurally odd for a pure LCP.
 
 Tracked on **#1462** (rocket + the send record) and **#1443** (the LP question). **An actionable reply** is a concrete option set / `optfile`, a regularization or continuation schedule, or a named reformulation class — a diagnosis without one of those three does not unblock rocket.
@@ -963,7 +963,7 @@ Tracked on **#1462** (rocket + the send record) and **#1443** (the LP question).
 ### What Needs to Be Done
 
 1. **Draft the follow-up comment** for the no-reply branch, ready to post on 2026-09-09. It must **not** re-open the send decision.
-2. **Prepare the reply-integration checklist** for each thread: where a recommended option set plugs into the `--force {homotopy,multistart,optfile}` scaffold; what a licence grant triggers (a single `--only-solve` batch over the 11); what an answer on the LCP question would mean for `agreste` (which has **no open owning issue** — #1068 is an earlier, closed diagnosis).
+2. **Prepare the reply-integration checklist** for each thread: where a recommended option set plugs into the `--force {homotopy,multistart,optfile}` scaffold; what a license grant triggers (a single `--only-solve` batch over the 11); what an answer on the LCP question would mean for `agreste` (which has **no open owning issue** — #1068 is an earlier, closed diagnosis).
 3. **Re-measure the three threads' figures** so a reply is read against current numbers, not the send-time ones.
 4. **Pre-write the cohort re-test procedure** — one `--only-solve` pass, and the caveat that **`ferts`'s emit was silently wrong until S38 D11**, so *"a golden exists"* has never meant *"the golden is correct"* for this cohort.
 5. **State the projection discipline explicitly:** rocket's +1 and the cohort's +11 are **not Sprint-39 projections** and must not enter acceptance criteria.
@@ -996,7 +996,7 @@ print(' type', x['gamslib_type'], '| cvx', x['convexity']['status'],
       '| NLP', x['convexity']['objective_value'], '| MCP', x['mcp_solve']['outcome_category'])"
 done
 
-# The licence-gated cohort is still 11
+# The license-gated cohort is still 11
 .venv/bin/python -c "
 import json
 d=json.load(open('data/gamslib/gamslib_status.json'))

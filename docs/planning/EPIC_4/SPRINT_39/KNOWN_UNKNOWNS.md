@@ -694,7 +694,7 @@ A reply, if it arrives, will contain at least one of: a concrete option set / `o
 1. Has any reply arrived on #1462 or #1443 as of the prep date?
 2. If a reply arrives, does the `--force {homotopy,multistart,optfile}` scaffold still accept a recommended option set directly?
 3. What would a *non*-actionable reply look like (a diagnosis with no lever), and what is the response to that?
-4. Does the licence thread need a different follow-up cadence than the technical threads?
+4. Does the license thread need a different follow-up cadence than the technical threads?
 5. Is the follow-up comment drafted such that it does **not** re-open the send decision — the failure mode that produced five carries?
 
 ### How to Verify
@@ -715,26 +715,26 @@ Sprint 39 execution team
 
 ---
 
-## Unknown 6.2: If a licence arrives, does the 11-model batch actually solve?
+## Unknown 6.2: If a license arrives, does the 11-model batch actually solve?
 
 ### Priority
 **Medium** — the cohort's **+11 ceiling is explicitly not a Sprint-39 projection**, so a disappointing result costs nothing in the acceptance criteria. But the *procedure* must be right, and one member is known to have had a wrong emit.
 
 ### Assumption
-A single `--only-solve` pass over the 11 licence-gated models is sufficient, and their committed goldens are correct.
+A single `--only-solve` pass over the 11 license-gated models is sufficient, and their committed goldens are correct.
 
 ### Research Questions
 1. Is the cohort still exactly 11 (`egypt`, `ferts`, `glider`, `robot`, `shale`, `sroute`, `srpchase`, `tabora`, `tfordy`, `tricp`, `turkey`)?
-2. Does `run_full_test.py --only-solve` handle a batch of licence-gated models correctly, given they currently have `solver_version: None`?
+2. Does `run_full_test.py --only-solve` handle a batch of license-gated models correctly, given they currently have `solver_version: None`?
 3. **`ferts`'s emit was silently wrong until Sprint 38 Day 11** — has any *other* cohort member's golden been exercised by anything stronger than byte-stability?
-4. What would a per-model sanity check cost before spending licence capacity on a batch?
+4. What would a per-model sanity check cost before spending license capacity on a batch?
 5. Are the goldens current, or would the batch need a re-translate first?
 
 ### How to Verify
 Confirm the cohort membership from the DB. Dry-run the `--only-solve` path. Review each member's golden provenance for whether it has ever run.
 
 ### Risk if Wrong
-- **Licence capacity spent on goldens that do not execute**, which is exactly the `weapons` lesson ("a golden can pass structure/DB/NA-guard/determinism review and still not RUN") applied to eleven models at once.
+- **License capacity spent on goldens that do not execute**, which is exactly the `weapons` lesson ("a golden can pass structure/DB/NA-guard/determinism review and still not RUN") applied to eleven models at once.
 
 ### Estimated Research Time
 1.0 hour (cohort confirmation, dry run, provenance review)
@@ -1096,7 +1096,7 @@ Unknown 1.5 — *does a general `$149` fix unblock the `$149` half of dinam / in
 Confirm #1668's state and re-read the Day-1 measurement. Check whether Sprint 38 touched the rebind path. Decide explicitly: carry, or close as unreachable.
 
 ### Risk if Wrong
-- **A third optimistic carry** of a question that cannot be answered, which is the phantom-upside pattern the licence-gated cohort classification exists to prevent.
+- **A third optimistic carry** of a question that cannot be answered, which is the phantom-upside pattern the license-gated cohort classification exists to prevent.
 
 ### Estimated Research Time
 0.5 hours (issue state check, path diff, disposition decision)
