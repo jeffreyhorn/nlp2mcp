@@ -580,7 +580,10 @@ diff -q lnts_mcp.gms "$REPO/data/gamslib/mcp/lnts_mcp.gms" && echo "✅ golden-i
 # Reproduce, reading counts from GAMS's own lines (anchored)
 gams lnts_mcp.gms lo=0 errmsg=1 > /dev/null 2>&1; echo "rc=$?"
 grep '^\*\*\*\*' lnts_mcp.lst | sed 's/[0-9][0-9]*/N/g' | sort | uniq -c | sort -rn | head
-grep -E '^\*\*\*\* (SOLVER|MODEL) STATUS|ITERATION COUNT' lnts_mcp.lst
+# Each alternative anchored to ITS OWN prefix: STATUS lines start with ****,
+# but ITERATION COUNT starts with a single space -- folding both under ^\*\*\*\*
+# would silently drop every iteration line.
+grep -E '^(\*\*\*\* (SOLVER|MODEL) STATUS|[[:space:]]*ITERATION COUNT)' lnts_mcp.lst
 
 # Both .fx mechanisms present?
 grep -n "y_fx_" lnts_mcp.gms | head
@@ -800,19 +803,37 @@ grep -nE "domain\[pos\]|smt_domain\[|var_domain\[|set_declared_domain\[" \
 grep -E -n "for vd in var_domain|for .* in .*_domain" src/kkt/stationarity.py | head -20
 
 # Corpus incidence: repeated-symbol SET domains (the elec shape)
-.venv/bin/python -c "
-import sys, glob, os
+# FULL corpus by default -- the acceptance criterion is corpus incidence, and a
+# sample cannot establish it. `LIMIT=N` only for fast iteration.
+# Two things this must NOT do silently: swallow parse failures (a low count would
+# be indistinguishable from a broken scan) and hang. 7 models exceed a 20s parse,
+# so each file is individually alarm-bounded and timeouts are reported, not hidden.
+# Measured at Sprint 38 close: 219 scanned | 16 hits | 34 unparsed | 7 timed out.
+# Runtime ~7 min for the full corpus.
+PYTHONPATH=. .venv/bin/python -c "
+import sys, glob, os, signal
 sys.setrecursionlimit(50000)
 from src.ir.parser import parse_model_file
-hits=[]
-for f in sorted(glob.glob('data/gamslib/raw/*.gms'))[:40]:   # sample; widen in the task
-    try: ir=parse_model_file(f)
-    except Exception: continue
-    rep={n:s.domain for n,s in ir.sets.items()
-         if s.domain and len(s.domain)!=len({d.lower() for d in s.domain})}
-    if rep: hits.append((os.path.basename(f)[:-4], rep))
-print('sampled models with a repeated-symbol SET domain:', len(hits))
-for h in hits[:10]: print('  ', h)"
+files = sorted(glob.glob('data/gamslib/raw/*.gms'))
+limit = int(os.environ.get('LIMIT', '0'))
+per = int(os.environ.get('PER_FILE_TIMEOUT', '20'))
+if limit: files = files[:limit]
+def bail(*a): raise TimeoutError
+signal.signal(signal.SIGALRM, bail)
+hits, failed, slow = [], [], []
+for f in files:
+    signal.alarm(per)
+    try:
+        ir = parse_model_file(f)
+        rep = {n: st.domain for n, st in ir.sets.items()
+               if st.domain and len(st.domain) != len({d.lower() for d in st.domain})}
+        if rep: hits.append((os.path.basename(f)[:-4], rep))
+    except TimeoutError: slow.append(os.path.basename(f)[:-4])
+    except Exception:    failed.append(os.path.basename(f)[:-4])
+    finally:             signal.alarm(0)
+print(f'scanned {len(files)} | repeated-symbol SET domain: {len(hits)} | unparsed: {len(failed)} | timed out >{per}s: {len(slow)}')
+for h in hits[:12]: print('  ', h[0], dict(list(h[1].items())[:2]))
+"
 
 # Repeated-symbol domains in the emitted goldens, e.g. `e(n,n)` (known: tricp, ferts)
 # NOTE: this predicate needs a BACK-REFERENCE (the two symbols must be the SAME),
