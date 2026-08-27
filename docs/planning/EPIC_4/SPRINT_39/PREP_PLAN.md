@@ -496,9 +496,20 @@ m=[x for x in d['models'] if x['model_id']=='dyncge'][0]
 print('convexity:', m['convexity']['status'], '| NLP obj:', m['convexity']['objective_value'])
 print('MCP:', m['mcp_solve']['outcome_category'], '| obj:', m['mcp_solve']['objective_value'])"
 
-# The new issue exists and its Phase-0 gate names a LAYER
-ls docs/issues/ | grep -i dyncge
-grep -A3 "^## Phase 0" docs/issues/ISSUE_*dyncge*pf*.md 2>/dev/null | head -12
+# The NEW dyncge CASE_B issue exists and its Phase-0 gate names a LAYER.
+# Two traps here. (a) No 2>/dev/null: a missing or renamed doc must announce
+# itself, not read as a clean "no output". (b) An `*dyncge*pf*` glob FALSE-PASSES
+# on ISSUE_1693 -- the CLOSED Sprint 38 empty-pair defect -- because its slug
+# contains "eqpf2". Exclude it explicitly, or this step reports a gate that
+# belongs to a different, already-closed defect.
+found=$(find docs/issues -name "ISSUE_*dyncge*.md" ! -name "ISSUE_1693_*")
+if [ -z "$found" ]; then
+  echo "NO new dyncge CASE_B issue doc yet (expected until Task 2 lands it)"
+else
+  printf '%s\n' "$found" | while IFS= read -r f; do
+    echo "== $f"; grep -A3 "^## Phase 0" "$f" | head -12
+  done
+fi
 ```
 
 ### Deliverables
@@ -689,8 +700,10 @@ Both `stationarity.py` and `emit_gams.py` changed materially in Sprint 38 (Days 
 cd "$(git rev-parse --show-toplevel)"
 
 # The four call sites — do they still exist where recorded?
+# No 2>/dev/null: these files moved in Sprint 38, so a rename must fail loudly
+# rather than look like "the call sites are gone".
 grep -E -n "referenced-instance|_is_concrete_instance_of|resolve_set_members" \
-  src/ad/constraint_jacobian.py src/ad/index_mapping.py src/kkt/stationarity.py 2>/dev/null | head -20
+  src/ad/constraint_jacobian.py src/ad/index_mapping.py src/kkt/stationarity.py | head -20
 
 # Current line references from the Sprint-38 design doc, for comparison
 grep -nE "constraint_jacobian\.py:[0-9]+|index_mapping\.py:[0-9]+|stationarity\.py" \
@@ -1265,16 +1278,36 @@ print(Counter(m['mcp_solve']['outcome_category'] for m in bad))
 for m in sorted(bad, key=lambda x: x['model_id']):
     print(' ', m['model_id'], m['mcp_solve']['outcome_category'])" | head -30
 
-# Which of them have an owning issue with a Phase-0 gate
-for m in agreste cesam indus dinam lnts; do
-  f=$(ls docs/issues/ 2>/dev/null | grep -i "$m" | head -1)
-  if [ -n "$f" ]; then
-    g=$(grep -c "^## Phase 0" "docs/issues/$f" 2>/dev/null)
-    echo "$m -> $f (phase0 sections: $g)"
-  else
-    echo "$m -> NO ISSUE DOC"
-  fi
-done
+# Which of them have an owning issue with a Phase-0 gate.
+# Three defects fixed here, all of which made this read as a clean result:
+#   (a) `grep -i "$m"` is a SUBSTRING match -- `cesam` claimed cesam2's issue doc,
+#       and both are real, distinct corpus models (same for indus/indus89).
+#       Anchored to the ISSUE_<n>_<model>- naming convention instead.
+#   (b) `head -1` hid multiple owners -- camcge has 9 -- and hid that all of
+#       cesam's live in completed/, which for a backlog sweep is the whole point.
+#   (c) the model list was 5 hard-coded names standing in for "them", i.e. the
+#       failing candidates printed just above. Derived from the DB now.
+# Python rather than shell: the natural shell form needs word-splitting over
+# find output, and zsh does not split unquoted $vars.
+.venv/bin/python -c "
+import json, re, pathlib
+d=json.load(open('data/gamslib/gamslib_status.json'))
+cand=[m for m in d['models'] if m.get('convexity',{}).get('status') in ('verified_convex','likely_convex')]
+bad=sorted(m['model_id'] for m in cand
+           if m.get('mcp_solve',{}).get('outcome_category') not in ('model_optimal','model_optimal_presolve'))
+docs=list(pathlib.Path('docs/issues').rglob('ISSUE_*.md'))
+owned=0
+for m in bad:
+    pat=re.compile(rf'^ISSUE_\d+_{re.escape(m)}-')
+    hits=sorted(p for p in docs if pat.match(p.name))
+    if not hits:
+        print(f'{m:10} -> NO ISSUE DOC'); continue
+    owned+=1
+    for p in hits:
+        g=sum(1 for l in p.read_text().splitlines() if l.startswith('## Phase 0'))
+        print(f'{m:10} -> {p.relative_to(\"docs/issues\")} (phase0: {g})')
+print(f'--- {len(bad)} failing candidates, {owned} with an owning issue doc')
+"
 
 # Phase-0 checker: does it yet assert a layer field?
 grep -E -n "layer|Layer" scripts/sprint_audit/check_phase0_doc.py | head
