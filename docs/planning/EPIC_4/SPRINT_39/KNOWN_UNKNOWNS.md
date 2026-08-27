@@ -77,7 +77,7 @@ That is the principal risk this document is organised around. Sprint 38's most t
 
 **By Category:**
 - Category 1 (The Genuine-Floor Classification Decision): 3 unknowns
-- Category 2 (dyncge — the Second Emit Defect the Abort Was Masking): 4 unknowns
+- Category 2 (dyncge — the Second Emit Defect That the Abort Was Masking): 4 unknowns
 - Category 3 (lnts — the Contradictory `.fx` Mechanisms): 3 unknowns
 - Category 4 (sarf #1385 — the Four Untouched Call Sites): 4 unknowns
 - Category 5 (The Positional-vs-Declared-Domain Audit): 3 unknowns
@@ -100,7 +100,7 @@ That is the principal risk this document is organised around. Sprint 38's most t
 ## Table of Contents
 
 1. [Category 1: The Genuine-Floor Classification Decision](#category-1-the-genuine-floor-classification-decision)
-2. [Category 2: dyncge — the Second Emit Defect the Abort Was Masking](#category-2-dyncge--the-second-emit-defect-the-abort-was-masking)
+2. [Category 2: dyncge — the Second Emit Defect That the Abort Was Masking](#category-2-dyncge--the-second-emit-defect-that-the-abort-was-masking)
 3. [Category 3: lnts — the Contradictory `.fx` Mechanisms](#category-3-lnts--the-contradictory-fx-mechanisms)
 4. [Category 4: sarf #1385 — the Four Untouched Call Sites](#category-4-sarf-1385--the-four-untouched-call-sites)
 5. [Category 5: The Positional-vs-Declared-Domain Audit](#category-5-the-positional-vs-declared-domain-audit)
@@ -213,7 +213,7 @@ Sprint 39 execution team
 
 ---
 
-# Category 2: dyncge — the Second Emit Defect the Abort Was Masking
+# Category 2: dyncge — the Second Emit Defect That the Abort Was Masking
 
 ## Unknown 2.1: Is `CASE_A` reachable for dyncge at all, or is it non-convex like elec?
 
