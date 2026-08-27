@@ -36,7 +36,7 @@ This prep plan front-loads the work that would otherwise be discovered mid-sprin
 
 | # | Task | Priority | Est. Time | Dependencies | Sprint 39 Goal Addressed |
 |---|------|----------|-----------|--------------|--------------------------|
-| 1 | Create Sprint 39 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 10 priorities |
+| 1 | ✅ Create Sprint 39 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 10 priorities |
 | 2 | Re-Derive the Sprint-38 Baseline & Carryforward Fingerprints | Critical | 3-4 hours | Task 1 | Verify 111/96/135/floor-73 and every banked fingerprint on current `main` |
 | 3 | The Floor-Classification Decision Package (P1) | Critical | 2-3 hours | Tasks 1, 2 | P1 — the Day-0 decision that blocks the sprint's baseline |
 | 4 | dyncge Second-Defect Diagnosis & Layer Trace (P2) | Critical | 5-7 hours | Tasks 1, 2 | P2 — the sprint's only new diagnosis |
@@ -61,12 +61,14 @@ Task 7 feeds Task 11 (the catalog refresh reuses the survey's method). Task 12 d
 
 ## Task 1: Create Sprint 39 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-08-26)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
+**Time Spent:** 3 hours
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** n/a — this task *creates* the unknowns (30 across 10 categories)
 
 ### Objective
 
@@ -101,11 +103,33 @@ Categories should map to Sprint 39's priorities. Candidate seeds, drawn from `..
 
 ### Changes
 
-*To be completed*
+- **Created** `docs/planning/EPIC_4/SPRINT_39/KNOWN_UNKNOWNS.md` — 30 unknowns across 10 categories, each with all 8 required sections
+- **Added** the Task-to-Unknown mapping table (Appendix), assigning every unknown to an owning prep task
+- **Updated** `PREP_PLAN.md` Tasks 2–12 with `Unknowns Verified` metadata, a deliverable, and an acceptance-criteria item each
+- **Updated** `CHANGELOG.md` with the Task 1 completion entry
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — 30 unknowns, 10 categories, 29.0 research hours.**
+
+| metric | target | actual |
+|---|---|---|
+| Total unknowns | 22–30 (aim 25+) | **30** |
+| Critical | ~25 % | **7 (23 %)** |
+| High | ~40 % | **12 (40 %)** |
+| Medium | ~25 % | **8 (27 %)** |
+| Low | ~10 % | **3 (10 %)** |
+| Research time | 28–36 h | **29.0 h** |
+| Categories | all sprint components | **10** |
+
+**Every unknown is owned by exactly one prep task**, with Tasks 2 and 12 *contributing to* / *integrating* rather than owning. Coverage was checked mechanically, not by eye.
+
+**Two corrections made during creation, both of the "derive it, don't recall it" class:**
+
+1. **The research-time total was written as ~33.0 h from memory; the derived sum is 29.0 h.** Corrected, and the document now says the figure is derived rather than recalled — the exact failure the Sprint-38 Day-13 closeout made with its "three consecutive days" claim.
+2. **The prompt's category list numbered `Category 9` twice** (Epic-5 Handoff and General Emit-Backlog Sweep) and described "5 main categories" while listing ten. Resolved as **10 categories**, with the emit-backlog sweep as Category 10.
+
+**The heaviest category is not the one with the most hours.** Category 4 (sarf) has four unknowns and 6.5 h, but Category 2 (dyncge) carries **two Criticals** because it is the sprint's only new diagnosis *and* the model whose previous gate mis-scoped.
 
 ### Verification
 
@@ -144,12 +168,12 @@ grep -A3 "unknown .*prep task\|Mapping" docs/planning/EPIC_4/SPRINT_39/KNOWN_UNK
 
 ### Acceptance Criteria
 
-- [ ] Document created at `docs/planning/EPIC_4/SPRINT_39/KNOWN_UNKNOWNS.md`
-- [ ] ≥ 20 unknowns, each with all 8 required sections
-- [ ] Every Sprint-39 priority (P1–P10) has at least one category
-- [ ] Every unknown maps to a prep task; no unknown is orphaned
-- [ ] Critical/High unknowns are scheduled into a prep task that completes before Day 1
-- [ ] The lineage note identifies which unknowns descend from Sprint-38 dispositions
+- [x] Document created at `docs/planning/EPIC_4/SPRINT_39/KNOWN_UNKNOWNS.md`
+- [x] ≥ 20 unknowns, each with all 8 required sections
+- [x] Every Sprint-39 priority (P1–P10) has at least one category
+- [x] Every unknown maps to a prep task; no unknown is orphaned
+- [x] Critical/High unknowns are scheduled into a prep task that completes before Day 1
+- [x] The lineage note identifies which unknowns descend from Sprint-38 dispositions
 
 ---
 
@@ -161,6 +185,7 @@ grep -A3 "unknown .*prep task\|Mapping" docs/planning/EPIC_4/SPRINT_39/KNOWN_UNK
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
+**Unknowns Verified:** 1.1, 2.2, 3.3, 4.1, 7.1, 10.1
 
 ### Objective
 
@@ -263,6 +288,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md && \
 - `docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md` — per-figure verdict with the command and commit for each
 - A corrections list, each routed to the prep task or sprint priority that depends on it
 - Confirmation that the four sarf call sites still exist where recorded
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 2.2, 3.3, 4.1, 7.1, 10.1
 
 ### Acceptance Criteria
 
@@ -273,6 +299,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md && \
 - [ ] Leak-gate scope asserted at **186** with 7 allowlisted
 - [ ] Every correction routed to a named downstream task
 - [ ] All GAMS runs performed from a scratch directory; zero repo-root artifacts afterwards
+- [ ] Unknowns 1.1, 2.2, 3.3, 4.1, 7.1, 10.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -284,6 +311,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md && \
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team (decision: repository owner)
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 1.1, 1.2, 1.3
 
 ### Objective
 
@@ -367,6 +395,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/FLOOR_DECISION_BRIEF.md && \
 - `docs/planning/EPIC_4/SPRINT_39/FLOOR_DECISION_BRIEF.md` — one page: the evidence, the counter-argument, both answers' consequences, and the exact edit each implies
 - A sweep result stating whether any **third** model qualifies under the same reading
 - Draft `floor_provenance.json` entries, ready to apply if the answer is 75
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.3
 
 ### Acceptance Criteria
 
@@ -377,6 +406,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/FLOOR_DECISION_BRIEF.md && \
 - [ ] Downstream reports needing re-baselining are enumerated
 - [ ] Sprint 39's acceptance criteria are restated under each answer
 - [ ] The brief names the single question the owner must answer
+- [ ] Unknowns 1.1, 1.2, 1.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -388,6 +418,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/FLOOR_DECISION_BRIEF.md && \
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 2.1, 2.2, 2.3, 2.4
 
 ### Objective
 
@@ -468,6 +499,7 @@ grep -A3 "^## Phase 0" docs/issues/ISSUE_*dyncge*pf*.md 2>/dev/null | head -12
 - A hand-derived KKT shape for `stat_pf` / `stat_pq` and a term-by-term comparison against the emit
 - A stated position on whether `CASE_A` is reachable, or whether a documented divergence is the honest target
 - A cross-check result: is this mechanism already known under another name?
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.2, 2.3, 2.4
 
 ### Acceptance Criteria
 
@@ -478,6 +510,7 @@ grep -A3 "^## Phase 0" docs/issues/ISSUE_*dyncge*pf*.md 2>/dev/null | head -12
 - [ ] The "does this mechanism already exist?" check performed and its answer recorded
 - [ ] A REPLAN exit defined: what evidence would say `CASE_A` is unreachable
 - [ ] `#1693` confirmed closeable on its own terms, not widened
+- [ ] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -489,6 +522,7 @@ grep -A3 "^## Phase 0" docs/issues/ISSUE_*dyncge*pf*.md 2>/dev/null | head -12
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 3.1, 3.2, 3.3
 
 ### Objective
 
@@ -569,6 +603,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/LNTS_PROBE_DESIGN.md && echo "✅ probe d
 - A traced fix surface with its **layer** named, reached from AD/KKT outward
 - A Phase-0 gate on the lnts issue, or the issue created if none exists
 - A written REPLAN exit
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.1, 3.2, 3.3
 
 ### Acceptance Criteria
 
@@ -580,6 +615,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/LNTS_PROBE_DESIGN.md && echo "✅ probe d
 - [ ] A passing negative control specified
 - [ ] `cesam` explicitly excluded from the track, with the 0-`_fx_` reason restated
 - [ ] REPLAN exit defined
+- [ ] Unknowns 3.1, 3.2, 3.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -591,6 +627,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/LNTS_PROBE_DESIGN.md && echo "✅ probe d
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 4.1, 4.2, 4.3, 4.4
 
 ### Objective
 
@@ -675,6 +712,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/SARF_CALLSITE_PLAN.md && \
 - An atomicity plan naming the unit and the corpus-safety sites that must be unperturbed
 - A corpus-free surrogate fixture specification
 - The restated Phase-0 gate
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.1, 4.2, 4.3, 4.4
 
 ### Acceptance Criteria
 
@@ -685,6 +723,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/SARF_CALLSITE_PLAN.md && \
 - [ ] A surrogate fixture specified (sarf cannot be its own)
 - [ ] The gate restated with ≤300 s, symbolic-index assertion, `--min-scope` → 187
 - [ ] A REPLAN exit defined for a timeout re-trigger
+- [ ] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -696,6 +735,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/SARF_CALLSITE_PLAN.md && \
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 5.1, 5.2, 5.3
 
 ### Objective
 
@@ -776,6 +816,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/POSITIONAL_DOMAIN_SURVEY.md && \
 - `docs/planning/EPIC_4/SPRINT_39/POSITIONAL_DOMAIN_SURVEY.md` — every positional-resolution site, classified and ranked by blast radius
 - Corpus incidence per shape: repeated *variable* domains vs repeated *set* domains
 - A property-test specification covering the class generically
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 5.1, 5.2, 5.3
 
 ### Acceptance Criteria
 
@@ -785,6 +826,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/POSITIONAL_DOMAIN_SURVEY.md && \
 - [ ] Sites ranked by blast radius
 - [ ] A generic property test specified
 - [ ] The two known instances (tricp, elec) appear in the catalog and are marked already-fixed
+- [ ] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -796,6 +838,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/POSITIONAL_DOMAIN_SURVEY.md && \
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 7.1, 7.2, 7.3
 
 ### Objective
 
@@ -873,6 +916,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/PRESOLVE_RECORD_REMEDY.md && \
 - The KPI-fall communication wording, pre-written
 - The presolve-golden adoption rule, drafted for CONTRIBUTING
 - A regression-test specification: an aborting MCP must not be recordable as a match
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 7.1, 7.2, 7.3
 
 ### Acceptance Criteria
 
@@ -882,6 +926,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/PRESOLVE_RECORD_REMEDY.md && \
 - [ ] The adoption rule drafted, including "the emit actually executes"
 - [ ] A regression test specified for the aborting-MCP case
 - [ ] The attribution tool's positional method is preserved — **not** re-keyed on `EXECERROR`
+- [ ] Unknowns 7.1, 7.2, 7.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -893,6 +938,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/PRESOLVE_RECORD_REMEDY.md && \
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
+**Unknowns Verified:** 6.1, 6.2, 6.3
 
 ### Objective
 
@@ -973,6 +1019,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/CONSULTATION_FOLLOWUP_PACKAGE.md && \
 - A per-thread reply-integration checklist, including where an option set plugs into `--force`
 - The 11-model cohort re-test procedure with the `ferts` caveat
 - Re-measured figures for all three threads
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 6.1, 6.2, 6.3
 
 ### Acceptance Criteria
 
@@ -982,6 +1029,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/CONSULTATION_FOLLOWUP_PACKAGE.md && \
 - [ ] The cohort re-test procedure written, with the `ferts` "golden ≠ correct" caveat
 - [ ] `agreste`'s missing owning issue noted, with the condition under which one is filed
 - [ ] rocket's +1 and the cohort's +11 explicitly excluded from Sprint-39 projections
+- [ ] Unknowns 6.1, 6.2, 6.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -993,6 +1041,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/CONSULTATION_FOLLOWUP_PACKAGE.md && \
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 9.1, 9.2
 
 ### Objective
 
@@ -1073,6 +1122,7 @@ grep -c "ANSWERED" docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md
 - A **false-positive analysis** for the detection design, tested against the corpus
 - A CGE-cohort numéraire survey
 - Q1 and Q2 moved from *open* to *proposed*, with Q3/Q4's answers preserved
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 9.1, 9.2
 
 ### Acceptance Criteria
 
@@ -1083,6 +1133,7 @@ grep -c "ANSWERED" docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md
 - [ ] The corpus used as the false-positive test set
 - [ ] Q1/Q2 marked *proposed*; Q3/Q4's existing answers untouched
 - [ ] camcge confirmed to remain Epic-5-scoped and out of Sprint-39 implementation
+- [ ] Unknowns 9.1, 9.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -1094,6 +1145,7 @@ grep -c "ANSWERED" docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2, 7
+**Unknowns Verified:** 8.1, 8.2, 8.3, 10.1, 10.2
 
 ### Objective
 
@@ -1183,6 +1235,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/PROCESS_INFRA_SPEC.md && echo "✅ infra 
 - `docs/planning/EPIC_4/SPRINT_39/BACKLOG_CANDIDATE_CATALOG.md` — refreshed population, selection rule applied, ranked shortlist with rejection reasons
 - `docs/planning/EPIC_4/SPRINT_39/PROCESS_INFRA_SPEC.md` — specifications for 8a–8d, each with its motivating incident and a fail-before test
 - A cross-check result: which backlog models, if any, are instances of the positional-domain class
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 8.1, 8.2, 8.3, 10.1, 10.2
 
 ### Acceptance Criteria
 
@@ -1194,6 +1247,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/PROCESS_INFRA_SPEC.md && echo "✅ infra 
 - [ ] A fail-before test specified for each of the four
 - [ ] `agreste`'s consultation dependency noted — check #1443 before local work
 - [ ] The ganges rebind site explicitly marked do-not-re-open
+- [ ] Unknowns 8.1, 8.2, 8.3, 10.1, 10.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -1205,6 +1259,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/PROCESS_INFRA_SPEC.md && echo "✅ infra 
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** All tasks (1–11)
+**Unknowns Verified:** (integrates all)
 
 ### Objective
 
@@ -1294,6 +1349,7 @@ grep -c "Unknown [0-9]" docs/planning/EPIC_4/SPRINT_39/PLAN.md
 - `docs/planning/EPIC_4/SPRINT_39/prompts/PLAN_PROMPTS.md` — one prompt per day, each naming branch, deliverable and gate
 - A pre-registered close-rule set, **each rule carrying its precondition**
 - A routing table from every unresolved Known Unknown to the day that closes it
+- Every unresolved Known Unknown routed to the sprint day that closes it
 
 ### Acceptance Criteria
 
@@ -1305,6 +1361,7 @@ grep -c "Unknown [0-9]" docs/planning/EPIC_4/SPRINT_39/PLAN.md
 - [ ] Checkpoints at Days 5 and 10; final retest Day 13 under ≥ 3 `PYTHONHASHSEED`
 - [ ] Every unresolved Known Unknown routed to a specific day
 - [ ] Day prompts written, each naming its branch, deliverable and gate
+- [ ] All 30 unknowns are either resolved in prep or routed to a specific sprint day
 
 ---
 

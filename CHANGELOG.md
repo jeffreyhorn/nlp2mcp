@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 39 Prep
+
+- **Prep Task 1 COMPLETE (2026-08-26) — Sprint 39 Known Unknowns List created: 30 unknowns across 10 categories, 29.0 research hours.** New doc: `docs/planning/EPIC_4/SPRINT_39/KNOWN_UNKNOWNS.md`. Docs only — no `*.py` changed, so the quality gate does not apply.
+
+- **Priority distribution lands on target:** Critical **7 (23 %)** · High **12 (40 %)** · Medium **8 (27 %)** · Low **3 (10 %)**, against a 25/40/25/10 target. Research time **29.0 h** against a 28–36 h target.
+
+- **The seven Criticals are the assumptions that would force a mid-sprint REPLAN:** the floor's cold-emit premise (**1.1**); dyncge's reachability and locus (**2.1**, **2.2**); lnts's runtime collision, which has **never been tested** (**3.1**); sarf's site locations and cost attribution (**4.1**, **4.2**); and whether *any single* remedy covers all 14 presolve-record rows (**7.2**).
+
+- **Every unknown is owned by exactly one prep task**, verified mechanically rather than by eye. Tasks 2 and 12 *contribute to* / *integrate* rather than own: Task 2 re-derives the figures the technical unknowns rest on, Task 12 routes anything unresolved to the sprint day that closes it. `PREP_PLAN.md` Tasks 2–12 each gained an `**Unknowns Verified:**` line, a matching deliverable, and an acceptance-criteria item.
+
+- **The document is organised around Sprint 38's most transferable finding**, not around its models: **a gate can be confidently wrong about which *layer* a defect lives in** — twice by under-scoping (naming `emit_gams.py` for defects decided upstream in AD/KKT), once by over-scoping (demanding new logic for a diagonal-triviality test that had existed since #942). Unknowns **2.2**, **2.3**, **3.2** and **5.1** all exist to test a layer claim before the sprint budgets against it.
+
+- **⚠ Two corrections made during creation, both of the "derive it, don't recall it" class.** (1) The research-time total was first written as **~33.0 h from memory**; the derived sum is **29.0 h** — corrected, and the document now states the figure is derived. This is the same failure the Sprint-38 Day-13 closeout made with its "three consecutive days" claim, which review caught. (2) The requesting prompt numbered **`Category 9` twice** (Epic-5 Handoff and General Emit-Backlog Sweep) and described "5 main categories" while listing ten; resolved as **10 categories**, with the emit-backlog sweep as Category 10. The prompt's "Sprint 4" cross-reference and commit-message text were also read as template artifacts and corrected to Sprint 39.
+
+- **Sprint 38's Unknown 1.5 carries forward as Unknown 10.2**, and is registered at **Low** priority for a deliberate reason: it closed 🔍 INCOMPLETE because its measurement requires a `$149` fix in the tree, and **P1 ganges was closed as unreachable at the rebind site**. 10.2's actual question is whether to **close it as unreachable rather than carry it a third time** — the phantom-upside pattern the licence-gated cohort classification exists to prevent.
+
+- **The document records its own success criterion: prep should refute something.** Sprint 38's prep refuted 6 of 28 assumptions outright and partially refuted 3 more — a 32 % refutation rate on assumptions that had already survived a planning pass. A prep phase that confirms everything has probably not looked hard enough.
+
+
 ### Sprint 38 Execution
 
 - **Day 13 — SPRINT 38 CLOSED (2026-08-26).** Final KPI at `8e32be09`: **Solve 108 → 111 (+3) · Match 94 → 96 (+2) · Translate 135 · all-219 97 → 99 · `path_solve_terminated` 4 → 0.** Genuine floor **73 as reported** — ⚠ arguably **75**, owner decision open (below). Determinism **PASS ×3** (`PYTHONHASHSEED` 0/1/42, all **186** in-scope goldens byte-identical). Docs only. Four closeout artifacts: `SPRINT_LOG.md`, `SPRINT_RETROSPECTIVE.md`, Epic-4 `SUMMARY.md` row 38, **`SPRINT_39_CARRYFORWARDS.md`**.
