@@ -6,7 +6,7 @@
 
 ## 1. What the sprint actually did
 
-**It cleared a failure category.** `path_solve_terminated` held four models at S37 close and holds none now: `Solve 108 → 111`, `Match 94 → 96`, `all-219 97 → 99`. Three of the four were fixed by real emit changes; the fourth (`tricp`) was fixed and then hit the demo licence wall.
+**It cleared a failure category.** `path_solve_terminated` held four models at S37 close and holds none now: `Solve 108 → 111`, `Match 94 → 96`, `all-219 97 → 99`. Three of the four were fixed by real emit changes; the fourth (`tricp`) was fixed and then hit the demo license wall.
 
 **It was not floor-targeted, and the plan said so in every acceptance column.** That was the right call: it removed the pressure that produced Sprint 36's reverted landing attempt, and the sprint still produced the largest bucket movement since Sprint 28.
 
