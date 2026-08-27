@@ -17,6 +17,13 @@ successfully. The original issue described division-by-zero errors, but this has
 resolved — the `$(ut(i,j))` set membership condition IS correctly preserved in the
 stationarity equations, filtering out self-pairs.
 
+> **⚠ HISTORICAL — PRE-FIX, AND REFUTED.** The paragraph below is the 2026-03 framing.
+> It was **wrong**, and it is exactly the framing the header note corrects: the blocker was
+> never PATH convergence on a non-convex model, it was **two emit defects** (in
+> `src/ad/derivative_rules.py` and `src/kkt/stationarity.py`). Kept verbatim because
+> "this was diagnosed as unfixable for four sprints" is the record. For the verified
+> post-fix behaviour see *Resolution — Sprint 38 Day 12* below.
+
 The remaining issue is that PATH terminates with MODEL STATUS 6 (Intermediate Infeasible).
 This is a non-convex model (25 electrons, 75 variables, 25 quadratic ball constraints)
 where the KKT system has multiple solutions and PATH cannot converge from the given
@@ -24,7 +31,9 @@ initial point.
 
 ---
 
-## Current Status (2026-03-17)
+## Current Status (2026-03-17) — ⚠ HISTORICAL, PRE-FIX
+
+> Describes the state **before** the Sprint 38 Day 12 fix, not current behaviour. elec now reaches `MODEL STATUS 1 Optimal` cold. See *Resolution — Sprint 38 Day 12* below.
 
 - **Translation**: Success — MCP file generates without errors
 - **GAMS compilation**: Success — no compilation or execution errors

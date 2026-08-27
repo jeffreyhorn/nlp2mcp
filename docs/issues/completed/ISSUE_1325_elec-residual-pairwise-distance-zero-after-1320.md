@@ -30,7 +30,12 @@ KKT layer.
 
 ---
 
-## Current Status
+## Current Status — ⚠ HISTORICAL, PRE-FIX (as of 2026-04-29)
+
+> Describes the state **before** the Sprint 38 Day 12 fix. The `EXECERROR` /
+> `path_solve_terminated` rows below are **not** current: elec now reaches
+> `MODEL STATUS 1 Optimal` cold, with `kkt_residual.py` → `CASE_A` (max relative
+> 1.69e-08) and 0 anchored exec errors. See *Resolution — Sprint 38 Day 12* below.
 
 - **Translation**: Success
 - **GAMS compilation**: Success (0 errors)

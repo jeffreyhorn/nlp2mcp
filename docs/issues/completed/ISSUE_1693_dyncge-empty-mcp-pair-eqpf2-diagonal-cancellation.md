@@ -50,7 +50,7 @@ nu_eqpf2.fx(h_mob,i,j)$(sameas(i,j)) = 0;
 
 The emitted model currently contains **one** `nu_*.fx(` guard and **none** for `eqpf2`.
 
-**Traced fix-surface (Day-3, `2723c22a`):** `src/emit/emit_gams.py`, the §3 equality-multiplier fixing loop (~`3255–3273`). It bails at `if eq_def.condition is None: continue` — and unlike twocge, **dyncge has no condition to lift from the body either**. Detecting this case requires recognising that the equation's LHS and RHS become the **same expression** under an index identification, i.e. a structural self-cancellation test on `lhs_rhs`, which is **new logic rather than a widened condition-lift**.
+**Traced fix-surface (Day-3, `2723c22a`):** `src/emit/emit_gams.py`, the §3 equality-multiplier fixing loop (~`3255–3273`). It bails at `if eq_def.condition is None: continue` — and unlike twocge, **dyncge has no condition to lift from the body either**. Detecting this case requires recognising that the equation's LHS and RHS become the **same expression** under an index identification, i.e. a structural self-cancellation test on `lhs_rhs`, which is **new logic rather than a widened condition-lift**. **⚠ REFUTED — this sentence is the pre-fix hypothesis and it was wrong.** The logic already existed (section 2c, since #942) and was only ever applied to inequalities; the fix was a *reuse*, not new machinery. See *"⚠ The gate was wrong that this needs new logic"* below.
 
 **⚠ The line numbers are a traced hypothesis, not a result** — prep-doc fix surfaces were wrong ~4× in Sprint 27. Confirm before implementing.
 
