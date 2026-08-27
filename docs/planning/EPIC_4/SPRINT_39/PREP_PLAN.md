@@ -134,7 +134,7 @@ Categories should map to Sprint 39's priorities. Candidate seeds, drawn from `..
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 
 # Document exists
 test -f docs/planning/EPIC_4/SPRINT_39/KNOWN_UNKNOWNS.md && echo "✅ exists"
@@ -246,7 +246,7 @@ Sprint 39 quotes a lot: `CASE_B` at 6.22e-02, sarf at 28 m 40 s, 14 presolve row
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 
 # Headline KPIs + floor, both carrying their commit
 .venv/bin/python scripts/sprint_audit/kpi_block.py --format line
@@ -357,7 +357,7 @@ Both were **aborting before the fix**, so neither match is a solver effect. `pol
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 
 # The cold emits changed in their landing commits (NOT the presolve variants)
 git show --numstat 204f35ac -- data/gamslib/mcp/twocge_mcp.gms
@@ -468,7 +468,7 @@ The residual concentrates on the **`pf`/`pq` block, not `eqpf2`** — so this is
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 
 # The residual, re-derived
 .venv/bin/python scripts/diagnostics/kkt_residual.py data/gamslib/raw/dyncge.gms | tail -10
@@ -569,16 +569,17 @@ while a blanket pruned-instance zeroing fires on exactly those cells, giving `y.
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+REPO="$(git rev-parse --show-toplevel)"
+# GAMS writes scratch files to cwd -- run from a scratch dir, never the repo root
 mkdir -p /tmp/lnts_prep && cd /tmp/lnts_prep
 
-# Fresh emit == committed golden
-.venv/bin/python -m src.cli /Users/jeff/experiments/nlp2mcp/data/gamslib/raw/lnts.gms -o lnts_mcp.gms
-diff -q lnts_mcp.gms /Users/jeff/experiments/nlp2mcp/data/gamslib/mcp/lnts_mcp.gms && echo "✅ golden-identical"
+# Fresh emit == committed golden (absolute interpreter + PYTHONPATH: cwd is NOT the repo)
+PYTHONPATH="$REPO" "$REPO/.venv/bin/python" -m src.cli "$REPO/data/gamslib/raw/lnts.gms" -o lnts_mcp.gms
+diff -q lnts_mcp.gms "$REPO/data/gamslib/mcp/lnts_mcp.gms" && echo "✅ golden-identical"
 
 # Reproduce, reading counts from GAMS's own lines (anchored)
 gams lnts_mcp.gms lo=0 errmsg=1 > /dev/null 2>&1; echo "rc=$?"
-grep '^\*\*\*\*' lnts_mcp.lst | sed 's/[0-9]\+/N/g' | sort | uniq -c | sort -rn | head
+grep '^\*\*\*\*' lnts_mcp.lst | sed 's/[0-9][0-9]*/N/g' | sort | uniq -c | sort -rn | head
 grep -E '^\*\*\*\* (SOLVER|MODEL) STATUS|ITERATION COUNT' lnts_mcp.lst
 
 # Both .fx mechanisms present?
@@ -588,7 +589,7 @@ grep -nE "^y\.fx\(|^y\.lo\(|^y\.up\(" lnts_mcp.gms | head
 # The values the _fx_ equations demand
 grep -oE "y\(\"[^\"]+\",\"[^\"]+\"\) - [0-9.]+ =E= 0" lnts_mcp.gms | head
 
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 # Guard against batching cesam with it: cesam must have 0 _fx_ equations
 grep -c "_fx_" data/gamslib/mcp/cesam_mcp.gms || echo "0 (mechanism cannot apply)"
 
@@ -674,7 +675,7 @@ Both `stationarity.py` and `emit_gams.py` changed materially in Sprint 38 (Days 
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 
 # The four call sites — do they still exist where recorded?
 grep -n "referenced-instance\|_is_concrete_instance_of\|resolve_set_members" \
@@ -778,7 +779,7 @@ A survey is also the cheapest possible form of this work: P5 is budgeted 12–16
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 
 # Candidate sites: positional resolution against a declared domain
 grep -nE "domain\[pos\]|smt_domain\[|var_domain\[|set_declared_domain\[" \
@@ -802,8 +803,19 @@ for f in sorted(glob.glob('data/gamslib/raw/*.gms'))[:40]:   # sample; widen in 
 print('sampled models with a repeated-symbol SET domain:', len(hits))
 for h in hits[:10]: print('  ', h)"
 
-# Repeated-symbol VARIABLE domains (known: tricp, ferts)
-grep -l "" data/gamslib/mcp/*_mcp.gms | xargs grep -lE "^\s+\w+\((\w+),\1\)" 2>/dev/null | head
+# Repeated-symbol domains in the emitted goldens, e.g. `e(n,n)` (known: tricp, ferts)
+# NOTE: this predicate needs a BACK-REFERENCE (the two symbols must be the SAME),
+# which POSIX ERE does not have -- and `\s`/`\w`/`\1` are handled differently by
+# every grep. Measured on this corpus: BSD grep finds 3 sites in tricp; ugrep 7.5
+# finds 0 for the same pattern, because it reads `\1` as a literal `1`. Use Python
+# so the count is implementation-independent.
+.venv/bin/python -c "
+import pathlib, re
+pat = re.compile(r'^\s+\w+\((\w+),\1\)')
+for f in sorted(pathlib.Path('data/gamslib/mcp').glob('*_mcp.gms')):
+    hits = [l.strip() for l in f.read_text().splitlines() if pat.match(l)]
+    if hits: print(f'{f.name}: {len(hits)} site(s), e.g. {hits[0][:60]}')
+"   # expect 18 files at the Sprint 38 close emit (tricp + ferts among them)
 
 # The survey exists and classifies every site
 test -f docs/planning/EPIC_4/SPRINT_39/POSITIONAL_DOMAIN_SURVEY.md && \
@@ -880,7 +892,7 @@ The correction is also a KPI *fall*, which makes it exactly the kind of change t
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 
 # The population, re-counted
 .venv/bin/python -c "
@@ -979,7 +991,7 @@ Tracked on **#1462** (rocket + the send record) and **#1443** (the LP question).
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 
 # Tracking state on both issues
 gh issue view 1462 --json comments --jq '.comments | length' | sed 's/^/#1462 comments: /'
@@ -1088,7 +1100,7 @@ Epic 5's value is its **refutation record**: three-plus sprints of camcge varian
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 
 # The banned list is intact and reachable
 grep -n -A8 "BANNED" docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md | head -20
@@ -1197,7 +1209,7 @@ Refresh the emit-backlog candidate catalog against the post-Sprint-38 corpus, an
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 
 # Current non-solving candidates — the catalog's population
 .venv/bin/python -c "
@@ -1312,7 +1324,7 @@ This task also owns the close rules — and Sprint 38 learned the hard way that 
 ### Verification
 
 ```bash
-cd /Users/jeff/experiments/nlp2mcp
+cd "$(git rev-parse --show-toplevel)"
 
 # Plan + prompts exist
 test -f docs/planning/EPIC_4/SPRINT_39/PLAN.md && echo "✅ PLAN.md"
