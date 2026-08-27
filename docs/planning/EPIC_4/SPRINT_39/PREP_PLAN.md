@@ -214,7 +214,7 @@ Sprint 39 quotes a lot: `CASE_B` at 6.22e-02, sarf at 28 m 40 s, 14 presolve row
 
 **Fingerprints to re-reproduce**, each from `../SPRINT_38/`:
 
-- **dyncge** — `kkt_residual.py` → `CASE_B`, max relative **6.22e-02** at `stat_pf(CAP,SRV)`; cold MCP MS-1 @ **381401.119** vs NLP **539570.5027**
+- **dyncge** — `scripts/diagnostics/kkt_residual.py` → `CASE_B`, max relative **6.22e-02** at `stat_pf(CAP,SRV)`; cold MCP MS-1 @ **381401.119** vs NLP **539570.5027**
 - **lnts** — MS-4 at iteration 0; the `y("y2","h50")` / `5` and `45` values
 - **sarf** — killed at **28 m 40 s** against the ≤300 s gate; the four untouched call sites still at their recorded locations
 - **agreste / mine** — MS-5 Locally Infeasible after **9,734** / **10,662** PATH iterations, NLP MS-1 @ 17706.43 / 17500.0
@@ -224,11 +224,12 @@ Sprint 39 quotes a lot: `CASE_B` at 6.22e-02, sarf at 28 m 40 s, 14 presolve row
 - **`grep -c` counts lines, not occurrences** — it understated two of three error classes on a first pass.
 - **Read counts from GAMS's own `**** N ERROR(S)` / `EXECERROR = n` line**, never from a marker count, which undercounts under listing truncation.
 - **Run GAMS from a scratch directory** — corpus sources write artifacts to `cwd` (four models `execute_unload "result.gdx"`).
+  - **Documented exception: `scripts/diagnostics/kkt_residual.py` runs GAMS with `cwd=PROJECT_ROOT`** (`scripts/diagnostics/kkt_residual.py:928`). That is deliberate, not an oversight — it is how the repo-relative `$include` resolves (#1275). It does *not* pollute the repo root, because the harness redirects both outputs: `o=<scratch>/<stem>.lst` and `ScrDir=<scratch>`. **Measured on dyncge at Sprint 38 close: 0 new repo-root entries** in `git status --porcelain`. Do not "fix" this by changing its `cwd`. Still run the artifact check below after using it — the guarantee comes from two flags that a future edit could drop silently.
 - **Anchor `^****` when grepping a `.lst`** — it contains echoed source too.
 
 ### What Needs to Be Done
 
-1. **Re-derive the KPI block** with `scripts/sprint_audit/kpi_block.py` and the floor with `floor_tracker.py`; confirm each line against the table above and record the commit.
+1. **Re-derive the KPI block** with `scripts/sprint_audit/kpi_block.py` and the floor with `scripts/sprint_audit/floor_tracker.py`; confirm each line against the table above and record the commit.
 2. **Re-reproduce each fingerprint** from a scratch directory, using GAMS's own terminal line for any count.
 3. **Confirm the leak-gate inventory** — 186 in-scope, 7 allowlisted — with `--min-scope` still asserted on discovery.
 4. **Verify the four sarf call sites still exist at their recorded locations** (`git log -L` or a symbol search), since `stationarity.py` and `emit_gams.py` both changed in Sprint 38.
@@ -299,6 +300,13 @@ test -f docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md && \
 - [ ] Leak-gate scope asserted at **186** with 7 allowlisted
 - [ ] Every correction routed to a named downstream task
 - [ ] All GAMS runs performed from a scratch directory; zero repo-root artifacts afterwards
+  - Assert it, do not eyeball it — `scripts/diagnostics/kkt_residual.py` is an intentional `cwd=PROJECT_ROOT` exception (above), so the repo root is genuinely in play:
+    ```bash
+    git status --porcelain -z | tr '\0' '\n' | sort > /tmp/before.txt
+    # ... run the harness / GAMS steps ...
+    git status --porcelain -z | tr '\0' '\n' | sort > /tmp/after.txt
+    comm -13 /tmp/before.txt /tmp/after.txt   # MUST be empty
+    ```
 - [ ] Unknowns 1.1, 2.2, 3.3, 4.1, 7.1, 10.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
@@ -325,7 +333,7 @@ It is also the second consecutive sprint where a *decision*, not engineering eff
 
 ### Background
 
-`floor_tracker.py` reports **73** (`baseline 73 + 0 entries`), which is the number of record under Sprint 38's close rule #3. **The written definition appears to owe two entries.**
+`scripts/sprint_audit/floor_tracker.py` reports **73** (`baseline 73 + 0 entries`), which is the number of record under Sprint 38's close rule #3. **The written definition appears to owe two entries.**
 
 > *methodology* = cold emit **byte-identical to pre-fix**, matches only via warm-start; *genuine* = a real emit fix **changed the cold emit** — still genuine if it matches only via the presolve warm-start (the polygon/ps2 precedent).
 
@@ -1227,7 +1235,7 @@ Refresh the emit-backlog candidate catalog against the post-Sprint-38 corpus, an
 1. **Refresh the catalog** against the current DB — every non-solving candidate, with its outcome category, whether it has an owning issue, whether that issue has a Phase-0 gate, and whether a fingerprint is reproduced.
 2. **Apply the selection rule** and produce a ranked shortlist, with the rejected entries carrying their reason.
 3. **Cross-check against Task 7's survey** — is any backlog model an instance of the positional-domain class? That would move it from "new diagnosis" to "named fix surface".
-4. **Specify 8a**: the Phase-0 template's new *layer* field, and the `check_phase0_doc.py` assertion for it.
+4. **Specify 8a**: the Phase-0 template's new *layer* field, and the `scripts/sprint_audit/check_phase0_doc.py` assertion for it.
 5. **Specify 8b**: where the "does this exist for another population?" check lives in the authoring workflow.
 6. **Specify 8c and 8d** as CONTRIBUTING rules, each with the Sprint-38 incident that motivates it.
 7. **Write the fail-before test for each** — a template change without a test is a suggestion.
@@ -1288,7 +1296,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/PROCESS_INFRA_SPEC.md && echo "✅ infra 
 - [ ] Catalog refreshed against the current DB, not the Sprint-38 population
 - [ ] Selection rule applied; every rejection carries a reason
 - [ ] Cross-check against Task 7's survey performed
-- [ ] 8a specified, including the `check_phase0_doc.py` assertion
+- [ ] 8a specified, including the `scripts/sprint_audit/check_phase0_doc.py` assertion
 - [ ] 8b, 8c, 8d specified as CONTRIBUTING rules with their motivating incidents
 - [ ] A fail-before test specified for each of the four
 - [ ] `agreste`'s consultation dependency noted — check #1443 before local work

@@ -231,7 +231,7 @@ dyncge's `CASE_B` verdict indicates a **fixable emit defect**, and once fixed th
 5. What evidence would settle "unreachable" — and is it obtainable in prep?
 
 ### How to Verify
-Re-run `kkt_residual.py` and read the *full* verdict including any case_c classifier output. Inspect dyncge's objective structure for the `case_c_objdef` shape. Compare the residual's distribution (concentrated vs diffuse) against elec's known non-convex signature and against a known `CASE_B` emit bug.
+Re-run `scripts/diagnostics/kkt_residual.py` and read the *full* verdict including any case_c classifier output. Inspect dyncge's objective structure for the `case_c_objdef` shape. Compare the residual's distribution (concentrated vs diffuse) against elec's known non-convex signature and against a known `CASE_B` emit bug.
 
 ### Risk if Wrong
 - **16–22h spent chasing an unreachable target**, with a REPLAN arriving late in the sprint.
@@ -563,7 +563,7 @@ A corpus-free surrogate can exercise the same shape at a size that terminates, a
 5. Does adding sarf's golden change the leak sweep's runtime materially?
 
 ### How to Verify
-Build the surrogate and confirm it terminates while reproducing the shape. Check `--min-scope` handling in `check_golden_staleness.py`. Time a sweep before and after adding a large golden.
+Build the surrogate and confirm it terminates while reproducing the shape. Check `--min-scope` handling in `scripts/sprint_audit/check_golden_staleness.py`. Time a sweep before and after adding a large golden.
 
 ### Risk if Wrong
 - **No fail-before evidence** for the sprint's only KPI mover, which fails the Phase-0 gate on process grounds regardless of whether the code works.
@@ -725,7 +725,7 @@ A single `--only-solve` pass over the 11 license-gated models is sufficient, and
 
 ### Research Questions
 1. Is the cohort still exactly 11 (`egypt`, `ferts`, `glider`, `robot`, `shale`, `sroute`, `srpchase`, `tabora`, `tfordy`, `tricp`, `turkey`)?
-2. Does `run_full_test.py --only-solve` handle a batch of license-gated models correctly, given they currently have `solver_version: None`?
+2. Does `scripts/gamslib/run_full_test.py --only-solve` handle a batch of license-gated models correctly, given they currently have `solver_version: None`?
 3. **`ferts`'s emit was silently wrong until Sprint 38 Day 11** — has any *other* cohort member's golden been exercised by anything stronger than byte-stability?
 4. What would a per-model sanity check cost before spending license capacity on a batch?
 5. Are the goldens current, or would the batch need a re-translate first?
@@ -792,7 +792,7 @@ There are **14** dangling `mcp_file_used` rows (13 pre-existing plus `weapons`, 
 ### Research Questions
 1. How many rows have a `mcp_file_used` pointing at a non-existent file today?
 2. Is `weapons` among them, and is it still recorded as a match?
-3. Re-running `check_mcp_solve_attribution.py` over the full presolve population — is the spurious count still exactly 1?
+3. Re-running `scripts/sprint_audit/check_mcp_solve_attribution.py` over the full presolve population — is the spurious count still exactly 1?
 4. Did Day 12's `elec` adoption (and the `dyncge` *non*-adoption) change either count?
 5. Is the presolve population itself still the size the Day-10 census used?
 
@@ -825,7 +825,7 @@ One of two remedies covers the whole population: either wiring the attribution c
 1. Does the attribution-gate remedy fix the *dangling reference* problem, or only the spurious-match problem?
 2. Does the field-respecification remedy fix the *spurious match*, or only the dangling references?
 3. Is one remedy sufficient, or are both needed — and if both, is that still "systemic" or two fixes?
-4. Where in `run_full_test.py` does the record get written (`~954` per the Day-10 note), and is that the right insertion point?
+4. Where in `scripts/gamslib/run_full_test.py` does the record get written (`~954` per the Day-10 note), and is that the right insertion point?
 5. Does either remedy change the DB in a way that breaks `--resolve-changed`, the KPI helper, or the floor tracker?
 
 ### How to Verify
@@ -862,7 +862,7 @@ Reclassifying `weapons` takes Match 96 → 95, and no gate, CI check or report t
 5. Does the floor change? (It should not — `weapons` is a presolve match, so cold stays 65 either way.)
 
 ### How to Verify
-Grep the CI workflows and `scripts/` for Match-monotonicity assertions. Re-read the Sprint-39 acceptance criteria and draft the corrected wording. Confirm the floor is unaffected via `floor_tracker.py`.
+Grep the CI workflows and `scripts/` for Match-monotonicity assertions. Re-read the Sprint-39 acceptance criteria and draft the corrected wording. Confirm the floor is unaffected via `scripts/sprint_audit/floor_tracker.py`.
 
 ### Risk if Wrong
 - **A gate fails on a correct correction**, which is the worst kind of gate failure because the fix is to weaken the gate.
@@ -880,13 +880,13 @@ Sprint 39 execution team
 ---
 # Category 8: Infrastructure — the Sprint-38 Retrospective's Four Process Findings
 
-## Unknown 8.1: Can `check_phase0_doc.py` assert a "layer" field without breaking the existing gates?
+## Unknown 8.1: Can `scripts/sprint_audit/check_phase0_doc.py` assert a "layer" field without breaking the existing gates?
 
 ### Priority
 **Medium** — 8a is the direct response to three gates naming the wrong layer, but it changes a **required CI status check**, so a badly-scoped assertion blocks every emit-touching PR.
 
 ### Assumption
-A `layer` field can be added to the Phase-0 template and asserted by `check_phase0_doc.py` without invalidating the ~30 gates authored across Sprints 37–38.
+A `layer` field can be added to the Phase-0 template and asserted by `scripts/sprint_audit/check_phase0_doc.py` without invalidating the ~30 gates authored across Sprints 37–38.
 
 ### Research Questions
 1. How many issue docs currently carry a `## Phase 0: Acceptance Gate` section, and would all of them fail a new `layer` assertion?
