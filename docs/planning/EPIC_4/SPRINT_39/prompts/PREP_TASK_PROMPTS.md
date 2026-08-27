@@ -1,6 +1,6 @@
 # Sprint 39 Prep Task Prompts (Tasks 2–12)
 
-**Purpose:** ready-to-paste execution prompts for the Sprint-39 preparation tasks defined in `docs/planning/EPIC_4/SPRINT_39/PREP_PLAN.md`. Paste one prompt per prep task. Task 1 (Create Known Unknowns List) is already ✅ **COMPLETE** — **30 unknowns across 10 categories, 29.0 research hours**.
+**Purpose:** ready-to-paste execution prompts for the Sprint-39 preparation tasks defined in `docs/planning/EPIC_4/SPRINT_39/PREP_PLAN.md`. Paste one prompt per prep task. Task 1 (Create Known Unknowns List) is already ✅ **COMPLETE** — **30 unknowns across 10 categories, 40.0 research hours** (⚠ over the 28–36 h target — the 29.0 h figure published at creation was wrong; see `PREP_PLAN.md` correction 1).
 
 **Standing conventions (apply to every prompt below):**
 
@@ -22,6 +22,8 @@
 **Recommended order (critical path):** **2 → {3, 4, 5, 6} → 12**, with Tasks 7, 8, 9, 10 overlapping. **Task 2 gates everything technical** — four priorities rest on fingerprints nobody has re-measured. **Task 7 should precede Task 11** (the catalog cross-check consumes the survey) and is worth starting early because Task 4 wants its output for Unknown 2.3. **Task 9 is date-sensitive**, not effort-sensitive: its central question (has a reply arrived?) is answered by other people, so start it early and revisit.
 
 **Baseline at Sprint-38 close (`9ab2c0c3`) — re-derive, do not copy:** Solve **111** · Match **96** (65 cold + 31 presolve) · Translate **135** · Parse **142**/142 · `path_solve_terminated` **0** · `path_solve_license` **11** · mi **7** · pse **6** · all-219 **99** · genuine floor **73** (provenance file) · leak-gate scope **186** (7 allowlisted).
+
+> **Anchor note.** Sprint 38's own close docs cite `8e32be09` (the HEAD they were written against, PR #1705); `9ab2c0c3` is the close PR #1706 itself and is the anchor to use. The two differ by **docs only** — the DB is byte-identical and both derive Solve 111 / Match 96 — so a cross-reference to `8e32be09` is not a wrong baseline, just a different commit. See `PREP_PLAN.md` §Anchor.
 
 ---
 

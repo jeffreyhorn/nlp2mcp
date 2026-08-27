@@ -5,6 +5,12 @@
 **Goal:** De-risk the Sprint 38 carryforwards so every Sprint-39 priority starts from a *measured* disposition rather than a banked claim
 
 **Anchor:** `9ab2c0c3` (Sprint 38 close, 2026-08-26) · **Toolchain:** GAMS **54.2.1** / PATH **5.2.01**
+
+> **Which Sprint-38 anchor?** Sprint 38's own close artifacts (`SPRINT_LOG.md`, `SPRINT_RETROSPECTIVE.md`, `SPRINT_39_CARRYFORWARDS.md`) cite **`8e32be09`**, not `9ab2c0c3`. Both are correct for what they describe and **neither is a wrong baseline**:
+> - `8e32be09` is the merge of PR #1705, the HEAD those documents were *written against* — a close document cannot cite its own merge commit, which does not exist yet at authoring time.
+> - `9ab2c0c3` is the merge of PR #1706, the close PR itself, and is therefore the commit at which Sprint 38 is actually closed on `main`. **Use it.**
+>
+> **The distinction cannot change a re-derived figure.** `git diff 8e32be09 9ab2c0c3` is **docs-only** — CHANGELOG plus four Sprint-38 planning documents; no `src/`, no goldens, and `gamslib_status.json` and `floor_provenance.json` are byte-identical at both. Verified by deriving at each: **Solve 111 · Match 96** either way. Re-anchoring to `8e32be09` by mistake is therefore harmless for KPIs, but cite `9ab2c0c3` so the provenance is unambiguous.
 **Sprint definition:** `../PROJECT_PLAN.md` → *Sprint 39 (Weeks 43–44): Sprint 38 Carryforward — the dyncge Second Defect, lnts, sarf's Four Call Sites, the Floor-Classification Decision & the Positional-Domain Audit*
 
 **Key insight carried from Sprint 38:** the sprint's two most expensive days each turned out to be **two defects wearing one fingerprint**, and **three of its four Phase-0 gates named the wrong *layer*** — two under-scoped (naming `emit_gams.py` for defects decided upstream in AD/KKT), one over-scoped (demanding new logic for a diagonal-triviality test that had existed since #942). This prep plan is therefore weighted toward **tracing and reproduction** rather than design: Tasks 4–7 exist because their sprint priorities each rest on a claim nobody has yet re-measured on current `main`.
@@ -110,7 +116,7 @@ Categories should map to Sprint 39's priorities. Candidate seeds, drawn from `..
 
 ### Result
 
-✅ **COMPLETE — 30 unknowns, 10 categories, 29.0 research hours.**
+✅ **COMPLETE — 30 unknowns, 10 categories, 40.0 research hours** (⚠ over the 28–36 h target — see correction 1 below).
 
 | metric | target | actual |
 |---|---|---|
@@ -119,14 +125,15 @@ Categories should map to Sprint 39's priorities. Candidate seeds, drawn from `..
 | High | ~40 % | **12 (40 %)** |
 | Medium | ~25 % | **8 (27 %)** |
 | Low | ~10 % | **3 (10 %)** |
-| Research time | 28–36 h | **29.0 h** |
+| Research time | 28–36 h | **40.0 h** ⚠ **over target by 4 h** |
 | Categories | all sprint components | **10** |
 
 **Every unknown is owned by exactly one prep task**, with Tasks 2 and 12 *contributing to* / *integrating* rather than owning. Coverage was checked mechanically, not by eye.
 
 **Two corrections made during creation, both of the "derive it, don't recall it" class:**
 
-1. **The research-time total was written as ~33.0 h from memory; the derived sum is 29.0 h.** Corrected, and the document now says the figure is derived rather than recalled — the exact failure the Sprint-38 Day-13 closeout made with its "three consecutive days" claim.
+1. **The research-time total was written as ~33.0 h from memory, "corrected" to 29.0 h — and 29.0 was ALSO wrong.** The derived sum is **40.0 h**, and it has been 40.0 h since the file's first commit (`60e2581a`); no per-unknown estimate has changed since, so this was never a drift — the figure was simply never summed. It was published with the words *"derived by summing the per-unknown estimates, not recalled"*, which made an unaudited number look audited. Caught by the mechanical snippet pass (PR #1709), not by review or by the correction that claimed to have fixed it.
+   **The lesson is not "derive it, don't recall it" — that was already the lesson, and it still produced a wrong number.** It is that *a claim of having derived a figure is itself unverifiable prose*; only a re-derivation at the point of use is evidence. **Consequence:** at 40.0 h the research no longer fits the **34–47 h** budgeted for Tasks 2–11 at its lower bound — the prep is only completable near the top of its range, which Task 12 must schedule around.
 2. **The prompt's category list numbered `Category 9` twice** (Epic-5 Handoff and General Emit-Backlog Sweep) and described "5 main categories" while listing ten. Resolved as **10 categories**, with the emit-backlog sweep as Category 10.
 
 **The heaviest category is not the one with the most hours.** Category 4 (sarf) has four unknowns and 6.5 h, but Category 2 (dyncge) carries **two Criticals** because it is the sprint's only new diagnosis *and* the model whose previous gate mis-scoped.
@@ -148,7 +155,9 @@ import re
 s = open('docs/planning/EPIC_4/SPRINT_39/KNOWN_UNKNOWNS.md').read()
 req = ['### Priority','### Assumption','### Research Questions','### How to Verify',
        '### Risk if Wrong','### Estimated Research Time','### Owner','### Verification Results']
-blocks = re.split(r'^## Unknown ', s, flags=re.M)[1:]
+# drop the 'Unknown X.Y' template placeholder -- same predicate as the grep above,
+# or this reports 31 and contradicts the count two lines earlier
+blocks = [b for b in re.split(r'^## Unknown ', s, flags=re.M)[1:] if re.match(r'\d', b)]
 bad = [b.splitlines()[0] for b in blocks if not all(r in b for r in req)]
 print(f"unknowns: {len(blocks)} | missing-section: {len(bad)} {bad if bad else ''}")
 PY
@@ -272,11 +281,15 @@ print('terminated:', c['path_solve_terminated'], '| license:', c['path_solve_lic
 # EXPECT: checked 186 in-scope golden(s) (7 allowlisted, ...)
 
 # Presolve-record population
+# Same predicate as Task 8's block, deliberately: the canonical population is the
+# PRESOLVE rows (P7's remedy is "all 14 rows or none"). Both forms return 14 today
+# only because every dangling row happens to be a presolve row -- drop the
+# restriction and the two blocks would report different values for the same figure.
 .venv/bin/python -c "
 import json,os
 d=json.load(open('data/gamslib/gamslib_status.json'))
-dang=[m['model_id'] for m in d['models']
-      if (f:=m.get('mcp_solve',{}).get('mcp_file_used')) and not os.path.exists(f)]
+pre=[m for m in d['models'] if m.get('mcp_solve',{}).get('outcome_category')=='model_optimal_presolve']
+dang=[m['model_id'] for m in pre if (f:=m['mcp_solve'].get('mcp_file_used')) and not os.path.exists(f)]
 print('dangling mcp_file_used:', len(dang), sorted(dang))"
 
 # The reconfirmation doc exists and records a verdict per figure
@@ -1401,17 +1414,24 @@ This task also owns the close rules — and Sprint 38 learned the hard way that 
 ```bash
 cd "$(git rev-parse --show-toplevel)"
 
-# Plan + prompts exist
-test -f docs/planning/EPIC_4/SPRINT_39/PLAN.md && echo "✅ PLAN.md"
+# Plan + prompts exist. PLAN.md is THIS task's own deliverable, so before Task 12
+# runs every check below has nothing to read -- guard once and say so, rather than
+# emitting four "No such file" errors and a Python traceback.
+PLAN=docs/planning/EPIC_4/SPRINT_39/PLAN.md
+if [ ! -f "$PLAN" ]; then
+  echo "PLAN.md does not exist yet — expected until Task 12 produces it; skipping its checks"
+  exit 0
+fi
+echo "✅ PLAN.md"
 test -f docs/planning/EPIC_4/SPRINT_39/prompts/PLAN_PROMPTS.md && echo "✅ prompts"
 
 # 14 days covered (Day 0 + Days 1-13)
-grep -cE "^### Day [0-9]+" docs/planning/EPIC_4/SPRINT_39/PLAN.md
+grep -cE "^### Day [0-9]+" "$PLAN"
 
 # Budget check: no day over 12h, total under 168
-python3 - <<'PY'
-import re
-s=open('docs/planning/EPIC_4/SPRINT_39/PLAN.md').read()
+PLAN="$PLAN" python3 - <<'PY'
+import re, os
+s=open(os.environ['PLAN']).read()
 hrs=[int(x) for x in re.findall(r'^\|\s*\d+\s*\|.*\|\s*(\d+)\s*\|', s, re.M)]
 if hrs:
     print(f"days: {len(hrs)} | total: {sum(hrs)}h | max/day: {max(hrs)}h "
@@ -1421,13 +1441,13 @@ else:
 PY
 
 # Every priority has a REPLAN exit
-grep -c "REPLAN" docs/planning/EPIC_4/SPRINT_39/PLAN.md
+grep -c "REPLAN" "$PLAN"
 
 # Close rules present, each with its precondition
-grep -E -A2 "Close Rules|Pre-registered Close" docs/planning/EPIC_4/SPRINT_39/PLAN.md | head -12
+grep -E -A2 "Close Rules|Pre-registered Close" "$PLAN" | head -12
 
 # Every unknown routed to a day
-grep -c "Unknown [0-9]" docs/planning/EPIC_4/SPRINT_39/PLAN.md
+grep -c "Unknown [0-9]" "$PLAN"
 ```
 
 ### Deliverables

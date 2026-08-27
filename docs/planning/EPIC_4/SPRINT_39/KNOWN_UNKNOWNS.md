@@ -87,7 +87,7 @@ That is the principal risk this document is organised around. Sprint 38's most t
 - Category 9 (Epic-5 Handoff — the Two Answerable Open Questions): 2 unknowns
 - Category 10 (General Emit-Backlog Sweep): 2 unknowns
 
-**Estimated Research Time:** **29.0 hours** — derived by summing the per-unknown estimates, not recalled (within the 28–36 hour target; spread across prep Tasks 2–11)
+**Estimated Research Time:** **40.0 hours** — re-derived mechanically on 2026-08-27 by summing the 30 per-unknown estimates. **This exceeds the 28–36 hour target by 4 h.** The previously published figure of 29.0 h was wrong at every commit of this file, despite being labelled as derived. Spread across prep Tasks 2–11 (budgeted 34–47 h), so the prep is only completable near the top of that range.
 
 **By Resolution Status (as of creation, 2026-08-26):**
 - ✅ VERIFIED: 0
