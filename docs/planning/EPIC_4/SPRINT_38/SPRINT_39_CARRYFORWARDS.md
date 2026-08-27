@@ -60,7 +60,7 @@ The asymmetry is manufactured **downstream**, in the positional re-symbolization
 
 ## 6. ⏰ Consultation follow-up — due 2026-09-09
 
-Sent 2026-08-26 to `ferris@cs.wisc.edu`, `steve@gams.com`, `sdirkse@gams.com`. Tracked on **#1462** (rocket + send record) and **#1443** (the mine/agreste question). Three threads carried: rocket, the **11-model licence-capacity ask**, and **agreste + mine reframed as one question**.
+Sent 2026-08-26 to `ferris@cs.wisc.edu`, `steve@gams.com`, `sdirkse@gams.com`. Tracked on **#1462** (rocket + send record) and **#1443** (the mine/agreste question). Three threads carried: rocket, the **11-model license-capacity ask**, and **agreste + mine reframed as one question**.
 
 **If no reply by 2026-09-09:** post a follow-up comment and treat rocket's +1 Solve as consultation-gated for planning — **without re-opening the send decision.** Re-opening it is what produced five carries.
 

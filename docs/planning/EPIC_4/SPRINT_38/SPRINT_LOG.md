@@ -33,7 +33,7 @@ All figures derived at execution time (`scripts/sprint_audit/kpi_block.py`); the
 | **elec** (#983/#1325) | 12 | `path_solve_terminated` | `model_optimal_presolve` | **match** |
 | **dyncge** (#1693) | 12 | `path_solve_terminated` | `model_optimal` | **mismatch** |
 
-Only two of the four produced a Match. **tricp's fix is complete and verified but its MCP then exceeded the demo licence** (387 → 1,255 rows), so it moved sideways into the licence-gated cohort. **dyncge's fix is also complete, and it exposed a second, independent defect underneath** — the abort had been masking it (§7).
+Only two of the four produced a Match. **tricp's fix is complete and verified but its MCP then exceeded the demo license** (387 → 1,255 rows), so it moved sideways into the license-gated cohort. **dyncge's fix is also complete, and it exposed a second, independent defect underneath** — the abort had been masking it (§7).
 
 **⚠ `model_infeasible` did not rise to 9, and `path_syntax_error` did not fall to 4.** Close rule #2 pre-registered that lateral move as the shape of P1 working. **P1 was REPLAN'd on Day 1**, so the cascade never ran and both figures are unchanged at 7 and 6. Reporting the rule as unmet rather than silently dropping it: the rule was correct, its precondition did not occur.
 
