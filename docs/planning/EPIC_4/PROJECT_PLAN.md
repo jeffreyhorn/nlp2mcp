@@ -2203,7 +2203,8 @@ Derived from `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently". (
 - **Deliverable:** Comprehensive metrics comparison report
 
 ## Deliverables
-- `docs/research/PATH_CONSULTATION.md` — PATH author consultation document
+- **The consultation outcome acted on** — the reply integrated with any actionable lever applied (an option set / `optfile` plugged into the `--force` scaffold, a regularization or continuation schedule, or a named reformulation class), **OR** the no-reply branch executed with rocket/fawley re-confirmed as consultation-gated and removed from projections. *(The consultation document itself was **sent 2026-08-26** as `SPRINT_38/ROCKET_CONSULTATION_EXTERNAL.md`; producing it is not work remaining here.)*
+- If the license ask succeeded: the **11-model license-gated cohort re-tested as one batch**, with per-model results
 - Solution forcing strategy implementations and documentation
 - Final parse, translate, and solve fixes
 - Comprehensive pipeline metrics comparison
@@ -2251,11 +2252,12 @@ Derived from `SPRINT_27/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently". (
   - Update divergent models with new strategies
   - **Deliverable:** PATH feedback implementation
 
-- **Update Consultation Document (2-3h)**
-  - Add PATH author responses and recommendations
+- **Record the Consultation Outcome (2-3h)**
+  - Add the PATH authors' responses and recommendations to the tracking record
   - Document resolved vs. unresolved cases
   - Note any follow-up needed for Epic 5
-  - **Deliverable:** Updated `docs/research/PATH_CONSULTATION.md`
+  - **⚠ `docs/research/PATH_CONSULTATION.md` was never created** — the consultation that actually went out on 2026-08-26 is `docs/planning/EPIC_4/SPRINT_38/ROCKET_CONSULTATION_EXTERNAL.md`, and its send record and any replies live on **#1462** (rocket) and **#1443** (the `agreste`/`mine` LP question)
+  - **Deliverable:** the outcome recorded against the actual artifact and its tracking issues — **not** a new `docs/research/` document
 
 ### Final Pipeline Run & Assessment (~4-6h)
 - **Comprehensive Retest (2-3h)**
