@@ -321,9 +321,9 @@ On a new branch `planning/sprint39-task12` (from `main`), execute Sprint-39 Prep
 
 ## Appendix: Task-to-Unknown Quick Reference
 
-| Prep Task | Branch | Unknowns | Priority | Est. |
+| Prep Task | Branch | Unknowns **owned** (unless marked) | Priority | Est. |
 |---|---|---|---|---|
-| 2 — Re-Derive Baseline & Fingerprints | `planning/sprint39-task2` | 1.1, 2.2, 3.3, 4.1, 7.1, 10.1 | Critical | 3–4 h |
+| 2 — Re-Derive Baseline & Fingerprints | `planning/sprint39-task2` | *(contributes to, does not own)* 1.1, 2.2, 3.3, 4.1, 7.1, 10.1 | Critical | 3–4 h |
 | 3 — Floor-Classification Decision Package | `planning/sprint39-task3` | 1.1, 1.2, 1.3 | Critical | 2–3 h |
 | 4 — dyncge Second-Defect Diagnosis & Layer Trace | `planning/sprint39-task4` | 2.1, 2.2, 2.3, 2.4 | Critical | 5–7 h |
 | 5 — lnts Fingerprint & Runtime-Probe Design | `planning/sprint39-task5` | 3.1, 3.2, 3.3 | Critical | 4–6 h |
@@ -335,4 +335,6 @@ On a new branch `planning/sprint39-task12` (from `main`), execute Sprint-39 Prep
 | 11 — Backlog Catalog & Process-Infra Spec | `planning/sprint39-task11` | 8.1, 8.2, 8.3, 10.1, 10.2 | Medium | 3–4 h |
 | 12 — Plan Sprint 39 Detailed Schedule | `planning/sprint39-task12` | *(integrates all)* | Critical | 3–4 h |
 
-**Total:** ~40–55 h across 11 prompts. **Every one of the 30 unknowns is owned by exactly one task**; Tasks 2 and 12 contribute-to / integrate rather than own.
+**Total:** **37–51 h across these 11 prompts** (the plan's ~40–55 h is the full 12-task figure — it includes Task 1, already ✅ complete at 3–4 h).
+
+**Every one of the 30 unknowns is owned by exactly one task.** The table can read as contradicting this, because Task 2's row lists ids that also appear under Tasks 3–11 — those are **contributions, not ownership**, and are marked as such above. Task 2 re-derives the *figures* those unknowns rest on; the owning task does the verification. Task 12 integrates. Excluding Tasks 2 and 12, the owning sets partition all 30 ids exactly, with no id owned twice and none unowned — checked mechanically, not by eye.
