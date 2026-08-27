@@ -1,6 +1,8 @@
 # dyncge: empty MCP pair `eqpf2.nu_eqpf2` from diagonal self-cancellation (EXECERROR=4)
 
-**GitHub:** #1693 · **Model:** `dyncge` (A Recursive-Dynamic Standard CGE Model) · **Status:** OPEN
+**GitHub:** #1693 · **Model:** `dyncge` (A Recursive-Dynamic Standard CGE Model) · **Status:** ✅ **RESOLVED** — fix verified **2026-08-25** (Sprint 38 Day 12, `82b91c94`) · merged **2026-08-26** (PR #1704, main `31340922`) · GitHub issue closed **2026-08-27** (PR #1708)
+**Resolution:** section 2c's diagonal-triviality test **reused for equalities** as a new section 3c — the gate's claim that this needed *new logic* was wrong; the test had existed since **#942** and was only ever applied to inequalities. `eqpf2` now generates **12 off-diagonal rows and 0 diagonal**, **0** empty-pair errors, `MODEL STATUS 1 Optimal`. **Solve +1; Match NOT claimed.**
+**⚠ Closing this issue does NOT mean dyncge is correct.** The abort was *masking* a second, independent defect: `kkt_residual.py` → **`CASE_B`**, max relative **6.22e-02** at `stat_pf(CAP,SRV)`; the cold MCP solves to **381401.119** against the NLP's **539570.5027** (29.3 % mismatch). That is a **new diagnosis in the `pf`/`pq` block, not `eqpf2`**, and needs its own issue — **this one is not widened to cover it.**
 **Created:** Sprint 38 Day 3 (P7 Phase-0 backfill) · **Measured at:** `2723c22a`, GAMS **54.2.1** / PATH **5.2.01**
 
 ## Problem Summary
@@ -48,7 +50,7 @@ nu_eqpf2.fx(h_mob,i,j)$(sameas(i,j)) = 0;
 
 The emitted model currently contains **one** `nu_*.fx(` guard and **none** for `eqpf2`.
 
-**Traced fix-surface (Day-3, `2723c22a`):** `src/emit/emit_gams.py`, the §3 equality-multiplier fixing loop (~`3255–3273`). It bails at `if eq_def.condition is None: continue` — and unlike twocge, **dyncge has no condition to lift from the body either**. Detecting this case requires recognising that the equation's LHS and RHS become the **same expression** under an index identification, i.e. a structural self-cancellation test on `lhs_rhs`, which is **new logic rather than a widened condition-lift**.
+**Traced fix-surface (Day-3, `2723c22a`):** `src/emit/emit_gams.py`, the §3 equality-multiplier fixing loop (~`3255–3273`). It bails at `if eq_def.condition is None: continue` — and unlike twocge, **dyncge has no condition to lift from the body either**. Detecting this case requires recognising that the equation's LHS and RHS become the **same expression** under an index identification, i.e. a structural self-cancellation test on `lhs_rhs`, which is **new logic rather than a widened condition-lift**. **⚠ REFUTED — this sentence is the pre-fix hypothesis and it was wrong.** The logic already existed (section 2c, since #942) and was only ever applied to inequalities; the fix was a *reuse*, not new machinery. See *"⚠ The gate was wrong that this needs new logic"* below.
 
 **⚠ The line numbers are a traced hypothesis, not a result** — prep-doc fix surfaces were wrong ~4× in Sprint 27. Confirm before implementing.
 

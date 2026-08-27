@@ -1,10 +1,11 @@
 # elec: MCP PATH Convergence Failure (non-convex)
 
 **GitHub Issue:** [#983](https://github.com/jeffreyhorn/nlp2mcp/issues/983)
-**Status:** OPEN — Not fixable (non-convex model, PATH convergence issue)
+**Status:** ✅ **RESOLVED** — fix verified **2026-08-25** (Sprint 38 Day 12, `82b91c94`) · merged **2026-08-26** (PR #1704, main `31340922`) · GitHub issue closed **2026-08-27** (PR #1708). Resolved together with **#1325**
+**⚠ The former status line — "Not fixable (non-convex model, PATH convergence issue)" — was WRONG.** It was an emit defect all along: two of them, in the AD layer and in the KKT re-symbolization. This document's *"Why Division-by-Zero No Longer Occurs"* section was also wrong and stayed wrong for four sprints; both are corrected in *Resolution — Sprint 38 Day 12* below.
 **Severity:** Low — MCP generates correctly; solver cannot converge
 **Date:** 2026-03-03
-**Last Updated:** 2026-03-17
+**Last Updated:** 2026-08-27 *(resolution recorded; the 2026-03-17 stamp predated the fix by five months)*
 **Affected Models:** elec
 
 ---
@@ -16,6 +17,13 @@ successfully. The original issue described division-by-zero errors, but this has
 resolved — the `$(ut(i,j))` set membership condition IS correctly preserved in the
 stationarity equations, filtering out self-pairs.
 
+> **⚠ HISTORICAL — PRE-FIX, AND REFUTED.** The paragraph below is the 2026-03 framing.
+> It was **wrong**, and it is exactly the framing the header note corrects: the blocker was
+> never PATH convergence on a non-convex model, it was **two emit defects** (in
+> `src/ad/derivative_rules.py` and `src/kkt/stationarity.py`). Kept verbatim because
+> "this was diagnosed as unfixable for four sprints" is the record. For the verified
+> post-fix behaviour see *Resolution — Sprint 38 Day 12* below.
+
 The remaining issue is that PATH terminates with MODEL STATUS 6 (Intermediate Infeasible).
 This is a non-convex model (25 electrons, 75 variables, 25 quadratic ball constraints)
 where the KKT system has multiple solutions and PATH cannot converge from the given
@@ -23,7 +31,9 @@ initial point.
 
 ---
 
-## Current Status (2026-03-17)
+## Current Status (2026-03-17) — ⚠ HISTORICAL, PRE-FIX
+
+> Describes the state **before** the Sprint 38 Day 12 fix, not current behaviour. elec now reaches `MODEL STATUS 1 Optimal` cold. See *Resolution — Sprint 38 Day 12* below.
 
 - **Translation**: Success — MCP file generates without errors
 - **GAMS compilation**: Success — no compilation or execution errors

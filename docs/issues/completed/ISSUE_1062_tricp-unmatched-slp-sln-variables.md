@@ -1,14 +1,21 @@
 # tricp: Unmatched Variables `slp`/`sln` — 760 MCP Errors
 
 **GitHub Issue:** [#1062](https://github.com/jeffreyhorn/nlp2mcp/issues/1062)
-**Status:** OPEN
-**Severity:** High — execution errors, model fails to solve
+**Status:** ✅ **RESOLVED** — fix verified **2026-08-25** (Sprint 38 Day 11, `45926422`) · merged **2026-08-25** (PR #1703, main `cf8c0284`) · GitHub issue closed **2026-08-27** (PR #1708)
+**Severity:** High — execution errors, model fails to solve *(was)*
+**Resolution:** the collapsed stationarity head domain is fixed. `stat_slp` / `stat_sln` generate **54 rows each** (were `NONE`), **0** unmatched-variable errors (were 108). `tricp` moved `path_solve_terminated` → **`path_solve_license`**: the fix takes the MCP from 387 to **1,255 rows**, past the GAMS demo 1000-row nonlinear limit, so the remaining block is **capacity, not correctness**. **0 bucket move.** See *Resolution — Sprint 38 Day 11* below.
 **Date:** 2026-03-12
 **Affected Models:** tricp
 
 ---
 
-## Problem Summary
+## Problem Summary — ⚠ HISTORICAL, PRE-FIX
+
+> Describes the state **before** the Sprint 38 Day 11 fix. `stat_slp` / `stat_sln` now
+> generate **54 rows each** (were `NONE`) with **0** unmatched-variable errors. tricp's
+> remaining blocker is **capacity, not correctness** — the fix takes the MCP past the
+> GAMS demo 1000-row nonlinear limit (`path_solve_license`). See *Resolution — Sprint 38
+> Day 11* below.
 
 The tricp model's generated MCP file has 760 "Unmatched variable not free or fixed" errors for variables `slp(i,j)` and `sln(i,j)`. The stationarity equations `stat_slp(n,n)` and `stat_sln(n,n)` are defined over the full `(n,n)` cross product (400 instances for 20 nodes), but these variables only participate in equation `eq1(e(i,j))` which is conditioned on the edge set `e`. Off-edge instances have no corresponding equation in the MCP model.
 
