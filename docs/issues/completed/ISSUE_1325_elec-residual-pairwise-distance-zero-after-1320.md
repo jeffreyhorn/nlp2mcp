@@ -1,7 +1,8 @@
 # elec: Pairwise-distance div-by-zero in stat_x KKT-built equations, residual after #1320 divisor-guard
 
 **GitHub Issue:** [#1325](https://github.com/jeffreyhorn/nlp2mcp/issues/1325)
-**Status:** OPEN — Sprint 26 follow-up
+**Status:** ✅ **RESOLVED (2026-08-26)** — Sprint 38 Day 12, PR #1704, main `31340922`
+**Resolution:** **two independent defects**, in two different files, both required — `_diff_sum`'s partial-collapse left the condition's matched position unbound (`src/ad/derivative_rules.py`), and `_replace_indices_in_expr` mistook a self-mapped sum index for a concrete element against `Set ut(i,i)` (`src/kkt/stationarity.py`). Verified by `kkt_residual.py` → **`CASE_A`** (max relative **1.69e-08**), **0** anchored exec errors, and a cold MCP reaching `MODEL STATUS 1 Optimal`. **Solve +1, Match +1.** See *Resolution — Sprint 38 Day 12* below.
 **Severity:** High — `path_solve_terminated` (EXECERROR) at GAMS model-listing time on stat_x derivatives
 **Date:** 2026-04-29
 **Affected Models:** elec

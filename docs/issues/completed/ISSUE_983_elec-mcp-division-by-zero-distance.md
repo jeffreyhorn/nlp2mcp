@@ -1,7 +1,8 @@
 # elec: MCP PATH Convergence Failure (non-convex)
 
 **GitHub Issue:** [#983](https://github.com/jeffreyhorn/nlp2mcp/issues/983)
-**Status:** OPEN — Not fixable (non-convex model, PATH convergence issue)
+**Status:** ✅ **RESOLVED (2026-08-26)** — Sprint 38 Day 12, PR #1704, main `31340922`, together with **#1325**
+**⚠ The former status line — "Not fixable (non-convex model, PATH convergence issue)" — was WRONG.** It was an emit defect all along: two of them, in the AD layer and in the KKT re-symbolization. This document's *"Why Division-by-Zero No Longer Occurs"* section was also wrong and stayed wrong for four sprints; both are corrected in *Resolution — Sprint 38 Day 12* below.
 **Severity:** Low — MCP generates correctly; solver cannot converge
 **Date:** 2026-03-03
 **Last Updated:** 2026-03-17
