@@ -157,7 +157,7 @@ PY
 grep -c "^# Category" docs/planning/EPIC_4/SPRINT_39/KNOWN_UNKNOWNS.md
 
 # Mapping table present and non-empty
-grep -A3 "unknown .*prep task\|Mapping" docs/planning/EPIC_4/SPRINT_39/KNOWN_UNKNOWNS.md | head -5
+grep -E -A3 "unknown .*prep task|Mapping" docs/planning/EPIC_4/SPRINT_39/KNOWN_UNKNOWNS.md | head -5
 ```
 
 ### Deliverables
@@ -678,7 +678,7 @@ Both `stationarity.py` and `emit_gams.py` changed materially in Sprint 38 (Days 
 cd "$(git rev-parse --show-toplevel)"
 
 # The four call sites — do they still exist where recorded?
-grep -n "referenced-instance\|_is_concrete_instance_of\|resolve_set_members" \
+grep -E -n "referenced-instance|_is_concrete_instance_of|resolve_set_members" \
   src/ad/constraint_jacobian.py src/ad/index_mapping.py src/kkt/stationarity.py 2>/dev/null | head -20
 
 # Current line references from the Sprint-38 design doc, for comparison
@@ -690,16 +690,27 @@ ls data/gamslib/mcp/sarf_mcp.gms 2>/dev/null || echo "no golden — leak-check N
 
 # Bounded profile (do NOT run to completion; it does not terminate)
 # timeout is intentional: we want the profile, not the result
-.venv/bin/python -c "
+# Drives an actual translate (NOT just an import -- an import-only profile
+# captures ~0.4s of module load and none of the call sites we need to attribute).
+# cProfile dumps the file from a `finally`, so the profile survives the alarm.
+REPO="$(git rev-parse --show-toplevel)"
+PYTHONPATH="$REPO" "$REPO/.venv/bin/python" -c "
 import cProfile, pstats, sys, signal
 sys.setrecursionlimit(50000)
+from src.cli import main
 def bail(*a): raise TimeoutError
 signal.signal(signal.SIGALRM, bail); signal.alarm(180)
 try:
-    cProfile.run('__import__(\"src.cli\",fromlist=[\"main\"])', '/tmp/sarf.prof')
-except TimeoutError:
+    cProfile.run(
+        'main(args=[\"$REPO/data/gamslib/raw/sarf.gms\",\"-o\",\"sarf_mcp.gms\"],'
+        ' standalone_mode=False)', '/tmp/sarf.prof')
+except (TimeoutError, SystemExit):
     pass
-" 2>/dev/null; echo "(profile harness — adapt to drive translate on sarf)"
+pstats.Stats('/tmp/sarf.prof').sort_stats('cumulative').print_stats(15)
+"
+# ⚠ Bound-vs-reach: at a 10 s bound sarf is still inside parse_model_text, so the
+# four AD/KKT call sites are NOT yet on the stack. Raise the alarm until the
+# profile shows frames past the parser, or the attribution will be all parsing.
 
 # The plan exists and names the four sites + the atomic unit
 test -f docs/planning/EPIC_4/SPRINT_39/SARF_CALLSITE_PLAN.md && \
@@ -786,7 +797,7 @@ grep -nE "domain\[pos\]|smt_domain\[|var_domain\[|set_declared_domain\[" \
   src/kkt/stationarity.py src/ad/*.py | head -30
 
 # First-match scans over a domain tuple (the #1350 shape)
-grep -n "for vd in var_domain\|for .* in .*_domain" src/kkt/stationarity.py | head -20
+grep -E -n "for vd in var_domain|for .* in .*_domain" src/kkt/stationarity.py | head -20
 
 # Corpus incidence: repeated-symbol SET domains (the elec shape)
 .venv/bin/python -c "
@@ -1017,7 +1028,9 @@ lic=sorted(m['model_id'] for m in d['models']
 print(len(lic), lic)"
 
 # The forcing scaffold a recommendation would plug into
-grep -n "force.*homotopy\|force.*optfile\|force.*multistart" src/cli.py | head -3
+# NB: --force and the strategy names never share a line, so a `force.*homotopy`
+# pattern matches nothing even though the scaffold is present (src/cli.py:208-216)
+grep -E -n 'homotopy|multistart|optfile|"--force"' src/cli.py | head -5
 
 # Package exists with both branches
 test -f docs/planning/EPIC_4/SPRINT_39/CONSULTATION_FOLLOWUP_PACKAGE.md && \
@@ -1235,7 +1248,7 @@ for m in agreste cesam indus dinam lnts; do
 done
 
 # Phase-0 checker: does it yet assert a layer field?
-grep -n "layer\|Layer" scripts/sprint_audit/check_phase0_doc.py | head
+grep -E -n "layer|Layer" scripts/sprint_audit/check_phase0_doc.py | head
 
 # Deliverables exist
 test -f docs/planning/EPIC_4/SPRINT_39/BACKLOG_CANDIDATE_CATALOG.md && echo "✅ catalog"
@@ -1349,7 +1362,7 @@ PY
 grep -c "REPLAN" docs/planning/EPIC_4/SPRINT_39/PLAN.md
 
 # Close rules present, each with its precondition
-grep -A2 "Close Rules\|Pre-registered Close" docs/planning/EPIC_4/SPRINT_39/PLAN.md | head -12
+grep -E -A2 "Close Rules|Pre-registered Close" docs/planning/EPIC_4/SPRINT_39/PLAN.md | head -12
 
 # Every unknown routed to a day
 grep -c "Unknown [0-9]" docs/planning/EPIC_4/SPRINT_39/PLAN.md
