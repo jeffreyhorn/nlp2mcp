@@ -1,7 +1,7 @@
 # tricp: Unmatched Variables `slp`/`sln` — 760 MCP Errors
 
 **GitHub Issue:** [#1062](https://github.com/jeffreyhorn/nlp2mcp/issues/1062)
-**Status:** ✅ **RESOLVED (2026-08-26)** — Sprint 38 Day 11, PR #1703, main `cf8c0284`
+**Status:** ✅ **RESOLVED** — fix verified **2026-08-25** (Sprint 38 Day 11, `45926422`) · merged **2026-08-25** (PR #1703, main `cf8c0284`) · GitHub issue closed **2026-08-27** (PR #1708)
 **Severity:** High — execution errors, model fails to solve *(was)*
 **Resolution:** the collapsed stationarity head domain is fixed. `stat_slp` / `stat_sln` generate **54 rows each** (were `NONE`), **0** unmatched-variable errors (were 108). `tricp` moved `path_solve_terminated` → **`path_solve_license`**: the fix takes the MCP from 387 to **1,255 rows**, past the GAMS demo 1000-row nonlinear limit, so the remaining block is **capacity, not correctness**. **0 bucket move.** See *Resolution — Sprint 38 Day 11* below.
 **Date:** 2026-03-12
