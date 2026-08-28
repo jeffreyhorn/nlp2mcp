@@ -60,13 +60,17 @@ TRUTHS: dict[str, float | int] = {
     "path_solve_license cohort": 11,
     "path_solve_terminated": 0,
     "leak-gate in-scope goldens": 186,
-    "Sprint 39 unknowns": 30,
-    "Sprint 39 research hours": 40.0,
+    "current-sprint unknowns": 30,
+    "current-sprint research hours": 40.0,
     "dangling mcp_file_used rows": 14,
     "Task-2 figures reproduced": 13,
 }
 
-DOC = Path("docs/planning/EPIC_4/SPRINT_39/PREP_PLAN.md")
+# Derived, like the implementation. Pinning a sprint number here would make the
+# suite fail at the next rollover on a behaviour that had not changed.
+_SPRINT = cdf.current_sprint_dir()
+assert _SPRINT is not None, "no SPRINT_<n> directory found; the scope would be empty"
+DOC = _SPRINT.relative_to(PROJECT_ROOT) / "PREP_PLAN.md"
 
 
 def _scan(text: str):
@@ -86,17 +90,17 @@ def _facts(text: str) -> set[str]:
     [
         pytest.param(
             "✅ **COMPLETE — 30 unknowns, 10 categories, 29.0 research hours.**",
-            "Sprint 39 research hours",
+            "current-sprint research hours",
             id="research-hours-headline",
         ),
         pytest.param(
             "| Research time | 28–36 h | **29.0 h** |",
-            "Sprint 39 research hours",
+            "current-sprint research hours",
             id="research-hours-acceptance-table",
         ),
         pytest.param(
             "**30 unknowns across 10 categories, 29.0 research hours**.",
-            "Sprint 39 research hours",
+            "current-sprint research hours",
             id="research-hours-prompts-header",
         ),
         pytest.param(
@@ -106,7 +110,7 @@ def _facts(text: str) -> set[str]:
         ),
         pytest.param(
             'print(f"unknowns: 31 | missing-section: {len(bad)}")',
-            "Sprint 39 unknowns",
+            "current-sprint unknowns",
             id="unknowns-31-vs-30",
         ),
     ],
@@ -186,7 +190,7 @@ def test_the_number_pattern_cannot_match_a_bare_dot() -> None:
 
 def test_a_decimal_figure_is_captured_whole() -> None:
     findings, _ = _scan("30 unknowns across 10 categories, 29.0 research hours.")
-    cited = {f.cited for f in findings if f.fact == "Sprint 39 research hours"}
+    cited = {f.cited for f in findings if f.fact == "current-sprint research hours"}
     assert cited == {"29.0"}, f"expected the whole number, got {cited}"
 
 
@@ -197,7 +201,7 @@ def test_a_target_range_is_not_read_as_a_claim() -> None:
     claim sitting beside it, so the row reported clean.
     """
     findings, _ = _scan("| Research time | 28–36 h | **29.0 h** |")
-    cited = {f.cited for f in findings if f.fact == "Sprint 39 research hours"}
+    cited = {f.cited for f in findings if f.fact == "current-sprint research hours"}
     assert "29.0" in cited
     assert "28" not in cited and "36" not in cited
 
@@ -499,8 +503,8 @@ def test_unrelated_prose_does_not_fire(line: str, why: str) -> None:
 @pytest.mark.parametrize(
     ("line", "fact"),
     [
-        ("| Research time | 28–36 h | **29.0 h** |", "Sprint 39 research hours"),
-        ("| Total unknowns | 22–30 (aim 25+) | **31** |", "Sprint 39 unknowns"),
+        ("| Research time | 28–36 h | **29.0 h** |", "current-sprint research hours"),
+        ("| Total unknowns | 22–30 (aim 25+) | **31** |", "current-sprint unknowns"),
     ],
 )
 def test_an_acceptance_row_is_read_from_its_last_cell(line: str, fact: str) -> None:
@@ -520,7 +524,7 @@ def test_archived_docs_are_out_of_scope() -> None:
     logs. An unreadable check is a disabled check.
     """
     assert cdf.is_live_doc(Path("CHANGELOG.md"))
-    assert cdf.is_live_doc(Path("docs/planning/EPIC_4/SPRINT_39/PREP_PLAN.md"))
+    assert cdf.is_live_doc(DOC), f"{DOC} is the current sprint and must be live"
     assert not cdf.is_live_doc(Path("docs/planning/EPIC_3/SPRINT_16/PLAN.md"))
     assert not cdf.is_live_doc(Path("docs/planning/EPIC_4/SPRINT_38/SPRINT_LOG.md"))
 
@@ -593,7 +597,7 @@ def test_a_tree_with_no_sprint_directories_yields_no_sprint_scope(
     assert cdf.current_sprint_dir(tmp_path) is None
 
     monkeypatch.setattr(cdf, "SPRINT_ROOT", tmp_path)
-    assert not cdf.is_live_doc(Path("docs/planning/EPIC_4/SPRINT_39/x.md"))
+    assert not cdf.is_live_doc(DOC.parent / "x.md")
     # the static entries stay live regardless — they are not sprint-scoped
     assert cdf.is_live_doc(Path("CHANGELOG.md"))
 
@@ -811,3 +815,48 @@ def test_selection_is_keyed_on_the_number_alone(tmp_path: Path) -> None:
     (tmp_path / "SPRINT_40").mkdir()
     (tmp_path / "SPRINT_100").mkdir()
     assert cdf.current_sprint_dir(tmp_path) == tmp_path / "SPRINT_100"
+
+
+def test_derivations_follow_the_scope_across_a_rollover(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Scope and truths must move together, or the check reports confident nonsense.
+
+    The scope was derived while the fact derivations stayed pinned to a fixed
+    sprint. At the first rollover that combination scans the NEW sprint's docs
+    and compares them against the OLD sprint's numbers — so every correct figure
+    in the new sprint is reported as contradicting its source. That is worse
+    than not checking: it is a check that is wrong in the direction of looking
+    authoritative.
+    """
+    root = tmp_path / "EPIC_4"
+    (root / "SPRINT_39").mkdir(parents=True)
+    (root / "SPRINT_39" / "KNOWN_UNKNOWNS.md").write_text(
+        "## Unknown 1.1: a\n### Estimated Research Time\n1.0 hour\n"
+        "\n## Unknown 1.2: b\n### Estimated Research Time\n1.0 hour\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cdf, "SPRINT_ROOT", root)
+    assert cdf._unknown_count() == 2
+    assert cdf._research_hours() == 2.0
+
+    # Roll over, with deliberately different content.
+    (root / "SPRINT_40").mkdir()
+    (root / "SPRINT_40" / "KNOWN_UNKNOWNS.md").write_text(
+        "## Unknown 1.1: a\n### Estimated Research Time\n3.0 hours\n", encoding="utf-8"
+    )
+    assert cdf.current_sprint_dir() == root / "SPRINT_40"
+    assert cdf._unknown_count() == 1, "unknowns must come from the sprint being scanned"
+    assert cdf._research_hours() == 3.0, "hours must come from the sprint being scanned"
+
+
+def test_a_sprint_scoped_fact_names_no_sprint_number() -> None:
+    """A fact called "Sprint 39 unknowns" that reads Sprint 40's file is a lie.
+
+    The names appear verbatim in findings output, so a pinned name outlives the
+    thing it describes exactly as a pinned path did.
+    """
+    import re as _re
+
+    offenders = [f.name for f in cdf.FACTS if _re.search(r"[Ss]print\s*\d", f.name)]
+    assert offenders == [], f"fact names pin a sprint number: {offenders}"

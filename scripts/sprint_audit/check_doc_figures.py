@@ -297,12 +297,23 @@ def _outside_fences(text: str) -> list[str]:
     return out
 
 
+def _current_sprint_file(name: str) -> Path:
+    """A file inside the CURRENT sprint's directory.
+
+    Every derivation must resolve against the same sprint the scan is scoped to.
+    These were pinned to ``SPRINT_39`` while `is_live_doc` derived its scope, so
+    the first rollover would have scanned the new sprint's docs and compared them
+    against the OLD sprint's truths — reporting confident, wrong findings on
+    correct lines. Worse than not checking at all.
+    """
+    sprint = current_sprint_dir()
+    if sprint is None:
+        raise FileNotFoundError(f"no sprint directory under {SPRINT_ROOT}")
+    return sprint / name
+
+
 def _known_unknowns() -> list[str]:
-    return _outside_fences(
-        (PROJECT_ROOT / "docs/planning/EPIC_4/SPRINT_39/KNOWN_UNKNOWNS.md").read_text(
-            encoding="utf-8"
-        )
-    )
+    return _outside_fences(_current_sprint_file("KNOWN_UNKNOWNS.md").read_text(encoding="utf-8"))
 
 
 def _unknown_count() -> int:
@@ -330,7 +341,7 @@ def _reconfirmation_reproduced() -> int:
     ``12 of 14`` was written while the final measurement was still running and
     never revisited; the true count became 13 when it came back clean.
     """
-    p = PROJECT_ROOT / "docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md"
+    p = _current_sprint_file("BASELINE_RECONFIRMATION.md")
     if not p.exists():
         raise FileNotFoundError(p)
     return sum(
@@ -426,9 +437,9 @@ FACTS: tuple[Fact, ...] = (
         ),
     ),
     Fact(
-        name="Sprint 39 unknowns",
+        name="current-sprint unknowns",
         derive=_unknown_count,
-        source="count of '## Unknown N.N' in KNOWN_UNKNOWNS.md, outside fences",
+        source="count of '## Unknown N.N' in <current sprint>/KNOWN_UNKNOWNS.md, outside fences",
         # The TOTAL only. `KNOWN_UNKNOWNS.md` is full of per-category counts
         # ("Category 1 …: 3 unknowns") and subset counts ("6 of 30"), and an
         # unqualified `N unknowns` matched all of them — 203 hits across the
@@ -445,9 +456,9 @@ FACTS: tuple[Fact, ...] = (
         skip_if=(re.compile(r"\bof\s+(?:the\s+)?30\b"),),
     ),
     Fact(
-        name="Sprint 39 research hours",
+        name="current-sprint research hours",
         derive=_research_hours,
-        source="sum of '### Estimated Research Time' in KNOWN_UNKNOWNS.md, outside fences",
+        source="sum of '### Estimated Research Time' in <current sprint>/KNOWN_UNKNOWNS.md, outside fences",
         # Both forms require the number ADJACENT to the label. The earlier
         # `[^0-9]{0,24}` window reached across "**, leak gate **" and captured
         # the leak-gate figure as a research-hours citation.
@@ -490,7 +501,7 @@ FACTS: tuple[Fact, ...] = (
     Fact(
         name="Task-2 figures reproduced",
         derive=_reconfirmation_reproduced,
-        source="count of ✅ rows in BASELINE_RECONFIRMATION.md's verdict table",
+        source="count of ✅ rows in <current sprint>/BASELINE_RECONFIRMATION.md's verdict table",
         # "N of 14" alone matches any ratio out of fourteen — `+4 of 14 new`,
         # `9 of 14 categories`. Tie it to the claim: a `reproduc…` must follow
         # within the same sentence.
