@@ -52,6 +52,7 @@ set that grows silently is the same class of defect this check exists to catch.
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import re
 import subprocess
@@ -62,7 +63,19 @@ from pathlib import Path
 from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+# The sibling audit scripts are imported EAGERLY, while this path insert is in
+# effect, and bound to module-level names. They were lazy (inside the derive
+# functions), which quietly made the module depend on the `sys.path` mutation
+# SURVIVING import — so a caller that politely restored `sys.path` afterwards,
+# as a dynamic-import test should, got `ModuleNotFoundError: kpi_block` the
+# moment a fact derived. Importing here puts them in `sys.modules`, after which
+# the path entry is no longer needed by anything.
 sys.path.insert(0, str(PROJECT_ROOT / "scripts" / "sprint_audit"))
+
+from check_golden_staleness import discover_goldens, load_allowlist  # noqa: E402
+from floor_tracker import compute_floor  # noqa: E402
+from kpi_block import compute_kpis  # noqa: E402
 
 DB_PATH = PROJECT_ROOT / "data" / "gamslib" / "gamslib_status.json"
 PROVENANCE_PATH = PROJECT_ROOT / "data" / "floor_provenance.json"
@@ -210,21 +223,25 @@ def _load(path: Path) -> dict[str, Any]:
 # ---------------------------------------------------------------- derivations
 
 
+@functools.lru_cache(maxsize=1)
 def _kpis() -> dict[str, Any]:
-    from kpi_block import compute_kpis  # noqa: PLC0415  (path set at import time)
+    """The KPI block, computed once per process.
 
+    Six facts read from this. Uncached, each re-read the 461 KB results DB and
+    re-ran the full pass over the model list — five computations per run, ~210 ms
+    of a pre-push hook spent recomputing an identical answer.
+
+    Cached on the assumption that the DB does not change mid-run, which holds for
+    a CLI invocation. Tests that mutate the DB must call ``_kpis.cache_clear()``.
+    """
     return compute_kpis(_load(DB_PATH))
 
 
 def _floor() -> int:
-    from floor_tracker import compute_floor  # noqa: PLC0415
-
     return compute_floor(_load(PROVENANCE_PATH))
 
 
 def _leak_scope() -> int:
-    from check_golden_staleness import discover_goldens, load_allowlist  # noqa: PLC0415
-
     allow = load_allowlist()
     return sum(1 for (mid, _pre, _p) in discover_goldens() if mid not in allow)
 

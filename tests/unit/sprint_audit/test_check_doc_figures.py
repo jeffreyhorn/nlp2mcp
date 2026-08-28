@@ -38,7 +38,16 @@ _SPEC = importlib.util.spec_from_file_location(
 assert _SPEC and _SPEC.loader
 cdf = importlib.util.module_from_spec(_SPEC)
 sys.modules["check_doc_figures"] = cdf
-_SPEC.loader.exec_module(cdf)
+# The module mutates global process state on import (sys.path.insert, so it can
+# reach `kpi_block` / `floor_tracker` / `check_golden_staleness`). Snapshot and
+# restore sys.path so this dynamic load cannot leak import-resolution order into
+# the rest of the pytest run and cause order-dependent failures.
+# Same pattern, and the same reason, as tests/unit/test_presolve_divergence_classify.py.
+_saved_sys_path = list(sys.path)
+try:
+    _SPEC.loader.exec_module(cdf)
+finally:
+    sys.path[:] = _saved_sys_path
 
 
 #: Pinned rather than derived. Deriving them here would re-implement the thing
@@ -676,3 +685,57 @@ def test_uncommitted_work_stays_in_scope(tmp_path: Path) -> None:
 
     assert "uncommitted: Solve 777" in lines
     assert "committed: Solve 999" in lines
+
+
+# ------------------------------------------- import hygiene and derivation cost
+
+
+def test_the_module_works_after_its_sys_path_entry_is_removed() -> None:
+    """Restoring ``sys.path`` after a dynamic import must not break derivation.
+
+    The sibling imports (`kpi_block`, `floor_tracker`, `check_golden_staleness`)
+    were lazy — inside the derive functions — which quietly made the module
+    depend on its ``sys.path`` mutation *surviving* import. A caller that
+    politely restored ``sys.path``, which is exactly what a dynamic-import test
+    should do, then got ``ModuleNotFoundError: kpi_block`` the moment a fact
+    derived.
+
+    This test loads the module in isolation, restores ``sys.path``, and only
+    then derives — so the failure it guards against is the one that was actually
+    latent, not the one the import line looks like it has.
+    """
+    import importlib.util as _iu
+
+    spec = _iu.spec_from_file_location(
+        "cdf_isolated", PROJECT_ROOT / "scripts" / "sprint_audit" / "check_doc_figures.py"
+    )
+    assert spec and spec.loader
+    module = _iu.module_from_spec(spec)
+    # Register before exec: dataclasses resolve their module globals through
+    # `sys.modules[__name__]`, and omitting this fails with a bare AttributeError
+    # that looks like a defect in the module under test rather than in the test.
+    sys.modules[spec.name] = module
+    saved = list(sys.path)
+    try:
+        spec.loader.exec_module(module)
+    finally:
+        sys.path[:] = saved
+        sys.modules.pop(spec.name, None)
+
+    assert not any("scripts/sprint_audit" in p for p in sys.path), "path entry should be gone"
+    truths = module.derive_truths()
+    assert truths, "derivation must not depend on the sys.path entry persisting"
+
+
+def test_the_kpi_block_is_computed_once_per_process() -> None:
+    """Six facts read the KPI block; uncached, each re-read a 461 KB DB.
+
+    Measured at five full recomputations per run — roughly 210 ms of a pre-push
+    hook spent producing an identical answer.
+    """
+    assert hasattr(cdf._kpis, "cache_clear"), "_kpis must be cached"
+    cdf._kpis.cache_clear()
+    first = cdf._kpis()
+    assert cdf._kpis() is first, "repeated calls must return the cached object"
+    info = cdf._kpis.cache_info()
+    assert info.hits >= 1 and info.misses == 1
