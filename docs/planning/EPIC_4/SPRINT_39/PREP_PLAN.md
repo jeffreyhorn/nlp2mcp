@@ -43,7 +43,7 @@ This prep plan front-loads the work that would otherwise be discovered mid-sprin
 | # | Task | Priority | Est. Time | Dependencies | Sprint 39 Goal Addressed |
 |---|------|----------|-----------|--------------|--------------------------|
 | 1 | ✅ Create Sprint 39 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 10 priorities |
-| ✅ 2 | Re-Derive the Sprint-38 Baseline & Carryforward Fingerprints | Critical | 3-4 hours | Task 1 | Verify 111/96/135/floor-73 and every banked fingerprint on current `main` |
+| 2 | ✅ Re-Derive the Sprint-38 Baseline & Carryforward Fingerprints | Critical | 3-4 hours | Task 1 | Verify 111/96/135/floor-73 and every banked fingerprint on current `main` |
 | 3 | The Floor-Classification Decision Package (P1) | Critical | 2-3 hours | Tasks 1, 2 | P1 — the Day-0 decision that blocks the sprint's baseline |
 | 4 | dyncge Second-Defect Diagnosis & Layer Trace (P2) | Critical | 5-7 hours | Tasks 1, 2 | P2 — the sprint's only new diagnosis |
 | 5 | lnts Fingerprint Reproduction & Runtime-Probe Design (P3) | Critical | 4-6 hours | Tasks 1, 2 | P3 — an entirely untraced hypothesis |

@@ -130,7 +130,7 @@ Both `data/gamslib/mcp/twocge_mcp.gms` (S38 Day 9, `204f35ac`) and `data/gamslib
 5. Is either change confined to a `_fx_`-only region that a reviewer might reasonably call a methodology artifact?
 
 ### How to Verify
-`git show --numstat <sha> -- <golden>` for both, then read the actual diff hunks. Cross-check each model's pre-fix DB row (`path_solve_terminated`) against its post-fix row to confirm the abort. Compare against the leak-gate byte deltas recorded in the Day-11 and Day-12 docs.
+`git show --numstat 204f35ac -- data/gamslib/mcp/twocge_mcp.gms` and `git show --numstat 82b91c94 -- data/gamslib/mcp/elec_mcp.gms`, then read the actual diff hunks. Cross-check each model's pre-fix DB row (`path_solve_terminated`) against its post-fix row to confirm the abort. Compare against the leak-gate byte deltas recorded in the Day-11 and Day-12 docs.
 
 ### Risk if Wrong
 - **The decision is moot** and Sprint 39 opens on floor 73 with P1 collapsing to a 30-minute write-up — cheap, but the sprint's headline changes.
@@ -156,7 +156,7 @@ Sprint 39 execution team
 | twocge (`204f35ac`) | +10 / −0 | a comment block plus **two `nu_*.fx(...)` guard lines** — *entirely* within the `_fx_` multiplier-fixing region |
 | elec (`82b91c94`) | +3 / −3 | the **stationarity equations themselves** — the always-false `ut(i,i)` guard replaced by `ut(i,j__)`, plus a spurious outer sum removed |
 
-**Evidence:** `git show --numstat 204f35ac -- data/gamslib/mcp/twocge_mcp.gms` → `10 0`; same for elec → `3 3`; hunks read in full. Pre/post DB rows via `git show <sha>^:data/gamslib/gamslib_status.json`.
+**Evidence:** `git show --numstat 204f35ac -- data/gamslib/mcp/twocge_mcp.gms` → `10 0`; same for elec → `3 3`; hunks read in full. Pre/post DB rows via `git show 204f35ac^:data/gamslib/gamslib_status.json` and `git show 204f35ac:data/gamslib/gamslib_status.json` for twocge, and `git show 82b91c94^:data/gamslib/gamslib_status.json` / `git show 82b91c94:data/gamslib/gamslib_status.json` for elec — each read for that model's `mcp_solve.outcome_category` and `solver_version`.
 
 **Decision:** The assumption holds — both cold emits *did* change substantively. **But the floor is now 73, 74 or 75, not 73-or-75.** The 74 reading (elec qualifies, twocge is a `_fx_`-confined methodology artifact) is live and was not considered at Sprint 38 close. **Routed to Task 3, which owns the decision. Task 2 deliberately does not make it.**
 
@@ -518,7 +518,7 @@ Sprint 39 execution team
 1. **PREP_PLAN's Task 6 verification snippet checks the wrong thing** — it greps `referenced-instance|_is_concrete_instance_of|resolve_set_members` in `constraint_jacobian.py`, `index_mapping.py`, `stationarity.py`, none of which hold the four sites. Its comment even claims those files "moved in Sprint 38", which is inverted: `gradient.py`/`complementarity.py` have 0 commits since the anchor while `stationarity.py`/`emit_gams.py` have 2 and 4. Replace with the Day-7 form, `grep -n "enumerate_variable_instances(var_def" src/ad/gradient.py src/kkt/complementarity.py`.
 2. **The four sites may not be where the time goes.** A live capped translate sits in **`enumerate_equation_instances`** (via `constraint_jacobian.py:947/1117/1424`), not in variable-instance enumeration — see Unknown 4.2.
 
-**Evidence:** `grep -n "enumerate_variable_instances(var_def" …`; `git log --oneline 949a4587..HEAD -- <file>`.
+**Evidence:** `grep -n "enumerate_variable_instances(var_def" src/ad/gradient.py src/kkt/complementarity.py` (4 hits, at the recorded lines); `git log --oneline 949a4587..HEAD -- src/ad/gradient.py` and `git log --oneline 949a4587..HEAD -- src/kkt/complementarity.py` (**0** commits each), against `-- src/kkt/stationarity.py` (2) and `-- src/emit/emit_gams.py` (4).
 
 **Decision:** The sites are intact, so Task 6's premise holds. Its *verification command* and its *cost assumption* both need revision.
 
