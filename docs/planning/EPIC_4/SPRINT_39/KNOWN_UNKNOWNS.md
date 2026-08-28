@@ -143,7 +143,22 @@ Both `data/gamslib/mcp/twocge_mcp.gms` (S38 Day 9, `204f35ac`) and `data/gamslib
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — with a distinction the Sprint 38 close did not draw
+
+**Verified by:** Sprint 39 Prep Task 2 · **Date:** 2026-08-27 · **Measured at:** `a8669ad6`
+
+**Findings:** Both cold goldens changed at their landing commits, and both models were `path_solve_terminated` with `solver_version: None` beforehand — aborted before PATH ran — so neither match can be a solver effect. The full-population attribution run independently shows both now produce **their own** `MCP MS-1` rather than reading back the embedded NLP's answer.
+
+**But the two changes are not of the same kind**, which research question 5 asks about directly:
+
+| model | cold diff | what changed |
+|---|---|---|
+| twocge (`204f35ac`) | +10 / −0 | a comment block plus **two `nu_*.fx(...)` guard lines** — *entirely* within the `_fx_` multiplier-fixing region |
+| elec (`82b91c94`) | +3 / −3 | the **stationarity equations themselves** — the always-false `ut(i,i)` guard replaced by `ut(i,j__)`, plus a spurious outer sum removed |
+
+**Evidence:** `git show --numstat 204f35ac -- data/gamslib/mcp/twocge_mcp.gms` → `10 0`; same for elec → `3 3`; hunks read in full. Pre/post DB rows via `git show <sha>^:data/gamslib/gamslib_status.json`.
+
+**Decision:** The assumption holds — both cold emits *did* change substantively. **But the floor is now 73, 74 or 75, not 73-or-75.** The 74 reading (elec qualifies, twocge is a `_fx_`-confined methodology artifact) is live and was not considered at Sprint 38 close. **Routed to Task 3, which owns the decision. Task 2 deliberately does not make it.**
 
 ---
 
@@ -277,7 +292,15 @@ Hand-derive `stat_pf` and `stat_pq` from dyncge's source **before** reading the 
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (contribution — the *locus* question remains Task 4's)
+
+**Verified by:** Sprint 39 Prep Task 2 · **Date:** 2026-08-27 · **Measured at:** `a8669ad6`
+
+**Findings:** `CASE_B` reproduced exactly: max relative **6.22e-02** at `stat_pf(CAP,SRV)`, dual transfer CONSISTENT, and all five top rows in the recorded order (`stat_pf(CAP,SRV)` · `stat_pq(HMN)` · `stat_pf(LAB,SRV)` · `stat_pf(LAB,HMN)` · `stat_pf(CAP,LMN)`). The objective claim also holds: cold MCP **MS-1 @ 381401.119** vs NLP **539570.5027**, relative difference **0.2931** (29.3 %).
+
+**Evidence:** `scripts/diagnostics/kkt_residual.py data/gamslib/raw/dyncge.gms`; DB `solution_comparison` for the objectives.
+
+**Decision:** The fingerprint is sound to build on. Whether the defect *is in* the `pf`/`pq` block or merely *surfaces* there is untouched by this task and remains Task 4's.
 
 ---
 
@@ -443,7 +466,15 @@ Re-emit, `diff` against the golden, run from a **scratch directory**, and read c
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Verified by:** Sprint 39 Prep Task 2 · **Date:** 2026-08-27 · **Measured at:** `a8669ad6`
+
+**Findings:** A fresh emit is **byte-identical** to the committed golden (`diff -q` clean), so the measurement describes the golden. The failure reproduces exactly: `**** MODEL STATUS 4 Infeasible`, `SOLVER STATUS 1 Normal Completion`, **ITERATION COUNT 0**. Both fixed values are present and unchanged — `y_fx_y2_h50.. y("y2","h50") - 5 =E= 0;` and `y_fx_y3_h50.. y("y3","h50") - 45 =E= 0;` (golden lines 144-145).
+
+**Evidence:** fresh emit + `gams` run from `/tmp/s39t2/lnts`; status read from GAMS's own lines, anchored.
+
+**Decision:** lnts is unchanged since it was banked. Task 5 may proceed on the recorded fingerprint.
 
 ---
 # Category 4: sarf #1385 — the Four Untouched Call Sites
@@ -477,7 +508,19 @@ Locate each site by symbol rather than by line number, and diff `stationarity.py
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — and PREP_PLAN's own check for this is wrong
+
+**Verified by:** Sprint 39 Prep Task 2 · **Date:** 2026-08-27 · **Measured at:** `a8669ad6`
+
+**Findings:** All four call sites are at their **exact** recorded line numbers: `src/ad/gradient.py:287`, `src/ad/gradient.py:453`, `src/kkt/complementarity.py:367`, `src/kkt/complementarity.py:512`. Neither file has changed since the Day-7 measurement anchor `949a4587` (**0** commits each).
+
+**⚠ Two corrections, both routed to Task 6:**
+1. **PREP_PLAN's Task 6 verification snippet checks the wrong thing** — it greps `referenced-instance|_is_concrete_instance_of|resolve_set_members` in `constraint_jacobian.py`, `index_mapping.py`, `stationarity.py`, none of which hold the four sites. Its comment even claims those files "moved in Sprint 38", which is inverted: `gradient.py`/`complementarity.py` have 0 commits since the anchor while `stationarity.py`/`emit_gams.py` have 2 and 4. Replace with the Day-7 form, `grep -n "enumerate_variable_instances(var_def" src/ad/gradient.py src/kkt/complementarity.py`.
+2. **The four sites may not be where the time goes.** A live capped translate sits in **`enumerate_equation_instances`** (via `constraint_jacobian.py:947/1117/1424`), not in variable-instance enumeration — see Unknown 4.2.
+
+**Evidence:** `grep -n "enumerate_variable_instances(var_def" …`; `git log --oneline 949a4587..HEAD -- <file>`.
+
+**Decision:** The sites are intact, so Task 6's premise holds. Its *verification command* and its *cost assumption* both need revision.
 
 ---
 
@@ -809,7 +852,17 @@ Count dangling references directly from the DB against the filesystem. Re-run th
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Verified by:** Sprint 39 Prep Task 2 · **Date:** 2026-08-27 · **Measured at:** `a8669ad6`
+
+**Findings:** The dangling population is **14**, unchanged, and `weapons` is among them (13 pre-existing + `weapons`). Spuriousness was re-checked over the **entire** presolve∧match population rather than spot-checked: of **34** models, **33** produced their own `MCP MS-1/MS-2` and exactly **1** — `weapons` — reported only an embedded solve.
+
+**Four distinct populations, all correct, none to be reconciled into another:** 48 presolve rows (all-219) · 40 presolve goldens on disk · 34 presolve∧match (the attribution scope) · 31 presolve∧match∧convex-candidate (the KPI "presolve" line) · 14 of the 48 dangling.
+
+**Evidence:** `scripts/sprint_audit/check_mcp_solve_attribution.py` over all 34; DB scan for the dangling rows.
+
+**Decision:** Assumption holds exactly. P7's "all 14 rows or none" should state **which** population it means — routed to Task 8.
 
 ---
 
@@ -1073,7 +1126,17 @@ Rebuild the catalog from the current DB, join against `docs/issues/` for gate pr
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (contribution)
+
+**Verified by:** Sprint 39 Prep Task 2 · **Date:** 2026-08-27 · **Measured at:** `a8669ad6`
+
+**Findings:** **31** non-solving convex candidates, and the KPI reconciles fully: 142 candidates = 135 translate + **7** that fail to translate (`danwolfe`, `decomp`, `iswnm`, `mexls`, `nebrazil`, `saras`, `sarf` — exactly the 7 with no `mcp_solve` record); of the 135, Solve 111 leaves **24** (7 `model_infeasible` + 6 `path_syntax_error` + 11 `path_solve_license`), and 24 + 7 = 31.
+
+**30 of the 31 have an owning `ISSUE_*.md`. `robot` does not** — it is in the 11-model `license-gated` cohort.
+
+**Evidence:** DB scan joined against `docs/issues/**/ISSUE_*.md`, matched anchored on `^ISSUE_<n>_<model>-` (a substring match misattributes — `cesam` would claim `cesam2`'s docs).
+
+**Decision:** Population confirmed for Task 11's catalog refresh. `robot`'s missing owner is routed there.
 
 ---
 
