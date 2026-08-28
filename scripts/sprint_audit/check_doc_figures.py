@@ -106,7 +106,12 @@ NUM = r"\d+(?:\.\d+)?"
 
 #: ``A → B`` states a movement, so the left figure is historical by
 #: construction. Such lines are skipped — but reported, never silently.
-_MOVEMENT = re.compile(r"→|->")
+#:
+#: **Digits are required on both sides.** A bare ``->`` also appears in HTML
+#: comment terminators (``-->``), Mermaid edges and type hints, and exempting on
+#: that alone silently took ordinary prose out of scope — a false negative in a
+#: tool whose entire job is to not have any.
+_MOVEMENT = re.compile(r"\d\**\s*(?:→|->)\s*\**\d")
 
 
 @dataclass(frozen=True)
@@ -192,7 +197,7 @@ def _research_hours() -> float:
             continue
         for nxt in lines[i + 1 : i + 4]:
             if nxt.strip():
-                m = re.match(r"~?([0-9.]+)", nxt.strip())
+                m = re.match(rf"~?({NUM})", nxt.strip())
                 if m:
                     total += float(m.group(1))
                 break
@@ -222,10 +227,16 @@ def _dangling_presolve_rows() -> int:
         for m in db.get("models", [])
         if (m.get("mcp_solve") or {}).get("outcome_category") == "model_optimal_presolve"
     ]
+    # The DB stores repo-relative paths ("data/gamslib/mcp/..."). Resolving them
+    # against the CWD makes the count depend on where the tool was invoked: from
+    # `src/` this returned 48 — the entire presolve population — instead of 14,
+    # because nothing resolved. A wrong *derived truth* is worse than no check:
+    # every correct citation of 14 would then be reported as contradicting it.
     return sum(
         1
         for m in rows
-        if (f := (m.get("mcp_solve") or {}).get("mcp_file_used")) and not Path(f).exists()
+        if (f := (m.get("mcp_solve") or {}).get("mcp_file_used"))
+        and not (PROJECT_ROOT / f).exists()
     )
 
 
@@ -379,18 +390,29 @@ def changed_doc_lines(base: str) -> dict[Path, list[tuple[int, str]]]:
     out: dict[Path, list[tuple[int, str]]] = {}
     path: Path | None = None
     lineno = 0
+    # `+++ b/…` is a FILE HEADER only before the first hunk. Distinguishing it by
+    # prefix alone also discards body content: an added line holding `++ foo`
+    # arrives as `+++ foo`, and markdown legitimately contains such text. Track
+    # header-vs-body explicitly instead — a content line is never misread, and a
+    # header line is never mistaken for content.
+    in_header = False
     for line in raw.split("\n"):
-        if line.startswith("+++ b/"):
-            candidate = Path(line[6:])
+        if line.startswith("diff --git "):
+            in_header, path, lineno = True, None, 0
+            continue
+        if in_header and line.startswith("+++ "):
+            target = line[4:]
+            candidate = Path(target[2:] if target.startswith("b/") else target)
             path = candidate if candidate.suffix in DOC_SUFFIXES else None
             continue
         if line.startswith("@@"):
+            in_header = False
             m = re.search(r"\+(\d+)", line)
             lineno = int(m.group(1)) if m else 0
             continue
-        if path is None:
+        if path is None or in_header:
             continue
-        if line.startswith("+") and not line.startswith("+++"):
+        if line.startswith("+"):
             out.setdefault(path, []).append((lineno, line[1:]))
             lineno += 1
     return out
@@ -541,7 +563,14 @@ def main() -> int:
 
     findings, scanned, exemptions = check(args.base)
 
-    print(f"Doc-figure check: {scanned} changed doc line(s) scanned against {len(FACTS)} fact(s).")
+    # Report the DERIVABLE count, not the registered one. A fact whose source is
+    # absent is skipped by `derive_truths`, so quoting len(FACTS) claims coverage
+    # the run did not have — the precise overstatement this tool exists to catch.
+    derivable = len(derive_truths())
+    coverage = f"{derivable} fact(s)"
+    if derivable < len(FACTS):
+        coverage += f" ({len(FACTS) - derivable} skipped: source not present)"
+    print(f"Doc-figure check: {scanned} changed doc line(s) scanned against {coverage}.")
     if exemptions:
         print(f"  {len(exemptions)} line(s) exempted as corrective/historical:")
         for path, lineno, reason in exemptions[:10]:

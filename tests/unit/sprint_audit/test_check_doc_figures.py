@@ -329,3 +329,101 @@ def test_every_fact_has_at_least_one_pattern_with_a_value_group() -> None:
         assert fact.patterns, f"{fact.name} has no patterns"
         for pattern in fact.patterns:
             assert "value" in pattern.groupindex, f"{fact.name}: {pattern.pattern}"
+
+
+# ------------------------------------------------- defects found in PR review
+
+
+def test_the_module_never_uses_the_unsafe_number_alternation() -> None:
+    """``[0-9.]+`` must not appear anywhere, including in the derivations.
+
+    The module documents why that alternation is unsafe and then used it inside
+    ``_research_hours`` — deriving the very figure whose corruption motivated
+    the constant. A doc-comment is not a constraint; this is.
+    """
+    src = (PROJECT_ROOT / "scripts" / "sprint_audit" / "check_doc_figures.py").read_text(
+        encoding="utf-8"
+    )
+    offenders = [
+        line.strip()
+        for line in src.split("\n")
+        if "[0-9.]+" in line and not line.lstrip().startswith(("#", "*", '"'))
+    ]
+    assert offenders == [], f"unsafe number pattern in use: {offenders}"
+
+
+def test_dangling_count_does_not_depend_on_the_working_directory(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The DB stores repo-relative paths; resolving them against CWD miscounts.
+
+    Measured before the fix: from ``src/`` this returned **48** — the whole
+    presolve population — instead of 14, because nothing resolved. A wrong
+    derived truth is worse than no check: every correct citation of 14 would
+    then be reported as contradicting it.
+    """
+    from_root = cdf._dangling_presolve_rows()
+    monkeypatch.chdir(PROJECT_ROOT / "src")
+    assert cdf._dangling_presolve_rows() == from_root
+
+
+@pytest.mark.parametrize(
+    ("line", "is_movement"),
+    [
+        ("Solve 108 → 111", True),
+        ("Solve **108** → **111**", True),
+        ("`path_solve_terminated` 4 → 0", True),
+        pytest.param("<!-- see the note -->", False, id="html-comment-terminator"),
+        pytest.param("graph: A --> B", False, id="mermaid-edge"),
+        pytest.param("def f() -> int:", False, id="type-hint"),
+    ],
+)
+def test_movement_requires_digits_on_both_sides(line: str, is_movement: bool) -> None:
+    """A bare ``->`` exempted HTML comments, Mermaid edges and type hints.
+
+    Every such line silently left the scan — a false negative in a tool whose
+    entire job is to not have any.
+    """
+    assert bool(cdf._MOVEMENT.search(line)) is is_movement
+
+
+def test_added_content_beginning_with_plus_is_not_dropped(tmp_path: Path) -> None:
+    """``+++ b/…`` is a header only before the first hunk.
+
+    An added line holding ``++ foo`` arrives in the diff as ``+++ foo``.
+    Excluding it by prefix discarded real markdown content, which is a false
+    negative that no amount of pattern work would recover.
+    """
+    import subprocess
+
+    repo = tmp_path / "r"
+    repo.mkdir()
+    run = lambda *a: subprocess.run(a, cwd=repo, check=True, capture_output=True)  # noqa: E731
+    run("git", "init", "-q")
+    run("git", "config", "user.email", "t@t")
+    run("git", "config", "user.name", "t")
+    doc = repo / "d.md"
+    doc.write_text("base\n", encoding="utf-8")
+    run("git", "add", "d.md")
+    run("git", "commit", "-qm", "base")
+    doc.write_text("base\n++ emphasis with Solve 108\nplain Solve 108\n", encoding="utf-8")
+
+    original = cdf.PROJECT_ROOT
+    try:
+        cdf.PROJECT_ROOT = repo
+        lines = [t for _p, rows in cdf.changed_doc_lines("HEAD").items() for _n, t in rows]
+    finally:
+        cdf.PROJECT_ROOT = original
+    assert "++ emphasis with Solve 108" in lines
+
+
+def test_the_pre_push_hook_anchors_itself_to_the_repo_root() -> None:
+    """The hook derives figures from repo-relative paths, so cwd matters.
+
+    Git does run hooks from the worktree root — measured, not assumed — but a
+    worktree or a manual invocation need not, and the failure mode there is a
+    silently wrong derived truth rather than a crash.
+    """
+    makefile = (PROJECT_ROOT / "Makefile").read_text(encoding="utf-8")
+    recipe = makefile.split("install-hooks:", 1)[1].split("\n\n", 1)[0]
+    assert "rev-parse --show-toplevel" in recipe

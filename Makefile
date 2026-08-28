@@ -100,7 +100,7 @@ endif
 # a hook that gets deleted in annoyance the first time it fires.
 install-hooks:
 	@mkdir -p .git/hooks
-	@printf '#!/bin/sh\n# installed by `make install-hooks`; remove this file to disable\nexec make --no-print-directory check-doc-figures\n' > .git/hooks/pre-push
+	@printf '#!/bin/sh\n# installed by `make install-hooks`; remove this file to disable\n# git runs hooks from the worktree root already (measured), but a worktree or a\n# manual invocation need not, and this check derives figures from repo-relative\n# paths -- so anchor rather than assume.\ncd "$$(git rev-parse --show-toplevel)" || exit 1\nexec make --no-print-directory check-doc-figures\n' > .git/hooks/pre-push
 	@chmod +x .git/hooks/pre-push
 	@echo "installed .git/hooks/pre-push -> make check-doc-figures"
 	@echo "remove with: rm .git/hooks/pre-push"
