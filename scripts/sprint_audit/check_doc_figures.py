@@ -98,6 +98,33 @@ _EXEMPT_MARKERS = (
 #: Inline escape hatch, e.g. ``<!-- figures-ok: quoting Sprint 36's close -->``.
 _INLINE_EXEMPT = re.compile(r"<!--\s*figures-ok\b")
 
+#: Docs whose figures are supposed to be CURRENT. Everything else in ``docs/`` is
+#: an archive: a closed sprint's log saying *"Solve 108"* is correct for that
+#: sprint and must not be flagged when the file is touched for an unrelated edit.
+#:
+#: This matters more than it looks. Scanning every line of every doc — the
+#: worst case if scoping were removed — yields **2,376** findings, dominated by
+#: archived sprint logs and unrelated "N unknowns" prose. Scoping is what keeps
+#: the signal readable, and an unreadable check is a disabled check.
+#:
+#: ⚠ ``SPRINT_39`` is the *current* sprint and must be bumped at each rollover.
+#: `test_live_doc_scope_points_at_a_directory_that_exists` fails loudly when it
+#: goes stale, rather than silently narrowing to nothing.
+LIVE_DOC_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"^CHANGELOG\.md$"),
+    re.compile(r"^docs/planning/EPIC_4/SPRINT_39/"),
+    re.compile(r"^docs/planning/EPIC_4/(PROJECT_PLAN|SUMMARY)\.md$"),
+)
+
+#: The current-sprint directory, asserted by a test so a stale scope fails loudly.
+CURRENT_SPRINT_DIR = PROJECT_ROOT / "docs" / "planning" / "EPIC_4" / "SPRINT_39"
+
+
+def is_live_doc(path: Path) -> bool:
+    """True if ``path``'s figures are expected to be current rather than archival."""
+    posix = path.as_posix()
+    return any(p.search(posix) for p in LIVE_DOC_PATTERNS)
+
 
 #: A cited number. Never ``[0-9.]+``: that alternation matches a bare ``"."``,
 #: which silently captured the dot in ``29.0`` and made the check pass on the
@@ -296,20 +323,32 @@ FACTS: tuple[Fact, ...] = (
         name="leak-gate in-scope goldens",
         derive=_leak_scope,
         source="check_golden_staleness.discover_goldens() minus load_allowlist()",
+        # "in-scope" is used for other populations too ("12 in-scope models",
+        # "<= 8 in-scope" for model_infeasible). Require the golden/leak-gate
+        # context, or this reports on unrelated planning prose.
         patterns=(
-            re.compile(rf"\**(?P<value>{NUM})\**\s+in-scope"),
-            re.compile(rf"scope\s+(?:asserted\s+at\s+)?\**(?P<value>{NUM})\**"),
+            re.compile(rf"\**(?P<value>{NUM})\**\s+in-scope\s+golden"),
+            re.compile(rf"leak[- ]gate[^0-9\n]{{0,30}}\**(?P<value>{NUM})\**\s+in-scope"),
+            re.compile(rf"leak-gate\s+scope[^0-9\n]{{0,20}}\**(?P<value>{NUM})\**"),
         ),
     ),
     Fact(
         name="Sprint 39 unknowns",
         derive=_unknown_count,
         source="count of '## Unknown N.N' in KNOWN_UNKNOWNS.md, outside fences",
+        # The TOTAL only. `KNOWN_UNKNOWNS.md` is full of per-category counts
+        # ("Category 1 …: 3 unknowns") and subset counts ("6 of 30"), and an
+        # unqualified `N unknowns` matched all of them — 203 hits across the
+        # live docs, swamping the real signal.
         patterns=(
-            re.compile(rf"\**(?P<value>{NUM})\**\s+unknowns\b"),
+            re.compile(rf"\**(?P<value>{NUM})\**\s+unknowns\b(?=[^.\n]{{0,40}}(?:categor|across))"),
+            # `| Total unknowns | 22–30 (aim 25+) | **30** |` — the claim is the
+            # LAST cell. A forward scan stops at the target range's "22", which is
+            # then correctly discarded as a range endpoint, so the real figure was
+            # never reached and the row reported clean.
+            re.compile(rf"\|\s*Total\s+unknowns\s*\|[^|\n]*\|\s*\**(?P<value>{NUM})\**\s*\|", re.I),
             re.compile(rf"\bunknowns:\s*\**(?P<value>{NUM})\**"),
         ),
-        # "6 of 30", "24 of the 30" are subset counts, not the total.
         skip_if=(re.compile(r"\bof\s+(?:the\s+)?30\b"),),
     ),
     Fact(
@@ -324,7 +363,16 @@ FACTS: tuple[Fact, ...] = (
             re.compile(rf"research\s+time\b[^0-9\n]{{0,8}}\**(?P<value>{NUM})\**", re.I),
             # The acceptance-table row: `| Research time | 28–36 h | **40.0 h** |`
             # — the claim is the LAST cell, and the target range is not a claim.
-            re.compile(rf"\|\s*\**(?P<value>{NUM})\s*h\**\s*\|", re.I),
+            #
+            # The row LABEL is required. Without it this matched any markdown
+            # cell holding an hours estimate — `| Create … | 1h | … |` in an
+            # unrelated Sprint-16 plan reported "research hours: cited 1". A
+            # check that fires on unrelated edits is a check that gets switched
+            # off, which is the failure this tool was built to avoid.
+            re.compile(
+                rf"\|\s*Research\s+time\s*\|[^|\n]*\|\s*\**(?P<value>{NUM})\s*h\**\s*\|",
+                re.I,
+            ),
         ),
     ),
     Fact(
@@ -350,7 +398,12 @@ FACTS: tuple[Fact, ...] = (
         name="Task-2 figures reproduced",
         derive=_reconfirmation_reproduced,
         source="count of ✅ rows in BASELINE_RECONFIRMATION.md's verdict table",
-        patterns=(re.compile(rf"\**(?P<value>{NUM})\**\s+of\s+(?:the\s+)?14\b"),),
+        # "N of 14" alone matches any ratio out of fourteen — `+4 of 14 new`,
+        # `9 of 14 categories`. Tie it to the claim: a `reproduc…` must follow
+        # within the same sentence.
+        patterns=(
+            re.compile(rf"\**(?P<value>{NUM})\**\s+of\s+(?:the\s+)?14\b(?=[^.\n]{{0,60}}reproduc)"),
+        ),
     ),
 )
 
@@ -511,23 +564,35 @@ def derive_truths() -> dict[str, float | int]:
     return truths
 
 
-def check(base: str) -> tuple[list[Finding], int, list[tuple[Path, int, str]]]:
-    """Return ``(findings, lines_scanned, exemptions)``."""
+def check(
+    base: str,
+) -> tuple[list[Finding], int, list[tuple[Path, int, str]], dict[str, float | int], int]:
+    """Return ``(findings, lines_scanned, exemptions, truths, archived_lines)``.
+
+    The derived truths are returned rather than recomputed by the caller: every
+    derivation re-reads the DB and re-runs the KPI computation, and a second
+    pass could report a coverage figure the scan never used if a derivation ever
+    became time-dependent.
+    """
     changed = changed_doc_lines(base)
     truths = derive_truths()
 
     findings: list[Finding] = []
     exemptions: list[tuple[Path, int, str]] = []
     scanned = 0
+    archived = 0
 
     for path, lines in sorted(changed.items()):
+        if not is_live_doc(path):
+            archived += len(lines)
+            continue
         for lineno, text in lines:
             scanned += 1
             line_findings, reason = scan_line(path, lineno, text, truths)
             if reason:
                 exemptions.append((path, lineno, reason))
             findings.extend(line_findings)
-    return findings, scanned, exemptions
+    return findings, scanned, exemptions, truths, archived
 
 
 def main() -> int:
@@ -561,16 +626,19 @@ def main() -> int:
             print(f"  {fact.name:34} = {value}\n      {fact.source}")
         return 0
 
-    findings, scanned, exemptions = check(args.base)
+    findings, scanned, exemptions, truths, archived = check(args.base)
 
     # Report the DERIVABLE count, not the registered one. A fact whose source is
     # absent is skipped by `derive_truths`, so quoting len(FACTS) claims coverage
     # the run did not have — the precise overstatement this tool exists to catch.
-    derivable = len(derive_truths())
+    # Taken from the scan's own truths, so the number reported is the number used.
+    derivable = len(truths)
     coverage = f"{derivable} fact(s)"
     if derivable < len(FACTS):
         coverage += f" ({len(FACTS) - derivable} skipped: source not present)"
     print(f"Doc-figure check: {scanned} changed doc line(s) scanned against {coverage}.")
+    if archived:
+        print(f"  {archived} line(s) in archived docs not scanned (figures there are historical).")
     if exemptions:
         print(f"  {len(exemptions)} line(s) exempted as corrective/historical:")
         for path, lineno, reason in exemptions[:10]:

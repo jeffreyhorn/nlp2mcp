@@ -427,3 +427,92 @@ def test_the_pre_push_hook_anchors_itself_to_the_repo_root() -> None:
     makefile = (PROJECT_ROOT / "Makefile").read_text(encoding="utf-8")
     recipe = makefile.split("install-hooks:", 1)[1].split("\n\n", 1)[0]
     assert "rev-parse --show-toplevel" in recipe
+
+
+# ------------------------------- false-positive pressure (PR #1711, round 2)
+
+
+@pytest.mark.parametrize(
+    ("line", "why"),
+    [
+        pytest.param(
+            "| Create `src/nlp2mcp/reporting/` structure | 1h | Module skeleton |",
+            "an unrelated hours cell in a Sprint-16 plan",
+            id="hours-cell-without-the-label",
+        ),
+        pytest.param(
+            "- Translate: 21 (+4 of 14 new, 29%)", "a ratio out of fourteen", id="n-of-14-ratio"
+        ),
+        pytest.param("covered 9 of 14 categories", "another ratio", id="n-of-14-categories"),
+        pytest.param(
+            "Category 1 (Floor Classification): 3 unknowns",
+            "a per-category count, not the total",
+            id="per-category-unknowns",
+        ),
+        pytest.param(
+            "- 12 in-scope models: bearing, chain, cpack",
+            "'in-scope' is used for other populations",
+            id="in-scope-non-golden",
+        ),
+    ],
+)
+def test_unrelated_prose_does_not_fire(line: str, why: str) -> None:
+    """False positives are what get a check disabled.
+
+    Each of these fired before: an hours cell in an unrelated Sprint-16 plan was
+    read as a Sprint-39 research-hours citation, `+4 of 14` as the Task-2 verdict
+    count, and every per-category "N unknowns" as the total.
+    """
+    findings, _ = _scan(line)
+    assert findings == [], f"false positive on {why}: {[f.fact for f in findings]}"
+
+
+@pytest.mark.parametrize(
+    ("line", "fact"),
+    [
+        ("| Research time | 28–36 h | **29.0 h** |", "Sprint 39 research hours"),
+        ("| Total unknowns | 22–30 (aim 25+) | **31** |", "Sprint 39 unknowns"),
+    ],
+)
+def test_an_acceptance_row_is_read_from_its_last_cell(line: str, fact: str) -> None:
+    """`| label | target range | claim |` — the claim is the LAST cell.
+
+    A forward scan stops at the target range's first number, which is then
+    correctly discarded as a range endpoint — so the real figure was never
+    reached and the row reported clean.
+    """
+    assert fact in _facts(line)
+
+
+def test_archived_docs_are_out_of_scope() -> None:
+    """A closed sprint's log saying "Solve 108" is correct for that sprint.
+
+    Unscoped, a whole-corpus scan yields 2,376 findings — dominated by archived
+    logs. An unreadable check is a disabled check.
+    """
+    assert cdf.is_live_doc(Path("CHANGELOG.md"))
+    assert cdf.is_live_doc(Path("docs/planning/EPIC_4/SPRINT_39/PREP_PLAN.md"))
+    assert not cdf.is_live_doc(Path("docs/planning/EPIC_3/SPRINT_16/PLAN.md"))
+    assert not cdf.is_live_doc(Path("docs/planning/EPIC_4/SPRINT_38/SPRINT_LOG.md"))
+
+
+def test_live_doc_scope_points_at_a_directory_that_exists() -> None:
+    """The current-sprint scope must fail loudly at rollover, not narrow silently.
+
+    If ``SPRINT_39`` is not bumped when Sprint 40 opens, every figure in the new
+    sprint's docs falls out of scope and the check reports PASS forever.
+    """
+    assert cdf.CURRENT_SPRINT_DIR.is_dir(), (
+        f"{cdf.CURRENT_SPRINT_DIR} does not exist — bump LIVE_DOC_PATTERNS "
+        "and CURRENT_SPRINT_DIR to the current sprint"
+    )
+
+
+def test_check_returns_its_truths_so_reporting_cannot_diverge() -> None:
+    """`main` must not re-derive for the coverage line.
+
+    Deriving twice doubles the DB reads and lets the reported coverage describe
+    a different derivation from the one the scan used.
+    """
+    findings, scanned, exemptions, truths, archived = cdf.check("HEAD")
+    assert isinstance(truths, dict) and truths, "check() must return the truths it used"
