@@ -516,16 +516,77 @@ def test_archived_docs_are_out_of_scope() -> None:
     assert not cdf.is_live_doc(Path("docs/planning/EPIC_4/SPRINT_38/SPRINT_LOG.md"))
 
 
-def test_live_doc_scope_points_at_a_directory_that_exists() -> None:
-    """The current-sprint scope must fail loudly at rollover, not narrow silently.
+def test_the_current_sprint_is_the_highest_numbered_one_on_disk() -> None:
+    """The scope is derived, so rollover cannot leave it pointing at a closed sprint.
 
-    If ``SPRINT_39`` is not bumped when Sprint 40 opens, every figure in the new
-    sprint's docs falls out of scope and the check reports PASS forever.
+    The previous guard asserted only that ``CURRENT_SPRINT_DIR.is_dir()`` — which
+    could never fail, because closed sprints are never deleted: all of
+    ``SPRINT_18``…``SPRINT_39`` are still present. Leaving the constant at any
+    past sprint satisfied it forever while every new-sprint doc silently fell out
+    of scope and the check reported PASS. A vacuous guard, inside the tool whose
+    subject is checks that silently narrow.
     """
-    assert cdf.CURRENT_SPRINT_DIR.is_dir(), (
-        f"{cdf.CURRENT_SPRINT_DIR} does not exist — bump LIVE_DOC_PATTERNS "
-        "and CURRENT_SPRINT_DIR to the current sprint"
+    import re as _re
+
+    root = PROJECT_ROOT / "docs" / "planning" / "EPIC_4"
+    numbered = sorted(
+        int(m.group(1))
+        for p in root.iterdir()
+        if p.is_dir() and (m := _re.fullmatch(r"SPRINT_(\d+)", p.name))
     )
+    assert numbered, "no SPRINT_<n> directories found — the scope would be empty"
+    assert cdf.current_sprint_dir() == root / f"SPRINT_{numbered[-1]}"
+
+
+def test_rollover_needs_no_code_edit(tmp_path: Path) -> None:
+    """Creating the next sprint's directory moves the scope by itself.
+
+    This is the property the old guard was trying and failing to protect: a
+    human must not have to remember to bump a constant, because the failure of
+    remembering is silent.
+    """
+    root = tmp_path / "EPIC_4"
+    (root / "SPRINT_38").mkdir(parents=True)
+    (root / "SPRINT_39").mkdir()
+    assert cdf.current_sprint_dir(root) == root / "SPRINT_39"
+
+    (root / "SPRINT_40").mkdir()
+    assert (
+        cdf.current_sprint_dir(root) == root / "SPRINT_40"
+    ), "scope must follow the new sprint with no code change"
+
+
+def test_sprint_numbers_are_compared_numerically_not_lexically() -> None:
+    """``SPRINT_9`` must not outrank ``SPRINT_40``.
+
+    A string sort puts "SPRINT_9" after "SPRINT_40", which would pin the scope
+    to a long-closed sprint the moment the numbering passed 9 — and, being a
+    narrowing, would report PASS while doing it.
+    """
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        for n in (9, 38, 40):
+            (root / f"SPRINT_{n}").mkdir()
+        assert cdf.current_sprint_dir(root) == root / "SPRINT_40"
+
+
+def test_a_tree_with_no_sprint_directories_yields_no_sprint_scope(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Absent is absent — not "everything is live", and not a crash.
+
+    ``sprint_dir=None`` means *resolve at call time*, so the absence has to be
+    injected at the root. (Passing ``None`` explicitly reads like "no sprint" and
+    is not — a wart this test found by asserting the wrong thing first.)
+    """
+    assert cdf.current_sprint_dir(tmp_path) is None
+
+    monkeypatch.setattr(cdf, "SPRINT_ROOT", tmp_path)
+    assert not cdf.is_live_doc(Path("docs/planning/EPIC_4/SPRINT_39/x.md"))
+    # the static entries stay live regardless — they are not sprint-scoped
+    assert cdf.is_live_doc(Path("CHANGELOG.md"))
 
 
 def test_check_returns_its_truths_so_reporting_cannot_diverge() -> None:

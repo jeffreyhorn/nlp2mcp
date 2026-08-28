@@ -107,23 +107,67 @@ _INLINE_EXEMPT = re.compile(r"<!--\s*figures-ok\b")
 #: archived sprint logs and unrelated "N unknowns" prose. Scoping is what keeps
 #: the signal readable, and an unreadable check is a disabled check.
 #:
-#: ⚠ ``SPRINT_39`` is the *current* sprint and must be bumped at each rollover.
-#: `test_live_doc_scope_points_at_a_directory_that_exists` fails loudly when it
-#: goes stale, rather than silently narrowing to nothing.
-LIVE_DOC_PATTERNS: tuple[re.Pattern[str], ...] = (
+#: The sprint directories live under here.
+SPRINT_ROOT = PROJECT_ROOT / "docs" / "planning" / "EPIC_4"
+
+
+def current_sprint_dir(root: Path | None = None) -> Path | None:
+    """The highest-numbered ``SPRINT_<n>`` directory, or ``None`` if there are none.
+
+    **Derived, not declared.** This was a hardcoded ``SPRINT_39`` guarded by a
+    test asserting the directory existed — a guard that could never fire, because
+    closed sprints are never deleted: all 22 of ``SPRINT_18``…``SPRINT_39`` are
+    still present. Leaving the constant at any past sprint satisfied
+    ``.is_dir()`` forever while every new-sprint doc silently fell out of scope
+    and the check reported PASS.
+
+    That is the precise failure this tool exists to prevent — a check that
+    silently narrows — sitting inside the guard written to prevent it. So the
+    sprint is now read from the tree, and the only thing left to assert is that
+    the derivation agrees with what is on disk.
+    """
+    root = SPRINT_ROOT if root is None else root
+    if not root.is_dir():
+        return None
+    numbered = [
+        (int(m.group(1)), p)
+        for p in root.iterdir()
+        if p.is_dir() and (m := re.fullmatch(r"SPRINT_(\d+)", p.name))
+    ]
+    return max(numbered)[1] if numbered else None
+
+
+#: Docs whose figures are supposed to be CURRENT. Everything else in ``docs/`` is
+#: an archive: a closed sprint's log saying *"Solve 108"* is correct for that
+#: sprint and must not be flagged when the file is touched for an unrelated edit.
+#:
+#: This matters more than it looks. Scanning every line of every doc — the
+#: worst case if scoping were removed — yields **2,376** findings, dominated by
+#: archived sprint logs and unrelated "N unknowns" prose. Scoping is what keeps
+#: the signal readable, and an unreadable check is a disabled check.
+_STATIC_LIVE_DOC_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"^CHANGELOG\.md$"),
-    re.compile(r"^docs/planning/EPIC_4/SPRINT_39/"),
     re.compile(r"^docs/planning/EPIC_4/(PROJECT_PLAN|SUMMARY)\.md$"),
 )
 
-#: The current-sprint directory, asserted by a test so a stale scope fails loudly.
-CURRENT_SPRINT_DIR = PROJECT_ROOT / "docs" / "planning" / "EPIC_4" / "SPRINT_39"
 
+def is_live_doc(path: Path, sprint_dir: Path | None = None) -> bool:
+    """True if ``path``'s figures are expected to be current rather than archival.
 
-def is_live_doc(path: Path) -> bool:
-    """True if ``path``'s figures are expected to be current rather than archival."""
+    The current sprint is resolved at call time, so a rollover needs no edit
+    here and cannot leave the scope pointing at a closed sprint.
+    """
     posix = path.as_posix()
-    return any(p.search(posix) for p in LIVE_DOC_PATTERNS)
+    if any(p.search(posix) for p in _STATIC_LIVE_DOC_PATTERNS):
+        return True
+    sprint = current_sprint_dir() if sprint_dir is None else sprint_dir
+    if sprint is None:
+        return False
+    try:
+        rel = sprint.relative_to(PROJECT_ROOT).as_posix()
+    except ValueError:
+        rel = sprint.as_posix()
+    return posix.startswith(f"{rel}/")
 
 
 #: A cited number. Never ``[0-9.]+``: that alternation matches a bare ``"."``,
