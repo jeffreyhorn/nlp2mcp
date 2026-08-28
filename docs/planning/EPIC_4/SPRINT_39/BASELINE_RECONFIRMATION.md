@@ -26,7 +26,12 @@
 | 13 | sarf killed at **28 m 40 s** vs the ≤300 s gate | 🔶 **CLAIM REPRODUCED, FIGURE NOT REPRODUCIBLE** (§3.2) | capped translate, 1900 s |
 | 14 | leak-gate **186** in-scope, **7** allowlisted, all clean; `--min-scope` on discovery | ✅ **REPRODUCED** | `check_golden_staleness.py` |
 
-**No baseline figure was found to be wrong.** Every headline KPI and every banked fingerprint reproduced. One banked figure (sarf's 28 m 40 s) turns out **not to be a reproducible quantity at all** — §3.2. The corrections below are to the *prep plan's own verification machinery*, to *population definitions*, and to one *cost-attribution assumption*, not to the baseline.
+**No baseline figure was found to be wrong.** Two things are being distinguished here, and the distinction matters:
+
+- **Every banked *claim* reproduced** — all 14, without exception. Nothing the sprint plan asserts about the corpus turned out to be false.
+- **13 of the 14 *numbers* also reproduced.** The fourteenth, sarf's "28 m 40 s", is **not a reproducible quantity at all** (§3.2): it is a kill time, so re-running returns whatever cap you set. Its claim — *sarf does not terminate; the ≤300 s gate is not met* — reproduced and then some.
+
+So this document reports **14 claims reproduced, 13 numbers reproduced, 0 figures wrong.** The corrections below are to the *prep plan's own verification machinery*, to *population definitions*, and to one *cost-attribution assumption* — not to the baseline.
 
 ---
 

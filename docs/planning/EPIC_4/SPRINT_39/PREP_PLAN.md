@@ -308,7 +308,16 @@ print('dangling mcp_file_used:', len(dang), sorted(dang))"
 
 # The reconfirmation doc exists and records a verdict per figure
 test -f docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md && \
-  grep -cE "reproduced|corrected|NOT reproducible" docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md
+  # Count VERDICT CELLS, not free words. The prose form under-counts (a
+  # case-sensitive "reproduced|corrected|NOT reproducible" returns 3 against 14
+  # verdicts, because every verdict token is uppercase) and -i over-counts
+  # (18 — it matches narrative prose too). What the criterion actually asserts
+  # is "one verdict per figure", so count rows and verdicts and compare.
+  R=docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md
+  rows=$(grep -cE '^\| *[0-9]+ *\|' "$R")
+  verdicts=$(grep -cE '^\| *[0-9]+ *\|.*\| *(✅|🔶|❌) ' "$R")
+  echo "figures=$rows verdicts=$verdicts  $([ "$rows" = "$verdicts" ] && echo OK || echo MISMATCH)"
+  grep -oE '\| *(✅|🔶|❌) \*\*[A-Z, ]+\*\*' "$R" | sed 's/^| *//' | sort | uniq -c
 ```
 
 ### Deliverables
