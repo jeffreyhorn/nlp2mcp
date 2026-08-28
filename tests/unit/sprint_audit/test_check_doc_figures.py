@@ -739,3 +739,75 @@ def test_the_kpi_block_is_computed_once_per_process() -> None:
     assert cdf._kpis() is first, "repeated calls must return the cached object"
     info = cdf._kpis.cache_info()
     assert info.hits >= 1 and info.misses == 1
+
+
+def test_importing_the_module_leaks_nothing_onto_sys_path() -> None:
+    """Not just the entry this module adds — the ones its imports add too.
+
+    Importing the siblings runs *their* path mutations as well:
+    `check_golden_staleness` and its transitive imports contribute three further
+    entries. Removing only the one added here left those behind, still changing
+    import resolution for the rest of the process — the leak this was meant to
+    close, minus one entry.
+    """
+    import importlib.util as _iu
+
+    spec = _iu.spec_from_file_location(
+        "cdf_leakcheck", PROJECT_ROOT / "scripts" / "sprint_audit" / "check_doc_figures.py"
+    )
+    assert spec and spec.loader
+    module = _iu.module_from_spec(spec)
+    sys.modules[spec.name] = module
+
+    # The siblings must be evicted first. Left in `sys.modules` they are simply
+    # rebound on import, their `sys.path.insert` never re-runs, and the probe
+    # reports "no leak" whatever the module does — which is what the first
+    # version of this test did: it passed against a deliberately reverted fix.
+    evicted = {
+        name: sys.modules.pop(name)
+        for name in ("check_golden_staleness", "floor_tracker", "kpi_block")
+        if name in sys.modules
+    }
+    before = list(sys.path)
+    try:
+        spec.loader.exec_module(module)
+        after = list(sys.path)
+    finally:
+        sys.modules.pop(spec.name, None)
+        sys.modules.update(evicted)
+        sys.path[:] = before
+
+    # Exact list, not set membership. The sibling inserts PROJECT_ROOT, which is
+    # ALREADY on sys.path under pytest — so a membership test sees nothing new
+    # and reports clean while duplicates accumulate. That is the second way this
+    # test was decorative; both were found by reverting the fix and watching it
+    # pass.
+    assert after == before, (
+        "import mutated sys.path; "
+        f"added {[p for p in after if p not in before] or '(duplicates only)'}, "
+        f"length {len(before)} -> {len(after)}"
+    )
+
+
+def test_a_duplicate_sprint_number_is_refused_rather_than_resolved(tmp_path: Path) -> None:
+    """`SPRINT_39` and `SPRINT_039` both parse to 39, and both can exist.
+
+    ``max()`` over ``(int, Path)`` tuples does resolve such a tie — Paths *are*
+    orderable, so it does not raise — but it resolves *arbitrarily*, by lexical
+    order, and would scope the whole check to whichever directory happened to
+    sort higher. Silently choosing is the failure this tool exists to prevent,
+    so it is refused with a message naming the claimants.
+    """
+    (tmp_path / "SPRINT_38").mkdir()
+    (tmp_path / "SPRINT_39").mkdir()
+    (tmp_path / "SPRINT_039").mkdir()
+    with pytest.raises(ValueError, match=r"ambiguous current sprint"):
+        cdf.current_sprint_dir(tmp_path)
+
+
+def test_selection_is_keyed_on_the_number_alone(tmp_path: Path) -> None:
+    """The winner must not depend on Path ordering when numbers differ."""
+    (tmp_path / "SPRINT_9").mkdir()
+    (tmp_path / "SPRINT_40").mkdir()
+    (tmp_path / "SPRINT_100").mkdir()
+    assert cdf.current_sprint_dir(tmp_path) == tmp_path / "SPRINT_100"

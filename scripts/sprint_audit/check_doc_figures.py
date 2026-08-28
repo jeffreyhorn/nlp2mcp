@@ -71,11 +71,24 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 # as a dynamic-import test should, got `ModuleNotFoundError: kpi_block` the
 # moment a fact derived. Importing here puts them in `sys.modules`, after which
 # the path entry is no longer needed by anything.
+# `sys.path` is restored WHOLESALE, not just stripped of the entry added here.
+# Importing the siblings also runs THEIR path mutations — `check_golden_staleness`
+# and its transitive imports contribute three more entries — and leaving any of
+# them behind changes import resolution for the rest of the process. That matters
+# when this module is imported programmatically rather than run as a script,
+# which is exactly how its own tests load it.
+#
+# Safe because every one of these imports is eager: once they return, the modules
+# are in `sys.modules` and nothing downstream resolves through the path again.
+# (Checked: no in-function `src.`/`scripts.` imports in the chain.)
+_SAVED_SYS_PATH = list(sys.path)
 sys.path.insert(0, str(PROJECT_ROOT / "scripts" / "sprint_audit"))
-
-from check_golden_staleness import discover_goldens, load_allowlist  # noqa: E402
-from floor_tracker import compute_floor  # noqa: E402
-from kpi_block import compute_kpis  # noqa: E402
+try:
+    from check_golden_staleness import discover_goldens, load_allowlist  # noqa: E402
+    from floor_tracker import compute_floor  # noqa: E402
+    from kpi_block import compute_kpis  # noqa: E402
+finally:
+    sys.path[:] = _SAVED_SYS_PATH
 
 DB_PATH = PROJECT_ROOT / "data" / "gamslib" / "gamslib_status.json"
 PROVENANCE_PATH = PROJECT_ROOT / "data" / "floor_provenance.json"
@@ -147,7 +160,26 @@ def current_sprint_dir(root: Path | None = None) -> Path | None:
         for p in root.iterdir()
         if p.is_dir() and (m := re.fullmatch(r"SPRINT_(\d+)", p.name))
     ]
-    return max(numbered)[1] if numbered else None
+    if not numbered:
+        return None
+
+    # Keyed on the NUMBER alone. `max()` over the raw tuples falls through to
+    # comparing Paths on a tie, which resolves — Paths are orderable — but
+    # resolves *arbitrarily*, by lexical order.
+    #
+    # And a tie is reachable without any filesystem exotica: `SPRINT_39` and
+    # `SPRINT_039` are distinct directories that both parse to 39. Two
+    # directories claiming one sprint is genuinely ambiguous, and picking one
+    # silently is the failure this tool exists to prevent — so it is refused.
+    top = max(n for n, _p in numbered)
+    claimants = sorted(p.name for n, p in numbered if n == top)
+    if len(claimants) > 1:
+        raise ValueError(
+            f"ambiguous current sprint: {', '.join(claimants)} all parse to {top} "
+            f"under {root}. Remove or rename the duplicates — silently choosing "
+            "one would scope the doc-figure check to an arbitrary directory."
+        )
+    return next(p for n, p in numbered if n == top)
 
 
 #: Docs whose figures are supposed to be CURRENT. Everything else in ``docs/`` is
