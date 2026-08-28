@@ -423,22 +423,62 @@ def _is_range_endpoint(text: str, start: int, end: int) -> bool:
 # --------------------------------------------------------------------- diffing
 
 
-def changed_doc_lines(base: str) -> dict[Path, list[tuple[int, str]]]:
-    """Added/modified doc lines in ``base..worktree``, as ``{path: [(lineno, text)]}``.
+def _merge_base(base: str) -> str:
+    """The fork point of ``base`` and ``HEAD``, or ``base`` if there is none.
 
-    Parsed from unified diff hunk headers rather than by re-reading files, so a
-    line is in scope only if this change actually touched it.
+    Diffing straight against ``base`` answers *"how does the worktree differ from
+    base"*, which is **not** the question. Once ``base`` advances, a line that
+    another branch rewrote shows up as *added here* simply because this branch
+    still has the older text — so a stale figure someone else introduced is
+    attributed to this change.
+
+    Demonstrated, not assumed. With ``main`` ahead by one unrelated commit::
+
+        git diff main            ->  +ours untouched          # never touched here
+                                     +feature adds: Solve 999
+        git diff <merge-base>    ->  +feature adds: Solve 999
+
+    The merge base is used against the **worktree** rather than ``base...HEAD``
+    because the three-dot form drops uncommitted work, and running the check
+    before committing is the main way it gets used.
     """
     try:
+        return subprocess.run(
+            ["git", "merge-base", base, "HEAD"],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+    except subprocess.CalledProcessError:
+        # No common ancestor (an unrelated history, or a bare SHA). Fall back to
+        # `base` and say so: a silent fallback would quietly restore the very
+        # over-scoping this function exists to avoid.
+        print(
+            f"  note: no merge base for {base!r} and HEAD — diffing against {base!r} directly.",
+            file=sys.stderr,
+        )
+        return base
+
+
+def changed_doc_lines(base: str) -> dict[Path, list[tuple[int, str]]]:
+    """Added/modified doc lines this branch introduced, as ``{path: [(lineno, text)]}``.
+
+    Parsed from unified diff hunk headers rather than by re-reading files, so a
+    line is in scope only if this change actually touched it. Measured from the
+    merge base rather than from ``base`` — see :func:`_merge_base`.
+    """
+    fork = _merge_base(base)
+    try:
         raw = subprocess.run(
-            ["git", "diff", "--unified=0", "--no-color", base, "--"],
+            ["git", "diff", "--unified=0", "--no-color", fork, "--"],
             cwd=PROJECT_ROOT,
             capture_output=True,
             text=True,
             check=True,
         ).stdout
     except subprocess.CalledProcessError as exc:
-        raise SystemExit(f"ERROR: `git diff {base}` failed: {exc.stderr.strip()}") from exc
+        raise SystemExit(f"ERROR: `git diff {fork}` failed: {exc.stderr.strip()}") from exc
 
     out: dict[Path, list[tuple[int, str]]] = {}
     path: Path | None = None

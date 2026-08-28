@@ -516,3 +516,82 @@ def test_check_returns_its_truths_so_reporting_cannot_diverge() -> None:
     """
     findings, scanned, exemptions, truths, archived = cdf.check("HEAD")
     assert isinstance(truths, dict) and truths, "check() must return the truths it used"
+
+
+def test_scope_is_measured_from_the_merge_base_not_the_base_tip(tmp_path: Path) -> None:
+    """A branch being *behind* base must not pull other people's lines into scope.
+
+    Diffing straight against ``base`` answers "how does the worktree differ from
+    base", which is the wrong question. Once base advances, a line another branch
+    rewrote appears as *added here* — because this branch still holds the older
+    text — so a stale figure someone else introduced gets attributed to this
+    change.
+
+    Measured on a real repo rather than argued: with ``main`` one unrelated
+    commit ahead, the two-dot diff reports ``+ours untouched`` (never touched on
+    this branch) alongside the genuine change; the merge-base diff reports only
+    the genuine one.
+    """
+    import subprocess
+
+    repo = tmp_path / "r"
+    repo.mkdir()
+    run = lambda *a: subprocess.run(a, cwd=repo, check=True, capture_output=True)  # noqa: E731
+    run("git", "init", "-q", "-b", "main")
+    run("git", "config", "user.email", "t@t")
+    run("git", "config", "user.name", "t")
+    doc = repo / "d.md"
+
+    doc.write_text("shared\nours untouched\n", encoding="utf-8")
+    run("git", "add", "d.md")
+    run("git", "commit", "-qm", "base")
+
+    run("git", "checkout", "-q", "-b", "feature")
+    doc.write_text("shared\nours untouched\nfeature adds: Solve 999\n", encoding="utf-8")
+    run("git", "commit", "-qam", "feature")
+
+    run("git", "checkout", "-q", "main")
+    doc.write_text("shared\nmain rewrote this: Solve 108\n", encoding="utf-8")
+    run("git", "commit", "-qam", "main advances")
+    run("git", "checkout", "-q", "feature")
+
+    original = cdf.PROJECT_ROOT
+    try:
+        cdf.PROJECT_ROOT = repo
+        lines = [t for _p, rows in cdf.changed_doc_lines("main").items() for _n, t in rows]
+    finally:
+        cdf.PROJECT_ROOT = original
+
+    assert lines == ["feature adds: Solve 999"], (
+        "only this branch's own change belongs in scope; got " f"{lines}"
+    )
+
+
+def test_uncommitted_work_stays_in_scope(tmp_path: Path) -> None:
+    """``base...HEAD`` would drop it, and checking before committing is the point."""
+    import subprocess
+
+    repo = tmp_path / "r"
+    repo.mkdir()
+    run = lambda *a: subprocess.run(a, cwd=repo, check=True, capture_output=True)  # noqa: E731
+    run("git", "init", "-q", "-b", "main")
+    run("git", "config", "user.email", "t@t")
+    run("git", "config", "user.name", "t")
+    doc = repo / "d.md"
+    doc.write_text("shared\n", encoding="utf-8")
+    run("git", "add", "d.md")
+    run("git", "commit", "-qm", "base")
+    run("git", "checkout", "-q", "-b", "feature")
+    doc.write_text("shared\ncommitted: Solve 999\n", encoding="utf-8")
+    run("git", "commit", "-qam", "feature")
+    doc.write_text("shared\ncommitted: Solve 999\nuncommitted: Solve 777\n", encoding="utf-8")
+
+    original = cdf.PROJECT_ROOT
+    try:
+        cdf.PROJECT_ROOT = repo
+        lines = [t for _p, rows in cdf.changed_doc_lines("main").items() for _n, t in rows]
+    finally:
+        cdf.PROJECT_ROOT = original
+
+    assert "uncommitted: Solve 777" in lines
+    assert "committed: Solve 999" in lines
