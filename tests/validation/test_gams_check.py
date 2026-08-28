@@ -16,21 +16,6 @@ from src.validation.gams_check import (
 )
 
 
-@pytest.fixture(autouse=True)
-def cleanup_gams_files():
-    """Clean up GAMS output files after each test."""
-    yield
-    # Clean up .lst and .log files in tests/golden directory
-    golden_dir = Path("tests/golden")
-    if golden_dir.exists():
-        for pattern in ["*.lst", "*.log"]:
-            for file in golden_dir.glob(pattern):
-                try:
-                    file.unlink()
-                except OSError:
-                    pass  # Ignore errors if file doesn't exist or can't be deleted
-
-
 @pytest.mark.validation
 class TestGAMSExecutableDetection:
     """Test GAMS executable detection."""
@@ -49,12 +34,21 @@ class TestGAMSValidation:
     All tests now pass after fixing GitHub issue #47 (Indexed Stationarity Equations).
     """
 
-    def test_validate_simple_nlp_golden(self):
-        """Test GAMS validation of simple_nlp_mcp.gms."""
+    def test_validate_simple_nlp_golden(self, tmp_path):
+        """Test GAMS validation of simple_nlp_mcp.gms.
+
+        Validated on a COPY. `validate_gams_syntax` runs GAMS with
+        ``cwd=<file>.parent`` and reads ``<stem>.lst`` back from there, so
+        pointing it at `tests/golden/` makes every xdist worker write and read
+        build artifacts in one shared directory.
+        """
         golden_file = Path("tests/golden/simple_nlp_mcp.gms")
         assert golden_file.exists(), f"Golden file not found: {golden_file}"
 
-        error = validate_gams_syntax_or_skip(str(golden_file))
+        test_file = tmp_path / golden_file.name
+        shutil.copy(golden_file, test_file)
+
+        error = validate_gams_syntax_or_skip(str(test_file))
         if error:
             pytest.fail(f"GAMS validation failed: {error}")
 

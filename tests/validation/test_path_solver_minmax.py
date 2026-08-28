@@ -5,6 +5,7 @@ solved successfully with the PATH solver.
 """
 
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -154,7 +155,7 @@ class TestPathSolverMinMax:
         "(see docs/issues/minmax-reformulation-spurious-variables.md)",
         strict=True,
     )
-    def test_solve_min_max_test_mcp(self):
+    def test_solve_min_max_test_mcp(self, tmp_path):
         """Test PATH solver on min_max_test_mcp.gms.
 
         Model: Minimize z where z = min(x, y)
@@ -171,8 +172,14 @@ class TestPathSolverMinMax:
         gams_exe = find_gams_executable()
         assert gams_exe is not None, "GAMS executable not found"
 
+        # Solve a COPY: `_solve_gams` runs GAMS with `cwd=<file>.parent` and
+        # reads `<stem>.lst` back, so solving in `tests/golden/` puts every
+        # xdist worker's artifacts in one shared directory.
+        test_file = tmp_path / golden_file.name
+        shutil.copy(golden_file, test_file)
+
         # Solve the MCP
-        success, message, solution = _solve_gams(golden_file, gams_exe)
+        success, message, solution = _solve_gams(test_file, gams_exe)
         assert success, f"PATH solve failed: {message}"
 
         # Verify we got a solution

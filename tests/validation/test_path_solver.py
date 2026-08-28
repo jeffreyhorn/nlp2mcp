@@ -330,21 +330,6 @@ def _check_kkt_residuals(lst_content: str, tolerance: float = 1e-6) -> tuple[boo
 # ============================================
 
 
-@pytest.fixture(autouse=True)
-def cleanup_gams_files():
-    """Clean up GAMS output files after each test."""
-    yield
-    # Clean up .lst, .log, and other GAMS files in tests/golden directory
-    golden_dir = Path("tests/golden")
-    if golden_dir.exists():
-        for pattern in ["*.lst", "*.log", "*.put", "*.lxi"]:
-            for file in golden_dir.glob(pattern):
-                try:
-                    file.unlink()
-                except OSError:
-                    pass  # Ignore errors if file doesn't exist or can't be deleted
-
-
 # ============================================
 # PATH Solver Validation Tests
 # ============================================
