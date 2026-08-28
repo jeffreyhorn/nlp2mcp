@@ -98,12 +98,18 @@ endif
 # Opt-in: run the doc-figure check on every `git push`. Deliberately NOT
 # installed by `make install` — a hook that appears without being asked for is
 # a hook that gets deleted in annoyance the first time it fires.
+# `.git` is a FILE in a linked worktree, so `mkdir -p .git/hooks` fails outright
+# there ("Not a directory") — and `core.hooksPath`, if set, means `.git/hooks` is
+# not where git looks anyway, so a hook installed there would silently never run.
+# `git rev-parse --git-path hooks` resolves all three cases: plain repo,
+# worktree, and core.hooksPath. Verified against each.
 install-hooks:
-	@mkdir -p .git/hooks
-	@printf '#!/bin/sh\n# installed by `make install-hooks`; remove this file to disable\n# git runs hooks from the worktree root already (measured), but a worktree or a\n# manual invocation need not, and this check derives figures from repo-relative\n# paths -- so anchor rather than assume.\ncd "$$(git rev-parse --show-toplevel)" || exit 1\nexec make --no-print-directory check-doc-figures\n' > .git/hooks/pre-push
-	@chmod +x .git/hooks/pre-push
-	@echo "installed .git/hooks/pre-push -> make check-doc-figures"
-	@echo "remove with: rm .git/hooks/pre-push"
+	@hooks="$$(git rev-parse --git-path hooks)"; \
+	mkdir -p "$$hooks"; \
+	printf '#!/bin/sh\n# installed by `make install-hooks`; remove this file to disable\n# git runs hooks from the worktree root already (measured), but a worktree or a\n# manual invocation need not, and this check derives figures from repo-relative\n# paths -- so anchor rather than assume.\ncd "$$(git rev-parse --show-toplevel)" || exit 1\nexec make --no-print-directory check-doc-figures\n' > "$$hooks/pre-push"; \
+	chmod +x "$$hooks/pre-push"; \
+	echo "installed $$hooks/pre-push -> make check-doc-figures"; \
+	echo "remove with: rm $$hooks/pre-push"
 
 # Full-corpus LEAK GATE (Sprint 37 Prep Task 3) — the required Phase-0 check for
 # any change to a shared emit function (_add_indexed_jacobian_terms /

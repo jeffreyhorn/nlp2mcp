@@ -417,6 +417,11 @@ def test_added_content_beginning_with_plus_is_not_dropped(tmp_path: Path) -> Non
     assert "++ emphasis with Solve 108" in lines
 
 
+def _install_hooks_recipe() -> str:
+    makefile = (PROJECT_ROOT / "Makefile").read_text(encoding="utf-8")
+    return makefile.split("install-hooks:", 1)[1].split("\n\n", 1)[0]
+
+
 def test_the_pre_push_hook_anchors_itself_to_the_repo_root() -> None:
     """The hook derives figures from repo-relative paths, so cwd matters.
 
@@ -424,9 +429,24 @@ def test_the_pre_push_hook_anchors_itself_to_the_repo_root() -> None:
     worktree or a manual invocation need not, and the failure mode there is a
     silently wrong derived truth rather than a crash.
     """
-    makefile = (PROJECT_ROOT / "Makefile").read_text(encoding="utf-8")
-    recipe = makefile.split("install-hooks:", 1)[1].split("\n\n", 1)[0]
-    assert "rev-parse --show-toplevel" in recipe
+    assert "rev-parse --show-toplevel" in _install_hooks_recipe()
+
+
+def test_the_hook_is_installed_via_gits_resolved_hooks_directory() -> None:
+    """``.git/hooks`` is wrong in two common setups, both measured.
+
+    * In a **linked worktree** ``.git`` is a *file*, so ``mkdir -p .git/hooks``
+      fails outright with "Not a directory" and the target errors out — while
+      the hook text it installs talks about worktrees.
+    * With **core.hooksPath** set, ``.git/hooks`` is not where git looks, so a
+      hook installed there silently never runs.
+
+    ``git rev-parse --git-path hooks`` resolves all three cases (plain repo,
+    worktree, core.hooksPath); verified against each.
+    """
+    recipe = _install_hooks_recipe()
+    assert "--git-path hooks" in recipe
+    assert ".git/hooks" not in recipe, "hardcoding .git/hooks breaks worktrees and core.hooksPath"
 
 
 # ------------------------------- false-positive pressure (PR #1711, round 2)
