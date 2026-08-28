@@ -43,7 +43,7 @@ This prep plan front-loads the work that would otherwise be discovered mid-sprin
 | # | Task | Priority | Est. Time | Dependencies | Sprint 39 Goal Addressed |
 |---|------|----------|-----------|--------------|--------------------------|
 | 1 | ✅ Create Sprint 39 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 10 priorities |
-| 2 | Re-Derive the Sprint-38 Baseline & Carryforward Fingerprints | Critical | 3-4 hours | Task 1 | Verify 111/96/135/floor-73 and every banked fingerprint on current `main` |
+| 2 | ✅ Re-Derive the Sprint-38 Baseline & Carryforward Fingerprints | Critical | 3-4 hours | Task 1 | Verify 111/96/135/floor-73 and every banked fingerprint on current `main` |
 | 3 | The Floor-Classification Decision Package (P1) | Critical | 2-3 hours | Tasks 1, 2 | P1 — the Day-0 decision that blocks the sprint's baseline |
 | 4 | dyncge Second-Defect Diagnosis & Layer Trace (P2) | Critical | 5-7 hours | Tasks 1, 2 | P2 — the sprint's only new diagnosis |
 | 5 | lnts Fingerprint Reproduction & Runtime-Probe Design (P3) | Critical | 4-6 hours | Tasks 1, 2 | P3 — an entirely untraced hypothesis |
@@ -188,9 +188,10 @@ grep -E -A3 "unknown .*prep task|Mapping" docs/planning/EPIC_4/SPRINT_39/KNOWN_U
 
 ## Task 2: Re-Derive the Sprint-38 Baseline & Carryforward Fingerprints
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-27)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
+**Time Spent:** 3.5 hours
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
@@ -247,11 +248,24 @@ Sprint 39 quotes a lot: `CASE_B` at 6.22e-02, sarf at 28 m 40 s, 14 presolve row
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md` — 14 figures, each with a verdict, the command that produced it, and the commit it was measured at
+- `KNOWN_UNKNOWNS.md` — Unknowns **1.1, 2.2, 3.3, 4.1, 7.1, 10.1** moved from 🔍 INCOMPLETE to ✅ VERIFIED, each with Verified by / Date / Measured at / Findings / Evidence / Decision
+- `CHANGELOG.md` — Sprint 39 Prep entry
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — no baseline figure is wrong.** All 14 figures re-derived at `a8669ad6`: 12 reproduced outright, 1 reproduced with a caveat (agreste's source runs two solves; the banked figure is the second), and 1 — sarf's "28 m 40 s" — turns out **not to be a reproducible quantity**: it is a kill time, not a property of the model. The claim it stands for (*sarf does not terminate; the ≤300 s gate is not met*) reproduces and then some — a capped run reached **1900 s** (~6.3× the gate) still enumerating, with no output file.
+
+**Four corrections, each routed:**
+
+| # | correction | routed to |
+|---|---|---|
+| 1 | PREP_PLAN's own Task 6 check greps the wrong files/symbols for the four sarf call sites; its "these files moved" rationale is inverted | **Task 6** |
+| 2 | Five distinct presolve populations (48 / 40 / 34 / 31 / 14 dangling), all correct — P7 must name which it means | **Task 8** |
+| 3 | sarf's hot path at the cap is `enumerate_equation_instances`, not the four `enumerate_variable_instances` sites — Unknown 4.2 is genuinely open | **Task 6** |
+| 4 | `robot` is the one non-solving candidate with no owning issue doc | **Task 11** |
+
+**The finding that matters most is for Task 3.** twocge's and elec's cold emits both changed, but **not in the same way**: twocge's entire cold delta is a comment block plus two `nu_*.fx` guard lines, while elec's changed the stationarity equations themselves. Unknown 1.1 asks exactly this. **The floor is 73, 74 or 75** — the 74 reading was not considered at Sprint 38 close. Task 2 deliberately does not decide it.
 
 ### Verification
 
@@ -294,7 +308,16 @@ print('dangling mcp_file_used:', len(dang), sorted(dang))"
 
 # The reconfirmation doc exists and records a verdict per figure
 test -f docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md && \
-  grep -cE "reproduced|corrected|NOT reproducible" docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md
+  # Count VERDICT CELLS, not free words. The prose form under-counts (a
+  # case-sensitive "reproduced|corrected|NOT reproducible" returns 3 against 14
+  # verdicts, because every verdict token is uppercase) and -i over-counts
+  # (18 — it matches narrative prose too). What the criterion actually asserts
+  # is "one verdict per figure", so count rows and verdicts and compare.
+  R=docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md
+  rows=$(grep -cE '^\| *[0-9]+ *\|' "$R")
+  verdicts=$(grep -cE '^\| *[0-9]+ *\|.*\| *(✅|🔶|❌) ' "$R")
+  echo "figures=$rows verdicts=$verdicts  $([ "$rows" = "$verdicts" ] && echo OK || echo MISMATCH)"
+  grep -oE '\| *(✅|🔶|❌) \*\*[A-Z, ]+\*\*' "$R" | sed 's/^| *//' | sort | uniq -c
 ```
 
 ### Deliverables
@@ -306,13 +329,13 @@ test -f docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md && \
 
 ### Acceptance Criteria
 
-- [ ] Every headline KPI re-derived at execution time and matching, or the discrepancy recorded
-- [ ] Genuine floor read from `floor_provenance.json`, never a mechanical DB count
-- [ ] `path_solve_terminated` confirmed still **0**
-- [ ] Every quoted fingerprint re-reproduced or explicitly marked NOT reproducible
-- [ ] Leak-gate scope asserted at **186** with 7 allowlisted
-- [ ] Every correction routed to a named downstream task
-- [ ] All GAMS runs performed from a scratch directory; zero repo-root artifacts afterwards
+- [x] Every headline KPI re-derived at execution time and matching, or the discrepancy recorded
+- [x] Genuine floor read from `floor_provenance.json`, never a mechanical DB count
+- [x] `path_solve_terminated` confirmed still **0**
+- [x] Every quoted fingerprint re-reproduced or explicitly marked NOT reproducible
+- [x] Leak-gate scope asserted at **186** with 7 allowlisted
+- [x] Every correction routed to a named downstream task
+- [x] All GAMS runs performed from a scratch directory; zero repo-root artifacts afterwards
   - Assert it, do not eyeball it — `scripts/diagnostics/kkt_residual.py` is an intentional `cwd=PROJECT_ROOT` exception (above), so the repo root is genuinely in play:
     ```bash
     git status --porcelain -z | tr '\0' '\n' | sort > /tmp/before.txt
@@ -320,7 +343,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md && \
     git status --porcelain -z | tr '\0' '\n' | sort > /tmp/after.txt
     comm -13 /tmp/before.txt /tmp/after.txt   # MUST be empty
     ```
-- [ ] Unknowns 1.1, 2.2, 3.3, 4.1, 7.1, 10.1 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Unknowns 1.1, 2.2, 3.3, 4.1, 7.1, 10.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
