@@ -44,7 +44,7 @@ This prep plan front-loads the work that would otherwise be discovered mid-sprin
 |---|------|----------|-----------|--------------|--------------------------|
 | 1 | ✅ Create Sprint 39 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 10 priorities |
 | 2 | ✅ Re-Derive the Sprint-38 Baseline & Carryforward Fingerprints | Critical | 3-4 hours | Task 1 | Verify 111/96/135/floor-73 and every banked fingerprint on current `main` |
-| 3 | The Floor-Classification Decision Package (P1) | Critical | 2-3 hours | Tasks 1, 2 | P1 — the Day-0 decision that blocks the sprint's baseline |
+| 3 | ✅ The Floor-Classification Decision Package (P1) | Critical | 2-3 hours | Tasks 1, 2 | P1 — the Day-0 decision that blocks the sprint's baseline |
 | 4 | dyncge Second-Defect Diagnosis & Layer Trace (P2) | Critical | 5-7 hours | Tasks 1, 2 | P2 — the sprint's only new diagnosis |
 | 5 | lnts Fingerprint Reproduction & Runtime-Probe Design (P3) | Critical | 4-6 hours | Tasks 1, 2 | P3 — an entirely untraced hypothesis |
 | 6 | sarf's Four Call Sites — Cost Attribution & Atomicity Plan (P4) | Critical | 5-7 hours | Tasks 1, 2 | P4 — the only KPI mover (+1 Translate) |
@@ -349,9 +349,10 @@ test -f docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md && \
 
 ## Task 3: The Floor-Classification Decision Package (P1)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-29)
 **Priority:** Critical
 **Estimated Time:** 2-3 hours
+**Time Spent:** 2.5 hours
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team (decision: repository owner)
 **Dependencies:** Tasks 1, 2
@@ -392,11 +393,24 @@ Both were **aborting before the fix**, so neither match is a solver effect. `pol
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_39/FLOOR_DECISION_BRIEF.md` — evidence, both counter-arguments, all three answers' consequences, the exact edit each implies
+- **NEW** `docs/planning/EPIC_4/SPRINT_39/floor_provenance_entries.draft.json` — ready-to-apply entries, validated against the live `_entry_schema` and against `compute_floor` (74 with one, 75 with both)
+- `KNOWN_UNKNOWNS.md` — **1.1 ✅ VERIFIED**, **1.2 ✅ VERIFIED**, **1.3 ❌ WRONG**
+- `CHANGELOG.md` — Sprint 39 Prep entry
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — and the decision's shape changed during preparation.** The plan frames this as "73 or 75". Two measurements move it:
+
+**1. The counter-argument the plan proposed for 73 is refuted.** It rests on the "still genuine via warm-start" clause having been written for a **non-convex** shape that twocge might not fit. But `polygon` — the only in-corpus member of the "polygon/ps2" precedent, and the one the definition names — is **`likely_convex`**, exactly like twocge and elec. The `non_convex` members are `ps2_*`/`ps3_*`, the three **out-of-corpus** models the 2026-08-18 re-baseline removed. Convexity cannot separate twocge from the precedent.
+
+**2. A distinction the plan did not anticipate makes 74 live.** The two cold changes differ in kind: elec's rewrote the **stationarity equations** (a wrong derivative made right); twocge's entire delta is **two `nu_*.fx` multiplier-fixing lines** for MCP-excluded instances. One may call that bookkeeping rather than a correctness fix — though those lines are load-bearing, since twocge aborted without them.
+
+**Measured, not inferred.** Both cold emits now *solve* (`MS-1`) but converge on a different KKT point — twocge **55.508** vs NLP 56.7778, elec **244.624** vs 243.8128 — which is why the pipeline retries with the warm start. `polygon` does not solve cold at all (MS-5). All three match only via presolve: the clause's exact situation.
+
+**No third model.** Five cold goldens changed in S38; only twocge and elec match today. **`tricp` is a conditional future candidate** — abort removed, blocked only by capacity — so any answer is *"of the models testable today"*. Two structural limits recorded: `polygon` has **no provenance entry** (the named precedent is not auditable), and a pre-S38 misclassification is not addressable by design.
+
+**Not decided here**, deliberately — see the brief's §7.
 
 ### Verification
 
@@ -443,14 +457,14 @@ test -f docs/planning/EPIC_4/SPRINT_39/FLOOR_DECISION_BRIEF.md && \
 
 ### Acceptance Criteria
 
-- [ ] Both cold-emit changes re-verified **from git**, not from prose
-- [ ] The sweep for additional qualifying models is complete and its result stated
-- [ ] The counter-argument for 73 is stated fairly, including twocge's convexity and cold-solve behaviour
-- [ ] Draft provenance entries written with `limb`, `since_sprint`, `evidence`, `pr`
-- [ ] Downstream reports needing re-baselining are enumerated
-- [ ] Sprint 39's acceptance criteria are restated under each answer
-- [ ] The brief names the single question the owner must answer
-- [ ] Unknowns 1.1, 1.2, 1.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Both cold-emit changes re-verified **from git**, not from prose
+- [x] The sweep for additional qualifying models is complete and its result stated
+- [x] The counter-argument for 73 is stated fairly, including twocge's convexity and cold-solve behaviour
+- [x] Draft provenance entries written with `limb`, `since_sprint`, `evidence`, `pr`
+- [x] Downstream reports needing re-baselining are enumerated
+- [x] Sprint 39's acceptance criteria are restated under each answer
+- [x] The brief names the single question the owner must answer
+- [x] Unknowns 1.1, 1.2, 1.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

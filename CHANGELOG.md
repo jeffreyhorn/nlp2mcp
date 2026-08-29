@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 39 Prep
 
+- **Prep Task 3 COMPLETE (2026-08-29) — the floor-classification decision package.** New docs: `SPRINT_39/FLOOR_DECISION_BRIEF.md` and `SPRINT_39/floor_provenance_entries.draft.json`. **The decision is NOT taken** — the package assembles the evidence so an owner can take it on Day 0. Docs only — no `*.py` changed, so the quality gate does not apply.
+
+- **⚠ The decision's shape changed: it is 73, 74 or 75, not "73 or 75".** The plan and the carryforwards anticipate two answers; two measurements add a third.
+
+- **The counter-argument the plan proposed for 73 is refuted.** It rests on the *"still genuine via warm-start"* clause having been written for a **non-convex** shape that `twocge` might not fit. But **`polygon`** — the only in-corpus member of the "polygon/ps2" precedent, and the model the definition actually names — is **`likely_convex`**, exactly like `twocge` and `elec`. The `non_convex` members are `ps2_f_s`/`ps2_s`/`ps3_s_gic`, the three **out-of-corpus** models the 2026-08-18 re-baseline *removed* (76 → 73). Written "polygon/ps2" the precedent reads as one non-convex family; it is not, and convexity cannot separate `twocge` from it.
+
+- **A distinction the plan did not anticipate makes 74 live.** The two cold changes differ in kind: `elec`'s rewrote the **stationarity equations** (an always-false `ut(i,i)` guard replaced, a spurious outer sum removed — a wrong derivative made right), while `twocge`'s entire delta is **two `nu_*.fx` multiplier-fixing lines** for MCP-excluded instances. That can be argued as bookkeeping rather than a correctness fix — against which, those lines are load-bearing: `twocge` aborted without them.
+
+- **Cold behaviour measured, not inferred.** Both cold emits now *solve* (`MODEL STATUS 1`) but converge on a **different KKT point** — `twocge` **55.508** vs NLP **56.7778**, `elec` **244.624** vs **243.8128** — which is why `_cold_objective_mismatches_nlp` fires and the pipeline retries with the presolve warm start. `polygon` does not solve cold at all (**MS-5**). All three match only via presolve: precisely the clause's situation.
+
+- **No third qualifying model.** Five cold goldens changed between the baseline anchor `8cffec29` and S38-close `9ab2c0c3`; only `twocge` and `elec` match today (`dyncge` mismatches, `ferts` was untestable throughout). **⚠ `tricp` is a conditional future candidate** — its cold emit changed and the abort is gone; it is blocked only by **capacity** (387 → 1,255 rows). If the #1462 licence ask succeeds and it matches, it qualifies on identical terms, so any answer is *"of the models testable today"*.
+
+- **Two structural limits recorded rather than worked around:** `polygon` has **no provenance entry** (`entries` is `[]`; the baseline is one opaque count), so the precedent the definition names **cannot be audited** — "polygon set the precedent" is an argument from prose. And a pre-S38 misclassification is **not addressable**: the file's README states the floor "cannot be RECONSTRUCTED" (three derivations give 65/93/76) and that the baseline "is never re-litigated". Because no third instance was found, the decision keeps its "append N entries" shape rather than escalating to "re-derive the classification".
+
+- **Draft provenance entries are ready to apply**, validated against the live `_entry_schema` (keys match exactly) and against `floor_tracker.compute_floor` — **74** with the `elec` entry alone, **75** with both. `expected_floor` must move in the same change or the tracker exits non-zero, which is the behaviour it was built for.
+
+- **Unknowns 1.1 ✅ VERIFIED · 1.2 ✅ VERIFIED · 1.3 ❌ WRONG** — **9 of 30 resolved** (Task 2's six plus these three; 8 VERIFIED + 1 WRONG), 21 remain.
+
 - **Prep Task 2 COMPLETE (2026-08-27) — Sprint-38 baseline re-derived at `a8669ad6`; no baseline figure is wrong.** New doc: `docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md`, 14 figures each with a verdict, the command that produced it, and the commit it was measured at. Docs only — no `*.py` changed, so the quality gate does not apply.
 
 - **All 14 banked *claims* reproduced; 13 of the 14 *numbers* did too** (12 outright, 1 — agreste's NLP objective — with a caveat, since its source runs two solves and the banked figure is the second). Reproduced outright: the full KPI block (Solve **111** · Match **96** = 65+31 · Translate **135** · mi **7** · pse **6** · all-219 **99**), genuine floor **73** from the provenance file, `path_solve_terminated` **0**, dyncge's `CASE_B` at **6.22e-02**, lnts MS-4 at iteration 0 from a byte-identical emit, agreste/mine at **9,734**/**10,662** iterations, and the leak gate clean at **186** in-scope / **7** allowlisted.
