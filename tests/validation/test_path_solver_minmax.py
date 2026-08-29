@@ -5,6 +5,7 @@ solved successfully with the PATH solver.
 """
 
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -154,7 +155,7 @@ class TestPathSolverMinMax:
         "(see docs/issues/minmax-reformulation-spurious-variables.md)",
         strict=True,
     )
-    def test_solve_min_max_test_mcp(self):
+    def test_solve_min_max_test_mcp(self, tmp_path):
         """Test PATH solver on min_max_test_mcp.gms.
 
         Model: Minimize z where z = min(x, y)
@@ -171,8 +172,14 @@ class TestPathSolverMinMax:
         gams_exe = find_gams_executable()
         assert gams_exe is not None, "GAMS executable not found"
 
+        # Solve a COPY: `_solve_gams` runs GAMS with `cwd=<file>.parent` and
+        # reads `<stem>.lst` back, so solving in `tests/golden/` puts every
+        # xdist worker's artifacts in one shared directory.
+        test_file = tmp_path / golden_file.name
+        shutil.copy(golden_file, test_file)
+
         # Solve the MCP
-        success, message, solution = _solve_gams(golden_file, gams_exe)
+        success, message, solution = _solve_gams(test_file, gams_exe)
         assert success, f"PATH solve failed: {message}"
 
         # Verify we got a solution
@@ -193,8 +200,14 @@ class TestPathSolverMinMax:
             # y should be at its lower bound
             assert abs(solution["y"] - 2.0) < tol, f"Expected y=2, got y={solution['y']}"
 
-        # Check KKT conditions
-        lst_file = golden_file.parent / (golden_file.stem + ".lst")
+        # Check KKT conditions — read the listing beside the COPY that was
+        # solved. Reading it from `golden_file.parent` was the same partial
+        # isolation this change exists to remove: it is unreachable today
+        # (the test xfails at the PATH-solve assertion above), but the moment
+        # the min/max bug is fixed and the xfail lifted, it would either raise
+        # FileNotFoundError or read a stale `.lst` some other worker left in the
+        # shared directory — reintroducing the race.
+        lst_file = test_file.with_suffix(".lst")
         lst_content = lst_file.read_text()
         kkt_ok, kkt_msg = _check_kkt_residuals(lst_content)
         assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"
