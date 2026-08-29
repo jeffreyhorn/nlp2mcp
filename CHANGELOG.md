@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 39 Prep
 
-- **Prep Task 3 COMPLETE (2026-08-29) — the floor-classification decision package.** New docs: `SPRINT_39/FLOOR_DECISION_BRIEF.md` and `SPRINT_39/floor_provenance_entries.draft.json`. **The decision is NOT taken** — the package assembles the evidence so an owner can take it on Day 0. Docs only — no `*.py` changed, so the quality gate does not apply.
+- **Prep Task 3 COMPLETE (2026-08-29) — the floor-classification decision package.** New docs: `docs/planning/EPIC_4/SPRINT_39/FLOOR_DECISION_BRIEF.md` and `docs/planning/EPIC_4/SPRINT_39/floor_provenance_entries.draft.json`. **The decision is NOT taken** — the package assembles the evidence so an owner can take it on Day 0. Docs only — no `*.py` changed, so the quality gate does not apply.
 
 - **⚠ The decision's shape changed: it is 73, 74 or 75, not "73 or 75".** The plan and the carryforwards anticipate two answers; two measurements add a third.
 
@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Draft provenance entries are ready to apply**, validated against the live `_entry_schema` (keys match exactly) and against `floor_tracker.compute_floor` — **74** with the `elec` entry alone, **75** with both. `expected_floor` must move in the same change or the tracker exits non-zero, which is the behaviour it was built for.
 
-- **Unknowns 1.1 ✅ VERIFIED · 1.2 ✅ VERIFIED · 1.3 ❌ WRONG** — **9 of 30 resolved** (Task 2's six plus these three; 8 VERIFIED + 1 WRONG), 21 remain.
+- **Unknowns 1.1 ✅ VERIFIED · 1.2 ✅ VERIFIED · 1.3 ❌ WRONG** — **8 of 30 resolved** (7 VERIFIED + 1 WRONG), 22 remain. Task 2 verified six; Task 3 adds 1.2 and 1.3, and **confirms** 1.1 rather than re-recording it.
 
 - **Prep Task 2 COMPLETE (2026-08-27) — Sprint-38 baseline re-derived at `a8669ad6`; no baseline figure is wrong.** New doc: `docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md`, 14 figures each with a verdict, the command that produced it, and the commit it was measured at. Docs only — no `*.py` changed, so the quality gate does not apply.
 

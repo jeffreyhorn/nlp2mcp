@@ -360,7 +360,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/BASELINE_RECONFIRMATION.md && \
 
 ### Objective
 
-Assemble a one-page package an owner can decide from on Day 0: is the genuine floor **73** or **75**? Include the evidence, the counter-argument, the downstream consequences of each answer, and the exact edit each implies.
+Assemble a one-page package an owner can decide from on Day 0: is the genuine floor **73**, **74**, or **75**? *(Scoped as "73 or 75" when written. Task 3's own measurements added **74**: the counter-argument this task was asked to state for 73 is refuted — `polygon`, the precedent, is `likely_convex` like twocge and elec — while the two cold changes turn out to differ in kind, which 74 turns on.)* Include the evidence, the counter-argument, the downstream consequences of each answer, and the exact edit each implies.
 
 ### Why This Matters
 
