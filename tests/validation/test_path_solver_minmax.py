@@ -200,8 +200,14 @@ class TestPathSolverMinMax:
             # y should be at its lower bound
             assert abs(solution["y"] - 2.0) < tol, f"Expected y=2, got y={solution['y']}"
 
-        # Check KKT conditions
-        lst_file = golden_file.parent / (golden_file.stem + ".lst")
+        # Check KKT conditions — read the listing beside the COPY that was
+        # solved. Reading it from `golden_file.parent` was the same partial
+        # isolation this change exists to remove: it is unreachable today
+        # (the test xfails at the PATH-solve assertion above), but the moment
+        # the min/max bug is fixed and the xfail lifted, it would either raise
+        # FileNotFoundError or read a stale `.lst` some other worker left in the
+        # shared directory — reintroducing the race.
+        lst_file = test_file.with_suffix(".lst")
         lst_content = lst_file.read_text()
         kkt_ok, kkt_msg = _check_kkt_residuals(lst_content)
         assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"

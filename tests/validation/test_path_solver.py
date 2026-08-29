@@ -326,11 +326,6 @@ def _check_kkt_residuals(lst_content: str, tolerance: float = 1e-6) -> tuple[boo
 
 
 # ============================================
-# Cleanup Fixture
-# ============================================
-
-
-# ============================================
 # PATH Solver Validation Tests
 # ============================================
 
