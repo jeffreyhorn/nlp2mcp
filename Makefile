@@ -76,6 +76,41 @@ regen-goldens:
 check-goldens:
 	$(PYTHON) scripts/sprint_audit/check_golden_staleness.py
 
+# Doc-figure check — flags a figure cited in a CHANGED doc line that contradicts
+# the source it was derived from (the DB, the provenance file, a verdict table,
+# a set of headings).
+#
+# Only changed lines are in scope, deliberately: CHANGELOG.md is full of figures
+# that were correct when written. Touching a line is what makes its figures
+# current, so touching a line is what puts them in scope.
+#
+#   make check-doc-figures                   # vs origin/main
+#   make check-doc-figures BASE=main
+#   make check-doc-figures FACTS=1           # print the registry and its truths
+.PHONY: check-doc-figures install-hooks
+check-doc-figures:
+ifdef FACTS
+	$(PYTHON) scripts/sprint_audit/check_doc_figures.py --list-facts
+else
+	$(PYTHON) scripts/sprint_audit/check_doc_figures.py --base $(or $(BASE),origin/main)
+endif
+
+# Opt-in: run the doc-figure check on every `git push`. Deliberately NOT
+# installed by `make install` — a hook that appears without being asked for is
+# a hook that gets deleted in annoyance the first time it fires.
+# `.git` is a FILE in a linked worktree, so `mkdir -p .git/hooks` fails outright
+# there ("Not a directory") — and `core.hooksPath`, if set, means `.git/hooks` is
+# not where git looks anyway, so a hook installed there would silently never run.
+# `git rev-parse --git-path hooks` resolves all three cases: plain repo,
+# worktree, and core.hooksPath. Verified against each.
+install-hooks:
+	@hooks="$$(git rev-parse --git-path hooks)"; \
+	mkdir -p "$$hooks"; \
+	printf '#!/bin/sh\n# installed by `make install-hooks`; remove this file to disable\n# git runs hooks from the worktree root already (measured), but a worktree or a\n# manual invocation need not, and this check derives figures from repo-relative\n# paths -- so anchor rather than assume.\ncd "$$(git rev-parse --show-toplevel)" || exit 1\nexec make --no-print-directory check-doc-figures\n' > "$$hooks/pre-push"; \
+	chmod +x "$$hooks/pre-push"; \
+	echo "installed $$hooks/pre-push -> make check-doc-figures"; \
+	echo "remove with: rm $$hooks/pre-push"
+
 # Full-corpus LEAK GATE (Sprint 37 Prep Task 3) — the required Phase-0 check for
 # any change to a shared emit function (_add_indexed_jacobian_terms /
 # _compute_index_offset_key). Asserts that EXACTLY the intended model(s) drift:
