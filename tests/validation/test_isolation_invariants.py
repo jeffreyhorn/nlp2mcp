@@ -40,8 +40,12 @@ _SHARED_ROOTS = (
     r"Path\(\s*[\"']tests/golden[\"']\s*\)\s*/",
 )
 
+#: The extension must carry its dot. Without it the alternation matches any
+#: word ENDING in one of the suffixes — `golden_dir / "catalog"` matched on the
+#: "log" of "catalog" — so an ordinary future filename would trip the guard and
+#: teach people to delete it.
 _ARTIFACT_PATH = re.compile(
-    r"(?:" + "|".join(_SHARED_ROOTS) + r")[^\n]{0,80}?(?:" + "|".join(_ARTIFACT_SUFFIXES) + r")\b"
+    r"(?:" + "|".join(_SHARED_ROOTS) + r")[^\n]{0,80}?\.(?:" + "|".join(_ARTIFACT_SUFFIXES) + r")\b"
 )
 
 
@@ -100,3 +104,22 @@ def test_the_guard_can_actually_see_the_defect_it_guards_against() -> None:
 
     fixed = '        lst_file = test_file.with_suffix(".lst")'
     assert not _ARTIFACT_PATH.search(fixed), "the guard flags the corrected form"
+
+
+@pytest.mark.validation
+@pytest.mark.parametrize(
+    "line",
+    [
+        pytest.param('data = golden_dir / "catalog"', id="catalog-ends-in-log"),
+        pytest.param('p = golden_dir / "dialog_notes"', id="dialog"),
+        pytest.param('x = golden_dir / "putative_case"', id="putative"),
+        pytest.param('f = golden_file.parent / "gdxdump_readme"', id="gdx-prefix"),
+    ],
+)
+def test_the_guard_does_not_fire_on_ordinary_filenames(line: str) -> None:
+    """An extension is a dot plus a suffix, not a suffix anywhere in a word.
+
+    Without the dot the alternation matched the "log" of "catalog". A guard that
+    fires on unrelated filenames is a guard that gets deleted.
+    """
+    assert not _ARTIFACT_PATH.search(line)

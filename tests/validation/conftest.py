@@ -35,21 +35,36 @@ def _artifacts() -> list[Path]:
     return sorted(p for pattern in _ARTIFACT_PATTERNS for p in GOLDEN_DIR.glob(pattern))
 
 
+def _fail(when: str, found: list[Path]) -> None:
+    names = ", ".join(p.name for p in found)
+    pytest.fail(
+        f"GAMS artifacts present in {GOLDEN_DIR} {when}: {names}. "
+        "Copy the golden file to `tmp_path` and run GAMS on the copy — running "
+        "in the shared directory races with other xdist workers. If these are "
+        "leftovers from an older run, delete them; nothing should write here."
+    )
+
+
 @pytest.fixture(scope="session", autouse=True)
 def golden_dir_stays_clean() -> None:
-    """Fail if the validation suite wrote build artifacts into `tests/golden/`.
+    """Assert `tests/golden/` holds NO build artifacts, before and after.
 
-    Asserted at session end rather than per test, because per-test assertion
-    would itself have to look at a directory other workers are using — the
-    problem it exists to prevent.
+    The first version diffed against a pre-existing set and failed only on
+    *new* paths. That misses the common regression: a test that rewrites
+    `simple_nlp_mcp.lst`, the same filename a previous run left behind, is
+    invisible to a set difference — and the directory is not clean either way,
+    so the fixture's own name was untrue.
+
+    Checked at session start as well, because a leftover is itself evidence the
+    invariant was broken: nothing in this suite writes here any more, so the
+    only way an artifact appears is a regression or an aborted older run. Both
+    are worth surfacing immediately rather than at the end of a six-minute run.
+
+    Session-scoped rather than per-test: a per-test assertion would itself have
+    to inspect a directory other workers are using — the problem it prevents.
     """
-    pre_existing = set(_artifacts())
+    if found := _artifacts():
+        _fail("at session start", found)
     yield
-    leaked = [p for p in _artifacts() if p not in pre_existing]
-    if leaked:
-        names = ", ".join(p.name for p in leaked)
-        pytest.fail(
-            f"GAMS artifacts were written into {GOLDEN_DIR}: {names}. "
-            "Copy the golden file to `tmp_path` and run GAMS on the copy — "
-            "running in the shared directory races with other xdist workers."
-        )
+    if found := _artifacts():
+        _fail("after the session", found)
