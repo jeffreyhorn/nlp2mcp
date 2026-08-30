@@ -191,7 +191,25 @@ Walk `git log --follow` over `data/gamslib/mcp/*_mcp.gms` for the baseline perio
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — no third model, with one conditional
+
+**Verified by:** Sprint 39 Prep Task 3 · **Date:** 2026-08-29 · **Measured at:** `8a5a88bc`
+
+**Findings:** Swept every **cold** golden (`*_mcp.gms`, excluding `_presolve`) changed between the baseline anchor `8cffec29` (S37-close) and `9ab2c0c3` (S38-close) — the only window the opaque baseline does not already absorb. **Five** changed; only **two** match today:
+
+| model | pre-fix | today | qualifies |
+|---|---|---|---|
+| twocge | `path_solve_terminated` | presolve + match | candidate |
+| elec | `path_solve_terminated` | presolve + match | candidate |
+| dyncge | `path_solve_terminated` | `model_optimal` + **mismatch** | ✗ (the `CASE_B` defect) |
+| tricp | `path_solve_terminated` | `path_solve_license` | ✗ **today** |
+| ferts | `path_solve_license` | `path_solve_license` | ✗ untestable throughout |
+
+**⚠ `tricp` is a conditional future candidate** — cold emit changed, abort removed, blocked only by **capacity** (387 → 1,255 rows, past the demo limit). If the #1462 licence ask succeeds and tricp matches, it qualifies on identical terms. Any answer taken today is *"of the models testable today"*.
+
+**Two structural limits, both recorded rather than worked around:** (a) **`polygon` has no provenance entry** — `entries` is `[]` and the baseline is one opaque count, so the precedent the definition names **cannot be audited**; "polygon set the precedent" is an argument from prose. (b) A pre-S38 misclassification is **not addressable**: the README states the floor "cannot be RECONSTRUCTED" (three derivations give 65/93/76), only 14 of 76 were ever attributable by name, and the baseline "is never re-litigated".
+
+**Decision:** No third instance, so the decision keeps its **"append N entries"** shape and does *not* escalate to "the classification needs re-deriving".
 
 ---
 
@@ -224,7 +242,27 @@ Read both models' convexity status and cold-solve behaviour from the DB and from
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — the assumption behind the counter-argument does not hold
+
+**Verified by:** Sprint 39 Prep Task 3 · **Date:** 2026-08-29 · **Measured at:** `8a5a88bc`
+
+**The assumption was** that the "still genuine via warm-start" clause was written for the **polygon/ps2 non-convex** shape, which twocge might not fit. **It does not survive contact with the data.**
+
+**Findings:** `polygon` — the only in-corpus member of that precedent, and the one the definition actually names — is **`likely_convex`**, exactly like twocge and elec. The `non_convex` members are `ps2_f_s`, `ps2_s`, `ps3_s_gic`, which are the three **out-of-corpus** models the 2026-08-18 re-baseline *removed* (76 → 73) for being out of scope. Written "polygon/ps2" the precedent reads as one non-convex family; it is not.
+
+Cold behaviour measured live, standalone from a scratch directory with `display nlp2mcp_obj_val` appended:
+
+| model | cold status | cold objective | NLP | cold match? |
+|---|---|---|---|---|
+| twocge | **MS-1 Optimal** | 55.508 | 56.7778 | ✗ (−2.2 %) |
+| elec | **MS-1 Optimal** | 244.624 | 243.8128 | ✗ (+0.33 %) |
+| polygon | **MS-5 Infeasible** | — | 0.7797 | ✗ |
+
+Both cold emits now *solve* — that is what the fixes bought — but converge on a **different KKT point**, which is why `_cold_objective_mismatches_nlp` fires and the pipeline retries with the warm start. That is exactly the clause's situation.
+
+**Evidence:** DB `convexity.status` for all six models; cold runs in `/tmp/s39t3/cold*`; objectives read only after asserting `MODEL STATUS 1`.
+
+**Decision:** On convexity, corpus membership, DB outcome and cold-solve failure, **twocge and the precedent are the same shape** — so convexity cannot separate them, and the plan's proposed case for 73 fails on its own terms. A distinction *does* remain, but it is the **nature of the cold change** (twocge's `.fx` bookkeeping vs elec's corrected mathematics), which makes **74** live. Routed to the owner via `FLOOR_DECISION_BRIEF.md` §3; not decided here.
 
 ---
 

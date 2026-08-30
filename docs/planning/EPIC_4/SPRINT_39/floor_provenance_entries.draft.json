@@ -1,0 +1,26 @@
+{
+  "_README": [
+    "DRAFT — not applied. Sprint 39 Prep Task 3.",
+    "Apply to data/floor_provenance.json -> entries, AND set expected_floor in the SAME change:",
+    "  both entries  -> expected_floor 75",
+    "  elec only     -> expected_floor 74 (drop the twocge entry)",
+    "  neither       -> apply nothing; see FLOOR_DECISION_BRIEF.md section 5.",
+    "floor_tracker.py exits non-zero if entries and expected_floor disagree."
+  ],
+  "entries": [
+    {
+      "model_id": "elec",
+      "limb": "presolve-match-genuine",
+      "since_sprint": 38,
+      "evidence": "cold emit changed at 82b91c94 (+3/-3): stationarity equations corrected — always-false ut(i,i) diagonal guard replaced by ut(i,j__), spurious outer sum removed. Was path_solve_terminated (solver_version: None, aborting before PATH); now model_optimal_presolve + match. Cold emit reaches MS-1 @ 244.624 vs NLP 243.8128, so the match arrives via the presolve warm start.",
+      "pr": "1704"
+    },
+    {
+      "model_id": "twocge",
+      "limb": "presolve-match-genuine",
+      "since_sprint": 38,
+      "evidence": "cold emit changed at 204f35ac (+10/-0): two nu_*.fx guard lines fixing multipliers for MCP-excluded instances. Was path_solve_terminated (solver_version: None, aborting before PATH); now model_optimal_presolve + match. Cold emit reaches MS-1 @ 55.508 vs NLP 56.7778, so the match arrives via the presolve warm start.",
+      "pr": "1703"
+    }
+  ]
+}
