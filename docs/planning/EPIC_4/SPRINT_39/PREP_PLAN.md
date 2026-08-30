@@ -45,7 +45,7 @@ This prep plan front-loads the work that would otherwise be discovered mid-sprin
 | 1 | ✅ Create Sprint 39 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 10 priorities |
 | 2 | ✅ Re-Derive the Sprint-38 Baseline & Carryforward Fingerprints | Critical | 3-4 hours | Task 1 | Verify 111/96/135/floor-73 and every banked fingerprint on current `main` |
 | 3 | ✅ The Floor-Classification Decision Package (P1) | Critical | 2-3 hours | Tasks 1, 2 | P1 — the Day-0 decision that blocks the sprint's baseline |
-| 4 | dyncge Second-Defect Diagnosis & Layer Trace (P2) | Critical | 5-7 hours | Tasks 1, 2 | P2 — the sprint's only new diagnosis |
+| 4 | ✅ dyncge Second-Defect Diagnosis & Layer Trace (P2) | Critical | 5-7 hours | Tasks 1, 2 | P2 — the sprint's only new diagnosis |
 | 5 | lnts Fingerprint Reproduction & Runtime-Probe Design (P3) | Critical | 4-6 hours | Tasks 1, 2 | P3 — an entirely untraced hypothesis |
 | 6 | sarf's Four Call Sites — Cost Attribution & Atomicity Plan (P4) | Critical | 5-7 hours | Tasks 1, 2 | P4 — the only KPI mover (+1 Translate) |
 | 7 | Positional-vs-Declared-Domain Site Survey (P5) | High | 4-5 hours | Tasks 1, 2 | P5 — the audit's input catalog |
@@ -470,9 +470,10 @@ test -f docs/planning/EPIC_4/SPRINT_39/FLOOR_DECISION_BRIEF.md && \
 
 ## Task 4: dyncge Second-Defect Diagnosis & Layer Trace (P2)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-30)
 **Priority:** Critical
 **Estimated Time:** 5-7 hours
+**Time Spent:** 5 hours
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
@@ -517,11 +518,25 @@ The residual concentrates on the **`pf`/`pq` block, not `eqpf2`** — so this is
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/issues/ISSUE_1714_dyncge-phantom-indexoffset-stat-pf.md` + GitHub issue **#1714** — full Phase-0 gate with all four required subsections, a hand-derived KKT shape, and a **named layer**
+- `KNOWN_UNKNOWNS.md` — **2.1 🔶 PARTIALLY WRONG**, **2.2 ✅ VERIFIED**, **2.3 ❌ WRONG**, **2.4 ✅ VERIFIED**
+- `CHANGELOG.md` — Sprint 39 Prep entry
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — the defect is located, and it is not a new one.**
+
+**The defect.** `eqXp(i)`'s index `i` is free and unrelated to the head's `(h,j)`, so `stat_pf(h,j)` must carry `sum(i, …·nu_eqXp(i))`. The emit instead produces the diagonal plus manufactured offsets `nu_eqXp(j±1..3)`, each gated on **`$(ord(h) = k)`** — a guard on the **factor** index for a sum over the **goods** index. `h` = {CAP, LAB} has 2 members, so `ord(h)=3` terms are **dead** and each row keeps a different wrong subset. dyncge's source contains **no lead/lag at all**; every offset is manufactured. `eqII` is corrupted identically (CAP only), explaining why CAP rows carry the largest residual while LAB rows are also wrong.
+
+**Layer: KKT / stationarity** — `src/kkt/stationarity.py` ~7107–7131, the #1081 dimension-mismatch branch. Not the emitter (which prints faithfully) and not AD (per-term derivatives verify by hand, including the `eqM`/`eqD` chain rules). Reached because `Alias (i,j)` makes `i` and `j` share a set root, so a free equation index is mistaken for a shifted head index.
+
+**The control that made it decisive:** `stat_pq` is **correct** — all seven pq-bearing equations present, every coefficient verified term-by-term, **0** phantom refs, **0** `ord()` guards — because it is 1-D head / 1-D equation and never enters the dim-mismatch path.
+
+**⚠ The mechanism is already known (2.3 refuted the "new diagnosis" framing).** This is the phantom-IndexOffset / plain-alias + dim-mismatch family tracked by **#1381** (camcge #1354, cesam2 #1355). **But dyncge is the first known SILENT instance:** every prior member was found via a PATH `$141` compile failure, whereas dyncge's guards keep the phantom references in range, so it compiles, solves to `MS-1`, and is wrong by 29.3 % with no diagnostic. **#1381's "at minimum 13 affected models" therefore counts only the models that failed loudly** — the family's blast radius is plausibly larger. A structural search (`nu_X(idx±k)` beside an `ord(…)=k` guard) is recommended follow-up.
+
+**`CASE_A` reachability is NOT asserted.** It is the right target, but a second-order non-convexity beneath the offset defect would be invisible until the offsets are fixed — and elec's verdict changed from `CASE_B` to `CASE_C_OBJDEF` as the classifier improved. The REPLAN is **pre-registered** in #1714 rather than left to be discovered mid-sprint.
+
+**#1693 closes cleanly** — a different mechanism in a different place, masked by the abort rather than caused by it.
 
 ### Verification
 
@@ -572,14 +587,14 @@ fi
 
 ### Acceptance Criteria
 
-- [ ] The residual re-reproduced on current `main` with its top rows confirmed
-- [ ] The KKT shape hand-derived from source before any code reading
-- [ ] The defect traced to a **layer** with a written justification, starting from AD/KKT rather than the emitter
-- [ ] A Phase-0 gate authored with the **`CASE_A` requirement** as its accept criterion
-- [ ] The "does this mechanism already exist?" check performed and its answer recorded
-- [ ] A REPLAN exit defined: what evidence would say `CASE_A` is unreachable
-- [ ] `#1693` confirmed closeable on its own terms, not widened
-- [ ] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The residual re-reproduced on current `main` with its top rows confirmed
+- [x] The KKT shape hand-derived from source before any code reading
+- [x] The defect traced to a **layer** with a written justification, starting from AD/KKT rather than the emitter
+- [x] A Phase-0 gate authored with the **`CASE_A` requirement** as its accept criterion
+- [x] The "does this mechanism already exist?" check performed and its answer recorded
+- [x] A REPLAN exit defined: what evidence would say `CASE_A` is unreachable
+- [x] `#1693` confirmed closeable on its own terms, not widened
+- [x] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

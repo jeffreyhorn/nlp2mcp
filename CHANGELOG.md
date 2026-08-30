@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 39 Prep
 
+- **Prep Task 4 COMPLETE (2026-08-30) — dyncge's second defect is LOCATED, and it is not a new one.** New: `docs/issues/ISSUE_1714_dyncge-phantom-indexoffset-stat-pf.md` + GitHub issue **#1714**, with a full Phase-0 gate and a **named layer**. Docs only — no `*.py` changed, so the quality gate does not apply.
+
+- **The defect.** `eqXp(i)`'s index `i` is free and unrelated to the head's `(h,j)`, so `stat_pf(h,j)` must carry `sum(i, …·nu_eqXp(i))`. The emit instead produces the diagonal plus **manufactured offsets** `nu_eqXp(j±1..3)`, each gated on **`$(ord(h) = k)`** — a guard on the **factor** index for a sum over the **goods** index. `h` = {CAP, LAB} has 2 members, so the `ord(h)=3` terms are **dead code** and every row keeps a different wrong subset of the four multipliers. **dyncge's source contains no lead/lag at all** — every offset is manufactured. `eqII` is corrupted identically (CAP rows only), which is why CAP carries the largest residual while LAB rows are also wrong.
+
+- **Layer: KKT / stationarity** — `src/kkt/stationarity.py` ~7107–7131, the **#1081** dimension-mismatch branch whose comment describes a genuine lead/lag (`bal4(t) → x(t,l)`). Not the emitter (which prints faithfully) and not AD (per-term derivatives verify by hand, including the `eqM`/`eqD` chain rules, whose emitted tail `/A · B·C/B²` reduces exactly to `1/pq`). Reached because `Alias (i,j)` makes `i` and `j` share a set root, so a free equation index is mistaken for a shifted head index.
+
+- **The control that made it decisive:** `stat_pq` is **correct** — all seven pq-bearing equations present (exhaustive scan of 29 definitions), every coefficient verified term-by-term, **0** phantom refs and **0** `ord()` guards — because it is 1-D head / 1-D equation and never enters the dim-mismatch path.
+
+- **⚠ The mechanism is already known.** This is the **phantom-IndexOffset / plain-alias + dim-mismatch** family tracked by **#1381** (consolidating camcge **#1354** and cesam2 **#1355**; `ISSUE_1355` is titled *"Phantom IndexOffset `nu_COLSUM(i±N)` References"* — the same shape). Unknown 2.3's "new diagnosis" framing is therefore **refuted**: the S38 lesson repeats one level up — *before filing a new defect, check whether the defect is already filed*.
+
+- **⚠⚠ But dyncge is the first known SILENT instance, and that widens the family.** Every prior member was discovered because it produced a **PATH `$141` compile failure** on the phantom reference. dyncge's guards keep every reference in range, so it **compiles, solves to `MODEL STATUS 1`, and is wrong by 29.3 %** with no diagnostic at all. **#1381's "at minimum 13 affected models" is therefore a census of the models that failed LOUDLY** — silent instances are invisible to that method, so the blast radius is plausibly larger. Recommended follow-up: search for the structural signature — `nu_X(idx±k)` beside an `ord(…)=k` guard in a stationarity row.
+
+- **`CASE_A` reachability is NOT asserted** (2.1 → 🔶 PARTIALLY WRONG). It is the right target, but a second-order non-convexity beneath the offset defect would stay invisible until the offsets are corrected — and **elec's own verdict changed from `CASE_B` to `CASE_C_OBJDEF`** as the classifier improved. The REPLAN is **pre-registered** in #1714 rather than discovered mid-sprint: if the residual persists as `CASE_C_OBJDEF`, the honest deliverable is a *documented divergence* with `modelstat` asserted, not a Match.
+
+- **#1693 closes cleanly** (2.4) — a different mechanism in a different place, *masked* by the abort rather than caused by it. Consistent with the Sprint 38 close, which recorded that closing #1693 does not mean dyncge is correct.
+
+- **Open and deliberately not closed:** `stat_pq(HMN)` carries the second-largest residual (5.90e-02) despite `stat_pq` verifying correct term-by-term, so it is **not explained by its own row** — most plausibly surfacing through the shared `nu_eqXp` multiplier, **unproven**. #1714's REPLAN signal treats a surviving `stat_pq` residual as evidence of a second defect.
+
+- **Unknowns 2.1 🔶 · 2.2 ✅ · 2.3 ❌ · 2.4 ✅** — **11 of 30 resolved** (8 VERIFIED + 2 WRONG + 1 PARTIALLY WRONG), 19 remain. Task 4 adds 2.1, 2.3, 2.4 and **rewrites** 2.2, which Task 2 had already verified more narrowly.
+
 - **Prep Task 3 COMPLETE (2026-08-29) — the floor-classification decision package.** New docs: `docs/planning/EPIC_4/SPRINT_39/FLOOR_DECISION_BRIEF.md` and `docs/planning/EPIC_4/SPRINT_39/floor_provenance_entries.draft.json`. **The decision is NOT taken** — the package assembles the evidence so an owner can take it on Day 0. Docs only — no `*.py` changed, so the quality gate does not apply.
 
 - **⚠ The decision's shape changed: it is 73, 74 or 75, not "73 or 75".** The plan and the carryforwards anticipate two answers; two measurements add a third.
