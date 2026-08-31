@@ -130,10 +130,27 @@ Instrumented site coverage:
 |---|---|
 | wall-clock | **≤ 300 s** on a nightly slot |
 | golden | byte-stable; sarf newly produces one (scope **186 → 187**) |
-| symbolic indices | `grep -E 'nu_[[:alnum:]_]+\("\|lam_[[:alnum:]_]+\("' sarf_mcp.gms` → **empty** |
+| symbolic indices | no set-name-literal multiplier index — see below, **and run its positive control** |
 | determinism | ×3 `PYTHONHASHSEED`, byte-identical |
 | leak gate | `make check-goldens` full scope clean |
 | fail-before | capped translate does not terminate (**confirmed at 900 s**) |
+
+### The symbolic-index check, and why it is not in the table
+
+⚠ **This command must not live in a table cell.** An earlier revision of this document put it there and escaped the alternation to stop the pipe from splitting the cell — producing `grep -E 'nu_…\("\|lam_…\("'`. In ERE `\|` is a **literal pipe**, so the pattern no longer means "nu\_ *or* lam\_"; it means the single string `nu_x("|lam_y("`. Verified: against a line containing both `nu_eqfoo("AGR")` and `lam_bar("LAB")` the escaped form exits **1** and prints nothing — the gate reports "empty" and **passes on the exact defect it exists to catch**. Every other copy of this check in the repo (`PROJECT_PLAN.md`, `SPRINT_32`–`SPRINT_34`) has the correct unescaped form; only the table cell was corrupted, **by the act of putting it in a table**.
+
+```bash
+# The check. Must print nothing.
+grep -E 'nu_[[:alnum:]_]+\("|lam_[[:alnum:]_]+\("' sarf_mcp.gms
+
+# POSITIVE CONTROL — run this FIRST, every time. It must print the line.
+# A silent grep is indistinguishable from a broken grep, which is how the
+# escaped form survived: "empty" looked like a pass.
+printf 'stat_x(i).. nu_eqfoo("AGR") + lam_bar("LAB") =E= 0;\n' \
+  | grep -E 'nu_[[:alnum:]_]+\("|lam_[[:alnum:]_]+\("'
+```
+
+The failure this guards is the Sprint-26 `nu_slack("srn")` regression (commit `243fe578`).
 
 **REPLAN exit — timeout re-trigger.** If a candidate narrowing still exceeds 300 s, **stop and re-attribute rather than iterating**. §2 shows the dominant path is one the Day-7 change already touched, so a second timeout is evidence the lever is in `compute_constraint_jacobian`/`_diff_sum`, not in enumeration — a different piece of work with a different estimate, and it should be re-scoped rather than absorbed.
 
