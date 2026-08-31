@@ -789,6 +789,8 @@ Sprint 39 execution team
 | `complementarity.py:512` | 2 | needs per-element `.up` overrides |
 | `gradient.py:453` | **0** | **unreachable — dead code** |
 
+**It is a translate-path fixture, not a solve fixture.** The assertion is on the emit and on which sites execute while producing it. The two-line `Variable` → `Positive Variable` re-typing was challenged in review as a probable redefinition error; it is legal GAMS, and **GAMS 54.2.1 compiles the file with 0 compilation errors**. As an NLP it is **unbounded** (`MODEL STATUS 3`) — irrelevant to the purpose, recorded so "built and verified" is not read as "solves end to end".
+
 **Two things the build taught that a specification would not have:** a first surrogate without per-element bound overrides reached **only 1 of 4** sites — the complementarity sites require `.lo`/`.up` *overrides*, not merely bounded variables. And the fourth site cannot be reached at any size, because nothing in production calls it.
 
 **Decision:** "Hits all four" is unachievable **by construction, not by fixture design** — three of four is the maximum. Scope **186 → 187** is unchanged as a target, since it depends on sarf producing a golden, which depends on the ≤300 s gate.

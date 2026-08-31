@@ -93,6 +93,10 @@ cap(t)..    sum((g,mn,mn2), task(g,t,mn,mn2)) =l= 10 * emply(t);
 link(g,t).. sum((mn,mn2), task(g,t,mn,mn2)) =g= 1;
 ```
 
+**The two-line declaration form is valid GAMS, and that was checked rather than assumed.** Review flagged `Variable task(...)` followed by `Positive Variable task, emply` as a probable symbol-redefinition error. It is not: re-typing an already-declared variable is legal, and **GAMS 54.2.1 compiles this file with 0 compilation errors** (`COMPILATION TIME = 0.005 SECONDS`, no `$` codes). nlp2mcp reads it the same way — the emit declares `Variables profit;` and `Positive Variables task(g,t,mn,mn__), emply(t), …`, so the re-typing is carried through, not dropped.
+
+**What the surrogate is for, stated precisely.** It is a **translate-path** fixture: the assertion is on the *emit*, and on which of the four sites execute while producing it. It is deliberately **not** a solve fixture — as an NLP it is **unbounded** (`MODEL STATUS 3`, CONOPT reaching infinity on `task`), because `cap(t)` ties `sum(task)` to `10·emply(t)` while only `emply.up('t2')` is bounded. That is irrelevant to the fixture's purpose and is recorded here so "built and verified" is not read as "solves cleanly end to end".
+
 Instrumented site coverage:
 
 | site | hits | note |

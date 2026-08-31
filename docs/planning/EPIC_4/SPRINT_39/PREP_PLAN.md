@@ -802,11 +802,11 @@ The charitable reading — *the four emit the instances later differentiated* �
 cd "$(git rev-parse --show-toplevel)"
 
 # The four call sites — do they still exist where recorded?
-# ⚠ CORRECTED by Task 2 and re-corrected here. The original form greped
+# ⚠ CORRECTED by Task 2 and re-corrected here. The original form grepped
 # constraint_jacobian.py / index_mapping.py / stationarity.py, none of which
 # holds any of the four; and its "these files moved in Sprint 38" rationale is
 # inverted — gradient.py and complementarity.py did NOT move (0 commits since
-# 949a4587), while the files it greped did. Symbols, not line numbers:
+# 949a4587), while the files it grepped did. Symbols, not line numbers:
 # ⇒ gradient.py:287, gradient.py:453, complementarity.py:367, complementarity.py:512
 grep -n "= enumerate_variable_instances(" src/ad/gradient.py src/kkt/complementarity.py
 
