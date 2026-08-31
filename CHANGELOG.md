@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 39 Prep
 
+- **Prep Task 5 COMPLETE (2026-08-31) — lnts's hypothesis is CONFIRMED at runtime, and its banked fix surface is REFUTED.** New: `docs/planning/EPIC_4/SPRINT_39/LNTS_PROBE_DESIGN.md`; addendum on `ISSUE_1694`. Docs only — no `*.py` changed, so the quality gate does not apply.
+
+- **The collision is now a runtime fact rather than a source reading.** The probe — `display` of effective `y.lo`/`y.up` injected after all fixing — was designed with **confirm/refute criteria written and committed before it ran**, then executed: `y("y2","h50")` and `y("y3","h50")` carry `_fx_` equations demanding **5** and **45**, and their effective bounds at solve time are **`lo = up = 0`**. All three CONFIRM criteria hold, including that the contradiction is *exactly* zero (so it is the blanket, not a third writer) and that the `D = 0` control `y("y4","h50")` is consistent (so the probe is not over-reporting). **The hypothesis had been banked since Sprint 38 on a source read alone.**
+
+- **⚠⚠ The banked fix surface is WRONG — and it was refuted by instrumentation, not reading.** The carryforwards named the **`fix_rhs = "0"` fallback** (`src/emit/emit_gams.py:3060–3061`), flagged as an untraced hypothesis. Instrumenting every site that emits a variable `.fx(...)$(not (...)) = …` line and re-emitting lnts: line **3061 fired once — for variable `u`, taking the `u.lo(h)` branch** — and the `"0"` fallback printed **nothing at all**. The blanket that pins `y` at `h50` is emitted at **line 3121**, with a wider first guard at **3005**. **Sprint 39 Day 1 would have opened on a branch that never executes.**
+
+- **Layer: EMIT** — `src/emit/emit_gams.py` ~3121 (and ~3005). Unlike three of four Sprint-38 gates, the emitter genuinely *is* the layer here, and that was established by **running the code**. The site collects equation conditions where `eq_domain == var_def.domain` and fixes the variable wherever the combined condition fails, **without consulting `var_def.fx_map`** — so it cannot see that a cell already carries an authoritative `_fx_` equation.
+
+- **The machinery to fix it already exists** (the S38 dyncge lesson applied): `_fx_eq_name()` at `emit_gams.py:711` is the canonical namer, `emit_gams.py:920` already builds a `suppressed` set of `_fx_` equation names — the same reasoning in the opposite direction — and `var_def.fx_map` already enumerates the values (`partition.py:180`). **The fix is a lookup against existing structures, not new machinery.**
+
+- **The "same shape as the Sprint-33 P6 fix" analogy is structurally genuine.** S33 P6 made the emitter skip an expression `.l` init when its `.l` refs were not a subset of `_declared_mcp_vars` — *guard an emission on the state of another emitted artifact*. Same shape, different predicate. ⚠ Worth noting it was cited **alongside a fix surface that proved wrong**: the soundness of an analogy does not transfer to the location it is attached to.
+
+- **Fingerprint re-reproduced under all four §4.1 criteria** — fresh emit **byte-identical** to the committed golden; `MODEL STATUS 4` / `SOLVER STATUS 1` / `ITERATION COUNT 0` read from GAMS's own anchored lines; **zero `**** ERROR` lines**, so the infeasibility is a bounds contradiction detected in presolve; and a passing negative control.
+
+- **`cesam` remains un-batched.** Same MS-4-at-iteration-0 signature, **0 `_fx_` equations**, so this mechanism cannot apply. A shared signature is not a shared mechanism.
+
+- **Unknowns 3.1 ✅ · 3.2 ❌ · 3.3 ✅** — **13 of 30 resolved** (9 VERIFIED + 3 WRONG + 1 PARTIALLY WRONG), 17 remain.
+
 - **Prep Task 4 COMPLETE (2026-08-30) — dyncge's second defect is LOCATED, and it is not a new one.** New: `docs/issues/ISSUE_1714_dyncge-phantom-indexoffset-stat-pf.md` + GitHub issue **#1714**, with a full Phase-0 gate and a **named layer**. Docs only — no `*.py` changed, so the quality gate does not apply.
 
 - **The defect.** `eqXp(i)`'s index `i` is free and unrelated to the head's `(h,j)`, so `stat_pf(h,j)` must carry `sum(i, …·nu_eqXp(i))`. The emit instead produces the diagonal plus **manufactured offsets** `nu_eqXp(j±1..3)`, each gated on **`$(ord(h) = k)`** — a guard on the **factor** index for a sum over the **goods** index. `h` = {CAP, LAB} has 2 members, so the `ord(h)=3` terms are **dead code** and every row keeps a different wrong subset of the four multipliers. **dyncge's source contains no lead/lag at all** — every offset is manufactured. `eqII` is corrupted identically (CAP rows only), which is why CAP carries the largest residual while LAB rows are also wrong.

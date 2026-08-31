@@ -115,3 +115,61 @@ Scanning for the co-occurrence — a variable carrying **both** a `_fx_` equatio
 ### Regression guard
 
 A minimal synthetic fixture: a variable with a labelled nonzero `.fx` at a boundary element, plus an active-domain pruning condition that covers that element. Assert the emitted model does **not** contain both a `_fx_` equation and a blanket `.fx` for the same cell. **Include `otpop` as the negative control** — the fixture is only meaningful if it also demonstrates non-firing on a matching-but-sound model.
+
+---
+
+## Sprint 39 Prep Task 5 addendum — runtime confirmation and a CORRECTED fix surface
+
+**Added:** 2026-08-31 · **Measured at:** `4bbe7c3c`, GAMS **54.2.1** / PATH **5.2.01**
+
+### 1. The collision is now confirmed at RUNTIME, not inferred from source
+
+The gate above was authored from a source read. A source read shows two mechanisms *exist*; it cannot show they *collide*. A bound probe (`display` of the effective `y.lo`/`y.up` injected after all fixing, before `Solve`) was designed with **confirm/refute criteria fixed in advance** — `docs/planning/EPIC_4/SPRINT_39/LNTS_PROBE_DESIGN.md` — and then run:
+
+| tuple | `_fx_` equation demands | effective `lo` | effective `up` | verdict |
+|---|---|---|---|---|
+| `y("y2","h50")` | **5** | **0.000** | **0.000** | **CONTRADICTED** |
+| `y("y3","h50")` | **45** | **0.000** | **0.000** | **CONTRADICTED** |
+| `y("y4","h50")` | 0 | 0.000 | 0.000 | consistent — negative control ✓ |
+| `y("y1","h0")` | 0 | −INF | +INF | blanket does not reach it |
+
+All three pre-registered CONFIRM criteria hold (contradiction present; it is exactly `lo = up = 0`; the `D = 0` control is consistent). **No refute criterion fires.** The hypothesis banked since Sprint 38 is confirmed.
+
+Fingerprint re-reproduced under §4.1: fresh emit **byte-identical** to the committed golden; `**** MODEL STATUS 4 Infeasible`, `**** SOLVER STATUS 1 Normal Completion`, `ITERATION COUNT 0`, read from GAMS's own anchored lines; **no `**** ERROR` lines at all**, so infeasibility is declared from the bounds before any iteration.
+
+### 2. ⚠ The banked fix surface is WRONG — established by instrumentation
+
+The carryforwards named the **`fix_rhs = "0"` fallback** (`src/emit/emit_gams.py:3060–3061`) and flagged it as an *untraced hypothesis*. It was traced. **It is not reached for lnts.**
+
+Instrumenting every site in `emit_gams.py` that emits a variable `.fx(...)$(not (...)) = ...` line and re-emitting lnts:
+
+```
+SITE-S3005: y.fx(c,h)$(not (ord(c) <= card(c) - 2 and ord(h) <= card(h) - 1 or ord(h) > 1 or …)) = 0;
+SITE-S3121: y.fx(c,h)$(not ((ord(c) <= card(c) - 2) and (ord(h) <= card(h) - 1))) = 0;
+```
+
+Line **3061 fired once — for variable `u`, taking the `u.lo(h)` branch** — and the `fix_rhs = "0"` fallback printed **nothing**. The offending blanket that pins `y` at `h50` is emitted at **line 3121**; line 3005 emits the first, wider guard.
+
+**Layer: EMIT** — `src/emit/emit_gams.py`, the pruned-instance blanket at ~3121 (and ~3005). Recorded with its justification, per the Sprint 38 finding that three of four gates named the wrong layer: here the emitter genuinely *is* the layer, and that was established by **running the code**, not by reading it. The site collects equation conditions where `eq_domain == var_def.domain` and fixes the variable wherever the combined condition fails — **without consulting `var_def.fx_map`**, so it cannot see that a cell already carries an authoritative `_fx_` equation.
+
+### 3. The machinery to fix it already exists
+
+Per the Sprint 38 dyncge lesson — *check whether the logic exists for a different population before writing new logic*:
+
+- **`_fx_eq_name(var_name, indices)`** (`emit_gams.py:711`) is the canonical way to name a per-element `_fx_` equation, delegating to `src/ir/normalize.py::bound_name` to avoid drift.
+- **`emit_gams.py:920`** already builds a `suppressed` set of `_fx_` equation names for instances excluded by membership constraints — the same reasoning, applied in the opposite direction.
+- The per-element fixed values are already enumerated from **`var_def.fx_map`** (`src/kkt/partition.py:180`).
+
+So the fix is a **lookup against existing structures**, not new machinery.
+
+### 4. Is the "same shape as the Sprint-33 P6 fix" analogy genuine?
+
+**Yes, structurally.** Sprint 33 P6 made `emit_gams.py` skip an expression `.l` initialisation when its `.l` references were not a subset of `_declared_mcp_vars` — *guard an emission on the state of another emitted artifact*. The lnts fix is the same shape: guard the blanket `.fx` on whether the cell already carries an `_fx_` equation. **The predicate differs; the shape does not.** The analogy is sound and may be reused as precedent — but note it was cited alongside a fix *surface* that turned out to be wrong, so the analogy's soundness does not transfer to the location.
+
+### 5. REPLAN exit (unchanged in force, now with the trigger measured)
+
+The probe **confirmed** the hypothesis, so the REPLAN exit does not fire. Had any refute criterion held — bounds consistent with `D`, a non-zero disagreement, or no contradiction despite MS-4 — the banked mechanism would have been refuted and P3 would return to diagnosis rather than proceed to implementation. Recorded because the exit was written before the result was known.
+
+### 6. Unchanged and still binding
+
+**Do not batch `cesam` with lnts.** It shows the same MS-4-at-iteration-0 signature but has **0 `_fx_` equations**, so this mechanism cannot apply. A shared signature is not a shared mechanism.
