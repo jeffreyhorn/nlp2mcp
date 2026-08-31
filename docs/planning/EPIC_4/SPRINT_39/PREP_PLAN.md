@@ -46,7 +46,7 @@ This prep plan front-loads the work that would otherwise be discovered mid-sprin
 | 2 | ✅ Re-Derive the Sprint-38 Baseline & Carryforward Fingerprints | Critical | 3-4 hours | Task 1 | Verify 111/96/135/floor-73 and every banked fingerprint on current `main` |
 | 3 | ✅ The Floor-Classification Decision Package (P1) | Critical | 2-3 hours | Tasks 1, 2 | P1 — the Day-0 decision that blocks the sprint's baseline |
 | 4 | ✅ dyncge Second-Defect Diagnosis & Layer Trace (P2) | Critical | 5-7 hours | Tasks 1, 2 | P2 — the sprint's only new **instance**; the mechanism is the known #1381 family, and dyncge is its first **silent** case |
-| 5 | lnts Fingerprint Reproduction & Runtime-Probe Design (P3) | Critical | 4-6 hours | Tasks 1, 2 | P3 — an entirely untraced hypothesis |
+| 5 | ✅ lnts Fingerprint Reproduction & Runtime-Probe Design (P3) | Critical | 4-6 hours | Tasks 1, 2 | P3 — an entirely untraced hypothesis |
 | 6 | sarf's Four Call Sites — Cost Attribution & Atomicity Plan (P4) | Critical | 5-7 hours | Tasks 1, 2 | P4 — the only KPI mover (+1 Translate) |
 | 7 | Positional-vs-Declared-Domain Site Survey (P5) | High | 4-5 hours | Tasks 1, 2 | P5 — the audit's input catalog |
 | 8 | Presolve-Record Remedy Design (P7) | High | 3-4 hours | Tasks 1, 2 | P7 — all 14 rows or none |
@@ -579,7 +579,7 @@ fi
 
 ### Deliverables
 
-- A new `docs/issues/ISSUE_<n>_dyncge-*.md` with a complete Phase-0 acceptance gate, including a **named layer**
+- A new `docs/issues/ISSUE_1714_dyncge-phantom-indexoffset-stat-pf.md` with a complete Phase-0 acceptance gate, including a **named layer** *(written as `ISSUE_<n>_dyncge-*.md` when the task was scoped; the number was assigned on filing)*
 - A hand-derived KKT shape for `stat_pf` / `stat_pq` and a term-by-term comparison against the emit
 - A stated position on whether `CASE_A` is reachable, or whether a documented divergence is the honest target
 - A cross-check result: is this mechanism already known under another name?
@@ -600,9 +600,10 @@ fi
 
 ## Task 5: lnts Fingerprint Reproduction & Runtime-Probe Design (P3)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-31)
 **Priority:** Critical
 **Estimated Time:** 4-6 hours
+**Time Spent:** 4.5 hours
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
@@ -644,11 +645,24 @@ while a blanket pruned-instance zeroing fires on exactly those cells, giving `y.
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_39/LNTS_PROBE_DESIGN.md` — the runtime bound probe, with confirm/refute criteria **written before execution**
+- `docs/issues/ISSUE_1694_lnts-contradictory-fx-mechanisms-blanket-zeroing.md` — Task 5 addendum: runtime confirmation, the **corrected fix surface**, the named layer, the existing-machinery note, and the S33-P6 analogy verdict
+- `KNOWN_UNKNOWNS.md` — **3.1 ✅**, **3.2 ❌ WRONG**, **3.3 ✅**
+- `CHANGELOG.md` — Sprint 39 Prep entry
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — the hypothesis is confirmed and the banked fix surface is refuted.**
+
+**The collision is now a runtime fact, not a source reading.** The probe was designed with confirm/refute criteria fixed in advance, then run: `y("y2","h50")` and `y("y3","h50")` carry `_fx_` equations demanding **5** and **45**, and their **effective bounds at solve time are `lo = up = 0`**. All three CONFIRM criteria hold — including that the contradiction is *exactly* zero (so it is the blanket, not some third writer) and that the `D = 0` control `y("y4","h50")` is consistent (so the probe is not over-reporting). No refute criterion fires.
+
+**⚠ The banked fix surface is wrong.** The carryforwards named the `fix_rhs = "0"` fallback (`emit_gams.py:3060–3061`) and flagged it as untraced. Instrumented: line 3061 fired **once, for variable `u`**, taking the `u.lo(h)` branch, and the `"0"` fallback printed **nothing**. The blanket that pins `y` is emitted at **line 3121** (with a wider first guard at 3005). Day 1 would have opened on a branch that never executes.
+
+**Layer: EMIT** — and unlike three of four Sprint-38 gates, the emitter genuinely *is* the layer here, established by **running the code** rather than reading it. The site fixes pruned instances **without consulting `var_def.fx_map`**, so it cannot see that a cell already carries an authoritative `_fx_` equation.
+
+**The machinery already exists** — `_fx_eq_name()` (`emit_gams.py:711`), the `suppressed` set at `emit_gams.py:920` doing the same reasoning in the opposite direction, and `var_def.fx_map` (`partition.py:180`). The fix is a lookup, not new machinery. The **Sprint-33 P6 analogy is structurally genuine** (guard an emission on the state of another emitted artifact) — though it was cited alongside a *location* that proved wrong.
+
+**REPLAN exit** written before the result and did not fire.
 
 ### Verification
 
@@ -695,15 +709,15 @@ test -f docs/planning/EPIC_4/SPRINT_39/LNTS_PROBE_DESIGN.md && echo "✅ probe d
 
 ### Acceptance Criteria
 
-- [ ] Fresh emit confirmed byte-identical to the committed golden
-- [ ] Failure reproduced with **anchored** `^****` diagnostics and a terminal state from GAMS's own line
-- [ ] Both `.fx` mechanisms located in the emit, or the hypothesis marked unconfirmed
-- [ ] The runtime probe designed with **confirm and refute criteria written before it is run**
-- [ ] Fix surface traced from `stationarity.py`/AD outward, with the layer named
-- [ ] A passing negative control specified
-- [ ] `cesam` explicitly excluded from the track, with the 0-`_fx_` reason restated
-- [ ] REPLAN exit defined
-- [ ] Unknowns 3.1, 3.2, 3.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Fresh emit confirmed byte-identical to the committed golden
+- [x] Failure reproduced with **anchored** `^****` diagnostics and a terminal state from GAMS's own line
+- [x] Both `.fx` mechanisms located in the emit, or the hypothesis marked unconfirmed
+- [x] The runtime probe designed with **confirm and refute criteria written before it is run**
+- [x] Fix surface traced from `stationarity.py`/AD outward, with the layer named
+- [x] A passing negative control specified
+- [x] `cesam` explicitly excluded from the track, with the 0-`_fx_` reason restated
+- [x] REPLAN exit defined
+- [x] Unknowns 3.1, 3.2, 3.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -1590,7 +1604,7 @@ Recorded in advance, so it can be recognised:
 
 ### Per-priority background
 - **P1 floor:** `data/floor_provenance.json` · `scripts/sprint_audit/floor_tracker.py` · `../SPRINT_38/MEASUREMENT_INTEGRITY_DESIGN.md` (P6c)
-- **P2 dyncge:** `docs/issues/ISSUE_1693_dyncge-empty-mcp-pair-eqpf2-diagonal-cancellation.md` · `../SPRINT_38/DAY12_P8_ELEC.md` §6
+- **P2 dyncge:** `docs/issues/completed/ISSUE_1693_dyncge-empty-mcp-pair-eqpf2-diagonal-cancellation.md` · `../SPRINT_38/DAY12_P8_ELEC.md` §6
 - **P3 lnts:** `../SPRINT_38/BACKLOG_CANDIDATE_CATALOG.md` · `../SPRINT_38/PLAN.md` Day-12 entry
 - **P4 sarf:** `docs/issues/ISSUE_1385*` · `../SPRINT_38/SARF_REARCH_DESIGN.md` · `../SPRINT_38/DAY6_SARF_PROBE_DECISION.md` · `../SPRINT_38/DAY7_SARF_GATE_P6C.md`
 - **P5 positional domain:** `../SPRINT_38/DAY11_P5_CLOSE_P8_TRICP.md` · `../SPRINT_38/DAY12_P8_ELEC.md` · `docs/issues/ISSUE_1062_*` · `docs/issues/ISSUE_1325_*`

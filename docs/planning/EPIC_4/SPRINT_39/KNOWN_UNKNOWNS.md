@@ -468,7 +468,24 @@ Two mechanisms act on the same cells: the correct `y_fx_y2_h50.. y("y2","h50") -
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — confirmed at RUNTIME, criteria fixed in advance
+
+**Verified by:** Sprint 39 Prep Task 5 · **Date:** 2026-08-31 · **Measured at:** `4bbe7c3c`
+
+**Findings:** The collision is real. A bound probe (`display` of effective `y.lo`/`y.up`, injected after all fixing and before `Solve`) was designed with **confirm/refute criteria written and committed before it ran** — `LNTS_PROBE_DESIGN.md` — then executed:
+
+| tuple | `_fx_` demands | effective `lo` | effective `up` | verdict |
+|---|---|---|---|---|
+| `y("y2","h50")` | **5** | **0.000** | **0.000** | **CONTRADICTED** |
+| `y("y3","h50")` | **45** | **0.000** | **0.000** | **CONTRADICTED** |
+| `y("y4","h50")` | 0 | 0.000 | 0.000 | consistent — control ✓ |
+| `y("y1","h0")` | 0 | −INF | +INF | blanket doesn't reach it |
+
+All three CONFIRM criteria hold: a `D ≠ 0` tuple shows `lo = up = 0`; the contradiction is **exactly** zero rather than merely different (so it is the blanket, not a third writer); and the `D = 0` control is consistent, so the probe is not over-reporting. **No refute criterion fires.**
+
+**Evidence:** fresh emit byte-identical to the golden; `MODEL STATUS 4` / `SOLVER STATUS 1` / `ITERATION COUNT 0` from GAMS's own anchored lines, with **no `**** ERROR` lines** — infeasibility is declared from bounds before any iteration.
+
+**Decision:** The hypothesis banked since Sprint 38 is **confirmed**, and for the first time by runtime observation rather than a source read. Recorded in #1694's addendum.
 
 ---
 
@@ -501,7 +518,28 @@ Instrument the fallback (a temporary log or breakpoint) and re-emit lnts. Trace 
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — the named surface is not reached; the real one is elsewhere
+
+**Verified by:** Sprint 39 Prep Task 5 · **Date:** 2026-08-31 · **Measured at:** `4bbe7c3c`
+
+**The assumption was** that the fix surface is the **`fix_rhs = "0"` fallback** (`src/emit/emit_gams.py:3060–3061`). The carryforwards flagged it as an *untraced hypothesis*. It was traced by **instrumentation, not reading**, and it is wrong.
+
+Instrumenting every site in `emit_gams.py` that emits a variable `.fx(...)$(not (...)) = …` line and re-emitting lnts:
+
+```
+SITE-S3005: y.fx(c,h)$(not (ord(c) <= card(c) - 2 and … or ord(h) > 1 or …)) = 0;
+SITE-S3121: y.fx(c,h)$(not ((ord(c) <= card(c) - 2) and (ord(h) <= card(h) - 1))) = 0;
+```
+
+Line **3061 fired once — for variable `u`, taking the `u.lo(h)` branch** — and the `fix_rhs = "0"` fallback printed **nothing at all**. The blanket that pins `y` at `h50` is emitted at **line 3121**; line 3005 emits a wider first guard.
+
+**Layer: EMIT**, `src/emit/emit_gams.py` ~3121 (and ~3005). Unlike three of four Sprint-38 gates, the emitter genuinely *is* the layer here — and that was established by **running the code**. The site collects equation conditions where `eq_domain == var_def.domain` and fixes the variable wherever the combined condition fails, **without consulting `var_def.fx_map`**, so it cannot see that a cell already carries an authoritative `_fx_` equation.
+
+**The machinery to fix it already exists** (the S38 dyncge lesson): `_fx_eq_name()` at `emit_gams.py:711` is the canonical namer; `emit_gams.py:920` already builds a `suppressed` set of `_fx_` equation names — the same reasoning in the opposite direction; and `var_def.fx_map` already enumerates the fixed values (`partition.py:180`). **The fix is a lookup, not new machinery.**
+
+**Is the "same shape as the Sprint-33 P6 fix" analogy genuine? Yes — structurally.** S33 P6 made the emitter skip an expression `.l` init when its `.l` refs were not a subset of `_declared_mcp_vars`: *guard an emission on the state of another emitted artifact*. The lnts fix is the same shape with a different predicate. ⚠ But note the analogy was cited **alongside a fix surface that turned out to be wrong** — soundness of the shape did not transfer to the location.
+
+**Decision:** Surface corrected in #1694's addendum. The banked location would have sent Day 1 to a branch that never executes.
 
 ---
 
@@ -536,13 +574,13 @@ Sprint 39 execution team
 ### Verification Results
 ✅ **Status:** VERIFIED
 
-**Verified by:** Sprint 39 Prep Task 2 · **Date:** 2026-08-27 · **Measured at:** `a8669ad6`
+**Verified by:** Sprint 39 Prep Task 5 · **Date:** 2026-08-31 · **Measured at:** `4bbe7c3c`
 
-**Findings:** A fresh emit is **byte-identical** to the committed golden (`diff -q` clean), so the measurement describes the golden. The failure reproduces exactly: `**** MODEL STATUS 4 Infeasible`, `SOLVER STATUS 1 Normal Completion`, **ITERATION COUNT 0**. Both fixed values are present and unchanged — `y_fx_y2_h50.. y("y2","h50") - 5 =E= 0;` and `y_fx_y3_h50.. y("y3","h50") - 45 =E= 0;` (golden lines 144-145).
+**Findings:** lnts still reproduces exactly. A fresh emit is **byte-identical** to the committed golden (`diff -q` clean), so the measurement describes the golden rather than a rebuild. From a scratch directory: `**** SOLVER STATUS 1 Normal Completion`, `**** MODEL STATUS 4 Infeasible`, `ITERATION COUNT 0`, `1 NONOPT` — and **zero anchored `**** ERROR` lines**, confirming this is a bounds contradiction detected in presolve rather than a compile or execution failure.
 
-**Evidence:** fresh emit + `gams` run from `/tmp/s39t2/lnts`; status read from GAMS's own lines, anchored.
+**Evidence:** `/tmp/s39t5` — emit + `gams lnts_mcp.gms lo=0 errmsg=1`; status read from GAMS's own lines, anchored `^****`; diagnostics fingerprinted with numbers collapsed.
 
-**Decision:** lnts is unchanged since it was banked. Task 5 may proceed on the recorded fingerprint.
+**Decision:** Unchanged since Sprint 38 and since Task 2's independent reproduction. Safe to build the gate on.
 
 ---
 # Category 4: sarf #1385 — the Four Untouched Call Sites
