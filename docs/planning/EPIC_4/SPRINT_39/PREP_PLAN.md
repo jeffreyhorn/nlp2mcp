@@ -45,7 +45,7 @@ This prep plan front-loads the work that would otherwise be discovered mid-sprin
 | 1 | ✅ Create Sprint 39 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 10 priorities |
 | 2 | ✅ Re-Derive the Sprint-38 Baseline & Carryforward Fingerprints | Critical | 3-4 hours | Task 1 | Verify 111/96/135/floor-73 and every banked fingerprint on current `main` |
 | 3 | ✅ The Floor-Classification Decision Package (P1) | Critical | 2-3 hours | Tasks 1, 2 | P1 — the Day-0 decision that blocks the sprint's baseline |
-| 4 | ✅ dyncge Second-Defect Diagnosis & Layer Trace (P2) | Critical | 5-7 hours | Tasks 1, 2 | P2 — the sprint's only new diagnosis |
+| 4 | ✅ dyncge Second-Defect Diagnosis & Layer Trace (P2) | Critical | 5-7 hours | Tasks 1, 2 | P2 — the sprint's only new **instance**; the mechanism is the known #1381 family, and dyncge is its first **silent** case |
 | 5 | lnts Fingerprint Reproduction & Runtime-Probe Design (P3) | Critical | 4-6 hours | Tasks 1, 2 | P3 — an entirely untraced hypothesis |
 | 6 | sarf's Four Call Sites — Cost Attribution & Atomicity Plan (P4) | Critical | 5-7 hours | Tasks 1, 2 | P4 — the only KPI mover (+1 Translate) |
 | 7 | Positional-vs-Declared-Domain Site Survey (P5) | High | 4-5 hours | Tasks 1, 2 | P5 — the audit's input catalog |
@@ -136,7 +136,7 @@ Categories should map to Sprint 39's priorities. Candidate seeds, drawn from `..
    **The lesson is not "derive it, don't recall it" — that was already the lesson, and it still produced a wrong number.** It is that *a claim of having derived a figure is itself unverifiable prose*; only a re-derivation at the point of use is evidence. **Consequence:** at 40.0 h the research no longer fits the **34–47 h** budgeted for Tasks 2–11 at its lower bound — the prep is only completable near the top of its range, which Task 12 must schedule around.
 2. **The prompt's category list numbered `Category 9` twice** (Epic-5 Handoff and General Emit-Backlog Sweep) and described "5 main categories" while listing ten. Resolved as **10 categories**, with the emit-backlog sweep as Category 10.
 
-**The heaviest category is not the one with the most hours.** Category 4 (sarf) has four unknowns and 6.5 h, but Category 2 (dyncge) carries **two Criticals** because it is the sprint's only new diagnosis *and* the model whose previous gate mis-scoped.
+**The heaviest category is not the one with the most hours.** Category 4 (sarf) has four unknowns and 6.5 h, but Category 2 (dyncge) carries **two Criticals** because it is the sprint's only new **instance** *and* the model whose previous gate mis-scoped. *(Task 4: the mechanism turned out to be the known #1381 family — the two Criticals were still the right call, since the instance is the family's first silent one.)*
 
 ### Verification
 
@@ -485,7 +485,7 @@ Take dyncge's `CASE_B` residual from a *symptom* to a *located defect with a nam
 
 ### Why This Matters
 
-P2 is **the sprint's only new diagnosis**, and dyncge is precisely the model whose previous gate mis-scoped: `ISSUE_1693` demanded *"new logic rather than a widened condition-lift"* for a diagonal-triviality test that **had existed since #942** and was merely applied to inequalities. Reusing it cost ~40 lines of extraction.
+P2 is **the sprint's only new diagnosis** — *as scoped. Task 4 refuted that: the mechanism is the already-tracked #1381 phantom-IndexOffset family (camcge #1354, cesam2 #1355). What is new is the **instance**, and specifically that dyncge is the family's first **silent** case — every prior member announced itself with a PATH `$141` compile failure. See Unknown 2.3.* — and dyncge is precisely the model whose previous gate mis-scoped: `ISSUE_1693` demanded *"new logic rather than a widened condition-lift"* for a diagonal-triviality test that **had existed since #942** and was merely applied to inequalities. Reusing it cost ~40 lines of extraction.
 
 Sprint 38's most transferable finding is that **three of four Phase-0 gates named the wrong layer**. A gate authored in prep, from a trace rather than an inspection, is the mitigation.
 
