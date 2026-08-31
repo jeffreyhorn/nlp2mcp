@@ -297,7 +297,17 @@ Re-run `scripts/diagnostics/kkt_residual.py` and read the *full* verdict includi
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — `CASE_A` is the right target, but reachability is not yet provable
+
+**Verified by:** Sprint 39 Prep Task 4 · **Date:** 2026-08-30 · **Measured at:** `37665091`
+
+**Findings:** dyncge is **`likely_convex`**, and the harness reports **`CASE_B — emit_bug`**, not `CASE_C_OBJDEF` — so it is not, on today's evidence, elec's non-convexity shape. A concrete structural defect is located (see 2.2), with a well-defined correct target, which makes `CASE_A` the honest goal.
+
+**But reachability cannot be asserted before the fix.** The assumption as written ("`CASE_A` is reachable") over-claims: the residual is currently dominated by the phantom-offset defect, and a second-order non-convexity beneath it would be invisible until that is corrected. **elec's own verdict changed from `CASE_B` to `CASE_C_OBJDEF` as the classifier improved** — precedent for exactly this.
+
+**Evidence:** DB `convexity.status = likely_convex`; `kkt_residual.py` → `CASE_B`, max rel 6.22e-02.
+
+**Decision:** Target `CASE_A`; **pre-register the REPLAN** rather than discovering it mid-sprint — if the residual persists as `CASE_C_OBJDEF` once the offsets are corrected, the honest deliverable becomes a *documented divergence* with `modelstat` asserted, **not** a Match. Written into #1714's PROCEED/REPLAN signal.
 
 ---
 
@@ -330,15 +340,15 @@ Hand-derive `stat_pf` and `stat_pq` from dyncge's source **before** reading the 
 Sprint 39 execution team
 
 ### Verification Results
-✅ **Status:** VERIFIED (contribution — the *locus* question remains Task 4's)
+✅ **Status:** VERIFIED — the defect is IN the `pf` block; the `pq` row only surfaces it
 
-**Verified by:** Sprint 39 Prep Task 2 · **Date:** 2026-08-27 · **Measured at:** `a8669ad6`
+**Verified by:** Sprint 39 Prep Task 4 · **Date:** 2026-08-30 · **Measured at:** `37665091`
 
-**Findings:** `CASE_B` reproduced exactly: max relative **6.22e-02** at `stat_pf(CAP,SRV)`, dual transfer CONSISTENT, and all five top rows in the recorded order (`stat_pf(CAP,SRV)` · `stat_pq(HMN)` · `stat_pf(LAB,SRV)` · `stat_pf(LAB,HMN)` · `stat_pf(CAP,LMN)`). The objective claim also holds: cold MCP **MS-1 @ 381401.119** vs NLP **539570.5027**, relative difference **0.2931** (29.3 %).
+**Findings — located, not suspected.** `eqXp(i)`'s index `i` is **free and unrelated to the head's `(h,j)`**, so `stat_pf(h,j)` must carry `sum(i, (-1)*alpha(i)*f(h,j)/pq(i) * nu_eqXp(i))`. Instead the emit produces the diagonal plus a fan of manufactured offsets `nu_eqXp(j±1..3)`, each gated on **`$(ord(h) = k)`** — a guard on the **factor** index for a sum over the **goods** index. `h` = {CAP, LAB} has 2 members, so `ord(h)=3` terms are **dead**, and each row keeps a different wrong subset. `eqII` is corrupted identically (CAP rows only), which is why CAP carries the largest residual while LAB rows are also wrong. **dyncge's source contains no lead/lag at all** — every offset is manufactured. Measured: 12 phantom `nu_X(j±k)` refs, `ord(h)` guards ∈ {1,2,3}.
 
-**Evidence:** `scripts/diagnostics/kkt_residual.py data/gamslib/raw/dyncge.gms`; DB `solution_comparison` for the objectives.
+**`stat_pq` is CORRECT** — the decisive control. All seven pq-bearing equations present (exhaustive scan of 29 equation definitions), every coefficient verified term-by-term **including the `eqM`/`eqD` chain rules**, where the emitted tail `/A · B·C/B²` reduces exactly to `1/pq`. It carries **0** phantom refs and **0** `ord()` guards, because it is 1-D head / 1-D equation and never enters the dim-mismatch path.
 
-**Decision:** The fingerprint is sound to build on. Whether the defect *is in* the `pf`/`pq` block or merely *surfaces* there is untouched by this task and remains Task 4's.
+**Decision:** The defect is **in** the `pf` block. `stat_pq(HMN)`'s residual (5.90e-02, second-largest) is **not explained by its own row** and most plausibly surfaces through the shared `nu_eqXp` multiplier — **not proven**, and #1714's REPLAN signal treats a surviving `stat_pq` residual as evidence of a second defect.
 
 ---
 
@@ -371,7 +381,17 @@ Cross-check dyncge's structure against the catalog Task 7 produces, and against 
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — the mechanism IS already known, under another name
+
+**Verified by:** Sprint 39 Prep Task 4 · **Date:** 2026-08-30 · **Measured at:** `37665091`
+
+**The assumption was** that this is a new diagnosis. It is not: it is a new *instance* of the **phantom-IndexOffset / plain-alias + dim-mismatch** family already tracked by **#1381** (consolidating camcge **#1354** and cesam2 **#1355** — `ISSUE_1355` is titled "Phantom IndexOffset `nu_COLSUM(i±N)` References in `stat_tsam` Stationarity", the same shape). The `ord(h)=k` guard comes from the **#1081** dimension-mismatch path in `src/kkt/stationarity.py` (~7107–7131), whose own comment describes a genuine lead/lag (`bal4(t) → x(t,l)`).
+
+**⚠ But dyncge adds information the family did not have.** Every previously known member was found because it produced a **PATH `$141` compile failure** on the phantom reference. **dyncge is the first known SILENT instance**: its guards keep every phantom reference in range, so it compiles, solves to `MS-1`, and is wrong by 29.3 % with no diagnostic at all.
+
+**Consequence:** #1381's *"at minimum 13 affected models"* is a census of models that failed **loudly**. Silent instances are invisible to that method, so the family's blast radius is plausibly larger than recorded. A search for the **structural** signature — `nu_X(idx±k)` paired with an `ord(…)=k` guard in a stationarity row — is recommended follow-up.
+
+**Decision:** This is the S38 dyncge lesson repeating one level up: *before writing new emit logic, check whether the logic exists for a different population* — and here, **before filing a new defect, check whether the defect is already filed.** #1714 carries dyncge's gate and evidence, but the **fix probably belongs to #1381's Pattern C Phase B**, not a dyncge-specific patch.
 
 ---
 
@@ -403,7 +423,17 @@ Re-read #1693's gate against the Day-12 measurements. Draft the new issue's open
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — #1693 closes cleanly; this is not a widening
+
+**Verified by:** Sprint 39 Prep Task 4 · **Date:** 2026-08-30 · **Measured at:** `37665091`
+
+**Findings:** #1693 was the `eqpf2` **empty-pair abort from diagonal self-cancellation**, fixed by reusing section 2c's diagonal-triviality test for equalities (section 3c). That defect is gone: `eqpf2` now generates 12 off-diagonal rows and 0 diagonal, with 0 empty-pair errors, and dyncge reaches `MODEL STATUS 1`.
+
+The defect diagnosed here is a **different mechanism in a different place** — manufactured index offsets on `nu_eqXp`/`nu_eqII` in `stat_pf`, from the dim-mismatch path. It was *masked* by the abort (the model never got far enough to expose it), which is a sequencing relationship, not a shared cause.
+
+**Evidence:** #1693's own resolution record; the located defect's mechanism (`ord(h)` offset guards) is untouched by the 3c change; cold emit compiles and solves.
+
+**Decision:** #1693 stays closed on its own terms. dyncge's second defect is tracked separately as **#1714** — consistent with the Sprint 38 close, which recorded that closing #1693 does **not** mean dyncge is correct.
 
 ---
 
