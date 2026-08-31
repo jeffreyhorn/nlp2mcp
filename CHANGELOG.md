@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 39 Prep
 
-- **Prep Task 5 COMPLETE (2026-08-31) — lnts's hypothesis is CONFIRMED at runtime, and its banked fix surface is REFUTED.** New: `docs/planning/EPIC_4/SPRINT_39/LNTS_PROBE_DESIGN.md`; addendum on `ISSUE_1694`. Docs only — no `*.py` changed, so the quality gate does not apply.
+- **Prep Task 5 COMPLETE (2026-08-31) — lnts's hypothesis is CONFIRMED at runtime, and its banked fix surface is REFUTED.** New: `docs/planning/EPIC_4/SPRINT_39/LNTS_PROBE_DESIGN.md`; addendum appended to `docs/issues/ISSUE_1694_lnts-contradictory-fx-mechanisms-blanket-zeroing.md`. Docs only — no `*.py` changed, so the quality gate does not apply.
 
 - **The collision is now a runtime fact rather than a source reading.** The probe — `display` of effective `y.lo`/`y.up` injected after all fixing — was designed with **confirm/refute criteria written and committed before it ran**, then executed: `y("y2","h50")` and `y("y3","h50")` carry `_fx_` equations demanding **5** and **45**, and their effective bounds at solve time are **`lo = up = 0`**. All three CONFIRM criteria hold, including that the contradiction is *exactly* zero (so it is the blanket, not a third writer) and that the `D = 0` control `y("y4","h50")` is consistent (so the probe is not over-reporting). **The hypothesis had been banked since Sprint 38 on a source read alone.**
 

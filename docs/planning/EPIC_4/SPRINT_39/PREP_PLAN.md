@@ -579,7 +579,7 @@ fi
 
 ### Deliverables
 
-- A new `docs/issues/ISSUE_<n>_dyncge-*.md` with a complete Phase-0 acceptance gate, including a **named layer**
+- A new `docs/issues/ISSUE_1714_dyncge-phantom-indexoffset-stat-pf.md` with a complete Phase-0 acceptance gate, including a **named layer** *(written as `ISSUE_<n>_dyncge-*.md` when the task was scoped; the number was assigned on filing)*
 - A hand-derived KKT shape for `stat_pf` / `stat_pq` and a term-by-term comparison against the emit
 - A stated position on whether `CASE_A` is reachable, or whether a documented divergence is the honest target
 - A cross-check result: is this mechanism already known under another name?
@@ -646,7 +646,7 @@ while a blanket pruned-instance zeroing fires on exactly those cells, giving `y.
 ### Changes
 
 - **NEW** `docs/planning/EPIC_4/SPRINT_39/LNTS_PROBE_DESIGN.md` — the runtime bound probe, with confirm/refute criteria **written before execution**
-- `docs/issues/ISSUE_1694_lnts-*.md` — Task 5 addendum: runtime confirmation, the **corrected fix surface**, the named layer, the existing-machinery note, and the S33-P6 analogy verdict
+- `docs/issues/ISSUE_1694_lnts-contradictory-fx-mechanisms-blanket-zeroing.md` — Task 5 addendum: runtime confirmation, the **corrected fix surface**, the named layer, the existing-machinery note, and the S33-P6 analogy verdict
 - `KNOWN_UNKNOWNS.md` — **3.1 ✅**, **3.2 ❌ WRONG**, **3.3 ✅**
 - `CHANGELOG.md` — Sprint 39 Prep entry
 
@@ -1604,7 +1604,7 @@ Recorded in advance, so it can be recognised:
 
 ### Per-priority background
 - **P1 floor:** `data/floor_provenance.json` · `scripts/sprint_audit/floor_tracker.py` · `../SPRINT_38/MEASUREMENT_INTEGRITY_DESIGN.md` (P6c)
-- **P2 dyncge:** `docs/issues/ISSUE_1693_dyncge-empty-mcp-pair-eqpf2-diagonal-cancellation.md` · `../SPRINT_38/DAY12_P8_ELEC.md` §6
+- **P2 dyncge:** `docs/issues/completed/ISSUE_1693_dyncge-empty-mcp-pair-eqpf2-diagonal-cancellation.md` · `../SPRINT_38/DAY12_P8_ELEC.md` §6
 - **P3 lnts:** `../SPRINT_38/BACKLOG_CANDIDATE_CATALOG.md` · `../SPRINT_38/PLAN.md` Day-12 entry
 - **P4 sarf:** `docs/issues/ISSUE_1385*` · `../SPRINT_38/SARF_REARCH_DESIGN.md` · `../SPRINT_38/DAY6_SARF_PROBE_DECISION.md` · `../SPRINT_38/DAY7_SARF_GATE_P6C.md`
 - **P5 positional domain:** `../SPRINT_38/DAY11_P5_CLOSE_P8_TRICP.md` · `../SPRINT_38/DAY12_P8_ELEC.md` · `docs/issues/ISSUE_1062_*` · `docs/issues/ISSUE_1325_*`
