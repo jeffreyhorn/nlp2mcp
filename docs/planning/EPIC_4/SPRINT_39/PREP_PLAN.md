@@ -1038,7 +1038,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/POSITIONAL_DOMAIN_SURVEY.md && \
 - [x] Each site classified, with "not reachable" cases carrying an **argument**, not an assertion — the single such verdict (`emit_gams.py:795`) is stated as **"not reachable *in sample*"**, 0 of 15, and explicitly labelled a measured absence rather than a proof
 - [x] Corpus incidence measured for both shapes, not just the variable-domain one — and for a third (**parameter** domains, 21 models) that was not in the question
 - [x] Sites ranked by blast radius — **measured** by `sys.settrace` over 15 models, not argued from call chains
-- [x] A generic property test specified — **two** specified, because one cannot cover the class; P1 mutation-killed, P2 finds 7 live violations
+- [x] A generic property test specified — **two** specified, because one cannot cover the class; P1 mutation-killed, P2 finds **9 live violations across 6 models**
 - [x] The two known instances (tricp, elec) appear in the catalog and are marked already-fixed — used as the survey's **positive control**
 - [x] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 

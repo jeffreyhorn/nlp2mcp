@@ -159,7 +159,7 @@ This is why so many `NEEDS A TEST` verdicts above are *"safe today, but by somet
 
 ## 4. Corpus incidence (Unknown 5.2)
 
-**Two independent methods, deliberately.** An IR census over all 219 models (`parse_model_file`, then a **case-insensitive** repeat test — `len(domain) != len({x.lower() for x in domain})` — per symbol table, because GAMS identifiers are case-insensitive, so `p(I,i)` is a repeat) and a source-level regex prescan of the raw `.gms` files. They agree on **24** models; the union is **44**.
+**Two independent methods, deliberately** — three, counting the corroboration below. An IR census over all 219 models (`parse_model_file`, then a **case-insensitive** repeat test — `len(domain) != len({x.lower() for x in domain})` — per symbol table, because GAMS identifiers are case-insensitive, so `p(I,i)` is a repeat) and a source-level regex prescan of the raw `.gms` files. They agree on **24** models; the union is **44**.
 
 | kind | models | ∩ the 142 convex candidates |
 |---|---|---|
@@ -173,6 +173,8 @@ This is why so many `NEEDS A TEST` verdicts above are *"safe today, but by somet
 
 - The plan records the *variable*-domain case as **"exactly two models: `tricp`, `ferts`"**. It is **five** — `ferts`, `lop`, `maxmin`, `sarf`, `tricp`. `lop` declares `dtr(s,s,s,s)`, a **four-fold** repeat.
 - Unknown 5.2's assumption is that the *set*-domain shape is **"as rare as the variable-domain shape"**. It is **16 models, 8×** the variable count — and the **parameter** shape, which no one had counted at all, is larger still at **21**.
+
+**Independently corroborated, for the set-domain figure.** `PREP_PLAN.md`'s own Task-7 verification snippet — written at Sprint 38 close, before this task existed, and using a *different* per-file timeout (20 s vs 120 s) — records `219 scanned | 16 hits`. That is the same **16** this census measures for repeated-symbol set domains.
 
 **Coverage limits, stated rather than buried.** The IR census could not parse **41 of 219** models (10 of them prescan candidates: `andean`, `dinam`, `emfl`, `epscm`, `gqapsdp`, `kqkpsdp`, `netgen`, `phosdis`, `qp1x`, `sddp` — `dinam` timed out at 120 s, several `$include` a file the corpus does not carry). Those 10 are counted from the source prescan only, so their **kind** breakdown is unknown. The per-kind figures above are therefore **lower bounds**.
 
@@ -197,6 +199,8 @@ Stated over the **emitted output**, because that is where the GAMS semantics bit
 
 - Control: **elec pre-fix 1 violation (`$(ut(i,i))`), elec today 0.**
 - **⚠ P2 finds 9 violations across 6 CURRENT goldens.**
+
+**Counting convention, stated once because the two numbers differ.** A **violation** is one distinct offending reference *within* a golden (`turkpow` alone contributes three: `vs(v,v)`, `vs(t__kkt1,t__kkt1)`, `vs(t__kkt2,t__kkt2)`); a **model** is a golden carrying at least one. Both are reported because they size different things — violations size the fix work, models size the blast radius. "Hits" is used loosely below and always means violations.
 
 | model | emitted | source declares it repeated? | assessment |
 |---|---|---|---|
@@ -225,7 +229,7 @@ Both properties are pure text scans of `data/gamslib/mcp/`: **under 3 s over 193
 
 P5 is **0-bucket by design**; nothing below asks for a bucket move.
 
-1. **Land P2 as a gate first.** It is the only artefact here that finds live defects, it runs in 2.2 s, and its 5 hits are a ready-made work list. Landing it *before* any guard means the guards have a fail-before.
+1. **Land P2 as a gate first.** It is the only artefact here that finds live defects, it runs in under 3 s, and its **9 violations across 6 models** are a ready-made work list. Landing it *before* any guard means the guards have a fail-before.
 2. **Guard the two symbol-keyed `dict(zip(...))` collapses** — `condition_eval.py:117` and `empty_equation_detector.py:127`. Highest reach among unguarded sites (9/15 and 10/15), smallest fix, and `strict=True` already gives a false sense of safety there.
 3. **Make the `constraint_jacobian.py` `.index()` family's dependency explicit** — 4 sites, the highest-reach shape in the catalog, safe only because of a pass covering one of three sub-shapes.
 4. **Then `stationarity.py:1091/1104`.** Lower reach (2/15), genuinely unguarded.
