@@ -47,7 +47,7 @@ This prep plan front-loads the work that would otherwise be discovered mid-sprin
 | 3 | ✅ The Floor-Classification Decision Package (P1) | Critical | 2-3 hours | Tasks 1, 2 | P1 — the Day-0 decision that blocks the sprint's baseline |
 | 4 | ✅ dyncge Second-Defect Diagnosis & Layer Trace (P2) | Critical | 5-7 hours | Tasks 1, 2 | P2 — the sprint's only new **instance**; the mechanism is the known #1381 family, and dyncge is its first **silent** case |
 | 5 | ✅ lnts Fingerprint Reproduction & Runtime-Probe Design (P3) | Critical | 4-6 hours | Tasks 1, 2 | P3 — an entirely untraced hypothesis |
-| 6 | sarf's Four Call Sites — Cost Attribution & Atomicity Plan (P4) | Critical | 5-7 hours | Tasks 1, 2 | P4 — the only KPI mover (+1 Translate) |
+| 6 | ✅ sarf's Four Call Sites — Cost Attribution & Atomicity Plan (P4) | Critical | 5-7 hours | Tasks 1, 2 | P4 — the only KPI mover (+1 Translate) |
 | 7 | Positional-vs-Declared-Domain Site Survey (P5) | High | 4-5 hours | Tasks 1, 2 | P5 — the audit's input catalog |
 | 8 | Presolve-Record Remedy Design (P7) | High | 3-4 hours | Tasks 1, 2 | P7 — all 14 rows or none |
 | 9 | Consultation Reply-Integration & Follow-Up Package (P6) | Medium | 2-3 hours | Task 1 | P6 — both branches prepared before the date gate |
@@ -260,9 +260,9 @@ Sprint 39 quotes a lot: `CASE_B` at 6.22e-02, sarf at 28 m 40 s, 14 presolve row
 
 | # | correction | routed to |
 |---|---|---|
-| 1 | PREP_PLAN's own Task 6 check greps the wrong files/symbols for the four sarf call sites; its "these files moved" rationale is inverted | **Task 6** |
+| 1 | PREP_PLAN's own Task 6 check greps the wrong files/symbols for the four sarf call sites; its "these files moved" rationale is inverted | **Task 6** ✅ applied |
 | 2 | Five distinct presolve populations (48 / 40 / 34 / 31 / 14 dangling), all correct — P7 must name which it means | **Task 8** |
-| 3 | sarf's hot path at the cap is `enumerate_equation_instances`, not the four `enumerate_variable_instances` sites — Unknown 4.2 is genuinely open | **Task 6** |
+| 3 | sarf's hot path at the cap is `enumerate_equation_instances`, not the four `enumerate_variable_instances` sites — Unknown 4.2 is genuinely open<br>⚠ **Task 6 found this correction itself wrong**: at a 900 s cap `enumerate_equation_instances` is 0.329 s / 0.04 %. Task 2's shorter cap stopped *inside* that phase, so the deepest live frame read as the cost. The premise it refutes still fails — just not for this reason. | **Task 6** ✅ |
 | 4 | `robot` is the one non-solving candidate with no owning issue doc | **Task 11** |
 
 **The finding that matters most is for Task 3.** twocge's and elec's cold emits both changed, but **not in the same way**: twocge's entire cold delta is a comment block plus two `nu_*.fx` guard lines, while elec's changed the stationarity equations themselves. Unknown 1.1 asks exactly this. **The floor is 73, 74 or 75** — the 74 reading was not considered at Sprint 38 close. Task 2 deliberately does not decide it.
@@ -723,9 +723,10 @@ test -f docs/planning/EPIC_4/SPRINT_39/LNTS_PROBE_DESIGN.md && echo "✅ probe d
 
 ## Task 6: sarf's Four Call Sites — Cost Attribution & Atomicity Plan (P4)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-08-31)
 **Priority:** Critical
 **Estimated Time:** 5-7 hours
+**Time Spent:** 5 hours
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
@@ -767,11 +768,33 @@ Both `stationarity.py` and `emit_gams.py` changed materially in Sprint 38 (Days 
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_39/SARF_CALLSITE_PLAN.md` — the four sites at their current locations, the measured cost attribution, the re-validated O(active) projection, the atomicity plan, the verified surrogate, the restated Phase-0 gate, and a REPLAN exit
+- `KNOWN_UNKNOWNS.md` — Unknowns **4.1 ✅ VERIFIED**, **4.2 ❌ WRONG**, **4.3 🔶 PARTIALLY WRONG**, **4.4 🔶 PARTIALLY WRONG**
+- `CHANGELOG.md` — Sprint 39 Prep entry
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — and the finding is that P4's premise does not survive measurement.**
+
+**The sites are where they were recorded** (4.1 ✅): `gradient.py:287`, `gradient.py:453`, `complementarity.py:367`, `complementarity.py:512`, all at their exact Day-7 lines, with **0** commits to either file since the anchor `949a4587`. Located by symbol, not by line number. ⚠ But there are **six** callers of `enumerate_variable_instances`, not four — `constraint_jacobian.py:80` and `index_mapping.py:634` are the two the Day-7 filter already covers.
+
+**The cost is not at those sites** (4.2 ❌). A capped 900 s `cProfile` of a sarf translate:
+
+| frame | cumulative | % | ncalls |
+|---|---|---|---|
+| `compute_constraint_jacobian` | **637.9 s** | **70.9 %** | 1 |
+| `_diff_sum` | 513.6 s | 57.1 % | 1,641,023 |
+| `_is_concrete_instance_of` | 306.2 s | 34.0 % | 13,344,770 |
+| `compute_objective_gradient` | 156.9 s | 17.4 % | 1 |
+| **`enumerate_variable_instances`** | **4.4 s** | **0.5 %** | **40** |
+
+The charitable reading — *the four emit the instances later differentiated* — fails too: the 70.9 % path takes its columns from `constraint_jacobian.py:80`, which is **not** one of the four and which Day 7 already narrowed. **And `gradient.py:453` is dead code** — `compute_gradient_for_expression` has no production caller, confirmed by instrumentation. So the lever is **three live sites** with an honest upper bound of 17.4 %, not four sites accounting for the bulk.
+
+**The projection's rate holds; its scope premise does not** (4.3 🔶). 1,183 × 398 = 470,834 at 3,343/s ⇒ 141 s is arithmetically right, and the measured 1,146/s profiled implies ~3,439/s at a 3× cProfile overhead. But the run performed **1,031,810** differentiations — 2.2× the projection's entire budget — without finishing. The ≤300 s gate's headroom is intact **only if** the narrowing reaches 398 active columns, a conditional that has never been tested.
+
+**The surrogate was built and verified, not specified** (4.4 🔶): `task(g,t,mn,mn)` at 96 columns hits **3 of 4** sites; a first attempt without per-element `.lo`/`.up` overrides hit only 1. The fourth is **unreachable by construction**, because nothing calls it.
+
+**Routed to the owner, not decided here.** P4 is the sprint's only KPI mover; re-scoping it onto the differentiation path, keeping it with a much smaller expected gain, or deferring are decisions with different costs and different KPI consequences. `SARF_CALLSITE_PLAN.md` §8 states the options.
 
 ### Verification
 
@@ -779,14 +802,41 @@ Both `stationarity.py` and `emit_gams.py` changed materially in Sprint 38 (Days 
 cd "$(git rev-parse --show-toplevel)"
 
 # The four call sites — do they still exist where recorded?
-# No 2>/dev/null: these files moved in Sprint 38, so a rename must fail loudly
-# rather than look like "the call sites are gone".
-grep -E -n "referenced-instance|_is_concrete_instance_of|resolve_set_members" \
-  src/ad/constraint_jacobian.py src/ad/index_mapping.py src/kkt/stationarity.py | head -20
+# ⚠ CORRECTED by Task 2 and re-corrected here. The original form grepped
+# constraint_jacobian.py / index_mapping.py / stationarity.py, none of which
+# holds any of the four; and its "these files moved in Sprint 38" rationale is
+# inverted — gradient.py and complementarity.py did NOT move (0 commits since
+# 949a4587), while the files it grepped did. Symbols, not line numbers:
+# ⇒ gradient.py:287, gradient.py:453, complementarity.py:367, complementarity.py:512
+# ERE with `[[:space:]]*`, NOT a fixed-string "= enumerate...": the fixed form is
+# brittle to formatting and would miss `instances=enumerate_variable_instances(`.
+grep -nE "=[[:space:]]*enumerate_variable_instances\(" \
+  src/ad/gradient.py src/kkt/complementarity.py
 
-# Current line references from the Sprint-38 design doc, for comparison
-grep -nE "constraint_jacobian\.py:[0-9]+|index_mapping\.py:[0-9]+|stationarity\.py" \
-  docs/planning/EPIC_4/SPRINT_38/SARF_REARCH_DESIGN.md | head
+# POSITIVE CONTROL for that anchor — run it, do not assume it. ⇒ 3
+# (The fixed-string form scores 1 of 3 here. That is the whole reason for the ERE.)
+printf 'x = enumerate_variable_instances(a)\ny=enumerate_variable_instances(a)\nz  =  enumerate_variable_instances(a)\n' \
+  | grep -cE "=[[:space:]]*enumerate_variable_instances\("
+
+# ⚠ There are SIX callers, not four. The other two — constraint_jacobian.py:80
+# and index_mapping.py:634 — are the ones the Day-7 referenced-instance filter
+# already covers. Count them, so the difference is visible rather than assumed.
+grep -rnE "=[[:space:]]*enumerate_variable_instances\(" src/ | sort   # ⇒ exactly 6
+
+# CROSS-CHECK that the `=` anchor is not hiding a site: list every OTHER mention
+# and eyeball it. ⇒ 8 — 3 imports, 1 def, 3 `>>>` doctest examples, 1 prose line
+# (gradient.py:48). An unanchored grep picks all 8 up and reports 14 "callers".
+grep -rn "enumerate_variable_instances" src/ \
+  | grep -vE "=[[:space:]]*enumerate_variable_instances\("
+# ⚠ Known blind spot, accepted deliberately: the `=` anchor cannot see a bare
+# statement call, `enumerate_variable_instances(x)` with the result discarded.
+# The function exists to return a list, so such a call would be dead — but if
+# the cross-check above ever returns something that is not an import, a def, a
+# doctest or prose, that is the case, and the count is wrong.
+
+# gradient.py:453 is DEAD CODE in the translate path — its enclosing function has
+# no production caller. Expect hits only in tests and in its own docstring.
+grep -rn "compute_gradient_for_expression" src/ tests/ | grep -v "def compute_gradient_for_expression"
 
 # sarf has no golden (so leak-check will report NO-OP — expected, not a failure)
 ls data/gamslib/mcp/sarf_mcp.gms 2>/dev/null || echo "no golden — leak-check NO-OP is expected"
@@ -802,7 +852,7 @@ import cProfile, pstats, sys, signal
 sys.setrecursionlimit(50000)
 from src.cli import main
 def bail(*a): raise TimeoutError
-signal.signal(signal.SIGALRM, bail); signal.alarm(180)
+signal.signal(signal.SIGALRM, bail); signal.alarm(900)
 try:
     cProfile.run(
         'main(args=[\"$REPO/data/gamslib/raw/sarf.gms\",\"-o\",\"sarf_mcp.gms\"],'
@@ -814,6 +864,8 @@ pstats.Stats('/tmp/sarf.prof').sort_stats('cumulative').print_stats(15)
 # ⚠ Bound-vs-reach: at a 10 s bound sarf is still inside parse_model_text, so the
 # four AD/KKT call sites are NOT yet on the stack. Raise the alarm until the
 # profile shows frames past the parser, or the attribution will be all parsing.
+# 900 s is the bound the SARF_CALLSITE_PLAN.md §2 figures were measured at;
+# parse completes at 33.1 s, so the remaining 867 s is AD/KKT.
 
 # The plan exists and names the four sites + the atomic unit
 test -f docs/planning/EPIC_4/SPRINT_39/SARF_CALLSITE_PLAN.md && \
@@ -831,14 +883,14 @@ test -f docs/planning/EPIC_4/SPRINT_39/SARF_CALLSITE_PLAN.md && \
 
 ### Acceptance Criteria
 
-- [ ] All four call sites located on current `main`, with any movement since S38 D7 recorded
-- [ ] Cost attributed **by measurement**; if the four do not dominate, that finding is reported and P4's estimate revised
-- [ ] The ~141 s O(active) projection re-validated or corrected
-- [ ] The atomic unit defined, with the inconsistent-MCP argument written out
-- [ ] A surrogate fixture specified (sarf cannot be its own)
-- [ ] The gate restated with ≤300 s, symbolic-index assertion, `--min-scope` → 187
-- [ ] A REPLAN exit defined for a timeout re-trigger
-- [ ] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All four call sites located on current `main`, with any movement since S38 D7 recorded — none moved (0 commits to either file since `949a4587`); located by symbol
+- [x] Cost attributed **by measurement**; if the four do not dominate, that finding is reported and P4's estimate revised — **they do not** (0.5 %), reported in `SARF_CALLSITE_PLAN.md` §2 and §8
+- [x] The ~141 s O(active) projection re-validated or corrected — rate survives, scope premise does not (§3)
+- [x] The atomic unit defined, with the inconsistent-MCP argument written out (§6)
+- [x] A surrogate fixture specified (sarf cannot be its own) — specified **and run**; 3 of 4 sites, the 4th unreachable (§5)
+- [x] The gate restated with ≤300 s, symbolic-index assertion, `--min-scope` → 187 (§7)
+- [x] A REPLAN exit defined for a timeout re-trigger (§7)
+- [x] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

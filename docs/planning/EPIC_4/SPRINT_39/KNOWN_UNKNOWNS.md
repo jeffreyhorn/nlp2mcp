@@ -628,6 +628,20 @@ Sprint 39 execution team
 
 **Decision:** The sites are intact, so Task 6's premise holds. Its *verification command* and its *cost assumption* both need revision.
 
+#### Task 6 addendum — both routed corrections resolved
+
+**Re-confirmed by:** Sprint 39 Prep Task 6 · **Date:** 2026-08-31 · **Measured at:** `6b58d0ca`
+
+**Still at the same lines**, re-located by **symbol** rather than by line number: `gradient.py:287` is in `compute_objective_gradient`, `gradient.py:453` in `compute_gradient_for_expression`, `complementarity.py:367` and `:512` both in `build_complementarity_pairs`. Still 0 commits to either file since `949a4587`.
+
+**Correction 1 is APPLIED** — PREP_PLAN's Task 6 verification block now greps `grep -nE "=[[:space:]]*enumerate_variable_instances\("` in `gradient.py` and `complementarity.py`, and carries the inverted-rationale note so it is not reintroduced. The `=` anchor matters: an unanchored grep also picks up 3 imports, the `def`, three `>>>` doctest examples in `index_mapping.py` and a prose line at `gradient.py:48` — **8 non-call mentions**, so it reports 14 "callers" rather than 6. **The anchor is an ERE with `[[:space:]]*`, not a fixed string** (review finding): the fixed form `"= enumerate_variable_instances("` scores **1 of 3** against the whitespace variants `x = …` / `y=…` / `z  =  …`. Both the anchor's positive control and a cross-check listing every non-call mention are now part of the block, because a grep that silently under-reports looks exactly like a grep that found nothing.
+
+**⚠ There are six callers, not four.** The other two — `constraint_jacobian.py:80` and `index_mapping.py:634` — are the ones the Day-7 referenced-instance filter already covers. That is consistent with "four *untouched* sites", but the phrase reads easily as "four sites total", and the difference is exactly what decides 4.2.
+
+**⚠ Correction 2 is itself WRONG, and this matters more than the original claim.** At a 900 s cap, `enumerate_equation_instances` costs **0.329 s over 82 calls** — 0.04 %, not the hot path. Task 2's shorter cap stopped while the run was still *in* equation enumeration, so the deepest live frame read as the cost. **A capped profile's top frame is where the run currently is, not where the time goes** — a cumulative-time attribution needs the phase to have completed, or a cap chosen past it. See 4.2 for what the cost actually is.
+
+**Decision:** Location holds under both measurements. What the location *means* for cost does not — see 4.2.
+
 ---
 
 ## Unknown 4.2: Do the four sites actually account for the bulk of the remaining wall-clock?
@@ -659,7 +673,32 @@ Profile a **capped** sarf translate (the uncapped run does not terminate) and at
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — the four account for 0.5 %, not the bulk
+
+**Verified by:** Sprint 39 Prep Task 6 · **Date:** 2026-08-31 · **Measured at:** `6b58d0ca`
+
+**Findings — measured, not read.** Capped 900 s `cProfile` of a sarf translate (did not finish):
+
+| frame | cumulative | % | ncalls |
+|---|---|---|---|
+| `compute_constraint_jacobian` | **637.9 s** | **70.9 %** | 1 |
+| `_diff_sum` | 513.6 s | 57.1 % | 1,641,023 |
+| `_is_concrete_instance_of` | 306.2 s | 34.0 % | **13,344,770** |
+| `resolve_set_members` | 165.0 s | 18.3 % | **13,348,120** |
+| `compute_objective_gradient` | 156.9 s | 17.4 % | 1 |
+| **`enumerate_variable_instances`** | **4.4 s** | **0.5 %** | **40** |
+
+`build_complementarity_pairs` does not appear in the top twelve.
+
+**⚠ Task 2's routed correction is also wrong.** It named `enumerate_equation_instances` as the hot path; at this cap it costs **0.329 s over 82 calls (0.04 %)**. Task 2's shorter cap stopped while the run was still inside equation enumeration, so the deepest live frame read as the cost. Both the original claim and its correction located the cost at an *enumeration* function; neither is where it is.
+
+**The charitable reading fails too.** "The four *emit* the instances later differentiated" would rescue the premise, but `compute_constraint_jacobian` (70.9 %) takes its columns from `constraint_jacobian.py:80`'s cache — **not** one of the four, and already narrowed by the Day-7 filter (`_REFERENCED_TUPLE_CAP = 200_000`; sarf's worst row is 51,840, so it engages). Narrowing the four leaves the dominant path untouched.
+
+**And one of the four is dead code:** `gradient.py:453` sits in `compute_gradient_for_expression`, which has **no production caller** — only its own docstring and `tests/integration/ad/test_gradient.py`. Confirmed by instrumentation: it never fires during a translate.
+
+**Per-column vs per-row, kept apart:** the blow-up is per-**column** differentiation inside the Jacobian, reached via `_diff_sum`. The 1,183 rows are untouched by the O(active) argument and remain a floor.
+
+**Decision:** **This changes P4's estimate and is reported now.** The honest upper bound on the lever as scoped is `compute_objective_gradient`'s 17.4 %, and only three of the four sites are live. Routed to the owner via `SARF_CALLSITE_PLAN.md` §8 — prep does not silently re-aim the sprint's only KPI mover.
 
 ---
 
@@ -692,7 +731,19 @@ Re-measure active columns and rows for sarf, and re-measure differentiation thro
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — the rate holds, the scope premise does not
+
+**Verified by:** Sprint 39 Prep Task 6 · **Date:** 2026-08-31 · **Measured at:** `6b58d0ca`
+
+**The claim:** 1,183 rows × 398 active columns = 470,834 differentiations at 3,343/s ⇒ ~141 s. **The arithmetic is correct.**
+
+**The rate survives.** Measured **1,146/s profiled** (1,031,810 `differentiate_expr` calls in 900 s). `cProfile` typically costs 2–4×, which brackets the claim — at 3× the implied true rate is **3,439/s** against the claimed 3,343/s.
+
+**The scope premise does not.** The run performed **1,031,810** differentiations — **2.2× the projection's entire budget** — and had not finished. The code today does not differentiate 470,834 times; 398 active columns describes a state the narrowing is meant to *produce*, not one it has been shown to reach.
+
+**Evidence:** `/tmp/s39t6/sarf.prof`; rate arithmetic reproduced in the plan doc.
+
+**Decision:** The ≤300 s gate was revised *because of* this projection (owner decision, 2026-08-18). Its headroom is intact **conditional on** the narrowing achieving 398 active columns — a conditional that has never been tested and is the whole estimate. Recorded rather than re-baselined.
 
 ---
 
@@ -725,7 +776,24 @@ Build the surrogate and confirm it terminates while reproducing the shape. Check
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — a surrogate is buildable, but "all four" is impossible
+
+**Verified by:** Sprint 39 Prep Task 6 · **Date:** 2026-08-31 · **Measured at:** `6b58d0ca`
+
+**Findings:** sarf cannot be its own fixture — at **369,024** declared `task` columns (99.96 % of its 369,165) the fail-before state does not terminate. A corpus-free surrogate was **built and verified**, not merely specified: `task(g,t,mn,mn)` at 2×3×4×4 = **96** columns, preserving the shape (4-D variable with a **repeated declaration index**, driven by an objective and an inequality).
+
+| site | hits | note |
+|---|---|---|
+| `gradient.py:287` | 3 | |
+| `complementarity.py:367` | 2 | needs per-element `.lo` overrides |
+| `complementarity.py:512` | 2 | needs per-element `.up` overrides |
+| `gradient.py:453` | **0** | **unreachable — dead code** |
+
+**It is a translate-path fixture, not a solve fixture.** The assertion is on the emit and on which sites execute while producing it. The two-line `Variable` → `Positive Variable` re-typing was challenged in review as a probable redefinition error; it is legal GAMS, and **GAMS 54.2.1 compiles the file with 0 compilation errors**. As an NLP it is **unbounded** (`MODEL STATUS 3`) — irrelevant to the purpose, recorded so "built and verified" is not read as "solves end to end".
+
+**Two things the build taught that a specification would not have:** a first surrogate without per-element bound overrides reached **only 1 of 4** sites — the complementarity sites require `.lo`/`.up` *overrides*, not merely bounded variables. And the fourth site cannot be reached at any size, because nothing in production calls it.
+
+**Decision:** "Hits all four" is unachievable **by construction, not by fixture design** — three of four is the maximum. Scope **186 → 187** is unchanged as a target, since it depends on sarf producing a golden, which depends on the ≤300 s gate.
 
 ---
 
