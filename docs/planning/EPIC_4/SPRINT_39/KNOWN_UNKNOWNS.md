@@ -1115,6 +1115,16 @@ Sprint 39 execution team
 
 **Decision:** Assumption holds exactly. P7's "all 14 rows or none" should state **which** population it means — routed to Task 8.
 
+#### Task 8 addendum — re-derived at the point of use
+
+**Re-confirmed by:** Sprint 39 Prep Task 8 · **Date:** 2026-09-01 · **Measured at:** `15fb4a78`
+
+All five populations reproduce **exactly**: 48 presolve rows · 40 goldens on disk · 34 presolve∧match · 31 ∧convex · **14 dangling**. The attribution checker over all 34 again reports **33 MCP-SOLVED / 1 EMBEDDED-ONLY**, and the one is still `weapons` (`war/NLP MS-2`, no MCP summary).
+
+The 14, named: `aircraft`, `apl1p`, `apl1pca`, `china`, `circle`, `imsl`, `lmp2`, `prodsp2`, `ps10_s_mn`, `ps5_s_mn`, `senstran`, `spatequ`, `trig`, `weapons`.
+
+**The routed question is answered:** "all 14 rows or none" refers to the **dangling** population. The spurious population is **1**, and their intersection is `weapons` alone — which is why one remedy cannot cover both (see 7.2).
+
 ---
 
 ## Unknown 7.2: Which remedy shape covers ALL affected rows?
@@ -1146,7 +1156,33 @@ Trace the record-writing path and enumerate which of the 14 rows each remedy wou
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — neither remedy covers both defects; P7 needs two changes at one site
+
+**Verified by:** Sprint 39 Prep Task 8 · **Date:** 2026-09-01 · **Measured at:** `15fb4a78`
+
+**The assumption is that "one of two remedies covers the whole population". Neither does**, because the two findings are different kinds of defect that merely share a row:
+
+- the **spurious match** is a *truth* defect — the row asserts something untrue;
+- the **dangling reference** is a *specification* defect — the field records a real artifact under a name implying a different one.
+
+| | spurious match (1 row) | dangling refs (14 rows) |
+|---|---|---|
+| **A** — gate the retry-success branch on attribution | **1 of 1** | **1 of 14** (`weapons` only, and only because its row reverts to the cold golden, which exists) |
+| **B** — re-specify `mcp_file_used` + back-fill | **0 of 1** | **14 of 14** |
+
+**A does not fix the other 13**: their retries genuinely succeeded, and `mcp_file_used` faithfully records a *generated* artifact never adopted as a golden. **B is a code change AND a back-fill**, not a back-fill alone — `run_full_test.py:954` rewrites the field on every successful retry.
+
+**⚠ A is a prerequisite for B's durability on the weapons row.** B alone nulls the path but leaves the match; the next re-solve restores both defects. **Recommendation: land A and B together at one site** — still systemic, but it must be *described* as two rules, because "all 14 rows or none" is true of B and false of A.
+
+**Q4 — the insertion point.** `run_full_test.py:936`, `if retry_result["status"] == "success":`, which sets `presolve_required` (`:949`), `mcp_file_used` (`:954`), `outcome_category` (`:955`). **The Day-10 note's `~954` is one of the three and is the wrong place to gate.** Located by symbol, then read back.
+
+**The fix does not invent a category.** Measured: weapons' **cold** emit solves — `MODEL STATUS 1` @ **1700.397** vs NLP 1735.5696, a **2.03 %** divergence, so the retry was correctly triggered. The right record is weapons' own cold result, and the `else` branch already restores exactly that (`original_mcp_solve`). **The remedy declines to overwrite rather than choosing a replacement.**
+
+**Q5 — consumer breakage:** see 7.3.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_39/PRESOLVE_RECORD_REMEDY.md` §2–3.
+
+**Decision:** P7 does **not** need re-scoping, but its acceptance statement does: two rules, one insertion point, one PR.
 
 ---
 
@@ -1179,7 +1215,38 @@ Grep the CI workflows and `scripts/` for Match-monotonicity assertions. Re-read 
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — no gate breaks, but the fall is bigger than one figure
+
+**Verified by:** Sprint 39 Prep Task 8 · **Date:** 2026-09-01 · **Measured at:** `15fb4a78`
+
+**Q1/Q2 — no gate asserts Match monotonicity.** `scripts/check_parse_rate_regression.py` reads only `parse_rate_percent`, `convert_rate_percent` and `avg_time_ms` from a report JSON — **there is no Match analogue and it never reads the DB**. Across all ten workflows, `ci.yml` touches `gamslib_status.json` solely as a **cache key**. So the assumption "no gate treats a falling Match as a failure" **holds**.
+
+**⚠ But "Match 96 → 95" understates it. Three figures move:**
+
+| figure | before | after |
+|---|---|---|
+| **Match** | 96 | **95** |
+| **presolve-match** | 31 | **30** |
+| **all-219 Match** | 99 | **98** |
+| Solve | 111 | **111 — unchanged** |
+| cold-optimal | 65 | **65 — unchanged** |
+| `path_solve_terminated` | 0 | **0 — unchanged** |
+
+**Two feared collisions do not happen, and both had to be measured to rule out.** An earlier pass here assumed weapons should be recorded as a *failure* and reported `Solve 111 → 110` and **`path_solve_terminated` 0 → 1** — which would have collided head-on with Sprint 39's pre-registered criterion that it must **maintain 0**. Running weapons' cold emit refuted both: it solves (`MS-1` @ 1700.397), so only the *comparison* was untrue.
+
+**Q5 — the floor cannot change, structurally.** `floor_tracker.compute_floor(provenance)` takes only the provenance dict and never reads the DB. Not "should be unaffected" — unaffected by construction.
+
+**⚠ The one real gate interaction is `--resolve-changed`.** `_bucket_severity = compare_rank × 10 + outcome_rank`: weapons is `match` + `model_optimal_presolve` ⇒ **22** today, `mismatch` + `model_optimal` ⇒ **12** corrected. A drop classifies `backward`, the checkpoint's only NO-GO. It does **not** fire for P7 (the checkpoint selects on *changed goldens*, and P7 changes none) — but the mechanism matters inverted: **without Remedy A, a later re-solve re-records the spurious match and the checkpoint reads 12 → 22 as `forward`, applauding the regression.** That is the sharpest argument for A.
+
+**Two consumers need care, neither a break.** `check_doc_figures.py`'s `dangling mcp_file_used rows` fact goes 14 → 0 and `Match` 96 → 95, so it will flag any **changed** doc line citing the old figures — correct behaviour, but the docs must move in the same PR. And `tests/gamslib/test_run_full_test_path_relative.py` (Sprint 27 #1400) requires a repo-relative path *when one is written*; a null must be an explicit allowed case.
+
+**No test breaks.** `test_check_doc_figures.py`'s `TRUTHS` are **pinned** fixtures, deliberately not derived, and no test asserts derived == pinned.
+
+**Q3 — Sprint 39's `Match ≥ 96` criterion must be restated** as: *Match ≥ 95, and exactly 95 if P7 lands, reported as a correction with its reason in the same sentence.* Wording pre-written in §5 of the remedy doc.
+
+**Evidence:** remedy doc §4; CI grep across all 10 workflows; `kpi_block.compute_kpis` on a rewritten row.
+
+**Decision:** P7 can land. Restate the acceptance criterion, and use the pre-written wording.
 
 ---
 # Category 8: Infrastructure — the Sprint-38 Retrospective's Four Process Findings

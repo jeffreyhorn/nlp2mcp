@@ -49,7 +49,7 @@ This prep plan front-loads the work that would otherwise be discovered mid-sprin
 | 5 | ✅ lnts Fingerprint Reproduction & Runtime-Probe Design (P3) | Critical | 4-6 hours | Tasks 1, 2 | P3 — an entirely untraced hypothesis |
 | 6 | ✅ sarf's Four Call Sites — Cost Attribution & Atomicity Plan (P4) | Critical | 5-7 hours | Tasks 1, 2 | P4 — the only KPI mover (+1 Translate) |
 | 7 | ✅ Positional-vs-Declared-Domain Site Survey (P5) | High | 4-5 hours | Tasks 1, 2 | P5 — the audit's input catalog |
-| 8 | Presolve-Record Remedy Design (P7) | High | 3-4 hours | Tasks 1, 2 | P7 — all 14 rows or none |
+| 8 | ✅ Presolve-Record Remedy Design (P7) | High | 3-4 hours | Tasks 1, 2 | P7 — all 14 rows or none |
 | 9 | Consultation Reply-Integration & Follow-Up Package (P6) | Medium | 2-3 hours | Task 1 | P6 — both branches prepared before the date gate |
 | 10 | Epic-5 Design Scoping: Numéraire Rule & Degeneracy Detection (P9) | Medium | 3-4 hours | Tasks 1, 2 | P9 — design only, no camcge experiment |
 | 11 | Emit-Backlog Catalog Refresh & Process-Infrastructure Spec (P8, P10) | Medium | 3-4 hours | Tasks 1, 2, 7 | P8 infrastructure + P10 slack absorber |
@@ -1046,9 +1046,10 @@ test -f docs/planning/EPIC_4/SPRINT_39/POSITIONAL_DOMAIN_SURVEY.md && \
 
 ## Task 8: Presolve-Record Remedy Design (P7)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-09-01)
 **Priority:** High
 **Estimated Time:** 3-4 hours
+**Time Spent:** 3.5 hours
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
@@ -1085,11 +1086,31 @@ The correction is also a KPI *fall*, which makes it exactly the kind of change t
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_39/PRESOLVE_RECORD_REMEDY.md` — per-row remedy coverage, the measured KPI effect, the pre-written correction wording, the adoption rule drafted for CONTRIBUTING, and the regression-test spec
+- `KNOWN_UNKNOWNS.md` — Unknowns **7.1 ✅** (re-derived addendum), **7.2 ❌**, **7.3 🔶**
+- `CHANGELOG.md` — Sprint 39 Prep entry
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — P7 can land, but not as specified.**
+
+**The population is unchanged** (7.1 ✅, re-derived at `15fb4a78`): 48 presolve rows · 40 goldens on disk · 34 presolve∧match · 31 ∧convex · **14 dangling**. Attribution over all 34 again reports **33 MCP-SOLVED / 1 EMBEDDED-ONLY**, still `weapons`. **The routed question is answered:** "all 14 rows or none" refers to the **dangling** population; the spurious population is **1**.
+
+**⚠ No single remedy covers both findings** (7.2 ❌). They are different kinds of defect that share one row: the spurious match is a *truth* defect, the dangling reference a *specification* defect. Coverage, per remedy:
+
+| | spurious (1 row) | dangling (14 rows) |
+|---|---|---|
+| **A** — gate the retry-success branch on attribution | 1 of 1 | 1 of 14 |
+| **B** — re-specify `mcp_file_used` + back-fill | 0 of 1 | 14 of 14 |
+ And **A is a prerequisite for B's durability** — B alone nulls weapons' path but leaves the match, and the next re-solve restores both. **Land A and B together at one site** (`run_full_test.py:936`; the Day-10 note's `~954` is one of three writes and the wrong place to gate).
+
+**The remedy invents nothing.** Measured: weapons' **cold** emit solves — `MS-1` @ **1700.397** vs NLP 1735.5696, a **2.03 %** divergence, so the retry was correctly triggered. The right record is weapons' own cold result, which the existing `else` branch already restores. **The fix declines to overwrite rather than choosing a replacement category.**
+
+**⚠ The KPI fall is three figures, not one** (7.3 🔶): **Match 96 → 95**, presolve-match 31 → 30, all-219 99 → 98. **Solve stays 111** and **`path_solve_terminated` stays 0** — an earlier pass assumed a *failure* record and reported `Solve → 110` and `path_solve_terminated → 1`, which would have collided head-on with Sprint 39's "maintain 0" criterion. Running the cold emit refuted both. **The floor cannot change structurally** — `compute_floor(provenance)` never reads the DB.
+
+**No gate asserts Match monotonicity** — `check_parse_rate_regression.py` reads only parse/convert/perf from a report JSON, and `ci.yml` touches the DB solely as a cache key. **The one real interaction is `--resolve-changed`**, and it matters *inverted*: without Remedy A, a later re-solve re-records the spurious match and the checkpoint reads the severity rise 12 → 22 as `forward` — applauding the regression.
+
+**Routed to the owner:** the `mcp_file_used` replacement value (`null` vs renaming the field to `mcp_file_generated` and keeping the path) trades a clean dangling count against debugger-useful information. Flagged, not taken.
 
 ### Verification
 
@@ -1134,13 +1155,13 @@ test -f docs/planning/EPIC_4/SPRINT_39/PRESOLVE_RECORD_REMEDY.md && \
 
 ### Acceptance Criteria
 
-- [ ] The affected population re-counted, not assumed
-- [ ] A remedy chosen with a written argument for why it covers **every** row
-- [ ] The Match 96 → 95 correction wording pre-written, with the reason in the same sentence
-- [ ] The adoption rule drafted, including "the emit actually executes"
-- [ ] A regression test specified for the aborting-MCP case
-- [ ] The attribution tool's positional method is preserved — **not** re-keyed on `EXECERROR`
-- [ ] Unknowns 7.1, 7.2, 7.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The affected population re-counted, not assumed — all five re-derived at `15fb4a78`; 14 dangling, 1 spurious, both unchanged
+- [x] A remedy chosen with a written argument for why it covers **every** row — **and the argument shows no single remedy does.** Per-row coverage tabulated for both candidates; the answer is A **and** B at one site, with A a prerequisite for B's durability
+- [x] The Match 96 → 95 correction wording pre-written, with the reason in the same sentence — §5, and it names the figures that did **not** move so the fall is not read as wider than it is
+- [x] The adoption rule drafted, including "the emit actually executes" — §6, four conditions, with the weapons lesson as the stated reason (4) is separate from (1)–(3)
+- [x] A regression test specified for the aborting-MCP case — §7, with a negative control and a mutation requirement, because a test that rejects everything passes
+- [x] The attribution tool's positional method is preserved — **not** re-keyed on `EXECERROR`; the remedy *calls* the tool rather than re-implementing its check, and §6 records why `EXECERROR` is wrong
+- [x] Unknowns 7.1, 7.2, 7.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
