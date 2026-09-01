@@ -42,6 +42,14 @@ P2 control -- elec pre-fix 1 ['ut(i,i)'] / today 0
 ALL CONTROLS PASS
 ```
 
+**One environment dependency.** `mutation_controls.py`'s P2 control needs the
+pre-fix elec golden, which it reads with `git show 82b91c94^:...`. That is
+unavailable in a **shallow clone** (CI checkouts default to depth 1) or an
+archive export. It no longer dies with a raw `CalledProcessError`: it prints the
+cause, the fix (`git fetch --unshallow`, or `fetch-depth: 0`), and a note that
+the P1 control needs no history and its result still stands. Verified against a
+real `--depth 1` clone, not simulated.
+
 **Two fidelity notes.** The committed copies differ from the run copies only in
 that the output directory is parameterised as `$OUT`. And `census.py`/`kinds.py`
 carry a per-model `SIGALRM` timeout — 41 of 219 models do not parse, which is

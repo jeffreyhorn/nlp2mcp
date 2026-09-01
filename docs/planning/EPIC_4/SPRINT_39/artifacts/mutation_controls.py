@@ -86,6 +86,40 @@ def p2(txt: str) -> list[str]:
     return sorted(set(out))
 
 
+#: The Sprint-38 Day-12 commit that fixed elec. Its PARENT holds the pre-fix
+#: golden, which is the P2 control's fail-before.
+ELEC_FIX = "82b91c94"
+
+
+def _elec_prefix_golden() -> str | None:
+    """The pre-fix elec golden, or None with an actionable message.
+
+    `git show <sha>^:<path>` is unavailable in a shallow clone (CI checkouts
+    default to depth 1) and in an archive export. Failing there with a raw
+    CalledProcessError would contradict this directory's "reproducible from the
+    repo" claim, so say what to do about it instead. (PR #1718 review.)
+    """
+    r = subprocess.run(
+        ["git", "show", f"{ELEC_FIX}^:data/gamslib/mcp/elec_mcp.gms"],
+        capture_output=True, text=True,
+    )
+    if r.returncode == 0:
+        return r.stdout
+    shallow = subprocess.run(
+        ["git", "rev-parse", "--is-shallow-repository"], capture_output=True, text=True
+    ).stdout.strip()
+    print(f"P2 control -- CANNOT RUN: `git show {ELEC_FIX}^:...` failed")
+    print(f"    git said: {r.stderr.strip().splitlines()[0] if r.stderr.strip() else '(no stderr)'}")
+    if shallow == "true":
+        print("    Cause: this is a SHALLOW clone, so the pre-fix commit is absent.")
+        print("    Fix:   git fetch --unshallow      (CI: actions/checkout with fetch-depth: 0)")
+    else:
+        print(f"    Cause: commit {ELEC_FIX} is not in this repository's history.")
+        print("    Fix:   fetch the branch containing it, or run from a full clone of the upstream repo.")
+    print("    The P1 control above does not need git history and its result stands.")
+    return None
+
+
 def main() -> int:
     outdir = pathlib.Path(OUT)
     outdir.mkdir(parents=True, exist_ok=True)
@@ -116,15 +150,21 @@ def main() -> int:
 
     # --- P2 control: elec before vs after 82b91c94 --------------------------
     pre = outdir / "elec_prefix.gms"
-    pre.write_text(subprocess.run(
-        ["git", "show", "82b91c94^:data/gamslib/mcp/elec_mcp.gms"],
-        capture_output=True, text=True, check=True).stdout)
-    before, after = p2(pre.read_text()), p2((pathlib.Path("data/gamslib/mcp/elec_mcp.gms")).read_text())
-    print(f"P2 control -- elec pre-fix {len(before)} {before} / today {len(after)}")
-    if not before:
-        failures.append("P2 did not fire on elec pre-fix: the property is vacuous")
-    if after:
-        failures.append("P2 fires on elec today: the property has a false positive")
+    text = _elec_prefix_golden()
+    if text is None:
+        failures.append(
+            "P2 control could not run: the pre-fix elec golden is unreachable"
+        )
+    else:
+        pre.write_text(text)
+    if text is not None:
+        before = p2(pre.read_text())
+        after = p2(pathlib.Path("data/gamslib/mcp/elec_mcp.gms").read_text())
+        print(f"P2 control -- elec pre-fix {len(before)} {before} / today {len(after)}")
+        if not before:
+            failures.append("P2 did not fire on elec pre-fix: the property is vacuous")
+        if after:
+            failures.append("P2 fires on elec today: the property has a false positive")
 
     for f in failures:
         print(f"  FAIL: {f}")
