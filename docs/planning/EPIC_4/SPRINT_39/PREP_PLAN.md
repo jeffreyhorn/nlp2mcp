@@ -48,7 +48,7 @@ This prep plan front-loads the work that would otherwise be discovered mid-sprin
 | 4 | ✅ dyncge Second-Defect Diagnosis & Layer Trace (P2) | Critical | 5-7 hours | Tasks 1, 2 | P2 — the sprint's only new **instance**; the mechanism is the known #1381 family, and dyncge is its first **silent** case |
 | 5 | ✅ lnts Fingerprint Reproduction & Runtime-Probe Design (P3) | Critical | 4-6 hours | Tasks 1, 2 | P3 — an entirely untraced hypothesis |
 | 6 | ✅ sarf's Four Call Sites — Cost Attribution & Atomicity Plan (P4) | Critical | 5-7 hours | Tasks 1, 2 | P4 — the only KPI mover (+1 Translate) |
-| 7 | Positional-vs-Declared-Domain Site Survey (P5) | High | 4-5 hours | Tasks 1, 2 | P5 — the audit's input catalog |
+| 7 | ✅ Positional-vs-Declared-Domain Site Survey (P5) | High | 4-5 hours | Tasks 1, 2 | P5 — the audit's input catalog |
 | 8 | Presolve-Record Remedy Design (P7) | High | 3-4 hours | Tasks 1, 2 | P7 — all 14 rows or none |
 | 9 | Consultation Reply-Integration & Follow-Up Package (P6) | Medium | 2-3 hours | Task 1 | P6 — both branches prepared before the date gate |
 | 10 | Epic-5 Design Scoping: Numéraire Rule & Degeneracy Detection (P9) | Medium | 3-4 hours | Tasks 1, 2 | P9 — design only, no camcge experiment |
@@ -896,9 +896,10 @@ test -f docs/planning/EPIC_4/SPRINT_39/SARF_CALLSITE_PLAN.md && \
 
 ## Task 7: Positional-vs-Declared-Domain Site Survey (P5)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-09-01)
 **Priority:** High
 **Estimated Time:** 4-5 hours
+**Time Spent:** 5 hours
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
@@ -936,11 +937,25 @@ A survey is also the cheapest possible form of this work: P5 is budgeted 12–16
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_39/POSITIONAL_DOMAIN_SURVEY.md` — 21 primary sites classified and ranked by **measured** blast radius, corpus incidence by symbol kind, two property specs, and a ranked recommendation
+- `KNOWN_UNKNOWNS.md` — Unknowns **5.1 🔶**, **5.2 ❌**, **5.3 🔶**
+- `CHANGELOG.md` — Sprint 39 Prep entry
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — and three inherited figures are wrong, one of them a live correctness finding.**
+
+**The catalog (5.1 🔶).** "Resolves positionally against a declared domain" is too wide to filter on — **173** subscripted-domain expressions and **33** `zip`-against-a-domain sites exist, and almost none can break, because `zip`/`enumerate` pair position *i* with position *i*. What breaks is a **symbol → (position | value)** step: **21 primary sites**, enumerated by AST scan. **9 ALREADY GUARDED · 7 NEEDS A TEST · 4 NEEDS A GUARD · 1 NOT REACHABLE (in sample)**. 21 is auditable inside P5's 12–16 h, so the assumption holds — **but the reach is not in `stationarity.py`**: the top three sites are `constraint_jacobian.py:1466/1513` (12/15 and 11/15 sampled models) and `empty_equation_detector.py:127` (10/15). Blast radius was **measured** by `sys.settrace` line tracing over 15 adversarially chosen models — no source instrumentation, so nothing could be left in the tree.
+
+**The organising fact.** `dedupe_repeated_variable_domains` (#1062, `cli.py:476`) runs unconditionally before differentiation and iterates `model_ir.variables` **only**. So the **variable**-domain sub-shape is globally neutralised and the **set** (16 models) and **parameter** (21 models) sub-shapes are not. Most `NEEDS A TEST` verdicts are "safe today, but by something upstream and incidental".
+
+**Corpus incidence (5.2 ❌ WRONG).** Two independent methods — a 219-model IR census and a source prescan — agreeing on 24, union 44. **Sets 16 · params 21 · variables 5 · equations 0; 34 models total, 25 in the 142 convex candidates.** The assumption that the set shape is "as rare as the variable shape" is wrong by **8×**, and the banked **"exactly two models (tricp, ferts)"** for variable domains is also wrong — it is **five** (`ferts`, `lop`, `maxmin`, `sarf`, `tricp`; `lop` declares `dtr(s,s,s,s)`, a four-fold repeat). **41 of 219 models did not parse, so the per-kind figures are lower bounds** — stated, not buried.
+
+**⚠ The live finding.** The emit-level property finds **7 violations in 5 CURRENT goldens**. `dinam`, `egypt`, `turkpow` carry repeats the **source never declared** — manufactured by our emit; `shale`, `gussrisk` carry declaration-derived ones. **11 of the 34 models match, but only `gussrisk` is in the suspect set, and its instance is latent** (an NA-guard narrowed to the diagonal, on data that is never NA). The other four are `mcp_solve: failure`, so no reported KPI is affected today.
+
+**The property test (5.3 🔶).** One property cannot cover the class; **two** are needed. **P1** (no repeated symbol in an emitted head) is **mutation-killed** — the tricp mutant with #1062 disabled emits 4 violations — but **scores 0 on elec's pre-fix golden**, because the #1062 guard makes it trivially true for variable domains. **P2** (no repeated index in an emitted `$(...)` guard) is the complement and the one that finds live defects; its guard-scoping is load-bearing, since a naive whole-file form flags elec's legitimate declaration both before *and* after the fix. Both run in **under 3 s over 193 goldens**. A third sub-shape falls out that neither known instance showed: a manufactured repeat can be identically **TRUE** (`turkpow`) as easily as identically false, so the property must be *"the index repeats"*, not *"the guard is unsatisfiable"*.
+
+**Routed to P5, not decided here:** the four `NEEDS A GUARD` sites are **candidates**, not confirmed defects — each needs the Day-0 trace the S38 retrospective requires, since three of four S38 gates named the wrong layer.
 
 ### Verification
 
@@ -1016,13 +1031,13 @@ test -f docs/planning/EPIC_4/SPRINT_39/POSITIONAL_DOMAIN_SURVEY.md && \
 
 ### Acceptance Criteria
 
-- [ ] Every positional-resolution site in `stationarity.py` and the AD layer enumerated
-- [ ] Each site classified, with "not reachable" cases carrying an **argument**, not an assertion
-- [ ] Corpus incidence measured for both shapes, not just the variable-domain one
-- [ ] Sites ranked by blast radius
-- [ ] A generic property test specified
-- [ ] The two known instances (tricp, elec) appear in the catalog and are marked already-fixed
-- [ ] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Every positional-resolution site in `stationarity.py` and the AD layer enumerated — by **AST scan** over all four packages, not grep; 21 primary sites after applying the symbol→position discriminator
+- [x] Each site classified, with "not reachable" cases carrying an **argument**, not an assertion — the single such verdict (`emit_gams.py:795`) is stated as **"not reachable *in sample*"**, 0 of 15, and explicitly labelled a measured absence rather than a proof
+- [x] Corpus incidence measured for both shapes, not just the variable-domain one — and for a third (**parameter** domains, 21 models) that was not in the question
+- [x] Sites ranked by blast radius — **measured** by `sys.settrace` over 15 models, not argued from call chains
+- [x] A generic property test specified — **two** specified, because one cannot cover the class; P1 mutation-killed, P2 finds 7 live violations
+- [x] The two known instances (tricp, elec) appear in the catalog and are marked already-fixed — used as the survey's **positive control**
+- [x] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

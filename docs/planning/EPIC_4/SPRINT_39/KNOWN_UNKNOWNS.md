@@ -828,7 +828,32 @@ Grep for the positional-indexing and first-match-scan patterns across `src/kkt/`
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — auditable, but the population is not where the question looked
+
+**Verified by:** Sprint 39 Prep Task 7 · **Date:** 2026-09-01 · **Measured at:** `52cb2da0`
+
+**Findings.** Enumerated by **AST scan** over `src/kkt/`, `src/ad/`, `src/emit/`, `src/ir/` — not grep, so a shape spread across lines cannot hide.
+
+The question's framing does not survive. "Indexes a declared domain positionally" is too wide to filter on: **173** subscripted-domain expressions and **33** `zip`-against-a-domain sites exist, and almost none can break, because `zip`/`enumerate` pair position *i* with position *i* and are repeat-safe. What breaks is a **symbol → (position | value)** step. **21 primary sites** carry one.
+
+| verdict | sites |
+|---|---|
+| ALREADY GUARDED | **9** |
+| NEEDS A TEST | **7** |
+| NEEDS A GUARD | **4** |
+| NOT REACHABLE (in sample) | **1** |
+
+**The assumption holds — 21 is auditable inside P5's 12–16 h.** But three of the four highest-reach sites are *outside* `stationarity.py`: `constraint_jacobian.py:1466/1513` (12/15 and 11/15 sampled models) and `empty_equation_detector.py:127` (10/15). Q4 asked whether sites exist outside `stationarity.py`; **most of the reach does.**
+
+**Blast radius was measured, not argued** — `sys.settrace` line tracing over 15 adversarially chosen models (both known instances, all five emit-level offenders, controls). No source instrumentation, so nothing could be left in the tree.
+
+**Membership tests are not in the class** (27 sites): `i in ('i','i')` behaves as `i in ('i',)`. They matter only as the **gate** in front of a positional step — which is exactly elec.
+
+**Positive control:** the scan rediscovers both known instances — tricp at `stationarity.py:1500`, elec at `stationarity.py:3931/3954/3966`.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_39/POSITIONAL_DOMAIN_SURVEY.md` §1–2.
+
+**Decision:** The catalog is P5's input. **Reprioritise away from `stationarity.py`** — the class's reach is in the AD layer and the IR.
 
 ---
 
@@ -861,7 +886,35 @@ Parse the corpus and inspect `model_ir.sets` (and `model_ir.params`) for repeate
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — the set-domain shape is 8× the variable-domain shape, and two banked counts are wrong
+
+**Verified by:** Sprint 39 Prep Task 7 · **Date:** 2026-09-01 · **Measured at:** `52cb2da0`
+
+**Findings — two independent methods.** An IR census over all 219 models and a source-level prescan of the raw `.gms`. They agree on **24** models; union **44**.
+
+| kind | models | ∩ the 142 convex candidates |
+|---|---|---|
+| **set** domain | **16** | 11 |
+| **parameter** domain | **21** | 16 |
+| **variable** domain | **5** | 4 |
+| equation domain | 0 | 0 |
+| **any** | **34** | **25** |
+
+**The assumption is refuted.** It states the set-domain shape is "as rare as the variable-domain shape, so the audit's corpus exposure is small". The set shape is **16**, **8×** the variable count — and **parameter** domains, never counted by anyone, are larger still at **21**.
+
+**⚠ A second banked figure is also wrong.** The plan records the variable-domain case as **"exactly two models: `tricp`, `ferts`"** (S38-measured). It is **five**: `ferts`, `lop`, `maxmin`, `sarf`, `tricp`. `lop` declares `dtr(s,s,s,s)` — a **four-fold** repeat.
+
+**Q3 — is a matching model silently wrong?** **11 of the 34 match**: `bearing`, `cesam2`, `chenery`, `elec`, `gussrisk`, `kand`, `maxmin`, `mexss`, `robustlp`, `srkandw`, `weapons`. **Carrying the declaration shape is not being wrong.** The emit-level property (5.3) is the discriminator, and it puts exactly **one** matching model in the suspect set — `gussrisk`, and its instance is **latent** (an NA-guard narrowed to the diagonal, on data that is never NA). (`weapons` is separately a known **spurious** match, S38 Day 10.)
+
+**Q4 — is elec the only one whose EMIT was affected? NO.** The property finds **7 violations in 5 current goldens**: `dinam`, `egypt`, `turkpow` carry repeats the **source never declared** — manufactured by our emit — and `shale`, `gussrisk` carry declaration-derived ones. All four non-`gussrisk` models are `mcp_solve: failure` today, so no reported KPI is affected.
+
+**Q5 — parameter domains: yes, and there is a site.** `stationarity.py:3432` resolves a **param's** declared domain positionally while keying `offset_map` by symbol, so `ferts`'s `rail(i,i)` receives the same offset at both positions.
+
+**⚠ Coverage limit, stated not buried:** the IR census could not parse **41 of 219** models, 10 of them prescan candidates (`dinam` timed out at 120 s; several `$include` a file the corpus lacks). The per-kind figures are **lower bounds**.
+
+**Evidence:** survey §4; `/tmp/s39t7/census.json`, `/tmp/s39t7/prescan.json`.
+
+**Decision:** The audit's corpus exposure is **an order of magnitude larger than budgeted for**, and it is concentrated in the two sub-shapes with **no** global guard. P5 stays 0-bucket, but its site prioritisation should follow §6 of the survey.
 
 ---
 
@@ -893,7 +946,31 @@ Draft the property and evaluate it against the current corpus goldens; check for
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — expressible and cheap, but ONE property cannot cover the class
+
+**Verified by:** Sprint 39 Prep Task 7 · **Date:** 2026-09-01 · **Measured at:** `52cb2da0`
+
+**Findings.** The assumption — that a single property can state "no emitted head or guard may repeat a controlling index symbol where the declared domain repeats a set" — **conflates two properties that behave differently.** Two are needed.
+
+**P1 — no emitted equation HEAD repeats a controlling index symbol.** Stated over the emitted output, because that is where the GAMS semantics bite.
+- **193 goldens, 3,100 heads, 0 violations, under 3 s.** Full corpus scale, no sampling.
+- **Mutation-killed, not merely green:** with `dedupe_repeated_variable_domains` monkeypatched to a no-op, tricp emits **4** violations (`stat_slp(n,n)`, `stat_sln(n,n)`, `comp_lo_slp(n,n)`, `comp_lo_sln(n,n)`).
+- **⚠ Q5 answered, and it is the key limit: the #1062 guard makes P1 trivially true *for variable domains*.** P1 is a regression test on one sub-shape. **Proof: P1 scores 0 on elec's pre-fix golden** — elec's defect was in a `$(...)` guard, never in a head.
+
+**P2 — no emitted `$(...)` guard references a set at a repeated index.** The complement, and the one that finds live defects.
+- Control: **elec pre-fix 1 violation, elec today 0.**
+- **7 violations across 5 current goldens** (see 5.2 Q4).
+- **Scoping is load-bearing:** a naive whole-file form flags `Set ut(i,i)` in elec's declaration block **both before and after** the fix — a false positive that would have made the check useless and, eventually, deleted.
+
+**Q2 — legitimate counter-examples?** For **P1, none** (0 in 3,100 heads); a repeated head is never wanted, since the MCP is then left with unmatched columns. For **P2, yes** — a declaration and a genuinely diagonal reference are both legitimate; `gussrisk`/`shale` are the residue after guard-scoping: a *reference* built from the declared domain's own symbols.
+
+**A third sub-shape neither known instance showed:** a manufactured repeat can be identically **TRUE** (`turkpow`: `vs(t,v) = ord(t) >= ord(v)` ⇒ `vs(v,v)` always holds ⇒ silently **over**-inclusive) as easily as identically false. **An "is this guard unsatisfiable?" check would miss half the population** — the property must be *"the index repeats"*.
+
+**Q4 — CI budget:** both are pure text scans of `data/gamslib/mcp/`; **under 3 s over 193 goldens**, no re-emission, no GAMS. They belong beside the golden-level gates, not in the unit suite. No sampling required.
+
+**Evidence:** survey §5.
+
+**Decision:** Specify **two** properties, and **land P2 first** — it is the only artefact here that finds live defects and it gives every subsequent guard a fail-before.
 
 ---
 
