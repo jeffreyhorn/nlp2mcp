@@ -1,5 +1,6 @@
 import os as _os
 OUT = _os.environ.get("OUT", "/tmp/s39t7")
+_os.makedirs(OUT, exist_ok=True)
 import json
 reach=json.load(open(f"{OUT}/reach.json"))
 N=len(reach)

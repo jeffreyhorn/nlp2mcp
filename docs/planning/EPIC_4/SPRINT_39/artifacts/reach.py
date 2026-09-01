@@ -5,6 +5,7 @@ so there is no instrumented file to forget to restore.
 """
 import os as _os
 OUT = _os.environ.get("OUT", "/tmp/s39t7")
+_os.makedirs(OUT, exist_ok=True)
 import sys, json, signal, collections, pathlib
 sys.setrecursionlimit(50000); sys.path.insert(0, ".")
 

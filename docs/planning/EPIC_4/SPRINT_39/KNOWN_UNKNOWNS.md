@@ -957,7 +957,7 @@ Sprint 39 execution team
 - **Mutation-killed, not merely green:** with `dedupe_repeated_variable_domains` monkeypatched to a no-op, tricp emits **4** violations (`stat_slp(n,n)`, `stat_sln(n,n)`, `comp_lo_slp(n,n)`, `comp_lo_sln(n,n)`).
 - **⚠ Q5 answered, and it is the key limit: the #1062 guard makes P1 trivially true *for variable domains*.** P1 is a regression test on one sub-shape. **Proof: P1 scores 0 on elec's pre-fix golden** — elec's defect was in a `$(...)` guard, never in a head.
 
-**P2 — no emitted `$(...)` guard references a set at a repeated index.** The complement, and the one that finds live defects.
+**P2 — no emitted `$(...)` guard references a *symbol* at a repeated index.** Not set-specific — the matcher is `name(x,x)`, and the live hits are parameters as much as sets. The complement, and the one that finds live defects. **⚠ Known gap (PR #1718 review): it scans guard CONTENT only, not an assignment's left-hand side** — `gussrisk` is caught only because its repeat appears in both.
 - Control: **elec pre-fix 1 violation, elec today 0.**
 - **7 violations across 5 current goldens** (see 5.2 Q4).
 - **Scoping is load-bearing:** a naive whole-file form flags `Set ut(i,i)` in elec's declaration block **both before and after** the fix — a false positive that would have made the check useless and, eventually, deleted.

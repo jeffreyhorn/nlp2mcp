@@ -1,6 +1,7 @@
 """Per-kind IR confirmation for the 34 prescan candidates."""
 import os as _os
 OUT = _os.environ.get("OUT", "/tmp/s39t7")
+_os.makedirs(OUT, exist_ok=True)
 import json, sys, signal, pathlib
 sys.setrecursionlimit(50000); sys.path.insert(0, ".")
 from src.ir.parser import parse_model_file

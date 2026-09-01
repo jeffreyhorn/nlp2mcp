@@ -1,6 +1,7 @@
 """P1 + P2 evaluated over every committed golden, each with a mutation control."""
 import os as _os
 OUT = _os.environ.get("OUT", "/tmp/s39t7")
+_os.makedirs(OUT, exist_ok=True)
 import re, pathlib, collections, time, sys
 
 MCP = pathlib.Path("data/gamslib/mcp")
@@ -18,12 +19,22 @@ def p1(txt):
     return out
 
 def p2(txt):
-    """Repeated-symbol set reference inside a $(...) GUARD.
+    """Repeated-ARGUMENT reference inside a ``$(...)`` guard.
 
-    Scoped to guards on purpose: `Set ut(i,i)` in the declaration block is the
-    model's own legitimate declaration and must not be flagged. elec's defect is
-    the GUARD `$(ut(i,i))`, which is identically false on a strictly upper-
-    triangular set and silently drops half the gradient.
+    Deliberately NOT set-specific: the matcher is ``name(x,x)`` for any symbol,
+    because the live hits are parameters and sets alike (``ts2``, ``tranc``,
+    ``vs``, ``covar``). Calling it a "set" check would misdescribe it.
+
+    Scoped to guard CONTENT on purpose: a whole-file form also matches the
+    emitted ``Set ut(i,i)`` DECLARATION, which is legitimate and present in elec
+    both before and after the fix -- a false positive that would get the check
+    deleted.
+
+    KNOWN GAP (PR #1718 review): it does not inspect an assignment's LEFT-HAND
+    SIDE. gussrisk's ``covar(stocks,stocks)$(NOT ...) = 0;`` is caught only
+    because the repeat ALSO appears inside the guard; a repeated LHS with a
+    clean guard would be missed. The line filter (``".." in line or "=" in
+    line``) selects candidate lines, it does not widen what is scanned.
     """
     out = []
     for line in txt.split("\n"):
@@ -55,5 +66,5 @@ pre = pathlib.Path(f"{OUT}/elec_prefix.gms").read_text()
 print(f"elec PRE-FIX  : P1={len(p1(pre))}  P2={len(p2(pre))} -> {p2(pre)}")
 cur = (MCP / "elec_mcp.gms").read_text()
 print(f"elec TODAY    : P1={len(p1(cur))}  P2={len(p2(cur))}")
-mut = pathlib.Path(f"{OUT}/mut/tricp_nodedupe.gms").read_text()
+mut = pathlib.Path(f"{OUT}/tricp_nodedupe.gms").read_text()
 print(f"tricp MUTANT  : P1={len(p1(mut))} -> {sorted(set(p1(mut)))}  P2={len(p2(mut))}")

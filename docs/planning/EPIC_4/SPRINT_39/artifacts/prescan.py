@@ -7,6 +7,7 @@ declaration-looking line in it, that gap needs an explanation.
 """
 import os as _os
 OUT = _os.environ.get("OUT", "/tmp/s39t7")
+_os.makedirs(OUT, exist_ok=True)
 import re, pathlib, collections, json
 
 RAW = pathlib.Path("data/gamslib/raw")

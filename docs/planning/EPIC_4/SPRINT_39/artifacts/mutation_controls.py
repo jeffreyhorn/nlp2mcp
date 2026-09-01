@@ -37,11 +37,22 @@ def p1(txt: str) -> list[str]:
 
 
 def p2(txt: str) -> list[str]:
-    """Repeated-symbol reference inside a ``$(...)`` guard or an assignment.
+    """Repeated-ARGUMENT reference inside a ``$(...)`` guard.
 
-    Scoped deliberately: a whole-file form also matches the emitted ``Set
-    ut(i,i)`` DECLARATION, which is legitimate and present in elec both before
-    and after the fix -- a false positive that would get the check deleted.
+    Deliberately NOT set-specific: the matcher is ``name(x,x)`` for any symbol,
+    because the live hits are parameters and sets alike (``ts2``, ``tranc``,
+    ``vs``, ``covar``). Calling it a "set" check would misdescribe it.
+
+    Scoped to guard CONTENT on purpose: a whole-file form also matches the
+    emitted ``Set ut(i,i)`` DECLARATION, which is legitimate and present in elec
+    both before and after the fix -- a false positive that would get the check
+    deleted.
+
+    KNOWN GAP (PR #1718 review): it does not inspect an assignment's LEFT-HAND
+    SIDE. gussrisk's ``covar(stocks,stocks)$(NOT ...) = 0;`` is caught only
+    because the repeat ALSO appears inside the guard; a repeated LHS with a
+    clean guard would be missed. The line filter (``".." in line or "=" in
+    line``) selects candidate lines, it does not widen what is scanned.
     """
     out = []
     for line in txt.split("\n"):

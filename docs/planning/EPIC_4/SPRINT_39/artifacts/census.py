@@ -6,6 +6,7 @@ VARIABLE domain; elec: a SET domain) and reached different code paths.
 """
 import os as _os
 OUT = _os.environ.get("OUT", "/tmp/s39t7")
+_os.makedirs(OUT, exist_ok=True)
 import json, sys, signal, pathlib
 sys.setrecursionlimit(50000)
 sys.path.insert(0, ".")
@@ -31,7 +32,10 @@ for i, path in enumerate(models, 1):
             rep = {}
             for sym, d in table.items():
                 dom = tuple(getattr(d, "domain", ()) or ())
-                if len(dom) != len(set(dom)):
+                # Case-INSENSITIVE: GAMS identifiers are case-insensitive, so
+                # `p(I,i)` is a repeat. A case-sensitive `set(dom)` undercounts
+                # and would also disagree with kinds.py. (PR #1718 review.)
+                if len(dom) != len({x.lower() for x in dom}):
                     rep[sym] = list(dom)
             rec[kind] = rep
     except TO:

@@ -159,7 +159,7 @@ This is why so many `NEEDS A TEST` verdicts above are *"safe today, but by somet
 
 ## 4. Corpus incidence (Unknown 5.2)
 
-**Two independent methods, deliberately.** An IR census over all 219 models (`parse_model_file`, then `len(domain) != len(set(domain))` per symbol table) and a source-level regex prescan of the raw `.gms` files. They agree on **24** models; the union is **44**.
+**Two independent methods, deliberately.** An IR census over all 219 models (`parse_model_file`, then a **case-insensitive** repeat test — `len(domain) != len({x.lower() for x in domain})` — per symbol table, because GAMS identifiers are case-insensitive, so `p(I,i)` is a repeat) and a source-level regex prescan of the raw `.gms` files. They agree on **24** models; the union is **44**.
 
 | kind | models | ∩ the 142 convex candidates |
 |---|---|---|
@@ -191,9 +191,9 @@ Stated over the **emitted output**, because that is where the GAMS semantics bit
 - **⚠ And that is exactly the answer to 5.3 Q5: the #1062 guard makes P1 trivially true *for variable domains*.** P1 is a regression test on one sub-shape, not a property covering the class.
 - **Proof: P1 scores 0 on elec's pre-fix golden.** elec's defect was never in a head — it was in a `$(...)` guard inside the body.
 
-### P2 — no emitted `$(...)` guard references a set at a repeated index
+### P2 — no emitted `$(...)` guard references a **symbol** at a repeated index
 
-The complement. Scoped to guards **on purpose**: `Set ut(i,i)` in the emitted declaration block is the model's own legitimate declaration, and a naive whole-file form flags it in elec both before *and* after the fix — a false positive that would have made the check useless.
+**Not set-specific:** the matcher is `name(x,x)` for any symbol, because the live hits are parameters (`ts2`, `tranc`, `vs`, `covar`) as much as sets. The complement. Scoped to guards **on purpose**: `Set ut(i,i)` in the emitted declaration block is the model's own legitimate declaration, and a naive whole-file form flags it in elec both before *and* after the fix — a false positive that would have made the check useless.
 
 - Control: **elec pre-fix 1 violation (`$(ut(i,i))`), elec today 0.**
 - **⚠ P2 finds 7 violations across 5 CURRENT goldens.**
@@ -204,7 +204,7 @@ The complement. Scoped to guards **on purpose**: `Set ut(i,i)` in the emitted de
 | `egypt` | `1$(tranc(rp,rp))` | ❌ source has `Table tranc(r,rp)` | **manufactured.** A self-transfer cost; the diagonal is absent ⇒ the term drops. |
 | `turkpow` | `1$(vs(v,v))`, `1$(vs(t__kkt1,t__kkt1))` | ❌ source has `vs(t,v)` | **manufactured, and the MIRROR case.** `vs(t,v) = ord(t) >= ord(v)` ⇒ `vs(v,v)` is identically **TRUE**, so the guard is a no-op and the term is included for *every* instance instead of a triangle. Silently **over**-inclusive. `t__kkt1` is a KKT-minted name, so this guard was generated, not copied. |
 | `shale` | `1$(ts(tf,tf))` | ✅ `ts(tf,tf)` | declaration-derived. `ts(tf,tfp)$(ord(tfp) < ord(tf)) = 1` ⇒ identically false. |
-| `gussrisk` | `covar(stocks,stocks)$(NOT (…)) = 0;` | ✅ `covar(stocks,stocks)` | declaration-derived, and in an **assignment**, not a guard — so the NA-guard covers only the diagonal. **Latent:** `covar` is computed, never NA, so today's answer is unaffected. This is the one **matching** model in the suspect set. |
+| `gussrisk` | `covar(stocks,stocks)$(NOT (…)) = 0;` | ✅ `covar(stocks,stocks)` | declaration-derived, on an **assignment**. The repeat is in *both* the LHS and the guard; the **LHS** is what narrows the NA-guard to the diagonal, and P2 sees only the guard (gap below). **Latent:** `covar` is computed and never NA, so today's answer is unaffected. The one **matching** model in the suspect set. |
 
 **A third sub-shape falls out of this that neither known instance showed:** a manufactured repeat can be identically **true** (`turkpow`) as easily as identically false (`elec`, `dinam`, `shale`). An "is this guard always false?" check would miss half of them. The property must be *"the index repeats"*, not *"the guard is unsatisfiable"*.
 
@@ -212,9 +212,11 @@ The complement. Scoped to guards **on purpose**: `Set ut(i,i)` in the emitted de
 
 **For P1, no** — 0 violations in 3,100 heads. A repeated controlling index in an emitted head is never what we want, because the MCP then has unmatched columns.
 
-**For P2, yes, and they are why the scoping matters** — a declaration (`Set ut(i,i)`) and a genuinely diagonal reference are both legitimate. Restricting P2 to `$(...)` guards and assignment lines removes the declaration class. `gussrisk` and `shale` show the residue: a *reference* built from the declared domain's own symbols, which is legitimate syntax carrying an illegitimate scope.
+**For P2, yes, and they are why the scoping matters** — a declaration (`Set ut(i,i)`) and a genuinely diagonal reference are both legitimate. Restricting P2 to the CONTENT of `$(...)` guards removes the declaration class. `gussrisk` and `shale` show the residue: a *reference* built from the declared domain's own symbols, which is legitimate syntax carrying an illegitimate scope.
 
 ### Cost and home
+
+**⚠ P2's known gap, found in review of this PR.** It scans **guard content only** and does not inspect an assignment's **left-hand side**. `gussrisk` is caught only because its repeat appears in *both* the LHS and the guard — **a repeated LHS with a clean guard would be missed.** The line filter (`".." in line or "=" in line`) merely selects candidate lines; it does not widen what is scanned. Closing this is a one-line extension and belongs with P2's graduation into a gate, not with prep.
 
 Both properties are pure text scans of `data/gamslib/mcp/`: **under 3 s over 193 goldens** (1.3–2.2 s measured), no model re-emission, no GAMS. They belong beside the existing golden-level gates rather than in the unit suite, and neither needs to sample.
 
