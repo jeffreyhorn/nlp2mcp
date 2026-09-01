@@ -1156,7 +1156,7 @@ test -f docs/planning/EPIC_4/SPRINT_39/PRESOLVE_RECORD_REMEDY.md && \
 ### Acceptance Criteria
 
 - [x] The affected population re-counted, not assumed — all five re-derived at `15fb4a78`; 14 dangling, 1 spurious, both unchanged
-- [x] A remedy chosen with a written argument for why it covers **every** row — **and the argument shows no single remedy does.** Per-row coverage tabulated for both candidates; the answer is A **and** B at one site, with A a prerequisite for B's durability
+- [x] A remedy chosen with a written argument for why it covers **every** row — the chosen remedy is **A + B landed together at one site**, which covers the **1** spurious row and all **14** dangling rows. The argument is per-row and tabulated, and it establishes that **neither A nor B alone suffices**, with A a prerequisite for B's durability
 - [x] The Match 96 → 95 correction wording pre-written, with the reason in the same sentence — §5, and it names the figures that did **not** move so the fall is not read as wider than it is
 - [x] The adoption rule drafted, including "the emit actually executes" — §6, four conditions, with the weapons lesson as the stated reason (4) is separate from (1)–(3)
 - [x] A regression test specified for the aborting-MCP case — §7, with a negative control and a mutation requirement, because a test that rejects everything passes
