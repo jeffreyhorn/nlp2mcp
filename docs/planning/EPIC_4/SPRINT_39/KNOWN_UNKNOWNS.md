@@ -845,7 +845,7 @@ The question's framing does not survive. "Indexes a declared domain positionally
 
 **The assumption holds — 21 is auditable inside P5's 12–16 h.** But three of the four highest-reach sites are *outside* `stationarity.py`: `constraint_jacobian.py:1466/1513` (12/15 and 11/15 sampled models) and `empty_equation_detector.py:127` (10/15). Q4 asked whether sites exist outside `stationarity.py`; **most of the reach does.**
 
-**Blast radius was measured, not argued** — `sys.settrace` line tracing over 15 adversarially chosen models (both known instances, all five emit-level offenders, controls). No source instrumentation, so nothing could be left in the tree.
+**Blast radius was measured, not argued** — `sys.settrace` line tracing over 15 adversarially chosen models (both known instances, five of the six emit-level offenders, controls; `nonsharp` surfaced later). No source instrumentation, so nothing could be left in the tree.
 
 **Membership tests are not in the class** (27 sites): `i in ('i','i')` behaves as `i in ('i',)`. They matter only as the **gate** in front of a positional step — which is exactly elec.
 
@@ -906,7 +906,7 @@ Sprint 39 execution team
 
 **Q3 — is a matching model silently wrong?** **11 of the 34 match**: `bearing`, `cesam2`, `chenery`, `elec`, `gussrisk`, `kand`, `maxmin`, `mexss`, `robustlp`, `srkandw`, `weapons`. **Carrying the declaration shape is not being wrong.** The emit-level property (5.3) is the discriminator, and it puts exactly **one** matching model in the suspect set — `gussrisk`, and its instance is **latent** (an NA-guard narrowed to the diagonal, on data that is never NA). (`weapons` is separately a known **spurious** match, S38 Day 10.)
 
-**Q4 — is elec the only one whose EMIT was affected? NO.** The property finds **7 violations in 5 current goldens**: `dinam`, `egypt`, `turkpow` carry repeats the **source never declared** — manufactured by our emit — and `shale`, `gussrisk` carry declaration-derived ones. All four non-`gussrisk` models are `mcp_solve: failure` today, so no reported KPI is affected.
+**Q4 — is elec the only one whose EMIT was affected? NO.** The property finds **9 violations in 6 current goldens**: `dinam`, `egypt`, `turkpow` carry repeats the **source never declared** — manufactured by our emit — and `shale`, `gussrisk`, `nonsharp` carry declaration-derived ones (`nonsharp` also carries a manufactured `inter(col__kkt1,col__kkt1,stm)`). None of the five non-`gussrisk` models can affect a reported KPI today: four are `mcp_solve: failure` and `nonsharp` is convexity-`excluded` with no MCP solve. **`nonsharp` is 3-arity and was invisible to the original binary `name(x,x)` matcher — found only when review forced the matcher to be generalised.**
 
 **Q5 — parameter domains: yes, and there is a site.** `stationarity.py:3432` resolves a **param's** declared domain positionally while keying `offset_map` by symbol, so `ferts`'s `rail(i,i)` receives the same offset at both positions.
 
@@ -959,7 +959,7 @@ Sprint 39 execution team
 
 **P2 — no emitted `$(...)` guard references a *symbol* at a repeated index.** Not set-specific — the matcher is `name(x,x)`, and the live hits are parameters as much as sets. The complement, and the one that finds live defects. **⚠ Known gap (PR #1718 review): it scans guard CONTENT only, not an assignment's left-hand side** — `gussrisk` is caught only because its repeat appears in both.
 - Control: **elec pre-fix 1 violation, elec today 0.**
-- **7 violations across 5 current goldens** (see 5.2 Q4).
+- **9 violations across 6 current goldens** (see 5.2 Q4).
 - **Scoping is load-bearing:** a naive whole-file form flags `Set ut(i,i)` in elec's declaration block **both before and after** the fix — a false positive that would have made the check useless and, eventually, deleted.
 
 **Q2 — legitimate counter-examples?** For **P1, none** (0 in 3,100 heads); a repeated head is never wanted, since the MCP is then left with unmatched columns. For **P2, yes** — a declaration and a genuinely diagonal reference are both legitimate; `gussrisk`/`shale` are the residue after guard-scoping: a *reference* built from the declared domain's own symbols.

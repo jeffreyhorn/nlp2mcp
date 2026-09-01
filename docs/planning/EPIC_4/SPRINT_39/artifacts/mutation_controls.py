@@ -23,7 +23,26 @@ sys.path.insert(0, ".")
 
 HEAD = re.compile(r"^([A-Za-z][A-Za-z0-9_]*)\s*\(([^()]*)\)\s*(?:\$[^.]*)?\.\.", re.M)
 GUARD = re.compile(r"\$\(")
-REPEAT = re.compile(r"\b([A-Za-z][A-Za-z0-9_]*)\(\s*([A-Za-z][A-Za-z0-9_]*)\s*,\s*\2\s*\)")
+#: Any symbol call. The repeat test runs over its bare-identifier arguments,
+#: so it catches EVERY arity and position -- `p(x,x)`, `p(x,y,x)`, `p(x,x,z)`.
+#: The earlier `name(x,x)` regex only caught the binary ADJACENT form and
+#: missed nonsharp's `inter(col,col,stm)` entirely (PR #1718 review).
+CALL = re.compile(r"\b([A-Za-z][A-Za-z0-9_]*)\(([^()]*)\)")
+BARE = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
+
+
+def repeats(fragment: str) -> list[str]:
+    """Symbol calls in ``fragment`` whose bare-identifier arguments repeat.
+
+    Case-INSENSITIVE, because GAMS identifiers are: `p(I,i)` is a repeat.
+    """
+    out = []
+    for m in CALL.finditer(fragment):
+        args = [a.strip() for a in m.group(2).split(",")]
+        bare = [a for a in args if BARE.fullmatch(a or "")]
+        if len(bare) >= 2 and len(bare) != len({b.lower() for b in bare}):
+            out.append(m.group(0))
+    return out
 
 
 def p1(txt: str) -> list[str]:
@@ -63,7 +82,7 @@ def p2(txt: str) -> list[str]:
             while i < len(line) and depth:
                 depth += (line[i] == "(") - (line[i] == ")")
                 i += 1
-            out += [m.group(0) for m in REPEAT.finditer(line[gm.end():i])]
+            out += repeats(line[gm.end():i])
     return sorted(set(out))
 
 

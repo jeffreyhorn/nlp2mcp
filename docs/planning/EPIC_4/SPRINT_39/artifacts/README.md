@@ -26,6 +26,12 @@ Run **from the repo root**. All write into `$OUT` (default `/tmp/s39t7`).
 | `property2.py` | P1 and P2 over every committed golden | ~2 s |
 | `mutation_controls.py` | **the controls behind §5** — exits non-zero if either property is vacuous | ~30 s |
 
+**The controls earn their keep.** During PR #1718 review the repeat matcher was
+generalised from `name(x,x)` to any arity; the rewrite silently wrote a literal
+backspace into the compiled pattern, so P2 matched nothing. `mutation_controls.py`
+failed immediately with `P2 control -- elec pre-fix 0 []`. A green corpus run
+would have looked like "no violations" and shipped.
+
 `mutation_controls.py` is the one to run first. It re-derives the claims the
 survey actually rests on:
 

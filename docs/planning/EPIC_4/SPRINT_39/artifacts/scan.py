@@ -29,7 +29,6 @@ for root in ROOTS:
     for path in sorted(pathlib.Path(root).rglob("*.py")):
         src = path.read_text(encoding="utf-8")
         tree = ast.parse(src)
-        lines = src.split("\n")
         for node in ast.walk(tree):
             # R1: dict comprehension keyed by an element of a domainish iterable
             if isinstance(node, ast.DictComp):

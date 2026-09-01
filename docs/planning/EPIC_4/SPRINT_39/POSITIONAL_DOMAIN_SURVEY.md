@@ -2,7 +2,7 @@
 
 **Sprint 39 Prep Task 7** · **Measured at:** `52cb2da0`, GAMS **54.2.1** · **Authored:** 2026-09-01
 
-> **⚠ Three of this task's inherited figures are wrong, and one is a live correctness finding.** The repeated-symbol **set** domain is **8× more common** than assumed (16 models, not "as rare as 2"). The repeated **variable** domain is **5** models, not the banked 2. And an emit-level property finds **5 models whose committed goldens already carry a manufactured repeated-index guard** — three of them repeats the source never declared.
+> **⚠ Three of this task's inherited figures are wrong, and one is a live correctness finding.** The repeated-symbol **set** domain is **8× more common** than assumed (16 models, not "as rare as 2"). The repeated **variable** domain is **5** models, not the banked 2. And an emit-level property finds **6 models whose committed goldens already carry a repeated-index guard** — three of them repeats the source never declared.
 
 **Reproducible from the repo.** Every figure below comes from a script in [`artifacts/`](artifacts/README.md), committed alongside this document. Start with `artifacts/mutation_controls.py` — it re-derives the claims §5 rests on and **exits non-zero if either property is vacuous**.
 
@@ -141,7 +141,7 @@ Exists FOR this class: requires >= 2 var-domain positions canonicalising to the 
 
 **`src/emit/emit_gams.py:795`** — NOT REACHABLE (in sample) · reach 0/15
 
-0 of 15 sampled models executed this line, including both known instances and all five emit-level offenders. NOT a proof of unreachability — it is a measured absence over a 15-model sample chosen to be adversarial for this class, and it is recorded as such.
+0 of 15 sampled models executed this line, including both known instances and five of the six emit-level offenders (`nonsharp` was identified later, by the generalised matcher, and was not in the traced sample). NOT a proof of unreachability — it is a measured absence over a 15-model sample chosen to be adversarial for this class, and it is recorded as such.
 
 ---
 
@@ -196,7 +196,7 @@ Stated over the **emitted output**, because that is where the GAMS semantics bit
 **Not set-specific:** the matcher is `name(x,x)` for any symbol, because the live hits are parameters (`ts2`, `tranc`, `vs`, `covar`) as much as sets. The complement. Scoped to guards **on purpose**: `Set ut(i,i)` in the emitted declaration block is the model's own legitimate declaration, and a naive whole-file form flags it in elec both before *and* after the fix — a false positive that would have made the check useless.
 
 - Control: **elec pre-fix 1 violation (`$(ut(i,i))`), elec today 0.**
-- **⚠ P2 finds 7 violations across 5 CURRENT goldens.**
+- **⚠ P2 finds 9 violations across 6 CURRENT goldens.**
 
 | model | emitted | source declares it repeated? | assessment |
 |---|---|---|---|
@@ -204,6 +204,7 @@ Stated over the **emitted output**, because that is where the GAMS semantics bit
 | `egypt` | `1$(tranc(rp,rp))` | ❌ source has `Table tranc(r,rp)` | **manufactured.** A self-transfer cost; the diagonal is absent ⇒ the term drops. |
 | `turkpow` | `1$(vs(v,v))`, `1$(vs(t__kkt1,t__kkt1))` | ❌ source has `vs(t,v)` | **manufactured, and the MIRROR case.** `vs(t,v) = ord(t) >= ord(v)` ⇒ `vs(v,v)` is identically **TRUE**, so the guard is a no-op and the term is included for *every* instance instead of a triangle. Silently **over**-inclusive. `t__kkt1` is a KKT-minted name, so this guard was generated, not copied. |
 | `shale` | `1$(ts(tf,tf))` | ✅ `ts(tf,tf)` | declaration-derived. `ts(tf,tfp)$(ord(tfp) < ord(tf)) = 1` ⇒ identically false. |
+| `nonsharp` | `inter(col,col,stm)`, `inter(col__kkt1,col__kkt1,stm)` | ✅ `Set inter(col,col,stm)` | **3-arity — invisible to the original binary matcher** (PR #1718 review). The source only ever assigns off-diagonal pairs (`inter(colp,col,stm)`), so `inter(col,col,stm)` is identically false. `col__kkt1` is KKT-minted, so that one is **manufactured**. Convexity `excluded`, no MCP solve — outside the 142 candidates. |
 | `gussrisk` | `covar(stocks,stocks)$(NOT (…)) = 0;` | ✅ `covar(stocks,stocks)` | declaration-derived, on an **assignment**. The repeat is in *both* the LHS and the guard; the **LHS** is what narrows the NA-guard to the diagonal, and P2 sees only the guard (gap below). **Latent:** `covar` is computed and never NA, so today's answer is unaffected. The one **matching** model in the suspect set. |
 
 **A third sub-shape falls out of this that neither known instance showed:** a manufactured repeat can be identically **true** (`turkpow`) as easily as identically false (`elec`, `dinam`, `shale`). An "is this guard always false?" check would miss half of them. The property must be *"the index repeats"*, not *"the guard is unsatisfiable"*.
@@ -234,8 +235,8 @@ P5 is **0-bucket by design**; nothing below asks for a bucket move.
 
 ## 7. What this survey does not establish
 
-- **It did not re-derive whether the 5 P2 hits change any answer.** `dinam`, `egypt`, `shale`, `turkpow` are all `mcp_solve: failure` today, so a wrong term is not currently reaching a reported KPI; `gussrisk` matches but its instance is latent on this data. Confirming each is P5 execution work, not prep.
-- **`emit_gams.py:795` is "not reachable *in sample*", not "not reachable".** 0 of 15 models executed it, and the sample was chosen adversarially for this class (both known instances, all five emit-level offenders, plus controls). That is a measured absence over 15 models, not a proof — and it is the one verdict in the catalog resting on absence of evidence.
+- **It did not re-derive whether the 9 P2 hits change any answer.** `dinam`, `egypt`, `shale`, `turkpow` are all `mcp_solve: failure` today and `nonsharp` is convexity-`excluded` with no MCP solve, so a wrong term is not currently reaching a reported KPI; `gussrisk` matches but its instance is latent on this data. Confirming each is P5 execution work, not prep.
+- **`emit_gams.py:795` is "not reachable *in sample*", not "not reachable".** 0 of 15 models executed it, and the sample was chosen adversarially for this class (both known instances, five of the six emit-level offenders, plus controls — `nonsharp` surfaced only after the matcher was generalised in review). That is a measured absence over 15 models, not a proof — and it is the one verdict in the catalog resting on absence of evidence.
 - **The per-kind census is a lower bound** — 41 of 219 models did not parse.
 
 ---
