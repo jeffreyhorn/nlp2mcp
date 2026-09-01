@@ -808,14 +808,31 @@ cd "$(git rev-parse --show-toplevel)"
 # inverted — gradient.py and complementarity.py did NOT move (0 commits since
 # 949a4587), while the files it grepped did. Symbols, not line numbers:
 # ⇒ gradient.py:287, gradient.py:453, complementarity.py:367, complementarity.py:512
-grep -n "= enumerate_variable_instances(" src/ad/gradient.py src/kkt/complementarity.py
+# ERE with `[[:space:]]*`, NOT a fixed-string "= enumerate...": the fixed form is
+# brittle to formatting and would miss `instances=enumerate_variable_instances(`.
+grep -nE "=[[:space:]]*enumerate_variable_instances\(" \
+  src/ad/gradient.py src/kkt/complementarity.py
+
+# POSITIVE CONTROL for that anchor — run it, do not assume it. ⇒ 3
+# (The fixed-string form scores 1 of 3 here. That is the whole reason for the ERE.)
+printf 'x = enumerate_variable_instances(a)\ny=enumerate_variable_instances(a)\nz  =  enumerate_variable_instances(a)\n' \
+  | grep -cE "=[[:space:]]*enumerate_variable_instances\("
 
 # ⚠ There are SIX callers, not four. The other two — constraint_jacobian.py:80
 # and index_mapping.py:634 — are the ones the Day-7 referenced-instance filter
 # already covers. Count them, so the difference is visible rather than assumed.
-# The `= ` anchor excludes the three `>>>` docstring examples in index_mapping.py
-# and the prose mention at gradient.py:48, which an unanchored grep picks up.
-grep -rn "= enumerate_variable_instances(" src/ | sort   # ⇒ exactly 6 lines
+grep -rnE "=[[:space:]]*enumerate_variable_instances\(" src/ | sort   # ⇒ exactly 6
+
+# CROSS-CHECK that the `=` anchor is not hiding a site: list every OTHER mention
+# and eyeball it. ⇒ 8 — 3 imports, 1 def, 3 `>>>` doctest examples, 1 prose line
+# (gradient.py:48). An unanchored grep picks all 8 up and reports 14 "callers".
+grep -rn "enumerate_variable_instances" src/ \
+  | grep -vE "=[[:space:]]*enumerate_variable_instances\("
+# ⚠ Known blind spot, accepted deliberately: the `=` anchor cannot see a bare
+# statement call, `enumerate_variable_instances(x)` with the result discarded.
+# The function exists to return a list, so such a call would be dead — but if
+# the cross-check above ever returns something that is not an import, a def, a
+# doctest or prose, that is the case, and the count is wrong.
 
 # gradient.py:453 is DEAD CODE in the translate path — its enclosing function has
 # no production caller. Expect hits only in tests and in its own docstring.
