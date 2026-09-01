@@ -205,7 +205,7 @@ Sprint 39 execution team
 | tricp | `path_solve_terminated` | `path_solve_license` | ✗ **today** |
 | ferts | `path_solve_license` | `path_solve_license` | ✗ untestable throughout |
 
-**⚠ `tricp` is a conditional future candidate** — cold emit changed, abort removed, blocked only by **capacity** (387 → 1,255 rows, past the demo limit). If the #1462 licence ask succeeds and tricp matches, it qualifies on identical terms. Any answer taken today is *"of the models testable today"*.
+**⚠ `tricp` is a conditional future candidate** — cold emit changed, abort removed, blocked only by **capacity** (387 → 1,255 rows, past the demo limit). If the #1462 license ask succeeds and tricp matches, it qualifies on identical terms. Any answer taken today is *"of the models testable today"*.
 
 **Two structural limits, both recorded rather than worked around:** (a) **`polygon` has no provenance entry** — `entries` is `[]` and the baseline is one opaque count, so the precedent the definition names **cannot be audited**; "polygon set the precedent" is an argument from prose. (b) A pre-S38 misclassification is **not addressable**: the README states the floor "cannot be RECONSTRUCTED" (three derivations give 65/93/76), only 14 of 76 were ever attributable by name, and the baseline "is never re-litigated".
 
@@ -1015,7 +1015,7 @@ Sprint 39 execution team
 
 **Q3 — the response to a non-actionable reply is defined, and it is to STOP.** Record the reply verbatim on the owning issue, note which of the three forms it lacks, mark the thread *answered but not actionable*, and **do not send a clarifying question** — a clarification round re-opens the decision this package exists to keep closed and has no date gate to bound it.
 
-**Q4 — the licence thread rides the same cadence.** It is in the same email and the same follow-up; splitting it would create a second send decision, which is the failure mode.
+**Q4 — the license thread rides the same cadence.** It is in the same email and the same follow-up; splitting it would create a second send decision, which is the failure mode.
 
 **Q5 — the follow-up is drafted and checked against "do not re-open".** It states the send as a completed fact, offers **re-routing rather than reconsideration**, carries no deadline or escalation (so it cannot fail and trigger a decision), and ends by relieving the recipient of obligation. Explicitly excluded: a re-summary of the question, a restatement of why it matters, and any proposal to change the recipient list.
 
@@ -1071,7 +1071,7 @@ Sprint 39 execution team
 
 Both live violations are the elec shape: a guard that is **identically false**, silently dropping a term. **Neither has ever been executed by a solve.**
 
-**Q4 — a pre-flight is warranted, and it is nearly free.** Not a full per-model review: **Stage 0 is P2 over the cohort's goldens — ~2 s, no GAMS, no licence** — and it already knows two members are suspect. A member that appears is *flagged, not disqualified*; its result is read knowing the emit carries a defect signature.
+**Q4 — a pre-flight is warranted, and it is nearly free.** Not a full per-model review: **Stage 0 is P2 over the cohort's goldens — ~2 s, no GAMS, no license** — and it already knows two members are suspect. A member that appears is *flagged, not disqualified*; its result is read knowing the emit carries a defect signature.
 
 **Q2/Q5 — one `--only-solve` pass, then attribution.** The goldens are current (`--only-solve` does not re-translate). **Stage 2 is not optional:** every member reporting a match must pass `check_mcp_solve_attribution.py`. These are the first solves these emits have ever had, and `weapons` established that a golden can pass every static review and still not run — **a first-ever match is exactly where a spurious one is most plausible.**
 

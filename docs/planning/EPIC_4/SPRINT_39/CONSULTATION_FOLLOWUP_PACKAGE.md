@@ -49,7 +49,7 @@ NLP references, unchanged: rocket **1.0128** (`likely_convex`), agreste **17706.
 
 > **Follow-up — 2026-09-09**
 >
-> Following up on the consultation sent 2026-08-26 (rocket non-convergence, the LP-degeneracy question on `agreste`/`mine`, and the licence-capacity ask). No reply has arrived; this is a courtesy bump, not a resubmission.
+> Following up on the consultation sent 2026-08-26 (rocket non-convergence, the LP-degeneracy question on `agreste`/`mine`, and the license-capacity ask). No reply has arrived; this is a courtesy bump, not a resubmission.
 >
 > Nothing has changed on our side. All three fingerprints were re-measured on 2026-09-01 against GAMS 54.2.1 / PATH 5.2.01 and reproduce exactly: rocket `MODEL STATUS 5` after 9,241 iterations with 0 evaluation errors and the residual concentrated on `stat_step` under three of PATH's four final norms; `agreste` `MODEL STATUS 5` after 9,734 iterations; `mine` after 10,662. Both `agreste` and `mine` are verified-convex LPs, which is what makes a *locally* infeasible termination worth asking about.
 >
@@ -82,7 +82,7 @@ NLP references, unchanged: rocket **1.0128** (`likely_convex`), agreste **17706.
 
 **Apply it to `rocket_mcp_presolve.gms`** — that is the emit the 9,241-iteration figure came from.
 
-### 4b. licence grant → one `--only-solve` batch
+### 4b. license grant → one `--only-solve` batch
 
 See §5. **Do not run the batch blind** — the pre-flight there is now load-bearing.
 
@@ -120,7 +120,7 @@ Both live violations are the elec shape: a guard that is **identically false**, 
 ### The procedure
 
 ```bash
-# STAGE 0 — pre-flight, costs no licence capacity. Run it FIRST.
+# STAGE 0 — pre-flight, costs no license capacity. Run it FIRST.
 #   P2 over the cohort's goldens: ~2 s, no GAMS.
 OUT=/tmp/p6 .venv/bin/python docs/planning/EPIC_4/SPRINT_39/artifacts/property2.py
 #   Expect egypt and shale to appear. A member that appears is NOT
@@ -137,7 +137,7 @@ OUT=/tmp/p6 .venv/bin/python docs/planning/EPIC_4/SPRINT_39/artifacts/property2.
 
 **Stage 2 is not optional.** These are the first solves these emits have ever had, and `weapons` established that a golden can pass every static review and still not run. A first-ever match is exactly the case where a spurious one is most plausible.
 
-**⚠ A per-model sanity check before spending capacity is warranted, and Stage 0 is its cheap form.** It costs seconds and no licence, and it already knows two members are suspect. A full per-model review is not warranted — the batch is one pass, and a failure costs nothing that a projection depends on (§7).
+**⚠ A per-model sanity check before spending capacity is warranted, and Stage 0 is its cheap form.** It costs seconds and no license, and it already knows two members are suspect. A full per-model review is not warranted — the batch is one pass, and a failure costs nothing that a projection depends on (§7).
 
 ## 6. `agreste` has no owning issue (Unknown 6.3)
 
@@ -161,7 +161,7 @@ OUT=/tmp/p6 .venv/bin/python docs/planning/EPIC_4/SPRINT_39/artifacts/property2.
 **Neither of these is a Sprint-39 projection, and neither may enter an acceptance criterion:**
 
 - **rocket's +1** is contingent on a reply that may not arrive and, if it arrives, may not be actionable.
-- **the cohort's +11** is a *ceiling*, contingent on a licence grant that is a purchasing decision, not engineering — and §5 now shows the ceiling is optimistic on its own terms, since 2 of the 11 carry a live emit defect.
+- **the cohort's +11** is a *ceiling*, contingent on a license grant that is a purchasing decision, not engineering — and §5 now shows the ceiling is optimistic on its own terms, since 2 of the 11 carry a live emit defect.
 
 **Both are excluded from projections and neither is written off.** If either lands, it is reported as an **unprojected gain** with its contingency named — not as a plan met.
 
