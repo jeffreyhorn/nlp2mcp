@@ -29,7 +29,7 @@ Sprint 39 addresses ten priorities:
 4. **P4 (KPI):** sarf's four located call sites — **+1 Translate**, the only KPI mover
 5. **P5 (Prevention):** the positional-vs-declared-domain audit
 6. **P6 (Date-gated):** consultation reply integration, or the 2026-09-09 follow-up
-7. **P7 (Integrity):** the presolve-record systemic remedy — all 14 rows or none
+7. **P7 (Integrity):** the presolve-record systemic remedy — ⚠ *originally scoped "all 14 rows or none"; **Task 8 refuted that framing** (two distinct defect populations, needing Remedy A **and** B together — see `PRESOLVE_RECORD_REMEDY.md` §3)*
 8. **P8 (Infrastructure):** the four Sprint-38 retrospective process findings
 9. **P9 (Epic 5):** the numéraire-selection rule + degeneracy detection, **design only**
 10. **P10 (Slack):** the general emit-backlog sweep
@@ -49,7 +49,7 @@ This prep plan front-loads the work that would otherwise be discovered mid-sprin
 | 5 | ✅ lnts Fingerprint Reproduction & Runtime-Probe Design (P3) | Critical | 4-6 hours | Tasks 1, 2 | P3 — an entirely untraced hypothesis |
 | 6 | ✅ sarf's Four Call Sites — Cost Attribution & Atomicity Plan (P4) | Critical | 5-7 hours | Tasks 1, 2 | P4 — the only KPI mover (+1 Translate) |
 | 7 | ✅ Positional-vs-Declared-Domain Site Survey (P5) | High | 4-5 hours | Tasks 1, 2 | P5 — the audit's input catalog |
-| 8 | ✅ Presolve-Record Remedy Design (P7) | High | 3-4 hours | Tasks 1, 2 | P7 — all 14 rows or none |
+| 8 | ✅ Presolve-Record Remedy Design (P7) | High | 3-4 hours | Tasks 1, 2 | P7 — **two** defect populations (1 spurious row + 14 dangling), so **A + B together** |
 | 9 | Consultation Reply-Integration & Follow-Up Package (P6) | Medium | 2-3 hours | Task 1 | P6 — both branches prepared before the date gate |
 | 10 | Epic-5 Design Scoping: Numéraire Rule & Degeneracy Detection (P9) | Medium | 3-4 hours | Tasks 1, 2 | P9 — design only, no camcge experiment |
 | 11 | Emit-Backlog Catalog Refresh & Process-Infrastructure Spec (P8, P10) | Medium | 3-4 hours | Tasks 1, 2, 7 | P8 infrastructure + P10 slack absorber |
@@ -296,7 +296,8 @@ print('terminated:', c['path_solve_terminated'], '| license:', c['path_solve_lic
 
 # Presolve-record population
 # Same predicate as Task 8's block, deliberately: the canonical population is the
-# PRESOLVE rows (P7's remedy is "all 14 rows or none"). Both forms return 14 today
+# PRESOLVE rows. ⚠ P7 was scoped "all 14 rows or none"; Task 8 showed that names
+# only the DANGLING population — the spurious population is 1. Both forms return 14 today
 # only because every dangling row happens to be a presolve row -- drop the
 # restriction and the two blocks would report different values for the same figure.
 .venv/bin/python -c "

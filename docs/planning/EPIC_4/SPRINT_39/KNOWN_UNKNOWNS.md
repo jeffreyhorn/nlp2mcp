@@ -21,7 +21,7 @@ That is the principal risk this document is organised around. Sprint 38's most t
 4. **P4 (KPI)** — sarf's four located call sites: **+1 Translate**, the only KPI mover
 5. **P5 (Prevention)** — the positional-vs-declared-domain audit
 6. **P6 (Date-gated)** — consultation reply integration, or the 2026-09-09 follow-up
-7. **P7 (Integrity)** — the presolve-record systemic remedy: all 14 rows or none
+7. **P7 (Integrity)** — the presolve-record systemic remedy: ⚠ *originally scoped "all 14 rows or none"; **Task 8 refuted that framing** — see 7.2*
 8. **P8 (Infrastructure)** — the four Sprint-38 retrospective process findings
 9. **P9 (Epic 5)** — the numéraire-selection rule + degeneracy detection, **design only**
 10. **P10 (Slack)** — the general emit-backlog sweep
@@ -1078,7 +1078,7 @@ Sprint 39 execution team
 ## Unknown 7.1: Is the population still 14, and is `weapons` still the only spurious match?
 
 ### Priority
-**High** — P7's "all 14 rows or none" framing depends on the count, and Sprint 38 adopted goldens on Days 8 and 12 that may have changed it.
+**High** — P7's "all 14 rows or none" framing depends on the count, and Sprint 38 adopted goldens on Days 8 and 12 that may have changed it. *(⚠ The count holds, but **Task 8 refuted the framing itself** — it names only the dangling population; see the addendum below and 7.2.)*
 
 ### Assumption
 There are **14** dangling `mcp_file_used` rows (13 pre-existing plus `weapons`, whose presolve golden was reverted in review), and `weapons` remains the **only** spurious match of the presolve population.

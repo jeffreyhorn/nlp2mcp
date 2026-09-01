@@ -71,7 +71,7 @@ These are distinct populations and must not be "reconciled" into one another:
 | **31** | presolve ∧ match ∧ convex candidate — the KPI block's "presolve" line |
 | **14** | of the 48, those whose recorded `mcp_file_used` path no longer exists |
 
-P7's remedy is scoped to "all 14 rows or none". **Routed to Task 8** so the remedy names which population it covers.
+P7's remedy is scoped to "all 14 rows or none". **Routed to Task 8** so the remedy names which population it covers. *(Answered 2026-09-01: it names the **dangling** population only — the spurious population is 1, and no single remedy covers both. `PRESOLVE_RECORD_REMEDY.md` §3.)*
 
 ### 2.3 sarf's hot path is **equation**-instance enumeration, not the four **variable**-instance sites → **Task 6 (P4)**
 
