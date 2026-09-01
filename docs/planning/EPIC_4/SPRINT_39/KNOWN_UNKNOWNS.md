@@ -1005,7 +1005,25 @@ Check both issues' comment history. Verify the `--force` scaffold still emits th
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — no reply yet (so the assumption is untested), and the scaffold takes a strategy, not option values
+
+**Verified by:** Sprint 39 Prep Task 9 · **Date:** 2026-09-01 · **Measured at:** `84656666`
+
+**Q1 — no reply has arrived.** Checked 2026-09-01: the last comment on **#1462** and on **#1443** is my own send record of 2026-08-26. **Six days elapsed of the fourteen** to the gate. The assumption — that a reply *will* contain one of the three actionable forms — **cannot be tested and remains open by design**; both branches are prepared.
+
+**Q2 — the scaffold is live, but ⚠ it does NOT accept an option set directly.** `--force {none,homotopy,multistart,optfile}` at `src/cli.py:208`, dispatched at `:488`, emitted by `src/emit/forcing.py:41`. But the signature is `emit_forcing_scaffold(strategy, model_name, add_comments)` — **no option payload**. The values a reply would recommend are hardcoded literals: `proximal_perturbation 1e-2` + `merit_function normal` in the `optfile` branch (`:64`), and the `mu` schedule `1e3 → … → 0` at `:121–122`. **Integrating a recommended option set is a source edit with a quality gate, not a flag** — small, but it must be budgeted as `src/` work.
+
+**Q3 — the response to a non-actionable reply is defined, and it is to STOP.** Record the reply verbatim on the owning issue, note which of the three forms it lacks, mark the thread *answered but not actionable*, and **do not send a clarifying question** — a clarification round re-opens the decision this package exists to keep closed and has no date gate to bound it.
+
+**Q4 — the licence thread rides the same cadence.** It is in the same email and the same follow-up; splitting it would create a second send decision, which is the failure mode.
+
+**Q5 — the follow-up is drafted and checked against "do not re-open".** It states the send as a completed fact, offers **re-routing rather than reconsideration**, carries no deadline or escalation (so it cannot fail and trigger a decision), and ends by relieving the recipient of obligation. Explicitly excluded: a re-summary of the question, a restatement of why it matters, and any proposal to change the recipient list.
+
+**Also re-measured, because a reply must be read against current numbers.** All three banked figures reproduce — **but they come from different emits, and the sent package did not say which**: rocket's 9,241 is its **presolve** emit (its **cold** emit runs to **16,024**, a figure appearing nowhere), while agreste's 9,734 and mine's 10,662 are **cold**. rocket's `stat_step` residual claim reproduces exactly — three of PATH's four final norms.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_39/CONSULTATION_FOLLOWUP_PACKAGE.md` §1–4.
+
+**Decision:** Both branches ready. **Revisit §1 before 2026-09-09** — it is the only section that can go stale.
 
 ---
 
@@ -1037,7 +1055,29 @@ Confirm the cohort membership from the DB. Dry-run the `--only-solve` path. Revi
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — the goldens are not safe to assume; 7 of 11 sit in a known defect class and 2 carry live violations
+
+**Verified by:** Sprint 39 Prep Task 9 · **Date:** 2026-09-01 · **Measured at:** `84656666`
+
+**Q1 — the cohort is still exactly 11**, confirmed from the DB (`outcome_category == "path_solve_license"`): `egypt`, `ferts`, `glider`, `robot`, `shale`, `sroute`, `srpchase`, `tabora`, `tfordy`, `tricp`, `turkey`. All carry `solver_version: None` — **PATH never ran on any of them**. All 11 have a cold golden; **none has a presolve golden.**
+
+**Q3 — the assumption "their committed goldens are correct" is WRONG, and `ferts` is not the exception but the pattern.** Cross-referencing Sprint-39 Task 7:
+
+| finding | members |
+|---|---|
+| carry a **repeated-symbol declared domain** (Task 7's defect class) | **7 of 11** — `egypt`, `ferts`, `shale`, `sroute`, `srpchase`, `tfordy`, `tricp` |
+| carry a **live P2 violation in the committed golden today** | **2 of 11** — `egypt` (`1$(tranc(rp,rp))`), `shale` (`1$(ts(tf,tf))`) |
+| **unknown** — Task 7's census could not parse it inside 120 s | **1** — `turkey` |
+
+Both live violations are the elec shape: a guard that is **identically false**, silently dropping a term. **Neither has ever been executed by a solve.**
+
+**Q4 — a pre-flight is warranted, and it is nearly free.** Not a full per-model review: **Stage 0 is P2 over the cohort's goldens — ~2 s, no GAMS, no licence** — and it already knows two members are suspect. A member that appears is *flagged, not disqualified*; its result is read knowing the emit carries a defect signature.
+
+**Q2/Q5 — one `--only-solve` pass, then attribution.** The goldens are current (`--only-solve` does not re-translate). **Stage 2 is not optional:** every member reporting a match must pass `check_mcp_solve_attribution.py`. These are the first solves these emits have ever had, and `weapons` established that a golden can pass every static review and still not run — **a first-ever match is exactly where a spurious one is most plausible.**
+
+**Evidence:** package §5; DB cohort query; Task 7's census and P2 run.
+
+**Decision:** The procedure is now three stages, not one. **The +11 ceiling is optimistic on its own terms** — but it is not a projection (§7), so this costs nothing in the acceptance criteria.
 
 ---
 
@@ -1069,7 +1109,23 @@ Query the issue tracker for agreste and the other banked models. Read #1068's di
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — and the same gap exists for `cesam`
+
+**Verified by:** Sprint 39 Prep Task 9 · **Date:** 2026-09-01 · **Measured at:** `84656666`
+
+**Q1 — #1068 is CLOSED (2026-03-13) and describes a different defect:** *"MCP structurally infeasible — missing Jacobian terms and alias handling bug"*. Today's fingerprint is not structural infeasibility — it is a **verified-convex LP terminating `Locally Infeasible` after 9,734 iterations with 0 evaluation errors**, which is precisely the structural oddity the consultation asks about.
+
+**Q2 — no open issue owns `agreste`.** A search across all issues returns only #1443 and #1462 (both by cross-reference) and the closed #1068. **The assumption holds.**
+
+**Q3 — the gate is pre-drafted** so filing is fast: fail-before `MS-5` / **9,734** iterations / 0 eval errors (reproduced today); pass-after `MS-1` or `MS-2` with the objective within tolerance of the NLP's **17706.43**, *asserting `modelstat` before reading it*; **negative control `mine`** (#1443) must not drift, since a fix moving both is a different and larger finding; leak gate clean with drift on `agreste` alone.
+
+**Q4 — file it only if a reply arrives.** A pre-emptive issue whose Phase-0 gate depends on an unknown answer would be a gate asserting nothing, and Sprint 38 showed that a doc written before its measurement rots.
+
+**Q5 — ⚠ the gap is wider than agreste.** **`cesam` has six issues, all CLOSED** (#733, #807, #864, #874, #878, #881) and **none open** — every one an emit defect from Sprints 20–27, none about solver behaviour. `indus` (#1461 byte-reproducibility, #931 iswnm) and `dinam` (#926 compilation errors) have open issues describing **different defects**, so neither would own an LP-degeneracy answer. **`mine` and `rocket` are the only banked threads with a genuine owner.**
+
+**Evidence:** package §6; `gh issue` queries across all states.
+
+**Decision:** Assumption confirmed. File on reply, not before — and if the reply generalises beyond agreste, `cesam` needs one too.
 
 ---
 

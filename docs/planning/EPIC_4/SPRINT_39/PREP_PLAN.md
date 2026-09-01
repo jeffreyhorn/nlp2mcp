@@ -50,7 +50,7 @@ This prep plan front-loads the work that would otherwise be discovered mid-sprin
 | 6 | ✅ sarf's Four Call Sites — Cost Attribution & Atomicity Plan (P4) | Critical | 5-7 hours | Tasks 1, 2 | P4 — the only KPI mover (+1 Translate) |
 | 7 | ✅ Positional-vs-Declared-Domain Site Survey (P5) | High | 4-5 hours | Tasks 1, 2 | P5 — the audit's input catalog |
 | 8 | ✅ Presolve-Record Remedy Design (P7) | High | 3-4 hours | Tasks 1, 2 | P7 — **two** defect populations (1 spurious row + 14 dangling), so **A + B together** |
-| 9 | Consultation Reply-Integration & Follow-Up Package (P6) | Medium | 2-3 hours | Task 1 | P6 — both branches prepared before the date gate |
+| 9 | ✅ Consultation Reply-Integration & Follow-Up Package (P6) | Medium | 2-3 hours | Task 1 | P6 — both branches prepared before the date gate |
 | 10 | Epic-5 Design Scoping: Numéraire Rule & Degeneracy Detection (P9) | Medium | 3-4 hours | Tasks 1, 2 | P9 — design only, no camcge experiment |
 | 11 | Emit-Backlog Catalog Refresh & Process-Infrastructure Spec (P8, P10) | Medium | 3-4 hours | Tasks 1, 2, 7 | P8 infrastructure + P10 slack absorber |
 | 12 | Plan Sprint 39 Detailed Schedule | Critical | 3-4 hours | All tasks (1–11) | Day-by-day schedule + REPLAN exits + budget |
@@ -1168,9 +1168,10 @@ test -f docs/planning/EPIC_4/SPRINT_39/PRESOLVE_RECORD_REMEDY.md && \
 
 ## Task 9: Consultation Reply-Integration & Follow-Up Package (P6)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-09-01) — ⏰ **revisit §1 before 2026-09-09**
 **Priority:** Medium
 **Estimated Time:** 2-3 hours
+**Time Spent:** 2.5 hours
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
@@ -1206,11 +1207,25 @@ Tracked on **#1462** (rocket + the send record) and **#1443** (the LP question).
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_39/CONSULTATION_FOLLOWUP_PACKAGE.md` — both branches, the ready-to-post follow-up, per-thread integration checklists, the three-stage cohort procedure, re-measured figures, and the projection discipline
+- `KNOWN_UNKNOWNS.md` — Unknowns **6.1 🔶**, **6.2 ❌**, **6.3 ✅**
+- `CHANGELOG.md` — Sprint 39 Prep entry
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — no reply yet, both branches ready, and two findings that change how P6 executes.**
+
+**No reply (6.1 🔶).** Checked 2026-09-01: the last comment on #1462 and #1443 is my own send record of 2026-08-26 — **6 of the 14 days elapsed**. The assumption that a reply *would* be actionable cannot be tested and stays open by design. **⚠ But the `--force` scaffold does not accept an option set:** `emit_forcing_scaffold(strategy, model_name, add_comments)` takes **no option payload**, and the values a reply would recommend are hardcoded (`proximal_perturbation 1e-2` at `forcing.py:64`; the `mu` schedule at `:121–122`). **Integrating a recommended option set is `src/` work with a quality gate, not a flag.**
+
+**⚠ All three figures reproduce — but from different emits, and the sent package never said which.** rocket's **9,241** is its **presolve** emit; its **cold** emit runs to **16,024**, a figure appearing nowhere and looking like a contradiction to anyone re-measuring. agreste's **9,734** and mine's **10,662** are **cold**. rocket's `stat_step` residual claim reproduces exactly — three of PATH's four final norms. **A reply must be applied to the emit its figure came from**, and the package names that per thread.
+
+**⚠⚠ The cohort's goldens are not safe to assume (6.2 ❌).** Cross-referencing Task 7: **7 of the 11** license-gated models carry a repeated-symbol declared domain, and **2 — `egypt` and `shale` — carry a live P2 violation in their committed goldens today**, both the elec shape (a guard that is identically false). `turkey` is unknown; Task 7's census could not parse it. **`ferts` is not the exception, it is the pattern.** The procedure is now three stages: a **free** P2 pre-flight (~2 s, no GAMS, no licence), the single `--only-solve` batch, then **mandatory attribution** on every member reporting a match — these are the first solves these emits have ever had, and a first-ever match is exactly where a spurious one is most plausible.
+
+**`agreste` needs an issue, and so does `cesam` (6.3 ✅).** #1068 is CLOSED and describes a *different* defect (structural infeasibility, not a converged-then-infeasible LP). Gate pre-drafted; **file on reply, not before** — a gate depending on an unknown answer asserts nothing. **⚠ `cesam` has six issues, all closed, none open**; `indus` and `dinam` have open issues describing different defects. **`mine` and `rocket` are the only banked threads with a genuine owner.**
+
+**The non-actionable branch is defined, and it is to stop:** record the reply, note which of the three actionable forms it lacks, mark the thread *answered but not actionable*, and **do not send a clarifying question** — that re-opens the decision this package exists to keep closed, with no date gate to bound it.
+
+**Projection discipline restated:** rocket's **+1** and the cohort's **+11** are **not Sprint-39 projections** and must not enter acceptance criteria. If either lands it is reported as an **unprojected gain** with its contingency named.
 
 ### Verification
 
@@ -1261,13 +1276,13 @@ test -f docs/planning/EPIC_4/SPRINT_39/CONSULTATION_FOLLOWUP_PACKAGE.md && \
 
 ### Acceptance Criteria
 
-- [ ] The follow-up comment drafted and explicitly does **not** re-open the send decision
-- [ ] An integration checklist exists for each of the three threads
-- [ ] All three threads' figures re-measured on current `main`
-- [ ] The cohort re-test procedure written, with the `ferts` "golden ≠ correct" caveat
-- [ ] `agreste`'s missing owning issue noted, with the condition under which one is filed
-- [ ] rocket's +1 and the cohort's +11 explicitly excluded from Sprint-39 projections
-- [ ] Unknowns 6.1, 6.2, 6.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The follow-up comment drafted and explicitly does **not** re-open the send decision — states the send as completed fact, offers **re-routing rather than reconsideration**, carries no deadline or escalation, and ends by relieving the recipient of obligation. Three additions are explicitly banned, each of which would re-open it
+- [x] An integration checklist exists for each of the three threads — plus a fourth for the **non-actionable** reply, whose defined response is to stop rather than to clarify
+- [x] All three threads' figures re-measured on current `main` — all reproduce, and the measurement found that **the three come from different emits**, which the sent package did not say
+- [x] The cohort re-test procedure written, with the `ferts` "golden ≠ correct" caveat — **and the caveat made specific**: 7 of 11 in the defect class, 2 with live violations, so it is a pattern rather than an exception
+- [x] `agreste`'s missing owning issue noted, with the condition under which one is filed — file **on reply, not before**; gate pre-drafted; **`cesam` has the same gap**
+- [x] rocket's +1 and the cohort's +11 explicitly excluded from Sprint-39 projections — and §5 shows the +11 ceiling is optimistic on its own terms
+- [x] Unknowns 6.1, 6.2, 6.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
