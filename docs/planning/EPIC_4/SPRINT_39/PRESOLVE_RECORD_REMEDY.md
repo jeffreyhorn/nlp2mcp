@@ -86,15 +86,18 @@ Unknown 7.2 assumes *"one of two remedies covers the whole population"*. **Neith
 
 Simulated by rewriting weapons' row to its cold result and re-running `kpi_block.compute_kpis`:
 
-| figure | before | after |
+| KPI-block row | before | after |
 |---|---|---|
 | **Match** | 96 | **95** |
-| **presolve-match** | 31 | **30** |
+| &nbsp;&nbsp;**cold-optimal** | 65 | **65 — unchanged** |
+| &nbsp;&nbsp;**presolve** | 31 | **30** |
 | **all-219 Match** | 99 | **98** |
-| Solve | 111 | **111 — unchanged** |
-| cold-optimal match | 65 | **65 — unchanged** |
-| `path_solve_terminated` | 0 | **0 — unchanged** |
-| dangling rows | 14 | **13** (A alone) / **0** (A + B) |
+| **Solve** | 111 | **111 — unchanged** |
+| **`path_solve_terminated`** | 0 | **0 — unchanged** |
+
+*Row names and order are `kpi_block.py`'s own, so this table cross-references the block a reader meets in a report. `presolve` and `cold-optimal` are the indented sub-rows of `Match`; where the prose below says "presolve-match" it means this `presolve` row.*
+
+Not a KPI-block row, but moved by the same change: **dangling `mcp_file_used`** 14 → **13** under Remedy A alone, → **0** under A + B.
 
 **Two feared collisions do not happen, and both are worth stating because the plan does not rule them out.**
 

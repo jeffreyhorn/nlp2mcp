@@ -1223,14 +1223,16 @@ Sprint 39 execution team
 
 **⚠ But "Match 96 → 95" understates it. Three figures move:**
 
-| figure | before | after |
+| KPI-block row | before | after |
 |---|---|---|
 | **Match** | 96 | **95** |
-| **presolve-match** | 31 | **30** |
+| &nbsp;&nbsp;**cold-optimal** | 65 | **65 — unchanged** |
+| &nbsp;&nbsp;**presolve** | 31 | **30** |
 | **all-219 Match** | 99 | **98** |
-| Solve | 111 | **111 — unchanged** |
-| cold-optimal | 65 | **65 — unchanged** |
-| `path_solve_terminated` | 0 | **0 — unchanged** |
+| **Solve** | 111 | **111 — unchanged** |
+| **`path_solve_terminated`** | 0 | **0 — unchanged** |
+
+*Row names and order are `kpi_block.py`'s own, so the table cross-references the block a reader meets in a report.*
 
 **Two feared collisions do not happen, and both had to be measured to rule out.** An earlier pass here assumed weapons should be recorded as a *failure* and reported `Solve 111 → 110` and **`path_solve_terminated` 0 → 1** — which would have collided head-on with Sprint 39's pre-registered criterion that it must **maintain 0**. Running weapons' cold emit refuted both: it solves (`MS-1` @ 1700.397), so only the *comparison* was untrue.
 
