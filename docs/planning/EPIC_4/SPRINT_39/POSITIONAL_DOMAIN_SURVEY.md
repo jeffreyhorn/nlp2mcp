@@ -4,6 +4,8 @@
 
 > **⚠ Three of this task's inherited figures are wrong, and one is a live correctness finding.** The repeated-symbol **set** domain is **8× more common** than assumed (16 models, not "as rare as 2"). The repeated **variable** domain is **5** models, not the banked 2. And an emit-level property finds **5 models whose committed goldens already carry a manufactured repeated-index guard** — three of them repeats the source never declared.
 
+**Reproducible from the repo.** Every figure below comes from a script in [`artifacts/`](artifacts/README.md), committed alongside this document. Start with `artifacts/mutation_controls.py` — it re-derives the claims §5 rests on and **exits non-zero if either property is vacuous**.
+
 ---
 
 ## 1. The discriminator this survey turns on
@@ -208,7 +210,7 @@ The complement. Scoped to guards **on purpose**: `Set ut(i,i)` in the emitted de
 
 ### Are there legitimate counter-examples? (5.3 Q2)
 
-**For P1, no** — 0 violations in 2,342 heads. A repeated controlling index in an emitted head is never what we want, because the MCP then has unmatched columns.
+**For P1, no** — 0 violations in 3,100 heads. A repeated controlling index in an emitted head is never what we want, because the MCP then has unmatched columns.
 
 **For P2, yes, and they are why the scoping matters** — a declaration (`Set ut(i,i)`) and a genuinely diagonal reference are both legitimate. Restricting P2 to `$(...)` guards and assignment lines removes the declaration class. `gussrisk` and `shale` show the residue: a *reference* built from the declared domain's own symbols, which is legitimate syntax carrying an illegitimate scope.
 

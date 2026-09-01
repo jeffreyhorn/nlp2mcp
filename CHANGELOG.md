@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Recommendation to P5 (0-bucket, unchanged): land P2 first**, so every subsequent guard has a fail-before. Then the two `dict(zip(...))` collapses (`condition_eval.py:117`, `empty_equation_detector.py:127`), then the `constraint_jacobian.py` `.index()` family. **The four `NEEDS A GUARD` sites are candidates, not confirmed defects** — three of four Sprint-38 gates named the wrong layer.
 
+- **The measurement scripts are committed** under `docs/planning/EPIC_4/SPRINT_39/artifacts/` (9 scripts + README), so every figure is reproducible from the repo rather than from prose. `mutation_controls.py` re-derives the P1/P2 claims and **exits non-zero if either property turns out vacuous**. One-off prep scripts, outside the quality gate's scope (`src/`, `tests/`) — if P2 graduates into a gate it lands as real code under `scripts/`, reviewed on its own terms.
+
 - **Unknowns 5.1 🔶 · 5.2 ❌ · 5.3 🔶** — **19 of 30 resolved** (9 VERIFIED + 5 WRONG + 5 PARTIALLY WRONG), 11 remain.
 
 - **Prep Task 6 COMPLETE (2026-08-31) — P4's premise does not survive measurement: the four call sites are 0.5 % of wall-clock, and one of them is dead code.** New: `docs/planning/EPIC_4/SPRINT_39/SARF_CALLSITE_PLAN.md`. Docs only — no `*.py` changed, so the quality gate is N/A.

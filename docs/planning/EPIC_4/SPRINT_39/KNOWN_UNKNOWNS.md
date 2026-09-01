@@ -912,7 +912,7 @@ Sprint 39 execution team
 
 **⚠ Coverage limit, stated not buried:** the IR census could not parse **41 of 219** models, 10 of them prescan candidates (`dinam` timed out at 120 s; several `$include` a file the corpus lacks). The per-kind figures are **lower bounds**.
 
-**Evidence:** survey §4; `/tmp/s39t7/census.json`, `/tmp/s39t7/prescan.json`.
+**Evidence:** survey §4; reproducible via `docs/planning/EPIC_4/SPRINT_39/artifacts/census.py` and `prescan.py` (committed; their JSON outputs are run artifacts and are not).
 
 **Decision:** The audit's corpus exposure is **an order of magnitude larger than budgeted for**, and it is concentrated in the two sub-shapes with **no** global guard. P5 stays 0-bucket, but its site prioritisation should follow §6 of the survey.
 

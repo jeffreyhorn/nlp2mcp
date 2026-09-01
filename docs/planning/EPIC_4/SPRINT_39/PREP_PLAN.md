@@ -924,6 +924,8 @@ A survey is also the cheapest possible form of this work: P5 is budgeted 12–16
 
 **Corpus incidence, measured in S38:** exactly **two** models have a repeated-symbol *variable* domain (`tricp`, `ferts`). The *set*-domain case was not surveyed at all — elec was found by chasing a division-by-zero.
 
+> **⚠ HISTORICAL — both figures in the paragraph above were SUPERSEDED by this task's own Result below (2026-09-01).** The variable-domain count is **five** (`ferts`, `lop`, `maxmin`, `sarf`, `tricp`), not two; the set-domain case is now surveyed and is **16** models, with **21** more carrying a repeated *parameter* domain. The paragraph is kept as written because it is the premise Task 7 was scoped against.
+
 **Known related machinery** worth including in the survey: `_remap_condition_to_domain` (#1062/#1350's parent-set lookup, which needed consume-once matching), `_replace_indices_in_expr`'s `SetMembershipTest` branch, and any `smt_domain[pos]` / `var_domain[pos]` positional indexing.
 
 ### What Needs to Be Done
@@ -938,6 +940,7 @@ A survey is also the cheapest possible form of this work: P5 is budgeted 12–16
 ### Changes
 
 - **NEW** `docs/planning/EPIC_4/SPRINT_39/POSITIONAL_DOMAIN_SURVEY.md` — 21 primary sites classified and ranked by **measured** blast radius, corpus incidence by symbol kind, two property specs, and a ranked recommendation
+- **NEW** `docs/planning/EPIC_4/SPRINT_39/artifacts/` — the 9 measurement scripts behind every figure, so the survey is reproducible from the repo rather than from prose. `mutation_controls.py` re-derives §5's claims and **exits non-zero if either property is vacuous**. Outside the quality gate's scope (`src/`, `tests/`); one-off prep scripts, not maintained tooling
 - `KNOWN_UNKNOWNS.md` — Unknowns **5.1 🔶**, **5.2 ❌**, **5.3 🔶**
 - `CHANGELOG.md` — Sprint 39 Prep entry
 
