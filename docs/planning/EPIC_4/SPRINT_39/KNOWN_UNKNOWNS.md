@@ -1439,9 +1439,9 @@ Sprint 39 execution team
 
 **Verified by:** Sprint 39 Prep Task 10 · **Date:** 2026-09-02 · **Measured at:** `04f50d6c`
 
-**Analysis over the corpus IR only. No camcge experiment was run.** Scan of all 219 models; **178 parsed, 41 did not**, so counts are lower bounds.
+**Analysis over the corpus IR only. No camcge experiment was run.** Scan of all 219 models. **⚠ The parsed count is load-dependent** — `iswnm`/`mexls`/`turkey` sit at the 120 s per-model timeout and three runs gave **176 / 178 / 179**. Figures are from the clean run (**179 parsed, 40 not**); all counts are lower bounds.
 
-**Q1 — the cohort.** Nine models have ≥ 2 price-like variables *and* a market-clearing equation. **Only two have the full CGE signature** (many prices + clearing + balance + a SAM): **`camcge` and `korcge`** — structural near-twins, same SAM parameter names (`io(i,j)`, `zz(*,i)`), 9 price variables each.
+**Q1 — the cohort.** Ten models have ≥ 2 price-like variables *and* a market-clearing equation. **Only two have the full CGE signature** (many prices + clearing + balance + a SAM): **`camcge` and `korcge`** — structural near-twins, same SAM parameter names (`io(i,j)`, `zz(*,i)`), 9 price variables each.
 
 **⚠ The finding: camcge DOES fix a price, and it is the wrong one.** `pwm.fx(i) = pwm0(i)` — but `pwm` is the **world market price of imports**, exogenous data, not a numéraire for the domestic system. Its nine domestic prices are all endogenous and **none is pinned**. `korcge` fixes **`pindex`**, a real price index, and **solves and matches**. **The IR cannot tell these apart** — both read as "a symbol starting with `p` carries an `.fx`".
 
@@ -1492,12 +1492,12 @@ Sprint 39 execution team
 
 **Verified by:** Sprint 39 Prep Task 10 · **Date:** 2026-09-02 · **Measured at:** `04f50d6c`
 
-**Q1/Q2/Q3 — the detectors, applied as analysis over 178 parsed models.** Expected true positives: **1** (camcge).
+**Q1/Q2/Q3 — the detectors, applied as analysis over the 179 parsed models of the clean run.** Expected true positives: **1** (camcge).
 
 | detector | flags | ∩ convex candidates | camcge flagged? |
 |---|---|---|---|
-| **D1** ≥ 2 price-like variables | 33 | 30 | ✅ |
-| **D2** D1 + a market-clearing equation | 9 | 8 | ✅ |
+| **D1** ≥ 2 price-like variables | 34 | 31 | ✅ |
+| **D2** D1 + a market-clearing equation | 10 | 9 | ✅ |
 | **D3** D2 + a balance/income equation | **3** (`agreste`, `camcge`, `korcge`) | 3 | ✅ |
 | **D4** D3 + **no price is `.fx`-fixed** | **1** (`agreste`) | 1 | ❌ **NO** |
 

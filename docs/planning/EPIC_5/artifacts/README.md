@@ -30,11 +30,22 @@ Emitting both fields means the output is self-consistent — the published colum
 is reproducible from this script alone — **and** the failure remains visible in
 the data rather than only in prose.
 
-**The blind spot was not a camcge quirk.** Over the 178 parsed models the two
-probes disagree on **6**: `camcge`, `glider`, `korcge`, `orani`, `otpop`,
-`robot`. On `camcge` they read `["pwm"]` vs `[]`; on `orani`, `["phi","pm"]` vs
-`["pm"]` — the incomplete probe found one of two fixes and looked like it had
-worked.
+**The blind spot was not a camcge quirk.** The two probes disagree on **5**
+models: `camcge`, `glider`, `korcge`, `otpop`, `robot`. On `camcge` they read
+`["pwm"]` vs `[]`; on `robot`, `["phi","phi_dot"]` vs `["phi_dot"]` — the
+incomplete probe found one of two fixes and looked like it had worked.
 
-Verified 2026-09-02 at `365a538a`: a full re-run of this script reproduces the
-published §6.1 column for all nine CGE-shaped models.
+⚠ **`fixed_prices_fx_only` uses `vd.fx is not None`, not `if vd.fx`.** A scalar
+fix to `0.0` is falsey, and the original probe dropped it — so the field would
+disagree with `fixed_prices` for **two unrelated reasons** and the comparison
+would prove nothing. The two probes must differ in **exactly one dimension: the
+field set**. Before this was corrected the count read 6 and included `orani`,
+whose `phi` disagreed for the truthiness bug rather than the `fx_expr_map` one.
+
+⚠ **The parsed count is load-dependent.** `iswnm`, `mexls` and `turkey` sit at
+the 120 s per-model timeout; three runs gave **176 / 178 / 179** parsed. Quote a
+range, or state the load conditions. The published figures are from the clean
+run (**179 parsed, 40 not**).
+
+Verified 2026-09-02: a full re-run of this script reproduces the published §6.1
+column for all nine originally-tabulated CGE-shaped models.

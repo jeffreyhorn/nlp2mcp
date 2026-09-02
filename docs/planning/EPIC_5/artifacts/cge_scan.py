@@ -55,7 +55,13 @@ for i, path in enumerate(models, 1):
             if vd.fx is not None or vd.fx_map or vd.fx_expr is not None or vd.fx_expr_map:
                 fixed.append(v)
             # The incomplete probe, kept so the trap is visible in the output.
-            if getattr(vd, "fx_map", None) or getattr(vd, "fx", None):
+            # ⚠ `vd.fx is not None`, NOT `if vd.fx` — a scalar fix to 0.0 is
+            # falsey, and the original probe dropped it. That is a SECOND,
+            # unrelated defect; leaving it in would make this field disagree
+            # with `fixed_prices` for two different reasons at once and muddy
+            # the evidence. The two probes must differ in EXACTLY ONE
+            # dimension — the field set — or the comparison proves nothing.
+            if vd.fx is not None or vd.fx_map:
                 fixed_legacy.append(v)
         rec["price_vars"] = sorted(pv)
         rec["fixed_prices"] = sorted(fixed)

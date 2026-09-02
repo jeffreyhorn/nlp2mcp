@@ -146,15 +146,17 @@ grep -Ei '#1330|#1354|#1355|#1317|#1331|#1251|#1070' docs/planning/EPIC_5/CGE_DE
 
 ---
 
-# 6. Numéraire-selection rule — PROPOSED (Unknown 9.1)
+## 6. Numéraire-selection rule — PROPOSED (Unknown 9.1)
 
 **Sprint 39 Prep Task 10** · **Measured at:** `04f50d6c` · **2026-09-02** · **Analysis over the corpus IR only; no camcge experiment was run.**
 
-## 6.1 The CGE-cohort survey
+### 6.1 The CGE-cohort survey
 
-Structural scan of all 219 corpus models (`artifacts/cge_scan.py`); **178 parsed, 41 did not**, so every count below is a **lower bound**. The **numéraire column is the script's `fixed_prices` field**, which probes all four places a GAMS `.fx` can land (`fx`, `fx_map`, `fx_expr`, `fx_expr_map`) — see §7.2 and `artifacts/README.md` for why the distinction is load-bearing.
+Structural scan of all 219 corpus models (`artifacts/cge_scan.py`); every count below is a **lower bound**.
 
-Models with ≥ 2 price-like variables **and** a market-clearing equation — the CGE shape:
+**⚠ The parsed count is load-dependent, so it is quoted as a range.** Three models — `iswnm`, `mexls`, `turkey` — sit at the **120 s per-model timeout** and flip depending on machine load: three runs gave **176 / 178 / 179** parsed. The figures below are from the **clean run (179 parsed, 40 not)**, taken with nothing else running. A count taken while `make test` was running would report `turkey` unparsed and drop it from the table. The **numéraire column is the script's `fixed_prices` field**, which probes all four places a GAMS `.fx` can land (`fx`, `fx_map`, `fx_expr`, `fx_expr_map`) — see §7.2 and `artifacts/README.md` for why the distinction is load-bearing.
+
+Models with ≥ 2 price-like variables **and** a market-clearing equation — the CGE shape (**10**):
 
 | model | price vars | clearing eqs | balance eqs | SAM-like params | numéraire declared? |
 |---|---|---|---|---|---|
@@ -165,12 +167,13 @@ Models with ≥ 2 price-like variables **and** a market-clearing equation — th
 | tforss | 6 | 2 | 0 | — | none |
 | paperco | 4 | 4 | 0 | — | none |
 | agreste | 2 | 2 | 1 | — | none |
+| turkey | 2 | 2 | 0 | — | none |
 | fawley | 2 | 4 | 0 | — | none |
 | nebrazil | 2 | 2 | 0 | — | none |
 
 **Only two models have the full CGE signature** (many prices + clearing + balance + a SAM): **camcge and korcge**. They are near-twins structurally — same SAM parameter names, 9 price variables each — and they differ in exactly the thing that matters.
 
-## 6.2 ⚠ The finding: camcge fixes a price, and it is the wrong one
+### 6.2 ⚠ The finding: camcge fixes a price, and it is the wrong one
 
 **camcge does declare a fixed price — `pwm.fx(i) = pwm0(i)`** — but `pwm` is the **world market price of imports**: exogenous data, not a numéraire for the domestic price system. Its nine domestic prices (`p`, `pd`, `pe`, `pk`, `pm`, `pva`, `px`) are all endogenous and **none is pinned**.
 
@@ -178,7 +181,7 @@ Models with ≥ 2 price-like variables **and** a market-clearing equation — th
 
 **The IR cannot tell these apart.** Both read as *"a variable whose name starts with `p` carries an `.fx`"*. Distinguishing them needs the economic meaning of the symbol, which no structural signal in the IR carries.
 
-## 6.3 The proposed rule
+### 6.3 The proposed rule
 
 **Per-model declaration. An automatic rule is neither warranted nor, on this cohort, achievable.**
 
@@ -199,22 +202,22 @@ Three reasons, in order of decisiveness:
 | declared symbol is indexed and the declaration names no element | require an element; a set-wide pin over-determines the system |
 | no declaration on a model the detector flags | **do nothing** — see §7; there is no safe automatic fallback |
 
-# 7. Degeneracy detection — PROPOSED (Unknown 9.2)
+## 7. Degeneracy detection — PROPOSED (Unknown 9.2)
 
-## 7.1 The candidate detectors, applied to the corpus
+### 7.1 The candidate detectors, applied to the corpus
 
-Each applied as **analysis over the IR** of all 178 parsed models. Expected true positives: **1** (camcge).
+Each applied as **analysis over the IR** of the **179** parsed models of the clean run (see §6.1 on why that count is a range). Expected true positives: **1** (camcge).
 
 | detector | flags | of which convex candidates | camcge flagged? |
 |---|---|---|---|
-| **D1** ≥ 2 price-like variables | 33 | 30 | ✅ |
-| **D2** D1 + a market-clearing equation | 9 | 8 | ✅ |
+| **D1** ≥ 2 price-like variables | 34 | 31 | ✅ |
+| **D2** D1 + a market-clearing equation | 10 | 9 | ✅ |
 | **D3** D2 + a balance/income equation | **3** | 3 | ✅ |
 | **D4** D3 + **no price variable is `.fx`-fixed** | **1** | 1 | ❌ **NO** |
 
-D3's three flags are `agreste`, `camcge`, `korcge`. Narrowing from 33 to 3 is real progress — and then the last conjunct, the one that encodes *"has no numéraire"*, **inverts the answer**.
+D3's three flags are `agreste`, `camcge`, `korcge`. Narrowing from 34 to 3 is real progress — and then the last conjunct, the one that encodes *"has no numéraire"*, **inverts the answer**.
 
-## 7.2 ⚠ D4 scores 0 true positives and 1 false positive
+### 7.2 ⚠ D4 scores 0 true positives and 1 false positive
 
 | | |
 |---|---|
@@ -224,9 +227,11 @@ D3's three flags are `agreste`, `camcge`, `korcge`. Narrowing from 33 to 3 is re
 
 **Precision 0. Recall 0.** The rule is not discriminating on degeneracy at all; it is discriminating on *"does this model happen to fix any symbol whose name starts with `p`"* — a question whose answer is identical for the model that needs the transformation and the model that does not.
 
-**⚠ And one conjunct was silently inert while being measured.** The first pass of `cge_scan.py` probed `fx` and `fx_map` only. GAMS `pwm.fx(i) = pwm0(i)` lands in **`fx_expr_map`**, so camcge read as having *no* fixed price and D4 appeared to flag it correctly. The corrected four-field probe reversed the result. **The detector's most important conjunct was doing nothing, and the run looked healthy** — recorded because a Sprint-39 detector will face the same trap. `cge_scan.py` now emits **both** probes (`fixed_prices`, correct; `fixed_prices_fx_only`, incomplete), so the failure is visible in the script's own output and not only here. **And it was not a camcge quirk** — over the 178 parsed models the two disagree on **6**: `camcge`, `glider`, `korcge`, `orani`, `otpop`, `robot`. On camcge they read `["pwm"]` vs `[]`; on `orani`, `["phi","pm"]` vs `["pm"]` — the incomplete probe found one of two fixes and looked like it had worked.
+**⚠ And one conjunct was silently inert while being measured.** The first pass of `cge_scan.py` probed `fx` and `fx_map` only. GAMS `pwm.fx(i) = pwm0(i)` lands in **`fx_expr_map`**, so camcge read as having *no* fixed price and D4 appeared to flag it correctly. The corrected four-field probe reversed the result. **The detector's most important conjunct was doing nothing, and the run looked healthy** — recorded because a Sprint-39 detector will face the same trap. `cge_scan.py` now emits **both** probes (`fixed_prices`, correct; `fixed_prices_fx_only`, incomplete), so the failure is visible in the script's own output and not only here. **And it was not a camcge quirk** — the two disagree on **5** models: `camcge`, `glider`, `korcge`, `otpop`, `robot`. On camcge they read `["pwm"]` vs `[]`; on `robot`, `["phi","phi_dot"]` vs `["phi_dot"]` — the incomplete probe found one of two fixes and looked like it had worked.
 
-## 7.3 The proposed design: a retry loop, not preprocessing
+**⚠ An earlier draft said 6 and named `orani`. That was wrong, and the way it was wrong is the point.** The legacy field originally tested `if getattr(vd, "fx", None)`, which drops a **scalar fix to `0.0`** — so `orani`'s `phi` disagreed for the *truthiness* bug, not the `fx_expr_map` one, and the field was disagreeing for two unrelated reasons at once. Corrected to `vd.fx is not None or vd.fx_map`, so the two probes now differ in **exactly one dimension — the field set** — and every disagreement is attributable to it. `orani` drops out; the figure is **5**. (Found in review of this PR.)
+
+### 7.3 The proposed design: a retry loop, not preprocessing
 
 **There is no pre-solve structural signal that separates camcge from korcge**, and that is not a tuning problem — the distinguishing fact is the *economic role* of a fixed symbol, which the IR does not carry.
 
@@ -245,7 +250,7 @@ solve the MCP cold
 
 **The shape is not new** — the presolve-retry path (`run_full_test.py:936`) is exactly this: solve, detect failure, re-solve differently. Epic 5 would add a second trigger, not a new architecture. ⚠ And it inherits that path's hazard, which Sprint 38 Day 9 measured on `weapons`: **a retry whose MCP aborts can read back the embedded NLP's answer and match itself.** Any Epic-5 retry must assert the MCP produced its **own** `MODEL STATUS` — `scripts/sprint_audit/check_mcp_solve_attribution.py`.
 
-## 7.4 What would need measuring, and why it is out of scope here
+### 7.4 What would need measuring, and why it is out of scope here
 
 The prompt asks that a needed-but-forbidden measurement be recorded rather than taken. One qualifies:
 
