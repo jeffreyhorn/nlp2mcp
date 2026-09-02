@@ -6,7 +6,8 @@ Signals recorded per model:
   price_vars           variables whose name looks like a price (p, pd, pm, py, pk, cpi...)
   fixed_prices         price variables carrying a .fx, by the CORRECT four-field probe
   fixed_prices_fx_only price variables found by the INCOMPLETE fx/fx_map probe
-  clearing_eqs         equations whose name looks like market clearing (equil, mkt, clear...)
+  clearing_eqs         market-clearing names, EXCLUDING any that also match BALANCE
+  clearing_eqs_also_balance  the equations that matched both, before disjointing
   balance_eqs          equations that look like an income/budget/Walras balance
   sam_params           parameters that look like a SAM (sam, sam0, io, z...) and their domains
 
@@ -27,8 +28,21 @@ sys.setrecursionlimit(50000); sys.path.insert(0, ".")
 from src.ir.parser import parse_model_file
 
 PRICE = re.compile(r"^(p|pr|price|cpi|pindex|pi)([a-z0-9_]*)$", re.I)
+#: Market-clearing equation names. `bal` is deliberately KEPT: a material or
+#: labour balance (`mbalc`, `laborbal`, `kbal`) is market clearing in the
+#: supply = demand sense, and dropping the term removes 91 such equations
+#: across 40 models.
 CLEAR = re.compile(r"(equil|mkt|market|clear|supply|demand|bal)", re.I)
+#: Income / budget / Walras balance names — the redundant row.
 BALANCE = re.compile(r"(walras|income|budget|gdp|sav|invbal|lmequil|hhinc|yinc)", re.I)
+#: ⚠ The two lists intersect (`bal` vs `invbal`, and `equil` vs `lmequil`), so
+#: an equation could land in BOTH buckets and D2/D3 — conjunctions of the two —
+#: would count one signal twice (PR #1721 review). Classification is therefore
+#: made DISJOINT by precedence: BALANCE wins, because its terms are the more
+#: specific ones. Measured on this corpus the collision is small but real:
+#: `lmequil` in camcge and korcge, which is a labour-market clearing row whose
+#: name also reads as a balance. Assigning it to BALANCE alone is the
+#: conservative choice — it cannot inflate the clearing signal.
 SAM = re.compile(r"^(sam|sam0|z|zz|io|iomat|social)", re.I)
 
 RAW = pathlib.Path("data/gamslib/raw")
@@ -37,6 +51,16 @@ def bail(*a): raise TO
 
 out = {}
 models = sorted(RAW.glob("*.gms"))
+# ⚠ `data/gamslib/raw/` is GITIGNORED. On a clean checkout it is empty, and
+# without this guard the script printed "0 models", wrote an empty JSON and
+# exited 0 — a successful-looking run that produced no data (PR #1721 review).
+if not models:
+    sys.exit(
+        f"ERROR: no models found in {RAW}/.\n"
+        "  data/gamslib/raw/ is gitignored and is NOT part of a fresh checkout.\n"
+        "  Populate it first:  scripts/download_gamslib_raw.sh\n"
+        "  Expected: 219 .gms files."
+    )
 print(f"{len(models)} models", flush=True)
 for i, path in enumerate(models, 1):
     name = path.stem
@@ -66,8 +90,16 @@ for i, path in enumerate(models, 1):
         rec["price_vars"] = sorted(pv)
         rec["fixed_prices"] = sorted(fixed)
         rec["fixed_prices_fx_only"] = sorted(fixed_legacy)
-        rec["clearing_eqs"] = sorted(e for e in m.equations if CLEAR.search(e))
+        # DISJOINT by precedence: BALANCE first, CLEAR gets what is left.
         rec["balance_eqs"] = sorted(e for e in m.equations if BALANCE.search(e))
+        rec["clearing_eqs"] = sorted(
+            e for e in m.equations if CLEAR.search(e) and not BALANCE.search(e)
+        )
+        # Equations that matched both before the buckets were made disjoint —
+        # recorded so the correction is auditable from the output, not on trust.
+        rec["clearing_eqs_also_balance"] = sorted(
+            e for e in m.equations if CLEAR.search(e) and BALANCE.search(e)
+        )
         rec["sam_params"] = {p: list(getattr(m.params[p], "domain", ()) or ()) 
                              for p in m.params if SAM.match(p)}
         rec["n_eq"] = len(m.equations); rec["n_var"] = len(m.variables)

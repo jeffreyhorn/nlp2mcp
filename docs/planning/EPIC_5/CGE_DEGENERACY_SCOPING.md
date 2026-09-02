@@ -154,7 +154,7 @@ grep -Ei '#1330|#1354|#1355|#1317|#1331|#1251|#1070' docs/planning/EPIC_5/CGE_DE
 
 Structural scan of all 219 corpus models (`artifacts/cge_scan.py`); every count below is a **lower bound**.
 
-**⚠ The parsed count is load-dependent, so it is quoted as a range.** Three models — `iswnm`, `mexls`, `turkey` — sit at the **120 s per-model timeout** and flip depending on machine load: three runs gave **176 / 178 / 179** parsed. The figures below are from the **clean run (179 parsed, 40 not)**, taken with nothing else running. A count taken while `make test` was running would report `turkey` unparsed and drop it from the table. The **numéraire column is the script's `fixed_prices` field**, which probes all four places a GAMS `.fx` can land (`fx`, `fx_map`, `fx_expr`, `fx_expr_map`) — see §7.2 and `artifacts/README.md` for why the distinction is load-bearing.
+**⚠ The parsed count is load-dependent, so it is quoted as a range.** Three models — `iswnm`, `mexls`, `turkey` — sit at the **120 s per-model timeout** and flip with machine load: **five runs gave 176 / 178 / 179 / 180 / 180**, the 176 taken while `make test` was running. The figures below are from the two most recent **clean runs, which agree at 180 parsed / 39 not**. **The detector counts D1–D4 were identical across both clean runs**, so no conclusion here rests on the flapping models. The **numéraire column is the script's `fixed_prices` field**, which probes all four places a GAMS `.fx` can land (`fx`, `fx_map`, `fx_expr`, `fx_expr_map`) — see §7.2 and `artifacts/README.md` for why that distinction is load-bearing.
 
 Models with ≥ 2 price-like variables **and** a market-clearing equation — the CGE shape (**10**):
 
@@ -206,7 +206,7 @@ Three reasons, in order of decisiveness:
 
 ### 7.1 The candidate detectors, applied to the corpus
 
-Each applied as **analysis over the IR** of the **179** parsed models of the clean run (see §6.1 on why that count is a range). Expected true positives: **1** (camcge).
+Each applied as **analysis over the IR** of the **180** parsed models of the clean runs (see §6.1 on why that count is a range, and why these detector counts do not depend on it). Expected true positives: **1** (camcge).
 
 | detector | flags | of which convex candidates | camcge flagged? |
 |---|---|---|---|

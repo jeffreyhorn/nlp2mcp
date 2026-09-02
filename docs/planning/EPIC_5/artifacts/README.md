@@ -8,9 +8,15 @@ Committed so the survey is reproducible from the repo rather than from prose.
 **solves nothing**, and in particular runs **no camcge experiment** — the banned
 variants in §4a stay banned.
 
+⚠ **Prerequisite: the corpus is not in the repo.** `data/gamslib/raw/*.gms` is
+**gitignored**, so a fresh checkout has none of it and the scan has nothing to
+read. Populate it first with `scripts/download_gamslib_raw.sh` (219 `.gms`
+files). The script now **exits non-zero with that instruction** rather than
+printing `0 models` and writing an empty JSON, which is what it used to do.
+
 Run from the repo root; writes `$OUT/cge_scan.json` (default `/tmp/s39t10`).
-**~45 minutes** for the full 219-model corpus; **41 models do not parse**, so
-every figure derived from it is a **lower bound**.
+**~45 minutes** for the full 219-model corpus; **39 models do not parse** in a
+clean run, so every figure derived from it is a **lower bound**.
 
 ## ⚠ Two fixed-price fields, on purpose
 
@@ -43,9 +49,11 @@ field set**. Before this was corrected the count read 6 and included `orani`,
 whose `phi` disagreed for the truthiness bug rather than the `fx_expr_map` one.
 
 ⚠ **The parsed count is load-dependent.** `iswnm`, `mexls` and `turkey` sit at
-the 120 s per-model timeout; three runs gave **176 / 178 / 179** parsed. Quote a
-range, or state the load conditions. The published figures are from the clean
-run (**179 parsed, 40 not**).
+the 120 s per-model timeout; **five runs gave 176 / 178 / 179 / 180 / 180**, the
+176 taken while `make test` was running. Quote a range, or state the load
+conditions. The published figures are from the two most recent **clean runs,
+which agree at 180 parsed / 39 not** — and the detector counts D1–D4 were
+identical across both, so no conclusion depends on the flapping models.
 
 Verified 2026-09-02: a full re-run of this script reproduces the published §6.1
-column for all nine originally-tabulated CGE-shaped models.
+column for all **ten** CGE-shaped models in the clean-run table.

@@ -1439,7 +1439,7 @@ Sprint 39 execution team
 
 **Verified by:** Sprint 39 Prep Task 10 · **Date:** 2026-09-02 · **Measured at:** `04f50d6c`
 
-**Analysis over the corpus IR only. No camcge experiment was run.** Scan of all 219 models. **⚠ The parsed count is load-dependent** — `iswnm`/`mexls`/`turkey` sit at the 120 s per-model timeout and three runs gave **176 / 178 / 179**. Figures are from the clean run (**179 parsed, 40 not**); all counts are lower bounds.
+**Analysis over the corpus IR only. No camcge experiment was run.** Scan of all 219 models. **⚠ The parsed count is load-dependent** — `iswnm`/`mexls`/`turkey` sit at the 120 s per-model timeout and five runs gave **176 / 178 / 179 / 180 / 180**. Figures are from the two clean runs, which agree at **180 parsed, 39 not**; **D1–D4 were identical across both**, so no conclusion depends on the flapping models. All counts are lower bounds.
 
 **Q1 — the cohort.** Ten models have ≥ 2 price-like variables *and* a market-clearing equation. **Only two have the full CGE signature** (many prices + clearing + balance + a SAM): **`camcge` and `korcge`** — structural near-twins, same SAM parameter names (`io(i,j)`, `zz(*,i)`), 9 price variables each.
 
@@ -1492,7 +1492,7 @@ Sprint 39 execution team
 
 **Verified by:** Sprint 39 Prep Task 10 · **Date:** 2026-09-02 · **Measured at:** `04f50d6c`
 
-**Q1/Q2/Q3 — the detectors, applied as analysis over the 179 parsed models of the clean run.** Expected true positives: **1** (camcge).
+**Q1/Q2/Q3 — the detectors, applied as analysis over the 180 parsed models of the clean run.** Expected true positives: **1** (camcge).
 
 | detector | flags | ∩ convex candidates | camcge flagged? |
 |---|---|---|---|
