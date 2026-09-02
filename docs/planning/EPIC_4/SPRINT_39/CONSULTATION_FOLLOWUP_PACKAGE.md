@@ -74,9 +74,17 @@ NLP references, unchanged: rocket **1.0128** (`likely_convex`), agreste **17706.
 
 | reply shape | where it lands |
 |---|---|
-| a concrete **`optfile`** / option set | `forcing.py:64–80`, the `optfile` branch. Today it hardcodes `proximal_perturbation 1e-2` + `merit_function normal` |
-| a **regularization / continuation schedule** | `forcing.py:105` (`else:  # homotopy`), the schedule literal at `:121–122`. Today `mu` steps `1e3 → 1e2 → 1e1 → 1.0 → 1e-1 → 1e-2 → 0` over `m1*m7` |
+| a concrete **`optfile`** / option set | the `optfile` branch, `forcing.py:64–80`. The literals to change are at **`:73–74`** — `proximal_perturbation 1e-2` and `merit_function normal` |
+| a **regularization / continuation schedule** | the `homotopy` branch, `forcing.py:105`. The schedule literal to change is at **`:122`** — `mu` steps `1e3 → 1e2 → 1e1 → 1.0 → 1e-1 → 1e-2 → 0` over `m1*m7` |
 | a **named reformulation class** | not a scaffold change — a new issue against `src/kkt/`, with rocket's Phase-0 gate |
+
+**Re-derive these line numbers rather than trusting them** — they have drifted twice already in review, and this document is meant to be read on a date-gated day:
+
+```bash
+grep -n 'if strategy == "optfile":\|proximal_perturbation 1e-2\|merit_function normal")\|else:  # homotopy\|/ m1 1e3' src/emit/forcing.py
+#   ⇒ 64  optfile branch      ⇒ 73,74  its literals
+#   ⇒ 105 homotopy branch     ⇒ 122    the mu schedule
+```
 
 **⚠ The scaffold takes a strategy, not option values.** There is no CLI path for "use *these* numbers": `emit_forcing_scaffold(strategy, model_name, add_comments)` takes no option payload, and the literals above are in the emitter. **Integrating a recommended option set is a source edit, not a flag** — small, but it is `src/` work with a quality gate, not a config change. Budget it as such.
 
