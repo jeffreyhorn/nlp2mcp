@@ -119,21 +119,47 @@ Both live violations are the elec shape: a guard that is **identically false**, 
 
 ### The procedure
 
+Run from the repo root. **Every command below was executed as written at `84656666`, in `zsh` and `bash`.**
+
+⚠ The cohort is written as a **literal list**, not expanded from a variable, because `for m in ${VAR//,/ }` splits into 11 words in `bash` and **1 word in `zsh`** — a paste into the wrong shell would silently run the loop once with a nonsense model id.
+
 ```bash
-# STAGE 0 — pre-flight, costs no license capacity. Run it FIRST.
-#   P2 over the cohort's goldens: ~2 s, no GAMS.
-OUT=/tmp/p6 .venv/bin/python docs/planning/EPIC_4/SPRINT_39/artifacts/property2.py
-#   Expect egypt and shale to appear. A member that appears is NOT
-#   disqualified — it is flagged, and its result must be read knowing the
-#   emit carries a defect signature.
+export OUT=/tmp/p6
 
-# STAGE 1 — the batch, one pass, no retries.
-.venv/bin/python scripts/gamslib/run_full_test.py --only-solve \
-  --models egypt,ferts,glider,robot,shale,sroute,srpchase,tabora,tfordy,tricp,turkey
+# ── STAGE 0 — pre-flight. Costs no license capacity. Run it FIRST. ──
+# ⚠ property2.py scans EVERY committed golden (193), not just the cohort, and
+# its mutation-control section reads artifacts that mutation_controls.py writes
+# into $OUT — run standalone into a fresh $OUT it dies with FileNotFoundError.
+# Run the controls first. That is also right on the merits: a vacuous P2 would
+# report "no hits" indistinguishably from a clean cohort.
+.venv/bin/python docs/planning/EPIC_4/SPRINT_39/artifacts/mutation_controls.py
+#   must print: ALL CONTROLS PASS
 
-# STAGE 2 — attribution on every member that reports a match.
-.venv/bin/python scripts/sprint_audit/check_mcp_solve_attribution.py --models <matched ids>
+# Then the corpus report, filtered to the cohort. ~2 s, no GAMS.
+.venv/bin/python docs/planning/EPIC_4/SPRINT_39/artifacts/property2.py | grep -E \
+ "P2 (egypt|ferts|glider|robot|shale|sroute|srpchase|tabora|tfordy|tricp|turkey)_mcp:"
+#   ⇒ P2 egypt_mcp: ['tranc(rp,rp)']
+#   ⇒ P2 shale_mcp: ['ts(tf,tf)']
+#   A member that appears is NOT disqualified — it is flagged, and its result
+#   must be read knowing the emit carries a defect signature.
+
+# ── STAGE 1 — the batch, one pass, no retries. ──
+# ⚠ run_full_test.py takes --model (SINGULAR, one id). There is no --models;
+# passing one fails with "unrecognized arguments". The batch is a loop.
+# --dry-run prints the selection without solving, so rehearse it for free:
+for m in egypt ferts glider robot shale sroute srpchase tabora tfordy tricp turkey; do
+  .venv/bin/python scripts/gamslib/run_full_test.py --only-solve --model "$m" --dry-run
+done
+# Then drop --dry-run for the real pass.
+
+# ── STAGE 2 — attribution on every member that reports a match. ──
+# A literal <placeholder> here would be parsed by the shell as input
+# redirection and fail on paste, so set a variable from Stage 1's output.
+MATCHED=egypt,shale      # ← replace with Stage 1's actual matches
+.venv/bin/python scripts/sprint_audit/check_mcp_solve_attribution.py --models "$MATCHED"
 ```
+
+**⚠ Two things about Stage 1 that a reader would otherwise discover at the console.** `run_full_test.py` exposes `--model` (singular); there is no `--models`, and passing one fails with `unrecognized arguments`. And `--dry-run` prints the selection without solving, so the whole loop can be rehearsed for free before any license capacity is spent.
 
 **Stage 2 is not optional.** These are the first solves these emits have ever had, and `weapons` established that a golden can pass every static review and still not run. A first-ever match is exactly the case where a spurious one is most plausible.
 

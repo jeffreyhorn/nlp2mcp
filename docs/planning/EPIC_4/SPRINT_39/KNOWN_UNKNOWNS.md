@@ -1071,7 +1071,7 @@ Sprint 39 execution team
 
 Both live violations are the elec shape: a guard that is **identically false**, silently dropping a term. **Neither has ever been executed by a solve.**
 
-**Q4 — a pre-flight is warranted, and it is nearly free.** Not a full per-model review: **Stage 0 is P2 over the cohort's goldens — ~2 s, no GAMS, no license** — and it already knows two members are suspect. A member that appears is *flagged, not disqualified*; its result is read knowing the emit carries a defect signature.
+**Q4 — a pre-flight is warranted, and it is nearly free.** Not a full per-model review: **Stage 0 runs the P2 property and filters its output to the cohort — ~2 s, no GAMS, no license** — and it already knows two members are suspect. (⚠ `property2.py` scans **all 193** committed goldens, not the cohort; the scoping is a `grep` on its output, and it must be preceded by `mutation_controls.py`, which writes the artifacts its mutation-control section reads.) A member that appears is *flagged, not disqualified*; its result is read knowing the emit carries a defect signature.
 
 **Q2/Q5 — one `--only-solve` pass, then attribution.** The goldens are current (`--only-solve` does not re-translate). **Stage 2 is not optional:** every member reporting a match must pass `check_mcp_solve_attribution.py`. These are the first solves these emits have ever had, and `weapons` established that a golden can pass every static review and still not run — **a first-ever match is exactly where a spurious one is most plausible.**
 
