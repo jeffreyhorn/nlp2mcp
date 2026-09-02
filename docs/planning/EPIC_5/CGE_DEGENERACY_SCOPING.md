@@ -1,5 +1,21 @@
 # Epic 5 Scoping — CGE Walras' Law Degeneracy (camcge #1330)
 
+> ## ⛔ BANNED VARIANTS — READ BEFORE ANYTHING ELSE
+>
+> **Do not re-run any of these. Each was measured, not argued** (detail + provenance in §4a):
+>
+> | variant | outcome |
+> |---|---|
+> | **B1 drop-row** (drop `lmequil` or one `equil(i)`) | **primal-correct @ omega 299, but MS-4** — the dropped market's multiplier is **orphaned out of the stationarity**, breaking the MCP *dual*. **Silent unless you look for it.** |
+> | **B2 price-pin / numéraire alone** | correct primal (191.7346), still **MS-4** |
+> | **B3 single-dual-pin** | **MS-4** |
+> | **B4 objective-gradient sign flip** | inert; control-refuted, `ISSUE_1236` closed |
+>
+> **Why every single-mechanism variant returns MS-4 — the two-nullspaces diagnosis:** the KKT Jacobian has **two** independent singularities, a **price-scaling ray** and a **row-redundancy nullspace**. **A numéraire closes the first only.**
+>
+> **B1 is the dangerous one because it is primal-correct.** Three-plus sprints of variants have all stayed MS-4. `camcge #1330` remains Epic-5-scoped and is **not** implemented in Sprint 39.
+
+
 > **Toolchain stamp (added 2026-08-18, Sprint 38 Prep Task 8).** **Original measurements** throughout this document — including the refutations in §3 and §4a — were taken under **GAMS 51.3.0 / PATH 5.2.01**.
 > **The current toolchain is GAMS 54.2.1 / PATH 5.2.01** (the corpus was re-pinned 2026-08-12); figures explicitly dated 2026-08-18 or later are from it.
 > **Re-confirmed 2026-08-18 under the current toolchain:** camcge emits in **19 s**,
@@ -111,8 +127,10 @@ camcge translates and compiles cleanly (post-#1245), and the **emitted KKT syste
 
 ## 5. Open questions for the Epic-5 task
 
-1. **Numéraire-selection rule.** Is there a robust automatic rule (e.g. fix the price of the SAM's largest sector, or a CPI aggregate), or must each CGE model declare its numéraire?
-2. **Degeneracy detection.** How does the preprocessing layer *detect* Walras-degeneracy (PATH basis-singularity report? a rank check on the market-clearing block? a model-structure heuristic?) without falsely flagging a well-posed model?
+1. ~~**Numéraire-selection rule.** Is there a robust automatic rule (e.g. fix the price of the SAM's largest sector, or a CPI aggregate), or must each CGE model declare its numéraire?~~
+   **🟡 PROPOSED — per-model declaration (Sprint 39 Prep Task 10; §6).** An automatic rule is **not warranted**, and on the measured cohort not **achievable** either. A general rule would serve a population of **one**.
+2. ~~**Degeneracy detection.** How does the preprocessing layer *detect* Walras-degeneracy … without falsely flagging a well-posed model?~~
+   **🟡 PROPOSED — no pre-solve structural detector, so Epic 5 is a RETRY LOOP, not preprocessing (Task 10; §7).** The best structural detector scores **0 true positives and 1 false positive** on the corpus: it **excludes camcge** — the sole true positive — and flags `agreste`, which is not a Walras case.
 3. ~~**Empirical confirmation.** Does drop-`lmequil` + fix-`cpi=1` actually drive camcge to MODEL STATUS 1 at 191.7346 (the §3 paper argument verified in GAMS)?~~
    **✅ ANSWERED — NO (Sprint 30 Day 11; re-confirmed S34/S36/S37).** The drop-row variant measures **omega 299, MS-4** — primal-correct, but the dropped market's multiplier is orphaned out of the stationarity, breaking the MCP *dual*. The price-pin half alone reaches the correct **primal** (191.7346) yet stays **MS-4**. Do **not** re-run this experiment. **The live open question is instead:** does the *three-part* formulation (keep every row + consumption-weighted numéraire + **Walras-law dual redefinition**) reach MS-1? Banked evidence is discouraging — price-pin MS-4, single-dual-pin MS-4, drop-row corrupt @ 299; **3+ sprints of variants have all stayed MS-4**. The control is cheap to re-run (Sprint-37 Day-10 measurement, **GAMS 54.2.1 / PATH 5.2.01**: **19 s** emit, 641 single equations / 641 variables, demo-reachable; embedded NLP MS-2 @ omega 191.7346, `mcp_model` MS-4).
 4. **Cohort generality.** Does the same transformation (with a per-model row/numéraire) recover any *other* genuinely Walras-degenerate model, or is camcge the only one in the corpus? (The §2 survey suggests camcge is currently the sole inherent case.)
@@ -125,3 +143,117 @@ test -f docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md && echo present
 grep -Ei 'Walras|numéraire|redundant|equil|lmequil' docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md | head
 grep -Ei '#1330|#1354|#1355|#1317|#1331|#1251|#1070' docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md | head
 ```
+
+---
+
+# 6. Numéraire-selection rule — PROPOSED (Unknown 9.1)
+
+**Sprint 39 Prep Task 10** · **Measured at:** `04f50d6c` · **2026-09-02** · **Analysis over the corpus IR only; no camcge experiment was run.**
+
+## 6.1 The CGE-cohort survey
+
+Structural scan of all 219 corpus models (`artifacts/cge_scan.py`); **178 parsed, 41 did not**, so every count below is a **lower bound**.
+
+Models with ≥ 2 price-like variables **and** a market-clearing equation — the CGE shape:
+
+| model | price vars | clearing eqs | balance eqs | SAM-like params | numéraire declared? |
+|---|---|---|---|---|---|
+| **camcge** | 9 | 4 | 4 | `io(i,j)`, `zz(*,i)` | **⚠ `pwm` only — a *world* price** |
+| **korcge** | 9 | 3 | 4 | `io(i,j)`, `zz(*,i)` | ✅ **`pindex`** — a genuine price index |
+| orani | 6 | 5 | 0 | — | `phi`, `pm` |
+| tfordy | 6 | 2 | 0 | — | none |
+| tforss | 6 | 2 | 0 | — | none |
+| paperco | 4 | 4 | 0 | — | none |
+| agreste | 2 | 2 | 1 | — | none |
+| fawley | 2 | 4 | 0 | — | none |
+| nebrazil | 2 | 2 | 0 | — | none |
+
+**Only two models have the full CGE signature** (many prices + clearing + balance + a SAM): **camcge and korcge**. They are near-twins structurally — same SAM parameter names, 9 price variables each — and they differ in exactly the thing that matters.
+
+## 6.2 ⚠ The finding: camcge fixes a price, and it is the wrong one
+
+**camcge does declare a fixed price — `pwm.fx(i) = pwm0(i)`** — but `pwm` is the **world market price of imports**: exogenous data, not a numéraire for the domestic price system. Its nine domestic prices (`p`, `pd`, `pe`, `pk`, `pm`, `pva`, `px`) are all endogenous and **none is pinned**.
+
+**korcge fixes `pindex`** — an actual price-index numéraire — and korcge **solves and matches** (`model_optimal`, match).
+
+**The IR cannot tell these apart.** Both read as *"a variable whose name starts with `p` carries an `.fx`"*. Distinguishing them needs the economic meaning of the symbol, which no structural signal in the IR carries.
+
+## 6.3 The proposed rule
+
+**Per-model declaration. An automatic rule is neither warranted nor, on this cohort, achievable.**
+
+Three reasons, in order of decisiveness:
+
+1. **Population of one (Q5).** The §2 survey establishes camcge as the **sole inherent** Walras case, and §6.1 confirms only one other model even has the shape — and it already declares its own numéraire. **A general rule would serve exactly one model.** Building an inference engine for a population of one is how a scoping document becomes a project.
+2. **The obvious automatic rules fail on the only case (Q1/Q2).** *"Fix the largest sector by SAM value"* needs a SAM the IR can identify: camcge's SAM-like parameters are `io(i,j)` and `zz(*,i)`, and nothing distinguishes an input–output matrix from any other 2-D parameter by structure. *"Fix any already-fixed price"* selects `pwm` — the **world** price — which is precisely the pin that does **not** close the price-scaling ray.
+3. **A CPI aggregate needs a model-side symbol (Q3).** camcge has no CPI variable. Introducing one is a change to the *model*, not to the emitted MCP, and Epic 5's transformation is supposed to be applied by the translator.
+
+**Q4 — correct or merely consistent?** Consistent is enough **for the ray**: any valid numéraire closes the price-scaling nullspace, which is why B2 reaches the correct primal (191.7346). It is **not** enough for the problem, because the **row-redundancy nullspace remains** — that is the two-nullspaces diagnosis, and it is why B2 is still MS-4. **A numéraire rule is a necessary component, never a sufficient one.**
+
+**Failure modes of the proposed declaration, to be handled when Epic 5 starts:**
+
+| failure mode | handling |
+|---|---|
+| declared symbol is not a variable, or not in the model | reject at parse; do not emit |
+| declared symbol is already `.fx`-fixed (the camcge `pwm` trap) | **reject, and say why** — fixing an exogenous price does not close the ray |
+| declared symbol is indexed and the declaration names no element | require an element; a set-wide pin over-determines the system |
+| no declaration on a model the detector flags | **do nothing** — see §7; there is no safe automatic fallback |
+
+# 7. Degeneracy detection — PROPOSED (Unknown 9.2)
+
+## 7.1 The candidate detectors, applied to the corpus
+
+Each applied as **analysis over the IR** of all 178 parsed models. Expected true positives: **1** (camcge).
+
+| detector | flags | of which convex candidates | camcge flagged? |
+|---|---|---|---|
+| **D1** ≥ 2 price-like variables | 33 | 30 | ✅ |
+| **D2** D1 + a market-clearing equation | 9 | 8 | ✅ |
+| **D3** D2 + a balance/income equation | **3** | 3 | ✅ |
+| **D4** D3 + **no price variable is `.fx`-fixed** | **1** | 1 | ❌ **NO** |
+
+D3's three flags are `agreste`, `camcge`, `korcge`. Narrowing from 33 to 3 is real progress — and then the last conjunct, the one that encodes *"has no numéraire"*, **inverts the answer**.
+
+## 7.2 ⚠ D4 scores 0 true positives and 1 false positive
+
+| | |
+|---|---|
+| **camcge** — the sole true positive | **excluded**, because it fixes `pwm` (a world price) |
+| **korcge** — well-posed, solves and matches | excluded, because it fixes `pindex` (a real numéraire) — **right answer, wrong reason** |
+| **agreste** — not a Walras case | **flagged** |
+
+**Precision 0. Recall 0.** The rule is not discriminating on degeneracy at all; it is discriminating on *"does this model happen to fix any symbol whose name starts with `p`"* — a question whose answer is identical for the model that needs the transformation and the model that does not.
+
+**⚠ And one conjunct was silently inert while being measured.** The first pass of `cge_scan.py` probed `fx` and `fx_map` only. GAMS `pwm.fx(i) = pwm0(i)` lands in **`fx_expr_map`**, so camcge read as having *no* fixed price and D4 appeared to flag it correctly. The corrected four-field probe reversed the result. **The detector's most important conjunct was doing nothing, and the run looked healthy** — recorded because a Sprint-39 detector will face the same trap.
+
+## 7.3 The proposed design: a retry loop, not preprocessing
+
+**There is no pre-solve structural signal that separates camcge from korcge**, and that is not a tuning problem — the distinguishing fact is the *economic role* of a fixed symbol, which the IR does not carry.
+
+This answers the architectural question 9.2 raised: **detection works only post-solve, so Epic 5 is a retry loop.**
+
+```
+solve the MCP cold
+  └── MS-4 (infeasible / singular basis) ?
+        └── AND the model is D3-shaped (many prices + clearing + balance) ?
+              └── AND a numéraire is DECLARED for it (§6.3) ?
+                    └── apply the transformation and re-solve
+                    └── otherwise: report MS-4 unchanged
+```
+
+**Why this is safe where a preprocessor is not.** Every gate is a *narrowing* on a model that has **already failed**: D3's 3 flags are irrelevant to `korcge`, which never reaches the retry because it solves. **A false positive costs one re-solve on an already-failed model; a false positive in a preprocessor would transform a healthy one.** That asymmetry is the whole argument.
+
+**The shape is not new** — the presolve-retry path (`run_full_test.py:936`) is exactly this: solve, detect failure, re-solve differently. Epic 5 would add a second trigger, not a new architecture. ⚠ And it inherits that path's hazard, which Sprint 38 Day 9 measured on `weapons`: **a retry whose MCP aborts can read back the embedded NLP's answer and match itself.** Any Epic-5 retry must assert the MCP produced its **own** `MODEL STATUS` — `scripts/sprint_audit/check_mcp_solve_attribution.py`.
+
+## 7.4 What would need measuring, and why it is out of scope here
+
+The prompt asks that a needed-but-forbidden measurement be recorded rather than taken. One qualifies:
+
+**A rank check on the assembled market-clearing block** — the one detector that could work pre-solve, because redundancy is what actually defines the degeneracy. It is **not** an IR-level question: it needs the *numeric* Jacobian at a point, which means building the KKT system and evaluating it. That is a solve-adjacent measurement on camcge, and §4a's banned list exists precisely to stop "just one more camcge measurement".
+
+**Recorded, not run.** If Epic 5 wants it, it is a first-day task with its own Phase-0 gate — and the honest prior from §7.2 is discouraging: a rank check would separate camcge from korcge only if the redundancy is visible *before* the numéraire question is settled, and the two-nullspaces diagnosis says the two singularities are independent.
+
+---
+
+**§6–§7 Document Status:** ✅ Complete — Sprint 39 Prep Task 10. Q1 and Q2 are **proposed**, not open. Q3/Q4 answers unchanged.
+**Last Updated:** 2026-09-02

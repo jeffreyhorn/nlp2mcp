@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 39 Prep
 
+- **Prep Task 10 COMPLETE (2026-09-02) — both Epic-5 answers are negative, and the second changes the epic's architecture.** `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` extended with §6–§7; new `docs/planning/EPIC_5/artifacts/`. **No camcge experiment was run.** No production code changed and no `*.py` added to `src/`/`tests/`, so the quality gate is N/A.
+
+- **The BANNED variants are now a banner directly under the document title**, met before §4a and before any temptation, with **B1's primal-correctness called out first** — it is the dangerous one precisely because a reader checking only the primal concludes it works. camcge #1330 remains Epic-5-scoped and out of Sprint-39 implementation.
+
+- **⚠ The numéraire rule is per-model declaration** (9.1 ❌ WRONG — the assumption was that a robust automatic rule exists). Corpus scan of all 219 models (**178 parsed, 41 not**, so counts are lower bounds): nine have ≥ 2 price-like variables plus a market-clearing equation, but **only two carry the full CGE signature** — **`camcge` and `korcge`**, structural near-twins with the same SAM parameter names (`io(i,j)`, `zz(*,i)`) and nine price variables each.
+
+- **⚠⚠ camcge DOES fix a price, and it is the wrong one.** `pwm.fx(i) = pwm0(i)` pins the **world market price of imports** — exogenous data, not a numéraire for the domestic price system — while all nine domestic prices (`p`, `pd`, `pe`, `pk`, `pm`, `pva`, `px`) stay endogenous and unpinned. `korcge` fixes **`pindex`**, a genuine price index, and **solves and matches**. **The IR cannot tell these apart:** both read as "a symbol beginning with `p` carries an `.fx`". Distinguishing them needs the *economic role* of the symbol, which no structural signal carries.
+
+- **The other automatic rules fail too.** *"Fix the largest sector by SAM value"* is not expressible — nothing structural distinguishes camcge's `io(i,j)` from any other 2-D parameter. *"A CPI aggregate"* needs a model-side symbol camcge does not have (verified: **zero** `cpi`/`pindex` variables). And **consistency is enough for the price-scaling ray but not for the problem** — which is exactly why banned variant B2 reaches the correct primal (191.7346) and is still MS-4. **Decisively: camcge is the sole inherent case, so a general rule would serve a population of one.**
+
+- **⚠⚠ No pre-solve detector works, so Epic 5 is a RETRY LOOP rather than a preprocessing layer** (9.2 ❌ WRONG). Four detectors applied as analysis over 178 parsed models: **D1** (≥ 2 price-like vars) flags **33**; **D2** (+ a market-clearing eq) **9**; **D3** (+ a balance/income eq) **3** — `agreste`, `camcge`, `korcge`. Narrowing 33 → 3 is real progress. Then **D4**, the conjunct that encodes *"has no numéraire"*, **inverts the answer**: it **excludes camcge**, the sole true positive, and **flags `agreste`**, which is not a Walras case. **Precision 0, recall 0.** The rule discriminates on *"does this model fix any symbol starting with `p`"* — a question with the same answer for the model that needs the transformation and the model that does not.
+
+- **⚠ The detector's most important conjunct was silently inert while being measured.** The first scan probed `fx` and `fx_map` only; a GAMS `pwm.fx(i) = pwm0(i)` lands in **`fx_expr_map`**, so camcge read as having no fixed price and D4 *appeared* to flag it correctly. The corrected four-field probe (`fx`, `fx_map`, `fx_expr`, `fx_expr_map`) reversed the result. **The run looked healthy the whole time** — recorded in the artifacts README because a Sprint-39 detector will face the same trap.
+
+- **The proposed architecture:** cold solve → **MS-4** → D3-shaped → a numéraire is **declared** → transform and re-solve; otherwise report MS-4 unchanged. **Safe where a preprocessor is not**, because every gate narrows on a model that has *already failed* — a false positive costs one re-solve, where a preprocessor's would transform a healthy model. `korcge` never reaches the retry because it solves. The shape is not new (`run_full_test.py:936` is exactly this) — and ⚠ it **inherits that path's `weapons` hazard**: any Epic-5 retry must assert the MCP produced its **own** `MODEL STATUS` via `check_mcp_solve_attribution.py`.
+
+- **Recorded, not run:** a **rank check on the assembled market-clearing block** is the one detector that could work pre-solve, since redundancy is what defines the degeneracy. It is not an IR-level question — it needs the numeric Jacobian, i.e. a solve-adjacent camcge measurement, which §4a's banned list exists to refuse. Left as an Epic-5 first-day task with its own Phase-0 gate.
+
+- **Q1 and Q2 are now 🟡 *proposed*, not open; Q3 and Q4's existing answers are untouched** (verified by grep after editing).
+
+- **Unknowns 9.1 ❌ · 9.2 ❌** — **26 of 30 resolved** (10 VERIFIED + 9 WRONG + 7 PARTIALLY WRONG), 4 remain.
+
 - **Prep Task 9 COMPLETE (2026-09-01) — no reply yet; both branches ready, and two findings that change how P6 executes.** New: `docs/planning/EPIC_4/SPRINT_39/CONSULTATION_FOLLOWUP_PACKAGE.md`. **No production code changed** and no `*.py` added, so the quality gate is N/A. ⏰ **Revisit §1 before the 2026-09-09 date gate** — it is the only section that can go stale.
 
 - **No reply has arrived** (6.1 🔶). Checked 2026-09-01: the last comment on **#1462** and on **#1443** is my own send record of 2026-08-26 — **6 of the 14 days elapsed**. The assumption that a reply *would* be actionable cannot be tested in prep and stays open by design; both branches are prepared so neither needs improvisation on the day.

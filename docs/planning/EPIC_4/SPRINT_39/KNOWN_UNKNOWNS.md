@@ -1435,7 +1435,27 @@ Survey the corpus CGE cohort for numéraire declarations and SAM structure. Eval
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — no robust automatic rule; per-model declaration, and a general rule serves a population of one
+
+**Verified by:** Sprint 39 Prep Task 10 · **Date:** 2026-09-02 · **Measured at:** `04f50d6c`
+
+**Analysis over the corpus IR only. No camcge experiment was run.** Scan of all 219 models; **178 parsed, 41 did not**, so counts are lower bounds.
+
+**Q1 — the cohort.** Nine models have ≥ 2 price-like variables *and* a market-clearing equation. **Only two have the full CGE signature** (many prices + clearing + balance + a SAM): **`camcge` and `korcge`** — structural near-twins, same SAM parameter names (`io(i,j)`, `zz(*,i)`), 9 price variables each.
+
+**⚠ The finding: camcge DOES fix a price, and it is the wrong one.** `pwm.fx(i) = pwm0(i)` — but `pwm` is the **world market price of imports**, exogenous data, not a numéraire for the domestic system. Its nine domestic prices are all endogenous and **none is pinned**. `korcge` fixes **`pindex`**, a real price index, and **solves and matches**. **The IR cannot tell these apart** — both read as "a symbol starting with `p` carries an `.fx`".
+
+**Q2 — "largest sector by SAM value" is not expressible.** camcge's SAM-like parameters are `io(i,j)` and `zz(*,i)`; nothing structural distinguishes an input–output matrix from any other 2-D parameter.
+
+**Q3 — a CPI aggregate needs a model-side symbol.** camcge has **no** CPI variable (verified: zero `cpi`/`pindex` variables). Adding one changes the *model*, not the emitted MCP, and Epic 5's transformation is applied by the translator.
+
+**Q4 — consistent is enough for the RAY, not for the problem.** Any valid numéraire closes the price-scaling nullspace, which is why **B2 reaches the correct primal (191.7346) and is still MS-4**: the row-redundancy nullspace remains. **A numéraire rule is a necessary component, never a sufficient one.**
+
+**Q5 — decisive. A general rule would serve a population of ONE.** §2 establishes camcge as the sole inherent Walras case; §6.1 confirms the only other CGE-shaped model already declares its own numéraire.
+
+**Decision: per-model declaration**, with four failure modes specified — including rejecting a declaration that names an **already-fixed exogenous** price, which is exactly the camcge `pwm` trap.
+
+**Evidence:** `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` §6; `docs/planning/EPIC_5/artifacts/cge_scan.py`.
 
 ---
 
@@ -1468,7 +1488,32 @@ Implement the candidate detectors as *analysis only* over the corpus IR and coun
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — no pre-solve detector works; the best scores 0 true positives and 1 false positive, so Epic 5 is a RETRY LOOP
+
+**Verified by:** Sprint 39 Prep Task 10 · **Date:** 2026-09-02 · **Measured at:** `04f50d6c`
+
+**Q1/Q2/Q3 — the detectors, applied as analysis over 178 parsed models.** Expected true positives: **1** (camcge).
+
+| detector | flags | ∩ convex candidates | camcge flagged? |
+|---|---|---|---|
+| **D1** ≥ 2 price-like variables | 33 | 30 | ✅ |
+| **D2** D1 + a market-clearing equation | 9 | 8 | ✅ |
+| **D3** D2 + a balance/income equation | **3** (`agreste`, `camcge`, `korcge`) | 3 | ✅ |
+| **D4** D3 + **no price is `.fx`-fixed** | **1** (`agreste`) | 1 | ❌ **NO** |
+
+**⚠ D4 — the conjunct that encodes "has no numéraire" — INVERTS the answer.** camcge is **excluded** (it fixes the world price `pwm`); `korcge`, which is well-posed and matches, is excluded **for the right reason but by the same rule**; `agreste`, not a Walras case, is **flagged**. **Precision 0, recall 0.** The rule discriminates on *"does this model fix any symbol starting with `p`"* — identical for the model that needs the transformation and the one that does not.
+
+**Q4 — no, a structural heuristic cannot distinguish them.** The distinguishing fact is the **economic role** of a fixed symbol, which the IR does not carry.
+
+**⚠ And the conjunct was silently inert while being measured.** The first scan probed `fx`/`fx_map` only; `pwm.fx(i) = pwm0(i)` lands in **`fx_expr_map`**, so camcge read as unfixed and D4 *appeared* to flag it correctly. The corrected four-field probe reversed the result. **The most important conjunct was doing nothing and the run looked healthy** — recorded because a Sprint-39 detector will face the same trap.
+
+**Q5 — the threshold question is moot.** There is no false-positive *rate* to weigh: the detector never identifies the true positive at all.
+
+**Decision — this changes Epic 5's architecture, which is what 9.2 was for.** Detection works only **post-solve**, so Epic 5 is a **retry loop**, not a preprocessing layer: cold solve → MS-4 → D3-shaped → numéraire declared → transform and re-solve. **Safe where a preprocessor is not**, because every gate narrows on a model that has *already failed* — a false positive costs one re-solve, where a preprocessor's would transform a healthy model. The shape already exists (`run_full_test.py:936`), and ⚠ it inherits that path's `weapons` hazard: **any Epic-5 retry must assert the MCP produced its own `MODEL STATUS`.**
+
+**Recorded, not run:** a **rank check on the assembled market-clearing block** is the one detector that could work pre-solve, but it needs the numeric Jacobian — a solve-adjacent camcge measurement, which §4a's banned list exists to refuse.
+
+**Evidence:** `CGE_DEGENERACY_SCOPING.md` §7; `artifacts/cge_scan.py`.
 
 ---
 

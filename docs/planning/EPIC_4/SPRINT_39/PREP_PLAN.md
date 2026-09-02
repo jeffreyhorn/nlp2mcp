@@ -51,7 +51,7 @@ This prep plan front-loads the work that would otherwise be discovered mid-sprin
 | 7 | ✅ Positional-vs-Declared-Domain Site Survey (P5) | High | 4-5 hours | Tasks 1, 2 | P5 — the audit's input catalog |
 | 8 | ✅ Presolve-Record Remedy Design (P7) | High | 3-4 hours | Tasks 1, 2 | P7 — **two** defect populations (1 spurious row + 14 dangling), so **A + B together** |
 | 9 | ✅ Consultation Reply-Integration & Follow-Up Package (P6) | Medium | 2-3 hours | Task 1 | P6 — both branches prepared before the date gate |
-| 10 | Epic-5 Design Scoping: Numéraire Rule & Degeneracy Detection (P9) | Medium | 3-4 hours | Tasks 1, 2 | P9 — design only, no camcge experiment |
+| 10 | ✅ Epic-5 Design Scoping: Numéraire Rule & Degeneracy Detection (P9) | Medium | 3-4 hours | Tasks 1, 2 | P9 — design only, no camcge experiment |
 | 11 | Emit-Backlog Catalog Refresh & Process-Infrastructure Spec (P8, P10) | Medium | 3-4 hours | Tasks 1, 2, 7 | P8 infrastructure + P10 slack absorber |
 | 12 | Plan Sprint 39 Detailed Schedule | Critical | 3-4 hours | All tasks (1–11) | Day-by-day schedule + REPLAN exits + budget |
 
@@ -1288,9 +1288,10 @@ test -f docs/planning/EPIC_4/SPRINT_39/CONSULTATION_FOLLOWUP_PACKAGE.md && \
 
 ## Task 10: Epic-5 Design Scoping — Numéraire Rule & Degeneracy Detection (P9)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-09-02)
 **Priority:** Medium
 **Estimated Time:** 3-4 hours
+**Time Spent:** 3.5 hours
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
@@ -1332,11 +1333,24 @@ Epic 5's value is its **refutation record**: three-plus sprints of camcge varian
 
 ### Changes
 
-*To be completed*
+- `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` — **§6** (numéraire rule, proposed) and **§7** (degeneracy detection + false-positive analysis, proposed) appended; the **BANNED variants restated as a banner directly under the title**; Q1/Q2 moved from *open* to 🟡 *proposed* with Q3/Q4's answers untouched
+- **NEW** `docs/planning/EPIC_5/artifacts/` — `cge_scan.py` + README, so the corpus survey is reproducible from the repo
+- `KNOWN_UNKNOWNS.md` — Unknowns **9.1 ❌**, **9.2 ❌**
+- `CHANGELOG.md` — Sprint 39 Prep entry
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — both answers are negative, and the second changes Epic 5's architecture.** No camcge experiment was run.
+
+**⚠ The numéraire rule is per-model declaration (9.1 ❌).** Corpus scan of 219 models (178 parsed, 41 not — counts are lower bounds): nine have the CGE shape, but **only two have the full signature** — `camcge` and `korcge`, structural near-twins with the same SAM parameter names and 9 price variables each. **camcge DOES fix a price, and it is the wrong one:** `pwm.fx(i) = pwm0(i)` pins the **world market price of imports** — exogenous data, not a numéraire — while all nine domestic prices stay endogenous. `korcge` fixes **`pindex`**, a real price index, and solves and matches. **The IR cannot tell these apart.** "Largest sector by SAM value" is not expressible (nothing distinguishes `io(i,j)` from any 2-D parameter); a CPI aggregate needs a model-side symbol camcge does not have. Decisively: **camcge is the sole inherent case, so a general rule would serve a population of one.**
+
+**⚠⚠ No pre-solve detector works, so Epic 5 is a RETRY LOOP, not preprocessing (9.2 ❌).** Four detectors over the IR: D1 flags 33, D2 → 9, D3 → 3 (`agreste`, `camcge`, `korcge`). Narrowing 33 → 3 is real — then **D4, the conjunct encoding "has no numéraire", inverts the answer**: it **excludes camcge** (the sole true positive) and **flags `agreste`** (not a Walras case). **Precision 0, recall 0.** The rule discriminates on *"does this model fix any symbol starting with `p`"*, identical for the model that needs the transformation and the one that does not.
+
+**⚠ The conjunct was silently inert while being measured.** The first scan probed `fx`/`fx_map` only; a GAMS `pwm.fx(i) = pwm0(i)` lands in **`fx_expr_map`**, so camcge read as unfixed and D4 *appeared* to flag it correctly. The corrected four-field probe reversed the result — **the most important conjunct was doing nothing and the run looked healthy.**
+
+**The proposed architecture:** cold solve → MS-4 → D3-shaped → numéraire **declared** → transform and re-solve. **Safe where a preprocessor is not**, because every gate narrows on a model that has *already failed*: a false positive costs one re-solve, where a preprocessor's would transform a healthy model. The shape already exists at `run_full_test.py:936` — and ⚠ it inherits that path's `weapons` hazard, so any Epic-5 retry **must assert the MCP produced its own `MODEL STATUS`**.
+
+**Recorded, not run:** a rank check on the assembled market-clearing block is the one detector that could work pre-solve, but it needs the numeric Jacobian — a solve-adjacent camcge measurement, which §4a's banned list exists to refuse.
 
 ### Verification
 
@@ -1379,14 +1393,14 @@ grep -c "ANSWERED" docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md
 
 ### Acceptance Criteria
 
-- [ ] The BANNED variants restated at the top of the new material
-- [ ] **No camcge experiment run** — anything requiring one is recorded as out of scope
-- [ ] A numéraire-selection rule drafted with its failure modes
-- [ ] A degeneracy-detection design drafted, with the false-positive analysis given the majority of the effort
-- [ ] The corpus used as the false-positive test set
-- [ ] Q1/Q2 marked *proposed*; Q3/Q4's existing answers untouched
-- [ ] camcge confirmed to remain Epic-5-scoped and out of Sprint-39 implementation
-- [ ] Unknowns 9.1, 9.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] The BANNED variants restated at the top of the new material — as a banner **directly under the document title**, so it is met before §4a and before any temptation, with B1's primal-correctness called out first
+- [x] **No camcge experiment run** — the one measurement that would help (a rank check on the assembled market-clearing block) needs the numeric Jacobian, and is **recorded as out of scope** with the reason
+- [x] A numéraire-selection rule drafted with its failure modes — **per-model declaration**, four failure modes, including rejecting a declaration that names an already-fixed *exogenous* price (the camcge `pwm` trap)
+- [x] A degeneracy-detection design drafted, with the false-positive analysis given the majority of the effort — and the analysis is what **refuted** the design: precision 0, recall 0
+- [x] The corpus used as the false-positive test set — 178 parsed models; `korcge` is the decisive control, structurally a near-twin of camcge and well-posed
+- [x] Q1/Q2 marked 🟡 *proposed*; Q3/Q4's existing answers untouched (verified by grep after editing)
+- [x] camcge confirmed to remain Epic-5-scoped and out of Sprint-39 implementation — stated in the top banner
+- [x] Unknowns 9.1, 9.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
