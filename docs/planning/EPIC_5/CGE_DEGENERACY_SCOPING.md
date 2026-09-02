@@ -152,7 +152,7 @@ grep -Ei '#1330|#1354|#1355|#1317|#1331|#1251|#1070' docs/planning/EPIC_5/CGE_DE
 
 ## 6.1 The CGE-cohort survey
 
-Structural scan of all 219 corpus models (`artifacts/cge_scan.py`); **178 parsed, 41 did not**, so every count below is a **lower bound**.
+Structural scan of all 219 corpus models (`artifacts/cge_scan.py`); **178 parsed, 41 did not**, so every count below is a **lower bound**. The **numéraire column is the script's `fixed_prices` field**, which probes all four places a GAMS `.fx` can land (`fx`, `fx_map`, `fx_expr`, `fx_expr_map`) — see §7.2 and `artifacts/README.md` for why the distinction is load-bearing.
 
 Models with ≥ 2 price-like variables **and** a market-clearing equation — the CGE shape:
 
@@ -224,7 +224,7 @@ D3's three flags are `agreste`, `camcge`, `korcge`. Narrowing from 33 to 3 is re
 
 **Precision 0. Recall 0.** The rule is not discriminating on degeneracy at all; it is discriminating on *"does this model happen to fix any symbol whose name starts with `p`"* — a question whose answer is identical for the model that needs the transformation and the model that does not.
 
-**⚠ And one conjunct was silently inert while being measured.** The first pass of `cge_scan.py` probed `fx` and `fx_map` only. GAMS `pwm.fx(i) = pwm0(i)` lands in **`fx_expr_map`**, so camcge read as having *no* fixed price and D4 appeared to flag it correctly. The corrected four-field probe reversed the result. **The detector's most important conjunct was doing nothing, and the run looked healthy** — recorded because a Sprint-39 detector will face the same trap.
+**⚠ And one conjunct was silently inert while being measured.** The first pass of `cge_scan.py` probed `fx` and `fx_map` only. GAMS `pwm.fx(i) = pwm0(i)` lands in **`fx_expr_map`**, so camcge read as having *no* fixed price and D4 appeared to flag it correctly. The corrected four-field probe reversed the result. **The detector's most important conjunct was doing nothing, and the run looked healthy** — recorded because a Sprint-39 detector will face the same trap. `cge_scan.py` now emits **both** probes (`fixed_prices`, correct; `fixed_prices_fx_only`, incomplete), so the failure is visible in the script's own output and not only here. **And it was not a camcge quirk** — over the 178 parsed models the two disagree on **6**: `camcge`, `glider`, `korcge`, `orani`, `otpop`, `robot`. On camcge they read `["pwm"]` vs `[]`; on `orani`, `["phi","pm"]` vs `["pm"]` — the incomplete probe found one of two fixes and looked like it had worked.
 
 ## 7.3 The proposed design: a retry loop, not preprocessing
 

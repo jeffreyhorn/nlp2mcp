@@ -3,11 +3,20 @@
 ANALYSIS ONLY over the IR. No model is solved; no camcge experiment is run.
 
 Signals recorded per model:
-  price_vars      variables whose name looks like a price (p, pq, pd, pw, py, pk, pm, cpi...)
-  fixed_prices    price variables carrying a .fx (an explicit numeraire declaration)
-  clearing_eqs    equations whose name looks like market clearing (equil, mkt, clear, bal...)
-  balance_eqs     equations that look like an income/budget/Walras balance
-  sam_params      parameters that look like a SAM (sam, sam0, z, ...) and their domains
+  price_vars           variables whose name looks like a price (p, pd, pm, py, pk, cpi...)
+  fixed_prices         price variables carrying a .fx, by the CORRECT four-field probe
+  fixed_prices_fx_only price variables found by the INCOMPLETE fx/fx_map probe
+  clearing_eqs         equations whose name looks like market clearing (equil, mkt, clear...)
+  balance_eqs          equations that look like an income/budget/Walras balance
+  sam_params           parameters that look like a SAM (sam, sam0, io, z...) and their domains
+
+⚠ WHY TWO FIXED-PRICE FIELDS. A GAMS ``pwm.fx(i) = pwm0(i)`` does **not** land in
+``VariableDef.fx`` or ``.fx_map`` — it lands in ``fx_expr_map``, because the
+right-hand side is an expression. The first version of this script probed only
+the first two, so **camcge read as having no fixed price when it has one**, and
+the D4 detector appeared to flag it correctly (see ../CGE_DEGENERACY_SCOPING.md
+§7.2). Both fields are emitted so the published table is reproducible from this
+script AND the trap stays visible in its output rather than only in prose.
 """
 import os as _os
 OUT = _os.environ.get("OUT", "/tmp/s39t10")
@@ -37,14 +46,20 @@ for i, path in enumerate(models, 1):
         m = parse_model_file(str(path))
         rec["parsed"] = True
         pv = [v for v in m.variables if PRICE.match(v)]
-        # a price is "fixed" if the model declares an .fx on it
-        fixed = []
+        # CORRECT: an .fx can land in any of four fields. `fx`/`fx_map` hold a
+        # constant fix; `fx_expr`/`fx_expr_map` hold an expression-valued one,
+        # which is the form `pwm.fx(i) = pwm0(i)` takes.
+        fixed, fixed_legacy = [], []
         for v in pv:
             vd = m.variables[v]
-            fx = getattr(vd, "fx_map", None) or getattr(vd, "fx", None)
-            if fx: fixed.append(v)
+            if vd.fx is not None or vd.fx_map or vd.fx_expr is not None or vd.fx_expr_map:
+                fixed.append(v)
+            # The incomplete probe, kept so the trap is visible in the output.
+            if getattr(vd, "fx_map", None) or getattr(vd, "fx", None):
+                fixed_legacy.append(v)
         rec["price_vars"] = sorted(pv)
         rec["fixed_prices"] = sorted(fixed)
+        rec["fixed_prices_fx_only"] = sorted(fixed_legacy)
         rec["clearing_eqs"] = sorted(e for e in m.equations if CLEAR.search(e))
         rec["balance_eqs"] = sorted(e for e in m.equations if BALANCE.search(e))
         rec["sam_params"] = {p: list(getattr(m.params[p], "domain", ()) or ()) 
