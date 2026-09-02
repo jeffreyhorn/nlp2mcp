@@ -91,7 +91,7 @@ Swept every **cold** golden (`*_mcp.gms`, excluding `_presolve`) changed between
 | `tricp` | `45926422` | `path_solve_terminated` | `path_solve_license` | ✗ **today** — see below |
 | `ferts` | `45926422` | `path_solve_license` | `path_solve_license` | ✗ — untestable before and after |
 
-**⚠ `tricp` is a conditional future candidate.** Its cold emit changed, it *was* aborting, and the abort is gone — it is blocked only by **capacity** (387 → 1,255 rows, past the demo 1000-row nonlinear limit), not correctness. If the licence ask on #1462 succeeds and tricp then matches, it qualifies on the same terms and the floor moves again. **The answer taken today should be recorded as "of the models testable today".**
+**⚠ `tricp` is a conditional future candidate.** Its cold emit changed, it *was* aborting, and the abort is gone — it is blocked only by **capacity** (387 → 1,255 rows, past the demo 1000-row nonlinear limit), not correctness. If the license ask on #1462 succeeds and tricp then matches, it qualifies on the same terms and the floor moves again. **The answer taken today should be recorded as "of the models testable today".**
 
 **Two limits on this sweep, both structural:**
 
