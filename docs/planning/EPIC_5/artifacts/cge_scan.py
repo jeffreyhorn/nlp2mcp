@@ -100,8 +100,11 @@ for i, path in enumerate(models, 1):
         rec["clearing_eqs_also_balance"] = sorted(
             e for e in m.equations if CLEAR.search(e) and BALANCE.search(e)
         )
-        rec["sam_params"] = {p: list(getattr(m.params[p], "domain", ()) or ()) 
-                             for p in m.params if SAM.match(p)}
+        rec["sam_params"] = {
+            p: list(getattr(m.params[p], "domain", ()) or ())
+            for p in m.params
+            if SAM.match(p)
+        }
         rec["n_eq"] = len(m.equations); rec["n_var"] = len(m.variables)
     except TO:
         rec["error"] = "TIMEOUT 120s"
