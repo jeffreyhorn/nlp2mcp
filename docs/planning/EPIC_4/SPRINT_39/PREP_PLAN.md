@@ -52,7 +52,7 @@ This prep plan front-loads the work that would otherwise be discovered mid-sprin
 | 8 | ✅ Presolve-Record Remedy Design (P7) | High | 3-4 hours | Tasks 1, 2 | P7 — **two** defect populations (1 spurious row + 14 dangling), so **A + B together** |
 | 9 | ✅ Consultation Reply-Integration & Follow-Up Package (P6) | Medium | 2-3 hours | Task 1 | P6 — both branches prepared before the date gate |
 | 10 | ✅ Epic-5 Design Scoping: Numéraire Rule & Degeneracy Detection (P9) | Medium | 3-4 hours | Tasks 1, 2 | P9 — design only, no camcge experiment |
-| 11 | Emit-Backlog Catalog Refresh & Process-Infrastructure Spec (P8, P10) | Medium | 3-4 hours | Tasks 1, 2, 7 | P8 infrastructure + P10 slack absorber |
+| 11 | ✅ Emit-Backlog Catalog Refresh & Process-Infrastructure Spec (P8, P10) | Medium | 3-4 hours | Tasks 1, 2, 7 | P8 infrastructure + P10 slack absorber |
 | 12 | Plan Sprint 39 Detailed Schedule | Critical | 3-4 hours | All tasks (1–11) | Day-by-day schedule + REPLAN exits + budget |
 
 **Total Estimated Time:** ~40–55 hours (~5–7 working days)
@@ -1406,9 +1406,10 @@ grep -c "ANSWERED" docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md
 
 ## Task 11: Emit-Backlog Catalog Refresh & Process-Infrastructure Spec (P8, P10)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-09-02)
 **Priority:** Medium
 **Estimated Time:** 3-4 hours
+**Time Spent:** 3.5 hours
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2, 7
@@ -1455,11 +1456,30 @@ Refresh the emit-backlog candidate catalog against the post-Sprint-38 corpus, an
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_39/BACKLOG_CANDIDATE_CATALOG.md` — refreshed population, the selection rule applied with every rejection reasoned, the Task-7 cross-check, and the P10 absorber
+- **NEW** `docs/planning/EPIC_4/SPRINT_39/PROCESS_INFRA_SPEC.md` — 8a–8d, each with its motivating incident quoted from the source gate and a fail-before test
+- `KNOWN_UNKNOWNS.md` — **8.1 ❌**, **8.2 ✅**, **8.3 🔶**, **10.1 addendum**, **10.2 ❌** ⇒ **all 30 unknowns resolved**
+- `CHANGELOG.md` — Sprint 39 Prep entry
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — and P10's deliverable is not supportable from the backlog, so it is re-routed.**
+
+**The catalog (10.1).** Population reconfirmed exactly: **31** non-solving convex candidates, 30 with an owning issue, `robot` without. **⚠ Phase-0 gates are now 8 of 31, up from Sprint 38's 0 of 5** — four authored during this prep, the P7-gates-P8 sequencing paying off a sprint later. **The rule yields two qualifiers and neither is available to P10:** `lnts` is P3's deep track, and `mine` — the only unclaimed one — is #1443, a live consultation thread, so local work before the **2026-09-09** gate risks duplicating a reply.
+
+**The Task-7 cross-check does not rescue it, and the reason is the finding.** Four candidates are positional-domain instances (`dinam`, `egypt`, `shale`, `turkpow`), so Task 7 names a fix surface for each — **but not for the defect that blocks them**: two fail to compile, two never reach PATH. They are **latent second defects in models we already cannot solve**, which is why the Task-9 cohort procedure now gates on it.
+
+**⚠ P10 is re-routed: land Task 7's P2 property as a gate and work its six flagged models.** It meets P10's criteria better than the sweep — fingerprints **in committed goldens today** (9 violations, under 3 s, no GAMS), catalogued fix surfaces ranked by measured blast radius, a fixed list rather than a diagnosis, **0-bucket by design**, and a fail-before the sweep lacks.
+
+**8a (8.1 ❌).** The assumption is wrong on its own numbers: **60** gates exist, not "~30", and **59 lack a Layer field** — a hard assertion breaks a required CI check. But **"new" is mechanically determinable**: `pulls.listFiles` already returns a `status` field the workflow discards. **Scoped to `added`, the assertion fails 0 of 60.** Vocabulary `parser · IR · AD · KKT · emit · pipeline`, with **compound values required** — elec was `AD + KKT` and twocge `KKT + emit`, so a single-valued field would force a false choice.
+
+**8b (8.2 ✅) — retro-applied to all four Sprint-38 gates, and it discriminates.** **Two of four had already answered it voluntarily** (tricp named the emitter's existing `__`-aliasing machinery; twocge named the analogous #1053 block), **one it does not apply to** (elec, two independent defects), and **one it would have caught** — dyncge's gate asserted *"new logic rather than a widened condition-lift"* when section 2c had done that test since #942, for inequalities. That two gates did it unprompted is the evidence the question is natural rather than bureaucratic.
+
+**8c (8.3 🔶).** Preconditions are expressible **only under three constraints**, because otherwise they are escape hatches: reference a track's **start**, never its outcome; fixed at pre-registration; a voided rule is reported, not dropped. **⚠ The asymmetry is the evidence** — of Sprint 39's two pre-registered rules, `path_solve_terminated` maintains 0 takes **no** precondition (a corpus-wide invariant), and only the Match-falls-to-95 rule needs one (`P7 started`).
+
+**8d.** Specified as a CONTRIBUTING rule with the test *"could this figure be wrong while the conclusion stays right?"*. **Already load-bearing**: Task 9 re-measured the three consultation threads and found the figures reproduce **but come from different emits** — the conclusion held while the package could not say which file to apply a fix to.
+
+**10.2 ❌ — closed as unreachable.** ⚠ The premise was inaccurate: **#1668 is OPEN**, not closed; what closed is its two *directions*. And **`git log 9ab2c0c3..HEAD -- src/` returns zero commits** — no `src/` file has changed at all since Sprint 38 closed, so the rebind site is byte-identical and the question is exactly as unmeasurable. Third carry refused.
 
 ### Verification
 
@@ -1526,15 +1546,15 @@ test -f docs/planning/EPIC_4/SPRINT_39/PROCESS_INFRA_SPEC.md && echo "✅ infra 
 
 ### Acceptance Criteria
 
-- [ ] Catalog refreshed against the current DB, not the Sprint-38 population
-- [ ] Selection rule applied; every rejection carries a reason
-- [ ] Cross-check against Task 7's survey performed
-- [ ] 8a specified, including the `scripts/sprint_audit/check_phase0_doc.py` assertion
-- [ ] 8b, 8c, 8d specified as CONTRIBUTING rules with their motivating incidents
-- [ ] A fail-before test specified for each of the four
-- [ ] `agreste`'s consultation dependency noted — check #1443 before local work
-- [ ] The ganges rebind site explicitly marked do-not-re-open
-- [ ] Unknowns 8.1, 8.2, 8.3, 10.1, 10.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Catalog refreshed against the current DB, not the Sprint-38 population — 31 non-solving, reconciling exactly with Task 2; gates now **8 of 31** against Sprint 38's 0 of 5
+- [x] Selection rule applied; every rejection carries a reason — including the 11 license-gated as **structurally excluded** (PATH never ran, so no fingerprint is reproducible)
+- [x] Cross-check against Task 7's survey performed — 4 candidates are positional-domain instances, and **none is promoted**, because the named surface is not the blocking defect
+- [x] 8a specified, including the `check_phase0_doc.py` assertion — **dry-run first**, as the prompt required: 59 of 60 would fail a hard rule, 0 of 60 fail the added-only rule
+- [x] 8b, 8c, 8d specified as CONTRIBUTING rules with their motivating incidents — each quoted verbatim from its source gate, and each quote verified present
+- [x] A fail-before test specified for each of the four — 8d's is stated as **not mechanizable**, with the reason, rather than inventing one
+- [x] `agreste`'s consultation dependency noted — check #1443 before local work; and its **missing owning issue** recorded (#1068 closed, different defect)
+- [x] The ganges rebind site explicitly marked do-not-re-open — with the measurement that keeps it closed (**0 commits to `src/` since S38 close**)
+- [x] Unknowns 8.1, 8.2, 8.3, 10.1, 10.2 verified and updated in KNOWN_UNKNOWNS.md — **all 30 now resolved**
 
 ---
 
