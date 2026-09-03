@@ -1337,7 +1337,23 @@ Count existing gates and dry-run a prototype assertion over all of them. Draft t
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — there are 60 gates, not ~30, and 59 would fail; but added-only scoping makes it a no-op
+
+**Verified by:** Sprint 39 Prep Task 11 · **Date:** 2026-09-02 · **Measured at:** `00f7a105`
+
+**Q1 — the assumption's own numbers are wrong.** Dry-run over the repo: **60** docs carry a `## Phase 0: Acceptance Gate`, not "~30", and **59 of 60 have no Layer field** — the sole exception is `ISSUE_1714`, authored during this prep. A hard assertion breaks a **required CI status check** on every PR that touches an old gate doc.
+
+**Q2 — "new" is mechanically determinable, and needs no heuristic.** `.github/workflows/phase0-gate.yml` already collects the PR's files with `github.rest.pulls.listFiles`, whose response carries a **`status`** field (`added`/`modified`/`removed`/`renamed`). It currently writes `f.filename` alone; writing `f.status + "\t" + f.filename` gives the checker the distinction. **Scoped to `added`, the assertion fails 0 of 60** — measured, not assumed.
+
+**Q3 — the vocabulary is `parser · IR · AD · KKT · emit · pipeline`, and compound values are REQUIRED.** All four Sprint-38 defects map: tricp → `IR` (a pre-differentiation pass), elec → **`AD + KKT`** (two defects, two files), dyncge → `KKT`, twocge → **`KKT + emit`**. Two of four span layers, so a single-valued field would force a false choice. `pipeline` covers tricp's shape — a pass wired into `cli.py` rather than living inside a stage.
+
+**Q4 — no interaction with the existing structural rule.** The four canonical `###` subsections must sit directly under the `##` header, and any intervening `##` terminates the section. The Layer line is a `**bold**` field in the *header block*, before the `##` — `ISSUE_1714` places it at line 8 with the gate at line 26 and passes today.
+
+**Q5 — no warning phase needed**, because the added-only scoping is already a measured no-op on every existing doc.
+
+**Evidence:** `PROCESS_INFRA_SPEC.md` §8a; dry-run in `/tmp` reproduced from the spec.
+
+**Decision:** Implementable as a hard assertion, **scoped to added docs**. The assumption is refuted on its count and on "without invalidating"; the goal is achievable by scoping rather than by backfilling 59 docs.
 
 ---
 
@@ -1369,7 +1385,30 @@ Retro-apply the drafted check to all four Sprint-38 P8 gates and record whether 
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — and it discriminates: 2 of 4 gates already did it voluntarily, 1 would have been caught
+
+**Verified by:** Sprint 39 Prep Task 11 · **Date:** 2026-09-02 · **Measured at:** `00f7a105`
+
+**Q3/Q4 — retro-applied to all four Sprint-38 P8 gates.** The test is explicit: *fired on all four is too broad, fired on none is useless.* As a required template field it is **answered** on all four, so the discriminating measure is whether it would have **changed the outcome**:
+
+| gate | what the doc says about existing mechanisms | outcome |
+|---|---|---|
+| **tricp** #1062 | *"the emitter **already has `__`-aliasing machinery** … the fix applies existing capability"* | already answered **voluntarily** — no change |
+| **twocge** #1331 | *"New block **analogous to the #1053 multiplier-widening block**"* | already answered **voluntarily** — no change |
+| **elec** #1325 | silent; two independent defects, no analogous mechanism | fires, answered "none" — no change |
+| **dyncge** #1693 | asserted *"**new logic** rather than a widened condition-lift"* | **⚠ CAUGHT** — section 2c had done exactly that test since #942, for inequalities |
+
+**Two of four had already done this unprompted.** That is the strongest evidence the question is natural rather than bureaucratic — it makes an existing habit non-optional rather than inventing work. **It changes the outcome on exactly one**, the case it exists for. **Q4 answered: no false friction on tricp**, whose gate answered it and still correctly needed a new IR pass.
+
+**Q1/Q2/Q5 — the form, and where it lives.** The **Phase-0 template**, not CONTRIBUTING and not the PR checklist: it must be answered when the gate is *authored*, because by PR time the implementation choice is already made. A required line, with **"none" valid**:
+
+> **Nearest existing mechanism:** `<file:symbol>` — `<the population it currently serves>` — **reused** / **not applicable because …**
+
+Naming a *file and symbol* plus *its current population* is what cannot be answered vacuously — noticing that section 2c served **inequalities** is precisely the step dyncge's gate skipped.
+
+**Evidence:** `PROCESS_INFRA_SPEC.md` §8b, quoting each gate verbatim (all four quotes verified present in their docs).
+
+**Decision:** Specified and retro-validated. The assumption holds.
 
 ---
 
@@ -1401,7 +1440,32 @@ Draft preconditions for Sprint 39's pre-registered close rules and check each ag
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — expressible, but only under constraints, and one of Sprint 39's two rules needs no precondition
+
+**Verified by:** Sprint 39 Prep Task 11 · **Date:** 2026-09-02 · **Measured at:** `00f7a105`
+
+**Q1 — the form:** each pre-registered close rule carries **Rule / Precondition / If the precondition fails**, and a failed precondition makes the rule **VOID, not unmet**, with the closeout naming which precondition failed.
+
+**Q5 — the escape-hatch risk is real, so the assumption "each rule can carry a precondition" holds only under three constraints:**
+
+1. **A precondition may reference only a track's START state, never its outcome.** "P1 landed" is forbidden; "P1 was started" is allowed. **An outcome-conditioned rule excuses its own failure.**
+2. **Preconditions are fixed at pre-registration** and cannot be added or edited after Day 0. One invented at close is an excuse.
+3. **A voided rule is reported, not dropped.**
+
+**Q4 — applied to Sprint 39's two pre-registered rules:**
+
+| rule | precondition | escape-hatch check |
+|---|---|---|
+| `path_solve_terminated` **maintains 0** | **NONE** — a corpus-wide invariant, independent of every track | ✅ cannot be voided, therefore cannot be gamed |
+| **Match may fall to 95**, reported as a correction | **P7 started** | ✅ references a *start*, not an outcome. If P7 is never started, Match stays 96 and the rule is correctly void |
+
+**⚠ The asymmetry is the evidence.** One of the two rules takes **no** precondition. If every rule needed one, the mechanism would be an escape hatch by construction — that exactly one does is what shows it is not.
+
+**Q2 — not mechanical; this is prose discipline** with a structured form. **Q3 — it would have documented Sprint 38's confusion rather than prevented it**: close rule #2 was sound, P1 was REPLAN'd on Day 1, and the rule went unmet for reasons unconnected to the close. A precondition would have made it *void* and the closeout would have said so.
+
+**Evidence:** `PROCESS_INFRA_SPEC.md` §8c.
+
+**Decision:** Adopt, with the three constraints stated as part of the rule rather than as guidance.
 
 ---
 
@@ -1559,6 +1623,22 @@ Sprint 39 execution team
 
 **Decision:** Population confirmed for Task 11's catalog refresh. `robot`'s missing owner is routed there.
 
+#### Task 11 addendum — the rule applied, and ⚠ the target is not supportable
+
+**Verified by:** Sprint 39 Prep Task 11 · **Date:** 2026-09-02 · **Measured at:** `00f7a105`
+
+**Population reconfirmed exactly: 31**, 30 with an owning issue, `robot` without. **⚠ Phase-0 gates are now 8 of 31, up from Sprint 38's 0 of 5** — four of the eight were authored during this prep, which is the P7-gates-P8 sequencing paying off a sprint later.
+
+**Q3 — applying the rule strictly yields TWO qualifiers, and neither is available to P10.** `lnts` (fingerprint runtime-confirmed in Task 5; fix surface `emit_gams.py:3121`, which Task 5 corrected from the banked one) is **P3's deep track**. `mine` (MS-5 after 10,662 iterations, re-measured in Task 9; surface named in #1443) is the only unclaimed qualifier — and #1443 is **one of the two consultation threads**, so local work before the 2026-09-09 gate risks duplicating a reply. **P10's independent pool is effectively one model, and that one is date-entangled.** The "≥2 backlog models recovered or re-triaged" deliverable is **not supportable from the backlog as it stands.**
+
+**Q4 — Task 7's survey does NOT move any candidate into the shortlist, and the reason matters.** Four of the 31 are positional-domain instances (`dinam`, `egypt`, `shale`, `turkpow`), so Task 7 gives each a *named fix surface* — but **the defect it names is not the one blocking the model**: `dinam`/`turkpow` fail to compile, `egypt`/`shale` never reach PATH. Fixing the P2 violation leaves all four where they are. What it does establish is that these are **latent second defects in models we already cannot solve**, which is why the Task-9 cohort procedure now gates on it.
+
+**Q5 — what absorbs P10's 12–16 h: land Task 7's P2 property as a gate and work its six flagged models.** It meets P10's own criteria better than the sweep does — the fingerprints are **in committed goldens today** (9 violations, reproducible in under 3 s with no GAMS), the fix surfaces are catalogued and ranked by measured blast radius, the scope is a fixed list rather than a diagnosis, and it is **0-bucket by design**. It also has a fail-before the sweep lacks: land the property, watch it fail on six, fix, watch it pass.
+
+**Evidence:** `BACKLOG_CANDIDATE_CATALOG.md` §1–§5.
+
+**Decision:** The assumption is **refuted for P10's purposes**. Route P10 to the P2-gate work; keep `mine` banked until the consultation gate passes.
+
 ---
 
 ## Unknown 10.2: Is Sprint 38's Unknown 1.5 measurable this sprint?
@@ -1589,7 +1669,25 @@ Confirm #1668's state and re-read the Day-1 measurement. Check whether Sprint 38
 Sprint 39 execution team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG on its premise — #1668 is OPEN, not closed; but the disposition is confirmed: CLOSE AS UNREACHABLE
+
+**Verified by:** Sprint 39 Prep Task 11 · **Date:** 2026-09-02 · **Measured at:** `00f7a105`
+
+**Q1 — ⚠ the assumption's premise is inaccurate, and the distinction matters.** It states *"P1 ganges was closed as unreachable at the rebind site"*. **GitHub #1668 is OPEN.** What was closed is its two *investigation directions*, in Sprint 38's Unknowns 1.2 and 1.3: **direction 1 is a measured no-op** (265 fires, zero residual; `prolog` drifts −3 bytes in the full sweep) and **direction 2 is not expressible** (ganges and `prolog` are *locally indistinguishable* at the site). The issue tracker was simply never updated to match.
+
+**Q2 — nothing has changed the rebind site's information content. Measured: `git log 9ab2c0c3..HEAD -- src/` returns ZERO commits.** Not just the parser and preprocessor — **no `src/` file has changed at all since Sprint 38 closed.** The site is byte-identical.
+
+**Q3 — yes: measuring an unpatched tree would restate the four models' current failure rather than answer the question.** All four are still `path_syntax_error` (`dinam`, `indus`, `turkpow`, `clearlak`), exactly as at S38 close.
+
+**Q4 — no alternative route.** The question is *"does a general `$149` fix unblock the `$149` half"*; answering it requires a `$149` fix in the tree, and the only two routes to one are the closed directions.
+
+**Q5 — CLOSE AS UNREACHABLE.** This is the third carry of a question whose blocking precondition has not moved and cannot be moved from inside this sprint. Carrying it again is the **phantom-upside pattern** the license-gated classification exists to prevent: it books a possibility that no scheduled work can realise.
+
+**Recommended follow-up, outside this task:** #1668 should be closed on GitHub with its two directions' measurements recorded, so the tracker stops implying live work.
+
+**Evidence:** `gh issue view 1668`; `git log 9ab2c0c3..HEAD -- src/` (0 commits); DB outcome categories for the four models.
+
+**Decision:** **Closed as unreachable.** Do not carry to Sprint 40.
 
 ---
 
