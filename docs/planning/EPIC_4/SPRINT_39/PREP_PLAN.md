@@ -53,7 +53,7 @@ This prep plan front-loads the work that would otherwise be discovered mid-sprin
 | 9 | ✅ Consultation Reply-Integration & Follow-Up Package (P6) | Medium | 2-3 hours | Task 1 | P6 — both branches prepared before the date gate |
 | 10 | ✅ Epic-5 Design Scoping: Numéraire Rule & Degeneracy Detection (P9) | Medium | 3-4 hours | Tasks 1, 2 | P9 — design only, no camcge experiment |
 | 11 | ✅ Emit-Backlog Catalog Refresh & Process-Infrastructure Spec (P8, P10) | Medium | 3-4 hours | Tasks 1, 2, 7 | P8 infrastructure + P10 slack absorber |
-| 12 | Plan Sprint 39 Detailed Schedule | Critical | 3-4 hours | All tasks (1–11) | Day-by-day schedule + REPLAN exits + budget |
+| 12 | ✅ Plan Sprint 39 Detailed Schedule | Critical | 3-4 hours | All tasks (1–11) | Day-by-day schedule + REPLAN exits + budget |
 
 **Total Estimated Time:** ~40–55 hours (~5–7 working days)
 
@@ -1560,9 +1560,10 @@ test -f docs/planning/EPIC_4/SPRINT_39/PROCESS_INFRA_SPEC.md && echo "✅ infra 
 
 ## Task 12: Plan Sprint 39 Detailed Schedule
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-09-02) — ⇒ **ALL 12 PREP TASKS COMPLETE; GO for Day 0**
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
+**Time Spent:** 3.5 hours
 **Deadline:** Before Sprint 39 Day 1
 **Owner:** Development team
 **Dependencies:** All tasks (1–11)
@@ -1610,11 +1611,28 @@ This task also owns the close rules — and Sprint 38 learned the hard way that 
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_39/PLAN.md` — 14-day schedule with per-day budgets, REPLAN exits, checkpoints, close rules with preconditions, risk register, acceptance criteria, unknown routing, and the prep refutation summary
+- **NEW** `docs/planning/EPIC_4/SPRINT_39/prompts/PLAN_PROMPTS.md` — one prompt per day, each naming its branch, deliverable and gate
+- `KNOWN_UNKNOWNS.md` — no new verdicts; the resolve-or-route check is recorded in `PLAN.md` §8
+- `CHANGELOG.md` — Sprint 39 Prep entry
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — GO for Day 0, with two owner decisions outstanding.**
+
+**The schedule validates rather than asserts.** Built and checked by script: **14 days, 140 h against the 168 h cap, heaviest day 11 h**, every priority inside its PROJECT_PLAN estimate except P9 — which is **deliberately under** (2 h against 8–12) because prep Task 10 delivered the Epic-5 design in full. The freed ~8 h is **not reallocated**; it is the sprint's slack.
+
+**Every fixed point is honoured, and one is a calendar fact rather than a preference.** Day 0 is 2026-09-03 (the day after prep completes), days run consecutively as prep did, and **Day 6 lands exactly on 2026-09-09 — P6's immovable date gate**. Verified by computation, not by counting.
+
+**⚠ Two owner decisions are pre-registered as Day-0 work, not discovered later.** P1's floor answer (73/74/75) blocks the baseline, and **P4's branch** — Task 6 refuted the premise behind its 20–28 h, so three branches are written out with their budget destinations: **A** keep as scoped (26 h), **B** re-scope to diagnosis + a gate (11 h, freeing 15 h), **C** defer (freeing 26 h). Day 7 opens on **A** by default and REPLANs to **B** at the first 300 s timeout.
+
+**Six close rules, each with a precondition, and three take none** (`path_solve_terminated` maintains 0; the three-gate firm-landing rule; every figure derived at execution time). **That asymmetry is the evidence the mechanism is not an escape hatch** — if every rule needed a precondition it would be gameable by construction. **C4 is the sharp one:** if P1 is not decided, **the sprint cannot report a floor at all** — escalate, do not improvise.
+
+**⚠ `Match ≥ 96` is superseded.** Task 8 established that P7's correction takes Match to **95** legitimately, so the criterion is now **≥ 95, and exactly 95 if P7 lands**, reported with its reason in the same sentence. A criterion demanding ≥ 96 would fail a correct correction.
+
+**All 30 unknowns were resolved in prep, so none needs routing to be *answered*** — §8 routes what each resolution *feeds* instead. **10.2 is closed, not routed**: `git log 9ab2c0c3..HEAD -- src/` returns zero commits, so its blocking precondition has not moved.
+
+**The prep phase refuted 19 of 30 assumptions — 63 %, against Sprint 38's 32 %.** §9 records the nine that changed the sprint rather than a figure, plus three that cost nothing but would each have cost a day.
 
 ### Verification
 
@@ -1632,20 +1650,12 @@ fi
 echo "✅ PLAN.md"
 test -f docs/planning/EPIC_4/SPRINT_39/prompts/PLAN_PROMPTS.md && echo "✅ prompts"
 
-# 14 days covered (Day 0 + Days 1-13)
-grep -cE "^### Day [0-9]+" "$PLAN"
-
-# Budget check: no day over 12h, total under 168
-PLAN="$PLAN" python3 - <<'PY'
-import re, os
-s=open(os.environ['PLAN']).read()
-hrs=[int(x) for x in re.findall(r'^\|\s*\d+\s*\|.*\|\s*(\d+)\s*\|', s, re.M)]
-if hrs:
-    print(f"days: {len(hrs)} | total: {sum(hrs)}h | max/day: {max(hrs)}h "
-          f"| under cap: {sum(hrs)<=168 and max(hrs)<=12}")
-else:
-    print("no day-budget table found — add one")
-PY
+# ⚠ The day/budget checks that used to live inline here greped `^### Day [0-9]+`
+# headings and `^\|\s*\d+\s*\|` rows — NEITHER of which PLAN.md uses. They found
+# zero days and zero budget rows, i.e. verified nothing while looking like a
+# verification (PR #1723 review). Replaced by a committed checker that lives
+# beside the document, so it cannot drift from it unnoticed.
+.venv/bin/python docs/planning/EPIC_4/SPRINT_39/artifacts/validate_plan.py
 
 # Every priority has a REPLAN exit
 grep -c "REPLAN" "$PLAN"
@@ -1667,15 +1677,15 @@ grep -c "Unknown [0-9]" "$PLAN"
 
 ### Acceptance Criteria
 
-- [ ] 14 days scheduled (Day 0 + Days 1–13) with per-day budgets
-- [ ] No day exceeds 12 h; total ≤ 168 h and consistent with the plan's 116–160 h estimate
-- [ ] P1 on Day 0; P6 respecting the 2026-09-09 date gate; P7 after P1
-- [ ] A REPLAN exit for every track, naming the triggering evidence and the budget's destination
-- [ ] Close rules pre-registered, **each with its precondition stated**
-- [ ] Checkpoints at Days 5 and 10; final retest Day 13 under ≥ 3 `PYTHONHASHSEED`
-- [ ] Every unresolved Known Unknown routed to a specific day
-- [ ] Day prompts written, each naming its branch, deliverable and gate
-- [ ] All 30 unknowns are either resolved in prep or routed to a specific sprint day
+- [x] 14 days scheduled (Day 0 + Days 1–13) with per-day budgets — **built and validated by script**, not asserted
+- [x] No day exceeds 12 h; total ≤ 168 h and consistent with the estimate — **140 h, heaviest day 11 h**; every priority inside its estimate except P9, which is **deliberately under** because prep delivered its design
+- [x] P1 on Day 0; P6 respecting the 2026-09-09 date gate; P7 after P1 — **Day 6 computes to exactly 2026-09-09**; P7 is Days 10–11, and runs **after Checkpoint 2** so the checkpoint does not diff against a changed recording path
+- [x] A REPLAN exit for every track, naming the triggering evidence and the budget's destination — P2 (3 triggers), P3 (2), P4 (**3 branches** plus a mid-track exit), P6 (3 reply shapes), P7 (2)
+- [x] Close rules pre-registered, **each with its precondition stated** — six rules; **three take no precondition**, which is the evidence the mechanism is not an escape hatch
+- [x] Checkpoints at Days 5 and 10; final retest Day 13 under ≥ 3 `PYTHONHASHSEED` — both checkpoints re-anchored to **`9ab2c0c3`**
+- [x] Every unresolved Known Unknown routed to a specific day — **none is unresolved**; §8 routes what each resolution feeds, and records 10.2 as **closed, not routed**
+- [x] Day prompts written, each naming its branch, deliverable and gate
+- [x] All 30 unknowns are either resolved in prep or routed to a specific sprint day — **30 resolved, 0 routed-unanswered**; check recorded in `PLAN.md` §8
 
 ---
 
@@ -1712,13 +1722,13 @@ Task 1 (Known Unknowns)
 
 ### Success Criteria for the Prep Phase
 
-- [ ] **Every Critical/High Known Unknown is resolved or explicitly deferred with a reason** — a deferred unknown carries the day that closes it
-- [ ] **Every figure Sprint 39's plan quotes has been re-derived on current `main`**, or its discrepancy recorded and routed
-- [ ] **The floor decision is a package an owner can answer in one sitting** — evidence, counter-argument, both consequences, both edits
-- [ ] **All three untraced tracks (P2, P3, P4) have a named layer and a Phase-0 gate** before Day 1
-- [ ] **No prep task ran a banned experiment** — camcge's variants in particular
-- [ ] **The schedule fits**: ≤ 12 h/day, ≤ 168 h total, with a REPLAN exit per track and close rules carrying their preconditions
-- [ ] **Prep found at least one wrong premise.** Sprint 38's prep refuted 6 of 28 assumptions outright and partially refuted 3 more; a prep phase that confirms everything has probably not looked hard enough
+- [x] **Every Critical/High Known Unknown is resolved or explicitly deferred with a reason** — **all 30 resolved**, none deferred (11 ✅ · 11 ❌ · 8 🔶)
+- [x] **Every figure Sprint 39's plan quotes has been re-derived on current `main`**, or its discrepancy recorded and routed — Task 2 re-derived the baseline; each later task re-derived at its own commit, and `PLAN.md`'s baseline is checked against a live `kpi_block.py` call
+- [x] **The floor decision is a package an owner can answer in one sitting** — `FLOOR_DECISION_BRIEF.md`: evidence, the refuted counter-argument, all three consequences, and the exact edit each answer implies
+- [x] **All three untraced tracks (P2, P3, P4) have a named layer and a Phase-0 gate** before Day 1 — P2 `ISSUE_1714` (KKT/stationarity), P3 `ISSUE_1694` (emit, **surface corrected** from the banked one), P4 `ISSUE_1385` (⚠ layer named but its **cost premise refuted** — three branches pre-registered)
+- [x] **No prep task ran a banned experiment** — camcge's variants in particular. Task 10 is analysis over the IR only, and the one measurement that would have helped (a rank check needing the numeric Jacobian) is **recorded as out of scope** rather than taken
+- [x] **The schedule fits**: ≤ 12 h/day, ≤ 168 h total, with a REPLAN exit per track and close rules carrying their preconditions — **140 h, heaviest day 11 h**, validated by script
+- [x] **Prep found at least one wrong premise** — **19 of 30 refuted or partially refuted, 63 %**, against Sprint 38's 32 %. Nine changed the sprint rather than a figure (`PLAN.md` §9)
 
 ### What Would Make This Prep a Failure
 
