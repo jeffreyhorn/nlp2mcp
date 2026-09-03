@@ -63,7 +63,7 @@ TOTAL **140 h** against a **168 h** cap; heaviest day **11 h**.
 | **P6 date-gated 2026-09-09** | cannot be pulled earlier; the consultation was sent 2026-08-26 | **Day 6 = 2026-09-09** ✅ |
 | **P7 after P1** | it changes how the pipeline *records* solves; the baseline must be settled first | Days 10–11 |
 | **P7 after Checkpoint 2** | the checkpoint reads the DB that P7 modifies — running it after would compare against a changed recording path | CK2 Day 10 **before** P7 starts |
-| **P4 is the only KPI mover** | +1 Translate → 136, and the largest single cost | Days 7–9 |
+| **P4 is the only track that can move a KPI UPWARD** | **+1 Translate → 136**, and the largest single cost. ⚠ It is *not* the only track that moves a KPI at all — **P7 moves Match 96 → 95**, but as a **correction** (C2), not a gain. The distinction is why C6 and C2 are separate rules | Days 7–9 |
 | checkpoints | Day 5 and Day 10 | both `--resolve-changed --since-commit 9ab2c0c3` |
 | final retest | ≥3 `PYTHONHASHSEED`, byte-identical | Day 13 |
 

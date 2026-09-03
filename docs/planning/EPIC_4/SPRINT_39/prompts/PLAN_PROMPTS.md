@@ -60,7 +60,14 @@ Branch `planning/sprint39-day4-lnts`.
 
 **⚠ `cesam` must NOT be batched with lnts.** Same MS-4-at-iteration-0 signature, **0 `_fx_` equations** — a shared signature is not a shared mechanism.
 
-**Day 5 ends with Checkpoint 1:** `--resolve-changed --since-commit 9ab2c0c3`. **NO-GO on any `backward` or `missing` row.**
+**Day 5 ends with Checkpoint 1:**
+
+```bash
+.venv/bin/python scripts/gamslib/run_full_test.py \
+  --resolve-changed --since-commit 9ab2c0c3 --min-scope <n>
+```
+
+**NO-GO on any `backward` or `missing` row.** It never persists the DB. `--min-scope` is asserted on **discovery**, so set `<n>` to the number of changed goldens you expect — a checkpoint that silently selects zero models passes and proves nothing.
 
 ## Day 6 (2026-09-09) — P6: the date gate · 6 h · + P8 8c/8d · 4 h
 
@@ -95,6 +102,13 @@ Branch `planning/sprint39-day7-sarf`.
 Branch `planning/sprint39-day10-presolve`.
 
 **⚠ Checkpoint 2 runs FIRST, before P7 changes the recording path.** Running it after would diff against a changed path.
+
+```bash
+.venv/bin/python scripts/gamslib/run_full_test.py \
+  --resolve-changed --since-commit 9ab2c0c3 --min-scope <n>
+```
+
+Same rule: **NO-GO on any `backward` or `missing` row**, `--min-scope` asserted on discovery.
 
 `PRESOLVE_RECORD_REMEDY.md`: **A and B together at `run_full_test.py:936`** — the Day-10 note's `~954` is one of three writes in that branch and the wrong place to gate. **A is a prerequisite for B's durability**; B alone gets overwritten by the next re-solve.
 
