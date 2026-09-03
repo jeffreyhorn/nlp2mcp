@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 39 Execution
 
-- **Day 0 (2026-09-03) — P1: the genuine floor is re-baselined 73 → 75, and P4 takes branch B.** New: `docs/planning/EPIC_4/SPRINT_39/SPRINT_LOG.md`. **Docs/DB only** — no `*.py` changed, so the quality gate is N/A. `make check-doc-figures` clean; `floor_tracker.py` exit 0; `validate_plan.py` → PLAN VALIDATES.
+- **Day 0 (2026-09-03) — P1: the genuine floor is re-baselined 73 → 75, and P4 takes branch B.** New: `docs/planning/EPIC_4/SPRINT_39/SPRINT_LOG.md`. **No production code changed** — `src/` and `tests/` are untouched — but the PR does modify `*.py` under `docs/` (`artifacts/validate_plan.py`, extended during review), so the quality gate was **run rather than waived**: typecheck / format / lint clean, `make test` 5301 passed / 10 skipped / 1 xfailed. `make check-doc-figures` clean; `floor_tracker.py` exit 0; `validate_plan.py` → PLAN VALIDATES.
 
 - **✅ FLOOR DECISION: 75** (owner, 2026-09-03), closing a question open since Sprint-38 close. Both `twocge` and `elec` fail the written definition's *methodology* test — "cold emit byte-identical to pre-fix" — so both owe provenance entries. `data/floor_provenance.json` now carries them with **`expected_floor` 75**, and `floor_tracker.py` agrees (it exits non-zero on divergence). **Sprint 39 opens at floor 75; "no floor regression" means ≥ 75.** Sprint 38's close record re-reads **73 → 75 (+2)**.
 
@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 39 Prep
 
-- **Prep Task 12 COMPLETE (2026-09-02) — the Sprint-39 schedule. ⇒ ALL 12 PREP TASKS COMPLETE; GO for Day 0.** New: `docs/planning/EPIC_4/SPRINT_39/PLAN.md` and `docs/planning/EPIC_4/SPRINT_39/prompts/PLAN_PROMPTS.md`. Docs only — no `*.py` changed, so the quality gate is N/A.
+- **Prep Task 12 COMPLETE (2026-09-02) — the Sprint-39 schedule. ⇒ ALL 12 PREP TASKS COMPLETE; GO for Day 0.** New: `docs/planning/EPIC_4/SPRINT_39/PLAN.md`, `docs/planning/EPIC_4/SPRINT_39/prompts/PLAN_PROMPTS.md` and `docs/planning/EPIC_4/SPRINT_39/artifacts/validate_plan.py`. **No production code changed** — `src/` and `tests/` are untouched — but the validator is `*.py` under `docs/`, so the quality gate was **run rather than waived**. *(Corrected 2026-09-03: this entry originally read "Docs only — no `*.py` changed". That was accurate at the task commit `7306d174` and was invalidated by review commit `8cbce58a`, which added the validator. The claim aged out; the entry was never re-read against the PR's final file list.)*
 
 - **The schedule validates rather than asserts.** Built and checked by script: **14 days, 140 h against the 168 h cap, heaviest day 11 h.** Every priority sits inside its PROJECT_PLAN estimate except **P9 (2 h against 8–12)**, which is **deliberately under** because prep Task 10 delivered the Epic-5 design in full — what remains is recording it. The freed ~8 h is **not reallocated**; the 28 h of headroom under the cap is the sprint's slack.
 

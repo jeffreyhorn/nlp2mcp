@@ -7,7 +7,7 @@ Plan: `PLAN.md` · prompts: `prompts/PLAN_PROMPTS.md`
 
 ## Day 0 — 2026-09-03 · P1: the floor-classification decision · 6 h
 
-**Branch:** `planning/sprint39-day0-floor` · **Measured at:** `388082b0` · **Docs/DB only — no `*.py` changed, quality gate N/A**
+**Branch:** `planning/sprint39-day0-floor` · **Measured at:** `388082b0` · **No production code changed (`src/`, `tests/` untouched); `*.py` under `docs/` did change, so the quality gate was run — see below**
 
 ### Baseline, re-derived at execution time (close rule C5)
 
@@ -66,6 +66,7 @@ Days 7–8 become **diagnosis of the differentiation path plus a Phase-0 gate fo
 - `floor_tracker.py` → **75**, agreeing with the recorded decision, **exit 0**
 - `artifacts/validate_plan.py` → **PLAN VALIDATES** after the re-budget
 - `make check-doc-figures` → clean
-- Quality gate **N/A** — no `*.py` changed
+- Quality gate **RUN, not waived** — `src/` and `tests/` are untouched, but `artifacts/validate_plan.py` was extended during review, and it is `*.py`. typecheck / format / lint clean; `make test` **5301 passed / 10 skipped / 1 xfailed**.
+  - ⚠ This line originally read *"N/A — no `*.py` changed"*, which was **true when Day 0 was written and false by the time the PR merged** — the review rounds added the validator. The waiver test is now stated over `src/`/`tests/`, which a review round cannot invalidate. Same aging-out class as the banked-staleness findings: **a claim about a PR's contents must be re-read against the PR's final file list, not its first commit.**
 
 ---
