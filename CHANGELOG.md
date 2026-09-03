@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 39 Prep
 
-- **Prep Task 10 COMPLETE (2026-09-02) — both Epic-5 answers are negative, and the second changes the epic's architecture.** `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` extended with §6–§7; new `docs/planning/EPIC_5/artifacts/`. **No camcge experiment was run.** No production code changed and no `*.py` added to `src/`/`tests/`, so the quality gate is N/A.
+- **Prep Task 10 COMPLETE (2026-09-02) — both Epic-5 answers are negative, and the second changes the epic's architecture.** `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md` extended with §6–§7; new `docs/planning/EPIC_5/artifacts/`. **No camcge experiment was run.** **No production code changed** — `src/` and `tests/` are untouched — but the PR does add `*.py` under `docs/` (`artifacts/cge_scan.py`), so the quality gate was **run rather than waived**: typecheck / format / lint clean, `make test` 5301 passed / 10 skipped / 1 xfailed.
 
 - **The BANNED variants are now a banner directly under the document title**, met before §4a and before any temptation, with **B1's primal-correctness called out first** — it is the dangerous one precisely because a reader checking only the primal concludes it works. camcge #1330 remains Epic-5-scoped and out of Sprint-39 implementation.
 
