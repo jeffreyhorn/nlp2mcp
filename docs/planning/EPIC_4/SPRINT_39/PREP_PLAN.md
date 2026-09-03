@@ -1650,20 +1650,12 @@ fi
 echo "✅ PLAN.md"
 test -f docs/planning/EPIC_4/SPRINT_39/prompts/PLAN_PROMPTS.md && echo "✅ prompts"
 
-# 14 days covered (Day 0 + Days 1-13)
-grep -cE "^### Day [0-9]+" "$PLAN"
-
-# Budget check: no day over 12h, total under 168
-PLAN="$PLAN" python3 - <<'PY'
-import re, os
-s=open(os.environ['PLAN']).read()
-hrs=[int(x) for x in re.findall(r'^\|\s*\d+\s*\|.*\|\s*(\d+)\s*\|', s, re.M)]
-if hrs:
-    print(f"days: {len(hrs)} | total: {sum(hrs)}h | max/day: {max(hrs)}h "
-          f"| under cap: {sum(hrs)<=168 and max(hrs)<=12}")
-else:
-    print("no day-budget table found — add one")
-PY
+# ⚠ The day/budget checks that used to live inline here greped `^### Day [0-9]+`
+# headings and `^\|\s*\d+\s*\|` rows — NEITHER of which PLAN.md uses. They found
+# zero days and zero budget rows, i.e. verified nothing while looking like a
+# verification (PR #1723 review). Replaced by a committed checker that lives
+# beside the document, so it cannot drift from it unnoticed.
+.venv/bin/python docs/planning/EPIC_4/SPRINT_39/artifacts/validate_plan.py
 
 # Every priority has a REPLAN exit
 grep -c "REPLAN" "$PLAN"

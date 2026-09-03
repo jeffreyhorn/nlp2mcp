@@ -10,17 +10,19 @@
 
 ```bash
 make check-doc-figures
-git log -1 --format=%B | grep -c "Co-Authored-By\|Generated with"    # must print 0
+git log -1 --format=%B | grep -qE "Co-Authored-By|Generated with" \
+  && { echo "ATTRIBUTION IN COMMIT MESSAGE — amend before pushing"; exit 1; }
 ```
 
 *Before creating the PR* — write the body to a file first, so it can be checked before it is sent:
 
 ```bash
-grep -c "Co-Authored-By\|Generated with" /tmp/pr-body.md            # must print 0
+grep -qE "Co-Authored-By|Generated with" /tmp/pr-body.md \
+  && { echo "ATTRIBUTION IN PR BODY — edit before creating"; exit 1; }
 gh pr create --base main --head <branch> --title "<title>" --body-file /tmp/pr-body.md
 ```
 
-⚠ **`grep -c` exits 1 when the count is 0**, so do not chain either line with `&&` — read the printed number. A `&&` chain here fails on the *good* case.
+⚠ **`grep -qE`, not `grep -c`.** `grep -c` prints `0` but **exits 1** on no-match, so it is unsafe under `set -e` and inverts naively-chained logic — the *good* case looks like a failure. `-q` makes the good case exit 0, and `-E` uses portable ERE alternation (`|`) rather than GNU's BRE `\|`, which POSIX BRE reads as a **literal pipe** — the exact defect that let a Phase-0 gate pass on the bug it existed to catch (PR #1717).
 
 **⚠ Derive every figure at execution time.** Close rule **C5**. `kpi_block.py` carries its commit and warns on a dirty DB; `floor_tracker.py` reads the provenance file — the mechanical DB count yields **65** and looks authoritative.
 
@@ -126,7 +128,7 @@ Tests pinning the nine `ALREADY GUARDED` and seven `NEEDS A TEST` sites. **Do no
 
 **⚠ The four `NEEDS A GUARD` sites are candidates, not confirmed defects** — trace each before implementing.
 
-**P10:** work the six P2-flagged models (`dinam`, `egypt`, `gussrisk`, `nonsharp`, `shale`, `turkpow`). ⚠ Two are licence-gated, so their fix is verifiable by property and golden but **not by a solve**.
+**P10:** work the six P2-flagged models (`dinam`, `egypt`, `gussrisk`, `nonsharp`, `shale`, `turkpow`). ⚠ Two are license-gated, so their fix is verifiable by property and golden but **not by a solve**.
 
 ## Day 13 (2026-09-16) — retest and close · 10 h
 
