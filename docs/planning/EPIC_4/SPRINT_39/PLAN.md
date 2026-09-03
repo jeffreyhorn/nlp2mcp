@@ -4,6 +4,8 @@
 **Baseline:** Solve **111** · Match **96** (65 cold + 31 presolve) · Translate **135** · `path_solve_terminated` **0** · all-219 **99** · genuine floor **⚠ 73, 74 or 75 — P1 decides on Day 0**
 **DB checkpoint anchor:** `9ab2c0c3` (Sprint-38 close)
 
+> **⚠ "Weeks 43–44" are PROJECT-RELATIVE sprint weeks, not ISO weeks**, and the distinction matters because the two are seven weeks apart. ISO weeks 43–44 of 2026 are **2026-10-19 … 11-01**, but this sprint runs **2026-09-03 … 09-16**. The labels are consistent across the plan — Sprint 38 is "Weeks 41–42" and closed **2026-08-26**, which is ISO week **35**, so they cannot be ISO weeks. **Read the dates, not the week numbers**; the dates are what the 2026-09-09 gate is checked against.
+
 > **⚠ Three things about this sprint that the schedule is built around.**
 > **P1 is a decision, not work, and it blocks the sprint's own baseline** — nothing that reads the floor can be reported before Day 0 settles it.
 > **P4's premise was refuted in prep.** Its four call sites are **0.5 %** of wall-clock and one is dead code; the 20–28 h estimate assumed otherwise. **Three branches are pre-registered below — the owner picks one on Day 0**, not on Day 7.
@@ -15,7 +17,7 @@
 
 | Day | date | h | allocation |
 |---|---|---|---|
-| **0** | 2026-09-03 | 6 | **P1** 4h · **--** 2h |
+| **0** | 2026-09-03 | 6 | **P1** 4h · **baseline** 2h |
 | **1** | 2026-09-04 | 9 | **P2** 9h |
 | **2** | 2026-09-05 | 10 | **P2** 7h · **P8** 3h |
 | **3** | 2026-09-06 | 9 | **P2** 4h · **P8** 5h |
@@ -28,7 +30,7 @@
 | **10** | 2026-09-13 | 11 | **CK** 2h · **P7** 9h |
 | **11** | 2026-09-14 | 11 | **P7** 4h · **P5** 7h |
 | **12** | 2026-09-15 | 11 | **P5** 6h · **P10** 5h |
-| **13** | 2026-09-16 | 10 | **P10** 4h · **--** 6h |
+| **13** | 2026-09-16 | 10 | **P10** 4h · **retest + close** 6h |
 
 TOTAL **140 h** against a **168 h** cap; heaviest day **11 h**.
 
@@ -49,7 +51,7 @@ TOTAL **140 h** against a **168 h** cap; heaviest day **11 h**.
 | P9 | 2 h | 8–12 h | ⚠ **under** |
 | P10 | 14 h | 12–16 h | ✅ |
 | checkpoints | 4 h | — | |
-| Day-0 baseline + Day-13 close | 8 h | — | |
+| **baseline** (Day 0) + **retest + close** (Day 13) | 8 h | — | not a priority; the two non-priority blocks named in the schedule |
 
 **P9 is deliberately under.** Prep Task 10 delivered the Epic-5 design in full — both open questions are now *proposed*, with a false-positive analysis and a corpus survey. What remains is recording it in the Epic-5 handoff, which is 2 h, not 8–12. **The freed ~8 h is not reallocated**; it is the sprint's slack, and the 140 h total sits 28 h under the cap deliberately.
 
