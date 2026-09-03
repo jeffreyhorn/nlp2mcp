@@ -84,13 +84,27 @@ def main() -> int:
             check("**P6**" in alloc, f"{GATE} (Day {gate_rows[0]}) carries P6")
 
     # ⚠ PROSE MUST NOT CONTRADICT THE TABLE. Added after the Day-0 re-budget left
-    # three stale claims behind ("Days 7-9", "the 140 h total", "void under
-    # branch C") while the table itself was correct — the recurring failure mode
-    # is that a table edit does not re-read the sentences that depend on it
-    # (PR #1724 review).
+    # SEVEN lines of stale prose behind while the table itself was correct —
+    # five stale day-ranges, a stale hour total, and two claims C6's change had
+    # invalidated. Review flagged three of the seven; a manual grep found two
+    # more; these checks found the last two. (Count derived from the diff of
+    # 036c8158, not recalled.) The recurring failure mode is that a table edit
+    # does not re-read the sentences depending on it (PR #1724 review).
     if rows:
-        # 1. Any "<N> h total" / "TOTAL <N> h" in prose must be the real total.
-        for cited in {int(x) for x in re.findall(r"\*\*(\d{2,3}) h\*\* total|the \*\*?(\d{2,3}) h\*\*? total", plan) for x in ([x] if isinstance(x, str) else x) if x}:
+        # 1. Any "<N> h total" in prose must equal the schedule table's total.
+        #    Two spellings, each with ONE capture group and unpacked explicitly —
+        #    the earlier one-liner reused a loop variable and leant on
+        #    isinstance() to tell a tuple from a string (PR #1724 review).
+        #    Collected into one set first, so a phrase matching both spellings
+        #    is reported once rather than twice.
+        TOTAL_FORMS = (
+            re.compile(r"\*\*(\d{2,3}) h\*\* total"),        # "**130 h** total"
+            re.compile(r"the \*\*?(\d{2,3}) h\*\*? total"),   # "the 130 h total"
+        )
+        cited_totals = {
+            int(m.group(1)) for form in TOTAL_FORMS for m in form.finditer(plan)
+        }
+        for cited in sorted(cited_totals):
             check(cited == total, f"prose total {cited} h matches the table ({total} h)")
         # 2. A priority's cited day-range must match the days it occupies.
         #    ⚠ DELIBERATELY NARROW. A range can be written either side of its
