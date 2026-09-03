@@ -1,14 +1,14 @@
 # Sprint 39 Plan (Weeks 43–44) — Day-by-Day Schedule
 
 **Sprint 39 Prep Task 12** · **Planned at:** `e754ec90` · **2026-09-02**
-**Baseline:** Solve **111** · Match **96** (65 cold + 31 presolve) · Translate **135** · `path_solve_terminated` **0** · all-219 **99** · genuine floor **⚠ 73, 74 or 75 — P1 decides on Day 0**
+**Baseline:** Solve **111** · Match **96** (65 cold + 31 presolve) · Translate **135** · `path_solve_terminated` **0** · all-219 **99** · genuine floor **75** ✅ *(decided Day 0, 2026-09-03: 73 → 75, two provenance entries)*
 **DB checkpoint anchor:** `9ab2c0c3` (Sprint-38 close)
 
 > **⚠ "Weeks 43–44" are PROJECT-RELATIVE sprint weeks, not ISO weeks**, and the distinction matters because the two are seven weeks apart. ISO weeks 43–44 of 2026 are **2026-10-19 … 11-01**, but this sprint runs **2026-09-03 … 09-16**. The labels are consistent across the plan — Sprint 38 is "Weeks 41–42" and closed **2026-08-26**, which is ISO week **35**, so they cannot be ISO weeks. **Read the dates, not the week numbers**; the dates are what the 2026-09-09 gate is checked against.
 
-> **⚠ Three things about this sprint that the schedule is built around.**
-> **P1 is a decision, not work, and it blocks the sprint's own baseline** — nothing that reads the floor can be reported before Day 0 settles it.
-> **P4's premise was refuted in prep.** Its four call sites are **0.5 %** of wall-clock and one is dead code; the 20–28 h estimate assumed otherwise. **Three branches are pre-registered below — the owner picks one on Day 0**, not on Day 7.
+> **✅ BOTH DAY-0 DECISIONS TAKEN — 2026-09-03.**
+> **P1: the genuine floor is 75.** Both `twocge` and `elec` owe provenance entries; `data/floor_provenance.json` has them and `expected_floor` 75, with `floor_tracker.py` agreeing. **Sprint 39 opens at floor 75; "no floor regression" means ≥ 75.**
+> **P4: branch B — re-scope.** Days 7–8 become diagnosis plus a Phase-0 gate for the differentiation path; **no implementation this sprint**. P4 drops 26 h → 11 h and **15 h moves to P5 and P10**. ⚠ **C6 is therefore VOID** — Translate reports **135 flat**, with the re-scope named. The sprint has **no upward KPI mover**; its KPI movement is P7's Match **96 → 95 correction**.
 > **P6 cannot move.** The date gate is **2026-09-09**, which is **Day 6**.
 
 ---
@@ -24,15 +24,15 @@
 | **4** | 2026-09-07 | 10 | **P3** 10h |
 | **5** | 2026-09-08 | 10 | **P3** 8h · **CK** 2h |
 | **6** | 2026-09-09 | 10 | **P6** 6h · **P8** 4h |
-| **7** | 2026-09-10 | 11 | **P4** 11h |
-| **8** | 2026-09-11 | 11 | **P4** 11h |
-| **9** | 2026-09-12 | 11 | **P4** 4h · **P9** 2h · **P10** 5h |
+| **7** | 2026-09-10 | 6 | **P4** 6h |
+| **8** | 2026-09-11 | 10 | **P4** 5h · **P5** 5h |
+| **9** | 2026-09-12 | 10 | **P9** 2h · **P10** 5h · **P5** 3h |
 | **10** | 2026-09-13 | 11 | **CK** 2h · **P7** 9h |
-| **11** | 2026-09-14 | 11 | **P7** 4h · **P5** 7h |
-| **12** | 2026-09-15 | 11 | **P5** 6h · **P10** 5h |
-| **13** | 2026-09-16 | 10 | **P10** 4h · **retest + close** 6h |
+| **11** | 2026-09-14 | 9 | **P7** 4h · **P5** 5h |
+| **12** | 2026-09-15 | 9 | **P5** 3h · **P10** 6h |
+| **13** | 2026-09-16 | 11 | **P10** 5h · **retest + close** 6h |
 
-TOTAL **140 h** against a **168 h** cap; heaviest day **11 h**.
+TOTAL **130 h** against a **168 h** cap; heaviest day **11 h**. *(Re-budgeted on Day 0 for P4 branch B: P4 26 h → 11 h, with 5 h absorbed by P5 and P10 to the top of their estimates and the remaining **10 h returned to slack** — P5 and P10 cannot take more without exceeding their own bands.)*
 
 **Days are consecutive calendar days**, matching how prep ran (Tasks 1–12 spanned 2026-08-26 → 09-02 including weekends). Day 0 is the day after prep completes.
 
@@ -43,17 +43,17 @@ TOTAL **140 h** against a **168 h** cap; heaviest day **11 h**.
 | P1 | 4 h | 4–6 h | ✅ |
 | P2 | 20 h | 16–22 h | ✅ |
 | P3 | 18 h | 14–18 h | ✅ |
-| P4 | 26 h | 20–28 h | ✅ |
-| P5 | 13 h | 12–16 h | ✅ |
+| P4 | 11 h | 20–28 h | ⚠ **under** — branch B, by decision |
+| P5 | 16 h | 12–16 h | ✅ |
 | P6 | 6 h | 6–10 h | ✅ |
 | P7 | 13 h | 10–14 h | ✅ |
 | P8 | 12 h | 10–14 h | ✅ |
 | P9 | 2 h | 8–12 h | ⚠ **under** |
-| P10 | 14 h | 12–16 h | ✅ |
+| P10 | 16 h | 12–16 h | ✅ |
 | checkpoints | 4 h | — | |
 | **baseline** (Day 0) + **retest + close** (Day 13) | 8 h | — | not a priority; the two non-priority blocks named in the schedule |
 
-**P9 is deliberately under.** Prep Task 10 delivered the Epic-5 design in full — both open questions are now *proposed*, with a false-positive analysis and a corpus survey. What remains is recording it in the Epic-5 handoff, which is 2 h, not 8–12. **The freed ~8 h is not reallocated**; it is the sprint's slack, and the 140 h total sits 28 h under the cap deliberately.
+**P4 and P9 are both under, for different reasons.** P4 is under **by decision** — branch B re-scopes it to diagnosis plus a gate, with no implementation this sprint. **P9 is deliberately under.** Prep Task 10 delivered the Epic-5 design in full — both open questions are now *proposed*, with a false-positive analysis and a corpus survey. What remains is recording it in the Epic-5 handoff, which is 2 h, not 8–12. **The freed ~8 h is not reallocated**; it is the sprint's slack. With P4's branch-B re-budget on top, the **130 h** total sits **38 h** under the cap deliberately.
 
 ## 2. Fixed points
 
@@ -63,7 +63,7 @@ TOTAL **140 h** against a **168 h** cap; heaviest day **11 h**.
 | **P6 date-gated 2026-09-09** | cannot be pulled earlier; the consultation was sent 2026-08-26 | **Day 6 = 2026-09-09** ✅ |
 | **P7 after P1** | it changes how the pipeline *records* solves; the baseline must be settled first | Days 10–11 |
 | **P7 after Checkpoint 2** | the checkpoint reads the DB that P7 modifies — running it after would compare against a changed recording path | CK2 Day 10 **before** P7 starts |
-| **P4 is the only track that can move a KPI UPWARD** | **+1 Translate → 136**, and the largest single cost. ⚠ It is *not* the only track that moves a KPI at all — **P7 moves Match 96 → 95**, but as a **correction** (C2), not a gain. The distinction is why C6 and C2 are separate rules | Days 7–9 |
+| **⚠ NO track moves a KPI upward** *(as of the Day-0 branch-B decision)* | P4 **was** the only candidate (+1 Translate → 136); branch B does not implement, so **C6 is void and Translate reports 135 flat**. The sprint's only KPI movement is **P7's Match 96 → 95**, a **correction** (C2), not a gain — which is why C6 and C2 are separate rules | Days 7–8 |
 | checkpoints | Day 5 and Day 10 | both `--resolve-changed --since-commit 9ab2c0c3` |
 | final retest | ≥3 `PYTHONHASHSEED`, byte-identical | Day 13 |
 
@@ -75,7 +75,7 @@ TOTAL **140 h** against a **168 h** cap; heaviest day **11 h**.
 
 | trigger | evidence | budget goes to |
 |---|---|---|
-| the residual persists as **`CASE_C_OBJDEF`** | `kkt_residual.py` after the offsets are corrected | **P5** (Days 11–12 widen). dyncge becomes a *documented divergence* with `modelstat` asserted, **not** a Match — elec's verdict changed this way as the classifier improved, so treat it as live |
+| the residual persists as **`CASE_C_OBJDEF`** | `kkt_residual.py` after the offsets are corrected | **P5** (Days 8–12 widen). dyncge becomes a *documented divergence* with `modelstat` asserted, **not** a Match — elec's verdict changed this way as the classifier improved, so treat it as live |
 | the fix drifts **any model other than dyncge** | `make check-goldens` | hand back to **#1381 Pattern C Phase B**; do not patch here |
 | `stat_pq(HMN)`'s residual survives | `kkt_residual.py` per-row | a **second, independent defect** — bank it, do not widen Day 3 |
 
@@ -86,15 +86,19 @@ TOTAL **140 h** against a **168 h** cap; heaviest day **11 h**.
 | the probe **refutes** the two-mechanism collision | any of `LNTS_PROBE_DESIGN.md` §4's R1/R2/R3 | **P10** (Day 9/12/13). Bank the real mechanism; **do not widen the track** — the named fix would then address a mechanism that does not exist |
 | the fix at `emit_gams.py:3121` does not clear MS-4 | GAMS listing, iteration 0 | bank and stop. The surface was already corrected once in prep (the banked `:3060–61` **never runs**) |
 
-### P4 — sarf (Days 7–9) — ⚠ **three branches, owner picks on Day 0**
+### P4 — sarf (Days 7–8) — ✅ **branch B chosen on Day 0, 2026-09-03**
 
 Prep Task 6 measured the four call sites at **0.5 %** of wall-clock, found **`gradient.py:453` is dead code**, and put **70.9 %** in `compute_constraint_jacobian` — a path Sprint 38 Day 7 already changed.
 
-| branch | what Days 7–9 do | budget |
-|---|---|---|
-| **A — keep as scoped** | narrow the three live enumeration sites; accept a much smaller expected gain | 26 h as scheduled |
-| **B — re-scope onto the differentiation path** | Day 7 becomes diagnosis + a new Phase-0 gate for `_diff_sum`; implementation is **not** attempted this sprint | 11 h; **15 h → P5 and P10** |
-| **C — defer** | P4 does not run | 0 h; **26 h → P5, P10 and slack** |
+| branch | what it does | budget | |
+|---|---|---|---|
+| A — keep as scoped | narrow the three live enumeration sites | 26 h | not chosen |
+| **B — re-scope onto the differentiation path** | **Day 7 diagnosis of `compute_constraint_jacobian` / `_diff_sum` (70.9 %); Day 8 authors its Phase-0 gate. NO implementation this sprint.** | **11 h** | ✅ **CHOSEN** |
+| C — defer | P4 does not run | 0 h | not chosen |
+
+**Where the 15 h went, and where it did not.** P5 and P10 each rose to the **top of their own estimates** (13 → 16 h and 14 → 16 h), absorbing **5 h**. The remaining **10 h returned to slack** — neither can take more without exceeding its band, and inflating a track past its estimate to spend a budget is the thing P10 exists to prevent. Sprint total **140 h → 130 h**.
+
+**⚠ Two consequences, both pre-registered.** **C6 is VOID** — Translate reports **135 flat**, with the re-scope named; and the sprint therefore has **no upward KPI mover**. Its only KPI movement is P7's Match **96 → 95**, which is a *correction* (C2). A sprint that reports one downward figure and no upward one is the honest shape here, not an underperformance: P4's premise was refuted by measurement, and spending 26 h against a ≤17.4 % ceiling to protect an appearance is what the REPLAN exits exist to refuse.
 
 **Mid-track REPLAN (branches A and B alike):** if a candidate narrowing still exceeds **300 s**, **stop and re-attribute rather than iterating.** §2 of `SARF_CALLSITE_PLAN.md` shows the dominant path is one Day 7 already touched, so a second timeout is evidence the lever is in `compute_constraint_jacobian`/`_diff_sum` — different work, different estimate.
 
@@ -134,7 +138,7 @@ Format per Task 11's 8c spec. **A precondition may reference only a track's *sta
 | **C3** | **Three-gate firm landing:** a per-model Phase-0 gate **and** an *unqualified* leak-gate pass **and** in `main`. Two of three is not a landing | **none** — applies to every landing | cannot be voided |
 | **C4** | The floor is read from `data/floor_provenance.json` **on whichever baseline P1 settled**, never from a mechanical DB count | **P1 decided on Day 0** | ⚠ **the sprint cannot report a floor at all** — escalate, do not improvise |
 | **C5** | **Every figure is derived at execution time**, and any figure quoted in a doc carries the commit it was measured at | **none** | cannot be voided |
-| **C6** | **+1 Translate → 136** is reported only if sarf newly produces a golden | **P4 branch A or B started** | void under branch C; report Translate 135 flat, with the deferral named |
+| **C6** | **+1 Translate → 136** is reported only if sarf newly produces a golden | **P4 branch A started** | ⚠ **VOID — branch B was chosen on Day 0.** Report Translate **135 flat**, naming the re-scope. *(Precondition corrected on Day 0: it read "branch A or B", but B explicitly does not implement, so it can never produce a golden. Fixed before the sprint runs rather than discovered at close.)* |
 
 **⚠ C1 and C3 and C5 take no precondition, and that is the evidence the mechanism is not an escape hatch.** If every rule needed one, preconditions would be gameable by construction. Three of six do.
 
@@ -148,9 +152,9 @@ Format per Task 11's 8c spec. **A precondition may reference only a track's *sta
 |---|---|---|
 | Solve ≥ **111** | 111 → 111 | `kpi_block.py` |
 | **Match ≥ 95**, and exactly 95 if P7 lands | 96 → **95** | `kpi_block.py` — the fall is **C2**, reported with its reason in the same sentence |
-| Translate **135**, or **136** if P4 lands | 135 → **136** *(conditional)* | `kpi_block.py` — **C6**; void under P4 branch C |
+| Translate **135 flat** | 135 → **135** | `kpi_block.py` — **C6 is VOID** (branch B chosen Day 0; it does not implement, so no golden can be produced). Report the re-scope alongside |
 | `path_solve_terminated` **= 0** | 0 → 0 | `kpi_block.py` — **C1** |
-| genuine floor **≥ the P1 answer** | 73 → **73 / 74 / 75** | `floor_tracker.py` reading `data/floor_provenance.json` — **never** the mechanical DB count, which yields **65** and looks authoritative |
+| genuine floor **≥ 75** | 73 → **75** ✅ *decided* | `floor_tracker.py` reading `data/floor_provenance.json` — **never** the mechanical DB count, which yields **65** and looks authoritative |
 | determinism | — | Day 13, ×3 `PYTHONHASHSEED`, byte-identical |
 | leak gate | — | `make check-goldens` at full scope, **unqualified**; `--min-scope` asserted on discovery |
 
@@ -179,8 +183,8 @@ Format per Task 11's 8c spec. **A precondition may reference only a track's *sta
 | 1.1–1.3 | the floor decision package | **Day 0** (P1) |
 | 2.1–2.4 | dyncge located, #1714 filed with a gate | **Days 1–3** (P2) |
 | 3.1–3.3 | lnts confirmed at runtime, fix surface **corrected** | **Days 4–5** (P3) |
-| 4.1–4.4 | P4's premise **refuted**; three branches | **Day 0 decision**, then Days 7–9 |
-| 5.1–5.3 | 21-site catalog + two properties | **Days 11–12** (P5) and **Days 9/12/13** (P10) |
+| 4.1–4.4 | P4's premise **refuted**; three branches | **Day 0 — branch B chosen**, then Days 7–8 |
+| 5.1–5.3 | 21-site catalog + two properties | **Days 8–12** (P5) and **Days 9–13** (P10) |
 | 6.1–6.3 | both branches prepared; no reply as of 2026-09-02 | **Day 6** (P6) |
 | 7.1–7.3 | remedy A+B; Match 96→95 | **Days 10–11** (P7) |
 | 8.1–8.3 | 8a–8d specified with fail-befores | **Days 2, 3, 6** (P8) |

@@ -2,7 +2,32 @@
 
 **Written by** Prep Task 12 · **2026-09-02** · companion to `../PLAN.md`
 
-**Every day:** branch `planning/sprint39-dayN-<slug>` from `main` → work → **quality gate only if `*.py` changed** (`make typecheck && make format && make lint && make test`) → commit → push → PR → wait for review → reply to each comment on its own thread. **Docs/DB/golden-only PRs skip the gate.**
+**Every day:** branch `planning/sprint39-dayN-<slug>` from `main` → work → **quality gate if any `*.py` changed** (`make typecheck && make format && make lint && make test`) → commit → push → PR → wait for review → reply to each comment on its own thread. **Docs/DB/golden-only PRs skip the gate.**
+
+⚠ **The gate condition is `*.py` ANYWHERE, not just `src/` — and it must be re-evaluated on the PR's FINAL file list, not its first commit.** A review round that adds or edits a script (an `artifacts/*.py` validator, a probe) flips a correctly-waived PR into one that owes the gate, and any "docs only" line already written becomes false. This is the aging-out class: **the claim was true when written and false when merged.** It bit PRs #1723 and #1724 — three CHANGELOG/SPRINT_LOG lines asserting *"no `*.py` changed"* while the PR modified `artifacts/validate_plan.py`.
+
+**Two rules, both derived rather than recalled:**
+
+1. **Never write "no `*.py` changed" as a *waiver reason*.** State the waiver over the stable scope — *"`src/` and `tests/` untouched"* — which a review round adding a docs-side script cannot invalidate. If `*.py` did change anywhere, say the gate was **run rather than waived** and cite its actual result.
+2. **Re-derive the condition before every push, including review-round pushes:**
+
+```bash
+# Re-run before EVERY push on the branch, not just the first.
+PY=$(git diff main...HEAD --name-only | grep -c '\.py$') || true
+if [ "$PY" -gt 0 ]; then
+  echo "$PY .py file(s) changed — QUALITY GATE REQUIRED; and no doc line may say 'no *.py changed'"
+  git diff main...HEAD --name-only | grep '\.py$'
+  if git diff main...HEAD -- '*.md' | grep -qE 'no .\*\.py. changed|[Dd]ocs.only'; then
+    echo "  ^^ a changed doc line still claims docs-only — FIX IT"
+  fi
+else
+  echo "0 .py changed — gate may be waived"
+fi
+```
+
+*(`grep -c` exits 1 on zero matches, hence the `|| true`; see the `grep` traps below.)*
+
+⚠ **Run it AFTER committing, before pushing.** It reads `main...HEAD`, so uncommitted working-tree fixes are invisible to it — running it mid-edit reports the state you have just fixed and looks like a false positive. *(Observed while writing this block.)* The doc-line grep is deliberately broad and will also match a line that legitimately **quotes** the phrase in a correction note; read the hit before acting on it.
 
 **Every day — two checkpoints, because the PR body does not exist until the PR does.**
 

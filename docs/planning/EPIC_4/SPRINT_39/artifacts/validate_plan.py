@@ -83,6 +83,61 @@ def main() -> int:
             alloc = next(a for d, date, _, a in rows if date == GATE)
             check("**P6**" in alloc, f"{GATE} (Day {gate_rows[0]}) carries P6")
 
+    # ⚠ PROSE MUST NOT CONTRADICT THE TABLE. Added after the Day-0 re-budget left
+    # SEVEN lines of stale prose behind while the table itself was correct —
+    # five stale day-ranges, a stale hour total, and two claims C6's change had
+    # invalidated. Review flagged three of the seven; a manual grep found two
+    # more; these checks found the last two. (Count derived from the diff of
+    # 036c8158, not recalled.) The recurring failure mode is that a table edit
+    # does not re-read the sentences depending on it (PR #1724 review).
+    if rows:
+        # 1. Any "<N> h total" in prose must equal the schedule table's total.
+        #    Two spellings, each with ONE capture group and unpacked explicitly —
+        #    the earlier one-liner reused a loop variable and leant on
+        #    isinstance() to tell a tuple from a string (PR #1724 review).
+        #    Collected into one set first, so a phrase matching both spellings
+        #    is reported once rather than twice.
+        TOTAL_FORMS = (
+            re.compile(r"\*\*(\d{2,3}) h\*\* total"),        # "**130 h** total"
+            re.compile(r"the \*\*?(\d{2,3}) h\*\*? total"),   # "the 130 h total"
+        )
+        cited_totals = {
+            int(m.group(1)) for form in TOTAL_FORMS for m in form.finditer(plan)
+        }
+        for cited in sorted(cited_totals):
+            check(cited == total, f"prose total {cited} h matches the table ({total} h)")
+        # 2. A priority's cited day-range must match the days it occupies.
+        #    ⚠ DELIBERATELY NARROW. A range can be written either side of its
+        #    priority — "P4 — sarf (Days 7-8)" and "**Days 8-12** (P5)" — and
+        #    adjacent ranges defeat nearest-token attribution: in
+        #    "**Days 8-12** (P5) and **Days 9-13** (P10)" the P10 range is
+        #    textually closer to P5. Two unambiguous forms are checked and
+        #    everything else is SKIPPED. Under-covering is acceptable here;
+        #    mis-attributing is not, because a check that reports a false
+        #    failure gets deleted (PR #1724 review).
+        occupied = {}
+        for prio in {m for m in re.findall(r"\*\*(P\d+)\*\*", plan)}:
+            days = sorted(int(d) for d, _, _, alloc in rows if f"**{prio}**" in alloc)
+            if days:
+                occupied[prio] = (days[0], days[-1])
+        cited: set[tuple[str, int, int]] = set()
+        claimed: set[int] = set()          # offsets of ranges form (a) owns
+        # (a) trailing: "**Days 8-12** (P5)" — the parenthesised priority wins,
+        #     and claims that range so (b) cannot also reach across it.
+        for m in re.finditer(r"Days (\d+)[–-](\d+)\*{0,2}\s*\((P\d+)\)", plan):
+            cited.add((m.group(3), int(m.group(1)), int(m.group(2))))
+            claimed.add(m.start())
+        # (b) leading: "P4 — sarf (Days 7-8)" — nothing but punctuation between.
+        for m in re.finditer(r"\b(P\d+)\b[^|\n\d]{0,24}?(Days (\d+)[–-](\d+))", plan):
+            if m.start(2) in claimed:      # already owned by a trailing form
+                continue
+            cited.add((m.group(1), int(m.group(3)), int(m.group(4))))
+        for prio, a, b in sorted(cited):
+            if prio in occupied:
+                check((a, b) == occupied[prio],
+                      f"{prio}: cited range Days {a}-{b} matches its schedule rows "
+                      f"{occupied[prio][0]}-{occupied[prio][1]}")
+
     # Every close rule the acceptance table cites must be defined in §5.
     for rule in sorted(set(re.findall(r"\*\*(C\d)\*\*", plan))):
         check(bool(re.search(rf"^\| \*\*{rule}\*\* \|", plan, re.M)), f"{rule} is defined in the close-rule table")

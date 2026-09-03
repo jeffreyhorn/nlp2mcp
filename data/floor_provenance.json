@@ -24,8 +24,23 @@
     "decided_by": "owner",
     "note": "In-corpus only. The historical figure 76 credited three non_convex, OUT-OF-CORPUS models (ps2_f_s, ps2_s, ps3_s_gic) from the Sprint-31 +4; 76 - 3 = 73. The S31-S37 series was therefore overstated by 3, and Sprint 37's advance re-reads as 72 -> 73. Per-model records for the opaque 'S28 genuine 68' block were never kept and are NOT reconstructible -- only 14 of the 76 were ever attributable by name. Option (a) (in-corpus) was chosen over (b) (keep 76 with a documented scope) because the floor is reported in the same breath as Solve and Match, which are strictly in-corpus; a metric whose corpus differs silently from its neighbours is the more dangerous of the two states."
   },
-  "expected_floor": 73,
-  "entries": [],
+  "expected_floor": 75,
+  "entries": [
+    {
+      "model_id": "elec",
+      "limb": "presolve-match-genuine",
+      "since_sprint": 38,
+      "evidence": "cold emit changed at 82b91c94 (+3/-3): stationarity equations corrected \u2014 always-false ut(i,i) diagonal guard replaced by ut(i,j__), spurious outer sum removed. Was path_solve_terminated (solver_version: None, aborting before PATH); now model_optimal_presolve + match. Cold emit reaches MS-1 @ 244.624 vs NLP 243.8128, so the match arrives via the presolve warm start.",
+      "pr": "1704"
+    },
+    {
+      "model_id": "twocge",
+      "limb": "presolve-match-genuine",
+      "since_sprint": 38,
+      "evidence": "cold emit changed at 204f35ac (+10/-0): two nu_*.fx guard lines fixing multipliers for MCP-excluded instances. Was path_solve_terminated (solver_version: None, aborting before PATH); now model_optimal_presolve + match. Cold emit reaches MS-1 @ 55.508 vs NLP 56.7778, so the match arrives via the presolve warm start.",
+      "pr": "1703"
+    }
+  ],
   "_entry_schema": {
     "model_id": "the model that moved",
     "limb": "which partition it moved INTO (e.g. cold-match), so a later reader can tell a genuine cold match from a methodology one without re-deriving it",
