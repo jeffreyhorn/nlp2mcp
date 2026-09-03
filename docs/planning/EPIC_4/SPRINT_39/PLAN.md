@@ -108,8 +108,8 @@ Prep Task 6 measured the four call sites at **0.5 %** of wall-clock, found **`gr
 
 | trigger | response |
 |---|---|
-| Remedy A's attribution gate would reject a *non*-spurious row | `check_mcp_solve_attribution.py` over all 34 before landing | 
-| the back-fill breaks a consumer | `check_doc_figures`'s dangling fact goes 14 → 0; **the docs must move in the same PR** |
+| Remedy A's attribution gate would reject a *non*-spurious row | `check_mcp_solve_attribution.py` over all 34 before landing |
+| the back-fill breaks a consumer | `check_doc_figures.py`'s `dangling mcp_file_used rows` fact goes 14 → 0; **the docs must move in the same PR** |
 
 ## 4. Checkpoints and the final retest
 

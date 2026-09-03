@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 39 Prep
 
-- **Prep Task 12 COMPLETE (2026-09-02) — the Sprint-39 schedule. ⇒ ALL 12 PREP TASKS COMPLETE; GO for Day 0.** New: `docs/planning/EPIC_4/SPRINT_39/PLAN.md` and `prompts/PLAN_PROMPTS.md`. Docs only — no `*.py` changed, so the quality gate is N/A.
+- **Prep Task 12 COMPLETE (2026-09-02) — the Sprint-39 schedule. ⇒ ALL 12 PREP TASKS COMPLETE; GO for Day 0.** New: `docs/planning/EPIC_4/SPRINT_39/PLAN.md` and `docs/planning/EPIC_4/SPRINT_39/prompts/PLAN_PROMPTS.md`. Docs only — no `*.py` changed, so the quality gate is N/A.
 
 - **The schedule validates rather than asserts.** Built and checked by script: **14 days, 140 h against the 168 h cap, heaviest day 11 h.** Every priority sits inside its PROJECT_PLAN estimate except **P9 (2 h against 8–12)**, which is **deliberately under** because prep Task 10 delivered the Epic-5 design in full — what remains is recording it. The freed ~8 h is **not reallocated**; the 28 h of headroom under the cap is the sprint's slack.
 
