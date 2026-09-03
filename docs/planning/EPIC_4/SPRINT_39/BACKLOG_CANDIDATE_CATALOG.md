@@ -62,7 +62,7 @@
 
 **This does not move any of them into the shortlist, and the reason matters.** Task 7 gives each a *named fix surface* — the repeated-index guard — but the defect it names is **not the one blocking the model**. `dinam` and `turkpow` fail to compile; `egypt` and `shale` never reach PATH. Fixing the P2 violation leaves all four exactly where they are.
 
-**What it does establish** is that these are **second, latent defects in models we already cannot solve** — so when their primary blocker is cleared, they will not be correct. That is worth knowing before a licence grant is spent (see the Task 9 package §5, which now gates the cohort batch on exactly this).
+**What it does establish** is that these are **second, latent defects in models we already cannot solve** — so when their primary blocker is cleared, they will not be correct. That is worth knowing before a license grant is spent (see the Task 9 package §5, which now gates the cohort batch on exactly this).
 
 ## 4. ⚠ 10.1's assumption is at risk
 
