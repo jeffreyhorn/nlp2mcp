@@ -4,7 +4,23 @@
 
 **Every day:** branch `planning/sprint39-dayN-<slug>` from `main` → work → **quality gate only if `*.py` changed** (`make typecheck && make format && make lint && make test`) → commit → push → PR → wait for review → reply to each comment on its own thread. **Docs/DB/golden-only PRs skip the gate.**
 
-**Every day, before pushing:** `make check-doc-figures`, and `grep -c "Co-Authored-By\|Generated with"` on the commit message and PR body must return **0**.
+**Every day — two checkpoints, because the PR body does not exist until the PR does.**
+
+*Before pushing:*
+
+```bash
+make check-doc-figures
+git log -1 --format=%B | grep -c "Co-Authored-By\|Generated with"    # must print 0
+```
+
+*Before creating the PR* — write the body to a file first, so it can be checked before it is sent:
+
+```bash
+grep -c "Co-Authored-By\|Generated with" /tmp/pr-body.md            # must print 0
+gh pr create --base main --head <branch> --title "<title>" --body-file /tmp/pr-body.md
+```
+
+⚠ **`grep -c` exits 1 when the count is 0**, so do not chain either line with `&&` — read the printed number. A `&&` chain here fails on the *good* case.
 
 **⚠ Derive every figure at execution time.** Close rule **C5**. `kpi_block.py` carries its commit and warns on a dirty DB; `floor_tracker.py` reads the provenance file — the mechanical DB count yields **65** and looks authoritative.
 

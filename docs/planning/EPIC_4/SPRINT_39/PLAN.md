@@ -142,15 +142,17 @@ Format per Task 11's 8c spec. **A precondition may reference only a track's *sta
 
 ## 6. Acceptance criteria — with each figure's source
 
-| criterion | figure | source |
+| criterion | baseline → target | source |
 |---|---|---|
-| Solve ≥ **111** | 111 | `scripts/sprint_audit/kpi_block.py`, derived at execution time |
-| **Match ≥ 95**, and exactly 95 if P7 lands | 96 → 95 | `kpi_block.py`; the fall is C2, reported with its reason |
-| Translate **135**, or **136** if P4 lands | 135 | `kpi_block.py` |
-| `path_solve_terminated` **= 0** | 0 | `kpi_block.py`; C1 |
-| genuine floor **≥ the P1 answer** | 73 / 74 / 75 | `scripts/sprint_audit/floor_tracker.py` reading `data/floor_provenance.json` — **never** the mechanical DB count, which yields 65 and looks authoritative |
-| determinism | ×3 `PYTHONHASHSEED`, byte-identical | Day 13 |
-| leak gate | `make check-goldens`, **unqualified** | full scope; `--min-scope` asserted on discovery |
+| Solve ≥ **111** | 111 → 111 | `kpi_block.py` |
+| **Match ≥ 95**, and exactly 95 if P7 lands | 96 → **95** | `kpi_block.py` — the fall is **C2**, reported with its reason in the same sentence |
+| Translate **135**, or **136** if P4 lands | 135 → **136** *(conditional)* | `kpi_block.py` — **C6**; void under P4 branch C |
+| `path_solve_terminated` **= 0** | 0 → 0 | `kpi_block.py` — **C1** |
+| genuine floor **≥ the P1 answer** | 73 → **73 / 74 / 75** | `floor_tracker.py` reading `data/floor_provenance.json` — **never** the mechanical DB count, which yields **65** and looks authoritative |
+| determinism | — | Day 13, ×3 `PYTHONHASHSEED`, byte-identical |
+| leak gate | — | `make check-goldens` at full scope, **unqualified**; `--min-scope` asserted on discovery |
+
+**Tool paths**, given once so the table can use short names: `scripts/sprint_audit/kpi_block.py` · `scripts/sprint_audit/floor_tracker.py`. Both are run **at execution time** (close rule **C5**); `kpi_block.py` carries its commit and warns on a dirty DB.
 
 **⚠ `Match ≥ 96` as originally written is superseded.** Task 8 established that P7's correction takes Match to 95 legitimately; a criterion demanding ≥ 96 would fail a correct correction.
 
