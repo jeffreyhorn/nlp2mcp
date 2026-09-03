@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 39 Execution
+
+- **Day 0 (2026-09-03) — P1: the genuine floor is re-baselined 73 → 75, and P4 takes branch B.** New: `docs/planning/EPIC_4/SPRINT_39/SPRINT_LOG.md`. **Docs/DB only** — no `*.py` changed, so the quality gate is N/A. `make check-doc-figures` clean; `floor_tracker.py` exit 0; `validate_plan.py` → PLAN VALIDATES.
+
+- **✅ FLOOR DECISION: 75** (owner, 2026-09-03), closing a question open since Sprint-38 close. Both `twocge` and `elec` fail the written definition's *methodology* test — "cold emit byte-identical to pre-fix" — so both owe provenance entries. `data/floor_provenance.json` now carries them with **`expected_floor` 75**, and `floor_tracker.py` agrees (it exits non-zero on divergence). **Sprint 39 opens at floor 75; "no floor regression" means ≥ 75.** Sprint 38's close record re-reads **73 → 75 (+2)**.
+
+- **Every figure was re-verified before the edit, not taken from the brief.** The decision package was measured at `8a5a88bc`; close rule C5 requires derivation at execution time. Nothing had moved — **0 commits to `src/`, to the goldens or to the DB** — and all three cold solves reproduce exactly: **twocge MS-1 @ 55.508** vs NLP 56.7778 · **elec MS-1 @ 244.624** vs 243.8128 · **`polygon` MS-5 Locally Infeasible**. The convexity facts that decide it also hold: `polygon`, `twocge` and `elec` are all **`likely_convex` and in-corpus**, while the `non_convex` `ps2_f_s`/`ps2_s`/`ps3_s_gic` are all **out-of-corpus** — the three the 2026-08-18 re-baseline removed. **Sprint 38 Day 9 had applied the wrong test** ("matched via presolve ⇒ methodology"), which is what produced the flat-73 report.
+
+- **✅ P4 DECISION: branch B — re-scope** (owner, 2026-09-03), on Task 6's measurement that the four call sites are **0.5 %** of wall-clock, `gradient.py:453` is **dead code**, and **70.9 %** sits in `compute_constraint_jacobian`. Days 7–8 become **diagnosis of the differentiation path plus a Phase-0 gate for it, with no implementation this sprint**; P4 drops **26 h → 11 h**.
+
+- **⚠ Where the freed 15 h went — and where it did not.** P5 and P10 each rose to the **top of their own estimates** (13 → 16 h and 14 → 16 h), absorbing **5 h**; the remaining **10 h returned to slack**. Neither can take more without exceeding its band, and **inflating a track past its estimate to spend a budget is the thing P10 exists to prevent**. Sprint total **140 h → 130 h**, heaviest day 11 h, re-validated by `validate_plan.py`.
+
+- **⚠ Two consequences, both pre-registered: C6 is VOID and the sprint has no upward KPI mover.** Translate reports **135 flat**, naming the re-scope. The sprint's only KPI movement is P7's Match **96 → 95**, which is a **correction** (C2), not a regression. A sprint reporting one downward figure and no upward one is the honest shape when a lever's premise has been refuted by measurement — spending 26 h against a ≤ 17.4 % ceiling to protect an appearance is what the REPLAN exits exist to refuse.
+
+- **⚠ C6's precondition was itself wrong, and was corrected before the sprint ran.** It read *"P4 branch A or B started"* — but branch B explicitly does not implement, so it can never produce a golden and the rule could never have been met under it. Fixed on Day 0 rather than discovered at close, which is precisely what Task 11's 8c precondition discipline is for.
+
 ### Sprint 39 Prep
 
 - **Prep Task 12 COMPLETE (2026-09-02) — the Sprint-39 schedule. ⇒ ALL 12 PREP TASKS COMPLETE; GO for Day 0.** New: `docs/planning/EPIC_4/SPRINT_39/PLAN.md` and `docs/planning/EPIC_4/SPRINT_39/prompts/PLAN_PROMPTS.md`. Docs only — no `*.py` changed, so the quality gate is N/A.
