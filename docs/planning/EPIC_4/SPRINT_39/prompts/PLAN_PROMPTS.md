@@ -10,19 +10,24 @@
 
 ```bash
 make check-doc-figures
-git log -1 --format=%B | grep -qE "Co-Authored-By|Generated with" \
-  && { echo "ATTRIBUTION IN COMMIT MESSAGE — amend before pushing"; exit 1; }
+if git log -1 --format=%B | grep -qE "Co-Authored-By|Generated with"; then
+  echo "ATTRIBUTION IN COMMIT MESSAGE — amend before pushing"; exit 1
+fi
 ```
 
 *Before creating the PR* — write the body to a file first, so it can be checked before it is sent:
 
 ```bash
-grep -qE "Co-Authored-By|Generated with" /tmp/pr-body.md \
-  && { echo "ATTRIBUTION IN PR BODY — edit before creating"; exit 1; }
+if grep -qE "Co-Authored-By|Generated with" /tmp/pr-body.md; then
+  echo "ATTRIBUTION IN PR BODY — edit before creating"; exit 1
+fi
 gh pr create --base main --head <branch> --title "<title>" --body-file /tmp/pr-body.md
 ```
 
-⚠ **`grep -qE`, not `grep -c`.** `grep -c` prints `0` but **exits 1** on no-match, so it is unsafe under `set -e` and inverts naively-chained logic — the *good* case looks like a failure. `-q` makes the good case exit 0, and `-E` uses portable ERE alternation (`|`) rather than GNU's BRE `\|`, which POSIX BRE reads as a **literal pipe** — the exact defect that let a Phase-0 gate pass on the bug it existed to catch (PR #1717).
+⚠ **Use `if`, not `&&`, and `-E`, not a BRE.** Two separate traps:
+
+- **`grep` exits 1 on no-match** — that is true of `-c` *and* `-q`; `-q` only suppresses output, it does **not** change the exit code. So `grep -qE … && { …; exit 1; }` returns **1 in the good case** and is fatal under `set -e`. Only the `if` form makes no-match non-fatal while still failing on a match. *(An earlier revision of this file claimed "`-q` makes the good case exit 0". That was wrong — measured: `grep -qE` on a clean file exits **1**.)*
+- **`\|` is GNU BRE alternation; POSIX BRE reads it as a literal pipe.** Use `-E` with `|`. That is the exact defect that let a Phase-0 gate pass on the bug it existed to catch (PR #1717).
 
 **⚠ Derive every figure at execution time.** Close rule **C5**. `kpi_block.py` carries its commit and warns on a dirty DB; `floor_tracker.py` reads the provenance file — the mechanical DB count yields **65** and looks authoritative.
 

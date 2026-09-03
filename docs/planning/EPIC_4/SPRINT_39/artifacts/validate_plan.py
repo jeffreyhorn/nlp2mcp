@@ -12,7 +12,8 @@ budget rows, i.e. it verified nothing while looking like a verification
 (PR #1723 review). A snippet that drifts from the document it checks is worse
 than no snippet, so the checker lives beside the document instead.
 
-Run from the repo root. Exits non-zero on the first failed assertion.
+Run from the repo root. Every check runs — failures are accumulated and
+reported together — and the script exits non-zero if **any** check failed.
 """
 
 from __future__ import annotations
@@ -37,8 +38,13 @@ GATE = "2026-09-09"
 
 def main() -> int:
     if not PLAN.is_file():
-        print(f"PLAN.md does not exist yet at {PLAN} — expected before Task 12 runs")
-        return 0
+        # Non-zero: a checker that "passes" without validating anything is the
+        # failure mode this whole file exists to remove (PR #1723 review). The
+        # caller that legitimately runs before Task 12 — PREP_PLAN's
+        # Verification block — guards on the file's existence itself and says
+        # so; that context belongs there, not here.
+        print(f"ERROR: {PLAN} does not exist — nothing was validated", file=sys.stderr)
+        return 2
     plan = PLAN.read_text(encoding="utf-8")
     rows = ROW.findall(plan)
     fail: list[str] = []
