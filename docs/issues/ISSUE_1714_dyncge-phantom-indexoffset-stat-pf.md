@@ -5,7 +5,7 @@
 **Severity:** High — the model compiles, solves to `MODEL STATUS 1`, and is **silently wrong by 29.3 %**
 **Affected Models:** dyncge (confirmed). Root-cause family: camcge (#1354), cesam2 (#1355), consolidated in **#1381**
 **Measured at:** `37665091`, GAMS **54.2.1** / PATH **5.2.01**
-**Layer:** **KKT / stationarity** — `src/kkt/stationarity.py`. ⚠ **REFINED by trace on Day 1 (2026-09-04): the named ~7107–7131 path is the SYMPTOM site, not the birth site.** It does execute (91 hits), but it only decorates offsets that already exist. The offsets are *born* upstream at **~6290–6455**, where the Pattern-C recogniser cascade fails to claim `(eqXp, pf)` and `allow_nonzero_offsets` stays `True`. Evidence: `SPRINT_39/artifacts/trace_dyncge_layer.py`. See **Day-1 layer confirmation** below.
+**Layer:** **KKT / stationarity** — `src/kkt/stationarity.py`. ⚠ **REFINED by trace on Day 1 (2026-09-04): the named ~7107–7131 path is the SYMPTOM site, not the birth site.** It does execute (91 hits), but it only decorates offsets that already exist. The offsets are *born* upstream at **~6290–6455**, where the Pattern-C recogniser cascade fails to claim `(eqXp, pf)` and `allow_nonzero_offsets` stays `True`. Evidence: `docs/planning/EPIC_4/SPRINT_39/artifacts/trace_dyncge_layer.py`. See **Day-1 layer confirmation** below.
 
 **Cross-references:**
 - **#1381** — Pattern C Phase B: plain-alias + dim-mismatch consolidation (**the fix probably belongs here**)
@@ -114,7 +114,7 @@ Every previously known member of this family was found because it produced a **P
 
 Reproduced first, at `8aae26f4` / GAMS 54.2.1: residual **`CASE_B`**, max rel **6.22e-02** at `stat_pf(CAP,SRV)`, and the same five top rows in the same order as recorded at `37665091`. Structural fail-before also reproduces: **6** `nu_eqXp(j±k)` + **6** `nu_eqII(j±k)` refs, **12** `$(ord(h) = k)` guards, offsets **±1..±3**, `ord(h)` values **{1,2,3}** while `h` has **2** members, and **0** occurrences of the correct `nu_eqXp(i)`.
 
-**Method.** `artifacts/trace_dyncge_layer.py` runs the real emit under a line tracer over `stationarity.py` and wraps the recogniser cascade. No conclusion below is read off the source.
+**Method.** `docs/planning/EPIC_4/SPRINT_39/artifacts/trace_dyncge_layer.py` runs the real emit under a line tracer over `stationarity.py` and wraps the recogniser cascade. No conclusion below is read off the source.
 
 **Result — the named layer is real but downstream.**
 
@@ -136,6 +136,8 @@ So ~7107–7131 **is** on the path — but it decorates offsets that already exi
 | `_find_plain_alias_pattern_c` (B-1) | 1 / 62 | 0 / 4 |
 | `_find_b2_pattern_c` (B-2) | 0 / 62 | 0 / 4 |
 | `_find_dim_mismatch_pattern_c` (B-3) | 2 / 60 | 0 / 4 |
+
+**The consequence, measured directly.** Of the **168** offset keys produced for 2-D variables, **72 carry a non-zero real offset**, every one of shape `('UNMATCHED', ±k)` with k ∈ {1,2,3} — the first coordinate (`h`) unmatched, the second (`j`) shifted. That is exactly the emitted `nu_eqXp(j±1..3)` fan, and the multiplicities **18/18/12/12/6/6** are the 3:2:1 boundary-valid counts over a 4-element set. **Nothing zeroes them** — the suppression line is a MISS above. This is independent corroboration: the recogniser misses and the manufactured offsets are two separately observed facts, not one inferred from the other.
 
 **The structural reason, and it is a single shared gate.** B-1, B-2 and B-3 each require a **single-index** `Sum` — `len(expr.index_sets) == 1` at lines **604**, **743** and **949** — and the launch-shape gate requires a `$` condition dyncge has none of. dyncge's operative term is
 

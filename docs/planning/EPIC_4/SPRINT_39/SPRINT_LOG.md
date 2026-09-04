@@ -83,7 +83,7 @@ The package had **not** rotted — worth stating explicitly, since the standing 
 
 ### The layer is CONFIRMED but REFINED — and the refinement is the day's result
 
-`ISSUE_1714` named `stationarity.py` ~7107–7131 and labelled it a hypothesis. Traced with `artifacts/trace_dyncge_layer.py` (line tracer over the real emit + wrapped recognisers), **not read**:
+`ISSUE_1714` named `stationarity.py` ~7107–7131 and labelled it a hypothesis. Traced with `docs/planning/EPIC_4/SPRINT_39/artifacts/trace_dyncge_layer.py` (line tracer over the real emit + wrapped recognisers), **not read**:
 
 - The named surface **does execute** — 91 hits at the branch, 216 at guard construction. It is real.
 - But the suppression that would stop the offsets being *born* **never fires once**: 0 hits, and `allow_nonzero_offsets` stays `True`.
@@ -108,6 +108,6 @@ So ~7107–7131 is the **symptom** site and ~6290–6455 is the **birth** site. 
 ### Gate
 
 - Fail-before reproduced (residual + structural), both recorded above
-- **No `src/` or `tests/` change**; the only `*.py` is the new `artifacts/trace_dyncge_layer.py`, so the quality gate was **run rather than waived**
+- **No `src/` or `tests/` change**; the only `*.py` is the new `docs/planning/EPIC_4/SPRINT_39/artifacts/trace_dyncge_layer.py`, so the quality gate was **run rather than waived**
 
 ---

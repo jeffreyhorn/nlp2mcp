@@ -12,10 +12,11 @@ instrument it, don't read it** (S39 Task 5, where the banked surface never ran).
 So this traces the real emit and reports:
 
 1. Which of the candidate decision sites actually EXECUTE for dyncge.
-2. What ``_find_pattern_c_alias_sum`` — the recogniser that would set
+2. What the Pattern-C recogniser CASCADE — any member of which would set
    ``allow_nonzero_offsets = False`` and suppress the offsets at birth — is
-   asked, and what it answers, for the ``(eqXp, pf)`` pair.
-3. The offset keys ``_compute_index_offset_key`` produces for that pair.
+   asked, and what it answers, aggregated per variable with ``pf`` called out.
+3. The offset keys ``_compute_index_offset_key`` produces for ``pf`` — direct
+   evidence that non-zero offsets are manufactured, and that nothing zeroes them.
 
 Run from the repo root. Requires ``data/gamslib/raw/dyncge.gms`` (git-ignored),
 and exits non-zero if it is absent rather than reporting a vacuous pass.
@@ -55,7 +56,15 @@ def main() -> int:
     target = st.__file__
 
     def trace_lines(frame, event, arg):  # noqa: ANN001, ANN202
-        if event == "line":
+        # Filter by filename here as well as in trace_calls. MEASURED (PR #1726
+        # review): a child frame in another module does NOT reach this function
+        # — CPython dispatches every 'call' event to the GLOBAL trace, which is
+        # trace_calls below, and that returns None for non-target frames, so the
+        # counts were never polluted. The guard is kept anyway because the
+        # invariant "these line numbers are stationarity.py's" is load-bearing
+        # for every figure this script prints, and it should be visible at the
+        # point of use rather than inferred from the other function.
+        if event == "line" and frame.f_code.co_filename == target:
             ln = frame.f_lineno
             for label, (lo, hi) in SITES.items():
                 if lo <= ln < hi:
@@ -95,6 +104,21 @@ def main() -> int:
         originals[name] = getattr(st, name)
         setattr(st, name, make_wrapper(name, originals[name]))
 
+    # Item 3 of the docstring: the offset keys themselves. Without these the
+    # script asserts the recognisers missed but never shows the consequence —
+    # that non-zero offsets are then produced and nothing zeroes them.
+    offset_keys: collections.Counter[tuple] = collections.Counter()
+    _orig_key = st._compute_index_offset_key
+
+    def _key_probe(eq_idx, var_idx, mult_domain, var_domain, model_ir, **k):  # noqa: ANN001, ANN202
+        out = _orig_key(eq_idx, var_idx, mult_domain, var_domain, model_ir, **k)
+        if len(var_domain or ()) == 2:  # pf(h,j) is the 2-D variable of interest
+            offset_keys[tuple(out)] += 1
+        return out
+
+    originals["_compute_index_offset_key"] = _orig_key
+    st._compute_index_offset_key = _key_probe
+
     from src.cli import main as cli
 
     with tempfile.TemporaryDirectory() as td:
@@ -132,6 +156,20 @@ def main() -> int:
         v = agg.get((rec, "pf"))
         if v:
             print(f"  pf only: {rec:<32} CLAIMED={v[1]}  missed={v[0]}")
+
+    print("\n=== offset keys produced for 2-D variables (pf(h,j) is the one at issue) ===")
+    if not offset_keys:
+        print("  none recorded")
+    else:
+        nonzero = 0
+        for key, n in sorted(offset_keys.items(), key=lambda kv: -kv[1]):
+            real = [o for o in key if isinstance(o, int) and o not in (0, st._SENTINEL_UNMATCHED)]
+            if real:
+                nonzero += n
+            shown = tuple("UNMATCHED" if o == st._SENTINEL_UNMATCHED else o for o in key)
+            print(f"  {n:6,}  {shown}{'   <-- NON-ZERO: a manufactured offset' if real else ''}")
+        print(f"\n  {nonzero:,} of {sum(offset_keys.values()):,} carry a non-zero real offset")
+        print("  Nothing zeroes them: the suppression line is a MISS above.")
     return 0
 
 
