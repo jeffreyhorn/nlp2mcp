@@ -58,7 +58,7 @@ gh pr create --base main --head <branch> --title "<title>" --body-file /tmp/pr-b
 
 ---
 
-## Day 0 (2026-09-03) — P1: the floor decision · 6 h
+## Day 0 (2026-09-03) — P1: the floor decision · 4 h · + baseline · 2 h
 
 Branch `planning/sprint39-day0-floor`. **This is a decision, and it blocks the sprint's own baseline.**
 
@@ -66,7 +66,7 @@ Read `FLOOR_DECISION_BRIEF.md`. It does **not** decide — it assembles the evid
 
 **Deliverables:** the decision recorded in `SPRINT_LOG.md`; if 74 or 75, append to `data/floor_provenance.json` **and update `expected_floor` in the same change** (the tracker exits non-zero on divergence) plus the four downstream sites the brief names. Re-derive the baseline at the settled floor.
 
-**⚠ Also decide P4's branch today** (`PLAN.md` §3) — A keep-as-scoped, B re-scope, or C defer. Day 7 opens on **A** by default.
+**⚠ Also decide P4's branch today** (`PLAN.md` §3) — A keep-as-scoped, B re-scope, or C defer. Day 7 opens on **A** by default. — ✅ **DECIDED 2026-09-03: branch B.** The "A by default" above is the *pre-decision* instruction, retained as the executed record; Days 7–9 execute **B**, which does not implement.
 
 **Gate:** `floor_tracker.py` agrees with the recorded decision; `make check-doc-figures` clean.
 
@@ -84,7 +84,7 @@ Branch `planning/sprint39-day1-dyncge` (and `-day2`, `-day3`).
 
 **P8 alongside:** Day 2 lands **8a** (the layer field + the **added-only** assertion — `pulls.listFiles` already returns `status`; the workflow discards it). Day 3 lands **8b** (the Phase-0 template's *nearest existing mechanism* field). **Both need a fail-before test**; 8a's negative control is that a `modified` doc without a Layer line still **passes**.
 
-## Days 4–5 (09-07, 09-08) — P3: lnts · 18 h · + Checkpoint 1
+## Days 4–5 (09-07, 09-08) — P3: lnts · 18 h · + Checkpoint 1 · 2 h
 
 Branch `planning/sprint39-day4-lnts`.
 
@@ -113,11 +113,22 @@ Branch `planning/sprint39-day6-consultation`.
 
 **P8 alongside:** 8c (close-rule preconditions — **start state, never outcome**) and 8d (re-derive a carried package's *evidence*, not only its conclusion) as CONTRIBUTING rules.
 
-## Days 7–9 (09-10 … 09-12) — P4: sarf · 26 h · + P9 · 2 h · + P10 · 5 h
+## Days 7–9 (09-10 … 09-12) — P4: sarf · 11 h · + P5 · 8 h · + P9 · 2 h · + P10 · 5 h
 
 Branch `planning/sprint39-day7-sarf`.
 
-**⚠ Execute the branch chosen on Day 0.** `SARF_CALLSITE_PLAN.md` §8 states the options; §2 is why: the four sites are **0.5 %** of wall-clock, `gradient.py:453` is **dead code**, and **70.9 %** sits in `compute_constraint_jacobian` — a path Sprint 38 Day 7 already changed.
+**✅ The branch was chosen on Day 0: B — re-scope. DO NOT IMPLEMENT.** Prep Task 6 measured the four call sites at **0.5 %** of wall-clock, found **`gradient.py:453` is dead code**, and put **70.9 %** in `compute_constraint_jacobian` — a path Sprint 38 Day 7 already changed. PLAN.md §P4 carries the branch table; `SARF_CALLSITE_PLAN.md` §2 carries the measurement.
+
+- **Day 7 (6 h) — diagnose.** Attribute inside `compute_constraint_jacobian` / `_diff_sum` (the 70.9 %). Produce the attribution, not a fix.
+- **Day 8 (5 h) — author the Phase-0 gate** for the differentiation path, so whoever implements it has a fail-before. **No `src/` change lands this sprint.**
+
+**⚠ A CAPPED PROFILE'S TOP FRAME IS WHERE THE RUN *IS*, NOT WHERE THE TIME GOES.** Cumulative attribution is valid only if the phase completed — Task 2 capped short and named `enumerate_equation_instances` the hot path; it is **0.04 %**. Let the profile run to completion or say so explicitly.
+
+**Mid-track REPLAN (applies to B as well):** if a candidate still exceeds **300 s**, **stop and re-attribute rather than iterating.** A second timeout is evidence the lever is in `compute_constraint_jacobian`/`_diff_sum` — different work, different estimate.
+
+**⚠ C6 is VOID under this branch.** Translate reports **135 flat**, naming the re-scope. Do not report +1 Translate → 136; the sprint has **no upward KPI mover**, and that is the pre-registered outcome, not an underperformance.
+
+<details><summary><b>Branch A material — NOT this sprint.</b> Retained for a future revival; do not execute.</summary>
 
 **The atomic unit:** narrowing of live enumeration sites must land **with** the Jacobian-side column selection. A partial landing is an **inconsistent MCP** — gradient and Jacobian indexed over different column sets — not partial progress.
 
@@ -125,11 +136,11 @@ Branch `planning/sprint39-day7-sarf`.
 
 **⚠ The Day-7 trap, not to be rediscovered:** the first narrowing attempt traded 436 M differentiations for 436 M dict lookups and still did not terminate.
 
-**Mid-track REPLAN:** if a candidate still exceeds **300 s**, **stop and re-attribute rather than iterating.**
+</details>
 
-**Day 9 also:** P9 records the Epic-5 design in the handoff (2 h — prep delivered it); P10 lands Task 7's **P2 property as a gate** (5 h), which gives every subsequent guard a fail-before.
+**Day 8 also:** P5 begins (5 h). **Day 9:** P5 continues (3 h); P9 records the Epic-5 design in the handoff (2 h — prep delivered it); P10 lands Task 7's **P2 property as a gate** (5 h), which gives every subsequent guard a fail-before.
 
-## Days 10–11 (09-13, 09-14) — Checkpoint 2 · P7 · 13 h · + P5 · 7 h
+## Days 10–11 (09-13, 09-14) — Checkpoint 2 · 2 h · P7 · 13 h · + P5 · 5 h
 
 Branch `planning/sprint39-day10-presolve`.
 
@@ -150,7 +161,7 @@ Same rule: **NO-GO on any `backward` or `missing` row**, `--min-scope` asserted 
 
 **Day 11 also starts P5**: guards for the four `NEEDS A GUARD` sites in `POSITIONAL_DOMAIN_SURVEY.md` §2.
 
-## Day 12 (2026-09-15) — P5 finish · 6 h · + P10 · 5 h
+## Day 12 (2026-09-15) — P5 finish · 3 h · + P10 · 6 h
 
 Branch `planning/sprint39-day12-audit`.
 
@@ -160,7 +171,7 @@ Tests pinning the nine `ALREADY GUARDED` and seven `NEEDS A TEST` sites. **Do no
 
 **P10:** work the six P2-flagged models (`dinam`, `egypt`, `gussrisk`, `nonsharp`, `shale`, `turkpow`). ⚠ Two are license-gated, so their fix is verifiable by property and golden but **not by a solve**.
 
-## Day 13 (2026-09-16) — retest and close · 10 h
+## Day 13 (2026-09-16) — retest and close · 6 h · + P10 · 5 h
 
 Branch `planning/sprint39-day13-close`.
 

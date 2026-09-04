@@ -157,6 +157,50 @@ def main() -> int:
         check(pr.count("--resolve-changed --since-commit") == 2, "both checkpoints carry a runnable command")
         check("licence" not in pr.lower(), "prompts use the repo's 'license' spelling")
 
+        # ⚠ THE PROMPTS MUST AGREE WITH THE TABLE. Added after the Day-0
+        # re-budget (P4 26 h -> 11 h under branch B) updated PLAN.md and left
+        # PLAN_PROMPTS.md untouched: FIVE headings drifted, and the Days 7-9
+        # BODY still instructed the reader to execute branch A — 26 h of
+        # implementation the same decision had removed. PLAN.md validated
+        # cleanly throughout, because nothing compared the two files.
+        #
+        # Same class as the stale-prose checks above: a cascade renumbers
+        # labels, it does not re-read CONTENT. (Five derived from the diff of
+        # this commit, not recalled.)
+        #
+        # ⚠ DELIBERATELY NARROW, for the reason the day-range check above is:
+        # only a `P<n>` token carrying its own hour figure is compared. Labels
+        # without a priority number (`Checkpoint 1`, `baseline`,
+        # `retest and close`) are SKIPPED — under-covering is acceptable here,
+        # mis-attributing is not. `[^·]*` cannot cross a separator, so each
+        # figure binds to the priority it actually follows.
+        per_day: dict[int, dict[str, int]] = {}
+        for day, _date, _tot, parts in rows:
+            acc: dict[str, int] = {}
+            for prio, hrs in re.findall(r"\*\*(P\d+)\*\* (\d+)h", parts):
+                acc[prio] = acc.get(prio, 0) + int(hrs)
+            per_day[int(day)] = acc
+
+        headings = re.findall(r"^## Days? (\d+)(?:[–-](\d+))? \(.*?\) — (.+)$", pr, re.M)
+        check(len(headings) == 8, f"8 day-headings found in the prompts ({len(headings)})")
+        for lo, hi, tail in headings:
+            span = range(int(lo), int(hi or lo) + 1)
+            table: dict[str, int] = {}
+            for d in span:
+                for prio, hrs in per_day.get(d, {}).items():
+                    table[prio] = table.get(prio, 0) + hrs
+            label = f"Day{'s' if hi else ''} {lo}{'–' + hi if hi else ''}"
+            cited = {p: int(h) for p, h in re.findall(r"(P\d+)[^·]*· (\d+) h", tail)}
+            for prio, hrs in sorted(cited.items()):
+                check(
+                    table.get(prio) == hrs,
+                    f"{label} heading cites {prio} {hrs} h; table has {table.get(prio, 0)} h",
+                )
+            # A priority the table places in the span must not be omitted from
+            # the heading — how P5 (8 h) and P10 (5 h) went missing entirely.
+            for prio in sorted(set(table) - set(cited)):
+                check(False, f"{label} heading omits {prio} ({table[prio]} h in the table)")
+
     print(f"\n{'PLAN VALIDATES' if not fail else f'{len(fail)} CHECK(S) FAILED'}")
     return 1 if fail else 0
 
