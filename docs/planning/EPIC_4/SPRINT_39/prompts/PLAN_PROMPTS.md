@@ -173,7 +173,7 @@ Branch `planning/sprint39-day7-sarf`.
 
 **⚠ A CAPPED PROFILE'S TOP FRAME IS WHERE THE RUN *IS*, NOT WHERE THE TIME GOES.** Cumulative attribution is valid only if the phase completed — Task 2 capped short and named `enumerate_equation_instances` the hot path; it is **0.04 %**. Let the profile run to completion or say so explicitly.
 
-**Mid-track REPLAN (applies to B as well):** if a candidate still exceeds **300 s**, **stop and re-attribute rather than iterating.**
+**Mid-track REPLAN (applies to B as well):** if a candidate still exceeds **300 s**, **stop and re-attribute rather than iterating.** A second timeout is evidence the lever is in `compute_constraint_jacobian`/`_diff_sum` — different work, different estimate.
 
 **⚠ C6 is VOID under this branch.** Translate reports **135 flat**, naming the re-scope. Do not report +1 Translate → 136; the sprint has **no upward KPI mover**, and that is the pre-registered outcome, not an underperformance.
 
