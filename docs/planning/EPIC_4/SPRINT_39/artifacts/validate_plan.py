@@ -188,10 +188,19 @@ def main() -> int:
         # would have failed for the wrong reason the moment the file was split.
         # A guard that exists to catch a human forgetting to update something
         # must DERIVE the value (PR #1711). One heading per scheduled day.
-        covered = sorted({d for lo, hi, _ in headings for d in range(int(lo), int(hi or lo) + 1)})
+        # ⚠ A LIST, NOT A SET. Built as a set this silently tolerated a
+        # DUPLICATE day heading — two "## Day 0" sections collapse to one
+        # element, `covered` still reads 0..13, and the check passes on a
+        # structurally broken file (PR #1727 review). As a sorted list the same
+        # single comparison catches all four ways the mapping can break:
+        # a missing day, a duplicated day, an out-of-range day, and (with the
+        # range rule below) a regrouping. Deriving the count separately would
+        # be a second check saying the same thing.
+        covered = sorted(d for lo, hi, _ in headings for d in range(int(lo), int(hi or lo) + 1))
         check(
             covered == list(range(len(rows))),
-            f"every scheduled day has a prompt heading (covered {covered})",
+            f"exactly one prompt heading per scheduled day "
+            f"({len(headings)} headings for {len(rows)} days; covered {covered})",
         )
         # ⚠ ONE HEADING PER DAY — the convention S36/S37/S38 all follow (14
         # headings each). S39 shipped eight track-grouped headings instead, and
