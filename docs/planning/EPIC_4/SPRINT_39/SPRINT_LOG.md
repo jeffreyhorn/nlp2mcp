@@ -70,3 +70,44 @@ Days 7–8 become **diagnosis of the differentiation path plus a Phase-0 gate fo
   - ⚠ This line originally read *"N/A — no `*.py` changed"*, which was **true when Day 0 was written and false by the time the PR merged** — the review rounds added the validator. The waiver test is now stated over `src/`/`tests/`, which a review round cannot invalidate. Same aging-out class as the banked-staleness findings: **a claim about a PR's contents must be re-read against the PR's final file list, not its first commit.**
 
 ---
+
+## Day 1 — 2026-09-04 · P2: dyncge — confirm the layer · 9 h
+
+**Branch:** `planning/sprint39-day1-dyncge` · **Measured at:** `8aae26f4` · **No `src/` change — this day was scoped to confirm the layer, not to implement**
+
+### Fail-before, reproduced before anything else
+
+Residual **`CASE_B`**, max rel **6.22e-02** at `stat_pf(CAP,SRV)`; the five top rows match the prep record at `37665091` **in the same order**. Structural: **6** `nu_eqXp(j±k)` + **6** `nu_eqII(j±k)`, **12** `$(ord(h) = k)` guards, offsets **±1..±3**, `ord(h)` ∈ {1,2,3} while `h` has **2** members, **0** occurrences of the correct `nu_eqXp(i)`.
+
+The package had **not** rotted — worth stating explicitly, since the standing lesson is that a long-carried package rots in place.
+
+### The layer is CONFIRMED but REFINED — and the refinement is the day's result
+
+`ISSUE_1714` named `stationarity.py` ~7107–7131 and labelled it a hypothesis. Traced with `docs/planning/EPIC_4/SPRINT_39/artifacts/trace_dyncge_layer.py` (line tracer over the real emit + wrapped recognisers), **not read**:
+
+- The named surface **does execute** — 91 hits at the branch, 216 at guard construction. It is real.
+- But the suppression that would stop the offsets being *born* **never fires once**: 0 hits, and `allow_nonzero_offsets` stays `True`.
+- **All four** Pattern-C recognisers miss `pf` (0 claimed / 56 calls). Two claim elsewhere in dyncge (B-1 ×1, B-3 ×2), so the machinery works — it does not recognise **this shape**.
+
+**Single shared cause:** B-1/B-2/B-3 each require a **single-index `Sum`** (`len(index_sets) == 1` at lines 604 / 743 / 949); the launch-shape gate requires a `$` condition dyncge lacks. dyncge's term is `sum((h,j), pf(h,j)*F(h,j))` — a **two-index Sum binding both of `pf`'s coordinates with the equation index `i` free and unrelated**. B-3's *dimension* gate passes (1 < 2); the miss is the **Sum's arity**, not the dimension mismatch.
+
+So ~7107–7131 is the **symptom** site and ~6290–6455 is the **birth** site. Fixing the named surface would suppress the guard, not the offsets.
+
+**This is why the day was scoped to a trace.** Three of four Sprint-38 gates named the wrong layer; this one named a real code path that is nonetheless the wrong place to fix. Implementing against the banked surface would have produced a guard-suppression patch that leaves the wrong answer intact — and the emit would still have compiled and solved MS-1, which is exactly how this defect stayed silent.
+
+### Checked before proposing new logic (S38-D12 rule / P8 8b)
+
+**No existing member covers this population.** The nearest — B-3 — handles a variable whose *equation index binds one coordinate* while the sum binds the other (cesam2 `COLSUM(jj).. sum(ii, TSAM(ii,jj))`). Here the equation index binds **neither**. A distinct Pattern-C member, not a widening of B-3.
+
+### Carried into Day 2
+
+- ⚠ **`eqSp` (line 420) carries the identical `sum((h,j), pf*F)` term.** Scalar-domain, so a different branch — **verify, do not assume**.
+- The `stat_pq(HMN)` open question stands; `stat_pq` remains the negative control and must stay byte-identical.
+- Route is **#1381 Pattern C Phase B**, which `ISSUE_1714` listed as a REPLAN exit. On this evidence it is the **expected** route, not a fallback.
+
+### Gate
+
+- Fail-before reproduced (residual + structural), both recorded above
+- **No `src/` or `tests/` change**; the only `*.py` is the new `docs/planning/EPIC_4/SPRINT_39/artifacts/trace_dyncge_layer.py`, so the quality gate was **run rather than waived**
+
+---
