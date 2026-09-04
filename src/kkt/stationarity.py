@@ -1001,6 +1001,245 @@ def _find_dim_mismatch_pattern_c(
     return None
 
 
+def _find_full_collapse_pattern_c(
+    eq_def: EquationDef,
+    var_name: str,
+    var_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> dict | None:
+    """Detect a Sprint 39 #1381 Phase B-4 *full-collapse* Pattern C — a
+    multi-index ``Sum`` that binds EVERY coordinate of a higher-dimensional
+    variable, inside an equation whose own domain index appears in NONE of them.
+
+    dyncge (#1714)::
+
+        eqXp(i)..  Xp(i) =e= alpha(i)*(sum((h,j), pf(h,j)*F(h,j)) - Sp - Td)/pq(i);
+
+    Differentiating the inner ``Sum`` collapses it to the head instance, leaving
+    the equation's own index ``i`` free and to be summed::
+
+        stat_pf(h,j) ⊃ sum(i, (-alpha(i)*F(h,j)/pq(i)) * nu_eqXp(i))
+
+    **Why this is a new member rather than a widened one.** B-1/B-2/B-3 each
+    require a SINGLE-index ``Sum`` (``len(index_sets) == 1``), so none can see
+    this shape. B-2 is the nearest by body shape — an eq-domain factor outside
+    the sum — and misses *solely* on the sum's arity; but its walker descends
+    only through ``*``, whereas here the ``Sum`` sits inside an additive
+    subexpression (``... - Sp - Td``) under a division. Relaxing B-2's arity
+    gate would therefore not reach this shape *and* would widen a predicate the
+    whole corpus depends on. This adds a POSITIVE requirement instead (S37
+    fawley: a predicate that over-fires is fixed by adding a requirement, not by
+    subtracting an exclusion).
+
+    Without it the standard path treats the free equation index as a shifted
+    head index — ``Alias (i,j)`` gives them a shared set root — and manufactures
+    ``nu_eqXp(j±k)`` terms gated on ``ord(h) = k``, which for dyncge compiles,
+    solves to MS-1 and is silently wrong by 29.3 %.
+
+    Returns ``{"sum_node", "sum_indices", "var_ref"}`` or ``None``.
+    """
+    if eq_def is None or eq_def.condition is not None:
+        return None
+    # Positive requirement 1: a multi-coordinate variable. The 1-D cases are
+    # B-1/B-2's and must keep reaching them.
+    if len(var_domain) < 2:
+        return None
+    # Positive requirement 2: the equation must have at least one index of its
+    # own -- that index is what the consolidated term sums over. A scalar
+    # equation has none (dyncge's eqSp), and is handled by the non-indexed path
+    # entirely; it never reaches this cascade.
+    eq_domain = tuple(eq_def.domain or ())
+    if len(eq_domain) != 1:
+        return None
+    eq_syms = {d.lower() for d in eq_domain}
+    eq_canon = {_resolve_alias_target(d, model_ir) for d in eq_domain}
+    lhs, rhs = eq_def.lhs_rhs
+    body = Binary("-", lhs, rhs)
+    found = _find_full_collapse_sum(body, var_name, len(var_domain), eq_syms, eq_canon, model_ir)
+    if found is None:
+        return None
+    # Positive requirement 3 (single-pattern guard, mirroring B-1/B-2): the
+    # variable must appear EXCLUSIVELY inside the matched Sum. If it also
+    # appears elsewhere, bypassing the standard path would drop that other
+    # occurrence -- the #1110 diagonal-drop failure.
+    total = _count_varref(lhs, var_name) + _count_varref(rhs, var_name)
+    if total != _count_varref(found["sum_node"].body, var_name):
+        return None
+    return found
+
+
+def _find_full_collapse_sum(
+    expr: Expr,
+    var_name: str,
+    var_arity: int,
+    eq_syms: set[str],
+    eq_canon: set[str],
+    model_ir: ModelIR,
+) -> dict | None:
+    """Locate the B-4 full-collapse ``Sum`` anywhere in ``expr``.
+
+    Unlike the B-1/B-2/B-3 walkers this does NOT restrict itself to additive or
+    multiplicative structure: dyncge's sum sits inside ``(sum(...) - Sp - Td)``
+    under a division, so a structure-restricted descent cannot reach it. The
+    consolidated term is built by differentiating the WHOLE equation body, so
+    the surrounding structure need not be classified -- only located.
+
+    Only UNCONDITIONAL ``Sum``s match, consistent with the other walkers: the
+    builder emits no guard, so matching a ``$``-conditioned ``Sum`` would
+    silently drop that condition.
+    """
+    stack: list[Expr] = [expr]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, Sum) and node.condition is None and len(node.index_sets) >= 2:
+            sum_idx = tuple(node.index_sets)
+            vref = _find_varref_arity(node.body, var_name, var_arity)
+            if vref is not None:
+                vidx = [i for i in vref.indices if isinstance(i, str)]
+                # The Sum must bind EVERY coordinate of the reference ...
+                if len(vidx) == var_arity and {i.lower() for i in vidx} == {
+                    s.lower() for s in sum_idx
+                }:
+                    # ... and the equation's own index must appear in NONE of
+                    # them. That is what makes the eq index free and unrelated,
+                    # and is precisely what the standard path mistakes for a
+                    # shifted head index.
+                    #
+                    # ⚠ BOTH CONDITIONS, AND THEY ARE NOT THE SAME TEST.
+                    #
+                    # (1) DIFFERENT SYMBOL — the equation's index must not appear
+                    #     literally among the reference's indices, or it is not
+                    #     free. Comparing CANONICAL sets here matches nothing:
+                    #     under ``Alias (i,j)`` the variable's ``j`` resolves to
+                    #     ``i``, so a canonical test reports "related" for exactly
+                    #     the shape this exists to catch — the same conflation
+                    #     that produces the defect (S38 D11/D12).
+                    #
+                    # (2) SHARED SET ROOT — but the symbols must nonetheless
+                    #     resolve to a COMMON set. This is what makes the standard
+                    #     path go wrong: it reads a free equation index as a
+                    #     shifted head index precisely because the alias gives
+                    #     them one root. Without this second requirement B-4
+                    #     matches the ordinary, ALREADY-CORRECT full-collapse
+                    #     shape found across the corpus — measured: agreste
+                    #     ``dprod(c) ← sum((p,s), xcrop(p,s))``, tforss
+                    #     ``lbal(cl) ← sum((s,k,at), v(...))``, turkey, fawley,
+                    #     egypt, shale — 9 models drifted, a corpus-wide leak,
+                    #     against a baseline of ZERO drift on main.
+                    #
+                    # So: same set, different symbol. Either test alone is wrong.
+                    vsyms = {i.lower() for i in vidx}
+                    vcanon = {_resolve_alias_target(i, model_ir) for i in vidx}
+                    if not (vsyms & eq_syms) and (vcanon & eq_canon):
+                        return {"sum_node": node, "sum_indices": sum_idx, "var_ref": vref}
+        stack.extend(node.children())
+    return None
+
+
+def _substitute_node(expr: Expr, target: Expr, replacement: Expr) -> Expr:
+    """Return ``expr`` with the node that IS ``target`` (identity, not equality)
+    replaced by ``replacement``.
+
+    Identity is deliberate: an equation may contain two structurally equal Sums
+    (dyncge's ``eqSp`` and ``eqXp`` share one verbatim), and only the located
+    occurrence may be substituted.
+    """
+    import dataclasses as _dc
+
+    if expr is target:
+        return replacement
+    if not hasattr(expr, "__dataclass_fields__"):
+        return expr
+    # Generic dataclass-field rebuild, mirroring _apply_alias_offset_to_deriv:
+    # the Expr nodes are FROZEN dataclasses with no with_children(), and
+    # children() is read-only, so a rebuild has to go through the fields.
+    updates: dict[str, object] = {}
+    for f in _dc.fields(expr):  # type: ignore[arg-type]
+        val = getattr(expr, f.name)
+        if hasattr(val, "__dataclass_fields__"):
+            new_val = _substitute_node(val, target, replacement)
+            if new_val is not val:
+                updates[f.name] = new_val
+        elif isinstance(val, tuple):
+            items = tuple(
+                (
+                    _substitute_node(i, target, replacement)
+                    if hasattr(i, "__dataclass_fields__")
+                    else i
+                )
+                for i in val
+            )
+            if any(a is not b for a, b in zip(val, items, strict=True)):
+                updates[f.name] = items
+    return _dc.replace(expr, **updates) if updates else expr  # type: ignore[type-var]
+
+
+def _build_full_collapse_term(
+    found: dict,
+    eq_def: EquationDef,
+    var_name: str,
+    var_domain: tuple[str, ...],
+    mult_name: str,
+    mult_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> Expr | None:
+    """Build the B-4 consolidated term ``Sum((eq_idx,), COEFF * nu_eq(eq_idx))``.
+
+    ``COEFF`` is ``∂(lhs - rhs)/∂var`` taken at the SUM's own index tuple, then
+    renamed onto the stationarity row's indices. Differentiating the whole body
+    (rather than the sum body plus reconstructed outer factors, as B-1/B-2 do)
+    is what lets this member ignore the surrounding structure -- the division
+    and the additive siblings in dyncge's ``alpha(i)*(sum(...) - Sp - Td)/pq(i)``
+    fall out of the derivative automatically.
+    """
+    from src.ad.derivative_rules import differentiate_expr
+
+    if len(mult_domain) != 1:
+        return None
+    eq_idx = (eq_def.domain or ("",))[0]
+    if not eq_idx:
+        return None
+    sum_node: Sum = found["sum_node"]
+    sum_indices: tuple[str, ...] = found["sum_indices"]
+    if len(sum_indices) != len(var_domain):
+        return None
+    lhs, rhs = eq_def.lhs_rhs
+    body = Binary("-", lhs, rhs)
+
+    # ⚠ THE DERIVATIVE MUST BE SPLIT, NOT TAKEN WHOLE. Differentiating ``body``
+    # directly at the Sum's own bound names is ambiguous: those names shadow the
+    # stationarity row's indices, and the AD layer answers for the whole array —
+    # it produced ``sum((h__,j__), f(h__,j__))`` (F summed over every instance)
+    # where the correct coefficient is ``f(h,j)`` at the single head instance.
+    # That emit compiled and would have been silently wrong, the same failure
+    # class as the defect being fixed.
+    #
+    # So: chain rule, explicitly. With ``S`` the value of the Sum,
+    #     ∂body/∂var(H,J) = (∂body/∂S) · (∂sum_body/∂var(H,J))
+    # The outer factor is obtained by substituting a fresh scalar for the Sum
+    # (which is what makes the surrounding division and additive siblings fall
+    # out automatically); the inner factor by differentiating the Sum's body at
+    # its own indices, exactly as B-1 does.
+    placeholder = "__b4_sum_value__"
+    outer_src = _substitute_node(body, sum_node, VarRef(placeholder, ()))
+    outer = differentiate_expr(outer_src, placeholder, (), Config(model_ir=model_ir))
+    inner = differentiate_expr(sum_node.body, var_name, sum_indices, Config(model_ir=model_ir))
+    if outer is None or inner is None:
+        return None
+    coeff = apply_simplification(Binary("*", outer, inner), "advanced")
+    if coeff is None or (isinstance(coeff, Const) and coeff.value == 0.0):
+        return None
+    # Rename the sum's bound indices onto the stationarity row's own indices,
+    # positionally: sum((h,j), ...) differentiated at (h,j) yields a coefficient
+    # in (h,j), and the row is stat_var(h,j).
+    rename = {
+        s.lower(): var_domain[k] for k, s in enumerate(sum_indices) if s.lower() != var_domain[k]
+    }
+    if rename:
+        coeff = _rewrite_subset_to_superset(coeff, rename)
+    return Sum((eq_idx,), Binary("*", coeff, MultiplierRef(mult_name, (eq_idx,))))
+
+
 def _b3_multiplier_ref_is_valid(
     binding_symbol: str,
     mult_declared_domain: tuple[str, ...],
@@ -6421,6 +6660,43 @@ def _add_indexed_jacobian_terms(
                                 )
                                 if _b3_term is not None:
                                     expr = Binary("+", expr, _b3_term)
+                                    continue
+
+                            # Sprint 39 #1381 Phase B-4: full-collapse Sum —
+                            # dyncge's ``eqXp(i).. Xp(i) =e= alpha(i)*(sum((h,j),
+                            # pf(h,j)*F(h,j)) - Sp - Td)/pq(i)``. A multi-index
+                            # Sum binds BOTH of pf's coordinates while the
+                            # equation's own index ``i`` binds neither, so the
+                            # standard path mistakes ``i`` for a shifted head
+                            # index (``Alias (i,j)`` gives them one set root) and
+                            # manufactures ``nu_eqXp(j±k)$(ord(h) = k)``. LAST in
+                            # the cascade: B-1/B-2/B-3 all require a single-index
+                            # Sum, so none can claim this shape, and running last
+                            # means an existing member keeps anything it already
+                            # claims (#1714).
+                            _fc = _find_full_collapse_pattern_c(
+                                eq_def_for_gate,
+                                var_name,
+                                var_domain,
+                                kkt.model_ir,
+                            )
+                            if _fc is not None:
+                                _mn = name_func(eq_name_base)
+                                _fc_term = (
+                                    _build_full_collapse_term(
+                                        _fc,
+                                        eq_def_for_gate,
+                                        var_name,
+                                        var_domain,
+                                        _mn,
+                                        mult_domain,
+                                        kkt.model_ir,
+                                    )
+                                    if _mn in multipliers
+                                    else None
+                                )
+                                if _fc_term is not None:
+                                    expr = Binary("+", expr, _fc_term)
                                     continue
 
                 # Issue #1045: Sub-group entries by their index offset pattern.
