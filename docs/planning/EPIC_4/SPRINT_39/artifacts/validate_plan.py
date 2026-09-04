@@ -182,7 +182,35 @@ def main() -> int:
             per_day[int(day)] = acc
 
         headings = re.findall(r"^## Days? (\d+)(?:[–-](\d+))? \(.*?\) — (.+)$", pr, re.M)
-        check(len(headings) == 8, f"8 day-headings found in the prompts ({len(headings)})")
+        # ⚠ DERIVED, NOT HARDCODED. This read `== 8` when the prompts grouped
+        # days into eight track-blocks — which both froze a departure from the
+        # per-day convention S36/S37/S38 all follow (14 headings each), and
+        # would have failed for the wrong reason the moment the file was split.
+        # A guard that exists to catch a human forgetting to update something
+        # must DERIVE the value (PR #1711). One heading per scheduled day.
+        # ⚠ A LIST, NOT A SET. Built as a set this silently tolerated a
+        # DUPLICATE day heading — two "## Day 0" sections collapse to one
+        # element, `covered` still reads 0..13, and the check passes on a
+        # structurally broken file (PR #1727 review). As a sorted list the same
+        # single comparison catches all four ways the mapping can break:
+        # a missing day, a duplicated day, an out-of-range day, and (with the
+        # range rule below) a regrouping. Deriving the count separately would
+        # be a second check saying the same thing.
+        covered = sorted(d for lo, hi, _ in headings for d in range(int(lo), int(hi or lo) + 1))
+        check(
+            covered == list(range(len(rows))),
+            f"exactly one prompt heading per scheduled day "
+            f"({len(headings)} headings for {len(rows)} days; covered {covered})",
+        )
+        # ⚠ ONE HEADING PER DAY — the convention S36/S37/S38 all follow (14
+        # headings each). S39 shipped eight track-grouped headings instead, and
+        # that grouping is what let Days 2-3 carry NO P2 instruction at all
+        # while their hours drifted unnoticed: a range heading's figures are
+        # checked against the span TOTAL, so per-day drift inside the span is
+        # invisible. Verified: regrouping days 2-3 back into one range passes
+        # every other check in this file. Hence an explicit structural rule.
+        grouped = [(lo, hi) for lo, hi, _ in headings if hi]
+        check(not grouped, f"each prompt heading covers exactly one day (grouped: {grouped})")
         for lo, hi, tail in headings:
             span = range(int(lo), int(hi or lo) + 1)
             table: dict[str, int] = {}

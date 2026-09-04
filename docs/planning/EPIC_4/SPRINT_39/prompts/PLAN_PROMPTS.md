@@ -58,7 +58,8 @@ gh pr create --base main --head <branch> --title "<title>" --body-file /tmp/pr-b
 
 ---
 
-## Day 0 (2026-09-03) — P1: the floor decision · 4 h · + baseline · 2 h
+
+## Day 0 (2026-09-03) — P1: the floor decision · 4 h · + baseline · 2 h — ✅ COMPLETE
 
 Branch `planning/sprint39-day0-floor`. **This is a decision, and it blocks the sprint's own baseline.**
 
@@ -66,13 +67,15 @@ Read `FLOOR_DECISION_BRIEF.md`. It does **not** decide — it assembles the evid
 
 **Deliverables:** the decision recorded in `SPRINT_LOG.md`; if 74 or 75, append to `data/floor_provenance.json` **and update `expected_floor` in the same change** (the tracker exits non-zero on divergence) plus the four downstream sites the brief names. Re-derive the baseline at the settled floor.
 
-**⚠ Also decide P4's branch today** (`PLAN.md` §3) — A keep-as-scoped, B re-scope, or C defer. Day 7 opens on **A** by default. — ✅ **DECIDED 2026-09-03: branch B.** The "A by default" above is the *pre-decision* instruction, retained as the executed record; Days 7–9 execute **B**, which does not implement.
+**⚠ Also decide P4's branch today** (`PLAN.md` §3) — A keep-as-scoped, B re-scope, or C defer. Day 7 opens on **A** by default. — ✅ **DECIDED 2026-09-03: branch B.** The "A by default" above is the *pre-decision* instruction, retained as the executed record; Days 7–8 execute **B**, which does not implement.
 
 **Gate:** `floor_tracker.py` agrees with the recorded decision; `make check-doc-figures` clean.
 
-## Days 1–3 (09-04 … 09-06) — P2: dyncge · 20 h · + P8 8a/8b · 8 h
+**Outcome:** floor **73 → 75**; P4 **branch B**; sprint re-budgeted **140 h → 130 h**; **C6 VOID**.
 
-Branch `planning/sprint39-day1-dyncge` (and `-day2`, `-day3`).
+## Day 1 (2026-09-04) — P2: dyncge — confirm the layer · 9 h — ✅ COMPLETE
+
+Branch `planning/sprint39-day1-dyncge`.
 
 `ISSUE_1714` has the full Phase-0 gate. **Day 1's first job is to confirm the layer by trace, not to implement** — three of four Sprint-38 gates named the wrong layer, and this one is `src/kkt/stationarity.py` ~7107–7131, the #1081 dim-mismatch branch.
 
@@ -82,15 +85,62 @@ Branch `planning/sprint39-day1-dyncge` (and `-day2`, `-day3`).
 
 **REPLAN exits:** `PLAN.md` §3.
 
-**P8 alongside:** Day 2 lands **8a** (the layer field + the **added-only** assertion — `pulls.listFiles` already returns `status`; the workflow discards it). Day 3 lands **8b** (the Phase-0 template's *nearest existing mechanism* field). **Both need a fail-before test**; 8a's negative control is that a `modified` doc without a Layer line still **passes**.
+**Outcome — the layer is CONFIRMED but REFINED, and Days 2–3 below are written against the refinement.** The named surface *does* execute (91 hits at the branch, 216 at guard construction) but it is the **symptom** site: it decorates offsets that already exist. The suppression that would stop them being born **never fires once**. Birth site is **~6290–6455**. Evidence: `artifacts/trace_dyncge_layer.py`; written up in `ISSUE_1714` §*Day-1 layer confirmation* and `SPRINT_LOG.md`.
 
-## Days 4–5 (09-07, 09-08) — P3: lnts · 18 h · + Checkpoint 1 · 2 h
+## Day 2 (2026-09-05) — P2: dyncge — the new Pattern-C member · 7 h · + P8 8a · 3 h
+
+Branch `planning/sprint39-day2-dyncge`.
+
+**⚠ Read Day 1's outcome first. Do NOT implement at `~7107–7131`** — Day 1 measured that as the symptom site. Suppressing the `ord()` guard there would leave the wrong answer intact, and the emit would still compile and still solve MS-1, which is exactly how this defect stayed silent.
+
+**The target is the recogniser cascade at ~6290–6455.** All four members miss `pf`, for one shared reason: B-1/B-2/B-3 each require a **single-index `Sum`** (`len(index_sets) == 1` at lines **604 / 743 / 949**) and the launch-shape gate requires a `$` condition dyncge lacks. dyncge's operative term is
+
+```gams
+eqXp(i)..  Xp(i) =e= alpha(i)*(sum((h,j), pf(h,j)*F(h,j)) - Sp - Td)/pq(i);
+```
+
+a **two-index `Sum` binding BOTH of the variable's coordinates, with the equation index `i` free and unrelated to either.** Day 1 established this is a **distinct Pattern-C member**, not a widening of B-3 — B-3's equation index binds *one* coordinate (cesam2 `COLSUM(jj).. sum(ii, TSAM(ii,jj))`); here it binds **neither**. B-3's *dimension* gate already passes (1 < 2); the miss is the `Sum`'s **arity**.
+
+**⚠ First task of the day, before writing the recogniser: `eqSp` (line 420) carries the IDENTICAL `sum((h,j), pf(h,j)*F(h,j))` term.** It is scalar-domain, so it should take a different branch — **verify that by trace, do not assume it.** A recogniser written for `eqXp` will be offered `eqSp` too. `artifacts/trace_dyncge_layer.py` already wraps all four recognisers; extend it rather than writing a second probe.
+
+**⚠ This is shared, high-blast-radius machinery.** A recogniser that matches too broadly is a **corpus-wide leak**, not a dyncge bug. Two models already rely on the neighbouring members (B-1 claims once, B-3 twice, *within dyncge alone*). Add a **positive requirement**, do not relax an existing exclusion — the S37 fawley lesson: a narrowing predicate that over-fires is fixed by adding a requirement, not subtracting one.
+
+**Phase-0 obligation:** `ISSUE_1714`'s gate predates the refinement. Before the `src/` commit, record the **birth-site** fix surface and a fail-before that fails **at the new location** — a gate that still points at ~7107–7131 would pass against a wrong fix.
+
+**P8 alongside (3 h):** land **8a** — the layer field + the **added-only** assertion (`pulls.listFiles` already returns `status`; the workflow discards it). **Needs a fail-before test**; its negative control is that a `modified` doc without a Layer line still **passes**.
+
+## Day 3 (2026-09-06) — P2: dyncge — verify or hand back · 4 h · + P8 8b · 5 h
+
+Branch `planning/sprint39-day3-dyncge`.
+
+**Run the pre-registered controls, in this order — a non-erroring emit is not a pass:**
+
+1. **Residual** reaches **`CASE_A`** (`scripts/diagnostics/kkt_residual.py`).
+2. **`stat_pf`** contains `sum(i, … nu_eqXp(i))` and **zero** `nu_eqXp(j±k)` / `nu_eqII(j±k)` refs and **zero** `$(ord(h) = …)` guards.
+3. **Negative control:** `stat_pq` **byte-identical** to before.
+4. **Leak gate:** `make check-goldens` drifts **dyncge alone**, unqualified.
+5. **Determinism:** ≥ 3 `PYTHONHASHSEED` values, byte-identical.
+6. **Objective:** cold MCP currently **MS-1 @ 381401.119** vs NLP **539570.5027**. ⚠ **Assert `modelstat` before reading any objective.**
+
+**REPLAN exits — all three are live, none is remote:**
+
+- residual persists as **`CASE_C_OBJDEF`** ⇒ dyncge is a non-convexity case like elec; the honest target becomes a **documented divergence**, not a Match. elec's own verdict moved `CASE_B` → `CASE_C_OBJDEF` as the classifier improved.
+- **any drift beyond dyncge** ⇒ hand back to **#1381** as Pattern C Phase B rather than patching here. Day 1 already routed the work there, so this exit is a *scope* signal, not a failure.
+- `stat_pq(HMN)`'s residual survives a corrected `stat_pf` ⇒ a **second, independent defect** (`ISSUE_1714` *Open question*). Record it; do not absorb it into this track.
+
+**P8 alongside (5 h):** land **8b** — the Phase-0 template's *nearest existing mechanism* field. **Needs a fail-before test.** ⚠ This sprint is its own best example: Day 1 found the mechanism existed for three neighbouring populations and still did not cover this one, so the field must record **why the nearest mechanism does not apply**, not merely that one was found.
+
+## Day 4 (2026-09-07) — P3: lnts · 10 h
 
 Branch `planning/sprint39-day4-lnts`.
 
 `LNTS_PROBE_DESIGN.md` fixes the confirm/refute criteria **before** the probe runs — honour that ordering. The collision is confirmed at runtime, and **the banked fix surface is refuted**: `fix_rhs = "0"` at `emit_gams.py:3060–61` **never runs**; the real blanket is **`:3121`**. The machinery to fix it exists — `_fx_eq_name()` at `:711`, the `suppressed` set at `:920`.
 
 **⚠ `cesam` must NOT be batched with lnts.** Same MS-4-at-iteration-0 signature, **0 `_fx_` equations** — a shared signature is not a shared mechanism.
+
+## Day 5 (2026-09-08) — P3: lnts finish · 8 h · + Checkpoint 1 · 2 h
+
+Branch `planning/sprint39-day5-lnts`.
 
 **Day 5 ends with Checkpoint 1:**
 
@@ -113,14 +163,13 @@ Branch `planning/sprint39-day6-consultation`.
 
 **P8 alongside:** 8c (close-rule preconditions — **start state, never outcome**) and 8d (re-derive a carried package's *evidence*, not only its conclusion) as CONTRIBUTING rules.
 
-## Days 7–9 (09-10 … 09-12) — P4: sarf · 11 h · + P5 · 8 h · + P9 · 2 h · + P10 · 5 h
+## Day 7 (2026-09-10) — P4: sarf — diagnose · 6 h
 
 Branch `planning/sprint39-day7-sarf`.
 
 **✅ The branch was chosen on Day 0: B — re-scope. DO NOT IMPLEMENT.** Prep Task 6 measured the four call sites at **0.5 %** of wall-clock, found **`gradient.py:453` is dead code**, and put **70.9 %** in `compute_constraint_jacobian` — a path Sprint 38 Day 7 already changed. PLAN.md §P4 carries the branch table; `SARF_CALLSITE_PLAN.md` §2 carries the measurement.
 
-- **Day 7 (6 h) — diagnose.** Attribute inside `compute_constraint_jacobian` / `_diff_sum` (the 70.9 %). Produce the attribution, not a fix.
-- **Day 8 (5 h) — author the Phase-0 gate** for the differentiation path, so whoever implements it has a fail-before. **No `src/` change lands this sprint.**
+**Today: attribute inside `compute_constraint_jacobian` / `_diff_sum` (the 70.9 %). Produce the attribution, not a fix.**
 
 **⚠ A CAPPED PROFILE'S TOP FRAME IS WHERE THE RUN *IS*, NOT WHERE THE TIME GOES.** Cumulative attribution is valid only if the phase completed — Task 2 capped short and named `enumerate_equation_instances` the hot path; it is **0.04 %**. Let the profile run to completion or say so explicitly.
 
@@ -138,9 +187,25 @@ Branch `planning/sprint39-day7-sarf`.
 
 </details>
 
-**Day 8 also:** P5 begins (5 h). **Day 9:** P5 continues (3 h); P9 records the Epic-5 design in the handoff (2 h — prep delivered it); P10 lands Task 7's **P2 property as a gate** (5 h), which gives every subsequent guard a fail-before.
+## Day 8 (2026-09-11) — P4: the Phase-0 gate · 5 h · + P5 · 5 h
 
-## Days 10–11 (09-13, 09-14) — Checkpoint 2 · 2 h · P7 · 13 h · + P5 · 5 h
+Branch `planning/sprint39-day8-sarf`.
+
+**P4 (5 h): author the Phase-0 gate** for the differentiation path, so whoever implements it has a fail-before. **No `src/` change lands this sprint.**
+
+**P5 begins (5 h):** guards for the four `NEEDS A GUARD` sites in `POSITIONAL_DOMAIN_SURVEY.md` §2. ⚠ **They are candidates, not confirmed defects** — trace each before implementing.
+
+## Day 9 (2026-09-12) — P9 · 2 h · + P10 · 5 h · + P5 · 3 h
+
+Branch `planning/sprint39-day9-epic5`.
+
+**P9 (2 h):** record the Epic-5 design in the handoff — prep Task 10 delivered it in full, so this is recording, not designing.
+
+**P10 (5 h):** land Task 7's **P2 property as a gate**, which gives every subsequent guard a fail-before.
+
+**P5 (3 h):** continue the `NEEDS A GUARD` work from Day 8.
+
+## Day 10 (2026-09-13) — Checkpoint 2 · 2 h · + P7 · 9 h
 
 Branch `planning/sprint39-day10-presolve`.
 
@@ -157,17 +222,21 @@ Same rule: **NO-GO on any `backward` or `missing` row**, `--min-scope` asserted 
 
 **The remedy invents no category** — weapons' **cold** emit solves (MS-1 @ **1700.397** vs NLP 1735.5696, a 2.03 % divergence), so the correct record is its own cold result and the existing `else` branch already restores it.
 
-**Report the fall with the pre-written wording** (§5, close rule C2). Three figures move: **Match 96→95 · presolve 31→30 · all-219 99→98**. Solve stays 111 and `path_solve_terminated` stays 0.
+## Day 11 (2026-09-14) — P7 finish · 4 h · + P5 · 5 h
 
-**Day 11 also starts P5**: guards for the four `NEEDS A GUARD` sites in `POSITIONAL_DOMAIN_SURVEY.md` §2.
+Branch `planning/sprint39-day11-presolve`.
+
+**Report the fall with the pre-written wording** (`PRESOLVE_RECORD_REMEDY.md` §5, close rule C2). Three figures move: **Match 96→95 · presolve 31→30 · all-219 99→98**. Solve stays **111** and `path_solve_terminated` stays **0**.
+
+⚠ **Match falling to 95 is a CORRECTION, not a regression** — it must be reported with its reason **in the same sentence**.
+
+**P5 (5 h):** continue the audit.
 
 ## Day 12 (2026-09-15) — P5 finish · 3 h · + P10 · 6 h
 
 Branch `planning/sprint39-day12-audit`.
 
 Tests pinning the nine `ALREADY GUARDED` and seven `NEEDS A TEST` sites. **Do not re-guard the guarded ones** — three independent remedies already exist (consume-once slot claiming, `seen_sym` duplicate bail-out, parser alias substitution).
-
-**⚠ The four `NEEDS A GUARD` sites are candidates, not confirmed defects** — trace each before implementing.
 
 **P10:** work the six P2-flagged models (`dinam`, `egypt`, `gussrisk`, `nonsharp`, `shale`, `turkpow`). ⚠ Two are license-gated, so their fix is verifiable by property and golden but **not by a solve**.
 
