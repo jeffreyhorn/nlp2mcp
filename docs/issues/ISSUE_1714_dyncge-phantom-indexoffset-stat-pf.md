@@ -5,7 +5,7 @@
 **Severity:** High — the model compiles, solves to `MODEL STATUS 1`, and is **silently wrong by 29.3 %**
 **Affected Models:** dyncge (confirmed). Root-cause family: camcge (#1354), cesam2 (#1355), consolidated in **#1381**
 **Measured at:** `37665091`, GAMS **54.2.1** / PATH **5.2.01**
-**Layer:** **KKT / stationarity** — `src/kkt/stationarity.py`, the dimension-mismatch offset path (~7107–7131)
+**Layer:** **KKT / stationarity** — `src/kkt/stationarity.py`. ⚠ **REFINED by trace on Day 1 (2026-09-04): the named ~7107–7131 path is the SYMPTOM site, not the birth site.** It does execute (91 hits), but it only decorates offsets that already exist. The offsets are *born* upstream at **~6290–6455**, where the Pattern-C recogniser cascade fails to claim `(eqXp, pf)` and `allow_nonzero_offsets` stays `True`. Evidence: `SPRINT_39/artifacts/trace_dyncge_layer.py`. See **Day-1 layer confirmation** below.
 
 **Cross-references:**
 - **#1381** — Pattern C Phase B: plain-alias + dim-mismatch consolidation (**the fix probably belongs here**)
@@ -77,7 +77,7 @@ stat_pf(h,j).. ... + sum(i, ((-1) * alpha(i) * f(h,j) / pq(i)) * nu_eqXp(i)) + .
 
 So each row keeps a different, wrong subset of the four `nu_eqXp` multipliers, and no row sums all four. `eqII` is corrupted identically (CAP rows only), which is why CAP rows carry the largest residual while LAB rows are also wrong.
 
-**Fix surface (hypothesis, not a result).** `src/kkt/stationarity.py` ~7107–7131, the `is_dim_mismatch and has_real_offset` branch added for #1081. Its comment describes a genuine lead/lag (`bal4(t) → x(t,l)`, "offset k applies when `ord(l) = k`"). dyncge reaches it because `Alias (i,j)` makes `i` and `j` share a set root, so a free equation index is mistaken for a shifted head index. **The `ord()` guard is a symptom; the offsets should never have been created.** ⚠ Confirm before implementing — Sprint 38 saw three of four gates name the wrong layer.
+**Fix surface (hypothesis, not a result).** ⚠ **TRACED ON DAY 1 — this hypothesis was HALF right; see the Day-1 section below before implementing here.** The branch does execute, but fixing it would suppress the *guard*, not the offsets. `src/kkt/stationarity.py` ~7107–7131, the `is_dim_mismatch and has_real_offset` branch added for #1081. Its comment describes a genuine lead/lag (`bal4(t) → x(t,l)`, "offset k applies when `ord(l) = k`"). dyncge reaches it because `Alias (i,j)` makes `i` and `j` share a set root, so a free equation index is mistaken for a shifted head index. **The `ord()` guard is a symptom; the offsets should never have been created.** ⚠ Confirm before implementing — Sprint 38 saw three of four gates name the wrong layer.
 
 ### Verification Methodology
 
@@ -107,6 +107,49 @@ Every previously known member of this family was found because it produced a **P
 **dyncge is the first known SILENT instance.** Its guards keep every phantom reference in range, so the emit compiles, solves to `MS-1`, and is wrong by 29.3 % with no diagnostic of any kind.
 
 **Consequence for #1381:** its "at minimum 13 affected models" is a census of models that failed *loudly*. Silent instances are invisible to that method, so the family's blast radius is plausibly larger than recorded. A search for the *structural* signature — `nu_X(idx±k)` paired with an `ord(…) = k` guard in a stationarity row — would be a cheap way to find them, and is recommended as follow-up work.
+
+---
+
+## Day-1 layer confirmation (Sprint 39, 2026-09-04) — traced, not read
+
+Reproduced first, at `8aae26f4` / GAMS 54.2.1: residual **`CASE_B`**, max rel **6.22e-02** at `stat_pf(CAP,SRV)`, and the same five top rows in the same order as recorded at `37665091`. Structural fail-before also reproduces: **6** `nu_eqXp(j±k)` + **6** `nu_eqII(j±k)` refs, **12** `$(ord(h) = k)` guards, offsets **±1..±3**, `ord(h)` values **{1,2,3}** while `h` has **2** members, and **0** occurrences of the correct `nu_eqXp(i)`.
+
+**Method.** `artifacts/trace_dyncge_layer.py` runs the real emit under a line tracer over `stationarity.py` and wraps the recogniser cascade. No conclusion below is read off the source.
+
+**Result — the named layer is real but downstream.**
+
+| site | executes for dyncge? |
+|---|---|
+| `allow_nonzero_offsets = True` (default) | **HIT** — 63 |
+| Pattern-C claims the pair ⇒ offsets suppressed | **MISS — 0** |
+| `offset_key` zeroed by suppression | **MISS — 0** |
+| `is_dim_mismatch and has_real_offset` *(the named surface)* | **HIT** — 91 |
+| `ord()` guard constructed *(~7124–7132)* | **HIT** — 216 |
+
+So ~7107–7131 **is** on the path — but it decorates offsets that already exist. **The suppression that should prevent them never fires once.**
+
+**Why it never fires.** The cascade is four recognisers, and *all four* miss `pf` (0 claimed, 56 calls). Two of them do claim elsewhere in dyncge (B-1 once, B-3 twice), so the machinery works — it simply does not recognise this shape:
+
+| recogniser | claimed / missed (all vars) | `pf` |
+|---|---|---|
+| `_find_pattern_c_alias_sum` (launch-shape) | 0 / 791 | 0 / 44 |
+| `_find_plain_alias_pattern_c` (B-1) | 1 / 62 | 0 / 4 |
+| `_find_b2_pattern_c` (B-2) | 0 / 62 | 0 / 4 |
+| `_find_dim_mismatch_pattern_c` (B-3) | 2 / 60 | 0 / 4 |
+
+**The structural reason, and it is a single shared gate.** B-1, B-2 and B-3 each require a **single-index** `Sum` — `len(expr.index_sets) == 1` at lines **604**, **743** and **949** — and the launch-shape gate requires a `$` condition dyncge has none of. dyncge's operative term is
+
+```gams
+eqXp(i)..  Xp(i) =e= alpha(i)*(sum((h,j), pf(h,j)*F(h,j)) - Sp - Td)/pq(i);
+```
+
+a **two-index `Sum` binding BOTH of `pf`'s coordinates, with the equation's own index `i` free and unrelated to either.** B-3's *dimension* gate (`0 < len(eq_domain) < len(var_domain)`) actually passes (1 < 2) — the miss is the arity of the `Sum`, not the dimension mismatch. B-1's set gate passes too (`common = {i}`, since `Alias(i,j)` shares a root).
+
+**Checked before proposing new logic** (the S38-D12 rule, and P8's 8b): **no existing member covers this population.** The nearest, B-3, handles a higher-dimensional variable whose *equation index binds one coordinate* while the sum binds the other (cesam2's `COLSUM(jj).. sum(ii, TSAM(ii,jj))`). Here the equation index binds **neither**; the sum collapses the variable entirely. That is a distinct Pattern-C member, not a widening of B-3.
+
+**Consequence for the plan.** This lands where `ISSUE_1714` already pointed — *"the `ord()` guard is a symptom; the offsets should never have been created"* and *"#1381 — the fix probably belongs here."* The trace promotes both from hypothesis to measurement. It also means the REPLAN exit *"hand back to #1381 as Pattern C Phase B rather than patching here"* is the **expected** route, not the fallback.
+
+⚠ **`eqSp` carries the identical `sum((h,j), pf(h,j)*F(h,j))` term** (line 420), so any recogniser added for `eqXp` will see `eqSp` too. `eqSp` is scalar-domain, so it takes a different branch — **this must be verified, not assumed**, before implementing.
 
 ---
 
