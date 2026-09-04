@@ -1131,7 +1131,22 @@ def _find_full_collapse_sum(
                     vsyms = {i.lower() for i in vidx}
                     vcanon = {_resolve_alias_target(i, model_ir) for i in vidx}
                     if not (vsyms & eq_syms) and (vcanon & eq_canon):
-                        return {"sum_node": node, "sum_indices": sum_idx, "var_ref": vref}
+                        return {
+                            "sum_node": node,
+                            "sum_indices": sum_idx,
+                            # ⚠ The VarRef's OWN ordered indices, which are what
+                            # the builder must differentiate against. The check
+                            # above is set-equality (order-insensitive, and
+                            # correctly so — ``sum((j,h), x(h,j))`` binds the
+                            # same coordinates as ``sum((h,j), x(h,j))``), but
+                            # the Sum HEADER order need not match the reference
+                            # order. Differentiating at the header order in that
+                            # case yields a zero derivative and the whole
+                            # stationarity row silently emits as ``0 =E= 0``
+                            # (PR #1728 review; reproduced before fixing).
+                            "var_indices": tuple(vidx),
+                            "var_ref": vref,
+                        }
         stack.extend(node.children())
     return None
 
@@ -1200,8 +1215,10 @@ def _build_full_collapse_term(
     if not eq_idx:
         return None
     sum_node: Sum = found["sum_node"]
-    sum_indices: tuple[str, ...] = found["sum_indices"]
-    if len(sum_indices) != len(var_domain):
+    # ⚠ ORDER MATTERS HERE, and it is the REFERENCE's order, not the Sum
+    # header's. See the note in _find_full_collapse_sum.
+    ref_indices: tuple[str, ...] = found["var_indices"]
+    if len(ref_indices) != len(var_domain):
         return None
     lhs, rhs = eq_def.lhs_rhs
     body = Binary("-", lhs, rhs)
@@ -1223,7 +1240,7 @@ def _build_full_collapse_term(
     placeholder = "__b4_sum_value__"
     outer_src = _substitute_node(body, sum_node, VarRef(placeholder, ()))
     outer = differentiate_expr(outer_src, placeholder, (), Config(model_ir=model_ir))
-    inner = differentiate_expr(sum_node.body, var_name, sum_indices, Config(model_ir=model_ir))
+    inner = differentiate_expr(sum_node.body, var_name, ref_indices, Config(model_ir=model_ir))
     if outer is None or inner is None:
         return None
     coeff = apply_simplification(Binary("*", outer, inner), "advanced")
@@ -1233,7 +1250,7 @@ def _build_full_collapse_term(
     # positionally: sum((h,j), ...) differentiated at (h,j) yields a coefficient
     # in (h,j), and the row is stat_var(h,j).
     rename = {
-        s.lower(): var_domain[k] for k, s in enumerate(sum_indices) if s.lower() != var_domain[k]
+        s.lower(): var_domain[k] for k, s in enumerate(ref_indices) if s.lower() != var_domain[k]
     }
     if rename:
         coeff = _rewrite_subset_to_superset(coeff, rename)
