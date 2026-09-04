@@ -110,8 +110,15 @@ def main() -> int:
     offset_keys: collections.Counter[tuple] = collections.Counter()
     _orig_key = st._compute_index_offset_key
 
-    def _key_probe(eq_idx, var_idx, mult_domain, var_domain, model_ir, **k):  # noqa: ANN001, ANN202
-        out = _orig_key(eq_idx, var_idx, mult_domain, var_domain, model_ir, **k)
+    # ⚠ Parameter names MIRROR the wrapped function exactly
+    # (``eq_indices, var_indices, eq_domain, var_domain, model_ir``). They
+    # previously read ``mult_domain`` for the third argument — copied from the
+    # CALL SITE's local variable name, not the callee's parameter (PR #1726
+    # review). Harmless while the single call site passes positionally, but the
+    # name asserted the wrong thing about what the value *is*, and a future
+    # keyword call would have broken on it.
+    def _key_probe(eq_indices, var_indices, eq_domain, var_domain, model_ir, **k):  # noqa: ANN001, ANN202
+        out = _orig_key(eq_indices, var_indices, eq_domain, var_domain, model_ir, **k)
         if len(var_domain or ()) == 2:  # pf(h,j) is the 2-D variable of interest
             offset_keys[tuple(out)] += 1
         return out
