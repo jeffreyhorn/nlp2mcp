@@ -79,6 +79,20 @@ So each row keeps a different, wrong subset of the four `nu_eqXp` multipliers, a
 
 **Fix surface (hypothesis, not a result).** ⚠ **TRACED ON DAY 1 — this hypothesis was HALF right; see the Day-1 section below before implementing here.** The branch does execute, but fixing it would suppress the *guard*, not the offsets. `src/kkt/stationarity.py` ~7107–7131, the `is_dim_mismatch and has_real_offset` branch added for #1081. Its comment describes a genuine lead/lag (`bal4(t) → x(t,l)`, "offset k applies when `ord(l) = k`"). dyncge reaches it because `Alias (i,j)` makes `i` and `j` share a set root, so a free equation index is mistaken for a shifted head index. **The `ord()` guard is a symptom; the offsets should never have been created.** ⚠ Confirm before implementing — Sprint 38 saw three of four gates name the wrong layer.
 
+### Nearest Existing Mechanism
+
+**Nearest:** Pattern-C member **B-2** (`_find_b2_pattern_c`) — an eq-domain factor outside an alias-`Sum`. Its condition gate, canonical-overlap gate (`common = {i}`) and single-pattern guard **all already pass** for dyncge.
+
+**Why it does not apply, and why it was NOT widened:**
+
+1. B-2 requires a **single-index `Sum`** (`len(index_sets) == 1`, line 743). dyncge's `sum((h,j), pf(h,j)*F(h,j))` binds **two**.
+2. Relaxing that gate would still not reach this shape: B-2's walker descends only through `*`, whereas dyncge's `Sum` sits inside `(sum(...) - Sp - Td)` **under a division**.
+3. B-2 is load-bearing for the corpus, so loosening it risks every model that currently relies on it.
+
+⚠ **B-1 and B-3 were checked too and fail for the same reason** — all three require a single-index `Sum` (lines 604 / 743 / 949). *Three* neighbouring mechanisms existed and none covered this population; recording only "a nearest mechanism exists" would have aimed the fix at B-2. Day-1 trace: 0 claims across 56 calls for `pf`.
+
+**Resolution:** a **new** member (B-4) with a *positive* requirement, leaving B-1/B-2/B-3 untouched (S37 fawley: a predicate that over-fires is fixed by adding a requirement, not subtracting an exclusion).
+
 ### Verification Methodology
 
 1. **Fail-before.** `scripts/diagnostics/kkt_residual.py data/gamslib/raw/dyncge.gms` → `CASE_B`, max rel **6.22e-02** at `stat_pf(CAP,SRV)`; top rows `stat_pf(CAP,SRV)` · `stat_pq(HMN)` · `stat_pf(LAB,SRV)` · `stat_pf(LAB,HMN)` · `stat_pf(CAP,LMN)`.
@@ -189,6 +203,61 @@ eqII(j)..  pk*II(j) =e= pf('CAP',j)**zeta*F('CAP',j) / sum(i, pf('CAP',i)**zeta*
 **Consequence:** `stat_pf` is *partially* corrected.
 
 ⚠ **B-4 was landed as a PARTIAL fix by owner decision on 2026-09-05, and this issue stays OPEN.** dyncge still solves to the wrong answer — the residual remains **`CASE_B` @ 6.26e-02** — and the committed `dyncge_mcp.gms` golden therefore encodes a **less-wrong but still incorrect** emit. Do not read that golden as correct. Day 3 still decides between adding the literal-index member for `eqII` and handing the family back to **#1381** as Pattern C Phase B.
+
+---
+
+## Day-3 verdict (2026-09-06) — VERIFY FAILED; `eqII` HANDED BACK to #1381
+
+The Day-3 controls were run in order against the landed B-4. **Two fail, and they are the two that decide the track.**
+
+| control | verdict | measured |
+|---|---|---|
+| 1 · residual `CASE_A` | ❌ **FAIL** | `CASE_B` @ **6.26e-02**, `stat_pf(CAP,SRV)` |
+| 2 · structural | ❌ **FAIL** | `nu_eqXp(j±k)` **0** ✓ · `nu_eqII(j±k)` **6** ✗ · `$(ord(h)=k)` **6** ✗ |
+| 3 · negative control | ✅ PASS | `stat_pq` byte-identical to the pre-B4 golden (`373d34c2`) |
+| 4 · leak gate | ✅ PASS | 186 checked, all clean, no timeouts |
+| 5 · determinism ×3 | ✅ PASS | 1 distinct hash across seeds 0/1/42 |
+| 6 · objective | — not re-measured | verdict already decided by 1–2; the known divergence stands (MS-1 @ 381401.119 vs NLP 539570.5027) |
+
+### ⚠ A CORRECT PARTIAL FIX MADE ONE ROW WORSE — residual movement is NOT a progress metric here
+
+| row | Day-1 pre-fix | after B-4 | |
+|---|---|---|---|
+| `stat_pf(CAP,SRV)` | 6.22e-02 | **6.26e-02** | ⚠ **worsened** |
+| `stat_pq(HMN)` | 5.90e-02 | 5.90e-02 | unchanged |
+| `stat_pf(LAB,SRV)` | 4.26e-02 | **3.87e-02** | improved |
+| `stat_pf(LAB,HMN)` | 2.96e-02 | 2.96e-02 | unchanged |
+| `stat_pf(CAP,LMN)` | 2.39e-02 | 2.39e-02 | unchanged |
+
+`eqXp` is now **correct**, yet the top row's residual **rose**. Two wrong terms were partially cancelling; correcting one removed the cancellation. `eqII` is **CAP-only**, which is why exactly the CAP rows are the ones that fail to improve.
+
+**Consequence for anyone continuing this work: do not use residual magnitude to judge progress on a row carrying more than one defect.** A correct fix can increase it. Only `CASE_A` — or a per-term hand-derivation — is a valid signal.
+
+### `stat_pq(HMN)` — the third REPLAN exit is NOT discharged
+
+It is **completely insensitive** to the `eqXp` fix (5.90e-02 → 5.90e-02, unchanged to three significant figures). But that exit's premise is *"correcting `stat_pf`"*, and `stat_pf` is only **partially** corrected while `eqII` remains. **The exit therefore cannot be discharged either way**, and the *Open question* below stays open. Recorded, not absorbed.
+
+### Hand-back package for #1381 — the `eqII` member
+
+```gams
+eqII(j).. pk*II(j) =e= pf('CAP',j)**zeta*F('CAP',j)
+                       / sum(i, pf('CAP',i)**zeta*F('CAP',i)) * (Sp + eps*Sf);
+```
+
+**Why B-4 declines it — correctly, on two independent requirements:**
+
+1. **Not a full collapse.** The `Sum` binds only **one** of `pf`'s coordinates; the first is the **literal `'CAP'`**. B-4 requires the `Sum` to bind *every* coordinate.
+2. **Not single-pattern.** `pf` appears **outside** the `Sum` too (the numerator `pf('CAP',j)`). B-4's single-pattern guard — inherited from B-1/B-2, and the #1110 diagonal-drop protection — rejects that.
+
+**What a new member must handle, that no existing member does:**
+
+- a **literal element** in a variable reference coordinate, beside a free sum index in another
+- the variable appearing in **both** numerator and denominator (a genuine quotient rule), so the coefficient is not a single product
+- the equation index `j` binding the *non-literal* coordinate — unlike B-4, where it binds neither
+
+**Proven and reusable from B-4:** the discriminator (**same set root, different symbol**), the chain-rule split with placeholder substitution, and the placeholder-survival guard. The two mutation-verified predicate tests in `tests/unit/kkt/test_pattern_c_b4_full_collapse.py` are the template for pinning any new member against over- and under-matching.
+
+⚠ **Do not widen B-4 to reach `eqII`.** Its full-collapse requirement is load-bearing: relaxing it re-admits the corpus-wide leak measured on Day 2 (10 goldens against a zero-drift baseline).
 
 ---
 

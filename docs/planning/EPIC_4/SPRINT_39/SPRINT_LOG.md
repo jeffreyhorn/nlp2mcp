@@ -168,3 +168,48 @@ The verified half is banked rather than held or handed back. **What this decides
 - **⚠ The PROCEED signal was not met and was not waived.** Landing here is a scope decision about banking verified work, not a judgement that the acceptance gate passed.
 
 ---
+
+## Day 3 — 2026-09-06 · P2: verify or hand back · 4 h · + P8 8a/8b · 5 h
+
+**Branch:** `planning/sprint39-day3-dyncge` · **Measured at:** `74c5efba`
+
+### P2 — VERIFY FAILED; `eqII` HANDED BACK to #1381
+
+| control | verdict |
+|---|---|
+| 1 · residual `CASE_A` | ❌ **`CASE_B` @ 6.26e-02** |
+| 2 · structural | ❌ `nu_eqXp(j±k)` 0 ✓ · `nu_eqII(j±k)` **6** ✗ · `$(ord(h)=k)` **6** ✗ |
+| 3 · negative control | ✅ `stat_pq` byte-identical to the pre-B4 golden |
+| 4 · leak gate | ✅ 186 checked, all clean, no timeouts |
+| 5 · determinism ×3 | ✅ 1 distinct hash |
+| 6 · objective | — not re-measured; decided by 1–2 |
+
+Hand-back package in `ISSUE_1714` §*Day-3 verdict*: what `eqII` needs that no member has (literal coordinate; variable in numerator **and** denominator sum; eq index binding the non-literal coordinate), and what B-4 already proves reusable.
+
+### ⚠ A CORRECT PARTIAL FIX MADE THE TOP ROW WORSE
+
+`stat_pf(CAP,SRV)` **6.22e-02 → 6.26e-02** after `eqXp` was corrected. Two wrong terms had been partially cancelling; removing one exposed the other. Only `stat_pf(LAB,SRV)` improved (4.26 → 3.87e-02); three rows unchanged.
+
+**Residual magnitude is NOT a progress metric for a row with more than one defect.** Only `CASE_A`, or a per-term hand-derivation, is valid. Recorded because it would mislead whoever takes `eqII`.
+
+### ⚠ The third REPLAN exit could NOT be discharged
+
+`stat_pq(HMN)` is completely insensitive to the fix (5.90e-02, unchanged), but that exit's premise is *"correcting `stat_pf`"* — and `stat_pf` is only **partially** corrected. Open in both directions; recorded, not absorbed.
+
+### ⚠ SCOPE SLIP FOUND — P8 8a was never landed
+
+Day 2 spent its full budget on P2 and dropped its 3 h of P8 without recording it. `check_phase0_doc.py` and `phase0-gate.yml` were last touched in **Sprint 37**. Since 8a and 8b share the *added-only* mechanism, both landed today.
+
+### P8 8a + 8b
+
+- **Mechanism:** `pulls.listFiles` already returns `status`; the workflow discarded it. It now emits `status\tfilename`, and the checker parses it — **bare paths still work**, and a bare path is treated as *not added*, so the legacy format can never tighten the gate by accident.
+- **8a:** an added doc must carry a `**Layer:**` line.
+- **8b:** an added doc must carry `### Nearest Existing Mechanism` **and record why it does not apply** — naming one is not enough.
+- **⚠ ADDED-ONLY BY DESIGN.** Unconditional requirements would retroactively fail **all 39** conforming issue docs. A gate that goes red on untouched history gets switched off, and a switched-off gate protects nothing.
+- **3 mutants killed** (8b removed · 8b why-not check removed · 8a removed). `ISSUE_1714` backfilled as a worked example — it passes even when treated as *added*.
+
+### Gate
+
+typecheck / format / lint clean · `make test` **5310 passed** / 10 skipped / 1 xfailed (+6) · leak gate 186 all clean
+
+---

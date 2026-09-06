@@ -47,6 +47,34 @@ REQUIRED = [
     "PROCEED/REPLAN Signal",
 ]
 
+#: Sprint 39 P8-8b. Required only of docs the PR ADDS -- see `added_only` below.
+#: A newly authored Phase-0 gate must say which existing mechanism is nearest
+#: and WHY IT DOES NOT APPLY, not merely that one was looked for.
+#:
+#: ⚠ THIS SPRINT IS THE WORKED EXAMPLE. ISSUE_1714's Day-1 trace found the
+#: mechanism already existed for THREE neighbouring populations (Pattern-C
+#: members B-1/B-2/B-3) and still did not cover dyncge's shape -- each requires
+#: a single-index ``Sum``. Recording only "a nearest mechanism exists" would
+#: have pointed the fix at B-2 and produced either a corpus-wide leak (measured:
+#: 10 goldens) or dead code. The load-bearing content is the *why not*.
+REQUIRED_WHEN_ADDED = ["Nearest Existing Mechanism"]
+
+#: Sprint 39 P8-8a. A newly authored gate must name the layer it targets.
+#: ⚠ ISSUE_1714 named ~7107-7131 and Day 1 measured that as the SYMPTOM site,
+#: not the birth site -- so the field's value is that it is falsifiable, and it
+#: was in fact falsified. Three of four Sprint-38 gates named the wrong layer.
+LAYER_FIELD = re.compile(r"^\*\*Layer:\*\*", re.M)
+
+#: A "why not" rationale, deliberately LOOSE. This enforces that the question
+#: was ANSWERED, not that the answer is good -- judging the latter is review's
+#: job, and a tighter pattern would only teach authors to paste the magic words.
+WHY_NOT_CUES = re.compile(
+    r"does not apply|do not apply|doesn't apply|not applicable|declines?|"
+    r"cannot reach|can't reach|does not reach|not widened|rather than widen|"
+    r"why it does not|insufficient|does not cover|not covered",
+    re.I,
+)
+
 PHASE0_HEADING = re.compile(r"^## Phase 0: Acceptance Gate\b", re.M)
 
 
@@ -70,6 +98,50 @@ def missing_subsections(text: str) -> list[str]:
     if subs is None:
         return list(REQUIRED)
     return [r for r in REQUIRED if not any(h.startswith(r) for h in subs)]
+
+
+def subsection_body(text: str, title: str) -> str:
+    """Body text under a ``### <title>`` subsection of the Phase-0 section."""
+    m = PHASE0_HEADING.search(text)
+    if not m:
+        return ""
+    rest = text[m.end() :]
+    nxt = re.search(r"^## ", rest, re.M)
+    body = rest[: nxt.start()] if nxt else rest
+    sm = re.search(rf"^### {re.escape(title)}.*$", body, re.M)
+    if not sm:
+        return ""
+    after = body[sm.end() :]
+    nxt2 = re.search(r"^#{2,3} ", after, re.M)
+    return after[: nxt2.start()] if nxt2 else after
+
+
+def missing_for_added(text: str) -> list[str]:
+    """Extra requirements that apply only to a NEWLY ADDED Phase-0 doc.
+
+    Kept separate from :func:`missing_subsections` on purpose. Making these
+    unconditional would retroactively fail **all 39** currently-conforming issue
+    docs (measured on 2026-09-06) -- a gate that goes red on untouched history
+    gets disabled, and a disabled gate protects nothing. New docs pay the cost;
+    existing ones are backfilled deliberately, not by a build break.
+    """
+    out: list[str] = []
+    subs = phase0_subsections(text)
+    if subs is None:
+        return list(REQUIRED_WHEN_ADDED) + ["**Layer:** metadata line"]
+    for req in REQUIRED_WHEN_ADDED:
+        if not any(h.startswith(req) for h in subs):
+            out.append(req)
+            continue
+        body = subsection_body(text, req)
+        if not WHY_NOT_CUES.search(body):
+            out.append(
+                f"{req} (present, but records no reason the nearest mechanism "
+                f"does not apply -- naming one is not enough)"
+            )
+    if not LAYER_FIELD.search(text):
+        out.append("**Layer:** metadata line")
+    return out
 
 
 def issue_docs_from_body(body: str) -> list[Path]:
@@ -109,7 +181,20 @@ def main() -> int:
     if not changed_path.is_file():
         print(f"ERROR: --changed-files not found: {changed_path}", file=sys.stderr)
         return 2
-    changed = [ln.strip() for ln in changed_path.read_text().splitlines() if ln.strip()]
+    # Each line is either ``path`` (legacy) or ``status\tpath`` (Sprint 39 P8-8a:
+    # ``pulls.listFiles`` already returns ``status``; the workflow used to
+    # discard it). A bare path yields status "" -- treated as NOT added, so the
+    # legacy format can never *tighten* the gate by accident.
+    raw = [ln.rstrip("\n") for ln in changed_path.read_text().splitlines() if ln.strip()]
+    status_of: dict[str, str] = {}
+    changed = []
+    for ln in raw:
+        st, tab, path = ln.partition("\t")
+        if not tab:
+            st, path = "", ln.strip()
+        path = path.strip()
+        changed.append(path)
+        status_of[path] = st.strip().lower()
 
     emit_files = [f for f in changed if EMIT_PATH_RE.match(f)]
     report: dict = {"emit_files": emit_files, "applicable": bool(emit_files)}
@@ -142,12 +227,21 @@ def main() -> int:
     conforming: list[str] = []
     defects: list[tuple[str, list[str]]] = []
     for p in candidates:
-        miss = missing_subsections(p.read_text())
+        text = p.read_text()
         rel = str(p.relative_to(PROJECT_ROOT))
+        miss = missing_subsections(text)
+        # Sprint 39 P8-8a/8b: extra requirements for docs this PR ADDS.
+        if status_of.get(rel) == "added":
+            miss = miss + missing_for_added(text)
         if miss:
             defects.append((rel, miss))
         else:
             conforming.append(rel)
+    report["added_docs"] = [
+        str(p.relative_to(PROJECT_ROOT))
+        for p in candidates
+        if status_of.get(str(p.relative_to(PROJECT_ROOT))) == "added"
+    ]
 
     report["conforming"] = conforming
     report["defects"] = [{"doc": d, "missing": m} for d, m in defects]
