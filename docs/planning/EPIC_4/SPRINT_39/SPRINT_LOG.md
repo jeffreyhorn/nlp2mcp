@@ -148,7 +148,7 @@ The condition is **same set root, different symbol**. Neither half alone works:
 
 Differentiating the whole body at the `Sum`'s own bound names produced `sum((h__,j__), f(h__,j__))` — F summed over **every** instance where the correct coefficient is `f(h,j)` at the head instance. It compiled and would have been silently wrong: **the same failure class as the defect under repair.** Fixed with an explicit chain-rule split (placeholder substitution for the outer factor, sum-body derivative for the inner).
 
-### Carried to Day 3 — the land-or-hand-back decision
+### Carried to Day 3 — the `eqII` route (the landing decision is TAKEN; see below)
 
 `eqII` is a **second, distinct member**, not a gap in B-4:
 

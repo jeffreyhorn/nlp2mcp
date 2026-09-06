@@ -198,5 +198,5 @@ eqII(j)..  pk*II(j) =e= pf('CAP',j)**zeta*F('CAP',j) / sum(i, pf('CAP',i)**zeta*
 
 ---
 
-**Document Status:** ✅ Phase-0 gate authored — Sprint 39 Prep Task 4
-**Last Updated:** 2026-08-30
+**Document Status:** ⚠ **OPEN — partially fixed.** Phase-0 gate authored Sprint 39 Prep Task 4; layer confirmed and refined Day 1; B-4 landed as a **partial** fix by owner decision Day 2. `eqXp` is corrected; **`eqII` is not**, and dyncge still solves to the wrong answer (residual **`CASE_B` @ 6.26e-02**).
+**Last Updated:** 2026-09-05 — Day-2 owner decision (partial-fix landing)
