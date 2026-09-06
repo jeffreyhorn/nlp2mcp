@@ -186,7 +186,9 @@ eqII(j)..  pk*II(j) =e= pf('CAP',j)**zeta*F('CAP',j) / sum(i, pf('CAP',i)**zeta*
 
 `pf` appears **twice**, with a **literal `'CAP'`** in the first coordinate: once at the equation's own index `j`, once inside `sum(i, …)`. So the `Sum` binds only **one** of `pf`'s coordinates and `pf` also occurs **outside** it. B-4 declines on both its full-collapse requirement and its single-pattern guard — **correctly**; this is a different member, not a gap in B-4.
 
-**Consequence:** `stat_pf` is *partially* corrected. Day 3 decides between adding the literal-index member and handing the whole family back to **#1381** as Pattern C Phase B.
+**Consequence:** `stat_pf` is *partially* corrected.
+
+⚠ **B-4 was landed as a PARTIAL fix by owner decision on 2026-09-05, and this issue stays OPEN.** dyncge still solves to the wrong answer — the residual remains **`CASE_B` @ 6.26e-02** — and the committed `dyncge_mcp.gms` golden therefore encodes a **less-wrong but still incorrect** emit. Do not read that golden as correct. Day 3 still decides between adding the literal-index member for `eqII` and handing the family back to **#1381** as Pattern C Phase B.
 
 ---
 
