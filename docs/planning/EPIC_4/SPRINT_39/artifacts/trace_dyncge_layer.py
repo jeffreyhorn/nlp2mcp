@@ -95,7 +95,14 @@ def main() -> int:
         def wrapped(*a, **k):  # noqa: ANN202
             out = orig(*a, **k)
             var = next((str(x) for x in a if isinstance(x, str)), "?")
-            calls.append((name, var, out is not None))
+            # Day 2: key by (equation, variable), not variable alone. eqSp and
+            # eqXp carry the IDENTICAL sum((h,j), pf*F) term, so a per-variable
+            # aggregate cannot distinguish them — and whether eqSp reaches the
+            # same branch decides whether a recogniser written for eqXp will
+            # also be offered eqSp. Three of the four take eq_def first; the
+            # launch-shape gate takes an Expr, so it reports "-".
+            eq = getattr(a[0], "name", None) if a else None
+            calls.append((name, str(eq) if eq else "-", var, out is not None))
             return out
 
         return wrapped
@@ -150,7 +157,7 @@ def main() -> int:
 
     print("\n=== the Pattern-C recogniser CASCADE (a miss by all -> offsets born) ===")
     agg: dict[tuple[str, str], list[int]] = {}
-    for rec, var, found in calls:
+    for rec, _eq, var, found in calls:
         a = agg.setdefault((rec, var), [0, 0])
         a[found] += 1
     print(f"  {'recogniser':<32} {'var':<6} {'CLAIMED':>8} {'missed':>8}")
@@ -163,6 +170,24 @@ def main() -> int:
         v = agg.get((rec, "pf"))
         if v:
             print(f"  pf only: {rec:<32} CLAIMED={v[1]}  missed={v[0]}")
+
+    # Day 2: eqSp vs eqXp — they share the identical sum((h,j), pf*F) term.
+    print("\n=== per-EQUATION view for pf (eqSp and eqXp share the same Sum) ===")
+    per_eq: dict[tuple[str, str], list[int]] = {}
+    for rec, eq, var, found in calls:
+        if var.lower() == "pf":
+            e = per_eq.setdefault((eq, rec), [0, 0])
+            e[found] += 1
+    if not per_eq:
+        print("  no pf calls recorded")
+    else:
+        for (eq, rec), (miss, found) in sorted(per_eq.items()):
+            print(f"  eq={eq:<10} {rec:<32} CLAIMED={found}  missed={miss}")
+        eqs = sorted({eq for eq, _ in per_eq})
+        print(f"\n  equations offering pf to the cascade: {eqs}")
+        for want in ("eqSp", "eqXp"):
+            seen = [e for e in eqs if e.lower() == want.lower()]
+            print(f"  {want}: {'REACHES the cascade' if seen else 'does NOT reach the cascade'}")
 
     print("\n=== offset keys produced for 2-D variables (pf(h,j) is the one at issue) ===")
     if not offset_keys:

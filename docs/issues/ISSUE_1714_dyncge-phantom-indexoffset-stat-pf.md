@@ -155,6 +155,41 @@ a **two-index `Sum` binding BOTH of `pf`'s coordinates, with the equation's own 
 
 ---
 
+## Day-2 Phase-0 gate — re-authored at the BIRTH site (2026-09-04)
+
+⚠ **The Phase-0 gate above targets ~7107–7131 and must not be used to accept a fix.** Day 1 measured that as the symptom site; a gate anchored there passes against a change that suppresses the `ord()` guard while leaving the wrong answer intact. This section supersedes it for fix-acceptance purposes.
+
+**Fix surface (measured, not hypothesised).** `src/kkt/stationarity.py`, the Pattern-C recogniser cascade at **~6290–6455**. The four existing members all decline `(eqXp, pf)`, so `allow_nonzero_offsets` stays `True` and the generic offset-groups path manufactures the offsets.
+
+**Nearest existing mechanism — and why it is not widened** *(the P8-8b field, answered)*. **B-2** is nearest by body shape: an eq-domain factor outside an alias-`Sum`. It fails **only** on the `Sum`'s arity (`len(index_sets) == 1`, line 743); its condition gate, canonical-overlap gate (`common = {i}`) and single-pattern guard all already pass for dyncge. It is nonetheless **not** widened, for two reasons — relaxing that arity gate would not reach this shape anyway (B-2's walker descends only through `*`, whereas dyncge's `Sum` sits inside `(sum(...) - Sp - Td)` under a division), and it would loosen a predicate the whole corpus depends on. A **new** member with a **positive** requirement is added instead (S37 fawley). *(Day 1 named B-3 as nearest; that is right about the dimension relationship and wrong about body shape. B-2 is the closer analogue.)*
+
+**Fail-before at the new location.** With the fix reverted, `(eqXp, pf)` reaches line 6292 and **no** cascade member claims it:
+
+```
+FIND eq=eqXp  miss  var_dom=('h','j') eq_dom=('i',) cond=False
+```
+
+and `stat_pf` carries **6** `nu_eqXp(j±k)` references. With the fix, the recogniser claims the pair and those go to **0**.
+
+### Verified on Day 2
+
+- **`eqSp` does NOT reach the cascade** — traced, not assumed. Only the four *indexed* equations (`eqF`, `eqII`, `eqXp`, `eqpf2`) reach line 6292 for `pf`; `eqSp` is scalar-domain and the cascade lives inside `_add_indexed_jacobian_terms`, so the exclusion is **structural, not incidental**. Its emitted term `((-1) * (ssp * f(h,j))) * nu_eqSp` already matches the hand-derivation exactly.
+- **`eqXp` is fixed.** `nu_eqXp(j±k)` **6 → 0**, and the emitted coefficient is `sum(i, ((-1) * (pq(i)*alpha(i)/sqr(pq(i)))) * f(h,j) * nu_eqXp(i))` = `−alpha(i)·f(h,j)/pq(i)` — the hand-derived value. *(Unreduced `pq/sqr(pq)`, matching the pre-fix emit's own convention.)*
+
+### ⚠ NOT fixed on Day 2 — `eqII` is a SECOND, distinct shape
+
+`nu_eqII(j±k)` remains **6**, `$(ord(h) = k)` remains **6**, and the residual stays **`CASE_B`** at **6.26e-02** (`stat_pf(CAP,SRV)`), essentially unmoved — `eqII` is CAP-only, which is exactly why the CAP rows dominate.
+
+```gams
+eqII(j)..  pk*II(j) =e= pf('CAP',j)**zeta*F('CAP',j) / sum(i, pf('CAP',i)**zeta*F('CAP',i)) * (Sp + eps*Sf);
+```
+
+`pf` appears **twice**, with a **literal `'CAP'`** in the first coordinate: once at the equation's own index `j`, once inside `sum(i, …)`. So the `Sum` binds only **one** of `pf`'s coordinates and `pf` also occurs **outside** it. B-4 declines on both its full-collapse requirement and its single-pattern guard — **correctly**; this is a different member, not a gap in B-4.
+
+**Consequence:** `stat_pf` is *partially* corrected. Day 3 decides between adding the literal-index member and handing the whole family back to **#1381** as Pattern C Phase B.
+
+---
+
 ## Open question (deliberately not closed here)
 
 `stat_pq(HMN)` carries the **second-largest** residual (5.90e-02), yet `stat_pq` was verified correct term-by-term. Its residual is therefore **not explained by a defect in its own row** — most plausibly it *surfaces* there through multipliers shared with the corrupted `stat_pf` rows (`nu_eqXp` appears in both). **This has not been proven**, and the PROCEED/REPLAN signal above treats a surviving `stat_pq` residual as evidence of a second defect.

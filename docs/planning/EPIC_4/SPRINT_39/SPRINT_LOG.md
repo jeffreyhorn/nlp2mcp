@@ -111,3 +111,51 @@ So ~7107–7131 is the **symptom** site and ~6290–6455 is the **birth** site. 
 - **No `src/` or `tests/` change**; the only `*.py` is the new `docs/planning/EPIC_4/SPRINT_39/artifacts/trace_dyncge_layer.py`, so the quality gate was **run rather than waived**
 
 ---
+
+## Day 2 — 2026-09-04 · P2: dyncge — the new Pattern-C member · 7 h
+
+**Branch:** `planning/sprint39-day2-dyncge` · **Measured at:** `9ee4fe0f` · **`src/` CHANGED — quality gate run**
+
+### ⚠ PROCEED is NOT met. This is a corpus-safe PARTIAL fix.
+
+| control | result |
+|---|---|
+| 1 · residual `CASE_A` | ✗ **`CASE_B` @ 6.26e-02** (`stat_pf(CAP,SRV)`) — eqII unfixed |
+| 2 · structural | ◐ `nu_eqXp(j±k)` **6 → 0** ✓ · `nu_eqII(j±k)` **6** ✗ · `$(ord(h)=k)` **6** ✗ |
+| 3 · negative control | ✓ `stat_pq` **byte-identical** |
+| 4 · leak gate | ✓ **dyncge alone** (186 checked, no timeout), against a **measured zero-drift baseline** |
+| 6 · determinism ×3 | ✓ identical MD5 across `PYTHONHASHSEED` 0/1/42 |
+| — · tests | ✓ 5301 passed / 10 skipped / 1 xfailed |
+
+### `eqSp` — the day's first task, discharged
+
+**Verified by trace, not assumed: `eqSp` does NOT reach the cascade.** Only the four *indexed* equations reach line 6292 for `pf`; `eqSp` is scalar-domain and the cascade lives inside `_add_indexed_jacobian_terms`, so the exclusion is **structural**. Its emitted term `((-1) * (ssp * f(h,j))) * nu_eqSp` already matches the hand-derivation.
+
+### The nearest member is B-2, not B-3 — a correction to Day 1
+
+B-2 fails on the `Sum`'s **arity alone**; its condition gate, canonical-overlap gate (`common = {i}`) and single-pattern guard all already pass for dyncge. Day 1 named B-3, which is right about the *dimension relationship* and wrong about *body shape*. B-2 is still not widened: its walker descends only through `*`, and dyncge's `Sum` sits inside `(sum(...) - Sp - Td)` under a division, so relaxing its arity gate would not even reach this shape.
+
+### ⚠ The discriminator took TWO wrong attempts, and both failed SILENTLY
+
+The condition is **same set root, different symbol**. Neither half alone works:
+
+1. **Canonical sets only** — matched **nothing**. Under `Alias (i,j)` the variable's `j` resolves to `i`, so the test reported "related" for exactly the shape it existed to catch. **That is the same conflation that produces the defect.**
+2. **Symbols only** — matched the **whole corpus**. 10 goldens drifted against a **measured baseline of zero**: agreste, egypt (**−28 KB**), fawley, shale, tforss, turkey. These are ordinary full-collapse shapes the standard path **already emits correctly** — B-4 was rewriting working emits.
+
+⚠ **Attempt 2 passed `make test`, `typecheck` and `lint`.** Only the leak gate *against a measured baseline* caught it. I had also guessed egypt/shale drift was pre-existing (they carry a known live emit defect); the baseline run refuted that — **all 10 were mine**.
+
+### ⚠ A second silent bug in the builder
+
+Differentiating the whole body at the `Sum`'s own bound names produced `sum((h__,j__), f(h__,j__))` — F summed over **every** instance where the correct coefficient is `f(h,j)` at the head instance. It compiled and would have been silently wrong: **the same failure class as the defect under repair.** Fixed with an explicit chain-rule split (placeholder substitution for the outer factor, sum-body derivative for the inner).
+
+### Carried to Day 3 — the land-or-hand-back decision
+
+`eqII` is a **second, distinct member**, not a gap in B-4:
+
+```gams
+eqII(j).. pk*II(j) =e= pf('CAP',j)**zeta*F('CAP',j) / sum(i, pf('CAP',i)**zeta*F('CAP',i)) * (Sp + eps*Sf);
+```
+
+A **literal `'CAP'`** in `pf`'s first coordinate, `pf` both inside and outside the `Sum`, and the `Sum` binding only **one** coordinate. B-4 declines on both its full-collapse requirement and its single-pattern guard — correctly. Day 3 chooses: add the literal-index member, or hand the family back to **#1381** as Pattern C Phase B.
+
+---
