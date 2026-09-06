@@ -1036,7 +1036,10 @@ def _find_full_collapse_pattern_c(
     ``nu_eqXp(j±k)`` terms gated on ``ord(h) = k``, which for dyncge compiles,
     solves to MS-1 and is silently wrong by 29.3 %.
 
-    Returns ``{"sum_node", "sum_indices", "var_ref"}`` or ``None``.
+    Returns ``{"sum_node", "sum_indices", "var_indices", "var_ref"}`` or
+    ``None``. ``sum_indices`` is the ``Sum`` header's order; ``var_indices`` is
+    the matched reference's own order, and is the one the builder must
+    differentiate against — the two can differ (``sum((j,h), x(h,j)*...)``).
     """
     if eq_def is None or eq_def.condition is not None:
         return None
@@ -1151,6 +1154,19 @@ def _find_full_collapse_sum(
     return None
 
 
+def _references_symbol(expr: Expr, name: str) -> bool:
+    """True if any ``VarRef``/``ParamRef``/``SymbolRef`` in ``expr`` is ``name``."""
+    stack: list[Expr] = [expr]
+    lowered = name.lower()
+    while stack:
+        node = stack.pop()
+        nm = getattr(node, "name", None)
+        if nm is not None and str(nm).lower() == lowered:
+            return True
+        stack.extend(node.children())
+    return False
+
+
 def _substitute_node(expr: Expr, target: Expr, replacement: Expr) -> Expr:
     """Return ``expr`` with the node that IS ``target`` (identity, not equality)
     replaced by ``replacement``.
@@ -1243,8 +1259,30 @@ def _build_full_collapse_term(
     inner = differentiate_expr(sum_node.body, var_name, ref_indices, Config(model_ir=model_ir))
     if outer is None or inner is None:
         return None
+    # ⚠ THE PLACEHOLDER MUST NOT SURVIVE. If the body is NONLINEAR in the Sum's
+    # value — e.g. ``a(i)*sqr(sum((h,j), x(h,j)*w(h,j)))/q(i)`` — then
+    # ``∂body/∂S`` legitimately still references ``S``, and emitting that
+    # coefficient puts the placeholder into the GAMS source as an UNDEFINED
+    # SYMBOL. Measured before fixing (PR #1728 review): two rows emitted
+    # ``... * 2 * __b4_sum_value__ / ...``, which does not compile.
+    #
+    # Declining here falls back to the standard offset-groups path — the
+    # pre-existing behaviour for these shapes — rather than shipping invalid
+    # GAMS. Substituting the Sum back in would be mathematically correct, but
+    # the positional rename below would then also rewrite the restored Sum's OWN
+    # bound indices and capture them, so it is deliberately not attempted; a
+    # nonlinear-in-Sum member is separate work.
     coeff = apply_simplification(Binary("*", outer, inner), "advanced")
     if coeff is None or (isinstance(coeff, Const) and coeff.value == 0.0):
+        return None
+    # ⚠ CHECK AFTER SIMPLIFICATION, on the coefficient that is actually emitted.
+    # Checking the RAW ``outer`` rejects valid cases: the quotient rule produces
+    # ``(dN/dS·D - N·dD/dS)/D²``, and the ``N·0`` term still mentions the
+    # placeholder until simplification removes it. dyncge's own eqXp is exactly
+    # that shape, so the raw check silently un-did the entire fix -- and the
+    # synthetic unit tests still passed, because their bodies simplify
+    # differently. Only re-checking dyncge caught it.
+    if _references_symbol(coeff, placeholder):
         return None
     # Rename the sum's bound indices onto the stationarity row's own indices,
     # positionally: sum((h,j), ...) differentiated at (h,j) yields a coefficient

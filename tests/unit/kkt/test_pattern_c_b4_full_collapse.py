@@ -38,8 +38,8 @@ import sys
 import pytest
 
 # A 2-D variable fully bound by a multi-index Sum, with the equation's own index
-# `c` sharing a set root with the variable's `j` via `Alias (i,j)` but written as
-# a DIFFERENT symbol. This is dyncge's shape, minimised.
+# `i` sharing a set root with the variable's second coordinate `j` via
+# `Alias (i,j)` while being a DIFFERENT symbol. This is dyncge's shape, minimised.
 ALIAS_COLLISION = """\
 Set i /i1*i3/, h /h1,h2/;
 Alias (i,j);
@@ -142,4 +142,67 @@ def test_b4_declines_when_the_sets_are_unrelated(tmp_path):
         "the variable's coordinates come from unrelated sets: the standard path "
         f"already emits it correctly, so claiming it is a corpus-wide leak. "
         f"Claimed: {claimed}"
+    )
+
+
+# Same full-collapse shape, but the body is NONLINEAR in the Sum's value. The
+# builder splits the chain rule by substituting a placeholder for the Sum; here
+# `∂body/∂S` legitimately still references S, so the placeholder would survive
+# into the coefficient.
+NONLINEAR_IN_SUM = """\
+Set i /i1*i3/, h /h1,h2/;
+Alias (i,j);
+Parameter a(i), q(i);
+a(i) = 1; q(i) = 2;
+Variables x(h,i), w(h,i), y(i), obj;
+Equations eqy(i), eobj;
+eqy(i)..  y(i) =e= a(i)*sqr(sum((h,j), x(h,j)*w(h,j)))/q(i);
+eobj..    obj =e= sum(i, y(i));
+Model m /all/;
+Solve m maximizing obj using nlp;
+"""
+
+
+@pytest.mark.unit
+def test_b4_declines_when_the_body_is_nonlinear_in_the_sum(tmp_path):
+    """INVALID-EMIT guard.
+
+    Without the placeholder-survival check the emitted GAMS contained an
+    undefined symbol -- measured, before the fix::
+
+        stat_x(h,i).. sum(i__, ((-1) * (q(i__)*a(i__) * 2 * __b4_sum_value__
+                       / sqr(q(i__)))) * w(h,i__) * nu_eqy(i__)) =E= 0;
+
+    which does not compile. B-4 must decline instead, falling back to the
+    standard path. Asserted two ways: the recogniser's term must not be used,
+    and -- the property that actually matters -- the placeholder must never
+    reach the emitted source.
+    """
+    gams_file = tmp_path / "m.gms"
+    gams_file.write_text(NONLINEAR_IN_SUM)
+
+    old_limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(50000)
+    try:
+        from src.ad.constraint_jacobian import compute_constraint_jacobian
+        from src.ad.gradient import compute_objective_gradient
+        from src.emit.emit_gams import emit_gams_mcp
+        from src.ir.normalize import normalize_model
+        from src.ir.parser import parse_model_file
+        from src.kkt.assemble import assemble_kkt_system
+
+        model = parse_model_file(str(gams_file))
+        normalize_model(model)
+        j_eq, j_ineq = compute_constraint_jacobian(model)
+        grad = compute_objective_gradient(model)
+        kkt = assemble_kkt_system(model, grad, j_eq, j_ineq)
+        output = emit_gams_mcp(kkt)
+    finally:
+        sys.setrecursionlimit(old_limit)
+
+    assert "__b4_sum_value__" not in output, (
+        "The B-4 chain-rule placeholder leaked into the emitted GAMS, which "
+        "references an undefined symbol and will not compile. B-4 must decline "
+        "when the body is nonlinear in the Sum's value.\n"
+        + "\n".join(ln for ln in output.splitlines() if "__b4_sum_value__" in ln)
     )
