@@ -68,7 +68,9 @@ jobs:
               pull_number: context.payload.pull_request.number,
               per_page: 100,
             });
-            fs.writeFileSync('changed_files.txt', files.map(f => f.filename).join('\n'));
+            // Sprint 39 P8-8a: keep `status` -- listFiles already returns it, and the
+            // added-only Phase-0 requirements cannot be applied without it.
+            fs.writeFileSync('changed_files.txt', files.map(f => `${f.status}\t${f.filename}`).join('\n'));
             fs.writeFileSync('pr_body.txt', context.payload.pull_request.body || '');
             core.info(`Collected ${files.length} changed file(s).`);
 
