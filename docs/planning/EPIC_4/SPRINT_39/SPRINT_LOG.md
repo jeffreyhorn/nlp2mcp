@@ -148,7 +148,7 @@ The condition is **same set root, different symbol**. Neither half alone works:
 
 Differentiating the whole body at the `Sum`'s own bound names produced `sum((h__,j__), f(h__,j__))` — F summed over **every** instance where the correct coefficient is `f(h,j)` at the head instance. It compiled and would have been silently wrong: **the same failure class as the defect under repair.** Fixed with an explicit chain-rule split (placeholder substitution for the outer factor, sum-body derivative for the inner).
 
-### Carried to Day 3 — the land-or-hand-back decision
+### Carried to Day 3 — the `eqII` route (the landing decision is TAKEN; see below)
 
 `eqII` is a **second, distinct member**, not a gap in B-4:
 
@@ -156,6 +156,15 @@ Differentiating the whole body at the `Sum`'s own bound names produced `sum((h__
 eqII(j).. pk*II(j) =e= pf('CAP',j)**zeta*F('CAP',j) / sum(i, pf('CAP',i)**zeta*F('CAP',i)) * (Sp + eps*Sf);
 ```
 
-A **literal `'CAP'`** in `pf`'s first coordinate, `pf` both inside and outside the `Sum`, and the `Sum` binding only **one** coordinate. B-4 declines on both its full-collapse requirement and its single-pattern guard — correctly. Day 3 chooses: add the literal-index member, or hand the family back to **#1381** as Pattern C Phase B.
+A **literal `'CAP'`** in `pf`'s first coordinate, `pf` both inside and outside the `Sum`, and the `Sum` binding only **one** coordinate. B-4 declines on both its full-collapse requirement and its single-pattern guard — correctly.
+
+### ✅ OWNER DECISION 2026-09-05 — land B-4 as a PARTIAL fix
+
+The verified half is banked rather than held or handed back. **What this decides, and what it does not:**
+
+- **Decided:** B-4 lands. `eqXp` is fixed, corpus-safe (186 goldens clean, no timeouts), `stat_pq` byte-identical, 3 mutation-verified tests.
+- **NOT decided:** `eqII`. It remains open, and **dyncge is still wrong** — the residual stays **`CASE_B` @ 6.26e-02**. Day 3 still chooses between the literal-index member and the **#1381** Pattern C Phase B hand-back.
+- **⚠ No KPI moves.** dyncge does not become a Solve or Match gain, because it does not yet reach `CASE_A`. The committed golden encodes a **less-wrong but still incorrect** emit. Anyone reading `dyncge_mcp.gms` as correct would be misled — `ISSUE_1714` stays **OPEN** and says so.
+- **⚠ The PROCEED signal was not met and was not waived.** Landing here is a scope decision about banking verified work, not a judgement that the acceptance gate passed.
 
 ---

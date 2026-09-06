@@ -186,7 +186,9 @@ eqII(j)..  pk*II(j) =e= pf('CAP',j)**zeta*F('CAP',j) / sum(i, pf('CAP',i)**zeta*
 
 `pf` appears **twice**, with a **literal `'CAP'`** in the first coordinate: once at the equation's own index `j`, once inside `sum(i, …)`. So the `Sum` binds only **one** of `pf`'s coordinates and `pf` also occurs **outside** it. B-4 declines on both its full-collapse requirement and its single-pattern guard — **correctly**; this is a different member, not a gap in B-4.
 
-**Consequence:** `stat_pf` is *partially* corrected. Day 3 decides between adding the literal-index member and handing the whole family back to **#1381** as Pattern C Phase B.
+**Consequence:** `stat_pf` is *partially* corrected.
+
+⚠ **B-4 was landed as a PARTIAL fix by owner decision on 2026-09-05, and this issue stays OPEN.** dyncge still solves to the wrong answer — the residual remains **`CASE_B` @ 6.26e-02** — and the committed `dyncge_mcp.gms` golden therefore encodes a **less-wrong but still incorrect** emit. Do not read that golden as correct. Day 3 still decides between adding the literal-index member for `eqII` and handing the family back to **#1381** as Pattern C Phase B.
 
 ---
 
@@ -196,5 +198,5 @@ eqII(j)..  pk*II(j) =e= pf('CAP',j)**zeta*F('CAP',j) / sum(i, pf('CAP',i)**zeta*
 
 ---
 
-**Document Status:** ✅ Phase-0 gate authored — Sprint 39 Prep Task 4
-**Last Updated:** 2026-08-30
+**Document Status:** ⚠ **OPEN — partially fixed.** Phase-0 gate authored Sprint 39 Prep Task 4; layer confirmed and refined Day 1; B-4 landed as a **partial** fix by owner decision Day 2. `eqXp` is corrected; **`eqII` is not**, and dyncge still solves to the wrong answer (residual **`CASE_B` @ 6.26e-02**).
+**Last Updated:** 2026-09-05 — Day-2 owner decision (partial-fix landing)
