@@ -213,3 +213,39 @@ Day 2 spent its full budget on P2 and dropped its 3 h of P8 without recording it
 typecheck / format / lint clean · `make test` **5310 passed** / 10 skipped / 1 xfailed (+6) · leak gate 186 all clean
 
 ---
+
+## Day 4 — 2026-09-07 · P3: lnts · 10 h
+
+**Branch:** `planning/sprint39-day4-lnts` · **Measured at:** `6fa78b12` · **Docs only — `src/`, `tests/`, `data/` untouched; no `*.py` in the PR**
+
+### ✅ The banked hypothesis is CONFIRMED at runtime — its first actual test
+
+Criteria were fixed in advance (`LNTS_PROBE_DESIGN.md` §4, committed 2026-08-31) and honoured. Probe injected into a **copy** in a scratch dir.
+
+| tuple | `_fx_` demands | effective bounds | |
+|---|---|---|---|
+| `y("y2","h50")` | **5** | `lo = up = 0` | **C1 ✓ C2 ✓** |
+| `y("y3","h50")` | **45** | `lo = up = 0` | **C1 ✓ C2 ✓** |
+| `y("y4","h50")` | 0 | `lo = up = 0` | **C3 ✓** consistent — probe not over-reporting |
+
+`MODEL STATUS 4`, **ITERATION COUNT 0**. **No refute criterion fires.** A hypothesis carried since Sprint 38 on a source read alone now has a runtime observation behind it.
+
+### The layer — traced, and prep is VINDICATED
+
+`emit_gams.py:3061` (the banked `fix_rhs = "0"` fallback) **never fires**; **`:3121` emits the killing blanket**. Both prep claims hold.
+
+⚠ **An intermediate run of mine said `:3091`, and that was my own tracer bug** — it attributed list growth to the line where growth was *observed* (the loop header) rather than the line that executed the append. I nearly reported prep as wrong. Fixed by attributing to the previously-executed line in the same frame. **Third time this sprint a measurement artifact of mine nearly became a reported finding.**
+
+### Root cause — sharper than "the blanket is wrong"
+
+`_compute_suppressed_fx_equations` (`:874`) already handles this conflict class by **suppressing** the `_fx_` equation — deciding membership against **`kkt.stationarity_conditions`**. But the section-1b blanket at `:3121` fires on a **different** condition, `infer_lead_lag_condition` (cached at `:3080`).
+
+**A cell can be inside the stationarity condition — so its `_fx_` equation survives — yet outside the lead/lag condition, so the blanket zeroes it.** lnts's `h50` cells are exactly that gap.
+
+This **rules out** a tempting fix: extending the suppression to the lead/lag condition would **drop** the `_fx_` equations demanding 5 and 45, which are real boundary conditions from the source.
+
+### Carried to Day 5 (P3 finish, 8 h + Checkpoint 1)
+
+Exclude cells carrying a surviving `_fx_` equation from the `:3121` blanket. Reuse `_fx_eq_name()` (`:711`) and the `suppressed` set (`:920`). ⚠ **Add a positive exclusion; do not widen the lead/lag condition** — section 1b serves the whole corpus, and Day 2 measured what a loosened predicate costs (10 goldens vs a zero-drift baseline). ⚠ `cesam` stays out of scope: same signature, **0 `_fx_` equations**.
+
+---
