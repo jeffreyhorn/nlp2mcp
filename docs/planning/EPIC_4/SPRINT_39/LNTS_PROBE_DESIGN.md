@@ -80,7 +80,7 @@ It tests the **runtime collision**, nothing else. It does not identify the *laye
 
 ---
 
-## 7. RESULT — executed Sprint 39 Day 4, 2026-09-07 (measured at `6fa78b12`, GAMS 54.2.1)
+## 7. RESULT — executed Sprint 39 Day 4 (plan date 2026-09-07; **run 2026-09-06**, a day early) at `6fa78b12`, GAMS 54.2.1
 
 ### ✅ CONFIRMED — all three criteria hold; no refute criterion fires
 
@@ -128,4 +128,4 @@ At `:3121`, the blanket must **not** zero a cell that carries a surviving (non-s
 ---
 
 **Document Status:** ✅ Design complete and **EXECUTED** — criteria fixed before execution (Prep Task 5); result CONFIRMED (Sprint 39 Day 4).
-**Last Updated:** 2026-09-07 — probe executed, hypothesis confirmed, layer traced
+**Last Updated:** 2026-09-06 — probe executed, hypothesis confirmed, layer traced
