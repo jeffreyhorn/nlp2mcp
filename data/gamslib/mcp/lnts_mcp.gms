@@ -157,7 +157,7 @@ y.fx(c,h)$(not (ord(c) <= card(c) - 2 and ord(h) <= card(h) - 1 or ord(h) > 1 or
 u.fx(h)$(not (u.up(h) - u.lo(h) > 1e-10)) = u.lo(h);
 piL_u.fx(h)$(not (u.up(h) - u.lo(h) > 1e-10)) = 0;
 piU_u.fx(h)$(not (u.up(h) - u.lo(h) > 1e-10)) = 0;
-y.fx(c,h)$(not ((ord(c) <= card(c) - 2) and (ord(h) <= card(h) - 1))) = 0;
+y.fx(c,h)$(not (((ord(c) <= card(c) - 2) and (ord(h) <= card(h) - 1)) or (sameas(c, 'y1') and sameas(h, 'h0')) or (sameas(c, 'y2') and sameas(h, 'h0')) or (sameas(c, 'y2') and sameas(h, 'h50')) or (sameas(c, 'y3') and sameas(h, 'h0')) or (sameas(c, 'y3') and sameas(h, 'h50')) or (sameas(c, 'y4') and sameas(h, 'h0')) or (sameas(c, 'y4') and sameas(h, 'h50')))) = 0;
 piL_u.fx(h)$(not (((-1) * pi) / 2 > -inf)) = 0;
 piU_u.fx(h)$(not (pi / 2 < inf)) = 0;
 nu_pos_eqn.fx(c,h)$(not ((ord(c) <= card(c) - 2) and (ord(h) <= card(h) - 1))) = 0;

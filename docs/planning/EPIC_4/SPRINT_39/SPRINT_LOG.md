@@ -270,3 +270,62 @@ This **rules out** a tempting fix: extending the suppression to the lead/lag con
 Exclude cells carrying a surviving `_fx_` equation from the `:3121` blanket. Reuse `_fx_eq_name()` (`:711`) and the `suppressed` set (`:920`). ⚠ **Add a positive exclusion; do not widen the lead/lag condition** — section 1b serves the whole corpus, and Day 2 measured what a loosened predicate costs (10 goldens vs a zero-drift baseline). ⚠ `cesam` stays out of scope: same signature, **0 `_fx_` equations**.
 
 ---
+
+## Day 5 — planned 2026-09-08, **executed 2026-09-07** · P3: lnts finish · 8 h · + Checkpoint 1 · 2 h
+
+**Branch:** `planning/sprint39-day5-lnts` · **Measured at:** `c1ad2bfd`
+
+### ⚠ The confirmed mechanism is FIXED. lnts still does not solve.
+
+| quantity | before | after |
+|---|---|---|
+| bounds at `h50` | `lo = up = 0` vs demands of **5** and **45** | **free** (`-INF/+INF`) |
+| model status | **MS-4 Infeasible, iteration 0** | **MS-5 Locally Infeasible, iteration 1508** |
+| DB bucket | `model_infeasible` | `model_infeasible` — **unchanged** |
+
+PATH now *iterates* instead of failing before it starts, which is what the Day-4 diagnosis predicted. It is **not a solve**, and lnts is **not** a Solve or Match gain.
+
+**The fix** (`emit_gams.py`, the section-1b blanket): exclude instances carrying a **surviving** `_fx_` equation. The three-part survival test — declared ∧ not suppressed ∧ multiplier not simplified away — is **reused** from the `.fx` emission gate (~`:2358`) rather than reinvented (S38-D12 rule). A **positive exclusion**; the lead/lag condition is untouched.
+
+### ⚠ A SECOND DEFECT WAS BEING MASKED — the same shape as dyncge/`eqII`
+
+With the bound collision gone, **364 rows** report `INFES`: `velo1_eqn(h)`, `tf_eqn`, `stat_step`, with `step` and `tf` mutually inconsistent (`tf - 50*step =E= 0`, LHS = −1). These are the model's **dynamics**, not the `_fx_` collision. They were unreachable before, because the model died at iteration 0.
+
+**Fixing one defect exposed another.** Recorded, not chased — Day 5's budget is spent and this is a separate diagnosis.
+
+### ⚠ THREE goldens drifted where Day 4 predicted ONE — checked, not assumed
+
+`lnts` (+292 B), `robot` (+135 B), `springchain` (+45 B). That is the pre-registered stop-and-look signal, so each was examined:
+
+| model | status | evidence |
+|---|---|---|
+| `springchain` | **MS-1, 289 iters, obj −185.4461 — IDENTICAL** | I re-solved the **baseline** emit through the same GAMS as a like-for-like control rather than trusting its byte-diff or the DB. Its **Match is safe**. |
+| `robot` | text-only change | **license-gated** (`solver_version: None`) — cannot be solve-verified locally; already outside the KPIs. **This is the thinnest evidence in the change.** |
+| `lnts` | MS-4@0 → MS-5@1508 | above |
+
+**Verdict: the same defect corrected in three models, not a leak.** But that conclusion rests on re-solving springchain, not on the drift being small.
+
+### ✅ Checkpoint 1 — GO
+
+```
+[resolve-changed] re-solving 4 changed-golden model(s) since 9ab2c0c3: dyncge, lnts, robot, springchain
+  dyncge       model_optimal/mismatch   -> same
+  lnts         model_infeasible/not_tested -> same
+  robot        path_solve_license/not_tested -> same
+  springchain  model_optimal/match      -> same
+GO: all 4 changed-golden model(s) held their bucket
+```
+
+**No `backward`, no `missing`.** springchain's Match is confirmed **twice** — by my manual control and independently by the checkpoint.
+
+⚠ **Discovery was 4, not the 3 I asserted via `--min-scope`.** `--since-commit 9ab2c0c3` spans everything changed since Sprint-38 close, so it correctly included dyncge from Day 2. `--min-scope 3` was a valid *lower bound* and the assertion held, but the figure to quote is **4**.
+
+### KPIs
+
+**Nothing moves.** lnts stays `model_infeasible`; springchain stays a Match; robot stays license-gated. Second partial fix of the sprint, after dyncge.
+
+### Gate
+
+typecheck / format / lint clean · `make test` **5310 passed** / 10 skipped / 1 xfailed · leak gate 186 checked, 3 expected drifts, regenerated · Checkpoint 1 **GO**
+
+---
