@@ -218,7 +218,7 @@ typecheck / format / lint clean · `make test` **5310 passed** / 10 skipped / 1 
 
 Recorded 2026-09-06, after review flagged a Day-4 entry dated **in the future relative to its own commit**. Derived from commit dates, not recalled:
 
-| day | plan date | actually executed | |
+| day | plan date | actually executed | drift |
 |---|---|---|---|
 | Day 1 | 2026-09-04 | **2026-09-03** | 1 day early |
 | Day 2 | 2026-09-05 | **2026-09-04** | 1 day early |
