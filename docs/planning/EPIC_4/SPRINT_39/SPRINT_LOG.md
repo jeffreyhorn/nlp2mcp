@@ -306,7 +306,7 @@ PR #1732 initially described it as *"the same defect corrected in three models, 
 
 **Open problem for a landable fix:** express "the pruning guard actually covers the fixed tuple" **symbolically** — a runtime `ord`/`card` property — so no model's labels appear in the emit.
 
-### ✅ Checkpoint 1 — GO (run against the now-reverted state)
+### ✅ Checkpoint 1 — GO (run against the CANDIDATE emit, before the revert)
 
 ```
 [resolve-changed] re-solving 4 changed-golden model(s) since 9ab2c0c3:
