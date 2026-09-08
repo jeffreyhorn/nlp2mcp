@@ -271,7 +271,7 @@ Exclude cells carrying a surviving `_fx_` equation from the `:3121` blanket. Reu
 
 ---
 
-## Day 5 — planned 2026-09-08, **executed 2026-09-07** · P3: lnts finish · 8 h · + Checkpoint 1 · 2 h
+## Day 5 — planned 2026-09-08, **executed 2026-09-07** · P3: lnts *(planned as "finish")* · 8 h · + Checkpoint 1 · 2 h — ⚠ **REPLAN: banked, not landed**
 
 **Branch:** `planning/sprint39-day5-lnts` · **Measured at:** `c1ad2bfd`
 

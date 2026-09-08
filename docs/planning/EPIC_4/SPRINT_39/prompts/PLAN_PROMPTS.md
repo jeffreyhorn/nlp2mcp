@@ -87,7 +87,7 @@ Branch `planning/sprint39-day1-dyncge`.
 
 **Outcome — the layer is CONFIRMED but REFINED, and Days 2–3 below are written against the refinement.** The named surface *does* execute (91 hits at the branch, 216 at guard construction) but it is the **symptom** site: it decorates offsets that already exist. The suppression that would stop them being born **never fires once**. Birth site is **~6290–6455**. Evidence: `artifacts/trace_dyncge_layer.py`; written up in `ISSUE_1714` §*Day-1 layer confirmation* and `SPRINT_LOG.md`.
 
-## Day 2 (2026-09-05) — P2: dyncge — the new Pattern-C member · 7 h · + P8 8a · 3 h
+## Day 2 (2026-09-05) — P2: dyncge — the new Pattern-C member · 7 h · + P8 8a · 3 h — ✅ COMPLETE (partial: eqXp fixed, eqII open)
 
 Branch `planning/sprint39-day2-dyncge`.
 
@@ -109,7 +109,7 @@ a **two-index `Sum` binding BOTH of the variable's coordinates, with the equatio
 
 **P8 alongside (3 h):** land **8a** — the layer field + the **added-only** assertion (`pulls.listFiles` already returns `status`; the workflow discards it). **Needs a fail-before test**; its negative control is that a `modified` doc without a Layer line still **passes**.
 
-## Day 3 (2026-09-06) — P2: dyncge — verify or hand back · 4 h · + P8 8b · 5 h
+## Day 3 (2026-09-06) — P2: dyncge — verify or hand back · 4 h · + P8 8b · 5 h — ✅ COMPLETE (verify failed; eqII handed back)
 
 Branch `planning/sprint39-day3-dyncge`.
 
@@ -130,7 +130,7 @@ Branch `planning/sprint39-day3-dyncge`.
 
 **P8 alongside (5 h):** land **8b** — the Phase-0 template's *nearest existing mechanism* field. **Needs a fail-before test.** ⚠ This sprint is its own best example: Day 1 found the mechanism existed for three neighbouring populations and still did not cover this one, so the field must record **why the nearest mechanism does not apply**, not merely that one was found.
 
-## Day 4 (2026-09-07) — P3: lnts · 10 h
+## Day 4 (2026-09-07) — P3: lnts · 10 h — ✅ COMPLETE (hypothesis confirmed at runtime)
 
 Branch `planning/sprint39-day4-lnts`.
 
@@ -138,7 +138,7 @@ Branch `planning/sprint39-day4-lnts`.
 
 **⚠ `cesam` must NOT be batched with lnts.** Same MS-4-at-iteration-0 signature, **0 `_fx_` equations** — a shared signature is not a shared mechanism.
 
-## Day 5 (2026-09-08) — P3: lnts finish · 8 h · + Checkpoint 1 · 2 h
+## Day 5 (2026-09-08) — P3: lnts *(planned as "finish")* · 8 h · + Checkpoint 1 · 2 h — ⚠ REPLAN (banked, not landed)
 
 Branch `planning/sprint39-day5-lnts`.
 
