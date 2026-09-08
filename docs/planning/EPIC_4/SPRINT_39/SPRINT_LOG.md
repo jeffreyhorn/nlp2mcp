@@ -270,3 +270,59 @@ This **rules out** a tempting fix: extending the suppression to the lead/lag con
 Exclude cells carrying a surviving `_fx_` equation from the `:3121` blanket. Reuse `_fx_eq_name()` (`:711`) and the `suppressed` set (`:920`). ⚠ **Add a positive exclusion; do not widen the lead/lag condition** — section 1b serves the whole corpus, and Day 2 measured what a loosened predicate costs (10 goldens vs a zero-drift baseline). ⚠ `cesam` stays out of scope: same signature, **0 `_fx_` equations**.
 
 ---
+
+## Day 5 — planned 2026-09-08, **executed 2026-09-07** · P3: lnts *(planned as "finish")* · 8 h · + Checkpoint 1 · 2 h — ⚠ **REPLAN: banked, not landed**
+
+**Branch:** `planning/sprint39-day5-lnts` · **Measured at:** `c1ad2bfd`
+
+### ⚠ VERDICT: REPLAN. The mechanism is BANKED, not landed. `src/` is reverted.
+
+The fix was implemented at the section-1b blanket Day 4 traced, measured against the **PROCEED/REPLAN signal fixed in advance** in `ISSUE_1694` — and it **fails that signal**. The `src/` change and all three goldens are **reverted**; only the findings are kept.
+
+| PROCEED requires (all four) | result |
+|---|---|
+| cells no longer blanket-zeroed | ✅ bounds at `h50` `lo = up = 0` → free |
+| `_fx_` equations remain **and bind at 5 / 45** | ❌ **`y2.h50` = 4.8997, `y3.h50` = 41.9700 — both `INFES`** |
+| PATH iterates | ✅ MS-4 @ iter 0 → MS-5 @ **1508** |
+| **nothing outside `lnts` drifts** | ❌ **`robot` and `springchain` drifted** |
+
+**Two REPLAN conditions fire:**
+
+1. **"perturbs any of the five other models that match the source pattern but are not defective"** — **`springchain` is named in that list** and its emit changed. Its behaviour is identical (control re-solve: MS-1, 289 iters, obj −185.4461) but the criterion says *perturbed*, not *broken*.
+2. **"if it requires per-model enumeration, bank it — a label-enumerated guard is not a general fix"** — the exclusion emits literal labels (`sameas(c,'y2') and sameas(h,'h50')`). **It is exactly that.**
+
+`otpop`, the named negative control, did **not** drift — the only criterion that came back clean.
+
+### ⚠ I FIRST REPORTED THIS AS A SUCCESS. THAT WAS WRONG.
+
+PR #1732 initially described it as *"the same defect corrected in three models, not a leak"* and **corpus-safe**. That came from testing whether `springchain` still **behaves** identically — a weaker test than the pre-registered one, which forbids **perturbing** it at all. **Substituting a weaker criterion that happens to let the work land is exactly what an advance-fixed signal exists to prevent.** It survived until the **CI Phase-0 gate** failed the PR (emit change with no Phase-0 reference) and forced a re-read of `ISSUE_1694`. The gate caught a process miss and, through it, a reporting error.
+
+### What is established and banked
+
+- the collision is **real and runtime-confirmed** (Day 4);
+- the layer is **`emit_gams.py` section 1b**, traced;
+- root cause: **two different conditions** — suppression tests `kkt.stationarity_conditions`, the blanket fires on `infer_lead_lag_condition`;
+- removing the contradiction is **not sufficient** — lnts then fails on its own **dynamics** (364 `INFES` rows: `velo1_eqn`, `tf_eqn`, `stat_step`; `tf - 50*step =E= 0` at LHS −1), a second defect the collision was masking.
+
+**Open problem for a landable fix:** express "the pruning guard actually covers the fixed tuple" **symbolically** — a runtime `ord`/`card` property — so no model's labels appear in the emit.
+
+### ✅ Checkpoint 1 — GO (run against the CANDIDATE emit, before the revert)
+
+```
+[resolve-changed] re-solving 4 changed-golden model(s) since 9ab2c0c3:
+                  dyncge, lnts, robot, springchain
+  all 4 -> same bucket;  GO
+```
+
+No `backward`, no `missing`. ⚠ Discovery was **4**, not the 3 asserted via `--min-scope` — the flag was a valid *lower bound*, but the figure to quote is 4. ⚠ This checkpoint exercised the **candidate** emit; with `src/` reverted the corpus is back to its `c1ad2bfd` state, which the checkpoint's own "same bucket" result confirms was never disturbed.
+
+### KPIs
+
+**Nothing moves, and nothing lands.** lnts stays `model_infeasible`.
+
+### Gate
+
+typecheck / format / lint clean · `make test` **5310 passed** / 10 skipped / 1 xfailed *(run against the candidate)* · `src/` and goldens **reverted to `main`**
+
+---
+
