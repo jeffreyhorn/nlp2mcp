@@ -173,3 +173,41 @@ The probe **confirmed** the hypothesis, so the REPLAN exit does not fire. Had an
 ### 6. Unchanged and still binding
 
 **Do not batch `cesam` with lnts.** It shows the same MS-4-at-iteration-0 signature but has **0 `_fx_` equations**, so this mechanism cannot apply. A shared signature is not a shared mechanism.
+
+
+---
+
+## Sprint 39 Day 5 — implementation attempted; **REPLAN fired. BANK, do not land.**
+
+**Executed 2026-09-07, measured at `c1ad2bfd`.** The fix was implemented at the section-1b blanket (`emit_gams.py`, the site Day 4 traced) as a positive exclusion of instances carrying a surviving `_fx_` equation. It was then measured against the **PROCEED/REPLAN signal fixed in advance above** — and it fails.
+
+### Against PROCEED (all four required)
+
+| criterion | result |
+|---|---|
+| cells no longer blanket-zeroed | ✅ bounds at `h50` go `lo = up = 0` → free |
+| `_fx_` equations remain **and bind at 5 / 45** | ❌ **`y2.h50` = 4.8997, `y3.h50` = 41.9700 — both `INFES`** |
+| PATH iterates | ✅ MS-4 @ iteration 0 → MS-5 @ **1508** |
+| **nothing outside `lnts` drifts** | ❌ **`robot` (+135 B) and `springchain` (+45 B) drifted** |
+
+### Against REPLAN — **TWO conditions fire**
+
+1. **"perturbs any of the five other models that match the source pattern but are not defective."** **`springchain` is named in that list** (`model_optimal`, false positive) and its emit changed. Its *behaviour* is identical — re-solving the baseline emit as a control gives **MS-1, 289 iterations, obj −185.4461**, matching exactly — but the criterion says **perturbed**, not *broken*.
+2. **"if it requires per-model enumeration, bank it — a label-enumerated guard is not a general fix."** The implemented exclusion emits literal labels: `sameas(c,'y2') and sameas(h,'h50')`, `sameas(n,'n0')`, `sameas(h,'h50')`. **It is exactly per-model label enumeration.**
+
+`otpop`, the explicit negative control, **did not drift** — the one criterion that came back clean.
+
+### ⚠ How this was nearly reported as a success
+
+The Day-5 PR (#1732) first described this as *"the same defect corrected in three models, not a leak"* and *corpus-safe*. That conclusion came from testing whether `springchain` still **behaves** identically — a weaker test than the pre-registered one, which forbids **perturbing** it at all. **Substituting a weaker criterion that happens to let the work land is the exact failure the advance-fixed signal exists to prevent**, and it survived until the CI Phase-0 gate forced a re-read of this document. The gate caught a process miss (an emit change with no Phase-0 reference) and, in doing so, caught a reporting error.
+
+### Verdict
+
+**BANK the mechanism; do not land this implementation.** What is established and worth keeping:
+
+- the collision is **real and runtime-confirmed** (Day 4, `LNTS_PROBE_DESIGN.md` §7);
+- the emitting layer is **`emit_gams.py` section 1b**, traced;
+- the root cause is **two different conditions** — `_compute_suppressed_fx_equations` tests `kkt.stationarity_conditions`, the blanket fires on `infer_lead_lag_condition`;
+- removing the contradiction is **not sufficient**: lnts then fails on its own **dynamics** (364 `INFES` rows in `velo1_eqn` / `tf_eqn` / `stat_step`, `tf - 50*step =E= 0` at LHS −1), a second defect the collision was masking.
+
+**What a landable fix still needs:** a discriminator that is *not* label enumeration — the doc already warns the real discriminator is "whether the pruning guard actually covers the fixed tuple, which is a runtime property of `ord`/`card` … and cannot be read off the source." Expressing that condition **symbolically**, so no model's labels appear in the emit, is the open problem.

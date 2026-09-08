@@ -3118,56 +3118,6 @@ def emit_gams_mcp(
             combined = var_conds[0]
         else:
             combined = " or ".join(f"({c})" for c in var_conds)
-
-        # Sprint 39 P3 (ISSUE_1694, lnts): do NOT blanket-zero an instance that
-        # carries a SURVIVING `_fx_` equation.
-        #
-        # ⚠ TWO DIFFERENT CONDITIONS ARE IN PLAY, AND ONLY ONE WAS CONSULTED.
-        # `_compute_suppressed_fx_equations` already resolves this conflict
-        # class -- by dropping the `_fx_` equation -- but it decides membership
-        # against `kkt.stationarity_conditions`. This blanket fires on a
-        # DIFFERENT condition: `infer_lead_lag_condition`, cached in
-        # `_eq_cache` above. So an instance can be INSIDE the stationarity
-        # condition (its `_fx_` equation survives) yet OUTSIDE the lead/lag
-        # condition (this blanket zeroes it anyway).
-        #
-        # lnts is exactly that gap: `y_fx_y2_h50` demands 5 and `y_fx_y3_h50`
-        # demands 45, both survive, and both cells were then fixed to 0 --
-        # infeasible before iteration 1, hence MS-4 at iteration 0. Confirmed at
-        # runtime by probe, not inferred: the effective bounds displayed
-        # `lo = up = 0` against demands of 5 and 45 (SPRINT_39/LNTS_PROBE_DESIGN.md §7).
-        #
-        # The `_fx_` equation is authoritative; this blanket is cleanup for
-        # genuinely pruned instances. So EXCLUDE those cells rather than widen
-        # the lead/lag condition -- a positive requirement, not a loosened
-        # predicate (S37 fawley; and Day 2 measured what widening a shared
-        # predicate costs here: 10 goldens against a zero-drift baseline).
-        #
-        # The three-part survival test is REUSED from the `.fx` emission gate
-        # above (~:2358) rather than reinvented: declared, not suppressed, and
-        # its multiplier not simplified away.
-        fx_survivors: list[str] = []
-        if var_def.fx_map:
-            for fx_indices in sorted(var_def.fx_map):
-                if len(fx_indices) != len(var_def.domain):
-                    continue
-                fx_eq = _fx_eq_name(var_name, fx_indices)
-                fx_mult = create_eq_multiplier_name(fx_eq)
-                if (
-                    fx_eq in _equalities_set
-                    and fx_eq not in suppressed_fx
-                    and (
-                        kkt.referenced_multipliers is None or fx_mult in kkt.referenced_multipliers
-                    )
-                ):
-                    conj = " and ".join(
-                        f"sameas({dom}, {_quote_uel(str(ix))})"
-                        for dom, ix in zip(var_def.domain, fx_indices, strict=True)
-                    )
-                    fx_survivors.append(f"({conj})")
-        if fx_survivors:
-            combined = " or ".join([f"({combined})", *fx_survivors])
-
         fx_lines.append(f"{var_name}.fx({domain_str})$(not ({combined})) = {fix_val};")
 
     # 1c. Issue #1179: Fix domain-widened primal variables for out-of-subset instances.

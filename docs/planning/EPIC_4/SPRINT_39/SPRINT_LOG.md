@@ -275,57 +275,54 @@ Exclude cells carrying a surviving `_fx_` equation from the `:3121` blanket. Reu
 
 **Branch:** `planning/sprint39-day5-lnts` · **Measured at:** `c1ad2bfd`
 
-### ⚠ The confirmed mechanism is FIXED. lnts still does not solve.
+### ⚠ VERDICT: REPLAN. The mechanism is BANKED, not landed. `src/` is reverted.
 
-| quantity | before | after |
-|---|---|---|
-| bounds at `h50` | `lo = up = 0` vs demands of **5** and **45** | **free** (`-INF/+INF`) |
-| model status | **MS-4 Infeasible, iteration 0** | **MS-5 Locally Infeasible, iteration 1508** |
-| DB bucket | `model_infeasible` | `model_infeasible` — **unchanged** |
+The fix was implemented at the section-1b blanket Day 4 traced, measured against the **PROCEED/REPLAN signal fixed in advance** in `ISSUE_1694` — and it **fails that signal**. The `src/` change and all three goldens are **reverted**; only the findings are kept.
 
-PATH now *iterates* instead of failing before it starts, which is what the Day-4 diagnosis predicted. It is **not a solve**, and lnts is **not** a Solve or Match gain.
+| PROCEED requires (all four) | result |
+|---|---|
+| cells no longer blanket-zeroed | ✅ bounds at `h50` `lo = up = 0` → free |
+| `_fx_` equations remain **and bind at 5 / 45** | ❌ **`y2.h50` = 4.8997, `y3.h50` = 41.9700 — both `INFES`** |
+| PATH iterates | ✅ MS-4 @ iter 0 → MS-5 @ **1508** |
+| **nothing outside `lnts` drifts** | ❌ **`robot` and `springchain` drifted** |
 
-**The fix** (`emit_gams.py`, the section-1b blanket): exclude instances carrying a **surviving** `_fx_` equation. The three-part survival test — declared ∧ not suppressed ∧ multiplier not simplified away — is **reused** from the `.fx` emission gate (~`:2358`) rather than reinvented (S38-D12 rule). A **positive exclusion**; the lead/lag condition is untouched.
+**Two REPLAN conditions fire:**
 
-### ⚠ A SECOND DEFECT WAS BEING MASKED — the same shape as dyncge/`eqII`
+1. **"perturbs any of the five other models that match the source pattern but are not defective"** — **`springchain` is named in that list** and its emit changed. Its behaviour is identical (control re-solve: MS-1, 289 iters, obj −185.4461) but the criterion says *perturbed*, not *broken*.
+2. **"if it requires per-model enumeration, bank it — a label-enumerated guard is not a general fix"** — the exclusion emits literal labels (`sameas(c,'y2') and sameas(h,'h50')`). **It is exactly that.**
 
-With the bound collision gone, **364 rows** report `INFES`: `velo1_eqn(h)`, `tf_eqn`, `stat_step`, with `step` and `tf` mutually inconsistent (`tf - 50*step =E= 0`, LHS = −1). These are the model's **dynamics**, not the `_fx_` collision. They were unreachable before, because the model died at iteration 0.
+`otpop`, the named negative control, did **not** drift — the only criterion that came back clean.
 
-**Fixing one defect exposed another.** Recorded, not chased — Day 5's budget is spent and this is a separate diagnosis.
+### ⚠ I FIRST REPORTED THIS AS A SUCCESS. THAT WAS WRONG.
 
-### ⚠ THREE goldens drifted where Day 4 predicted ONE — checked, not assumed
+PR #1732 initially described it as *"the same defect corrected in three models, not a leak"* and **corpus-safe**. That came from testing whether `springchain` still **behaves** identically — a weaker test than the pre-registered one, which forbids **perturbing** it at all. **Substituting a weaker criterion that happens to let the work land is exactly what an advance-fixed signal exists to prevent.** It survived until the **CI Phase-0 gate** failed the PR (emit change with no Phase-0 reference) and forced a re-read of `ISSUE_1694`. The gate caught a process miss and, through it, a reporting error.
 
-`lnts` (+292 B), `robot` (+135 B), `springchain` (+45 B). That is the pre-registered stop-and-look signal, so each was examined:
+### What is established and banked
 
-| model | status | evidence |
-|---|---|---|
-| `springchain` | **MS-1, 289 iters, obj −185.4461 — IDENTICAL** | I re-solved the **baseline** emit through the same GAMS as a like-for-like control rather than trusting its byte-diff or the DB. Its **Match is safe**. |
-| `robot` | text-only change | **license-gated** (`solver_version: None`) — cannot be solve-verified locally; already outside the KPIs. **This is the thinnest evidence in the change.** |
-| `lnts` | MS-4@0 → MS-5@1508 | above |
+- the collision is **real and runtime-confirmed** (Day 4);
+- the layer is **`emit_gams.py` section 1b**, traced;
+- root cause: **two different conditions** — suppression tests `kkt.stationarity_conditions`, the blanket fires on `infer_lead_lag_condition`;
+- removing the contradiction is **not sufficient** — lnts then fails on its own **dynamics** (364 `INFES` rows: `velo1_eqn`, `tf_eqn`, `stat_step`; `tf - 50*step =E= 0` at LHS −1), a second defect the collision was masking.
 
-**Verdict: the same defect corrected in three models, not a leak.** But that conclusion rests on re-solving springchain, not on the drift being small.
+**Open problem for a landable fix:** express "the pruning guard actually covers the fixed tuple" **symbolically** — a runtime `ord`/`card` property — so no model's labels appear in the emit.
 
-### ✅ Checkpoint 1 — GO
+### ✅ Checkpoint 1 — GO (run against the now-reverted state)
 
 ```
-[resolve-changed] re-solving 4 changed-golden model(s) since 9ab2c0c3: dyncge, lnts, robot, springchain
-  dyncge       model_optimal/mismatch   -> same
-  lnts         model_infeasible/not_tested -> same
-  robot        path_solve_license/not_tested -> same
-  springchain  model_optimal/match      -> same
-GO: all 4 changed-golden model(s) held their bucket
+[resolve-changed] re-solving 4 changed-golden model(s) since 9ab2c0c3:
+                  dyncge, lnts, robot, springchain
+  all 4 -> same bucket;  GO
 ```
 
-**No `backward`, no `missing`.** springchain's Match is confirmed **twice** — by my manual control and independently by the checkpoint.
-
-⚠ **Discovery was 4, not the 3 I asserted via `--min-scope`.** `--since-commit 9ab2c0c3` spans everything changed since Sprint-38 close, so it correctly included dyncge from Day 2. `--min-scope 3` was a valid *lower bound* and the assertion held, but the figure to quote is **4**.
+No `backward`, no `missing`. ⚠ Discovery was **4**, not the 3 asserted via `--min-scope` — the flag was a valid *lower bound*, but the figure to quote is 4. ⚠ This checkpoint exercised the **candidate** emit; with `src/` reverted the corpus is back to its `c1ad2bfd` state, which the checkpoint's own "same bucket" result confirms was never disturbed.
 
 ### KPIs
 
-**Nothing moves.** lnts stays `model_infeasible`; springchain stays a Match; robot stays license-gated. Second partial fix of the sprint, after dyncge.
+**Nothing moves, and nothing lands.** lnts stays `model_infeasible`.
 
 ### Gate
 
-typecheck / format / lint clean · `make test` **5310 passed** / 10 skipped / 1 xfailed · leak gate 186 checked, 3 expected drifts, regenerated · Checkpoint 1 **GO**
+typecheck / format / lint clean · `make test` **5310 passed** / 10 skipped / 1 xfailed *(run against the candidate)* · `src/` and goldens **reverted to `main`**
 
 ---
+
