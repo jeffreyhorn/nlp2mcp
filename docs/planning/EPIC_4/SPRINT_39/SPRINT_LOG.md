@@ -438,7 +438,7 @@ They are three separate executions, not one measurement described three ways. Ru
 | `_is_concrete_instance_of` `:3087` | 18,582,862 |
 | **sum** | **45,491,733** vs measured **45,513,129** — 0.05 % apart |
 
-**Both hoistable — verified, not assumed:** neither `ir/ast.py` nor `index_mapping.py` imports back at module level (**no cycle**), and `derivative_rules.py` already imports `..ir.ast` at module scope.
+**Both hoistable — verified, not assumed:** neither `src/ir/ast.py` nor `src/ad/index_mapping.py` imports `src/ad/ad_core.py` / `src/ad/derivative_rules.py` at module level (**no cycle**), and `src/ad/derivative_rules.py` already imports `..ir.ast` at module scope.
 
 ⚠ My first cycle check was invalid — `grep … | head || echo` reports **head's** exit status, so the fallback never fired and empty output proved nothing. Re-done with an AST parse. **The pipe-exit-status trap, from my own notes, hit again.**
 

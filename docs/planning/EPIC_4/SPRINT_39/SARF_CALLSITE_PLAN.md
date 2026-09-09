@@ -229,7 +229,7 @@ That is sufficient to establish §2's actual claim (*the cost is differentiation
 
 Difference **21,396 (0.05 %)** — the two low-traffic local imports in `_try_diff_sum_offset_crossterms` and `_try_resolve_cardinality_reversal`.
 
-**Both are hoistable — verified, not assumed.** Neither `src/ir/ast.py` nor `src/ad/index_mapping.py` imports `ad_core`/`derivative_rules` at module level, so there is **no cycle to break**; and `derivative_rules.py` **already** imports `..ir.ast` at module scope, which demonstrates the pattern is safe in this package.
+**Both are hoistable — verified, not assumed.** Neither `src/ir/ast.py` nor `src/ad/index_mapping.py` imports `src/ad/ad_core.py` / `src/ad/derivative_rules.py` at module level, so there is **no cycle to break**; and `src/ad/derivative_rules.py` **already** imports `..ir.ast` at module scope, which demonstrates the pattern is safe in this package.
 
 ### What this means for P4
 
