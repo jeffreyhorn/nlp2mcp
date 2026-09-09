@@ -515,6 +515,48 @@ It re-solves every model whose `*_mcp[_presolve].gms` golden changed since the b
 
 ---
 
+## Close-Rule Preconditions and Carried-Package Evidence (Sprint 39 P8, 8c/8d)
+
+Two rules from Sprint 39. Both exist because a *claim* was carried forward without the thing it rested on.
+
+### 8c — A close rule's precondition is a START STATE, never an outcome
+
+**Rule.** Every close rule must state a precondition that is decidable **before the work runs**, from the state at the start of the day or track. A precondition that can only be evaluated by looking at what the work *produced* is not a precondition — it is a result, and a rule gated on it cannot be checked when it matters.
+
+**Why, from this sprint.** Sprint 39's close rule **C6** ("+1 Translate → 136 is reported only if sarf newly produces a golden") carried the precondition *"P4 branch A **or B** started"*. Branch B is the **re-scope** branch: it explicitly does not implement, so it can never produce a golden. The precondition was therefore **unsatisfiable under half the branches it named** — and nobody could tell, because it read like a start-state condition while silently depending on an outcome. It was caught on **Day 0**, when the branch was chosen, rather than at close, only because the branch decision forced a re-read.
+
+**What to do.**
+
+- State the precondition over facts that exist **before** the track runs: a decision taken, a branch chosen, a file present, a gate green.
+- If a rule genuinely depends on an outcome, say so explicitly and give it a **VOID** state — *"C6 is VOID under branch B"* is a legitimate close-record entry; *"C6 unmet"* would have been wrong, because the rule never became applicable.
+- **VOID ≠ unmet.** At close, report which rules were void and why. A rule that could not apply is not a failure.
+
+**Anti-pattern.** A precondition naming several branches or paths without checking that each one *can* satisfy it. Enumerate, then verify per branch.
+
+### 8d — Re-derive a carried package's EVIDENCE, not only its conclusion
+
+**Rule.** When a document, figure, or decision package is carried across sprints and then acted on, re-derive the **evidence it rests on**, not merely its headline conclusion. A conclusion can stay true while the thing it described changes underneath it.
+
+**Why, from this sprint and the last.**
+
+- **Sprint 38, rocket (five carries).** Prep re-verified rocket's *conclusion* — still MS-5 — and stamped the toolchain, but not the *failure description*, which had become wrong: `EXIT — other error` had turned into `Normal Completion` + MS-5 after 9,241 iterations. The conclusion survived; the evidence did not.
+- **Sprint 39 Day 6, the consultation follow-up.** The package's figures were measured at `84656666`, and `src/` had changed since (a Pattern-C member landed on Day 2). Before posting, the check was not *"do the figures still read the same?"* but *"do they still describe the same artifacts?"* — verified by confirming all five relevant `_mcp*.gms` emits were **byte-unchanged since the measurement commit**. Had any drifted, the figures would have needed re-measuring before the comment could honestly cite them.
+
+**What to do.**
+
+- Identify what the claim is *about* — an emit, a golden, a DB row, a solver version — and check **that artifact** has not moved since the measurement.
+- Prefer a cheap invariant over a full re-measure where one exists: *"the emit is byte-identical to the measurement commit"* is faster than re-solving, and it is the property the figure actually depends on.
+- If the artifact moved, the figure is **stale until re-measured**, however plausible it still looks.
+- Record the measurement commit alongside every carried figure so this check is possible at all. A figure with no provenance cannot be re-derived, only re-trusted.
+
+### Related
+
+- Sprint 39 Day 0 (C6's precondition corrected before the sprint ran): `docs/planning/EPIC_4/SPRINT_39/SPRINT_LOG.md`
+- Sprint 39 Day 6 (8d applied to the consultation package): same file, and `docs/planning/EPIC_4/SPRINT_39/CONSULTATION_FOLLOWUP_PACKAGE.md` §1
+- The Phase-0 added-only requirements (8a/8b) are enforced mechanically: `scripts/sprint_audit/check_phase0_doc.py`. **8c and 8d are review rules, not automated** — both are semantic judgements about whether a stated condition is a start state and whether an artifact still matches its measurement, and a cue-matching check would be gameable without being reliable.
+
+---
+
 ## Project Structure
 
 ```

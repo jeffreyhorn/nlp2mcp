@@ -326,3 +326,62 @@ typecheck / format / lint clean · `make test` **5310 passed** / 10 skipped / 1 
 
 ---
 
+
+## Day 6 — 2026-09-09 · P6: the date gate · 6 h · + P8 8c/8d · 4 h
+
+**Branch:** `planning/sprint39-day6-consultation` · **Measured at:** `e662c2f6` · **Docs only — no `src/`, `tests/` or `data/` change; no `*.py` in the PR**
+
+### ✅ P6 — the follow-up is POSTED. The five-sprint slip is broken.
+
+**The date gate was met, not anticipated.** Executed on **2026-09-09**, the gate date itself — Days 1–5 ran up to a day early, and this was the one day that could not be pulled forward.
+
+**Preconditions re-verified at the gate date, not carried from the package's 2026-09-01 check:**
+
+| check | result |
+|---|---|
+| #1462 rocket | **OPEN**, last comment 2026-08-26 — my own send record |
+| #1443 mine / LP-degeneracy | **OPEN**, last comment 2026-08-26 — my own send record |
+| elapsed | **14 days** since the send |
+| ⇒ branch taken | **no reply → post the pre-written follow-up (§3)** |
+
+Posted **verbatim** from §3 — full comment on **#1462**, one-line cross-reference on **#1443**. Checked against the three banned additions (no restatement of the question, no "why it matters", no recipient-list change) and against the failure mode: the draft states the send as a completed fact, offers **re-routing rather than reconsideration**, carries no deadline, and ends by relieving the recipient of obligation. **Nothing re-opened the send decision** — the mechanism behind all five prior slips.
+
+### ⚠ 8d was applied to this package before posting, and it mattered
+
+The follow-up cites figures measured at **`84656666`**, and `src/` has changed since — a Pattern-C member landed on Day 2. The check was **not** "do the figures still read the same?" but "**do they still describe the same artifacts?**":
+
+```
+UNCHANGED  rocket_mcp.gms          UNCHANGED  rocket_mcp_presolve.gms
+UNCHANGED  agreste_mcp.gms         UNCHANGED  agreste_mcp_presolve.gms
+UNCHANGED  mine_mcp.gms
+```
+
+All five emits **byte-unchanged since the measurement commit**, so the figures still hold. Had any drifted, they would have been stale regardless of how plausible they looked — the Sprint-38 rocket lesson, where the *conclusion* survived five carries and the *failure description* did not.
+
+### ✅ The email is SENT — P6 is fully discharged
+
+§3 also requires the email. **This session has no email capability**, which the Sprint-38 decision brief anticipated (*"the send itself is a human action"*). **The owner sent it on 2026-09-09**, to the three addresses that brief settled on 2026-08-18:
+
+| recipient | address |
+|---|---|
+| Michael Ferris | `ferris@cs.wisc.edu` |
+| Steven Dirkse | `steve@gams.com` **and** `sdirkse@gams.com` |
+
+Both of Dirkse's addresses were supplied without a preference and the brief recommends addressing both — *"a bounce on one is silent"*.
+
+**Both channels are now complete: the GitHub comments and the email.** P6 has no outstanding action, and the consultation that slipped five sprints is fully followed up.
+
+### P8 8c/8d — landed as CONTRIBUTING rules
+
+New section: **Close-Rule Preconditions and Carried-Package Evidence**.
+
+- **8c — a close rule's precondition is a START STATE, never an outcome.** Evidence from this sprint: **C6** carried the precondition *"P4 branch A **or B** started"*, but branch B is the **re-scope** branch and never implements, so it could never produce a golden. The precondition was **unsatisfiable under half the branches it named**, and read like a start state while depending on an outcome. Caught Day 0 only because choosing the branch forced a re-read. Rule also fixes the reporting: **VOID ≠ unmet**.
+- **8d — re-derive a carried package's EVIDENCE, not only its conclusion.** Evidence: Sprint 38's rocket (conclusion survived five carries, failure description did not) and today's P6 application above. Prefer a **cheap invariant** — "the emit is byte-identical to the measurement commit" — over a full re-measure, and **record the measurement commit** with every carried figure, since a figure with no provenance can only be re-trusted, not re-derived.
+
+⚠ **Both are review rules, stated as NOT automated, and the doc says so.** 8a/8b are mechanically enforced by `check_phase0_doc.py`; 8c and 8d are semantic judgements — whether a condition is a start state, whether an artifact still matches its measurement — and a cue-matching check would be gameable without being reliable. Claiming enforcement that does not exist would be the same defect these rules exist to prevent.
+
+### Gate
+
+`check-doc-figures` clean · `validate_plan.py` **PLAN VALIDATES** · no `*.py` in the PR
+
+---
