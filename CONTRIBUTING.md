@@ -552,7 +552,7 @@ Two rules from Sprint 39. Both exist because a *claim* was carried forward witho
 ### Related
 
 - Sprint 39 Day 0 (C6's precondition corrected before the sprint ran): `docs/planning/EPIC_4/SPRINT_39/SPRINT_LOG.md`
-- Sprint 39 Day 6 (8d applied to the consultation package): same file, and `SPRINT_39/CONSULTATION_FOLLOWUP_PACKAGE.md` §1
+- Sprint 39 Day 6 (8d applied to the consultation package): same file, and `docs/planning/EPIC_4/SPRINT_39/CONSULTATION_FOLLOWUP_PACKAGE.md` §1
 - The Phase-0 added-only requirements (8a/8b) are enforced mechanically: `scripts/sprint_audit/check_phase0_doc.py`. **8c and 8d are review rules, not automated** — both are semantic judgements about whether a stated condition is a start state and whether an artifact still matches its measurement, and a cue-matching check would be gameable without being reliable.
 
 ---
