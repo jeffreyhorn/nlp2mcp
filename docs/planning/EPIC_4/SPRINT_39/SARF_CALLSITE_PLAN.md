@@ -200,7 +200,7 @@ That is sufficient to establish §2's actual claim (*the cost is differentiation
 | `builtins.isinstance` | 48.1 s | 8.4 % | 213,791,329 |
 | `derivative_rules.py:2480 _partial_index_match` | 34.3 s | 6.0 % | 1,852,280 |
 | `index_mapping.py:115 resolve_set_members` | 30.0 s | 5.2 % | 18,586,177 |
-| **`importlib._bootstrap:645(parent)`** | **25.4 s** | **4.4 %** | **45,513,129** |
+| **`<frozen importlib._bootstrap>:645(parent)`** | **25.4 s** | **4.4 %** | **45,513,129** |
 | `str.lower` | 21.6 s | 3.8 % | 77,616,469 |
 | `case_insensitive_dict.py:41 __getitem__` | 18.6 s | 3.2 % | 18,588,713 |
 | `str.rpartition` | 17.7 s | 3.1 % | 45,513,134 |
@@ -218,14 +218,14 @@ That is sufficient to establish §2's actual claim (*the cost is differentiation
 
 ### ⚠ 7.5 % is PURE IMPORT OVERHEAD, and it is not differentiation at all
 
-`importlib._bootstrap.parent` (25.4 s) + `str.rpartition` (17.7 s) = **43.1 s of 573 s = 7.5 %**, from **45.5 M import re-resolutions**. Attributed exactly:
+`<frozen importlib._bootstrap>:645(parent)` (25.4 s) + `str.rpartition` (17.7 s) = **43.1 s of 573 s = 7.5 %**, from **45.5 M import re-resolutions**. Attributed exactly:
 
 | function | function-local import | calls |
 |---|---|---|
 | `ad_core.simplify` (87–326) | `:127` `from ..ir.ast import (…)` | 26,908,871 |
 | `_is_concrete_instance_of` (3025–3136) | `:3087` `from .index_mapping import resolve_set_members` | 18,582,862 |
 | | **sum** | **45,491,733** |
-| | `importlib.parent` measured | **45,513,129** |
+| | `<frozen importlib._bootstrap>:645(parent)` measured | **45,513,129** |
 
 Difference **21,396 (0.05 %)** — the two low-traffic local imports in `_try_diff_sum_offset_crossterms` and `_try_resolve_cardinality_reversal`.
 

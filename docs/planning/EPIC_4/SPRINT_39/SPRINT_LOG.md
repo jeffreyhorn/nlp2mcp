@@ -418,8 +418,9 @@ They are three separate executions, not one measurement described three ways. Ru
 | `isinstance` | 48.1 s | 8.4 % | 213.8 M |
 | `_partial_index_match` | 34.3 s | 6.0 % | 1.9 M |
 | `resolve_set_members` | 30.0 s | 5.2 % | 18.6 M |
-| **`importlib.parent`** | **25.4 s** | **4.4 %** | **45.5 M** |
+| **`<frozen importlib._bootstrap>:645(parent)`** | **25.4 s** | **4.4 %** | **45.5 M** |
 | `str.lower` | 21.6 s | 3.8 % | 77.6 M |
+| **`str.rpartition`** | **17.7 s** | **3.1 %** | **45.5 M** |
 | **`_diff_sum`** | **16.5 s** | **2.9 %** | 1.9 M |
 
 ### ⚠ `_diff_sum` is 2.9 % of self time, not 57 %
@@ -428,7 +429,7 @@ They are three separate executions, not one measurement described three ways. Ru
 
 ### ⚠ 7.5 % is PURE IMPORT OVERHEAD — not differentiation
 
-`importlib.parent` (25.4 s) + `str.rpartition` (17.7 s) = **43.1 s / 573 s**, from **45.5 M import re-resolutions**, attributed exactly to two function-local imports:
+`<frozen importlib._bootstrap>:645(parent)` (25.4 s) + `str.rpartition` (17.7 s) = **43.1 s / 573 s**, from **45.5 M import re-resolutions**, attributed exactly to two function-local imports:
 
 | function | calls |
 |---|---|
