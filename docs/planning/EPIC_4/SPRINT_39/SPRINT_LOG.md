@@ -390,15 +390,25 @@ New section: **Close-Rule Preconditions and Carried-Package Evidence**.
 
 **Branch:** `planning/sprint39-day7-sarf` · **Measured at:** `9efbb723` · **Branch B — diagnosis only, no `src/` change**
 
+### ⚠ THREE DISTINCT RUNS ARE CITED BELOW — provenance, so no figure is misattributed
+
+| # | run | cap | outcome | what it produced |
+|---|---|---|---|---|
+| 1 | **pipeline translate** (`run_full_test`) | 600 s | `failure` @ **600.08 s**, no golden | the fact that **sarf never completes a translate** |
+| 2 | **prep §2 profile** (`cProfile`) | **900 s** | did **not** finish | the **70.9 % cumulative** figure |
+| 3 | **Day-7 profile** (`cProfile`, this section) | **600 s** | did **not** finish — wall **600.3 s**, **573.2 s** profiled | the **self-time table** below |
+
+They are three separate executions, not one measurement described three ways. Run 1 is the whole translate under the pipeline's own timeout; runs 2 and 3 profile `compute_constraint_jacobian` alone, at different caps. *(Run 3's 573.2 s is `cProfile`'s accounted function time, which is less than the 600.3 s wall clock.)*
+
 ### ⚠ "Run the profile to completion" is impossible for sarf, and that is a fact about the model
 
 `sarf` has **never completed a translate** — DB: `nlp2mcp_translate.status = failure` at **600.08 s**, **no golden**. The prompt's alternative applies: *say so explicitly*.
 
-**It also means §2's own 70.9 % is a lower bound over a capped run**, not a completed attribution — `compute_constraint_jacobian` shows `ncalls = 1`, still on the stack at the 900 s cap. Enough to establish §2's real claim (*the cost is differentiation, not enumeration* — `enumerate_variable_instances` genuinely completed), but not readable as "70.9 % of the translate".
+**It also means §2's own 70.9 % is a lower bound over a capped run**, not a completed attribution — `compute_constraint_jacobian` shows `ncalls = 1`, still on the stack at **run 2**'s 900 s cap. Enough to establish §2's real claim (*the cost is differentiation, not enumeration* — `enumerate_variable_instances` genuinely completed), but not readable as "70.9 % of the translate".
 
 **Method: SELF time (`tottime`) + call counts, valid regardless of completion.** Cumulative treated as a lower bound.
 
-### The attribution (573.2 s profiled)
+### The attribution — run 3 (cap 600 s; 573.2 s profiled)
 
 | frame | self | % | ncalls |
 |---|---|---|---|

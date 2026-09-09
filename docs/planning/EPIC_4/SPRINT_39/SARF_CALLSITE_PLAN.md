@@ -172,15 +172,25 @@ P4 is Sprint 39's **only KPI mover** (+1 Translate → 136), and its 20–28 h a
 
 **Executed 2026-09-09, measured at `9efbb723`.** Branch B: **diagnosis, no implementation.**
 
+### ⚠ THREE DISTINCT RUNS ARE CITED BELOW — provenance, so no figure is misattributed
+
+| # | run | cap | outcome | what it produced |
+|---|---|---|---|---|
+| 1 | **pipeline translate** (`run_full_test`) | 600 s | `failure` @ **600.08 s**, no golden | the fact that **sarf never completes a translate** |
+| 2 | **prep §2 profile** (`cProfile`) | **900 s** | did **not** finish | the **70.9 % cumulative** figure |
+| 3 | **Day-7 profile** (`cProfile`, this section) | **600 s** | did **not** finish — wall **600.3 s**, **573.2 s** profiled | the **self-time table** below |
+
+They are three separate executions, not one measurement described three ways. Run 1 is the whole translate under the pipeline's own timeout; runs 2 and 3 profile `compute_constraint_jacobian` alone, at different caps. *(Run 3's 573.2 s is `cProfile`'s accounted function time, which is less than the 600.3 s wall clock.)*
+
 ### ⚠ "Run the profile to completion" is NOT ACHIEVABLE for sarf, and that is a fact about the model
 
-`sarf` has **never completed a translate**: the DB records `nlp2mcp_translate.status = failure` at **600.08 s**, and **no golden exists**. So the prompt's alternative applies — *say so explicitly* — and it also means **§2's own 70.9 % figure is a lower bound over a capped run**, not a completed attribution: `compute_constraint_jacobian` shows `ncalls = 1` with the frame still on the stack when the 900 s cap hit.
+`sarf` has **never completed a translate**: the DB records `nlp2mcp_translate.status = failure` at **600.08 s**, and **no golden exists**. So the prompt's alternative applies — *say so explicitly* — and it also means **§2's own 70.9 % figure is a lower bound over a capped run**, not a completed attribution: `compute_constraint_jacobian` shows `ncalls = 1` with the frame still on the stack when **run 2**'s 900 s cap hit.
 
 That is sufficient to establish §2's actual claim (*the cost is differentiation, not enumeration* — `enumerate_variable_instances` genuinely **completed** 40 calls at 4.4 s), but it cannot be read as "70.9 % of sarf's translate".
 
 **Method used instead: SELF time (`tottime`) and call counts, which are valid for work actually performed regardless of whether the phase finished.** Cumulative time is treated as a lower bound for any frame still on the stack.
 
-### The attribution — `compute_constraint_jacobian`, capped at 600 s (573.2 s of profiled work)
+### The attribution — run 3: `compute_constraint_jacobian`, cap 600 s, 573.2 s of profiled work
 
 | frame | self | % | ncalls |
 |---|---|---|---|
