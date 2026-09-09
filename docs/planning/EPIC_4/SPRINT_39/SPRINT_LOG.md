@@ -420,6 +420,7 @@ They are three separate executions, not one measurement described three ways. Ru
 | `resolve_set_members` | 30.0 s | 5.2 % | 18.6 M |
 | **`<frozen importlib._bootstrap>:645(parent)`** | **25.4 s** | **4.4 %** | **45.5 M** |
 | `str.lower` | 21.6 s | 3.8 % | 77.6 M |
+| `CaseInsensitiveDict.__getitem__` | 18.6 s | 3.2 % | 18.6 M |
 | **`str.rpartition`** | **17.7 s** | **3.1 %** | **45.5 M** |
 | **`_diff_sum`** | **16.5 s** | **2.9 %** | 1.9 M |
 
