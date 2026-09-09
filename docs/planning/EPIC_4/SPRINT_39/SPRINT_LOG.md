@@ -385,3 +385,55 @@ New section: **Close-Rule Preconditions and Carried-Package Evidence**.
 `check-doc-figures` clean · `validate_plan.py` **PLAN VALIDATES** · no `*.py` in the PR
 
 ---
+
+## Day 7 — planned 2026-09-10, **executed 2026-09-09** · P4: sarf — diagnose · 6 h
+
+**Branch:** `planning/sprint39-day7-sarf` · **Measured at:** `9efbb723` · **Branch B — diagnosis only, no `src/` change**
+
+### ⚠ "Run the profile to completion" is impossible for sarf, and that is a fact about the model
+
+`sarf` has **never completed a translate** — DB: `nlp2mcp_translate.status = failure` at **600.08 s**, **no golden**. The prompt's alternative applies: *say so explicitly*.
+
+**It also means §2's own 70.9 % is a lower bound over a capped run**, not a completed attribution — `compute_constraint_jacobian` shows `ncalls = 1`, still on the stack at the 900 s cap. Enough to establish §2's real claim (*the cost is differentiation, not enumeration* — `enumerate_variable_instances` genuinely completed), but not readable as "70.9 % of the translate".
+
+**Method: SELF time (`tottime`) + call counts, valid regardless of completion.** Cumulative treated as a lower bound.
+
+### The attribution (573.2 s profiled)
+
+| frame | self | % | ncalls |
+|---|---|---|---|
+| `simplify` | **109.9 s** | **19.2 %** | 26.9 M |
+| `CaseInsensitiveDict.__contains__` | **68.1 s** | **11.9 %** | 55.8 M |
+| `_is_concrete_instance_of` | 55.0 s | 9.6 % | 18.6 M |
+| `isinstance` | 48.1 s | 8.4 % | 213.8 M |
+| `_partial_index_match` | 34.3 s | 6.0 % | 1.9 M |
+| `resolve_set_members` | 30.0 s | 5.2 % | 18.6 M |
+| **`importlib.parent`** | **25.4 s** | **4.4 %** | **45.5 M** |
+| `str.lower` | 21.6 s | 3.8 % | 77.6 M |
+| **`_diff_sum`** | **16.5 s** | **2.9 %** | 1.9 M |
+
+### ⚠ `_diff_sum` is 2.9 % of self time, not 57 %
+
+§2 named it at **57.1 % cumulative** and the prompt directed attribution at it. **Its own work is 2.9 %** — it is a dispatcher. Same distinction that forced §2's correction of Task 2, applied one level deeper: **cumulative says what a frame is waiting on; self time says what does the work.**
+
+### ⚠ 7.5 % is PURE IMPORT OVERHEAD — not differentiation
+
+`importlib.parent` (25.4 s) + `str.rpartition` (17.7 s) = **43.1 s / 573 s**, from **45.5 M import re-resolutions**, attributed exactly to two function-local imports:
+
+| function | calls |
+|---|---|
+| `ad_core.simplify` `:127` | 26,908,871 |
+| `_is_concrete_instance_of` `:3087` | 18,582,862 |
+| **sum** | **45,491,733** vs measured **45,513,129** — 0.05 % apart |
+
+**Both hoistable — verified, not assumed:** neither `ir/ast.py` nor `index_mapping.py` imports back at module level (**no cycle**), and `derivative_rules.py` already imports `..ir.ast` at module scope.
+
+⚠ My first cycle check was invalid — `grep … | head || echo` reports **head's** exit status, so the fallback never fired and empty output proved nothing. Re-done with an AST parse. **The pipe-exit-status trap, from my own notes, hit again.**
+
+### What this means for P4
+
+**The cheapest lever is not algorithmic** — ~7.5 % from moving two `import` statements to module scope. The genuine algorithmic cost is `simplify` (19.2 %) + case-insensitive lookup (~18.9 %) ≈ **38 %**, neither addressed by anything P4 was originally scoped to do; the four original sites remain **0.5 %**.
+
+**Nothing implemented.** Day 8 authors the Phase-0 gate. **C6 VOID; Translate reports 135 flat.**
+
+---
