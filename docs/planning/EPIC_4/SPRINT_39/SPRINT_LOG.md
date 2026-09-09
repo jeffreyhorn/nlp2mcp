@@ -358,9 +358,18 @@ UNCHANGED  mine_mcp.gms
 
 All five emits **byte-unchanged since the measurement commit**, so the figures still hold. Had any drifted, they would have been stale regardless of how plausible they looked — the Sprint-38 rocket lesson, where the *conclusion* survived five carries and the *failure description* did not.
 
-### ⚠ NOT DONE — the email
+### ✅ The email is SENT — P6 is fully discharged
 
-§3 also says *"Send the email to the same three recipients."* **I have no email capability; it is not sent.** The GitHub half is complete; the email is outstanding and needs the owner.
+§3 also requires the email. **This session has no email capability**, which the Sprint-38 decision brief anticipated (*"the send itself is a human action"*). **The owner sent it on 2026-09-09**, to the three addresses that brief settled on 2026-08-18:
+
+| recipient | address |
+|---|---|
+| Michael Ferris | `ferris@cs.wisc.edu` |
+| Steven Dirkse | `steve@gams.com` **and** `sdirkse@gams.com` |
+
+Both of Dirkse's addresses were supplied without a preference and the brief recommends addressing both — *"a bounce on one is silent"*.
+
+**Both channels are now complete: the GitHub comments and the email.** P6 has no outstanding action, and the consultation that slipped five sprints is fully followed up.
 
 ### P8 8c/8d — landed as CONTRIBUTING rules
 
