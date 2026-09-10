@@ -167,3 +167,62 @@ def test_every_existing_issue_doc_still_conforms():
         and missing_subsections(d.read_text(encoding="utf-8"))
     ]
     assert broken == [], f"these live docs would newly fail the base gate: {broken}"
+
+
+# A document carrying TWO acceptance gates -- one issue, two independent levers,
+# each with its own criteria. The second gate holds the added-only fields.
+TWO_GATES = """\
+**Layer:** **AD / differentiation** — `src/ad/ad_core.py`
+
+## Phase 0: Acceptance Gate
+
+### Hand-Derived KKT Shape
+first gate.
+
+### Expected Emit Pattern
+first gate.
+
+### Verification Methodology
+first gate.
+
+### PROCEED/REPLAN Signal
+first gate.
+
+## Phase 0: Acceptance Gate — the second lever
+
+### Nearest Existing Mechanism
+The first gate's narrowing is nearest, but it **does not apply**: it changes the
+column count, not the per-column cost.
+
+### Hand-Derived KKT Shape
+unchanged — this is a performance change.
+
+### Expected Emit Pattern
+byte-identical corpus-wide.
+
+### Verification Methodology
+call-count fail-before.
+
+### PROCEED/REPLAN Signal
+PROCEED if byte-identical.
+"""
+
+
+@pytest.mark.unit
+def test_a_second_phase0_gate_is_not_invisible():
+    """⚠ MULTI-GATE guard — found by being the rule's own first customer.
+
+    `phase0_subsections` and `subsection_body` both used `PHASE0_HEADING.search`,
+    which stops at the FIRST Phase-0 heading. A document carrying a second
+    acceptance gate had that gate ignored entirely: its
+    `### Nearest Existing Mechanism` was reported missing, and once found, its
+    body was reported as recording no reason -- because the body was never read.
+
+    That is worse than not checking at all: the gate reported a specific, wrong
+    reason. Both functions now scan every Phase-0 section (Sprint 39 Day 8).
+    """
+    assert missing_subsections(TWO_GATES) == []
+    assert missing_for_added(TWO_GATES) == [], (
+        "the second gate's Nearest Existing Mechanism (and its 'does not apply' "
+        "reason) must be seen; reading only the first gate makes this fail"
+    )
