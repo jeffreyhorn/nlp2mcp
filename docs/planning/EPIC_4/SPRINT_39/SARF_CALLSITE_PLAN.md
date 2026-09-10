@@ -164,3 +164,77 @@ P4 is Sprint 39's **only KPI mover** (+1 Translate → 136), and its 20–28 h a
 
 **Document Status:** ✅ Complete — Sprint 39 Prep Task 6
 **Last Updated:** 2026-08-31
+
+
+---
+
+## Sprint 39 Day 7 — attribution INSIDE the differentiation path (branch B)
+
+**Executed 2026-09-09, measured at `9efbb723`.** Branch B: **diagnosis, no implementation.**
+
+### ⚠ THREE DISTINCT RUNS ARE CITED BELOW — provenance, so no figure is misattributed
+
+| # | run | cap | outcome | what it produced |
+|---|---|---|---|---|
+| 1 | **pipeline translate** (`run_full_test`) | 600 s | `failure` @ **600.08 s**, no golden | the fact that **sarf never completes a translate** |
+| 2 | **prep §2 profile** (`cProfile`) | **900 s** | did **not** finish | the **70.9 % cumulative** figure |
+| 3 | **Day-7 profile** (`cProfile`, this section) | **600 s** | did **not** finish — wall **600.3 s**, **573.2 s** profiled | the **self-time table** below |
+
+They are three separate executions, not one measurement described three ways. Run 1 is the whole translate under the pipeline's own timeout; runs 2 and 3 profile `compute_constraint_jacobian` alone, at different caps. *(Run 3's 573.2 s is `cProfile`'s accounted function time, which is less than the 600.3 s wall clock.)*
+
+### ⚠ "Run the profile to completion" is NOT ACHIEVABLE for sarf, and that is a fact about the model
+
+`sarf` has **never completed a translate**: the DB records `nlp2mcp_translate.status = failure` at **600.08 s**, and **no golden exists**. So the prompt's alternative applies — *say so explicitly* — and it also means **§2's own 70.9 % figure is a lower bound over a capped run**, not a completed attribution: `compute_constraint_jacobian` shows `ncalls = 1` with the frame still on the stack when **run 2**'s 900 s cap hit.
+
+That is sufficient to establish §2's actual claim (*the cost is differentiation, not enumeration* — `enumerate_variable_instances` genuinely **completed** 40 calls at 4.4 s), but it cannot be read as "70.9 % of sarf's translate".
+
+**Method used instead: SELF time (`tottime`) and call counts, which are valid for work actually performed regardless of whether the phase finished.** Cumulative time is treated as a lower bound for any frame still on the stack.
+
+### The attribution — run 3: `compute_constraint_jacobian`, cap 600 s, 573.2 s of profiled work
+
+| frame | self | % | ncalls |
+|---|---|---|---|
+| `ad_core.py:87 simplify` | **109.9 s** | **19.2 %** | 26,908,871 |
+| `case_insensitive_dict.py:52 __contains__` | **68.1 s** | **11.9 %** | 55,760,744 |
+| `derivative_rules.py:3025 _is_concrete_instance_of` | 55.0 s | 9.6 % | 18,582,862 |
+| `builtins.isinstance` | 48.1 s | 8.4 % | 213,791,329 |
+| `derivative_rules.py:2480 _partial_index_match` | 34.3 s | 6.0 % | 1,852,280 |
+| `index_mapping.py:115 resolve_set_members` | 30.0 s | 5.2 % | 18,586,177 |
+| **`<frozen importlib._bootstrap>:645(parent)`** | **25.4 s** | **4.4 %** | **45,513,129** |
+| `str.lower` | 21.6 s | 3.8 % | 77,616,469 |
+| `case_insensitive_dict.py:41 __getitem__` | 18.6 s | 3.2 % | 18,588,713 |
+| `str.rpartition` | 17.7 s | 3.1 % | 45,513,134 |
+| **`derivative_rules.py:2159 _diff_sum`** | **16.5 s** | **2.9 %** | 1,943,447 |
+
+### ⚠ `_diff_sum` is 2.9 % of self time, not 57 %
+
+§2 named `_diff_sum` at **57.1 % cumulative**, and the Day-7 prompt directs attribution at it. **Its own work is 2.9 %.** It is a dispatcher; the 57 % is its callees. This is the same distinction that made §2's own correction necessary — *cumulative tells you what a frame is waiting on, self time tells you what is doing the work* — and it applies one level deeper than §2 went.
+
+### Three cost centres, in order
+
+1. **`simplify` — 19.2 %, 26.9 M calls.** The single largest self-time consumer. Called roughly **14× per `differentiate_expr` call** (26.9 M vs 1.9 M `_diff_sum`).
+2. **Case-insensitive dictionary lookup — ~18.9 % combined** (`__contains__` 11.9 % + `__getitem__` 3.2 % + a large share of `str.lower` 3.8 %). **55.8 M `__contains__` calls**, each lowercasing its key.
+3. **Instance/membership resolution — ~14.8 %** (`_is_concrete_instance_of` 9.6 % + `resolve_set_members` 5.2 %), at **18.6 M calls each** — the two are called in lockstep.
+
+### ⚠ 7.5 % is PURE IMPORT OVERHEAD, and it is not differentiation at all
+
+`<frozen importlib._bootstrap>:645(parent)` (25.4 s) + `str.rpartition` (17.7 s) = **43.1 s of 573 s = 7.5 %**, from **45.5 M import re-resolutions**. Attributed exactly:
+
+| function | function-local import | calls |
+|---|---|---|
+| `ad_core.simplify` (87–326) | `:127` `from ..ir.ast import (…)` | 26,908,871 |
+| `_is_concrete_instance_of` (3025–3136) | `:3087` `from .index_mapping import resolve_set_members` | 18,582,862 |
+| | **sum** | **45,491,733** |
+| | `<frozen importlib._bootstrap>:645(parent)` measured | **45,513,129** |
+
+Difference **21,396 (0.05 %)** — the two low-traffic local imports in `_try_diff_sum_offset_crossterms` and `_try_resolve_cardinality_reversal`.
+
+**Both are hoistable — verified, not assumed.** Neither `src/ir/ast.py` nor `src/ad/index_mapping.py` imports `src/ad/ad_core.py` / `src/ad/derivative_rules.py` at module level, so there is **no cycle to break**; and `src/ad/derivative_rules.py` **already** imports `..ir.ast` at module scope, which demonstrates the pattern is safe in this package.
+
+### What this means for P4
+
+**The cheapest lever is not algorithmic.** ~7.5 % is recoverable by moving two `import` statements to module scope — no behaviour change, no emit change, and it does not touch the four originally-scoped call sites (still 0.5 %) or the O(active) argument.
+
+The genuine algorithmic cost is `simplify` (19.2 %) and case-insensitive lookup (~18.9 %) — **together ~38 %**, both reached through differentiation, neither addressed by anything P4 was originally scoped to do.
+
+⚠ **None of this is implemented.** Branch B is diagnosis; Day 8 authors the Phase-0 gate so an implementer has a fail-before. **C6 remains VOID and Translate reports 135 flat.**
