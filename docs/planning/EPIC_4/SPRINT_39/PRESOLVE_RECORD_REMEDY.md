@@ -113,7 +113,7 @@ Not a KPI-block row, but moved by the same change: **dangling `mcp_file_used`** 
 | `scripts/sprint_audit/kpi_block.py` | reports the new figures — intended |
 | `scripts/sprint_audit/floor_tracker.py` | **none** — reads provenance, not the DB |
 | `scripts/sprint_audit/check_doc_figures.py` | ⚠ **`Match` 96 → 95**, so the check flags any **changed** doc line citing 96 — correct behaviour, but the docs must move in the same PR. ⚠⚠ **The `dangling mcp_file_used rows` fact does NOT go 14 → 0** under the decided remedy — that prediction assumed the `null` option. See §9: left un-updated the fact reports **0 for the wrong reason**, and updated it reports **14, unchanged**. |
-| `tests/unit/sprint_audit/test_check_doc_figures.py` | **none.** Its `TRUTHS` are *pinned* fixtures, deliberately not derived ("deriving them here would re-implement the thing under test"), and no test asserts derived == pinned |
+| `tests/unit/sprint_audit/test_check_doc_figures.py` | ⚠ **NOT "none" once the fact is RENAMED** (PR #1738 review). The original reasoning covered the *number* changing, not the *name*: `TRUTHS` are pinned fixtures, so 14 → any value breaks nothing. But `check_doc_figures.py:661` is `if fact.name not in truths: continue`, and `TRUTHS` hard-codes the key `"dangling mcp_file_used rows"`. Rename the fact without the fixture and **the new fact is silently skipped in every test while the old key sits inert** — coverage lost with the suite still green. See §9 obligation 3. |
 | `tests/gamslib/test_run_full_test_path_relative.py` | ⚠ Sprint 27 #1400 requires a **repo-relative** path when one is written. A null must be an explicit allowed case, not an accident |
 | CI workflows | **none assert Match monotonicity.** `check_parse_rate_regression.py` reads only `parse_rate_percent`, `convert_rate_percent`, `avg_time_ms` from a report JSON — there is no Match analogue and no DB read. `ci.yml` touches `gamslib_status.json` only as a **cache key** |
 
@@ -197,11 +197,32 @@ This is the *silent scope narrowing* class already on record (S37's leak gate sw
 
 ### P7's obligations, therefore
 
+*Six, not the five this section first listed — the schema contract was missing (PR #1738 review).*
+
 1. **Update `_dangling_presolve_rows` to the new key IN THE SAME COMMIT as the DB migration.** Not the same PR — the same commit. A commit where the DB has moved and the checker has not is a commit whose figures lie.
 2. **Assert the fact still derives 14 afterwards.** A positive control: the count must be *unchanged*, and a 0 is the failure signal, not the success signal. This inverts the usual reading, so state it at the assertion.
-3. **Rename the fact and its `source` string** — `dangling mcp_file_used rows` describes a defect that no longer exists. The population is still worth deriving (docs cite it), but as *"presolve rows whose generated file is no longer on disk"*. Its three regex patterns match the word `dangling`; prose that keeps that word now misdescribes the record.
+3. **Rename the fact, its `source` string, AND the pinned test fixture — together.** `dangling mcp_file_used rows` describes a defect that no longer exists; the population is still worth deriving (docs cite it), but as *"presolve rows whose generated file is no longer on disk"*.
+   - ⚠ **Two of its three patterns key on the word `dangling`, not three** (PR #1738 review — an earlier revision of this line said three). Patterns 1–2 are the forward and reverse `dangling` forms; **pattern 3 is `all\s+N\s+(?:presolve-record\s+)?rows`, which never mentions `dangling`** and must survive the rename untouched. Editing it because a list said "three" would silently drop the "all 14 rows" citation form.
+   - ⚠ **`tests/unit/sprint_audit/test_check_doc_figures.py` must move in the same commit.** `check_doc_figures.py:661` is `if fact.name not in truths: continue`, and the test's `TRUTHS` hard-codes `"dangling mcp_file_used rows": 14`. Rename `FACTS` alone and the new fact is **skipped in every test** — no failure, no coverage. The consumer table's original "none" for this file reasoned about the pinned *value*, which is safe, and missed the *key*, which is not.
 4. **The Sprint 27 #1400 repo-relative requirement still applies unchanged.** `tests/gamslib/test_run_full_test_path_relative.py` exists because an absolute path leaked into this field. The decided remedy still writes a path, so — unlike the `null` option, which needed a new "null is allowed" case — that test's property is untouched. Only the key it names moves.
 5. **`run_full_test.py:954` is the sole writer.** Renaming the DB key without it means the next pipeline run silently re-introduces `mcp_file_used` alongside `mcp_file_generated`, and the DB carries both.
+6. **⚠⚠ `data/gamslib/schema.json` IS THE HARD ONE — it breaks P7's own gate** (PR #1738 review; this obligation was missing from the first revision of §9). `definitions.mcp_solve_result` sets **`additionalProperties: false`** and lists `mcp_file_used` among its properties, so a renamed key is an *unexpected property*.
+
+   Measured by deep-copying the live DB, renaming the key and validating:
+
+   | state | schema errors |
+   |---|---|
+   | today | **0** |
+   | rename, `schema.json` unchanged | **48** — `Additional properties are not allowed ('mcp_file_generated' was unexpected)` |
+   | rename, `schema.json` updated too | **0** |
+
+   **48, not 14** — every row carrying the field, not only the dangling ones.
+
+   **Why this is worse than a failed check:** `scripts/sprint_audit/check_mcp_solve_attribution.py:832-834` validates the whole DB and `raise InputError(schema_error)` on failure. That tool is **§6's adoption-rule item 1** and Remedy A's gate. So P7 would break the instrument it needs to verify itself with — and the failure surfaces as a refusal to run, not as a diagnosis of the rename.
+
+   **⚠ AND IT MAY NOT REPRODUCE ON YOUR MACHINE.** `jsonschema` is **not** a declared dependency (absent from `requirements.txt` and `pyproject.toml`), and `_validate_against_schema` is documented as a **no-op** when the import fails. So on a machine without it the migration looks clean and breaks wherever the library *is* installed. Same shape as the silent-zero trap in this section: **the local signal and the true signal differ.** Verify with `jsonschema` present, and say in the PR that you did.
+
+   **Also update the property's `description`.** It currently reads *"Relative path to the MCP file that was **solved**"* — a stronger version of the same present/past-tense defect the rename exists to fix, and demonstrably false for `weapons`, whose MCP never solved. `"...that was generated"` is what the writer actually knows.
 
 ### Why this is not §5's KPI correction
 
