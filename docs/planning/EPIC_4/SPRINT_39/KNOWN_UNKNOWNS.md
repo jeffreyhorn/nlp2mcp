@@ -1300,7 +1300,7 @@ Sprint 39 execution team
 
 > ⚠ **SUPERSEDED IN PART, 2026-09-10 — the paragraph above assumed the `null` option, which the owner did not choose.** Decision: **rename to `mcp_file_generated` and KEEP the path.** Two consequences invert:
 >
-> - **`dangling mcp_file_used rows` does NOT go 14 → 0.** Paths are kept, so an *updated* checker still derives **14**. An *un-updated* one derives **0** — by reading a key that no longer exists. The predicted value and the failure value coincide, so 0 must be read as the failure signal.
+> - **`dangling mcp_file_used rows` does NOT go 14 → 0.** Paths are kept, so an *updated* checker still derives **14**. An *un-updated* one derives **0** — by reading a key that no longer exists. The predicted value and the failure value coincide, so 0 must be read as the failure signal. ⚠ **That 14 is the RENAME-ONLY figure.** P7 lands Remedy A as well, and A reverts `weapons` to its cold golden (`data/gamslib/mcp/weapons_mcp.gms`, which exists), so its row stops dangling: **the full A + rename result is 13.** Keeping the two apart is the point — 14 is the positive control that the *rename* changed nothing; 13 is the post-P7 state. `PRESOLVE_RECORD_REMEDY.md` §9 obligation 2 carries the table.
 > - **The #1400 repo-relative property is untouched**, not extended. A path is still written, so there is no "null is an allowed case" to add; only the key name moves.
 >
 > Analysis left in place as the record of what was known at prep time. Current design: `PRESOLVE_RECORD_REMEDY.md` §9.

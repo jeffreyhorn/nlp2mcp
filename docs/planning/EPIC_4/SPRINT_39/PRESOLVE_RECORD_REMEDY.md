@@ -117,7 +117,7 @@ Not a KPI-block row, but moved by the same change: **dangling `mcp_file_used`** 
 | `scripts/sprint_audit/kpi_block.py` | reports the new figures — intended |
 | `scripts/sprint_audit/floor_tracker.py` | **none** — reads provenance, not the DB |
 | `scripts/sprint_audit/check_doc_figures.py` | ⚠ **`Match` 96 → 95**, so the check flags any **changed** doc line citing 96 — correct behaviour, but the docs must move in the same PR. ⚠⚠ **The `dangling mcp_file_used rows` fact does NOT go 14 → 0** under the decided remedy — that prediction assumed the `null` option. See §9: left un-updated the fact reports **0 for the wrong reason**, and updated it reports **14, unchanged**. |
-| `tests/unit/sprint_audit/test_check_doc_figures.py` | ⚠ **NOT "none" once the fact is RENAMED** (PR #1738 review). The original reasoning covered the *number* changing, not the *name*: `TRUTHS` are pinned fixtures, so 14 → any value breaks nothing. But `check_doc_figures.py:661` is `if fact.name not in truths: continue`, and `TRUTHS` hard-codes the key `"dangling mcp_file_used rows"`. Rename the fact without the fixture and **the new fact is silently skipped in every test while the old key sits inert** — coverage lost with the suite still green. See §9 obligation 3. |
+| `tests/unit/sprint_audit/test_check_doc_figures.py` | ⚠ **NOT "none" once the fact is RENAMED** (PR #1738 review). The original reasoning covered the *number* changing, not the *name*: `TRUTHS` are pinned fixtures, so 14 → any value breaks nothing. But `check_doc_figures.py:662` is `if fact.name not in truths: continue`, and `TRUTHS` hard-codes the key `"dangling mcp_file_used rows"`. Rename the fact without the fixture and **the new fact is silently skipped in every test while the old key sits inert** — coverage lost with the suite still green. See §9 obligation 3. |
 | `tests/gamslib/test_run_full_test_path_relative.py` | ⚠ Sprint 27 #1400 requires a **repo-relative** path when one is written. ~~A null must be an explicit allowed case, not an accident~~ — **that sentence described the REJECTED `null` option** (PR #1738 review). Under the decided rename a path is still written, so there is no null case to allow; the #1400 *property* is untouched. ⚠ But the test does **not** cover the writer at all — see §9 obligation 4. |
 | CI workflows | **none assert Match monotonicity.** `check_parse_rate_regression.py` reads only `parse_rate_percent`, `convert_rate_percent`, `avg_time_ms` from a report JSON — there is no Match analogue and no DB read. `ci.yml` touches `gamslib_status.json` only as a **cache key** |
 
@@ -217,11 +217,12 @@ This is the *silent scope narrowing* class already on record (S37's leak gate sw
    Both figures are re-derived above from the live DB, not carried. **The inversion is the point: 0 is failure, not success**, and it is the number three planning documents predicted — so state that at the assertion, or a reader will read the trap as the goal.
 3. **Rename the fact, its `source` string, AND the pinned test fixture — together.** `dangling mcp_file_used rows` describes a defect that no longer exists; the population is still worth deriving (docs cite it), but as *"presolve rows whose generated file is no longer on disk"*.
    - ⚠ **Two of its three patterns key on the word `dangling`, not three** (PR #1738 review — an earlier revision of this line said three). Patterns 1–2 are the forward and reverse `dangling` forms; **pattern 3 is `all\s+N\s+(?:presolve-record\s+)?rows`, which never mentions `dangling`** and must survive the rename untouched. Editing it because a list said "three" would silently drop the "all 14 rows" citation form.
+   - ⚠ **(PR #1738 review, third round) Pattern 2 also hard-codes the FIELD NAME, not just the word `dangling`.** It reads `\**(?P<value>N)\**\s+dangling\**\s+(?:mcp_file_used\s+)?rows?\b`. That optional `mcp_file_used\s+` group is what lets *"**14** dangling `mcp_file_used` rows"* match at all. Once prose cites `mcp_file_generated`, **the reverse form stops matching even after the fact and the fixture are renamed** — a third independent way to lose coverage silently, and the one that survives fixing the other two. Update the token (or re-write the pattern to the new wording) **and add a positive test for the reverse form**, which the suite does not currently have: `:209–220` cover the two *negative* regressions, and `:143` covers the forward form only.
    - ⚠ **`tests/unit/sprint_audit/test_check_doc_figures.py` must move in the same commit — and `TRUTHS` alone is NOT enough** (PR #1738 review, second round). Three separate things in that file are keyed to the old naming, and each fails *silently*:
 
      | site | what it is | how it fails after a partial rename |
      |---|---|---|
-     | **:65** — `TRUTHS`, keyed `"dangling mcp_file_used rows"` | the pinned truth map | `check_doc_figures.py:661` is `if fact.name not in truths: continue` — the renamed fact is **skipped in every test** |
+     | **:65** — `TRUTHS`, keyed `"dangling mcp_file_used rows"` | the pinned truth map | `check_doc_figures.py:662` is `if fact.name not in truths: continue` — the renamed fact is **skipped in every test** |
      | **:143** — the `current-dangling` vector | asserts a correct citation does **not** fire | once patterns 1–2 no longer match that prose, it fires nothing **because nothing matches it** — a vacuous pass |
      | **:209–220** — the two `test_dangling_pattern_*` regressions | clause-crossing and population-vs-count, both asserting `== set()` | same shape: `== set()` is satisfied by a pattern that matches nothing at all |
 
@@ -230,7 +231,9 @@ This is the *silent scope narrowing* class already on record (S37's leak gate sw
      The consumer table's original "none" for this file reasoned about the pinned *value*, which is safe, and missed the *key* and the *vectors*, which are not.
 4. **The Sprint 27 #1400 *property* is untouched — but nothing tests the writer, so the rename lands unverified.** `tests/gamslib/test_run_full_test_path_relative.py` exists because an absolute path leaked into this field. The decided remedy still writes a path, so — unlike the `null` option, which needed a new "null is allowed" case — the property itself needs no change.
 
-   ⚠ **Do not read that as coverage** (PR #1738 review). Measured: the file imports exactly one symbol, `_repo_relative_path`, and its three tests all call it directly. **None reaches the record-writing branch at `run_full_test.py:954`**, and the module docstring still names `mcp_file_used` as the contract. So **the suite stays green if P7 renames the DB key and forgets the writer** — the same silent-pass shape as obligations 2 and 3, arriving by a third route.
+   ⚠ **Do not read that as coverage** (PR #1738 review). Measured: **all three of its tests call `_repo_relative_path` directly and nothing else** — none reaches the record-writing branch at `run_full_test.py:954` — and the module docstring still names `mcp_file_used` as the contract.
+
+   *(⚠ An earlier revision said the file "imports exactly one symbol". It imports **two** — `PROJECT_ROOT, _repo_relative_path` at `:11`, plus `pytest`. Corrected in the third review round. The import list was never the load-bearing fact; **what the tests call** is, and that is unchanged.)* So **the suite stays green if P7 renames the DB key and forgets the writer** — the same silent-pass shape as obligations 2 and 3, arriving by a third route.
 
    Therefore: **add a focused assertion that the writer emits `mcp_file_generated` with a repo-relative value**, and update that docstring. Without it, obligation 5 ("`run_full_test.py:954` is the sole writer") is a claim no test can hold P7 to.
 5. **`run_full_test.py:954` is the sole writer.** Renaming the DB key without it means the next pipeline run silently re-introduces `mcp_file_used` alongside `mcp_file_generated`, and the DB carries both.
@@ -259,7 +262,26 @@ This is the *silent scope narrowing* class already on record (S37's leak gate sw
 
    ⚠ **They do NOT offer `--validate`, and an earlier revision of this obligation said they did** (PR #1738 review). Measured from their parsers, both expose only `--dry-run`, `--verbose`, `--no-backup`, `--database`. **`--validate` exists in `migrate_schema_v2.1.0.py`** (`add_argument` at :266, used at :327) — the precedent *regressed* at 2.2.0 and I attributed the older script's flag to the newer ones.
 
-   That matters more than a citation slip, because obligation 6 is precisely about schema validity: a migration that cannot check its own output is the wrong tool for a **breaking** change. So **require validation rather than assume it** — either restore `--validate` on the new script, or run the existing entry point, `python scripts/gamslib/db_manager.py validate`, as a separate step. ⚠ Whichever route, obligation 6's caveat applies: with `jsonschema` absent the check is a **no-op**, so a clean validate proves nothing on a machine that lacks it.
+   That matters more than a citation slip, because obligation 6 is precisely about schema validity: a migration that cannot check its own output is the wrong tool for a **breaking** change. So **require validation rather than assume it** — either restore `--validate` on the new script, or run the existing entry point, `python scripts/gamslib/db_manager.py validate`, as a separate step.
+
+   ⚠ **The two routes are NOT equivalent under a missing `jsonschema`, and an earlier revision of this obligation said they were** (PR #1738 review, third round):
+
+   | route | `jsonschema` absent |
+   |---|---|
+   | `db_manager.py validate` | **fails CLOSED** — `validate_database` returns `{"path": "(library)", "message": "jsonschema not installed"}` (`:205-209`) and `cmd_validate` returns **1** (`:326-332`) |
+   | `check_mcp_solve_attribution.py` | **no-op** — documented to degrade in coverage rather than fail (obligation 6) |
+
+   So obligation 6's caveat is real but belongs **only** to the attribution checker. Sweeping `db_manager.py validate` into it was worse than a wrong footnote: it told P7 that a clean validate proves nothing, when in fact this route **cannot** report clean without the library. **`db_manager.py validate` is therefore the recommended route** — for a breaking migration, a check that fails closed on a missing dependency is the property you want.
+
+   ⚠ **Three places carry the version, not one** (PR #1738 review, third round). Following the steps above literally produces a v2.3.0 database against a schema that still calls itself v2.2.1:
+
+   | site | today |
+   |---|---|
+   | `data/gamslib/gamslib_status.json` → `schema_version` | `"2.2.1"` |
+   | `data/gamslib/schema.json:5` → root `description` | `"… through the nlp2mcp pipeline (v2.2.1)"` |
+   | the migration script's own target constant | n/a — new |
+
+   The root `description` is **prose inside the contract**, so nothing validates it and nothing will flag it. That is precisely the shape this whole section is about: an un-updated artifact that stays silent.
 
    **Recommended `2.3.0`, not `2.2.2`** — the existing `2.2.x` steps were *additive* (new optional properties, old DBs still valid), whereas this one invalidates them. That asymmetry is what the version number should carry. **P7 confirms the number**; the obligation is that it *moves* and ships a migration, not which digit changes.
 
