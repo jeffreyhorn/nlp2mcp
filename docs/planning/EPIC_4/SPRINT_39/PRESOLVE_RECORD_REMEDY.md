@@ -62,6 +62,8 @@ Extend the condition to *"the retry succeeded **and** the MCP produced its own `
 
 ### Remedy B — re-specify `mcp_file_used` (null unless a committed golden exists) + back-fill
 
+> ⚠ **This is B-as-NULL, the variant the owner did NOT choose** (2026-09-10). The decided remedy renames the field and **keeps** the path; see §9. The row below — *dangling references: 14 of 14* — is therefore the corrected count for a remedy that was not adopted. Kept as the record of the option considered.
+
 | corrects | rows |
 |---|---|
 | dangling references | **14 of 14** |
@@ -97,7 +99,9 @@ Simulated by rewriting weapons' row to its cold result and re-running `kpi_block
 
 *Row names and order are `kpi_block.py`'s own, so this table cross-references the block a reader meets in a report. `presolve` and `cold-optimal` are the indented sub-rows of `Match`; where the prose below says "presolve-match" it means this `presolve` row.*
 
-Not a KPI-block row, but moved by the same change: **dangling `mcp_file_used`** 14 → **13** under Remedy A alone, → **0** under A + B.
+Not a KPI-block row, but moved by the same change: **dangling `mcp_file_used`** 14 → **13** under Remedy A alone, → ~~**0** under A + B~~.
+
+> ⚠ **The `→ 0 under A + B` half is SUPERSEDED** (owner decision 2026-09-10; §9). It is the outcome of **B-as-null**, which was not chosen. The decided remedy **keeps the path**, so B moves the count by **nothing**. The live figures are: **13** after A + the rename, **14** after the rename alone. **0 is now a failure signal** — it means the checker is reading a key that no longer exists. The `14 → 13` half is unaffected: it is Remedy A's doing, not B's.
 
 **Two feared collisions do not happen, and both are worth stating because the plan does not rule them out.**
 
@@ -173,7 +177,7 @@ The *specification* defect named in §3. The pipeline writes this field at emit 
 
 ### ⚠ What it does NOT do — three live docs say otherwise
 
-`PLAN.md` §3 (risk table), this doc's §4 consumer table, and `KNOWN_UNKNOWNS.md` §7.3 all predict `check_doc_figures.py`'s `dangling mcp_file_used rows` fact going **14 → 0**. **That prediction was written for the `null` option and does not survive the decided one.** Keeping the path keeps the count. All three are corrected in the same PR as this section.
+`PLAN.md` §3 (risk table), this doc's §4 consumer table, and `KNOWN_UNKNOWNS.md` §7.3 all predict `check_doc_figures.py`'s `dangling mcp_file_used rows` fact going **14 → 0**. **That prediction was written for the `null` option and does not survive the decided one.** Keeping the path keeps the count: **the rename moves it by nothing.** (⚠ Remedy A separately moves it 14 → 13 — a different change with a different cause; obligation 2 keeps the two apart.) All three are corrected in the same PR as this section.
 
 ### ⚠⚠ THE TRAP: the predicted number and the broken number are the same number
 
@@ -200,7 +204,17 @@ This is the *silent scope narrowing* class already on record (S37's leak gate sw
 *Seven. The first revision listed five: the schema **contract** (6) and the schema **version + migration** (7) were both missing, found in successive review rounds (PR #1738). ⚠ The count has been wrong twice — derive it from the list below, do not trust this line.*
 
 1. **Update `_dangling_presolve_rows` to the new key IN THE SAME COMMIT as the DB migration.** Not the same PR — the same commit. A commit where the DB has moved and the checker has not is a commit whose figures lie.
-2. **Assert the fact still derives 14 afterwards.** A positive control: the count must be *unchanged*, and a 0 is the failure signal, not the success signal. This inverts the usual reading, so state it at the assertion.
+2. **Assert the rename ALONE leaves the fact at 14 — then expect 13 once Remedy A lands** (PR #1738 review; an earlier revision of this obligation said "14 afterwards" without qualification, which contradicts A+B).
+
+   The two changes move this count independently, so the assertion must name which one it is isolating:
+
+   | after | derives | why |
+   |---|---|---|
+   | the rename alone | **14** | keeping the path keeps every row; this is the positive control that the rename changed nothing |
+   | the rename **+ Remedy A** | **13** | A reverts `weapons` to its cold golden, which **exists** (`data/gamslib/mcp/weapons_mcp.gms`), so its row stops dangling — §3, *"1 of 14 — only `weapons`"* |
+   | either, checker not updated | **0** | ⚠ **the failure signal** — a key that no longer exists |
+
+   Both figures are re-derived above from the live DB, not carried. **The inversion is the point: 0 is failure, not success**, and it is the number three planning documents predicted — so state that at the assertion, or a reader will read the trap as the goal.
 3. **Rename the fact, its `source` string, AND the pinned test fixture — together.** `dangling mcp_file_used rows` describes a defect that no longer exists; the population is still worth deriving (docs cite it), but as *"presolve rows whose generated file is no longer on disk"*.
    - ⚠ **Two of its three patterns key on the word `dangling`, not three** (PR #1738 review — an earlier revision of this line said three). Patterns 1–2 are the forward and reverse `dangling` forms; **pattern 3 is `all\s+N\s+(?:presolve-record\s+)?rows`, which never mentions `dangling`** and must survive the rename untouched. Editing it because a list said "three" would silently drop the "all 14 rows" citation form.
    - ⚠ **`tests/unit/sprint_audit/test_check_doc_figures.py` must move in the same commit — and `TRUTHS` alone is NOT enough** (PR #1738 review, second round). Three separate things in that file are keyed to the old naming, and each fails *silently*:
@@ -241,7 +255,11 @@ This is the *silent scope narrowing* class already on record (S37's leak gate sw
 
    Under `additionalProperties: false`, the old and new shapes are **mutually invalid**: a pre-rename DB fails the post-rename schema exactly as the reverse fails today (48 errors, measured in obligation 6). Leaving `schema_version` at **`2.2.1`** — where the live DB sits — makes two mutually-incompatible databases claim the same version, so nothing can tell them apart programmatically, and there is no upgrade path for a DB captured before the rename.
 
-   **The repo already has the pattern; follow it rather than inventing one.** `scripts/gamslib/migrate_schema_v2.2.0.py` and `migrate_schema_v2.2.1.py` each rewrite the affected rows, set `database["schema_version"]`, and offer `--validate` against `schema.json`. A `migrate_schema_v2.3.0.py` doing the same for this key rename is the obligation.
+   **The repo already has the pattern; follow it rather than inventing one.** `scripts/gamslib/migrate_schema_v2.2.0.py` and `migrate_schema_v2.2.1.py` each rewrite the affected rows and set `database["schema_version"]`. A `migrate_schema_v2.3.0.py` doing the same for this key rename is the obligation.
+
+   ⚠ **They do NOT offer `--validate`, and an earlier revision of this obligation said they did** (PR #1738 review). Measured from their parsers, both expose only `--dry-run`, `--verbose`, `--no-backup`, `--database`. **`--validate` exists in `migrate_schema_v2.1.0.py`** (`add_argument` at :266, used at :327) — the precedent *regressed* at 2.2.0 and I attributed the older script's flag to the newer ones.
+
+   That matters more than a citation slip, because obligation 6 is precisely about schema validity: a migration that cannot check its own output is the wrong tool for a **breaking** change. So **require validation rather than assume it** — either restore `--validate` on the new script, or run the existing entry point, `python scripts/gamslib/db_manager.py validate`, as a separate step. ⚠ Whichever route, obligation 6's caveat applies: with `jsonschema` absent the check is a **no-op**, so a clean validate proves nothing on a machine that lacks it.
 
    **Recommended `2.3.0`, not `2.2.2`** — the existing `2.2.x` steps were *additive* (new optional properties, old DBs still valid), whereas this one invalidates them. That asymmetry is what the version number should carry. **P7 confirms the number**; the obligation is that it *moves* and ships a migration, not which digit changes.
 
@@ -252,4 +270,14 @@ Independent of it. §5's `Match 96 → 95` is a **record correction** about `wea
 ---
 
 **Document Status:** ✅ Complete — Sprint 39 Prep Task 8
-**Last Updated:** 2026-09-10 (§9 added — the owner's field-rename decision and P7's obligations; the body above §9 is unchanged from 2026-09-01)
+**Last Updated:** 2026-09-10 — **§9 added** (the owner's field-rename decision and P7's obligations), **plus these labels above it**:
+
+- §3 — the Remedy-B heading, marked as the `null` variant that was **not** chosen
+- §4 — the `→ 0 under A + B` figure, marked superseded
+- §4 consumer row — `check_doc_figures.py`: the `dangling` 14 → 0 prediction removed, `Match` 96 → 95 retained
+- §4 consumer row — `test_check_doc_figures.py`: **"none"** corrected, it is not none once the fact is renamed
+- §4 consumer row — `test_run_full_test_path_relative.py`: the "a null must be an allowed case" sentence struck as rejected-option text
+
+⚠ *Listed rather than counted, deliberately. An earlier revision of this footer said "the body above §9 is unchanged" while three consumer rows had already moved, and its replacement then said "four" while there were five (PR #1738 review, both rounds). A list cannot be off by one.*
+
+Everything not listed above is unchanged from **2026-09-01**, the Prep Task 8 record.
