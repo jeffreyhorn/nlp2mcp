@@ -139,7 +139,7 @@ To be used verbatim, so the fall is never reported as a bare number.
 >
 > 1. `scripts/sprint_audit/check_mcp_solve_attribution.py --models <id>` reports **`MCP-SOLVED`**. `EMBEDDED-ONLY` and `MCP-NO-STATUS` are both refusals.
 > 2. `scripts/diagnostics/check_presolve_divergence.py --model <id>` passes.
-> 3. The DB's `mcp_solve.mcp_file_used` references **the golden being adopted**.
+> 3. The DB's `mcp_solve.mcp_file_generated` references **the golden being adopted**. *(⚠ Reads `mcp_file_used` until P7 lands the rename — §9. Updated here rather than left historical because, unlike §3's Remedy-B text, this section is a **forward-facing draft for CONTRIBUTING**: leaving it would ship guidance pointing adopters at a key that must disappear. PR #1738 review.)*
 > 4. **The emit actually executes.** Run it and read a `MODEL STATUS` produced by *our* `mcp_model`.
 >
 > **Why (4) is separate from (1)–(3).** `weapons` passed structure, DB, NA-guard and determinism review and was adopted — and its emit did not run. *A golden can pass every static check and still not execute.* The reviewer who caught it did so by running the file, which no checklist item had asked for. (Sprint 38 Day 9.)
@@ -258,7 +258,7 @@ This is the *silent scope narrowing* class already on record (S37's leak gate sw
 
    Under `additionalProperties: false`, the old and new shapes are **mutually invalid**: a pre-rename DB fails the post-rename schema exactly as the reverse fails today (48 errors, measured in obligation 6). Leaving `schema_version` at **`2.2.1`** — where the live DB sits — makes two mutually-incompatible databases claim the same version, so nothing can tell them apart programmatically, and there is no upgrade path for a DB captured before the rename.
 
-   **The repo already has the pattern; follow it rather than inventing one.** `scripts/gamslib/migrate_schema_v2.2.0.py` and `migrate_schema_v2.2.1.py` each rewrite the affected rows and set `database["schema_version"]`. A `migrate_schema_v2.3.0.py` doing the same for this key rename is the obligation.
+   **The repo already has the pattern; follow it rather than inventing one.** `scripts/gamslib/migrate_schema_v2.2.0.py` and `migrate_schema_v2.2.1.py` each rewrite the affected rows and set `database["schema_version"]`. A `migrate_schema_v3.0.0.py` doing the same for this key rename is the obligation (version per the recommendation below).
 
    ⚠ **They do NOT offer `--validate`, and an earlier revision of this obligation said they did** (PR #1738 review). Measured from their parsers, both expose only `--dry-run`, `--verbose`, `--no-backup`, `--database`. **`--validate` exists in `migrate_schema_v2.1.0.py`** (`add_argument` at :266, used at :327) — the precedent *regressed* at 2.2.0 and I attributed the older script's flag to the newer ones.
 
@@ -273,17 +273,28 @@ This is the *silent scope narrowing* class already on record (S37's leak gate sw
 
    So obligation 6's caveat is real but belongs **only** to the attribution checker. Sweeping `db_manager.py validate` into it was worse than a wrong footnote: it told P7 that a clean validate proves nothing, when in fact this route **cannot** report clean without the library. **`db_manager.py validate` is therefore the recommended route** — for a breaking migration, a check that fails closed on a missing dependency is the property you want.
 
-   ⚠ **Three places carry the version, not one** (PR #1738 review, third round). Following the steps above literally produces a v2.3.0 database against a schema that still calls itself v2.2.1:
+   ⚠ **Three places carry the version, not one** (PR #1738 review, third round). Following the steps above literally produces a newly-versioned database against a schema that still calls itself v2.2.1:
 
    | site | today |
    |---|---|
    | `data/gamslib/gamslib_status.json` → `schema_version` | `"2.2.1"` |
    | `data/gamslib/schema.json:5` → root `description` | `"… through the nlp2mcp pipeline (v2.2.1)"` |
-   | the migration script's own target constant | n/a — new |
+   | the migration script's own target constant | n/a — new; **and its filename** |
 
    The root `description` is **prose inside the contract**, so nothing validates it and nothing will flag it. That is precisely the shape this whole section is about: an un-updated artifact that stays silent.
 
-   **Recommended `2.3.0`, not `2.2.2`** — the existing `2.2.x` steps were *additive* (new optional properties, old DBs still valid), whereas this one invalidates them. That asymmetry is what the version number should carry. **P7 confirms the number**; the obligation is that it *moves* and ships a migration, not which digit changes.
+   **Recommended `3.0.0` — a MAJOR bump** (PR #1738 review, fourth round; earlier revisions of this obligation said `2.3.0`, which is a *minor* bump and contradicted this section's own argument).
+
+   The schema declares its own rule, so there is nothing to decide by analogy:
+
+   ```
+   data/gamslib/schema.json → properties.schema_version.description
+   "Semantic version of the database schema (MAJOR.MINOR.PATCH)"
+   ```
+
+   Under SemVer a **breaking** change takes the MAJOR digit, and §9 argues at length that this change *is* breaking — the old and new shapes are mutually invalid under `additionalProperties: false`, measured at 48 errors either way. **Recommending a minor bump for it was internally inconsistent**: I picked the next number in the `2.2.x` series by analogy instead of applying the rule the schema states. Checked for a counter-precedent and found none — `2.1.0`, `2.2.0` and `2.2.1` were all *additive* (new optional properties; old DBs stayed valid), so nothing in this repo's history establishes an exception to SemVer for this file.
+
+   **P7 confirms the number**, and the obligation is that it *moves* and ships a migration. But if P7 chooses a minor bump, that is a decision to depart from the schema's declared versioning and should be recorded as one — not reached by following the `2.2.x` pattern, which is what produced the wrong recommendation here.
 
 ### Why this is not §5's KPI correction
 

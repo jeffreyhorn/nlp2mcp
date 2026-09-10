@@ -1307,6 +1307,16 @@ Sprint 39 execution team
 
 **No test breaks.** `test_check_doc_figures.py`'s `TRUTHS` are **pinned** fixtures, deliberately not derived, and no test asserts derived == pinned.
 
+> ⚠ **SUPERSEDED, 2026-09-10 — "no test breaks" was true of the REJECTED `null` option and is FALSE for the decided rename.** Pinning protects against the *value* moving (14 → anything). It does not protect against the *name* moving, and the rename moves three names at once. `PRESOLVE_RECORD_REMEDY.md` §9 obligation 3 requires all of:
+>
+> - the `TRUTHS` **key** (`check_doc_figures.py:662` skips any fact absent from that map);
+> - **pattern 2's embedded field name** — `(?:mcp_file_used\s+)?` — which stops matching once prose cites `mcp_file_generated`;
+> - the **test vectors** at `:143` and `:209–220`.
+>
+> ⚠ **And the failure is silent in every case: each site passes by matching NOTHING.** A partial rename leaves the suite green over a fact with no coverage — the opposite of "no test breaks", and worse, because nothing signals it.
+
+
+
 **Q3 — Sprint 39's `Match ≥ 96` criterion must be restated** as: *Match ≥ 95, and exactly 95 if P7 lands, reported as a correction with its reason in the same sentence.* Wording pre-written in §5 of the remedy doc.
 
 **Evidence:** remedy doc §4; CI grep across all 10 workflows; `kpi_block.compute_kpis` on a rewritten row.
