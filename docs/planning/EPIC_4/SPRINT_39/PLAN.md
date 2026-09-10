@@ -115,7 +115,7 @@ Prep Task 6 measured the four call sites at **0.5 %** of wall-clock, found **`gr
 | trigger | response |
 |---|---|
 | Remedy A's attribution gate would reject a *non*-spurious row | `check_mcp_solve_attribution.py` over all 34 before landing |
-| the back-fill breaks a consumer | `check_doc_figures.py`'s `dangling mcp_file_used rows` fact goes 14 → 0; **the docs must move in the same PR** |
+| the back-fill breaks a consumer | `check_doc_figures.py`'s `Match` fact goes 96 → 95; **the docs must move in the same PR**. ⚠ **The `dangling mcp_file_used rows` fact does NOT go 14 → 0** — that read assumed the `null` option, and the owner decided (2026-09-10) to **rename to `mcp_file_generated` and keep the path**. Updated, the fact still derives **14**; left un-updated it derives **0 because it reads a key that no longer exists** — the predicted number and the broken number are the same number. `PRESOLVE_RECORD_REMEDY.md` §9 |
 
 ## 4. Checkpoints and the final retest
 

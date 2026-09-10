@@ -1298,6 +1298,13 @@ Sprint 39 execution team
 
 **Two consumers need care, neither a break.** `check_doc_figures.py`'s `dangling mcp_file_used rows` fact goes 14 → 0 and `Match` 96 → 95, so it will flag any **changed** doc line citing the old figures — correct behaviour, but the docs must move in the same PR. And `tests/gamslib/test_run_full_test_path_relative.py` (Sprint 27 #1400) requires a repo-relative path *when one is written*; a null must be an explicit allowed case.
 
+> ⚠ **SUPERSEDED IN PART, 2026-09-10 — the paragraph above assumed the `null` option, which the owner did not choose.** Decision: **rename to `mcp_file_generated` and KEEP the path.** Two consequences invert:
+>
+> - **`dangling mcp_file_used rows` does NOT go 14 → 0.** Paths are kept, so an *updated* checker still derives **14**. An *un-updated* one derives **0** — by reading a key that no longer exists. The predicted value and the failure value coincide, so 0 must be read as the failure signal.
+> - **The #1400 repo-relative property is untouched**, not extended. A path is still written, so there is no "null is an allowed case" to add; only the key name moves.
+>
+> Analysis left in place as the record of what was known at prep time. Current design: `PRESOLVE_RECORD_REMEDY.md` §9.
+
 **No test breaks.** `test_check_doc_figures.py`'s `TRUTHS` are **pinned** fixtures, deliberately not derived, and no test asserts derived == pinned.
 
 **Q3 — Sprint 39's `Match ≥ 96` criterion must be restated** as: *Match ≥ 95, and exactly 95 if P7 lands, reported as a correction with its reason in the same sentence.* Wording pre-written in §5 of the remedy doc.

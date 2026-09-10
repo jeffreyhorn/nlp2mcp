@@ -112,7 +112,7 @@ Not a KPI-block row, but moved by the same change: **dangling `mcp_file_used`** 
 |---|---|
 | `scripts/sprint_audit/kpi_block.py` | reports the new figures — intended |
 | `scripts/sprint_audit/floor_tracker.py` | **none** — reads provenance, not the DB |
-| `scripts/sprint_audit/check_doc_figures.py` | ⚠ the `dangling mcp_file_used rows` fact goes 14 → 0 and `Match` 96 → 95. The check then flags any **changed** doc line still citing the old figures — correct behaviour, but the docs must move in the same PR |
+| `scripts/sprint_audit/check_doc_figures.py` | ⚠ **`Match` 96 → 95**, so the check flags any **changed** doc line citing 96 — correct behaviour, but the docs must move in the same PR. ⚠⚠ **The `dangling mcp_file_used rows` fact does NOT go 14 → 0** under the decided remedy — that prediction assumed the `null` option. See §9: left un-updated the fact reports **0 for the wrong reason**, and updated it reports **14, unchanged**. |
 | `tests/unit/sprint_audit/test_check_doc_figures.py` | **none.** Its `TRUTHS` are *pinned* fixtures, deliberately not derived ("deriving them here would re-implement the thing under test"), and no test asserts derived == pinned |
 | `tests/gamslib/test_run_full_test_path_relative.py` | ⚠ Sprint 27 #1400 requires a **repo-relative** path when one is written. A null must be an explicit allowed case, not an accident |
 | CI workflows | **none assert Match monotonicity.** `check_parse_rate_regression.py` reads only `parse_rate_percent`, `convert_rate_percent`, `avg_time_ms` from a report JSON — there is no Match analogue and no DB read. `ci.yml` touches `gamslib_status.json` only as a **cache key** |
@@ -160,8 +160,52 @@ To be used verbatim, so the fall is never reported as a bare number.
 ## 8. What this design does not do
 
 - **It does not correct the DB.** That is P7 execution. The wording in §5 is written so the correction is reportable the day it lands.
-- **It does not decide the `mcp_file_used` replacement value.** `null` is the plan's suggestion and is consistent with the field's name; an alternative — rename to `mcp_file_generated` and keep the path — preserves information a debugger may want. Both close the dangling count; they differ in what is lost. **Owner's call, flagged rather than taken.**
+- **~~It does not decide the `mcp_file_used` replacement value.~~ ✅ DECIDED by the owner, 2026-09-10: RENAME the field to `mcp_file_generated` and KEEP the path.** The debugger-useful information is preserved, and the field's name then matches what the pipeline actually knows — that it *generated* a file, not that the file is still present. ⚠ **This doc's original framing — "both close the dangling count" — was wrong, and §9 records the consequence.** Keeping the path means the count does **not** close; it stays at **14**. What changes is that those rows stop being a *defect*.
 - **It does not re-check the remaining rows for spuriousness** — the 13 other than `weapons`. All are `MCP-SOLVED` per §1, so their records are true; only the field's meaning is at issue.
+
+## 9. The decided field rename, and the silent-zero trap it sets for P7
+
+**Decision (owner, 2026-09-10): rename `mcp_solve.mcp_file_used` → `mcp_solve.mcp_file_generated`, keeping the recorded path.**
+
+### What the rename fixes
+
+The *specification* defect named in §4. The pipeline writes this field at emit time and knows exactly one thing: that it **generated** that file. It does not know, then or later, whether the file is still on disk — the presolve artifacts are working files, and 14 of the 48 have since been cleaned up. `mcp_file_used` asserts a present-tense fact the writer was never in a position to assert; `mcp_file_generated` asserts the past-tense fact it actually observed. **A non-existent path then stops being an anomaly and becomes the expected steady state.**
+
+### ⚠ What it does NOT do — three live docs say otherwise
+
+`PLAN.md` §3 (risk table), this doc's §7 consumer table, and `KNOWN_UNKNOWNS.md` §7.3 all predict `check_doc_figures.py`'s `dangling mcp_file_used rows` fact going **14 → 0**. **That prediction was written for the `null` option and does not survive the decided one.** Keeping the path keeps the count. All three are corrected in the same PR as this section.
+
+### ⚠⚠ THE TRAP: the predicted number and the broken number are the same number
+
+`_dangling_presolve_rows` reads the key by name:
+
+```python
+if (f := (m.get("mcp_solve") or {}).get("mcp_file_used"))
+```
+
+Measured against the live DB, simulating the rename with paths kept:
+
+| state | fact reports |
+|---|---|
+| today | **14** |
+| after the rename, checker **left as-is** (reads `mcp_file_used`) | **0** |
+| after the rename, checker **updated** (reads `mcp_file_generated`) | **14** |
+
+So a P7 that renames the DB key and forgets the checker sees the fact fall to **0** — **exactly the number three planning documents predicted** — while the derivation has in fact gone blind, summing over a key that no longer exists. The prediction would appear confirmed by the very defect it should have caught.
+
+This is the *silent scope narrowing* class already on record (S37's leak gate sweeping 3 goldens instead of 163): **a derived truth that reports 0 because it is looking at nothing is worse than no check**, because every correct citation of 14 would then be flagged as contradicting it.
+
+### P7's obligations, therefore
+
+1. **Update `_dangling_presolve_rows` to the new key IN THE SAME COMMIT as the DB migration.** Not the same PR — the same commit. A commit where the DB has moved and the checker has not is a commit whose figures lie.
+2. **Assert the fact still derives 14 afterwards.** A positive control: the count must be *unchanged*, and a 0 is the failure signal, not the success signal. This inverts the usual reading, so state it at the assertion.
+3. **Rename the fact and its `source` string** — `dangling mcp_file_used rows` describes a defect that no longer exists. The population is still worth deriving (docs cite it), but as *"presolve rows whose generated file is no longer on disk"*. Its three regex patterns match the word `dangling`; prose that keeps that word now misdescribes the record.
+4. **The Sprint 27 #1400 repo-relative requirement still applies unchanged.** `tests/gamslib/test_run_full_test_path_relative.py` exists because an absolute path leaked into this field. The decided remedy still writes a path, so — unlike the `null` option, which needed a new "null is allowed" case — that test's property is untouched. Only the key it names moves.
+5. **`run_full_test.py:954` is the sole writer.** Renaming the DB key without it means the next pipeline run silently re-introduces `mcp_file_used` alongside `mcp_file_generated`, and the DB carries both.
+
+### Why this is not §5's KPI correction
+
+Independent of it. §5's `Match 96 → 95` is a **record correction** about `weapons`; this rename is a **field respecification** about all 48 presolve rows. They land together in P7 only because §4 showed one row (`weapons`) sits in both populations. Neither number depends on the other, and the KPI wording in §5 stands verbatim.
 
 ---
 
