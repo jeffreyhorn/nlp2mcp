@@ -492,3 +492,62 @@ The first P5 attempt profiled full emits of the five triggering models with **de
 typecheck / format / lint clean · `make test` **5311 passed** / 10 skipped / 1 xfailed (+1) · `check-doc-figures` clean · Phase-0 checker verified end-to-end on `ISSUE_1385` as an *added* doc (exit 0)
 
 ---
+
+## Day 9 — planned 2026-09-12, **executed 2026-09-10** · P9 · 2 h · + P10 · 5 h · + P5 · 3 h
+
+**Branch:** `planning/sprint39-day9-epic5` · **Measured at:** `a933eca9`
+
+### P9 — the Epic-5 design is RECORDED (recording, not designing)
+
+Both remaining questions move from *open* to **PROPOSED**, pointing at `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md`: **9.1** numéraire-selection rule (§6), **9.2** degeneracy detection (§7). Recorded in `docs/planning/EPIC_4/SPRINT_38/CAMCGE_EPIC5_HANDOFF.md`.
+
+⚠ **Flagged for whoever implements §7:** its detectors have **exactly one expected true positive (camcge)**. On that evidence a detector *tuned* to camcge is indistinguishable from one that generalises. §7 states the count; it does not demonstrate generality.
+
+### ⚠ A stale figure corrected — the license cohort is 11, not 10
+
+The handoff recorded **10 models / ceiling +10 Solve**. **Derived from the DB**, `path_solve_license` is **11**: egypt · ferts · glider · robot · shale · sroute · srpchase · tabora · tfordy · **tricp** · turkey. `tricp` joined after that document was written. **Ceiling is +11.**
+
+### P10 — the P1/P2 gate is LANDED (`make check-index-repeats`)
+
+| property | design | today |
+|---|---|---|
+| **P1** — no emitted head repeats a controlling index | **HARD gate** | **0** violations / 3,100 heads |
+| **P2** — no `$(...)` guard references a repeated index | **RATCHET** vs baseline | **9** across 6 models, baselined |
+
+P2 is a ratchet because **9 real violations sit in committed goldens now**; a gate that goes red on untouched history gets switched off — the same reasoning that made 8a/8b added-only. Fixing one requires shrinking the baseline (`--update-baseline`), and the gate reports entries that have disappeared.
+
+**All four exit paths verified end-to-end**, not just the happy one: clean → 0 · new P2 violation → **1** · P1 violation → **1** · stale baseline entry → 0 **plus a ratchet notice**.
+
+### ⚠ P10 did NOT follow the survey's recommendation — measured first, it was 8/8 false positives
+
+The survey ranks *"close P2's known LHS gap — a one-line extension"* as part of graduation. **Measured before implementing:** extending P2 to assignment left-hand sides adds **8 violations across 7 more models**, and **every one is source-faithful**:
+
+```
+china    crec(cf,cf)$(not sum(ca, crec(ca,cf))) = 1;   verbatim in source :305
+prolog   eta(g,g,h) = ...                              verbatim in source :88
+markov   pi(s,i,sp,j,sp) = pr(i,j);                    verbatim in source :56
+orani    ce(c,c) = 1;  ·  etabar(c,s,c,s)              verbatim in source :30/:86
+dinam    a(id,id,te)                                   verbatim in source :271
+egypt    yld(c,c,r) = yield(c,r);                      verbatim in source :707
+danwolfe e(i,i) = 0;                                   deliberate diagonal
+```
+
+**8 false positives against 9 true findings — roughly 1:1.** A check at that rate gets deleted, which is exactly what the survey itself predicts for the `Set ut(i,i)` declaration class. **The guard-content scoping is load-bearing, not a limitation.** Two tests pin the decision so it is not "fixed" later.
+
+### P5 — the two EQUATION-keyed sites guarded; the variable-keyed pair deliberately not
+
+New shared helper `src/ir/index_map.py::build_index_map`, used by **both** call sites rather than duplicated (the S38-D12 rule, and the PR #1734 lesson about copying a predicate). It **raises** instead of silently collapsing.
+
+⚠ **`strict=True` does not catch this.** It compares *lengths*, which agree; the collapse happens in the `dict` construction afterwards — `dict(zip(("i","i"),("i1","i2")))` is `{"i": "i2"}`, first position silently discarded. The test asserts that defect explicitly before asserting the guard.
+
+**Raising is safe, measured:** no corpus model declares a repeated **equation** domain (220-model scan), and these sites are equation-keyed. **The variable-keyed pair is left alone** — `dedupe_repeated_variable_domains` rewrites every repeated variable domain upstream, so a guard there would be dead code whose fail-before has nothing to fail on.
+
+### ⚠ I repeated Day 5's contention mistake
+
+The first leak-gate run reported *"All in-scope goldens clean"* **with 2 unverified timeouts** (ganges, gangesx) — because I started it in the same command as `make test`. That is a claim over **184 of 186**, not full scope. Re-run uncontended: **186 checked, all clean, no timeouts.** Second occurrence of this exact error; the rule is simply that the leak gate runs alone.
+
+### Gate
+
+typecheck / format / lint clean · `make test` **5325 passed** / 10 skipped / 1 xfailed (**+14**) · leak gate **186 clean, uncontended** · `make check-index-repeats` PASS · `check-doc-figures` clean · dyncge/elec/springchain emits byte-identical
+
+---

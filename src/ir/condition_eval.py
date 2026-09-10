@@ -20,6 +20,7 @@ from .ast import (
     Unary,
     VarRef,
 )
+from .index_map import build_index_map
 
 if TYPE_CHECKING:
     from .model_ir import ModelIR
@@ -114,7 +115,7 @@ def evaluate_condition(
         True
     """
     # Create index substitution map
-    index_map = dict(zip(domain_sets, index_values, strict=True))
+    index_map = build_index_map(domain_sets, index_values, context="condition evaluation")
 
     # Evaluate the expression
     try:

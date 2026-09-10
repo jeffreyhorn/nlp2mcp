@@ -1,0 +1,23 @@
+{
+  "dinam_mcp": [
+    "ts2(te,te)"
+  ],
+  "egypt_mcp": [
+    "tranc(rp,rp)"
+  ],
+  "gussrisk_mcp": [
+    "covar(stocks,stocks)"
+  ],
+  "nonsharp_mcp": [
+    "inter(col,col,stm)",
+    "inter(col__kkt1,col__kkt1,stm)"
+  ],
+  "shale_mcp": [
+    "ts(tf,tf)"
+  ],
+  "turkpow_mcp": [
+    "vs(t__kkt1,t__kkt1)",
+    "vs(t__kkt2,t__kkt2)",
+    "vs(v,v)"
+  ]
+}

@@ -137,5 +137,34 @@ With camcge Epic-5-scoped and turkey blocked, **P5's Sprint-38 deliverable is do
 
 ---
 
+## 6. Sprint 39 P9 — the Epic-5 design is RECORDED (2026-09-10)
+
+Prep Task 10 delivered both remaining open questions **in full**, so this section records them rather than designing anything. Both live in `docs/planning/EPIC_5/CGE_DEGENERACY_SCOPING.md`, measured at `04f50d6c`.
+
+| question | status | where |
+|---|---|---|
+| **9.1** numéraire-selection rule | **PROPOSED** — not open | `CGE_DEGENERACY_SCOPING.md` §6 |
+| **9.2** degeneracy detection | **PROPOSED** — not open | `CGE_DEGENERACY_SCOPING.md` §7 |
+
+**Both are proposals over the corpus IR, with no camcge experiment run** — §6 is explicit that its cohort counts are **lower bounds** from a structural scan, and §7's detector counts are analysis over the IR of the parsed models, with **exactly one expected true positive (camcge)**.
+
+⚠ **That "1 expected true positive" is the figure an implementer should challenge first.** A detector whose expected yield is one known model is indistinguishable, on this evidence, from one tuned to that model. §7 states the count; it does not demonstrate the detector generalises.
+
+### ⚠ A stale figure in this document, corrected
+
+§4 above records the license-gated cohort as **10 models**, with **"ceiling +10 Solve"**. **It is 11.** Derived from the DB rather than recalled — `path_solve_license` today:
+
+```
+egypt · ferts · glider · robot · shale · sroute · srpchase · tabora · tfordy · tricp · turkey
+```
+
+`tricp` joined the cohort after this document was written (Sprint 38 closed #1062 for it; the model is rejected at *generation*, `solver_version: None`). **The ceiling is +11 Solve, not +10.** §4's own framing is otherwise unchanged: excluded from projections, not written off, re-tested as one batch.
+
+### What P9 does NOT claim
+
+**No Epic-5 work is started, and no KPI moves.** This is a recording step: the two questions move from *open* to *proposed*, and the handoff now points at where each proposal lives. Sprint 39 carries **no upward KPI mover** (C6 is VOID under P4 branch B), and P9 does not change that.
+
+---
+
 **Document Status:** ✅ Complete — Sprint 38 Prep Task 8. **5.2 ❌ WRONG** (the handoff was already written; three narrow gaps, not a document) · **5.3 ✅ VERIFIED** (per-model numéraire still correct, now stamped under v54) · **5.1 🔶 reframed — a 10-model license-gated cohort**, excluded from projections but actively pursued; ceiling +10 Solve.
-**Last Updated:** 2026-08-18 · **Owner:** Sprint 38 execution team · **License pursuit:** active (owner, with Dirkse/Ferris)
+**Last Updated:** 2026-09-10 — Sprint 39 P9 recorded the Epic-5 design (§6) and corrected the license cohort **10 → 11**. · **Owner:** Sprint 38 execution team · **License pursuit:** active (owner, with Dirkse/Ferris; follow-up sent 2026-09-09)

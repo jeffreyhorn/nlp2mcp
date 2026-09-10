@@ -24,6 +24,7 @@ from src.ir.ast import (
     SymbolRef,
     VarRef,
 )
+from src.ir.index_map import build_index_map
 from src.ir.model_ir import ModelIR
 
 
@@ -124,7 +125,9 @@ def detect_empty_equation_instances(
         empty_instances: set[tuple[str, ...]] = set()
 
         for inst in instances:
-            index_map = dict(zip(eq_def.domain, inst, strict=True))
+            index_map = build_index_map(
+                eq_def.domain, inst, context=f"empty-equation scan of {eq_name!r}"
+            )
             if not _instance_has_any_variable(var_accesses, index_map, model_ir):
                 empty_instances.add(inst)
 
