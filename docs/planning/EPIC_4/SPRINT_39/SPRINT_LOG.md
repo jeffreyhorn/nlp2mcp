@@ -449,3 +449,46 @@ They are three separate executions, not one measurement described three ways. Ru
 **Nothing implemented.** Day 8 authors the Phase-0 gate. **C6 VOID; Translate reports 135 flat.**
 
 ---
+
+## Day 8 — planned 2026-09-11, **executed 2026-09-09/10** · P4: the Phase-0 gate · 5 h · + P5 · 5 h
+
+**Branch:** `planning/sprint39-day8-sarf` · **Measured at:** `7d8aaee6`
+
+### P4 — the differentiation-path Phase-0 gate is authored (branch B: no implementation)
+
+Added to **`ISSUE_1385`** as a **second, independent gate**, for the **per-column cost** lever. The gate already there narrows **how many columns** are differentiated (436,555,392 → 259,728); this one reduces **what each column costs**. Total work is the **product**, so neither subsumes the other and either can land alone.
+
+⚠ **The fail-before is explicitly NOT anchored on `_diff_sum`.** Prep's §2 named it at **57.1 % cumulative** and Day 7's own prompt directed attribution at it — but its **self time is 2.9 %**. A gate anchored there would pass against a change that does nothing, which is precisely the failure Day 1 caught for dyncge.
+
+Anchors instead on Day 7's attribution: a **call-count** assertion for the import lever (`<frozen importlib._bootstrap>:645(parent)` **45,513,129 → ~0**, machine-independent), and per-frame self-time/call-count targets for `simplify` (19.2 %) and case-insensitive lookup (~18.9 %). Emit invariance is the whole of the expected pattern: **byte-identical corpus-wide, any drift is a failed gate.**
+
+### ⚠ Being the first customer of my own Day-3 rules found a bug in them
+
+`ISSUE_1385` now carries **two** `## Phase 0: Acceptance Gate` sections. Both `phase0_subsections` and `subsection_body` used `PHASE0_HEADING.search`, which stops at the **first** — so the new gate was invisible, and the checker reported *"Nearest Existing Mechanism missing"*, then *"present, but records no reason"*, **for a section it had never read**. That is worse than not checking: a specific, wrong reason.
+
+Both functions now scan **every** Phase-0 section. ⚠ Fixing `phase0_subsections` alone was not enough — the identical bug lived in `subsection_body`, and the first fix looked like it worked because the failure message merely changed. Regression test added; **both mutants killed**.
+
+### P5 — all four `NEEDS A GUARD` sites TRACED; none is a confirmed defect
+
+| site | keyed on | corpus repeats | dedupe covers? | verdict |
+|---|---|---|---|---|
+| `empty_equation_detector.py:127` | **equation** | **0** | ✗ | **LATENT** — unguarded, unreachable |
+| `condition_eval.py:117` | **equation** | **0** | ✗ | **LATENT** — same |
+| `stationarity.py:1384` *(was `:1091`)* | **variable** | 5 | ✓ | **PROTECTED UPSTREAM** |
+| `stationarity.py:1398` *(was `:1104`)* | **variable** | 5 | ✓ | **PROTECTED UPSTREAM** |
+
+⚠ **Two of the four line references were already stale — by this sprint's own Day-2 landing.** B-4 (PR #1728) inserted ~256 lines at ~1004, so `stationarity.py:1091` now lands inside `_find_full_collapse_sum`. **+293 line drift**; relocated by content.
+
+⚠ **"Reach 10/15" is not "triggered 10/15".** Reach counts models that execute the line, not models that pass it a repeated domain. A 220-model scan finds only **five** models with the shape, **all variable domains, zero equation domains**.
+
+**Recommendation:** guard the two **equation-keyed** sites — genuinely unprotected, unreachable only by corpus accident. **Do not** guard the variable-keyed pair: `dedupe_repeated_variable_domains` rewrites every repeated variable domain before the AD layer (measured: tricp, lop, ferts all rewritten, **zero repeats remaining**), so a local guard would be **dead code whose fail-before has nothing to fail on**.
+
+### ⚠ Method note — a 29-minute probe answered nothing
+
+The first P5 attempt profiled full emits of the five triggering models with **dedupe bypassed** (it called parse → normalize → jacobian → emit directly; `dedupe` is invoked only from `src/cli.py:476`). It ran **29 minutes without emitting one model** and was killed: un-deduped, `lop`'s `dtr(s,s,s,s)` is |s|⁴ columns. **The probe removed the protection that makes those models tractable.** A bounded test of the transformation itself answered the question in seconds.
+
+### Gate
+
+typecheck / format / lint clean · `make test` **5311 passed** / 10 skipped / 1 xfailed (+1) · `check-doc-figures` clean · Phase-0 checker verified end-to-end on `ISSUE_1385` as an *added* doc (exit 0)
+
+---

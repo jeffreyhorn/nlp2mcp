@@ -247,3 +247,69 @@ P5 is **0-bucket by design**; nothing below asks for a bucket move.
 
 **Document Status:** ✅ Complete — Sprint 39 Prep Task 7
 **Last Updated:** 2026-09-01
+
+
+---
+
+## Sprint 39 Day 8 — the four `NEEDS A GUARD` sites, TRACED
+
+**Executed 2026-09-09/10, measured at `7d8aaee6`.** The prompt's instruction was *"they are candidates, not confirmed defects — trace each before implementing."* All four are traced below. **None is a confirmed defect, and the two reasons differ**, which changes what a guard should be.
+
+### ⚠ TWO OF THE FOUR LINE REFERENCES WERE ALREADY STALE — by this sprint's own work
+
+| survey ref | actual location today | drift |
+|---|---|---|
+| `stationarity.py:1091` | **`:1384`** (`def _pos`) | **+293** |
+| `stationarity.py:1104` | **`:1398`** (`bindings[eqi] = p`) | **+293** |
+
+The survey was written **2026-09-01**; Sprint 39 Day 2 merged the B-4 Pattern-C member (**PR #1728, 2026-09-05**), inserting ~256 lines at ~1004. **Anyone opening `stationarity.py:1091` today lands inside B-4's `_find_full_collapse_sum` and would trace an unrelated function.** Relocated by content, not by offset.
+
+### The corpus can barely trigger this shape at all
+
+A 220-model scan for repeated-symbol declaration domains finds **five models — and every one is a VARIABLE domain**:
+
+| model | domain |
+|---|---|
+| `ferts` | `xi(c,i,i)` |
+| `lop` | `dtr(s,s,s,s)` |
+| `maxmin` | `dist(n,n)` |
+| `sarf` | `task(g,t,mn,mn)` |
+| `tricp` | `slp(n,n)`, `sln(n,n)` |
+
+**Zero models declare a repeated EQUATION domain.**
+
+### Verdicts
+
+| site | keyed on | corpus repeats | dedupe covers? | verdict |
+|---|---|---|---|---|
+| `empty_equation_detector.py:127` | **equation** domain | **0** | ✗ | **LATENT** — genuinely unguarded, no model can reach it |
+| `condition_eval.py:117` | **equation** domain | **0** | ✗ | **LATENT** — same |
+| `stationarity.py:1384` | **variable** domain | 5 | ✓ | **PROTECTED UPSTREAM** |
+| `stationarity.py:1398` | **variable** domain | 5 | ✓ | **PROTECTED UPSTREAM** |
+
+**`condition_eval.py:117` is equation-keyed, not variable-keyed** — its only caller passing a domain is `src/ad/index_mapping.py:533`, which supplies **`eq_domain`** (`:489` passes empty tuples). That was not obvious from the site itself.
+
+**The upstream protection is TOTAL for variables and ABSENT for equations.** `dedupe_repeated_variable_domains` (`src/kkt/repeated_domain.py:51`, called once from `src/cli.py:476`) iterates **`list(model_ir.variables)`** and mutates **`var_def.domain`** only; `model_ir.equations` appears solely in its namespace-collision set. Measured on every model that has the shape:
+
+```
+tricp   slp(n,n)      -> (n, n__)                  ferts  xi(c,i,i) -> (c, i, i__)
+lop     dtr(s,s,s,s)  -> (s, s__, s___, s____)
+repeats remaining after dedupe: NONE, in all cases
+```
+
+### ⚠ "Reach 10/15" is not "triggered 10/15"
+
+The survey's reach column counts models whose execution **reaches the line**. It does **not** count models that pass it a repeated-symbol domain. A first trace over six models returned **zero** collapse conditions at every site — consistent, and not evidence of a guard working. **Reach is not trigger**, and the two are easy to conflate when the number is high.
+
+### Recommendation for the remaining P5 days
+
+**Guard the two EQUATION-keyed sites; do not guard the two variable-keyed ones.**
+
+- The equation-keyed sites are the real exposure: **unprotected and unreachable only by corpus accident.** A model with a repeated equation domain would hit them silently — and unlike variables, nothing upstream would catch it.
+- A local guard on the variable-keyed sites would be **dead code today**: `dedupe` rewrites every repeated variable domain before the AD layer, so the guard could never fire, and its fail-before would have nothing to fail on. That is the "a test that cannot fail" shape.
+
+⚠ **The upstream protection is deliberate but narrow.** `dedupe` is a *variable*-domain pass; it is complete for what it covers and covers nothing else. The survey's phrase *"upstream and incidental"* is right about equations and understates how thorough it is for variables.
+
+### Method note
+
+A first attempt profiled full emits of the five triggering models **with the dedupe bypassed** (the probe called parse → normalize → jacobian → emit directly, and `dedupe` is invoked only from `src/cli.py`). It ran **29 minutes without emitting a single model** and was killed — un-deduped, `lop`'s `dtr(s,s,s,s)` is |s|⁴ columns over one set, so the probe removed the very protection that makes those models tractable. **A bounded test of the specific transformation answered the question in seconds.** Prefer testing the transformation over re-running the pipeline around it.

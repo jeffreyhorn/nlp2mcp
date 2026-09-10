@@ -79,17 +79,33 @@ PHASE0_HEADING = re.compile(r"^## Phase 0: Acceptance Gate\b", re.M)
 
 
 def phase0_subsections(text: str) -> list[str] | None:
-    """Return the ``### `` subsection titles under the Phase-0 heading.
+    """Return the ``### `` subsection titles under EVERY Phase-0 heading.
 
     Returns None when the document has no Phase-0 heading at all.
+
+    ⚠ ALL Phase-0 sections, not just the first. This used ``search``, which
+    stopped at the first heading -- so a document carrying a SECOND acceptance
+    gate had that gate's subsections ignored entirely. Found by being the first
+    customer of the 8a/8b added-only requirements (Sprint 39 Day 8):
+    ``ISSUE_1385`` gained a second gate for a distinct lever, its
+    ``### Nearest Existing Mechanism`` was written, and the checker reported it
+    missing because it never looked past gate one.
+
+    A document may legitimately carry more than one gate -- one issue, several
+    independent levers, each with its own acceptance criteria. Reading only the
+    first makes the check silently under-scoped, which is worse than not
+    checking: it reports a specific, wrong reason.
     """
-    m = PHASE0_HEADING.search(text)
-    if not m:
+    matches = list(PHASE0_HEADING.finditer(text))
+    if not matches:
         return None
-    rest = text[m.end() :]
-    nxt = re.search(r"^## ", rest, re.M)
-    body = rest[: nxt.start()] if nxt else rest
-    return [h.strip() for h in re.findall(r"^### (.+)$", body, re.M)]
+    out: list[str] = []
+    for m in matches:
+        rest = text[m.end() :]
+        nxt = re.search(r"^## ", rest, re.M)
+        body = rest[: nxt.start()] if nxt else rest
+        out.extend(h.strip() for h in re.findall(r"^### (.+)$", body, re.M))
+    return out
 
 
 def missing_subsections(text: str) -> list[str]:
@@ -102,18 +118,23 @@ def missing_subsections(text: str) -> list[str]:
 
 def subsection_body(text: str, title: str) -> str:
     """Body text under a ``### <title>`` subsection of the Phase-0 section."""
-    m = PHASE0_HEADING.search(text)
-    if not m:
-        return ""
-    rest = text[m.end() :]
-    nxt = re.search(r"^## ", rest, re.M)
-    body = rest[: nxt.start()] if nxt else rest
-    sm = re.search(rf"^### {re.escape(title)}.*$", body, re.M)
-    if not sm:
-        return ""
-    after = body[sm.end() :]
-    nxt2 = re.search(r"^#{2,3} ", after, re.M)
-    return after[: nxt2.start()] if nxt2 else after
+    # ⚠ ALL Phase-0 sections, for the same reason as phase0_subsections: a
+    # document may carry a second acceptance gate, and reading only the first
+    # made this return "" for a subsection that exists -- which then reported
+    # "present, but records no reason" for a section it had never read.
+    # Fixing phase0_subsections alone was not enough; the identical bug lived
+    # here too (Sprint 39 Day 8).
+    for m in PHASE0_HEADING.finditer(text):
+        rest = text[m.end() :]
+        nxt = re.search(r"^## ", rest, re.M)
+        body = rest[: nxt.start()] if nxt else rest
+        sm = re.search(rf"^### {re.escape(title)}.*$", body, re.M)
+        if not sm:
+            continue
+        after = body[sm.end() :]
+        nxt2 = re.search(r"^#{2,3} ", after, re.M)
+        return after[: nxt2.start()] if nxt2 else after
+    return ""
 
 
 def missing_for_added(text: str) -> list[str]:

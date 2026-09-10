@@ -187,3 +187,64 @@ sarf needs `>330 s → single-digit seconds`, i.e. **~66×**. A 5 % constant-fac
 - `docs/planning/EPIC_4/SPRINT_37/SARF_REARCH_REFRESH.md` — the design refresh (Task 7)
 - `docs/planning/EPIC_4/SPRINT_36/DAY6_SARF_BANK.md`, `SPRINT_35/SARF_SYMBOLIC_EMIT_DESIGN.md` — the banked 3-site / 6-call-site / 7-term design
 - `src/ad/index_mapping.py:400` — the srpchase #1385 gate (structural precedent)
+
+
+---
+
+## Phase 0: Acceptance Gate — the PER-COLUMN COST lever (Sprint 39 Day 8)
+
+**Layer:** **AD / differentiation** — `src/ad/ad_core.py` (`simplify`, 87–326), `src/ad/derivative_rules.py` (`_is_concrete_instance_of`, 3025–3136), `src/utils/case_insensitive_dict.py` (`__contains__` :52, `__getitem__` :41). Two of the four function-local imports sit at `src/ad/ad_core.py:127` and `src/ad/derivative_rules.py:3087`.
+
+**Authored 2026-09-09 (Sprint 39 Day 8), from the Day-7 attribution** in `docs/planning/EPIC_4/SPRINT_39/SARF_CALLSITE_PLAN.md` §*Day 7*. **Branch B: no implementation this sprint** — this is the fail-before an implementer will need.
+
+> **⚠ This is a SECOND, INDEPENDENT gate on the same issue, not a replacement.** The gate above narrows **how many columns** are differentiated (436,555,392 → 259,728). This one reduces **what each column costs**. Total work is the **product**, so neither subsumes the other and either can land alone.
+
+### Nearest Existing Mechanism
+
+**Nearest:** this issue's **own** referenced-tuple narrowing (the live gate above, `_REFERENCED_TUPLE_CAP`), which is already partly landed and *does* engage for sarf (worst row 51,840 < 200,000 cap).
+
+**Why it does not apply to this lever:**
+
+1. It changes the **column count**, not the **per-column cost**. Day 7 measured the per-column path directly: `simplify` **19.2 %**, case-insensitive lookup **~18.9 %**, import re-resolution **7.5 %**. Narrowing columns multiplies those costs by a smaller number; it does not make any of them cheaper.
+2. **They compose rather than compete.** Applying only the narrowing leaves ~38 % algorithmic overhead on every surviving column; applying only this leaves 259,728 columns each carrying reduced cost.
+3. ⚠ **The import lever is not differentiation at all.** 7.5 % is `import`-statement re-resolution inside two hot functions — no column-selection change can reach it.
+
+**Also checked and rejected as the nearest:** the four originally-scoped enumeration call sites (`SARF_CALLSITE_PLAN` §2) — measured at **0.5 %** of wall-clock across 40 calls, with `gradient.py:453` dead code. They are not a mechanism for this cost.
+
+### Hand-Derived KKT Shape
+
+**Unchanged — and that is the acceptance criterion, not an omission.** This is a *performance* change: no stationarity row, multiplier, complementarity pair or bound may differ. The banked **7-term** `stat_task` anchor and the row/column table in the gate above both continue to govern.
+
+The derivation is therefore a **negative** one: for every model in the corpus, ∂h_j/∂x is the same expression before and after, because neither hoisting an `import` nor memoising a case-insensitive lookup nor short-circuiting `simplify` may change any derivative's *value or form*.
+
+### Expected Emit Pattern
+
+**BYTE-IDENTICAL corpus-wide** — the same standard the gate above sets, and here it is the *whole* of the expected pattern. There is no new emitted construct to describe.
+
+Concretely: `make check-goldens` reports **186 checked, all clean, 0 drifted**. **Any** drift is a failure, including on models that merely get faster.
+
+### Verification Methodology
+
+⚠ **Do NOT anchor the fail-before on `_diff_sum`.** Prep's §2 named it at **57.1 % cumulative** and Sprint 39's own Day-7 prompt directed attribution at it — but its **self time is 2.9 %**. It is a dispatcher. A gate anchored there would pass against a change that does nothing, which is the exact failure Day 1 caught for dyncge.
+
+Run from a scratch directory; profile `compute_constraint_jacobian` alone.
+
+1. **Fail-before, import lever (exact, and the cheapest to check).** Profile sarf and count the frame `<frozen importlib._bootstrap>:645(parent)`. **Before: 45,513,129 calls, 25.4 s self**, plus `str.rpartition` **45,513,134 calls, 17.7 s** — together **43.1 s of 573.2 s = 7.5 %**. **After: both must fall to ~0** (only genuine first-import resolutions remain). This is a *call-count* assertion, so it does not depend on machine speed.
+2. **Fail-before, algorithmic lever.** `simplify` **109.9 s self / 26.9 M calls (19.2 %)**; `CaseInsensitiveDict.__contains__` **68.1 s / 55.8 M (11.9 %)** + `__getitem__` **18.6 s / 18.6 M (3.2 %)** + `str.lower` **21.6 s / 77.6 M (3.8 %)**. Assert a **reduction in call count or self-time share**, stated per frame before implementing.
+3. **⚠ The measurement must be SELF time, not cumulative.** sarf has **never completed a translate** (DB: `failure` at **600.08 s**, no golden), so no cumulative attribution over it can be complete. Self time and call counts are valid for work performed; cumulative is a **lower bound** for any frame still on the stack at the cap. State the cap with every figure.
+4. **Emit invariance.** `make check-goldens` → **186 clean, 0 drift**. Determinism ×3 `PYTHONHASHSEED`, byte-identical.
+5. **Corpus safety.** The AD layer is reached by every model. A leak here is corpus-wide, not sarf-local — Sprint 39 Day 2 measured what a loosened predicate in shared machinery costs (**10 goldens against a zero-drift baseline**).
+
+### PROCEED/REPLAN Signal
+
+**PROCEED** — the targeted frame's call count or self-time share falls as stated in §1/§2, **and** `check-goldens` is **186 clean with 0 drift**, **and** determinism ×3 holds.
+
+**REPLAN** if any of:
+
+- **any golden drifts, on any model.** This is a performance change; there is no emit improvement to trade against. One drifted byte is a failed gate, not a partial win.
+- the import lever is found to be a **circular-import workaround**. Day 7 verified it is not — neither `src/ir/ast.py` nor `src/ad/index_mapping.py` imports `src/ad/ad_core.py` / `src/ad/derivative_rules.py` at module level, and `src/ad/derivative_rules.py` already imports `..ir.ast` at module scope — but **re-derive this before hoisting**, since a later change could introduce the cycle.
+- **sarf still does not terminate after both levers.** That is a legitimate outcome, not a failure to report: this gate targets a measured **~45 %** of the profiled work (38 % algorithmic + 7.5 % import), and **removing all of it does not by itself make a non-terminating emit terminate.** Say so plainly rather than reporting the reduction as progress toward Translate.
+
+### Bucket / KPI
+
+**0 bucket expected, and no Translate claim.** sarf is `translate_failure` and stays so unless it terminates. **C6 is VOID for Sprint 39** (branch B does not implement), so **Translate reports 135 flat**. Any future +1 Translate belongs to whichever lever actually makes the emit finish — and on current evidence that is **not** demonstrated by either gate alone.
