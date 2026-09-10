@@ -1,6 +1,6 @@
 """Sprint 39 P10 — the P1/P2 repeated-index gate.
 
-P1 is a HARD gate (0 violations across 3,100 heads when it landed). P2 is a
+P1 is a HARD gate (0 violations across 3,109 heads when it landed). P2 is a
 RATCHET against a recorded baseline, because 9 real violations sit in committed
 goldens today and a gate that goes red on untouched history gets switched off.
 
@@ -37,12 +37,21 @@ _SPEC = importlib.util.spec_from_file_location(
 )
 assert _SPEC and _SPEC.loader
 _mod = importlib.util.module_from_spec(_SPEC)
+# ⚠ Restore BOTH sys.path and sys.modules. The module must be in sys.modules
+# while exec_module runs (dataclasses/typing resolution needs it), but leaving
+# it there leaks import state into the rest of the pytest run and can make
+# behaviour order-dependent under xdist (PR #1736 review).
+_prev_mod = sys.modules.get("check_index_repeat_properties")
 sys.modules["check_index_repeat_properties"] = _mod
 _saved = list(sys.path)
 try:
     _SPEC.loader.exec_module(_mod)
 finally:
     sys.path[:] = _saved
+    if _prev_mod is None:
+        sys.modules.pop("check_index_repeat_properties", None)
+    else:
+        sys.modules["check_index_repeat_properties"] = _prev_mod
 
 p1_violations = _mod.p1_violations
 p2_violations = _mod.p2_violations
@@ -59,6 +68,28 @@ def test_p1_flags_a_repeated_controlling_index_in_a_head():
 @pytest.mark.unit
 def test_p1_is_case_insensitive_like_gams():
     assert p1_violations("stat_x(I,i).. foo =E= 0;") == ["stat_x(I,i)"]
+
+
+@pytest.mark.unit
+def test_p1_scans_a_head_whose_GUARD_CONTAINS_A_DECIMAL():
+    """⚠ SCOPE guard — the head regex must stop at the ``..`` operator.
+
+    An earlier form matched the guard with ``[^.]*``, which stops at the first
+    ``.``. Any head whose ``$`` guard contains a decimal literal was therefore
+    never matched and never scanned: measured **9 heads** across egypt, ganges,
+    gangesx, gtm, imsl, korcge (x2), tricp and turkey (x2). The reported head
+    count was 3,100 when the true figure is **3,109**.
+
+    P1's verdict happened to be unaffected -- none of the nine repeats an index
+    -- but that is luck of the data. A HARD gate silently scanning 99.7 % of its
+    input can pass on a violation it never looked at, which is the false
+    negative a gate exists to prevent (PR #1736 review).
+    """
+    # Real shapes, from gtm and tricp respectively.
+    assert p1_violations("comp_up_s(i)$(0.99 * supc(i) < inf).. foo =E= 0;") == []
+    assert p1_violations("comp_lo_r(n)$(myScale * 0.001 > -inf).. foo =E= 0;") == []
+    # …and the violation must still be caught THROUGH such a guard.
+    assert p1_violations("comp_up_s(i,i)$(0.99 * supc(i) < inf).. foo =E= 0;") == ["comp_up_s(i,i)"]
 
 
 @pytest.mark.unit

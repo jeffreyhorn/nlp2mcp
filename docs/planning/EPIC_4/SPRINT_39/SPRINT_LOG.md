@@ -511,7 +511,7 @@ The handoff recorded **10 models / ceiling +10 Solve**. **Derived from the DB**,
 
 | property | design | today |
 |---|---|---|
-| **P1** — no emitted head repeats a controlling index | **HARD gate** | **0** violations / 3,100 heads |
+| **P1** — no emitted head repeats a controlling index | **HARD gate** | **0** violations / 3,109 heads |
 | **P2** — no `$(...)` guard references a repeated index | **RATCHET** vs baseline | **9** across 6 models, baselined |
 
 P2 is a ratchet because **9 real violations sit in committed goldens now**; a gate that goes red on untouched history gets switched off — the same reasoning that made 8a/8b added-only. Fixing one requires shrinking the baseline (`--update-baseline`), and the gate reports entries that have disappeared.

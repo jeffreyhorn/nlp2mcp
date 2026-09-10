@@ -45,12 +45,21 @@ _SPEC = importlib.util.spec_from_file_location(
 )
 assert _SPEC and _SPEC.loader
 _mod = importlib.util.module_from_spec(_SPEC)
+# ⚠ Restore BOTH sys.path and sys.modules. The module must be in sys.modules
+# while exec_module runs (dataclasses/typing resolution needs it), but leaving
+# it there leaks import state into the rest of the pytest run and can make
+# behaviour order-dependent under xdist (PR #1736 review).
+_prev_mod = sys.modules.get("check_phase0_doc")
 sys.modules["check_phase0_doc"] = _mod
 _saved_sys_path = list(sys.path)
 try:
     _SPEC.loader.exec_module(_mod)
 finally:
     sys.path[:] = _saved_sys_path
+    if _prev_mod is None:
+        sys.modules.pop("check_phase0_doc", None)
+    else:
+        sys.modules["check_phase0_doc"] = _prev_mod
 
 missing_for_added = _mod.missing_for_added
 missing_subsections = _mod.missing_subsections

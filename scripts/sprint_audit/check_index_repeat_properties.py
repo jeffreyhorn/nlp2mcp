@@ -4,7 +4,7 @@
 Sprint 39 P10, graduating Prep Task 7's `artifacts/property2.py` into a gate.
 
 **P1 — no emitted equation HEAD repeats a controlling index symbol.**
-Measured 0 violations across 3,100 heads in 193 goldens, so this is a HARD
+Measured 0 violations across 3,109 heads in 193 goldens, so this is a HARD
 gate: any violation fails. A repeated controlling index in an emitted head
 leaves the MCP with unmatched columns; there is no legitimate instance.
 
@@ -59,7 +59,20 @@ MCP = ROOT / "data/gamslib/mcp"
 BASELINE = ROOT / "scripts/sprint_audit/index_repeat_p2_baseline.json"
 
 #: An emitted equation head: ``name(args) [$cond] ..``
-HEAD = re.compile(r"^([A-Za-z][A-Za-z0-9_]*)\s*\(([^()]*)\)\s*(?:\$[^.]*)?\.\.", re.M)
+#:
+#: ⚠ The guard is matched non-greedily to the ``..`` DEFINITION OPERATOR, not
+#: with ``[^.]*``. That earlier form stopped at the first ``.``, so any head
+#: whose ``$`` guard contains a DECIMAL LITERAL was never matched and never
+#: scanned -- measured: **9 heads** across egypt, ganges, gangesx, gtm, imsl,
+#: korcge (×2), tricp and turkey (×2), with guards like ``$(0.99 * supc(i) <
+#: inf)`` and ``$(myScale * 0.001 > -inf)``. P1 reported 3,100 heads when there
+#: are **3,109**.
+#:
+#: P1's verdict was unaffected -- none of the nine repeats an index -- but that
+#: was luck of the data, not construction: a HARD gate silently scanning 99.7 %
+#: of its input can pass on a violation it never looked at. Asserting a gate's
+#: SCOPE matters as much as its verdict (PR #1736 review).
+HEAD = re.compile(r"^([A-Za-z][A-Za-z0-9_]*)\s*\(([^()]*)\)\s*(?:\$.*?)?\.\.(?!\.)", re.M)
 GUARD = re.compile(r"\$\(")
 #: Any symbol call. The repeat test runs over its bare-identifier arguments, so
 #: it catches every arity and position -- ``p(x,x)``, ``p(x,y,x)``, ``p(x,x,z)``.
@@ -163,7 +176,7 @@ def main() -> int:
         print(
             "\n  An emitted equation head must not repeat a controlling index symbol:\n"
             "  the MCP is then left with unmatched columns. There is no legitimate\n"
-            "  instance — 0 violations across 3,100 heads when this gate landed."
+            "  instance — 0 violations across 3,109 heads when this gate landed."
         )
     else:
         print(f"  P1 OK: 0 violation(s) in {n_heads} head(s)")
