@@ -1,6 +1,6 @@
 # ISSUE #1385 — sarf: O(369K) column materialization; the emit never terminates
 
-**Status:** 🔵 PHASE-0 AUTHORED (Sprint 37 Day 7) — **implementation NOT started.** The track is a 20–28 h atomic re-architecture; this document is its acceptance gate, which P5 has never had.
+**Status:** 🔵 **TWO PHASE-0 GATES AUTHORED, both with implementation NOT started.** (1) Sprint 37 Day 7 — the **column-count** lever (436,555,392 → 259,728). (2) Sprint 39 Day 8 — the **per-column cost** lever (differentiation path). Total work is the *product*, so neither subsumes the other and either can land alone. The track is a 20–28 h atomic re-architecture; this document is its acceptance gate, which P5 has never had.
 **Sprint:** 37 (P5) · **Prep:** Task 7 · **Design:** `docs/planning/EPIC_4/SPRINT_37/SARF_REARCH_REFRESH.md`
 
 ## Problem

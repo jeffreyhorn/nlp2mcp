@@ -117,7 +117,16 @@ def missing_subsections(text: str) -> list[str]:
 
 
 def subsection_body(text: str, title: str) -> str:
-    """Body text under a ``### <title>`` subsection of the Phase-0 section."""
+    """Body text under a ``### <title>`` subsection of ANY Phase-0 section.
+
+    Scans **every** ``## Phase 0: Acceptance Gate`` heading and returns the first
+    matching subsection's body, or ``""`` when no section carries that title.
+
+    ⚠ The singular phrasing this replaced ("the Phase-0 section") described the
+    behaviour BEFORE the Sprint 39 Day 8 fix and would have re-taught the exact
+    misreading that fix corrects: a reader would assume only the first gate is
+    inspected, which is what made a second gate's subsection report as missing.
+    """
     # ⚠ ALL Phase-0 sections, for the same reason as phase0_subsections: a
     # document may carry a second acceptance gate, and reading only the first
     # made this return "" for a subsection that exists -- which then reported

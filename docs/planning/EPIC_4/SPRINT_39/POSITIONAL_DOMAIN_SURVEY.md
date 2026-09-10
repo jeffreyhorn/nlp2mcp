@@ -245,8 +245,8 @@ P5 is **0-bucket by design**; nothing below asks for a bucket move.
 
 ---
 
-**Document Status:** ✅ Complete — Sprint 39 Prep Task 7
-**Last Updated:** 2026-09-01
+**Document Status:** ✅ Survey complete (Sprint 39 Prep Task 7); the four `NEEDS A GUARD` sites **TRACED** Sprint 39 Day 8 — none is a confirmed defect, and **two of the four line references had already drifted +293 lines**. See §*Sprint 39 Day 8*.
+**Last Updated:** 2026-09-10 — Day-8 trace of the four candidate sites
 
 
 ---
