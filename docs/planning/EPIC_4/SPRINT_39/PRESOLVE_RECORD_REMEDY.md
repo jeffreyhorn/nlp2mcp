@@ -114,7 +114,7 @@ Not a KPI-block row, but moved by the same change: **dangling `mcp_file_used`** 
 | `scripts/sprint_audit/floor_tracker.py` | **none** — reads provenance, not the DB |
 | `scripts/sprint_audit/check_doc_figures.py` | ⚠ **`Match` 96 → 95**, so the check flags any **changed** doc line citing 96 — correct behaviour, but the docs must move in the same PR. ⚠⚠ **The `dangling mcp_file_used rows` fact does NOT go 14 → 0** under the decided remedy — that prediction assumed the `null` option. See §9: left un-updated the fact reports **0 for the wrong reason**, and updated it reports **14, unchanged**. |
 | `tests/unit/sprint_audit/test_check_doc_figures.py` | ⚠ **NOT "none" once the fact is RENAMED** (PR #1738 review). The original reasoning covered the *number* changing, not the *name*: `TRUTHS` are pinned fixtures, so 14 → any value breaks nothing. But `check_doc_figures.py:661` is `if fact.name not in truths: continue`, and `TRUTHS` hard-codes the key `"dangling mcp_file_used rows"`. Rename the fact without the fixture and **the new fact is silently skipped in every test while the old key sits inert** — coverage lost with the suite still green. See §9 obligation 3. |
-| `tests/gamslib/test_run_full_test_path_relative.py` | ⚠ Sprint 27 #1400 requires a **repo-relative** path when one is written. A null must be an explicit allowed case, not an accident |
+| `tests/gamslib/test_run_full_test_path_relative.py` | ⚠ Sprint 27 #1400 requires a **repo-relative** path when one is written. ~~A null must be an explicit allowed case, not an accident~~ — **that sentence described the REJECTED `null` option** (PR #1738 review). Under the decided rename a path is still written, so there is no null case to allow; the #1400 *property* is untouched. ⚠ But the test does **not** cover the writer at all — see §9 obligation 4. |
 | CI workflows | **none assert Match monotonicity.** `check_parse_rate_regression.py` reads only `parse_rate_percent`, `convert_rate_percent`, `avg_time_ms` from a report JSON — there is no Match analogue and no DB read. `ci.yml` touches `gamslib_status.json` only as a **cache key** |
 
 **⚠ The one real gate interaction is `--resolve-changed`.** `_bucket_severity` = `compare_rank × 10 + outcome_rank`. weapons today is `match` + `model_optimal_presolve` ⇒ **22**; corrected it is `mismatch` + `model_optimal` ⇒ **12**. A drop is classified `backward`, and `backward` is the checkpoint's **only NO-GO**.
@@ -169,11 +169,11 @@ To be used verbatim, so the fall is never reported as a bare number.
 
 ### What the rename fixes
 
-The *specification* defect named in §4. The pipeline writes this field at emit time and knows exactly one thing: that it **generated** that file. It does not know, then or later, whether the file is still on disk — the presolve artifacts are working files, and 14 of the 48 have since been cleaned up. `mcp_file_used` asserts a present-tense fact the writer was never in a position to assert; `mcp_file_generated` asserts the past-tense fact it actually observed. **A non-existent path then stops being an anomaly and becomes the expected steady state.**
+The *specification* defect named in §3. The pipeline writes this field at emit time and knows exactly one thing: that it **generated** that file. It does not know, then or later, whether the file is still on disk — the presolve artifacts are working files, and 14 of the 48 have since been cleaned up. `mcp_file_used` asserts a present-tense fact the writer was never in a position to assert; `mcp_file_generated` asserts the past-tense fact it actually observed. **A non-existent path then stops being an anomaly and becomes the expected steady state.**
 
 ### ⚠ What it does NOT do — three live docs say otherwise
 
-`PLAN.md` §3 (risk table), this doc's §7 consumer table, and `KNOWN_UNKNOWNS.md` §7.3 all predict `check_doc_figures.py`'s `dangling mcp_file_used rows` fact going **14 → 0**. **That prediction was written for the `null` option and does not survive the decided one.** Keeping the path keeps the count. All three are corrected in the same PR as this section.
+`PLAN.md` §3 (risk table), this doc's §4 consumer table, and `KNOWN_UNKNOWNS.md` §7.3 all predict `check_doc_figures.py`'s `dangling mcp_file_used rows` fact going **14 → 0**. **That prediction was written for the `null` option and does not survive the decided one.** Keeping the path keeps the count. All three are corrected in the same PR as this section.
 
 ### ⚠⚠ THE TRAP: the predicted number and the broken number are the same number
 
@@ -197,14 +197,28 @@ This is the *silent scope narrowing* class already on record (S37's leak gate sw
 
 ### P7's obligations, therefore
 
-*Six, not the five this section first listed — the schema contract was missing (PR #1738 review).*
+*Seven. The first revision listed five: the schema **contract** (6) and the schema **version + migration** (7) were both missing, found in successive review rounds (PR #1738). ⚠ The count has been wrong twice — derive it from the list below, do not trust this line.*
 
 1. **Update `_dangling_presolve_rows` to the new key IN THE SAME COMMIT as the DB migration.** Not the same PR — the same commit. A commit where the DB has moved and the checker has not is a commit whose figures lie.
 2. **Assert the fact still derives 14 afterwards.** A positive control: the count must be *unchanged*, and a 0 is the failure signal, not the success signal. This inverts the usual reading, so state it at the assertion.
 3. **Rename the fact, its `source` string, AND the pinned test fixture — together.** `dangling mcp_file_used rows` describes a defect that no longer exists; the population is still worth deriving (docs cite it), but as *"presolve rows whose generated file is no longer on disk"*.
    - ⚠ **Two of its three patterns key on the word `dangling`, not three** (PR #1738 review — an earlier revision of this line said three). Patterns 1–2 are the forward and reverse `dangling` forms; **pattern 3 is `all\s+N\s+(?:presolve-record\s+)?rows`, which never mentions `dangling`** and must survive the rename untouched. Editing it because a list said "three" would silently drop the "all 14 rows" citation form.
-   - ⚠ **`tests/unit/sprint_audit/test_check_doc_figures.py` must move in the same commit.** `check_doc_figures.py:661` is `if fact.name not in truths: continue`, and the test's `TRUTHS` hard-codes `"dangling mcp_file_used rows": 14`. Rename `FACTS` alone and the new fact is **skipped in every test** — no failure, no coverage. The consumer table's original "none" for this file reasoned about the pinned *value*, which is safe, and missed the *key*, which is not.
-4. **The Sprint 27 #1400 repo-relative requirement still applies unchanged.** `tests/gamslib/test_run_full_test_path_relative.py` exists because an absolute path leaked into this field. The decided remedy still writes a path, so — unlike the `null` option, which needed a new "null is allowed" case — that test's property is untouched. Only the key it names moves.
+   - ⚠ **`tests/unit/sprint_audit/test_check_doc_figures.py` must move in the same commit — and `TRUTHS` alone is NOT enough** (PR #1738 review, second round). Three separate things in that file are keyed to the old naming, and each fails *silently*:
+
+     | site | what it is | how it fails after a partial rename |
+     |---|---|---|
+     | **:65** — `TRUTHS`, keyed `"dangling mcp_file_used rows"` | the pinned truth map | `check_doc_figures.py:661` is `if fact.name not in truths: continue` — the renamed fact is **skipped in every test** |
+     | **:143** — the `current-dangling` vector | asserts a correct citation does **not** fire | once patterns 1–2 no longer match that prose, it fires nothing **because nothing matches it** — a vacuous pass |
+     | **:209–220** — the two `test_dangling_pattern_*` regressions | clause-crossing and population-vs-count, both asserting `== set()` | same shape: `== set()` is satisfied by a pattern that matches nothing at all |
+
+     **Every one of these passes by matching nothing.** That is the failure mode a `== set()` assertion cannot distinguish from success, so re-phrase the vectors to the new wording in the same commit and confirm each still *exercises* its pattern — the two regression tests exist to pin defects (a window crossing into `P7`, and `14 of the 48` reading the population), and a vector that no longer matches pins nothing.
+
+     The consumer table's original "none" for this file reasoned about the pinned *value*, which is safe, and missed the *key* and the *vectors*, which are not.
+4. **The Sprint 27 #1400 *property* is untouched — but nothing tests the writer, so the rename lands unverified.** `tests/gamslib/test_run_full_test_path_relative.py` exists because an absolute path leaked into this field. The decided remedy still writes a path, so — unlike the `null` option, which needed a new "null is allowed" case — the property itself needs no change.
+
+   ⚠ **Do not read that as coverage** (PR #1738 review). Measured: the file imports exactly one symbol, `_repo_relative_path`, and its three tests all call it directly. **None reaches the record-writing branch at `run_full_test.py:954`**, and the module docstring still names `mcp_file_used` as the contract. So **the suite stays green if P7 renames the DB key and forgets the writer** — the same silent-pass shape as obligations 2 and 3, arriving by a third route.
+
+   Therefore: **add a focused assertion that the writer emits `mcp_file_generated` with a repo-relative value**, and update that docstring. Without it, obligation 5 ("`run_full_test.py:954` is the sole writer") is a claim no test can hold P7 to.
 5. **`run_full_test.py:954` is the sole writer.** Renaming the DB key without it means the next pipeline run silently re-introduces `mcp_file_used` alongside `mcp_file_generated`, and the DB carries both.
 6. **⚠⚠ `data/gamslib/schema.json` IS THE HARD ONE — it breaks P7's own gate** (PR #1738 review; this obligation was missing from the first revision of §9). `definitions.mcp_solve_result` sets **`additionalProperties: false`** and lists `mcp_file_used` among its properties, so a renamed key is an *unexpected property*.
 
@@ -223,12 +237,19 @@ This is the *silent scope narrowing* class already on record (S37's leak gate sw
    **⚠ AND IT MAY NOT REPRODUCE ON YOUR MACHINE.** `jsonschema` is **not** a declared dependency (absent from `requirements.txt` and `pyproject.toml`), and `_validate_against_schema` is documented as a **no-op** when the import fails. So on a machine without it the migration looks clean and breaks wherever the library *is* installed. Same shape as the silent-zero trap in this section: **the local signal and the true signal differ.** Verify with `jsonschema` present, and say in the PR that you did.
 
    **Also update the property's `description`.** It currently reads *"Relative path to the MCP file that was **solved**"* — a stronger version of the same present/past-tense defect the rename exists to fix, and demonstrably false for `weapons`, whose MCP never solved. `"...that was generated"` is what the writer actually knows.
+7. **⚠ Bump `schema_version` and ship a migration script — a property rename is a BREAKING contract change** (PR #1738 review, second round). Obligation 6 keeps the *current* DB valid; it does nothing for any DB that already exists.
+
+   Under `additionalProperties: false`, the old and new shapes are **mutually invalid**: a pre-rename DB fails the post-rename schema exactly as the reverse fails today (48 errors, measured in obligation 6). Leaving `schema_version` at **`2.2.1`** — where the live DB sits — makes two mutually-incompatible databases claim the same version, so nothing can tell them apart programmatically, and there is no upgrade path for a DB captured before the rename.
+
+   **The repo already has the pattern; follow it rather than inventing one.** `scripts/gamslib/migrate_schema_v2.2.0.py` and `migrate_schema_v2.2.1.py` each rewrite the affected rows, set `database["schema_version"]`, and offer `--validate` against `schema.json`. A `migrate_schema_v2.3.0.py` doing the same for this key rename is the obligation.
+
+   **Recommended `2.3.0`, not `2.2.2`** — the existing `2.2.x` steps were *additive* (new optional properties, old DBs still valid), whereas this one invalidates them. That asymmetry is what the version number should carry. **P7 confirms the number**; the obligation is that it *moves* and ships a migration, not which digit changes.
 
 ### Why this is not §5's KPI correction
 
-Independent of it. §5's `Match 96 → 95` is a **record correction** about `weapons`; this rename is a **field respecification** about all 48 presolve rows. They land together in P7 only because §4 showed one row (`weapons`) sits in both populations. Neither number depends on the other, and the KPI wording in §5 stands verbatim.
+Independent of it. §5's `Match 96 → 95` is a **record correction** about `weapons`; this rename is a **field respecification** about all 48 presolve rows. They land together in P7 only because §3 showed one row (`weapons`) sits in both populations. Neither number depends on the other, and the KPI wording in §5 stands verbatim.
 
 ---
 
 **Document Status:** ✅ Complete — Sprint 39 Prep Task 8
-**Last Updated:** 2026-09-01
+**Last Updated:** 2026-09-10 (§9 added — the owner's field-rename decision and P7's obligations; the body above §9 is unchanged from 2026-09-01)
