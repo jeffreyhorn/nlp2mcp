@@ -42,6 +42,29 @@ class RepeatedDomainSymbolError(ValueError):
     """
 
 
+def assert_no_repeated_symbol(domain: tuple[str, ...] | list[str], *, context: str) -> None:
+    """Refuse a domain that repeats a symbol, without building a map.
+
+    Split out so a caller binding MANY instances of ONE domain can validate
+    once instead of per instance: the domain is constant across the loop, so
+    re-checking it adds cost without adding safety after the first iteration
+    (PR #1736 review). ``build_index_map`` still checks, for callers that bind
+    a single instance and would otherwise have to remember to call this.
+    """
+    lowered = [d.lower() for d in domain]
+    if len(lowered) != len(set(lowered)):
+        dupes = sorted({d for d in lowered if lowered.count(d) > 1})
+        raise RepeatedDomainSymbolError(
+            f"{context}: domain {tuple(domain)} repeats {dupes}, so an index map "
+            f"would silently collapse — a repeated symbol binds only its last "
+            f"occurrence and discards the earlier position(s). GAMS binds a "
+            f"repeated controlling index diagonally in an equation definition; "
+            f"that is not implemented here, so this is refused rather than "
+            f"emitted incorrectly. See "
+            f"docs/planning/EPIC_4/SPRINT_39/POSITIONAL_DOMAIN_SURVEY.md."
+        )
+
+
 def build_index_map(
     domain: tuple[str, ...] | list[str],
     values: tuple[str, ...] | list[str],
@@ -66,16 +89,5 @@ def build_index_map(
             (case-insensitively, because GAMS identifiers are).
         ValueError: if the lengths differ (from ``zip(strict=True)``).
     """
-    lowered = [d.lower() for d in domain]
-    if len(lowered) != len(set(lowered)):
-        dupes = sorted({d for d in lowered if lowered.count(d) > 1})
-        raise RepeatedDomainSymbolError(
-            f"{context}: domain {tuple(domain)} repeats {dupes}, so an index map "
-            f"would silently collapse — {tuple(values)} would bind only the last "
-            f"occurrence of each repeated symbol and discard the earlier "
-            f"position(s). GAMS binds a repeated controlling index diagonally in "
-            f"an equation definition; that is not implemented here, so this is "
-            f"refused rather than emitted incorrectly. See "
-            f"docs/planning/EPIC_4/SPRINT_39/POSITIONAL_DOMAIN_SURVEY.md."
-        )
+    assert_no_repeated_symbol(domain, context=context)
     return dict(zip(domain, values, strict=True))

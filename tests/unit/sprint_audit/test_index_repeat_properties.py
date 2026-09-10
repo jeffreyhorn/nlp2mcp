@@ -95,15 +95,27 @@ def test_p2_does_NOT_flag_a_source_faithful_diagonal_assignment():
     the assignment LHS flags all of them: measured 8/8 false positives across
     china, prolog, markov, orani, dinam, egypt and danwolfe.
     """
-    for line in (
-        "crec(cf,cf)$((not sum(ca, crec(ca,cf)))) = 1;",  # china, source :305
-        "eta(g,g,h) = gamma(g, h) * (1 - beta(g,h)) / x0(g,h) - 1;",  # prolog, :88
-        "pi(s,i,sp,j,sp) = pr(i,j);",  # markov, :56
-        "ce(c,c) = 1;",  # orani, :30
-        "yld(c,c,r) = yield(c,r);",  # egypt, :707
-        "e(i,i) = 0;",  # danwolfe — deliberate diagonal
-    ):
-        assert p2_violations(line) == [], f"source-faithful diagonal wrongly flagged: {line}"
+    # ⚠ ALL EIGHT measured cases. An earlier revision listed six while the
+    # docstring claimed 8/8 (PR #1736 review) -- the same defect class as a
+    # table that omits a row its own arithmetic needs. The count is now DERIVED
+    # from this tuple rather than asserted in prose.
+    cases = (
+        ("china", "crec(cf,cf)$((not sum(ca, crec(ca,cf)))) = 1;"),  # source :305
+        ("prolog", "eta(g,g,h) = gamma(g, h) * (1 - beta(g,h)) / x0(g,h) - 1;"),  # :88
+        ("markov", "pi(s,i,sp,j,sp) = pr(i,j);"),  # :56
+        ("orani-ce", "ce(c,c) = 1;"),  # :30
+        ("orani-etabar", "etabar(c,s,c,s) = -1. + alphae(c,s);"),  # :86
+        ("dinam", "a(id,id,te)$t(te) = a(id,id,te) - 1;"),  # :271
+        ("egypt", "yld(c,c,r) = yield(c,r);"),  # :707
+        ("danwolfe", "e(i,i) = 0;"),  # deliberate diagonal
+    )
+    assert (
+        len(cases) == 8
+    ), f"the docstring claims 8/8 false positives; {len(cases)} cases are listed"
+    for model, line in cases:
+        assert (
+            p2_violations(line) == []
+        ), f"source-faithful diagonal wrongly flagged ({model}): {line}"
 
 
 @pytest.mark.unit
