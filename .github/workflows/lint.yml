@@ -70,3 +70,34 @@ jobs:
       - name: Check code formatting with Black
         run: |
           black --check src/ tests/
+
+  # Sprint 39 P10 (PR #1736 review). The Makefile called check-index-repeats a
+  # "gate" while it ran only when someone remembered to type it -- so a P1
+  # regression could reach main unchallenged. A gate that is not enforced is a
+  # naming claim, not a gate.
+  #
+  # Cheap enough that there is no reason NOT to enforce it: stdlib-only, no
+  # install step, 0.41 s over 193 committed goldens and 3,109 heads.
+  #
+  # Runs on every PR rather than under an `on.pull_request.paths:` filter --
+  # both because a golden can drift from a src/ change that touches no scanned
+  # path, and because a path-filtered *required* check that never reports leaves
+  # a PR stuck at "Expected -- waiting for status to be reported" (the same
+  # correction already applied to golden-staleness.yml and phase0-gate.yml).
+  index-repeats:
+    name: P1/P2 repeated-index properties
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # No dependency install: the checker imports only argparse, json,
+      # pathlib, re and sys.
+      - name: Run the P1/P2 repeated-index gate
+        run: |
+          python scripts/sprint_audit/check_index_repeat_properties.py

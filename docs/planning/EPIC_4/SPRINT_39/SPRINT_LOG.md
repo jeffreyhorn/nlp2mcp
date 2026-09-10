@@ -536,7 +536,16 @@ danwolfe e(i,i) = 0;                                   deliberate diagonal
 
 ### P5 — the two EQUATION-keyed sites guarded; the variable-keyed pair deliberately not
 
-New shared helper `src/ir/index_map.py::build_index_map`, used by **both** call sites rather than duplicated (the S38-D12 rule, and the PR #1734 lesson about copying a predicate). It **raises** instead of silently collapsing.
+New shared module `src/ir/index_map.py`, used by **both** call sites rather than duplicated (the S38-D12 rule, and the PR #1734 lesson about copying a predicate). It **raises** instead of silently collapsing.
+
+⚠ **The two sites call DIFFERENT entry points, and that is the design** (PR #1736 review — an earlier revision of this line said both call `build_index_map`, which aged out when the hoist landed in `c428836a`):
+
+| site | binds | calls |
+|---|---|---|
+| `src/ir/condition_eval.py` | one instance per call | **`build_index_map`** — validate + build |
+| `src/kkt/empty_equation_detector.py` | many instances of ONE domain | **`assert_no_repeated_symbol`** once *outside* the loop, then `dict(zip(..., strict=True))` per instance |
+
+The domain is constant across the instance loop, so re-checking it per instance adds cost without adding safety after the first iteration. **Do not "fix" `empty_equation_detector` back to `build_index_map`** — that silently reinstates the per-instance re-check the hoist removed. `assert_no_repeated_symbol` exists precisely so the validate step can be hoisted; `build_index_map` delegates to it, so neither site can drift from the other's notion of "repeated".
 
 ⚠ **`strict=True` does not catch this.** It compares *lengths*, which agree; the collapse happens in the `dict` construction afterwards — `dict(zip(("i","i"),("i1","i2")))` is `{"i": "i2"}`, first position silently discarded. The test asserts that defect explicitly before asserting the guard.
 
