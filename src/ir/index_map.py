@@ -51,11 +51,21 @@ def assert_no_repeated_symbol(domain: tuple[str, ...] | list[str], *, context: s
     (PR #1736 review). ``build_index_map`` still checks, for callers that bind
     a single instance and would otherwise have to remember to call this.
     """
-    lowered = [d.lower() for d in domain]
-    if len(lowered) != len(set(lowered)):
-        dupes = sorted({d for d in lowered if lowered.count(d) > 1})
+    # Single pass: detect duplicates AND collect them together. The previous
+    # form tested `len(lowered) != len(set(lowered))` and then, on the raise
+    # path, rebuilt the duplicate list with `lowered.count(d)` — O(n²) (PR #1736
+    # review). One pass over a `seen` set gives both answers in O(n) and removes
+    # the need to reason about which branch the quadratic work sat on.
+    seen: set[str] = set()
+    dupes: set[str] = set()
+    for d in domain:
+        low = d.lower()
+        if low in seen:
+            dupes.add(low)
+        seen.add(low)
+    if dupes:
         raise RepeatedDomainSymbolError(
-            f"{context}: domain {tuple(domain)} repeats {dupes}, so an index map "
+            f"{context}: domain {tuple(domain)} repeats {sorted(dupes)}, so an index map "
             f"would silently collapse — a repeated symbol binds only its last "
             f"occurrence and discards the earlier position(s). GAMS binds a "
             f"repeated controlling index diagonally in an equation definition; "
