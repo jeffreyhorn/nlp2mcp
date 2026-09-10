@@ -68,11 +68,25 @@ coverage:
 # Wraps the golden-staleness checker's --fix mode (regenerate -> determinism
 # double-check -> overwrite). Run after any intentional emit change, then commit
 # the refreshed goldens.
-.PHONY: regen-goldens check-goldens
+.PHONY: regen-goldens check-goldens check-index-repeats
 regen-goldens:
 	$(PYTHON) scripts/sprint_audit/check_golden_staleness.py --fix
 
 # Report-only golden-staleness check (the CI gate uses this; exit 1 on drift).
+# P1/P2 repeated-index properties over the committed goldens (Sprint 39 P10).
+# P1 is a hard gate (0 violations); P2 ratchets against
+# scripts/sprint_audit/index_repeat_p2_baseline.json -- 9 real violations sit in
+# committed goldens today, and a gate that goes red on untouched history gets
+# switched off. Under 3 s: a text scan, no re-emission, no GAMS.
+#
+# ENFORCED IN CI: .github/workflows/lint.yml, job `index-repeats`, on every PR.
+# It was called a "gate" here for a round while running only when someone
+# remembered to type it, which let a P1 regression reach main unchallenged
+# (PR #1736 review). An unenforced gate is a naming claim, not a gate -- if you
+# rename or move this target, move the workflow step with it.
+check-index-repeats:
+	$(PYTHON) scripts/sprint_audit/check_index_repeat_properties.py
+
 check-goldens:
 	$(PYTHON) scripts/sprint_audit/check_golden_staleness.py
 

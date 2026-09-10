@@ -24,6 +24,7 @@ from src.ir.ast import (
     SymbolRef,
     VarRef,
 )
+from src.ir.index_map import assert_no_repeated_symbol
 from src.ir.model_ir import ModelIR
 
 
@@ -123,6 +124,10 @@ def detect_empty_equation_instances(
         instances = _enumerate_domain_instances(eq_def.domain, model_ir)
         empty_instances: set[tuple[str, ...]] = set()
 
+        # Validate ONCE: the domain is constant across the instance loop, so
+        # re-checking it per instance costs without adding safety after the
+        # first iteration (PR #1736 review).
+        assert_no_repeated_symbol(eq_def.domain, context=f"empty-equation scan of {eq_name!r}")
         for inst in instances:
             index_map = dict(zip(eq_def.domain, inst, strict=True))
             if not _instance_has_any_variable(var_accesses, index_map, model_ir):

@@ -188,7 +188,7 @@ This is why so many `NEEDS A TEST` verdicts above are *"safe today, but by somet
 
 Stated over the **emitted output**, because that is where the GAMS semantics bite: a repeated controlling index in an equation *definition* binds to the same element, so `stat_slp(n,n)..` generates only the diagonal.
 
-- **193 goldens, 3,100 equation heads, 0 violations, under 3 s.** Runs at full corpus scale; no sampling needed. (Measured 1.3–2.2 s for P1+P2 together across runs — quoted as a bound rather than a point figure, because it is wall-clock and does not reproduce to two significant figures.)
+- **193 goldens, 3,100 equation heads, 0 violations, under 3 s.** ⚠ **The head count is superseded: it is 3,109.** The prep matcher's optional `$` guard used `[^.]*`, which stops at the first `.`, so **9 heads whose guard contains a decimal literal were never scanned** (egypt, ganges, gangesx, gtm, imsl, korcge ×2, tricp, turkey ×2). Corrected when P2 graduated into a gate (Sprint 39 Day 9, PR #1736). **The 0-violation verdict is unchanged** — none of the nine repeats an index — but that was luck of the data, not construction. Runs at full corpus scale; no sampling needed. (Measured 1.3–2.2 s for P1+P2 together across runs — quoted as a bound rather than a point figure, because it is wall-clock and does not reproduce to two significant figures.)
 - **Mutation-killed, not merely green.** With `dedupe_repeated_variable_domains` monkeypatched to a no-op, tricp emits **4** violations — `stat_slp(n,n)`, `stat_sln(n,n)`, `comp_lo_slp(n,n)`, `comp_lo_sln(n,n)`. The property detects the real defect.
 - **⚠ And that is exactly the answer to 5.3 Q5: the #1062 guard makes P1 trivially true *for variable domains*.** P1 is a regression test on one sub-shape, not a property covering the class.
 - **Proof: P1 scores 0 on elec's pre-fix golden.** elec's defect was never in a head — it was in a `$(...)` guard inside the body.
@@ -215,7 +215,7 @@ Stated over the **emitted output**, because that is where the GAMS semantics bit
 
 ### Are there legitimate counter-examples? (5.3 Q2)
 
-**For P1, no** — 0 violations in 3,100 heads. A repeated controlling index in an emitted head is never what we want, because the MCP then has unmatched columns.
+**For P1, no** — 0 violations in **3,109** heads (see the correction in §P1). A repeated controlling index in an emitted head is never what we want, because the MCP then has unmatched columns.
 
 **For P2, yes, and they are why the scoping matters** — a declaration (`Set ut(i,i)`) and a genuinely diagonal reference are both legitimate. Restricting P2 to the CONTENT of `$(...)` guards removes the declaration class. `gussrisk` and `shale` show the residue: a *reference* built from the declared domain's own symbols, which is legitimate syntax carrying an illegitimate scope.
 
