@@ -217,7 +217,19 @@ This is the *silent scope narrowing* class already on record (S37's leak gate sw
    Both figures are re-derived above from the live DB, not carried. **The inversion is the point: 0 is failure, not success**, and it is the number three planning documents predicted — so state that at the assertion, or a reader will read the trap as the goal.
 3. **Rename the fact, its `source` string, AND the pinned test fixture — together.** `dangling mcp_file_used rows` describes a defect that no longer exists; the population is still worth deriving (docs cite it), but as *"presolve rows whose generated file is no longer on disk"*.
    - ⚠ **Two of its three patterns key on the word `dangling`, not three** (PR #1738 review — an earlier revision of this line said three). Patterns 1–2 are the forward and reverse `dangling` forms; **pattern 3 is `all\s+N\s+(?:presolve-record\s+)?rows`, which never mentions `dangling`** and must survive the rename untouched. Editing it because a list said "three" would silently drop the "all 14 rows" citation form.
-   - ⚠ **(PR #1738 review, third round) Pattern 2 also hard-codes the FIELD NAME, not just the word `dangling`.** It reads `\**(?P<value>N)\**\s+dangling\**\s+(?:mcp_file_used\s+)?rows?\b`. That optional `mcp_file_used\s+` group is what lets *"**14** dangling `mcp_file_used` rows"* match at all. Once prose cites `mcp_file_generated`, **the reverse form stops matching even after the fact and the fixture are renamed** — a third independent way to lose coverage silently, and the one that survives fixing the other two. Update the token (or re-write the pattern to the new wording) **and add a positive test for the reverse form**, which the suite does not currently have: `:209–220` cover the two *negative* regressions, and `:143` covers the forward form only.
+   - ⚠ **(PR #1738 review, rounds 3–4) Pattern 2 also hard-codes the FIELD NAME — but the group is ALREADY VESTIGIAL, which is a different and smaller problem than the one first recorded here.** It reads `\**(?P<value>N)\**\s+dangling\**\s+(?:mcp_file_used\s+)?rows?\b`.
+
+     ⚠ **An earlier revision illustrated it with *"**14** dangling `mcp_file_used` rows"* and called it "a third independent way to lose coverage silently". Both halves were wrong**, and measuring the regex rather than reading it is what showed why: the optional group matches only the **bare** token, so **backticks defeat it** — the group is skipped at the backtick and `rows?` then fails. Measured against the live `FACTS` entry:
+
+     | text | p1 | p2 |
+     |---|---|---|
+     | `**14 dangling mcp_file_used rows**` (bare) | — | **match** |
+     | ``**14** dangling `mcp_file_used` rows`` (backticked) | — | **—** |
+     | ``…count of dangling `mcp_file_used` rows is **14**`` (the `:143` vector) | **match** | — |
+
+     **So the example was a false coverage case, and there is no coverage to lose:** scanning every `.md` under `docs/` plus the CHANGELOG, **4 lines match pattern 2 and 0 of them reach it via the `mcp_file_used` token** — repo prose backticks field names, so that group never fires today.
+
+     **The obligation is therefore smaller and clearer:** P7 should **update the token or delete it** — it costs nothing either way and a dead branch naming the old field is a trap for the next reader — and if a positive test for the reverse form is added, it must use the **unformatted** token, the only form that reaches the group at all.
    - ⚠ **`tests/unit/sprint_audit/test_check_doc_figures.py` must move in the same commit — and `TRUTHS` alone is NOT enough** (PR #1738 review, second round). Three separate things in that file are keyed to the old naming, and each fails *silently*:
 
      | site | what it is | how it fails after a partial rename |
@@ -258,7 +270,7 @@ This is the *silent scope narrowing* class already on record (S37's leak gate sw
 
    Under `additionalProperties: false`, the old and new shapes are **mutually invalid**: a pre-rename DB fails the post-rename schema exactly as the reverse fails today (48 errors, measured in obligation 6). Leaving `schema_version` at **`2.2.1`** — where the live DB sits — makes two mutually-incompatible databases claim the same version, so nothing can tell them apart programmatically, and there is no upgrade path for a DB captured before the rename.
 
-   **The repo already has the pattern; follow it rather than inventing one.** `scripts/gamslib/migrate_schema_v2.2.0.py` and `migrate_schema_v2.2.1.py` each rewrite the affected rows and set `database["schema_version"]`. A `migrate_schema_v3.0.0.py` doing the same for this key rename is the obligation (version per the recommendation below).
+   **The repo already has the pattern; follow it rather than inventing one.** `scripts/gamslib/migrate_schema_v2.2.0.py` and `migrate_schema_v2.2.1.py` each rewrite the affected rows and set `database["schema_version"]`. A `migrate_schema_v<chosen-version>.py` doing the same for this key rename is the obligation — **version-neutral deliberately**, since the number is recommended below and not decided. (An earlier revision hard-coded `v3.0.0` here while the recommendation two paragraphs down said P7 confirms it; PR #1738 review.)
 
    ⚠ **They do NOT offer `--validate`, and an earlier revision of this obligation said they did** (PR #1738 review). Measured from their parsers, both expose only `--dry-run`, `--verbose`, `--no-backup`, `--database`. **`--validate` exists in `migrate_schema_v2.1.0.py`** (`add_argument` at :266, used at :327) — the precedent *regressed* at 2.2.0 and I attributed the older script's flag to the newer ones.
 
@@ -310,7 +322,9 @@ Independent of it. §5's `Match 96 → 95` is a **record correction** about `wea
 - §4 consumer row — `check_doc_figures.py`: the `dangling` 14 → 0 prediction removed, `Match` 96 → 95 retained
 - §4 consumer row — `test_check_doc_figures.py`: **"none"** corrected, it is not none once the fact is renamed
 - §4 consumer row — `test_run_full_test_path_relative.py`: the "a null must be an allowed case" sentence struck as rejected-option text
+- §6 item 3 — the adoption rule now reads `mcp_file_generated`. ⚠ **Rewritten, not labelled**, unlike everything else on this list: §6 is a forward-facing *draft for CONTRIBUTING*, so a stale key there is a live instruction destined to be copied into a permanent document, not a record of what was believed
+- §8 — the flagged open question flipped to ✅ **DECIDED**, with its "both close the dangling count" framing marked wrong
 
-⚠ *Listed rather than counted, deliberately. An earlier revision of this footer said "the body above §9 is unchanged" while three consumer rows had already moved, and its replacement then said "four" while there were five (PR #1738 review, both rounds). A list cannot be off by one.*
+⚠ *Listed rather than counted, and **derived from the diff rather than recalled** — the three previous attempts at this note were each wrong: "the body above §9 is unchanged" (three consumer rows had moved), then "four" (there were five), then a five-item list that omitted §6 and §8 (PR #1738 review, rounds 2–4). A list cannot be off by one, but it can still be short, so this one was built by walking `git diff main` hunk by hunk and mapping each to its section.*
 
 Everything not listed above is unchanged from **2026-09-01**, the Prep Task 8 record.
