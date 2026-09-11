@@ -261,7 +261,7 @@ def test_an_unattributed_retry_is_NOT_recorded_as_a_presolve_match(monkeypatch, 
     # The COLD record is what survives — the remedy invents no category.
     assert solve["outcome_category"] == "model_optimal"
     assert solve["objective_value"] == pytest.approx(1700.397)
-    assert stats["presolve_retry_unattributed"] == 1
+    assert stats["presolve_retry_rejected"] == 1
     assert stats["presolve_retry_success"] == 0
 
 
@@ -276,7 +276,7 @@ def test_an_ATTRIBUTED_retry_is_still_recorded_normally(monkeypatch, tmp_path):
     assert model["mcp_solve"]["outcome_category"] == "model_optimal_presolve"
     assert model["mcp_solve"]["presolve_required"] is True
     assert stats["presolve_retry_success"] == 1
-    assert stats["presolve_retry_unattributed"] == 0
+    assert stats["presolve_retry_rejected"] == 0
 
 
 @pytest.mark.unit
@@ -313,4 +313,4 @@ def test_an_ABORTED_retry_of_OUR_OWN_model_is_NOT_recorded(monkeypatch, tmp_path
     assert model["mcp_solve"]["outcome_category"] != "model_optimal_presolve"
     assert model["mcp_solve"]["outcome_category"] == "model_optimal"
     assert stats["presolve_retry_success"] == 0
-    assert stats["presolve_retry_unattributed"] == 1
+    assert stats["presolve_retry_rejected"] == 1

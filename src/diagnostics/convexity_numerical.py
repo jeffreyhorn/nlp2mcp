@@ -138,8 +138,26 @@ def _compare_results(
         return True
 
     def _solver_completed(result: dict[str, Any]) -> bool:
-        """Solver ran to completion (solver_status=1), even if model is infeasible."""
-        return result.get("solver_status") == 1
+        """Solver ran to completion (solver_status=1), even if model is infeasible.
+
+        ⚠ Sprint 39 P7 (PR #1740 review): the attribution gate on
+        `_solve_optimal` alone was not enough. This feeds the INFEASIBLE path,
+        and a presolve listing whose embedded source reports infeasible while
+        our emitted MCP reports nothing is `EMBEDDED-ONLY` — so without this
+        check the source's infeasibility would be read as the warm MCP's and
+        produce a "both infeasible" or "warm infeasible" verdict about a solve
+        that never happened. The same false attribution, arriving through the
+        other branch.
+
+        ⚠ Requires exactly `MCP-SOLVED` here too, NOT merely "not
+        EMBEDDED-ONLY": an aborted MCP is `MCP-FAILED`, and its 4/5 status is no
+        more usable than a borrowed one. A missing key stays permitted so older
+        result dicts keep working.
+        """
+        if result.get("solver_status") != 1:
+            return False
+        attribution = result.get("mcp_attribution")
+        return attribution is None or attribution == "MCP-SOLVED"
 
     status_cold = cold_result.get("model_status")
     status_warm = warm_result.get("model_status")

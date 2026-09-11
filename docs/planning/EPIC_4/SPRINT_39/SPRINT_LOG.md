@@ -533,7 +533,9 @@ typecheck / format / lint clean · `make test` **5311 passed** / 10 skipped / 1 
 
 ### Verification
 
-`typecheck` · `format` · `lint` clean; `make test` **5333 passed** / 10 skipped / 1 xfailed. Mutation-killed twice: reverting Remedy A's condition fails the record-path assertion; reverting pattern 2's renamed token fails the new positive reverse-form test. **`src/` untouched**, so emit is byte-identical by construction and Phase-0 does not arm — the `weapons` cold golden re-translated byte-identical, confirming it.
+`typecheck` · `format` · `lint` clean. Mutation-killed twice: reverting Remedy A's condition fails the record-path assertion; reverting pattern 2's renamed token fails the new positive reverse-form test.
+
+⚠ **The scope claim needed correcting mid-review.** This day was originally recorded as *"`src/` untouched"*; that was true at the first commit and false after the review round that gated `src/diagnostics/convexity_numerical.py` on the attribution verdict. The accurate statement is narrower and is what actually carries the argument: **the EMIT implementation — `src/{ad,kkt,emit}` — is untouched**, so emit is byte-identical by construction, Phase-0 does not arm (it keys on exactly those three trees), and the `weapons` cold golden re-translated byte-identical, confirming it. `src/diagnostics/` is a consumer of solve results, not an emit path.
 
 
 ## Day 9 — planned 2026-09-12, **executed 2026-09-10** · P9 · 2 h · + P10 · 5 h · + P5 · 3 h

@@ -1046,7 +1046,17 @@ def cold_start_result(
     # in. `None` is tolerated for backward compatibility with older results.
     attribution = solved.get("mcp_attribution")
     if attribution is not None and attribution != "MCP-SOLVED":
-        return ("unavailable", None) if attribution == "NO-SOLVE" else ("diverged", obj)
+        # ⚠ INDETERMINATE IS NOT EVIDENCE (PR #1740 review). `MCP-NO-STATUS`,
+        # `NO-SOLVE` and `ERROR` all mean "nothing can be concluded" -- the
+        # audit tool groups them in `_INDETERMINATE_VERDICTS` for exactly that
+        # reason. An earlier revision mapped everything but `NO-SOLVE` to
+        # "diverged", and `_cold_is_spurious` treats "diverged" as PROOF of a
+        # spurious cold solve, so a statusless MCP could have been reclassified
+        # `case_c_objdef` on no usable result at all. Only `MCP-FAILED` -- our
+        # model ran and reported an unusable answer -- is a real divergence.
+        if attribution == "MCP-FAILED":
+            return "diverged", obj
+        return "unavailable", None
     if solved.get("model_status") in (1, 2):
         return "optimal", obj
     if solved.get("model_status") is None:

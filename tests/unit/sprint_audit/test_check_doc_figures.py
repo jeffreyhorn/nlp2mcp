@@ -67,7 +67,11 @@ TRUTHS: dict[str, float | int] = {
     "leak-gate in-scope goldens": 186,
     "current-sprint unknowns": 30,
     "current-sprint research hours": 40.0,
-    "presolve rows whose generated file is absent": 14,
+    # ⚠ 13, not 14. 14 is the RENAME-ONLY control; the committed DB also has
+    # Remedy A applied, which reverts `weapons` to its cold golden so its row
+    # stops dangling. Pinning 14 here blessed a state this PR does not ship
+    # (PR #1740 review). See PRESOLVE_RECORD_REMEDY.md §9 obligation 2.
+    "presolve rows whose generated file is absent": 13,
     "Task-2 figures reproduced": 13,
 }
 
@@ -156,7 +160,7 @@ def test_catches_the_figures_that_actually_shipped_wrong(line: str, fact: str) -
             id="current-leak-scope",
         ),
         pytest.param(
-            "the live count of dangling `mcp_file_generated` rows is **14**",
+            "the live count of dangling `mcp_file_generated` rows is **13**",
             id="current-dangling",
         ),
         pytest.param("genuine floor **73** (baseline 73 + 0 entries)", id="current-floor"),
@@ -238,15 +242,15 @@ def test_the_REVERSE_form_still_matches_after_the_field_rename() -> None:
     matches neither pattern. That is why repo prose — which backticks field
     names — never exercised this branch, and why this test has to spell it bare.
     """
-    assert _facts("**14 dangling mcp_file_generated rows**") == set()
+    assert _facts("**13 dangling mcp_file_generated rows**") == set()
     # …and the same line with a WRONG count must be caught, or the assertion
     # above would be satisfied by a pattern that matches nothing at all.
-    assert _facts("**13 dangling mcp_file_generated rows**") == {
+    assert _facts("**12 dangling mcp_file_generated rows**") == {
         "presolve rows whose generated file is absent"
     }
     # The stale token must NOT keep working — a rename that leaves both live is
     # how a DB ends up carrying two names for one field.
-    assert _facts("**13 dangling mcp_file_used rows**") == set()
+    assert _facts("**12 dangling mcp_file_used rows**") == set()
 
 
 def test_dangling_pattern_does_not_reach_into_the_next_clause() -> None:

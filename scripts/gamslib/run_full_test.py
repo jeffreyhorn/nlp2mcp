@@ -1012,27 +1012,43 @@ def run_pipeline(
                     # ⚠ The two arrivals here need DIFFERENT bookkeeping, because
                     # `run_solve_stage` counted the retry by its own status.
                     if retry_result["status"] == "success":
-                        # Unattributed: the retry was counted a success and
-                        # pushed no error, so undo exactly that. Popping
+                        # REJECTED: the retry was counted a success and pushed
+                        # no error, so undo exactly that. Popping
                         # `solve_errors` here would discard the COLD error.
                         stats["solve_success"] -= 1
-                        stats["presolve_retry_unattributed"] += 1
+                        stats["presolve_retry_rejected"] += 1
                         if args.verbose:
+                            # ⚠ Message keyed on the VERDICT (PR #1740 review).
+                            # A flat "not from our mcp_model" is false for
+                            # `MCP-FAILED`, where the status IS ours and the
+                            # solve aborted — two different findings that must
+                            # not be reported as one.
+                            _verdict = retry_result.get("mcp_attribution")
+                            _why = (
+                                "the status belongs to the embedded source solve"
+                                if _verdict == "EMBEDDED-ONLY"
+                                else f"our MCP reported {_verdict}"
+                            )
                             logger.info(
-                                "    [RETRY] UNATTRIBUTED: the retry reported a "
-                                "status, but not from our mcp_model — keeping the "
-                                "cold record"
+                                f"    [RETRY] REJECTED ({_verdict}): {_why} — "
+                                f"keeping the cold record"
                             )
                     else:
                         # Undo the extra failure count from the retry solve
                         stats["solve_failure"] -= 1
                         if stats["solve_errors"]:
                             stats["solve_errors"].pop()
-                    if args.verbose:
-                        logger.info(
-                            f"    [RETRY] Still failed: "
-                            f"{retry_result.get('outcome_category')}"
-                        )
+                        # ⚠ INSIDE this branch (PR #1740 review). It previously
+                        # sat after the if/else and fired for BOTH arrivals, so
+                        # a rejected-but-successful retry was logged "Still
+                        # failed" one line after being logged as reporting
+                        # success — contradicting both the recorded status and
+                        # the message above it.
+                        if args.verbose:
+                            logger.info(
+                                f"    [RETRY] Still failed: "
+                                f"{retry_result.get('outcome_category')}"
+                            )
             else:
                 if args.verbose:
                     logger.info("    [RETRY] Re-translate with --nlp-presolve failed")
@@ -1085,11 +1101,20 @@ def _new_stats(total: int) -> dict[str, Any]:
         # Pre-solve retry stats
         "presolve_retry_attempted": 0,
         "presolve_retry_success": 0,
-        # Sprint 39 P7 / Remedy A: retries that reported a status belonging to
-        # the embedded source solve rather than to our MCP. Counted rather than
-        # folded into failures — it is a distinct finding, and a silent zero
-        # here would hide the gate never firing.
-        "presolve_retry_unattributed": 0,
+        # Sprint 39 P7 / Remedy A: retries whose GLOBAL status said success but
+        # whose attribution verdict was not `MCP-SOLVED`, so the record was
+        # rejected and the cold result kept.
+        #
+        # ⚠ Renamed from `presolve_retry_unattributed` (PR #1740 review). That
+        # name described only `EMBEDDED-ONLY` — a status belonging to the
+        # embedded source — but the gate also rejects `MCP-FAILED`, where the
+        # status IS ours and the solve aborted. Calling an aborted own-MCP retry
+        # "unattributed" mislabels it in the run summary, which is the one place
+        # a reader sees this number.
+        #
+        # Counted rather than folded into failures: it is a distinct finding,
+        # and a silent zero would hide the gate never firing.
+        "presolve_retry_rejected": 0,
         # Compare stats
         "compare_match": 0,
         "compare_mismatch": 0,
@@ -1784,8 +1809,9 @@ def generate_summary(stats: dict[str, Any], args: argparse.Namespace) -> dict[st
                     "success": stats["presolve_retry_success"],
                     # Sprint 39 P7 / Remedy A — reported so the gate's effect is
                     # visible in the run summary rather than inferred from a gap
-                    # between `attempted` and `success`.
-                    "unattributed": stats.get("presolve_retry_unattributed", 0),
+                    # between `attempted` and `success`. Covers every non
+                    # `MCP-SOLVED` verdict, not only `EMBEDDED-ONLY`.
+                    "rejected": stats.get("presolve_retry_rejected", 0),
                 }
             summary["solve"] = solve_summary
 
