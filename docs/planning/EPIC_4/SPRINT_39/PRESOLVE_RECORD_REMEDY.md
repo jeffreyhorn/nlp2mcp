@@ -227,9 +227,21 @@ This is the *silent scope narrowing* class already on record (S37's leak gate sw
      | ``**14** dangling `mcp_file_used` rows`` (backticked) | — | **—** |
      | ``…count of dangling `mcp_file_used` rows is **14**`` (the `:143` vector) | **match** | — |
 
-     **So the example was a false coverage case, and there is no coverage to lose:** scanning every `.md` under `docs/` plus the CHANGELOG, **4 lines match pattern 2 and 0 of them reach it via the `mcp_file_used` token** — repo prose backticks field names, so that group never fires today.
+     **So the example was a false coverage case, and there is no *substantive* coverage to lose.** Scanning every `.md` under `docs/` plus the CHANGELOG, **the only line reaching pattern 2 via the `mcp_file_used` token is the bare-token cell of the table immediately above** — this document illustrating the regex. Every real citation backticks the field name and therefore misses the group.
 
-     **The obligation is therefore smaller and clearer:** P7 should **update the token or delete it** — it costs nothing either way and a dead branch naming the old field is a trap for the next reader — and if a positive test for the reverse form is added, it must use the **unformatted** token, the only form that reaches the group at all.
+     ⚠ **THIS FIGURE IS SELF-PERTURBING, WHICH IS WHY IT IS STATED AS A PROPERTY AND NOT A COUNT.** Two revisions got it wrong in two rounds, each time by editing the thing being measured:
+
+     - *"0 lines reach it via the token"* — true when taken, **falsified by the edit that recorded it**: writing the illustrative table created the very line the count denied.
+     - *"4 lines match pattern 2"* — true when taken, **5 after this correction was written.**
+
+     A figure measured before an edit and cited after it describes a document that no longer exists. So the claim above names *which* line matches and *why*, which the next edit cannot silently invalidate. **Re-derive at the point of use — including after your own edits**, and prefer a property to a count when the measurement's subject is the text doing the measuring.
+
+     **The obligation is therefore smaller and clearer, but NOT optional** (PR #1738 review, fifth round — an earlier revision wrote *"if a positive test … is added"*, which left the hole open). P7 must take **exactly one** of these, not neither:
+
+     - **(a) Keep the branch → a POSITIVE reverse-form test is REQUIRED**, using the **unformatted** token (`**14 dangling mcp_file_generated rows**`), the only form that reaches the group. Without it, renaming the fixture and the negative vectors leaves the regex dead with every test green — **precisely the silent-coverage failure this obligation exists to prevent**, re-entering through the fix for it.
+     - **(b) Delete the branch → test its replacement.** Simplest, given the group carries no substantive citation today; but a deletion still needs a test that the *remaining* reverse form matches, or the pattern loses its only positive case entirely.
+
+     ⚠ **"Neither" is the failure mode, and it looks like success:** the suite goes green either way, and nothing reports that pattern 2 stopped matching anything.
    - ⚠ **`tests/unit/sprint_audit/test_check_doc_figures.py` must move in the same commit — and `TRUTHS` alone is NOT enough** (PR #1738 review, second round). Three separate things in that file are keyed to the old naming, and each fails *silently*:
 
      | site | what it is | how it fails after a partial rename |
@@ -265,10 +277,16 @@ This is the *silent scope narrowing* class already on record (S37's leak gate sw
 
    **⚠ AND IT MAY NOT REPRODUCE ON YOUR MACHINE.** `jsonschema` is **not** a declared dependency (absent from `requirements.txt` and `pyproject.toml`), and `_validate_against_schema` is documented as a **no-op** when the import fails. So on a machine without it the migration looks clean and breaks wherever the library *is* installed. Same shape as the silent-zero trap in this section: **the local signal and the true signal differ.** Verify with `jsonschema` present, and say in the PR that you did.
 
-   **Also update the property's `description`.** It currently reads *"Relative path to the MCP file that was **solved**"* — a stronger version of the same present/past-tense defect the rename exists to fix, and demonstrably false for `weapons`, whose MCP never solved. `"...that was generated"` is what the writer actually knows.
+   **Also update the property's `description`.** It currently reads *"Relative path to the MCP file that was **solved**"* — a stronger version of the same present/past-tense defect the rename exists to fix. `"...that was generated"` is what the writer actually knows.
+
+   ⚠ **Justified by the field's LIFECYCLE, not by `weapons`** (PR #1738 review, fifth round; an earlier revision said the description was *"demonstrably false for `weapons`, whose MCP never solved"*). The correct grounds are general and apply to all 48 rows: **the field is written at generation time and the artifact may be cleaned up afterwards** — 14 of the 48 paths no longer exist — so *"the file that was solved"* asserts an outcome the writer was not positioned to observe, exactly as *"used"* did.
+
+   **Why `weapons` was the wrong example, twice over.** Its live row reads `status: success`, `model_status: 2`, `outcome_category: model_optimal_presolve`, `objective_match: true` — so the *record* does not demonstrate anything false; §2's finding is that **the record itself is wrong**, which makes citing it circular. And Remedy A repoints that row at `weapons_mcp.gms`, which **does** solve (§2: `MODEL STATUS 1`, 1700.397), so after P7 the row is not an example of an unsolved file either. A justification that a correction invalidates was never the justification.
 7. **⚠ Bump `schema_version` and ship a migration script — a property rename is a BREAKING contract change** (PR #1738 review, second round). Obligation 6 keeps the *current* DB valid; it does nothing for any DB that already exists.
 
-   Under `additionalProperties: false`, the old and new shapes are **mutually invalid**: a pre-rename DB fails the post-rename schema exactly as the reverse fails today (48 errors, measured in obligation 6). Leaving `schema_version` at **`2.2.1`** — where the live DB sits — makes two mutually-incompatible databases claim the same version, so nothing can tell them apart programmatically, and there is no upgrade path for a DB captured before the rename.
+   Under `additionalProperties: false`, the old and new shapes are **mutually invalid**: a pre-rename DB fails the post-rename schema exactly as the reverse fails today (48 errors, measured in obligation 6). Leaving `schema_version` at **`2.2.1`** — where the live DB sits — makes two mutually-incompatible databases claim the same version, **so version-based tooling cannot select the applicable contract from `schema_version` alone**, and there is no upgrade path for a DB captured before the rename.
+
+   ⚠ *An earlier revision said "nothing can tell them apart programmatically", which is too broad (PR #1738 review, fifth round): the two shapes are trivially distinguishable by **inspecting which key is present**. The defect is narrower and worse — it is the **version field** that stops being informative, and that is the field a migration runner, a validator, or a compatibility check keys on. Sniffing the payload to discover which contract applies is exactly what a version number exists to make unnecessary.*
 
    **The repo already has the pattern; follow it rather than inventing one.** `scripts/gamslib/migrate_schema_v2.2.0.py` and `migrate_schema_v2.2.1.py` each rewrite the affected rows and set `database["schema_version"]`. A `migrate_schema_v<chosen-version>.py` doing the same for this key rename is the obligation — **version-neutral deliberately**, since the number is recommended below and not decided. (An earlier revision hard-coded `v3.0.0` here while the recommendation two paragraphs down said P7 confirms it; PR #1738 review.)
 
