@@ -26,7 +26,7 @@ jobs:
           duration=$((end_time - start_time))
           echo "Fast test duration: ${duration}s"
 
-          # Check budget (50s limit, 47s warning)
+          # Check budget (60s limit, 57s warning)
           # Budget raised from 35s→40s in Sprint 20: test count grew 3,579→3,715
           # (+3.8%) and several tests gained heavier assertions/fixtures.
           # Budget raised from 40s→45s in Sprint 24: test count grew 3,715→4,435
@@ -35,13 +35,35 @@ jobs:
           # Budget raised from 45s→50s in Sprint 29: fast-test count grew
           # 4,435→~4,940 (+11%) from the carryforward unit tests + the
           # crossterm-shape fixtures; the 45s gate began tripping on CI variance.
-          if [ "$duration" -gt 50 ]; then
-            echo "❌ BUDGET EXCEEDED: Fast tests took ${duration}s (budget: 50s)"
+          #
+          # Budget raised from 50s→60s in Sprint 39 (PR #1738 flake).
+          # ⚠ UNLIKE THE THREE RAISES ABOVE, THIS ONE IS NOT ABOUT GROWTH.
+          # Test count moved 4,940→5,170 (+4.7%), the smallest increase of the
+          # four, and the gate was not tracking it — it was tracking the runner.
+          #
+          # Measured on a docs-only PR with ZERO *.py changed, so the suite was
+          # byte-identical to main across every run:
+          #
+          #   37 · 37 · 38 · 40 · 43 · 43 · 49 · 49 · 50 · 53
+          #
+          # The 53s failure and the 38s pass that followed it ran the SAME 5,170
+          # tests: pytest itself reported 51.77s then 37.36s, so the swing is
+          # inside the test run, not wrapper overhead. A ~40 % spread on shared
+          # CI hardware against a 3s guard band is a coin flip, and a gate that
+          # fails on identical code teaches people to re-run rather than read it.
+          #
+          # 60s puts the observed maximum ~13 % inside the limit rather than 6 %
+          # outside. It does NOT buy headroom for growth: at +4.7 % per ~10
+          # sprints the next raise should again be justified by a measurement,
+          # and if the *median* (≈43s) starts climbing, that IS growth and wants
+          # profiling, not another raise.
+          if [ "$duration" -gt 60 ]; then
+            echo "❌ BUDGET EXCEEDED: Fast tests took ${duration}s (budget: 60s)"
             exit 1
-          elif [ "$duration" -gt 47 ]; then
-            echo "⚠️  WARNING: Fast tests took ${duration}s (approaching 50s budget)"
+          elif [ "$duration" -gt 57 ]; then
+            echo "⚠️  WARNING: Fast tests took ${duration}s (approaching 60s budget)"
             exit 0
           else
-            echo "✅ Within budget: ${duration}s / 50s"
+            echo "✅ Within budget: ${duration}s / 60s"
             exit 0
           fi
