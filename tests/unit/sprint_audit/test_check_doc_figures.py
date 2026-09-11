@@ -54,7 +54,12 @@ finally:
 #: under test, and the test would then pass against a broken derivation.
 TRUTHS: dict[str, float | int] = {
     "Solve": 111,
-    "Match": 96,
+    # Sprint 39 P7 corrected this 96 -> 95 (the weapons spurious presolve match).
+    # ⚠ These fixtures are SYNTHETIC and self-consistent; no test asserts they
+    # equal the live DB, so nothing broke when the live figure moved. Updated
+    # anyway: leaving 96 pinned, in the change that establishes 96 was wrong,
+    # blesses the corrected-away value for the next reader (PR #1740 review).
+    "Match": 95,
     "Translate": 135,
     "genuine floor": 73,
     "path_solve_license cohort": 11,
@@ -132,8 +137,19 @@ def test_catches_the_figures_that_actually_shipped_wrong(line: str, fact: str) -
             id="thirteen-of-fourteen",
         ),
         pytest.param(
-            "Solve **111** · Match **96** · Translate **135** · all-219 Match **99**",
+            "Solve **111** · Match **95** · Translate **135** · all-219 Match **98**",
             id="current-kpi-block",
+        ),
+        pytest.param(
+            # ⚠ WITHOUT `all-219`, deliberately. The vector above mentions it,
+            # and `all-219` is a `skip_if` on the Match fact — so that whole line
+            # is skipped for Match and a WRONG value there fires nothing.
+            # Measured: `Match **96**` against a pinned 95 yields 0 findings on
+            # an all-219 line. Updating that vector to 95 was therefore
+            # cosmetic; THIS is the vector that pins the corrected figure
+            # (PR #1740 review).
+            "Solve **111** · Match **95** · Translate **135**",
+            id="current-kpi-block-match-pinned",
         ),
         pytest.param(
             "leak gate clean at **186** in-scope / **7** allowlisted",

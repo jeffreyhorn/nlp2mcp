@@ -42,6 +42,7 @@ import json
 import logging
 import shutil
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -101,7 +102,11 @@ def main(argv: list[str] | None = None) -> int:
     database = json.loads(args.database.read_text(encoding="utf-8"))
     current = database.get("schema_version", "unknown")
 
-    if args.validate and not args.dry_run and current == TO_VERSION:
+    # Validate-only: the database is already migrated, so there is nothing to do
+    # but check it. ⚠ NOT gated on `not args.dry_run` — validation writes
+    # nothing, so refusing to run it under --dry-run made `--dry-run --validate`
+    # report a result it had never checked (PR #1740 review).
+    if args.validate and current == TO_VERSION:
         errors = validate(database)
         if errors:
             logger.error("Validation FAILED with %d error(s):", len(errors))
@@ -123,6 +128,12 @@ def main(argv: list[str] | None = None) -> int:
 
     renamed = rename_field(database)
     database["schema_version"] = TO_VERSION
+    # ⚠ `schema.json` defines this as "ISO 8601 timestamp of last modification",
+    # and every prior migration (v2.1.0, v2.2.0, v2.2.1) sets it. Omitting it
+    # left the DB reporting 2026-05-14 provenance for a file this script had just
+    # rewritten 48 rows of — stale provenance is worse than none, because it
+    # reads as a positive claim about when the data last moved (PR #1740 review).
+    database["updated_date"] = datetime.now(UTC).isoformat()
     database["_migration_summary_v3_0_0"] = {
         "to_version": TO_VERSION,
         "renamed": {"from": OLD_KEY, "to": NEW_KEY, "rows": renamed},
@@ -131,10 +142,10 @@ def main(argv: list[str] | None = None) -> int:
     logger.info("%s -> %s: renamed %s -> %s on %d row(s)",
                 FROM_VERSION, TO_VERSION, OLD_KEY, NEW_KEY, renamed)
 
-    if args.dry_run:
-        logger.info("--dry-run: nothing written")
-        return 0
-
+    # ⚠ Validate the IN-MEMORY migration BEFORE the dry-run exit. Validation
+    # writes nothing, so there is no reason to skip it — and skipping it made
+    # `--dry-run` the one mode that could not answer the question the flag
+    # exists for: *would this migration produce a valid database?*
     errors = validate(database)
     if errors:
         logger.error("Migrated database does NOT validate (%d error(s)):", len(errors))
@@ -142,6 +153,10 @@ def main(argv: list[str] | None = None) -> int:
             logger.error("  %s", e)
         logger.error("Refusing to write.")
         return 1
+
+    if args.dry_run:
+        logger.info("--dry-run: migration validates; nothing written")
+        return 0
 
     if not args.no_backup:
         backup = args.database.with_suffix(f".json.bak-{FROM_VERSION}")

@@ -943,10 +943,10 @@ def run_pipeline(
                 # `model_optimal_presolve` + match for a solve that never
                 # happened. That is `weapons` (Sprint 38 Day 9).
                 #
-                # ⚠ Gated HERE and not at the `mcp_file_used` write below: this
-                # branch makes THREE writes (`presolve_required`,
-                # `mcp_file_used`, `outcome_category`), and gating one of them
-                # would leave the other two asserting a presolve success.
+                # ⚠ Gated HERE and not at the `mcp_file_generated` write below:
+                # this branch makes THREE writes (`presolve_required`,
+                # `mcp_file_generated`, `outcome_category`), and gating one of
+                # them would leave the other two asserting a presolve success.
                 #
                 # ⚠ Do NOT key this on `EXECERROR` — it conflates MCP-side and
                 # NLP-side aborts, which is how weapons was first reported
