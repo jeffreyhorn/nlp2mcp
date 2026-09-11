@@ -140,7 +140,24 @@ def _drive(monkeypatch, tmp_path, retry_listing: str):
     from scripts.gamslib.test_solve import parse_gams_listing
     from scripts.sprint_audit.check_mcp_solve_attribution import parse_solve_summaries
 
-    mcp = tmp_path / "weapons_mcp.gms"
+    # ⚠ PROJECT_ROOT is redirected so this runs WITHOUT `data/gamslib/raw/`.
+    # `run_pipeline` returns at :816 when the raw source is missing, and CI does
+    # not ship `raw/` — so the first version of this file passed locally and
+    # failed in CI with `KeyError: 'mcp_solve'`, the solve stage never reached.
+    #
+    # The repo convention for raw-dependent tests is `pytest.skip()`, and that
+    # is the WRONG answer here: these three are the gate's only end-to-end
+    # coverage, and skipping them in CI means the regression they exist to catch
+    # would land unchallenged. Nothing in them needs the real `weapons` source —
+    # translate and solve are both stubbed — so the fixture supplies a stand-in
+    # instead of opting out.
+    root = tmp_path / "root"
+    (root / "data" / "gamslib" / "raw").mkdir(parents=True)
+    (root / "data" / "gamslib" / "mcp").mkdir(parents=True)
+    (root / "data" / "gamslib" / "raw" / "weapons.gms").write_text("* stand-in source\n")
+    monkeypatch.setattr(rft, "PROJECT_ROOT", root)
+
+    mcp = root / "data" / "gamslib" / "mcp" / "weapons_mcp.gms"
     mcp.write_text("* cold emit\n")
 
     calls = {"n": 0}
