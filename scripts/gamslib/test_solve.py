@@ -55,7 +55,7 @@ import math
 # Sprint 39 P7 / Remedy A. Reused rather than re-implemented: the attribution
 # is POSITIONAL (a status line belongs to the nearest summary header above it),
 # and a second regex here would be a second thing to keep correct.
-from scripts.sprint_audit.check_mcp_solve_attribution import parse_solve_summaries
+from scripts.sprint_audit.check_mcp_solve_attribution import Attribution, parse_solve_summaries
 
 from scripts.gamslib.error_taxonomy import (
     COMPARE_BOTH_INFEASIBLE,
@@ -1081,11 +1081,29 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
         # answer the question, which is why this reuses the audit tool's parser
         # rather than adding another regex here.
         #
-        # ⚠ This says the status is OURS, not that the solve succeeded: an MCP
-        # returning MS-4 is attributed and still has no usable answer. Success
-        # stays `is_success` below; keep the two separate.
-        mcp_summaries = [s for s in parse_solve_summaries(lst_content) if s.is_emitted_mcp]
-        mcp_produced_own_status = any(s.model_status is not None for s in mcp_summaries)
+        # ⚠⚠ ATTRIBUTION IS NOT SUCCESS, AND THE GATE NEEDS SUCCESS.
+        # An earlier revision computed only `any(s.model_status is not None)` --
+        # i.e. `Attribution.mcp_produced_status` -- and used it as the retry
+        # gate. That is a hole: for an ABORTED MCP, GAMS still prints
+        # `MODEL STATUS 1` above the `**** SOLVE ... ABORTED` line, so
+        # `parse_gams_listing` returns 1/1, `is_success` is true, the flag was
+        # true, and `run_pipeline` recorded `model_optimal_presolve` for a solve
+        # that explicitly aborted (PR #1740 review). The distinction is spelled
+        # out in tests/unit/sprint_audit/test_mcp_solve_attribution.py: an
+        # aborted MCP has `mcp_produced_status` True, `mcp_succeeded` False, and
+        # verdict `MCP-FAILED`.
+        #
+        # So the whole `Attribution` is built and its VERDICT carried, rather
+        # than a hand-rolled predicate. `MCP-SOLVED` is exactly the condition
+        # §6's presolve-golden adoption rule already requires, and it folds in
+        # the abort, abort-ambiguity and solver-status checks that a status
+        # presence test cannot see.
+        attribution = Attribution(
+            model_id=mcp_path.stem,
+            summaries=parse_solve_summaries(lst_content),
+        )
+        mcp_attribution = attribution.verdict
+        mcp_produced_own_status = attribution.mcp_produced_status
 
         # Extract PATH solver version from .lst file
         path_version = extract_path_version(lst_content)
@@ -1130,8 +1148,14 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
             "solve_time_seconds": round(elapsed, 4),
             "iterations": parsed.get("iterations"),
             "outcome_category": outcome,
-            # Sprint 39 P7 / Remedy A. Consumed by run_full_test.py's presolve
-            # retry gate; `False` there means the recorded status is not ours.
+            # Sprint 39 P7 / Remedy A.
+            # `mcp_attribution` is the audit tool's verdict for THIS listing:
+            # MCP-SOLVED / MCP-FAILED / MCP-NO-STATUS / EMBEDDED-ONLY / NO-SOLVE.
+            # Only MCP-SOLVED means "our emitted model produced a usable answer".
+            # ⚠ Consumers must gate on the VERDICT, not on
+            # `mcp_produced_own_status`, which answers the narrower question
+            # "is the status ours" and is True for an aborted MCP.
+            "mcp_attribution": mcp_attribution,
             "mcp_produced_own_status": mcp_produced_own_status,
         }
 

@@ -951,7 +951,15 @@ def run_pipeline(
                 # ⚠ Do NOT key this on `EXECERROR` — it conflates MCP-side and
                 # NLP-side aborts, which is how weapons was first reported
                 # against the wrong half of its listing.
-                retry_attributed = retry_result.get("mcp_produced_own_status", False)
+                # ⚠ Gated on the VERDICT, not on "is the status ours".
+                # `mcp_produced_own_status` is True for an ABORTED MCP -- GAMS
+                # prints MODEL STATUS 1 above the `SOLVE ... ABORTED` line -- so
+                # an earlier revision of this gate would have recorded
+                # `model_optimal_presolve` for an explicitly aborted retry
+                # (PR #1740 review). `MCP-SOLVED` is the condition §6's
+                # presolve-golden adoption rule already requires, and it folds in
+                # the abort and solver-status checks a presence test cannot see.
+                retry_attributed = retry_result.get("mcp_attribution") == "MCP-SOLVED"
                 if retry_result["status"] == "success" and retry_attributed:
                     stats["presolve_retry_success"] += 1
                     # Correct the double-count from running solve twice. For a

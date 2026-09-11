@@ -112,12 +112,28 @@ def _compare_results(
     _INFEASIBLE = {4, 5}
 
     def _solve_optimal(result: dict[str, Any]) -> bool:
-        """Strict check: trust as optimal only for fully successful solves."""
+        """Strict check: trust as optimal only for fully successful solves.
+
+        ⚠ Sprint 39 P7 (PR #1740 review): "fully successful" must include
+        *whose* success it is. `solve_mcp` derives `status`/`model_status` from a
+        listing-wide scan that takes the LAST match of each pattern, and a
+        ``--nlp-presolve`` emit's listing also contains the embedded source
+        solve. So when our MCP aborts before reporting, this function would read
+        the SOURCE's status and objective and call the warm MCP optimal — a
+        false convexity verdict from a solve that never happened.
+
+        `mcp_attribution` is the audit tool's verdict for that listing; only
+        ``MCP-SOLVED`` means our emitted model produced a usable answer. Absent
+        (older result dicts) is tolerated so this stays backward-compatible.
+        """
         if result.get("status") != "success":
             return False
         if result.get("solver_status") != 1:
             return False
         if result.get("error"):
+            return False
+        attribution = result.get("mcp_attribution")
+        if attribution is not None and attribution != "MCP-SOLVED":
             return False
         return True
 

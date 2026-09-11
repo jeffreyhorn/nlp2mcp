@@ -51,16 +51,40 @@ WEAPONS_SHAPED = """
 
 #: The negative control: the same listing PLUS our MCP reporting its own status.
 #: Without this, a gate that rejects everything would pass every other test here.
+#:
+#: ⚠ `FROM LINE 240`, NOT 238. The base listing ends with
+#: `**** SOLVE from line 238 ABORTED`, and attribution is by FROM LINE — so an
+#: MCP summary claiming line 238 IS the aborted solve. The first draft used 238
+#: and the strengthened gate correctly refused it, which is the fixture being
+#: wrong rather than the gate (PR #1740 review). A negative control has to be a
+#: genuinely healthy listing or it proves nothing.
 WEAPONS_SHAPED_PLUS_OUR_MCP = WEAPONS_SHAPED + """
                S O L V E      S U M M A R Y
 
      MODEL   mcp_model           OBJECTIVE  dummy
      TYPE    MCP                 DIRECTION  MINIMIZE
-     SOLVER  PATH                FROM LINE  238
+     SOLVER  PATH                FROM LINE  240
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE                0.0000
+"""
+
+
+#: ⚠ OUR model, OUR status — and explicitly ABORTED. GAMS prints MODEL STATUS 1
+#: above the abort line, so `parse_gams_listing` reports 1/1 and a
+#: status-presence gate waves it through (PR #1740 review).
+OURS_ABORTED = """
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  1124
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+
+**** SOLVE from line 1124 ABORTED, EXECERROR = 1
 """
 
 
@@ -138,7 +162,10 @@ def _drive(monkeypatch, tmp_path, retry_listing: str):
     """
     import scripts.gamslib.run_full_test as rft
     from scripts.gamslib.test_solve import parse_gams_listing
-    from scripts.sprint_audit.check_mcp_solve_attribution import parse_solve_summaries
+    from scripts.sprint_audit.check_mcp_solve_attribution import (
+        Attribution,
+        parse_solve_summaries,
+    )
 
     # ⚠ PROJECT_ROOT is redirected so this runs WITHOUT `data/gamslib/raw/`.
     # `run_pipeline` returns at :816 when the raw source is missing, and CI does
@@ -173,10 +200,9 @@ def _drive(monkeypatch, tmp_path, retry_listing: str):
                 "outcome_category": "model_optimal",
                 "solve_time_seconds": 0.1,
                 "iterations": 1,
-                "mcp_produced_own_status": True,
+                "mcp_attribution": "MCP-SOLVED",
             }
         parsed = parse_gams_listing(retry_listing)  # the real parser
-        ours = [s for s in parse_solve_summaries(retry_listing) if s.is_emitted_mcp]
         return {
             "status": "success",
             "solver_status": parsed["solver_status"],
@@ -185,7 +211,14 @@ def _drive(monkeypatch, tmp_path, retry_listing: str):
             "outcome_category": "model_optimal",
             "solve_time_seconds": 0.1,
             "iterations": 1,
-            "mcp_produced_own_status": any(s.model_status is not None for s in ours),
+            # ⚠ PRODUCTION semantics, not a local re-derivation. An earlier
+            # version computed `any(s.model_status is not None)` here, which
+            # (a) duplicated logic the gate no longer uses and (b) could not have
+            # caught the aborted-MCP hole, because that predicate is True for an
+            # aborted solve (PR #1740 review).
+            "mcp_attribution": Attribution(
+                model_id="weapons", summaries=parse_solve_summaries(retry_listing)
+            ).verdict,
         }
 
     monkeypatch.setattr(rft, "get_solve_function", lambda: fake_solve)
@@ -261,3 +294,23 @@ def test_the_unattributed_path_undoes_the_RIGHT_counter(monkeypatch, tmp_path):
     assert stats["solve_success"] == 1
     assert stats["solve_failure"] == 0
     assert stats["solve_errors"] == [], "no cold error existed to pop"
+
+
+@pytest.mark.unit
+def test_an_ABORTED_retry_of_OUR_OWN_model_is_NOT_recorded(monkeypatch, tmp_path):
+    """⚠ The hole an earlier revision of this gate had (PR #1740 review).
+
+    Attribution SUCCEEDS here — the status genuinely is ours — so the original
+    `mcp_produced_own_status` predicate was True, `parse_gams_listing` returned
+    1/1, and the retry would have been recorded `model_optimal_presolve` for a
+    solve GAMS reported ABORTED.
+
+    A different door into the same defect as `weapons`: there the status
+    belonged to someone else; here it belongs to us and still means nothing.
+    """
+    model, stats = _drive(monkeypatch, tmp_path, OURS_ABORTED)
+
+    assert model["mcp_solve"]["outcome_category"] != "model_optimal_presolve"
+    assert model["mcp_solve"]["outcome_category"] == "model_optimal"
+    assert stats["presolve_retry_success"] == 0
+    assert stats["presolve_retry_unattributed"] == 1

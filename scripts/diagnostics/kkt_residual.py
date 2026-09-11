@@ -1039,6 +1039,14 @@ def cold_start_result(
     solved = solve_mcp(cold_path, timeout=timeout)
     obj = solved.get("objective_value")
     obj = float(obj) if isinstance(obj, (int, float)) else None
+    # ⚠ Sprint 39 P7 (PR #1740 review). A COLD listing holds only our MCP, so the
+    # embedded-only confusion cannot arise here — but an ABORTED solve still
+    # prints `MODEL STATUS 1` above its abort line, so the check below would
+    # report "optimal" for a solve GAMS refused to finish. The verdict folds that
+    # in. `None` is tolerated for backward compatibility with older results.
+    attribution = solved.get("mcp_attribution")
+    if attribution is not None and attribution != "MCP-SOLVED":
+        return ("unavailable", None) if attribution == "NO-SOLVE" else ("diverged", obj)
     if solved.get("model_status") in (1, 2):
         return "optimal", obj
     if solved.get("model_status") is None:
@@ -1055,6 +1063,15 @@ def _presolve_match_objective(presolve_path: Path, timeout: int = 120) -> float 
 
     try:
         solved = solve_mcp(presolve_path, timeout=timeout)
+        # ⚠ Sprint 39 P7 (PR #1740 review): `model_status` alone cannot say WHOSE
+        # status it is. This reads a `--nlp-presolve` listing, which also holds
+        # the embedded source solve, so an MCP that aborted before reporting
+        # would hand back the SOURCE's objective as if it were the presolve
+        # answer. Only `MCP-SOLVED` means our emitted model produced one.
+        # `None` is tolerated for backward compatibility with older results.
+        attribution = solved.get("mcp_attribution")
+        if attribution is not None and attribution != "MCP-SOLVED":
+            return None
         if solved.get("model_status") in (1, 2):
             obj = solved.get("objective_value")
             return float(obj) if isinstance(obj, (int, float)) else None

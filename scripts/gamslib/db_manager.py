@@ -248,8 +248,16 @@ def cmd_init(args: argparse.Namespace) -> int:
 
     if args.empty:
         # Create empty database
+        # ⚠ Sprint 39 P7 (PR #1740 review): this must be the CANONICAL version in
+        # `data/gamslib/schema.json`, not a historical one. There is only one
+        # schema file, so a fresh database stamped 2.2.0 would be validated
+        # against 3.0.0's rules while claiming a contract it is not being held
+        # to — and no migration script would upgrade it, since each accepts only
+        # its immediate predecessor. An EMPTY database is structurally valid
+        # under any of these versions (it has no `mcp_solve` rows to carry the
+        # renamed key), so stamping it current is safe as well as correct.
         database = {
-            "schema_version": "2.2.0",
+            "schema_version": "3.0.0",
             "created_date": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "updated_date": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "total_models": 0,
