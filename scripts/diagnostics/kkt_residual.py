@@ -1054,7 +1054,13 @@ def cold_start_result(
         # spurious cold solve, so a statusless MCP could have been reclassified
         # `case_c_objdef` on no usable result at all. Only `MCP-FAILED` -- our
         # model ran and reported an unusable answer -- is a real divergence.
-        if attribution == "MCP-FAILED":
+        # ⚠ `MCP-FAILED` is NOT a synonym for "completed with a bad status"
+        # (PR #1740 review): it also covers an explicitly ABORTED MCP, including
+        # one that printed MS-1 above its abort line. Mapping all of it to
+        # "diverged" would still hand `reclassify_objdef_case_c` an aborted run
+        # as proof of a spurious point. Only a solve that RAN TO COMPLETION and
+        # reported its own status is a real divergence.
+        if attribution == "MCP-FAILED" and solved.get("mcp_completed_own_solve"):
             return "diverged", obj
         return "unavailable", None
     if solved.get("model_status") in (1, 2):

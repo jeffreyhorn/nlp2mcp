@@ -149,15 +149,25 @@ def _compare_results(
         that never happened. The same false attribution, arriving through the
         other branch.
 
-        ⚠ Requires exactly `MCP-SOLVED` here too, NOT merely "not
-        EMBEDDED-ONLY": an aborted MCP is `MCP-FAILED`, and its 4/5 status is no
-        more usable than a borrowed one. A missing key stays permitted so older
-        result dicts keep working.
+        ⚠⚠ AND IT MUST NOT REQUIRE `MCP-SOLVED` (PR #1740 review). An earlier
+        revision did, which **rejected every genuine infeasible solve**: a
+        normally-completed MCP reporting model status 4/5 is `MCP-FAILED`, since
+        the verdict reserves `MCP-SOLVED` for a *usable* answer. That turned the
+        cold-infeasible, warm-infeasible and both-infeasible branches into
+        generic inconclusive outcomes for real solver results — the opposite of
+        the bug being fixed, and a worse one, because it silently discards
+        findings rather than inventing them.
+
+        The distinction needed here is *"did OUR model run to completion and
+        report this status"*, which is `mcp_completed_own_solve`: true for a
+        real 4/5, false for an abort with a stale status above its abort line
+        and false for a status borrowed from the embedded source. A missing key
+        stays permitted so older result dicts keep working.
         """
         if result.get("solver_status") != 1:
             return False
-        attribution = result.get("mcp_attribution")
-        return attribution is None or attribution == "MCP-SOLVED"
+        completed = result.get("mcp_completed_own_solve")
+        return completed is None or bool(completed)
 
     status_cold = cold_result.get("model_status")
     status_warm = warm_result.get("model_status")

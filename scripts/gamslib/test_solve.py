@@ -42,6 +42,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -55,7 +56,12 @@ import math
 # Sprint 39 P7 / Remedy A. Reused rather than re-implemented: the attribution
 # is POSITIONAL (a status line belongs to the nearest summary header above it),
 # and a second regex here would be a second thing to keep correct.
-from scripts.sprint_audit.check_mcp_solve_attribution import Attribution, parse_solve_summaries
+from scripts.sprint_audit.check_mcp_solve_attribution import (
+    _NORMAL_COMPLETION,
+    EMITTED_MCP_MODEL,
+    Attribution,
+    parse_solve_summaries,
+)
 
 from scripts.gamslib.error_taxonomy import (
     COMPARE_BOTH_INFEASIBLE,
@@ -948,6 +954,24 @@ def compare_solutions(
     return result
 
 
+_SOLVE_MCP_STMT = re.compile(r"^\s*solve\s+([A-Za-z_]\w*)\s+using\s+MCP\b", re.I | re.M)
+
+
+def _emitted_model_name(mcp_path: Path) -> str | None:
+    """The model name the emitted file actually solves, or ``None``.
+
+    Read from the file rather than assumed, because ``--model-name`` makes the
+    module constant ``mcp_model`` a DEFAULT and not a guarantee. Returning
+    ``None`` (unreadable / no match) leaves the constant in force, which is the
+    pre-existing behaviour.
+    """
+    try:
+        m = _SOLVE_MCP_STMT.search(mcp_path.read_text(encoding="utf-8", errors="ignore"))
+    except OSError:
+        return None
+    return m.group(1) if m else None
+
+
 def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
     """Solve an MCP model using PATH solver.
 
@@ -1098,12 +1122,40 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
         # §6's presolve-golden adoption rule already requires, and it folds in
         # the abort, abort-ambiguity and solver-status checks that a status
         # presence test cannot see.
-        attribution = Attribution(
-            model_id=mcp_path.stem,
-            summaries=parse_solve_summaries(lst_content),
-        )
+        # ⚠ The emitted model NAME is read from the file, not assumed.
+        # `SolveSummary.is_emitted_mcp` compares against the module constant
+        # `mcp_model`, which is only the CLI's DEFAULT -- `--model-name` lets a
+        # caller emit `my_model`, and every summary would then be classified
+        # EMBEDDED-ONLY, turning valid results inconclusive (PR #1740 review).
+        # Summaries naming the emitted model are relabelled to the constant so
+        # `Attribution` reasons about them as ours; the raw source's own solves
+        # keep their names and stay distinguishable.
+        emitted_name = _emitted_model_name(mcp_path)
+        summaries = parse_solve_summaries(lst_content)
+        if emitted_name and emitted_name.lower() != EMITTED_MCP_MODEL.lower():
+            summaries = [
+                replace(s, model=EMITTED_MCP_MODEL)
+                if (s.model or "").lower() == emitted_name.lower()
+                else s
+                for s in summaries
+            ]
+        attribution = Attribution(model_id=mcp_path.stem, summaries=summaries)
         mcp_attribution = attribution.verdict
         mcp_produced_own_status = attribution.mcp_produced_status
+        # ⚠ SEPARATE FROM THE VERDICT, and needed because `MCP-FAILED` covers
+        # two different things: a solve that ran to completion and reported an
+        # infeasible/unbounded status, and one that ABORTED with a stale status
+        # above the abort line. The first is a real, usable answer about the
+        # model; the second is no answer at all. Consumers that reason about
+        # infeasibility need the distinction, and the verdict alone cannot give
+        # it (PR #1740 review).
+        mcp_completed_own_solve = any(
+            s.model_status is not None
+            and not s.aborted
+            and not s.abort_ambiguous
+            and s.solver_status == _NORMAL_COMPLETION
+            for s in attribution.mcp_summaries
+        )
 
         # Extract PATH solver version from .lst file
         path_version = extract_path_version(lst_content)
@@ -1157,6 +1209,9 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
             # "is the status ours" and is True for an aborted MCP.
             "mcp_attribution": mcp_attribution,
             "mcp_produced_own_status": mcp_produced_own_status,
+            # Our MCP ran to completion and reported ITS OWN status — true for a
+            # genuine `model_status` 4/5 (infeasible), false for an abort.
+            "mcp_completed_own_solve": mcp_completed_own_solve,
         }
 
         if not is_success:

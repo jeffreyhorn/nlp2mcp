@@ -71,7 +71,7 @@ OURS_ABORTED = """
 def run_with_listing(monkeypatch):
     """Drive the real `solve_mcp` over a supplied listing, without GAMS."""
 
-    def _run(listing: str):
+    def _run(listing: str, model_name: str = "mcp_model"):
         # `solve_mcp` locates GAMS via `shutil.which` (it has no `find_gams`),
         # so stub that rather than a name the module does not export.
         monkeypatch.setattr(ts.shutil, "which", lambda _n: "/nonexistent/gams")
@@ -89,6 +89,8 @@ def run_with_listing(monkeypatch):
             return R()
 
         monkeypatch.setattr(ts.subprocess, "run", fake_subprocess_run)
+        # `solve_mcp` reads the emitted model's NAME out of this file.
+        monkeypatch.setattr(ts, "_emitted_model_name", lambda _p: model_name)
         return ts.solve_mcp(Path("weapons_mcp_presolve.gms"), timeout=5)
 
     return _run
@@ -150,3 +152,54 @@ def test_the_verdict_is_computed_HERE_and_not_by_a_caller(run_with_listing):
             "NO-SOLVE",
             "ERROR",
         }
+
+
+#: The same healthy solve, emitted under a CUSTOM model name via `--model-name`.
+OURS_SOLVED_CUSTOM_NAME = OURS_SOLVED.replace("mcp_model", "my_model")
+
+
+@pytest.mark.unit
+def test_a_CUSTOM_emitted_model_name_is_still_ours(run_with_listing):
+    """⚠ `mcp_model` is the CLI's DEFAULT, not a guarantee (PR #1740 review).
+
+    `SolveSummary.is_emitted_mcp` compares against the module constant, so
+    before the name was threaded through, `nlp2mcp --model-name my_model` made
+    every valid MCP summary `EMBEDDED-ONLY` — turning correct results
+    inconclusive and, worse, doing it silently.
+    """
+    result = run_with_listing(OURS_SOLVED_CUSTOM_NAME, model_name="my_model")
+    assert result["mcp_attribution"] == "MCP-SOLVED"
+    assert result["mcp_completed_own_solve"] is True
+
+
+@pytest.mark.unit
+def test_a_custom_name_does_NOT_swallow_the_raw_source_solve(run_with_listing):
+    """The raw source keeps its own identity — only the emitted name is mapped.
+
+    Relabelling must not be a blanket rewrite: `weapons`' embedded `war` solve
+    has to stay distinguishable, or the fix would recreate the very confusion it
+    removes.
+    """
+    listing = EMBEDDED_ONLY.replace("mcp_model", "my_model")
+    result = run_with_listing(listing, model_name="my_model")
+    assert result["mcp_attribution"] == "EMBEDDED-ONLY"
+
+
+@pytest.mark.unit
+def test_a_COMPLETED_infeasible_mcp_is_failed_but_COMPLETED(run_with_listing):
+    """⚠ The distinction the convexity infeasible path depends on.
+
+    A normally-completed MCP reporting model status 4 is `MCP-FAILED` — the
+    verdict reserves `MCP-SOLVED` for a usable answer — but it DID run and
+    report that status itself, unlike an abort.
+    """
+    infeasible = OURS_SOLVED.replace(
+        "**** MODEL STATUS      1 Optimal", "**** MODEL STATUS      4 Infeasible"
+    )
+    result = run_with_listing(infeasible)
+    assert result["mcp_attribution"] == "MCP-FAILED"
+    assert result["mcp_completed_own_solve"] is True, "it completed; it just failed"
+
+    aborted = run_with_listing(OURS_ABORTED)
+    assert aborted["mcp_attribution"] == "MCP-FAILED", "same verdict…"
+    assert aborted["mcp_completed_own_solve"] is False, "…different meaning"
