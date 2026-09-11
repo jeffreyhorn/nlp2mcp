@@ -52,6 +52,11 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 import math
 
+# Sprint 39 P7 / Remedy A. Reused rather than re-implemented: the attribution
+# is POSITIONAL (a status line belongs to the nearest summary header above it),
+# and a second regex here would be a second thing to keep correct.
+from scripts.sprint_audit.check_mcp_solve_attribution import parse_solve_summaries
+
 from scripts.gamslib.error_taxonomy import (
     COMPARE_BOTH_INFEASIBLE,
     COMPARE_MCP_FAILED,
@@ -1060,6 +1065,28 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
         lst_content = lst_path.read_text()
         parsed = parse_gams_listing(lst_content)
 
+        # Sprint 39 P7 / Remedy A: did *our* emitted MCP report a status of its
+        # own, or are we reading someone else's?
+        #
+        # ⚠ `parse_gams_listing` above takes the LAST match of each pattern
+        # across the WHOLE listing (`finditer(...)[-1]`), with no notion of which
+        # model produced it. For a `--nlp-presolve` emit the listing holds the
+        # embedded source solve AND our MCP solve, so when our MCP aborts before
+        # reporting, the source's `MODEL STATUS` is the last one present and is
+        # read back as ours. That is the `weapons` defect exactly: the retry is
+        # recorded `model_optimal_presolve` + match while our MCP never solved.
+        #
+        # ⚠ Attribution is POSITIONAL and must stay so — a status line belongs to
+        # the nearest summary header above it. A listing-wide search cannot
+        # answer the question, which is why this reuses the audit tool's parser
+        # rather than adding another regex here.
+        #
+        # ⚠ This says the status is OURS, not that the solve succeeded: an MCP
+        # returning MS-4 is attributed and still has no usable answer. Success
+        # stays `is_success` below; keep the two separate.
+        mcp_summaries = [s for s in parse_solve_summaries(lst_content) if s.is_emitted_mcp]
+        mcp_produced_own_status = any(s.model_status is not None for s in mcp_summaries)
+
         # Extract PATH solver version from .lst file
         path_version = extract_path_version(lst_content)
         gams_version = extract_gams_version(lst_content)
@@ -1103,6 +1130,9 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
             "solve_time_seconds": round(elapsed, 4),
             "iterations": parsed.get("iterations"),
             "outcome_category": outcome,
+            # Sprint 39 P7 / Remedy A. Consumed by run_full_test.py's presolve
+            # retry gate; `False` there means the recorded status is not ours.
+            "mcp_produced_own_status": mcp_produced_own_status,
         }
 
         if not is_success:

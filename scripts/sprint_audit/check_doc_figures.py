@@ -366,7 +366,7 @@ def _dangling_presolve_rows() -> int:
     return sum(
         1
         for m in rows
-        if (f := (m.get("mcp_solve") or {}).get("mcp_file_used"))
+        if (f := (m.get("mcp_solve") or {}).get("mcp_file_generated"))
         and not (PROJECT_ROOT / f).exists()
     )
 
@@ -480,21 +480,23 @@ FACTS: tuple[Fact, ...] = (
         ),
     ),
     Fact(
-        name="dangling mcp_file_used rows",
+        name="presolve rows whose generated file is absent",
         derive=_dangling_presolve_rows,
-        source="DB: presolve rows whose recorded mcp_file_used no longer exists",
+        source="DB: presolve rows whose recorded mcp_file_generated is not on disk",
         # The forward form must not cross punctuation. An earlier
         # `dangling[^0-9\n]{0,32}` scanned past the end of the clause in
         # "(… / 14 dangling), all correct — P7 must name which" and captured the
         # 7 of "P7" as the cited figure.
         patterns=(
-            # Forward: "…count of dangling `mcp_file_used` rows is **14**".
+            # Forward: "…count of dangling `mcp_file_generated` rows is **14**".
             # The window is generous but cannot cross clause punctuation.
             re.compile(rf"dangling\b[^0-9\n,)|—;.]{{0,40}}\**(?P<value>{NUM})\**"),
             # Reverse: "**14 dangling** rows". The trailing "rows" is required —
             # without it, "14 of the 48 dangling" matches the POPULATION (48)
             # rather than the count.
-            re.compile(rf"\**(?P<value>{NUM})\**\s+dangling\**\s+(?:mcp_file_used\s+)?rows?\b"),
+            re.compile(
+                rf"\**(?P<value>{NUM})\**\s+dangling\**\s+(?:mcp_file_generated\s+)?rows?\b"
+            ),
             re.compile(rf"all\s+\**(?P<value>{NUM})\**\s+(?:presolve-record\s+)?rows"),
         ),
     ),

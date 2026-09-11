@@ -150,6 +150,22 @@ ignore_missing_imports = true
 # Cover the top-level `numpy` package (where __init__.pyi lives) AND submodules.
 module = ["numpy", "numpy.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Sprint 39 P7. `jsonschema` is a GENUINELY OPTIONAL, UNDECLARED dependency —
+# every use in `scripts/` sits behind `try: from jsonschema import ...` with an
+# ImportError fallback, so the code is written to run without it. Requiring
+# `types-jsonschema` would therefore declare a stub for a package the project
+# deliberately does not depend on.
+#
+# ⚠ It became visible only in Sprint 39: `mypy src/` follows
+# `src/diagnostics/convexity_numerical.py:67` into `scripts/gamslib/test_solve.py`,
+# and P7's Remedy A added an import from there to
+# `scripts/sprint_audit/check_mcp_solve_attribution.py`, which reaches the
+# optional import. The dependency was always optional; the import graph is what
+# changed.
+module = ["jsonschema", "jsonschema.*"]
+ignore_missing_imports = true
 # Recent numpy ships stubs using PEP 695 `type X = ...` statements (3.12+ syntax).
 # mypy targets python_version 3.11 (requires-python >=3.11), so following those
 # stubs fails parsing numpy/__init__.pyi ("Type statement is only supported in

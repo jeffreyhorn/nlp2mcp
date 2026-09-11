@@ -1,5 +1,5 @@
 {
-  "schema_version": "2.2.1",
+  "schema_version": "3.0.0",
   "created_date": "2026-01-26T16:07:08Z",
   "updated_date": "2026-05-14T18:57:08.958639+00:00",
   "total_models": 219,
@@ -208,7 +208,7 @@
         "iterations": 3792,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/aircraft_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/aircraft_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "skipped",
@@ -623,7 +623,7 @@
         "iterations": 22,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/apl1p_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/apl1p_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "skipped",
@@ -697,7 +697,7 @@
         "iterations": 9,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/apl1pca_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/apl1pca_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "skipped",
@@ -804,7 +804,7 @@
         "iterations": 2554,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/bearing_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/bearing_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -1022,7 +1022,7 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/camshape_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/camshape_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -1101,7 +1101,7 @@
         "iterations": 1042,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/catmix_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/catmix_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -1186,7 +1186,7 @@
         "iterations": 500,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/cclinpts_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/cclinpts_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -1404,7 +1404,7 @@
         "iterations": 4,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/chain_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/chain_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -1738,7 +1738,7 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/china_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/china_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -1823,7 +1823,7 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/circle_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/circle_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -2001,7 +2001,7 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/cpack_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/cpack_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -2610,7 +2610,7 @@
         "iterations": 1,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/elec_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/elec_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -2762,7 +2762,7 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/etamac_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/etamac_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -3667,7 +3667,7 @@
         "iterations": 91,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/harker_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/harker_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -3746,7 +3746,7 @@
         "iterations": 12,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/hhfair_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/hhfair_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -3985,7 +3985,7 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/himmel16_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/himmel16_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -4390,7 +4390,7 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/imsl_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/imsl_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -4594,7 +4594,7 @@
         "iterations": 3,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/irscge_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/irscge_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5088,7 +5088,7 @@
         "iterations": 673,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/launch_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/launch_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5250,7 +5250,7 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/like_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/like_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5347,7 +5347,7 @@
         "iterations": 1433,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/lmp2_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/lmp2_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -5550,7 +5550,7 @@
         "iterations": 3,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/lrgcge_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/lrgcge_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5629,7 +5629,7 @@
         "iterations": 389,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/marco_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/marco_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5791,7 +5791,7 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/mathopt1_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/mathopt1_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5941,7 +5941,7 @@
         "iterations": 3,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/mathopt3_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/mathopt3_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -6020,7 +6020,7 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/mathopt4_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/mathopt4_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -6135,7 +6135,7 @@
         "iterations": 2881,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/maxmin_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/maxmin_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -6647,7 +6647,7 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/mingamma_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/mingamma_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -6928,7 +6928,7 @@
         "iterations": 3,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/moncge_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/moncge_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -7448,7 +7448,7 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/paperco_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/paperco_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -7877,7 +7877,7 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/polygon_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/polygon_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -8327,7 +8327,7 @@
         "iterations": 4,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/prodsp2_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/prodsp2_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -8561,7 +8561,7 @@
         "iterations": 17,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/ps10_s_mn_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/ps10_s_mn_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "skipped",
@@ -8873,7 +8873,7 @@
         "iterations": 2,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/ps2_f_s_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/ps2_f_s_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -8953,7 +8953,7 @@
         "iterations": 2,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/ps2_s_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/ps2_s_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -9188,7 +9188,7 @@
         "iterations": 4,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/ps3_s_gic_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/ps3_s_gic_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -9423,7 +9423,7 @@
         "iterations": 7,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/ps5_s_mn_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/ps5_s_mn_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "skipped",
@@ -9879,7 +9879,7 @@
         "iterations": 11,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/qsambal_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/qsambal_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -10334,7 +10334,7 @@
         "iterations": 1385,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/robustlp_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/robustlp_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -10481,7 +10481,7 @@
         "iterations": 11,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/sambal_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/sambal_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -10791,7 +10791,7 @@
         "iterations": 3,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/senstran_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/senstran_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "skipped",
@@ -11191,7 +11191,7 @@
         "iterations": 57,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/spatequ_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/spatequ_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -11724,7 +11724,7 @@
         "iterations": 3,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/stdcge_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/stdcge_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -11960,7 +11960,7 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/tforss_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/tforss_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -12155,7 +12155,7 @@
         "iterations": 3,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/trig_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/trig_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -12638,7 +12638,7 @@
         "iterations": 7,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/twocge_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/twocge_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -12843,59 +12843,67 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-06-20T22:55:31.766276+00:00",
+        "parse_date": "2026-09-11T15:20:31.457680+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.6109,
+        "parse_time_seconds": 20.563,
         "variables_count": 3,
         "equations_count": 5
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-06-20T22:55:39.211391+00:00",
+        "translate_date": "2026-09-11T15:20:53.476282+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 7.4398,
+        "translate_time_seconds": 21.7634,
         "output_file": "data/gamslib/mcp/weapons_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-08-13T13:40:57.109899+00:00",
+        "solve_date": "2026-09-11T15:20:55.006977+00:00",
         "solver": "PATH",
-        "solver_version": null,
+        "solver_version": "5.2.01",
         "gams_version": "54.2.1",
         "solver_status": 1,
         "solver_status_text": "Normal Completion",
-        "model_status": 2,
-        "model_status_text": "Locally Optimal",
-        "objective_value": 1735.5696,
-        "solve_time_seconds": 0.5375,
-        "iterations": 11,
-        "outcome_category": "model_optimal_presolve",
-        "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/weapons_mcp_presolve.gms"
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": 1700.397,
+        "solve_time_seconds": 1.4448,
+        "iterations": 24,
+        "outcome_category": "model_optimal"
       },
       "solution_comparison": {
-        "comparison_status": "match",
-        "comparison_date": "2026-08-13T13:40:57.110664+00:00",
+        "comparison_status": "mismatch",
+        "comparison_date": "2026-09-11T15:21:19.904178+00:00",
         "nlp_objective": 1735.5696,
-        "mcp_objective": 1735.5696,
-        "absolute_difference": 0.0,
-        "relative_difference": 0.0,
-        "objective_match": true,
+        "mcp_objective": 1700.397,
+        "absolute_difference": 35.1726000000001,
+        "relative_difference": 0.020265738694662607,
+        "objective_match": false,
         "tolerance_absolute": 1e-08,
         "tolerance_relative": 0.002,
         "nlp_solver_status": 1,
         "nlp_model_status": 2,
         "mcp_solver_status": 1,
-        "mcp_model_status": 2,
+        "mcp_model_status": 1,
         "status_match": true,
-        "comparison_result": "compare_objective_match",
-        "notes": "Match within tolerance (diff=0.00e+00, tol=3.47e+00)"
+        "comparison_result": "compare_objective_mismatch",
+        "notes": "Mismatch: diff=3.52e+01 > tolerance=3.47e+00"
       },
       "model_statistics": {
         "variables": 3,
         "equations": 5,
         "parameters": 0,
         "sets": 2
+      },
+      "convexity_numerical": {
+        "obj_cold": 1700.397,
+        "obj_warm": 1735.5696,
+        "status_cold": 1,
+        "status_warm": 2,
+        "is_nonconvex": true,
+        "abs_diff": 35.1726000000001,
+        "rel_diff": 0.020265738694662607,
+        "conclusion": "Non-convex (proven): two distinct KKT points (cold=1700.4, warm=1735.57, diff=35.1726)"
       }
     },
     {
@@ -13027,7 +13035,7 @@
         "iterations": 10,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "data/gamslib/mcp/worst_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/worst_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -13068,5 +13076,13 @@
     "to_version": "2.2.1",
     "applied_at": "2026-04-18T17:44:43Z",
     "multi_solve_excluded": 2
+  },
+  "_migration_summary_v3_0_0": {
+    "to_version": "3.0.0",
+    "renamed": {
+      "from": "mcp_file_used",
+      "to": "mcp_file_generated",
+      "rows": 48
+    }
   }
 }

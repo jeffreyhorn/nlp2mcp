@@ -933,7 +933,26 @@ def run_pipeline(
                 if stats["solve_times"] and stats["solve_times"][-1][0] == model_id:
                     stats["solve_times"].pop()
 
-                if retry_result["status"] == "success":
+                # Sprint 39 P7 / REMEDY A. A retry is recordable only when the
+                # status being recorded is OURS. `retry_result["status"]` alone
+                # is not that test: `parse_gams_listing` takes the LAST status
+                # in the listing regardless of which model produced it, and a
+                # `--nlp-presolve` listing contains the embedded source solve
+                # too. So when our MCP aborts before reporting, the source's
+                # status is read back as ours and the row records
+                # `model_optimal_presolve` + match for a solve that never
+                # happened. That is `weapons` (Sprint 38 Day 9).
+                #
+                # ⚠ Gated HERE and not at the `mcp_file_used` write below: this
+                # branch makes THREE writes (`presolve_required`,
+                # `mcp_file_used`, `outcome_category`), and gating one of them
+                # would leave the other two asserting a presolve success.
+                #
+                # ⚠ Do NOT key this on `EXECERROR` — it conflates MCP-side and
+                # NLP-side aborts, which is how weapons was first reported
+                # against the wrong half of its listing.
+                retry_attributed = retry_result.get("mcp_produced_own_status", False)
+                if retry_result["status"] == "success" and retry_attributed:
                     stats["presolve_retry_success"] += 1
                     # Correct the double-count from running solve twice. For a
                     # STATUS-5 cold (failure), the cold incremented solve_failure
@@ -951,7 +970,13 @@ def run_pipeline(
                     # database is machine-portable (the absolute PROJECT_ROOT
                     # prefix would otherwise leak the runner's home directory and
                     # break byte-identical comparison across machines).
-                    model["mcp_solve"]["mcp_file_used"] = _repo_relative_path(presolve_path)
+                    # Sprint 39 P7 / Remedy B: `mcp_file_generated`, not
+                    # `mcp_file_used`. This is the SOLE writer of the key; the
+                    # DB migration alone would be silently undone by the next
+                    # pipeline run re-introducing the old name alongside it.
+                    model["mcp_solve"]["mcp_file_generated"] = _repo_relative_path(
+                        presolve_path
+                    )
                     model["mcp_solve"]["outcome_category"] = (
                         "model_optimal_presolve"
                     )
@@ -965,14 +990,36 @@ def run_pipeline(
                             f"objective={obj_str}"
                         )
                 else:
-                    # Retry failed — restore original mcp_solve so the
-                    # database records the initial cold-start failure,
-                    # not the retry failure.
+                    # The retry produced no usable record of OUR MCP solving —
+                    # it either failed outright, or reported a status belonging
+                    # to the embedded source solve (Remedy A). Either way the
+                    # cold record is the true one, so restore it.
+                    #
+                    # ⚠ The remedy INVENTS NO CATEGORY. weapons' cold emit
+                    # solves (MS-1 @ 1700.397 vs NLP 1735.5696, a 2.03 %
+                    # divergence), so the correct record is its own cold result
+                    # — `model_optimal` + mismatch — which this branch already
+                    # restores.
                     model["mcp_solve"] = original_mcp_solve
-                    # Undo the extra failure count from the retry solve
-                    stats["solve_failure"] -= 1
-                    if stats["solve_errors"]:
-                        stats["solve_errors"].pop()
+                    # ⚠ The two arrivals here need DIFFERENT bookkeeping, because
+                    # `run_solve_stage` counted the retry by its own status.
+                    if retry_result["status"] == "success":
+                        # Unattributed: the retry was counted a success and
+                        # pushed no error, so undo exactly that. Popping
+                        # `solve_errors` here would discard the COLD error.
+                        stats["solve_success"] -= 1
+                        stats["presolve_retry_unattributed"] += 1
+                        if args.verbose:
+                            logger.info(
+                                "    [RETRY] UNATTRIBUTED: the retry reported a "
+                                "status, but not from our mcp_model — keeping the "
+                                "cold record"
+                            )
+                    else:
+                        # Undo the extra failure count from the retry solve
+                        stats["solve_failure"] -= 1
+                        if stats["solve_errors"]:
+                            stats["solve_errors"].pop()
                     if args.verbose:
                         logger.info(
                             f"    [RETRY] Still failed: "
@@ -1030,6 +1077,11 @@ def _new_stats(total: int) -> dict[str, Any]:
         # Pre-solve retry stats
         "presolve_retry_attempted": 0,
         "presolve_retry_success": 0,
+        # Sprint 39 P7 / Remedy A: retries that reported a status belonging to
+        # the embedded source solve rather than to our MCP. Counted rather than
+        # folded into failures — it is a distinct finding, and a silent zero
+        # here would hide the gate never firing.
+        "presolve_retry_unattributed": 0,
         # Compare stats
         "compare_match": 0,
         "compare_mismatch": 0,
@@ -1722,6 +1774,10 @@ def generate_summary(stats: dict[str, Any], args: argparse.Namespace) -> dict[st
                 solve_summary["presolve_retry"] = {
                     "attempted": stats["presolve_retry_attempted"],
                     "success": stats["presolve_retry_success"],
+                    # Sprint 39 P7 / Remedy A — reported so the gate's effect is
+                    # visible in the run summary rather than inferred from a gap
+                    # between `attempted` and `success`.
+                    "unattributed": stats.get("presolve_retry_unattributed", 0),
                 }
             summary["solve"] = solve_summary
 
