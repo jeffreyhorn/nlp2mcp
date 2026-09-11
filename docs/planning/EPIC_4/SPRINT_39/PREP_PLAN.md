@@ -1111,7 +1111,7 @@ The correction is also a KPI *fall*, which makes it exactly the kind of change t
 
 **No gate asserts Match monotonicity** — `check_parse_rate_regression.py` reads only parse/convert/perf from a report JSON, and `ci.yml` touches the DB solely as a cache key. **The one real interaction is `--resolve-changed`**, and it matters *inverted*: without Remedy A, a later re-solve re-records the spurious match and the checkpoint reads the severity rise 12 → 22 as `forward` — applauding the regression.
 
-**Routed to the owner:** the `mcp_file_used` replacement value (`null` vs renaming the field to `mcp_file_generated` and keeping the path) trades a clean dangling count against debugger-useful information. Flagged, not taken.
+**Routed to the owner:** the `mcp_file_used` replacement value (`null` vs renaming the field to `mcp_file_generated` and keeping the path) trades a clean dangling count against debugger-useful information. Flagged, not taken. — **✅ DECIDED 2026-09-10: rename to `mcp_file_generated`, keep the path.** ⚠ The trade as stated here is not quite the trade that resulted: keeping the path means the dangling count **does not clear** (it stays 14), it stops being a *defect*. `PRESOLVE_RECORD_REMEDY.md` §9.
 
 ### Verification
 
