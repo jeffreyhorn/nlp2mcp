@@ -522,12 +522,14 @@ typecheck / format / lint clean · `make test` **5311 passed** / 10 skipped / 1 
 ```
 [SOLVE]  SUCCESS: objective=1700.4
 [RETRY]  spurious-KKT mismatch — retrying with --nlp-presolve...
-[SOLVE]  SUCCESS: objective=1735.57
+[SOLVE]  FAILURE: path_solve_terminated
 [RETRY]  REJECTED (EMBEDDED-ONLY): the status belongs to the embedded source solve — keeping the cold record
 [COMPARE] MISMATCH: diff=3.52e+01 > tolerance=3.47e+00
+
+  Pre-solve retry: 0/1 recovered, 1 REJECTED (no usable answer from our MCP)
 ```
 
-⚠ *The first revision of this entry recorded `[RETRY] UNATTRIBUTED`, which was the message at the time and is not what the shipped code prints* — the label became verdict-keyed when review showed "unattributed" was false for an aborted own-MCP (PR #1740 review). **A pasted log is evidence only while the code that produced it is the code being shipped**, so this was re-run rather than re-worded.
+⚠ **THIS BLOCK HAS NOW GONE STALE THREE TIMES, EACH FOR A DIFFERENT REASON** — `[RETRY] UNATTRIBUTED` before the message became verdict-keyed; then `[SOLVE] SUCCESS: objective=1735.57` before `solve_mcp` began refusing to claim success for a borrowed status; and the summary line was missing before the formatter reported rejections at all. **A transcript is the most perishable evidence in a PR**: it captures one moment of one build, and *every* behavioural fix invalidates it. The rule that follows — re-capture, never re-word, and re-capture LAST, after the final behavioural change. ⚠ *The first revision of this entry recorded `[RETRY] UNATTRIBUTED`, which was the message at the time and is not what the shipped code prints* — the label became verdict-keyed when review showed "unattributed" was false for an aborted own-MCP (PR #1740 review). **A pasted log is evidence only while the code that produced it is the code being shipped**, so this was re-run rather than re-worded.
 
 ### Remedy B — the rename, and the obligations that were not optional
 

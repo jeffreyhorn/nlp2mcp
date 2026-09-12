@@ -296,3 +296,48 @@ def test_an_INDETERMINATE_verdict_does_NOT_flip_success(run_with_listing):
         "an unattributable listing must not be downgraded — otherwise a parser "
         "gap silently fails the whole corpus"
     )
+
+
+@pytest.mark.unit
+def test_a_rejected_row_does_not_keep_a_SUCCESS_category(run_with_listing):
+    """⚠ A failure row must not assert an optimal outcome (PR #1740 review).
+
+    `categorize_solve_outcome` derives from the same borrowed/stale scalars as
+    `status`, so refusing the status alone left `outcome_category:
+    "model_optimal"` on a `status: "failure"` row — which `run_solve_stage`
+    copies into `error.category`. That is schema-VALID (both are members of
+    `error_category`) and still a contradiction: no such row exists anywhere in
+    the corpus.
+
+    ⚠⚠ `path_solve_terminated` is a KPI Sprint 39 requires to stay at 0. This
+    mapping is inert today — no corpus row is attribution-rejected — so the
+    figure does not move. If it ever fires it is a model genuinely aborting that
+    was previously recorded optimal: a correction, not a regression.
+    """
+    for listing in (EMBEDDED_ONLY, OURS_ABORTED):
+        result = run_with_listing(listing)
+        assert result["status"] == "failure"
+        assert result["outcome_category"] == "path_solve_terminated", result["outcome_category"]
+
+    # The negative control: a genuine solve keeps its real category.
+    ok = run_with_listing(OURS_SOLVED)
+    assert ok["status"] == "success"
+    assert ok["outcome_category"] != "path_solve_terminated"
+
+
+@pytest.mark.unit
+def test_an_indeterminate_row_keeps_its_category(run_with_listing):
+    """The safety property again: no verdict, no re-categorisation."""
+    unattributable = """
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  240
+"""
+    result = run_with_listing(unattributable)
+    assert result["status"] == "success"
+    assert result["outcome_category"] != "path_solve_terminated"

@@ -88,6 +88,23 @@ OURS_ABORTED = """
 """
 
 
+#: ⚠ An INDETERMINATE listing: statuses parse (1/1) but belong to no summary our
+#: parser attributes, so the verdict is `MCP-NO-STATUS`/`NO-SOLVE`. This is the
+#: only shape that still reaches the rejection arm with `status == "success"`,
+#: because a contradicting verdict now downgrades the status itself.
+UNATTRIBUTABLE = """
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE             1735.5696
+
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  240
+"""
+
+
 # --------------------------------------------------------------- the primitive
 
 
@@ -297,12 +314,19 @@ def test_an_ATTRIBUTED_retry_is_still_recorded_normally(monkeypatch, tmp_path):
 def test_the_unattributed_path_undoes_the_RIGHT_counter(monkeypatch, tmp_path):
     """⚠ The two ways into the restore branch need different bookkeeping.
 
-    A failed retry increments ``solve_failure`` and pushes an error; an
-    UNATTRIBUTED retry reports success, so it incremented ``solve_success`` and
-    pushed nothing. Undoing the failure path here would double-count and — worse
-    — pop the COLD error off ``solve_errors``.
+    A failed retry increments ``solve_failure`` and pushes an error; a retry that
+    reports success incremented ``solve_success`` and pushed nothing. Undoing the
+    failure path for the second would double-count and — worse — pop the COLD
+    error off ``solve_errors``.
+
+    ⚠ USES THE INDETERMINATE FIXTURE, NOT ``WEAPONS_SHAPED`` (PR #1740 review).
+    Once `solve_mcp` began downgrading a CONTRADICTED status to ``failure``,
+    `WEAPONS_SHAPED` started arriving at the *failure* rollback — so this test
+    silently stopped exercising the ``solve_success`` branch it names, while
+    still passing. An indeterminate verdict is now the only way to reach the
+    rejection arm with a successful scalar status.
     """
-    _, stats = _drive(monkeypatch, tmp_path, WEAPONS_SHAPED)
+    _, stats = _drive(monkeypatch, tmp_path, UNATTRIBUTABLE)
 
     # cold success (+1) then the retry's success undone (-1) == one net success
     assert stats["solve_success"] == 1

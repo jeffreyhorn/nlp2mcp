@@ -1230,12 +1230,41 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
         # corpus-wide successes to failures on a parsing change alone. That risk
         # is the whole reason this was not done as a blanket `!= "MCP-SOLVED"`.
         _CONTRADICTS_SUCCESS = ("EMBEDDED-ONLY", "MCP-FAILED")
+        _attribution_rejected = (
+            solver_status == 1
+            and model_status in (1, 2)
+            and parsed.get("error_type") is None
+            and mcp_attribution in _CONTRADICTS_SUCCESS
+        )
         is_success = (
             solver_status == 1
             and model_status in (1, 2)
             and parsed.get("error_type") is None
             and mcp_attribution not in _CONTRADICTS_SUCCESS
         )
+
+        # ⚠ A row whose `status` we just refused must not keep a SUCCESS
+        # category (PR #1740 review). `categorize_solve_outcome` derives from
+        # the same borrowed/stale scalars, so an attribution-rejected solve
+        # would have been persisted as `status: "failure"` with
+        # `outcome_category: "model_optimal"` — and `run_solve_stage` copies that
+        # into `error.category`. Schema-VALID (both are members of
+        # `error_category`), but a failure row asserting an optimal outcome is a
+        # contradiction a reader has to resolve, and no such row exists in the
+        # corpus today.
+        #
+        # `path_solve_terminated` is the honest category: the solve produced no
+        # usable answer of its own, which is exactly what that value denotes.
+        #
+        # ⚠⚠ KPI INTERACTION, STATED BECAUSE IT LOOKS LIKE A REGRESSION.
+        # `path_solve_terminated` is a tracked KPI that Sprint 39 requires to
+        # MAINTAIN 0. This mapping is inert today — zero corpus rows are
+        # attribution-rejected — so the figure does not move. If it ever fires,
+        # that is a model genuinely aborting while previously being recorded as
+        # optimal: a CORRECTION surfacing a real defect, not a regression, and
+        # it must be reported with that reason in the same sentence.
+        if _attribution_rejected:
+            outcome = PATH_SOLVE_TERMINATED
 
         result: dict[str, Any] = {
             "status": "success" if is_success else "failure",
