@@ -1208,8 +1208,33 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
         model_status = parsed.get("model_status")
 
         # Determine success
+        #
+        # ⚠ Sprint 39 P7 (PR #1740 review). The three scalars above come from a
+        # listing-wide scan that takes the LAST match with no notion of which
+        # model produced it, so `status: "success"` could be reported for a
+        # listing in which our MCP aborted after printing a stale status, or
+        # never reported at all. Every consumer of `status` -- solve counts, the
+        # persisted DB record, the standalone loop -- inherited that, while only
+        # the presolve-retry branch checked the verdict separately.
+        #
+        # ⚠⚠ GATED ON POSITIVE CONTRADICTION ONLY, NOT ON `!= MCP-SOLVED`.
+        # `EMBEDDED-ONLY` means a usable status exists and is not ours;
+        # `MCP-FAILED` means our model reported and the answer is unusable
+        # (aborted, ambiguous abort, or a non-success status). Both are evidence
+        # that a "success" here is wrong.
+        #
+        # The INDETERMINATE verdicts -- `NO-SOLVE`, `MCP-NO-STATUS`, `ERROR` --
+        # are deliberately NOT included. They mean "nothing could be attributed",
+        # which is also where a summary the parser failed to recognise would
+        # land, so treating them as contradictions would flip genuine
+        # corpus-wide successes to failures on a parsing change alone. That risk
+        # is the whole reason this was not done as a blanket `!= "MCP-SOLVED"`.
+        _CONTRADICTS_SUCCESS = ("EMBEDDED-ONLY", "MCP-FAILED")
         is_success = (
-            solver_status == 1 and model_status in (1, 2) and parsed.get("error_type") is None
+            solver_status == 1
+            and model_status in (1, 2)
+            and parsed.get("error_type") is None
+            and mcp_attribution not in _CONTRADICTS_SUCCESS
         )
 
         result: dict[str, Any] = {

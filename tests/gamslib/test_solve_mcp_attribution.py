@@ -114,8 +114,13 @@ def test_an_embedded_only_listing_is_not_MCP_SOLVED(run_with_listing):
     result = run_with_listing(EMBEDDED_ONLY)
     assert result["mcp_attribution"] == "EMBEDDED-ONLY"
     assert result["mcp_produced_own_status"] is False
-    assert result["status"] == "success", "the scan is fooled — the verdict is not"
-    assert result["model_status"] == 2
+    # ⚠ The RAW SCAN is still fooled — `model_status` is the source's 2 — but
+    # `status` is no longer, because the verdict contradicts it (PR #1740
+    # review). An earlier revision asserted `status == "success"` here and
+    # called it "the scan is fooled, the verdict is not": true of the parse,
+    # and it left every consumer of `status` inheriting the false success.
+    assert result["model_status"] == 2, "the raw scan still reads the source's status"
+    assert result["status"] == "failure", "…but the public result no longer claims success"
 
 
 @pytest.mark.unit
@@ -132,6 +137,12 @@ def test_an_ABORTED_mcp_of_ours_is_not_MCP_SOLVED(run_with_listing):
     assert result["mcp_attribution"] == "MCP-FAILED", "…but the solve aborted"
     # And the distinction is not academic: the naive predicate says "record it".
     assert result["mcp_attribution"] != "MCP-SOLVED"
+    # ⚠ The PUBLIC contract too (PR #1740 review): GAMS prints MODEL STATUS 1
+    # above the abort line, so the raw scan yields 1/1 and `is_success` was true
+    # — every consumer of `status`, including the solve counts and the persisted
+    # DB record, would have booked an aborted solve as a success.
+    assert result["model_status"] == 1, "the raw scan reads the stale status"
+    assert result["status"] == "failure", "…and the public result refuses it"
 
 
 @pytest.mark.unit
@@ -247,3 +258,41 @@ def test_a_CASE_ONLY_model_name_override_is_still_ours(run_with_listing):
     listing = OURS_SOLVED.replace("mcp_model", "MCP_MODEL")
     result = run_with_listing(listing, model_name="MCP_MODEL")
     assert result["mcp_attribution"] == "MCP-SOLVED"
+
+
+@pytest.mark.unit
+def test_an_INDETERMINATE_verdict_does_NOT_flip_success(run_with_listing):
+    """⚠⚠ The safety property behind gating on positive contradiction only.
+
+    `NO-SOLVE` / `MCP-NO-STATUS` / `ERROR` mean *nothing could be attributed* —
+    and that is also where a summary the parser failed to recognise would land.
+    Treating them as contradictions would turn a parsing change into a
+    corpus-wide flip of genuine successes to failures, which is why the gate
+    lists `EMBEDDED-ONLY` and `MCP-FAILED` explicitly rather than testing
+    `!= "MCP-SOLVED"`.
+
+    ⚠ The fixture must reach the ATTRIBUTION layer to test it. A first draft
+    used a listing with no `S O L V E   S U M M A R Y` header at all, which
+    `parse_gams_listing` rejects outright — so it failed for a parse reason and
+    proved nothing about the verdict. This one has a valid summary that our
+    parser attributes to `mcp_model` but which carries NO status lines, with the
+    statuses stranded above it: global scan reads 1/1, attribution reads
+    nothing.
+    """
+    unattributable = """
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.0000
+
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  240
+"""
+    result = run_with_listing(unattributable)
+    assert result["mcp_attribution"] in {"NO-SOLVE", "MCP-NO-STATUS"}
+    assert result["status"] == "success", (
+        "an unattributable listing must not be downgraded — otherwise a parser "
+        "gap silently fails the whole corpus"
+    )

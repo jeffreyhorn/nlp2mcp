@@ -12843,22 +12843,22 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-09-12T17:03:25.989241+00:00",
+        "parse_date": "2026-09-12T18:21:04.427179+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 8.4341,
+        "parse_time_seconds": 8.2796,
         "variables_count": 3,
         "equations_count": 5
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-09-12T17:03:36.478600+00:00",
+        "translate_date": "2026-09-12T18:21:14.485781+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 10.3883,
+        "translate_time_seconds": 9.982,
         "output_file": "data/gamslib/mcp/weapons_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-09-12T17:03:39.237754+00:00",
+        "solve_date": "2026-09-12T18:21:15.134054+00:00",
         "solver": "PATH",
         "solver_version": "5.2.01",
         "gams_version": "54.2.1",
@@ -12867,13 +12867,13 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": 1700.397,
-        "solve_time_seconds": 2.7097,
+        "solve_time_seconds": 0.5991,
         "iterations": 24,
         "outcome_category": "model_optimal"
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
-        "comparison_date": "2026-09-12T17:03:51.402445+00:00",
+        "comparison_date": "2026-09-12T18:21:26.018907+00:00",
         "nlp_objective": 1735.5696,
         "mcp_objective": 1700.397,
         "absolute_difference": 35.1726000000001,

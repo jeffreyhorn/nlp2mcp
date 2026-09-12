@@ -1017,11 +1017,32 @@ def run_pipeline(
                     model["mcp_solve"] = original_mcp_solve
                     # ⚠ The two arrivals here need DIFFERENT bookkeeping, because
                     # `run_solve_stage` counted the retry by its own status.
-                    if retry_result["status"] == "success":
+                    # ⚠ Classify by VERDICT, not by status (PR #1740 review).
+                    # `solve_mcp` now refuses to report success when the verdict
+                    # contradicts it, so an EMBEDDED-ONLY retry arrives here as
+                    # a *failure* and is indistinguishable from a genuine one by
+                    # status alone. Without this the rejection would be logged
+                    # "Still failed" and never counted — the attribution finding
+                    # would vanish from the summary the previous round made it
+                    # visible in.
+                    _verdict = retry_result.get("mcp_attribution")
+                    _rejected_on_attribution = _verdict in ("EMBEDDED-ONLY", "MCP-FAILED")
+                    if _rejected_on_attribution or retry_result["status"] == "success":
                         # REJECTED: the retry was counted a success and pushed
                         # no error, so undo exactly that. Popping
                         # `solve_errors` here would discard the COLD error.
-                        stats["solve_success"] -= 1
+                        # ⚠ Undo whichever counter `run_solve_stage` moved. It
+                        # counts by the retry's OWN status, so an
+                        # attribution-rejected retry now lands in
+                        # `solve_failure` (with an error pushed) while a
+                        # status-success/indeterminate one lands in
+                        # `solve_success` (with none).
+                        if retry_result["status"] == "success":
+                            stats["solve_success"] -= 1
+                        else:
+                            stats["solve_failure"] -= 1
+                            if stats["solve_errors"]:
+                                stats["solve_errors"].pop()
                         stats["presolve_retry_rejected"] += 1
                         if args.verbose:
                             # ⚠ Message keyed on the VERDICT (PR #1740 review).
@@ -1029,7 +1050,6 @@ def run_pipeline(
                             # `MCP-FAILED`, where the status IS ours and the
                             # solve aborted — two different findings that must
                             # not be reported as one.
-                            _verdict = retry_result.get("mcp_attribution")
                             _why = (
                                 "the status belongs to the embedded source solve"
                                 if _verdict == "EMBEDDED-ONLY"
@@ -1936,7 +1956,10 @@ def print_summary(stats: dict[str, Any], args: argparse.Namespace) -> None:
             # summary that does report it.
             line = f"  Pre-solve retry: {pr['success']}/{attempted} recovered"
             if rejected:
-                line += f", {rejected} REJECTED (retry solved, but not our MCP)"
+                # ⚠ Wording covers BOTH rejection verdicts. "retry solved, but
+                # not our MCP" fits EMBEDDED-ONLY and misdescribes MCP-FAILED,
+                # where the solve is ours and aborted.
+                line += f", {rejected} REJECTED (no usable answer from our MCP)"
             if failed > 0:
                 line += f", {failed} failed"
             print(line)

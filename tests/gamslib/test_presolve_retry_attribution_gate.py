@@ -203,8 +203,24 @@ def _drive(monkeypatch, tmp_path, retry_listing: str):
                 "mcp_attribution": "MCP-SOLVED",
             }
         parsed = parse_gams_listing(retry_listing)  # the real parser
+        _verdict = Attribution(
+            model_id="weapons", summaries=parse_solve_summaries(retry_listing)
+        ).verdict
+        # ⚠ Mirror production's `is_success`, which now refuses to claim success
+        # when the verdict contradicts it. Leaving this hardcoded "success" made
+        # the fake diverge from `solve_mcp` and the tests exercise a path that no
+        # longer exists (PR #1740 review).
+        _status = (
+            "success"
+            if (
+                parsed["solver_status"] == 1
+                and parsed["model_status"] in (1, 2)
+                and _verdict not in ("EMBEDDED-ONLY", "MCP-FAILED")
+            )
+            else "failure"
+        )
         return {
-            "status": "success",
+            "status": _status,
             "solver_status": parsed["solver_status"],
             "model_status": parsed["model_status"],
             "objective_value": parsed["objective_value"],
@@ -216,9 +232,7 @@ def _drive(monkeypatch, tmp_path, retry_listing: str):
             # (a) duplicated logic the gate no longer uses and (b) could not have
             # caught the aborted-MCP hole, because that predicate is True for an
             # aborted solve (PR #1740 review).
-            "mcp_attribution": Attribution(
-                model_id="weapons", summaries=parse_solve_summaries(retry_listing)
-            ).verdict,
+            "mcp_attribution": _verdict,
         }
 
     monkeypatch.setattr(rft, "get_solve_function", lambda: fake_solve)
@@ -372,5 +386,5 @@ def test_the_summary_distinguishes_rejected_from_FAILED(capsys):
     print_summary(stats, _args())
     out = capsys.readouterr().out
     assert "1/3 recovered" in out
-    assert "1 REJECTED" in out
+    assert "1 REJECTED (no usable answer from our MCP)" in out
     assert "1 failed" in out
