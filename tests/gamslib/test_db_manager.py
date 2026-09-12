@@ -670,6 +670,16 @@ class TestCmdInitStampsTheCanonicalVersion:
         monkeypatch.setattr(
             mc, "migrate_catalog", lambda _c, _d: {"schema_version": "2.0.0", "models": []}
         )
+        # ⚠ Stub the validation step, which is NOT this test's subject and is
+        # environment-dependent: `validate_database` FAILS CLOSED when
+        # `jsonschema` is absent, returning a synthetic
+        # `{"path": "(library)", "message": "jsonschema not installed"}`. That
+        # library is deliberately undeclared, so this path returns 1 on any
+        # machine without it — which is exactly what happened in CI while the
+        # test passed locally (PR #1740 review). Stubbing keeps the assertion on
+        # the version stamp instead of on the runner's site-packages.
+        monkeypatch.setattr(dbm, "validate_database", lambda _d, _s: [])
+        monkeypatch.setattr(dbm, "load_schema", lambda: {})
 
         rc = dbm.cmd_init(argparse.Namespace(force=False, empty=False, dry_run=False))
         assert rc == 0
