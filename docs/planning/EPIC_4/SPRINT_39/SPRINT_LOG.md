@@ -507,7 +507,9 @@ typecheck / format / lint clean · `make test` **5311 passed** / 10 skipped / 1 
 
 ### Remedy A — the gate is on the BRANCH, not on one write
 
-⚠ **The plan's correction was right and the merged §9 obligation 5 was half of a truth.** `:954` is the sole writer *of the key*, but the branch at **`:936`** makes **three** writes — `presolve_required`, the file path, `outcome_category` — so gating the path write alone would have left the other two asserting a presolve success.
+⚠ **The plan's correction was right and the merged §9 obligation 5 was half of a truth.** The `mcp_file_generated` assignment is the sole writer *of the key*, but the branch it sits in — `if retry_result["status"] == "success" and retry_attributed:` — makes **three** writes: `presolve_required`, the file path, `outcome_category`. Gating the path write alone would have left the other two asserting a presolve success.
+
+⚠ *Referenced by symbol, not line number.* The plan cited `:936`/`:954` and this log repeated them; both were stale within the same PR, because the review rounds that hardened the gate inserted ~30 lines of comment above them (PR #1740 review). **A line number in a doc is a figure that ages out faster than any other** — it can be invalidated by an edit that changes no behaviour at all.
 
 **The defect, stated mechanically:** `parse_gams_listing` takes the **last** match of each pattern across the **whole** listing (`finditer(...)[-1]`), with no notion of which model produced it. A `--nlp-presolve` listing holds the embedded source solve *and* ours, so when our MCP aborts before reporting, the source's status is the last one present and is read back as ours.
 
@@ -515,7 +517,17 @@ typecheck / format / lint clean · `make test` **5311 passed** / 10 skipped / 1 
 
 ⚠ **The two arrivals at the restore branch need different bookkeeping.** A *failed* retry incremented `solve_failure` and pushed an error; an *unattributed* retry reported success, so it incremented `solve_success` and pushed nothing. Undoing the failure path for both would have popped the **cold** error off `solve_errors`. Pinned by a test.
 
-**It fired live.** `weapons` re-solved: retry reported success at 1735.57, `[RETRY] UNATTRIBUTED`, cold record kept, COMPARE → MISMATCH.
+**It fired live**, re-captured from the shipped code rather than quoted from the first run:
+
+```
+[SOLVE]  SUCCESS: objective=1700.4
+[RETRY]  spurious-KKT mismatch — retrying with --nlp-presolve...
+[SOLVE]  SUCCESS: objective=1735.57
+[RETRY]  REJECTED (EMBEDDED-ONLY): the status belongs to the embedded source solve — keeping the cold record
+[COMPARE] MISMATCH: diff=3.52e+01 > tolerance=3.47e+00
+```
+
+⚠ *The first revision of this entry recorded `[RETRY] UNATTRIBUTED`, which was the message at the time and is not what the shipped code prints* — the label became verdict-keyed when review showed "unattributed" was false for an aborted own-MCP (PR #1740 review). **A pasted log is evidence only while the code that produced it is the code being shipped**, so this was re-run rather than re-worded.
 
 ### Remedy B — the rename, and the obligations that were not optional
 

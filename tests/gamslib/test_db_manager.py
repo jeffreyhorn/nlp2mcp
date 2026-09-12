@@ -607,3 +607,70 @@ class TestValidateModelEntry:
         }
         errors = validate_model_entry(invalid_model, sample_schema)
         assert len(errors) > 0
+
+
+class TestCmdInitStampsTheCanonicalVersion:
+    """Sprint 39 P7 — a freshly initialized database must claim the CURRENT schema.
+
+    ⚠ These exist because neither `cmd_init` path was exercised (PR #1740
+    review): the suite covered helpers and validation, so both hard-coded
+    versions could have regressed silently. There is only one `schema.json`, so
+    a database stamped with a historical version is validated against rules it
+    does not claim to follow — and would need the whole migration chain run by
+    hand before any current tool accepted it.
+    """
+
+    @staticmethod
+    def _canonical() -> str:
+        """Read from the schema, never hard-coded — that is the defect's shape."""
+        import re
+
+        desc = json.loads((PROJECT_ROOT / "data" / "gamslib" / "schema.json").read_text())[
+            "description"
+        ]
+        m = re.search(r"\(v(\d+\.\d+\.\d+)\)", desc)
+        assert m, f"schema description carries no (vX.Y.Z): {desc!r}"
+        return m.group(1)
+
+    def test_empty_init_stamps_the_canonical_version(self, tmp_path, monkeypatch):
+        import argparse
+
+        from scripts.gamslib import db_manager as dbm
+
+        db = tmp_path / "gamslib_status.json"
+        monkeypatch.setattr(dbm, "DATABASE_PATH", db)
+        monkeypatch.setattr(dbm, "save_database", lambda d: db.write_text(json.dumps(d)))
+
+        rc = dbm.cmd_init(argparse.Namespace(force=False, empty=True, dry_run=False))
+        assert rc == 0
+        assert json.loads(db.read_text())["schema_version"] == self._canonical()
+
+    def test_catalog_init_stamps_the_canonical_version(self, tmp_path, monkeypatch):
+        """⚠ The path that actually runs for a real `init`.
+
+        `migrate_catalog` stamps `2.0.0` — correct as the migration chain's entry
+        point, wrong for a database being created now. Fixing only `--empty`
+        left this one, which is the common case.
+        """
+        import argparse
+
+        from scripts.gamslib import db_manager as dbm
+
+        db = tmp_path / "gamslib_status.json"
+        catalog = tmp_path / "catalog.json"
+        catalog.write_text("{}")
+        monkeypatch.setattr(dbm, "DATABASE_PATH", db)
+        monkeypatch.setattr(dbm, "CATALOG_PATH", catalog)
+        monkeypatch.setattr(dbm, "save_database", lambda d: db.write_text(json.dumps(d)))
+
+        import scripts.gamslib.migrate_catalog as mc
+
+        monkeypatch.setattr(mc, "load_catalog", lambda _p: {})
+        # The historical stamp this path must override.
+        monkeypatch.setattr(
+            mc, "migrate_catalog", lambda _c, _d: {"schema_version": "2.0.0", "models": []}
+        )
+
+        rc = dbm.cmd_init(argparse.Namespace(force=False, empty=False, dry_run=False))
+        assert rc == 0
+        assert json.loads(db.read_text())["schema_version"] == self._canonical()

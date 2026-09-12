@@ -1130,9 +1130,16 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
         # Summaries naming the emitted model are relabelled to the constant so
         # `Attribution` reasons about them as ours; the raw source's own solves
         # keep their names and stay distinguishable.
+        # ⚠ RELABEL WHENEVER THE NAME IS KNOWN, including a case-only override
+        # (PR #1740 review). An earlier revision skipped relabelling when the
+        # names matched case-INSENSITIVELY -- but `is_emitted_mcp` compares
+        # case-SENSITIVELY, so `--model-name MCP_MODEL` left the summary named
+        # `MCP_MODEL`, which then failed `== "mcp_model"` and was classified
+        # EMBEDDED-ONLY. Guarding on a looser comparison than the consumer uses
+        # is the hole: the guard must be at least as strict as what it protects.
         emitted_name = _emitted_model_name(mcp_path)
         summaries = parse_solve_summaries(lst_content)
-        if emitted_name and emitted_name.lower() != EMITTED_MCP_MODEL.lower():
+        if emitted_name:
             summaries = [
                 replace(s, model=EMITTED_MCP_MODEL)
                 if (s.model or "").lower() == emitted_name.lower()

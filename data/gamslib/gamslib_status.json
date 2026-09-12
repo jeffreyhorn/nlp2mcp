@@ -226,7 +226,7 @@
         "mcp_model_status": 1,
         "status_match": null,
         "comparison_result": "compare_multi_solve_skip",
-        "notes": "Multi-solve model: NLP reference captures a different solve iteration than the MCP formulation \u2014 objective comparison not meaningful"
+        "notes": "Multi-solve model: NLP reference captures a different solve iteration than the MCP formulation — objective comparison not meaningful"
       },
       "multi_solve": true
     },
@@ -641,7 +641,7 @@
         "mcp_model_status": 1,
         "status_match": null,
         "comparison_result": "compare_multi_solve_skip",
-        "notes": "Multi-solve model: NLP reference captures a different solve iteration than the MCP formulation \u2014 objective comparison not meaningful"
+        "notes": "Multi-solve model: NLP reference captures a different solve iteration than the MCP formulation — objective comparison not meaningful"
       },
       "multi_solve": true
     },
@@ -715,7 +715,7 @@
         "mcp_model_status": 1,
         "status_match": null,
         "comparison_result": "compare_multi_solve_skip",
-        "notes": "Multi-solve model: NLP reference captures a different solve iteration than the MCP formulation \u2014 objective comparison not meaningful"
+        "notes": "Multi-solve model: NLP reference captures a different solve iteration than the MCP formulation — objective comparison not meaningful"
       },
       "model_statistics": {
         "variables": 4,
@@ -2071,7 +2071,7 @@
         "translate_time_seconds": 4.6585,
         "error": {
           "category": "internal_error",
-          "message": "Error: Model is a multi-solve driver script and is out of scope for nlp2mcp (NLP\u2192MCP via KKT). Declared models: ['master', 'mcf', 'pricing']; distinct solve targets: ['master', 'mcf', 'pricing']; equation-marginal feedback to a subsequent solve: mdefbal.m.\n\nSuggestion: nlp2mcp transforms a single NLP's KKT conditions into an MCP. Driver scripts (Dantzig\u2013Wolfe, column generation, Benders', primal-dual alternation) combine multiple solves with dual feedback; their converged objective cannot be rec"
+          "message": "Error: Model is a multi-solve driver script and is out of scope for nlp2mcp (NLP→MCP via KKT). Declared models: ['master', 'mcf', 'pricing']; distinct solve targets: ['master', 'mcf', 'pricing']; equation-marginal feedback to a subsequent solve: mdefbal.m.\n\nSuggestion: nlp2mcp transforms a single NLP's KKT conditions into an MCP. Driver scripts (Dantzig–Wolfe, column generation, Benders', primal-dual alternation) combine multiple solves with dual feedback; their converged objective cannot be rec"
         }
       },
       "mcp_solve": {
@@ -2133,7 +2133,7 @@
         "translate_time_seconds": 2.8816,
         "error": {
           "category": "internal_error",
-          "message": "Error: Model is a multi-solve driver script and is out of scope for nlp2mcp (NLP\u2192MCP via KKT). Declared models: ['master', 'sub']; distinct solve targets: ['master', 'sub']; equation-marginal feedback to a subsequent solve: tbal.m, convex.m.\n\nSuggestion: nlp2mcp transforms a single NLP's KKT conditions into an MCP. Driver scripts (Dantzig\u2013Wolfe, column generation, Benders', primal-dual alternation) combine multiple solves with dual feedback; their converged objective cannot be recovered from any"
+          "message": "Error: Model is a multi-solve driver script and is out of scope for nlp2mcp (NLP→MCP via KKT). Declared models: ['master', 'sub']; distinct solve targets: ['master', 'sub']; equation-marginal feedback to a subsequent solve: tbal.m, convex.m.\n\nSuggestion: nlp2mcp transforms a single NLP's KKT conditions into an MCP. Driver scripts (Dantzig–Wolfe, column generation, Benders', primal-dual alternation) combine multiple solves with dual feedback; their converged objective cannot be recovered from any"
         }
       },
       "mcp_solve": {
@@ -8579,7 +8579,7 @@
         "mcp_model_status": 1,
         "status_match": null,
         "comparison_result": "compare_multi_solve_skip",
-        "notes": "Multi-solve model: NLP reference captures a different solve iteration than the MCP formulation \u2014 objective comparison not meaningful"
+        "notes": "Multi-solve model: NLP reference captures a different solve iteration than the MCP formulation — objective comparison not meaningful"
       },
       "model_statistics": {
         "variables": 4,
@@ -9441,7 +9441,7 @@
         "mcp_model_status": 1,
         "status_match": null,
         "comparison_result": "compare_multi_solve_skip",
-        "notes": "Multi-solve model: NLP reference captures a different solve iteration than the MCP formulation \u2014 objective comparison not meaningful"
+        "notes": "Multi-solve model: NLP reference captures a different solve iteration than the MCP formulation — objective comparison not meaningful"
       },
       "model_statistics": {
         "variables": 4,
@@ -10622,7 +10622,7 @@
         "translate_time_seconds": 26.3607,
         "error": {
           "category": "internal_error",
-          "message": "Error: Model is a multi-solve driver script and is out of scope for nlp2mcp (NLP\u2192MCP via KKT). Declared models: ['sarasdual', 'sarasprimal']; distinct solve targets: ['sarasdual', 'sarasprimal']; equation-marginal feedback to a subsequent solve: calibuc.m, calibul.m.\n\nSuggestion: nlp2mcp transforms a single NLP's KKT conditions into an MCP. Driver scripts (Dantzig\u2013Wolfe, column generation, Benders', primal-dual alternation) combine multiple solves with dual feedback; their converged objective ca"
+          "message": "Error: Model is a multi-solve driver script and is out of scope for nlp2mcp (NLP→MCP via KKT). Declared models: ['sarasdual', 'sarasprimal']; distinct solve targets: ['sarasdual', 'sarasprimal']; equation-marginal feedback to a subsequent solve: calibuc.m, calibul.m.\n\nSuggestion: nlp2mcp transforms a single NLP's KKT conditions into an MCP. Driver scripts (Dantzig–Wolfe, column generation, Benders', primal-dual alternation) combine multiple solves with dual feedback; their converged objective ca"
         }
       },
       "mcp_solve": {
@@ -10809,7 +10809,7 @@
         "mcp_model_status": 1,
         "status_match": null,
         "comparison_result": "compare_multi_solve_skip",
-        "notes": "Multi-solve model: NLP reference captures a different solve iteration than the MCP formulation \u2014 objective comparison not meaningful"
+        "notes": "Multi-solve model: NLP reference captures a different solve iteration than the MCP formulation — objective comparison not meaningful"
       },
       "model_statistics": {
         "variables": 2,
@@ -12843,22 +12843,22 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-09-11T16:46:09.351097+00:00",
+        "parse_date": "2026-09-12T00:29:30.016095+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 6.2312,
+        "parse_time_seconds": 6.0864,
         "variables_count": 3,
         "equations_count": 5
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-09-11T16:46:16.949936+00:00",
+        "translate_date": "2026-09-12T00:29:37.447878+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 7.5429,
+        "translate_time_seconds": 7.3705,
         "output_file": "data/gamslib/mcp/weapons_mcp.gms"
       },
       "mcp_solve": {
         "status": "success",
-        "solve_date": "2026-09-11T16:46:18.858532+00:00",
+        "solve_date": "2026-09-12T00:29:37.927882+00:00",
         "solver": "PATH",
         "solver_version": "5.2.01",
         "gams_version": "54.2.1",
@@ -12867,13 +12867,13 @@
         "model_status": 1,
         "model_status_text": "Optimal",
         "objective_value": 1700.397,
-        "solve_time_seconds": 1.8499,
+        "solve_time_seconds": 0.4452,
         "iterations": 24,
         "outcome_category": "model_optimal"
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
-        "comparison_date": "2026-09-11T16:46:27.401121+00:00",
+        "comparison_date": "2026-09-12T00:29:46.138133+00:00",
         "nlp_objective": 1735.5696,
         "mcp_objective": 1700.397,
         "absolute_difference": 35.1726000000001,
@@ -12894,16 +12894,6 @@
         "equations": 5,
         "parameters": 0,
         "sets": 2
-      },
-      "convexity_numerical": {
-        "obj_cold": 1700.397,
-        "obj_warm": 1735.5696,
-        "status_cold": 1,
-        "status_warm": 2,
-        "is_nonconvex": true,
-        "abs_diff": 35.1726000000001,
-        "rel_diff": 0.020265738694662607,
-        "conclusion": "Non-convex (proven): two distinct KKT points (cold=1700.4, warm=1735.57, diff=35.1726)"
       }
     },
     {

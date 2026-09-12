@@ -203,3 +203,47 @@ def test_a_COMPLETED_infeasible_mcp_is_failed_but_COMPLETED(run_with_listing):
     aborted = run_with_listing(OURS_ABORTED)
     assert aborted["mcp_attribution"] == "MCP-FAILED", "same verdict…"
     assert aborted["mcp_completed_own_solve"] is False, "…different meaning"
+
+
+@pytest.mark.unit
+def test_the_emitted_name_parser_reads_a_REAL_file(tmp_path):
+    """⚠ The custom-name tests above STUB `_emitted_model_name` (PR #1740 review).
+
+    That makes them tests of the relabelling, not of the parsing — they would
+    pass even if `_SOLVE_MCP_STMT` could not read a `Solve ... using MCP;`
+    statement at all. This exercises the helper against real file content.
+    """
+    f = tmp_path / "x_mcp.gms"
+    f.write_text(
+        "Variables x;\nEquations e;\n\nModel my_model / all /;\nSolve my_model using MCP;\n"
+    )
+    assert ts._emitted_model_name(f) == "my_model"
+
+    # Case is preserved as written — the relabelling is what normalises it.
+    f.write_text("Solve MCP_MODEL using MCP;\n")
+    assert ts._emitted_model_name(f) == "MCP_MODEL"
+
+    # Real emitted goldens parse.
+    golden = Path("data/gamslib/mcp/aircraft_mcp.gms")
+    if golden.exists():
+        assert ts._emitted_model_name(golden) == "mcp_model"
+
+    # Unreadable or unmatched leaves the constant in force (previous behaviour).
+    assert ts._emitted_model_name(tmp_path / "absent.gms") is None
+    f.write_text("* no solve statement here\n")
+    assert ts._emitted_model_name(f) is None
+
+
+@pytest.mark.unit
+def test_a_CASE_ONLY_model_name_override_is_still_ours(run_with_listing):
+    """⚠ The guard must be at least as strict as the consumer it protects.
+
+    `--model-name MCP_MODEL` differs from `mcp_model` only in case. An earlier
+    revision skipped relabelling when the names matched case-INSENSITIVELY,
+    while `is_emitted_mcp` compares case-SENSITIVELY — so the summary kept
+    `MCP_MODEL`, failed `== "mcp_model"`, and a healthy solve was reported
+    EMBEDDED-ONLY.
+    """
+    listing = OURS_SOLVED.replace("mcp_model", "MCP_MODEL")
+    result = run_with_listing(listing, model_name="MCP_MODEL")
+    assert result["mcp_attribution"] == "MCP-SOLVED"
