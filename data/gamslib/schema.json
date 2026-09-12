@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/jeffreyhorn/nlp2mcp/data/gamslib/schema.json",
   "title": "GAMSLIB Model Status Database",
-  "description": "Schema for tracking GAMSLIB model status through the nlp2mcp pipeline (v2.2.1)",
+  "description": "Schema for tracking GAMSLIB model status through the nlp2mcp pipeline (v3.0.0)",
   "type": "object",
   "required": ["schema_version", "models"],
   "additionalProperties": false,
@@ -47,7 +47,12 @@
       "type": "object",
       "description": "Bookkeeping block written by migrate_schema_v2.2.1.py (multi-solve-driver exclusion pass). Informational only; not consumed by the pipeline.",
       "additionalProperties": true
-    }
+    },
+      "_migration_summary_v3_0_0": {
+        "type": "object",
+        "description": "Bookkeeping block written by migrate_schema_v3.0.0.py (the mcp_file_used -> mcp_file_generated rename). Informational only.",
+        "additionalProperties": true
+      }
   },
   "definitions": {
     "model_entry": {
@@ -516,9 +521,9 @@
           ],
           "description": "Number of solver iterations (null if not available)"
         },
-        "mcp_file_used": {
+        "mcp_file_generated": {
           "type": "string",
-          "description": "Relative path to the MCP file that was solved"
+          "description": "Relative path to the MCP file that was GENERATED for this solve. Sprint 39 P7: renamed from mcp_file_used, and 'generated' rather than 'solved' or 'used' because that is the only thing the writer observes. The artifact is a working file and may be cleaned up afterwards, so a path that no longer exists is the expected steady state, not an anomaly."
         },
         "outcome_category": {
           "$ref": "#/definitions/solve_outcome_category",

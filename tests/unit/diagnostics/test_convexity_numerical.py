@@ -231,3 +231,74 @@ class TestConvexityResultDataclass:
         assert r.is_nonconvex is True
         assert r.obj_cold == 1.0
         assert r.conclusion == "test"
+
+
+class TestAttributionGates:
+    """Sprint 39 P7 — a borrowed or aborted status must not become a verdict.
+
+    ⚠ These exist because the two attribution gates were UNTESTED (PR #1740
+    review): every fixture above omits `mcp_attribution`, so they exercise only
+    the backward-compatible `None` path. Removing either gate would have left
+    the suite green while reinstating the false result it was added to stop.
+    """
+
+    @staticmethod
+    def _attributed(base: dict, verdict: str, completed: bool) -> dict:
+        return {**base, "mcp_attribution": verdict, "mcp_completed_own_solve": completed}
+
+    def test_an_EMBEDDED_ONLY_optimal_is_not_treated_as_optimal(self):
+        """The `weapons` shape: the status is the source's, not ours.
+
+        Without the gate both sides read as optimal at differing objectives and
+        `_compare_results` would report **proven non-convex** — a strong claim
+        from a solve that never happened.
+        """
+        cold = _ok(1, 950.913)
+        warm = self._attributed(_ok(1, 1075.547), "EMBEDDED-ONLY", False)
+        result = _compare_results(cold, warm)
+        assert not result.is_nonconvex, "a borrowed status cannot prove non-convexity"
+        assert "Non-convex" not in result.conclusion
+
+    def test_an_ABORTED_own_mcp_is_not_treated_as_optimal(self):
+        """`MCP-FAILED` with a stale MS-1 above its abort line."""
+        cold = _ok(1, 950.913)
+        warm = self._attributed(_ok(1, 1075.547), "MCP-FAILED", False)
+        result = _compare_results(cold, warm)
+        assert not result.is_nonconvex
+
+    def test_an_EMBEDDED_ONLY_infeasible_is_not_treated_as_infeasible(self):
+        """⚠ The infeasible path needs its own gate.
+
+        The source reports infeasible, our MCP reports nothing. Without the
+        guard this is read as the warm MCP being infeasible.
+        """
+        cold = self._attributed(_ok(5), "EMBEDDED-ONLY", False)
+        warm = self._attributed(_ok(5), "EMBEDDED-ONLY", False)
+        result = _compare_results(cold, warm)
+        assert not result.is_nonconvex
+        assert "infeasible" not in result.conclusion.lower(), result.conclusion
+
+    def test_a_GENUINELY_infeasible_mcp_is_STILL_reported(self):
+        """⚠⚠ THE REGRESSION GUARD, and the reason the gate is not MCP-SOLVED.
+
+        A normally-completed MCP reporting model status 4/5 is `MCP-FAILED` —
+        the verdict reserves `MCP-SOLVED` for a *usable* answer. An earlier
+        revision required `MCP-SOLVED` on this path and so rejected **every real
+        infeasible solve**, collapsing three branches into generic inconclusive
+        outcomes. The signal here is `mcp_completed_own_solve`: our model ran and
+        reported this status itself.
+        """
+        cold = self._attributed(_ok(5), "MCP-FAILED", True)
+        warm = self._attributed(_ok(5), "MCP-FAILED", True)
+        result = _compare_results(cold, warm)
+        assert "infeasible" in result.conclusion.lower(), result.conclusion
+
+    def test_results_without_the_new_fields_are_unchanged(self):
+        """Backward compatibility: older result dicts keep their behaviour."""
+        assert (
+            _compare_results(_ok(1, 1.0), _ok(1, 1.0)).conclusion
+            == _compare_results(
+                self._attributed(_ok(1, 1.0), "MCP-SOLVED", True),
+                self._attributed(_ok(1, 1.0), "MCP-SOLVED", True),
+            ).conclusion
+        )

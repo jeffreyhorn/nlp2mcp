@@ -54,7 +54,12 @@ finally:
 #: under test, and the test would then pass against a broken derivation.
 TRUTHS: dict[str, float | int] = {
     "Solve": 111,
-    "Match": 96,
+    # Sprint 39 P7 corrected this 96 -> 95 (the weapons spurious presolve match).
+    # ⚠ These fixtures are SYNTHETIC and self-consistent; no test asserts they
+    # equal the live DB, so nothing broke when the live figure moved. Updated
+    # anyway: leaving 96 pinned, in the change that establishes 96 was wrong,
+    # blesses the corrected-away value for the next reader (PR #1740 review).
+    "Match": 95,
     "Translate": 135,
     "genuine floor": 73,
     "path_solve_license cohort": 11,
@@ -62,7 +67,11 @@ TRUTHS: dict[str, float | int] = {
     "leak-gate in-scope goldens": 186,
     "current-sprint unknowns": 30,
     "current-sprint research hours": 40.0,
-    "dangling mcp_file_used rows": 14,
+    # ⚠ 13, not 14. 14 is the RENAME-ONLY control; the committed DB also has
+    # Remedy A applied, which reverts `weapons` to its cold golden so its row
+    # stops dangling. Pinning 14 here blessed a state this PR does not ship
+    # (PR #1740 review). See PRESOLVE_RECORD_REMEDY.md §9 obligation 2.
+    "presolve rows whose generated file is absent": 13,
     "Task-2 figures reproduced": 13,
 }
 
@@ -132,15 +141,26 @@ def test_catches_the_figures_that_actually_shipped_wrong(line: str, fact: str) -
             id="thirteen-of-fourteen",
         ),
         pytest.param(
-            "Solve **111** · Match **96** · Translate **135** · all-219 Match **99**",
+            "Solve **111** · Match **95** · Translate **135** · all-219 Match **98**",
             id="current-kpi-block",
+        ),
+        pytest.param(
+            # ⚠ WITHOUT `all-219`, deliberately. The vector above mentions it,
+            # and `all-219` is a `skip_if` on the Match fact — so that whole line
+            # is skipped for Match and a WRONG value there fires nothing.
+            # Measured: `Match **96**` against a pinned 95 yields 0 findings on
+            # an all-219 line. Updating that vector to 95 was therefore
+            # cosmetic; THIS is the vector that pins the corrected figure
+            # (PR #1740 review).
+            "Solve **111** · Match **95** · Translate **135**",
+            id="current-kpi-block-match-pinned",
         ),
         pytest.param(
             "leak gate clean at **186** in-scope / **7** allowlisted",
             id="current-leak-scope",
         ),
         pytest.param(
-            "the live count of dangling `mcp_file_used` rows is **14**",
+            "the live count of dangling `mcp_file_generated` rows is **13**",
             id="current-dangling",
         ),
         pytest.param("genuine floor **73** (baseline 73 + 0 entries)", id="current-floor"),
@@ -204,6 +224,33 @@ def test_a_target_range_is_not_read_as_a_claim() -> None:
     cited = {f.cited for f in findings if f.fact == "current-sprint research hours"}
     assert "29.0" in cited
     assert "28" not in cited and "36" not in cited
+
+
+def test_the_REVERSE_form_still_matches_after_the_field_rename() -> None:
+    """⚠ Sprint 39 P7 obligation 3 — the POSITIVE case pattern 2 never had.
+
+    Pattern 2 embeds the field name: ``…dangling\\s+(?:mcp_file_generated\\s+)?rows``.
+    The two regressions below and the ``current-dangling`` vector are all
+    NEGATIVE or forward-form, so **every one of them passes by matching
+    nothing** if that optional group goes dead. Renaming the fact, the fixture
+    and the vectors would therefore leave the branch broken with a green suite —
+    the silent-coverage failure the rename was audited to prevent, re-entering
+    through the fix for it.
+
+    ⚠ The token must be UNFORMATTED. Backticks defeat the group: it is skipped at
+    the backtick and ``rows?`` then fails, so ``**14** dangling `x` rows``
+    matches neither pattern. That is why repo prose — which backticks field
+    names — never exercised this branch, and why this test has to spell it bare.
+    """
+    assert _facts("**13 dangling mcp_file_generated rows**") == set()
+    # …and the same line with a WRONG count must be caught, or the assertion
+    # above would be satisfied by a pattern that matches nothing at all.
+    assert _facts("**12 dangling mcp_file_generated rows**") == {
+        "presolve rows whose generated file is absent"
+    }
+    # The stale token must NOT keep working — a rename that leaves both live is
+    # how a DB ends up carrying two names for one field.
+    assert _facts("**12 dangling mcp_file_used rows**") == set()
 
 
 def test_dangling_pattern_does_not_reach_into_the_next_clause() -> None:

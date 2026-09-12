@@ -248,8 +248,23 @@ def cmd_init(args: argparse.Namespace) -> int:
 
     if args.empty:
         # Create empty database
+        # ⚠ Sprint 39 P7 (PR #1740 review): this must be the CANONICAL version in
+        # `data/gamslib/schema.json`, not a historical one. There is only one
+        # schema file, so a fresh database stamped 2.2.0 would be validated
+        # against 3.0.0's rules while claiming a contract it is not being held
+        # to.
+        #
+        # ⚠ An earlier revision of this comment said "no migration script would
+        # upgrade it", which is FALSE: `migrate_schema_v2.2.1.py` accepts 2.2.0
+        # and `migrate_schema_v3.0.0.py` then accepts 2.2.1, so the chain does
+        # reach it. The real reason to stamp current is to avoid REQUIRING that
+        # multi-step chain for a database that was just created empty.
+        #
+        # An EMPTY database is structurally valid under any of these versions
+        # (no `mcp_solve` rows to carry the renamed key), so stamping it current
+        # is safe as well as correct.
         database = {
-            "schema_version": "2.2.0",
+            "schema_version": "3.0.0",
             "created_date": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "updated_date": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "total_models": 0,
@@ -269,6 +284,31 @@ def cmd_init(args: argparse.Namespace) -> int:
         catalog = load_catalog(CATALOG_PATH)
         migration_date = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
         database = migrate_catalog(catalog, migration_date)
+        # ⚠ Sprint 39 P7 (PR #1740 review). `migrate_catalog` stamps 2.0.0 — it
+        # is the ENTRY POINT of the version chain (2.0.0 → 2.1.0 → 2.2.0 →
+        # 2.2.1 → 3.0.0), which is correct for the migration scripts but wrong
+        # for a database being INITIALIZED now: it would claim a historical
+        # contract while being saved against this repo's only schema, the 3.0.0
+        # one.
+        #
+        # ⚠ An earlier revision said no current tool would accept it. That
+        # OVERSTATES it (PR #1740 review): `cmd_validate` checks the SHAPE
+        # against schema.json and does not require `schema_version == 3.0.0`, so
+        # a catalog-initialized 2.0.0 database with no `mcp_solve` rows passes it
+        # today. The real cost is narrower — the database advertises a
+        # historical contract, and any consumer that does gate on the version
+        # needs the four-step migration chain run by hand to reach the current
+        # one.
+        #
+        # Stamped current here rather than changed in `migrate_catalog`, because
+        # that function's 2.0.0 is load-bearing for the chain: the four
+        # `migrate_schema_v*.py` scripts each accept only their immediate
+        # predecessor, so moving it would strand every one of them.
+        #
+        # ⚠ Safe only because a freshly migrated catalog carries no `mcp_solve`
+        # rows — there is no `mcp_file_used` key for the 3.0.0 rename to have
+        # missed. If that ever changes, this must run the chain instead.
+        database["schema_version"] = "3.0.0"
 
         # Validate before saving
         schema = load_schema()

@@ -1039,6 +1039,30 @@ def cold_start_result(
     solved = solve_mcp(cold_path, timeout=timeout)
     obj = solved.get("objective_value")
     obj = float(obj) if isinstance(obj, (int, float)) else None
+    # ⚠ Sprint 39 P7 (PR #1740 review). A COLD listing holds only our MCP, so the
+    # embedded-only confusion cannot arise here — but an ABORTED solve still
+    # prints `MODEL STATUS 1` above its abort line, so the check below would
+    # report "optimal" for a solve GAMS refused to finish. The verdict folds that
+    # in. `None` is tolerated for backward compatibility with older results.
+    attribution = solved.get("mcp_attribution")
+    if attribution is not None and attribution != "MCP-SOLVED":
+        # ⚠ INDETERMINATE IS NOT EVIDENCE (PR #1740 review). `MCP-NO-STATUS`,
+        # `NO-SOLVE` and `ERROR` all mean "nothing can be concluded" -- the
+        # audit tool groups them in `_INDETERMINATE_VERDICTS` for exactly that
+        # reason. An earlier revision mapped everything but `NO-SOLVE` to
+        # "diverged", and `_cold_is_spurious` treats "diverged" as PROOF of a
+        # spurious cold solve, so a statusless MCP could have been reclassified
+        # `case_c_objdef` on no usable result at all. Only `MCP-FAILED` -- our
+        # model ran and reported an unusable answer -- is a real divergence.
+        # ⚠ `MCP-FAILED` is NOT a synonym for "completed with a bad status"
+        # (PR #1740 review): it also covers an explicitly ABORTED MCP, including
+        # one that printed MS-1 above its abort line. Mapping all of it to
+        # "diverged" would still hand `reclassify_objdef_case_c` an aborted run
+        # as proof of a spurious point. Only a solve that RAN TO COMPLETION and
+        # reported its own status is a real divergence.
+        if attribution == "MCP-FAILED" and solved.get("mcp_completed_own_solve"):
+            return "diverged", obj
+        return "unavailable", None
     if solved.get("model_status") in (1, 2):
         return "optimal", obj
     if solved.get("model_status") is None:
@@ -1055,6 +1079,15 @@ def _presolve_match_objective(presolve_path: Path, timeout: int = 120) -> float 
 
     try:
         solved = solve_mcp(presolve_path, timeout=timeout)
+        # ⚠ Sprint 39 P7 (PR #1740 review): `model_status` alone cannot say WHOSE
+        # status it is. This reads a `--nlp-presolve` listing, which also holds
+        # the embedded source solve, so an MCP that aborted before reporting
+        # would hand back the SOURCE's objective as if it were the presolve
+        # answer. Only `MCP-SOLVED` means our emitted model produced one.
+        # `None` is tolerated for backward compatibility with older results.
+        attribution = solved.get("mcp_attribution")
+        if attribution is not None and attribution != "MCP-SOLVED":
+            return None
         if solved.get("model_status") in (1, 2):
             obj = solved.get("objective_value")
             return float(obj) if isinstance(obj, (int, float)) else None

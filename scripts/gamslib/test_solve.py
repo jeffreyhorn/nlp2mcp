@@ -42,6 +42,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -51,6 +52,16 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 import math
+
+# Sprint 39 P7 / Remedy A. Reused rather than re-implemented: the attribution
+# is POSITIONAL (a status line belongs to the nearest summary header above it),
+# and a second regex here would be a second thing to keep correct.
+from scripts.sprint_audit.check_mcp_solve_attribution import (
+    _NORMAL_COMPLETION,
+    EMITTED_MCP_MODEL,
+    Attribution,
+    parse_solve_summaries,
+)
 
 from scripts.gamslib.error_taxonomy import (
     COMPARE_BOTH_INFEASIBLE,
@@ -943,6 +954,37 @@ def compare_solutions(
     return result
 
 
+_SOLVE_MCP_STMT = re.compile(r"^\s*solve\s+([A-Za-z_]\w*)\s+using\s+MCP\b", re.I | re.M)
+
+
+def _emitted_model_name(mcp_path: Path) -> str | None:
+    """The model name the emitted file actually solves, or ``None``.
+
+    Read from the file rather than assumed, because ``--model-name`` makes the
+    module constant ``mcp_model`` a DEFAULT and not a guarantee. Returning
+    ``None`` (unreadable / no match) leaves the constant in force, which is the
+    pre-existing behaviour.
+    """
+    try:
+        text = mcp_path.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return None
+    # ⚠ THE LAST MCP SOLVE, NOT THE FIRST (PR #1740 review). A `--nlp-presolve`
+    # emit embeds the original model, and a handful of sources are themselves
+    # MCPs — `cesam` and `spatequ` — so a FOREIGN `Solve <src> using MCP;` can
+    # precede ours. `search()` took that one, relabelled the source's summary as
+    # ours, and a source-only success (or a source success followed by an
+    # aborted generated solve) would have been reported `MCP-SOLVED`: the exact
+    # borrowed-status defect this whole remedy exists to stop, re-entering
+    # through the fix for it.
+    #
+    # Ours is always last: the emitter appends its own solve after the embedded
+    # model. That is also why the attribution module keeps
+    # `foreign_mcp_summaries` separate — the case is known to exist.
+    matches = _SOLVE_MCP_STMT.findall(text)
+    return matches[-1] if matches else None
+
+
 def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
     """Solve an MCP model using PATH solver.
 
@@ -962,6 +1004,29 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
         - iterations: Number of PATH iterations
         - outcome_category: Error taxonomy category
         - error: Error message (if failed)
+
+        Sprint 39 P7 attribution fields — WHOSE status the scalars above
+        describe. ``status``/``model_status`` come from a listing-wide scan that
+        takes the last match regardless of which model produced it, so on a
+        ``--nlp-presolve`` listing they can belong to the embedded source solve.
+        These three say so:
+
+        - mcp_attribution: the audit verdict for this listing — ``MCP-SOLVED``,
+          ``MCP-FAILED``, ``MCP-NO-STATUS``, ``EMBEDDED-ONLY``, ``NO-SOLVE`` or
+          ``ERROR``. Only ``MCP-SOLVED`` means our emitted model produced a
+          **usable** answer.
+        - mcp_produced_own_status: the status is OURS. ⚠ True for an aborted MCP
+          — attribution is not success. Gate on the verdict, not on this.
+        - mcp_completed_own_solve: our model ran to COMPLETION and reported this
+          status itself. True for a genuine ``model_status`` 4/5 (infeasible),
+          false for an abort with a stale status above its abort line. This is
+          the field a consumer reasoning about *infeasibility* needs, since
+          ``MCP-FAILED`` covers both cases.
+
+        ⚠ All three are absent from results returned on the early-exit failure
+        paths (no GAMS, timeout, no listing), which all report
+        ``status: "failure"``. Consumers tolerate a missing key as "unknown" so
+        older result dicts keep working.
     """
     start_time = time.perf_counter()
 
@@ -1060,6 +1125,81 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
         lst_content = lst_path.read_text()
         parsed = parse_gams_listing(lst_content)
 
+        # Sprint 39 P7 / Remedy A: did *our* emitted MCP report a status of its
+        # own, or are we reading someone else's?
+        #
+        # ⚠ `parse_gams_listing` above takes the LAST match of each pattern
+        # across the WHOLE listing (`finditer(...)[-1]`), with no notion of which
+        # model produced it. For a `--nlp-presolve` emit the listing holds the
+        # embedded source solve AND our MCP solve, so when our MCP aborts before
+        # reporting, the source's `MODEL STATUS` is the last one present and is
+        # read back as ours. That is the `weapons` defect exactly: the retry is
+        # recorded `model_optimal_presolve` + match while our MCP never solved.
+        #
+        # ⚠ Attribution is POSITIONAL and must stay so — a status line belongs to
+        # the nearest summary header above it. A listing-wide search cannot
+        # answer the question, which is why this reuses the audit tool's parser
+        # rather than adding another regex here.
+        #
+        # ⚠⚠ ATTRIBUTION IS NOT SUCCESS, AND THE GATE NEEDS SUCCESS.
+        # An earlier revision computed only `any(s.model_status is not None)` --
+        # i.e. `Attribution.mcp_produced_status` -- and used it as the retry
+        # gate. That is a hole: for an ABORTED MCP, GAMS still prints
+        # `MODEL STATUS 1` above the `**** SOLVE ... ABORTED` line, so
+        # `parse_gams_listing` returns 1/1, `is_success` is true, the flag was
+        # true, and `run_pipeline` recorded `model_optimal_presolve` for a solve
+        # that explicitly aborted (PR #1740 review). The distinction is spelled
+        # out in tests/unit/sprint_audit/test_mcp_solve_attribution.py: an
+        # aborted MCP has `mcp_produced_status` True, `mcp_succeeded` False, and
+        # verdict `MCP-FAILED`.
+        #
+        # So the whole `Attribution` is built and its VERDICT carried, rather
+        # than a hand-rolled predicate. `MCP-SOLVED` is exactly the condition
+        # §6's presolve-golden adoption rule already requires, and it folds in
+        # the abort, abort-ambiguity and solver-status checks that a status
+        # presence test cannot see.
+        # ⚠ The emitted model NAME is read from the file, not assumed.
+        # `SolveSummary.is_emitted_mcp` compares against the module constant
+        # `mcp_model`, which is only the CLI's DEFAULT -- `--model-name` lets a
+        # caller emit `my_model`, and every summary would then be classified
+        # EMBEDDED-ONLY, turning valid results inconclusive (PR #1740 review).
+        # Summaries naming the emitted model are relabelled to the constant so
+        # `Attribution` reasons about them as ours; the raw source's own solves
+        # keep their names and stay distinguishable.
+        # ⚠ RELABEL WHENEVER THE NAME IS KNOWN, including a case-only override
+        # (PR #1740 review). An earlier revision skipped relabelling when the
+        # names matched case-INSENSITIVELY -- but `is_emitted_mcp` compares
+        # case-SENSITIVELY, so `--model-name MCP_MODEL` left the summary named
+        # `MCP_MODEL`, which then failed `== "mcp_model"` and was classified
+        # EMBEDDED-ONLY. Guarding on a looser comparison than the consumer uses
+        # is the hole: the guard must be at least as strict as what it protects.
+        emitted_name = _emitted_model_name(mcp_path)
+        summaries = parse_solve_summaries(lst_content)
+        if emitted_name:
+            summaries = [
+                replace(s, model=EMITTED_MCP_MODEL)
+                if (s.model or "").lower() == emitted_name.lower()
+                else s
+                for s in summaries
+            ]
+        attribution = Attribution(model_id=mcp_path.stem, summaries=summaries)
+        mcp_attribution = attribution.verdict
+        mcp_produced_own_status = attribution.mcp_produced_status
+        # ⚠ SEPARATE FROM THE VERDICT, and needed because `MCP-FAILED` covers
+        # two different things: a solve that ran to completion and reported an
+        # infeasible/unbounded status, and one that ABORTED with a stale status
+        # above the abort line. The first is a real, usable answer about the
+        # model; the second is no answer at all. Consumers that reason about
+        # infeasibility need the distinction, and the verdict alone cannot give
+        # it (PR #1740 review).
+        mcp_completed_own_solve = any(
+            s.model_status is not None
+            and not s.aborted
+            and not s.abort_ambiguous
+            and s.solver_status == _NORMAL_COMPLETION
+            for s in attribution.mcp_summaries
+        )
+
         # Extract PATH solver version from .lst file
         path_version = extract_path_version(lst_content)
         gams_version = extract_gams_version(lst_content)
@@ -1081,9 +1221,63 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
         model_status = parsed.get("model_status")
 
         # Determine success
-        is_success = (
-            solver_status == 1 and model_status in (1, 2) and parsed.get("error_type") is None
+        #
+        # ⚠ Sprint 39 P7 (PR #1740 review). The three scalars above come from a
+        # listing-wide scan that takes the LAST match with no notion of which
+        # model produced it, so `status: "success"` could be reported for a
+        # listing in which our MCP aborted after printing a stale status, or
+        # never reported at all. Every consumer of `status` -- solve counts, the
+        # persisted DB record, the standalone loop -- inherited that, while only
+        # the presolve-retry branch checked the verdict separately.
+        #
+        # ⚠⚠ GATED ON POSITIVE CONTRADICTION ONLY, NOT ON `!= MCP-SOLVED`.
+        # `EMBEDDED-ONLY` means a usable status exists and is not ours;
+        # `MCP-FAILED` means our model reported and the answer is unusable
+        # (aborted, ambiguous abort, or a non-success status). Both are evidence
+        # that a "success" here is wrong.
+        #
+        # The INDETERMINATE verdicts -- `NO-SOLVE`, `MCP-NO-STATUS`, `ERROR` --
+        # are deliberately NOT included. They mean "nothing could be attributed",
+        # which is also where a summary the parser failed to recognise would
+        # land, so treating them as contradictions would flip genuine
+        # corpus-wide successes to failures on a parsing change alone. That risk
+        # is the whole reason this was not done as a blanket `!= "MCP-SOLVED"`.
+        _CONTRADICTS_SUCCESS = ("EMBEDDED-ONLY", "MCP-FAILED")
+        _attribution_rejected = (
+            solver_status == 1
+            and model_status in (1, 2)
+            and parsed.get("error_type") is None
+            and mcp_attribution in _CONTRADICTS_SUCCESS
         )
+        is_success = (
+            solver_status == 1
+            and model_status in (1, 2)
+            and parsed.get("error_type") is None
+            and mcp_attribution not in _CONTRADICTS_SUCCESS
+        )
+
+        # ⚠ A row whose `status` we just refused must not keep a SUCCESS
+        # category (PR #1740 review). `categorize_solve_outcome` derives from
+        # the same borrowed/stale scalars, so an attribution-rejected solve
+        # would have been persisted as `status: "failure"` with
+        # `outcome_category: "model_optimal"` — and `run_solve_stage` copies that
+        # into `error.category`. Schema-VALID (both are members of
+        # `error_category`), but a failure row asserting an optimal outcome is a
+        # contradiction a reader has to resolve, and no such row exists in the
+        # corpus today.
+        #
+        # `path_solve_terminated` is the honest category: the solve produced no
+        # usable answer of its own, which is exactly what that value denotes.
+        #
+        # ⚠⚠ KPI INTERACTION, STATED BECAUSE IT LOOKS LIKE A REGRESSION.
+        # `path_solve_terminated` is a tracked KPI that Sprint 39 requires to
+        # MAINTAIN 0. This mapping is inert today — zero corpus rows are
+        # attribution-rejected — so the figure does not move. If it ever fires,
+        # that is a model genuinely aborting while previously being recorded as
+        # optimal: a CORRECTION surfacing a real defect, not a regression, and
+        # it must be reported with that reason in the same sentence.
+        if _attribution_rejected:
+            outcome = PATH_SOLVE_TERMINATED
 
         result: dict[str, Any] = {
             "status": "success" if is_success else "failure",
@@ -1103,10 +1297,34 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
             "solve_time_seconds": round(elapsed, 4),
             "iterations": parsed.get("iterations"),
             "outcome_category": outcome,
+            # Sprint 39 P7 / Remedy A.
+            # `mcp_attribution` is the audit tool's verdict for THIS listing:
+            # MCP-SOLVED / MCP-FAILED / MCP-NO-STATUS / EMBEDDED-ONLY / NO-SOLVE.
+            # Only MCP-SOLVED means "our emitted model produced a usable answer".
+            # ⚠ Consumers must gate on the VERDICT, not on
+            # `mcp_produced_own_status`, which answers the narrower question
+            # "is the status ours" and is True for an aborted MCP.
+            "mcp_attribution": mcp_attribution,
+            "mcp_produced_own_status": mcp_produced_own_status,
+            # Our MCP ran to completion and reported ITS OWN status — true for a
+            # genuine `model_status` 4/5 (infeasible), false for an abort.
+            "mcp_completed_own_solve": mcp_completed_own_solve,
         }
 
         if not is_success:
-            if parsed.get("error_type"):
+            # ⚠ FIRST, because the scalars look healthy (PR #1740 review). An
+            # attribution-rejected solve has solver 1 and model 1/2, so every
+            # branch below is false and the reason fell through to
+            # "Unknown error" -- discarding the only thing that explains the
+            # refusal, for direct callers and for any failure record that
+            # survives the retry path.
+            if _attribution_rejected:
+                result["error"] = (
+                    f"MCP attribution {mcp_attribution}: the listing's "
+                    f"MODEL STATUS {model_status} is not a usable answer from "
+                    f"our emitted model"
+                )
+            elif parsed.get("error_type"):
                 result["error"] = f"Parse error: {parsed['error_type']}"
             elif solver_status != 1:
                 desc = SOLVER_STATUS_DESCRIPTIONS.get(int(solver_status), "Unknown") if solver_status is not None else "Unknown"

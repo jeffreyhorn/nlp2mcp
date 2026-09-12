@@ -493,6 +493,73 @@ typecheck / format / lint clean · `make test` **5311 passed** / 10 skipped / 1 
 
 ---
 
+## Day 10 (plan 2026-09-13; executed 2026-09-11) — Checkpoint 2 GO · P7 lands A **and** B
+
+### Checkpoint 2 — GO (run FIRST, before P7 changed the recording path)
+
+`--resolve-changed --since-commit 9ab2c0c3 --min-scope 1`. Scope **discovered** then asserted: exactly one golden changed since the S38 close — `dyncge` (Day 2's B-4). Bucket held: `model_optimal`/`mismatch` → `model_optimal`/`mismatch`, **same**. No `backward`, no `missing`.
+
+### The KPI correction, reported with its reason
+
+> **Match 96 → 95 is a CORRECTION, not a regression.** `weapons` was recorded as a **presolve** match, but the presolve retry's MCP produced no `MODEL STATUS` of its own. A `--nlp-presolve` emit warm-starts by solving the original model inside the generated file, so when that MCP solve aborted, `nlp2mcp_obj_val = tetd.l` still held the embedded NLP's own answer (1735.5696) and the comparison matched itself. **This is not "weapons cannot be solved as an MCP"** — its **cold** emit solves, to `model_optimal` @ **1700.397**, which is a **2.03 %** divergence from the NLP and therefore a **mismatch**. That cold result is the true record. The overstatement dates from Sprint 38 Day 9, was reported at the time, and is corrected here. **Match 95 is the first figure in this series that is true.** Solve (111), cold-optimal (65) and the genuine floor (75) are unaffected; presolve-match moves 31 → 30 and all-219 Match 99 → 98 for the same single reason.
+
+*(The floor reads **75**, not the 73 this wording was drafted against at prep — re-baselined on Day 0. Derived from `floor_tracker.py`, unchanged by P7.)*
+
+### Remedy A — the gate is on the BRANCH, not on one write
+
+⚠ **The plan's correction was right and the merged §9 obligation 5 was half of a truth.** The `mcp_file_generated` assignment is the sole writer *of the key*, but the branch it sits in — `if retry_result["status"] == "success" and retry_mcp_solved:` — makes **three** writes: `presolve_required`, the file path, `outcome_category`. Gating the path write alone would have left the other two asserting a presolve success.
+
+⚠ *The predicate is `retry_mcp_solved`, renamed from `retry_attributed` in review — `MCP-FAILED` **is** attributed and is deliberately rejected, so the old name asserted the weaker property while the branch enforced the stronger one. ⚠⚠ **Switching to symbol references did not make this citation stable**: the rename broke it two rounds later (PR #1740 review). A symbol is more durable than a line number and still not durable — **any doc that names code is a claim that ages out, and a rename is exactly the edit that ages it.*** ⚠ *Referenced by symbol, not line number.* The plan cited `:936`/`:954` and this log repeated them; both were stale within the same PR, because the review rounds that hardened the gate inserted ~30 lines of comment above them (PR #1740 review). **A line number in a doc is a figure that ages out faster than any other** — it can be invalidated by an edit that changes no behaviour at all.
+
+**The defect, stated mechanically:** `parse_gams_listing` takes the **last** match of each pattern across the **whole** listing (`finditer(...)[-1]`), with no notion of which model produced it. A `--nlp-presolve` listing holds the embedded source solve *and* ours, so when our MCP aborts before reporting, the source's status is the last one present and is read back as ours.
+
+`solve_mcp` now computes `mcp_produced_own_status` **while `lst_content` is still in hand** — it is read inside a `TemporaryDirectory` and discarded, so the attribution cannot be recovered later. It reuses `parse_solve_summaries` rather than adding a second regex: attribution is **positional**, and a listing-wide search cannot answer the question.
+
+⚠ **The arrivals at the restore branch need different bookkeeping, and WHICH arrival is which changed during the sprint.** `run_solve_stage` counts a retry by its own status, so the rollback must undo whatever *that* retry produced — never assume. As shipped:
+
+| retry verdict | arrives as | rollback |
+|---|---|---|
+| **`EMBEDDED-ONLY`** (the live `weapons` case) · **`MCP-FAILED`** | **failure** — `solve_mcp` refuses to claim success for a contradicted status | undo `solve_failure`, pop the retry's error |
+| **`MCP-NO-STATUS`** / **`NO-SOLVE`** (indeterminate) | **success** — nothing contradicts the scalars | undo `solve_success`, pop nothing |
+| a genuine solver failure | failure | undo `solve_failure`, pop the retry's error |
+
+⚠ *An earlier revision of this line said an "unattributed retry reported success" — true before `solve_mcp` began downgrading contradicted statuses, and false for the one verdict the sprint actually exercises (PR #1740 review).* **Popping `solve_errors` when this retry pushed none discards the COLD error.** Pinned by a test, which itself had to move to an indeterminate fixture once `EMBEDDED-ONLY` stopped reaching the success arm.
+
+**It fired live**, re-captured from the shipped code rather than quoted from the first run:
+
+```
+[SOLVE]  SUCCESS: objective=1700.4
+[RETRY]  spurious-KKT mismatch — retrying with --nlp-presolve...
+[SOLVE]  FAILURE: path_solve_terminated
+[RETRY]  REJECTED (EMBEDDED-ONLY): the status belongs to the embedded source solve — keeping the cold record
+[COMPARE] MISMATCH: diff=3.52e+01 > tolerance=3.47e+00
+
+  Pre-solve retry: 0/1 recovered, 1 REJECTED (no usable answer from our MCP)
+```
+
+⚠ **THIS BLOCK HAS NOW GONE STALE THREE TIMES, EACH FOR A DIFFERENT REASON** — `[RETRY] UNATTRIBUTED` before the message became verdict-keyed; then `[SOLVE] SUCCESS: objective=1735.57` before `solve_mcp` began refusing to claim success for a borrowed status; and the summary line was missing before the formatter reported rejections at all. **A transcript is the most perishable evidence in a PR**: it captures one moment of one build, and *every* behavioural fix invalidates it. The rule that follows — re-capture, never re-word, and re-capture LAST, after the final behavioural change. ⚠ *The first revision of this entry recorded `[RETRY] UNATTRIBUTED`, which was the message at the time and is not what the shipped code prints* — the label became verdict-keyed when review showed "unattributed" was false for an aborted own-MCP (PR #1740 review). **A pasted log is evidence only while the code that produced it is the code being shipped**, so this was re-run rather than re-worded.
+
+### Remedy B — the rename, and the obligations that were not optional
+
+`2.2.1 → 3.0.0`, **48 rows**, `migrate_schema_v3.0.0.py`. Major per the schema's own declared rule; the first breaking bump in this file's history.
+
+⚠ **The migration's own `--validate` caught a real defect before writing**: the root is *also* `additionalProperties: false`, so its `_migration_summary_v3_0_0` bookkeeping key was rejected. It refused to write — the fail-closed behaviour restored deliberately after v2.2.0/v2.2.1 dropped the flag v2.1.0 had.
+
+**Obligation 2's control holds, both rows:** the fact derives **14** after the rename alone (*not* 0 — 0 would mean the checker is reading a key that no longer exists) and **13** after Remedy A reverts `weapons` to its cold golden.
+
+⚠ **`weapons_mcp_presolve.gms` was generated by the re-solve and deliberately NOT committed.** It fails §6's adoption rule item 1 — its MCP does not solve — which is the entire finding.
+
+### A consequence nothing predicted
+
+`make typecheck` broke, and not on anything I edited. `mypy src/` follows `src/diagnostics/convexity_numerical.py:67` into `scripts/gamslib/test_solve.py`; Remedy A's import extended that chain to the attribution module, which reaches an optional `jsonschema` import with no stubs. **The dependency was always optional — the import graph is what changed.** Resolved with a `[[tool.mypy.overrides]]` entry beside the existing `lark`/`numpy` ones, rather than declaring stubs for a package the project deliberately does not depend on.
+
+### Verification
+
+`typecheck` · `format` · `lint` clean. Mutation-killed twice: reverting Remedy A's condition fails the record-path assertion; reverting pattern 2's renamed token fails the new positive reverse-form test.
+
+⚠ **The scope claim needed correcting mid-review.** This day was originally recorded as *"`src/` untouched"*; that was true at the first commit and false after the review round that gated `src/diagnostics/convexity_numerical.py` on the attribution verdict. The accurate statement is narrower and is what actually carries the argument: **the EMIT implementation — `src/{ad,kkt,emit}` — is untouched**, so emit is byte-identical by construction, Phase-0 does not arm (it keys on exactly those three trees), and the `weapons` cold golden re-translated byte-identical, confirming it. `src/diagnostics/` is a consumer of solve results, not an emit path.
+
+
 ## Day 9 — planned 2026-09-12, **executed 2026-09-10** · P9 · 2 h · + P10 · 5 h · + P5 · 3 h
 
 **Branch:** `planning/sprint39-day9-epic5` · **Measured at:** `a933eca9`
