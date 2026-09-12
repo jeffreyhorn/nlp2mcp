@@ -39,7 +39,7 @@ scripts/gamslib/
 └── verify_convexity.py   # Verify model convexity
 ```
 
-**Note:** As of Sprint 14 (January 2026), `catalog.json` has been replaced by `gamslib_status.json` with an enhanced schema (v2.0.0) that tracks the full nlp2mcp pipeline. See `docs/infrastructure/GAMSLIB_DATABASE_SCHEMA.md` for details.
+**Note:** As of Sprint 14 (January 2026), `catalog.json` has been replaced by `gamslib_status.json` with an enhanced schema that tracks the full nlp2mcp pipeline. ⚠ **The current schema version is `3.0.0`** (Sprint 39 P7 renamed `mcp_solve.mcp_file_used` → `mcp_file_generated`; the pre- and post-rename shapes are mutually invalid under `additionalProperties: false`). **`data/gamslib/schema.json` is the authoritative contract**; `docs/infrastructure/GAMSLIB_DATABASE_SCHEMA.md` still describes v2.0.0 and carries a banner saying so.
 
 ## 1. Discover Models
 

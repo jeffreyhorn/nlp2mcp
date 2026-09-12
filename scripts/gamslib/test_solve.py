@@ -966,10 +966,23 @@ def _emitted_model_name(mcp_path: Path) -> str | None:
     pre-existing behaviour.
     """
     try:
-        m = _SOLVE_MCP_STMT.search(mcp_path.read_text(encoding="utf-8", errors="ignore"))
+        text = mcp_path.read_text(encoding="utf-8", errors="ignore")
     except OSError:
         return None
-    return m.group(1) if m else None
+    # ⚠ THE LAST MCP SOLVE, NOT THE FIRST (PR #1740 review). A `--nlp-presolve`
+    # emit embeds the original model, and a handful of sources are themselves
+    # MCPs — `cesam` and `spatequ` — so a FOREIGN `Solve <src> using MCP;` can
+    # precede ours. `search()` took that one, relabelled the source's summary as
+    # ours, and a source-only success (or a source success followed by an
+    # aborted generated solve) would have been reported `MCP-SOLVED`: the exact
+    # borrowed-status defect this whole remedy exists to stop, re-entering
+    # through the fix for it.
+    #
+    # Ours is always last: the emitter appends its own solve after the embedded
+    # model. That is also why the attribution module keeps
+    # `foreign_mcp_summaries` separate — the case is known to exist.
+    matches = _SOLVE_MCP_STMT.findall(text)
+    return matches[-1] if matches else None
 
 
 def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:

@@ -1849,13 +1849,22 @@ def generate_summary(stats: dict[str, Any], args: argparse.Namespace) -> dict[st
                     # visible in the run summary rather than inferred from a gap
                     # between `attempted` and `success`.
                     #
-                    # ⚠ SCOPE: retries that REPORTED SUCCESS and were rejected
-                    # on their verdict — `EMBEDDED-ONLY`, `MCP-FAILED`,
-                    # `MCP-NO-STATUS`. A retry that failed outright never
-                    # reaches the counter (it takes the other arm), so this is
-                    # NOT "every non-MCP-SOLVED verdict" as an earlier revision
-                    # of this comment claimed (PR #1740 review). Genuine
-                    # failures are `attempted - success - rejected`.
+                    # ⚠ SCOPE: retries rejected because the verdict was not
+                    # `MCP-SOLVED`, whatever status they arrived with.
+                    # `EMBEDDED-ONLY` and `MCP-FAILED` arrive as FAILURES —
+                    # `solve_mcp` refuses to claim success for a contradicted
+                    # status — and only an indeterminate `MCP-NO-STATUS` /
+                    # `NO-SOLVE` reaches here with status success. A retry that
+                    # failed on its own merits is not counted; those are
+                    # `attempted - success - rejected`.
+                    #
+                    # ⚠⚠ THIS IS THE THIRD WORDING OF THIS SCOPE (PR #1740
+                    # review, three rounds). It was first too wide ("every
+                    # non-MCP-SOLVED verdict"), then narrowed to "retries that
+                    # REPORTED SUCCESS" — correct for the contract at that
+                    # moment and invalidated by the status downgrade landing in
+                    # the very next round. Describe it by VERDICT, which is what
+                    # the branch actually tests; status is the part that moved.
                     "rejected": stats.get("presolve_retry_rejected", 0),
                 }
             summary["solve"] = solve_summary

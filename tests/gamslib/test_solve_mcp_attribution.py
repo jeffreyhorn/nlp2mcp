@@ -361,3 +361,52 @@ def test_a_rejected_row_carries_the_REASON_not_Unknown_error(run_with_listing):
 
     # A genuinely successful solve carries no error at all.
     assert "error" not in run_with_listing(OURS_SOLVED)
+
+
+@pytest.mark.unit
+def test_a_FOREIGN_mcp_solve_before_ours_is_not_mistaken_for_ours(tmp_path):
+    """⚠ The emitted name must come from the LAST MCP solve (PR #1740 review).
+
+    A `--nlp-presolve` emit embeds the original model, and a few sources are
+    themselves MCPs — `cesam` and `spatequ`. A foreign `Solve <src> using MCP;`
+    can therefore precede ours in the file, and `search()` took *that* one: the
+    source's summary was then relabelled as ours, so a source-only success could
+    be reported `MCP-SOLVED`. That is the borrowed-status defect this remedy
+    exists to stop, re-entering through the fix for it.
+    """
+    f = tmp_path / "x_mcp_presolve.gms"
+    f.write_text(
+        "* embedded source, itself an MCP\n"
+        "Solve cesam using MCP;\n\n"
+        "* our generated model\n"
+        "Solve mcp_model using MCP;\n"
+    )
+    assert ts._emitted_model_name(f) == "mcp_model"
+
+    # Committed evidence that the shape is real, not hypothetical.
+    golden = Path("data/gamslib/mcp/cesam_mcp_presolve.gms")
+    if golden.exists():
+        assert ts._emitted_model_name(golden) == "mcp_model"
+
+
+@pytest.mark.unit
+def test_a_foreign_solve_does_not_borrow_the_verdict(run_with_listing, monkeypatch):
+    """The end-to-end consequence: a source-only success must not read MCP-SOLVED.
+
+    The listing has the foreign MCP solving and ours absent. With the emitted
+    name taken from the wrong statement, `cesam` would have been relabelled to
+    `mcp_model` and this would report `MCP-SOLVED`.
+    """
+    foreign_only = """
+               S O L V E      S U M M A R Y
+
+     MODEL   cesam               OBJECTIVE  obj
+     TYPE    MCP                 DIRECTION  MINIMIZE
+     SOLVER  PATH                FROM LINE  100
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+"""
+    result = run_with_listing(foreign_only, model_name="mcp_model")
+    assert result["mcp_attribution"] != "MCP-SOLVED", result["mcp_attribution"]
+    assert result["status"] == "failure"

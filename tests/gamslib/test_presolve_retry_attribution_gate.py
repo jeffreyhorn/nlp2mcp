@@ -282,8 +282,15 @@ def _drive(monkeypatch, tmp_path, retry_listing: str):
 
 
 @pytest.mark.unit
-def test_an_unattributed_retry_is_NOT_recorded_as_a_presolve_match(monkeypatch, tmp_path):
-    """§7 assertion 2 — the property the whole remedy exists to enforce."""
+def test_an_EMBEDDED_ONLY_retry_is_NOT_recorded_as_a_presolve_match(monkeypatch, tmp_path):
+    """§7 assertion 2 — the property the whole remedy exists to enforce.
+
+    ⚠ Named for the VERDICT, not "unattributed" (PR #1740 review). This module
+    distinguishes `EMBEDDED-ONLY` (the status belongs to the embedded source)
+    from `MCP-NO-STATUS` (nothing could be attributed at all), and the two reach
+    the rejection arm by different routes with different bookkeeping — so a name
+    that blurs them is misleading in exactly the file that draws the line.
+    """
     model, stats = _drive(monkeypatch, tmp_path, WEAPONS_SHAPED)
 
     solve = model["mcp_solve"]

@@ -1,6 +1,27 @@
 # GAMSLIB Database Schema Documentation
 
-**Schema Version:** 2.0.0  
+**Schema Version:** 2.0.0 — ⚠ **SUPERSEDED; the contract is now 3.0.0.**
+
+> ⚠ **READ THIS FIRST (Sprint 39 P7).** The checked-in contract is
+> **`data/gamslib/schema.json`**, which is **authoritative** — this document
+> describes **v2.0.0** and has not been rewritten for the versions since.
+>
+> Changes you will hit if you follow the text below:
+>
+> | | |
+> |---|---|
+> | `schema_version` | **`3.0.0`**, not `2.0.0` |
+> | `mcp_solve.mcp_file_used` | **renamed `mcp_file_generated`** — the pipeline records the file it *generated*, and that artifact may be cleaned up later, so a path that no longer exists is expected rather than an anomaly |
+> | `mcp_solve`, `solution_comparison`, `convexity` | added after v2.0.0 and **not described here at all** |
+>
+> `3.0.0` is a **major** bump because `mcp_solve_result` sets
+> `additionalProperties: false`: the pre- and post-rename shapes are mutually
+> invalid, so a database cannot satisfy both. Migrate with
+> `scripts/gamslib/migrate_schema_v3.0.0.py`.
+>
+> This banner is deliberately a pointer rather than a rewrite — restating a
+> 700-line contract in prose is how the two drifted apart in the first place.
+
 **Schema Standard:** JSON Schema Draft-07  
 **Database File:** `data/gamslib/gamslib_status.json`  
 **Schema File:** `data/gamslib/schema.json`
