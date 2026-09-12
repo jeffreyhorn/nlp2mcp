@@ -314,3 +314,63 @@ def test_an_ABORTED_retry_of_OUR_OWN_model_is_NOT_recorded(monkeypatch, tmp_path
     assert model["mcp_solve"]["outcome_category"] == "model_optimal"
     assert stats["presolve_retry_success"] == 0
     assert stats["presolve_retry_rejected"] == 1
+
+
+# ------------------------------------------------------------- the run summary
+
+
+@pytest.mark.unit
+def test_the_summary_REPORTS_rejected_retries(capsys):
+    """⚠ The human-facing formatter must not contradict the JSON (PR #1740 review).
+
+    `generate_summary` reports `rejected`, but `print_summary` printed only
+    `success/attempted recovered from STATUS 5` — so a run whose retry the
+    attribution gate refused showed **"0/1 recovered"**, hiding the finding
+    entirely. A gate whose result is invisible in the output people actually
+    read is a gate nobody will act on.
+
+    ⚠ And "STATUS 5" named one of TWO triggers. The retry also fires on a
+    spurious-KKT objective mismatch, which is `weapons`' case — so the one run
+    that exercises the gate was also the one the wording described wrongly.
+    """
+    from scripts.gamslib.run_full_test import print_summary
+
+    stats = _stats()
+    # ⚠ `solve_success`/`solve_failure` must be non-zero: `generate_summary`
+    # gates the whole solve block on `solve_total > 0`, so a fixture with only
+    # retry counters renders nothing and the assertions below would pass or fail
+    # for the wrong reason.
+    stats.update(
+        processed=1,
+        solve_success=1,
+        presolve_retry_attempted=1,
+        presolve_retry_success=0,
+        presolve_retry_rejected=1,
+    )
+    print_summary(stats, _args())
+    out = capsys.readouterr().out
+
+    assert "REJECTED" in out, out
+    assert "0/1 recovered" in out
+    assert "STATUS 5" not in out, "the trigger is not always STATUS 5"
+
+
+@pytest.mark.unit
+def test_the_summary_distinguishes_rejected_from_FAILED(capsys):
+    """`attempted - success - rejected` is a genuine failure, and reads as one."""
+    from scripts.gamslib.run_full_test import print_summary
+
+    stats = _stats()
+    stats.update(
+        processed=3,
+        solve_success=2,
+        solve_failure=1,
+        presolve_retry_attempted=3,
+        presolve_retry_success=1,
+        presolve_retry_rejected=1,
+    )
+    print_summary(stats, _args())
+    out = capsys.readouterr().out
+    assert "1/3 recovered" in out
+    assert "1 REJECTED" in out
+    assert "1 failed" in out

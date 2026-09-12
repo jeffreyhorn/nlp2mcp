@@ -1815,8 +1815,15 @@ def generate_summary(stats: dict[str, Any], args: argparse.Namespace) -> dict[st
                     "success": stats["presolve_retry_success"],
                     # Sprint 39 P7 / Remedy A — reported so the gate's effect is
                     # visible in the run summary rather than inferred from a gap
-                    # between `attempted` and `success`. Covers every non
-                    # `MCP-SOLVED` verdict, not only `EMBEDDED-ONLY`.
+                    # between `attempted` and `success`.
+                    #
+                    # ⚠ SCOPE: retries that REPORTED SUCCESS and were rejected
+                    # on their verdict — `EMBEDDED-ONLY`, `MCP-FAILED`,
+                    # `MCP-NO-STATUS`. A retry that failed outright never
+                    # reaches the counter (it takes the other arm), so this is
+                    # NOT "every non-MCP-SOLVED verdict" as an earlier revision
+                    # of this comment claimed (PR #1740 review). Genuine
+                    # failures are `attempted - success - rejected`.
                     "rejected": stats.get("presolve_retry_rejected", 0),
                 }
             summary["solve"] = solve_summary
@@ -1917,10 +1924,22 @@ def print_summary(stats: dict[str, Any], args: argparse.Namespace) -> None:
                 print(f"    {cat}: {count}")
         if s.get("presolve_retry"):
             pr = s["presolve_retry"]
-            print(
-                f"  Pre-solve retry: {pr['success']}/{pr['attempted']} "
-                f"recovered from STATUS 5"
-            )
+            attempted = pr["attempted"]
+            rejected = pr.get("rejected", 0)
+            failed = attempted - pr["success"] - rejected
+            # ⚠ NOT "recovered from STATUS 5" (PR #1740 review). Two things were
+            # wrong with that line. It named one of the two triggers — the retry
+            # also fires on a spurious-KKT objective mismatch, which is exactly
+            # `weapons`' case — and it omitted `rejected` entirely, so a run
+            # whose retry was refused by the attribution gate printed
+            # "0/1 recovered", hiding the finding and contradicting the JSON
+            # summary that does report it.
+            line = f"  Pre-solve retry: {pr['success']}/{attempted} recovered"
+            if rejected:
+                line += f", {rejected} REJECTED (retry solved, but not our MCP)"
+            if failed > 0:
+                line += f", {failed} failed"
+            print(line)
 
     # Compare results
     if "compare" in summary:
