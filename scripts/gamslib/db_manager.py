@@ -289,8 +289,16 @@ def cmd_init(args: argparse.Namespace) -> int:
         # 2.2.1 → 3.0.0), which is correct for the migration scripts but wrong
         # for a database being INITIALIZED now: it would claim a historical
         # contract while being saved against this repo's only schema, the 3.0.0
-        # one, and would need four migrations run by hand before any current
-        # tool accepted it.
+        # one.
+        #
+        # ⚠ An earlier revision said no current tool would accept it. That
+        # OVERSTATES it (PR #1740 review): `cmd_validate` checks the SHAPE
+        # against schema.json and does not require `schema_version == 3.0.0`, so
+        # a catalog-initialized 2.0.0 database with no `mcp_solve` rows passes it
+        # today. The real cost is narrower — the database advertises a
+        # historical contract, and any consumer that does gate on the version
+        # needs the four-step migration chain run by hand to reach the current
+        # one.
         #
         # Stamped current here rather than changed in `migrate_catalog`, because
         # that function's 2.0.0 is load-bearing for the chain: the four

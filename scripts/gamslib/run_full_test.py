@@ -959,8 +959,14 @@ def run_pipeline(
                 # (PR #1740 review). `MCP-SOLVED` is the condition §6's
                 # presolve-golden adoption rule already requires, and it folds in
                 # the abort and solver-status checks a presence test cannot see.
-                retry_attributed = retry_result.get("mcp_attribution") == "MCP-SOLVED"
-                if retry_result["status"] == "success" and retry_attributed:
+                # ⚠ Named for what it TESTS, not for attribution (PR #1740
+                # review). `MCP-FAILED` is *attributed* — the status genuinely is
+                # ours — and is deliberately false here, so calling this
+                # `retry_attributed` named the weaker property while enforcing
+                # the stronger one. That is exactly the conflation the comments
+                # below exist to prevent.
+                retry_mcp_solved = retry_result.get("mcp_attribution") == "MCP-SOLVED"
+                if retry_result["status"] == "success" and retry_mcp_solved:
                     stats["presolve_retry_success"] += 1
                     # Correct the double-count from running solve twice. For a
                     # STATUS-5 cold (failure), the cold incremented solve_failure

@@ -10,6 +10,7 @@ golden — a real ``--nlp-presolve`` emit — so they need no GAMS.
 from __future__ import annotations
 
 import math
+import pathlib
 import sys
 from pathlib import Path
 
@@ -916,3 +917,108 @@ Solve m using nlp maximizing obj;
             cold_obj=None,
         )
         assert out.code == "case_b"
+
+
+class TestAttributionGuards:
+    """Sprint 39 P7 — a borrowed or aborted status must not become evidence.
+
+    ⚠ Both guards were untested (PR #1740 review): `cold_start_result` and
+    `_presolve_match_objective` are reached only through GAMS-gated end-to-end
+    paths, so either could have regressed to treating an unusable run as a
+    result. `_cold_is_spurious` consumes the first as PROOF of a spurious point
+    and the Case-C reclassification consumes the second as the presolve match,
+    so a false value here does not stay local.
+    """
+
+    @staticmethod
+    def _solved(verdict: str, completed: bool, model_status: int = 1, obj: float = 42.0):
+        return {
+            "status": "success" if model_status in (1, 2) else "failure",
+            "solver_status": 1,
+            "model_status": model_status,
+            "objective_value": obj,
+            "mcp_attribution": verdict,
+            "mcp_completed_own_solve": completed,
+        }
+
+    def _patch_solve(self, monkeypatch, result):
+        """⚠ Patch the SOURCE modules, not `kkt_residual`.
+
+        Both helpers import at call time (`from scripts.gamslib.test_solve
+        import solve_mcp` inside the function body), so the names never exist as
+        attributes of `kkt_residual` and patching there silently does nothing —
+        the first draft of this class did exactly that and every test errored.
+        """
+        import kkt_residual as kr
+
+        from scripts.gamslib import batch_translate as bt
+        from scripts.gamslib import test_solve as ts
+
+        monkeypatch.setattr(ts, "solve_mcp", lambda *a, **k: result)
+        # The real translate writes the cold emit; the helpers gate on the
+        # file EXISTING, so the stub has to produce it rather than be skipped.
+        monkeypatch.setattr(
+            bt,
+            "translate_single_model",
+            lambda _src, out, **k: pathlib.Path(out).write_text("* stub emit\n"),
+        )
+        return kr
+
+    # ---------------------------------------------------------- cold_start_result
+
+    def test_a_solved_cold_mcp_is_optimal(self, monkeypatch, tmp_path):
+        kr = self._patch_solve(monkeypatch, self._solved("MCP-SOLVED", True))
+        assert kr.cold_start_result(tmp_path / "m.gms", tmp_path) == ("optimal", 42.0)
+
+    def test_a_COMPLETED_failure_is_diverged(self, monkeypatch, tmp_path):
+        """Our model ran and reported an unusable status — a real divergence."""
+        kr = self._patch_solve(
+            monkeypatch, self._solved("MCP-FAILED", True, model_status=4, obj=7.0)
+        )
+        assert kr.cold_start_result(tmp_path / "m.gms", tmp_path) == ("diverged", 7.0)
+
+    def test_an_ABORTED_mcp_is_UNAVAILABLE_not_diverged(self, monkeypatch, tmp_path):
+        """⚠ The distinction that keeps `_cold_is_spurious` honest.
+
+        An aborted MCP is also `MCP-FAILED`, and GAMS may print a stale MS-1
+        above its abort line. Calling that "diverged" would hand the Case-C
+        reclassification proof of a spurious point from a run that produced no
+        answer at all.
+        """
+        kr = self._patch_solve(monkeypatch, self._solved("MCP-FAILED", False, obj=7.0))
+        assert kr.cold_start_result(tmp_path / "m.gms", tmp_path) == ("unavailable", None)
+
+    def test_an_INDETERMINATE_verdict_is_unavailable(self, monkeypatch, tmp_path):
+        kr = self._patch_solve(monkeypatch, self._solved("MCP-NO-STATUS", False))
+        assert kr.cold_start_result(tmp_path / "m.gms", tmp_path) == ("unavailable", None)
+
+    # -------------------------------------------------- _presolve_match_objective
+
+    def test_the_presolve_match_requires_our_own_solve(self, monkeypatch, tmp_path):
+        """⚠ The borrowed-objective path, which is the `weapons` defect itself.
+
+        On a presolve listing an `EMBEDDED-ONLY` verdict means the objective is
+        the embedded SOURCE's. Returning it here would make the Case-C
+        reclassification compare the cold optimum against the NLP's own answer.
+        """
+        kr = self._patch_solve(monkeypatch, self._solved("EMBEDDED-ONLY", False, obj=999.0))
+        assert kr._presolve_match_objective(tmp_path / "p.gms") is None
+
+        kr = self._patch_solve(monkeypatch, self._solved("MCP-NO-STATUS", False, obj=999.0))
+        assert kr._presolve_match_objective(tmp_path / "p.gms") is None
+
+    def test_the_presolve_match_accepts_our_own_solve(self, monkeypatch, tmp_path):
+        """The negative control — a gate that rejected everything would pass above."""
+        kr = self._patch_solve(monkeypatch, self._solved("MCP-SOLVED", True, obj=123.5))
+        assert kr._presolve_match_objective(tmp_path / "p.gms") == pytest.approx(123.5)
+
+    def test_results_without_the_attribution_field_are_unchanged(self, monkeypatch, tmp_path):
+        """Backward compatibility: an older result dict keeps its behaviour."""
+        legacy = {
+            "status": "success",
+            "solver_status": 1,
+            "model_status": 1,
+            "objective_value": 5.0,
+        }
+        kr = self._patch_solve(monkeypatch, legacy)
+        assert kr._presolve_match_objective(tmp_path / "p.gms") == pytest.approx(5.0)

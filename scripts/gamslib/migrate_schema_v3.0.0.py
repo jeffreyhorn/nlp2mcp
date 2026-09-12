@@ -163,9 +163,15 @@ def main(argv: list[str] | None = None) -> int:
         shutil.copy2(args.database, backup)
         logger.info("Backup: %s", backup)
 
-    args.database.write_text(
-        json.dumps(database, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    # ⚠ DEFAULT escaping — do NOT add `ensure_ascii=False` (PR #1740 review).
+    # The database already contains escaped sequences (`\u2014`, `\u2192`) in
+    # `notes` and error `message` fields, and disabling escaping rewrites them to
+    # literal Unicode. That put four unrelated text changes in a migration whose
+    # whole claim is that it touches only the renamed key, and it diverges from
+    # every prior migration and from `db_manager.save_database`, which all use
+    # plain `indent=2`. A migration's diff is its evidence; anything in it that
+    # the migration did not intend is noise a reviewer has to disprove.
+    args.database.write_text(json.dumps(database, indent=2) + "\n", encoding="utf-8")
     logger.info("Wrote %s", args.database)
     return 0
 

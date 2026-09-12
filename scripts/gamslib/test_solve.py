@@ -991,6 +991,29 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
         - iterations: Number of PATH iterations
         - outcome_category: Error taxonomy category
         - error: Error message (if failed)
+
+        Sprint 39 P7 attribution fields — WHOSE status the scalars above
+        describe. ``status``/``model_status`` come from a listing-wide scan that
+        takes the last match regardless of which model produced it, so on a
+        ``--nlp-presolve`` listing they can belong to the embedded source solve.
+        These three say so:
+
+        - mcp_attribution: the audit verdict for this listing — ``MCP-SOLVED``,
+          ``MCP-FAILED``, ``MCP-NO-STATUS``, ``EMBEDDED-ONLY``, ``NO-SOLVE`` or
+          ``ERROR``. Only ``MCP-SOLVED`` means our emitted model produced a
+          **usable** answer.
+        - mcp_produced_own_status: the status is OURS. ⚠ True for an aborted MCP
+          — attribution is not success. Gate on the verdict, not on this.
+        - mcp_completed_own_solve: our model ran to COMPLETION and reported this
+          status itself. True for a genuine ``model_status`` 4/5 (infeasible),
+          false for an abort with a stale status above its abort line. This is
+          the field a consumer reasoning about *infeasibility* needs, since
+          ``MCP-FAILED`` covers both cases.
+
+        ⚠ All three are absent from results returned on the early-exit failure
+        paths (no GAMS, timeout, no listing), which all report
+        ``status: "failure"``. Consumers tolerate a missing key as "unknown" so
+        older result dicts keep working.
     """
     start_time = time.perf_counter()
 
