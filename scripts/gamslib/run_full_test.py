@@ -1028,9 +1028,15 @@ def run_pipeline(
                     _verdict = retry_result.get("mcp_attribution")
                     _rejected_on_attribution = _verdict in ("EMBEDDED-ONLY", "MCP-FAILED")
                     if _rejected_on_attribution or retry_result["status"] == "success":
-                        # REJECTED: the retry was counted a success and pushed
-                        # no error, so undo exactly that. Popping
-                        # `solve_errors` here would discard the COLD error.
+                        # REJECTED: undo whatever THIS retry produced.
+                        # ⚠ Not "counted a success" (PR #1740 review) — that was
+                        # true before `solve_mcp` began downgrading a
+                        # contradicted status, and is false now for
+                        # `EMBEDDED-ONLY`/`MCP-FAILED`, which arrive as
+                        # failures. Only an INDETERMINATE verdict still reaches
+                        # here having been counted a success.
+                        # Either way: never pop `solve_errors` unless THIS retry
+                        # pushed one, or the COLD error is discarded.
                         # ⚠ Undo whichever counter `run_solve_stage` moved. It
                         # counts by the retry's OWN status, so an
                         # attribution-rejected retry now lands in
@@ -1127,9 +1133,15 @@ def _new_stats(total: int) -> dict[str, Any]:
         # Pre-solve retry stats
         "presolve_retry_attempted": 0,
         "presolve_retry_success": 0,
-        # Sprint 39 P7 / Remedy A: retries whose GLOBAL status said success but
-        # whose attribution verdict was not `MCP-SOLVED`, so the record was
-        # rejected and the cold result kept.
+        # Sprint 39 P7 / Remedy A: retries rejected because the attribution
+        # verdict was not `MCP-SOLVED`, so the record was refused and the cold
+        # result kept.
+        #
+        # ⚠ NOT restricted to retries whose global status said success (PR #1740
+        # review). That was the contract before `solve_mcp` began downgrading a
+        # contradicted status; `EMBEDDED-ONLY` and `MCP-FAILED` now arrive here
+        # as FAILURES and are counted too. The narrower wording survived the
+        # change that invalidated it.
         #
         # ⚠ Renamed from `presolve_retry_unattributed` (PR #1740 review). That
         # name described only `EMBEDDED-ONLY` — a status belonging to the

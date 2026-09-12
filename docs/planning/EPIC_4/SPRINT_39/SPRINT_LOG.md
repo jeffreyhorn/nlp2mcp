@@ -515,7 +515,15 @@ typecheck / format / lint clean · `make test` **5311 passed** / 10 skipped / 1 
 
 `solve_mcp` now computes `mcp_produced_own_status` **while `lst_content` is still in hand** — it is read inside a `TemporaryDirectory` and discarded, so the attribution cannot be recovered later. It reuses `parse_solve_summaries` rather than adding a second regex: attribution is **positional**, and a listing-wide search cannot answer the question.
 
-⚠ **The two arrivals at the restore branch need different bookkeeping.** A *failed* retry incremented `solve_failure` and pushed an error; an *unattributed* retry reported success, so it incremented `solve_success` and pushed nothing. Undoing the failure path for both would have popped the **cold** error off `solve_errors`. Pinned by a test.
+⚠ **The arrivals at the restore branch need different bookkeeping, and WHICH arrival is which changed during the sprint.** `run_solve_stage` counts a retry by its own status, so the rollback must undo whatever *that* retry produced — never assume. As shipped:
+
+| retry verdict | arrives as | rollback |
+|---|---|---|
+| **`EMBEDDED-ONLY`** (the live `weapons` case) · **`MCP-FAILED`** | **failure** — `solve_mcp` refuses to claim success for a contradicted status | undo `solve_failure`, pop the retry's error |
+| **`MCP-NO-STATUS`** / **`NO-SOLVE`** (indeterminate) | **success** — nothing contradicts the scalars | undo `solve_success`, pop nothing |
+| a genuine solver failure | failure | undo `solve_failure`, pop the retry's error |
+
+⚠ *An earlier revision of this line said an "unattributed retry reported success" — true before `solve_mcp` began downgrading contradicted statuses, and false for the one verdict the sprint actually exercises (PR #1740 review).* **Popping `solve_errors` when this retry pushed none discards the COLD error.** Pinned by a test, which itself had to move to an indeterminate fixture once `EMBEDDED-ONLY` stopped reaching the success arm.
 
 **It fired live**, re-captured from the shipped code rather than quoted from the first run:
 

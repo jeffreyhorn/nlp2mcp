@@ -1299,7 +1299,19 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
         }
 
         if not is_success:
-            if parsed.get("error_type"):
+            # ⚠ FIRST, because the scalars look healthy (PR #1740 review). An
+            # attribution-rejected solve has solver 1 and model 1/2, so every
+            # branch below is false and the reason fell through to
+            # "Unknown error" -- discarding the only thing that explains the
+            # refusal, for direct callers and for any failure record that
+            # survives the retry path.
+            if _attribution_rejected:
+                result["error"] = (
+                    f"MCP attribution {mcp_attribution}: the listing's "
+                    f"MODEL STATUS {model_status} is not a usable answer from "
+                    f"our emitted model"
+                )
+            elif parsed.get("error_type"):
                 result["error"] = f"Parse error: {parsed['error_type']}"
             elif solver_status != 1:
                 desc = SOLVER_STATUS_DESCRIPTIONS.get(int(solver_status), "Unknown") if solver_status is not None else "Unknown"

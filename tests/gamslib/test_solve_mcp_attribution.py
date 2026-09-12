@@ -341,3 +341,23 @@ def test_an_indeterminate_row_keeps_its_category(run_with_listing):
     result = run_with_listing(unattributable)
     assert result["status"] == "success"
     assert result["outcome_category"] != "path_solve_terminated"
+
+
+@pytest.mark.unit
+def test_a_rejected_row_carries_the_REASON_not_Unknown_error(run_with_listing):
+    """⚠ The refusal must say why (PR #1740 review).
+
+    An attribution-rejected solve has solver status 1 and model status 1/2, so
+    every pre-existing branch of the error construction is false and the message
+    fell through to `"Unknown error"` — discarding the one fact that explains the
+    refusal, for direct callers and for any failure record that survives the
+    retry path.
+    """
+    for listing, verdict in ((EMBEDDED_ONLY, "EMBEDDED-ONLY"), (OURS_ABORTED, "MCP-FAILED")):
+        result = run_with_listing(listing)
+        assert result["status"] == "failure"
+        assert "Unknown error" not in result.get("error", "")
+        assert verdict in result["error"], result["error"]
+
+    # A genuinely successful solve carries no error at all.
+    assert "error" not in run_with_listing(OURS_SOLVED)
