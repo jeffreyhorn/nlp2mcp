@@ -302,3 +302,31 @@ class TestAttributionGates:
                 self._attributed(_ok(1, 1.0), "MCP-SOLVED", True),
             ).conclusion
         )
+
+
+class TestPersistedAttributionGaps:
+    """Sprint 39 P7 — a PERSISTED row carries less than a live result.
+
+    ⚠ `mcp_attribution` and `mcp_completed_own_solve` are both stored now, but
+    an earlier revision persisted only the verdict — so every stored row had the
+    completion flag absent, and `_solver_completed`'s backward-compatible
+    `None → allowed` fallback accepted it (PR #1740 review).
+    """
+
+    def test_attribution_present_but_completion_absent_is_NOT_completed(self):
+        """The exact shape a partially-persisted row had."""
+        cold = _ok(5)
+        warm = {**_ok(5), "mcp_attribution": "EMBEDDED-ONLY"}  # no completion flag
+        result = _compare_results(cold, warm)
+        assert "infeasible" not in result.conclusion.lower(), result.conclusion
+
+    def test_a_fully_legacy_row_is_unchanged(self):
+        """No attribution at all → the pre-existing behaviour, as before."""
+        result = _compare_results(_ok(5), _ok(5))
+        assert "infeasible" in result.conclusion.lower(), result.conclusion
+
+    def test_a_completed_infeasible_row_still_reports(self):
+        """Both fields present and consistent → the real finding survives."""
+        both = {**_ok(5), "mcp_attribution": "MCP-FAILED", "mcp_completed_own_solve": True}
+        result = _compare_results(both, both)
+        assert "infeasible" in result.conclusion.lower(), result.conclusion

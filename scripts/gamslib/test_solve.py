@@ -860,14 +860,32 @@ def compare_solutions(
     # carry no verdict, and treating "unknown" as a rejection would silently
     # re-classify the whole committed corpus.
     _mcp_attribution = mcp_solve.get("mcp_attribution")
-    _mcp_answer_is_ours = _mcp_attribution is None or _mcp_attribution == "MCP-SOLVED"
-    mcp_solved = (
-        mcp_solver_status == 1 and mcp_model_status in (1, 2) and _mcp_answer_is_ours
-    )
+    mcp_solved = mcp_solver_status == 1 and mcp_model_status in (1, 2)
     mcp_infeasible = mcp_model_status in (4, 5, 6, 19)
 
     # Decision tree
     # Case 0: Multi-solve model — NLP reference is from a different solve iteration
+    # ⚠ Sprint 39 P7 (PR #1740 review). NOTHING CONCLUDED IS NOT A MISMATCH.
+    # An earlier revision folded the verdict into `mcp_solved`, so a persisted
+    # `MCP-NO-STATUS` row — healthy 1/1 scalars, no attributable answer — fell
+    # through to the status-mismatch branch and was recorded `mismatch`. That
+    # converts PARSER AMBIGUITY into a KPI mismatch, which is the opposite of
+    # the reason indeterminate verdicts were kept out of the `is_success` gate
+    # in the first place, and it disagrees with every other consumer:
+    # `kkt_residual` maps these to "unavailable", not "diverged".
+    #
+    # Any verdict that is not `MCP-SOLVED` means the comparison cannot be made.
+    # Absent is tolerated — legacy rows carry no verdict and must not be
+    # re-classified.
+    if _mcp_attribution is not None and _mcp_attribution != "MCP-SOLVED":
+        result["comparison_status"] = "skipped"
+        result["comparison_result"] = COMPARE_MULTI_SOLVE_SKIP
+        result["notes"] = (
+            f"MCP attribution {_mcp_attribution}: no answer attributable to our "
+            f"emitted model, so the objective comparison is not meaningful"
+        )
+        return result
+
     if model.get("multi_solve"):
         result["comparison_status"] = "skipped"
         result["comparison_result"] = COMPARE_MULTI_SOLVE_SKIP
@@ -1389,8 +1407,9 @@ def update_model_solve_result(
     #
     # Omitted when the solver supplied none, matching `run_solve_stage`, so rows
     # written by either path stay schema-valid.
-    if solve_result.get("mcp_attribution") is not None:
-        model["mcp_solve"]["mcp_attribution"] = solve_result["mcp_attribution"]
+    for _k in ("mcp_attribution", "mcp_completed_own_solve"):
+        if solve_result.get(_k) is not None:
+            model["mcp_solve"][_k] = solve_result[_k]
 
     if "error" in solve_result:
         model["mcp_solve"]["error"] = {

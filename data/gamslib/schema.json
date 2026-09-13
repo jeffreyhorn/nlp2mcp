@@ -530,6 +530,10 @@
           "enum": ["MCP-SOLVED", "MCP-FAILED", "MCP-NO-STATUS", "EMBEDDED-ONLY", "NO-SOLVE", "ERROR"],
           "description": "Sprint 39 P7: WHOSE solve the sibling status fields describe. The listing scan takes the last MODEL STATUS regardless of which model produced it, and a --nlp-presolve listing also contains the embedded source solve, so these scalars alone cannot say. Only MCP-SOLVED means our emitted model produced a usable answer. Optional: absent on rows written before this field existed, which consumers must treat as unknown rather than as a rejection."
         },
+        "mcp_completed_own_solve": {
+          "type": "boolean",
+          "description": "Sprint 39 P7: our emitted model ran to COMPLETION and reported this status itself — true for a genuine model_status 4/5, false for an abort with a stale status above its abort line, false for a status borrowed from the embedded source. Distinct from mcp_attribution because MCP-FAILED covers both an abort and a completed failing solve, and a consumer reasoning about INFEASIBILITY needs to tell them apart. Optional: absent on rows written before this field existed."
+        },
         "outcome_category": {
           "$ref": "#/definitions/solve_outcome_category",
           "description": "Categorized outcome from solve (success or error type)"

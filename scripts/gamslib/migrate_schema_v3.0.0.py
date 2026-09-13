@@ -31,8 +31,12 @@ Usage:
 
 ⚠ ``--validate`` is restored here deliberately. v2.2.0 and v2.2.1 dropped the
 flag that v2.1.0 had, and a migration that cannot check its own output is the
-wrong tool for a breaking change. It FAILS CLOSED without ``jsonschema``: the
-library's absence is reported as an error rather than passing silently.
+wrong tool for a breaking change.
+
+⚠ ``jsonschema`` is optional and UNDECLARED, so validation may be unavailable.
+The two cases are kept apart: a default run WARNS loudly and proceeds, because
+refusing would make the documented command unrunnable; an explicit
+``--validate`` treats the absence as an ERROR, because it was asked for.
 """
 
 from __future__ import annotations
@@ -74,16 +78,29 @@ def rename_field(database: dict[str, Any]) -> int:
     return renamed
 
 
-def validate(database: dict[str, Any]) -> list[str]:
-    """Validate against schema.json. FAILS CLOSED when jsonschema is absent."""
+#: What to say when validation could not run at all.
+_UNAVAILABLE = (
+    "jsonschema is not installed, so the database was NOT validated. This is a "
+    "breaking schema change; do not sign it off on an unvalidated run. "
+    "`pip install jsonschema` and re-run with --validate."
+)
+
+
+def validate(database: dict[str, Any]) -> list[str] | None:
+    """Schema errors, or ``None`` when validation COULD NOT RUN.
+
+    ⚠ ``None`` and ``[]`` are different answers and callers must not conflate
+    them (PR #1740 review). An earlier revision returned a synthetic error for
+    the missing library, which made "could not check" indistinguishable from
+    "found a problem" — so the DEFAULT migration refused to write on any machine
+    without the deliberately undeclared `jsonschema`, i.e. the documented
+    command could not be run at all. The opt-in flag was meaningless because the
+    check was never opt-in.
+    """
     try:
         from jsonschema import Draft7Validator
     except ImportError:
-        return [
-            "jsonschema is not installed, so the migrated database was NOT "
-            "validated. This is a breaking schema change; do not sign it off on "
-            "an unvalidated run. Install jsonschema and re-run --validate."
-        ]
+        return None
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
     return [
         f"{'/'.join(str(p) for p in e.absolute_path)}: {e.message}"
@@ -108,6 +125,10 @@ def main(argv: list[str] | None = None) -> int:
     # report a result it had never checked (PR #1740 review).
     if args.validate and current == TO_VERSION:
         errors = validate(database)
+        if errors is None:
+            # Explicitly ASKED to validate and cannot: that is a failure.
+            logger.error(_UNAVAILABLE)
+            return 1
         if errors:
             logger.error("Validation FAILED with %d error(s):", len(errors))
             for e in errors[:20]:
@@ -147,7 +168,16 @@ def main(argv: list[str] | None = None) -> int:
     # `--dry-run` the one mode that could not answer the question the flag
     # exists for: *would this migration produce a valid database?*
     errors = validate(database)
-    if errors:
+    if errors is None:
+        # ⚠ WARN AND PROCEED on the default path. Refusing here made the
+        # migration unrunnable wherever the optional library is absent, which is
+        # a worse failure than an unvalidated run: the operator cannot even
+        # perform the migration, and the flag that exists to demand validation
+        # is doing it unasked. `--validate` still treats this as an error.
+        logger.warning("⚠ %s", _UNAVAILABLE)
+        if args.validate:
+            return 1
+    elif errors:
         logger.error("Migrated database does NOT validate (%d error(s)):", len(errors))
         for e in errors[:20]:
             logger.error("  %s", e)

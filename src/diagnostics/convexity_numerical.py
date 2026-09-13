@@ -166,8 +166,16 @@ def _compare_results(
         """
         if result.get("solver_status") != 1:
             return False
-        completed = result.get("mcp_completed_own_solve")
-        return completed is None or bool(completed)
+        # ⚠ The `None` fallback is for LEGACY rows only (PR #1740 review).
+        # Absent means "written before attribution existed" — but once a row
+        # carries a verdict, an absent completion flag is not unknown, it is a
+        # row that was attributed and did NOT complete. Treating that as
+        # "unknown → allowed" let a persisted EMBEDDED-ONLY row with a borrowed
+        # 4/5 status be accepted as a completed infeasible solve, and make a
+        # false claim about our MCP on the infeasible branch.
+        if result.get("mcp_attribution") is None:
+            return True  # legacy row: no attribution information at all
+        return bool(result.get("mcp_completed_own_solve"))
 
     status_cold = cold_result.get("model_status")
     status_warm = warm_result.get("model_status")

@@ -563,11 +563,17 @@ def run_solve_stage(
         # stored entry, not the live result, so without this an indeterminate
         # solve with healthy scalars is compared as though our model had
         # answered. Omitted when absent, which keeps older rows valid.
-        **(
-            {"mcp_attribution": result["mcp_attribution"]}
-            if result.get("mcp_attribution") is not None
-            else {}
-        ),
+        **{
+            # ⚠ BOTH fields, or the infeasible consumers cannot reason (PR #1740
+            # review). Persisting only the verdict left
+            # `mcp_completed_own_solve` absent on every stored row, and
+            # `_solver_completed` treats absent as "unknown → allowed" for
+            # backward compatibility — so a persisted EMBEDDED-ONLY row with a
+            # borrowed 4/5 status was accepted as a completed infeasible solve.
+            k: result[k]
+            for k in ("mcp_attribution", "mcp_completed_own_solve")
+            if result.get(k) is not None
+        },
     }
 
     # Collect timing data

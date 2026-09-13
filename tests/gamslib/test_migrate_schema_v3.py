@@ -116,8 +116,7 @@ def test_it_REFUSES_TO_WRITE_when_the_result_would_be_invalid(tmp_path, monkeypa
     assert db.read_text() == before, "an invalid migration must leave the file untouched"
 
 
-def test_validate_FAILS_CLOSED_without_jsonschema(monkeypatch):
-    """Absent the optional library, validation must report rather than pass."""
+def _block_jsonschema(monkeypatch):
     import builtins
 
     real = builtins.__import__
@@ -128,9 +127,48 @@ def test_validate_FAILS_CLOSED_without_jsonschema(monkeypatch):
         return real(name, *a, **k)
 
     monkeypatch.setattr(builtins, "__import__", blocked)
-    errors = mig.validate(_db())
-    assert len(errors) == 1
-    assert "jsonschema" in errors[0].lower()
+
+
+def test_validate_returns_None_when_it_CANNOT_RUN(monkeypatch):
+    """⚠ `None` (could not check) and `[]` (checked, clean) are different.
+
+    An earlier revision returned a synthetic error for the missing library,
+    which made the two indistinguishable (PR #1740 review).
+    """
+    _block_jsonschema(monkeypatch)
+    assert mig.validate(_db()) is None
+
+
+def test_the_DEFAULT_migration_still_runs_without_jsonschema(tmp_path, monkeypatch, caplog):
+    """⚠ Refusing here made the documented command unrunnable.
+
+    `jsonschema` is deliberately optional and undeclared, so treating its
+    absence as a validation failure blocked the migration on any machine
+    lacking it — a worse outcome than an unvalidated run, because the operator
+    cannot migrate at all.
+    """
+    db = tmp_path / "db.json"
+    db.write_text(json.dumps(_db(n_with_key=2)))
+    _block_jsonschema(monkeypatch)
+
+    assert mig.main(["--database", str(db), "--no-backup"]) == 0
+    out = json.loads(db.read_text())
+    assert out["schema_version"] == "3.0.0"
+    assert all("mcp_file_used" not in m["mcp_solve"] for m in out["models"])
+    assert any(
+        "NOT validated" in r.getMessage() for r in caplog.records
+    ), "the operator must be warned that the run was unvalidated"
+
+
+def test_an_EXPLICIT_validate_still_fails_when_it_cannot_run(tmp_path, monkeypatch):
+    """Asked for validation and cannot deliver it → error, not a silent pass."""
+    db = tmp_path / "db.json"
+    before = json.dumps(_db())
+    db.write_text(before)
+    _block_jsonschema(monkeypatch)
+
+    assert mig.main(["--database", str(db), "--no-backup", "--validate"]) == 1
+    assert db.read_text() == before, "and it must not have written an unvalidated result"
 
 
 def test_the_writer_does_not_re_encode_unicode(tmp_path, monkeypatch):
