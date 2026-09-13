@@ -1380,6 +1380,18 @@ def update_model_solve_result(
         "outcome_category": solve_result["outcome_category"],
     }
 
+    # ⚠ Sprint 39 P7 (PR #1740 review). THE SECOND WRITER. `run_solve_stage`
+    # persists the verdict; this one rebuilds `mcp_solve` from a fixed key list
+    # and dropped it, so the standalone batch path (`test_solve.py --compare`)
+    # stored a row with no attribution. `compare_solutions` then reads that as
+    # legacy — absent means "unknown", deliberately, so older rows keep working
+    # — and an embedded-only or aborted listing could still be counted a MATCH.
+    #
+    # Omitted when the solver supplied none, matching `run_solve_stage`, so rows
+    # written by either path stay schema-valid.
+    if solve_result.get("mcp_attribution") is not None:
+        model["mcp_solve"]["mcp_attribution"] = solve_result["mcp_attribution"]
+
     if "error" in solve_result:
         model["mcp_solve"]["error"] = {
             "category": solve_result["outcome_category"],

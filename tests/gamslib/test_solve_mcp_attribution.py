@@ -503,3 +503,39 @@ def test_the_verdict_is_PERSISTED_into_mcp_solve():
         rft.get_solve_function = orig
 
     assert "mcp_attribution" not in legacy["mcp_solve"]
+
+
+@pytest.mark.unit
+def test_BOTH_writers_persist_the_verdict():
+    """⚠ There are two paths that write `mcp_solve` (PR #1740 review).
+
+    `run_solve_stage` (the pipeline) and `update_model_solve_result` (the
+    standalone `test_solve.py --compare` batch loop). Persisting the verdict in
+    only the first left the second storing a row without it — which
+    `compare_solutions` reads as legacy/unknown, so an embedded-only or aborted
+    listing could still be counted a match on that path.
+    """
+    from scripts.gamslib.test_solve import update_model_solve_result
+
+    base = {
+        "status": "failure",
+        "solver_version": None,
+        "gams_version": None,
+        "solver_status": 1,
+        "solver_status_text": "Normal",
+        "model_status": 2,
+        "model_status_text": "Locally Optimal",
+        "objective_value": 1735.5696,
+        "solve_time_seconds": 0.1,
+        "iterations": 1,
+        "outcome_category": "path_solve_terminated",
+    }
+
+    model: dict = {"model_id": "weapons"}
+    update_model_solve_result(model, {**base, "mcp_attribution": "EMBEDDED-ONLY"})
+    assert model["mcp_solve"]["mcp_attribution"] == "EMBEDDED-ONLY"
+
+    # Omitted when absent, so rows from either writer stay schema-valid.
+    legacy: dict = {"model_id": "weapons"}
+    update_model_solve_result(legacy, base)
+    assert "mcp_attribution" not in legacy["mcp_solve"]
