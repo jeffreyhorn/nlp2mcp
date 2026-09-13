@@ -88,6 +88,22 @@ OURS_ABORTED = """
 """
 
 
+#: ⚠ OUR model, ran to COMPLETION, and genuinely infeasible. Verdict is
+#: `MCP-FAILED` — the same verdict as an abort — but `mcp_completed_own_solve`
+#: is True, so this is an ordinary solver failure and NOT an attribution
+#: rejection.
+OURS_COMPLETED_INFEASIBLE = """
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  240
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      4 Infeasible
+"""
+
+
 #: ⚠ An INDETERMINATE listing: statuses parse (1/1) but belong to no summary our
 #: parser attributes, so the verdict is `MCP-NO-STATUS`/`NO-SOLVE`. This is the
 #: only shape that still reaches the rejection arm with `status == "success"`,
@@ -250,6 +266,11 @@ def _drive(monkeypatch, tmp_path, retry_listing: str):
             # caught the aborted-MCP hole, because that predicate is True for an
             # aborted solve (PR #1740 review).
             "mcp_attribution": _verdict,
+            "mcp_completed_own_solve": any(
+                s.model_status is not None and not s.aborted and s.solver_status == 1
+                for s in parse_solve_summaries(retry_listing)
+                if s.is_emitted_mcp
+            ),
         }
 
     monkeypatch.setattr(rft, "get_solve_function", lambda: fake_solve)
@@ -313,6 +334,13 @@ def test_an_ATTRIBUTED_retry_is_still_recorded_normally(monkeypatch, tmp_path):
 
     assert model["mcp_solve"]["outcome_category"] == "model_optimal_presolve"
     assert model["mcp_solve"]["presolve_required"] is True
+    # ⚠ The WRITTEN PATH, at runtime (PR #1740 review). The sibling test in
+    # test_run_full_test_path_relative.py checks this assignment with
+    # `inspect.getsource`, which would pass even if the line were unreachable or
+    # stored the wrong value. This test already drives the branch, so it can
+    # assert the actual result — deterministic because the fixture redirects
+    # PROJECT_ROOT to a tmp tree.
+    assert model["mcp_solve"]["mcp_file_generated"] == "data/gamslib/mcp/weapons_mcp_presolve.gms"
     assert stats["presolve_retry_success"] == 1
     assert stats["presolve_retry_rejected"] == 0
 
@@ -419,3 +447,24 @@ def test_the_summary_distinguishes_rejected_from_FAILED(capsys):
     assert "1/3 recovered" in out
     assert "1 REJECTED (no usable answer from our MCP)" in out
     assert "1 failed" in out
+
+
+@pytest.mark.unit
+def test_a_COMPLETED_own_failure_is_a_FAILURE_not_a_rejection(monkeypatch, tmp_path):
+    """⚠ `MCP-FAILED` is two different things (PR #1740 review).
+
+    It covers an ABORTED run *and* an own MCP that ran to completion and
+    reported a genuine failing model status. Treating the whole verdict as an
+    attribution rejection rolled real solver failures out of `solve_failure` and
+    into `presolve_retry_rejected` — so the documented
+    `attempted - success - rejected` silently omitted them, and the summary
+    reported a real failure as "rejected on attribution".
+
+    `mcp_completed_own_solve` is what separates them.
+    """
+    model, stats = _drive(monkeypatch, tmp_path, OURS_COMPLETED_INFEASIBLE)
+
+    assert stats["presolve_retry_rejected"] == 0, "a completed failure is not a rejection"
+    assert stats["presolve_retry_success"] == 0
+    # The cold record still wins, as for any failed retry.
+    assert model["mcp_solve"]["outcome_category"] == "model_optimal"

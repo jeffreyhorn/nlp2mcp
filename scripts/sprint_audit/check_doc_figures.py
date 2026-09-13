@@ -630,6 +630,11 @@ def _exempt_reason(line: str) -> str | None:
 # ---------------------------------------------------------------------- check
 
 
+#: Identifiers this repo has retired, mapped to their replacement. A CHANGED doc
+#: line naming one is reported unless it carries a corrective/historical marker.
+_RETIRED_TOKENS = {"mcp_file_used": "mcp_file_generated"}
+
+
 @dataclass
 class Finding:
     path: Path
@@ -657,6 +662,32 @@ def scan_line(
         reason = "movement line (A → B): the left figure is historical"
     if reason:
         return [], reason
+
+    # ⚠ RETIRED FIELD NAMES ARE FIGURES TOO (Sprint 39 P7, PR #1740 review).
+    # The `dangling` patterns match on the surrounding prose, not the field
+    # name, so a line citing the RENAMED-AWAY `mcp_file_used` with a correct
+    # count matched happily and passed. Making the pattern reject the stale
+    # token instead would be worse — a non-match is silence, and silence is
+    # what let it through in the first place. This FAILS on it.
+    #
+    # Only reached for lines that survived the corrective/historical exemptions
+    # above, so a labelled reference to the old name is still allowed.
+    for retired, replacement in _RETIRED_TOKENS.items():
+        if retired in text:
+            return (
+                [
+                    Finding(
+                        path=path,
+                        lineno=lineno,
+                        fact=f"retired identifier {retired!r}",
+                        cited=retired,
+                        truth=replacement,
+                        source="Sprint 39 P7 renamed this field; the old name no longer exists",
+                        line=text.strip(),
+                    )
+                ],
+                None,
+            )
 
     findings: list[Finding] = []
     seen: set[tuple[str, str]] = set()

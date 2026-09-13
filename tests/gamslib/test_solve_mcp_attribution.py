@@ -410,3 +410,96 @@ def test_a_foreign_solve_does_not_borrow_the_verdict(run_with_listing, monkeypat
     result = run_with_listing(foreign_only, model_name="mcp_model")
     assert result["mcp_attribution"] != "MCP-SOLVED", result["mcp_attribution"]
     assert result["status"] == "failure"
+
+
+# ------------------------------------------------- persistence and comparison
+
+
+@pytest.mark.unit
+def test_comparison_refuses_an_UNATTRIBUTABLE_persisted_solve():
+    """⚠ The live gate does not reach `compare_solutions` (PR #1740 review).
+
+    Comparison reads the PERSISTED `mcp_solve` entry, and `run_solve_stage`
+    stored only the scalars — so an indeterminate verdict with healthy 1/1
+    scalars was compared as though our model had answered, and could be counted
+    a match. That is the `weapons` defect arriving through the comparison path
+    rather than the retry path.
+    """
+    from scripts.gamslib.test_solve import compare_solutions
+
+    def _model(**mcp):
+        return {
+            "model_id": "m",
+            "convexity": {"solver_status": 1, "model_status": 2, "objective_value": 10.0},
+            "mcp_solve": {"solver_status": 1, "model_status": 1, "objective_value": 10.0, **mcp},
+        }
+
+    # Attributed to us → compared normally, and matches.
+    ours = compare_solutions(_model(mcp_attribution="MCP-SOLVED"))
+    assert ours["comparison_status"] == "match"
+
+    # Not attributable → must NOT be reported as a match.
+    for verdict in ("MCP-NO-STATUS", "NO-SOLVE", "EMBEDDED-ONLY"):
+        r = compare_solutions(_model(mcp_attribution=verdict))
+        assert r["comparison_status"] != "match", f"{verdict}: {r['comparison_status']}"
+
+    # ⚠ Absent (pre-existing rows) → unchanged behaviour. Treating "unknown" as
+    # a rejection would silently re-classify the entire committed corpus.
+    legacy = compare_solutions(_model())
+    assert legacy["comparison_status"] == "match"
+
+
+@pytest.mark.unit
+def test_the_verdict_is_PERSISTED_into_mcp_solve():
+    """The field must survive `run_solve_stage`, or the check above is unreachable."""
+    import argparse
+
+    import scripts.gamslib.run_full_test as rft
+    from scripts.gamslib.run_full_test import _new_stats, run_solve_stage
+
+    def stub_solve(_path, timeout=120):
+        return {
+            "status": "success",
+            "solver_status": 1,
+            "model_status": 1,
+            "objective_value": 1.0,
+            "outcome_category": "model_optimal",
+            "solve_time_seconds": 0.1,
+            "iterations": 1,
+            "mcp_attribution": "MCP-SOLVED",
+            "mcp_completed_own_solve": True,
+        }
+
+    model: dict = {"model_id": "m"}
+    orig = rft.get_solve_function
+    rft.get_solve_function = lambda: stub_solve
+    try:
+        run_solve_stage(model, Path("unused.gms"), argparse.Namespace(verbose=False), _new_stats(1))
+    finally:
+        rft.get_solve_function = orig
+
+    assert model["mcp_solve"]["mcp_attribution"] == "MCP-SOLVED"
+
+    # …and omitted entirely when the solver did not supply one, so rows written
+    # by older code paths stay schema-valid.
+    def legacy_solve(_path, timeout=120):
+        return {
+            "status": "success",
+            "solver_status": 1,
+            "model_status": 1,
+            "objective_value": 1.0,
+            "outcome_category": "model_optimal",
+            "solve_time_seconds": 0.1,
+            "iterations": 1,
+        }
+
+    legacy: dict = {"model_id": "m"}
+    rft.get_solve_function = lambda: legacy_solve
+    try:
+        run_solve_stage(
+            legacy, Path("unused.gms"), argparse.Namespace(verbose=False), _new_stats(1)
+        )
+    finally:
+        rft.get_solve_function = orig
+
+    assert "mcp_attribution" not in legacy["mcp_solve"]

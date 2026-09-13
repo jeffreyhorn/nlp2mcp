@@ -248,9 +248,18 @@ def test_the_REVERSE_form_still_matches_after_the_field_rename() -> None:
     assert _facts("**12 dangling mcp_file_generated rows**") == {
         "presolve rows whose generated file is absent"
     }
-    # The stale token must NOT keep working — a rename that leaves both live is
-    # how a DB ends up carrying two names for one field.
-    assert _facts("**12 dangling mcp_file_used rows**") == set()
+    # ⚠ The stale token is now REPORTED, not merely unmatched (PR #1740 review).
+    # An earlier revision asserted `== set()` here, i.e. that the retired name
+    # simply failed to match the count pattern — but a non-match is *silence*,
+    # so a line citing `mcp_file_used` with a correct count sailed through. The
+    # retired-identifier guard fails on it instead.
+    assert _facts("**12 dangling mcp_file_used rows**") == {"retired identifier 'mcp_file_used'"}
+    # …and the FORWARD form too, which is what the count patterns could not see.
+    assert _facts("the live count of dangling `mcp_file_used` rows is **13**") == {
+        "retired identifier 'mcp_file_used'"
+    }
+    # A labelled historical reference is still allowed.
+    assert _facts("⚠ superseded: `mcp_file_used` was renamed in Sprint 39") == set()
 
 
 def test_dangling_pattern_does_not_reach_into_the_next_clause() -> None:

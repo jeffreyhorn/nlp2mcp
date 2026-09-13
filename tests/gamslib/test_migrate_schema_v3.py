@@ -147,3 +147,35 @@ def test_the_writer_does_not_re_encode_unicode(tmp_path, monkeypatch):
     assert mig.main(["--database", str(db), "--no-backup"]) == 0
     raw = db.read_text()
     assert "\\u2014" in raw and "\\u2192" in raw, "escapes must survive untouched"
+
+
+def test_a_real_migration_validates_against_the_ACTUAL_schema(tmp_path):
+    """⚠ Every other success test stubs `validate` (PR #1740 review).
+
+    That means none of them exercised the validate-before-write path against
+    the real `schema.json` — so a future mismatch between what the migration
+    writes and what the contract permits could still produce an invalid
+    database while this suite stayed green. Which is not hypothetical: the
+    migration's own `_migration_summary_v3_0_0` block was rejected on first
+    run, because the schema root is `additionalProperties: false`.
+    """
+    pytest.importorskip("jsonschema", reason="optional; the validator no-ops without it")
+
+    src = json.loads((PROJECT_ROOT / "data" / "gamslib" / "gamslib_status.json").read_text())
+    # Rewind the committed database to the pre-migration shape.
+    src["schema_version"] = "2.2.1"
+    src.pop("_migration_summary_v3_0_0", None)
+    for m in src["models"]:
+        solve = m.get("mcp_solve")
+        if isinstance(solve, dict) and "mcp_file_generated" in solve:
+            solve["mcp_file_used"] = solve.pop("mcp_file_generated")
+
+    db = tmp_path / "db.json"
+    db.write_text(json.dumps(src))
+
+    assert (
+        mig.main(["--database", str(db), "--no-backup"]) == 0
+    ), "the real validator must accept what the migration writes"
+    out = json.loads(db.read_text())
+    assert out["schema_version"] == "3.0.0"
+    assert mig.main(["--database", str(db), "--validate"]) == 0

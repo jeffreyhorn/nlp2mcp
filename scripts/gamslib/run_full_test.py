@@ -558,6 +558,16 @@ def run_solve_stage(
         "solve_time_seconds": result.get("solve_time_seconds"),
         "iterations": result.get("iterations"),
         "outcome_category": result.get("outcome_category"),
+        # Sprint 39 P7 (PR #1740 review). Persisted so downstream consumers can
+        # ask WHOSE status these scalars are. `compare_solutions` reads the
+        # stored entry, not the live result, so without this an indeterminate
+        # solve with healthy scalars is compared as though our model had
+        # answered. Omitted when absent, which keeps older rows valid.
+        **(
+            {"mcp_attribution": result["mcp_attribution"]}
+            if result.get("mcp_attribution") is not None
+            else {}
+        ),
     }
 
     # Collect timing data
@@ -1026,7 +1036,18 @@ def run_pipeline(
                     # would vanish from the summary the previous round made it
                     # visible in.
                     _verdict = retry_result.get("mcp_attribution")
-                    _rejected_on_attribution = _verdict in ("EMBEDDED-ONLY", "MCP-FAILED")
+                    # ⚠ `MCP-FAILED` is NOT synonymous with an attribution
+                    # rejection (PR #1740 review). It covers both an ABORTED run
+                    # and an own MCP that ran to completion and reported a
+                    # genuine failing model status — `mcp_completed_own_solve`
+                    # separates them. Treating the completed case as "rejected"
+                    # rolled real solver failures out of `solve_failure` and into
+                    # the rejection count, so the documented
+                    # `attempted - success - rejected` silently omitted them.
+                    _rejected_on_attribution = _verdict == "EMBEDDED-ONLY" or (
+                        _verdict == "MCP-FAILED"
+                        and not retry_result.get("mcp_completed_own_solve")
+                    )
                     if _rejected_on_attribution or retry_result["status"] == "success":
                         # REJECTED: undo whatever THIS retry produced.
                         # ⚠ Not "counted a success" (PR #1740 review) — that was

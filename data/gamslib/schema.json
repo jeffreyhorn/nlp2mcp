@@ -525,6 +525,11 @@
           "type": "string",
           "description": "Relative path to the MCP file that was GENERATED for this solve. Sprint 39 P7: renamed from mcp_file_used, and 'generated' rather than 'solved' or 'used' because that is the only thing the writer observes. The artifact is a working file and may be cleaned up afterwards, so a path that no longer exists is the expected steady state, not an anomaly."
         },
+        "mcp_attribution": {
+          "type": "string",
+          "enum": ["MCP-SOLVED", "MCP-FAILED", "MCP-NO-STATUS", "EMBEDDED-ONLY", "NO-SOLVE", "ERROR"],
+          "description": "Sprint 39 P7: WHOSE solve the sibling status fields describe. The listing scan takes the last MODEL STATUS regardless of which model produced it, and a --nlp-presolve listing also contains the embedded source solve, so these scalars alone cannot say. Only MCP-SOLVED means our emitted model produced a usable answer. Optional: absent on rows written before this field existed, which consumers must treat as unknown rather than as a rejection."
+        },
         "outcome_category": {
           "$ref": "#/definitions/solve_outcome_category",
           "description": "Categorized outcome from solve (success or error type)"

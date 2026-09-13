@@ -847,7 +847,23 @@ def compare_solutions(
     nlp_infeasible = nlp_model_status in (4, 5, 6, 19)
 
     # Check if MCP solve was successful
-    mcp_solved = mcp_solver_status == 1 and mcp_model_status in (1, 2)
+    #
+    # ⚠ Sprint 39 P7 (PR #1740 review). These scalars come from a listing-wide
+    # scan that cannot say WHICH model produced them, and `compare_solutions`
+    # reads the PERSISTED entry, so the live gate in `solve_mcp` does not reach
+    # here. Without the stored verdict, a solve with no attributable emitted
+    # answer could be compared as though our model had solved — and counted as a
+    # match, which is the `weapons` defect arriving through the comparison path
+    # instead of the retry path.
+    #
+    # ⚠ `None` is tolerated, deliberately: rows written before the field existed
+    # carry no verdict, and treating "unknown" as a rejection would silently
+    # re-classify the whole committed corpus.
+    _mcp_attribution = mcp_solve.get("mcp_attribution")
+    _mcp_answer_is_ours = _mcp_attribution is None or _mcp_attribution == "MCP-SOLVED"
+    mcp_solved = (
+        mcp_solver_status == 1 and mcp_model_status in (1, 2) and _mcp_answer_is_ours
+    )
     mcp_infeasible = mcp_model_status in (4, 5, 6, 19)
 
     # Decision tree
