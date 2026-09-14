@@ -18,7 +18,7 @@ gamslib --help
 
 ```
 data/gamslib/
-├── gamslib_status.json   # Model status database (v2.0.0, replaces catalog.json)
+├── gamslib_status.json   # Model status database (v3.0.0, replaces catalog.json)
 ├── catalog.json          # Legacy catalog (v1.0.0, migrated to gamslib_status.json)
 ├── schema.json           # JSON Schema for database validation
 ├── convexity_report.md   # Summary report of verification results
@@ -31,7 +31,7 @@ data/gamslib/
 └── archive/              # Database backups
 
 scripts/gamslib/
-├── db_manager.py         # Database management CLI (v2.0.0)
+├── db_manager.py         # Database management CLI (stamps the current schema, v3.0.0)
 ├── batch_parse.py        # Batch parsing with nlp2mcp
 ├── batch_translate.py    # Batch MCP translation
 ├── discover_models.py    # Discover LP/NLP/QCP models
@@ -231,7 +231,7 @@ nlp_models = [m for m in models if m["gamslib_type"] == "NLP"]
 print(f"LP models: {len(lp_models)}")
 print(f"NLP models: {len(nlp_models)}")
 
-# Filter by convexity status (note: nested structure in v2.0.0)
+# Filter by convexity status (the nested structure was introduced in v2.0.0 and still applies)
 verified = [m for m in models if m.get("convexity", {}).get("status") == "verified_convex"]
 likely = [m for m in models if m.get("convexity", {}).get("status") == "likely_convex"]
 print(f"Verified convex: {len(verified)}")

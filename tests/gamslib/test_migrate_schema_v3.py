@@ -200,13 +200,37 @@ def test_a_real_migration_validates_against_the_ACTUAL_schema(tmp_path):
     pytest.importorskip("jsonschema", reason="optional; the validator no-ops without it")
 
     src = json.loads((PROJECT_ROOT / "data" / "gamslib" / "gamslib_status.json").read_text())
-    # Rewind the committed database to the pre-migration shape.
+
+    # Rewind the committed database to a GENUINE pre-migration shape.
+    #
+    # ⚠ Rewinding the version and the file key is NOT enough (PR #1740 review).
+    # An earlier revision left `mcp_attribution` and `mcp_completed_own_solve`
+    # on the `weapons` row — fields that did not exist at 2.2.1 — so the
+    # "round trip" started from a HYBRID and the test could validate migrated
+    # output without ever exercising the pre-migration shape it claims to cover.
+    _POST_MIGRATION_FIELDS = ("mcp_attribution", "mcp_completed_own_solve")
     src["schema_version"] = "2.2.1"
     src.pop("_migration_summary_v3_0_0", None)
     for m in src["models"]:
         solve = m.get("mcp_solve")
-        if isinstance(solve, dict) and "mcp_file_generated" in solve:
-            solve["mcp_file_used"] = solve.pop("mcp_file_generated")
+        if isinstance(solve, dict):
+            if "mcp_file_generated" in solve:
+                solve["mcp_file_used"] = solve.pop("mcp_file_generated")
+            for field in _POST_MIGRATION_FIELDS:
+                solve.pop(field, None)
+
+    # …and assert it, so the fixture cannot silently drift back into a hybrid
+    # the next time a field is added to `mcp_solve`.
+    assert not any(
+        set(_POST_MIGRATION_FIELDS) & set(m["mcp_solve"])
+        for m in src["models"]
+        if isinstance(m.get("mcp_solve"), dict)
+    ), "the fixture must carry no post-migration field"
+    assert any(
+        "mcp_file_used" in m["mcp_solve"]
+        for m in src["models"]
+        if isinstance(m.get("mcp_solve"), dict)
+    ), "…and must actually carry the OLD key, or the rename exercises nothing"
 
     db = tmp_path / "db.json"
     db.write_text(json.dumps(src))
