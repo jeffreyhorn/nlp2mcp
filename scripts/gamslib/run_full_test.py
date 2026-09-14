@@ -1050,9 +1050,31 @@ def run_pipeline(
                     # rolled real solver failures out of `solve_failure` and into
                     # the rejection count, so the documented
                     # `attempted - success - rejected` silently omitted them.
-                    _rejected_on_attribution = _verdict == "EMBEDDED-ONLY" or (
-                        _verdict == "MCP-FAILED"
-                        and not retry_result.get("mcp_completed_own_solve")
+                    # ⚠ Every verdict that is not a usable answer from OUR
+                    # model, matching what the counter's contract claims
+                    # (PR #1740 review). An earlier revision listed only
+                    # EMBEDDED-ONLY and aborted MCP-FAILED, so a listing whose
+                    # embedded source failed and whose emitted-MCP summary
+                    # carried no status — `MCP-NO-STATUS` with an overall
+                    # failure — fell through to the ordinary rollback, was
+                    # logged "Still failed", and never reached the counter.
+                    #
+                    # TWO exclusions, both deliberate:
+                    #   • `None` — no attribution at all (an early exit before
+                    #     the listing was read). A genuine failure, not a
+                    #     rejection.
+                    #   • `MCP-FAILED` WITH `mcp_completed_own_solve` — our
+                    #     model ran and reported a real failing status. Also a
+                    #     genuine failure; counting it would hide real solver
+                    #     failures inside the rejection total.
+                    _INDETERMINATE = ("MCP-NO-STATUS", "NO-SOLVE", "ERROR")
+                    _rejected_on_attribution = (
+                        _verdict == "EMBEDDED-ONLY"
+                        or _verdict in _INDETERMINATE
+                        or (
+                            _verdict == "MCP-FAILED"
+                            and not retry_result.get("mcp_completed_own_solve")
+                        )
                     )
                     if _rejected_on_attribution or retry_result["status"] == "success":
                         # REJECTED: undo whatever THIS retry produced.

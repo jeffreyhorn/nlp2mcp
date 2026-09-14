@@ -479,6 +479,11 @@ def test_the_verdict_is_PERSISTED_into_mcp_solve():
         rft.get_solve_function = orig
 
     assert model["mcp_solve"]["mcp_attribution"] == "MCP-SOLVED"
+    # ⚠ BOTH fields (PR #1740 review). Asserting only the verdict meant dropping
+    # `mcp_completed_own_solve` from the comprehension would still pass — and
+    # that field is what `_solver_completed` needs to tell a completed
+    # infeasible solve from an abort, so losing it inverts a safety default.
+    assert model["mcp_solve"]["mcp_completed_own_solve"] is True
 
     # …and omitted entirely when the solver did not supply one, so rows written
     # by older code paths stay schema-valid.
@@ -503,6 +508,7 @@ def test_the_verdict_is_PERSISTED_into_mcp_solve():
         rft.get_solve_function = orig
 
     assert "mcp_attribution" not in legacy["mcp_solve"]
+    assert "mcp_completed_own_solve" not in legacy["mcp_solve"]
 
 
 @pytest.mark.unit
@@ -532,10 +538,20 @@ def test_BOTH_writers_persist_the_verdict():
     }
 
     model: dict = {"model_id": "weapons"}
-    update_model_solve_result(model, {**base, "mcp_attribution": "EMBEDDED-ONLY"})
+    update_model_solve_result(
+        model,
+        {**base, "mcp_attribution": "EMBEDDED-ONLY", "mcp_completed_own_solve": False},
+    )
     assert model["mcp_solve"]["mcp_attribution"] == "EMBEDDED-ONLY"
+    # ⚠ The completion flag distinguishes an aborted `MCP-FAILED` from a
+    # completed infeasible solve, so this writer regressing to the verdict alone
+    # must fail here (PR #1740 review). `False` is the value that matters — a
+    # dropped field reads as ABSENT, which `_solver_completed` treats as
+    # legacy/allowed, inverting the safety default.
+    assert model["mcp_solve"]["mcp_completed_own_solve"] is False
 
     # Omitted when absent, so rows from either writer stay schema-valid.
     legacy: dict = {"model_id": "weapons"}
     update_model_solve_result(legacy, base)
     assert "mcp_attribution" not in legacy["mcp_solve"]
+    assert "mcp_completed_own_solve" not in legacy["mcp_solve"]

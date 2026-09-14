@@ -168,6 +168,7 @@ def main(argv: list[str] | None = None) -> int:
     # `--dry-run` the one mode that could not answer the question the flag
     # exists for: *would this migration produce a valid database?*
     errors = validate(database)
+    _validated = errors is not None
     if errors is None:
         # ⚠ WARN AND PROCEED on the default path. Refusing here made the
         # migration unrunnable wherever the optional library is absent, which is
@@ -185,7 +186,14 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     if args.dry_run:
-        logger.info("--dry-run: migration validates; nothing written")
+        # ⚠ Must not claim validation that did not happen (PR #1740 review). The
+        # unconditional wording printed "migration validates" directly after the
+        # "NOT validated" warning, which is exactly how an operator comes to
+        # treat an unchecked dry run as checked.
+        logger.info(
+            "--dry-run: %s; nothing written",
+            "migration validates" if _validated else "migration NOT validated (see above)",
+        )
         return 0
 
     if not args.no_backup:

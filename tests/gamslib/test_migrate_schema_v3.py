@@ -217,3 +217,39 @@ def test_a_real_migration_validates_against_the_ACTUAL_schema(tmp_path):
     out = json.loads(db.read_text())
     assert out["schema_version"] == "3.0.0"
     assert mig.main(["--database", str(db), "--validate"]) == 0
+
+
+def test_a_dry_run_does_not_CLAIM_validation_it_could_not_do(tmp_path, monkeypatch, caplog):
+    """⚠ The message must reflect whether validation actually ran (PR #1740 review).
+
+    With `jsonschema` absent the run printed the "NOT validated" warning and
+    then, unconditionally, `--dry-run: migration validates` — directly
+    contradictory, and exactly how an operator comes to treat an unchecked dry
+    run as checked.
+    """
+    import logging
+
+    db = tmp_path / "db.json"
+    db.write_text(json.dumps(_db()))
+    _block_jsonschema(monkeypatch)
+
+    with caplog.at_level(logging.INFO):
+        assert mig.main(["--database", str(db), "--dry-run"]) == 0
+
+    msgs = " | ".join(r.getMessage() for r in caplog.records)
+    assert "NOT validated" in msgs
+    assert "migration validates" not in msgs, msgs
+
+
+def test_a_dry_run_DOES_claim_validation_when_it_ran(tmp_path, monkeypatch, caplog):
+    """The negative control — otherwise the assertion above passes on any wording."""
+    import logging
+
+    db = tmp_path / "db.json"
+    db.write_text(json.dumps(_db()))
+    monkeypatch.setattr(mig, "validate", lambda _d: [])
+
+    with caplog.at_level(logging.INFO):
+        assert mig.main(["--database", str(db), "--dry-run"]) == 0
+
+    assert "migration validates" in " | ".join(r.getMessage() for r in caplog.records)

@@ -104,6 +104,28 @@ OURS_COMPLETED_INFEASIBLE = """
 """
 
 
+#: ⚠ The MIXED listing: the embedded source FAILED, and our emitted-MCP summary
+#: exists but carries no status. Verdict `MCP-NO-STATUS`, overall status
+#: `failure` — so it reaches the rollback by the failure route, which is why an
+#: earlier rejection predicate missed it entirely.
+SOURCE_FAILED_OURS_STATUSLESS = """
+               S O L V E      S U M M A R Y
+
+     MODEL   war                 OBJECTIVE  tetd
+     TYPE    NLP                 DIRECTION  MAXIMIZE
+     SOLVER  CONOPT              FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      4 Infeasible
+
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  240
+"""
+
+
 #: ⚠ An INDETERMINATE listing: statuses parse (1/1) but belong to no summary our
 #: parser attributes, so the verdict is `MCP-NO-STATUS`/`NO-SOLVE`. This is the
 #: only shape that still reaches the rejection arm with `status == "success"`,
@@ -468,3 +490,19 @@ def test_a_COMPLETED_own_failure_is_a_FAILURE_not_a_rejection(monkeypatch, tmp_p
     assert stats["presolve_retry_success"] == 0
     # The cold record still wins, as for any failed retry.
     assert model["mcp_solve"]["outcome_category"] == "model_optimal"
+
+
+@pytest.mark.unit
+def test_an_INDETERMINATE_retry_is_COUNTED_as_rejected(monkeypatch, tmp_path):
+    """⚠ The counter's contract said "verdict not MCP-SOLVED"; the code disagreed.
+
+    A listing whose embedded source failed and whose emitted-MCP summary carries
+    no status yields `MCP-NO-STATUS` with an overall `failure`. It therefore
+    reached the rollback by the *failure* route and was logged "Still failed",
+    never incrementing `presolve_retry_rejected` — so the summary reported an
+    attribution problem as an ordinary solver failure (PR #1740 review).
+    """
+    _, stats = _drive(monkeypatch, tmp_path, SOURCE_FAILED_OURS_STATUSLESS)
+
+    assert stats["presolve_retry_rejected"] == 1, "nothing attributable is a rejection"
+    assert stats["presolve_retry_success"] == 0
