@@ -36,8 +36,10 @@ from pathlib import Path
 import pytest
 
 from scripts.sprint_audit.check_mcp_solve_attribution import (
+    _KNOWN_VERDICTS,
     Attribution,
     parse_solve_summaries,
+    status_is_ours,
 )
 
 #: Verbatim from `weapons`'s listing — the ONLY solve summary it contains,
@@ -2596,3 +2598,64 @@ def test_an_abort_inside_a_loop_stays_ambiguous_and_unsuccessful():
     lst = _looped("1 Optimal", "1 Optimal") + "\n**** SOLVE from line 240 ABORTED, EXECERROR = 1\n"
     attribution = Attribution("m", summaries=parse_solve_summaries(lst))
     assert attribution.verdict != "MCP-SOLVED"
+
+
+class TestStatusIsOursFailsClosed:
+    """Sprint 39 P7 — the predicate gating infeasibility and match must not
+    fail OPEN on malformed data.
+
+    ⚠ `schema.json`'s enum is only a backstop: `jsonschema` is an undeclared
+    optional dependency, so a persisted row may never have been validated — and
+    this predicate also accepts LIVE result dicts that no schema ever sees
+    (PR #1740 review).
+    """
+
+    def test_an_absent_key_is_the_ONLY_permissive_case(self):
+        """Rows predating attribution must keep their behaviour."""
+        assert status_is_ours({}) is True
+        assert status_is_ours({"model_status": 1}) is True
+
+    def test_an_explicit_null_is_NOT_the_legacy_shape(self):
+        """⚠ `row.get()` conflated an omitted field with a present `null`.
+
+        The schema declares a non-null string, so a row carrying `null` is
+        malformed — and it took the legacy allow path.
+        """
+        assert status_is_ours({"mcp_attribution": None}) is False
+
+    def test_an_unrecognised_verdict_fails_closed(self):
+        """⚠ An earlier revision fell through to `return True`.
+
+        A typo or corrupt value was therefore read as an attributed solve and
+        bypassed every guard built on this predicate.
+        """
+        for bad in ("MCP-SOLVE", "mcp-solved", "", "SOLVED", 42, [], {"x": 1}):
+            assert status_is_ours({"mcp_attribution": bad}) is False, bad
+
+    def test_the_completion_flag_requires_the_LITERAL_boolean(self):
+        """⚠ `bool("false")` is True — truthiness is the wrong test here."""
+
+        def row(v):
+            return {"mcp_attribution": "MCP-FAILED", "mcp_completed_own_solve": v}
+
+        assert status_is_ours(row(True)) is True
+        for bad in ("false", "true", 1, "1", [1], object()):
+            assert status_is_ours(row(bad)) is False, bad
+        assert status_is_ours({"mcp_attribution": "MCP-FAILED"}) is False, "absent → not completed"
+
+    def test_the_known_verdicts_all_resolve(self):
+        """Scope guard: every schema enum value must be handled explicitly.
+
+        Derived from the schema rather than restated, so a future enum addition
+        that this predicate does not handle fails here instead of silently
+        failing closed in production.
+        """
+        import json
+        from pathlib import Path
+
+        root = Path(__file__).resolve().parents[3]
+        schema = json.loads((root / "data" / "gamslib" / "schema.json").read_text())
+        enum = schema["definitions"]["mcp_solve_result"]["properties"]["mcp_attribution"]["enum"]
+        assert set(enum) == set(
+            _KNOWN_VERDICTS
+        ), "the schema enum and the predicate's known-verdict set have drifted"

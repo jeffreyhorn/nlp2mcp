@@ -160,6 +160,16 @@ class SolveSummary:
 #: The verdicts that mean "our emitted model did not produce this status".
 _NOT_OUR_STATUS = frozenset({"EMBEDDED-ONLY", "MCP-NO-STATUS", "NO-SOLVE", "ERROR"})
 
+#: Every value `mcp_attribution` may legitimately hold. Anything else — a typo,
+#: an explicit ``null``, a non-string — is malformed and must NOT be read as an
+#: attributed solve. ⚠ `schema.json`'s enum is only a backstop here: `jsonschema`
+#: is an undeclared optional dependency, so validation may never have run on the
+#: row being inspected, and this predicate also accepts LIVE result dicts that
+#: no schema ever sees.
+_KNOWN_VERDICTS = frozenset(
+    {"MCP-SOLVED", "MCP-FAILED", "MCP-NO-STATUS", "EMBEDDED-ONLY", "NO-SOLVE", "ERROR"}
+)
+
 
 def status_is_ours(row: dict) -> bool:
     """Did OUR emitted model produce the status recorded in ``row`` itself?
@@ -178,19 +188,43 @@ def status_is_ours(row: dict) -> bool:
 
     Returns:
         True when the status is attributable to our model. ⚠ Also True when the
-        row carries NO verdict at all: rows written before attribution existed
-        must keep their previous behaviour, and treating "unknown" as "not ours"
-        would silently re-classify the committed corpus.
+        ``mcp_attribution`` KEY IS ABSENT: rows written before attribution
+        existed must keep their previous behaviour, and treating "unknown" as
+        "not ours" would silently re-classify the committed corpus.
+
+        ⚠ Everything else fails CLOSED — an explicit ``null``, an unrecognised
+        verdict, a non-boolean completion flag. Absence is a known state; a
+        malformed value is not, and this predicate gates the infeasibility and
+        match paths.
     """
-    verdict = row.get("mcp_attribution")
-    if verdict is None:
+    # ⚠ KEY ABSENT is the ONLY permissive case (PR #1740 review). An earlier
+    # revision used `row.get(...)`, which conflates an omitted field — the
+    # intended legacy shape — with an explicitly present `null`. The schema
+    # declares this field a non-null string, so a row carrying `null` is
+    # MALFORMED and took the legacy allow path.
+    if "mcp_attribution" not in row:
         return True
+
+    verdict = row["mcp_attribution"]
+    # ⚠ FAIL CLOSED on anything unrecognised. An earlier revision fell through
+    # to `return True`, so a typo or corrupt value — `"MCP-SOLVE"`, `None`, a
+    # non-string — was treated as an attributed solve and bypassed every guard
+    # built on this predicate.
+    # ⚠ `isinstance` FIRST: `x not in frozenset` raises TypeError for an
+    # unhashable value, so a corrupt row holding a list or dict would crash the
+    # caller rather than fail closed. A guard that raises is not a guard.
+    if not isinstance(verdict, str) or verdict not in _KNOWN_VERDICTS:
+        return False
     if verdict in _NOT_OUR_STATUS:
         return False
     if verdict == "MCP-FAILED":
         # Ours, but only if it ran to completion — an abort leaves a stale
         # status above its abort line that belongs to nothing.
-        return bool(row.get("mcp_completed_own_solve"))
+        #
+        # ⚠ IDENTITY, not truthiness. `bool("false")` is True, so a malformed
+        # string made an aborted row look completed and reach the infeasibility
+        # and match paths.
+        return row.get("mcp_completed_own_solve") is True
     return True  # MCP-SOLVED
 
 
