@@ -684,3 +684,32 @@ class TestCmdInitStampsTheCanonicalVersion:
         rc = dbm.cmd_init(argparse.Namespace(force=False, empty=False, dry_run=False))
         assert rc == 0
         assert json.loads(db.read_text())["schema_version"] == self._canonical()
+
+
+def test_save_database_stamps_updated_date(tmp_path):
+    """⚠ Sprint 39 P7 — the pipeline's write path never set it (PR #1740 review).
+
+    `schema.json` defines `updated_date` as the "ISO 8601 timestamp of last
+    modification", but only the migration scripts were setting it. So a re-solve
+    left the database reporting provenance from whenever a migration last ran —
+    a positive claim about when the data moved, wrong by hours in the committed
+    artifact until this was fixed.
+    """
+    from scripts.gamslib import db_manager as dbm
+
+    db = tmp_path / "gamslib_status.json"
+    stale = "2026-01-01T00:00:00+00:00"
+    dbm.save_database({"schema_version": "3.0.0", "updated_date": stale, "models": []}, db)
+
+    written = json.loads(db.read_text())
+    assert written["updated_date"] != stale, "the write must re-stamp the modification time"
+    assert written["updated_date"] > stale
+
+
+def test_save_database_does_not_INVENT_the_field(tmp_path):
+    """A payload without the key keeps its shape — the stamp is not a schema change."""
+    from scripts.gamslib import db_manager as dbm
+
+    db = tmp_path / "other.json"
+    dbm.save_database({"schema_version": "3.0.0", "models": []}, db)
+    assert "updated_date" not in json.loads(db.read_text())

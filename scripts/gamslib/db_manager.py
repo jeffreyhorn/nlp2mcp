@@ -94,6 +94,18 @@ def save_database(data: dict[str, Any], path: Path = DATABASE_PATH) -> None:
         path: Output path
     """
     logger.debug(f"Saving database to {path}")
+    # ⚠ Sprint 39 P7 (PR #1740 review). `schema.json` defines `updated_date` as
+    # the "ISO 8601 timestamp of last modification", and nothing was setting it
+    # on the pipeline's write path — only the migration scripts did. So a
+    # re-solve left the database reporting provenance from whenever a migration
+    # last ran, which is a POSITIVE claim about when the data moved and was
+    # wrong by hours in the committed artifact.
+    #
+    # Stamped HERE rather than at each call site: this is the single choke point
+    # every writer goes through, and the field describes the write, not the
+    # caller's intent.
+    if isinstance(data, dict) and "updated_date" in data:
+        data["updated_date"] = datetime.now(UTC).isoformat()
     path.parent.mkdir(parents=True, exist_ok=True)
 
     # Write to temp file first

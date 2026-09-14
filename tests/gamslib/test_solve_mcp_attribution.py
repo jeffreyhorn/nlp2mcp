@@ -630,3 +630,64 @@ def test_a_status_failure_row_is_skipped_before_attribution_matters():
         },
     }
     assert compare_solutions(row)["comparison_status"] == "skipped"
+
+
+@pytest.mark.unit
+def test_mcp_completed_own_solve_follows_the_FINAL_execution(run_with_listing):
+    """⚠ The final-execution rule must hold for the COMPLETION FLAG too.
+
+    `Attribution.mcp_succeeded` was covered, but this flag is computed
+    separately in `solve_mcp`. An `any()` regression here would report a loop
+    whose early iteration completed and whose final one aborted as a genuinely
+    completed `MCP-FAILED` — changing the rejection/failure counters and, via
+    `status_is_ours`, the downstream infeasibility handling (PR #1740 review).
+    """
+
+    def ours(ms: str, line: int = 240) -> str:
+        return f"""
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  {line}
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      {ms}
+"""
+
+    # ⚠ DISTINCT source lines, so the abort names ONLY the final summary.
+    # A first draft reused line 240 for both — but then the abort is
+    # `abort_ambiguous` and marks EVERY summary, so `any()` and last-execution
+    # agree and the test discriminates nothing. It passed against the `any()`
+    # mutant, which is how I found it (PR #1740 review).
+    looped_abort = (
+        ours("1 Optimal", 240)
+        + ours("1 Optimal", 250)
+        + ("\n**** SOLVE from line 250 ABORTED, EXECERROR = 1\n")
+    )
+    result = run_with_listing(looped_abort)
+    assert (
+        result["mcp_completed_own_solve"] is False
+    ), "the FINAL execution aborted, even though an earlier one completed"
+    assert result["mcp_attribution"] != "MCP-SOLVED"
+
+    # And the shared-line variant must still be refused, by ambiguity.
+    ambiguous = (
+        ours("1 Optimal")
+        + ours("1 Optimal")
+        + ("\n**** SOLVE from line 240 ABORTED, EXECERROR = 1\n")
+    )
+    assert run_with_listing(ambiguous)["mcp_completed_own_solve"] is False
+
+    # Early completes, final completes but FAILS — completion is still true
+    # (it ran), while the verdict is MCP-FAILED. The two answer different
+    # questions and must not collapse.
+    looped_fail = ours("1 Optimal") + ours("4 Infeasible")
+    r2 = run_with_listing(looped_fail)
+    assert r2["mcp_completed_own_solve"] is True, "the final run completed; it just failed"
+    assert r2["mcp_attribution"] == "MCP-FAILED"
+
+    # A single healthy execution is unaffected.
+    r3 = run_with_listing(ours("1 Optimal"))
+    assert r3["mcp_completed_own_solve"] is True
+    assert r3["mcp_attribution"] == "MCP-SOLVED"
