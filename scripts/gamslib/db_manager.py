@@ -101,9 +101,15 @@ def save_database(data: dict[str, Any], path: Path = DATABASE_PATH) -> None:
     # last ran, which is a POSITIVE claim about when the data moved and was
     # wrong by hours in the committed artifact.
     #
-    # Stamped HERE rather than at each call site: this is the single choke point
-    # every writer goes through, and the field describes the write, not the
-    # caller's intent.
+    # Stamped HERE rather than at each call site, because the field describes
+    # the write and not the caller's intent.
+    #
+    # ⚠ An earlier revision of this comment called it "the single choke point
+    # every writer goes through". That was FALSE when written (PR #1740
+    # review): `test_solve.py` carried its own duplicate `save_database` that
+    # bypassed this entirely, so a standalone `--compare` run left the
+    # provenance stale. The duplicate now delegates here — the claim is true
+    # because it was made true, not because it was checked.
     if isinstance(data, dict) and "updated_date" in data:
         data["updated_date"] = datetime.now(UTC).isoformat()
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -275,7 +281,14 @@ def cmd_init(args: argparse.Namespace) -> int:
         # An EMPTY database is structurally valid under any of these versions
         # (no `mcp_solve` rows to carry the renamed key), so stamping it current
         # is safe as well as correct.
-        database = {
+        # ⚠ Annotated because the literal's mixed value types would otherwise
+        # infer `dict[str, object]`, making `database["models"]` an `object` and
+        # `len()` on it a type error further down (PR #1740 review). Latent
+        # until Sprint 39 P7 routed `test_solve.save_database` through this
+        # module, which pulled it into `mypy src/`'s import graph via
+        # src/diagnostics/convexity_numerical.py. The weakness was always here;
+        # only its visibility changed.
+        database: dict[str, Any] = {
             "schema_version": "3.0.0",
             "created_date": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "updated_date": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),

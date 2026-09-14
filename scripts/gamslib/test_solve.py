@@ -152,11 +152,25 @@ def load_database(db_path: Path = DATABASE_PATH) -> dict[str, Any]:
 
 
 def save_database(db: dict[str, Any], db_path: Path = DATABASE_PATH) -> None:
-    """Save the GAMSLIB status database with atomic write."""
-    temp_path = db_path.with_suffix(".tmp")
-    with open(temp_path, "w") as f:
-        json.dump(db, f, indent=2)
-    temp_path.replace(db_path)
+    """Save the GAMSLIB status database with atomic write.
+
+    ⚠ DELEGATES to `db_manager.save_database` (PR #1740 review). This was a
+    SECOND, independent implementation, and the divergence was not academic:
+
+    * it never refreshed `updated_date`, so a standalone `--compare` run
+      modified the database while leaving its documented last-modification
+      provenance stale — the exact defect just fixed for the pipeline writer,
+      surviving in a duplicate;
+    * it omitted the trailing newline `db_manager` writes, so the two writers
+      produced byte-different files from the same data.
+
+    Delegating rather than copying the stamp: two implementations is what
+    allowed one to be fixed and the other not, and a comment claiming "every
+    writer goes through this choke point" is only true if they do.
+    """
+    from scripts.gamslib.db_manager import save_database as _save
+
+    _save(db, db_path)
 
 
 def get_translated_models(db: dict[str, Any]) -> list[dict[str, Any]]:

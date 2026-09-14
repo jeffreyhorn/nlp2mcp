@@ -107,9 +107,15 @@ def test_our_own_solved_mcp_is_MCP_SOLVED(run_with_listing):
 def test_an_embedded_only_listing_is_not_MCP_SOLVED(run_with_listing):
     """The `weapons` defect, through the real `solve_mcp`.
 
-    ⚠ Note `status` is still "success" and `model_status` is still 2: the global
-    scan cannot tell whose status it read. That is precisely why the gate must
-    consult the verdict rather than the status.
+    ⚠ `model_status` is still **2** — borrowed from the embedded source by the
+    listing-wide scan, which cannot tell whose status it read. But `status` is
+    **failure**: `solve_mcp` refuses to claim success once the verdict
+    contradicts it.
+
+    ⚠ *An earlier revision of this docstring said `status` was still "success",
+    which was true when written and stopped being true when the downgrade landed
+    (PR #1740 review). The assertions below had already been updated; the prose
+    above them had not — so the file argued against its own code.*
     """
     result = run_with_listing(EMBEDDED_ONLY)
     assert result["mcp_attribution"] == "EMBEDDED-ONLY"

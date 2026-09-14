@@ -713,3 +713,24 @@ def test_save_database_does_not_INVENT_the_field(tmp_path):
     db = tmp_path / "other.json"
     dbm.save_database({"schema_version": "3.0.0", "models": []}, db)
     assert "updated_date" not in json.loads(db.read_text())
+
+
+def test_the_standalone_writer_goes_through_the_shared_saver(tmp_path):
+    """⚠ `test_solve.py` carried a SECOND `save_database` (PR #1740 review).
+
+    It never refreshed `updated_date` and omitted the trailing newline, so a
+    standalone `--compare` run modified the database while leaving its
+    last-modification provenance stale — the same defect just fixed for the
+    pipeline writer, surviving in a duplicate. Pinned here rather than in
+    `test_solve`'s own file because the property under test is that the two
+    writers are ONE.
+    """
+    from scripts.gamslib.test_solve import save_database as standalone
+
+    db = tmp_path / "db.json"
+    stale = "2026-01-01T00:00:00+00:00"
+    standalone({"schema_version": "3.0.0", "updated_date": stale, "models": []}, db)
+
+    raw = db.read_text()
+    assert json.loads(raw)["updated_date"] != stale, "the standalone writer must re-stamp"
+    assert raw.endswith("\n"), "…and match the shared writer byte for byte"

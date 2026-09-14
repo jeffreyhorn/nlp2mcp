@@ -126,6 +126,32 @@ SOURCE_FAILED_OURS_STATUSLESS = """
 """
 
 
+#: ⚠ A LOOPED retry: our model executes twice (a forcing ladder), the first
+#: iteration reports a status and the FINAL one aborts on its own line. `any()`
+#: would call this a completed failure; the final-execution rule refuses it.
+LOOPED_FINAL_ABORT = """
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  240
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  250
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+
+**** SOLVE from line 250 ABORTED, EXECERROR = 1
+"""
+
+
 #: ⚠ An INDETERMINATE listing: statuses parse (1/1) but belong to no summary our
 #: parser attributes, so the verdict is `MCP-NO-STATUS`/`NO-SOLVE`. This is the
 #: only shape that still reaches the rejection arm with `status == "success"`,
@@ -258,6 +284,8 @@ def _drive(monkeypatch, tmp_path, retry_listing: str):
                 "mcp_attribution": "MCP-SOLVED",
             }
         parsed = parse_gams_listing(retry_listing)  # the real parser
+        _ours = [s for s in parse_solve_summaries(retry_listing) if s.is_emitted_mcp]
+        _ours_last = _ours[-1] if _ours else None
         _verdict = Attribution(
             model_id="weapons", summaries=parse_solve_summaries(retry_listing)
         ).verdict
@@ -288,10 +316,20 @@ def _drive(monkeypatch, tmp_path, retry_listing: str):
             # caught the aborted-MCP hole, because that predicate is True for an
             # aborted solve (PR #1740 review).
             "mcp_attribution": _verdict,
-            "mcp_completed_own_solve": any(
-                s.model_status is not None and not s.aborted and s.solver_status == 1
-                for s in parse_solve_summaries(retry_listing)
-                if s.is_emitted_mcp
+            # ⚠ PRODUCTION'S RULE: the FINAL emitted-MCP execution, including
+            # `abort_ambiguous` (PR #1740 review). An `any()` here meant a
+            # looped retry whose first iteration reported a status and whose
+            # last aborted would be routed through the completed-failure
+            # bookkeeping — so these counter/rollback tests could pass against
+            # behaviour production does not have. Same defect as the verdict
+            # double two rounds ago: a fake that re-derives instead of mirroring
+            # drifts silently.
+            "mcp_completed_own_solve": bool(
+                _ours_last is not None
+                and _ours_last.model_status is not None
+                and not _ours_last.aborted
+                and not _ours_last.abort_ambiguous
+                and _ours_last.solver_status == 1
             ),
         }
 
@@ -505,4 +543,20 @@ def test_an_INDETERMINATE_retry_is_COUNTED_as_rejected(monkeypatch, tmp_path):
     _, stats = _drive(monkeypatch, tmp_path, SOURCE_FAILED_OURS_STATUSLESS)
 
     assert stats["presolve_retry_rejected"] == 1, "nothing attributable is a rejection"
+    assert stats["presolve_retry_success"] == 0
+
+
+@pytest.mark.unit
+def test_a_LOOPED_retry_whose_final_execution_aborts_is_REJECTED(monkeypatch, tmp_path):
+    """⚠ The completed-vs-aborted split must follow the FINAL execution here too.
+
+    A forcing ladder runs our model repeatedly. With `any()`, an early
+    iteration's clean status made the retry look like a COMPLETED failure — an
+    ordinary solver failure — instead of an attribution rejection, moving it
+    between the two counters and changing what the run summary reports
+    (PR #1740 review).
+    """
+    _, stats = _drive(monkeypatch, tmp_path, LOOPED_FINAL_ABORT)
+
+    assert stats["presolve_retry_rejected"] == 1, "the final execution aborted"
     assert stats["presolve_retry_success"] == 0
