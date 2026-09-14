@@ -330,3 +330,30 @@ class TestPersistedAttributionGaps:
         both = {**_ok(5), "mcp_attribution": "MCP-FAILED", "mcp_completed_own_solve": True}
         result = _compare_results(both, both)
         assert "infeasible" in result.conclusion.lower(), result.conclusion
+
+    def test_a_malformed_completion_flag_cannot_prove_non_convexity(self):
+        """⚠ The optimality gate validated the verdict and ignored the flag.
+
+        `_solve_optimal` can prove NON-CONVEXITY — the strongest claim this
+        probe makes — so a row whose completion flag is corrupt must not reach
+        it, whatever the verdict says (PR #1740 review).
+        """
+        cold = _ok(1, 950.913)
+        warm = {
+            **_ok(1, 1075.547),
+            "mcp_attribution": "MCP-SOLVED",
+            "mcp_completed_own_solve": "false",
+        }
+        result = _compare_results(cold, warm)
+        assert not result.is_nonconvex, result.conclusion
+        assert "Non-convex" not in result.conclusion
+
+    def test_a_valid_flag_still_proves_it(self):
+        """The negative control — otherwise the assertion above passes on anything."""
+        cold = _ok(1, 950.913)
+        warm = {
+            **_ok(1, 1075.547),
+            "mcp_attribution": "MCP-SOLVED",
+            "mcp_completed_own_solve": True,
+        }
+        assert _compare_results(cold, warm).is_nonconvex

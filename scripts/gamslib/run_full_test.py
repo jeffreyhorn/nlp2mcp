@@ -518,6 +518,13 @@ def run_translate_stage(
     return result
 
 
+def _own_solve_completed(row: dict) -> bool:
+    """Thin re-export so this module has ONE source for the rule."""
+    from scripts.sprint_audit.check_mcp_solve_attribution import own_solve_completed
+
+    return own_solve_completed(row)
+
+
 def run_solve_stage(
     model: dict[str, Any],
     mcp_path: Path,
@@ -1071,9 +1078,14 @@ def run_pipeline(
                     _rejected_on_attribution = (
                         _verdict == "EMBEDDED-ONLY"
                         or _verdict in _INDETERMINATE
+                        # ⚠ IDENTITY via the shared helper, not truthiness
+                        # (PR #1740 review). With `bool(...)`, a malformed
+                        # `"false"` read as completed, so an unusable retry was
+                        # booked as an ordinary solver failure and the rejection
+                        # counter and rollback were both wrong.
                         or (
                             _verdict == "MCP-FAILED"
-                            and not retry_result.get("mcp_completed_own_solve")
+                            and not _own_solve_completed(retry_result)
                         )
                     )
                     if _rejected_on_attribution or retry_result["status"] == "success":

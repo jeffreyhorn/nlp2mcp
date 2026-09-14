@@ -132,10 +132,17 @@ def _compare_results(
             return False
         if result.get("error"):
             return False
+        # ⚠ The verdict alone is not enough (PR #1740 review): a present but
+        # MALFORMED completion flag poisons the row whatever the verdict says,
+        # and this gate can prove NON-CONVEXITY — the strongest claim the probe
+        # makes. `status_is_ours` applies that rule; requiring `MCP-SOLVED` on
+        # top of it keeps optimality stricter than mere attribution.
+        from scripts.sprint_audit.check_mcp_solve_attribution import status_is_ours
+
         attribution = result.get("mcp_attribution")
         if attribution is not None and attribution != "MCP-SOLVED":
             return False
-        return True
+        return status_is_ours(result)
 
     def _solver_completed(result: dict[str, Any]) -> bool:
         """Solver ran to completion (solver_status=1), even if model is infeasible.

@@ -1022,3 +1022,21 @@ class TestAttributionGuards:
         }
         kr = self._patch_solve(monkeypatch, legacy)
         assert kr._presolve_match_objective(tmp_path / "p.gms") == pytest.approx(5.0)
+
+    # ------------------------------------------- malformed completion flag
+
+    def test_a_MALFORMED_completion_flag_is_unavailable_not_diverged(self, monkeypatch, tmp_path):
+        """⚠ `bool("false")` is True (PR #1740 review).
+
+        With truthiness, a run that never completed was classified "diverged" —
+        and `_cold_is_spurious` reads that as PROOF of a spurious point, so a
+        corrupt flag would have manufactured a Case-C reclassification.
+        """
+        kr = self._patch_solve(
+            monkeypatch,
+            {
+                **self._solved("MCP-FAILED", True, model_status=4, obj=7.0),
+                "mcp_completed_own_solve": "false",
+            },
+        )
+        assert kr.cold_start_result(tmp_path / "m.gms", tmp_path) == ("unavailable", None)

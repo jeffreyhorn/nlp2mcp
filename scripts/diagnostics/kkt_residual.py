@@ -1031,6 +1031,7 @@ def cold_start_result(
     not that flag — gates the solve."""
     from scripts.gamslib.batch_translate import translate_single_model
     from scripts.gamslib.test_solve import solve_mcp
+    from scripts.sprint_audit.check_mcp_solve_attribution import own_solve_completed
 
     cold_path = scratch / f"{model_path.stem}_mcp_cold.gms"
     translate_single_model(model_path, cold_path, nlp_presolve=False)
@@ -1060,7 +1061,7 @@ def cold_start_result(
         # "diverged" would still hand `reclassify_objdef_case_c` an aborted run
         # as proof of a spurious point. Only a solve that RAN TO COMPLETION and
         # reported its own status is a real divergence.
-        if attribution == "MCP-FAILED" and solved.get("mcp_completed_own_solve"):
+        if attribution == "MCP-FAILED" and own_solve_completed(solved):
             return "diverged", obj
         return "unavailable", None
     if solved.get("model_status") in (1, 2):
@@ -1076,6 +1077,7 @@ def _presolve_match_objective(presolve_path: Path, timeout: int = 120) -> float 
     (fail closed → the CASE_B verdict is left unchanged) if the presolve MCP does
     not reach a usable optimum."""
     from scripts.gamslib.test_solve import solve_mcp
+    from scripts.sprint_audit.check_mcp_solve_attribution import own_solve_completed
 
     try:
         solved = solve_mcp(presolve_path, timeout=timeout)

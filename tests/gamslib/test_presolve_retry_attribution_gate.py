@@ -560,3 +560,68 @@ def test_a_LOOPED_retry_whose_final_execution_aborts_is_REJECTED(monkeypatch, tm
 
     assert stats["presolve_retry_rejected"] == 1, "the final execution aborted"
     assert stats["presolve_retry_success"] == 0
+
+
+@pytest.mark.unit
+def test_a_MALFORMED_completion_flag_is_a_REJECTION_not_a_failure(monkeypatch, tmp_path):
+    """⚠ `bool("false")` is True (PR #1740 review).
+
+    With truthiness, a malformed `MCP-FAILED` retry looked COMPLETED, so it was
+    booked as an ordinary solver failure instead of an attribution rejection —
+    wrong counter, and the rollback took the wrong arm.
+    """
+    import scripts.gamslib.run_full_test as rft
+
+    calls = {"n": 0}
+
+    def fake_solve(path, timeout=120):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return {
+                "status": "success",
+                "solver_status": 1,
+                "model_status": 1,
+                "objective_value": 1700.397,
+                "outcome_category": "model_optimal",
+                "solve_time_seconds": 0.1,
+                "iterations": 1,
+                "mcp_attribution": "MCP-SOLVED",
+                "mcp_completed_own_solve": True,
+            }
+        return {
+            "status": "failure",
+            "solver_status": 1,
+            "model_status": 1,
+            "objective_value": 1735.5696,
+            "outcome_category": "path_solve_terminated",
+            "solve_time_seconds": 0.1,
+            "iterations": 1,
+            "mcp_attribution": "MCP-FAILED",
+            "mcp_completed_own_solve": "false",
+        }
+
+    root = tmp_path / "root"
+    (root / "data" / "gamslib" / "raw").mkdir(parents=True)
+    (root / "data" / "gamslib" / "mcp").mkdir(parents=True)
+    (root / "data" / "gamslib" / "raw" / "weapons.gms").write_text("* stand-in\n")
+    mcp = root / "data" / "gamslib" / "mcp" / "weapons_mcp.gms"
+    mcp.write_text("* cold\n")
+    monkeypatch.setattr(rft, "PROJECT_ROOT", root)
+    monkeypatch.setattr(rft, "get_solve_function", lambda: fake_solve)
+    monkeypatch.setattr(
+        rft,
+        "get_translate_function",
+        lambda: (lambda s, o, nlp_presolve=False: {"status": "success"}),
+    )
+    monkeypatch.setattr(rft, "get_compare_function", lambda: (lambda *a, **k: {}))
+    monkeypatch.setattr(rft, "_run_convexity_check", lambda *a, **k: None)
+
+    model = {
+        "model_id": "weapons",
+        "convexity": {"solver_status": 1, "model_status": 2, "objective_value": 1735.5696},
+        "nlp2mcp_translate": {"status": "success", "output_file": str(mcp)},
+    }
+    stats = _stats()
+    run_pipeline(model, {"models": [model]}, _args(only_solve=True), stats)
+
+    assert stats["presolve_retry_rejected"] == 1, "a malformed flag is not completion"

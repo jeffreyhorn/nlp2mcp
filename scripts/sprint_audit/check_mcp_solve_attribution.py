@@ -171,6 +171,34 @@ _KNOWN_VERDICTS = frozenset(
 )
 
 
+#: The completion-flag field name, in one place so a rename cannot half-land.
+_COMPLETED_KEY = "mcp_completed_own_solve"
+
+
+def own_solve_completed(row: dict) -> bool:
+    """Did our model run to COMPLETION and report this status itself?
+
+    ⚠ IDENTITY, not truthiness. ``bool("false")`` is True, so the likeliest
+    malformed serialisation of a boolean would read as completed — and this flag
+    is the only thing separating a genuine failing solve from an abort that left
+    a stale status above its abort line. Absent reads as NOT completed, which is
+    the conservative answer for a question about what happened.
+    """
+    return row.get(_COMPLETED_KEY) is True
+
+
+def completion_flag_is_malformed(row: dict) -> bool:
+    """The flag is PRESENT and is not the literal ``True`` or ``False``.
+
+    Distinguished from "absent" because absence is the legacy shape and must
+    stay permissive, while a present-but-corrupt value is evidence the row
+    cannot be trusted — the schema declares a boolean.
+    """
+    if _COMPLETED_KEY not in row:
+        return False
+    return row[_COMPLETED_KEY] is not True and row[_COMPLETED_KEY] is not False
+
+
 def status_is_ours(row: dict) -> bool:
     """Did OUR emitted model produce the status recorded in ``row`` itself?
 
@@ -217,15 +245,19 @@ def status_is_ours(row: dict) -> bool:
         return False
     if verdict in _NOT_OUR_STATUS:
         return False
+    # ⚠ A PRESENT-BUT-MALFORMED completion flag poisons the row whatever the
+    # verdict says (PR #1740 review). An earlier revision checked it only on the
+    # `MCP-FAILED` branch, so `{"mcp_attribution": "MCP-SOLVED",
+    # "mcp_completed_own_solve": "false"}` was accepted unconditionally and
+    # could be counted as a match. The schema declares a boolean; anything else
+    # is evidence the row cannot be trusted.
+    if completion_flag_is_malformed(row):
+        return False
     if verdict == "MCP-FAILED":
         # Ours, but only if it ran to completion — an abort leaves a stale
         # status above its abort line that belongs to nothing.
-        #
-        # ⚠ IDENTITY, not truthiness. `bool("false")` is True, so a malformed
-        # string made an aborted row look completed and reach the infeasibility
-        # and match paths.
-        return row.get("mcp_completed_own_solve") is True
-    return True  # MCP-SOLVED
+        return own_solve_completed(row)
+    return True  # MCP-SOLVED, with a valid or absent completion flag
 
 
 def parse_aborted_lines(lst_content: str) -> set[int]:

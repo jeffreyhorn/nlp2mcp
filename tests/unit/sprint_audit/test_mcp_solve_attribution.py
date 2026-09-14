@@ -38,6 +38,8 @@ import pytest
 from scripts.sprint_audit.check_mcp_solve_attribution import (
     _KNOWN_VERDICTS,
     Attribution,
+    completion_flag_is_malformed,
+    own_solve_completed,
     parse_solve_summaries,
     status_is_ours,
 )
@@ -2659,3 +2661,51 @@ class TestStatusIsOursFailsClosed:
         assert set(enum) == set(
             _KNOWN_VERDICTS
         ), "the schema enum and the predicate's known-verdict set have drifted"
+
+
+class TestMalformedCompletionFlagFailsClosedEverywhere:
+    """Sprint 39 P7 — the literal-boolean rule must hold at EVERY consumer.
+
+    ⚠ It was fixed in `status_is_ours`'s `MCP-FAILED` branch and left as
+    truthiness at four other sites (PR #1740 review). `bool("false")` is True,
+    so the likeliest malformed serialisation of a boolean read as *completed* —
+    and the four sites reach, respectively, the match count, a non-convexity
+    proof, the Case-C reclassification, and the retry rejection counters.
+    """
+
+    MALFORMED = "false"  # the value that motivated the finding
+
+    def test_the_predicate_rejects_a_malformed_flag_under_EITHER_verdict(self):
+        """⚠ Including `MCP-SOLVED`, which previously returned True unconditionally."""
+        for verdict in ("MCP-SOLVED", "MCP-FAILED"):
+            row = {"mcp_attribution": verdict, "mcp_completed_own_solve": self.MALFORMED}
+            assert status_is_ours(row) is False, verdict
+
+    def test_a_VALID_false_is_not_treated_as_malformed(self):
+        """`False` is a legitimate value: our model ran and did not complete.
+
+        Conflating it with corruption would make a genuine aborted row and a
+        typo indistinguishable — and `MCP-SOLVED` with `False` is still ours.
+        """
+        assert (
+            status_is_ours({"mcp_attribution": "MCP-SOLVED", "mcp_completed_own_solve": False})
+            is True
+        )
+        assert (
+            status_is_ours({"mcp_attribution": "MCP-FAILED", "mcp_completed_own_solve": False})
+            is False
+        )
+
+    def test_own_solve_completed_is_identity_not_truthiness(self):
+        assert own_solve_completed({"mcp_completed_own_solve": True}) is True
+        for bad in ("false", "true", 1, "1", [1], {}, None):
+            assert own_solve_completed({"mcp_completed_own_solve": bad}) is False, bad
+        assert own_solve_completed({}) is False, "absent is not completed"
+
+    def test_malformed_is_distinguished_from_ABSENT(self):
+        """Absence is the legacy shape and stays permissive; corruption does not."""
+        assert completion_flag_is_malformed({}) is False
+        assert completion_flag_is_malformed({"mcp_completed_own_solve": True}) is False
+        assert completion_flag_is_malformed({"mcp_completed_own_solve": False}) is False
+        assert completion_flag_is_malformed({"mcp_completed_own_solve": "false"}) is True
+        assert completion_flag_is_malformed({"mcp_completed_own_solve": 1}) is True
