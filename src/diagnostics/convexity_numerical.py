@@ -173,9 +173,13 @@ def _compare_results(
         # "unknown → allowed" let a persisted EMBEDDED-ONLY row with a borrowed
         # 4/5 status be accepted as a completed infeasible solve, and make a
         # false claim about our MCP on the infeasible branch.
-        if result.get("mcp_attribution") is None:
-            return True  # legacy row: no attribution information at all
-        return bool(result.get("mcp_completed_own_solve"))
+        # ⚠ The shared predicate, not a local re-derivation (PR #1740 review).
+        # This exact question — "did OUR model produce this status" — has been
+        # re-implemented at five call sites in this sprint and got a different
+        # answer at three of them.
+        from scripts.sprint_audit.check_mcp_solve_attribution import status_is_ours
+
+        return status_is_ours(result)
 
     status_cold = cold_result.get("model_status")
     status_warm = warm_result.get("model_status")

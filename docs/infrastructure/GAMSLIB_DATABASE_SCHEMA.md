@@ -849,6 +849,17 @@ python scripts/gamslib/db_manager.py init
 
 **Manual migration:**
 
+> ⚠ **This example produces a v2.0.0 database — the CHAIN ENTRY POINT, not the
+> current contract** (Sprint 39 P7). `migrate_catalog()` stamps `2.0.0` by
+> design, because four `migrate_schema_v*.py` scripts walk `2.0.0 → 2.1.0 →
+> 2.2.0 → 2.2.1 → 3.0.0` and each accepts only its immediate predecessor.
+> Saving its result directly leaves a database advertising a historical
+> contract.
+>
+> **To initialize at the current version, use `db_manager.py init`**, which
+> stamps the canonical version for both its empty and catalog-backed paths. The
+> snippet below is retained as documentation of the chain's first step.
+
 ```python
 from scripts.gamslib.migrate_catalog import load_catalog, migrate_catalog
 from datetime import datetime, UTC
@@ -856,13 +867,16 @@ from datetime import datetime, UTC
 # Load old catalog
 catalog = load_catalog("data/gamslib/catalog.json")
 
-# Migrate to new schema
+# Migrate to the CHAIN ENTRY POINT (v2.0.0) — not the current schema
 migration_date = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 database = migrate_catalog(catalog, migration_date)
 
 # Save to new location
 from scripts.gamslib.db_manager import save_database
 save_database(database, "data/gamslib/gamslib_status.json")
+
+# ⚠ Then run the chain to reach the current contract:
+#   migrate_schema_v2.1.0.py → v2.2.0.py → v2.2.1.py → v3.0.0.py
 ```
 
 ### Compatibility Notes

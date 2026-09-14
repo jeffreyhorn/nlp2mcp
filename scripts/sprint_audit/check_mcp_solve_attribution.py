@@ -157,6 +157,43 @@ class SolveSummary:
         return self.is_mcp and self.model == EMITTED_MCP_MODEL
 
 
+#: The verdicts that mean "our emitted model did not produce this status".
+_NOT_OUR_STATUS = frozenset({"EMBEDDED-ONLY", "MCP-NO-STATUS", "NO-SOLVE", "ERROR"})
+
+
+def status_is_ours(row: dict) -> bool:
+    """Did OUR emitted model produce the status recorded in ``row`` itself?
+
+    ⚠ NOT the same question as "is this a usable answer". ``MCP-SOLVED`` answers
+    that one; this is the weaker and more often needed property, true also for a
+    solve that ran to completion and reported a genuine failing status. The two
+    have now been conflated at five separate call sites in Sprint 39 P7 — the
+    retry gate, `kkt_residual`'s divergence mapping, `convexity_numerical`'s
+    infeasible path, the rejection counter, and the comparison guard — each time
+    costing a real finding or inventing a false one. Defined once here so the
+    next consumer asks rather than re-derives.
+
+    Args:
+        row: a persisted ``mcp_solve`` entry, or a live ``solve_mcp`` result.
+
+    Returns:
+        True when the status is attributable to our model. ⚠ Also True when the
+        row carries NO verdict at all: rows written before attribution existed
+        must keep their previous behaviour, and treating "unknown" as "not ours"
+        would silently re-classify the committed corpus.
+    """
+    verdict = row.get("mcp_attribution")
+    if verdict is None:
+        return True
+    if verdict in _NOT_OUR_STATUS:
+        return False
+    if verdict == "MCP-FAILED":
+        # Ours, but only if it ran to completion — an abort leaves a stale
+        # status above its abort line that belongs to nothing.
+        return bool(row.get("mcp_completed_own_solve"))
+    return True  # MCP-SOLVED
+
+
 def parse_aborted_lines(lst_content: str) -> set[int]:
     """Source lines of solves GAMS reported ABORTED."""
     return {int(m.group(1)) for m in _SOLVE_ABORTED.finditer(lst_content)}
@@ -316,12 +353,29 @@ class Attribution:
         resource or iteration limit can report a stale-but-plausible model
         status alongside SOLVER STATUS 3/4, and that is not a solved model.
         """
-        return any(
-            not s.aborted
-            and not s.abort_ambiguous
-            and s.solver_status == _NORMAL_COMPLETION
-            and s.model_status in _SUCCESS_MODEL_STATUS
-            for s in self.mcp_summaries
+        # ⚠ THE LAST EXECUTION, NOT ``any()`` (PR #1740 review) — the same rule
+        # `embedded_produced_status` already applies, and for the same reason.
+        # A forcing scaffold executes one `Solve mcp_model using MCP;` inside a
+        # loop (`src/emit/forcing.py`'s homotopy ladder), so a listing can hold
+        # several executions of OUR model. With ``any()``, an early iteration
+        # succeeding and a later one reporting MS-4 yielded `MCP-SOLVED` while
+        # the listing-wide scalars — which every consumer reads — came from the
+        # FAILING later run. A consumer would then accept a stale earlier answer
+        # as the current solve.
+        #
+        # ⚠ An ABORT inside such a loop is `abort_ambiguous` rather than
+        # `aborted`, because all iterations share one source line: which
+        # execution aborted cannot be established, and the flag below already
+        # treats that as not-successful. That case was already safe; this one
+        # was not.
+        last = self.mcp_summaries[-1] if self.mcp_summaries else None
+        if last is None:
+            return False
+        return (
+            not last.aborted
+            and not last.abort_ambiguous
+            and last.solver_status == _NORMAL_COMPLETION
+            and last.model_status in _SUCCESS_MODEL_STATUS
         )
 
     @property

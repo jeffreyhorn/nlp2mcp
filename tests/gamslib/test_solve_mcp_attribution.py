@@ -555,3 +555,78 @@ def test_BOTH_writers_persist_the_verdict():
     update_model_solve_result(legacy, base)
     assert "mcp_attribution" not in legacy["mcp_solve"]
     assert "mcp_completed_own_solve" not in legacy["mcp_solve"]
+
+
+@pytest.mark.unit
+def test_a_COMPLETED_own_failure_still_reaches_the_comparison_tree():
+    """⚠ The attribution guard must not swallow a genuine both-infeasible match.
+
+    A completed own-MCP failure is `MCP-FAILED` with
+    `mcp_completed_own_solve=True` — that IS our answer, and the decision tree
+    records NLP-infeasible + MCP-infeasible as a genuine `match`
+    (`COMPARE_BOTH_INFEASIBLE`). An earlier revision skipped every
+    non-`MCP-SOLVED` verdict and lost those matches (PR #1740 review).
+    """
+    from scripts.gamslib.test_solve import compare_solutions
+
+    def _model(**mcp):
+        return {
+            "model_id": "m",
+            "convexity": {
+                "status": "verified",
+                "solver_status": 1,
+                "model_status": 4,
+                "objective_value": None,
+            },
+            "mcp_solve": {
+                "status": "success",
+                "solver_status": 1,
+                "model_status": 4,
+                "objective_value": None,
+                **mcp,
+            },
+        }
+
+    completed = _model(mcp_attribution="MCP-FAILED", mcp_completed_own_solve=True)
+    assert compare_solutions(completed)["comparison_status"] == "match"
+    # …and matches the legacy row's behaviour exactly, which is the point.
+    assert compare_solutions(_model())["comparison_status"] == "match"
+
+    # An ABORTED own MCP is still refused: the 4 above its abort line is stale.
+    aborted = _model(mcp_attribution="MCP-FAILED", mcp_completed_own_solve=False)
+    assert compare_solutions(aborted)["comparison_status"] == "skipped"
+    # As is a borrowed status.
+    assert (
+        compare_solutions(_model(mcp_attribution="EMBEDDED-ONLY"))["comparison_status"] == "skipped"
+    )
+
+
+@pytest.mark.unit
+def test_a_status_failure_row_is_skipped_before_attribution_matters():
+    """⚠ Scope note: `status: "failure"` is skipped by a PRE-EXISTING branch.
+
+    `compare_solutions` skips any row whose `mcp_solve.status` is `"failure"`
+    before the infeasible cases are reached, so the attribution guard is not
+    what decides those. Recorded so a future reader does not attribute this
+    behaviour — or a change to it — to the Sprint 39 work.
+    """
+    from scripts.gamslib.test_solve import compare_solutions
+
+    row = {
+        "model_id": "m",
+        "convexity": {
+            "status": "verified",
+            "solver_status": 1,
+            "model_status": 4,
+            "objective_value": None,
+        },
+        "mcp_solve": {
+            "status": "failure",
+            "solver_status": 1,
+            "model_status": 4,
+            "objective_value": None,
+            "mcp_attribution": "MCP-FAILED",
+            "mcp_completed_own_solve": True,
+        },
+    }
+    assert compare_solutions(row)["comparison_status"] == "skipped"

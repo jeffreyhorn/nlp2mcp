@@ -2543,3 +2543,56 @@ def test_a_read_only_json_destination_is_accepted_when_the_parent_is_writable(
         assert rc == 0, "a read-only file in a writable parent is a valid target"
     finally:
         dest.chmod(0o644)
+
+
+#: A forcing scaffold executes ONE `Solve mcp_model using MCP;` inside a loop
+#: (`src/emit/forcing.py`'s homotopy ladder), so a listing can hold several
+#: executions of OUR model, all sharing one source line.
+def _looped(*model_statuses: str) -> str:
+    return "".join(f"""
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  240
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      {ms}
+""" for ms in model_statuses)
+
+
+def test_a_looped_emitted_solve_is_judged_by_its_FINAL_execution():
+    """⚠ `any()` let an early success outrank the run the scalars came from.
+
+    Every consumer reads `parse_gams_listing`'s scalars, which take the LAST
+    match. With `any()`, a homotopy ladder whose first iteration solved and
+    whose last reported MS-4 was labelled `MCP-SOLVED` — so a consumer would
+    accept a stale earlier answer as the current solve (PR #1740 review).
+
+    This mirrors the rule `embedded_produced_status` already applies, and for
+    the same stated reason.
+    """
+    early_ok = Attribution(
+        "m", summaries=parse_solve_summaries(_looped("1 Optimal", "4 Infeasible"))
+    )
+    assert early_ok.verdict == "MCP-FAILED", "the last execution failed"
+
+    late_ok = Attribution(
+        "m", summaries=parse_solve_summaries(_looped("4 Infeasible", "1 Optimal"))
+    )
+    assert late_ok.verdict == "MCP-SOLVED", "…and it is not simply 'all must pass'"
+
+    single = Attribution("m", summaries=parse_solve_summaries(_looped("1 Optimal")))
+    assert single.verdict == "MCP-SOLVED", "single-execution listings are unaffected"
+
+
+def test_an_abort_inside_a_loop_stays_ambiguous_and_unsuccessful():
+    """The abort case was already safe, and must remain so.
+
+    All iterations share one source line, so `**** SOLVE from line 240 ABORTED`
+    cannot be attributed to a particular execution — `abort_ambiguous` covers it
+    and the verdict must not claim success.
+    """
+    lst = _looped("1 Optimal", "1 Optimal") + "\n**** SOLVE from line 240 ABORTED, EXECERROR = 1\n"
+    attribution = Attribution("m", summaries=parse_solve_summaries(lst))
+    assert attribution.verdict != "MCP-SOLVED"

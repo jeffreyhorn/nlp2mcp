@@ -58,6 +58,7 @@ import math
 # and a second regex here would be a second thing to keep correct.
 from scripts.sprint_audit.check_mcp_solve_attribution import (
     _NORMAL_COMPLETION,
+    status_is_ours,
     EMITTED_MCP_MODEL,
     Attribution,
     parse_solve_summaries,
@@ -874,10 +875,12 @@ def compare_solutions(
     # in the first place, and it disagrees with every other consumer:
     # `kkt_residual` maps these to "unavailable", not "diverged".
     #
-    # Any verdict that is not `MCP-SOLVED` means the comparison cannot be made.
-    # Absent is tolerated — legacy rows carry no verdict and must not be
-    # re-classified.
-    if _mcp_attribution is not None and _mcp_attribution != "MCP-SOLVED":
+    # ⚠ NOT `!= MCP-SOLVED` (PR #1740 review). A COMPLETED own-MCP failure is
+    # `MCP-FAILED` with `mcp_completed_own_solve`, and that IS our answer —
+    # skipping it lost valid both-infeasible matches, which the decision tree
+    # below records as a genuine `match`. `status_is_ours` is the shared
+    # predicate; absent verdicts stay tolerated for legacy rows.
+    if not status_is_ours(mcp_solve):
         result["comparison_status"] = "skipped"
         result["comparison_result"] = COMPARE_MULTI_SOLVE_SKIP
         result["notes"] = (
@@ -1226,12 +1229,19 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
         # model; the second is no answer at all. Consumers that reason about
         # infeasibility need the distinction, and the verdict alone cannot give
         # it (PR #1740 review).
-        mcp_completed_own_solve = any(
-            s.model_status is not None
-            and not s.aborted
-            and not s.abort_ambiguous
-            and s.solver_status == _NORMAL_COMPLETION
-            for s in attribution.mcp_summaries
+        # ⚠ THE LAST EXECUTION, matching `Attribution.mcp_succeeded` (PR #1740
+        # review). A forcing scaffold loops one `Solve mcp_model using MCP;`, so
+        # several executions of OUR model can appear; `any()` would report an
+        # early iteration's completion while the scalars every consumer reads
+        # come from the final one.
+        _ours = attribution.mcp_summaries
+        _last = _ours[-1] if _ours else None
+        mcp_completed_own_solve = bool(
+            _last is not None
+            and _last.model_status is not None
+            and not _last.aborted
+            and not _last.abort_ambiguous
+            and _last.solver_status == _NORMAL_COMPLETION
         )
 
         # Extract PATH solver version from .lst file
