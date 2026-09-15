@@ -309,31 +309,46 @@ def cmd_init(args: argparse.Namespace) -> int:
         catalog = load_catalog(CATALOG_PATH)
         migration_date = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
         database = migrate_catalog(catalog, migration_date)
-        # ⚠ Sprint 39 P7 (PR #1740 review). `migrate_catalog` stamps 2.0.0 — it
-        # is the ENTRY POINT of the version chain (2.0.0 → 2.1.0 → 2.2.0 →
-        # 2.2.1 → 3.0.0), which is correct for the migration scripts but wrong
-        # for a database being INITIALIZED now: it would claim a historical
-        # contract while being saved against this repo's only schema, the 3.0.0
-        # one.
+        # ⚠ DO NOT STAMP 3.0.0 HERE (PR #1740 review). An earlier revision did,
+        # reasoning that a freshly migrated catalog carries no `mcp_solve` rows
+        # and so has no `mcp_file_used` key for the 3.0.0 rename to have missed.
+        # That reasoning was about the RENAME ONLY, and the chain is not only a
+        # rename:
         #
-        # ⚠ An earlier revision said no current tool would accept it. That
-        # OVERSTATES it (PR #1740 review): `cmd_validate` checks the SHAPE
-        # against schema.json and does not require `schema_version == 3.0.0`, so
-        # a catalog-initialized 2.0.0 database with no `mcp_solve` rows passes it
-        # today. The real cost is narrower — the database advertises a
-        # historical contract, and any consumer that does gate on the version
-        # needs the four-step migration chain run by hand to reach the current
-        # one.
+        #   * v2.2.0 reads each raw source, detects MIP/MINLP/MIQCP/RMIP/RMINLP,
+        #     and installs the `pipeline_status: {status: "skipped"}` block;
+        #   * v2.2.1 adds the `multi_solve_driver_out_of_scope` exclusion.
         #
-        # Stamped current here rather than changed in `migrate_catalog`, because
-        # that function's 2.0.0 is load-bearing for the chain: the four
-        # `migrate_schema_v*.py` scripts each accept only their immediate
-        # predecessor, so moving it would strand every one of them.
+        # `migrate_catalog` deliberately leaves every pipeline stage absent
+        # (`migrate_catalog.py`, "Pipeline stages are NOT added"), so its output
+        # has no `pipeline_status` at all. `batch_parse.get_candidate_models`
+        # skips on exactly that key — its comment says it "Catches MINLPs whose
+        # convexity verifier reported `likely_convex`" — so a catalog-initialized
+        # database advertising 3.0.0 would hand DISCRETE models to the pipeline
+        # as candidates while claiming to satisfy the current contract. MINLP/MIP
+        # are out of scope for nlp2mcp; silently re-admitting them is the worst
+        # available failure.
         #
-        # ⚠ Safe only because a freshly migrated catalog carries no `mcp_solve`
-        # rows — there is no `mcp_file_used` key for the 3.0.0 rename to have
-        # missed. If that ever changes, this must run the chain instead.
-        database["schema_version"] = "3.0.0"
+        # So the version stays where `migrate_catalog` puts it, and the operator
+        # is told what remains. A database that says 2.0.0 is TRUE — the semantic
+        # migrations genuinely have not run — and `cmd_validate` accepts it,
+        # because `schema.json` constrains `schema_version` to a SemVer pattern
+        # rather than to one value.
+        #
+        # ⚠ The `--empty` path above still stamps 3.0.0, and that stays correct:
+        # it has `models: []`, so there is no model for the semantic transforms
+        # to have anything to say about.
+        logger.warning(
+            "Database initialized at schema %s from catalog.json. The semantic "
+            "migrations have NOT run: v2.2.0 installs the discrete-model "
+            "(MIP/MINLP/...) `pipeline_status` skip block and v2.2.1 adds the "
+            "multi-solve-driver exclusion, and `batch_parse.get_candidate_models` "
+            "gates on that block. Until the chain is run, discrete models may be "
+            "treated as candidates. Run, in order: migrate_schema_v2.1.0.py, "
+            "migrate_schema_v2.2.0.py, migrate_schema_v2.2.1.py, "
+            "migrate_schema_v3.0.0.py",
+            database.get("schema_version"),
+        )
 
         # Validate before saving
         schema = load_schema()
