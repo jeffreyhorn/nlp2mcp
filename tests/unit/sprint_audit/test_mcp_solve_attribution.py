@@ -31,6 +31,9 @@ They are labelled as such at each use.
 """
 
 import os
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -2839,3 +2842,55 @@ class TestStatusIsOursAndComplete:
                         assert not (tight and not loose), f"weaker on {row}"
                         seen_strictly_stronger |= loose and not tight
         assert seen_strictly_stronger, "the two predicates never differed — test is vacuous"
+
+
+@pytest.mark.unit
+class TestTheScriptRunsFromAnUninstalledCheckout:
+    """⚠ `python scripts/sprint_audit/check_mcp_solve_attribution.py` must work.
+
+    Running a script directly puts the SCRIPT'S OWN directory on `sys.path[0]`,
+    not the project root. When the shared predicates moved to
+    `src/diagnostics/solve_attribution.py`, the re-export import broke the
+    standalone entry point with `ModuleNotFoundError: No module named 'src'` at
+    IMPORT time — before `main`, so the tool was broken outright rather than
+    degraded (PR #1740 review).
+
+    ⚠ WHY A SMOKE TEST MISSED IT. A dev venv has an editable install
+    (`__editable__.nlp2mcp-*.pth`) that makes `src` importable from anywhere, so
+    running `--help` by hand PASSED while an uninstalled checkout failed. `-S`
+    skips `site`, and therefore the `.pth`, which reproduces the uninstalled
+    case. The script's other imports are all stdlib, so `-S` costs nothing.
+    """
+
+    # Derived here rather than imported: importing `PROJECT_ROOT` from the
+    # module under test would make this assert against the very value the fix
+    # installs, and several tests in this file monkeypatch it.
+    SCRIPT = (
+        Path(__file__).resolve().parents[3]
+        / "scripts"
+        / "sprint_audit"
+        / "check_mcp_solve_attribution.py"
+    )
+
+    def test_the_probe_is_not_vacuous(self):
+        """`-S` must really drop the editable path, or the test below proves nothing."""
+        out = subprocess.run(
+            [sys.executable, "-S", "-c", "import src"],
+            capture_output=True,
+            text=True,
+            cwd=tempfile.gettempdir(),
+        )
+        assert out.returncode != 0, "-S did not hide `src`; this probe cannot fail"
+        assert "No module named 'src'" in out.stderr
+
+    def test_it_starts_without_the_package_installed(self):
+        # cwd outside the repo as well, so the current directory cannot supply `src`.
+        out = subprocess.run(
+            [sys.executable, "-S", str(self.SCRIPT), "--help"],
+            capture_output=True,
+            text=True,
+            cwd=tempfile.gettempdir(),
+        )
+        assert out.returncode == 0, f"stderr:\n{out.stderr}"
+        assert "usage:" in out.stdout
+        assert "ModuleNotFoundError" not in out.stderr

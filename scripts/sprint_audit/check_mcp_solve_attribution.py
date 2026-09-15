@@ -165,6 +165,19 @@ class SolveSummary:
 # `src/diagnostics/convexity_numerical.py` needs on its RESULT-ONLY path, and
 # the wheel ships only `src` (`pyproject.toml` -> `include = ["src*"]`). An
 # installed package importing them from here raised `ModuleNotFoundError`.
+# ⚠ AND THIS SCRIPT IS ALSO RUN DIRECTLY FROM AN UNINSTALLED CHECKOUT
+# (PR #1740 review): `python scripts/sprint_audit/check_mcp_solve_attribution.py`
+# puts the SCRIPT'S OWN directory on `sys.path[0]`, not the project root, so the
+# import below raised `ModuleNotFoundError: No module named 'src'` at import
+# time — before `main` could run, i.e. the tool was simply broken rather than
+# degraded. `run_full_test.py:65` already does exactly this; matching it.
+#
+# ⚠ An editable install (`__editable__.nlp2mcp-*.pth`) makes `src` importable
+# from anywhere, which is why a smoke-test of `--help` in a dev venv PASSED and
+# hid this. Reproduce with `python -S <script> --help`.
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from src.diagnostics.solve_attribution import (  # noqa: E402
     _COMPLETED_KEY,
     _KNOWN_VERDICTS,
