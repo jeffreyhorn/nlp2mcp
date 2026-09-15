@@ -158,8 +158,31 @@ ignore_missing_imports = true
 # NOTE: `follow_imports = skip` alone does NOT skip .pyi stub files — by default
 # mypy still follows stubs. `follow_imports_for_stubs = true` is required so the
 # skip also applies to numpy's bundled stubs (verified against numpy 2.5.0).
+#
+# ⚠ KEEP THESE TWO KEYS IN THIS BLOCK. Sprint 39 P7 inserted a new override
+# between `ignore_missing_imports` and `follow_imports`, which silently moved
+# them onto the NEW module list: numpy lost its stub-skip, and CI failed on the
+# exact error this comment describes while the local run passed (older numpy).
+# A substitution count cannot detect misplacement — the anchor matched, and it
+# matched only the FIRST HALF of this block.
 follow_imports = "skip"
 follow_imports_for_stubs = true
+
+[[tool.mypy.overrides]]
+# Sprint 39 P7. `jsonschema` is a GENUINELY OPTIONAL, UNDECLARED dependency —
+# every use in `scripts/` sits behind `try: from jsonschema import ...` with an
+# ImportError fallback, so the code is written to run without it. Requiring
+# `types-jsonschema` would therefore declare a stub for a package the project
+# deliberately does not depend on.
+#
+# ⚠ It became visible only in Sprint 39: `mypy src/` follows
+# `src/diagnostics/convexity_numerical.py:67` into `scripts/gamslib/test_solve.py`,
+# and P7's Remedy A added an import from there to
+# `scripts/sprint_audit/check_mcp_solve_attribution.py`, which reaches the
+# optional import. The dependency was always optional; the import graph is what
+# changed.
+module = ["jsonschema", "jsonschema.*"]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "tabulate.*"

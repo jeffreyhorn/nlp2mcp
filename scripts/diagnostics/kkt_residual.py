@@ -1031,6 +1031,10 @@ def cold_start_result(
     not that flag — gates the solve."""
     from scripts.gamslib.batch_translate import translate_single_model
     from scripts.gamslib.test_solve import solve_mcp
+    from scripts.sprint_audit.check_mcp_solve_attribution import (
+        own_solve_completed,
+        status_is_ours_and_complete,
+    )
 
     cold_path = scratch / f"{model_path.stem}_mcp_cold.gms"
     translate_single_model(model_path, cold_path, nlp_presolve=False)
@@ -1039,6 +1043,39 @@ def cold_start_result(
     solved = solve_mcp(cold_path, timeout=timeout)
     obj = solved.get("objective_value")
     obj = float(obj) if isinstance(obj, (int, float)) else None
+    # ⚠ Sprint 39 P7 (PR #1740 review). A COLD listing holds only our MCP, so the
+    # embedded-only confusion cannot arise here — but an ABORTED solve still
+    # prints `MODEL STATUS 1` above its abort line, so the check below would
+    # report "optimal" for a solve GAMS refused to finish. The verdict folds that
+    # in. `None` is tolerated for backward compatibility with older results.
+    # ⚠ `status_is_ours` FIRST, not a bare string comparison (PR #1740 review).
+    # Checking only `!= "MCP-SOLVED"` let an explicit `mcp_attribution: null` and
+    # a malformed `mcp_completed_own_solve` on an MCP-SOLVED row through — and
+    # this result feeds `_cold_is_spurious`, which reads it as PROOF.
+    # ⚠ ATTRIBUTION **AND** COMPLETION — an attributed row whose solve did not
+    # complete has no objective to report. The conjunction is named once in the
+    # audit module rather than re-derived at each consumer (PR #1740 review).
+    if not status_is_ours_and_complete(solved):
+        return "unavailable", None
+    attribution = solved.get("mcp_attribution")
+    if attribution is not None and attribution != "MCP-SOLVED":
+        # ⚠ INDETERMINATE IS NOT EVIDENCE (PR #1740 review). `MCP-NO-STATUS`,
+        # `NO-SOLVE` and `ERROR` all mean "nothing can be concluded" -- the
+        # audit tool groups them in `_INDETERMINATE_VERDICTS` for exactly that
+        # reason. An earlier revision mapped everything but `NO-SOLVE` to
+        # "diverged", and `_cold_is_spurious` treats "diverged" as PROOF of a
+        # spurious cold solve, so a statusless MCP could have been reclassified
+        # `case_c_objdef` on no usable result at all. Only `MCP-FAILED` -- our
+        # model ran and reported an unusable answer -- is a real divergence.
+        # ⚠ `MCP-FAILED` is NOT a synonym for "completed with a bad status"
+        # (PR #1740 review): it also covers an explicitly ABORTED MCP, including
+        # one that printed MS-1 above its abort line. Mapping all of it to
+        # "diverged" would still hand `reclassify_objdef_case_c` an aborted run
+        # as proof of a spurious point. Only a solve that RAN TO COMPLETION and
+        # reported its own status is a real divergence.
+        if attribution == "MCP-FAILED" and own_solve_completed(solved):
+            return "diverged", obj
+        return "unavailable", None
     if solved.get("model_status") in (1, 2):
         return "optimal", obj
     if solved.get("model_status") is None:
@@ -1052,9 +1089,42 @@ def _presolve_match_objective(presolve_path: Path, timeout: int = 120) -> float 
     (fail closed → the CASE_B verdict is left unchanged) if the presolve MCP does
     not reach a usable optimum."""
     from scripts.gamslib.test_solve import solve_mcp
+    from scripts.sprint_audit.check_mcp_solve_attribution import (
+        status_is_ours_and_complete,
+    )
 
     try:
         solved = solve_mcp(presolve_path, timeout=timeout)
+        # ⚠ Sprint 39 P7 (PR #1740 review): `model_status` alone cannot say WHOSE
+        # status it is. This reads a `--nlp-presolve` listing, which also holds
+        # the embedded source solve, so an MCP that aborted before reporting
+        # would hand back the SOURCE's objective as if it were the presolve
+        # answer. Only `MCP-SOLVED` means our emitted model produced one.
+        # `None` is tolerated for backward compatibility with older results.
+        # ⚠ ATTRIBUTION **AND** COMPLETION, VIA THE SHARED CONJUNCTION
+        # (PR #1740 review). This gate hands back an OBJECTIVE, so being "ours"
+        # is not enough — `status_is_ours` answers attribution only and returns
+        # True for a schema-valid `MCP-SOLVED` row whose
+        # `mcp_completed_own_solve` is literally `False`.
+        #
+        # An earlier revision spelled the conjunction out here as
+        # `status_is_ours(...)` plus an inline `own_solve_completed(...)`. That
+        # was equivalent — verified across all 216 verdict × flag shapes, 64 of
+        # which proceed — but equivalence held only by coincidence of the
+        # current legacy/verdict semantics, and this was the LAST consumer still
+        # re-deriving it. The whole reason `status_is_ours_and_complete` exists
+        # is that this distinction was mis-read at seven call sites; a private
+        # copy here is exactly how the eighth would appear.
+        #
+        # ⚠ The `MCP-SOLVED` requirement stays SEPARATE and is NOT folded in:
+        # it is specific to this objective path. A completed `MCP-FAILED` solve
+        # is legitimately "ours and complete" but has no usable objective, and
+        # other consumers of the shared predicate must keep accepting it.
+        if not status_is_ours_and_complete(solved):
+            return None
+        attribution = solved.get("mcp_attribution")
+        if attribution is not None and attribution != "MCP-SOLVED":
+            return None
         if solved.get("model_status") in (1, 2):
             obj = solved.get("objective_value")
             return float(obj) if isinstance(obj, (int, float)) else None

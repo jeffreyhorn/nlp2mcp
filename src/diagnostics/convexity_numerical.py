@@ -18,6 +18,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+# ⚠ PACKAGED SIBLING, imported at module level (PR #1740 review). These
+# predicates previously came from `scripts.sprint_audit`, which the wheel does
+# not ship (`pyproject.toml` -> `include = ["src*"]`), so the RESULT-ONLY
+# comparison path — `check_convexity_from_results`, reached with already-computed
+# dicts and without running GAMS — raised `ModuleNotFoundError` once installed.
+# The `scripts.gamslib.test_solve` import further down is deliberately still
+# deferred: that one genuinely needs the un-packaged runner, and it carries its
+# own availability error message.
+from src.diagnostics.solve_attribution import status_is_ours_and_complete
+
 
 @dataclass
 class ConvexityResult:
@@ -112,18 +122,94 @@ def _compare_results(
     _INFEASIBLE = {4, 5}
 
     def _solve_optimal(result: dict[str, Any]) -> bool:
-        """Strict check: trust as optimal only for fully successful solves."""
+        """Strict check: trust as optimal only for fully successful solves.
+
+        ⚠ Sprint 39 P7 (PR #1740 review): "fully successful" must include
+        *whose* success it is. `solve_mcp` derives `status`/`model_status` from a
+        listing-wide scan that takes the LAST match of each pattern, and a
+        ``--nlp-presolve`` emit's listing also contains the embedded source
+        solve. So when our MCP aborts before reporting, this function would read
+        the SOURCE's status and objective and call the warm MCP optimal — a
+        false convexity verdict from a solve that never happened.
+
+        `mcp_attribution` is the audit tool's verdict for that listing; only
+        ``MCP-SOLVED`` means our emitted model produced a usable answer. Absent
+        (older result dicts) is tolerated so this stays backward-compatible.
+        """
         if result.get("status") != "success":
             return False
         if result.get("solver_status") != 1:
             return False
         if result.get("error"):
             return False
-        return True
+        # ⚠ The verdict alone is not enough (PR #1740 review): a present but
+        # MALFORMED completion flag poisons the row whatever the verdict says,
+        # and this gate can prove NON-CONVEXITY — the strongest claim the probe
+        # makes. `status_is_ours` applies that rule; requiring `MCP-SOLVED` on
+        # top of it keeps optimality stricter than mere attribution.
+        attribution = result.get("mcp_attribution")
+        if attribution is not None and attribution != "MCP-SOLVED":
+            return False
+        # ⚠ Completion is a SEPARATE condition from attribution (PR #1740
+        # review): `status_is_ours` returns True for a schema-valid `MCP-SOLVED`
+        # row whose `mcp_completed_own_solve` is False. This gate can prove
+        # NON-CONVEXITY, so "ours" is not enough — the solve must have finished.
+        # `status_is_ours_and_complete` is that conjunction, named once rather
+        # than re-derived here; fully legacy rows keep the compatibility path.
+        return status_is_ours_and_complete(result)
 
     def _solver_completed(result: dict[str, Any]) -> bool:
-        """Solver ran to completion (solver_status=1), even if model is infeasible."""
-        return result.get("solver_status") == 1
+        """Solver ran to completion (solver_status=1), even if model is infeasible.
+
+        ⚠ Sprint 39 P7 (PR #1740 review): the attribution gate on
+        `_solve_optimal` alone was not enough. This feeds the INFEASIBLE path,
+        and a presolve listing whose embedded source reports infeasible while
+        our emitted MCP reports nothing is `EMBEDDED-ONLY` — so without this
+        check the source's infeasibility would be read as the warm MCP's and
+        produce a "both infeasible" or "warm infeasible" verdict about a solve
+        that never happened. The same false attribution, arriving through the
+        other branch.
+
+        ⚠⚠ AND IT MUST NOT REQUIRE `MCP-SOLVED` (PR #1740 review). An earlier
+        revision did, which **rejected every genuine infeasible solve**: a
+        normally-completed MCP reporting model status 4/5 is `MCP-FAILED`, since
+        the verdict reserves `MCP-SOLVED` for a *usable* answer. That turned the
+        cold-infeasible, warm-infeasible and both-infeasible branches into
+        generic inconclusive outcomes for real solver results — the opposite of
+        the bug being fixed, and a worse one, because it silently discards
+        findings rather than inventing them.
+
+        The distinction needed here is *"did OUR model run to completion and
+        report this status"*, which is `mcp_completed_own_solve`: true for a
+        real 4/5, false for an abort with a stale status above its abort line
+        and false for a status borrowed from the embedded source. A missing key
+        stays permitted so older result dicts keep working.
+        """
+        if result.get("solver_status") != 1:
+            return False
+        # ⚠ The `None` fallback is for LEGACY rows only (PR #1740 review).
+        # Absent means "written before attribution existed" — but once a row
+        # carries a verdict, an absent completion flag is not unknown, it is a
+        # row that was attributed and did NOT complete. Treating that as
+        # "unknown → allowed" let a persisted EMBEDDED-ONLY row with a borrowed
+        # 4/5 status be accepted as a completed infeasible solve, and make a
+        # false claim about our MCP on the infeasible branch.
+        # ⚠ The shared predicate, not a local re-derivation (PR #1740 review).
+        # This exact question — "did OUR model produce this status" — has been
+        # re-implemented at five call sites in this sprint and got a different
+        # answer at three of them.
+        # ⚠ `status_is_ours` ALONE IS NOT ENOUGH HERE (PR #1740 review) — the
+        # same omission this docstring warns about, in the function that warns
+        # about it. It answers ATTRIBUTION, and accepts an `MCP-SOLVED` row
+        # whose completion flag is absent or literally False. A persisted row
+        # carrying a STALE model status 4/5 above an abort line would then be
+        # read as a completed own infeasible solve and produce a convexity
+        # conclusion about a solve that never finished.
+        #
+        # ⚠⚠ This still must NOT require `MCP-SOLVED` — see the docstring: a
+        # genuine infeasible solve is `MCP-FAILED` + completed, and demanding
+        # `MCP-SOLVED` rejected every one of them.
+        return status_is_ours_and_complete(result)
 
     status_cold = cold_result.get("model_status")
     status_warm = warm_result.get("model_status")

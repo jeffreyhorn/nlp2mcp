@@ -18,7 +18,7 @@ gamslib --help
 
 ```
 data/gamslib/
-├── gamslib_status.json   # Model status database (v2.0.0, replaces catalog.json)
+├── gamslib_status.json   # Model status database (v3.0.0, replaces catalog.json)
 ├── catalog.json          # Legacy catalog (v1.0.0, migrated to gamslib_status.json)
 ├── schema.json           # JSON Schema for database validation
 ├── convexity_report.md   # Summary report of verification results
@@ -31,7 +31,7 @@ data/gamslib/
 └── archive/              # Database backups
 
 scripts/gamslib/
-├── db_manager.py         # Database management CLI (v2.0.0)
+├── db_manager.py         # Database management CLI (stamps the current schema, v3.0.0)
 ├── batch_parse.py        # Batch parsing with nlp2mcp
 ├── batch_translate.py    # Batch MCP translation
 ├── discover_models.py    # Discover LP/NLP/QCP models
@@ -39,7 +39,7 @@ scripts/gamslib/
 └── verify_convexity.py   # Verify model convexity
 ```
 
-**Note:** As of Sprint 14 (January 2026), `catalog.json` has been replaced by `gamslib_status.json` with an enhanced schema (v2.0.0) that tracks the full nlp2mcp pipeline. See `docs/infrastructure/GAMSLIB_DATABASE_SCHEMA.md` for details.
+**Note:** As of Sprint 14 (January 2026), `catalog.json` has been replaced by `gamslib_status.json` with an enhanced schema that tracks the full nlp2mcp pipeline. ⚠ **The current schema version is `3.0.0`** (Sprint 39 P7 renamed `mcp_solve.mcp_file_used` → `mcp_file_generated`; the pre- and post-rename shapes are mutually invalid under `additionalProperties: false`). **`data/gamslib/schema.json` is the authoritative contract**; `docs/infrastructure/GAMSLIB_DATABASE_SCHEMA.md` still describes v2.0.0 and carries a banner saying so.
 
 ## 1. Discover Models
 
@@ -231,7 +231,7 @@ nlp_models = [m for m in models if m["gamslib_type"] == "NLP"]
 print(f"LP models: {len(lp_models)}")
 print(f"NLP models: {len(nlp_models)}")
 
-# Filter by convexity status (note: nested structure in v2.0.0)
+# Filter by convexity status (the nested structure was introduced in v2.0.0 and still applies)
 verified = [m for m in models if m.get("convexity", {}).get("status") == "verified_convex"]
 likely = [m for m in models if m.get("convexity", {}).get("status") == "likely_convex"]
 print(f"Verified convex: {len(verified)}")

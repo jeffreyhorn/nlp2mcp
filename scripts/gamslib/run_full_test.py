@@ -518,6 +518,13 @@ def run_translate_stage(
     return result
 
 
+def _own_solve_completed(row: dict) -> bool:
+    """Thin re-export so this module has ONE source for the rule."""
+    from scripts.sprint_audit.check_mcp_solve_attribution import own_solve_completed
+
+    return own_solve_completed(row)
+
+
 def run_solve_stage(
     model: dict[str, Any],
     mcp_path: Path,
@@ -558,6 +565,22 @@ def run_solve_stage(
         "solve_time_seconds": result.get("solve_time_seconds"),
         "iterations": result.get("iterations"),
         "outcome_category": result.get("outcome_category"),
+        # Sprint 39 P7 (PR #1740 review). Persisted so downstream consumers can
+        # ask WHOSE status these scalars are. `compare_solutions` reads the
+        # stored entry, not the live result, so without this an indeterminate
+        # solve with healthy scalars is compared as though our model had
+        # answered. Omitted when absent, which keeps older rows valid.
+        **{
+            # ⚠ BOTH fields, or the infeasible consumers cannot reason (PR #1740
+            # review). Persisting only the verdict left
+            # `mcp_completed_own_solve` absent on every stored row, and
+            # `_solver_completed` treats absent as "unknown → allowed" for
+            # backward compatibility — so a persisted EMBEDDED-ONLY row with a
+            # borrowed 4/5 status was accepted as a completed infeasible solve.
+            k: result[k]
+            for k in ("mcp_attribution", "mcp_completed_own_solve")
+            if result.get(k) is not None
+        },
     }
 
     # Collect timing data
@@ -933,7 +956,40 @@ def run_pipeline(
                 if stats["solve_times"] and stats["solve_times"][-1][0] == model_id:
                     stats["solve_times"].pop()
 
-                if retry_result["status"] == "success":
+                # Sprint 39 P7 / REMEDY A. A retry is recordable only when the
+                # status being recorded is OURS. `retry_result["status"]` alone
+                # is not that test: `parse_gams_listing` takes the LAST status
+                # in the listing regardless of which model produced it, and a
+                # `--nlp-presolve` listing contains the embedded source solve
+                # too. So when our MCP aborts before reporting, the source's
+                # status is read back as ours and the row records
+                # `model_optimal_presolve` + match for a solve that never
+                # happened. That is `weapons` (Sprint 38 Day 9).
+                #
+                # ⚠ Gated HERE and not at the `mcp_file_generated` write below:
+                # this branch makes THREE writes (`presolve_required`,
+                # `mcp_file_generated`, `outcome_category`), and gating one of
+                # them would leave the other two asserting a presolve success.
+                #
+                # ⚠ Do NOT key this on `EXECERROR` — it conflates MCP-side and
+                # NLP-side aborts, which is how weapons was first reported
+                # against the wrong half of its listing.
+                # ⚠ Gated on the VERDICT, not on "is the status ours".
+                # `mcp_produced_own_status` is True for an ABORTED MCP -- GAMS
+                # prints MODEL STATUS 1 above the `SOLVE ... ABORTED` line -- so
+                # an earlier revision of this gate would have recorded
+                # `model_optimal_presolve` for an explicitly aborted retry
+                # (PR #1740 review). `MCP-SOLVED` is the condition §6's
+                # presolve-golden adoption rule already requires, and it folds in
+                # the abort and solver-status checks a presence test cannot see.
+                # ⚠ Named for what it TESTS, not for attribution (PR #1740
+                # review). `MCP-FAILED` is *attributed* — the status genuinely is
+                # ours — and is deliberately false here, so calling this
+                # `retry_attributed` named the weaker property while enforcing
+                # the stronger one. That is exactly the conflation the comments
+                # below exist to prevent.
+                retry_mcp_solved = retry_result.get("mcp_attribution") == "MCP-SOLVED"
+                if retry_result["status"] == "success" and retry_mcp_solved:
                     stats["presolve_retry_success"] += 1
                     # Correct the double-count from running solve twice. For a
                     # STATUS-5 cold (failure), the cold incremented solve_failure
@@ -951,7 +1007,13 @@ def run_pipeline(
                     # database is machine-portable (the absolute PROJECT_ROOT
                     # prefix would otherwise leak the runner's home directory and
                     # break byte-identical comparison across machines).
-                    model["mcp_solve"]["mcp_file_used"] = _repo_relative_path(presolve_path)
+                    # Sprint 39 P7 / Remedy B: `mcp_file_generated`, not
+                    # `mcp_file_used`. This is the SOLE writer of the key; the
+                    # DB migration alone would be silently undone by the next
+                    # pipeline run re-introducing the old name alongside it.
+                    model["mcp_solve"]["mcp_file_generated"] = _repo_relative_path(
+                        presolve_path
+                    )
                     model["mcp_solve"]["outcome_category"] = (
                         "model_optimal_presolve"
                     )
@@ -965,19 +1027,121 @@ def run_pipeline(
                             f"objective={obj_str}"
                         )
                 else:
-                    # Retry failed — restore original mcp_solve so the
-                    # database records the initial cold-start failure,
-                    # not the retry failure.
+                    # The retry produced no usable record of OUR MCP solving —
+                    # it either failed outright, or reported a status belonging
+                    # to the embedded source solve (Remedy A). Either way the
+                    # cold record is the true one, so restore it.
+                    #
+                    # ⚠ The remedy INVENTS NO CATEGORY. weapons' cold emit
+                    # solves (MS-1 @ 1700.397 vs NLP 1735.5696, a 2.03 %
+                    # divergence), so the correct record is its own cold result
+                    # — `model_optimal` + mismatch — which this branch already
+                    # restores.
                     model["mcp_solve"] = original_mcp_solve
-                    # Undo the extra failure count from the retry solve
-                    stats["solve_failure"] -= 1
-                    if stats["solve_errors"]:
-                        stats["solve_errors"].pop()
-                    if args.verbose:
-                        logger.info(
-                            f"    [RETRY] Still failed: "
-                            f"{retry_result.get('outcome_category')}"
+                    # ⚠ The two arrivals here need DIFFERENT bookkeeping, because
+                    # `run_solve_stage` counted the retry by its own status.
+                    # ⚠ Classify by VERDICT, not by status (PR #1740 review).
+                    # `solve_mcp` now refuses to report success when the verdict
+                    # contradicts it, so an EMBEDDED-ONLY retry arrives here as
+                    # a *failure* and is indistinguishable from a genuine one by
+                    # status alone. Without this the rejection would be logged
+                    # "Still failed" and never counted — the attribution finding
+                    # would vanish from the summary the previous round made it
+                    # visible in.
+                    _verdict = retry_result.get("mcp_attribution")
+                    # ⚠ `MCP-FAILED` is NOT synonymous with an attribution
+                    # rejection (PR #1740 review). It covers both an ABORTED run
+                    # and an own MCP that ran to completion and reported a
+                    # genuine failing model status — `mcp_completed_own_solve`
+                    # separates them. Treating the completed case as "rejected"
+                    # rolled real solver failures out of `solve_failure` and into
+                    # the rejection count, so the documented
+                    # `attempted - success - rejected` silently omitted them.
+                    # ⚠ Every verdict that is not a usable answer from OUR
+                    # model, matching what the counter's contract claims
+                    # (PR #1740 review). An earlier revision listed only
+                    # EMBEDDED-ONLY and aborted MCP-FAILED, so a listing whose
+                    # embedded source failed and whose emitted-MCP summary
+                    # carried no status — `MCP-NO-STATUS` with an overall
+                    # failure — fell through to the ordinary rollback, was
+                    # logged "Still failed", and never reached the counter.
+                    #
+                    # TWO exclusions, both deliberate:
+                    #   • `None` — no attribution at all (an early exit before
+                    #     the listing was read). A genuine failure, not a
+                    #     rejection.
+                    #   • `MCP-FAILED` WITH `mcp_completed_own_solve` — our
+                    #     model ran and reported a real failing status. Also a
+                    #     genuine failure; counting it would hide real solver
+                    #     failures inside the rejection total.
+                    _INDETERMINATE = ("MCP-NO-STATUS", "NO-SOLVE", "ERROR")
+                    _rejected_on_attribution = (
+                        _verdict == "EMBEDDED-ONLY"
+                        or _verdict in _INDETERMINATE
+                        # ⚠ IDENTITY via the shared helper, not truthiness
+                        # (PR #1740 review). With `bool(...)`, a malformed
+                        # `"false"` read as completed, so an unusable retry was
+                        # booked as an ordinary solver failure and the rejection
+                        # counter and rollback were both wrong.
+                        or (
+                            _verdict == "MCP-FAILED"
+                            and not _own_solve_completed(retry_result)
                         )
+                    )
+                    if _rejected_on_attribution or retry_result["status"] == "success":
+                        # REJECTED: undo whatever THIS retry produced.
+                        # ⚠ Not "counted a success" (PR #1740 review) — that was
+                        # true before `solve_mcp` began downgrading a
+                        # contradicted status, and is false now for
+                        # `EMBEDDED-ONLY`/`MCP-FAILED`, which arrive as
+                        # failures. Only an INDETERMINATE verdict still reaches
+                        # here having been counted a success.
+                        # Either way: never pop `solve_errors` unless THIS retry
+                        # pushed one, or the COLD error is discarded.
+                        # ⚠ Undo whichever counter `run_solve_stage` moved. It
+                        # counts by the retry's OWN status, so an
+                        # attribution-rejected retry now lands in
+                        # `solve_failure` (with an error pushed) while a
+                        # status-success/indeterminate one lands in
+                        # `solve_success` (with none).
+                        if retry_result["status"] == "success":
+                            stats["solve_success"] -= 1
+                        else:
+                            stats["solve_failure"] -= 1
+                            if stats["solve_errors"]:
+                                stats["solve_errors"].pop()
+                        stats["presolve_retry_rejected"] += 1
+                        if args.verbose:
+                            # ⚠ Message keyed on the VERDICT (PR #1740 review).
+                            # A flat "not from our mcp_model" is false for
+                            # `MCP-FAILED`, where the status IS ours and the
+                            # solve aborted — two different findings that must
+                            # not be reported as one.
+                            _why = (
+                                "the status belongs to the embedded source solve"
+                                if _verdict == "EMBEDDED-ONLY"
+                                else f"our MCP reported {_verdict}"
+                            )
+                            logger.info(
+                                f"    [RETRY] REJECTED ({_verdict}): {_why} — "
+                                f"keeping the cold record"
+                            )
+                    else:
+                        # Undo the extra failure count from the retry solve
+                        stats["solve_failure"] -= 1
+                        if stats["solve_errors"]:
+                            stats["solve_errors"].pop()
+                        # ⚠ INSIDE this branch (PR #1740 review). It previously
+                        # sat after the if/else and fired for BOTH arrivals, so
+                        # a rejected-but-successful retry was logged "Still
+                        # failed" one line after being logged as reporting
+                        # success — contradicting both the recorded status and
+                        # the message above it.
+                        if args.verbose:
+                            logger.info(
+                                f"    [RETRY] Still failed: "
+                                f"{retry_result.get('outcome_category')}"
+                            )
             else:
                 if args.verbose:
                     logger.info("    [RETRY] Re-translate with --nlp-presolve failed")
@@ -1030,6 +1194,26 @@ def _new_stats(total: int) -> dict[str, Any]:
         # Pre-solve retry stats
         "presolve_retry_attempted": 0,
         "presolve_retry_success": 0,
+        # Sprint 39 P7 / Remedy A: retries rejected because the attribution
+        # verdict was not `MCP-SOLVED`, so the record was refused and the cold
+        # result kept.
+        #
+        # ⚠ NOT restricted to retries whose global status said success (PR #1740
+        # review). That was the contract before `solve_mcp` began downgrading a
+        # contradicted status; `EMBEDDED-ONLY` and `MCP-FAILED` now arrive here
+        # as FAILURES and are counted too. The narrower wording survived the
+        # change that invalidated it.
+        #
+        # ⚠ Renamed from `presolve_retry_unattributed` (PR #1740 review). That
+        # name described only `EMBEDDED-ONLY` — a status belonging to the
+        # embedded source — but the gate also rejects `MCP-FAILED`, where the
+        # status IS ours and the solve aborted. Calling an aborted own-MCP retry
+        # "unattributed" mislabels it in the run summary, which is the one place
+        # a reader sees this number.
+        #
+        # Counted rather than folded into failures: it is a distinct finding,
+        # and a silent zero would hide the gate never firing.
+        "presolve_retry_rejected": 0,
         # Compare stats
         "compare_match": 0,
         "compare_mismatch": 0,
@@ -1722,6 +1906,27 @@ def generate_summary(stats: dict[str, Any], args: argparse.Namespace) -> dict[st
                 solve_summary["presolve_retry"] = {
                     "attempted": stats["presolve_retry_attempted"],
                     "success": stats["presolve_retry_success"],
+                    # Sprint 39 P7 / Remedy A — reported so the gate's effect is
+                    # visible in the run summary rather than inferred from a gap
+                    # between `attempted` and `success`.
+                    #
+                    # ⚠ SCOPE: retries rejected because the verdict was not
+                    # `MCP-SOLVED`, whatever status they arrived with.
+                    # `EMBEDDED-ONLY` and `MCP-FAILED` arrive as FAILURES —
+                    # `solve_mcp` refuses to claim success for a contradicted
+                    # status — and only an indeterminate `MCP-NO-STATUS` /
+                    # `NO-SOLVE` reaches here with status success. A retry that
+                    # failed on its own merits is not counted; those are
+                    # `attempted - success - rejected`.
+                    #
+                    # ⚠⚠ THIS IS THE THIRD WORDING OF THIS SCOPE (PR #1740
+                    # review, three rounds). It was first too wide ("every
+                    # non-MCP-SOLVED verdict"), then narrowed to "retries that
+                    # REPORTED SUCCESS" — correct for the contract at that
+                    # moment and invalidated by the status downgrade landing in
+                    # the very next round. Describe it by VERDICT, which is what
+                    # the branch actually tests; status is the part that moved.
+                    "rejected": stats.get("presolve_retry_rejected", 0),
                 }
             summary["solve"] = solve_summary
 
@@ -1821,10 +2026,25 @@ def print_summary(stats: dict[str, Any], args: argparse.Namespace) -> None:
                 print(f"    {cat}: {count}")
         if s.get("presolve_retry"):
             pr = s["presolve_retry"]
-            print(
-                f"  Pre-solve retry: {pr['success']}/{pr['attempted']} "
-                f"recovered from STATUS 5"
-            )
+            attempted = pr["attempted"]
+            rejected = pr.get("rejected", 0)
+            failed = attempted - pr["success"] - rejected
+            # ⚠ NOT "recovered from STATUS 5" (PR #1740 review). Two things were
+            # wrong with that line. It named one of the two triggers — the retry
+            # also fires on a spurious-KKT objective mismatch, which is exactly
+            # `weapons`' case — and it omitted `rejected` entirely, so a run
+            # whose retry was refused by the attribution gate printed
+            # "0/1 recovered", hiding the finding and contradicting the JSON
+            # summary that does report it.
+            line = f"  Pre-solve retry: {pr['success']}/{attempted} recovered"
+            if rejected:
+                # ⚠ Wording covers BOTH rejection verdicts. "retry solved, but
+                # not our MCP" fits EMBEDDED-ONLY and misdescribes MCP-FAILED,
+                # where the solve is ours and aborted.
+                line += f", {rejected} REJECTED (no usable answer from our MCP)"
+            if failed > 0:
+                line += f", {failed} failed"
+            print(line)
 
     # Compare results
     if "compare" in summary:

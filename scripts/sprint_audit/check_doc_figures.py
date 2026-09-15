@@ -220,6 +220,17 @@ def is_live_doc(path: Path, sprint_dir: Path | None = None) -> bool:
 #: exact figure it was written to catch.
 NUM = r"\d+(?:\.\d+)?"
 
+#: A line citing the **all-<n>** population rather than the 142-candidate one.
+#:
+#: ⚠ SHARED BY THE TWO `Match` FACTS ON PURPOSE (PR #1740 review). The candidate
+#: `Match` fact excludes these lines and the `all-219 Match` fact claims them, so
+#: the two must agree on the boundary exactly. Hardcoding `all-219` in the
+#: exclusion while matching `all-\d+` in the claim meant an `all-220 Match` line
+#: — after a corpus-size change, which is itself a tracked figure — would be
+#: checked as BOTH populations and could raise a false candidate-Match finding.
+#: One pattern makes the disagreement unrepresentable.
+_ALL_POPULATION_MATCH = re.compile(r"\ball-(?P<population>\d+)\s+Match")
+
 #: ``A → B`` states a movement, so the left figure is historical by
 #: construction. Such lines are skipped — but reported, never silently.
 #:
@@ -246,6 +257,26 @@ class Fact:
     #: added to scope out *"73 or 75"* also matches inside *"**flo**or 75"*, which
     #: silenced the floor check entirely.
     skip_if: tuple[re.Pattern[str], ...] = field(default=())
+    #: Optional DISPLAY label. ``name`` stays the stable internal key that
+    #: `derive_truths` and the `truths` mapping are keyed by; this is what a
+    #: reader sees in a finding.
+    #:
+    #: ⚠ WHY THE TWO ARE SPLIT (PR #1740 review). The all-<n> fact matches
+    #: ``all-\d+`` and `kpi_block` renders the population from `total_models`,
+    #: but the fact was NAMED `all-219 Match`. After a corpus-size change the
+    #: checker would have reported an all-220 discrepancy under the label
+    #: "all-219 Match" — a finding that misnames its own source, in the tool
+    #: whose entire job is catching figures that contradict their source.
+    label_fn: Callable[[re.Match[str] | None], str] | None = field(default=None)
+
+    def label(self, match: re.Match[str] | None = None) -> str:
+        """Human-facing name. Falls back to the stable key when not dynamic."""
+        if self.label_fn is None:
+            return self.name
+        try:
+            return self.label_fn(match)
+        except Exception:  # noqa: BLE001 - a label must never break a report
+            return self.name
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -366,7 +397,7 @@ def _dangling_presolve_rows() -> int:
     return sum(
         1
         for m in rows
-        if (f := (m.get("mcp_solve") or {}).get("mcp_file_used"))
+        if (f := (m.get("mcp_solve") or {}).get("mcp_file_generated"))
         and not (PROJECT_ROOT / f).exists()
     )
 
@@ -376,6 +407,19 @@ def _dangling_presolve_rows() -> int:
 
 def _kpi(key: str) -> Callable[[], int]:
     return lambda: _kpis()[key]
+
+
+def _all_population_label(match: re.Match[str] | None) -> str:
+    """``all-<n> Match``, with *n* from the cited line — or from the corpus.
+
+    Taking the population from the MATCH is what makes a finding self-consistent:
+    it names the population the flagged line actually cites. With no match (the
+    ``--facts`` listing) it falls back to the derived corpus size, which is the
+    same quantity `kpi_block` prints.
+    """
+    if match is not None:
+        return f"all-{match.group('population')} Match"
+    return f"all-{_kpis()['total_models']} Match"
 
 
 FACTS: tuple[Fact, ...] = (
@@ -390,8 +434,33 @@ FACTS: tuple[Fact, ...] = (
         derive=_kpi("match"),
         source="scripts/sprint_audit/kpi_block.py  ->  match",
         patterns=(re.compile(rf"(?<!-)\bMatch\s+\**(?P<value>{NUM})\**"),),
-        # "all-219 Match 99" is a different population from the 142-candidate one.
-        skip_if=(re.compile(r"all-219"),),
+        # "all-<n> Match" is a different population from the 142-candidate one.
+        # ⚠ SHARED with the fact below, not a hardcoded 219 (PR #1740 review):
+        # the corpus size is itself a figure, so an `all-220 Match` line would
+        # have been checked as BOTH populations and could raise a false
+        # candidate-Match finding. One pattern, so they cannot disagree.
+        skip_if=(_ALL_POPULATION_MATCH,),
+    ),
+    Fact(
+        # ⚠ The population `Match` deliberately skips (PR #1740 review). Because
+        # `Match` bails on any line containing `all-219`, an all-219 figure was
+        # checked by NOTHING — a fixture could cite an arbitrary value and stay
+        # green. `kpi_block.py` derives it, so the fix is a fact, not a deletion.
+        #
+        # ⚠ STABLE INTERNAL KEY, DYNAMIC DISPLAY LABEL (PR #1740 review). The
+        # pattern matches `all-<n>` and `kpi_block` renders the population from
+        # `total_models`, so hard-coding 219 in the NAME meant that after a
+        # corpus-size change an all-220 discrepancy would be reported as
+        # "all-219 Match" — and the test asserting that label would keep
+        # blessing it. `name` is never displayed; it only keys `truths`.
+        #
+        # ⚠ `derive` keeps the key `all_219_match`: that is `kpi_block`'s own
+        # dict key, not this tool's label, and renaming it is a separate change.
+        name="all-population Match",
+        derive=_kpi("all_219_match"),
+        source="scripts/sprint_audit/kpi_block.py  ->  all_219_match",
+        patterns=(re.compile(rf"{_ALL_POPULATION_MATCH.pattern}\s+\**(?P<value>{NUM})\**"),),
+        label_fn=_all_population_label,
     ),
     Fact(
         name="Translate",
@@ -480,21 +549,23 @@ FACTS: tuple[Fact, ...] = (
         ),
     ),
     Fact(
-        name="dangling mcp_file_used rows",
+        name="presolve rows whose generated file is absent",
         derive=_dangling_presolve_rows,
-        source="DB: presolve rows whose recorded mcp_file_used no longer exists",
+        source="DB: presolve rows whose recorded mcp_file_generated is not on disk",
         # The forward form must not cross punctuation. An earlier
         # `dangling[^0-9\n]{0,32}` scanned past the end of the clause in
         # "(… / 14 dangling), all correct — P7 must name which" and captured the
         # 7 of "P7" as the cited figure.
         patterns=(
-            # Forward: "…count of dangling `mcp_file_used` rows is **14**".
+            # Forward: "…count of dangling `mcp_file_generated` rows is **14**".
             # The window is generous but cannot cross clause punctuation.
             re.compile(rf"dangling\b[^0-9\n,)|—;.]{{0,40}}\**(?P<value>{NUM})\**"),
             # Reverse: "**14 dangling** rows". The trailing "rows" is required —
             # without it, "14 of the 48 dangling" matches the POPULATION (48)
             # rather than the count.
-            re.compile(rf"\**(?P<value>{NUM})\**\s+dangling\**\s+(?:mcp_file_used\s+)?rows?\b"),
+            re.compile(
+                rf"\**(?P<value>{NUM})\**\s+dangling\**\s+(?:mcp_file_generated\s+)?rows?\b"
+            ),
             re.compile(rf"all\s+\**(?P<value>{NUM})\**\s+(?:presolve-record\s+)?rows"),
         ),
     ),
@@ -656,6 +727,24 @@ def scan_line(
     if reason:
         return [], reason
 
+    # ⚠ NO RETIRED-IDENTIFIER GUARD HERE, DELIBERATELY (PR #1740 review).
+    # One was added and then REMOVED after measuring it: across the live docs it
+    # would fire on **56** lines, **50** of which name only the old identifier
+    # and are historical records — prep findings, decision records, CHANGELOG
+    # entries about the pre-rename state. Zero were current misuses.
+    #
+    # It only ever read clean because those lines happen to be unchanged
+    # relative to `main`; the first unrelated edit to any of them would have
+    # produced a false positive, and 50:0 is the ratio this module's own
+    # docstring says turns a check into a disabled one.
+    #
+    # ⚠ AND IT PROTECTED NOTHING THE PATTERNS DO NOT. The forward pattern is
+    # NAME-AGNOSTIC, so a stale-token line carrying a WRONG figure is still
+    # flagged; a stale-token line with a CORRECT figure is a historical
+    # statement, which this repo's convention explicitly permits ("label
+    # superseded analysis, do not rewrite"). The figure — the thing this
+    # checker exists to verify — is checked either way.
+
     findings: list[Finding] = []
     seen: set[tuple[str, str]] = set()
     for fact in FACTS:
@@ -683,7 +772,7 @@ def scan_line(
                     Finding(
                         path=path,
                         lineno=lineno,
-                        fact=fact.name,
+                        fact=fact.label(m),
                         cited=cited_raw,
                         truth=f"{truth}",
                         source=fact.source,
@@ -767,7 +856,7 @@ def main() -> int:
                 value: object = fact.derive()
             except Exception as exc:  # noqa: BLE001 - reported, not raised
                 value = f"(underivable: {exc})"
-            print(f"  {fact.name:34} = {value}\n      {fact.source}")
+            print(f"  {fact.label():34} = {value}\n      {fact.source}")
         return 0
 
     findings, scanned, exemptions, truths, archived = check(args.base)

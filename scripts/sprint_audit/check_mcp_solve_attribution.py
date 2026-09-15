@@ -157,6 +157,48 @@ class SolveSummary:
         return self.is_mcp and self.model == EMITTED_MCP_MODEL
 
 
+# ⚠ THE PREDICATES BELOW MOVED TO `src/diagnostics/solve_attribution.py`
+# (PR #1740 review) and are re-exported here so every existing caller, test and
+# `from check_mcp_solve_attribution import ...` keeps working unchanged.
+#
+# They had to move because they are pure functions of a result dict that
+# `src/diagnostics/convexity_numerical.py` needs on its RESULT-ONLY path, and
+# the wheel ships only `src` (`pyproject.toml` -> `include = ["src*"]`). An
+# installed package importing them from here raised `ModuleNotFoundError`.
+# ⚠ AND THIS SCRIPT IS ALSO RUN DIRECTLY FROM AN UNINSTALLED CHECKOUT
+# (PR #1740 review): `python scripts/sprint_audit/check_mcp_solve_attribution.py`
+# puts the SCRIPT'S OWN directory on `sys.path[0]`, not the project root, so the
+# import below raised `ModuleNotFoundError: No module named 'src'` at import
+# time — before `main` could run, i.e. the tool was simply broken rather than
+# degraded. `run_full_test.py:65` already does exactly this; matching it.
+#
+# ⚠ An editable install (`__editable__.nlp2mcp-*.pth`) makes `src` importable
+# from anywhere, which is why a smoke-test of `--help` in a dev venv PASSED and
+# hid this. Reproduce with `python -S <script> --help`.
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.diagnostics.solve_attribution import (  # noqa: E402
+    _COMPLETED_KEY,
+    _KNOWN_VERDICTS,
+    _NOT_OUR_STATUS,
+    completion_flag_is_malformed,
+    own_solve_completed,
+    status_is_ours,
+    status_is_ours_and_complete,
+)
+
+__all__ = [
+    "_COMPLETED_KEY",
+    "_KNOWN_VERDICTS",
+    "_NOT_OUR_STATUS",
+    "completion_flag_is_malformed",
+    "own_solve_completed",
+    "status_is_ours",
+    "status_is_ours_and_complete",
+]
+
+
 def parse_aborted_lines(lst_content: str) -> set[int]:
     """Source lines of solves GAMS reported ABORTED."""
     return {int(m.group(1)) for m in _SOLVE_ABORTED.finditer(lst_content)}
@@ -316,12 +358,29 @@ class Attribution:
         resource or iteration limit can report a stale-but-plausible model
         status alongside SOLVER STATUS 3/4, and that is not a solved model.
         """
-        return any(
-            not s.aborted
-            and not s.abort_ambiguous
-            and s.solver_status == _NORMAL_COMPLETION
-            and s.model_status in _SUCCESS_MODEL_STATUS
-            for s in self.mcp_summaries
+        # ⚠ THE LAST EXECUTION, NOT ``any()`` (PR #1740 review) — the same rule
+        # `embedded_produced_status` already applies, and for the same reason.
+        # A forcing scaffold executes one `Solve mcp_model using MCP;` inside a
+        # loop (`src/emit/forcing.py`'s homotopy ladder), so a listing can hold
+        # several executions of OUR model. With ``any()``, an early iteration
+        # succeeding and a later one reporting MS-4 yielded `MCP-SOLVED` while
+        # the listing-wide scalars — which every consumer reads — came from the
+        # FAILING later run. A consumer would then accept a stale earlier answer
+        # as the current solve.
+        #
+        # ⚠ An ABORT inside such a loop is `abort_ambiguous` rather than
+        # `aborted`, because all iterations share one source line: which
+        # execution aborted cannot be established, and the flag below already
+        # treats that as not-successful. That case was already safe; this one
+        # was not.
+        last = self.mcp_summaries[-1] if self.mcp_summaries else None
+        if last is None:
+            return False
+        return (
+            not last.aborted
+            and not last.abort_ambiguous
+            and last.solver_status == _NORMAL_COMPLETION
+            and last.model_status in _SUCCESS_MODEL_STATUS
         )
 
     @property

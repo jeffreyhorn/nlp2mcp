@@ -1,0 +1,837 @@
+"""Sprint 39 P7 — `solve_mcp` must carry the attribution VERDICT, not a guess.
+
+⚠ THIS FILE EXISTS BECAUSE THE GATE'S OWN WIRING WAS UNTESTED (PR #1740 review).
+`run_full_test.py`'s presolve-retry gate depends entirely on `solve_mcp`
+returning `mcp_attribution`, but the end-to-end tests stub the solver and
+compute that value themselves — so the parser/filter here could be removed or
+miswired and the suite would stay green while every real retry silently
+defaulted to unattributed.
+
+⚠ AND ATTRIBUTION IS NOT SUCCESS. An earlier revision gated on
+``any(s.model_status is not None)`` — *is the status ours* — which is **True for
+an aborted MCP**: GAMS prints ``MODEL STATUS 1`` above the
+``**** SOLVE ... ABORTED`` line, so `parse_gams_listing` reports 1/1 and the
+retry would have been recorded `model_optimal_presolve`. The verdict folds in
+the abort and solver-status checks that a presence test cannot see.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from scripts.gamslib import test_solve as ts
+
+#: Our emitted MCP solved, and only ours is present. The cold-emit shape.
+OURS_SOLVED = """
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model           OBJECTIVE  dummy
+     TYPE    MCP                 DIRECTION  MINIMIZE
+     SOLVER  PATH                FROM LINE  240
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.0000
+"""
+
+#: `weapons`: the embedded source solved, our MCP aborted without a summary.
+EMBEDDED_ONLY = """
+               S O L V E      S U M M A R Y
+
+     MODEL   war                 OBJECTIVE  tetd
+     TYPE    NLP                 DIRECTION  MAXIMIZE
+     SOLVER  CONOPT              FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+**** OBJECTIVE VALUE             1735.5696
+
+**** SOLVE from line 238 ABORTED, EXECERROR = 1
+"""
+
+#: ⚠ OUR model, OUR status — and explicitly ABORTED. The shape a status-presence
+#: test cannot distinguish from a real solve.
+OURS_ABORTED = """
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  1124
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+
+**** SOLVE from line 1124 ABORTED, EXECERROR = 1
+"""
+
+
+@pytest.fixture
+def run_with_listing(monkeypatch):
+    """Drive the real `solve_mcp` over a supplied listing, without GAMS."""
+
+    def _run(listing: str, model_name: str = "mcp_model"):
+        # `solve_mcp` locates GAMS via `shutil.which` (it has no `find_gams`),
+        # so stub that rather than a name the module does not export.
+        monkeypatch.setattr(ts.shutil, "which", lambda _n: "/nonexistent/gams")
+
+        def fake_subprocess_run(cmd, *a, **k):
+            # `o=<path>` is where solve_mcp told GAMS to write the listing.
+            out = next(c.split("=", 1)[1] for c in cmd if str(c).startswith("o="))
+            Path(out).write_text(listing)
+
+            class R:
+                returncode = 0
+                stdout = ""
+                stderr = ""
+
+            return R()
+
+        monkeypatch.setattr(ts.subprocess, "run", fake_subprocess_run)
+        # `solve_mcp` reads the emitted model's NAME out of this file.
+        monkeypatch.setattr(ts, "_emitted_model_name", lambda _p: model_name)
+        return ts.solve_mcp(Path("weapons_mcp_presolve.gms"), timeout=5)
+
+    return _run
+
+
+@pytest.mark.unit
+def test_our_own_solved_mcp_is_MCP_SOLVED(run_with_listing):
+    result = run_with_listing(OURS_SOLVED)
+    assert result["mcp_attribution"] == "MCP-SOLVED"
+    assert result["status"] == "success"
+
+
+@pytest.mark.unit
+def test_an_embedded_only_listing_is_not_MCP_SOLVED(run_with_listing):
+    """The `weapons` defect, through the real `solve_mcp`.
+
+    ⚠ `model_status` is still **2** — borrowed from the embedded source by the
+    listing-wide scan, which cannot tell whose status it read. But `status` is
+    **failure**: `solve_mcp` refuses to claim success once the verdict
+    contradicts it.
+
+    ⚠ *An earlier revision of this docstring said `status` was still "success",
+    which was true when written and stopped being true when the downgrade landed
+    (PR #1740 review). The assertions below had already been updated; the prose
+    above them had not — so the file argued against its own code.*
+    """
+    result = run_with_listing(EMBEDDED_ONLY)
+    assert result["mcp_attribution"] == "EMBEDDED-ONLY"
+    assert result["mcp_produced_own_status"] is False
+    # ⚠ The RAW SCAN is still fooled — `model_status` is the source's 2 — but
+    # `status` is no longer, because the verdict contradicts it (PR #1740
+    # review). An earlier revision asserted `status == "success"` here and
+    # called it "the scan is fooled, the verdict is not": true of the parse,
+    # and it left every consumer of `status` inheriting the false success.
+    assert result["model_status"] == 2, "the raw scan still reads the source's status"
+    assert result["status"] == "failure", "…but the public result no longer claims success"
+
+
+@pytest.mark.unit
+def test_an_ABORTED_mcp_of_ours_is_not_MCP_SOLVED(run_with_listing):
+    """⚠ The hole an earlier revision of this gate had.
+
+    Attribution SUCCEEDS here — the status genuinely is ours — so a
+    `mcp_produced_own_status` gate passes. But the solve aborted, so there is no
+    usable answer, and `run_pipeline` would have recorded
+    `model_optimal_presolve` for it.
+    """
+    result = run_with_listing(OURS_ABORTED)
+    assert result["mcp_produced_own_status"] is True, "the status IS ours…"
+    assert result["mcp_attribution"] == "MCP-FAILED", "…but the solve aborted"
+    # And the distinction is not academic: the naive predicate says "record it".
+    assert result["mcp_attribution"] != "MCP-SOLVED"
+    # ⚠ The PUBLIC contract too (PR #1740 review): GAMS prints MODEL STATUS 1
+    # above the abort line, so the raw scan yields 1/1 and `is_success` was true
+    # — every consumer of `status`, including the solve counts and the persisted
+    # DB record, would have booked an aborted solve as a success.
+    assert result["model_status"] == 1, "the raw scan reads the stale status"
+    assert result["status"] == "failure", "…and the public result refuses it"
+
+
+@pytest.mark.unit
+def test_the_verdict_is_computed_HERE_and_not_by_a_caller(run_with_listing):
+    """Scope guard: the field must be present on every successful solve.
+
+    The end-to-end gate tests stub the solver and supply this value themselves,
+    so without this file nothing checks that production computes it at all.
+    """
+    for listing in (OURS_SOLVED, EMBEDDED_ONLY, OURS_ABORTED):
+        result = run_with_listing(listing)
+        assert "mcp_attribution" in result
+        assert result["mcp_attribution"] in {
+            "MCP-SOLVED",
+            "MCP-FAILED",
+            "MCP-NO-STATUS",
+            "EMBEDDED-ONLY",
+            "NO-SOLVE",
+            "ERROR",
+        }
+
+
+#: The same healthy solve, emitted under a CUSTOM model name via `--model-name`.
+OURS_SOLVED_CUSTOM_NAME = OURS_SOLVED.replace("mcp_model", "my_model")
+
+
+@pytest.mark.unit
+def test_a_CUSTOM_emitted_model_name_is_still_ours(run_with_listing):
+    """⚠ `mcp_model` is the CLI's DEFAULT, not a guarantee (PR #1740 review).
+
+    `SolveSummary.is_emitted_mcp` compares against the module constant, so
+    before the name was threaded through, `nlp2mcp --model-name my_model` made
+    every valid MCP summary `EMBEDDED-ONLY` — turning correct results
+    inconclusive and, worse, doing it silently.
+    """
+    result = run_with_listing(OURS_SOLVED_CUSTOM_NAME, model_name="my_model")
+    assert result["mcp_attribution"] == "MCP-SOLVED"
+    assert result["mcp_completed_own_solve"] is True
+
+
+@pytest.mark.unit
+def test_a_custom_name_does_NOT_swallow_the_raw_source_solve(run_with_listing):
+    """The raw source keeps its own identity — only the emitted name is mapped.
+
+    Relabelling must not be a blanket rewrite: `weapons`' embedded `war` solve
+    has to stay distinguishable, or the fix would recreate the very confusion it
+    removes.
+    """
+    listing = EMBEDDED_ONLY.replace("mcp_model", "my_model")
+    result = run_with_listing(listing, model_name="my_model")
+    assert result["mcp_attribution"] == "EMBEDDED-ONLY"
+
+
+@pytest.mark.unit
+def test_a_COMPLETED_infeasible_mcp_is_failed_but_COMPLETED(run_with_listing):
+    """⚠ The distinction the convexity infeasible path depends on.
+
+    A normally-completed MCP reporting model status 4 is `MCP-FAILED` — the
+    verdict reserves `MCP-SOLVED` for a usable answer — but it DID run and
+    report that status itself, unlike an abort.
+    """
+    infeasible = OURS_SOLVED.replace(
+        "**** MODEL STATUS      1 Optimal", "**** MODEL STATUS      4 Infeasible"
+    )
+    result = run_with_listing(infeasible)
+    assert result["mcp_attribution"] == "MCP-FAILED"
+    assert result["mcp_completed_own_solve"] is True, "it completed; it just failed"
+
+    aborted = run_with_listing(OURS_ABORTED)
+    assert aborted["mcp_attribution"] == "MCP-FAILED", "same verdict…"
+    assert aborted["mcp_completed_own_solve"] is False, "…different meaning"
+
+
+@pytest.mark.unit
+def test_the_emitted_name_parser_reads_a_REAL_file(tmp_path):
+    """⚠ The custom-name tests above STUB `_emitted_model_name` (PR #1740 review).
+
+    That makes them tests of the relabelling, not of the parsing — they would
+    pass even if `_SOLVE_MCP_STMT` could not read a `Solve ... using MCP;`
+    statement at all. This exercises the helper against real file content.
+    """
+    f = tmp_path / "x_mcp.gms"
+    f.write_text(
+        "Variables x;\nEquations e;\n\nModel my_model / all /;\nSolve my_model using MCP;\n"
+    )
+    assert ts._emitted_model_name(f) == "my_model"
+
+    # Case is preserved as written — the relabelling is what normalises it.
+    f.write_text("Solve MCP_MODEL using MCP;\n")
+    assert ts._emitted_model_name(f) == "MCP_MODEL"
+
+    # Real emitted goldens parse.
+    golden = Path("data/gamslib/mcp/aircraft_mcp.gms")
+    if golden.exists():
+        assert ts._emitted_model_name(golden) == "mcp_model"
+
+    # Unreadable or unmatched leaves the constant in force (previous behaviour).
+    assert ts._emitted_model_name(tmp_path / "absent.gms") is None
+    f.write_text("* no solve statement here\n")
+    assert ts._emitted_model_name(f) is None
+
+
+@pytest.mark.unit
+def test_a_CASE_ONLY_model_name_override_is_still_ours(run_with_listing):
+    """⚠ The guard must be at least as strict as the consumer it protects.
+
+    `--model-name MCP_MODEL` differs from `mcp_model` only in case. An earlier
+    revision skipped relabelling when the names matched case-INSENSITIVELY,
+    while `is_emitted_mcp` compares case-SENSITIVELY — so the summary kept
+    `MCP_MODEL`, failed `== "mcp_model"`, and a healthy solve was reported
+    EMBEDDED-ONLY.
+    """
+    listing = OURS_SOLVED.replace("mcp_model", "MCP_MODEL")
+    result = run_with_listing(listing, model_name="MCP_MODEL")
+    assert result["mcp_attribution"] == "MCP-SOLVED"
+
+
+@pytest.mark.unit
+def test_an_INDETERMINATE_verdict_does_NOT_flip_success(run_with_listing):
+    """⚠⚠ The safety property behind gating on positive contradiction only.
+
+    `NO-SOLVE` / `MCP-NO-STATUS` / `ERROR` mean *nothing could be attributed* —
+    and that is also where a summary the parser failed to recognise would land.
+    Treating them as contradictions would turn a parsing change into a
+    corpus-wide flip of genuine successes to failures, which is why the gate
+    lists `EMBEDDED-ONLY` and `MCP-FAILED` explicitly rather than testing
+    `!= "MCP-SOLVED"`.
+
+    ⚠ The fixture must reach the ATTRIBUTION layer to test it. A first draft
+    used a listing with no `S O L V E   S U M M A R Y` header at all, which
+    `parse_gams_listing` rejects outright — so it failed for a parse reason and
+    proved nothing about the verdict. This one has a valid summary that our
+    parser attributes to `mcp_model` but which carries NO status lines, with the
+    statuses stranded above it: global scan reads 1/1, attribution reads
+    nothing.
+    """
+    unattributable = """
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.0000
+
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  240
+"""
+    result = run_with_listing(unattributable)
+    assert result["mcp_attribution"] in {"NO-SOLVE", "MCP-NO-STATUS"}
+    assert result["status"] == "success", (
+        "an unattributable listing must not be downgraded — otherwise a parser "
+        "gap silently fails the whole corpus"
+    )
+
+
+@pytest.mark.unit
+def test_a_rejected_row_does_not_keep_a_SUCCESS_category(run_with_listing):
+    """⚠ A failure row must not assert an optimal outcome (PR #1740 review).
+
+    `categorize_solve_outcome` derives from the same borrowed/stale scalars as
+    `status`, so refusing the status alone left `outcome_category:
+    "model_optimal"` on a `status: "failure"` row — which `run_solve_stage`
+    copies into `error.category`. That is schema-VALID (both are members of
+    `error_category`) and still a contradiction: no such row exists anywhere in
+    the corpus.
+
+    ⚠⚠ `path_solve_terminated` is a KPI Sprint 39 requires to stay at 0. This
+    mapping is inert today — no corpus row is attribution-rejected — so the
+    figure does not move. If it ever fires it is a model genuinely aborting that
+    was previously recorded optimal: a correction, not a regression.
+    """
+    for listing in (EMBEDDED_ONLY, OURS_ABORTED):
+        result = run_with_listing(listing)
+        assert result["status"] == "failure"
+        assert result["outcome_category"] == "path_solve_terminated", result["outcome_category"]
+
+    # The negative control: a genuine solve keeps its real category.
+    ok = run_with_listing(OURS_SOLVED)
+    assert ok["status"] == "success"
+    assert ok["outcome_category"] != "path_solve_terminated"
+
+
+@pytest.mark.unit
+def test_an_indeterminate_row_keeps_its_category(run_with_listing):
+    """The safety property again: no verdict, no re-categorisation."""
+    unattributable = """
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  240
+"""
+    result = run_with_listing(unattributable)
+    assert result["status"] == "success"
+    assert result["outcome_category"] != "path_solve_terminated"
+
+
+@pytest.mark.unit
+def test_a_rejected_row_carries_the_REASON_not_Unknown_error(run_with_listing):
+    """⚠ The refusal must say why (PR #1740 review).
+
+    An attribution-rejected solve has solver status 1 and model status 1/2, so
+    every pre-existing branch of the error construction is false and the message
+    fell through to `"Unknown error"` — discarding the one fact that explains the
+    refusal, for direct callers and for any failure record that survives the
+    retry path.
+    """
+    for listing, verdict in ((EMBEDDED_ONLY, "EMBEDDED-ONLY"), (OURS_ABORTED, "MCP-FAILED")):
+        result = run_with_listing(listing)
+        assert result["status"] == "failure"
+        assert "Unknown error" not in result.get("error", "")
+        assert verdict in result["error"], result["error"]
+
+    # A genuinely successful solve carries no error at all.
+    assert "error" not in run_with_listing(OURS_SOLVED)
+
+
+@pytest.mark.unit
+def test_a_FOREIGN_mcp_solve_before_ours_is_not_mistaken_for_ours(tmp_path):
+    """⚠ The emitted name must come from the LAST MCP solve (PR #1740 review).
+
+    A `--nlp-presolve` emit embeds the original model, and a few sources are
+    themselves MCPs — `cesam` and `spatequ`. A foreign `Solve <src> using MCP;`
+    can therefore precede ours in the file, and `search()` took *that* one: the
+    source's summary was then relabelled as ours, so a source-only success could
+    be reported `MCP-SOLVED`. That is the borrowed-status defect this remedy
+    exists to stop, re-entering through the fix for it.
+    """
+    f = tmp_path / "x_mcp_presolve.gms"
+    f.write_text(
+        "* embedded source, itself an MCP\n"
+        "Solve cesam using MCP;\n\n"
+        "* our generated model\n"
+        "Solve mcp_model using MCP;\n"
+    )
+    assert ts._emitted_model_name(f) == "mcp_model"
+
+    # Committed evidence that the shape is real, not hypothetical.
+    golden = Path("data/gamslib/mcp/cesam_mcp_presolve.gms")
+    if golden.exists():
+        assert ts._emitted_model_name(golden) == "mcp_model"
+
+
+@pytest.mark.unit
+def test_a_foreign_solve_does_not_borrow_the_verdict(run_with_listing, monkeypatch):
+    """The end-to-end consequence: a source-only success must not read MCP-SOLVED.
+
+    The listing has the foreign MCP solving and ours absent. With the emitted
+    name taken from the wrong statement, `cesam` would have been relabelled to
+    `mcp_model` and this would report `MCP-SOLVED`.
+    """
+    foreign_only = """
+               S O L V E      S U M M A R Y
+
+     MODEL   cesam               OBJECTIVE  obj
+     TYPE    MCP                 DIRECTION  MINIMIZE
+     SOLVER  PATH                FROM LINE  100
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+"""
+    result = run_with_listing(foreign_only, model_name="mcp_model")
+    assert result["mcp_attribution"] != "MCP-SOLVED", result["mcp_attribution"]
+    assert result["status"] == "failure"
+
+
+# ------------------------------------------------- persistence and comparison
+
+
+@pytest.mark.unit
+def test_comparison_refuses_an_UNATTRIBUTABLE_persisted_solve():
+    """⚠ The live gate does not reach `compare_solutions` (PR #1740 review).
+
+    Comparison reads the PERSISTED `mcp_solve` entry, and `run_solve_stage`
+    stored only the scalars — so an indeterminate verdict with healthy 1/1
+    scalars was compared as though our model had answered, and could be counted
+    a match. That is the `weapons` defect arriving through the comparison path
+    rather than the retry path.
+    """
+    from scripts.gamslib.test_solve import compare_solutions
+
+    def _model(**mcp):
+        return {
+            "model_id": "m",
+            "convexity": {"solver_status": 1, "model_status": 2, "objective_value": 10.0},
+            "mcp_solve": {"solver_status": 1, "model_status": 1, "objective_value": 10.0, **mcp},
+        }
+
+    # Attributed to us AND completed → compared normally, and matches.
+    # ⚠ `mcp_completed_own_solve=True` is not decoration (PR #1740 review). An
+    # earlier revision of this fixture set only `mcp_attribution`, and that
+    # shape is now REFUSED — see
+    # `test_an_attributed_but_UNCOMPLETED_row_cannot_record_a_match`. `solve_mcp`
+    # computes and persists the two fields TOGETHER, so a live `MCP-SOLVED` row
+    # always carries the flag; a flagless one is stale or hand-edited, which is
+    # exactly the case the guard exists to reject. The fixture was asserting the
+    # defect as though it were the contract.
+    ours = compare_solutions(_model(mcp_attribution="MCP-SOLVED", mcp_completed_own_solve=True))
+    assert ours["comparison_status"] == "match"
+
+    # Not attributable → must NOT be reported as a match.
+    for verdict in ("MCP-NO-STATUS", "NO-SOLVE", "EMBEDDED-ONLY"):
+        r = compare_solutions(_model(mcp_attribution=verdict))
+        assert r["comparison_status"] != "match", f"{verdict}: {r['comparison_status']}"
+
+    # ⚠ Absent (pre-existing rows) → unchanged behaviour. Treating "unknown" as
+    # a rejection would silently re-classify the entire committed corpus.
+    legacy = compare_solutions(_model())
+    assert legacy["comparison_status"] == "match"
+
+
+@pytest.mark.unit
+def test_the_verdict_is_PERSISTED_into_mcp_solve():
+    """The field must survive `run_solve_stage`, or the check above is unreachable."""
+    import argparse
+
+    import scripts.gamslib.run_full_test as rft
+    from scripts.gamslib.run_full_test import _new_stats, run_solve_stage
+
+    def stub_solve(_path, timeout=120):
+        return {
+            "status": "success",
+            "solver_status": 1,
+            "model_status": 1,
+            "objective_value": 1.0,
+            "outcome_category": "model_optimal",
+            "solve_time_seconds": 0.1,
+            "iterations": 1,
+            "mcp_attribution": "MCP-SOLVED",
+            "mcp_completed_own_solve": True,
+        }
+
+    model: dict = {"model_id": "m"}
+    orig = rft.get_solve_function
+    rft.get_solve_function = lambda: stub_solve
+    try:
+        run_solve_stage(model, Path("unused.gms"), argparse.Namespace(verbose=False), _new_stats(1))
+    finally:
+        rft.get_solve_function = orig
+
+    assert model["mcp_solve"]["mcp_attribution"] == "MCP-SOLVED"
+    # ⚠ BOTH fields (PR #1740 review). Asserting only the verdict meant dropping
+    # `mcp_completed_own_solve` from the comprehension would still pass — and
+    # that field is what `_solver_completed` needs to tell a completed
+    # infeasible solve from an abort, so losing it inverts a safety default.
+    assert model["mcp_solve"]["mcp_completed_own_solve"] is True
+
+    # …and omitted entirely when the solver did not supply one, so rows written
+    # by older code paths stay schema-valid.
+    def legacy_solve(_path, timeout=120):
+        return {
+            "status": "success",
+            "solver_status": 1,
+            "model_status": 1,
+            "objective_value": 1.0,
+            "outcome_category": "model_optimal",
+            "solve_time_seconds": 0.1,
+            "iterations": 1,
+        }
+
+    legacy: dict = {"model_id": "m"}
+    rft.get_solve_function = lambda: legacy_solve
+    try:
+        run_solve_stage(
+            legacy, Path("unused.gms"), argparse.Namespace(verbose=False), _new_stats(1)
+        )
+    finally:
+        rft.get_solve_function = orig
+
+    assert "mcp_attribution" not in legacy["mcp_solve"]
+    assert "mcp_completed_own_solve" not in legacy["mcp_solve"]
+
+
+@pytest.mark.unit
+def test_BOTH_writers_persist_the_verdict():
+    """⚠ There are two paths that write `mcp_solve` (PR #1740 review).
+
+    `run_solve_stage` (the pipeline) and `update_model_solve_result` (the
+    standalone `test_solve.py --compare` batch loop). Persisting the verdict in
+    only the first left the second storing a row without it — which
+    `compare_solutions` reads as legacy/unknown, so an embedded-only or aborted
+    listing could still be counted a match on that path.
+    """
+    from scripts.gamslib.test_solve import update_model_solve_result
+
+    base = {
+        "status": "failure",
+        "solver_version": None,
+        "gams_version": None,
+        "solver_status": 1,
+        "solver_status_text": "Normal",
+        "model_status": 2,
+        "model_status_text": "Locally Optimal",
+        "objective_value": 1735.5696,
+        "solve_time_seconds": 0.1,
+        "iterations": 1,
+        "outcome_category": "path_solve_terminated",
+    }
+
+    model: dict = {"model_id": "weapons"}
+    update_model_solve_result(
+        model,
+        {**base, "mcp_attribution": "EMBEDDED-ONLY", "mcp_completed_own_solve": False},
+    )
+    assert model["mcp_solve"]["mcp_attribution"] == "EMBEDDED-ONLY"
+    # ⚠ The completion flag distinguishes an aborted `MCP-FAILED` from a
+    # completed infeasible solve, so this writer regressing to the verdict alone
+    # must fail here (PR #1740 review). `False` is the value that matters — a
+    # dropped field reads as ABSENT, which `_solver_completed` treats as
+    # legacy/allowed, inverting the safety default.
+    assert model["mcp_solve"]["mcp_completed_own_solve"] is False
+
+    # Omitted when absent, so rows from either writer stay schema-valid.
+    legacy: dict = {"model_id": "weapons"}
+    update_model_solve_result(legacy, base)
+    assert "mcp_attribution" not in legacy["mcp_solve"]
+    assert "mcp_completed_own_solve" not in legacy["mcp_solve"]
+
+
+@pytest.mark.unit
+def test_a_COMPLETED_own_failure_still_reaches_the_comparison_tree():
+    """⚠ The attribution guard must not swallow a genuine both-infeasible match.
+
+    A completed own-MCP failure is `MCP-FAILED` with
+    `mcp_completed_own_solve=True` — that IS our answer, and the decision tree
+    records NLP-infeasible + MCP-infeasible as a genuine `match`
+    (`COMPARE_BOTH_INFEASIBLE`). An earlier revision skipped every
+    non-`MCP-SOLVED` verdict and lost those matches (PR #1740 review).
+    """
+    from scripts.gamslib.test_solve import compare_solutions
+
+    def _model(**mcp):
+        return {
+            "model_id": "m",
+            "convexity": {
+                "status": "verified",
+                "solver_status": 1,
+                "model_status": 4,
+                "objective_value": None,
+            },
+            "mcp_solve": {
+                # ⚠ RUNTIME SHAPE (PR #1740 review). `solve_mcp` derives
+                # `is_success` from `model_status in (1, 2)`, so a completed
+                # INFEASIBLE solve is persisted as `status: "failure"`. An
+                # earlier revision of this fixture paired `"success"` with
+                # `model_status: 4` — a combination the runtime cannot emit —
+                # which made Case 3 look reachable when Case 6 was returning
+                # first for every real row.
+                "status": "failure",
+                "solver_status": 1,
+                "model_status": 4,
+                "objective_value": None,
+                **mcp,
+            },
+        }
+
+    completed = _model(mcp_attribution="MCP-FAILED", mcp_completed_own_solve=True)
+    assert compare_solutions(completed)["comparison_status"] == "match"
+    # …and matches the legacy row's behaviour exactly, which is the point.
+    assert compare_solutions(_model())["comparison_status"] == "match"
+
+    # An ABORTED own MCP is still refused: the 4 above its abort line is stale.
+    aborted = _model(mcp_attribution="MCP-FAILED", mcp_completed_own_solve=False)
+    assert compare_solutions(aborted)["comparison_status"] == "skipped"
+    # As is a borrowed status.
+    assert (
+        compare_solutions(_model(mcp_attribution="EMBEDDED-ONLY"))["comparison_status"] == "skipped"
+    )
+
+
+@pytest.mark.unit
+def test_an_attributed_but_UNCOMPLETED_row_cannot_record_a_match():
+    """⚠ The OPTIMAL path needed completion too (PR #1740 review).
+
+    The guard used `status_is_ours`, which is ATTRIBUTION-only and deliberately
+    accepts `MCP-SOLVED` whose `mcp_completed_own_solve` is absent or literally
+    False — the two fields are independently valid under the schema, so that
+    contradictory shape is storable. Such a row entered the optimal path and
+    could record a genuine `match` off an objective its solve never finished
+    producing, which is a KPI-visible false positive of exactly the kind the
+    weapons defect was.
+
+    The infeasible half of the same tree was already covered; this is its
+    optimal twin, and the guard is now `status_is_ours_and_complete`.
+    """
+    from scripts.gamslib.test_solve import compare_solutions
+
+    def _model(**mcp):
+        return {
+            "model_id": "m",
+            "convexity": {
+                "status": "verified",
+                "solver_status": 1,
+                "model_status": 1,
+                "objective_value": 1735.5696,
+            },
+            "mcp_solve": {
+                "status": "success",
+                "solver_status": 1,
+                "model_status": 1,
+                "objective_value": 1735.5696,
+                **mcp,
+            },
+        }
+
+    # ⚠ NEGATIVE CONTROL FIRST — otherwise "skipped" below passes on anything.
+    assert (
+        compare_solutions(_model(mcp_attribution="MCP-SOLVED", mcp_completed_own_solve=True))[
+            "comparison_status"
+        ]
+        == "match"
+    )
+    assert compare_solutions(_model())["comparison_status"] == "match", "legacy row"
+
+    # The defect: ours by attribution, never completed.
+    for bad in ({"mcp_completed_own_solve": False}, {}):
+        row = _model(mcp_attribution="MCP-SOLVED", **bad)
+        out = compare_solutions(row)
+        assert out["comparison_status"] == "skipped", f"{bad}: {out}"
+        assert "did not run to completion" in out["notes"], (
+            "the skip note must name COMPLETION, not attribution — they need "
+            f"different follow-up: {out['notes']}"
+        )
+
+    # And the two skip reasons stay distinguishable in the note.
+    not_ours = compare_solutions(_model(mcp_attribution="EMBEDDED-ONLY"))
+    assert not_ours["comparison_status"] == "skipped"
+    assert "no answer attributable" in not_ours["notes"]
+
+
+@pytest.mark.unit
+def test_a_status_failure_row_with_NO_own_answer_is_still_refused():
+    """⚠ Case 6 was swallowing Case 3 for every runtime-shaped row (PR #1740).
+
+    This test previously asserted the opposite — that ANY `status: "failure"`
+    row is refused before the infeasible cases are reached — and recorded it as
+    settled pre-existing behaviour. It was, and that was the bug: `solve_mcp`
+    sets `status: "failure"` for every `model_status` outside 1/2, so a
+    genuinely COMPLETED infeasible MCP arrived here as a failure row and Case 3
+    (both infeasible) could never fire for anything the runtime actually
+    produces. The only fixtures that reached it paired `status: "success"` with
+    `model_status: 4`, which `solve_mcp` cannot emit.
+
+    Case 6 now exempts a completed own infeasible ANSWER. What it must still
+    refuse is a failure row carrying no answer of ours at all — asserted here so
+    the exemption cannot quietly widen into "any failure row is comparable".
+    """
+    from scripts.gamslib.test_solve import compare_solutions
+
+    def _model(**mcp):
+        return {
+            "model_id": "m",
+            "convexity": {
+                "status": "verified",
+                "solver_status": 1,
+                "model_status": 4,
+                "objective_value": None,
+            },
+            "mcp_solve": {
+                "status": "failure",
+                "solver_status": 1,
+                "model_status": 4,
+                "objective_value": None,
+                **mcp,
+            },
+        }
+
+    # The exemption: our model ran and PROVED infeasible, NLP agrees → Case 3.
+    assert (
+        compare_solutions(_model(mcp_attribution="MCP-FAILED", mcp_completed_own_solve=True))[
+            "comparison_status"
+        ]
+        == "match"
+    )
+
+    # Still refused — no usable answer of ours, for three different reasons.
+    # ⚠ `model_status: 13` is NOT infeasible, so Case 6 still owns it even
+    # though the solver completed.
+    errored = _model(mcp_attribution="MCP-FAILED", mcp_completed_own_solve=True, model_status=13)
+    assert compare_solutions(errored)["comparison_status"] != "match"
+
+    # The solver itself did not complete normally.
+    no_normal_completion = _model(
+        mcp_attribution="MCP-FAILED", mcp_completed_own_solve=True, solver_status=3
+    )
+    assert compare_solutions(no_normal_completion)["comparison_status"] != "match"
+
+    # Attributed to the embedded source, not to us.
+    assert (
+        compare_solutions(_model(mcp_attribution="EMBEDDED-ONLY"))["comparison_status"] == "skipped"
+    )
+
+    # ⚠⚠ AND THE NARROWING ITSELF: the exemption is exactly Case 3's condition,
+    # so it requires the NLP to be infeasible too. Dropping `nlp_infeasible`
+    # releases rows whose NLP solved OPTIMALLY into Case 4 — an A/B replay of
+    # all 219 DB rows measured that as moving the seven `model_infeasible`
+    # models (agreste, camcge, cesam, fawley, lnts, mine, rocket) from
+    # `skipped` to `mismatch`. That re-bucketing may be the more honest verdict,
+    # but it is KPI-visible and out of scope for a review fix, so the scoping is
+    # pinned here rather than left to be rediscovered by replay.
+    nlp_optimal_mcp_infeasible = {
+        "model_id": "m",
+        "convexity": {
+            "status": "verified",
+            "solver_status": 1,
+            "model_status": 1,
+            "objective_value": 42.0,
+        },
+        "mcp_solve": {
+            "status": "failure",
+            "solver_status": 1,
+            "model_status": 4,
+            "objective_value": None,
+            "mcp_attribution": "MCP-FAILED",
+            "mcp_completed_own_solve": True,
+        },
+    }
+    out = compare_solutions(nlp_optimal_mcp_infeasible)
+    assert out["comparison_result"] == "compare_mcp_failed", (
+        "the exemption must not release an optimal-NLP row into Case 4: "
+        f"{out['comparison_status']}/{out['comparison_result']}"
+    )
+
+
+@pytest.mark.unit
+def test_mcp_completed_own_solve_follows_the_FINAL_execution(run_with_listing):
+    """⚠ The final-execution rule must hold for the COMPLETION FLAG too.
+
+    `Attribution.mcp_succeeded` was covered, but this flag is computed
+    separately in `solve_mcp`. An `any()` regression here would report a loop
+    whose early iteration completed and whose final one aborted as a genuinely
+    completed `MCP-FAILED` — changing the rejection/failure counters and, via
+    `status_is_ours`, the downstream infeasibility handling (PR #1740 review).
+    """
+
+    def ours(ms: str, line: int = 240) -> str:
+        return f"""
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  {line}
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      {ms}
+"""
+
+    # ⚠ DISTINCT source lines, so the abort names ONLY the final summary.
+    # A first draft reused line 240 for both — but then the abort is
+    # `abort_ambiguous` and marks EVERY summary, so `any()` and last-execution
+    # agree and the test discriminates nothing. It passed against the `any()`
+    # mutant, which is how I found it (PR #1740 review).
+    looped_abort = (
+        ours("1 Optimal", 240)
+        + ours("1 Optimal", 250)
+        + ("\n**** SOLVE from line 250 ABORTED, EXECERROR = 1\n")
+    )
+    result = run_with_listing(looped_abort)
+    assert (
+        result["mcp_completed_own_solve"] is False
+    ), "the FINAL execution aborted, even though an earlier one completed"
+    assert result["mcp_attribution"] != "MCP-SOLVED"
+
+    # And the shared-line variant must still be refused, by ambiguity.
+    ambiguous = (
+        ours("1 Optimal")
+        + ours("1 Optimal")
+        + ("\n**** SOLVE from line 240 ABORTED, EXECERROR = 1\n")
+    )
+    assert run_with_listing(ambiguous)["mcp_completed_own_solve"] is False
+
+    # Early completes, final completes but FAILS — completion is still true
+    # (it ran), while the verdict is MCP-FAILED. The two answer different
+    # questions and must not collapse.
+    looped_fail = ours("1 Optimal") + ours("4 Infeasible")
+    r2 = run_with_listing(looped_fail)
+    assert r2["mcp_completed_own_solve"] is True, "the final run completed; it just failed"
+    assert r2["mcp_attribution"] == "MCP-FAILED"
+
+    # A single healthy execution is unaffected.
+    r3 = run_with_listing(ours("1 Optimal"))
+    assert r3["mcp_completed_own_solve"] is True
+    assert r3["mcp_attribution"] == "MCP-SOLVED"

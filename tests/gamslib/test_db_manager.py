@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import sys
 from pathlib import Path
 from unittest.mock import patch
@@ -607,3 +608,188 @@ class TestValidateModelEntry:
         }
         errors = validate_model_entry(invalid_model, sample_schema)
         assert len(errors) > 0
+
+
+class TestCmdInitStampsTheCanonicalVersion:
+    """Sprint 39 P7 — what each `cmd_init` path may legitimately CLAIM.
+
+    ⚠ These exist because neither `cmd_init` path was exercised (PR #1740
+    review): the suite covered helpers and validation, so both hard-coded
+    versions could have regressed silently.
+
+    ⚠⚠ AND THE TWO PATHS DIFFER, which an earlier revision of this class got
+    wrong by asserting both stamp the canonical version. `--empty` may: it has
+    `models: []`, so the migration chain has nothing to act on. The CATALOG path
+    may NOT — the chain is not only the 3.0.0 file rename. v2.2.0 reads each raw
+    source, detects MIP/MINLP/MIQCP/RMIP/RMINLP and installs the
+    `pipeline_status: {status: "skipped"}` block; v2.2.1 adds the
+    multi-solve-driver exclusion; and `migrate_catalog` deliberately leaves
+    every pipeline stage absent. Since `batch_parse.get_candidate_models` gates
+    on that block, a catalog-initialized database claiming 3.0.0 would feed
+    DISCRETE models to the pipeline as candidates while advertising the current
+    contract.
+    """
+
+    @staticmethod
+    def _canonical() -> str:
+        """Read from the schema, never hard-coded — that is the defect's shape."""
+        import re
+
+        desc = json.loads((PROJECT_ROOT / "data" / "gamslib" / "schema.json").read_text())[
+            "description"
+        ]
+        m = re.search(r"\(v(\d+\.\d+\.\d+)\)", desc)
+        assert m, f"schema description carries no (vX.Y.Z): {desc!r}"
+        return m.group(1)
+
+    def test_empty_init_stamps_the_canonical_version(self, tmp_path, monkeypatch):
+        import argparse
+
+        from scripts.gamslib import db_manager as dbm
+
+        db = tmp_path / "gamslib_status.json"
+        monkeypatch.setattr(dbm, "DATABASE_PATH", db)
+        monkeypatch.setattr(dbm, "save_database", lambda d: db.write_text(json.dumps(d)))
+
+        rc = dbm.cmd_init(argparse.Namespace(force=False, empty=True, dry_run=False))
+        assert rc == 0
+        assert json.loads(db.read_text())["schema_version"] == self._canonical()
+
+    def test_catalog_init_does_NOT_over_claim_the_canonical_version(
+        self, tmp_path, monkeypatch, caplog
+    ):
+        """⚠ The path that actually runs for a real `init` — and it must NOT stamp.
+
+        An earlier revision of this code stamped the canonical version here,
+        justified by "a freshly migrated catalog carries no `mcp_solve` rows, so
+        there is no `mcp_file_used` for the 3.0.0 rename to have missed". That
+        reasoning covered the RENAME only and missed the SEMANTIC migrations —
+        the discrete-model skip block (v2.2.0) and the multi-solve-driver
+        exclusion (v2.2.1). Claiming 3.0.0 without them re-admits MINLP/MIP
+        models as pipeline candidates, which are out of scope for nlp2mcp.
+
+        The version therefore stays where `migrate_catalog` puts it, and the
+        operator is TOLD what has not run.
+        """
+        import argparse
+
+        from scripts.gamslib import db_manager as dbm
+
+        db = tmp_path / "gamslib_status.json"
+        catalog = tmp_path / "catalog.json"
+        catalog.write_text("{}")
+        monkeypatch.setattr(dbm, "DATABASE_PATH", db)
+        monkeypatch.setattr(dbm, "CATALOG_PATH", catalog)
+        monkeypatch.setattr(dbm, "save_database", lambda d: db.write_text(json.dumps(d)))
+
+        import scripts.gamslib.migrate_catalog as mc
+
+        monkeypatch.setattr(mc, "load_catalog", lambda _p: {})
+        monkeypatch.setattr(
+            mc, "migrate_catalog", lambda _c, _d: {"schema_version": "2.0.0", "models": []}
+        )
+        # ⚠ Stub the validation step, which is NOT this test's subject and is
+        # environment-dependent: `validate_database` FAILS CLOSED when
+        # `jsonschema` is absent, returning a synthetic
+        # `{"path": "(library)", "message": "jsonschema not installed"}`. That
+        # library is deliberately undeclared, so this path returns 1 on any
+        # machine without it — which is exactly what happened in CI while the
+        # test passed locally (PR #1740 review).
+        monkeypatch.setattr(dbm, "validate_database", lambda _d, _s: [])
+        monkeypatch.setattr(dbm, "load_schema", lambda: {})
+
+        with caplog.at_level(logging.WARNING):
+            rc = dbm.cmd_init(argparse.Namespace(force=False, empty=False, dry_run=False))
+        assert rc == 0
+
+        written = json.loads(db.read_text())["schema_version"]
+        assert written == "2.0.0", (
+            "the catalog path must preserve `migrate_catalog`'s version; stamping "
+            f"the current one advertises migrations that never ran (got {written})"
+        )
+        assert (
+            written != self._canonical()
+        ), "if these ever coincide this assertion is vacuous — re-derive the test"
+
+        # The operator must be told, or a truthful version is just a silent one.
+        warning = caplog.text
+        assert "have NOT run" in warning
+        assert "migrate_schema_v2.2.0.py" in warning, "the discrete-model skip block"
+        assert "migrate_schema_v2.2.1.py" in warning, "the multi-solve exclusion"
+
+    def test_the_discrete_skip_block_is_what_makes_this_matter(self):
+        """⚠ The CONSUMER, asserted rather than described.
+
+        This is why the version claim above is not cosmetic:
+        `batch_parse.get_candidate_models` skips a model solely on
+        `pipeline_status.status == "skipped"`, and `migrate_catalog` never
+        writes that key. Pinning both halves here means a future change to
+        either — dropping the skip check, or making `migrate_catalog` populate
+        the block — surfaces as a failure rather than silently re-admitting
+        MINLP/MIP models.
+        """
+        from scripts.gamslib.batch_parse import get_candidate_models
+
+        discrete = {
+            "model_id": "minlp_model",
+            "convexity": {"status": "likely_convex"},
+            "pipeline_status": {"status": "skipped", "reason": "minlp_out_of_scope"},
+        }
+        assert get_candidate_models({"models": [discrete]}) == [], "the skip block must win"
+
+        # Same model as `migrate_catalog` would leave it: no pipeline_status.
+        unmigrated = {k: v for k, v in discrete.items() if k != "pipeline_status"}
+        assert get_candidate_models({"models": [unmigrated]}) == [unmigrated], (
+            "without the block it IS admitted — which is precisely why the "
+            "catalog path must not claim the migrations have run"
+        )
+
+
+def test_save_database_stamps_updated_date(tmp_path):
+    """⚠ Sprint 39 P7 — the pipeline's write path never set it (PR #1740 review).
+
+    `schema.json` defines `updated_date` as the "ISO 8601 timestamp of last
+    modification", but only the migration scripts were setting it. So a re-solve
+    left the database reporting provenance from whenever a migration last ran —
+    a positive claim about when the data moved, wrong by hours in the committed
+    artifact until this was fixed.
+    """
+    from scripts.gamslib import db_manager as dbm
+
+    db = tmp_path / "gamslib_status.json"
+    stale = "2026-01-01T00:00:00+00:00"
+    dbm.save_database({"schema_version": "3.0.0", "updated_date": stale, "models": []}, db)
+
+    written = json.loads(db.read_text())
+    assert written["updated_date"] != stale, "the write must re-stamp the modification time"
+    assert written["updated_date"] > stale
+
+
+def test_save_database_does_not_INVENT_the_field(tmp_path):
+    """A payload without the key keeps its shape — the stamp is not a schema change."""
+    from scripts.gamslib import db_manager as dbm
+
+    db = tmp_path / "other.json"
+    dbm.save_database({"schema_version": "3.0.0", "models": []}, db)
+    assert "updated_date" not in json.loads(db.read_text())
+
+
+def test_the_standalone_writer_goes_through_the_shared_saver(tmp_path):
+    """⚠ `test_solve.py` carried a SECOND `save_database` (PR #1740 review).
+
+    It never refreshed `updated_date` and omitted the trailing newline, so a
+    standalone `--compare` run modified the database while leaving its
+    last-modification provenance stale — the same defect just fixed for the
+    pipeline writer, surviving in a duplicate. Pinned here rather than in
+    `test_solve`'s own file because the property under test is that the two
+    writers are ONE.
+    """
+    from scripts.gamslib.test_solve import save_database as standalone
+
+    db = tmp_path / "db.json"
+    stale = "2026-01-01T00:00:00+00:00"
+    standalone({"schema_version": "3.0.0", "updated_date": stale, "models": []}, db)
+
+    raw = db.read_text()
+    assert json.loads(raw)["updated_date"] != stale, "the standalone writer must re-stamp"
+    assert raw.endswith("\n"), "…and match the shared writer byte for byte"

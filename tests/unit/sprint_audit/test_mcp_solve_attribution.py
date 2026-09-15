@@ -31,13 +31,21 @@ They are labelled as such at each use.
 """
 
 import os
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 
 import pytest
 
 from scripts.sprint_audit.check_mcp_solve_attribution import (
+    _KNOWN_VERDICTS,
     Attribution,
+    completion_flag_is_malformed,
+    own_solve_completed,
     parse_solve_summaries,
+    status_is_ours,
+    status_is_ours_and_complete,
 )
 
 #: Verbatim from `weapons`'s listing — the ONLY solve summary it contains,
@@ -2543,3 +2551,346 @@ def test_a_read_only_json_destination_is_accepted_when_the_parent_is_writable(
         assert rc == 0, "a read-only file in a writable parent is a valid target"
     finally:
         dest.chmod(0o644)
+
+
+#: A forcing scaffold executes ONE `Solve mcp_model using MCP;` inside a loop
+#: (`src/emit/forcing.py`'s homotopy ladder), so a listing can hold several
+#: executions of OUR model, all sharing one source line.
+def _looped(*model_statuses: str) -> str:
+    return "".join(f"""
+               S O L V E      S U M M A R Y
+
+     MODEL   mcp_model
+     TYPE    MCP
+     SOLVER  PATH                FROM LINE  240
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      {ms}
+""" for ms in model_statuses)
+
+
+def test_a_looped_emitted_solve_is_judged_by_its_FINAL_execution():
+    """⚠ `any()` let an early success outrank the run the scalars came from.
+
+    Every consumer reads `parse_gams_listing`'s scalars, which take the LAST
+    match. With `any()`, a homotopy ladder whose first iteration solved and
+    whose last reported MS-4 was labelled `MCP-SOLVED` — so a consumer would
+    accept a stale earlier answer as the current solve (PR #1740 review).
+
+    This mirrors the rule `embedded_produced_status` already applies, and for
+    the same stated reason.
+    """
+    early_ok = Attribution(
+        "m", summaries=parse_solve_summaries(_looped("1 Optimal", "4 Infeasible"))
+    )
+    assert early_ok.verdict == "MCP-FAILED", "the last execution failed"
+
+    late_ok = Attribution(
+        "m", summaries=parse_solve_summaries(_looped("4 Infeasible", "1 Optimal"))
+    )
+    assert late_ok.verdict == "MCP-SOLVED", "…and it is not simply 'all must pass'"
+
+    single = Attribution("m", summaries=parse_solve_summaries(_looped("1 Optimal")))
+    assert single.verdict == "MCP-SOLVED", "single-execution listings are unaffected"
+
+
+def test_an_abort_inside_a_loop_stays_ambiguous_and_unsuccessful():
+    """The abort case was already safe, and must remain so.
+
+    All iterations share one source line, so `**** SOLVE from line 240 ABORTED`
+    cannot be attributed to a particular execution — `abort_ambiguous` covers it
+    and the verdict must not claim success.
+    """
+    lst = _looped("1 Optimal", "1 Optimal") + "\n**** SOLVE from line 240 ABORTED, EXECERROR = 1\n"
+    attribution = Attribution("m", summaries=parse_solve_summaries(lst))
+    assert attribution.verdict != "MCP-SOLVED"
+
+
+class TestStatusIsOursFailsClosed:
+    """Sprint 39 P7 — the predicate gating infeasibility and match must not
+    fail OPEN on malformed data.
+
+    ⚠ `schema.json`'s enum is only a backstop: `jsonschema` is an undeclared
+    optional dependency, so a persisted row may never have been validated — and
+    this predicate also accepts LIVE result dicts that no schema ever sees
+    (PR #1740 review).
+    """
+
+    def test_an_absent_key_is_the_ONLY_permissive_case(self):
+        """Rows predating attribution must keep their behaviour."""
+        assert status_is_ours({}) is True
+        assert status_is_ours({"model_status": 1}) is True
+
+    def test_an_explicit_null_is_NOT_the_legacy_shape(self):
+        """⚠ `row.get()` conflated an omitted field with a present `null`.
+
+        The schema declares a non-null string, so a row carrying `null` is
+        malformed — and it took the legacy allow path.
+        """
+        assert status_is_ours({"mcp_attribution": None}) is False
+
+    def test_an_unrecognised_verdict_fails_closed(self):
+        """⚠ An earlier revision fell through to `return True`.
+
+        A typo or corrupt value was therefore read as an attributed solve and
+        bypassed every guard built on this predicate.
+        """
+        for bad in ("MCP-SOLVE", "mcp-solved", "", "SOLVED", 42, [], {"x": 1}):
+            assert status_is_ours({"mcp_attribution": bad}) is False, bad
+
+    def test_the_completion_flag_requires_the_LITERAL_boolean(self):
+        """⚠ `bool("false")` is True — truthiness is the wrong test here."""
+
+        def row(v):
+            return {"mcp_attribution": "MCP-FAILED", "mcp_completed_own_solve": v}
+
+        assert status_is_ours(row(True)) is True
+        for bad in ("false", "true", 1, "1", [1], object()):
+            assert status_is_ours(row(bad)) is False, bad
+        assert status_is_ours({"mcp_attribution": "MCP-FAILED"}) is False, "absent → not completed"
+
+    def test_the_known_verdicts_all_resolve(self):
+        """Scope guard: every schema enum value must be handled explicitly.
+
+        Derived from the schema rather than restated, so a future enum addition
+        that this predicate does not handle fails here instead of silently
+        failing closed in production.
+        """
+        import json
+        from pathlib import Path
+
+        root = Path(__file__).resolve().parents[3]
+        schema = json.loads((root / "data" / "gamslib" / "schema.json").read_text())
+        enum = schema["definitions"]["mcp_solve_result"]["properties"]["mcp_attribution"]["enum"]
+        assert set(enum) == set(
+            _KNOWN_VERDICTS
+        ), "the schema enum and the predicate's known-verdict set have drifted"
+
+
+class TestMalformedCompletionFlagFailsClosedEverywhere:
+    """Sprint 39 P7 — the literal-boolean rule must hold at EVERY consumer.
+
+    ⚠ It was fixed in `status_is_ours`'s `MCP-FAILED` branch and left as
+    truthiness at four other sites (PR #1740 review). `bool("false")` is True,
+    so the likeliest malformed serialisation of a boolean read as *completed* —
+    and the four sites reach, respectively, the match count, a non-convexity
+    proof, the Case-C reclassification, and the retry rejection counters.
+    """
+
+    MALFORMED = "false"  # the value that motivated the finding
+
+    def test_the_predicate_rejects_a_malformed_flag_under_EITHER_verdict(self):
+        """⚠ Including `MCP-SOLVED`, which previously returned True unconditionally."""
+        for verdict in ("MCP-SOLVED", "MCP-FAILED"):
+            row = {"mcp_attribution": verdict, "mcp_completed_own_solve": self.MALFORMED}
+            assert status_is_ours(row) is False, verdict
+
+    def test_a_VALID_false_is_not_treated_as_malformed(self):
+        """`False` is a legitimate value: our model ran and did not complete.
+
+        Conflating it with corruption would make a genuine aborted row and a
+        typo indistinguishable — and `MCP-SOLVED` with `False` is still ours.
+        """
+        assert (
+            status_is_ours({"mcp_attribution": "MCP-SOLVED", "mcp_completed_own_solve": False})
+            is True
+        )
+        assert (
+            status_is_ours({"mcp_attribution": "MCP-FAILED", "mcp_completed_own_solve": False})
+            is False
+        )
+
+    def test_own_solve_completed_is_identity_not_truthiness(self):
+        assert own_solve_completed({"mcp_completed_own_solve": True}) is True
+        for bad in ("false", "true", 1, "1", [1], {}, None):
+            assert own_solve_completed({"mcp_completed_own_solve": bad}) is False, bad
+        assert own_solve_completed({}) is False, "absent is not completed"
+
+    def test_malformed_is_distinguished_from_ABSENT(self):
+        """Absence is the legacy shape and stays permissive; corruption does not."""
+        assert completion_flag_is_malformed({}) is False
+        assert completion_flag_is_malformed({"mcp_completed_own_solve": True}) is False
+        assert completion_flag_is_malformed({"mcp_completed_own_solve": False}) is False
+        assert completion_flag_is_malformed({"mcp_completed_own_solve": "false"}) is True
+        assert completion_flag_is_malformed({"mcp_completed_own_solve": 1}) is True
+
+    def test_a_HYBRID_row_is_not_a_legacy_row(self):
+        """⚠ The legacy fast path ran BEFORE the malformed check (PR #1740 review).
+
+        A genuine legacy row carries NEITHER field. A row with a completion flag
+        but no verdict is a hybrid — and with a corrupt flag it was accepted as
+        attributed, in a helper documented as fail-closed.
+        """
+        assert status_is_ours({}) is True, "neither field: genuine legacy"
+        assert status_is_ours({"mcp_completed_own_solve": "false"}) is False
+        assert status_is_ours({"mcp_completed_own_solve": 1}) is False
+        # ⚠ A VALID flag without a verdict is HONOURED, not waved through
+        # (PR #1740 review). An earlier revision of this test asserted both
+        # shapes True, reasoning that the flag "drives nothing on its own" —
+        # which is exactly what made the gap invisible. It drives plenty: every
+        # objective and comparison consumer built on this predicate would read
+        # the row's stale scalars as a completed answer while the row itself
+        # says the solve did NOT complete. Absence is unknown; `False` is a
+        # statement, and a fail-closed helper must not overrule it.
+        assert status_is_ours({"mcp_completed_own_solve": True}) is True
+        assert status_is_ours({"mcp_completed_own_solve": False}) is False
+
+
+@pytest.mark.unit
+class TestStatusIsOursAndComplete:
+    """The conjunction every objective-reading consumer actually wants.
+
+    ⚠ WHY THIS EXISTS AS A NAMED PREDICATE. `status_is_ours` answers
+    ATTRIBUTION only, and that distinction was missed at SEVEN call sites in
+    Sprint 39 P7 — each time as "the consumer forgot the completion check", and
+    twice found only in review (PR #1740). The pattern is not that the reviewers
+    were sharp; it is that the safe combination had no name, so every consumer
+    re-derived it and some got it wrong. Asking for the property directly is the
+    fix that does not depend on remembering.
+    """
+
+    def test_it_requires_BOTH_attribution_and_completion(self):
+        assert (
+            status_is_ours_and_complete(
+                {"mcp_attribution": "MCP-SOLVED", "mcp_completed_own_solve": True}
+            )
+            is True
+        )
+        # Ours, but the solve never finished — the gap that caused the defect.
+        assert (
+            status_is_ours_and_complete(
+                {"mcp_attribution": "MCP-SOLVED", "mcp_completed_own_solve": False}
+            )
+            is False
+        )
+        assert status_is_ours_and_complete({"mcp_attribution": "MCP-SOLVED"}) is False, (
+            "an attributed row with an ABSENT flag was attributed and did NOT "
+            "complete; absence is only 'unknown' when there is no verdict at all"
+        )
+
+    def test_a_COMPLETED_failure_is_still_ours(self):
+        """⚠ It must not collapse into `== MCP-SOLVED`.
+
+        A genuine infeasible solve is `MCP-FAILED` + completed. An earlier
+        revision of `_solver_completed` required `MCP-SOLVED` and rejected every
+        one of them — discarding real findings, a worse failure than the one it
+        was fixing. This predicate must keep them.
+        """
+        assert (
+            status_is_ours_and_complete(
+                {"mcp_attribution": "MCP-FAILED", "mcp_completed_own_solve": True}
+            )
+            is True
+        )
+        assert (
+            status_is_ours_and_complete(
+                {"mcp_attribution": "MCP-FAILED", "mcp_completed_own_solve": False}
+            )
+            is False
+        )
+
+    def test_a_borrowed_or_indeterminate_status_is_never_ours(self):
+        for verdict in ("EMBEDDED-ONLY", "MCP-NO-STATUS", "NO-SOLVE", "ERROR"):
+            assert (
+                status_is_ours_and_complete(
+                    {"mcp_attribution": verdict, "mcp_completed_own_solve": True}
+                )
+                is False
+            ), f"{verdict} completed, but the status is not ours"
+
+    def test_legacy_rows_stay_permissive(self):
+        """No verdict at all → the pre-attribution corpus, unchanged.
+
+        Rejecting these would silently re-classify every committed row.
+        """
+        assert status_is_ours_and_complete({}) is True
+        assert status_is_ours_and_complete({"model_status": 1}) is True
+        # ⚠ NOT legacy — a hybrid row stating its solve did not complete
+        # (PR #1740 review). Genuine legacy is NEITHER field.
+        assert status_is_ours_and_complete({"mcp_completed_own_solve": False}) is False
+        assert status_is_ours_and_complete({"mcp_completed_own_solve": True}) is True
+
+    def test_it_is_never_weaker_than_status_is_ours(self):
+        """The subset property, asserted over the whole cross product.
+
+        Any consumer swapping `status_is_ours` for this one can only become
+        stricter — that is what makes the four call-site swaps in PR #1740 safe
+        to reason about without re-reading each of them.
+        """
+        verdicts = [
+            "MCP-SOLVED",
+            "MCP-FAILED",
+            "MCP-NO-STATUS",
+            "EMBEDDED-ONLY",
+            "NO-SOLVE",
+            "ERROR",
+            None,
+            "bogus",
+        ]
+        flags = [True, False, "false", 1, None]
+        seen_strictly_stronger = False
+        for v in verdicts:
+            for f in flags:
+                for omit_v in (True, False):
+                    for omit_f in (True, False):
+                        row = {}
+                        if not omit_v:
+                            row["mcp_attribution"] = v
+                        if not omit_f:
+                            row["mcp_completed_own_solve"] = f
+                        loose, tight = status_is_ours(row), status_is_ours_and_complete(row)
+                        assert not (tight and not loose), f"weaker on {row}"
+                        seen_strictly_stronger |= loose and not tight
+        assert seen_strictly_stronger, "the two predicates never differed — test is vacuous"
+
+
+@pytest.mark.unit
+class TestTheScriptRunsFromAnUninstalledCheckout:
+    """⚠ `python scripts/sprint_audit/check_mcp_solve_attribution.py` must work.
+
+    Running a script directly puts the SCRIPT'S OWN directory on `sys.path[0]`,
+    not the project root. When the shared predicates moved to
+    `src/diagnostics/solve_attribution.py`, the re-export import broke the
+    standalone entry point with `ModuleNotFoundError: No module named 'src'` at
+    IMPORT time — before `main`, so the tool was broken outright rather than
+    degraded (PR #1740 review).
+
+    ⚠ WHY A SMOKE TEST MISSED IT. A dev venv has an editable install
+    (`__editable__.nlp2mcp-*.pth`) that makes `src` importable from anywhere, so
+    running `--help` by hand PASSED while an uninstalled checkout failed. `-S`
+    skips `site`, and therefore the `.pth`, which reproduces the uninstalled
+    case. The script's other imports are all stdlib, so `-S` costs nothing.
+    """
+
+    # Derived here rather than imported: importing `PROJECT_ROOT` from the
+    # module under test would make this assert against the very value the fix
+    # installs, and several tests in this file monkeypatch it.
+    SCRIPT = (
+        Path(__file__).resolve().parents[3]
+        / "scripts"
+        / "sprint_audit"
+        / "check_mcp_solve_attribution.py"
+    )
+
+    def test_the_probe_is_not_vacuous(self):
+        """`-S` must really drop the editable path, or the test below proves nothing."""
+        out = subprocess.run(
+            [sys.executable, "-S", "-c", "import src"],
+            capture_output=True,
+            text=True,
+            cwd=tempfile.gettempdir(),
+        )
+        assert out.returncode != 0, "-S did not hide `src`; this probe cannot fail"
+        assert "No module named 'src'" in out.stderr
+
+    def test_it_starts_without_the_package_installed(self):
+        # cwd outside the repo as well, so the current directory cannot supply `src`.
+        out = subprocess.run(
+            [sys.executable, "-S", str(self.SCRIPT), "--help"],
+            capture_output=True,
+            text=True,
+            cwd=tempfile.gettempdir(),
+        )
+        assert out.returncode == 0, f"stderr:\n{out.stderr}"
+        assert "usage:" in out.stdout
+        assert "ModuleNotFoundError" not in out.stderr
