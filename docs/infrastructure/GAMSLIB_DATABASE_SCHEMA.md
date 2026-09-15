@@ -1,6 +1,27 @@
 # GAMSLIB Database Schema Documentation
 
-**Schema Version:** 2.0.0  
+**Schema Version:** 2.0.0 — ⚠ **SUPERSEDED; the contract is now 3.0.0.**
+
+> ⚠ **READ THIS FIRST (Sprint 39 P7).** The checked-in contract is
+> **`data/gamslib/schema.json`**, which is **authoritative** — this document
+> describes **v2.0.0** and has not been rewritten for the versions since.
+>
+> Changes you will hit if you follow the text below:
+>
+> | | |
+> |---|---|
+> | `schema_version` | **`3.0.0`**, not `2.0.0` |
+> | `mcp_solve.mcp_file_used` | **renamed `mcp_file_generated`** — the pipeline records the file it *generated*, and that artifact may be cleaned up later, so a path that no longer exists is expected rather than an anomaly |
+> | `mcp_solve`, `solution_comparison`, `convexity` | added after v2.0.0 and **not described here at all** |
+>
+> `3.0.0` is a **major** bump because `mcp_solve_result` sets
+> `additionalProperties: false`: the pre- and post-rename shapes are mutually
+> invalid, so a database cannot satisfy both. Migrate with
+> `scripts/gamslib/migrate_schema_v3.0.0.py`.
+>
+> This banner is deliberately a pointer rather than a rewrite — restating a
+> 700-line contract in prose is how the two drifted apart in the first place.
+
 **Schema Standard:** JSON Schema Draft-07  
 **Database File:** `data/gamslib/gamslib_status.json`  
 **Schema File:** `data/gamslib/schema.json`
@@ -469,7 +490,14 @@ python scripts/gamslib/db_manager.py init --force
 
 **What happens:**
 - Reads `data/gamslib/catalog.json`
-- Migrates to new schema v2.0.0
+- Migrates to new schema v2.0.0 — the chain ENTRY POINT, **not** the current
+  contract. The version is left at `2.0.0` deliberately and `init` warns:
+  the semantic migrations (`v2.2.0`'s discrete-model skip block, `v2.2.1`'s
+  multi-solve exclusion) have not run, and `batch_parse` gates on them.
+  Run `migrate_schema_v2.1.0.py` → `v2.2.0` → `v2.2.1` → `v3.0.0` to reach
+  `3.0.0`.
+- `--empty` instead stamps `3.0.0` directly: with `models: []` there is nothing
+  for those migrations to act on.
 - Creates `data/gamslib/gamslib_status.json`
 - Validates against schema before saving
 
@@ -828,6 +856,29 @@ python scripts/gamslib/db_manager.py init
 
 **Manual migration:**
 
+> ⚠ **This example produces a v2.0.0 database — the CHAIN ENTRY POINT, not the
+> current contract** (Sprint 39 P7). `migrate_catalog()` stamps `2.0.0` by
+> design, because four `migrate_schema_v*.py` scripts walk `2.0.0 → 2.1.0 →
+> 2.2.0 → 2.2.1 → 3.0.0` and each accepts only its immediate predecessor.
+> Saving its result directly leaves a database advertising a historical
+> contract.
+>
+> ⚠ **THE TWO `init` PATHS DIFFER — a catalog-backed `init` does NOT reach the
+> current contract** (PR #1740 review). `init --empty` stamps `3.0.0`, which is
+> sound because it has `models: []` and the migration chain has nothing to act
+> on. A catalog-backed `init` **preserves `2.0.0` and warns**, because the chain
+> is not only the `mcp_file_used` → `mcp_file_generated` rename: `v2.2.0` reads
+> each raw source, detects MIP/MINLP/MIQCP/RMIP/RMINLP and installs the
+> `pipeline_status: {status: "skipped"}` block, and `v2.2.1` adds the
+> multi-solve-driver exclusion. `migrate_catalog()` leaves every pipeline stage
+> absent, and `batch_parse.get_candidate_models` skips a model on exactly that
+> block — so a catalog-backed database claiming `3.0.0` would feed DISCRETE
+> models to the pipeline as candidates.
+>
+> **To reach `3.0.0` from a catalog, run the chain by hand** after `init`:
+> `migrate_schema_v2.1.0.py` → `v2.2.0` → `v2.2.1` → `v3.0.0`. The snippet
+> below is retained as documentation of the chain's first step.
+
 ```python
 from scripts.gamslib.migrate_catalog import load_catalog, migrate_catalog
 from datetime import datetime, UTC
@@ -835,13 +886,16 @@ from datetime import datetime, UTC
 # Load old catalog
 catalog = load_catalog("data/gamslib/catalog.json")
 
-# Migrate to new schema
+# Migrate to the CHAIN ENTRY POINT (v2.0.0) — not the current schema
 migration_date = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 database = migrate_catalog(catalog, migration_date)
 
 # Save to new location
 from scripts.gamslib.db_manager import save_database
 save_database(database, "data/gamslib/gamslib_status.json")
+
+# ⚠ Then run the chain to reach the current contract:
+#   migrate_schema_v2.1.0.py → v2.2.0.py → v2.2.1.py → v3.0.0.py
 ```
 
 ### Compatibility Notes

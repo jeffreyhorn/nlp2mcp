@@ -94,6 +94,24 @@ def save_database(data: dict[str, Any], path: Path = DATABASE_PATH) -> None:
         path: Output path
     """
     logger.debug(f"Saving database to {path}")
+    # ⚠ Sprint 39 P7 (PR #1740 review). `schema.json` defines `updated_date` as
+    # the "ISO 8601 timestamp of last modification", and nothing was setting it
+    # on the pipeline's write path — only the migration scripts did. So a
+    # re-solve left the database reporting provenance from whenever a migration
+    # last ran, which is a POSITIVE claim about when the data moved and was
+    # wrong by hours in the committed artifact.
+    #
+    # Stamped HERE rather than at each call site, because the field describes
+    # the write and not the caller's intent.
+    #
+    # ⚠ An earlier revision of this comment called it "the single choke point
+    # every writer goes through". That was FALSE when written (PR #1740
+    # review): `test_solve.py` carried its own duplicate `save_database` that
+    # bypassed this entirely, so a standalone `--compare` run left the
+    # provenance stale. The duplicate now delegates here — the claim is true
+    # because it was made true, not because it was checked.
+    if isinstance(data, dict) and "updated_date" in data:
+        data["updated_date"] = datetime.now(UTC).isoformat()
     path.parent.mkdir(parents=True, exist_ok=True)
 
     # Write to temp file first
@@ -248,8 +266,30 @@ def cmd_init(args: argparse.Namespace) -> int:
 
     if args.empty:
         # Create empty database
-        database = {
-            "schema_version": "2.2.0",
+        # ⚠ Sprint 39 P7 (PR #1740 review): this must be the CANONICAL version in
+        # `data/gamslib/schema.json`, not a historical one. There is only one
+        # schema file, so a fresh database stamped 2.2.0 would be validated
+        # against 3.0.0's rules while claiming a contract it is not being held
+        # to.
+        #
+        # ⚠ An earlier revision of this comment said "no migration script would
+        # upgrade it", which is FALSE: `migrate_schema_v2.2.1.py` accepts 2.2.0
+        # and `migrate_schema_v3.0.0.py` then accepts 2.2.1, so the chain does
+        # reach it. The real reason to stamp current is to avoid REQUIRING that
+        # multi-step chain for a database that was just created empty.
+        #
+        # An EMPTY database is structurally valid under any of these versions
+        # (no `mcp_solve` rows to carry the renamed key), so stamping it current
+        # is safe as well as correct.
+        # ⚠ Annotated because the literal's mixed value types would otherwise
+        # infer `dict[str, object]`, making `database["models"]` an `object` and
+        # `len()` on it a type error further down (PR #1740 review). Latent
+        # until Sprint 39 P7 routed `test_solve.save_database` through this
+        # module, which pulled it into `mypy src/`'s import graph via
+        # src/diagnostics/convexity_numerical.py. The weakness was always here;
+        # only its visibility changed.
+        database: dict[str, Any] = {
+            "schema_version": "3.0.0",
             "created_date": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "updated_date": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "total_models": 0,
@@ -269,6 +309,46 @@ def cmd_init(args: argparse.Namespace) -> int:
         catalog = load_catalog(CATALOG_PATH)
         migration_date = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
         database = migrate_catalog(catalog, migration_date)
+        # ⚠ DO NOT STAMP 3.0.0 HERE (PR #1740 review). An earlier revision did,
+        # reasoning that a freshly migrated catalog carries no `mcp_solve` rows
+        # and so has no `mcp_file_used` key for the 3.0.0 rename to have missed.
+        # That reasoning was about the RENAME ONLY, and the chain is not only a
+        # rename:
+        #
+        #   * v2.2.0 reads each raw source, detects MIP/MINLP/MIQCP/RMIP/RMINLP,
+        #     and installs the `pipeline_status: {status: "skipped"}` block;
+        #   * v2.2.1 adds the `multi_solve_driver_out_of_scope` exclusion.
+        #
+        # `migrate_catalog` deliberately leaves every pipeline stage absent
+        # (`migrate_catalog.py`, "Pipeline stages are NOT added"), so its output
+        # has no `pipeline_status` at all. `batch_parse.get_candidate_models`
+        # skips on exactly that key — its comment says it "Catches MINLPs whose
+        # convexity verifier reported `likely_convex`" — so a catalog-initialized
+        # database advertising 3.0.0 would hand DISCRETE models to the pipeline
+        # as candidates while claiming to satisfy the current contract. MINLP/MIP
+        # are out of scope for nlp2mcp; silently re-admitting them is the worst
+        # available failure.
+        #
+        # So the version stays where `migrate_catalog` puts it, and the operator
+        # is told what remains. A database that says 2.0.0 is TRUE — the semantic
+        # migrations genuinely have not run — and `cmd_validate` accepts it,
+        # because `schema.json` constrains `schema_version` to a SemVer pattern
+        # rather than to one value.
+        #
+        # ⚠ The `--empty` path above still stamps 3.0.0, and that stays correct:
+        # it has `models: []`, so there is no model for the semantic transforms
+        # to have anything to say about.
+        logger.warning(
+            "Database initialized at schema %s from catalog.json. The semantic "
+            "migrations have NOT run: v2.2.0 installs the discrete-model "
+            "(MIP/MINLP/...) `pipeline_status` skip block and v2.2.1 adds the "
+            "multi-solve-driver exclusion, and `batch_parse.get_candidate_models` "
+            "gates on that block. Until the chain is run, discrete models may be "
+            "treated as candidates. Run, in order: migrate_schema_v2.1.0.py, "
+            "migrate_schema_v2.2.0.py, migrate_schema_v2.2.1.py, "
+            "migrate_schema_v3.0.0.py",
+            database.get("schema_version"),
+        )
 
         # Validate before saving
         schema = load_schema()

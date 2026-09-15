@@ -54,7 +54,12 @@ finally:
 #: under test, and the test would then pass against a broken derivation.
 TRUTHS: dict[str, float | int] = {
     "Solve": 111,
-    "Match": 96,
+    # Sprint 39 P7 corrected this 96 -> 95 (the weapons spurious presolve match).
+    # ⚠ These fixtures are SYNTHETIC and self-consistent; no test asserts they
+    # equal the live DB, so nothing broke when the live figure moved. Updated
+    # anyway: leaving 96 pinned, in the change that establishes 96 was wrong,
+    # blesses the corrected-away value for the next reader (PR #1740 review).
+    "Match": 95,
     "Translate": 135,
     "genuine floor": 73,
     "path_solve_license cohort": 11,
@@ -62,7 +67,15 @@ TRUTHS: dict[str, float | int] = {
     "leak-gate in-scope goldens": 186,
     "current-sprint unknowns": 30,
     "current-sprint research hours": 40.0,
-    "dangling mcp_file_used rows": 14,
+    # ⚠ 13, not 14. 14 is the RENAME-ONLY control; the committed DB also has
+    # Remedy A applied, which reverts `weapons` to its cold golden so its row
+    # stops dangling. Pinning 14 here blessed a state this PR does not ship
+    # (PR #1740 review). See PRESOLVE_RECORD_REMEDY.md §9 obligation 2.
+    # ⚠ The STABLE INTERNAL KEY, not the display label (PR #1740 review). The
+    # label is derived per-finding from the population the line cites, so an
+    # `all-220 Match` line reports "all-220 Match" instead of misnaming itself.
+    "all-population Match": 98,
+    "presolve rows whose generated file is absent": 13,
     "Task-2 figures reproduced": 13,
 }
 
@@ -132,15 +145,26 @@ def test_catches_the_figures_that_actually_shipped_wrong(line: str, fact: str) -
             id="thirteen-of-fourteen",
         ),
         pytest.param(
-            "Solve **111** · Match **96** · Translate **135** · all-219 Match **99**",
+            "Solve **111** · Match **95** · Translate **135** · all-219 Match **98**",
             id="current-kpi-block",
+        ),
+        pytest.param(
+            # ⚠ WITHOUT `all-219`, deliberately. The vector above mentions it,
+            # and `all-219` is a `skip_if` on the Match fact — so that whole line
+            # is skipped for Match and a WRONG value there fires nothing.
+            # Measured: `Match **96**` against a pinned 95 yields 0 findings on
+            # an all-219 line. Updating that vector to 95 was therefore
+            # cosmetic; THIS is the vector that pins the corrected figure
+            # (PR #1740 review).
+            "Solve **111** · Match **95** · Translate **135**",
+            id="current-kpi-block-match-pinned",
         ),
         pytest.param(
             "leak gate clean at **186** in-scope / **7** allowlisted",
             id="current-leak-scope",
         ),
         pytest.param(
-            "the live count of dangling `mcp_file_used` rows is **14**",
+            "the live count of dangling `mcp_file_generated` rows is **13**",
             id="current-dangling",
         ),
         pytest.param("genuine floor **73** (baseline 73 + 0 entries)", id="current-floor"),
@@ -204,6 +228,43 @@ def test_a_target_range_is_not_read_as_a_claim() -> None:
     cited = {f.cited for f in findings if f.fact == "current-sprint research hours"}
     assert "29.0" in cited
     assert "28" not in cited and "36" not in cited
+
+
+def test_the_REVERSE_form_still_matches_after_the_field_rename() -> None:
+    """⚠ Sprint 39 P7 obligation 3 — the POSITIVE case pattern 2 never had.
+
+    Pattern 2 embeds the field name: ``…dangling\\s+(?:mcp_file_generated\\s+)?rows``.
+    The two regressions below and the ``current-dangling`` vector are all
+    NEGATIVE or forward-form, so **every one of them passes by matching
+    nothing** if that optional group goes dead. Renaming the fact, the fixture
+    and the vectors would therefore leave the branch broken with a green suite —
+    the silent-coverage failure the rename was audited to prevent, re-entering
+    through the fix for it.
+
+    ⚠ The token must be UNFORMATTED. Backticks defeat the group: it is skipped at
+    the backtick and ``rows?`` then fails, so ``**14** dangling `x` rows``
+    matches neither pattern. That is why repo prose — which backticks field
+    names — never exercised this branch, and why this test has to spell it bare.
+    """
+    assert _facts("**13 dangling mcp_file_generated rows**") == set()
+    # …and the same line with a WRONG count must be caught, or the assertion
+    # above would be satisfied by a pattern that matches nothing at all.
+    assert _facts("**12 dangling mcp_file_generated rows**") == {
+        "presolve rows whose generated file is absent"
+    }
+    # ⚠ THE RETIRED-TOKEN GUARD WAS REMOVED AFTER MEASURING IT (PR #1740
+    # review): across the live docs it fired on 56 lines, 50 of them historical
+    # records naming only the old identifier, and 0 current misuses.
+    #
+    # Removing it loses NO figure coverage, because the forward pattern is
+    # NAME-AGNOSTIC. A stale-token line with a WRONG figure is still flagged:
+    assert _facts("the live count of dangling `mcp_file_used` rows is **12**") == {
+        "presolve rows whose generated file is absent"
+    }
+    # …and one with the CORRECT figure passes, which is right: it is a
+    # historical statement, and this repo labels superseded analysis rather
+    # than rewriting it.
+    assert _facts("the live count of dangling `mcp_file_used` rows is **13**") == set()
 
 
 def test_dangling_pattern_does_not_reach_into_the_next_clause() -> None:
@@ -860,3 +921,53 @@ def test_a_sprint_scoped_fact_names_no_sprint_number() -> None:
 
     offenders = [f.name for f in cdf.FACTS if _re.search(r"[Ss]print\s*\d", f.name)]
     assert offenders == [], f"fact names pin a sprint number: {offenders}"
+
+
+def test_the_all_219_population_is_actually_CHECKED() -> None:
+    """⚠ It was cited in a fixture and verified by nothing (PR #1740 review).
+
+    `Match` skips every line containing `all-219`, because that is a different
+    population — so an all-219 figure fell between the two facts and a stale or
+    arbitrary value stayed green. `kpi_block.py` derives it, so the fix is a
+    dedicated fact rather than dropping the claim.
+    """
+    correct = "Solve **111** · Match **95** · Translate **135** · all-219 Match **98**"
+    assert _facts(correct) == set()
+
+    wrong = "Solve **111** · Match **95** · Translate **135** · all-219 Match **99**"
+    assert _facts(wrong) == {"all-219 Match"}, "an arbitrary all-219 value must fire"
+
+    # ⚠ And the 142-candidate `Match` on the same line is still skipped, which
+    # is the behaviour the new fact must not disturb: a wrong Match beside a
+    # correct all-219 stays unchecked here, by design.
+    assert _facts("Match **9999** · all-219 Match **98**") == set()
+
+
+@pytest.mark.unit
+def test_the_all_population_exclusion_is_DYNAMIC_not_hardcoded_219():
+    r"""⚠ The two `Match` facts must agree on the population boundary.
+
+    `Match` excludes the all-<n> population and `all-219 Match` claims it. An
+    earlier revision hardcoded `all-219` in the exclusion while matching
+    `all-\d+` in the claim, so the two disagreed for every other corpus size —
+    and the corpus size is itself a tracked figure that `kpi_block` prints from
+    `total_models`. An `all-220 Match` line would have been checked as BOTH
+    populations, letting the 142-candidate `Match` fact fire a FALSE finding on
+    a figure that was never its to check.
+
+    Asserted at a size the corpus does not currently have, precisely because a
+    test pinned to 219 cannot tell the two implementations apart.
+    """
+    # The all-220 value is wrong for BOTH populations (candidate Match is 95,
+    # all-<n> Match is 98). Only the all-<n> fact may fire — and it must name
+    # the population the LINE cites, not a hardcoded 219.
+    #
+    # ⚠ An earlier revision of this test asserted `{"all-219 Match"}` here,
+    # which blessed a finding that misnames its own source: the checker would
+    # have reported an all-220 discrepancy under the label "all-219 Match", in
+    # the tool whose entire job is catching figures that contradict their
+    # source (PR #1740 review).
+    assert _facts("Solve **111** · all-220 Match **77**") == {"all-220 Match"}
+
+    # And a correct all-220 figure is clean — not flagged by the candidate fact.
+    assert _facts("Solve **111** · all-220 Match **98**") == set()

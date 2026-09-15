@@ -10,6 +10,7 @@ golden — a real ``--nlp-presolve`` emit — so they need no GAMS.
 from __future__ import annotations
 
 import math
+import pathlib
 import sys
 from pathlib import Path
 
@@ -916,3 +917,216 @@ Solve m using nlp maximizing obj;
             cold_obj=None,
         )
         assert out.code == "case_b"
+
+
+class TestAttributionGuards:
+    """Sprint 39 P7 — a borrowed or aborted status must not become evidence.
+
+    ⚠ Both guards were untested (PR #1740 review): `cold_start_result` and
+    `_presolve_match_objective` are reached only through GAMS-gated end-to-end
+    paths, so either could have regressed to treating an unusable run as a
+    result. `_cold_is_spurious` consumes the first as PROOF of a spurious point
+    and the Case-C reclassification consumes the second as the presolve match,
+    so a false value here does not stay local.
+    """
+
+    @staticmethod
+    def _solved(verdict: str, completed: bool, model_status: int = 1, obj: float = 42.0):
+        return {
+            "status": "success" if model_status in (1, 2) else "failure",
+            "solver_status": 1,
+            "model_status": model_status,
+            "objective_value": obj,
+            "mcp_attribution": verdict,
+            "mcp_completed_own_solve": completed,
+        }
+
+    def _patch_solve(self, monkeypatch, result):
+        """⚠ Patch the SOURCE modules, not `kkt_residual`.
+
+        Both helpers import at call time (`from scripts.gamslib.test_solve
+        import solve_mcp` inside the function body), so the names never exist as
+        attributes of `kkt_residual` and patching there silently does nothing —
+        the first draft of this class did exactly that and every test errored.
+        """
+        import kkt_residual as kr
+
+        from scripts.gamslib import batch_translate as bt
+        from scripts.gamslib import test_solve as ts
+
+        monkeypatch.setattr(ts, "solve_mcp", lambda *a, **k: result)
+        # The real translate writes the cold emit; the helpers gate on the
+        # file EXISTING, so the stub has to produce it rather than be skipped.
+        monkeypatch.setattr(
+            bt,
+            "translate_single_model",
+            lambda _src, out, **k: pathlib.Path(out).write_text("* stub emit\n"),
+        )
+        return kr
+
+    # ---------------------------------------------------------- cold_start_result
+
+    def test_a_solved_cold_mcp_is_optimal(self, monkeypatch, tmp_path):
+        kr = self._patch_solve(monkeypatch, self._solved("MCP-SOLVED", True))
+        assert kr.cold_start_result(tmp_path / "m.gms", tmp_path) == ("optimal", 42.0)
+
+    def test_a_COMPLETED_failure_is_diverged(self, monkeypatch, tmp_path):
+        """Our model ran and reported an unusable status — a real divergence."""
+        kr = self._patch_solve(
+            monkeypatch, self._solved("MCP-FAILED", True, model_status=4, obj=7.0)
+        )
+        assert kr.cold_start_result(tmp_path / "m.gms", tmp_path) == ("diverged", 7.0)
+
+    def test_an_ABORTED_mcp_is_UNAVAILABLE_not_diverged(self, monkeypatch, tmp_path):
+        """⚠ The distinction that keeps `_cold_is_spurious` honest.
+
+        An aborted MCP is also `MCP-FAILED`, and GAMS may print a stale MS-1
+        above its abort line. Calling that "diverged" would hand the Case-C
+        reclassification proof of a spurious point from a run that produced no
+        answer at all.
+        """
+        kr = self._patch_solve(monkeypatch, self._solved("MCP-FAILED", False, obj=7.0))
+        assert kr.cold_start_result(tmp_path / "m.gms", tmp_path) == ("unavailable", None)
+
+    def test_an_INDETERMINATE_verdict_is_unavailable(self, monkeypatch, tmp_path):
+        kr = self._patch_solve(monkeypatch, self._solved("MCP-NO-STATUS", False))
+        assert kr.cold_start_result(tmp_path / "m.gms", tmp_path) == ("unavailable", None)
+
+    # -------------------------------------------------- _presolve_match_objective
+
+    def test_the_presolve_match_requires_our_own_solve(self, monkeypatch, tmp_path):
+        """⚠ The borrowed-objective path, which is the `weapons` defect itself.
+
+        On a presolve listing an `EMBEDDED-ONLY` verdict means the objective is
+        the embedded SOURCE's. Returning it here would make the Case-C
+        reclassification compare the cold optimum against the NLP's own answer.
+        """
+        kr = self._patch_solve(monkeypatch, self._solved("EMBEDDED-ONLY", False, obj=999.0))
+        assert kr._presolve_match_objective(tmp_path / "p.gms") is None
+
+        kr = self._patch_solve(monkeypatch, self._solved("MCP-NO-STATUS", False, obj=999.0))
+        assert kr._presolve_match_objective(tmp_path / "p.gms") is None
+
+    def test_the_presolve_match_DELEGATES_to_the_shared_conjunction(self, monkeypatch, tmp_path):
+        """⚠ A COUPLING test, because behaviour alone cannot discriminate here.
+
+        This gate used to spell the conjunction out — `status_is_ours(...)` plus
+        an inline `own_solve_completed(...)` — which is exactly equivalent today
+        (verified across all 216 verdict × flag shapes, 64 of which proceed). So
+        no input can tell the two forms apart, and an ordinary regression would
+        pass against either (PR #1740 review).
+
+        What the review actually asked for is that this consumer FOLLOW the
+        shared semantics rather than re-derive them, so that a future change to
+        the legacy/verdict rules reaches it. That is testable: patch the shared
+        predicate and assert the gate obeys. The hand-rolled form ignores the
+        patch entirely, which is the drift the shared helper exists to prevent.
+        """
+        from scripts.sprint_audit import check_mcp_solve_attribution as att
+
+        # A row that is accepted today, so the assertion below is about the
+        # DELEGATION and not about the row being rejected on its own merits.
+        row = self._solved("MCP-SOLVED", True, obj=123.5)
+        kr = self._patch_solve(monkeypatch, row)
+        assert (
+            kr._presolve_match_objective(tmp_path / "p.gms") == 123.5
+        ), "precondition: this row must be accepted, or the test proves nothing"
+
+        monkeypatch.setattr(att, "status_is_ours_and_complete", lambda _row: False)
+        assert (
+            kr._presolve_match_objective(tmp_path / "p.gms") is None
+        ), "the gate re-derived the conjunction instead of delegating to it"
+
+    def test_the_MCP_SOLVED_requirement_stays_SEPARATE_from_the_conjunction(
+        self, monkeypatch, tmp_path
+    ):
+        """⚠ The `MCP-SOLVED` check must NOT be folded into the shared predicate.
+
+        A COMPLETED `MCP-FAILED` solve is legitimately "ours and complete" — the
+        shared conjunction accepts it, and other consumers depend on that (the
+        both-infeasible match path, the `diverged` mapping). It has no usable
+        objective, though, so THIS path must still refuse it. Folding the
+        verdict into the shared helper would have broken those other consumers;
+        this pins the split.
+        """
+        from scripts.sprint_audit import check_mcp_solve_attribution as att
+
+        row = self._solved("MCP-FAILED", True, obj=42.0)
+        assert att.status_is_ours_and_complete(row) is True, "ours and complete…"
+        kr = self._patch_solve(monkeypatch, row)
+        assert kr._presolve_match_objective(tmp_path / "p.gms") is None, "…but not an objective"
+
+    def test_the_presolve_match_accepts_our_own_solve(self, monkeypatch, tmp_path):
+        """The negative control — a gate that rejected everything would pass above."""
+        kr = self._patch_solve(monkeypatch, self._solved("MCP-SOLVED", True, obj=123.5))
+        assert kr._presolve_match_objective(tmp_path / "p.gms") == pytest.approx(123.5)
+
+    def test_results_without_the_attribution_field_are_unchanged(self, monkeypatch, tmp_path):
+        """Backward compatibility: an older result dict keeps its behaviour."""
+        legacy = {
+            "status": "success",
+            "solver_status": 1,
+            "model_status": 1,
+            "objective_value": 5.0,
+        }
+        kr = self._patch_solve(monkeypatch, legacy)
+        assert kr._presolve_match_objective(tmp_path / "p.gms") == pytest.approx(5.0)
+
+    # ------------------------------------------- malformed completion flag
+
+    def test_a_MALFORMED_completion_flag_is_unavailable_not_diverged(self, monkeypatch, tmp_path):
+        """⚠ `bool("false")` is True (PR #1740 review).
+
+        With truthiness, a run that never completed was classified "diverged" —
+        and `_cold_is_spurious` reads that as PROOF of a spurious point, so a
+        corrupt flag would have manufactured a Case-C reclassification.
+        """
+        kr = self._patch_solve(
+            monkeypatch,
+            {
+                **self._solved("MCP-FAILED", True, model_status=4, obj=7.0),
+                "mcp_completed_own_solve": "false",
+            },
+        )
+        assert kr.cold_start_result(tmp_path / "m.gms", tmp_path) == ("unavailable", None)
+
+    def test_both_gates_reject_a_malformed_row_via_the_shared_predicate(
+        self, monkeypatch, tmp_path
+    ):
+        """⚠ Both gates compared the verdict string and skipped `status_is_ours`.
+
+        So an explicit `mcp_attribution: null`, and a malformed completion flag
+        on an otherwise `MCP-SOLVED` row, reached the cold-optimal result and
+        the presolve match — the two values `_cold_is_spurious` and the Case-C
+        reclassification treat as proof (PR #1740 review).
+        """
+        malformed = [
+            {"mcp_attribution": None},
+            {"mcp_attribution": "MCP-SOLVED", "mcp_completed_own_solve": "false"},
+        ]
+        for extra in malformed:
+            kr = self._patch_solve(
+                monkeypatch, {**self._solved("MCP-SOLVED", True, obj=42.0), **extra}
+            )
+            assert kr.cold_start_result(tmp_path / "m.gms", tmp_path) == (
+                "unavailable",
+                None,
+            ), extra
+            assert kr._presolve_match_objective(tmp_path / "p.gms") is None, extra
+
+    def test_MCP_SOLVED_with_a_FALSE_completion_flag_is_refused(self, monkeypatch, tmp_path):
+        """⚠ `status_is_ours` answers ATTRIBUTION, not completion (PR #1740 review).
+
+        It returns True for a schema-valid `MCP-SOLVED` row whose
+        `mcp_completed_own_solve` is literally `False` — a contradictory but
+        storable combination. Both of these gates hand back an OBJECTIVE, so
+        "ours" is not sufficient: the solve must have finished.
+        """
+        row = {**self._solved("MCP-SOLVED", True, obj=42.0), "mcp_completed_own_solve": False}
+        kr = self._patch_solve(monkeypatch, row)
+        assert kr.cold_start_result(tmp_path / "m.gms", tmp_path) == ("unavailable", None)
+        assert kr._presolve_match_objective(tmp_path / "p.gms") is None
+
+        # The negative control: with completion True the objective flows.
+        ok = self._patch_solve(monkeypatch, self._solved("MCP-SOLVED", True, obj=42.0))
+        assert ok.cold_start_result(tmp_path / "m.gms", tmp_path) == ("optimal", 42.0)
