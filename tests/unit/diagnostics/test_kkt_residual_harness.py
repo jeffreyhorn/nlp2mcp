@@ -1040,3 +1040,27 @@ class TestAttributionGuards:
             },
         )
         assert kr.cold_start_result(tmp_path / "m.gms", tmp_path) == ("unavailable", None)
+
+    def test_both_gates_reject_a_malformed_row_via_the_shared_predicate(
+        self, monkeypatch, tmp_path
+    ):
+        """⚠ Both gates compared the verdict string and skipped `status_is_ours`.
+
+        So an explicit `mcp_attribution: null`, and a malformed completion flag
+        on an otherwise `MCP-SOLVED` row, reached the cold-optimal result and
+        the presolve match — the two values `_cold_is_spurious` and the Case-C
+        reclassification treat as proof (PR #1740 review).
+        """
+        malformed = [
+            {"mcp_attribution": None},
+            {"mcp_attribution": "MCP-SOLVED", "mcp_completed_own_solve": "false"},
+        ]
+        for extra in malformed:
+            kr = self._patch_solve(
+                monkeypatch, {**self._solved("MCP-SOLVED", True, obj=42.0), **extra}
+            )
+            assert kr.cold_start_result(tmp_path / "m.gms", tmp_path) == (
+                "unavailable",
+                None,
+            ), extra
+            assert kr._presolve_match_objective(tmp_path / "p.gms") is None, extra

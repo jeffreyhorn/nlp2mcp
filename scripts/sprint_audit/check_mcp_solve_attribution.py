@@ -230,6 +230,14 @@ def status_is_ours(row: dict) -> bool:
     # intended legacy shape — with an explicitly present `null`. The schema
     # declares this field a non-null string, so a row carrying `null` is
     # MALFORMED and took the legacy allow path.
+    # ⚠ The malformed-flag check runs BEFORE the legacy fast path (PR #1740
+    # review). An earlier revision returned early on a missing verdict, so
+    # `{"mcp_completed_own_solve": "false"}` — a HYBRID, not a legacy row — was
+    # accepted as attributed, and this helper is documented as fail-closed.
+    # A genuine legacy row carries NEITHER field.
+    if completion_flag_is_malformed(row):
+        return False
+
     if "mcp_attribution" not in row:
         return True
 
@@ -244,14 +252,6 @@ def status_is_ours(row: dict) -> bool:
     if not isinstance(verdict, str) or verdict not in _KNOWN_VERDICTS:
         return False
     if verdict in _NOT_OUR_STATUS:
-        return False
-    # ⚠ A PRESENT-BUT-MALFORMED completion flag poisons the row whatever the
-    # verdict says (PR #1740 review). An earlier revision checked it only on the
-    # `MCP-FAILED` branch, so `{"mcp_attribution": "MCP-SOLVED",
-    # "mcp_completed_own_solve": "false"}` was accepted unconditionally and
-    # could be counted as a match. The schema declares a boolean; anything else
-    # is evidence the row cannot be trusted.
-    if completion_flag_is_malformed(row):
         return False
     if verdict == "MCP-FAILED":
         # Ours, but only if it ran to completion — an abort leaves a stale

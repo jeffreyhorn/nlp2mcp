@@ -2709,3 +2709,18 @@ class TestMalformedCompletionFlagFailsClosedEverywhere:
         assert completion_flag_is_malformed({"mcp_completed_own_solve": False}) is False
         assert completion_flag_is_malformed({"mcp_completed_own_solve": "false"}) is True
         assert completion_flag_is_malformed({"mcp_completed_own_solve": 1}) is True
+
+    def test_a_HYBRID_row_is_not_a_legacy_row(self):
+        """⚠ The legacy fast path ran BEFORE the malformed check (PR #1740 review).
+
+        A genuine legacy row carries NEITHER field. A row with a completion flag
+        but no verdict is a hybrid — and with a corrupt flag it was accepted as
+        attributed, in a helper documented as fail-closed.
+        """
+        assert status_is_ours({}) is True, "neither field: genuine legacy"
+        assert status_is_ours({"mcp_completed_own_solve": "false"}) is False
+        assert status_is_ours({"mcp_completed_own_solve": 1}) is False
+        # A VALID flag without a verdict stays permissive: it drives nothing on
+        # its own, and tightening it would re-classify rows for no gain.
+        assert status_is_ours({"mcp_completed_own_solve": True}) is True
+        assert status_is_ours({"mcp_completed_own_solve": False}) is True

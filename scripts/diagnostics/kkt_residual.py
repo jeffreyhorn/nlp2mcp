@@ -1031,7 +1031,10 @@ def cold_start_result(
     not that flag — gates the solve."""
     from scripts.gamslib.batch_translate import translate_single_model
     from scripts.gamslib.test_solve import solve_mcp
-    from scripts.sprint_audit.check_mcp_solve_attribution import own_solve_completed
+    from scripts.sprint_audit.check_mcp_solve_attribution import (
+        own_solve_completed,
+        status_is_ours,
+    )
 
     cold_path = scratch / f"{model_path.stem}_mcp_cold.gms"
     translate_single_model(model_path, cold_path, nlp_presolve=False)
@@ -1045,6 +1048,12 @@ def cold_start_result(
     # prints `MODEL STATUS 1` above its abort line, so the check below would
     # report "optimal" for a solve GAMS refused to finish. The verdict folds that
     # in. `None` is tolerated for backward compatibility with older results.
+    # ⚠ `status_is_ours` FIRST, not a bare string comparison (PR #1740 review).
+    # Checking only `!= "MCP-SOLVED"` let an explicit `mcp_attribution: null` and
+    # a malformed `mcp_completed_own_solve` on an MCP-SOLVED row through — and
+    # this result feeds `_cold_is_spurious`, which reads it as PROOF.
+    if not status_is_ours(solved):
+        return "unavailable", None
     attribution = solved.get("mcp_attribution")
     if attribution is not None and attribution != "MCP-SOLVED":
         # ⚠ INDETERMINATE IS NOT EVIDENCE (PR #1740 review). `MCP-NO-STATUS`,
@@ -1077,7 +1086,10 @@ def _presolve_match_objective(presolve_path: Path, timeout: int = 120) -> float 
     (fail closed → the CASE_B verdict is left unchanged) if the presolve MCP does
     not reach a usable optimum."""
     from scripts.gamslib.test_solve import solve_mcp
-    from scripts.sprint_audit.check_mcp_solve_attribution import own_solve_completed
+    from scripts.sprint_audit.check_mcp_solve_attribution import (
+        own_solve_completed,
+        status_is_ours,
+    )
 
     try:
         solved = solve_mcp(presolve_path, timeout=timeout)
@@ -1087,6 +1099,10 @@ def _presolve_match_objective(presolve_path: Path, timeout: int = 120) -> float 
         # would hand back the SOURCE's objective as if it were the presolve
         # answer. Only `MCP-SOLVED` means our emitted model produced one.
         # `None` is tolerated for backward compatibility with older results.
+        # ⚠ Same rule as the cold path: the shared predicate, then the
+        # stricter MCP-SOLVED requirement (PR #1740 review).
+        if not status_is_ours(solved):
+            return None
         attribution = solved.get("mcp_attribution")
         if attribution is not None and attribution != "MCP-SOLVED":
             return None
