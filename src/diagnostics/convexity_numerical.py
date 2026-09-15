@@ -18,6 +18,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+# ⚠ PACKAGED SIBLING, imported at module level (PR #1740 review). These
+# predicates previously came from `scripts.sprint_audit`, which the wheel does
+# not ship (`pyproject.toml` -> `include = ["src*"]`), so the RESULT-ONLY
+# comparison path — `check_convexity_from_results`, reached with already-computed
+# dicts and without running GAMS — raised `ModuleNotFoundError` once installed.
+# The `scripts.gamslib.test_solve` import further down is deliberately still
+# deferred: that one genuinely needs the un-packaged runner, and it carries its
+# own availability error message.
+from src.diagnostics.solve_attribution import status_is_ours_and_complete
+
 
 @dataclass
 class ConvexityResult:
@@ -137,10 +147,6 @@ def _compare_results(
         # and this gate can prove NON-CONVEXITY — the strongest claim the probe
         # makes. `status_is_ours` applies that rule; requiring `MCP-SOLVED` on
         # top of it keeps optimality stricter than mere attribution.
-        from scripts.sprint_audit.check_mcp_solve_attribution import (
-            status_is_ours_and_complete,
-        )
-
         attribution = result.get("mcp_attribution")
         if attribution is not None and attribution != "MCP-SOLVED":
             return False
@@ -203,10 +209,6 @@ def _compare_results(
         # ⚠⚠ This still must NOT require `MCP-SOLVED` — see the docstring: a
         # genuine infeasible solve is `MCP-FAILED` + completed, and demanding
         # `MCP-SOLVED` rejected every one of them.
-        from scripts.sprint_audit.check_mcp_solve_attribution import (
-            status_is_ours_and_complete,
-        )
-
         return status_is_ours_and_complete(result)
 
     status_cold = cold_result.get("model_status")

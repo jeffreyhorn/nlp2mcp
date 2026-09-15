@@ -71,7 +71,10 @@ TRUTHS: dict[str, float | int] = {
     # Remedy A applied, which reverts `weapons` to its cold golden so its row
     # stops dangling. Pinning 14 here blessed a state this PR does not ship
     # (PR #1740 review). See PRESOLVE_RECORD_REMEDY.md §9 obligation 2.
-    "all-219 Match": 98,
+    # ⚠ The STABLE INTERNAL KEY, not the display label (PR #1740 review). The
+    # label is derived per-finding from the population the line cites, so an
+    # `all-220 Match` line reports "all-220 Match" instead of misnaming itself.
+    "all-population Match": 98,
     "presolve rows whose generated file is absent": 13,
     "Task-2 figures reproduced": 13,
 }
@@ -956,8 +959,15 @@ def test_the_all_population_exclusion_is_DYNAMIC_not_hardcoded_219():
     test pinned to 219 cannot tell the two implementations apart.
     """
     # The all-220 value is wrong for BOTH populations (candidate Match is 95,
-    # all-<n> Match is 98). Only the all-<n> fact may fire.
-    assert _facts("Solve **111** · all-220 Match **77**") == {"all-219 Match"}
+    # all-<n> Match is 98). Only the all-<n> fact may fire — and it must name
+    # the population the LINE cites, not a hardcoded 219.
+    #
+    # ⚠ An earlier revision of this test asserted `{"all-219 Match"}` here,
+    # which blessed a finding that misnames its own source: the checker would
+    # have reported an all-220 discrepancy under the label "all-219 Match", in
+    # the tool whose entire job is catching figures that contradict their
+    # source (PR #1740 review).
+    assert _facts("Solve **111** · all-220 Match **77**") == {"all-220 Match"}
 
     # And a correct all-220 figure is clean — not flagged by the candidate fact.
     assert _facts("Solve **111** · all-220 Match **98**") == set()

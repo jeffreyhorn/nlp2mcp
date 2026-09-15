@@ -229,7 +229,7 @@ NUM = r"\d+(?:\.\d+)?"
 #: — after a corpus-size change, which is itself a tracked figure — would be
 #: checked as BOTH populations and could raise a false candidate-Match finding.
 #: One pattern makes the disagreement unrepresentable.
-_ALL_POPULATION_MATCH = re.compile(r"\ball-\d+\s+Match")
+_ALL_POPULATION_MATCH = re.compile(r"\ball-(?P<population>\d+)\s+Match")
 
 #: ``A → B`` states a movement, so the left figure is historical by
 #: construction. Such lines are skipped — but reported, never silently.
@@ -257,6 +257,26 @@ class Fact:
     #: added to scope out *"73 or 75"* also matches inside *"**flo**or 75"*, which
     #: silenced the floor check entirely.
     skip_if: tuple[re.Pattern[str], ...] = field(default=())
+    #: Optional DISPLAY label. ``name`` stays the stable internal key that
+    #: `derive_truths` and the `truths` mapping are keyed by; this is what a
+    #: reader sees in a finding.
+    #:
+    #: ⚠ WHY THE TWO ARE SPLIT (PR #1740 review). The all-<n> fact matches
+    #: ``all-\d+`` and `kpi_block` renders the population from `total_models`,
+    #: but the fact was NAMED `all-219 Match`. After a corpus-size change the
+    #: checker would have reported an all-220 discrepancy under the label
+    #: "all-219 Match" — a finding that misnames its own source, in the tool
+    #: whose entire job is catching figures that contradict their source.
+    label_fn: Callable[[re.Match[str] | None], str] | None = field(default=None)
+
+    def label(self, match: re.Match[str] | None = None) -> str:
+        """Human-facing name. Falls back to the stable key when not dynamic."""
+        if self.label_fn is None:
+            return self.name
+        try:
+            return self.label_fn(match)
+        except Exception:  # noqa: BLE001 - a label must never break a report
+            return self.name
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -389,6 +409,19 @@ def _kpi(key: str) -> Callable[[], int]:
     return lambda: _kpis()[key]
 
 
+def _all_population_label(match: re.Match[str] | None) -> str:
+    """``all-<n> Match``, with *n* from the cited line — or from the corpus.
+
+    Taking the population from the MATCH is what makes a finding self-consistent:
+    it names the population the flagged line actually cites. With no match (the
+    ``--facts`` listing) it falls back to the derived corpus size, which is the
+    same quantity `kpi_block` prints.
+    """
+    if match is not None:
+        return f"all-{match.group('population')} Match"
+    return f"all-{_kpis()['total_models']} Match"
+
+
 FACTS: tuple[Fact, ...] = (
     Fact(
         name="Solve",
@@ -414,12 +447,20 @@ FACTS: tuple[Fact, ...] = (
         # checked by NOTHING — a fixture could cite an arbitrary value and stay
         # green. `kpi_block.py` derives it, so the fix is a fact, not a deletion.
         #
-        # The `all-<n>` prefix is matched rather than hardcoding 219: the corpus
-        # size is a figure too, and `kpi_block` prints it from `total_models`.
-        name="all-219 Match",
+        # ⚠ STABLE INTERNAL KEY, DYNAMIC DISPLAY LABEL (PR #1740 review). The
+        # pattern matches `all-<n>` and `kpi_block` renders the population from
+        # `total_models`, so hard-coding 219 in the NAME meant that after a
+        # corpus-size change an all-220 discrepancy would be reported as
+        # "all-219 Match" — and the test asserting that label would keep
+        # blessing it. `name` is never displayed; it only keys `truths`.
+        #
+        # ⚠ `derive` keeps the key `all_219_match`: that is `kpi_block`'s own
+        # dict key, not this tool's label, and renaming it is a separate change.
+        name="all-population Match",
         derive=_kpi("all_219_match"),
         source="scripts/sprint_audit/kpi_block.py  ->  all_219_match",
         patterns=(re.compile(rf"{_ALL_POPULATION_MATCH.pattern}\s+\**(?P<value>{NUM})\**"),),
+        label_fn=_all_population_label,
     ),
     Fact(
         name="Translate",
@@ -731,7 +772,7 @@ def scan_line(
                     Finding(
                         path=path,
                         lineno=lineno,
-                        fact=fact.name,
+                        fact=fact.label(m),
                         cited=cited_raw,
                         truth=f"{truth}",
                         source=fact.source,
@@ -815,7 +856,7 @@ def main() -> int:
                 value: object = fact.derive()
             except Exception as exc:  # noqa: BLE001 - reported, not raised
                 value = f"(underivable: {exc})"
-            print(f"  {fact.name:34} = {value}\n      {fact.source}")
+            print(f"  {fact.label():34} = {value}\n      {fact.source}")
         return 0
 
     findings, scanned, exemptions, truths, archived = check(args.base)

@@ -1,5 +1,9 @@
 """Tests for computational convexity test via dual KKT comparison."""
 
+import contextlib
+import importlib
+import sys
+
 import pytest
 
 from src.diagnostics.convexity_numerical import (
@@ -428,3 +432,79 @@ class TestPersistedAttributionGaps:
 
         # And a fully LEGACY row (no attribution at all) keeps working.
         assert "cold start infeasible" in _compare_results(_ok(4), warm).conclusion
+
+
+@pytest.mark.unit
+class TestTheResultOnlyApiIsPackageSelfContained:
+    """⚠ The wheel ships only `src` — `pyproject.toml` -> `include = ["src*"]`.
+
+    `check_convexity_from_results` takes already-computed dictionaries and runs
+    nothing, so an installed nlp2mcp must be able to call it. Sprint 39 P7 added
+    `from scripts.sprint_audit...` to the predicate gates on that path, which
+    raised `ModuleNotFoundError` for any installed user (PR #1740 review).
+
+    ⚠ A "no module-level `scripts` import under src/" lint would NOT have caught
+    it: the offending import was FUNCTION-level, inside `_solve_optimal`, and so
+    invisible until the branch actually ran. The only honest test is to block
+    `scripts` the way a wheel does and call the API.
+    """
+
+    @staticmethod
+    def _blocking_scripts():
+        class _Blocker:
+            def find_module(self, fullname, path=None):  # legacy API, harmless
+                return None
+
+            def find_spec(self, fullname, path=None, target=None):
+                if fullname == "scripts" or fullname.startswith("scripts."):
+                    raise ModuleNotFoundError(f"No module named {fullname!r}")
+                return None
+
+        return _Blocker()
+
+    @contextlib.contextmanager
+    def _no_scripts(self):
+        blocker = self._blocking_scripts()
+        saved = {k: v for k, v in sys.modules.items() if k == "scripts" or k.startswith("scripts.")}
+        for k in saved:
+            del sys.modules[k]
+        sys.meta_path.insert(0, blocker)
+        try:
+            yield
+        finally:
+            sys.meta_path.remove(blocker)
+            sys.modules.update(saved)
+
+    def test_the_blocker_actually_blocks(self):
+        """⚠ Non-vacuity: without this, the tests below pass on a broken probe."""
+        with self._no_scripts():
+            with pytest.raises(ModuleNotFoundError):
+                importlib.import_module("scripts.sprint_audit.check_mcp_solve_attribution")
+
+    def test_both_predicate_gates_run_with_scripts_unavailable(self):
+        """Exercises `_solve_optimal` AND `_solver_completed`, the two gates."""
+        with self._no_scripts():
+            # `_solve_optimal`: two attributed, completed optimal solves.
+            cold = {
+                **_ok(1, 950.913),
+                "mcp_attribution": "MCP-SOLVED",
+                "mcp_completed_own_solve": True,
+            }
+            warm = {
+                **_ok(1, 1075.547),
+                "mcp_attribution": "MCP-SOLVED",
+                "mcp_completed_own_solve": True,
+            }
+            assert _compare_results(cold, warm).is_nonconvex
+
+            # `_solver_completed`: the infeasible branch.
+            cold_inf = {**_ok(4), "mcp_attribution": "MCP-FAILED", "mcp_completed_own_solve": True}
+            assert "cold start infeasible" in _compare_results(cold_inf, warm).conclusion
+
+            # And the guards still REJECT, i.e. the predicates really ran.
+            uncompleted = {
+                **_ok(4),
+                "mcp_attribution": "MCP-SOLVED",
+                "mcp_completed_own_solve": False,
+            }
+            assert "cold start infeasible" not in _compare_results(uncompleted, warm).conclusion
