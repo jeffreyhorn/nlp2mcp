@@ -593,7 +593,14 @@ def test_a_COMPLETED_own_failure_still_reaches_the_comparison_tree():
                 "objective_value": None,
             },
             "mcp_solve": {
-                "status": "success",
+                # ⚠ RUNTIME SHAPE (PR #1740 review). `solve_mcp` derives
+                # `is_success` from `model_status in (1, 2)`, so a completed
+                # INFEASIBLE solve is persisted as `status: "failure"`. An
+                # earlier revision of this fixture paired `"success"` with
+                # `model_status: 4` — a combination the runtime cannot emit —
+                # which made Case 3 look reachable when Case 6 was returning
+                # first for every real row.
+                "status": "failure",
                 "solver_status": 1,
                 "model_status": 4,
                 "objective_value": None,
@@ -676,23 +683,82 @@ def test_an_attributed_but_UNCOMPLETED_row_cannot_record_a_match():
 
 
 @pytest.mark.unit
-def test_a_status_failure_row_is_skipped_before_attribution_matters():
-    """⚠ Scope note: `status: "failure"` is skipped by a PRE-EXISTING branch.
+def test_a_status_failure_row_with_NO_own_answer_is_still_refused():
+    """⚠ Case 6 was swallowing Case 3 for every runtime-shaped row (PR #1740).
 
-    `compare_solutions` skips any row whose `mcp_solve.status` is `"failure"`
-    before the infeasible cases are reached, so the attribution guard is not
-    what decides those. Recorded so a future reader does not attribute this
-    behaviour — or a change to it — to the Sprint 39 work.
+    This test previously asserted the opposite — that ANY `status: "failure"`
+    row is refused before the infeasible cases are reached — and recorded it as
+    settled pre-existing behaviour. It was, and that was the bug: `solve_mcp`
+    sets `status: "failure"` for every `model_status` outside 1/2, so a
+    genuinely COMPLETED infeasible MCP arrived here as a failure row and Case 3
+    (both infeasible) could never fire for anything the runtime actually
+    produces. The only fixtures that reached it paired `status: "success"` with
+    `model_status: 4`, which `solve_mcp` cannot emit.
+
+    Case 6 now exempts a completed own infeasible ANSWER. What it must still
+    refuse is a failure row carrying no answer of ours at all — asserted here so
+    the exemption cannot quietly widen into "any failure row is comparable".
     """
     from scripts.gamslib.test_solve import compare_solutions
 
-    row = {
+    def _model(**mcp):
+        return {
+            "model_id": "m",
+            "convexity": {
+                "status": "verified",
+                "solver_status": 1,
+                "model_status": 4,
+                "objective_value": None,
+            },
+            "mcp_solve": {
+                "status": "failure",
+                "solver_status": 1,
+                "model_status": 4,
+                "objective_value": None,
+                **mcp,
+            },
+        }
+
+    # The exemption: our model ran and PROVED infeasible, NLP agrees → Case 3.
+    assert (
+        compare_solutions(_model(mcp_attribution="MCP-FAILED", mcp_completed_own_solve=True))[
+            "comparison_status"
+        ]
+        == "match"
+    )
+
+    # Still refused — no usable answer of ours, for three different reasons.
+    # ⚠ `model_status: 13` is NOT infeasible, so Case 6 still owns it even
+    # though the solver completed.
+    errored = _model(mcp_attribution="MCP-FAILED", mcp_completed_own_solve=True, model_status=13)
+    assert compare_solutions(errored)["comparison_status"] != "match"
+
+    # The solver itself did not complete normally.
+    no_normal_completion = _model(
+        mcp_attribution="MCP-FAILED", mcp_completed_own_solve=True, solver_status=3
+    )
+    assert compare_solutions(no_normal_completion)["comparison_status"] != "match"
+
+    # Attributed to the embedded source, not to us.
+    assert (
+        compare_solutions(_model(mcp_attribution="EMBEDDED-ONLY"))["comparison_status"] == "skipped"
+    )
+
+    # ⚠⚠ AND THE NARROWING ITSELF: the exemption is exactly Case 3's condition,
+    # so it requires the NLP to be infeasible too. Dropping `nlp_infeasible`
+    # releases rows whose NLP solved OPTIMALLY into Case 4 — an A/B replay of
+    # all 219 DB rows measured that as moving the seven `model_infeasible`
+    # models (agreste, camcge, cesam, fawley, lnts, mine, rocket) from
+    # `skipped` to `mismatch`. That re-bucketing may be the more honest verdict,
+    # but it is KPI-visible and out of scope for a review fix, so the scoping is
+    # pinned here rather than left to be rediscovered by replay.
+    nlp_optimal_mcp_infeasible = {
         "model_id": "m",
         "convexity": {
             "status": "verified",
             "solver_status": 1,
-            "model_status": 4,
-            "objective_value": None,
+            "model_status": 1,
+            "objective_value": 42.0,
         },
         "mcp_solve": {
             "status": "failure",
@@ -703,7 +769,11 @@ def test_a_status_failure_row_is_skipped_before_attribution_matters():
             "mcp_completed_own_solve": True,
         },
     }
-    assert compare_solutions(row)["comparison_status"] == "skipped"
+    out = compare_solutions(nlp_optimal_mcp_infeasible)
+    assert out["comparison_result"] == "compare_mcp_failed", (
+        "the exemption must not release an optimal-NLP row into Case 4: "
+        f"{out['comparison_status']}/{out['comparison_result']}"
+    )
 
 
 @pytest.mark.unit

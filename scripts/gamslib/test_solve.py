@@ -935,7 +935,42 @@ def compare_solutions(
         return result
 
     # Case 6: MCP solve failed
-    if not mcp_solve or mcp_solve.get("status") == "failure":
+    #
+    # ⚠ A COMPLETED OWN INFEASIBLE SOLVE IS AN ANSWER, NOT A FAILURE TO RUN
+    # (PR #1740 review). `solve_mcp` sets `status: "failure"` whenever
+    # `model_status` is not 1/2, so a real infeasible MCP arrives here as a
+    # failure row — and this branch returned before Case 3 could ever see it.
+    # Case 3 (both infeasible) was therefore DEAD for runtime-shaped rows: the
+    # only fixtures reaching it paired `status: "success"` with `model_status:
+    # 4`, a combination `solve_mcp` cannot emit.
+    #
+    # The row has already passed the attribution+completion gate at the top of
+    # this function, so reaching here with `mcp_infeasible` and a normally
+    # completed solver means our model ran and PROVED infeasibility. That is a
+    # usable result and belongs to Case 3.
+    #
+    # ⚠ THE EXEMPTION IS EXACTLY CASE 3's CONDITION, INCLUDING `nlp_infeasible`
+    # (PR #1740 review). Scoping it to "our MCP proved infeasible" alone is too
+    # wide: it also releases rows whose NLP solved OPTIMALLY into Case 4, which
+    # a full replay of all 219 rows measured as moving the seven
+    # `model_infeasible` models (agreste, camcge, cesam, fawley, lnts, mine,
+    # rocket) from `skipped`/`compare_mcp_failed` to
+    # `mismatch`/`compare_status_mismatch`. That may well be the more honest
+    # verdict, but it is a KPI-visible re-bucketing of seven models and belongs
+    # to a track with a Phase-0 doc, not to a review fix whose stated purpose is
+    # to make a dead branch reachable.
+    #
+    # ⚠ An earlier revision of this comment claimed ZERO impact, derived by
+    # querying only for rows that would become BOTH-INFEASIBLE. It missed the
+    # rows that fall through to OTHER cases — the measurement matched the
+    # intent instead of the code. The figure below is from an A/B replay of
+    # `compare_solutions` over all 219 rows with the branch reverted.
+    #
+    # Measured with `nlp_infeasible` included: 0 of 219 rows change verdict.
+    _own_infeasible_answer = mcp_infeasible and mcp_solver_status == 1 and nlp_infeasible
+    if not mcp_solve or (
+        mcp_solve.get("status") == "failure" and not _own_infeasible_answer
+    ):
         result["comparison_status"] = "skipped"
         result["comparison_result"] = COMPARE_MCP_FAILED
         result["notes"] = f"MCP solve status: {mcp_solve.get('status', 'missing')}"

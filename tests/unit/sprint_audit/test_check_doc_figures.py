@@ -938,3 +938,26 @@ def test_the_all_219_population_is_actually_CHECKED() -> None:
     # is the behaviour the new fact must not disturb: a wrong Match beside a
     # correct all-219 stays unchecked here, by design.
     assert _facts("Match **9999** · all-219 Match **98**") == set()
+
+
+@pytest.mark.unit
+def test_the_all_population_exclusion_is_DYNAMIC_not_hardcoded_219():
+    r"""⚠ The two `Match` facts must agree on the population boundary.
+
+    `Match` excludes the all-<n> population and `all-219 Match` claims it. An
+    earlier revision hardcoded `all-219` in the exclusion while matching
+    `all-\d+` in the claim, so the two disagreed for every other corpus size —
+    and the corpus size is itself a tracked figure that `kpi_block` prints from
+    `total_models`. An `all-220 Match` line would have been checked as BOTH
+    populations, letting the 142-candidate `Match` fact fire a FALSE finding on
+    a figure that was never its to check.
+
+    Asserted at a size the corpus does not currently have, precisely because a
+    test pinned to 219 cannot tell the two implementations apart.
+    """
+    # The all-220 value is wrong for BOTH populations (candidate Match is 95,
+    # all-<n> Match is 98). Only the all-<n> fact may fire.
+    assert _facts("Solve **111** · all-220 Match **77**") == {"all-219 Match"}
+
+    # And a correct all-220 figure is clean — not flagged by the candidate fact.
+    assert _facts("Solve **111** · all-220 Match **98**") == set()

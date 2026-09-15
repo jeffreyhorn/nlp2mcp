@@ -2721,10 +2721,16 @@ class TestMalformedCompletionFlagFailsClosedEverywhere:
         assert status_is_ours({}) is True, "neither field: genuine legacy"
         assert status_is_ours({"mcp_completed_own_solve": "false"}) is False
         assert status_is_ours({"mcp_completed_own_solve": 1}) is False
-        # A VALID flag without a verdict stays permissive: it drives nothing on
-        # its own, and tightening it would re-classify rows for no gain.
+        # ⚠ A VALID flag without a verdict is HONOURED, not waved through
+        # (PR #1740 review). An earlier revision of this test asserted both
+        # shapes True, reasoning that the flag "drives nothing on its own" —
+        # which is exactly what made the gap invisible. It drives plenty: every
+        # objective and comparison consumer built on this predicate would read
+        # the row's stale scalars as a completed answer while the row itself
+        # says the solve did NOT complete. Absence is unknown; `False` is a
+        # statement, and a fail-closed helper must not overrule it.
         assert status_is_ours({"mcp_completed_own_solve": True}) is True
-        assert status_is_ours({"mcp_completed_own_solve": False}) is True
+        assert status_is_ours({"mcp_completed_own_solve": False}) is False
 
 
 @pytest.mark.unit
@@ -2796,7 +2802,10 @@ class TestStatusIsOursAndComplete:
         """
         assert status_is_ours_and_complete({}) is True
         assert status_is_ours_and_complete({"model_status": 1}) is True
-        assert status_is_ours_and_complete({"mcp_completed_own_solve": False}) is True
+        # ⚠ NOT legacy — a hybrid row stating its solve did not complete
+        # (PR #1740 review). Genuine legacy is NEITHER field.
+        assert status_is_ours_and_complete({"mcp_completed_own_solve": False}) is False
+        assert status_is_ours_and_complete({"mcp_completed_own_solve": True}) is True
 
     def test_it_is_never_weaker_than_status_is_ours(self):
         """The subset property, asserted over the whole cross product.

@@ -218,6 +218,13 @@ def status_is_ours_and_complete(row: dict) -> bool:
     """
     if not status_is_ours(row):
         return False
+    # ⚠ ONE definition of "legacy", and it lives in `status_is_ours` above
+    # (PR #1740 review): a genuine legacy row carries NEITHER field, and a
+    # hybrid is judged on the flag it does carry. Re-stating that rule here
+    # measured as UNTESTABLE — with `status_is_ours` fixed, no row reaches this
+    # line where the two definitions differ, so a mutant restoring the old
+    # one-field form survived every test. A second copy that cannot be
+    # discriminated is not defence in depth; it is a second thing to drift.
     if "mcp_attribution" not in row:
         return True
     return own_solve_completed(row)
@@ -263,7 +270,17 @@ def status_is_ours(row: dict) -> bool:
         return False
 
     if "mcp_attribution" not in row:
-        return True
+        # ⚠ A GENUINE legacy row carries NEITHER field (PR #1740 review). An
+        # earlier revision keyed the compatibility path on the VERDICT alone, so
+        # a HYBRID row — completion flag present, verdict absent — took the
+        # legacy allow path even when the flag said `False`, i.e. even when the
+        # row itself stated our solve did NOT complete. Downstream that let
+        # objective and comparison consumers trust stale scalars from a solve
+        # the row disclaims. The comment above already said "neither field";
+        # the code checked one.
+        if "mcp_completed_own_solve" not in row:
+            return True
+        return own_solve_completed(row)
 
     verdict = row["mcp_attribution"]
     # ⚠ FAIL CLOSED on anything unrecognised. An earlier revision fell through

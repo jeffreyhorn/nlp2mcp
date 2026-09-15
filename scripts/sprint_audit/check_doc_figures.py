@@ -220,6 +220,17 @@ def is_live_doc(path: Path, sprint_dir: Path | None = None) -> bool:
 #: exact figure it was written to catch.
 NUM = r"\d+(?:\.\d+)?"
 
+#: A line citing the **all-<n>** population rather than the 142-candidate one.
+#:
+#: ⚠ SHARED BY THE TWO `Match` FACTS ON PURPOSE (PR #1740 review). The candidate
+#: `Match` fact excludes these lines and the `all-219 Match` fact claims them, so
+#: the two must agree on the boundary exactly. Hardcoding `all-219` in the
+#: exclusion while matching `all-\d+` in the claim meant an `all-220 Match` line
+#: — after a corpus-size change, which is itself a tracked figure — would be
+#: checked as BOTH populations and could raise a false candidate-Match finding.
+#: One pattern makes the disagreement unrepresentable.
+_ALL_POPULATION_MATCH = re.compile(r"\ball-\d+\s+Match")
+
 #: ``A → B`` states a movement, so the left figure is historical by
 #: construction. Such lines are skipped — but reported, never silently.
 #:
@@ -390,8 +401,12 @@ FACTS: tuple[Fact, ...] = (
         derive=_kpi("match"),
         source="scripts/sprint_audit/kpi_block.py  ->  match",
         patterns=(re.compile(rf"(?<!-)\bMatch\s+\**(?P<value>{NUM})\**"),),
-        # "all-219 Match 99" is a different population from the 142-candidate one.
-        skip_if=(re.compile(r"all-219"),),
+        # "all-<n> Match" is a different population from the 142-candidate one.
+        # ⚠ SHARED with the fact below, not a hardcoded 219 (PR #1740 review):
+        # the corpus size is itself a figure, so an `all-220 Match` line would
+        # have been checked as BOTH populations and could raise a false
+        # candidate-Match finding. One pattern, so they cannot disagree.
+        skip_if=(_ALL_POPULATION_MATCH,),
     ),
     Fact(
         # ⚠ The population `Match` deliberately skips (PR #1740 review). Because
@@ -404,7 +419,7 @@ FACTS: tuple[Fact, ...] = (
         name="all-219 Match",
         derive=_kpi("all_219_match"),
         source="scripts/sprint_audit/kpi_block.py  ->  all_219_match",
-        patterns=(re.compile(rf"\ball-\d+\s+Match\s+\**(?P<value>{NUM})\**"),),
+        patterns=(re.compile(rf"{_ALL_POPULATION_MATCH.pattern}\s+\**(?P<value>{NUM})\**"),),
     ),
     Fact(
         name="Translate",
