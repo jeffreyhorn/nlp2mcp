@@ -1090,8 +1090,7 @@ def _presolve_match_objective(presolve_path: Path, timeout: int = 120) -> float 
     not reach a usable optimum."""
     from scripts.gamslib.test_solve import solve_mcp
     from scripts.sprint_audit.check_mcp_solve_attribution import (
-        own_solve_completed,
-        status_is_ours,
+        status_is_ours_and_complete,
     )
 
     try:
@@ -1102,18 +1101,30 @@ def _presolve_match_objective(presolve_path: Path, timeout: int = 120) -> float 
         # would hand back the SOURCE's objective as if it were the presolve
         # answer. Only `MCP-SOLVED` means our emitted model produced one.
         # `None` is tolerated for backward compatibility with older results.
-        # ⚠ Three conditions, and the third is not implied by the others
-        # (PR #1740 review). `status_is_ours` answers ATTRIBUTION, so it returns
+        # ⚠ ATTRIBUTION **AND** COMPLETION, VIA THE SHARED CONJUNCTION
+        # (PR #1740 review). This gate hands back an OBJECTIVE, so being "ours"
+        # is not enough — `status_is_ours` answers attribution only and returns
         # True for a schema-valid `MCP-SOLVED` row whose
-        # `mcp_completed_own_solve` is literally `False` — a contradictory but
-        # storable combination. This gate hands back an OBJECTIVE, so it needs
-        # the solve to have completed, not merely to be ours.
-        if not status_is_ours(solved):
+        # `mcp_completed_own_solve` is literally `False`.
+        #
+        # An earlier revision spelled the conjunction out here as
+        # `status_is_ours(...)` plus an inline `own_solve_completed(...)`. That
+        # was equivalent — verified across all 216 verdict × flag shapes, 64 of
+        # which proceed — but equivalence held only by coincidence of the
+        # current legacy/verdict semantics, and this was the LAST consumer still
+        # re-deriving it. The whole reason `status_is_ours_and_complete` exists
+        # is that this distinction was mis-read at seven call sites; a private
+        # copy here is exactly how the eighth would appear.
+        #
+        # ⚠ The `MCP-SOLVED` requirement stays SEPARATE and is NOT folded in:
+        # it is specific to this objective path. A completed `MCP-FAILED` solve
+        # is legitimately "ours and complete" but has no usable objective, and
+        # other consumers of the shared predicate must keep accepting it.
+        if not status_is_ours_and_complete(solved):
             return None
         attribution = solved.get("mcp_attribution")
-        if attribution is not None:
-            if attribution != "MCP-SOLVED" or not own_solve_completed(solved):
-                return None
+        if attribution is not None and attribution != "MCP-SOLVED":
+            return None
         if solved.get("model_status") in (1, 2):
             obj = solved.get("objective_value")
             return float(obj) if isinstance(obj, (int, float)) else None

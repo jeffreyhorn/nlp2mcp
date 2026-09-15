@@ -1007,6 +1007,55 @@ class TestAttributionGuards:
         kr = self._patch_solve(monkeypatch, self._solved("MCP-NO-STATUS", False, obj=999.0))
         assert kr._presolve_match_objective(tmp_path / "p.gms") is None
 
+    def test_the_presolve_match_DELEGATES_to_the_shared_conjunction(self, monkeypatch, tmp_path):
+        """⚠ A COUPLING test, because behaviour alone cannot discriminate here.
+
+        This gate used to spell the conjunction out — `status_is_ours(...)` plus
+        an inline `own_solve_completed(...)` — which is exactly equivalent today
+        (verified across all 216 verdict × flag shapes, 64 of which proceed). So
+        no input can tell the two forms apart, and an ordinary regression would
+        pass against either (PR #1740 review).
+
+        What the review actually asked for is that this consumer FOLLOW the
+        shared semantics rather than re-derive them, so that a future change to
+        the legacy/verdict rules reaches it. That is testable: patch the shared
+        predicate and assert the gate obeys. The hand-rolled form ignores the
+        patch entirely, which is the drift the shared helper exists to prevent.
+        """
+        from scripts.sprint_audit import check_mcp_solve_attribution as att
+
+        # A row that is accepted today, so the assertion below is about the
+        # DELEGATION and not about the row being rejected on its own merits.
+        row = self._solved("MCP-SOLVED", True, obj=123.5)
+        kr = self._patch_solve(monkeypatch, row)
+        assert (
+            kr._presolve_match_objective(tmp_path / "p.gms") == 123.5
+        ), "precondition: this row must be accepted, or the test proves nothing"
+
+        monkeypatch.setattr(att, "status_is_ours_and_complete", lambda _row: False)
+        assert (
+            kr._presolve_match_objective(tmp_path / "p.gms") is None
+        ), "the gate re-derived the conjunction instead of delegating to it"
+
+    def test_the_MCP_SOLVED_requirement_stays_SEPARATE_from_the_conjunction(
+        self, monkeypatch, tmp_path
+    ):
+        """⚠ The `MCP-SOLVED` check must NOT be folded into the shared predicate.
+
+        A COMPLETED `MCP-FAILED` solve is legitimately "ours and complete" — the
+        shared conjunction accepts it, and other consumers depend on that (the
+        both-infeasible match path, the `diverged` mapping). It has no usable
+        objective, though, so THIS path must still refuse it. Folding the
+        verdict into the shared helper would have broken those other consumers;
+        this pins the split.
+        """
+        from scripts.sprint_audit import check_mcp_solve_attribution as att
+
+        row = self._solved("MCP-FAILED", True, obj=42.0)
+        assert att.status_is_ours_and_complete(row) is True, "ours and complete…"
+        kr = self._patch_solve(monkeypatch, row)
+        assert kr._presolve_match_objective(tmp_path / "p.gms") is None, "…but not an objective"
+
     def test_the_presolve_match_accepts_our_own_solve(self, monkeypatch, tmp_path):
         """The negative control — a gate that rejected everything would pass above."""
         kr = self._patch_solve(monkeypatch, self._solved("MCP-SOLVED", True, obj=123.5))
