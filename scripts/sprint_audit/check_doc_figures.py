@@ -394,6 +394,19 @@ FACTS: tuple[Fact, ...] = (
         skip_if=(re.compile(r"all-219"),),
     ),
     Fact(
+        # ⚠ The population `Match` deliberately skips (PR #1740 review). Because
+        # `Match` bails on any line containing `all-219`, an all-219 figure was
+        # checked by NOTHING — a fixture could cite an arbitrary value and stay
+        # green. `kpi_block.py` derives it, so the fix is a fact, not a deletion.
+        #
+        # The `all-<n>` prefix is matched rather than hardcoding 219: the corpus
+        # size is a figure too, and `kpi_block` prints it from `total_models`.
+        name="all-219 Match",
+        derive=_kpi("all_219_match"),
+        source="scripts/sprint_audit/kpi_block.py  ->  all_219_match",
+        patterns=(re.compile(rf"\ball-\d+\s+Match\s+\**(?P<value>{NUM})\**"),),
+    ),
+    Fact(
         name="Translate",
         derive=_kpi("translate"),
         source="scripts/sprint_audit/kpi_block.py  ->  translate",
@@ -630,11 +643,6 @@ def _exempt_reason(line: str) -> str | None:
 # ---------------------------------------------------------------------- check
 
 
-#: Identifiers this repo has retired, mapped to their replacement. A CHANGED doc
-#: line naming one is reported unless it carries a corrective/historical marker.
-_RETIRED_TOKENS = {"mcp_file_used": "mcp_file_generated"}
-
-
 @dataclass
 class Finding:
     path: Path
@@ -663,31 +671,23 @@ def scan_line(
     if reason:
         return [], reason
 
-    # ⚠ RETIRED FIELD NAMES ARE FIGURES TOO (Sprint 39 P7, PR #1740 review).
-    # The `dangling` patterns match on the surrounding prose, not the field
-    # name, so a line citing the RENAMED-AWAY `mcp_file_used` with a correct
-    # count matched happily and passed. Making the pattern reject the stale
-    # token instead would be worse — a non-match is silence, and silence is
-    # what let it through in the first place. This FAILS on it.
+    # ⚠ NO RETIRED-IDENTIFIER GUARD HERE, DELIBERATELY (PR #1740 review).
+    # One was added and then REMOVED after measuring it: across the live docs it
+    # would fire on **56** lines, **50** of which name only the old identifier
+    # and are historical records — prep findings, decision records, CHANGELOG
+    # entries about the pre-rename state. Zero were current misuses.
     #
-    # Only reached for lines that survived the corrective/historical exemptions
-    # above, so a labelled reference to the old name is still allowed.
-    for retired, replacement in _RETIRED_TOKENS.items():
-        if retired in text:
-            return (
-                [
-                    Finding(
-                        path=path,
-                        lineno=lineno,
-                        fact=f"retired identifier {retired!r}",
-                        cited=retired,
-                        truth=replacement,
-                        source="Sprint 39 P7 renamed this field; the old name no longer exists",
-                        line=text.strip(),
-                    )
-                ],
-                None,
-            )
+    # It only ever read clean because those lines happen to be unchanged
+    # relative to `main`; the first unrelated edit to any of them would have
+    # produced a false positive, and 50:0 is the ratio this module's own
+    # docstring says turns a check into a disabled one.
+    #
+    # ⚠ AND IT PROTECTED NOTHING THE PATTERNS DO NOT. The forward pattern is
+    # NAME-AGNOSTIC, so a stale-token line carrying a WRONG figure is still
+    # flagged; a stale-token line with a CORRECT figure is a historical
+    # statement, which this repo's convention explicitly permits ("label
+    # superseded analysis, do not rewrite"). The figure — the thing this
+    # checker exists to verify — is checked either way.
 
     findings: list[Finding] = []
     seen: set[tuple[str, str]] = set()

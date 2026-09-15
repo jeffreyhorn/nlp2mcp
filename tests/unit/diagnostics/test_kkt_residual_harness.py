@@ -1064,3 +1064,20 @@ class TestAttributionGuards:
                 None,
             ), extra
             assert kr._presolve_match_objective(tmp_path / "p.gms") is None, extra
+
+    def test_MCP_SOLVED_with_a_FALSE_completion_flag_is_refused(self, monkeypatch, tmp_path):
+        """⚠ `status_is_ours` answers ATTRIBUTION, not completion (PR #1740 review).
+
+        It returns True for a schema-valid `MCP-SOLVED` row whose
+        `mcp_completed_own_solve` is literally `False` — a contradictory but
+        storable combination. Both of these gates hand back an OBJECTIVE, so
+        "ours" is not sufficient: the solve must have finished.
+        """
+        row = {**self._solved("MCP-SOLVED", True, obj=42.0), "mcp_completed_own_solve": False}
+        kr = self._patch_solve(monkeypatch, row)
+        assert kr.cold_start_result(tmp_path / "m.gms", tmp_path) == ("unavailable", None)
+        assert kr._presolve_match_objective(tmp_path / "p.gms") is None
+
+        # The negative control: with completion True the objective flows.
+        ok = self._patch_solve(monkeypatch, self._solved("MCP-SOLVED", True, obj=42.0))
+        assert ok.cold_start_result(tmp_path / "m.gms", tmp_path) == ("optimal", 42.0)

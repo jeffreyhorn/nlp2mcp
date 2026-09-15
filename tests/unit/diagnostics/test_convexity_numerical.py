@@ -357,3 +357,26 @@ class TestPersistedAttributionGaps:
             "mcp_completed_own_solve": True,
         }
         assert _compare_results(cold, warm).is_nonconvex
+
+    def test_MCP_SOLVED_with_a_FALSE_completion_flag_cannot_prove_non_convexity(self):
+        """⚠ Attribution is not completion (PR #1740 review).
+
+        `status_is_ours` accepts `MCP-SOLVED` + `mcp_completed_own_solve=False`
+        — schema-valid and contradictory. This gate proves NON-CONVEXITY, so it
+        needs the solve to have finished, not merely to be ours.
+        """
+        cold = _ok(1, 950.913)
+        warm = {
+            **_ok(1, 1075.547),
+            "mcp_attribution": "MCP-SOLVED",
+            "mcp_completed_own_solve": False,
+        }
+        assert not _compare_results(cold, warm).is_nonconvex
+
+        # Negative control — completion True still proves it.
+        warm_ok = {
+            **_ok(1, 1075.547),
+            "mcp_attribution": "MCP-SOLVED",
+            "mcp_completed_own_solve": True,
+        }
+        assert _compare_results(cold, warm_ok).is_nonconvex

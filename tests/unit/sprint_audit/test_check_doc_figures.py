@@ -71,6 +71,7 @@ TRUTHS: dict[str, float | int] = {
     # Remedy A applied, which reverts `weapons` to its cold golden so its row
     # stops dangling. Pinning 14 here blessed a state this PR does not ship
     # (PR #1740 review). See PRESOLVE_RECORD_REMEDY.md §9 obligation 2.
+    "all-219 Match": 98,
     "presolve rows whose generated file is absent": 13,
     "Task-2 figures reproduced": 13,
 }
@@ -248,18 +249,19 @@ def test_the_REVERSE_form_still_matches_after_the_field_rename() -> None:
     assert _facts("**12 dangling mcp_file_generated rows**") == {
         "presolve rows whose generated file is absent"
     }
-    # ⚠ The stale token is now REPORTED, not merely unmatched (PR #1740 review).
-    # An earlier revision asserted `== set()` here, i.e. that the retired name
-    # simply failed to match the count pattern — but a non-match is *silence*,
-    # so a line citing `mcp_file_used` with a correct count sailed through. The
-    # retired-identifier guard fails on it instead.
-    assert _facts("**12 dangling mcp_file_used rows**") == {"retired identifier 'mcp_file_used'"}
-    # …and the FORWARD form too, which is what the count patterns could not see.
-    assert _facts("the live count of dangling `mcp_file_used` rows is **13**") == {
-        "retired identifier 'mcp_file_used'"
+    # ⚠ THE RETIRED-TOKEN GUARD WAS REMOVED AFTER MEASURING IT (PR #1740
+    # review): across the live docs it fired on 56 lines, 50 of them historical
+    # records naming only the old identifier, and 0 current misuses.
+    #
+    # Removing it loses NO figure coverage, because the forward pattern is
+    # NAME-AGNOSTIC. A stale-token line with a WRONG figure is still flagged:
+    assert _facts("the live count of dangling `mcp_file_used` rows is **12**") == {
+        "presolve rows whose generated file is absent"
     }
-    # A labelled historical reference is still allowed.
-    assert _facts("⚠ superseded: `mcp_file_used` was renamed in Sprint 39") == set()
+    # …and one with the CORRECT figure passes, which is right: it is a
+    # historical statement, and this repo labels superseded analysis rather
+    # than rewriting it.
+    assert _facts("the live count of dangling `mcp_file_used` rows is **13**") == set()
 
 
 def test_dangling_pattern_does_not_reach_into_the_next_clause() -> None:
@@ -916,3 +918,23 @@ def test_a_sprint_scoped_fact_names_no_sprint_number() -> None:
 
     offenders = [f.name for f in cdf.FACTS if _re.search(r"[Ss]print\s*\d", f.name)]
     assert offenders == [], f"fact names pin a sprint number: {offenders}"
+
+
+def test_the_all_219_population_is_actually_CHECKED() -> None:
+    """⚠ It was cited in a fixture and verified by nothing (PR #1740 review).
+
+    `Match` skips every line containing `all-219`, because that is a different
+    population — so an all-219 figure fell between the two facts and a stale or
+    arbitrary value stayed green. `kpi_block.py` derives it, so the fix is a
+    dedicated fact rather than dropping the claim.
+    """
+    correct = "Solve **111** · Match **95** · Translate **135** · all-219 Match **98**"
+    assert _facts(correct) == set()
+
+    wrong = "Solve **111** · Match **95** · Translate **135** · all-219 Match **99**"
+    assert _facts(wrong) == {"all-219 Match"}, "an arbitrary all-219 value must fire"
+
+    # ⚠ And the 142-candidate `Match` on the same line is still skipped, which
+    # is the behaviour the new fact must not disturb: a wrong Match beside a
+    # correct all-219 stays unchecked here, by design.
+    assert _facts("Match **9999** · all-219 Match **98**") == set()

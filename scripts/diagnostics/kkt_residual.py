@@ -1055,6 +1055,10 @@ def cold_start_result(
     if not status_is_ours(solved):
         return "unavailable", None
     attribution = solved.get("mcp_attribution")
+    # ⚠ Completion is required too — see `_presolve_match_objective`. An
+    # attributed row whose solve did not complete has no objective to report.
+    if attribution is not None and not own_solve_completed(solved):
+        return "unavailable", None
     if attribution is not None and attribution != "MCP-SOLVED":
         # ⚠ INDETERMINATE IS NOT EVIDENCE (PR #1740 review). `MCP-NO-STATUS`,
         # `NO-SOLVE` and `ERROR` all mean "nothing can be concluded" -- the
@@ -1099,13 +1103,18 @@ def _presolve_match_objective(presolve_path: Path, timeout: int = 120) -> float 
         # would hand back the SOURCE's objective as if it were the presolve
         # answer. Only `MCP-SOLVED` means our emitted model produced one.
         # `None` is tolerated for backward compatibility with older results.
-        # ⚠ Same rule as the cold path: the shared predicate, then the
-        # stricter MCP-SOLVED requirement (PR #1740 review).
+        # ⚠ Three conditions, and the third is not implied by the others
+        # (PR #1740 review). `status_is_ours` answers ATTRIBUTION, so it returns
+        # True for a schema-valid `MCP-SOLVED` row whose
+        # `mcp_completed_own_solve` is literally `False` — a contradictory but
+        # storable combination. This gate hands back an OBJECTIVE, so it needs
+        # the solve to have completed, not merely to be ours.
         if not status_is_ours(solved):
             return None
         attribution = solved.get("mcp_attribution")
-        if attribution is not None and attribution != "MCP-SOLVED":
-            return None
+        if attribution is not None:
+            if attribution != "MCP-SOLVED" or not own_solve_completed(solved):
+                return None
         if solved.get("model_status") in (1, 2):
             obj = solved.get("objective_value")
             return float(obj) if isinstance(obj, (int, float)) else None

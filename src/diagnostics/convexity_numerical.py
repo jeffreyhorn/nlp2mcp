@@ -137,10 +137,21 @@ def _compare_results(
         # and this gate can prove NON-CONVEXITY — the strongest claim the probe
         # makes. `status_is_ours` applies that rule; requiring `MCP-SOLVED` on
         # top of it keeps optimality stricter than mere attribution.
-        from scripts.sprint_audit.check_mcp_solve_attribution import status_is_ours
+        from scripts.sprint_audit.check_mcp_solve_attribution import (
+            own_solve_completed,
+            status_is_ours,
+        )
 
         attribution = result.get("mcp_attribution")
         if attribution is not None and attribution != "MCP-SOLVED":
+            return False
+        # ⚠ Completion is a SEPARATE condition (PR #1740 review).
+        # `status_is_ours` answers attribution and returns True for a
+        # schema-valid `MCP-SOLVED` row with `mcp_completed_own_solve=False`.
+        # This gate can prove NON-CONVEXITY, so "ours" is not enough — the solve
+        # must have finished. Fully legacy rows (no attribution at all) keep the
+        # compatibility path.
+        if attribution is not None and not own_solve_completed(result):
             return False
         return status_is_ours(result)
 
