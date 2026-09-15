@@ -199,6 +199,30 @@ def completion_flag_is_malformed(row: dict) -> bool:
     return row[_COMPLETED_KEY] is not True and row[_COMPLETED_KEY] is not False
 
 
+def status_is_ours_and_complete(row: dict) -> bool:
+    """Ours AND the solve actually finished — what most consumers want.
+
+    ⚠ `status_is_ours` is ATTRIBUTION-ONLY by design, so it accepts
+    ``MCP-SOLVED`` whose ``mcp_completed_own_solve`` is absent or literally
+    ``False``: the two fields are independently valid under the schema, so that
+    contradictory combination is storable. Every consumer that goes on to read
+    an OBJECTIVE, prove NON-CONVEXITY, or record a MATCH needs completion too.
+
+    That gap has now been found at seven separate call sites in Sprint 39 P7,
+    each time as "the consumer forgot to add the completion check". This exists
+    so there is nothing to remember: ask for the property you need.
+
+    ⚠ Legacy rows — no ``mcp_attribution`` at all — stay permissive, exactly as
+    in `status_is_ours`. Absence is a known state; re-classifying the committed
+    corpus is not on the table.
+    """
+    if not status_is_ours(row):
+        return False
+    if "mcp_attribution" not in row:
+        return True
+    return own_solve_completed(row)
+
+
 def status_is_ours(row: dict) -> bool:
     """Did OUR emitted model produce the status recorded in ``row`` itself?
 

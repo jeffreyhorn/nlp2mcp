@@ -42,6 +42,7 @@ from scripts.sprint_audit.check_mcp_solve_attribution import (
     own_solve_completed,
     parse_solve_summaries,
     status_is_ours,
+    status_is_ours_and_complete,
 )
 
 #: Verbatim from `weapons`'s listing — the ONLY solve summary it contains,
@@ -2724,3 +2725,108 @@ class TestMalformedCompletionFlagFailsClosedEverywhere:
         # its own, and tightening it would re-classify rows for no gain.
         assert status_is_ours({"mcp_completed_own_solve": True}) is True
         assert status_is_ours({"mcp_completed_own_solve": False}) is True
+
+
+@pytest.mark.unit
+class TestStatusIsOursAndComplete:
+    """The conjunction every objective-reading consumer actually wants.
+
+    ⚠ WHY THIS EXISTS AS A NAMED PREDICATE. `status_is_ours` answers
+    ATTRIBUTION only, and that distinction was missed at SEVEN call sites in
+    Sprint 39 P7 — each time as "the consumer forgot the completion check", and
+    twice found only in review (PR #1740). The pattern is not that the reviewers
+    were sharp; it is that the safe combination had no name, so every consumer
+    re-derived it and some got it wrong. Asking for the property directly is the
+    fix that does not depend on remembering.
+    """
+
+    def test_it_requires_BOTH_attribution_and_completion(self):
+        assert (
+            status_is_ours_and_complete(
+                {"mcp_attribution": "MCP-SOLVED", "mcp_completed_own_solve": True}
+            )
+            is True
+        )
+        # Ours, but the solve never finished — the gap that caused the defect.
+        assert (
+            status_is_ours_and_complete(
+                {"mcp_attribution": "MCP-SOLVED", "mcp_completed_own_solve": False}
+            )
+            is False
+        )
+        assert status_is_ours_and_complete({"mcp_attribution": "MCP-SOLVED"}) is False, (
+            "an attributed row with an ABSENT flag was attributed and did NOT "
+            "complete; absence is only 'unknown' when there is no verdict at all"
+        )
+
+    def test_a_COMPLETED_failure_is_still_ours(self):
+        """⚠ It must not collapse into `== MCP-SOLVED`.
+
+        A genuine infeasible solve is `MCP-FAILED` + completed. An earlier
+        revision of `_solver_completed` required `MCP-SOLVED` and rejected every
+        one of them — discarding real findings, a worse failure than the one it
+        was fixing. This predicate must keep them.
+        """
+        assert (
+            status_is_ours_and_complete(
+                {"mcp_attribution": "MCP-FAILED", "mcp_completed_own_solve": True}
+            )
+            is True
+        )
+        assert (
+            status_is_ours_and_complete(
+                {"mcp_attribution": "MCP-FAILED", "mcp_completed_own_solve": False}
+            )
+            is False
+        )
+
+    def test_a_borrowed_or_indeterminate_status_is_never_ours(self):
+        for verdict in ("EMBEDDED-ONLY", "MCP-NO-STATUS", "NO-SOLVE", "ERROR"):
+            assert (
+                status_is_ours_and_complete(
+                    {"mcp_attribution": verdict, "mcp_completed_own_solve": True}
+                )
+                is False
+            ), f"{verdict} completed, but the status is not ours"
+
+    def test_legacy_rows_stay_permissive(self):
+        """No verdict at all → the pre-attribution corpus, unchanged.
+
+        Rejecting these would silently re-classify every committed row.
+        """
+        assert status_is_ours_and_complete({}) is True
+        assert status_is_ours_and_complete({"model_status": 1}) is True
+        assert status_is_ours_and_complete({"mcp_completed_own_solve": False}) is True
+
+    def test_it_is_never_weaker_than_status_is_ours(self):
+        """The subset property, asserted over the whole cross product.
+
+        Any consumer swapping `status_is_ours` for this one can only become
+        stricter — that is what makes the four call-site swaps in PR #1740 safe
+        to reason about without re-reading each of them.
+        """
+        verdicts = [
+            "MCP-SOLVED",
+            "MCP-FAILED",
+            "MCP-NO-STATUS",
+            "EMBEDDED-ONLY",
+            "NO-SOLVE",
+            "ERROR",
+            None,
+            "bogus",
+        ]
+        flags = [True, False, "false", 1, None]
+        seen_strictly_stronger = False
+        for v in verdicts:
+            for f in flags:
+                for omit_v in (True, False):
+                    for omit_f in (True, False):
+                        row = {}
+                        if not omit_v:
+                            row["mcp_attribution"] = v
+                        if not omit_f:
+                            row["mcp_completed_own_solve"] = f
+                        loose, tight = status_is_ours(row), status_is_ours_and_complete(row)
+                        assert not (tight and not loose), f"weaker on {row}"
+                        seen_strictly_stronger |= loose and not tight
+        assert seen_strictly_stronger, "the two predicates never differed — test is vacuous"

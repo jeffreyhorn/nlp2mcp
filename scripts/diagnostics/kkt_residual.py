@@ -1033,7 +1033,7 @@ def cold_start_result(
     from scripts.gamslib.test_solve import solve_mcp
     from scripts.sprint_audit.check_mcp_solve_attribution import (
         own_solve_completed,
-        status_is_ours,
+        status_is_ours_and_complete,
     )
 
     cold_path = scratch / f"{model_path.stem}_mcp_cold.gms"
@@ -1052,13 +1052,12 @@ def cold_start_result(
     # Checking only `!= "MCP-SOLVED"` let an explicit `mcp_attribution: null` and
     # a malformed `mcp_completed_own_solve` on an MCP-SOLVED row through — and
     # this result feeds `_cold_is_spurious`, which reads it as PROOF.
-    if not status_is_ours(solved):
+    # ⚠ ATTRIBUTION **AND** COMPLETION — an attributed row whose solve did not
+    # complete has no objective to report. The conjunction is named once in the
+    # audit module rather than re-derived at each consumer (PR #1740 review).
+    if not status_is_ours_and_complete(solved):
         return "unavailable", None
     attribution = solved.get("mcp_attribution")
-    # ⚠ Completion is required too — see `_presolve_match_objective`. An
-    # attributed row whose solve did not complete has no objective to report.
-    if attribution is not None and not own_solve_completed(solved):
-        return "unavailable", None
     if attribution is not None and attribution != "MCP-SOLVED":
         # ⚠ INDETERMINATE IS NOT EVIDENCE (PR #1740 review). `MCP-NO-STATUS`,
         # `NO-SOLVE` and `ERROR` all mean "nothing can be concluded" -- the

@@ -138,22 +138,19 @@ def _compare_results(
         # makes. `status_is_ours` applies that rule; requiring `MCP-SOLVED` on
         # top of it keeps optimality stricter than mere attribution.
         from scripts.sprint_audit.check_mcp_solve_attribution import (
-            own_solve_completed,
-            status_is_ours,
+            status_is_ours_and_complete,
         )
 
         attribution = result.get("mcp_attribution")
         if attribution is not None and attribution != "MCP-SOLVED":
             return False
-        # ⚠ Completion is a SEPARATE condition (PR #1740 review).
-        # `status_is_ours` answers attribution and returns True for a
-        # schema-valid `MCP-SOLVED` row with `mcp_completed_own_solve=False`.
-        # This gate can prove NON-CONVEXITY, so "ours" is not enough — the solve
-        # must have finished. Fully legacy rows (no attribution at all) keep the
-        # compatibility path.
-        if attribution is not None and not own_solve_completed(result):
-            return False
-        return status_is_ours(result)
+        # ⚠ Completion is a SEPARATE condition from attribution (PR #1740
+        # review): `status_is_ours` returns True for a schema-valid `MCP-SOLVED`
+        # row whose `mcp_completed_own_solve` is False. This gate can prove
+        # NON-CONVEXITY, so "ours" is not enough — the solve must have finished.
+        # `status_is_ours_and_complete` is that conjunction, named once rather
+        # than re-derived here; fully legacy rows keep the compatibility path.
+        return status_is_ours_and_complete(result)
 
     def _solver_completed(result: dict[str, Any]) -> bool:
         """Solver ran to completion (solver_status=1), even if model is infeasible.
@@ -195,9 +192,22 @@ def _compare_results(
         # This exact question — "did OUR model produce this status" — has been
         # re-implemented at five call sites in this sprint and got a different
         # answer at three of them.
-        from scripts.sprint_audit.check_mcp_solve_attribution import status_is_ours
+        # ⚠ `status_is_ours` ALONE IS NOT ENOUGH HERE (PR #1740 review) — the
+        # same omission this docstring warns about, in the function that warns
+        # about it. It answers ATTRIBUTION, and accepts an `MCP-SOLVED` row
+        # whose completion flag is absent or literally False. A persisted row
+        # carrying a STALE model status 4/5 above an abort line would then be
+        # read as a completed own infeasible solve and produce a convexity
+        # conclusion about a solve that never finished.
+        #
+        # ⚠⚠ This still must NOT require `MCP-SOLVED` — see the docstring: a
+        # genuine infeasible solve is `MCP-FAILED` + completed, and demanding
+        # `MCP-SOLVED` rejected every one of them.
+        from scripts.sprint_audit.check_mcp_solve_attribution import (
+            status_is_ours_and_complete,
+        )
 
-        return status_is_ours(result)
+        return status_is_ours_and_complete(result)
 
     status_cold = cold_result.get("model_status")
     status_warm = warm_result.get("model_status")

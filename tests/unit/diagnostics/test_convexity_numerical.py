@@ -380,3 +380,51 @@ class TestPersistedAttributionGaps:
             "mcp_completed_own_solve": True,
         }
         assert _compare_results(cold, warm_ok).is_nonconvex
+
+    def test_solver_completed_requires_COMPLETION_for_an_attributed_row(self):
+        """⚠ `_solver_completed` delegated to `status_is_ours` (PR #1740 review).
+
+        That is ATTRIBUTION-only: it accepts `MCP-SOLVED` whose
+        `mcp_completed_own_solve` is absent or literally False — schema-valid,
+        because the two fields are independent, and contradictory. A persisted
+        row carrying a STALE model status 4/5 (printed above an abort line) was
+        therefore read as a completed own INFEASIBLE solve and produced a
+        convexity conclusion about a solve that never finished.
+
+        This is the FIFTH site in this sprint where a consumer took attribution
+        for completion, which is why the conjunction is now a named predicate
+        (`status_is_ours_and_complete`) rather than a rule to remember.
+        """
+        warm = {
+            **_ok(1, 1075.547),
+            "mcp_attribution": "MCP-SOLVED",
+            "mcp_completed_own_solve": True,
+        }
+
+        for bad in ({"mcp_completed_own_solve": False}, {}):
+            cold = {**_ok(4), "mcp_attribution": "MCP-SOLVED", **bad}
+            conclusion = _compare_results(cold, warm).conclusion
+            assert (
+                "cold start infeasible" not in conclusion
+            ), f"an uncompleted solve was read as infeasible ({bad}): {conclusion}"
+
+    def test_solver_completed_still_accepts_a_GENUINE_completed_infeasible(self):
+        """⚠⚠ THE NEGATIVE CONTROL, and the constraint that outranks the fix.
+
+        A real infeasible solve is `MCP-FAILED` + completed — `MCP-SOLVED` is
+        reserved for a *usable* answer. An earlier revision of this gate
+        required `MCP-SOLVED` and so rejected EVERY genuine infeasible solve,
+        silently discarding findings: a worse bug than the one being fixed.
+        Tightening completion must not re-introduce it, so this asserts the
+        infeasible conclusion is still REACHED.
+        """
+        warm = {
+            **_ok(1, 1075.547),
+            "mcp_attribution": "MCP-SOLVED",
+            "mcp_completed_own_solve": True,
+        }
+        cold = {**_ok(4), "mcp_attribution": "MCP-FAILED", "mcp_completed_own_solve": True}
+        assert "cold start infeasible" in _compare_results(cold, warm).conclusion
+
+        # And a fully LEGACY row (no attribution at all) keeps working.
+        assert "cold start infeasible" in _compare_results(_ok(4), warm).conclusion

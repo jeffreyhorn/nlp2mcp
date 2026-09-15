@@ -440,8 +440,16 @@ def test_comparison_refuses_an_UNATTRIBUTABLE_persisted_solve():
             "mcp_solve": {"solver_status": 1, "model_status": 1, "objective_value": 10.0, **mcp},
         }
 
-    # Attributed to us → compared normally, and matches.
-    ours = compare_solutions(_model(mcp_attribution="MCP-SOLVED"))
+    # Attributed to us AND completed → compared normally, and matches.
+    # ⚠ `mcp_completed_own_solve=True` is not decoration (PR #1740 review). An
+    # earlier revision of this fixture set only `mcp_attribution`, and that
+    # shape is now REFUSED — see
+    # `test_an_attributed_but_UNCOMPLETED_row_cannot_record_a_match`. `solve_mcp`
+    # computes and persists the two fields TOGETHER, so a live `MCP-SOLVED` row
+    # always carries the flag; a flagless one is stale or hand-edited, which is
+    # exactly the case the guard exists to reject. The fixture was asserting the
+    # defect as though it were the contract.
+    ours = compare_solutions(_model(mcp_attribution="MCP-SOLVED", mcp_completed_own_solve=True))
     assert ours["comparison_status"] == "match"
 
     # Not attributable → must NOT be reported as a match.
@@ -605,6 +613,66 @@ def test_a_COMPLETED_own_failure_still_reaches_the_comparison_tree():
     assert (
         compare_solutions(_model(mcp_attribution="EMBEDDED-ONLY"))["comparison_status"] == "skipped"
     )
+
+
+@pytest.mark.unit
+def test_an_attributed_but_UNCOMPLETED_row_cannot_record_a_match():
+    """⚠ The OPTIMAL path needed completion too (PR #1740 review).
+
+    The guard used `status_is_ours`, which is ATTRIBUTION-only and deliberately
+    accepts `MCP-SOLVED` whose `mcp_completed_own_solve` is absent or literally
+    False — the two fields are independently valid under the schema, so that
+    contradictory shape is storable. Such a row entered the optimal path and
+    could record a genuine `match` off an objective its solve never finished
+    producing, which is a KPI-visible false positive of exactly the kind the
+    weapons defect was.
+
+    The infeasible half of the same tree was already covered; this is its
+    optimal twin, and the guard is now `status_is_ours_and_complete`.
+    """
+    from scripts.gamslib.test_solve import compare_solutions
+
+    def _model(**mcp):
+        return {
+            "model_id": "m",
+            "convexity": {
+                "status": "verified",
+                "solver_status": 1,
+                "model_status": 1,
+                "objective_value": 1735.5696,
+            },
+            "mcp_solve": {
+                "status": "success",
+                "solver_status": 1,
+                "model_status": 1,
+                "objective_value": 1735.5696,
+                **mcp,
+            },
+        }
+
+    # ⚠ NEGATIVE CONTROL FIRST — otherwise "skipped" below passes on anything.
+    assert (
+        compare_solutions(_model(mcp_attribution="MCP-SOLVED", mcp_completed_own_solve=True))[
+            "comparison_status"
+        ]
+        == "match"
+    )
+    assert compare_solutions(_model())["comparison_status"] == "match", "legacy row"
+
+    # The defect: ours by attribution, never completed.
+    for bad in ({"mcp_completed_own_solve": False}, {}):
+        row = _model(mcp_attribution="MCP-SOLVED", **bad)
+        out = compare_solutions(row)
+        assert out["comparison_status"] == "skipped", f"{bad}: {out}"
+        assert "did not run to completion" in out["notes"], (
+            "the skip note must name COMPLETION, not attribution — they need "
+            f"different follow-up: {out['notes']}"
+        )
+
+    # And the two skip reasons stay distinguishable in the note.
+    not_ours = compare_solutions(_model(mcp_attribution="EMBEDDED-ONLY"))
+    assert not_ours["comparison_status"] == "skipped"
+    assert "no answer attributable" in not_ours["notes"]
 
 
 @pytest.mark.unit

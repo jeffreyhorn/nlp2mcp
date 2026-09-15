@@ -59,6 +59,7 @@ import math
 from scripts.sprint_audit.check_mcp_solve_attribution import (
     _NORMAL_COMPLETION,
     status_is_ours,
+    status_is_ours_and_complete,
     EMITTED_MCP_MODEL,
     Attribution,
     parse_solve_summaries,
@@ -894,12 +895,26 @@ def compare_solutions(
     # skipping it lost valid both-infeasible matches, which the decision tree
     # below records as a genuine `match`. `status_is_ours` is the shared
     # predicate; absent verdicts stay tolerated for legacy rows.
-    if not status_is_ours(mcp_solve):
+    # ⚠ AND COMPLETION, NOT ATTRIBUTION ALONE (PR #1740 review). `status_is_ours`
+    # accepts an `MCP-SOLVED` row whose `mcp_completed_own_solve` is absent or
+    # False — the two fields are independently valid under the schema, so that
+    # contradictory shape is storable. Letting it through put an attributed but
+    # UNCOMPLETED row on the optimal path, where the tree below can record a
+    # `match` off a status the solve never finished producing; the same gap left
+    # `mcp_infeasible` usable for an `MCP-SOLVED`/`False` row.
+    if not status_is_ours_and_complete(mcp_solve):
         result["comparison_status"] = "skipped"
         result["comparison_result"] = COMPARE_MULTI_SOLVE_SKIP
+        # Distinguish the two ways to land here: a row that is not ours at all,
+        # and one that is ours but never finished. They need different follow-up.
+        _why = (
+            "our emitted model did not run to completion"
+            if status_is_ours(mcp_solve)
+            else "no answer attributable to our emitted model"
+        )
         result["notes"] = (
-            f"MCP attribution {_mcp_attribution}: no answer attributable to our "
-            f"emitted model, so the objective comparison is not meaningful"
+            f"MCP attribution {_mcp_attribution}: {_why}, so the objective "
+            f"comparison is not meaningful"
         )
         return result
 
