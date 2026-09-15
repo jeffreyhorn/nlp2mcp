@@ -31,7 +31,7 @@ data/gamslib/
 └── archive/              # Database backups
 
 scripts/gamslib/
-├── db_manager.py         # Database management CLI (stamps the current schema, v3.0.0)
+├── db_manager.py         # Database management CLI (`init --empty` stamps v3.0.0; `init` from catalog stays v2.0.0)
 ├── batch_parse.py        # Batch parsing with nlp2mcp
 ├── batch_translate.py    # Batch MCP translation
 ├── discover_models.py    # Discover LP/NLP/QCP models

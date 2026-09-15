@@ -490,7 +490,14 @@ python scripts/gamslib/db_manager.py init --force
 
 **What happens:**
 - Reads `data/gamslib/catalog.json`
-- Migrates to new schema v2.0.0
+- Migrates to new schema v2.0.0 — the chain ENTRY POINT, **not** the current
+  contract. The version is left at `2.0.0` deliberately and `init` warns:
+  the semantic migrations (`v2.2.0`'s discrete-model skip block, `v2.2.1`'s
+  multi-solve exclusion) have not run, and `batch_parse` gates on them.
+  Run `migrate_schema_v2.1.0.py` → `v2.2.0` → `v2.2.1` → `v3.0.0` to reach
+  `3.0.0`.
+- `--empty` instead stamps `3.0.0` directly: with `models: []` there is nothing
+  for those migrations to act on.
 - Creates `data/gamslib/gamslib_status.json`
 - Validates against schema before saving
 
@@ -856,9 +863,21 @@ python scripts/gamslib/db_manager.py init
 > Saving its result directly leaves a database advertising a historical
 > contract.
 >
-> **To initialize at the current version, use `db_manager.py init`**, which
-> stamps the canonical version for both its empty and catalog-backed paths. The
-> snippet below is retained as documentation of the chain's first step.
+> ⚠ **THE TWO `init` PATHS DIFFER — a catalog-backed `init` does NOT reach the
+> current contract** (PR #1740 review). `init --empty` stamps `3.0.0`, which is
+> sound because it has `models: []` and the migration chain has nothing to act
+> on. A catalog-backed `init` **preserves `2.0.0` and warns**, because the chain
+> is not only the `mcp_file_used` → `mcp_file_generated` rename: `v2.2.0` reads
+> each raw source, detects MIP/MINLP/MIQCP/RMIP/RMINLP and installs the
+> `pipeline_status: {status: "skipped"}` block, and `v2.2.1` adds the
+> multi-solve-driver exclusion. `migrate_catalog()` leaves every pipeline stage
+> absent, and `batch_parse.get_candidate_models` skips a model on exactly that
+> block — so a catalog-backed database claiming `3.0.0` would feed DISCRETE
+> models to the pipeline as candidates.
+>
+> **To reach `3.0.0` from a catalog, run the chain by hand** after `init`:
+> `migrate_schema_v2.1.0.py` → `v2.2.0` → `v2.2.1` → `v3.0.0`. The snippet
+> below is retained as documentation of the chain's first step.
 
 ```python
 from scripts.gamslib.migrate_catalog import load_catalog, migrate_catalog
