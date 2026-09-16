@@ -806,6 +806,145 @@ def test_b3_declines_a_repeated_index_reference():
 
 
 @pytest.mark.unit
+def test_b3_declines_a_repeated_EQ_DOMAIN(tmp_path):
+    """Sprint 39 P5 (PR #1742 review) — the SECOND collapse, in `bindings`.
+
+    The Day-11 guard checked only `src_indices`. `bindings` is a DICT keyed by
+    the eq-domain symbol, so `eq_domain=("i","i")` writes the same key twice:
+    `len(bindings)` stays 1, the `!= 1` bail-out does not fire, and B-3 proceeds
+    as though the equation had a single index. The two lists collapse
+    INDEPENDENTLY, so one check cannot cover both.
+
+    ⚠⚠ AND THE TWO CHECKS MUST STAY SEPARATE. `src_indices` and `eq_domain`
+    legitimately SHARE symbols — that overlap is B-3's whole premise, the
+    equation index binding one coordinate of a higher-dimensional variable.
+    cesam2 is `src_indices=("i","j")` with `eq_domain=("i",)`; concatenated that
+    is `["i","j","i"]`, so a MERGED repeat test rejects the case the builder
+    exists to serve. Asserted below, because "do not merge these" is exactly the
+    kind of constraint a later reader tidies away.
+    """
+    from src.ir.ast import Sum, VarRef
+    from src.ir.model_ir import ModelIR
+    from src.ir.symbols import AliasDef, SetDef
+    from src.kkt.stationarity import _build_pattern_c_dim_mismatch_term
+
+    ir = ModelIR()
+    ir.sets["i"] = SetDef(name="i", members=["a", "b"])
+    ir.aliases["j"] = AliasDef(name="j", target="i")
+
+    def _found(indices):
+        ref = VarRef(name="X", indices=indices)
+        return {
+            "sum_node": Sum(index_sets=("i",), body=ref, condition=None),
+            "sum_idx": "i",
+            "var_ref": ref,
+            "sign": 1.0,
+        }
+
+    # fail-before: the dict-keyed collapse, in the exact form the loop computes.
+    bindings = {}
+    for eqi in ("i", "i"):
+        bindings[eqi] = 0
+    assert len(bindings) == 1, "the !=1 bail-out does NOT fire on a repeated eq_domain"
+
+    # ⚠ THE VARIABLE MUST BE 3-D HERE, and this is not incidental. The builder
+    # opens with `0 < len(eq_domain) < len(var_domain)`, so a 2-symbol eq_domain
+    # against a 2-D variable returns None on the PRECONDITION and the test
+    # proves nothing. A first revision did exactly that and the mutant survived
+    # — removing the guard entirely still passed (PR #1742 review). With a 3-D
+    # variable the precondition holds (0 < 2 < 3) and the guard is the only
+    # thing that can decline.
+    ir.aliases["k"] = AliasDef(name="k", target="i")
+
+    def _found3(indices):
+        ref = VarRef(name="X3", indices=indices)
+        return {
+            "sum_node": Sum(index_sets=("i",), body=ref, condition=None),
+            "sum_idx": "i",
+            "var_ref": ref,
+            "sign": 1.0,
+        }
+
+    assert 0 < len(("i", "i")) < len(("i", "j", "k")), "precondition must HOLD, or this is vacuous"
+
+    # A DISTINCT reference with a REPEATED eq_domain must be declined, which the
+    # src_indices guard alone cannot do.
+    assert (
+        _build_pattern_c_dim_mismatch_term(
+            _found3(("i", "j", "k")), "X3", ("i", "j", "k"), ("i", "i"), "nu_X3", ir, ("j",)
+        )
+        is None
+    ), "a repeated eq_domain must fall back to the standard path"
+
+    # Case-insensitively, like GAMS.
+    assert (
+        _build_pattern_c_dim_mismatch_term(
+            _found3(("i", "j", "k")), "X3", ("i", "j", "k"), ("i", "I"), "nu_X3", ir, ("j",)
+        )
+        is None
+    )
+
+    # ⚠ THE ANTI-MERGE CONTROL: cesam2's real shape — indices and eq_domain
+    # SHARE `i` — must still get PAST both guards. A merged check fails here.
+    import src.kkt.stationarity as st
+
+    reached = {}
+    real = st._b3_multiplier_ref_is_valid
+
+    def _spy(*a, **k):
+        reached["yes"] = True
+        return real(*a, **k)
+
+    st._b3_multiplier_ref_is_valid = _spy
+    try:
+        _build_pattern_c_dim_mismatch_term(
+            _found(("i", "j")), "X", ("i", "j"), ("i",), "nu_X", ir, ("j",)
+        )
+    finally:
+        st._b3_multiplier_ref_is_valid = real
+    assert reached.get("yes"), (
+        "the shared `i` between src_indices and eq_domain is LEGITIMATE; a merged "
+        "repeat check would reject cesam2's own shape"
+    )
+
+
+@pytest.mark.unit
+def test_a_repeated_EQUATION_domain_is_refused_BEFORE_b3_is_reached(tmp_path):
+    """⚠ Caller-level ordering, measured (PR #1742 review).
+
+    The review asked for an `_emit_mini_mcp` case proving the standard path
+    emits the fallback correctly. Measuring first showed the fallback is not
+    reachable that way, and the reason is worth pinning rather than asserting a
+    contract that does not exist:
+
+    * a repeated EQUATION domain **raises at the Day-9 `#1737` guard**
+      (`empty_equation_detector`'s `assert_no_repeated_symbol`) long before B-3
+      is consulted — asserted here;
+    * a diagonal VARIABLE reference never reaches B-3 at all (the builder is
+      called **0 times** for such a model).
+
+    So the `eq_domain` half of the Day-11 guard is **defence in depth behind an
+    earlier raise**, not a live path. That is a fact about ordering, and if a
+    future caller reaches this builder without going through the empty-equation
+    scan, the unit test above is what holds it.
+    """
+    from src.ir.index_map import RepeatedDomainSymbolError
+
+    gams = """\
+Set i / a1, a2 /;
+Alias (i,j);
+Variable tsam(i,j), y(i), z;
+Equation diagsum(i,i), zdef;
+diagsum(i,i).. sum(j, tsam(i,j)) =e= y(i);
+zdef.. z =e= sum((i,j), tsam(i,j)) + sum(i, y(i));
+Model m / diagsum, zdef /;
+solve m using nlp minimizing z;
+"""
+    with pytest.raises(RepeatedDomainSymbolError, match="repeats"):
+        _emit_mini_mcp(tmp_path, gams, "mini_eq_domain_repeat.gms")
+
+
+@pytest.mark.unit
 def test_dual_dim_mismatch_binds_lower_dim_var(tmp_path):
     """Sprint 27 #1381 follow-up — the DUAL of B-3 (cesam2 ``stat_y``).
 

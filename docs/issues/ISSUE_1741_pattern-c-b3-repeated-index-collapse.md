@@ -35,6 +35,29 @@ inside `_find_full_collapse_sum`. Day 11 hit the same wall again, which is why
 the remedy here is an **address format**, not another measurement: cite this site
 by SYMBOL (`_pos`, `bindings`).
 
+⚠ **A REPEATED `eq_domain` COLLAPSES INDEPENDENTLY, and needs its own check**
+(PR #1742 review — the first revision of this guard missed it). `bindings` is a
+**dict keyed by the eq-domain symbol**, so `eq_domain=("i","i")` writes the same
+key twice: `len(bindings)` stays 1, the `!= 1` bail-out does not fire, and B-3
+proceeds as though the equation had one index. The reference guard cannot catch
+this — it inspects `src_indices`, and the two collapse independently.
+
+⚠⚠ **The two checks must NOT be merged into one list.** `src_indices` and
+`eq_domain` legitimately **share** symbols — that overlap is B-3's whole premise,
+the equation index binding one coordinate of a higher-dimensional variable.
+cesam2 is `src_indices=("i","j")` with `eq_domain=("i",)`; concatenated that is
+`["i","j","i"]`, so a merged repeat test **rejects the case the builder exists to
+serve**. Measured, and pinned by an anti-merge control in the test.
+
+⚠ **MEASURED ORDERING: the `eq_domain` half is defence in depth behind an
+earlier raise.** A repeated EQUATION domain raises at the Day-9 `#1737` guard
+(`empty_equation_detector`'s `assert_no_repeated_symbol`) **before** B-3 is
+consulted, and a diagonal VARIABLE reference never reaches B-3 at all — the
+builder is called **0 times** for such a model. So this half is not reachable
+end-to-end today; it holds if a future caller reaches the builder without going
+through the empty-equation scan. Both facts are asserted by tests rather than
+asserted in prose.
+
 ## Phase 0: Acceptance Gate
 
 ### Layer
@@ -118,7 +141,12 @@ the **standard path's** emit — not an error, and not the B-3 consolidated form
 > work still pending (PR #1742 review).
 
 **PROCEED** — `check-goldens` **186 clean, 0 drift, uncontended**; the guard
-declines both repeat shapes and neither distinct shape; full suite green.
+declines every repeat shape (repeated reference, repeated `eq_domain`, and the
+case-only variants) and **lets a distinct-symbol reference through to the rest
+of the builder**, which is what the positive control asserts — it may still
+return `None` further down for unrelated reasons, and that is not this guard's
+doing (PR #1742 review: an earlier wording said *"declines … neither distinct
+shape"*, which reads as a failed positive control). Full suite green.
 
 **REPLAN** if any of:
 

@@ -1406,6 +1406,24 @@ def _build_pattern_c_dim_mismatch_term(
     if len(_sym_indices) != len(set(_sym_indices)):
         return None
 
+    # ⚠ AND THE EQUATION DOMAIN, CHECKED SEPARATELY (PR #1742 review). The
+    # `bindings` loop below is a DICT keyed by the eq-domain symbol, so an
+    # `eq_domain` of `("i", "i")` writes the same key twice: `len(bindings)`
+    # stays 1, the `!= 1` bail-out does not fire, and B-3 proceeds as though the
+    # equation had a single index. The guard above cannot catch this — it
+    # inspects the VARIABLE REFERENCE, and the two collapse independently.
+    #
+    # ⚠⚠ DO NOT MERGE THE TWO CHECKS INTO ONE LIST. `src_indices` and
+    # `eq_domain` legitimately SHARE symbols — that overlap is the whole premise
+    # of B-3, where the equation's index binds one coordinate of the
+    # higher-dimensional variable. cesam2's real shape is `src_indices=("i","j")`
+    # with `eq_domain=("i",)`; concatenated that reads `["i","j","i"]`, so a
+    # combined repeat test would reject the very case this builder exists to
+    # serve. Measured: the merged form rejects cesam2.
+    _sym_eq_domain = [s.lower() for s in eq_domain if isinstance(s, str)]
+    if len(_sym_eq_domain) != len(set(_sym_eq_domain)):
+        return None
+
     def _pos(sym: str) -> int | None:
         for k, ix in enumerate(src_indices):
             if isinstance(ix, str) and ix.lower() == sym.lower():
