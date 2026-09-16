@@ -1381,6 +1381,31 @@ def _build_pattern_c_dim_mismatch_term(
     sign: float = found["sign"]
     src_indices = var_ref.indices
 
+    # ⚠ A REPEATED SYMBOL IN THE REFERENCE COLLAPSES EVERY POSITION LOOKUP
+    # (Sprint 39 P5, survey site `stationarity._pos` — issue #1741).
+    #
+    # `_pos` below returns the FIRST position whose symbol matches, so for a
+    # diagonal reference such as `X(i,i)` both `sum_position` and every
+    # `bindings[eqi]` resolve to position 0. The `len(bindings) != 1` bail-out
+    # does not catch it: that rejects MULTIPLE eq-domain indices, and this is a
+    # single index landing on the wrong coordinate.
+    #
+    # ⚠ AND THE EXISTING ALIAS CHECK CANNOT CATCH IT EITHER, which is why the
+    # guard has to be here. That check falls back when the sum and binding
+    # coordinates resolve to DISTINCT canonical sets — but a collapse makes them
+    # the SAME position, so it compares a symbol against itself, finds them
+    # equal, and proceeds on the wrong binding.
+    #
+    # ⚠ FALL BACK, DO NOT RAISE. This builder's contract is "return None and the
+    # caller takes the standard path", and the standard path handles the general
+    # case correctly. `src/ir/index_map.py` raises for the same defect class
+    # because there is no correct fallback there; here there is, and refusing
+    # would break models the standard path already emits correctly. Declining a
+    # special case is always safe; refusing to emit is not.
+    _sym_indices = [ix.lower() for ix in src_indices if isinstance(ix, str)]
+    if len(_sym_indices) != len(set(_sym_indices)):
+        return None
+
     def _pos(sym: str) -> int | None:
         for k, ix in enumerate(src_indices):
             if isinstance(ix, str) and ix.lower() == sym.lower():

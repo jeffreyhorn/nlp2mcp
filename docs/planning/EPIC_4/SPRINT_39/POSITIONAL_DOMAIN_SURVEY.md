@@ -33,14 +33,34 @@ A survey that cannot rediscover the defects that motivated it is worthless. Both
 | **tricp** (S38 D11) — `slp(n,n)` variable domain | `stationarity.py:1500` `_remap_condition_to_domain` (the #1350 consume-once site) |
 | **elec** (S38 D12) — `Set ut(i,i)` set domain | `stationarity.py:3931/3954/3966` `_replace_indices_in_expr` |
 
+## ⚠ Status (Sprint 39 Day 11): all four **NEEDS A GUARD** sites are closed
+
+| day | sites | remedy |
+|---|---|---|
+| D9 | `empty_equation_detector:127`, `condition_eval:117` | `src/ir/index_map.py` — **raises** (#1737) |
+| D11 | `stationarity._pos` + `bindings` (one function) | **declines to `None`** → standard path (#1741) |
+
+**The two remedies differ deliberately, and the reason is not stylistic.**
+`index_map` raises because a collapsed map has no honest value to return.
+The B-3 builder's contract is *"return `None` and the caller takes the standard
+path"*, which handles the general case correctly — so declining is both safe and
+better. **Do not "harmonise" these into one behaviour:** making B-3 raise would
+break models the standard path already emits correctly.
+
+⚠ **The line numbers below have aged out for `stationarity.py`.** `:1091` is now
+inside `_find_full_collapse_sum`. Cite these sites by SYMBOL.
+
+Remaining: 7 **NEEDS A TEST** and 9 **ALREADY GUARDED** sites — Day 12's work.
+**Do not re-guard the guarded ones**; three independent remedies already exist.
+
 ## 2. The catalog
 
 | site | shape | reach | verdict |
 |---|---|---|---|
-| `src/kkt/empty_equation_detector.py:127` | symbol-keyed map | 10/15 | **NEEDS A GUARD** |
-| `src/ir/condition_eval.py:117` | symbol-keyed map | 9/15 | **NEEDS A GUARD** |
-| `src/kkt/stationarity.py:1091` | first position | 2/15 | **NEEDS A GUARD** |
-| `src/kkt/stationarity.py:1104` | symbol-keyed store | 2/15 | **NEEDS A GUARD** |
+| `src/kkt/empty_equation_detector.py:127` | symbol-keyed map | 10/15 | ✅ **GUARDED** (D9, #1737) |
+| `src/ir/condition_eval.py:117` | symbol-keyed map | 9/15 | ✅ **GUARDED** (D9, #1737) |
+| `src/kkt/stationarity.py` `_pos` (was `:1091`) | first position | 2/15 | ✅ **GUARDED** (D11, #1741) |
+| `src/kkt/stationarity.py` `bindings` (was `:1104`) | symbol-keyed store | 2/15 | ✅ **GUARDED** (D11, #1741) — same function, one guard covers both ends |
 | `src/ad/constraint_jacobian.py:1466` | `symbolic_indices.index(idx)` | 12/15 | **NEEDS A TEST** |
 | `src/ad/constraint_jacobian.py:1513` | `symbolic_indices.index(idx)` in a comprehension | 11/15 | **NEEDS A TEST** |
 | `src/ad/constraint_jacobian.py:1536` | `symbolic_indices.index(expr.name)` | 4/15 | **NEEDS A TEST** |

@@ -627,3 +627,111 @@ The first leak-gate run reported *"All in-scope goldens clean"* **with 2 unverif
 typecheck / format / lint clean · `make test` **5325 passed** / 10 skipped / 1 xfailed (**+14**) · leak gate **186 clean, uncontended** · `make check-index-repeats` PASS · `check-doc-figures` clean · dyncge/elec/springchain emits byte-identical
 
 ---
+
+## Day 11 — planned 2026-09-14, **executed 2026-09-15** · P7 finish · 4 h · + P5 · 5 h
+
+### The fall was already reported on Day 10 — this day VERIFIED it rather than repeating it
+
+Close rule **C2** requires the Match fall to carry its reason in the same
+sentence. Day 10 discharged that in both live docs, so the Day-11 obligation is
+confirmation, not re-publication:
+
+| site | carries the C2 wording |
+|---|---|
+| `CHANGELOG.md` :13 | ✅ with **floor 75** |
+| `SPRINT_LOG.md` §7 (Day 10) :504 | ✅ with **floor 75** |
+
+**All figures re-derived at `90b43e1e` with `kpi_block.py` and `floor_tracker.py`,
+not recalled:** Solve **111** · Match **95** · cold-optimal **65** · presolve
+**30** · all-219 Match **98** · `path_solve_terminated` **0** · genuine floor
+**75**. Every one matches what Day 10 reported.
+
+### ⚠ The template that C2 says to quote VERBATIM was stale
+
+`PRESOLVE_RECORD_REMEDY.md` §5 read *"the genuine floor (73)"*. That was written
+at prep, when 73 was believed; the **Day-0 owner decision re-baselined it to
+75**, and `floor_tracker.py` derives 75 today.
+
+The number was wrong in the one place it could do the most damage. C2 says to
+use that block **verbatim**, so a Day-13 closeout quoting it unchanged would
+have reported a floor contradicting its own tool — **inside a sentence whose
+entire purpose is to correct a figure**. Day 10's two uses had silently fixed it
+in passing; only the source lagged, so nothing flagged it.
+
+Corrected to 75, with the reason recorded in the document rather than as a
+silent edit.
+
+**Banked staleness, third instance this sprint** (after the Day-8 prompt sweep
+and the Day-9 re-baseline): a figure written at prep and quoted at close
+describes a sprint that no longer exists. `check-doc-figures` does not cover it
+— the remedy doc is not a live doc, and the stale figure sat in a *template*
+rather than in a claim.
+
+### P7's seven obligations — verified discharged, not assumed
+
+Re-derived against merged `main`, each by running the thing rather than reading it:
+
+| # | obligation | evidence |
+|---|---|---|
+| 1 | checker updated in the **same commit** as the DB migration | `check_doc_figures.py` reads `mcp_file_generated`; no occurrence of the old key remains |
+| 2 | the fact derives **13** (rename **+** Remedy A), and **0 is the FAILURE signal** | derived **13** ✅ |
+| 3 | fact name, `source` string and fixture renamed; **pattern 3 untouched** | name = *"presolve rows whose generated file is absent"*; 3 patterns intact, pattern 3 still `all\s+N\s+(?:presolve-record\s+)?rows` |
+| 4 | a test that the **writer** emits the new key, repo-relative | `tests/gamslib/test_run_full_test_path_relative.py` |
+| 5 | `run_full_test.py` is the **sole writer** | the only remaining `mcp_file_used` occurrences are a historical **comment** and the migration's required `OLD_KEY` constant |
+| 6 | `schema.json` property renamed **and** its description corrected | `additionalProperties: false` retained; description now says *generated*, justified by the field's lifecycle |
+| 7 | `schema_version` bumped + migration script, **all three sites** | DB **3.0.0**, schema root description **3.0.0**, `migrate_schema_v3.0.0.py` present; 0 rows carry the old key |
+
+⚠ **My first obligation-5 probe FAILED, and the probe was wrong, not the code.**
+A bare substring search for `mcp_file_used` in `run_full_test.py` hit a comment
+explaining the rename. **A substring probe reports the absence of a string, not
+the absence of a meaning** — the same finding this sprint already recorded when
+a diff probe matched on capitalisation and tense. Verified by reading the two
+hits rather than by trusting the count.
+
+### P5 — the last two `NEEDS A GUARD` sites closed (#1741)
+
+Both remaining sites (`stationarity.py` survey rows `:1091` and `:1104`) are
+**one function**, `_build_pattern_c_dim_mismatch_term`, so **one guard closes
+both ends**. All four `NEEDS A GUARD` sites are now closed: D9 took the two
+index-map sites (#1737), D11 takes this pair.
+
+**The defect.** `_pos` returns the FIRST position whose symbol matches, so a
+diagonal reference like `X(i,i)` collapses `sum_position` and `bindings[eqi]`
+onto position 0 and B-3 consolidates against a coordinate the source never
+expressed.
+
+**⚠ Neither existing guard catches it, which is the reason a new one was needed.**
+`len(bindings) != 1` rejects MULTIPLE eq-domain indices — here `len(bindings)`
+is exactly 1. The canonical-set fallback declines when the sum and binding
+coordinates resolve to DISTINCT sets — but a collapse makes them the SAME
+position, so it compares a symbol with itself, finds them equal, and proceeds.
+
+**⚠ THE REMEDY DIFFERS FROM D9's ON PURPOSE — `return None`, not `raise`.**
+`index_map` raises because a collapsed map has no honest value to return. This
+builder's contract is *"return `None` and the caller takes the standard path"*,
+and that path handles the general case correctly. **Declining a special case is
+always safe; refusing to emit is not** — raising here would break models that
+translate correctly today. Recorded in the survey so a later reader does not
+"harmonise" the two and silently undo it.
+
+**⚠ The survey's line citations had aged out.** `:1091` now lands inside
+`_find_full_collapse_sum`; the site was relocated by symbol (`_pos`, `bindings`).
+Same failure as the P7 obligation-5 probe on the same day: **an address written
+at survey time does not survive the file changing.** The survey now says to cite
+these by symbol.
+
+**Verification.** Fail-before asserted on `_pos`'s own arithmetic (so the guard
+cannot later read as redundant); both repeat shapes declined, including the
+case-only `('i','I')` — GAMS identifiers are case-insensitive; **and a positive
+control that a distinct `('i','j')` reference gets PAST the guard**, asserted by
+spying on the next call, because every other assertion is `is None` and would
+pass vacuously against a guard that declined everything. Mutation-killed.
+
+**Emit invariance: `make check-goldens` 186 in-scope, all clean, 0 drift,
+UNCONTENDED** — run alone, per the rule this sprint has now broken twice. The
+guard is therefore latent: **0 corpus models reach it**, stated alongside the
+pass so a future reader can tell a real pass from an unexercised one.
+
+Phase-0: `docs/issues/ISSUE_1741_pattern-c-b3-repeated-index-collapse.md`
+(gate verified locally: PASS, 1 emit file changed).
+

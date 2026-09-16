@@ -714,6 +714,98 @@ def test_b3_multiplier_ref_validity_guard():
 
 
 @pytest.mark.unit
+def test_b3_declines_a_repeated_index_reference():
+    """Sprint 39 P5 — the survey's `stationarity._pos` site (issue #1741).
+
+    `_pos` returns the FIRST position whose symbol matches, so a DIAGONAL
+    reference like `X(i,i)` makes `sum_position` and every `bindings[eqi]`
+    resolve to position 0. B-3 then builds against a binding coordinate that is
+    not the one the source meant.
+
+    ⚠ NEITHER EXISTING GUARD CATCHES IT, which is the whole reason this one had
+    to be added rather than relying on them:
+
+    * `len(bindings) != 1` rejects MULTIPLE eq-domain indices; this is a single
+      index landing on the wrong coordinate, so `len(bindings) == 1`;
+    * the canonical-set fallback fires when the sum and binding coordinates
+      resolve to DISTINCT sets — but a collapse makes them the SAME position, so
+      it compares a symbol with itself, finds them equal, and proceeds.
+
+    The fail-before is asserted on `_pos`'s own arithmetic below, so this cannot
+    later be read as a guard against something that never happened.
+    """
+    from src.ir.ast import Sum, VarRef
+    from src.ir.model_ir import ModelIR
+    from src.ir.symbols import AliasDef, SetDef
+    from src.kkt.stationarity import _build_pattern_c_dim_mismatch_term
+
+    # --- fail-before: the collapse, in the exact form `_pos` computes it -----
+    src_indices = ("i", "i")
+
+    def _pos(sym):
+        for k, ix in enumerate(src_indices):
+            if isinstance(ix, str) and ix.lower() == sym.lower():
+                return k
+        return None
+
+    assert _pos("i") == 0
+    bindings = {"i": _pos("i")}
+    assert len(bindings) == 1, "the len(bindings) != 1 bail-out does NOT fire here"
+    assert _pos("i") == bindings["i"], "sum and binding positions collapse onto one another"
+
+    # --- the guard: B-3 declines the diagonal reference ----------------------
+    ir = ModelIR()
+    ir.sets["i"] = SetDef(name="i", members=["a", "b"])
+    ir.aliases["j"] = AliasDef(name="j", target="i")
+
+    def _found(indices):
+        ref = VarRef(name="X", indices=indices)
+        return {
+            "sum_node": Sum(index_sets=("i",), body=ref, condition=None),
+            "sum_idx": "i",
+            "var_ref": ref,
+            "sign": 1.0,
+        }
+
+    assert (
+        _build_pattern_c_dim_mismatch_term(
+            _found(("i", "i")), "X", ("i", "j"), ("i",), "nu_X", ir, ("j",)
+        )
+        is None
+    ), "a repeated-symbol reference must fall back to the standard path"
+
+    # --- negative control: case-only repeats are the same symbol in GAMS -----
+    assert (
+        _build_pattern_c_dim_mismatch_term(
+            _found(("i", "I")), "X", ("i", "j"), ("i",), "nu_X", ir, ("j",)
+        )
+        is None
+    ), "GAMS identifiers are case-insensitive, so ('i','I') is a repeat"
+
+    # --- negative control: a DISTINCT-symbol reference is NOT declined here ---
+    # It may still return None further down for unrelated reasons, but it must
+    # get past this guard — otherwise the guard would disable B-3 entirely and
+    # every assertion above would pass vacuously.
+    import src.kkt.stationarity as st
+
+    reached = {}
+    real_pos_caller = st._b3_multiplier_ref_is_valid
+
+    def _spy(*a, **k):
+        reached["yes"] = True
+        return real_pos_caller(*a, **k)
+
+    st._b3_multiplier_ref_is_valid = _spy
+    try:
+        _build_pattern_c_dim_mismatch_term(
+            _found(("i", "j")), "X", ("i", "j"), ("i",), "nu_X", ir, ("j",)
+        )
+    finally:
+        st._b3_multiplier_ref_is_valid = real_pos_caller
+    assert reached.get("yes"), "a distinct-symbol reference must pass the repeat guard"
+
+
+@pytest.mark.unit
 def test_dual_dim_mismatch_binds_lower_dim_var(tmp_path):
     """Sprint 27 #1381 follow-up — the DUAL of B-3 (cesam2 ``stat_y``).
 

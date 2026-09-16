@@ -129,7 +129,20 @@ It does not fire *for this change*, because the checkpoint selects models whose 
 
 To be used verbatim, so the fall is never reported as a bare number.
 
-> **Match 96 → 95 is a CORRECTION, not a regression.** `weapons` was recorded as a **presolve** match, but the presolve retry's MCP produced no `MODEL STATUS` of its own. A `--nlp-presolve` emit warm-starts by solving the original model inside the generated file, so when that MCP solve aborted, `nlp2mcp_obj_val = tetd.l` still held the embedded NLP's own answer (1735.5696) and the comparison matched itself. **This is not "weapons cannot be solved as an MCP"** — its **cold** emit solves, to `model_optimal` @ **1700.397**, which is a **2.03 %** divergence from the NLP and therefore a **mismatch**. That cold result is the true record. The overstatement dates from Sprint 38 Day 9, was reported at the time, and is corrected here. **Match 95 is the first figure in this series that is true.** Solve (111), cold-optimal (65) and the genuine floor (73) are unaffected; presolve-match moves 31 → 30 and all-219 Match 99 → 98 for the same single reason.
+> **Match 96 → 95 is a CORRECTION, not a regression.** `weapons` was recorded as a **presolve** match, but the presolve retry's MCP produced no `MODEL STATUS` of its own. A `--nlp-presolve` emit warm-starts by solving the original model inside the generated file, so when that MCP solve aborted, `nlp2mcp_obj_val = tetd.l` still held the embedded NLP's own answer (1735.5696) and the comparison matched itself. **This is not "weapons cannot be solved as an MCP"** — its **cold** emit solves, to `model_optimal` @ **1700.397**, which is a **2.03 %** divergence from the NLP and therefore a **mismatch**. That cold result is the true record. The overstatement dates from Sprint 38 Day 9, was reported at the time, and is corrected here. **Match 95 is the first figure in this series that is true.** Solve (111), cold-optimal (65) and the genuine floor (75) are unaffected; presolve-match moves 31 → 30 and all-219 Match 99 → 98 for the same single reason.
+
+⚠ **The floor figure in the block above was corrected 73 → 75 on Day 11.** It
+was written at prep, when the floor was believed to be 73; the **Day-0 owner
+decision re-baselined it to 75** (both `twocge` and `elec` fail the methodology
+test, so both owe provenance entries), and `floor_tracker.py` derives **75**
+today. The number was stale in the one place that most needed it to be right:
+close rule **C2 says to use this block verbatim**, so a Day-13 closeout quoting
+it unchanged would have reported a floor contradicting the tool — in the same
+sentence as a correction, which is precisely the failure this wording exists to
+prevent. Day 10's uses (`CHANGELOG.md`, `SPRINT_LOG.md` §7) already say 75;
+only the template lagged. **Banked staleness: a figure written at prep and
+quoted at close describes a sprint that no longer exists. Derive at the point of
+use.**
 
 **Three rules this wording follows**, each from a Sprint-38 close finding: the reason is in the **same sentence** as the number; the figures that did **not** move are named, so the reader is not left inferring a wider fall; and the direction is stated as a property of the *record*, not of the work.
 
