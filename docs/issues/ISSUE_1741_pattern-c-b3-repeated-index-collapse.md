@@ -55,8 +55,19 @@ earlier raise.** A repeated EQUATION domain raises at the Day-9 `#1737` guard
 consulted, and a diagonal VARIABLE reference never reaches B-3 at all — the
 builder is called **0 times** for such a model. So this half is not reachable
 end-to-end today; it holds if a future caller reaches the builder without going
-through the empty-equation scan. Both facts are asserted by tests rather than
-asserted in prose.
+through the empty-equation scan.
+
+Both facts are **COUNTED, not narrated** —
+`test_b3_is_never_reached_by_either_repeat_shape` spies on
+`_build_pattern_c_dim_mismatch_term` and asserts the call count is **0** for each
+shape. ⚠ A `pytest.raises` alone does NOT establish the ordering: it passes
+unchanged if B-3 runs first and the raise arrives afterwards (PR #1742 review —
+an earlier revision of that test claimed both facts while establishing neither,
+and its fixture used `tsam(i,j)`, which is not a diagonal reference at all). The
+counter runs against a **non-vacuity control** on cesam2 first, because a spy
+that was never wired reads 0 exactly like a real zero. Mutation-checked:
+disabling the `#1737` guard fails the ordering assertion, and unwiring the spy
+fails the control.
 
 ## Phase 0: Acceptance Gate
 

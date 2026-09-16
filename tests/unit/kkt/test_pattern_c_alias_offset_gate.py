@@ -909,28 +909,55 @@ def test_b3_declines_a_repeated_EQ_DOMAIN(tmp_path):
 
 
 @pytest.mark.unit
-def test_a_repeated_EQUATION_domain_is_refused_BEFORE_b3_is_reached(tmp_path):
-    """⚠ Caller-level ordering, measured (PR #1742 review).
+def test_b3_is_never_reached_by_either_repeat_shape(tmp_path, monkeypatch):
+    """⚠ Caller-level ORDERING and REACHABILITY, instrumented (PR #1742 review).
 
     The review asked for an `_emit_mini_mcp` case proving the standard path
-    emits the fallback correctly. Measuring first showed the fallback is not
-    reachable that way, and the reason is worth pinning rather than asserting a
-    contract that does not exist:
+    emits the fallback. Measuring showed the fallback is not reachable that way,
+    and an earlier revision of this test then **claimed two measured facts its
+    body did not establish** — `pytest.raises` alone passes just as happily if
+    B-3 runs FIRST and something later raises, and the fixture used `tsam(i,j)`,
+    which is not a diagonal reference at all. A docstring asserting a
+    measurement the test never takes is the exact defect this file exists to
+    catch, so both facts are now counted.
 
-    * a repeated EQUATION domain **raises at the Day-9 `#1737` guard**
-      (`empty_equation_detector`'s `assert_no_repeated_symbol`) long before B-3
-      is consulted — asserted here;
-    * a diagonal VARIABLE reference never reaches B-3 at all (the builder is
-      called **0 times** for such a model).
-
-    So the `eq_domain` half of the Day-11 guard is **defence in depth behind an
-    earlier raise**, not a live path. That is a fact about ordering, and if a
-    future caller reaches this builder without going through the empty-equation
-    scan, the unit test above is what holds it.
+    ⚠ NON-VACUITY FIRST. A call counter that reads 0 because it was never wired
+    is indistinguishable from a real zero, so the control asserts the spy fires
+    on cesam2 — B-3's own shape — before either zero is believed.
     """
+    import src.kkt.stationarity as st
+
+    calls: dict[str, int] = {"n": 0}
+    real = st._build_pattern_c_dim_mismatch_term
+
+    def _spy(*a, **k):
+        calls["n"] += 1
+        return real(*a, **k)
+
+    monkeypatch.setattr(st, "_build_pattern_c_dim_mismatch_term", _spy)
+
+    # --- control: the spy REGISTERS on the shape B-3 exists to serve ---------
+    cesam2 = """\
+Set i / total, a1, a2 /;
+Set ii(i); ii(i) = yes; ii("total") = no;
+Alias (i,j), (ii,jj);
+Variable tsam(i,j), y(i), z;
+Equation colsum(jj), rowsum(ii), zdef;
+colsum(jj).. sum(ii, tsam(ii,jj)) =e= y(jj);
+rowsum(ii).. sum(jj, tsam(ii,jj)) =e= y(ii);
+zdef.. z =e= sum((i,j), tsam(i,j)) + sum(i, y(i));
+Model m / colsum, rowsum, zdef /;
+solve m using nlp minimizing z;
+"""
+    _emit_mini_mcp(tmp_path, cesam2, "mini_spy_control.gms")
+    assert calls["n"] > 0, "the spy never fired; the zero-call assertions below would be vacuous"
+
+    # --- fact 1: a repeated EQUATION domain raises BEFORE B-3 is consulted ---
+    # ⚠ The call COUNT is what pins the ordering. `pytest.raises` alone does not:
+    # it would pass unchanged if B-3 ran first and the raise came afterwards.
     from src.ir.index_map import RepeatedDomainSymbolError
 
-    gams = """\
+    eq_domain_repeat = """\
 Set i / a1, a2 /;
 Alias (i,j);
 Variable tsam(i,j), y(i), z;
@@ -940,8 +967,35 @@ zdef.. z =e= sum((i,j), tsam(i,j)) + sum(i, y(i));
 Model m / diagsum, zdef /;
 solve m using nlp minimizing z;
 """
+    calls["n"] = 0
     with pytest.raises(RepeatedDomainSymbolError, match="repeats"):
-        _emit_mini_mcp(tmp_path, gams, "mini_eq_domain_repeat.gms")
+        _emit_mini_mcp(tmp_path, eq_domain_repeat, "mini_eq_domain_repeat.gms")
+    assert calls["n"] == 0, (
+        "the #1737 empty-equation guard must raise BEFORE B-3 is consulted; "
+        f"B-3 was called {calls['n']} time(s) first"
+    )
+
+    # --- fact 2: a DIAGONAL VARIABLE REFERENCE never reaches B-3 either ------
+    # ⚠ `tsam(i,i)`, an actual diagonal reference — the earlier fixture used
+    # `tsam(i,j)` and so exercised nothing of this claim. This one EMITS
+    # (no exception), so the zero is about reachability, not about an abort.
+    diagonal_reference = """\
+Set i / a1, a2 /;
+Alias (i,j);
+Variable tsam(i,j), y(i), z;
+Equation diagsum(j), zdef;
+diagsum(j).. sum(i, tsam(i,i)) =e= y(j);
+zdef.. z =e= sum((i,j), tsam(i,j)) + sum(i, y(i));
+Model m / diagsum, zdef /;
+solve m using nlp minimizing z;
+"""
+    calls["n"] = 0
+    _emit_mini_mcp(tmp_path, diagonal_reference, "mini_diagonal_ref.gms")
+    assert calls["n"] == 0, (
+        "a diagonal variable reference is expected never to reach B-3; it was "
+        f"called {calls['n']} time(s). If this fires, the guard's `src_indices` "
+        "half has become a LIVE path and needs corpus-level verification."
+    )
 
 
 @pytest.mark.unit
