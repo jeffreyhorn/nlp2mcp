@@ -792,6 +792,19 @@ cannot tell a regression in one from the other — and the first revision also
 inside that function's own source range, plus a test pinning the verdict counts
 and the shared-function case.
 
+⚠⚠ **AND THE CATALOG WAS SHORT BY THREE SITES** (PR #1743 review). It carried
+**13 rows for 16 sites**: `constraint_jacobian:1513`, `derivative_rules:2411`
+and the second `stationarity:5148` each **shared an anchor with a neighbour** and
+were silently collapsed into it, so a change to any of the three could not be
+detected. Each now has its own row and its own distinguishing anchor.
+
+**The count assertion was the thing that hid it:** it asserted **6/7 — the
+number of rows the catalog happened to have**, which is unfalsifiable by
+construction. It now asserts the survey's **7/9 (16 total)** and additionally
+that every `(file, function, anchor)` triple is **unique**, so a future
+collapse fails rather than passing quietly. *Asserting the count you HAVE proves
+nothing; asserting the count the SOURCE says is what catches an omission.*
+
 **⚠ TWO DEAD MUTANTS BEFORE THE `_sigma_sp_domain_collision` TEST DISCRIMINATED.**
 Weakening `len(canon_hits) < 2` to `< 1` survived, and so did replacing
 `any(vi < later …)` with `True`. Measuring showed why: **`< 2` is a FAST PATH,

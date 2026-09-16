@@ -59,6 +59,20 @@ CATALOGUED_SITES: tuple[tuple[str, str, str, str], ...] = (
         "NEEDS A TEST",
     ),
     (
+        # ⚠ DISTINCT from the `_sub_idx` row above, which shares the literal
+        # text `concrete_indices[symbolic_indices.index(idx)]` (PR #1743 review).
+        # This is the Sum/Prod FREE-INDEX comprehension — survey `:1513`, reach
+        # 11/15 — and a shared anchor collapsed it into the `:1466` row, so a
+        # change here could not be detected.
+        "src/ad/constraint_jacobian.py",
+        "_substitute_indices",
+        # ⚠ `free_concrete = tuple(` and NOT `if idx not in expr.index_sets` —
+        # the latter also appears on the `free_symbolic` line directly above, so
+        # it did not pin THIS site and its mutant survived (PR #1743 review).
+        "free_concrete = tuple(",
+        "NEEDS A TEST",
+    ),
+    (
         "src/ir/parser.py",
         "_handle_aggregation",
         "expanded_indices.index(child_idxs[0])",
@@ -85,9 +99,20 @@ CATALOGUED_SITES: tuple[tuple[str, str, str, str], ...] = (
         "ALREADY GUARDED",
     ),
     (
+        # ⚠ TWO consume-once sites in one function — survey `:5140` and `:5148`.
+        # Both write the literal `used_var.add(vi)`, so a shared anchor collapsed
+        # them (PR #1743 review). They are the FIRST pass (exact canonical match)
+        # and the SECOND pass (common root), and each is anchored on its own
+        # guard condition.
         "src/kkt/stationarity.py",
         "_compute_index_offset_key",
-        "used_var.add(vi)",
+        "if vi not in used_var and eq_canons[ei] == var_canons[vi]:",
+        "ALREADY GUARDED",
+    ),
+    (
+        "src/kkt/stationarity.py",
+        "_compute_index_offset_key",
+        "if vi not in used_var and eq_roots[ei] == var_roots[vi]:",
         "ALREADY GUARDED",
     ),
     (
@@ -106,6 +131,15 @@ CATALOGUED_SITES: tuple[tuple[str, str, str, str], ...] = (
         "src/ad/derivative_rules.py",
         "_diff_sum",
         "enumerate(wrt_indices)",
+        "ALREADY GUARDED",
+    ),
+    (
+        # ⚠ The SECOND `_diff_sum` site — survey `:2411`, the explicit duplicate
+        # bail-out. Collapsed into the `enumerate(wrt_indices)` row until
+        # PR #1743 review; it is a different remedy at a different line.
+        "src/ad/derivative_rules.py",
+        "_diff_sum",
+        "if sym_j in seen_sym:",
         "ALREADY GUARDED",
     ),
     (
@@ -177,9 +211,24 @@ def test_the_catalog_covers_both_verdicts_and_the_shared_function():
     review). Pinning the counts and the shared-function case keeps a future
     edit from silently collapsing the two verdicts again.
     """
+    # ⚠ THESE ARE THE SURVEY'S OWN COUNTS (PR #1743 review). An earlier revision
+    # asserted 6/7 — the number of ROWS it happened to have — which is how three
+    # sites went missing unnoticed: `constraint_jacobian:1513`,
+    # `derivative_rules:2411` and the second `stationarity:5148` each shared an
+    # anchor with a neighbour and were silently collapsed into it. Asserting the
+    # count you HAVE proves nothing; asserting the count the survey SAYS is what
+    # catches an omission.
     verdicts = [v for *_rest, v in CATALOGUED_SITES]
-    assert verdicts.count("NEEDS A TEST") == 6, verdicts
-    assert verdicts.count("ALREADY GUARDED") == 7, verdicts
+    assert verdicts.count("NEEDS A TEST") == 7, verdicts
+    assert verdicts.count("ALREADY GUARDED") == 9, verdicts
+    assert len(CATALOGUED_SITES) == 16, "the survey's remaining set is 16 sites"
+
+    # ⚠ Every anchor must be UNIQUE, or two rows collapse again.
+    anchors = [(r, f, s) for r, f, s, _v in CATALOGUED_SITES]
+    assert len(anchors) == len(set(anchors)), (
+        "two catalogued rows share a (file, function, anchor) triple and would "
+        f"pin the same site: {sorted(a for a in anchors if anchors.count(a) > 1)}"
+    )
 
     agg = [(f, s, v) for _r, f, s, v in CATALOGUED_SITES if f == "_handle_aggregation"]
     assert len(agg) == 2, f"_handle_aggregation owns two catalogued sites; got {agg}"
