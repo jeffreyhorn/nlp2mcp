@@ -47,8 +47,11 @@ path"*, which handles the general case correctly — so declining is both safe a
 better. **Do not "harmonise" these into one behaviour:** making B-3 raise would
 break models the standard path already emits correctly.
 
-⚠ **The line numbers below have aged out for `stationarity.py`.** `:1091` is now
-inside `_find_full_collapse_sum`. Cite these sites by SYMBOL.
+⚠ **The line numbers below have aged out for `stationarity.py`** — `:1091` now
+lands inside `_find_full_collapse_sum`. **Day 8 already measured this (+293
+lines, PR #1728) and said to relocate by content**; Day 11 hit it again while
+locating the same site, which is the argument for citing by SYMBOL rather than
+recording the drift a third time.
 
 Remaining: 7 **NEEDS A TEST** and 9 **ALREADY GUARDED** sites — Day 12's work.
 **Do not re-guard the guarded ones**; three independent remedies already exist.
@@ -79,19 +82,19 @@ Remaining: 7 **NEEDS A TEST** and 9 **ALREADY GUARDED** sites — Day 12's work.
 | `src/kkt/stationarity.py:5770` | purpose-built repeated-domain detector | 1/15 | **ALREADY GUARDED** |
 | `src/emit/emit_gams.py:795` | `enumerate(domain)` + name match | 0/15 | **NOT REACHABLE (in sample)** |
 
-**`src/kkt/empty_equation_detector.py:127`** — NEEDS A GUARD · reach 10/15
+**`src/kkt/empty_equation_detector.py:127`** — ✅ **GUARDED** (D9, #1737) · was NEEDS A GUARD · reach 10/15
 
 Identical collapse on an EQUATION domain. Two defects meet here: the map collapses, and `_enumerate_domain_instances` yields the full product for a domain a GAMS equation definition would bind diagonally. Reached by 10 of 15.
 
-**`src/ir/condition_eval.py:117`** — NEEDS A GUARD · reach 9/15
+**`src/ir/condition_eval.py:117`** — ✅ **GUARDED** (D9, #1737) · was NEEDS A GUARD · reach 9/15
 
 `strict=True` catches a LENGTH mismatch but not a KEY collapse: `zip(('i','i'), ('i1','i2'))` yields `{'i': 'i2'}`, silently discarding the first position. This is elec's mechanism in a second layer, and nothing upstream de-duplicates a SET or PARAM domain. Reached by 9 of 15 sampled models.
 
-**`src/kkt/stationarity.py:1091`** — NEEDS A GUARD · reach 2/15
+**`src/kkt/stationarity.py`** `_pos` (survey ref `:1091`, drifted) — ✅ **GUARDED** (D11, #1741) · was NEEDS A GUARD · reach 2/15
 
 `_pos` returns the first position of a symbol in a VarRef's index tuple; `bindings` is then keyed by equation index and `var_domain[binding_position]` resolved positionally. With a repeated tuple the binding position is always the first occurrence. The `len(bindings) != 1` bail-out rejects the multi-index case but not the single-index one.
 
-**`src/kkt/stationarity.py:1104`** — NEEDS A GUARD · reach 2/15
+**`src/kkt/stationarity.py`** `bindings` (survey ref `:1104`, drifted) — ✅ **GUARDED** (D11, #1741 — same function, one guard) · was NEEDS A GUARD · reach 2/15
 
 Same site, the storing half. Included separately because a guard could live at either end.
 
@@ -247,15 +250,27 @@ Both properties are pure text scans of `data/gamslib/mcp/`: **under 3 s over 193
 
 ## 6. Ranked recommendation for P5
 
+> ⚠ **HISTORICAL as of Sprint 39 Day 11 — items 1, 2 and 4 are DONE** (PR #1742
+> review). This section is the prep-era plan and is kept as written, per the
+> repo convention of labelling superseded analysis rather than rewriting it.
+> Per-item status is marked inline below; the authoritative state is
+> §*Status (Sprint 39 Day 11)* at the top of this document.
+
 P5 is **0-bucket by design**; nothing below asks for a bucket move.
 
-1. **Land P2 as a gate first.** It is the only artefact here that finds live defects, it runs in under 3 s, and its **9 violations across 6 models** are a ready-made work list. Landing it *before* any guard means the guards have a fail-before.
-2. **Guard the two symbol-keyed `dict(zip(...))` collapses** — `condition_eval.py:117` and `empty_equation_detector.py:127`. Highest reach among unguarded sites (9/15 and 10/15), smallest fix, and `strict=True` already gives a false sense of safety there.
-3. **Make the `constraint_jacobian.py` `.index()` family's dependency explicit** — 4 sites, the highest-reach shape in the catalog, safe only because of a pass covering one of three sub-shapes.
-4. **Then `stationarity.py:1091/1104`.** Lower reach (2/15), genuinely unguarded.
-5. **Do not re-guard the 9 `ALREADY GUARDED` sites** — three independent remedies already exist (consume-once slot claiming, `seen_sym` duplicate bail-out, parser alias substitution). Add tests that pin them; the `NEEDS A TEST` verdicts are exactly this.
+1. ✅ **DONE (D9/D10)** — **Land P2 as a gate first.** It is the only artefact here that finds live defects, it runs in under 3 s, and its **9 violations across 6 models** are a ready-made work list. Landing it *before* any guard means the guards have a fail-before.
+2. ✅ **DONE (D9, #1737 — `src/ir/index_map.py`, raises)** — **Guard the two symbol-keyed `dict(zip(...))` collapses** — `condition_eval.py:117` and `empty_equation_detector.py:127`. Highest reach among unguarded sites (9/15 and 10/15), smallest fix, and `strict=True` already gives a false sense of safety there.
+3. ⏳ **OPEN — Day 12 (`NEEDS A TEST`)** — **Make the `constraint_jacobian.py` `.index()` family's dependency explicit** — 4 sites, the highest-reach shape in the catalog, safe only because of a pass covering one of three sub-shapes.
+4. ✅ **DONE (D11, #1741 — declines to `None`, falling back to the standard path).** **Then `stationarity.py:1091/1104`.** Lower reach (2/15), genuinely unguarded. ⚠ The two rows are **one function**, so one guard closed both; and the remedy is a FALLBACK, not a raise — see the top-of-document status for why the two remedies deliberately differ.
+5. ⏳ **OPEN — Day 12** — **Do not re-guard the 9 `ALREADY GUARDED` sites** — three independent remedies already exist (consume-once slot claiming, `seen_sym` duplicate bail-out, parser alias substitution). Add tests that pin them; the `NEEDS A TEST` verdicts are exactly this.
 
 **⚠ The four `NEEDS A GUARD` sites are candidates, not confirmed defects.** Each needs the Day-0 trace the S38 retrospective requires — three of four S38 gates named the wrong layer.
+
+> ✅ **DISCHARGED.** All four were traced on **Day 8** (§*Sprint 39 Day 8*) and
+> the trace held: none was a confirmed defect on corpus data. Both remedies
+> landed anyway as **latent** guards — D9 (#1737) and D11 (#1741) — each with
+> `check-goldens` **186 clean, 0 drift** confirming no corpus model reaches
+> them. *Candidate, not confirmed* is exactly why neither remedy changes emit.
 
 ## 7. What this survey does not establish
 
@@ -265,8 +280,8 @@ P5 is **0-bucket by design**; nothing below asks for a bucket move.
 
 ---
 
-**Document Status:** ✅ Survey complete (Sprint 39 Prep Task 7); the four `NEEDS A GUARD` sites **TRACED** Sprint 39 Day 8 — none is a confirmed defect, and **two of the four line references had already drifted +293 lines**. See §*Sprint 39 Day 8*.
-**Last Updated:** 2026-09-10 — Day-8 trace of the four candidate sites
+**Document Status:** ✅ Survey complete (Sprint 39 Prep Task 7); the four `NEEDS A GUARD` sites **TRACED** Sprint 39 Day 8 — none is a confirmed defect, and **two of the four line references had already drifted +293 lines** (§*Sprint 39 Day 8*) — and **all four CLOSED** by Day 11: D9 `#1737` (raises) and D11 `#1741` (declines to `None`). Both are latent; `check-goldens` reports 186 clean / 0 drift for each. **Remaining: 7 `NEEDS A TEST` + 9 `ALREADY GUARDED` — Day 12.** §6 is prep-era and marked historical.
+**Last Updated:** 2026-09-15 — Day-11 closure of the last two `NEEDS A GUARD` sites (#1741)
 
 
 ---

@@ -26,9 +26,11 @@ This is the survey's `stationarity._pos` site (`POSITIONAL_DOMAIN_SURVEY.md`,
 as the discriminator — not positional indexing, which is repeat-safe.
 
 ⚠ **The survey cites this site as `stationarity.py:1091`/`:1104`. Those line
-numbers have since aged out** — `:1091` is now inside `_find_full_collapse_sum`.
-The site was relocated by symbol (`_pos`, `bindings`), which is how it should be
-cited from here on.
+numbers had already drifted `+293` before this issue was opened** — Day 8
+measured it (PR #1728 inserted B-4's ~256 lines at ~1004) and `:1091` now lands
+inside `_find_full_collapse_sum`. Day 11 hit the same wall again, which is why
+the remedy here is an **address format**, not another measurement: cite this site
+by SYMBOL (`_pos`, `bindings`).
 
 ## Phase 0: Acceptance Gate
 

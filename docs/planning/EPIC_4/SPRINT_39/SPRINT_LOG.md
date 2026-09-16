@@ -714,11 +714,15 @@ always safe; refusing to emit is not** — raising here would break models that
 translate correctly today. Recorded in the survey so a later reader does not
 "harmonise" the two and silently undo it.
 
-**⚠ The survey's line citations had aged out.** `:1091` now lands inside
-`_find_full_collapse_sum`; the site was relocated by symbol (`_pos`, `bindings`).
-Same failure as the P7 obligation-5 probe on the same day: **an address written
-at survey time does not survive the file changing.** The survey now says to cite
-these by symbol.
+**⚠ The survey's line citations had aged out — AND DAY 8 ALREADY SAID SO**
+(PR #1742 review). `:1091` now lands inside `_find_full_collapse_sum`. Day 8
+measured the drift exactly (**+293 lines**, from PR #1728) and wrote *"relocated
+by content, not by offset"*; Day 11 hit the same wall while locating the same
+site and recorded it as if new. **The finding was not the problem — the ADDRESS
+FORMAT was**, and re-recording a drift is not a fix for it. The survey now says
+to cite these sites by SYMBOL, which is the thing that actually stops the third
+recurrence. Same root as the P7 obligation-5 probe on the same day: an address
+written at survey time does not survive the file changing.
 
 **Verification.** Fail-before asserted on `_pos`'s own arithmetic (so the guard
 cannot later read as redundant); both repeat shapes declined, including the
