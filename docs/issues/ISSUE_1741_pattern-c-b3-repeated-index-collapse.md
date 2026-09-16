@@ -22,8 +22,11 @@ For a diagonal reference such as `X(i,i)` every lookup returns `0`, so
 B-3 consolidates against a binding the source never expressed.
 
 This is the survey's `stationarity._pos` site (`POSITIONAL_DOMAIN_SURVEY.md`,
-**NEEDS A GUARD**, reach 2/15). It is the symbol→position step the survey names
-as the discriminator — not positional indexing, which is repeat-safe.
+reach 2/15) — **catalogued `NEEDS A GUARD` at prep, and recorded ✅ GUARDED
+there since Day 11 by this very change**. The prep-era verdict is quoted as
+history, not as an open obligation (PR #1742 review). It is the symbol→position
+step the survey names as the discriminator — not positional indexing, which is
+repeat-safe.
 
 ⚠ **The survey cites this site as `stationarity.py:1091`/`:1104`. Those line
 numbers had already drifted `+293` before this issue was opened** — Day 8
@@ -105,6 +108,14 @@ the **standard path's** emit — not an error, and not the B-3 consolidated form
    an unexercised one.
 
 ### PROCEED/REPLAN Signal
+
+> ✅ **SATISFIED on Sprint 39 Day 11 — this section is the gate as written
+> BEFORE the work, kept in acceptance-gate voice** (the Phase-0 format requires
+> this heading, and `ISSUE_1737` is written the same way). Recorded outcome:
+> **PROCEED** — `check-goldens` **186 in-scope, all clean, 0 drift, uncontended**;
+> `make test` **5431 passed**, 10 skipped, 1 xfailed; none of the REPLAN exits
+> fired. Read the conditions below as the criteria that were applied, not as
+> work still pending (PR #1742 review).
 
 **PROCEED** — `check-goldens` **186 clean, 0 drift, uncontended**; the guard
 declines both repeat shapes and neither distinct shape; full suite green.
