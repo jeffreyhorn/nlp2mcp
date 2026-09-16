@@ -27,48 +27,165 @@ import pytest
 
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[3]
 
-#: site → the function that owns it, relocated by content on Day 12.
-#: ⚠ Keyed by SYMBOL, never by line, for the reason in the module docstring.
-CATALOGUED_SITES: tuple[tuple[str, str, str], ...] = (
-    # NEEDS A TEST
-    ("src/ad/constraint_jacobian.py", "_substitute_indices", "symbolic_indices.index(...) ×4"),
-    ("src/ir/parser.py", "_handle_assign", "alias expansion / first position"),
-    ("src/ir/parser.py", "_handle_aggregation", "seen_domain + minted alias"),
-    ("src/ir/condition_eval.py", "_try_dotted_key_lookup", "first position of '*'"),
-    ("src/kkt/stationarity.py", "_apply_alias_offset_to_deriv", "declared_domain[pi] vs PARAM"),
-    # ALREADY GUARDED
-    ("src/kkt/stationarity.py", "_match_subset_domain", "used_var_positions consume-once"),
-    ("src/kkt/stationarity.py", "_compute_index_offset_key", "used_var consume-once"),
-    ("src/kkt/stationarity.py", "_remap_condition_to_domain", "set_declared_domain[pos]"),
-    ("src/kkt/stationarity.py", "_sigma_sp_domain_collision", "canon_hits >= 2 conjunct"),
-    ("src/ad/derivative_rules.py", "_diff_sum", "enumerate + seen_sym bail-out"),
+#: One row per catalogued site: (file, owning function, ANCHOR SNIPPET, verdict).
+#:
+#: ⚠ Keyed by SYMBOL, never by line — see the module docstring.
+#:
+#: ⚠⚠ AND BY AN ANCHOR SNIPPET, because a function name is not fine-grained
+#: enough (PR #1743 review). `_handle_aggregation` owns TWO catalogued sites with
+#: DIFFERENT verdicts — `parser.py:6086`'s `expanded_indices.index(...)` is
+#: `NEEDS A TEST`, while `parser.py:6007`'s `seen_domain` path is
+#: `ALREADY GUARDED`. Recording only the function name cannot tell them apart, so
+#: a regression in the intended path would pass. The snippet pins which nested
+#: site each row means.
+CATALOGUED_SITES: tuple[tuple[str, str, str, str], ...] = (
+    # ---------------------------------------------------------- NEEDS A TEST
+    (
+        "src/ad/constraint_jacobian.py",
+        "_substitute_indices",
+        "concrete_indices[symbolic_indices.index(idx)]",
+        "NEEDS A TEST",
+    ),
+    (
+        "src/ad/constraint_jacobian.py",
+        "_substitute_indices",
+        "concrete_indices[symbolic_indices.index(idx.base)]",
+        "NEEDS A TEST",
+    ),
+    (
+        "src/ad/constraint_jacobian.py",
+        "_substitute_indices",
+        "concrete_indices[symbolic_indices.index(expr.name)]",
+        "NEEDS A TEST",
+    ),
+    (
+        "src/ir/parser.py",
+        "_handle_aggregation",
+        "expanded_indices.index(child_idxs[0])",
+        "NEEDS A TEST",
+    ),
+    (
+        "src/ir/condition_eval.py",
+        "_try_dotted_key_lookup",
+        'list(domain).index("*")',
+        "NEEDS A TEST",
+    ),
+    (
+        "src/kkt/stationarity.py",
+        "_apply_alias_offset_to_deriv",
+        "declared_domain[pi]",
+        "NEEDS A TEST",
+    ),
+    # ------------------------------------------------------- ALREADY GUARDED
+    # ⚠ DO NOT add guards for these — assert the existing remedy fires.
+    (
+        "src/kkt/stationarity.py",
+        "_match_subset_domain",
+        "used_var_positions",
+        "ALREADY GUARDED",
+    ),
+    (
+        "src/kkt/stationarity.py",
+        "_compute_index_offset_key",
+        "used_var.add(vi)",
+        "ALREADY GUARDED",
+    ),
+    (
+        "src/kkt/stationarity.py",
+        "_remap_condition_to_domain",
+        "set_declared_domain[pos]",
+        "ALREADY GUARDED",
+    ),
+    (
+        "src/kkt/stationarity.py",
+        "_sigma_sp_domain_collision",
+        "any(vi < later for vi in canon_hits)",
+        "ALREADY GUARDED",
+    ),
+    (
+        "src/ad/derivative_rules.py",
+        "_diff_sum",
+        "enumerate(wrt_indices)",
+        "ALREADY GUARDED",
+    ),
+    (
+        "src/ir/parser.py",
+        "_handle_assign",
+        "for pos, idx in enumerate(indices):",
+        "ALREADY GUARDED",
+    ),
+    (
+        "src/ir/parser.py",
+        "_handle_aggregation",
+        "for pos, dname in enumerate(domain_indices):",
+        "ALREADY GUARDED",
+    ),
 )
 
 
 @pytest.mark.unit
-def test_every_catalogued_site_still_resolves_by_symbol():
+def test_every_catalogued_site_still_resolves_by_symbol_AND_snippet():
     """⚠ The structural fix for the survey's rotting line numbers.
 
-    Day 8 measured +293 lines of drift on `stationarity.py`; Day 11 hit it again
-    while relocating the same site; Day 12 measured +318 to +346 across all six
-    of that file's citations. Three recurrences of "the address moved" is the
-    argument for pinning the SYMBOL, which is stable across the edits that move
-    lines.
+    Day 8 measured +293 lines of drift on `stationarity.py`; Day 11 hit it again;
+    Day 12 measured +318 to +346 across all six of that file's citations. Three
+    recurrences is the argument for pinning the SYMBOL, which survives the edits
+    that move lines.
 
-    If this fails, a site was renamed or removed — update `CATALOGUED_SITES` and
-    the survey together, in the same commit.
+    ⚠ **The symbol alone is not enough** (PR #1743 review). `_handle_aggregation`
+    owns TWO catalogued sites with DIFFERENT verdicts — `:6086` is
+    `NEEDS A TEST`, `:6007` is `ALREADY GUARDED` — so a function-name-only pin
+    cannot tell a regression in one from the other. Each row therefore carries an
+    ANCHOR SNIPPET that must appear **inside that function's own source range**,
+    not merely somewhere in the file.
+
+    If this fails, a site was renamed, removed, or rewritten — update
+    `CATALOGUED_SITES` and the survey together, in the same commit.
     """
-    missing = []
-    for rel, func, shape in CATALOGUED_SITES:
+    problems = []
+    for rel, func, snippet, verdict in CATALOGUED_SITES:
         path = PROJECT_ROOT / rel
         assert path.is_file(), f"{rel} no longer exists"
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-        names = {
-            n.name for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
-        }
-        if func not in names:
-            missing.append(f"{rel}::{func}  ({shape})")
-    assert not missing, "catalogued site(s) no longer resolve by symbol:\n  " + "\n  ".join(missing)
+        source = path.read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        owners = [
+            n
+            for n in ast.walk(tree)
+            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == func
+        ]
+        if not owners:
+            problems.append(f"{rel}::{func} — function gone ({verdict})")
+            continue
+        # ⚠ Scope the search to the FUNCTION's lines, so a snippet that merely
+        # exists elsewhere in the file cannot satisfy the pin.
+        lines = source.splitlines()
+        body = "\n".join(
+            "\n".join(lines[o.lineno - 1 : (o.end_lineno or o.lineno)]) for o in owners
+        )
+        if snippet not in body:
+            problems.append(f"{rel}::{func} — anchor absent: {snippet!r} ({verdict})")
+    assert not problems, "catalogued site(s) no longer resolve:\n  " + "\n  ".join(problems)
+
+
+@pytest.mark.unit
+def test_the_catalog_covers_both_verdicts_and_the_shared_function():
+    """⚠ Non-vacuity for the pin above, and a guard on the classification itself.
+
+    An earlier revision listed `_handle_assign` under `NEEDS A TEST`; the survey
+    has it as `ALREADY GUARDED` (alias expansion), and the `NEEDS A TEST` parser
+    site is `_handle_aggregation`'s `expanded_indices.index(...)` (PR #1743
+    review). Pinning the counts and the shared-function case keeps a future
+    edit from silently collapsing the two verdicts again.
+    """
+    verdicts = [v for *_rest, v in CATALOGUED_SITES]
+    assert verdicts.count("NEEDS A TEST") == 6, verdicts
+    assert verdicts.count("ALREADY GUARDED") == 7, verdicts
+
+    agg = [(f, s, v) for _r, f, s, v in CATALOGUED_SITES if f == "_handle_aggregation"]
+    assert len(agg) == 2, f"_handle_aggregation owns two catalogued sites; got {agg}"
+    assert {v for *_x, v in agg} == {"NEEDS A TEST", "ALREADY GUARDED"}, (
+        "the two sites inside _handle_aggregation carry DIFFERENT verdicts; " f"got {agg}"
+    )
 
 
 @pytest.mark.unit
@@ -109,6 +226,40 @@ class TestSubstituteIndicesCollapse:
         out = _substitute_indices(ref, ("s", "t"), ("x", "1991"))
         assert out.indices[0].base == "1991"
 
+    def test_the_Sum_free_index_comprehension_collapses_the_same_way(self):
+        """The `Sum`/`Prod` free-index site — the 11/15-reach one."""
+        from src.ad.constraint_jacobian import _substitute_indices
+        from src.ir.ast import Sum, VarRef
+
+        # `k` is bound by the Sum, so only the free `i` is substituted; with a
+        # repeated free domain it collapses onto position 0.
+        node = Sum(("k",), VarRef("x", ("i", "k")), None)
+        out = _substitute_indices(node, ("i", "i"), ("a1", "a2"))
+        assert out.body.indices == ("a1", "k"), out.body.indices
+
+        out = _substitute_indices(node, ("i", "m"), ("a1", "b2"))
+        assert out.body.indices == ("a1", "k"), "positive control: distinct domain"
+
+        # ⚠⚠ THE DISCRIMINATING CASE — a symbolic index the Sum actually BINDS.
+        # The site's safety is "don't substitute indices bound by the
+        # aggregation", and neither case above exercises it: with no overlap
+        # between `symbolic_indices` and `index_sets` the free-index filter is a
+        # no-op, so a mutant replacing it with `tuple(symbolic_indices)` survived
+        # (PR #1743 review). Here `k` is bound, so it must NOT be substituted.
+        out = _substitute_indices(node, ("i", "k"), ("a1", "k9"))
+        assert out.body.indices == ("a1", "k"), (
+            "`k` is bound by the Sum and must survive substitution untouched; "
+            f"got {out.body.indices}"
+        )
+
+    def test_the_SymbolRef_site_collapses_the_same_way(self):
+        """The bare-index `SymbolRef` site (#730), inside `Call` arguments."""
+        from src.ad.constraint_jacobian import _substitute_indices
+        from src.ir.ast import SymbolRef
+
+        assert _substitute_indices(SymbolRef("i"), ("i", "i"), ("a1", "a2")).name == "a1"
+        assert _substitute_indices(SymbolRef("j"), ("i", "j"), ("a1", "b2")).name == "b2"
+
 
 @pytest.mark.unit
 def test_the_AD_collapse_is_reachable_but_EMIT_refuses_it(tmp_path, monkeypatch):
@@ -137,11 +288,17 @@ def test_the_AD_collapse_is_reachable_but_EMIT_refuses_it(tmp_path, monkeypatch)
     from src.ad.constraint_jacobian import compute_constraint_jacobian
     from src.ad.gradient import compute_objective_gradient
     from src.emit.emit_gams import emit_gams_mcp
+    from src.ir.ast import IndexOffset, ParamRef, Prod, Sum, VarRef
     from src.ir.index_map import RepeatedDomainSymbolError
     from src.ir.normalize import normalize_model
     from src.ir.parser import parse_model_file
     from src.kkt.assemble import assemble_kkt_system
 
+    # ⚠ PER-SHAPE, not aggregate (PR #1743 review). An earlier revision asserted
+    # only "some repeated call happened with distinct concrete values", which one
+    # call could satisfy while the other `.index(...)` shapes stopped being
+    # exercised entirely — no use as the integration pin for a FOUR-site claim.
+    shapes: set[str] = set()
     repeated: list[tuple] = []
     real = cj._substitute_indices
 
@@ -149,17 +306,29 @@ def test_the_AD_collapse_is_reachable_but_EMIT_refuses_it(tmp_path, monkeypatch)
         sym = [s.lower() for s in symbolic_indices if isinstance(s, str)]
         if len(sym) != len(set(sym)):
             repeated.append((tuple(symbolic_indices), tuple(concrete_indices)))
+            if isinstance(expr, (VarRef, ParamRef)):
+                if any(isinstance(i, IndexOffset) for i in expr.indices):
+                    shapes.add("IndexOffset")
+                if any(isinstance(i, str) for i in expr.indices):
+                    shapes.add("str")
+            elif isinstance(expr, (Sum, Prod)):
+                shapes.add("Sum/Prod")
         return real(expr, symbolic_indices, concrete_indices)
 
     monkeypatch.setattr(cj, "_substitute_indices", _spy)
 
+    # ⚠ The model is deliberately richer than a bare `x(i)`: it carries a lead
+    # (`x(i+1)`) and an inner `sum(j, ...)` so that THREE of the four `.index(...)`
+    # shapes are actually exercised. A first revision used a minimal model and
+    # reached only the `str` shape while the docstring claimed all four.
     gams = """\
-Set i / a1, a2 /;
+Set i / a1, a2, a3 /;
 Alias (i,j);
-Variable x(i), z;
+Parameter g(i,j);  g(i,j) = 1;
+Variable x(i), y(i), z;
 Equation rep(i,i), zdef;
-rep(i,i).. x(i) =e= 1;
-zdef.. z =e= sum(i, x(i));
+rep(i,i).. x(i) + x(i+1) + sum(j, g(i,j) * y(j)) =e= 1;
+zdef.. z =e= sum(i, x(i) + y(i));
 Model m / rep, zdef /;
 solve m using nlp minimizing z;
 """
@@ -177,11 +346,20 @@ solve m using nlp minimizing z;
         "the AD layer was expected to REACH _substitute_indices with a repeated "
         "symbolic domain; 0 such calls means this test proves nothing"
     )
-    # …and at least one carries genuinely distinct concrete values, which is
-    # where information is actually lost.
+    # …at least one carrying genuinely DISTINCT concrete values, which is where
+    # information is actually lost.
     assert any(len(set(c)) > 1 for _s, c in repeated), (
         "every repeated call had identical concrete values, so nothing was lost; "
         f"got {sorted(set(repeated))}"
+    )
+    # ⚠ …and EACH expected shape individually, so a regression confined to one
+    # `.index(...)` site cannot hide behind the others.
+    assert shapes == {"str", "IndexOffset", "Sum/Prod"}, (
+        "the integration model must exercise each of these shapes with a repeated "
+        f"domain; got {sorted(shapes)}. ⚠ The fourth site, bare `SymbolRef`, is "
+        "NOT reachable from a GAMS source here (it needs an unresolved `Call` "
+        "argument) and is covered by the direct unit test above instead — stated "
+        "rather than quietly folded into an aggregate count."
     )
 
     # The refusal: emit will not produce a model built on that collapse.

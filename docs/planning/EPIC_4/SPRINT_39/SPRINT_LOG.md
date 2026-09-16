@@ -773,6 +773,25 @@ sites it was written against. Narrowing it would silently unprotect these four.
 That is now a test, with the spy count asserted **> 0** first so the refusal is
 not believed against a dead probe.
 
+⚠ **AND PER-SHAPE, NOT AGGREGATE** (PR #1743 review). A first revision asserted
+only *"some repeated call happened with distinct concrete values"* — which **one**
+call satisfies while the other `.index(...)` shapes stop being exercised, no use
+as the integration pin for a **four-site** claim. The model now carries a lead
+(`x(i+1)`) and an inner `sum(j, …)` so **three** of the four shapes are reached
+(`str`, `IndexOffset`, `Sum/Prod`) and **each is asserted individually**. The
+fourth — bare `SymbolRef` — is **not reachable from a GAMS source** here (it
+needs an unresolved `Call` argument) and is covered by a direct unit test
+instead, **stated rather than folded into an aggregate count**.
+
+⚠ **The function name alone was not a sufficient address either.**
+`_handle_aggregation` owns **two** catalogued sites with **different verdicts**
+(`:6086` `NEEDS A TEST`, `:6007` `ALREADY GUARDED`), so a function-name pin
+cannot tell a regression in one from the other — and the first revision also
+**misclassified** `_handle_assign` as `NEEDS A TEST` when the survey has it
+`ALREADY GUARDED`. Each row now carries an **anchor snippet** that must appear
+inside that function's own source range, plus a test pinning the verdict counts
+and the shared-function case.
+
 **⚠ TWO DEAD MUTANTS BEFORE THE `_sigma_sp_domain_collision` TEST DISCRIMINATED.**
 Weakening `len(canon_hits) < 2` to `< 1` survived, and so did replacing
 `any(vi < later …)` with `True`. Measuring showed why: **`< 2` is a FAST PATH,
