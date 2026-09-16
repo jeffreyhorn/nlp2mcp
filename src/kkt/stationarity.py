@@ -1381,6 +1381,49 @@ def _build_pattern_c_dim_mismatch_term(
     sign: float = found["sign"]
     src_indices = var_ref.indices
 
+    # ⚠ A REPEATED SYMBOL IN THE REFERENCE COLLAPSES EVERY POSITION LOOKUP
+    # (Sprint 39 P5, survey site `stationarity._pos` — issue #1741).
+    #
+    # `_pos` below returns the FIRST position whose symbol matches, so for a
+    # diagonal reference such as `X(i,i)` both `sum_position` and every
+    # `bindings[eqi]` resolve to position 0. The `len(bindings) != 1` bail-out
+    # does not catch it: that rejects MULTIPLE eq-domain indices, and this is a
+    # single index landing on the wrong coordinate.
+    #
+    # ⚠ AND THE EXISTING ALIAS CHECK CANNOT CATCH IT EITHER, which is why the
+    # guard has to be here. That check falls back when the sum and binding
+    # coordinates resolve to DISTINCT canonical sets — but a collapse makes them
+    # the SAME position, so it compares a symbol against itself, finds them
+    # equal, and proceeds on the wrong binding.
+    #
+    # ⚠ FALL BACK, DO NOT RAISE. This builder's contract is "return None and the
+    # caller takes the standard path", and the standard path handles the general
+    # case correctly. `src/ir/index_map.py` raises for the same defect class
+    # because there is no correct fallback there; here there is, and refusing
+    # would break models the standard path already emits correctly. Declining a
+    # special case is always safe; refusing to emit is not.
+    _sym_indices = [ix.lower() for ix in src_indices if isinstance(ix, str)]
+    if len(_sym_indices) != len(set(_sym_indices)):
+        return None
+
+    # ⚠ AND THE EQUATION DOMAIN, CHECKED SEPARATELY (PR #1742 review). The
+    # `bindings` loop below is a DICT keyed by the eq-domain symbol, so an
+    # `eq_domain` of `("i", "i")` writes the same key twice: `len(bindings)`
+    # stays 1, the `!= 1` bail-out does not fire, and B-3 proceeds as though the
+    # equation had a single index. The guard above cannot catch this — it
+    # inspects the VARIABLE REFERENCE, and the two collapse independently.
+    #
+    # ⚠⚠ DO NOT MERGE THE TWO CHECKS INTO ONE LIST. `src_indices` and
+    # `eq_domain` legitimately SHARE symbols — that overlap is the whole premise
+    # of B-3, where the equation's index binds one coordinate of the
+    # higher-dimensional variable. cesam2's real shape is `src_indices=("i","j")`
+    # with `eq_domain=("i",)`; concatenated that reads `["i","j","i"]`, so a
+    # combined repeat test would reject the very case this builder exists to
+    # serve. Measured: the merged form rejects cesam2.
+    _sym_eq_domain = [s.lower() for s in eq_domain if isinstance(s, str)]
+    if len(_sym_eq_domain) != len(set(_sym_eq_domain)):
+        return None
+
     def _pos(sym: str) -> int | None:
         for k, ix in enumerate(src_indices):
             if isinstance(ix, str) and ix.lower() == sym.lower():

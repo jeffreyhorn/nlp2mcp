@@ -714,6 +714,291 @@ def test_b3_multiplier_ref_validity_guard():
 
 
 @pytest.mark.unit
+def test_b3_declines_a_repeated_index_reference():
+    """Sprint 39 P5 — the survey's `stationarity._pos` site (issue #1741).
+
+    `_pos` returns the FIRST position whose symbol matches, so a DIAGONAL
+    reference like `X(i,i)` makes `sum_position` and every `bindings[eqi]`
+    resolve to position 0. B-3 then builds against a binding coordinate that is
+    not the one the source meant.
+
+    ⚠ NEITHER EXISTING GUARD CATCHES IT, which is the whole reason this one had
+    to be added rather than relying on them:
+
+    * `len(bindings) != 1` rejects MULTIPLE eq-domain indices; this is a single
+      index landing on the wrong coordinate, so `len(bindings) == 1`;
+    * the canonical-set fallback fires when the sum and binding coordinates
+      resolve to DISTINCT sets — but a collapse makes them the SAME position, so
+      it compares a symbol with itself, finds them equal, and proceeds.
+
+    The fail-before is asserted on `_pos`'s own arithmetic below, so this cannot
+    later be read as a guard against something that never happened.
+    """
+    from src.ir.ast import Sum, VarRef
+    from src.ir.model_ir import ModelIR
+    from src.ir.symbols import AliasDef, SetDef
+    from src.kkt.stationarity import _build_pattern_c_dim_mismatch_term
+
+    # --- fail-before: the collapse, in the exact form `_pos` computes it -----
+    src_indices = ("i", "i")
+
+    def _pos(sym):
+        for k, ix in enumerate(src_indices):
+            if isinstance(ix, str) and ix.lower() == sym.lower():
+                return k
+        return None
+
+    assert _pos("i") == 0
+    bindings = {"i": _pos("i")}
+    assert len(bindings) == 1, "the len(bindings) != 1 bail-out does NOT fire here"
+    assert _pos("i") == bindings["i"], "sum and binding positions collapse onto one another"
+
+    # --- the guard: B-3 declines the diagonal reference ----------------------
+    ir = ModelIR()
+    ir.sets["i"] = SetDef(name="i", members=["a", "b"])
+    ir.aliases["j"] = AliasDef(name="j", target="i")
+
+    def _found(indices):
+        ref = VarRef(name="X", indices=indices)
+        return {
+            "sum_node": Sum(index_sets=("i",), body=ref, condition=None),
+            "sum_idx": "i",
+            "var_ref": ref,
+            "sign": 1.0,
+        }
+
+    assert (
+        _build_pattern_c_dim_mismatch_term(
+            _found(("i", "i")), "X", ("i", "j"), ("i",), "nu_X", ir, ("j",)
+        )
+        is None
+    ), "a repeated-symbol reference must fall back to the standard path"
+
+    # --- negative control: case-only repeats are the same symbol in GAMS -----
+    assert (
+        _build_pattern_c_dim_mismatch_term(
+            _found(("i", "I")), "X", ("i", "j"), ("i",), "nu_X", ir, ("j",)
+        )
+        is None
+    ), "GAMS identifiers are case-insensitive, so ('i','I') is a repeat"
+
+    # --- negative control: a DISTINCT-symbol reference is NOT declined here ---
+    # It may still return None further down for unrelated reasons, but it must
+    # get past this guard — otherwise the guard would disable B-3 entirely and
+    # every assertion above would pass vacuously.
+    import src.kkt.stationarity as st
+
+    reached = {}
+    real_pos_caller = st._b3_multiplier_ref_is_valid
+
+    def _spy(*a, **k):
+        reached["yes"] = True
+        return real_pos_caller(*a, **k)
+
+    st._b3_multiplier_ref_is_valid = _spy
+    try:
+        _build_pattern_c_dim_mismatch_term(
+            _found(("i", "j")), "X", ("i", "j"), ("i",), "nu_X", ir, ("j",)
+        )
+    finally:
+        st._b3_multiplier_ref_is_valid = real_pos_caller
+    assert reached.get("yes"), "a distinct-symbol reference must pass the repeat guard"
+
+
+@pytest.mark.unit
+def test_b3_declines_a_repeated_EQ_DOMAIN(tmp_path):
+    """Sprint 39 P5 (PR #1742 review) — the SECOND collapse, in `bindings`.
+
+    The Day-11 guard checked only `src_indices`. `bindings` is a DICT keyed by
+    the eq-domain symbol, so `eq_domain=("i","i")` writes the same key twice:
+    `len(bindings)` stays 1, the `!= 1` bail-out does not fire, and B-3 proceeds
+    as though the equation had a single index. The two lists collapse
+    INDEPENDENTLY, so one check cannot cover both.
+
+    ⚠⚠ AND THE TWO CHECKS MUST STAY SEPARATE. `src_indices` and `eq_domain`
+    legitimately SHARE symbols — that overlap is B-3's whole premise, the
+    equation index binding one coordinate of a higher-dimensional variable.
+    cesam2 is `src_indices=("i","j")` with `eq_domain=("i",)`; concatenated that
+    is `["i","j","i"]`, so a MERGED repeat test rejects the case the builder
+    exists to serve. Asserted below, because "do not merge these" is exactly the
+    kind of constraint a later reader tidies away.
+    """
+    from src.ir.ast import Sum, VarRef
+    from src.ir.model_ir import ModelIR
+    from src.ir.symbols import AliasDef, SetDef
+    from src.kkt.stationarity import _build_pattern_c_dim_mismatch_term
+
+    ir = ModelIR()
+    ir.sets["i"] = SetDef(name="i", members=["a", "b"])
+    ir.aliases["j"] = AliasDef(name="j", target="i")
+
+    def _found(indices):
+        ref = VarRef(name="X", indices=indices)
+        return {
+            "sum_node": Sum(index_sets=("i",), body=ref, condition=None),
+            "sum_idx": "i",
+            "var_ref": ref,
+            "sign": 1.0,
+        }
+
+    # fail-before: the dict-keyed collapse, in the exact form the loop computes.
+    bindings = {}
+    for eqi in ("i", "i"):
+        bindings[eqi] = 0
+    assert len(bindings) == 1, "the !=1 bail-out does NOT fire on a repeated eq_domain"
+
+    # ⚠ THE VARIABLE MUST BE 3-D HERE, and this is not incidental. The builder
+    # opens with `0 < len(eq_domain) < len(var_domain)`, so a 2-symbol eq_domain
+    # against a 2-D variable returns None on the PRECONDITION and the test
+    # proves nothing. A first revision did exactly that and the mutant survived
+    # — removing the guard entirely still passed (PR #1742 review). With a 3-D
+    # variable the precondition holds (0 < 2 < 3) and the guard is the only
+    # thing that can decline.
+    ir.aliases["k"] = AliasDef(name="k", target="i")
+
+    def _found3(indices):
+        ref = VarRef(name="X3", indices=indices)
+        return {
+            "sum_node": Sum(index_sets=("i",), body=ref, condition=None),
+            "sum_idx": "i",
+            "var_ref": ref,
+            "sign": 1.0,
+        }
+
+    assert 0 < len(("i", "i")) < len(("i", "j", "k")), "precondition must HOLD, or this is vacuous"
+
+    # A DISTINCT reference with a REPEATED eq_domain must be declined, which the
+    # src_indices guard alone cannot do.
+    assert (
+        _build_pattern_c_dim_mismatch_term(
+            _found3(("i", "j", "k")), "X3", ("i", "j", "k"), ("i", "i"), "nu_X3", ir, ("j",)
+        )
+        is None
+    ), "a repeated eq_domain must fall back to the standard path"
+
+    # Case-insensitively, like GAMS.
+    assert (
+        _build_pattern_c_dim_mismatch_term(
+            _found3(("i", "j", "k")), "X3", ("i", "j", "k"), ("i", "I"), "nu_X3", ir, ("j",)
+        )
+        is None
+    )
+
+    # ⚠ THE ANTI-MERGE CONTROL: cesam2's real shape — indices and eq_domain
+    # SHARE `i` — must still get PAST both guards. A merged check fails here.
+    import src.kkt.stationarity as st
+
+    reached = {}
+    real = st._b3_multiplier_ref_is_valid
+
+    def _spy(*a, **k):
+        reached["yes"] = True
+        return real(*a, **k)
+
+    st._b3_multiplier_ref_is_valid = _spy
+    try:
+        _build_pattern_c_dim_mismatch_term(
+            _found(("i", "j")), "X", ("i", "j"), ("i",), "nu_X", ir, ("j",)
+        )
+    finally:
+        st._b3_multiplier_ref_is_valid = real
+    assert reached.get("yes"), (
+        "the shared `i` between src_indices and eq_domain is LEGITIMATE; a merged "
+        "repeat check would reject cesam2's own shape"
+    )
+
+
+@pytest.mark.unit
+def test_b3_is_never_reached_by_either_repeat_shape(tmp_path, monkeypatch):
+    """⚠ Caller-level ORDERING and REACHABILITY, instrumented (PR #1742 review).
+
+    The review asked for an `_emit_mini_mcp` case proving the standard path
+    emits the fallback. Measuring showed the fallback is not reachable that way,
+    and an earlier revision of this test then **claimed two measured facts its
+    body did not establish** — `pytest.raises` alone passes just as happily if
+    B-3 runs FIRST and something later raises, and the fixture used `tsam(i,j)`,
+    which is not a diagonal reference at all. A docstring asserting a
+    measurement the test never takes is the exact defect this file exists to
+    catch, so both facts are now counted.
+
+    ⚠ NON-VACUITY FIRST. A call counter that reads 0 because it was never wired
+    is indistinguishable from a real zero, so the control asserts the spy fires
+    on cesam2 — B-3's own shape — before either zero is believed.
+    """
+    import src.kkt.stationarity as st
+
+    calls: dict[str, int] = {"n": 0}
+    real = st._build_pattern_c_dim_mismatch_term
+
+    def _spy(*a, **k):
+        calls["n"] += 1
+        return real(*a, **k)
+
+    monkeypatch.setattr(st, "_build_pattern_c_dim_mismatch_term", _spy)
+
+    # --- control: the spy REGISTERS on the shape B-3 exists to serve ---------
+    cesam2 = """\
+Set i / total, a1, a2 /;
+Set ii(i); ii(i) = yes; ii("total") = no;
+Alias (i,j), (ii,jj);
+Variable tsam(i,j), y(i), z;
+Equation colsum(jj), rowsum(ii), zdef;
+colsum(jj).. sum(ii, tsam(ii,jj)) =e= y(jj);
+rowsum(ii).. sum(jj, tsam(ii,jj)) =e= y(ii);
+zdef.. z =e= sum((i,j), tsam(i,j)) + sum(i, y(i));
+Model m / colsum, rowsum, zdef /;
+solve m using nlp minimizing z;
+"""
+    _emit_mini_mcp(tmp_path, cesam2, "mini_spy_control.gms")
+    assert calls["n"] > 0, "the spy never fired; the zero-call assertions below would be vacuous"
+
+    # --- fact 1: a repeated EQUATION domain raises BEFORE B-3 is consulted ---
+    # ⚠ The call COUNT is what pins the ordering. `pytest.raises` alone does not:
+    # it would pass unchanged if B-3 ran first and the raise came afterwards.
+    from src.ir.index_map import RepeatedDomainSymbolError
+
+    eq_domain_repeat = """\
+Set i / a1, a2 /;
+Alias (i,j);
+Variable tsam(i,j), y(i), z;
+Equation diagsum(i,i), zdef;
+diagsum(i,i).. sum(j, tsam(i,j)) =e= y(i);
+zdef.. z =e= sum((i,j), tsam(i,j)) + sum(i, y(i));
+Model m / diagsum, zdef /;
+solve m using nlp minimizing z;
+"""
+    calls["n"] = 0
+    with pytest.raises(RepeatedDomainSymbolError, match="repeats"):
+        _emit_mini_mcp(tmp_path, eq_domain_repeat, "mini_eq_domain_repeat.gms")
+    assert calls["n"] == 0, (
+        "the #1737 empty-equation guard must raise BEFORE B-3 is consulted; "
+        f"B-3 was called {calls['n']} time(s) first"
+    )
+
+    # --- fact 2: a DIAGONAL VARIABLE REFERENCE never reaches B-3 either ------
+    # ⚠ `tsam(i,i)`, an actual diagonal reference — the earlier fixture used
+    # `tsam(i,j)` and so exercised nothing of this claim. This one EMITS
+    # (no exception), so the zero is about reachability, not about an abort.
+    diagonal_reference = """\
+Set i / a1, a2 /;
+Alias (i,j);
+Variable tsam(i,j), y(i), z;
+Equation diagsum(j), zdef;
+diagsum(j).. sum(i, tsam(i,i)) =e= y(j);
+zdef.. z =e= sum((i,j), tsam(i,j)) + sum(i, y(i));
+Model m / diagsum, zdef /;
+solve m using nlp minimizing z;
+"""
+    calls["n"] = 0
+    _emit_mini_mcp(tmp_path, diagonal_reference, "mini_diagonal_ref.gms")
+    assert calls["n"] == 0, (
+        "a diagonal variable reference is expected never to reach B-3; it was "
+        f"called {calls['n']} time(s). If this fires, the guard's `src_indices` "
+        "half has become a LIVE path and needs corpus-level verification."
+    )
+
+
+@pytest.mark.unit
 def test_dual_dim_mismatch_binds_lower_dim_var(tmp_path):
     """Sprint 27 #1381 follow-up — the DUAL of B-3 (cesam2 ``stat_y``).
 
