@@ -47,6 +47,30 @@ path"*, which handles the general case correctly — so declining is both safe a
 better. **Do not "harmonise" these into one behaviour:** making B-3 raise would
 break models the standard path already emits correctly.
 
+### ⚠ Day 12: every site RELOCATED BY SYMBOL — the line numbers are now advisory
+
+Third measurement of the same rot (D8 **+293**, D11 again, D12 below), so the
+addresses are replaced with the owning FUNCTION, which survives the edits that
+move lines. `tests/unit/kkt/test_positional_domain_sites.py::test_every_catalogued_site_still_resolves_by_symbol`
+fails if any of these is renamed or removed.
+
+| survey ref | owning function | drift |
+|---|---|---|
+| `constraint_jacobian.py:1466/1474` | `_substitute_indices._sub_idx` | **0** |
+| `constraint_jacobian.py:1513/1536` | `_substitute_indices` | **0** |
+| `parser.py:5530` | `_handle_assign` | **0** |
+| `parser.py:6007/6086` | `_handle_aggregation` | **0** |
+| `derivative_rules.py:2362/2411` | `_diff_sum` | **0** |
+| `condition_eval.py:52` | `_try_dotted_key_lookup` | +1 |
+| `stationarity.py:1500` | `_remap_condition_to_domain` | **+344** |
+| `stationarity.py:3432` | `_apply_alias_offset_to_deriv` | **+346** |
+| `stationarity.py:4880` | `_match_subset_domain` | **+332** |
+| `stationarity.py:5140/5148` | `_compute_index_offset_key` | **+336** |
+| `stationarity.py:5770` | `_sigma_sp_domain_collision` | **+318** |
+
+**Only `stationarity.py` rots** — every other file's citations still land
+exactly. That is the file this sprint kept editing, which is the whole mechanism.
+
 ⚠ **The line numbers below have aged out for `stationarity.py`** — `:1091` now
 lands inside `_find_full_collapse_sum`. **Day 8 already measured this (+293
 lines, PR #1728) and said to relocate by content**; Day 11 hit it again while

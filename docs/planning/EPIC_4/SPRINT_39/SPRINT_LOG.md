@@ -739,3 +739,83 @@ pass so a future reader can tell a real pass from an unexercised one.
 Phase-0: `docs/issues/ISSUE_1741_pattern-c-b3-repeated-index-collapse.md`
 (gate verified locally: PASS, 1 emit file changed).
 
+
+## Day 12 — planned 2026-09-15, **executed 2026-09-16** · P5 finish · 3 h · + P10 · 6 h
+
+### P5 — the remaining 16 sites pinned, and the address rot ended structurally
+
+New `tests/unit/kkt/test_positional_domain_sites.py`. **No new guards** — the
+nine `ALREADY GUARDED` sites keep their three existing remedies; these tests
+assert those remedies *fire*.
+
+**⚠ THIRD MEASUREMENT OF THE SAME ROT, so the fix is structural this time.** All
+six `stationarity.py` citations had drifted **+318 to +346**; `condition_eval.py`
+by +1; **every other file's citations still land exactly**. Only the file this
+sprint kept editing rots, which is the mechanism rather than a coincidence.
+`test_every_catalogued_site_still_resolves_by_symbol` pins each site's **owning
+function**, which survives the edits that move lines — and fails if one is
+renamed. The survey carries the full relocation table.
+
+**⚠ THE REAL SAFETY PROPERTY OF THE FOUR `_substitute_indices` SITES, MEASURED —
+and it is sharper than the survey's wording.** The survey called them *"safe only
+because of a pass covering one of three sub-shapes"*. Instrumented:
+
+* the AD layer **does** reach `_substitute_indices` with a repeated
+  `symbolic_indices` — **12 calls** for a `rep(i,i)` model, carrying `('i','i')`
+  against concrete tuples including `('a1','a2')`, so the collapse is **real**
+  and the off-diagonal instances get a wrong Jacobian;
+* **nothing wrong reaches output**, because `emit_gams_mcp` runs
+  `detect_empty_equation_instances`, whose **#1737** guard refuses the repeated
+  equation domain.
+
+So **#1737 is load-bearing for the AD layer too**, not only for the two call
+sites it was written against. Narrowing it would silently unprotect these four.
+That is now a test, with the spy count asserted **> 0** first so the refusal is
+not believed against a dead probe.
+
+**⚠ TWO DEAD MUTANTS BEFORE THE `_sigma_sp_domain_collision` TEST DISCRIMINATED.**
+Weakening `len(canon_hits) < 2` to `< 1` survived, and so did replacing
+`any(vi < later …)` with `True`. Measuring showed why: **`< 2` is a FAST PATH,
+not the guard** — with a single hit, that hit *is* `later`, so the ordering test
+is already False and the function returns `None` either way. The load-bearing
+condition is the **ordering** one, and it needed a case where the exact
+declared-name match sits EARLIER than the canon-only hit. The `< 2` mutant still
+survives, correctly, and the docstring now says so rather than claiming a guard
+that is not there.
+
+### P10 — the six P2-flagged models TRIAGED; **two classes, not one**
+
+`docs/planning/EPIC_4/SPRINT_39/P2_VIOLATION_TRIAGE.md`. Every emitted line and
+source rule read from the tree.
+
+The survey's framing — *"manufactured unless the source declares it so"* — is
+**half right**:
+
+* **Class A, MANUFACTURED** (dinam, egypt, turkpow ×3): the source keeps the two
+  positions DISTINCT and emit substitutes one symbol into both. Evaluated against
+  each source rule, the guard becomes **identically FALSE** (dinam: `ord(te) >
+  ord(te)`, so the term is silently dropped) or **identically TRUE** (turkpow:
+  `ord(v) >= ord(v)`, so the guard is inert).
+* **Class B, DECLARATION-faithful but ASSIGNMENT-narrowing** (gussrisk,
+  nonsharp; shale is B-origin with an A effect): the source **declares** the
+  parameter over the same set twice — legal GAMS meaning the full product — and
+  emit reuses that domain in an assignment/guard, where GAMS reads the
+  **DIAGONAL**. The symbols are the source's own; the *context* is what changed.
+
+**Class A is a downstream symptom of P5's sites**, not an independent bug list —
+turkpow is the clearest case, where the KKT alias minter put `t__kkt1` into
+**both** coordinates of a `vs(t,v)` reference.
+
+**⚠ No fix lands, and the baseline stays at 9.** Each Class-A fix is a `src/kkt`
+or `src/ad` emit change needing its own Phase-0 doc, golden regen and a re-solve
+— and **egypt and shale are license-gated**, so their re-solve is unavailable.
+Landing a partial fix would move the ratchet while being unable to demonstrate
+correctness on two of the six. **0 bucket, no KPI movement**: all four Class-A
+models are `mcp_solve: failure` today for other reasons, so no reported figure
+moves. Carried to Sprint 40 as a classified work list.
+
+### Gate
+
+typecheck / format / lint clean · `make check-index-repeats` PASS (P2 **9 =
+baseline 9**) · `check-doc-figures` clean.
+
