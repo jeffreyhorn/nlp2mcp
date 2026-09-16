@@ -51,7 +51,7 @@ break models the standard path already emits correctly.
 
 Third measurement of the same rot (D8 **+293**, D11 again, D12 below), so the
 addresses are replaced with the owning FUNCTION, which survives the edits that
-move lines. `tests/unit/kkt/test_positional_domain_sites.py::test_every_catalogued_site_still_resolves_by_symbol`
+move lines. `tests/unit/kkt/test_positional_domain_sites.py::test_every_catalogued_site_still_resolves_by_symbol_AND_snippet`
 fails if any of these is renamed or removed.
 
 | survey ref | owning function | drift |

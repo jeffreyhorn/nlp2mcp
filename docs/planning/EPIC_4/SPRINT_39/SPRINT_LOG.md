@@ -752,7 +752,7 @@ assert those remedies *fire*.
 six `stationarity.py` citations had drifted **+318 to +346**; `condition_eval.py`
 by +1; **every other file's citations still land exactly**. Only the file this
 sprint kept editing rots, which is the mechanism rather than a coincidence.
-`test_every_catalogued_site_still_resolves_by_symbol` pins each site's **owning
+`test_every_catalogued_site_still_resolves_by_symbol_AND_snippet` pins each site's **owning
 function**, which survives the edits that move lines — and fails if one is
 renamed. The survey carries the full relocation table.
 
@@ -848,6 +848,24 @@ moves. Carried to Sprint 40 as a classified work list.
 
 ### Gate
 
-typecheck / format / lint clean · `make check-index-repeats` PASS (P2 **9 =
-baseline 9**) · `check-doc-figures` clean.
+typecheck / format / lint clean · **`make test` 5441 passed**, 10 skipped,
+1 xfailed · `make check-index-repeats` PASS (P2 **9 = baseline 9**) ·
+`check-doc-figures` clean.
+
+⚠ **The suite figure was missing from this section and stale where it did
+appear** (PR #1743 review). The reconciliation, since the arithmetic does not
+close against the Day-11 log at face value:
+
+| | |
+|---|---|
+| Day 11, **as logged** | 5431 — the figure at its first commit |
+| Day 11, **as merged** | **5433** — its own review rounds added 2 tests |
+| this module collects | **8** nodes |
+| Day 12 final | **5441** = 5433 + 8 ✅ |
+
+The **5438 (+5)** first recorded here was correct at the *first* Day-12 commit,
+when the module had 5 tests; three review rounds since then added 3 more and the
+figure was never re-derived. **A gate figure quoted from the commit that
+produced it goes stale the moment a review round adds a test** — the same
+banked-staleness shape as the floor-73 template on Day 11, in the same document.
 

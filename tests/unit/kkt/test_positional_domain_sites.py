@@ -1,9 +1,33 @@
 """Sprint 39 P5 (Day 12) — pins for the survey's `NEEDS A TEST` / `ALREADY GUARDED` sites.
 
-`POSITIONAL_DOMAIN_SURVEY.md` catalogues 21 symbol→position sites. Four
-`NEEDS A GUARD` ones were closed on Days 9 and 11 (#1737, #1741). This module
-pins the rest: the property each remaining site *relies on*, so that a future
-change which removes that property fails here rather than in a golden.
+`POSITIONAL_DOMAIN_SURVEY.md` catalogues **21** symbol→position sites:
+
+    21  =  4 `NEEDS A GUARD`   (closed Days 9 and 11 — #1737, #1741)
+         + 1 `NOT REACHABLE (in sample)`  (`emit_gams.py:795`, deliberately out)
+         + 7 `NEEDS A TEST`  +  9 `ALREADY GUARDED`   <-- the 16 THIS MODULE COVERS
+
+(PR #1743 review: an earlier docstring said "the rest", which read as 17 and
+silently absorbed the `NOT REACHABLE` site.)
+
+⚠⚠ **WHAT THIS MODULE ACTUALLY ASSERTS — two different strengths, and the
+difference matters** (PR #1743 review).
+
+* **BEHAVIOURAL** — the collapse or the remedy is executed and its result
+  asserted: all four `_substitute_indices` shapes, and
+  `_sigma_sp_domain_collision`'s ordering conjunct.
+* **STRUCTURAL ONLY** — the site's anchor text is asserted to exist inside its
+  owning function, nothing is executed: `_match_subset_domain`, both
+  `_compute_index_offset_key` passes, `_diff_sum`'s two sites, and the two
+  parser paths. **A guard at these sites could keep its anchor text while its
+  state update or early return is broken, and this module would not notice.**
+
+⚠ **Why those are structural, measured rather than assumed.** A probe of **nine**
+input shapes against `_match_subset_domain` and `_compute_index_offset_key` —
+subset/alias/canon-collision combinations — with the consume-once guards
+DISABLED produced **byte-identical results in every case**. A behavioural pin
+built on any of them would have asserted nothing while looking rigorous, which
+is the precise failure this PR hit three times already. Narrowing the claim is
+the honest outcome; a discriminating input for those two sites is open work.
 
 ⚠ **THE SURVEY CITES SITES BY LINE NUMBER AND THOSE NUMBERS ROT.** Measured at
 Day 12: all six `stationarity.py` citations had drifted **+318 to +346**, and
@@ -43,7 +67,13 @@ CATALOGUED_SITES: tuple[tuple[str, str, str, str], ...] = (
     (
         "src/ad/constraint_jacobian.py",
         "_substitute_indices",
-        "concrete_indices[symbolic_indices.index(idx)]",
+        # ⚠ `return ...` PREFIX IS LOAD-BEARING (PR #1743 review). The bare
+        # expression `concrete_indices[symbolic_indices.index(idx)]` appears
+        # TWICE — here in `_sub_idx` and again inside the `:1513` comprehension —
+        # and the resolver searches the whole function, so without the prefix
+        # this row was satisfied by the comprehension alone and `:1466` was not
+        # independently pinned.
+        "return concrete_indices[symbolic_indices.index(idx)]",
         "NEEDS A TEST",
     ),
     (
