@@ -58,7 +58,7 @@
 | `dinam` | `1$(ts2(te,te))` | `path_syntax_error` |
 | `egypt` | `1$(tranc(rp,rp))` | `path_solve_license` |
 | `shale` | `1$(ts(tf,tf))` | `path_solve_license` |
-| `turkpow` | `1$(vs(v,v))`, `1$(vs(t__kkt1,t__kkt1))` | `path_syntax_error` |
+| `turkpow` | `1$(vs(v,v))`, `1$(vs(t__kkt1,t__kkt1))`, `1$(vs(t__kkt2,t__kkt2))` | `path_syntax_error` |
 
 **This does not move any of them into the shortlist, and the reason matters.** Task 7 gives each a *named fix surface* — the repeated-index guard — but the defect it names is **not the one blocking the model**. `dinam` and `turkpow` fail to compile; `egypt` and `shale` never reach PATH. Fixing the P2 violation leaves all four exactly where they are.
 

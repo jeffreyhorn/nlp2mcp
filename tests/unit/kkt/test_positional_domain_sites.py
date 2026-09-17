@@ -266,10 +266,39 @@ def test_every_catalogued_site_still_resolves_by_symbol_AND_snippet():
 #: ⚠ Keep this as DATA, not prose: the hand-written table in the docstring was
 #: wrong twice (PR #1743 review), and the test below derives the complement so
 #: the two cannot disagree.
-BEHAVIOURALLY_PINNED: frozenset[tuple[str, str]] = frozenset(
+#: ⚠ KEYED BY (file, function, ANCHOR) — row-granular, like the catalog
+#: (PR #1743 review). Keyed by (file, function) alone, the strength test only
+#: checked COUNTS: swapping `_sigma_sp_domain_collision` for
+#: `_match_subset_domain` still gave 5 behavioural / 11 structural and passed,
+#: with the behavioural and structural rows silently exchanged. The partition
+#: is now pinned by IDENTITY, not by size.
+BEHAVIOURALLY_PINNED: frozenset[tuple[str, str, str]] = frozenset(
     {
-        ("src/ad/constraint_jacobian.py", "_substitute_indices"),
-        ("src/kkt/stationarity.py", "_sigma_sp_domain_collision"),
+        (
+            "src/ad/constraint_jacobian.py",
+            "_substitute_indices",
+            "return concrete_indices[symbolic_indices.index(idx)]",
+        ),
+        (
+            "src/ad/constraint_jacobian.py",
+            "_substitute_indices",
+            "concrete_indices[symbolic_indices.index(idx.base)]",
+        ),
+        (
+            "src/ad/constraint_jacobian.py",
+            "_substitute_indices",
+            "concrete_indices[symbolic_indices.index(expr.name)]",
+        ),
+        (
+            "src/ad/constraint_jacobian.py",
+            "_substitute_indices",
+            "free_concrete = tuple(",
+        ),
+        (
+            "src/kkt/stationarity.py",
+            "_sigma_sp_domain_collision",
+            "any(vi < later for vi in canon_hits)",
+        ),
     }
 )
 
@@ -323,8 +352,8 @@ def test_every_site_has_exactly_one_strength_class():
     what makes that unrepresentable: every row is behavioural or structural, and
     the counts are asserted so an added row cannot slip in unclassified.
     """
-    behavioural = [s for s in CATALOGUED_SITES if (s[0], s[1]) in BEHAVIOURALLY_PINNED]
-    structural = [s for s in CATALOGUED_SITES if (s[0], s[1]) not in BEHAVIOURALLY_PINNED]
+    behavioural = [s for s in CATALOGUED_SITES if s[:3] in BEHAVIOURALLY_PINNED]
+    structural = [s for s in CATALOGUED_SITES if s[:3] not in BEHAVIOURALLY_PINNED]
 
     assert len(behavioural) + len(structural) == len(CATALOGUED_SITES), "partition must cover all"
     assert not (set(behavioural) & set(structural)), "partition must be disjoint"
@@ -333,8 +362,22 @@ def test_every_site_has_exactly_one_strength_class():
 
     # ⚠ Every `BEHAVIOURALLY_PINNED` entry must actually appear in the catalog,
     # or a typo there would silently shrink the behavioural set to nothing.
-    catalogued = {(s[0], s[1]) for s in CATALOGUED_SITES}
+    catalogued = {s[:3] for s in CATALOGUED_SITES}
     assert BEHAVIOURALLY_PINNED <= catalogued, BEHAVIOURALLY_PINNED - catalogued
+
+    # ⚠ And pin the partition by IDENTITY, not just by size (PR #1743 review):
+    # a count of 5/11 is satisfied by swapping which rows are which.
+    assert {s[1] for s in behavioural} == {"_substitute_indices", "_sigma_sp_domain_collision"}
+    assert {s[1] for s in structural} == {
+        "_handle_aggregation",
+        "_try_dotted_key_lookup",
+        "_apply_alias_offset_to_deriv",
+        "_match_subset_domain",
+        "_compute_index_offset_key",
+        "_remap_condition_to_domain",
+        "_diff_sum",
+        "_handle_assign",
+    }
 
 
 @pytest.mark.unit

@@ -814,9 +814,13 @@ call satisfies while the other `.index(...)` shapes stop being exercised, no use
 as the integration pin for a **four-site** claim. The model now carries a lead
 (`x(i+1)`) and an inner `sum(j, …)` so **three** of the four shapes are reached
 (`str`, `IndexOffset`, `Sum/Prod`) and **each is asserted individually**. The
-fourth — bare `SymbolRef` — is **not reachable from a GAMS source** here (it
-needs an unresolved `Call` argument) and is covered by a direct unit test
-instead, **stated rather than folded into an aggregate count**.
+fourth — bare `SymbolRef` — is **simply not exercised by this model**, and is
+covered by a direct unit test instead, **stated rather than folded into an
+aggregate count**. ⚠ An earlier revision said it was *"not reachable from a
+GAMS source"* and needed an *"unresolved `Call` argument"* — **wrong**: the
+parser represents an ordinary `ord(i)` as a `Call` holding a `SymbolRef`, and
+`_substitute_indices` recurses into call arguments (PR #1743 review). The test
+module was corrected a round earlier; this mirror was not.
 
 ⚠ **The function name alone was not a sufficient address either.**
 `_handle_aggregation` owns **two** catalogued sites with **different verdicts**
@@ -858,9 +862,14 @@ source rule read from the tree.
 The survey's framing — *"manufactured unless the source declares it so"* — is
 **half right**:
 
-* **Class A, MANUFACTURED** (dinam, egypt, turkpow ×3): the source keeps the two
-  positions DISTINCT and emit substitutes one symbol into both, so **a
-  coordinate is lost and the reference reads the wrong cell**. Where the symbol
+* **Class A, MANUFACTURED** (dinam, egypt, turkpow ×3, **nonsharp ×1**): the
+  source keeps the two positions DISTINCT and emit substitutes one symbol into
+  both, so **a coordinate is lost and the reference reads the wrong cell**.
+  ⚠ nonsharp's `inter(col__kkt1,col__kkt1,stm)` carries a **KKT-minted alias in
+  both coordinates** — the survey already records it as manufactured — so it is
+  Class A even though the model's *other* reference is declaration-derived. An
+  earlier revision put the whole model in Class B and hid this effect
+  (PR #1743 review). Where the symbol
   is an `ord`-style relation that cell is tautological — **identically FALSE**
   (dinam: `ord(te) > ord(te)`, the term is silently dropped) or **identically
   TRUE** (turkpow: `ord(v) >= ord(v)`, the guard is inert). Where it is a data
@@ -868,7 +877,8 @@ The survey's framing — *"manufactured unless the source declares it so"* — i
   `tranc(r,rp)`). ⚠ An earlier revision of this entry gave only the tautological
   symptom, which its own egypt row contradicted (PR #1743 review).
 * **Class B, DECLARATION-faithful but ASSIGNMENT-narrowing** (gussrisk,
-  nonsharp; shale is B-origin with an A effect): the source **declares** the
+  **nonsharp ×1** — its `inter(col,col,stm)` reference only; shale is B-origin
+  with an A effect): the source **declares** the
   SYMBOL — a **set OR a parameter** — over the same set twice. ⚠ Measured, and
   not a quibble: `gussrisk`'s `covar` is declared under `Parameter` but
   `nonsharp`'s `inter` is declared under **`Set`**, so naming only parameters is
@@ -908,7 +918,7 @@ close against the Day-11 log at face value:
 | this module collects | **10** nodes |
 | Day 12 final | **5443** = 5433 + 10 ✅ measured |
 
-⚠ **This reconciliation has now been re-derived TWICE.** The **5438 (+5)** first
+⚠ **This reconciliation has now been re-derived THREE times** (5438 → 5441 → 5443; an earlier revision said *twice* while listing three figures — PR #1743 review). The **5438 (+5)** first
 recorded was correct at the *first* Day-12 commit, when the module had 5 tests.
 The **5441 = 5433 + 8** that replaced it was correct until the very round that
 wrote it added `test_every_site_has_exactly_one_strength_class` — a **9th** node
