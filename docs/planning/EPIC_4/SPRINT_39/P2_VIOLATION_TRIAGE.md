@@ -46,7 +46,7 @@ definition would have made `egypt` look misclassified when it is not.
 | **egypt** ⚠ | `tranc(rp,rp)` | `Table tranc(r,rp)` | reads the **wrong coordinate** (`r` replaced by `rp`) | **A** |
 | **turkpow** | `vs(v,v)` | declared `vs(t,v)`; `vs(t,v) = (ord(t) >= ord(v))` | `ord(v) >= ord(v)` → **identically TRUE** | **A** |
 | **turkpow** | `vs(t__kkt1,t__kkt1)`, `vs(t__kkt2,t__kkt2)` | same | **identically TRUE** — and the minted alias went into **both** positions. ⚠ Both are in `index_repeat_p2_baseline.json`; the survey's own counting paragraph lists three turkpow violations, but its table and the backlog listed only `t__kkt1` — corrected there (PR #1743 review) | **A** |
-| **shale** ⚠ | `ts(tf,tf)` (×2, both in guards on `:344`) | declared `ts(tf,tf)`; `ts(tf,tfp)$(ord(tfp) < ord(tf)) = 1` | `ord(tf) < ord(tf)` → **identically FALSE** | **B origin, A effect** |
+| **shale** ⚠ | `ts(tf,tf)` — **one** P2 fingerprint (two textual occurrences on `:344`, but the checker de-duplicates identical references with `sorted(set(out))`, and the baseline records one) | declared `ts(tf,tf)`; `ts(tf,tfp)$(ord(tfp) < ord(tf)) = 1` | `ord(tf) < ord(tf)` → **identically FALSE** | **B origin, A effect** |
 | **gussrisk** | `covar(stocks,stocks)` | declared `covar(stocks,stocks)`; `covar(s,sp) = …` | NA-cleanup covers only the **diagonal** | **B** |
 | **nonsharp** | `inter(col,col,stm)` | declared `Set inter(col,col,stm)`; `inter(colp,col,stm) = no` | narrows to the **diagonal** of `col × col` | **B** |
 | **nonsharp** | `inter(col__kkt1,col__kkt1,stm)` | same declaration — but **`col__kkt1` is a KKT-minted alias**, and it landed in **both** coordinates | the diagonal of a set the source never names this way — same mechanism as turkpow's `vs(t__kkt1,t__kkt1)` | **A** |
@@ -75,6 +75,13 @@ A reference untouched.
 
 **Revised tallies:** Class A — dinam, egypt, turkpow ×3, **nonsharp ×1**;
 Class B — gussrisk, **nonsharp ×1**, shale (B origin, A effect).
+
+⚠ **Count P2 FINGERPRINTS, not textual occurrences** (PR #1743 review). The
+checker de-duplicates identical references per golden (`sorted(set(out))`), so
+the ratchet's **9** is: dinam 1 · egypt 1 · turkpow 3 · shale **1** · nonsharp 2 ·
+gussrisk 1 = **9**. An earlier revision of the shale row said *×2* — two textual
+occurrences of the same reference — which made the table sum to **10** against a
+documented ratchet of 9. Two occurrences of one fingerprint are one violation.
 
 ## Why this matters, stated as effect rather than as a lint
 

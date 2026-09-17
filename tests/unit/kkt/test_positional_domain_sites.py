@@ -402,6 +402,35 @@ def test_the_catalog_covers_both_verdicts_and_the_shared_function():
     assert verdicts.count("ALREADY GUARDED") == 9, verdicts
     assert len(CATALOGUED_SITES) == 16, "the survey's remaining set is 16 sites"
 
+    # ⚠ AND BY IDENTITY, NOT ONLY BY COUNT (PR #1743 review). 7/9 is satisfied
+    # by any two rows swapping verdicts — `_handle_assign` and
+    # `_try_dotted_key_lookup` exchanged, for instance — which would silently
+    # claim an existing remedy where none is verified. A count is invariant
+    # under permutation; the survey's classification is not.
+    by_verdict = {"NEEDS A TEST": set(), "ALREADY GUARDED": set()}
+    for _r, f, s, v in CATALOGUED_SITES:
+        by_verdict[v].add((f, s))
+    assert by_verdict["NEEDS A TEST"] == {
+        ("_substitute_indices", "return concrete_indices[symbolic_indices.index(idx)]"),
+        ("_substitute_indices", "concrete_indices[symbolic_indices.index(idx.base)]"),
+        ("_substitute_indices", "concrete_indices[symbolic_indices.index(expr.name)]"),
+        ("_substitute_indices", "free_concrete = tuple("),
+        ("_handle_aggregation", "expanded_indices.index(child_idxs[0])"),
+        ("_try_dotted_key_lookup", 'list(domain).index("*")'),
+        ("_apply_alias_offset_to_deriv", "declared_domain[pi]"),
+    }, by_verdict["NEEDS A TEST"]
+    assert by_verdict["ALREADY GUARDED"] == {
+        ("_match_subset_domain", "if k in used_var_positions:"),
+        ("_compute_index_offset_key", "if vi not in used_var and eq_canons[ei] == var_canons[vi]:"),
+        ("_compute_index_offset_key", "if vi not in used_var and eq_roots[ei] == var_roots[vi]:"),
+        ("_remap_condition_to_domain", "set_declared_domain[pos]"),
+        ("_sigma_sp_domain_collision", "any(vi < later for vi in canon_hits)"),
+        ("_diff_sum", "enumerate(wrt_indices)"),
+        ("_diff_sum", "if sym_j in seen_sym:"),
+        ("_handle_assign", "domain_name = param.domain[pos]"),
+        ("_handle_aggregation", "for pos, dname in enumerate(domain_indices):"),
+    }, by_verdict["ALREADY GUARDED"]
+
     # ⚠ Every anchor must be UNIQUE, or two rows collapse again.
     anchors = [(r, f, s) for r, f, s, _v in CATALOGUED_SITES]
     assert len(anchors) == len(set(anchors)), (
@@ -526,21 +555,27 @@ def test_the_AD_collapse_is_reachable_but_EMIT_refuses_it(tmp_path, monkeypatch)
     # only "some repeated call happened with distinct concrete values", which one
     # call could satisfy while the other `.index(...)` shapes stopped being
     # exercised entirely — no use as the integration pin for a FOUR-site claim.
-    shapes: set[str] = set()
+    # ⚠ Concrete tuples are kept PER SHAPE (PR #1743 review). A global "some call
+    # had distinct concrete values" is satisfied by the `str` calls alone, so an
+    # `IndexOffset` or `Sum/Prod` call could be reached only with identical
+    # values — `('a1','a1')`, where nothing is lost — and that shape would stop
+    # being a behavioural pin for the collapse while the assertion stayed green.
+    by_shape: dict[str, list[tuple]] = {}
     repeated: list[tuple] = []
     real = cj._substitute_indices
 
     def _spy(expr, symbolic_indices, concrete_indices):
         sym = [s.lower() for s in symbolic_indices if isinstance(s, str)]
         if len(sym) != len(set(sym)):
-            repeated.append((tuple(symbolic_indices), tuple(concrete_indices)))
+            call = (tuple(symbolic_indices), tuple(concrete_indices))
+            repeated.append(call)
             if isinstance(expr, (VarRef, ParamRef)):
                 if any(isinstance(i, IndexOffset) for i in expr.indices):
-                    shapes.add("IndexOffset")
+                    by_shape.setdefault("IndexOffset", []).append(call)
                 if any(isinstance(i, str) for i in expr.indices):
-                    shapes.add("str")
+                    by_shape.setdefault("str", []).append(call)
             elif isinstance(expr, (Sum, Prod)):
-                shapes.add("Sum/Prod")
+                by_shape.setdefault("Sum/Prod", []).append(call)
         return real(expr, symbolic_indices, concrete_indices)
 
     monkeypatch.setattr(cj, "_substitute_indices", _spy)
@@ -574,14 +609,9 @@ solve m using nlp minimizing z;
         "the AD layer was expected to REACH _substitute_indices with a repeated "
         "symbolic domain; 0 such calls means this test proves nothing"
     )
-    # …at least one carrying genuinely DISTINCT concrete values, which is where
-    # information is actually lost.
-    assert any(len(set(c)) > 1 for _s, c in repeated), (
-        "every repeated call had identical concrete values, so nothing was lost; "
-        f"got {sorted(set(repeated))}"
-    )
     # ⚠ …and EACH expected shape individually, so a regression confined to one
     # `.index(...)` site cannot hide behind the others.
+    shapes = set(by_shape)
     assert shapes == {"str", "IndexOffset", "Sum/Prod"}, (
         "the integration model must exercise each of these shapes with a repeated "
         f"domain; got {sorted(shapes)}. ⚠ The fourth site, bare `SymbolRef`, is "
@@ -592,9 +622,25 @@ solve m using nlp minimizing z;
         "call arguments). It is covered by the direct unit test above — stated "
         "rather than quietly folded into an aggregate count."
     )
+    # ⚠ …and EACH shape must carry at least one OFF-DIAGONAL concrete tuple —
+    # that is where information is actually lost. On the diagonal
+    # (`('a1','a1')`) the collapse is invisible, so a shape reached only that
+    # way pins nothing about it.
+    for shape, calls in by_shape.items():
+        assert any(len(set(c)) > 1 for _s, c in calls), (
+            f"shape {shape!r} was reached only with identical concrete values "
+            f"({sorted(set(calls))}); the collapse cannot be observed there"
+        )
 
     # The refusal: emit will not produce a model built on that collapse.
-    with pytest.raises(RepeatedDomainSymbolError, match="repeats"):
+    # ⚠ Match the DETECTOR's own context string, not the generic word "repeats"
+    # (PR #1743 review). Any repeated-domain path raises the same type with
+    # "repeats" in it, so the generic match could pass on a different guard and
+    # the claim that `detect_empty_equation_instances`'s #1737 guard is the
+    # load-bearing one would be unestablished. `assert_no_repeated_symbol` is
+    # called with `context=f"empty-equation scan of {eq_name!r}"`, and that
+    # prefix is unique to this call site.
+    with pytest.raises(RepeatedDomainSymbolError, match=r"^empty-equation scan of 'rep':"):
         emit_gams_mcp(kkt)
 
 
