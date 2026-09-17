@@ -745,8 +745,24 @@ Phase-0: `docs/issues/ISSUE_1741_pattern-c-b3-repeated-index-collapse.md`
 ### P5 — the remaining 16 sites pinned, and the address rot ended structurally
 
 New `tests/unit/kkt/test_positional_domain_sites.py`. **No new guards** — the
-nine `ALREADY GUARDED` sites keep their three existing remedies; these tests
-assert those remedies *fire*.
+nine `ALREADY GUARDED` sites keep their three existing remedies.
+
+⚠ **BUT THIS MODULE DOES NOT ASSERT MOST OF THEM FIRING, and an earlier revision
+of this entry said it did** (PR #1743 review). The honest split:
+
+| strength | sites |
+|---|---|
+| **BEHAVIOURAL** — executed, result asserted | the four `_substitute_indices` shapes; `_sigma_sp_domain_collision`'s ordering conjunct |
+| **STRUCTURAL ONLY** — anchor text asserted to exist, nothing executed | `_match_subset_domain`, both `_compute_index_offset_key` passes, `_diff_sum`'s two sites, the two parser paths |
+
+**A guard at a structural-only site could keep its anchor text while its state
+update or early return is broken, and this module would not notice.** That gap
+is deliberate and measured: a probe of **nine** input shapes against
+`_match_subset_domain` and `_compute_index_offset_key`, with the consume-once
+guards DISABLED, produced **byte-identical results in every case** — so a
+behavioural pin built on any of them would have asserted nothing while looking
+rigorous, the same failure this sprint hit three times. Finding a discriminating
+input for those two is **carried to Sprint 40**.
 
 **⚠ THIRD MEASUREMENT OF THE SAME ROT, so the fix is structural this time.** All
 six `stationarity.py` citations had drifted **+318 to +346**; `condition_eval.py`

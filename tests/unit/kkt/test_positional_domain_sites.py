@@ -39,7 +39,12 @@ that move lines.
 ⚠ **DO NOT RE-GUARD THE `ALREADY GUARDED` SITES.** Three independent remedies
 already exist (consume-once slot claiming, `seen_sym` duplicate bail-out, parser
 alias substitution) plus `_sigma_sp_domain_collision`'s own `>= 2` conjunct.
-These tests assert those remedies *fire*; they do not add new ones.
+⚠ **AND THIS MODULE DOES NOT ASSERT MOST OF THEM FIRING** (PR #1743 review — an
+earlier revision said *"these tests assert those remedies fire"*, which the
+strength table above already contradicted two paragraphs earlier). Only
+`_sigma_sp_domain_collision` is pinned **behaviourally**; the other **seven**
+guarded rows are **structural only**. The instruction not to re-guard them
+stands on the survey's measurement, not on coverage in this file.
 """
 
 from __future__ import annotations
@@ -121,7 +126,10 @@ CATALOGUED_SITES: tuple[tuple[str, str, str, str], ...] = (
         "NEEDS A TEST",
     ),
     # ------------------------------------------------------- ALREADY GUARDED
-    # ⚠ DO NOT add guards for these — assert the existing remedy fires.
+    # ⚠ DO NOT add guards for these — the survey measured the remedies as
+    # already complete. ⚠ Most rows below are STRUCTURAL-ONLY pins (anchor text,
+    # nothing executed); only `_sigma_sp_domain_collision` is asserted
+    # behaviourally. See the strength table in the module docstring.
     (
         "src/kkt/stationarity.py",
         "_match_subset_domain",
