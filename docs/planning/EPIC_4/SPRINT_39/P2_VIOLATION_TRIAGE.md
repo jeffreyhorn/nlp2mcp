@@ -51,8 +51,16 @@ definition would have made `egypt` look misclassified when it is not.
 | **nonsharp** | `inter(col,col,stm)` | declared `Set inter(col,col,stm)`; `inter(colp,col,stm) = no` | narrows to the **diagonal** of `col × col` | **B** |
 | **nonsharp** | `inter(col__kkt1,col__kkt1,stm)` | same declaration — but **`col__kkt1` is a KKT-minted alias**, and it landed in **both** coordinates | the diagonal of a set the source never names this way — same mechanism as turkpow's `vs(t__kkt1,t__kkt1)` | **A** |
 
-⚠ **`egypt` and `shale` are license-gated** (`path_solve_license`), so any fix is
-verifiable **by property and by golden, but NOT by a solve**.
+⚠ **THREE of the six have no solve to verify against, for two different reasons**
+(PR #1743 review — an earlier revision named only the first two):
+
+| model | why no solve | verifiable by |
+|---|---|---|
+| `egypt`, `shale` | **license-gated** (`path_solve_license`) — rejected at generation | property + golden |
+| `nonsharp` | **convexity-`excluded`, no `mcp_solve` record at all** — outside the 142 candidates | property + golden |
+
+So a Class-A fix on any of these three is verifiable **by property and by golden,
+but NOT by a solve**.
 
 ⚠ **`nonsharp` has TWO roots, and an earlier revision of this table collapsed
 them into Class B** (PR #1743 review). `inter(col,col,stm)` is the source's own
@@ -93,9 +101,12 @@ their own reach counts.
 
 **No fix lands in Sprint 39, and the P2 baseline is unchanged at 9.** Each Class-A
 fix is an emit change in `src/kkt` or `src/ad`, so each needs its own Phase-0
-acceptance doc, golden regeneration and a re-solve — and for `egypt`/`shale` the
-re-solve is unavailable. Landing a partial fix would move the ratchet without
-being able to demonstrate correctness on two of the six.
+acceptance doc, golden regeneration and a re-solve — and for `egypt`, `shale`
+**and `nonsharp`** the re-solve is unavailable (the first two license-gated, the
+third convexity-excluded with no solve record). Landing a partial fix would move
+the ratchet without being able to demonstrate correctness on **three** of the
+six. ⚠ An earlier revision said *two*, written before `nonsharp`'s KKT-minted
+reference was reclassified to Class A (PR #1743 review).
 
 **Carried to Sprint 40** as a classified work list: Class A first (`turkpow` is
 the most tractable — the alias-minting site is named), Class B second (it needs

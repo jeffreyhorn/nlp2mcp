@@ -893,13 +893,27 @@ turkpow is the clearest case, where the KKT alias minter put `t__kkt1` into
 
 **⚠ No fix lands, and the baseline stays at 9.** Each Class-A fix is a `src/kkt`
 or `src/ad` emit change needing its own Phase-0 doc, golden regen and a re-solve
-— and **egypt and shale are license-gated**, so their re-solve is unavailable.
-Landing a partial fix would move the ratchet while being unable to demonstrate
-correctness on two of the six. **0 bucket, no KPI movement**: all four models
-**with a Class-A effect** are `mcp_solve: failure` today for other reasons — ⚠
-*with a Class-A effect*, not *Class-A models*: the triage classifies **shale** as
-**B origin, A effect** (PR #1743 review) — so no reported figure
-moves. Carried to Sprint 40 as a classified work list.
+— and for **three** of the six the re-solve is unavailable: **egypt and shale
+are license-gated**, and **nonsharp is convexity-excluded with no `mcp_solve`
+record at all** (⚠ an earlier revision said *two*, written before nonsharp's
+KKT-minted reference was reclassified to Class A — PR #1743 review). Landing a
+partial fix would move the ratchet while being unable to demonstrate correctness
+on three of the six.
+
+**0 bucket, no KPI movement**, stated precisely because the Class-A set changed:
+
+| model | Class-A effect | today's status | moves a figure? |
+|---|---|---|---|
+| dinam, turkpow | yes | `mcp_solve: failure` (`path_syntax_error`) | no |
+| egypt, shale | yes (shale: B origin) | `mcp_solve: failure` (`path_solve_license`) | no |
+| **nonsharp** | yes (×1 of its 2 refs) | **no `mcp_solve` record** — convexity-`excluded`, outside the 142 | no |
+
+So **four** Class-A-effect models are `mcp_solve: failure` and a **fifth** has no
+solve record; none contributes to a reported figure. ⚠ *"all four models with a
+Class-A effect are `mcp_solve: failure`"* — the earlier wording — became false
+the moment nonsharp gained a Class-A reference, and the gate evidence has to
+name the no-solve exception rather than absorb it into "failure". Carried to
+Sprint 40 as a classified work list.
 
 ### Gate
 
