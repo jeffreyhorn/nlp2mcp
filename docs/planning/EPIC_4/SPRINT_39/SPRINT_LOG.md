@@ -861,7 +861,11 @@ The survey's framing — *"manufactured unless the source declares it so"* — i
   `ord(v) >= ord(v)`, so the guard is inert).
 * **Class B, DECLARATION-faithful but ASSIGNMENT-narrowing** (gussrisk,
   nonsharp; shale is B-origin with an A effect): the source **declares** the
-  parameter over the same set twice — legal GAMS meaning the full product — and
+  SYMBOL — a **set OR a parameter** — over the same set twice. ⚠ Measured, and
+  not a quibble: `gussrisk`'s `covar` is declared under `Parameter` but
+  `nonsharp`'s `inter` is declared under **`Set`**, so naming only parameters is
+  wrong for half the class and sends a reader to the wrong declaration block
+  (PR #1743 review). That is legal GAMS meaning the full product — and
   emit reuses that domain in an assignment/guard, where GAMS reads the
   **DIAGONAL**. The symbols are the source's own; the *context* is what changed.
 
