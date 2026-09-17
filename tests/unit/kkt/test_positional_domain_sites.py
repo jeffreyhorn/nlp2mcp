@@ -12,14 +12,27 @@ silently absorbed the `NOT REACHABLE` site.)
 ⚠⚠ **WHAT THIS MODULE ACTUALLY ASSERTS — two different strengths, and the
 difference matters** (PR #1743 review).
 
-* **BEHAVIOURAL** — the collapse or the remedy is executed and its result
+* **BEHAVIOURAL (5)** — the collapse or the remedy is executed and its result
   asserted: all four `_substitute_indices` shapes, and
   `_sigma_sp_domain_collision`'s ordering conjunct.
-* **STRUCTURAL ONLY** — the site's anchor text is asserted to exist inside its
-  owning function, nothing is executed: `_match_subset_domain`, both
-  `_compute_index_offset_key` passes, `_diff_sum`'s two sites, and the two
-  parser paths. **A guard at these sites could keep its anchor text while its
-  state update or early return is broken, and this module would not notice.**
+* **STRUCTURAL ONLY (11)** — the site's anchor text is asserted to exist inside
+  its owning function, nothing is executed: `_handle_aggregation`'s
+  `expanded_indices.index(...)`, `_try_dotted_key_lookup`,
+  `_apply_alias_offset_to_deriv`, `_match_subset_domain`, both
+  `_compute_index_offset_key` passes, `_remap_condition_to_domain`, `_diff_sum`'s
+  two sites, `_handle_assign`, and `_handle_aggregation`'s `seen_domain` path.
+  **A guard at these sites could keep its anchor text while its state update or
+  early return is broken, and this module would not notice.**
+
+⚠ **THIS TABLE WAS WRONG TWICE, so it is now DERIVED AND TESTED** (PR #1743
+review). An earlier revision listed **7** structural sites and omitted **four** —
+`_remap_condition_to_domain`, the `NEEDS A TEST` `_handle_aggregation` row,
+`_try_dotted_key_lookup` and `_apply_alias_offset_to_deriv` — so two catalogued
+sites fell outside **both** categories and the reader could not tell. The review
+named two of the four; the other two surfaced only by computing the complement.
+`test_every_site_has_exactly_one_strength_class` now asserts the partition is
+**exhaustive and disjoint** at **5 / 11**, so a hand-written list can no longer
+drift from the catalog.
 
 ⚠ **Why those are structural, measured rather than assumed.** A probe of **nine**
 input shapes against `_match_subset_domain` and `_compute_index_offset_key` —
@@ -237,6 +250,48 @@ def test_every_catalogued_site_still_resolves_by_symbol_AND_snippet():
         if snippet not in body:
             problems.append(f"{rel}::{func} — anchor absent: {snippet!r} ({verdict})")
     assert not problems, "catalogued site(s) no longer resolve:\n  " + "\n  ".join(problems)
+
+
+#: The sites this module pins BEHAVIOURALLY — executed, result asserted.
+#: Everything else in `CATALOGUED_SITES` is STRUCTURAL ONLY (anchor text).
+#: ⚠ Keep this as DATA, not prose: the hand-written table in the docstring was
+#: wrong twice (PR #1743 review), and the test below derives the complement so
+#: the two cannot disagree.
+BEHAVIOURALLY_PINNED: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("src/ad/constraint_jacobian.py", "_substitute_indices"),
+        ("src/kkt/stationarity.py", "_sigma_sp_domain_collision"),
+    }
+)
+
+
+@pytest.mark.unit
+def test_every_site_has_exactly_one_strength_class():
+    """⚠ The partition must be EXHAUSTIVE and DISJOINT (PR #1743 review).
+
+    Two catalogued sites — `_try_dotted_key_lookup` and
+    `_apply_alias_offset_to_deriv` — fell outside **both** listed categories in
+    an earlier revision, so a reader could not tell whether they were pinned. So
+    did `_remap_condition_to_domain` and the `NEEDS A TEST` `_handle_aggregation`
+    row, which the review did not name and which surfaced only by computing the
+    complement.
+
+    Deriving the split from `CATALOGUED_SITES` rather than listing it by hand is
+    what makes that unrepresentable: every row is behavioural or structural, and
+    the counts are asserted so an added row cannot slip in unclassified.
+    """
+    behavioural = [s for s in CATALOGUED_SITES if (s[0], s[1]) in BEHAVIOURALLY_PINNED]
+    structural = [s for s in CATALOGUED_SITES if (s[0], s[1]) not in BEHAVIOURALLY_PINNED]
+
+    assert len(behavioural) + len(structural) == len(CATALOGUED_SITES), "partition must cover all"
+    assert not (set(behavioural) & set(structural)), "partition must be disjoint"
+    assert len(behavioural) == 5, [s[1] for s in behavioural]
+    assert len(structural) == 11, [s[1] for s in structural]
+
+    # ⚠ Every `BEHAVIOURALLY_PINNED` entry must actually appear in the catalog,
+    # or a typo there would silently shrink the behavioural set to nothing.
+    catalogued = {(s[0], s[1]) for s in CATALOGUED_SITES}
+    assert BEHAVIOURALLY_PINNED <= catalogued, BEHAVIOURALLY_PINNED - catalogued
 
 
 @pytest.mark.unit

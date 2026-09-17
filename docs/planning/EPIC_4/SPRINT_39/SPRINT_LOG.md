@@ -750,10 +750,25 @@ nine `ALREADY GUARDED` sites keep their three existing remedies.
 ⚠ **BUT THIS MODULE DOES NOT ASSERT MOST OF THEM FIRING, and an earlier revision
 of this entry said it did** (PR #1743 review). The honest split:
 
-| strength | sites |
-|---|---|
-| **BEHAVIOURAL** — executed, result asserted | the four `_substitute_indices` shapes; `_sigma_sp_domain_collision`'s ordering conjunct |
-| **STRUCTURAL ONLY** — anchor text asserted to exist, nothing executed | `_match_subset_domain`, both `_compute_index_offset_key` passes, `_diff_sum`'s two sites, the two parser paths |
+| strength | count | sites |
+|---|---|---|
+| **BEHAVIOURAL** — executed, result asserted | **5** | the four `_substitute_indices` shapes; `_sigma_sp_domain_collision`'s ordering conjunct |
+| **STRUCTURAL ONLY** — anchor text asserted to exist, nothing executed | **11** | `_handle_aggregation`'s `expanded_indices.index(...)`, `_try_dotted_key_lookup`, `_apply_alias_offset_to_deriv`, `_match_subset_domain`, both `_compute_index_offset_key` passes, `_remap_condition_to_domain`, `_diff_sum`'s two sites, `_handle_assign`, `_handle_aggregation`'s `seen_domain` path |
+
+⚠ **This table was wrong twice.** An earlier revision listed **7** structural
+sites and omitted **four** — `_remap_condition_to_domain`, the `NEEDS A TEST`
+`_handle_aggregation` row, `_try_dotted_key_lookup` and
+`_apply_alias_offset_to_deriv` — leaving two catalogued sites outside **both**
+categories. The review named two of the four; the others surfaced only by
+computing the complement. The module now derives the split from
+`CATALOGUED_SITES` and `test_every_site_has_exactly_one_strength_class` asserts
+it is **exhaustive and disjoint at 5 / 11**, so a hand-written table can no
+longer drift from the catalog.
+
+⚠ **Note the classification cuts ACROSS the verdicts:** three `NEEDS A TEST`
+sites are structural-only, and one `ALREADY GUARDED` site
+(`_sigma_sp_domain_collision`) is behavioural. Verdict and pin-strength are
+independent axes.
 
 **A guard at a structural-only site could keep its anchor text while its state
 update or early return is broken, and this module would not notice.** That gap

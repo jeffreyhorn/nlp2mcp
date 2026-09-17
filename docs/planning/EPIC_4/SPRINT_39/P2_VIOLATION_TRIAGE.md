@@ -13,8 +13,16 @@ classes with different roots**, and the distinction decides the remedy.
 
 | class | what the source says | what the emit does | effect |
 |---|---|---|---|
-| **A — MANUFACTURED** | the parameter's domain keeps the two positions **DISTINCT** | emit substitutes the **same symbol into both** | the guard becomes identically **TRUE** or identically **FALSE** |
-| **B — DECLARATION-faithful, ASSIGNMENT-narrowing** | the parameter is **declared** over the same set twice (legal GAMS: the full product) | emit reuses that declaration domain in an **assignment / guard** context, where GAMS reads it as the **DIAGONAL** | the statement covers only the diagonal |
+| **A — MANUFACTURED** | the SYMBOL's domain keeps the two positions **DISTINCT** | emit substitutes the **same symbol into both** | the guard becomes identically **TRUE** or identically **FALSE** |
+| **B — DECLARATION-faithful, ASSIGNMENT-narrowing** | the SYMBOL — a **set OR a parameter** — is **declared** over the same set twice (legal GAMS: the full product) | emit reuses that declaration domain in an **assignment / guard** context, where GAMS reads it as the **DIAGONAL** | the statement covers only the diagonal |
+
+⚠ **"SYMBOL", not "parameter" — the class spans BOTH kinds** (PR #1743 review;
+an earlier revision of this table said *parameter* throughout). Measured in the
+sources: `gussrisk`'s `covar(stocks,stocks)` is declared under `Parameter`, but
+`nonsharp`'s `inter(col,col,stm)` is declared under **`Set`**. The
+declaration-vs-assignment context error is identical for both, so a definition
+naming only parameters is factually wrong for half the class and would send a
+reader looking in the wrong declaration block.
 
 **Class B is not a manufactured repeat** — the symbols came from the source's own
 declaration. It is a *context* error: the same text means "full product" in a

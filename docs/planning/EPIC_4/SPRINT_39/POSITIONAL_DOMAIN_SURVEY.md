@@ -68,8 +68,16 @@ fails if any of these is renamed or removed.
 | `stationarity.py:5140/5148` | `_compute_index_offset_key` | **+336** |
 | `stationarity.py:5770` | `_sigma_sp_domain_collision` | **+318** |
 
-**Only `stationarity.py` rots** — every other file's citations still land
-exactly. That is the file this sprint kept editing, which is the whole mechanism.
+**Only `stationarity.py` rots SUBSTANTIALLY** — `+318` to `+346`, enough that a
+reader following the citation lands inside an unrelated function.
+`condition_eval.py` drifted by **`+1`**, which the table above records and which
+still resolves by eye; every other file's citations land **exactly**.
+
+⚠ The earlier wording here said *"every other file's citations still land
+exactly"* with no qualifier, which **contradicted the `+1` row directly above it**
+(PR #1743 review). `stationarity.py` is the file this sprint kept editing, which
+is the mechanism — but "only it moved at all" was too strong a claim for the
+table to support.
 
 ⚠ **The line numbers below have aged out for `stationarity.py`** — `:1091` now
 lands inside `_find_full_collapse_sum`. **Day 8 already measured this (+293
