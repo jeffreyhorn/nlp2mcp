@@ -745,7 +745,11 @@ Phase-0: `docs/issues/ISSUE_1741_pattern-c-b3-repeated-index-collapse.md`
 ### P5 — the remaining 16 sites pinned, and the address rot ended structurally
 
 New `tests/unit/kkt/test_positional_domain_sites.py`. **No new guards** — the
-nine `ALREADY GUARDED` sites keep their three existing remedies.
+nine `ALREADY GUARDED` sites keep their existing remedies — **three shared
+mechanisms** (consume-once slot claiming, the `seen_sym` duplicate bail-out,
+parser alias substitution) **plus `_sigma_sp_domain_collision`'s own
+purpose-built detector**, which is a fourth and is not one of the three
+(PR #1743 review).
 
 ⚠ **BUT THIS MODULE DOES NOT ASSERT MOST OF THEM FIRING, and an earlier revision
 of this entry said it did** (PR #1743 review). The honest split:
@@ -855,10 +859,14 @@ The survey's framing — *"manufactured unless the source declares it so"* — i
 **half right**:
 
 * **Class A, MANUFACTURED** (dinam, egypt, turkpow ×3): the source keeps the two
-  positions DISTINCT and emit substitutes one symbol into both. Evaluated against
-  each source rule, the guard becomes **identically FALSE** (dinam: `ord(te) >
-  ord(te)`, so the term is silently dropped) or **identically TRUE** (turkpow:
-  `ord(v) >= ord(v)`, so the guard is inert).
+  positions DISTINCT and emit substitutes one symbol into both, so **a
+  coordinate is lost and the reference reads the wrong cell**. Where the symbol
+  is an `ord`-style relation that cell is tautological — **identically FALSE**
+  (dinam: `ord(te) > ord(te)`, the term is silently dropped) or **identically
+  TRUE** (turkpow: `ord(v) >= ord(v)`, the guard is inert). Where it is a data
+  table it is simply the **wrong lookup** (egypt's `tranc(rp,rp)` for
+  `tranc(r,rp)`). ⚠ An earlier revision of this entry gave only the tautological
+  symptom, which its own egypt row contradicted (PR #1743 review).
 * **Class B, DECLARATION-faithful but ASSIGNMENT-narrowing** (gussrisk,
   nonsharp; shale is B-origin with an A effect): the source **declares** the
   SYMBOL — a **set OR a parameter** — over the same set twice. ⚠ Measured, and
@@ -877,13 +885,15 @@ turkpow is the clearest case, where the KKT alias minter put `t__kkt1` into
 or `src/ad` emit change needing its own Phase-0 doc, golden regen and a re-solve
 — and **egypt and shale are license-gated**, so their re-solve is unavailable.
 Landing a partial fix would move the ratchet while being unable to demonstrate
-correctness on two of the six. **0 bucket, no KPI movement**: all four Class-A
-models are `mcp_solve: failure` today for other reasons, so no reported figure
+correctness on two of the six. **0 bucket, no KPI movement**: all four models
+**with a Class-A effect** are `mcp_solve: failure` today for other reasons — ⚠
+*with a Class-A effect*, not *Class-A models*: the triage classifies **shale** as
+**B origin, A effect** (PR #1743 review) — so no reported figure
 moves. Carried to Sprint 40 as a classified work list.
 
 ### Gate
 
-typecheck / format / lint clean · **`make test` 5441 passed**, 10 skipped,
+typecheck / format / lint clean · **`make test` 5443 passed**, 10 skipped,
 1 xfailed · `make check-index-repeats` PASS (P2 **9 = baseline 9**) ·
 `check-doc-figures` clean.
 
@@ -895,12 +905,20 @@ close against the Day-11 log at face value:
 |---|---|
 | Day 11, **as logged** | 5431 — the figure at its first commit |
 | Day 11, **as merged** | **5433** — its own review rounds added 2 tests |
-| this module collects | **8** nodes |
-| Day 12 final | **5441** = 5433 + 8 ✅ |
+| this module collects | **10** nodes |
+| Day 12 final | **5443** = 5433 + 10 ✅ measured |
 
-The **5438 (+5)** first recorded here was correct at the *first* Day-12 commit,
-when the module had 5 tests; three review rounds since then added 3 more and the
-figure was never re-derived. **A gate figure quoted from the commit that
+⚠ **This reconciliation has now been re-derived TWICE.** The **5438 (+5)** first
+recorded was correct at the *first* Day-12 commit, when the module had 5 tests.
+The **5441 = 5433 + 8** that replaced it was correct until the very round that
+wrote it added `test_every_site_has_exactly_one_strength_class` — a **9th** node
+— making the true figure **5442 = 5433 + 9** (PR #1743 review). The module now
+collects **10** nodes after this round's uniqueness guard, giving
+**5443 = 5433 + 10**, taken from the run rather than the arithmetic.
+
+**The rule this keeps proving: a node count written in the same round that adds
+a node is stale before the commit lands.** Derive it from `--collect-only` or
+the run itself, at the point of use. **A gate figure quoted from the commit that
 produced it goes stale the moment a review round adds a test** — the same
 banked-staleness shape as the floor-73 template on Day 11, in the same document.
 

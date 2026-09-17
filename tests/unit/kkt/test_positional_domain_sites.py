@@ -45,7 +45,7 @@ the honest outcome; a discriminating input for those two sites is open work.
 ⚠ **THE SURVEY CITES SITES BY LINE NUMBER AND THOSE NUMBERS ROT.** Measured at
 Day 12: all six `stationarity.py` citations had drifted **+318 to +346**, and
 `condition_eval.py` by +1. The same drift was recorded on Day 8 (+293) and hit
-again on Day 11. `test_every_catalogued_site_still_resolves_by_symbol` is the
+again on Day 11. `test_every_catalogued_site_still_resolves_by_symbol_AND_snippet` is the
 structural fix — it pins the OWNING FUNCTION of each site, which survives edits
 that move lines.
 
@@ -55,8 +55,9 @@ alias substitution) plus `_sigma_sp_domain_collision`'s own `>= 2` conjunct.
 ⚠ **AND THIS MODULE DOES NOT ASSERT MOST OF THEM FIRING** (PR #1743 review — an
 earlier revision said *"these tests assert those remedies fire"*, which the
 strength table above already contradicted two paragraphs earlier). Only
-`_sigma_sp_domain_collision` is pinned **behaviourally**; the other **seven**
-guarded rows are **structural only**. The instruction not to re-guard them
+`_sigma_sp_domain_collision` is pinned **behaviourally**; the other **eight**
+guarded rows are **structural only** (9 `ALREADY GUARDED` − 1 behavioural = 8;
+an earlier revision said seven — PR #1743 review). The instruction not to re-guard them
 stands on the survey's measurement, not on coverage in this file.
 """
 
@@ -146,7 +147,11 @@ CATALOGUED_SITES: tuple[tuple[str, str, str, str], ...] = (
     (
         "src/kkt/stationarity.py",
         "_match_subset_domain",
-        "used_var_positions",
+        # ⚠ The GUARD line, not the bare name: `used_var_positions` appears
+        # THREE times in `_match_subset_domain` (declaration, test, add), so the
+        # bare name pinned nothing. Found by sweeping after the review flagged
+        # the two other non-unique anchors.
+        "if k in used_var_positions:",
         "ALREADY GUARDED",
     ),
     (
@@ -196,7 +201,11 @@ CATALOGUED_SITES: tuple[tuple[str, str, str, str], ...] = (
     (
         "src/ir/parser.py",
         "_handle_assign",
-        "for pos, idx in enumerate(indices):",
+        # ⚠ NOT the loop header `for pos, idx in enumerate(indices):` — that
+        # appears TWICE in `_handle_assign` (`:5530` and `:5598`), so removing
+        # the alias-expansion loop would leave the pin passing on the later one
+        # (PR #1743 review).
+        "domain_name = param.domain[pos]",
         "ALREADY GUARDED",
     ),
     (
@@ -263,6 +272,40 @@ BEHAVIOURALLY_PINNED: frozenset[tuple[str, str]] = frozenset(
         ("src/kkt/stationarity.py", "_sigma_sp_domain_collision"),
     }
 )
+
+
+@pytest.mark.unit
+def test_every_anchor_occurs_EXACTLY_ONCE_in_its_function():
+    """⚠ An anchor that matches twice pins nothing (PR #1743 review).
+
+    The resolver searches the whole owning function, so a snippet appearing
+    more than once there is satisfied by the OTHER occurrence — removing the
+    catalogued site leaves the pin green. Measured: `for pos, idx in
+    enumerate(indices):` occurred **twice** in `_handle_assign`, and
+    `used_var_positions` **three times** in `_match_subset_domain` (declaration,
+    membership test, add).
+
+    ⚠ The existing uniqueness check compares ROWS to each other and structurally
+    cannot catch this — the duplicate is between a row and a different LINE of
+    its own function. This is the third distinct way an anchor has failed to
+    pin its site in this PR, so it is now a property rather than a review catch.
+    """
+    problems = []
+    for rel, func, snippet, _verdict in CATALOGUED_SITES:
+        source = (PROJECT_ROOT / rel).read_text(encoding="utf-8")
+        lines = source.splitlines()
+        owners = [
+            n
+            for n in ast.walk(ast.parse(source))
+            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == func
+        ]
+        body = "\n".join(
+            "\n".join(lines[o.lineno - 1 : (o.end_lineno or o.lineno)]) for o in owners
+        )
+        n = body.count(snippet)
+        if n != 1:
+            problems.append(f"{rel}::{func} — anchor occurs {n}x (need exactly 1): {snippet!r}")
+    assert not problems, "non-pinning anchor(s):\n  " + "\n  ".join(problems)
 
 
 @pytest.mark.unit
@@ -499,8 +542,11 @@ solve m using nlp minimizing z;
     assert shapes == {"str", "IndexOffset", "Sum/Prod"}, (
         "the integration model must exercise each of these shapes with a repeated "
         f"domain; got {sorted(shapes)}. ⚠ The fourth site, bare `SymbolRef`, is "
-        "NOT reachable from a GAMS source here (it needs an unresolved `Call` "
-        "argument) and is covered by the direct unit test above instead — stated "
+        "simply NOT EXERCISED BY THIS MODEL — not unreachable (PR #1743 review: "
+        "an earlier message claimed it needs an unresolved `Call` argument, which "
+        "is wrong; the parser represents ordinary calls such as `ord(i)` as a "
+        "`Call` holding a `SymbolRef`, and `_substitute_indices` recurses into "
+        "call arguments). It is covered by the direct unit test above — stated "
         "rather than quietly folded into an aggregate count."
     )
 

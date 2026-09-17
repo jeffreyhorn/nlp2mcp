@@ -13,7 +13,7 @@ classes with different roots**, and the distinction decides the remedy.
 
 | class | what the source says | what the emit does | effect |
 |---|---|---|---|
-| **A — MANUFACTURED** | the SYMBOL's domain keeps the two positions **DISTINCT** | emit substitutes the **same symbol into both** | the guard becomes identically **TRUE** or identically **FALSE** |
+| **A — MANUFACTURED** | the SYMBOL's domain keeps the two positions **DISTINCT** | emit substitutes the **same symbol into both** | **a coordinate is lost** — the reference reads the wrong cell. Often that cell is tautological, giving an identically **TRUE** or identically **FALSE** guard (turkpow, dinam); where the symbol is a data table it is simply the **wrong lookup** (egypt) |
 | **B — DECLARATION-faithful, ASSIGNMENT-narrowing** | the SYMBOL — a **set OR a parameter** — is **declared** over the same set twice (legal GAMS: the full product) | emit reuses that declaration domain in an **assignment / guard** context, where GAMS reads it as the **DIAGONAL** | the statement covers only the diagonal |
 
 ⚠ **"SYMBOL", not "parameter" — the class spans BOTH kinds** (PR #1743 review;
@@ -29,6 +29,14 @@ declaration. It is a *context* error: the same text means "full product" in a
 declaration and "diagonal" in an assignment. P2 cannot tell them apart from the
 emitted text alone, which is exactly the limitation recorded in
 `check_index_repeat_properties.py`'s module docstring.
+
+⚠ **CLASS A's EFFECT IS COORDINATE LOSS, NOT "TAUTOLOGICAL GUARD"** (PR #1743
+review — an earlier revision of the table above said the guard *always* becomes
+identically TRUE or FALSE, which its own `egypt` row contradicts). The tautology
+is what coordinate loss produces when the symbol is an `ord`-style relation;
+`egypt`'s `tranc` is a data **Table**, so the same substitution yields a wrong
+*value* rather than a constant guard. Stating the narrower symptom as the class
+definition would have made `egypt` look misclassified when it is not.
 
 ## Per-model findings
 
