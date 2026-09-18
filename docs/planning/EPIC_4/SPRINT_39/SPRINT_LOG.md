@@ -739,3 +739,216 @@ pass so a future reader can tell a real pass from an unexercised one.
 Phase-0: `docs/issues/ISSUE_1741_pattern-c-b3-repeated-index-collapse.md`
 (gate verified locally: PASS, 1 emit file changed).
 
+
+## Day 12 — planned 2026-09-15, **executed 2026-09-16** · P5 finish · 3 h · + P10 · 6 h
+
+### P5 — the remaining 16 sites pinned, and the address rot ended structurally
+
+New `tests/unit/kkt/test_positional_domain_sites.py`. **No new guards** — the
+nine `ALREADY GUARDED` sites keep their existing remedies — **three shared
+mechanisms** (consume-once slot claiming, the `seen_sym` duplicate bail-out,
+parser alias substitution) **plus `_sigma_sp_domain_collision`'s own
+purpose-built detector**, which is a fourth and is not one of the three
+(PR #1743 review).
+
+⚠ **BUT THIS MODULE DOES NOT ASSERT MOST OF THEM FIRING, and an earlier revision
+of this entry said it did** (PR #1743 review). The honest split:
+
+| strength | count | sites |
+|---|---|---|
+| **BEHAVIOURAL** — executed, result asserted | **5** | the four `_substitute_indices` shapes; `_sigma_sp_domain_collision`'s ordering conjunct |
+| **STRUCTURAL ONLY** — anchor text asserted to exist, nothing executed | **11** | `_handle_aggregation`'s `expanded_indices.index(...)`, `_try_dotted_key_lookup`, `_apply_alias_offset_to_deriv`, `_match_subset_domain`, both `_compute_index_offset_key` passes, `_remap_condition_to_domain`, `_diff_sum`'s two sites, `_handle_assign`, `_handle_aggregation`'s `seen_domain` path |
+
+⚠ **This table was wrong twice.** An earlier revision listed **7** structural
+sites and omitted **four** — `_remap_condition_to_domain`, the `NEEDS A TEST`
+`_handle_aggregation` row, `_try_dotted_key_lookup` and
+`_apply_alias_offset_to_deriv` — leaving **four** catalogued sites outside
+**both** categories (⚠ an earlier revision said *two* while listing four; none
+of the four is behavioural, so all four were unclassified — PR #1743 review).
+The review named two of the four; the others surfaced only by
+computing the complement. The module now derives the split from
+`CATALOGUED_SITES` and `test_every_site_has_exactly_one_strength_class` asserts
+it is **exhaustive and disjoint at 5 / 11**, so a hand-written table can no
+longer drift from the catalog.
+
+⚠ **Note the classification cuts ACROSS the verdicts:** three `NEEDS A TEST`
+sites are structural-only, and one `ALREADY GUARDED` site
+(`_sigma_sp_domain_collision`) is behavioural. Verdict and pin-strength are
+independent axes.
+
+**A guard at a structural-only site could keep its anchor text while its state
+update or early return is broken, and this module would not notice.** That gap
+is deliberate and measured: a probe of **nine** input shapes against
+`_match_subset_domain` and `_compute_index_offset_key`, with the consume-once
+guards DISABLED, produced **byte-identical results in every case** — so a
+behavioural pin built on any of them would have asserted nothing while looking
+rigorous, the same failure this sprint hit three times. Finding a discriminating
+input for those two is **carried to Sprint 40**.
+
+**⚠ THIRD MEASUREMENT OF THE SAME ROT, so the fix is structural this time.** All
+six `stationarity.py` citations had drifted **+318 to +346**; `condition_eval.py`
+by +1; **every other file's citations still land exactly**. Only the file this
+sprint kept editing rots, which is the mechanism rather than a coincidence.
+`test_every_catalogued_site_still_resolves_by_symbol_AND_snippet` pins each site's **owning
+function**, which survives the edits that move lines — and fails if one is
+renamed. The survey carries the full relocation table.
+
+**⚠ THE REAL SAFETY PROPERTY OF THE FOUR `_substitute_indices` SITES, MEASURED —
+and it is sharper than the survey's wording.** The survey called them *"safe only
+because of a pass covering one of three sub-shapes"*. Instrumented:
+
+* the AD layer **does** reach `_substitute_indices` with a repeated
+  `symbolic_indices` — **12 calls** for a `rep(i,i)` model, carrying `('i','i')`
+  against concrete tuples including `('a1','a2')`, so the collapse is **real**
+  and the off-diagonal instances get a wrong Jacobian;
+* **nothing wrong reaches output**, because `emit_gams_mcp` runs
+  `detect_empty_equation_instances`, whose **#1737** guard refuses the repeated
+  equation domain.
+
+So **#1737 is load-bearing for the AD layer too**, not only for the two call
+sites it was written against. Narrowing it would silently unprotect these four.
+That is now a test, with the spy count asserted **> 0** first so the refusal is
+not believed against a dead probe.
+
+⚠ **AND PER-SHAPE, NOT AGGREGATE** (PR #1743 review). A first revision asserted
+only *"some repeated call happened with distinct concrete values"* — which **one**
+call satisfies while the other `.index(...)` shapes stop being exercised, no use
+as the integration pin for a **four-site** claim. The model now carries a lead
+(`x(i+1)`) and an inner `sum(j, …)` so **three** of the four shapes are reached
+(`str`, `IndexOffset`, `Sum/Prod`) and **each is asserted individually**. The
+fourth — bare `SymbolRef` — is **simply not exercised by this model**, and is
+covered by a direct unit test instead, **stated rather than folded into an
+aggregate count**. ⚠ An earlier revision said it was *"not reachable from a
+GAMS source"* and needed an *"unresolved `Call` argument"* — **wrong**: the
+parser represents an ordinary `ord(i)` as a `Call` holding a `SymbolRef`, and
+`_substitute_indices` recurses into call arguments (PR #1743 review). The test
+module was corrected a round earlier; this mirror was not.
+
+⚠ **The function name alone was not a sufficient address either.**
+`_handle_aggregation` owns **two** catalogued sites with **different verdicts**
+(`:6086` `NEEDS A TEST`, `:6007` `ALREADY GUARDED`), so a function-name pin
+cannot tell a regression in one from the other — and the first revision also
+**misclassified** `_handle_assign` as `NEEDS A TEST` when the survey has it
+`ALREADY GUARDED`. Each row now carries an **anchor snippet** that must appear
+inside that function's own source range, plus a test pinning the verdict counts
+and the shared-function case.
+
+⚠⚠ **AND THE CATALOG WAS SHORT BY THREE SITES** (PR #1743 review). It carried
+**13 rows for 16 sites**: `constraint_jacobian:1513`, `derivative_rules:2411`
+and the second `stationarity:5148` each **shared an anchor with a neighbour** and
+were silently collapsed into it, so a change to any of the three could not be
+detected. Each now has its own row and its own distinguishing anchor.
+
+**The count assertion was the thing that hid it:** it asserted **6/7 — the
+number of rows the catalog happened to have**, which is unfalsifiable by
+construction. It now asserts the survey's **7/9 (16 total)** and additionally
+that every `(file, function, anchor)` triple is **unique**, so a future
+collapse fails rather than passing quietly. *Asserting the count you HAVE proves
+nothing; asserting the count the SOURCE says is what catches an omission.*
+
+**⚠ TWO DEAD MUTANTS BEFORE THE `_sigma_sp_domain_collision` TEST DISCRIMINATED.**
+Weakening `len(canon_hits) < 2` to `< 1` survived, and so did replacing
+`any(vi < later …)` with `True`. Measuring showed why: **`< 2` is a FAST PATH,
+not the guard** — with a single hit, that hit *is* `later`, so the ordering test
+is already False and the function returns `None` either way. The load-bearing
+condition is the **ordering** one, and it needed a case where the exact
+declared-name match sits EARLIER than the canon-only hit. The `< 2` mutant still
+survives, correctly, and the docstring now says so rather than claiming a guard
+that is not there.
+
+### P10 — the six P2-flagged models TRIAGED; **two classes, not one**
+
+`docs/planning/EPIC_4/SPRINT_39/P2_VIOLATION_TRIAGE.md`. Every emitted line and
+source rule read from the tree.
+
+The survey's framing — *"manufactured unless the source declares it so"* — is
+**half right**:
+
+* **Class A, MANUFACTURED** (dinam, egypt, turkpow ×3, **nonsharp ×1**): the
+  source keeps the two positions DISTINCT and emit substitutes one symbol into
+  both, so **a coordinate is lost and the reference reads the wrong cell**.
+  ⚠ nonsharp's `inter(col__kkt1,col__kkt1,stm)` carries a **KKT-minted alias in
+  both coordinates** — the survey already records it as manufactured — so it is
+  Class A even though the model's *other* reference is declaration-derived. An
+  earlier revision put the whole model in Class B and hid this effect
+  (PR #1743 review). Where the symbol
+  is an `ord`-style relation that cell is tautological — **identically FALSE**
+  (dinam: `ord(te) > ord(te)`, the term is silently dropped) or **identically
+  TRUE** (turkpow: `ord(v) >= ord(v)`, the guard is inert). Where it is a data
+  table it is simply the **wrong lookup** (egypt's `tranc(rp,rp)` for
+  `tranc(r,rp)`). ⚠ An earlier revision of this entry gave only the tautological
+  symptom, which its own egypt row contradicted (PR #1743 review).
+* **Class B, DECLARATION-faithful but ASSIGNMENT-narrowing** (gussrisk,
+  **nonsharp ×1** — its `inter(col,col,stm)` reference only; shale is B-origin
+  with an A effect): the source **declares** the
+  SYMBOL — a **set OR a parameter** — over the same set twice. ⚠ Measured, and
+  not a quibble: `gussrisk`'s `covar` is declared under `Parameter` but
+  `nonsharp`'s `inter` is declared under **`Set`**, so naming only parameters is
+  wrong for half the class and sends a reader to the wrong declaration block
+  (PR #1743 review). That is legal GAMS meaning the full product — and
+  emit reuses that domain in an assignment/guard, where GAMS reads the
+  **DIAGONAL**. The symbols are the source's own; the *context* is what changed.
+
+**Class A is a downstream symptom of P5's sites**, not an independent bug list —
+turkpow is the clearest case, where the KKT alias minter put `t__kkt1` into
+**both** coordinates of a `vs(t,v)` reference.
+
+**⚠ No fix lands, and the baseline stays at 9.** Each Class-A fix is a `src/kkt`
+or `src/ad` emit change needing its own Phase-0 doc, golden regen and a re-solve
+— and for **three** of the six the re-solve is unavailable: **egypt and shale
+are license-gated**, and **nonsharp is convexity-excluded with no `mcp_solve`
+record at all** (⚠ an earlier revision said *two*, written before nonsharp's
+KKT-minted reference was reclassified to Class A — PR #1743 review). Landing a
+partial fix would move the ratchet while being unable to demonstrate correctness
+on three of the six.
+
+**0 bucket, no KPI movement**, stated precisely because the Class-A set changed:
+
+| model | Class-A effect | today's status | moves a figure? |
+|---|---|---|---|
+| dinam, turkpow | yes | `mcp_solve: failure` (`path_syntax_error`) | no |
+| egypt, shale | yes (shale: B origin) | `mcp_solve: failure` (`path_solve_license`) | no |
+| **nonsharp** | yes (×1 of its 2 refs) | **no `mcp_solve` record** — convexity-`excluded`, outside the 142 | no |
+
+So **four** Class-A-effect models are `mcp_solve: failure` and a **fifth** has no
+solve record; none contributes to a reported figure. ⚠ *"all four models with a
+Class-A effect are `mcp_solve: failure`"* — the earlier wording — became false
+the moment nonsharp gained a Class-A reference, and the gate evidence has to
+name the no-solve exception rather than absorb it into "failure". Carried to
+Sprint 40 as a classified work list.
+
+### Gate
+
+typecheck / format / lint clean · **`make test` 5444 passed**, 10 skipped,
+1 xfailed (measured at `9f76f905`; the Day-13 retest re-derives this) · `make check-index-repeats` PASS (P2 **9 = baseline 9**) ·
+`check-doc-figures` clean.
+
+⚠ **The suite figure was missing from this section and stale where it did
+appear** (PR #1743 review). The reconciliation, since the arithmetic does not
+close against the Day-11 log at face value:
+
+| | |
+|---|---|
+| Day 11, **as logged** | 5431 — the figure at its first commit |
+| Day 11, **as merged** | **5433** — its own review rounds added 2 tests |
+| this module collects | **11** nodes (at `9f76f905`) |
+| Day 12 final | **5444** = 5433 + 11 ✅ measured at `9f76f905` |
+
+⚠ **This reconciliation has now been re-derived FOUR times** (5438 → 5441 → 5443 → 5444; PR #1743 review). The **5438 (+5)** first
+recorded was correct at the *first* Day-12 commit, when the module had 5 tests.
+The **5441 = 5433 + 8** that replaced it was correct until the very round that
+wrote it added `test_every_site_has_exactly_one_strength_class` — a **9th** node
+— making the true figure **5442 = 5433 + 9** (PR #1743 review). The module now
+collects **11** nodes after the permanent commented-out-site mutant test, giving
+**5444 = 5433 + 11**, measured at `9f76f905`.
+
+**The rule this keeps proving — and which I broke once more AFTER writing it
+down: a node count written in the same round that adds a node is stale before
+the commit lands.** The 5443 (+10) was recorded in the round that added the 11th
+node; the suite in that very round measured 5444 and the commit message said
+so, but the three mirrors were not re-derived. **So this table is now pinned to
+a commit** and is explicitly superseded by whatever the **Day-13 final retest**
+measures. Do not update it per review round; update it once, from that run. **A gate figure quoted from the commit that
+produced it goes stale the moment a review round adds a test** — the same
+banked-staleness shape as the floor-73 template on Day 11, in the same document.
+

@@ -47,14 +47,49 @@ path"*, which handles the general case correctly — so declining is both safe a
 better. **Do not "harmonise" these into one behaviour:** making B-3 raise would
 break models the standard path already emits correctly.
 
+### ⚠ Day 12: every site RELOCATED BY SYMBOL — the line numbers are now advisory
+
+Third measurement of the same rot (D8 **+293**, D11 again, D12 below), so the
+addresses are replaced with the owning FUNCTION, which survives the edits that
+move lines. `tests/unit/kkt/test_positional_domain_sites.py::test_every_catalogued_site_still_resolves_by_symbol_AND_snippet`
+fails if any of these is renamed or removed.
+
+| survey ref | owning function | drift |
+|---|---|---|
+| `constraint_jacobian.py:1466/1474` | `_substitute_indices._sub_idx` | **0** |
+| `constraint_jacobian.py:1513/1536` | `_substitute_indices` | **0** |
+| `parser.py:5530` | `_handle_assign` | **0** |
+| `parser.py:6007/6086` | `_handle_aggregation` | **0** |
+| `derivative_rules.py:2362/2411` | `_diff_sum` | **0** |
+| `condition_eval.py:52` | `_try_dotted_key_lookup` | +1 |
+| `stationarity.py:1500` | `_remap_condition_to_domain` | **+344** |
+| `stationarity.py:3432` | `_apply_alias_offset_to_deriv` | **+346** |
+| `stationarity.py:4880` | `_match_subset_domain` | **+332** |
+| `stationarity.py:5140/5148` | `_compute_index_offset_key` | **+336** |
+| `stationarity.py:5770` | `_sigma_sp_domain_collision` | **+318** |
+
+**Only `stationarity.py` rots SUBSTANTIALLY** — `+318` to `+346`, enough that a
+reader following the citation lands inside an unrelated function.
+`condition_eval.py` drifted by **`+1`**, which the table above records and which
+still resolves by eye; every other file's citations land **exactly**.
+
+⚠ The earlier wording here said *"every other file's citations still land
+exactly"* with no qualifier, which **contradicted the `+1` row directly above it**
+(PR #1743 review). `stationarity.py` is the file this sprint kept editing, which
+is the mechanism — but "only it moved at all" was too strong a claim for the
+table to support.
+
 ⚠ **The line numbers below have aged out for `stationarity.py`** — `:1091` now
 lands inside `_find_full_collapse_sum`. **Day 8 already measured this (+293
 lines, PR #1728) and said to relocate by content**; Day 11 hit it again while
 locating the same site, which is the argument for citing by SYMBOL rather than
 recording the drift a third time.
 
-Remaining: 7 **NEEDS A TEST** and 9 **ALREADY GUARDED** sites — Day 12's work.
-**Do not re-guard the guarded ones**; three independent remedies already exist.
+~~Remaining: 7 **NEEDS A TEST** and 9 **ALREADY GUARDED** sites — Day 12's work.~~
+**✅ Day 12 pinned all 16** — 5 behaviourally, 11 structurally (limit stated in
+`test_positional_domain_sites.py` and carried to Sprint 40). No guard was
+re-added; the remedies are three shared mechanisms plus
+`_sigma_sp_domain_collision`'s own detector.
 
 ## 2. The catalog
 
@@ -180,6 +215,18 @@ Exists FOR this class: requires >= 2 var-domain positions canonicalising to the 
 
 This is why so many `NEEDS A TEST` verdicts above are *"safe today, but by something upstream and incidental"*. The `.index()` family in `constraint_jacobian.py` is the highest-reach shape in the whole catalog (12/15 and 11/15 models), and its repeat-safety rests entirely on a pass that covers one of the three sub-shapes. **The audit's cheapest possible outcome is to make that dependency explicit rather than accidental.**
 
+> ⚠ **SUPERSEDED BY MEASUREMENT (Day 12).** The dependency is now explicit, and
+> it is not the one this paragraph guessed. Instrumented, the AD layer **does**
+> reach `_substitute_indices` with a repeated domain (12 calls for a `rep(i,i)`
+> model, carrying `('i','i')` against off-diagonal concrete tuples, so the
+> collapse is REAL and the off-diagonal Jacobian is wrong) — and **nothing wrong
+> reaches output because `emit_gams_mcp`'s `detect_empty_equation_instances`
+> refuses via the #1737 guard**. So the safety is not *"a pass covering one
+> sub-shape"*; it is **#1737, load-bearing for the AD layer**. Pinned by
+> `tests/unit/kkt/test_positional_domain_sites.py::test_the_AD_collapse_is_reachable_but_EMIT_refuses_it`,
+> which matches the detector's own context string so a different refusal
+> cannot satisfy it. See §*Day 12* above.
+
 ## 4. Corpus incidence (Unknown 5.2)
 
 **Two independent methods, deliberately** — three, counting the corroboration below. An IR census over all 219 models (`parse_model_file`, then a **case-insensitive** repeat test — `len(domain) != len({x.lower() for x in domain})` — per symbol table, because GAMS identifiers are case-insensitive, so `p(I,i)` is a repeat) and a source-level regex prescan of the raw `.gms` files. They agree on **24** models; the union is **44**.
@@ -229,7 +276,7 @@ Stated over the **emitted output**, because that is where the GAMS semantics bit
 |---|---|---|---|
 | `dinam` | `1$(ts2(te,te))` | ❌ source has `ts2(te,tep)` | **manufactured.** `ts2(te,tep) = 1$(ord(te) > ord(tep))` is strictly triangular ⇒ **identically false**; the term is silently zeroed. elec's exact shape. |
 | `egypt` | `1$(tranc(rp,rp))` | ❌ source has `Table tranc(r,rp)` | **manufactured.** A self-transfer cost; the diagonal is absent ⇒ the term drops. |
-| `turkpow` | `1$(vs(v,v))`, `1$(vs(t__kkt1,t__kkt1))` | ❌ source has `vs(t,v)` | **manufactured, and the MIRROR case.** `vs(t,v) = ord(t) >= ord(v)` ⇒ `vs(v,v)` is identically **TRUE**, so the guard is a no-op and the term is included for *every* instance instead of a triangle. Silently **over**-inclusive. `t__kkt1` is a KKT-minted name, so this guard was generated, not copied. |
+| `turkpow` | `1$(vs(v,v))`, `1$(vs(t__kkt1,t__kkt1))`, `1$(vs(t__kkt2,t__kkt2))` | ❌ source has `vs(t,v)` | **manufactured, and the MIRROR case.** `vs(t,v) = ord(t) >= ord(v)` ⇒ `vs(v,v)` is identically **TRUE**, so the guard is a no-op and the term is included for *every* instance instead of a triangle. Silently **over**-inclusive. `t__kkt1` is a KKT-minted name, so this guard was generated, not copied. |
 | `shale` | `1$(ts(tf,tf))` | ✅ `ts(tf,tf)` | declaration-derived. `ts(tf,tfp)$(ord(tfp) < ord(tf)) = 1` ⇒ identically false. |
 | `nonsharp` | `inter(col,col,stm)`, `inter(col__kkt1,col__kkt1,stm)` | ✅ `Set inter(col,col,stm)` | **3-arity — invisible to the original binary matcher** (PR #1718 review). The source only ever assigns off-diagonal pairs (`inter(colp,col,stm)`), so `inter(col,col,stm)` is identically false. `col__kkt1` is KKT-minted, so that one is **manufactured**. Convexity `excluded`, no MCP solve — outside the 142 candidates. |
 | `gussrisk` | `covar(stocks,stocks)$(NOT (…)) = 0;` | ✅ `covar(stocks,stocks)` | declaration-derived, on an **assignment**. The repeat is in *both* the LHS and the guard; the **LHS** is what narrows the NA-guard to the diagonal, and P2 sees only the guard (gap below). **Latent:** `covar` is computed and never NA, so today's answer is unaffected. The one **matching** model in the suspect set. |
@@ -260,9 +307,9 @@ P5 is **0-bucket by design**; nothing below asks for a bucket move.
 
 1. ✅ **DONE (D9/D10)** — **Land P2 as a gate first.** It is the only artefact here that finds live defects, it runs in under 3 s, and its **9 violations across 6 models** are a ready-made work list. Landing it *before* any guard means the guards have a fail-before.
 2. ✅ **DONE (D9, #1737 — `src/ir/index_map.py`, raises)** — **Guard the two symbol-keyed `dict(zip(...))` collapses** — `condition_eval.py:117` and `empty_equation_detector.py:127`. Highest reach among unguarded sites (9/15 and 10/15), smallest fix, and `strict=True` already gives a false sense of safety there.
-3. ⏳ **OPEN — Day 12 (`NEEDS A TEST`)** — **Make the `constraint_jacobian.py` `.index()` family's dependency explicit** — 4 sites, the highest-reach shape in the catalog, safe only because of a pass covering one of three sub-shapes.
+3. ✅ **DONE (D12)** — **Make the `constraint_jacobian.py` `.index()` family's dependency explicit** — 4 sites, the highest-reach shape in the catalog. ⚠ **The dependency turned out to be different from the prep-era guess.** This item originally read *"safe only because of a pass covering one of three sub-shapes"*; measured on Day 12, repeated domains **do** reach `_substitute_indices` and compute a wrong off-diagonal Jacobian, and the safety is the **#1737 refusal at `emit_gams_mcp`** (see the superseded note under §3). The stale rationale is removed from this line rather than kept beside its correction (PR #1743 review).
 4. ✅ **DONE (D11, #1741 — declines to `None`, falling back to the standard path).** **Then `stationarity.py:1091/1104`.** Lower reach (2/15), genuinely unguarded. ⚠ The two rows are **one function**, so one guard closed both; and the remedy is a FALLBACK, not a raise — see the top-of-document status for why the two remedies deliberately differ.
-5. ⏳ **OPEN — Day 12** — **Do not re-guard the 9 `ALREADY GUARDED` sites** — three independent remedies already exist (consume-once slot claiming, `seen_sym` duplicate bail-out, parser alias substitution). Add tests that pin them; the `NEEDS A TEST` verdicts are exactly this.
+5. ✅ **DONE (D12) — with a stated limit.** No guard was re-added. The 16 remaining sites are pinned in `test_positional_domain_sites.py`: **5 behaviourally** (the four `_substitute_indices` shapes, `_sigma_sp_domain_collision`) and **11 structurally** (anchor text within the owning function — a guard there could keep its anchor while its logic is broken; a nine-shape probe with the consume-once guards disabled found no discriminating input, carried to Sprint 40). **Do not re-guard the 9 `ALREADY GUARDED` sites** — three independent remedies already exist (consume-once slot claiming, `seen_sym` duplicate bail-out, parser alias substitution). Add tests that pin them; the `NEEDS A TEST` verdicts are exactly this.
 
 **⚠ The four `NEEDS A GUARD` sites are candidates, not confirmed defects.** Each needs the Day-0 trace the S38 retrospective requires — three of four S38 gates named the wrong layer.
 
@@ -280,8 +327,8 @@ P5 is **0-bucket by design**; nothing below asks for a bucket move.
 
 ---
 
-**Document Status:** ✅ Survey complete (Sprint 39 Prep Task 7); the four `NEEDS A GUARD` sites **TRACED** Sprint 39 Day 8 — none is a confirmed defect, and **two of the four line references had already drifted +293 lines** (§*Sprint 39 Day 8*) — and **all four CLOSED** by Day 11: D9 `#1737` (raises) and D11 `#1741` (declines to `None`). Both are latent; `check-goldens` reports 186 clean / 0 drift for each. **Remaining: 7 `NEEDS A TEST` + 9 `ALREADY GUARDED` — Day 12.** §6 is prep-era and marked historical.
-**Last Updated:** 2026-09-15 — Day-11 closure of the last two `NEEDS A GUARD` sites (#1741)
+**Document Status:** ✅ Survey complete (Sprint 39 Prep Task 7); the four `NEEDS A GUARD` sites **TRACED** Sprint 39 Day 8 — none is a confirmed defect, and **two of the four line references had already drifted +293 lines** (§*Sprint 39 Day 8*) — and **all four CLOSED** by Day 11: D9 `#1737` (raises) and D11 `#1741` (declines to `None`). Both are latent; `check-goldens` reports 186 clean / 0 drift for each. **The remaining 16 — 7 `NEEDS A TEST` + 9 `ALREADY GUARDED` — PINNED Day 12** (5 behaviourally, 11 structurally; the structural limit is stated and carried). §6 is prep-era and marked historical; §3's *"pass covering one sub-shape"* is superseded by the Day-12 measurement that #1737 is the load-bearing safety.
+**Last Updated:** 2026-09-17 — Day-12 pins for the remaining 16 sites; §3/§5/status brought into agreement with the Day-12 section (PR #1743 review)
 
 
 ---
