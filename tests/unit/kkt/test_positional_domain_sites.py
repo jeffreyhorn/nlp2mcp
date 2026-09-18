@@ -67,7 +67,10 @@ stands on the survey's measurement, not on coverage in this file.
 from __future__ import annotations
 
 import ast
+import functools
+import io
 import pathlib
+import tokenize
 
 import pytest
 
@@ -226,16 +229,63 @@ CATALOGUED_SITES: tuple[tuple[str, str, str, str], ...] = (
 )
 
 
+@functools.lru_cache(maxsize=16)
+def _code_only(source: str) -> str:
+    """``source`` with every COMMENT and every BARE-STRING STATEMENT blanked.
+
+    Cached per source text: 16 rows over a 6,000-line file re-tokenised it 16
+    times and took the two structural tests from ~3 s to ~7 s each.
+
+    Same length, same line structure — so line ranges computed on the original
+    still index into this text — but an anchor can now only match **executable
+    code**. Without this, deleting a guarded expression while leaving its exact
+    text in a comment or docstring kept both structural pins green, and those
+    pins are the only protection the 11 structural-only rows have
+    (PR #1743 review; the mutant is `test_the_anchor_pins_reject_a_COMMENTED_OUT_site`).
+
+    ⚠ Inline string LITERALS are kept — they are code. A first revision blanked
+    every STRING token and broke the `_try_dotted_key_lookup` anchor
+    ``list(domain).index("*")``, whose ``"*"`` is the lookup key, not prose.
+    Only string EXPRESSION STATEMENTS (docstrings and bare strings) are blanked.
+    """
+    lines = source.splitlines(keepends=True)
+    out = [list(ln) for ln in lines]
+
+    def _blank(r0, c0, r1, c1):
+        for r in range(r0, r1 + 1):
+            row = out[r - 1]
+            lo = c0 if r == r0 else 0
+            hi = c1 if r == r1 else len(row)
+            for c in range(lo, min(hi, len(row))):
+                if row[c] != "\n":
+                    row[c] = " "
+
+    for tok in tokenize.generate_tokens(io.StringIO(source).readline):
+        if tok.type == tokenize.COMMENT:
+            _blank(*tok.start, *tok.end)
+    for node in ast.walk(ast.parse(source)):
+        if (
+            isinstance(node, ast.Expr)
+            and isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)
+        ):
+            _blank(node.lineno, node.col_offset, node.end_lineno, node.end_col_offset)
+    return "".join("".join(row) for row in out)
+
+
 def _owning_bodies(source: str, qualified: str) -> list[str]:
-    """Source text of every function matching ``qualified``, nested paths allowed.
+    """CODE-ONLY text of every function matching ``qualified``, nested paths allowed.
 
     ``"outer.inner"`` resolves to the ``inner`` FunctionDef found *inside*
     ``outer``'s body — so an anchor is searched only within the nested function's
     own lines (PR #1743 review). A bare name resolves to every top-level or
     nested def of that name, as before.
+
+    The returned text has comments and strings blanked (`_code_only`), so an
+    anchor must still be live code to count.
     """
     tree = ast.parse(source)
-    lines = source.splitlines()
+    lines = _code_only(source).splitlines()
     parts = qualified.split(".")
 
     def _defs_in(node):
@@ -354,6 +404,40 @@ def test_every_anchor_occurs_EXACTLY_ONCE_in_its_function():
         if n != 1:
             problems.append(f"{rel}::{func} — anchor occurs {n}x (need exactly 1): {snippet!r}")
     assert not problems, "non-pinning anchor(s):\n  " + "\n  ".join(problems)
+
+
+@pytest.mark.unit
+def test_the_anchor_pins_reject_a_COMMENTED_OUT_site():
+    """⚠ An anchor in a comment is not a site (PR #1743 review).
+
+    Measured before the fix: deleting `_match_subset_domain`'s guard line and
+    leaving its exact text in a comment gave a raw-text count of **1** — both
+    structural pins stayed green with the catalogued site gone. This test keeps
+    that mutant permanently, applied to an in-memory copy of the source.
+    """
+    rel, func, snippet = (
+        "src/kkt/stationarity.py",
+        "_match_subset_domain",
+        "if k in used_var_positions:",
+    )
+    source = (PROJECT_ROOT / rel).read_text(encoding="utf-8")
+    assert "\n".join(_owning_bodies(source, func)).count(snippet) == 1, "precondition"
+
+    commented_out = source.replace(
+        "            if k in used_var_positions:",
+        "            # if k in used_var_positions:  (moved elsewhere)\n            if False:",
+    )
+    assert commented_out != source, "the mutation must apply, or this proves nothing"
+    assert (
+        "\n".join(_owning_bodies(commented_out, func)).count(snippet) == 0
+    ), "the anchor survives only in a comment; it must NOT count as the site"
+
+    # And a docstring must not count either.
+    in_docstring = source.replace(
+        "            if k in used_var_positions:",
+        '            """if k in used_var_positions:"""\n            if False:',
+    )
+    assert "\n".join(_owning_bodies(in_docstring, func)).count(snippet) == 0
 
 
 @pytest.mark.unit

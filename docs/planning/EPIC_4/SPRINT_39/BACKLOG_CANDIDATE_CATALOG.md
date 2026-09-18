@@ -82,12 +82,12 @@ The rule yields **two** strict qualifiers, `lnts` and `mine` — but:
 | reproduced fingerprint | **the violations are in committed goldens today** — 9 across 6 models, reproducible in under 3 s with no GAMS |
 | named fix surface | Task 7 §2's catalog: 21 sites, 4 `NEEDS A GUARD`, ranked by measured blast radius |
 | bounded, not open-ended | a fixed list of 6 models and 4 sites, not a diagnosis |
-| 0-bucket by design | **3 of the 6 are already `mcp_solve: failure`**, `nonsharp` is convexity-`excluded`, `gussrisk`'s instance is latent |
+| 0-bucket by design | **4 of the 6 are already `mcp_solve: failure`** (dinam, egypt, shale, turkpow — ⚠ an earlier revision said 3; the Day-12 triage measured 4 from the DB), `nonsharp` is convexity-`excluded` with **no `mcp_solve` record**, `gussrisk`'s instance is latent |
 | slack-absorbing | decomposes to one model per unit; stops cleanly at any point |
 
 **And it has a fail-before that the backlog sweep does not**: land the property first, watch it fail on the six, fix, watch it pass. Task 7's §6 recommends exactly this ordering.
 
-**⚠ Two of the six are `egypt` and `shale` — both license-gated.** Their fix is verifiable by the property and by golden re-emission, but **not** by a solve. That is a real limit and it is why this is 0-bucket work, not a Solve-mover.
+**⚠ Three of the six have no solve to verify against** — `egypt` and `shale` are license-gated, and `nonsharp` is convexity-excluded with no `mcp_solve` record (⚠ an earlier revision named only the first two, before the Day-12 triage reclassified nonsharp's KKT-minted reference to Class A). Their fix is verifiable by the property and by golden re-emission, but **not** by a solve. That is a real limit and it is why this is 0-bucket work, not a Solve-mover.
 
 ---
 
