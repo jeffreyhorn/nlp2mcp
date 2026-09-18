@@ -952,3 +952,156 @@ measures. Do not update it per review round; update it once, from that run. **A 
 produced it goes stale the moment a review round adds a test** — the same
 banked-staleness shape as the floor-73 template on Day 11, in the same document.
 
+
+## Day 13 — planned 2026-09-16, **executed 2026-09-18** · retest and close · 6 h · + P10 · 5 h
+
+**Branch:** `planning/sprint39-day13-close` · **Measured at:** `bd2af6e9` (the #1743
+merge) · **Docs only** — `src/`, `scripts/`, `tests/` untouched.
+
+### Headline
+
+**Sprint 39 closed. Solve 111 · Match 95 · Translate 135 · genuine floor 75 ·
+`path_solve_terminated` 0.** Every KPI figure is unchanged from open **except
+Match, which fell 96 → 95 as a correction** — the sprint's one KPI movement,
+pre-registered as close rule C2 and reported with its reason in the same
+sentence (below). **The sprint had no upward KPI mover by Day-0 decision** (P4
+took branch B), which was the pre-registered honest shape, not an
+underperformance.
+
+**Match 96 → 95 is a CORRECTION, not a regression.** `weapons` was recorded as a
+**presolve** match, but the presolve retry's MCP produced no `MODEL STATUS` of
+its own. A `--nlp-presolve` emit warm-starts by solving the original model inside
+the generated file, so when that MCP solve aborted, `nlp2mcp_obj_val = tetd.l`
+still held the embedded NLP's own answer (1735.5696) and the comparison matched
+itself. **This is not "weapons cannot be solved as an MCP"** — its **cold** emit
+solves, to `model_optimal` @ **1700.397**, which is a **2.03 %** divergence from
+the NLP and therefore a **mismatch**. That cold result is the true record. The
+overstatement dates from Sprint 38 Day 9, was reported at the time, and is
+corrected here. **Match 95 is the first figure in this series that is true.**
+Solve (111), cold-optimal (65) and the genuine floor (75) are unaffected;
+presolve-match moves 31 → 30 and all-219 Match 99 → 98 for the same single
+reason.
+
+### Closing figures — every one derived at `bd2af6e9`, none recalled (C5)
+
+| quantity | open (Day 0, `388082b0`) | close (`bd2af6e9`) | Δ | source |
+|---|---|---|---|---|
+| convex candidates | 142 | 142 | — | `kpi_block.py` |
+| Parse | 142 | 142 | — | `kpi_block.py` |
+| Translate | **135** | **135** | **— (C6 VOID)** | `kpi_block.py` |
+| Solve | **111** | **111** | — | `kpi_block.py` |
+| Match | **96** | **95** | **−1 (C2 correction)** | `kpi_block.py` |
+| &nbsp;&nbsp;cold-optimal | 65 | 65 | — | `kpi_block.py` |
+| &nbsp;&nbsp;presolve | 31 | 30 | −1 (weapons) | `kpi_block.py` |
+| all-219 Match | 99 | 98 | −1 (weapons) | `kpi_block.py` |
+| model_infeasible | 7 | 7 | — | `kpi_block.py` |
+| path_syntax_error | 6 | 6 | — | `kpi_block.py` |
+| **`path_solve_terminated`** | **0** | **0** | **— (C1 held)** | `kpi_block.py` |
+| path_solve_license | 11 | 11 | — | `kpi_block.py` |
+| **genuine floor** | **75** (re-baselined 73 → 75 on Day 0) | **75** | — | `floor_tracker.py` |
+| P2 ratchet | 9 | 9 | — | `check_index_repeat_properties.py` |
+| leak-gate scope | 186 | 186 | — | `check_golden_staleness.py` |
+| `make test` | 5301 (Day 0) · 5211 (S38 close) | **5444** | +143 vs Day 0 | this run |
+
+⚠ **The floor is read from `data/floor_provenance.json` via `floor_tracker.py`
+on the baseline P1 settled on Day 0 (C4).** The DB's mechanical count is **65**
+and is **not** the floor; the tool says so on every run.
+
+### Close gates — the full retest
+
+| gate | result |
+|---|---|
+| `--resolve-changed --since-commit 9ab2c0c3` | **GO** — scope **discovered** by dry-run (1 model, `dyncge`) then asserted with `--min-scope 1`; `model_optimal`/`mismatch` → same, bucket held |
+| `make check-goldens`, **unqualified**, run **alone** | **186 in-scope, all clean, 0 drift, no timeouts** |
+| Determinism ×3 `PYTHONHASHSEED` {0, 1, 42} | **PASS ×3** — 186 goldens byte-identical to their committed files under every seed, each run alone |
+| `make test` | **5444 passed**, 10 skipped, 1 xfailed |
+| `make check-index-repeats` | PASS — P1 0/3,109 · P2 **9 = baseline 9** |
+| `make check-doc-figures` | no cited figure contradicts its source |
+
+⚠ **Only one golden changed in the whole sprint** (`dyncge_mcp.gms`, +3/−3, Day 2),
+which is why the resolve-changed scope is 1. Every other `src/` change this
+sprint was **emit-neutral by construction** — three latent guards and one
+result-only diagnostics change — and the unqualified leak gate is what proves
+it, four times over.
+
+### The six close rules, each checked against its PRECONDITION (`PLAN.md` §5)
+
+| rule | precondition | precondition held? | verdict |
+|---|---|---|---|
+| **C1** `path_solve_terminated` maintains 0 | none (cannot be voided) | — | **✅ MET — 0 at open, 0 at close.** No model returned to it |
+| **C2** Match may fall to 95, reported as a correction with its reason in the same sentence | P7 started | ✅ P7 landed Day 10 | **✅ MET — 96 → 95, wording above is §5's verbatim block with the floor corrected 73 → 75 on Day 11** |
+| **C3** Three-gate firm landing: Phase-0 gate + unqualified leak gate + in `main` | none (cannot be voided) | — | **✅ MET for all three emit landings** (below); two of three is claimed for none |
+| **C4** Floor read from `floor_provenance.json` on the P1-settled baseline | P1 decided on Day 0 | ✅ decided 2026-09-03: 75 | **✅ MET — `floor_tracker.py` → 75 at `bd2af6e9`** |
+| **C5** Every figure derived at execution time, carrying its commit | none (cannot be voided) | — | **✅ MET — every figure above names its tool and commit** |
+| **C6** +1 Translate → 136 only if sarf newly produces a golden | P4 **branch A** started | ❌ **branch B chosen on Day 0** | **⚠ VOID, not unmet.** Translate reports **135 flat**; the re-scope is P4's Day-7/8 attribution (`_diff_sum` 2.9 % self, 70.9 % in `compute_constraint_jacobian`) |
+
+**VOID is not the same as unmet, and C6 is the worked example:** its precondition
+was corrected on Day 0 *before* the sprint ran (it read "branch A or B", but B
+does not implement and so can never produce a golden). A rule whose precondition
+fails says something about the *plan*, not the *work*.
+
+### Firm landings — the three-gate rule (C3) applied
+
+| landing | Phase-0 gate | leak gate (unqualified) | in `main` | bucket |
+|---|---|---|---|---|
+| **P2 dyncge B-4** — Pattern-C member for the full-collapse Sum (Day 2, #1728) | `ISSUE_1714` ✅ | 186 clean ✅ | ✅ | **0 — PARTIAL.** `eqXp` fixed; `eqII` handed back to #1381 (Day 3). Owner decision to land the partial |
+| **P5 #1737** — `src/ir/index_map.py`, repeated EQUATION domain **raises** (Day 9, #1736) | `ISSUE_1737` ✅ | 186 clean ✅ | ✅ | **0 — latent**, no corpus model reaches it |
+| **P5 #1741** — Pattern-C B-3 repeated-index guard, **declines to `None`** (Day 11, #1742) | `ISSUE_1741` ✅ | 186 clean ✅ | ✅ | **0 — latent**, no corpus model reaches it |
+
+**Three emit landings, all three-gated, all 0-bucket — and that is the correct
+reading, not a disappointment.** Two are guards for a defect class (S38 D11/D12)
+that the P5 survey showed is one symbol→position step away from live at 21
+sites; the third is a partial fix whose remainder is named. **The two guards
+deliberately differ** (raise vs. decline) and the reason is recorded in the
+survey so a later reader does not "harmonise" them.
+
+**Non-emit landings, not three-gated because they touch no emit path:** P7's
+Remedy A + B (`run_full_test.py` attribution gate; `mcp_file_used` →
+`mcp_file_generated` with schema **3.0.0** and a migration, Day 10); the shared
+attribution predicates moved into the packaged `src/diagnostics/solve_attribution.py`
+(#1740 review); P8's Phase-0 8a/8b requirements and the P1/P2 index-repeat gate
+(Day 3, Day 9); P6's consultation follow-up **posted on its gate date** (Day 6 —
+the five-sprint slip is broken); P9's Epic-5 design recorded (Day 9).
+
+### REPLAN'd and banked — stated as outcomes, not deferrals
+
+- **P3 lnts** (Days 4–5): hypothesis **CONFIRMED at runtime**, implementation
+  written and verified, then **REVERTED** — the mechanism is banked, the landing
+  is not, because the fix touched a live-match model's emit path without a
+  fail-before the leak gate could hold.
+- **P4 sarf** (Days 7–8): **branch B** — attribution, not implementation.
+  `_diff_sum` is 2.9 % self, 7.5 % inclusive; **70.9 %** sits in
+  `compute_constraint_jacobian`. The Phase-0 gate is authored for whoever
+  implements.
+- **P10 P2 models** (Day 12): the six triaged into **two classes** — Class A
+  (manufactured, coordinate lost) and Class B (declaration-faithful,
+  assignment-narrowing). **No fix landed, baseline held at 9**: each Class-A fix
+  needs its own Phase-0 doc and a re-solve, and **three of the five Class-A-effect
+  models have no solve** (egypt/shale license-gated, nonsharp convexity-excluded).
+
+### The sprint in figures — derived, since a count of findings is a figure too
+
+| figure | value | derivation |
+|---|---|---|
+| execution-day PRs merged | **18** (#1724–#1743, less two issue numbers and three prep PRs) | `gh pr list --state merged` |
+| Copilot review rounds across them | **68** | `gh api .../reviews`, filtered by author, summed |
+| of which on the four P7/P5 PRs #1736/#1740/#1742/#1743 | 6 + 7 + 5 + 8 = **26** | same |
+| goldens changed | **1** (`dyncge`) | `git diff --stat 9ab2c0c3..HEAD -- data/gamslib/mcp/` |
+| DB rows migrated | **48** (2.2.1 → 3.0.0); **47** carry `mcp_file_generated` after Remedy A reverted weapons | `migrate_schema_v3.0.0.py`; DB scan |
+| new tests | **+143** vs Day 0 (5301 → 5444) | `make test` |
+| P5 sites: guarded / pinned | **4** guarded (#1737 ×2, #1741 ×2) · **16** pinned (5 behaviourally, 11 structurally) | `test_positional_domain_sites.py` |
+| prep unknowns | 30, all resolved: 11 ✅ / 11 ❌ / 8 🔶 — refutation **63 %** | `KNOWN_UNKNOWNS.md` |
+
+⚠ **One recalled figure was wrong and is corrected here rather than carried:**
+during #1743's review I repeatedly wrote *"fifteen rounds"*; the API says **8**
+Copilot reviews on that PR. The 15 counted my own re-issued reply rounds. The
+derived figure stands.
+
+### P10 on Day 13 — carried, not worked
+
+The prompt allots 5 h to P10 on this day. Day 12's triage dispositioned it:
+**no Class-A fix can be demonstrated correct on three of the five affected
+models**, so landing one would move the ratchet without evidence. The 5 h went to
+the retest and the four close documents instead; the classified work list is
+§*Carryforwards* and `SPRINT_40_CARRYFORWARDS.md`.
+
