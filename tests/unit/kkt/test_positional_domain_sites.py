@@ -27,9 +27,12 @@ difference matters** (PR #1743 review).
 ⚠ **THIS TABLE WAS WRONG TWICE, so it is now DERIVED AND TESTED** (PR #1743
 review). An earlier revision listed **7** structural sites and omitted **four** —
 `_remap_condition_to_domain`, the `NEEDS A TEST` `_handle_aggregation` row,
-`_try_dotted_key_lookup` and `_apply_alias_offset_to_deriv` — so two catalogued
-sites fell outside **both** categories and the reader could not tell. The review
-named two of the four; the other two surfaced only by computing the complement.
+`_try_dotted_key_lookup` and `_apply_alias_offset_to_deriv` — so **four**
+catalogued sites fell outside **both** categories and the reader could not tell
+(PR #1743 review: an earlier revision of this sentence said *two*, contradicting
+the *four* it had just listed — none of the four is behavioural, so all four
+were unclassified). The review named two of the four; the other two surfaced
+only by computing the complement.
 `test_every_site_has_exactly_one_strength_class` now asserts the partition is
 **exhaustive and disjoint** at **5 / 11**, so a hand-written list can no longer
 drift from the catalog.
@@ -85,7 +88,13 @@ CATALOGUED_SITES: tuple[tuple[str, str, str, str], ...] = (
     # ---------------------------------------------------------- NEEDS A TEST
     (
         "src/ad/constraint_jacobian.py",
-        "_substitute_indices",
+        # ⚠ QUALIFIED NESTED OWNER (PR #1743 review). These two sites live in
+        # the nested `_sub_idx`, not in `_substitute_indices`'s own body; naming
+        # only the outer function let `_sub_idx` be renamed — or its lookup moved
+        # out of it — while the anchor still matched somewhere in the outer body.
+        # The resolver walks the dotted path and scopes the search to the INNER
+        # function's lines.
+        "_substitute_indices._sub_idx",
         # ⚠ `return ...` PREFIX IS LOAD-BEARING (PR #1743 review). The bare
         # expression `concrete_indices[symbolic_indices.index(idx)]` appears
         # TWICE — here in `_sub_idx` and again inside the `:1513` comprehension —
@@ -97,7 +106,7 @@ CATALOGUED_SITES: tuple[tuple[str, str, str, str], ...] = (
     ),
     (
         "src/ad/constraint_jacobian.py",
-        "_substitute_indices",
+        "_substitute_indices._sub_idx",
         "concrete_indices[symbolic_indices.index(idx.base)]",
         "NEEDS A TEST",
     ),
@@ -217,6 +226,31 @@ CATALOGUED_SITES: tuple[tuple[str, str, str, str], ...] = (
 )
 
 
+def _owning_bodies(source: str, qualified: str) -> list[str]:
+    """Source text of every function matching ``qualified``, nested paths allowed.
+
+    ``"outer.inner"`` resolves to the ``inner`` FunctionDef found *inside*
+    ``outer``'s body — so an anchor is searched only within the nested function's
+    own lines (PR #1743 review). A bare name resolves to every top-level or
+    nested def of that name, as before.
+    """
+    tree = ast.parse(source)
+    lines = source.splitlines()
+    parts = qualified.split(".")
+
+    def _defs_in(node):
+        return [
+            n
+            for n in ast.walk(node)
+            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n is not node
+        ]
+
+    candidates = [n for n in _defs_in(tree) if n.name == parts[0]]
+    for part in parts[1:]:
+        candidates = [c for n in candidates for c in _defs_in(n) if c.name == part]
+    return ["\n".join(lines[n.lineno - 1 : (n.end_lineno or n.lineno)]) for n in candidates]
+
+
 @pytest.mark.unit
 def test_every_catalogued_site_still_resolves_by_symbol_AND_snippet():
     """⚠ The structural fix for the survey's rotting line numbers.
@@ -241,21 +275,14 @@ def test_every_catalogued_site_still_resolves_by_symbol_AND_snippet():
         path = PROJECT_ROOT / rel
         assert path.is_file(), f"{rel} no longer exists"
         source = path.read_text(encoding="utf-8")
-        tree = ast.parse(source)
-        owners = [
-            n
-            for n in ast.walk(tree)
-            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == func
-        ]
-        if not owners:
+        bodies = _owning_bodies(source, func)
+        if not bodies:
             problems.append(f"{rel}::{func} — function gone ({verdict})")
             continue
-        # ⚠ Scope the search to the FUNCTION's lines, so a snippet that merely
-        # exists elsewhere in the file cannot satisfy the pin.
-        lines = source.splitlines()
-        body = "\n".join(
-            "\n".join(lines[o.lineno - 1 : (o.end_lineno or o.lineno)]) for o in owners
-        )
+        # ⚠ Scope the search to the FUNCTION's lines — the NESTED function's
+        # lines for a dotted owner — so a snippet that merely exists elsewhere in
+        # the file, or in the enclosing function, cannot satisfy the pin.
+        body = "\n".join(bodies)
         if snippet not in body:
             problems.append(f"{rel}::{func} — anchor absent: {snippet!r} ({verdict})")
     assert not problems, "catalogued site(s) no longer resolve:\n  " + "\n  ".join(problems)
@@ -276,12 +303,12 @@ BEHAVIOURALLY_PINNED: frozenset[tuple[str, str, str]] = frozenset(
     {
         (
             "src/ad/constraint_jacobian.py",
-            "_substitute_indices",
+            "_substitute_indices._sub_idx",
             "return concrete_indices[symbolic_indices.index(idx)]",
         ),
         (
             "src/ad/constraint_jacobian.py",
-            "_substitute_indices",
+            "_substitute_indices._sub_idx",
             "concrete_indices[symbolic_indices.index(idx.base)]",
         ),
         (
@@ -322,15 +349,7 @@ def test_every_anchor_occurs_EXACTLY_ONCE_in_its_function():
     problems = []
     for rel, func, snippet, _verdict in CATALOGUED_SITES:
         source = (PROJECT_ROOT / rel).read_text(encoding="utf-8")
-        lines = source.splitlines()
-        owners = [
-            n
-            for n in ast.walk(ast.parse(source))
-            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == func
-        ]
-        body = "\n".join(
-            "\n".join(lines[o.lineno - 1 : (o.end_lineno or o.lineno)]) for o in owners
-        )
+        body = "\n".join(_owning_bodies(source, func))
         n = body.count(snippet)
         if n != 1:
             problems.append(f"{rel}::{func} — anchor occurs {n}x (need exactly 1): {snippet!r}")
@@ -367,7 +386,11 @@ def test_every_site_has_exactly_one_strength_class():
 
     # ⚠ And pin the partition by IDENTITY, not just by size (PR #1743 review):
     # a count of 5/11 is satisfied by swapping which rows are which.
-    assert {s[1] for s in behavioural} == {"_substitute_indices", "_sigma_sp_domain_collision"}
+    assert {s[1] for s in behavioural} == {
+        "_substitute_indices",
+        "_substitute_indices._sub_idx",
+        "_sigma_sp_domain_collision",
+    }
     assert {s[1] for s in structural} == {
         "_handle_aggregation",
         "_try_dotted_key_lookup",
@@ -411,8 +434,8 @@ def test_the_catalog_covers_both_verdicts_and_the_shared_function():
     for _r, f, s, v in CATALOGUED_SITES:
         by_verdict[v].add((f, s))
     assert by_verdict["NEEDS A TEST"] == {
-        ("_substitute_indices", "return concrete_indices[symbolic_indices.index(idx)]"),
-        ("_substitute_indices", "concrete_indices[symbolic_indices.index(idx.base)]"),
+        ("_substitute_indices._sub_idx", "return concrete_indices[symbolic_indices.index(idx)]"),
+        ("_substitute_indices._sub_idx", "concrete_indices[symbolic_indices.index(idx.base)]"),
         ("_substitute_indices", "concrete_indices[symbolic_indices.index(expr.name)]"),
         ("_substitute_indices", "free_concrete = tuple("),
         ("_handle_aggregation", "expanded_indices.index(child_idxs[0])"),

@@ -85,8 +85,11 @@ lines, PR #1728) and said to relocate by content**; Day 11 hit it again while
 locating the same site, which is the argument for citing by SYMBOL rather than
 recording the drift a third time.
 
-Remaining: 7 **NEEDS A TEST** and 9 **ALREADY GUARDED** sites — Day 12's work.
-**Do not re-guard the guarded ones**; three independent remedies already exist.
+~~Remaining: 7 **NEEDS A TEST** and 9 **ALREADY GUARDED** sites — Day 12's work.~~
+**✅ Day 12 pinned all 16** — 5 behaviourally, 11 structurally (limit stated in
+`test_positional_domain_sites.py` and carried to Sprint 40). No guard was
+re-added; the remedies are three shared mechanisms plus
+`_sigma_sp_domain_collision`'s own detector.
 
 ## 2. The catalog
 
@@ -212,6 +215,18 @@ Exists FOR this class: requires >= 2 var-domain positions canonicalising to the 
 
 This is why so many `NEEDS A TEST` verdicts above are *"safe today, but by something upstream and incidental"*. The `.index()` family in `constraint_jacobian.py` is the highest-reach shape in the whole catalog (12/15 and 11/15 models), and its repeat-safety rests entirely on a pass that covers one of the three sub-shapes. **The audit's cheapest possible outcome is to make that dependency explicit rather than accidental.**
 
+> ⚠ **SUPERSEDED BY MEASUREMENT (Day 12).** The dependency is now explicit, and
+> it is not the one this paragraph guessed. Instrumented, the AD layer **does**
+> reach `_substitute_indices` with a repeated domain (12 calls for a `rep(i,i)`
+> model, carrying `('i','i')` against off-diagonal concrete tuples, so the
+> collapse is REAL and the off-diagonal Jacobian is wrong) — and **nothing wrong
+> reaches output because `emit_gams_mcp`'s `detect_empty_equation_instances`
+> refuses via the #1737 guard**. So the safety is not *"a pass covering one
+> sub-shape"*; it is **#1737, load-bearing for the AD layer**. Pinned by
+> `tests/unit/kkt/test_positional_domain_sites.py::test_the_AD_collapse_is_reachable_but_EMIT_refuses_it`,
+> which matches the detector's own context string so a different refusal
+> cannot satisfy it. See §*Day 12* above.
+
 ## 4. Corpus incidence (Unknown 5.2)
 
 **Two independent methods, deliberately** — three, counting the corroboration below. An IR census over all 219 models (`parse_model_file`, then a **case-insensitive** repeat test — `len(domain) != len({x.lower() for x in domain})` — per symbol table, because GAMS identifiers are case-insensitive, so `p(I,i)` is a repeat) and a source-level regex prescan of the raw `.gms` files. They agree on **24** models; the union is **44**.
@@ -292,9 +307,9 @@ P5 is **0-bucket by design**; nothing below asks for a bucket move.
 
 1. ✅ **DONE (D9/D10)** — **Land P2 as a gate first.** It is the only artefact here that finds live defects, it runs in under 3 s, and its **9 violations across 6 models** are a ready-made work list. Landing it *before* any guard means the guards have a fail-before.
 2. ✅ **DONE (D9, #1737 — `src/ir/index_map.py`, raises)** — **Guard the two symbol-keyed `dict(zip(...))` collapses** — `condition_eval.py:117` and `empty_equation_detector.py:127`. Highest reach among unguarded sites (9/15 and 10/15), smallest fix, and `strict=True` already gives a false sense of safety there.
-3. ⏳ **OPEN — Day 12 (`NEEDS A TEST`)** — **Make the `constraint_jacobian.py` `.index()` family's dependency explicit** — 4 sites, the highest-reach shape in the catalog, safe only because of a pass covering one of three sub-shapes.
+3. ✅ **DONE (D12)** — the dependency is explicit and **different from the guess here**: it is the #1737 refusal at emit, not a sub-shape pass (see the superseded note under §3). **Make the `constraint_jacobian.py` `.index()` family's dependency explicit** — 4 sites, the highest-reach shape in the catalog, safe only because of a pass covering one of three sub-shapes.
 4. ✅ **DONE (D11, #1741 — declines to `None`, falling back to the standard path).** **Then `stationarity.py:1091/1104`.** Lower reach (2/15), genuinely unguarded. ⚠ The two rows are **one function**, so one guard closed both; and the remedy is a FALLBACK, not a raise — see the top-of-document status for why the two remedies deliberately differ.
-5. ⏳ **OPEN — Day 12** — **Do not re-guard the 9 `ALREADY GUARDED` sites** — three independent remedies already exist (consume-once slot claiming, `seen_sym` duplicate bail-out, parser alias substitution). Add tests that pin them; the `NEEDS A TEST` verdicts are exactly this.
+5. ✅ **DONE (D12) — with a stated limit.** No guard was re-added. The 16 remaining sites are pinned in `test_positional_domain_sites.py`: **5 behaviourally** (the four `_substitute_indices` shapes, `_sigma_sp_domain_collision`) and **11 structurally** (anchor text within the owning function — a guard there could keep its anchor while its logic is broken; a nine-shape probe with the consume-once guards disabled found no discriminating input, carried to Sprint 40). **Do not re-guard the 9 `ALREADY GUARDED` sites** — three independent remedies already exist (consume-once slot claiming, `seen_sym` duplicate bail-out, parser alias substitution). Add tests that pin them; the `NEEDS A TEST` verdicts are exactly this.
 
 **⚠ The four `NEEDS A GUARD` sites are candidates, not confirmed defects.** Each needs the Day-0 trace the S38 retrospective requires — three of four S38 gates named the wrong layer.
 
@@ -312,8 +327,8 @@ P5 is **0-bucket by design**; nothing below asks for a bucket move.
 
 ---
 
-**Document Status:** ✅ Survey complete (Sprint 39 Prep Task 7); the four `NEEDS A GUARD` sites **TRACED** Sprint 39 Day 8 — none is a confirmed defect, and **two of the four line references had already drifted +293 lines** (§*Sprint 39 Day 8*) — and **all four CLOSED** by Day 11: D9 `#1737` (raises) and D11 `#1741` (declines to `None`). Both are latent; `check-goldens` reports 186 clean / 0 drift for each. **Remaining: 7 `NEEDS A TEST` + 9 `ALREADY GUARDED` — Day 12.** §6 is prep-era and marked historical.
-**Last Updated:** 2026-09-15 — Day-11 closure of the last two `NEEDS A GUARD` sites (#1741)
+**Document Status:** ✅ Survey complete (Sprint 39 Prep Task 7); the four `NEEDS A GUARD` sites **TRACED** Sprint 39 Day 8 — none is a confirmed defect, and **two of the four line references had already drifted +293 lines** (§*Sprint 39 Day 8*) — and **all four CLOSED** by Day 11: D9 `#1737` (raises) and D11 `#1741` (declines to `None`). Both are latent; `check-goldens` reports 186 clean / 0 drift for each. **The remaining 16 — 7 `NEEDS A TEST` + 9 `ALREADY GUARDED` — PINNED Day 12** (5 behaviourally, 11 structurally; the structural limit is stated and carried). §6 is prep-era and marked historical; §3's *"pass covering one sub-shape"* is superseded by the Day-12 measurement that #1737 is the load-bearing safety.
+**Last Updated:** 2026-09-17 — Day-12 pins for the remaining 16 sites; §3/§5/status brought into agreement with the Day-12 section (PR #1743 review)
 
 
 ---

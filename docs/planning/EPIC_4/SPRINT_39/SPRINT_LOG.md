@@ -762,8 +762,10 @@ of this entry said it did** (PR #1743 review). The honest split:
 ⚠ **This table was wrong twice.** An earlier revision listed **7** structural
 sites and omitted **four** — `_remap_condition_to_domain`, the `NEEDS A TEST`
 `_handle_aggregation` row, `_try_dotted_key_lookup` and
-`_apply_alias_offset_to_deriv` — leaving two catalogued sites outside **both**
-categories. The review named two of the four; the others surfaced only by
+`_apply_alias_offset_to_deriv` — leaving **four** catalogued sites outside
+**both** categories (⚠ an earlier revision said *two* while listing four; none
+of the four is behavioural, so all four were unclassified — PR #1743 review).
+The review named two of the four; the others surfaced only by
 computing the complement. The module now derives the split from
 `CATALOGUED_SITES` and `test_every_site_has_exactly_one_strength_class` asserts
 it is **exhaustive and disjoint at 5 / 11**, so a hand-written table can no
