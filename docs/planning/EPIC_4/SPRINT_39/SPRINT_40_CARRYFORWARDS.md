@@ -26,9 +26,11 @@ affected models.
 ⚠ **Three of the five Class-A-effect models have NO solve to verify a fix
 against:** egypt and shale are license-gated; **nonsharp is convexity-excluded
 with no `mcp_solve` record at all.** Property-and-golden verification is the
-*primary* route for this class, not a fallback. All four Class-A-effect models
-with a record are `mcp_solve: failure` today for other reasons, so no fix here
-moves a reported figure — plan it as correctness work, not KPI work.
+*primary* route for this class, not a fallback. The **four** Class-A-effect
+**models** with a record — **dinam, egypt, shale, turkpow** (models, not
+fingerprints; turkpow's ×3 in the table is three fingerprints in one model) — are
+all `mcp_solve: failure` today for other reasons, measured from the DB, so no fix
+here moves a reported figure. Plan it as correctness work, not KPI work.
 
 ⚠ **nonsharp has one reference of EACH class.** A Class-B fix leaves its Class-A
 reference untouched. Do not treat the model as one item.
@@ -116,9 +118,14 @@ first:
 ## 9. Banked, not started — rejected candidates stay rejected
 
 - **camcge** → Epic 5 (drop-row BANNED).
-- **ganges** → closed as unreachable at the rebind site (S38); the 6th blocker is
-  the embedded-NLP-diverges class.
+- **ganges** → the **`$149` rebind site** is closed (#1668, both directions
+  closed on measurement, S38). ⚠ **ganges itself is NOT closed** (PR #1744
+  review — an earlier revision said "closed", which would let this file drop
+  it): **#1667** (deferred `.l`-dependent bounds emitted before the presolve
+  `$include`), **#929/#930** (ganges/gangesx translation timeout) are **OPEN**,
+  and the 6th blocker — the embedded-NLP-diverges class (#1378/#1424) — has **no
+  issue of its own**. Sprint 40 prep should file that one.
 - **rocket / mine** → consultation sent 2026-08-26, follow-up posted 2026-09-09
   (#1462 / #1443). **Do not re-open the send decision.**
 - **agreste / cesam / indus** → banked, new diagnosis required.
-- **P4 lnts `eqII`** → handed back to #1381 (Day 3).
+- **P2 dyncge B-4 — the `eqII` remainder** → handed back to #1381 (Day 3). ⚠ An earlier revision labelled this "P4 lnts", which is wrong twice over: lnts is P3 (§2 above), and `eqII` belongs to the dyncge partial, not to lnts (PR #1744 review).

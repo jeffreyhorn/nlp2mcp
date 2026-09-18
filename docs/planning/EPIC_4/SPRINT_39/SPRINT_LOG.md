@@ -1083,13 +1083,13 @@ the five-sprint slip is broken); P9's Epic-5 design recorded (Day 9).
 
 | figure | value | derivation |
 |---|---|---|
-| execution-day PRs merged | **18** (#1724–#1743, less two issue numbers and three prep PRs) | `gh pr list --state merged` |
+| execution-day PRs merged | **18** — the range #1724–#1743 holds 20 numbers, of which #1737 and #1741 are issues; the three prep PRs (#1721–#1723) lie **outside** the range and are not subtracted (⚠ an earlier revision said "less … three prep PRs", which would give 15 — PR #1744 review) | `gh pr list --state merged` |
 | Copilot review rounds across them | **68** | `gh api .../reviews`, filtered by author, summed |
 | of which on the four P7/P5 PRs #1736/#1740/#1742/#1743 | 6 + 7 + 5 + 8 = **26** | same |
 | goldens changed | **1** (`dyncge`) | `git diff --stat 9ab2c0c3..HEAD -- data/gamslib/mcp/` |
 | DB rows migrated | **48** (2.2.1 → 3.0.0); **47** carry `mcp_file_generated` after Remedy A reverted weapons | `migrate_schema_v3.0.0.py`; DB scan |
 | new tests | **+143** vs Day 0 (5301 → 5444) | `make test` |
-| P5 sites: guarded / pinned | **4** guarded (#1737 ×2, #1741 ×2) · **16** pinned (5 behaviourally, 11 structurally) | `test_positional_domain_sites.py` |
+| P5 sites: 21 = guarded + excluded + pinned | **4** guarded (#1737 ×2, #1741 ×2) · **1** `NOT REACHABLE (in sample)` (`emit_gams.py:795`, deliberately excluded) · **16** pinned (5 behaviourally, 11 structurally) — ⚠ 4 + 1 + 16 = 21; an earlier revision omitted the excluded site (PR #1744 review) | `test_positional_domain_sites.py` module docstring |
 | prep unknowns | 30, all resolved: 11 ✅ / 11 ❌ / 8 🔶 — refutation **63 %** | `KNOWN_UNKNOWNS.md` |
 
 ⚠ **One recalled figure was wrong and is corrected here rather than carried:**

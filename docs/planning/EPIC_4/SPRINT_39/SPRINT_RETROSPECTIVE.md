@@ -24,9 +24,13 @@ deliberately differ.
 attribution defect behind a spurious match (Remedy A on the retry *branch*, not
 one write), renamed a field that asserted a fact its writer could never know, and
 shipped schema **3.0.0** with a migration. P8 landed Phase-0 requirements 8a/8b
-and the P1/P2 index-repeat gate (**enforced in CI**). P5 surveyed **21** sites,
-closed the 4 `NEEDS A GUARD` ones, and pinned the remaining **16** — 5
-behaviourally, 11 structurally, the limit stated. P6's consultation follow-up
+and the P1/P2 index-repeat gate (**enforced in CI**). P5 surveyed **21** sites:
+**4** `NEEDS A GUARD` closed, **1** `NOT REACHABLE (in sample)` deliberately
+left out (`emit_gams.py:795` — 0 of 15 sampled models reach it, an absence not a
+proof), and the remaining **16** pinned — 5 behaviourally, 11 structurally, the
+limit stated. ⚠ 4 + 1 + 16 = 21; an earlier revision omitted the excluded site
+and implied 4 + 16 (PR #1744 review) — the same omission the Day-12 module
+docstring had already corrected. P6's consultation follow-up
 went out **on its gate date**, breaking a five-sprint slip.
 
 **Prep refuted 63 % of its own unknowns** (11 ✅ / 11 ❌ / 8 🔶 of 30), against
@@ -36,7 +40,13 @@ believed is a prep that measured more.
 ## 2. The thing worth generalising: a claim restated is a claim that will rot
 
 **68 Copilot review rounds across 18 PRs, 26 of them on the four P7/P5 PRs** —
-and the four late PRs touched **no `src/` emit path**. Read individually the
+and every one of those four was **golden-neutral, measured**: the unqualified leak
+gate reported 186 clean / 0 drift after each. ⚠ *Not* "source-free" — an earlier
+revision of this sentence said the four "touched no `src/` emit path", which is
+**false**: #1736 changed `src/ir/index_map.py` and `src/kkt/empty_equation_detector.py`,
+#1742 changed `src/kkt/stationarity.py`, and #1740 added
+`src/diagnostics/solve_attribution.py` (PR #1744 review). The measured claim is
+that none of it moved a byte of any golden. Read individually the
 findings look like nitpicks: a count beside a list, a rationale beside its
 correction, a mirror of a mirror. Read together they are **one defect class in
 about ten costumes**, and naming it is the retrospective's job.
@@ -120,7 +130,9 @@ every adoption protocol.
 ## 5. What did not
 
 - **Documentation cost dominated the last four PRs** — 26 review rounds on
-  changes touching no emit. §2 names the class; §7 names the fix.
+  changes that were **golden-neutral** (two of them *did* change emit-path
+  source — the #1737 and #1741 guards — but produced no golden drift). §2 names
+  the class; §7 names the fix.
 - **The PR description was the stale mirror six times.** No gate checks it, so
   it is corrected only when read — and every time, the reader was the reviewer.
 - **Two probes reported passes that could not have failed** — a `python -c` run
