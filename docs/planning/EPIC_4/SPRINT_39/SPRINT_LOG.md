@@ -919,8 +919,8 @@ Sprint 40 as a classified work list.
 
 ### Gate
 
-typecheck / format / lint clean · **`make test` 5443 passed**, 10 skipped,
-1 xfailed · `make check-index-repeats` PASS (P2 **9 = baseline 9**) ·
+typecheck / format / lint clean · **`make test` 5444 passed**, 10 skipped,
+1 xfailed (measured at `9f76f905`; the Day-13 retest re-derives this) · `make check-index-repeats` PASS (P2 **9 = baseline 9**) ·
 `check-doc-figures` clean.
 
 ⚠ **The suite figure was missing from this section and stale where it did
@@ -931,20 +931,24 @@ close against the Day-11 log at face value:
 |---|---|
 | Day 11, **as logged** | 5431 — the figure at its first commit |
 | Day 11, **as merged** | **5433** — its own review rounds added 2 tests |
-| this module collects | **10** nodes |
-| Day 12 final | **5443** = 5433 + 10 ✅ measured |
+| this module collects | **11** nodes (at `9f76f905`) |
+| Day 12 final | **5444** = 5433 + 11 ✅ measured at `9f76f905` |
 
-⚠ **This reconciliation has now been re-derived THREE times** (5438 → 5441 → 5443; an earlier revision said *twice* while listing three figures — PR #1743 review). The **5438 (+5)** first
+⚠ **This reconciliation has now been re-derived FOUR times** (5438 → 5441 → 5443 → 5444; PR #1743 review). The **5438 (+5)** first
 recorded was correct at the *first* Day-12 commit, when the module had 5 tests.
 The **5441 = 5433 + 8** that replaced it was correct until the very round that
 wrote it added `test_every_site_has_exactly_one_strength_class` — a **9th** node
 — making the true figure **5442 = 5433 + 9** (PR #1743 review). The module now
-collects **10** nodes after this round's uniqueness guard, giving
-**5443 = 5433 + 10**, taken from the run rather than the arithmetic.
+collects **11** nodes after the permanent commented-out-site mutant test, giving
+**5444 = 5433 + 11**, measured at `9f76f905`.
 
-**The rule this keeps proving: a node count written in the same round that adds
-a node is stale before the commit lands.** Derive it from `--collect-only` or
-the run itself, at the point of use. **A gate figure quoted from the commit that
+**The rule this keeps proving — and which I broke once more AFTER writing it
+down: a node count written in the same round that adds a node is stale before
+the commit lands.** The 5443 (+10) was recorded in the round that added the 11th
+node; the suite in that very round measured 5444 and the commit message said
+so, but the three mirrors were not re-derived. **So this table is now pinned to
+a commit** and is explicitly superseded by whatever the **Day-13 final retest**
+measures. Do not update it per review round; update it once, from that run. **A gate figure quoted from the commit that
 produced it goes stale the moment a review round adds a test** — the same
 banked-staleness shape as the floor-73 template on Day 11, in the same document.
 
