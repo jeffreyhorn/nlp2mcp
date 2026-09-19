@@ -138,8 +138,16 @@ the **standard path's** emit — not an error, and not the B-3 consolidated form
    **uncontended** (a contended run reports unverified timeouts and silently
    narrows scope — this sprint hit that twice).
 5. **⚠ Scope, not just verdict.** State how many models could reach the guard
-   (**0** today) alongside the pass, so a future reader can tell a real pass from
-   an unexercised one.
+   alongside the pass, so a future reader can tell a real pass from an
+   unexercised one. **Measured at Sprint 39 close (`bd2af6e9`), not inferred
+   from the byte-diff:** a `sitecustomize` probe injected into every `src.cli`
+   subprocess of the leak gate (non-vacuity control: 6 B-3 calls registered on
+   cesam2 first) counted the B-3 **site** reached in **35 goldens, 98 calls**,
+   and this guard's decline conditions true **0 / 98** times. ⚠ The Day-11
+   record said "0 corpus models reach it" on the strength of 186 clean / 0
+   drift — which for a *declining* guard proves emit invariance only, not
+   non-reachability, since a reached guard falls back and may emit identical
+   bytes (PR #1744 review). The measured figure supersedes it.
 
 ### PROCEED/REPLAN Signal
 
