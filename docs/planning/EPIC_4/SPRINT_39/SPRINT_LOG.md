@@ -1045,13 +1045,24 @@ fails says something about the *plan*, not the *work*.
 | landing | Phase-0 gate | leak gate (unqualified) | in `main` | bucket |
 |---|---|---|---|---|
 | **P2 dyncge B-4** — Pattern-C member for the full-collapse Sum (Day 2, #1728) | `ISSUE_1714` ✅ | 186 clean ✅ | ✅ | **0 — PARTIAL.** `eqXp` fixed; `eqII` handed back to #1381 (Day 3). Owner decision to land the partial |
-| **P5 #1737** — `src/ir/index_map.py`, repeated EQUATION domain **raises** (Day 9, #1736) | `ISSUE_1737` ✅ | 186 clean ✅ | ✅ | **0 — latent**, no corpus model reaches it |
-| **P5 #1741** — Pattern-C B-3 repeated-index guard, **declines to `None`** (Day 11, #1742) | `ISSUE_1741` ✅ | 186 clean ✅ | ✅ | **0 — latent**, no corpus model reaches it |
+| **P5 #1737** — `src/ir/index_map.py`, repeated EQUATION domain **raises** (Day 9, #1736) | `ISSUE_1737` ✅ | 186 clean ✅ | ✅ | **0 — latent.** Reach is **proven by the raise**: a reached raising guard aborts regeneration, so 186 clean regenerations mean it was never entered; corroborated by `ISSUE_1737`'s 220-model static scan (0 repeated equation domains) |
+| **P5 #1741** — Pattern-C B-3 repeated-index guard, **declines to `None`** (Day 11, #1742) | `ISSUE_1741` ✅ | 186 clean ✅ | ✅ | **0 — latent, MEASURED at close:** a `sitecustomize` probe on every `src.cli` subprocess of the leak gate counted the B-3 **site** reached in **35** goldens (**98** calls) and the **guard** fired **0 / 98** times. ⚠ For a *declining* guard the byte-diff alone could not have shown this — a reached guard falls back to the standard path, which may emit identical bytes (PR #1744 review) |
 
 **Three emit landings, all three-gated, all 0-bucket — and that is the correct
 reading, not a disappointment.** Two are guards for a defect class (S38 D11/D12)
 that the P5 survey showed is one symbol→position step away from live at 21
-sites; the third is a partial fix whose remainder is named. **The two guards
+sites; the third is a partial fix whose remainder is named.
+
+⚠ **The two guards' latency rests on DIFFERENT evidence, and the close originally
+treated them alike** (PR #1744 review). A **raising** guard's non-reachability
+*is* proven by a clean regeneration — reaching it aborts emit. A **declining**
+guard's is not: it falls back and may emit identical bytes, so 0 drift cannot
+distinguish "not reached" from "reached, no-op". #1741 therefore needed a reach
+count, taken at close with a probe injected into every leak-gate subprocess
+(non-vacuity control: the probe registered 6 B-3 calls on cesam2 before the
+corpus run). The result — site reached in 35 goldens, guard fired 0/98 — is
+stronger than the byte-diff and also *more* informative: B-3 is live in the
+corpus, and none of its 98 corpus invocations carries a repeated index. **The two guards
 deliberately differ** (raise vs. decline) and the reason is recorded in the
 survey so a later reader does not "harmonise" them.
 

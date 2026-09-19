@@ -16,9 +16,15 @@ measurement (Task 6: four call sites at 0.5 % of wall-clock). That claim held.
 **Three emit landings, all three-gated (C3), all 0-bucket:** dyncge's Pattern-C
 B-4 member (partial, remainder named), and two **latent guards** for the
 repeated-domain defect class — `#1737` (raises) and `#1741` (declines). **Both
-guards were provably unreachable by any corpus model** (186 clean / 0 drift each),
-which is precisely why they could land safely, and the survey records why they
-deliberately differ.
+guards are latent on the corpus, on different evidence:** #1737's is proven by
+the raise itself (a reached raising guard aborts regeneration, and 186
+regenerated clean) plus a 220-model static scan; #1741's was **measured at
+close** — a probe on every leak-gate subprocess counted the B-3 site reached in
+35 goldens and the guard fired **0 of 98** times. ⚠ An earlier revision said
+both were *"provably unreachable"* on the byte-diff alone, which is true only
+for a raising guard; a declining guard can be reached and emit identical bytes
+(PR #1744 review). That is why they could land safely, and the survey records
+why they deliberately differ.
 
 **The infrastructure landings are the sprint's firmest product.** P7 fixed the
 attribution defect behind a spurious match (Remedy A on the retry *branch*, not
