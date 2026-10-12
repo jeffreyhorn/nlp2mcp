@@ -234,7 +234,7 @@ Sprint 40 prep team (license terms: project owner)
 **High** — `data/gamslib/schema.json` is at 3.0.0 with `additionalProperties: false` on both result types. PR #1745's review found the plan's writer list incomplete twice; a third omission found after the P2 batch means rows written without their edition.
 
 ### Assumption
-The only code that writes `mcp_solve` or `convexity` records, or stamps a `schema_version`, is: `scripts/gamslib/test_solve.py`, `scripts/gamslib/run_full_test.py` (passthrough), `scripts/gamslib/verify_convexity.py`, and `scripts/gamslib/db_manager.py` (`--empty` and the catalog-init chain).
+The code that writes `mcp_solve` or `convexity` records, or stamps a `schema_version`, is: `scripts/gamslib/test_solve.py`, `scripts/gamslib/run_full_test.py` (passthrough), `scripts/gamslib/verify_convexity.py` (output JSON / flat `catalog.json` fields only), **`scripts/gamslib/migrate_catalog.py` (the constructor of the DB's nested `convexity` object, ~L156–181)**, `scripts/gamslib/db_manager.py` (`--empty` and the catalog-init chain) — **plus a P3 application writer that does not exist yet**: nothing today applies verifier output to `gamslib_status.json`, so the closed list is not closed until that writer is designed.
 
 ### Research Questions
 1. Which files assign into an `mcp_solve` or `convexity` dict, or construct one? (grep, not recall)
@@ -378,7 +378,7 @@ Sprint 40 prep team
 5. Does it need the license (it re-solves), and therefore run only locally or in the licensed workflow?
 
 ### How to Verify
-Run the tool on every dry-run match and on one constructed self-match (the positive control — the `weapons`-shaped fixture in `tests/unit/sprint_audit/test_mcp_solve_attribution.py` shows the pattern). Record wall-clock and verdict.
+**Validate each dry-run match from its own recorded fields** — `mcp_attribution` / `mcp_completed_own_solve`, which `test_solve.py` parses from the **actual solve listing** before deleting it (read from the throwaway worktree's DB copy). The standalone `check_mcp_solve_attribution.py` re-emits and re-solves a **fresh** `--nlp-presolve` model, so it does **not** audit the dry-run's listing; run it **separately** as the large-model exercise on the largest members and on one constructed self-match (the positive control — the `weapons`-shaped fixture in `tests/unit/sprint_audit/test_mcp_solve_attribution.py` shows the pattern). Record wall-clock and verdict for both.
 
 ### Risk if Wrong
 - **A spurious cohort match booked as Solve/Match**, discovered later as a correction — the `weapons` story at scale.
