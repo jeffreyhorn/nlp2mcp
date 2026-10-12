@@ -10,7 +10,7 @@
 
 **Sprint definition:** `../PROJECT_PLAN.md` → *Sprint 40 (Weeks 45–46): Sprint 39 Carryforward & the Licensed-GAMS Unlock — the License-Gated Cohorts' First NLP-vs-MCP Comparison, Licensed CI, the P10 Two-Class Triage, lnts, sarf's Jacobian Re-Architecture & the Sprint-39 Process Changes*
 
-**Key insight carried from Sprint 39:** the sprint's recurring failure was not a wrong *fix* but a wrong *claim about evidence* — a figure restated per review round until it rotted (four times), a count where an identity was needed, a probe reported as passing that could not have failed (twice), a classification moved without sweeping the sentences that quoted it. Sprint 40 adds a new way to produce that failure at scale: **twenty-one models whose results have never existed**. This prep plan is therefore weighted toward **establishing what counts as evidence before the evidence arrives** — Tasks 3–6 exist so that the **first licensed cohort result (Task 7)** is read against rules written without knowing it. Task 3's synthetic probes and neutrality sample come first by design; they test the toolchain, not which way any gated model falls.
+**Key insight carried from Sprint 39:** the sprint's recurring failure was not a wrong *fix* but a wrong *claim about evidence* — a figure restated per review round until it rotted (four times), a count where an identity was needed, a probe reported as passing that could not have failed (twice), a classification moved without sweeping the sentences that quoted it. Sprint 40 adds a new way to produce that failure at scale: **twenty first-time in-scope results** — 11 MCP-gated solves plus 9 non-MIP NLP-gated classifications (`andean` is MIP-excluded). This prep plan is therefore weighted toward **establishing what counts as evidence before the evidence arrives** — Tasks 3–6 exist so that the **first licensed cohort result (Task 7)** is read against rules written without knowing it. Task 3's synthetic probes and neutrality sample come first by design; they test the toolchain, not which way any gated model falls.
 
 ---
 
@@ -496,7 +496,7 @@ Produce `docs/planning/EPIC_4/SPRINT_40/SCHEMA_3_1_0_DESIGN.md`: the exact field
 
 1. **Enumerate every writer by grep**, not by recall: every assignment into `mcp_solve` / `convexity` dicts and every `schema_version` literal.
 2. **Define the fields**: `license_edition` (`"licensed"` / `"demo"` / `null`) in both result types; `gams_version` in `convexity_result`. State the null semantics — **unrecorded, never a guessed `"demo"`**.
-3. **Specify the parser extension** to `extract_gams_version` using Task 3's discriminating string; reuse, do not duplicate.
+3. **Specify the parser extension** to `extract_gams_version` using Task 3's discriminating string; reuse, do not duplicate. **For `verify_convexity.py` this is more than a parser call:** `verify_convexity.py` cannot supply provenance itself: `verify_model` writes its listing to `output.lst` inside a `tempfile.TemporaryDirectory` that is deleted on return, and its `--output` JSON (`VerificationResult.to_dict()`) carries a numeric `solver_status` but **no solver name and no edition** (verified at `912d005c`). The design must read the edition **and the solver name** from the listing **before** the temporary directory is removed, and add both to `VerificationResult` (and so to `--output` and `convexity_result`).
 4. **Specify the migration** (`migrate_schema_v3.1.0.py`): additive, idempotent, `null` for existing rows, chain position after 3.0.0 — and it **refreshes the top-level `updated_date`** alongside `schema_version`, as `migrate_schema_v3.0.0.py` does (lines ~151–157, citing `schema.json`'s "timestamp of last modification" and PR #1740's stale-provenance finding) and every prior migration does.
 5. **Specify the `db_manager.py` changes**: `--empty` stamp 3.0.0 → 3.1.0 and its comment; the catalog-init warning's chain.
 6. **List the tests**: migration test (including an assertion that `updated_date` is refreshed); schema tests (accepts new fields, **still rejects an unknown key**); writer tests per stage from licensed and demo `.lst` fixtures; updated `test_db_manager.py` regressions.
@@ -659,9 +659,9 @@ None of the eleven MCP-gated emits has ever been exercised by a solve, and none 
 
 ### What Needs to Be Done
 
-1. **Confirm Task 3's edition** in every `.lst` the run produces — a demo-produced result is discarded, not recorded.
+1. **Confirm Task 3's edition** in every `.lst` the run produces — a demo-produced result is discarded, not recorded. For convexity runs the verifier deletes its listing, so step 3's retained-listing run supplies it.
 2. **MCP-gated (11):** in a scratch copy, re-emit each at HEAD and diff against its golden; run the MCP solve; compare to the NLP reference; run attribution; run `kkt_residual.py` on every non-match. Record translate and solve wall-clock (input to Task 12's nightly-slot sizing).
-3. **NLP-gated (9 in scope):** run `verify_convexity.py` licensed **output-only** (`--model <id> --output <scratch>.json`, never `--update-catalog`; it has no status-DB interface) in the throwaway worktree; for each convex classification, attempt parse → translate → solve → compare with the same evidence.
+3. **NLP-gated (9 in scope):** run `verify_convexity.py` licensed **output-only** (`--model <id> --output <scratch>.json`, never `--update-catalog`; it has no status-DB interface) in the throwaway worktree. `verify_convexity.py` cannot supply provenance itself: `verify_model` writes its listing to `output.lst` inside a `tempfile.TemporaryDirectory` that is deleted on return, and its `--output` JSON (`VerificationResult.to_dict()`) carries a numeric `solver_status` but **no solver name and no edition** (verified at `912d005c`). **Provenance by a retained-listing run:** for each model, also run the **same GAMS command the verifier issues** — `gams <model>.gms o=<scratch>/<id>.lst lo=3` with `LP=CPLEX` for LP or `NLP=CONOPT` otherwise — in the same worktree, **keeping** the listing. Read the **edition classification** (Task 3's regex) and the **solver actually used** (the `SOLVER … FROM LINE` line — for the QCP `emfl`, whatever QCP selects) from it, locally; commit only those two values. Require the retained run's model/solver status to **match** the verifier JSON's, or the pair is discarded. A model without a licensed retained listing has no recorded result. Then, for each convex classification, attempt parse → translate → solve → compare with the same evidence.
 4. **Classify each result** into an existing bucket and **route** every non-match (P4 for egypt/shale; `ISSUE_933` for tricp; a new issue stub otherwise) — no fix attempted.
 5. **Do not persist**: no `gamslib_status.json` write, no golden regeneration committed. The sprint's batch is the measurement of record; this is the rehearsal.
 6. **When any model's expected bucket moves**, grep this prep plan and every Sprint-40 prep doc for that model (§7.6).
@@ -695,7 +695,9 @@ import json, sys
 doc = open(sys.argv[1]).read()
 db = json.load(open("data/gamslib/gamslib_status.json"))
 mcp = {m["model_id"] for m in db["models"] if (m.get("mcp_solve") or {}).get("outcome_category") == "path_solve_license"}
-nlp = {m["model_id"] for m in db["models"] if (m.get("convexity") or {}).get("error") == "Model exceeds demo license limits"}
+# same type scope as the task: andean (MIP, minlp_out_of_scope) is excluded, never measured
+nlp = {m["model_id"] for m in db["models"] if (m.get("convexity") or {}).get("error") == "Model exceeds demo license limits"
+       and m.get("gamslib_type") in ("LP", "NLP", "QCP")}
 missing = sorted(x for x in mcp | nlp if f"`{x}`" not in doc)
 print("missing from dry-run doc:", missing or "none")
 PY
@@ -710,7 +712,7 @@ PY
 
 ### Acceptance Criteria
 
-- [ ] Every result shown to come from the licensed edition
+- [ ] Every result shown to come from the licensed edition — for convexity runs, by a **retained listing** whose edition classification and solver name are recorded and whose status matches the verifier JSON
 - [ ] Every member of both populations has a row, checked by identity against the DB predicate
 - [ ] Every non-match has a `kkt_residual.py` verdict and a route; no fix attempted
 - [ ] Every match has attribution showing our MCP solved
