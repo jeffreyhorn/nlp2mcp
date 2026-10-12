@@ -228,7 +228,7 @@ Sprint 40 prep team (license terms: project owner)
 
 ---
 
-## Unknown 1.4: Is the schema-3.1.0 writer list closed — `test_solve.py`, `run_full_test.py`, `verify_convexity.py` and `db_manager.py`, and nothing else?
+## Unknown 1.4: Can the schema-3.1.0 writer/initializer list be CLOSED — every existing writer found, and the missing P3 convexity application writer designed?
 
 ### Priority
 **High** — `data/gamslib/schema.json` is at 3.0.0 with `additionalProperties: false` on both result types. PR #1745's review found the plan's writer list incomplete twice; a third omission found after the P2 batch means rows written without their edition.
