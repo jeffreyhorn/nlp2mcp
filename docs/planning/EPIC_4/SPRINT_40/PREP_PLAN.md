@@ -304,7 +304,7 @@ test -f docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md && echo "✅ d
 
 ### Objective
 
-Produce `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md`: **which license file GAMS actually reads** (the user-level evaluation license, or the system-directory demo file still present), shown by evidence; and **three probes — LP, NLP and MCP, each sized above its own demo ceiling** (**per model-type demo ceilings** — linear models (LP, CPLEX) are refused only above **2,000** rows/columns; nonlinear types (NLP via CONOPT, MCP via PATH) above **1,000**) — run **on the demo and on the effective license**, showing each fails on one and solves on the other — plus a **non-identifying regex** that distinguishes the two editions in a `.lst` file (recorded with its classification results, never with raw header text), which Task 5's `license_edition` writer will key on.
+Produce `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md`: **which license file GAMS actually reads** (the user-level evaluation license, or the system-directory demo file still present), shown by evidence; and **four probes — LP, NLP, QCP and MCP, each sized above its own demo ceiling** (**per model-type demo ceilings** — linear models (LP, CPLEX) are refused only above **2,000** rows/columns; nonlinear types (NLP via CONOPT, MCP via PATH) above **1,000**) — run **on the demo and on the effective license**, showing each fails on one and solves on the other — plus a **non-identifying regex** that distinguishes the two editions in a `.lst` file (recorded with its classification results, never with raw header text), which Task 5's `license_edition` writer will key on.
 
 ### Why This Matters
 
@@ -320,7 +320,7 @@ Every license-dependent result in Sprint 40 is only as good as the evidence that
 ### What Needs to Be Done
 
 1. **Establish precedence by evidence:** with both files present, which does GAMS read? Move the user-level file aside (backup **outside the repo**), re-run, restore. Check every invocation path the pipeline uses (`shutil.which("gams")`, subprocesses). Recommend whether the system-directory demo file should also be replaced.
-2. **Build three probes from one scalable synthetic model** with a size parameter — **LP** (CPLEX, as `verify_convexity.py` uses `LP=CPLEX`) sized **above 2,000**; **NLP** (CONOPT) **above 1,000**; **MCP** (PATH) **above 1,000**. Each must exceed **its own** model type's ceiling, or its demo run cannot fail. Run each also just *under* its ceiling on the demo, to show the size parameter is what flips the result.
+2. **Build four probes from one scalable synthetic model** with a size parameter — **LP** (CPLEX, as `verify_convexity.py` uses `LP=CPLEX`) sized **above 2,000**; **NLP** (CONOPT) **above 1,000**; **QCP above 1,000**, run with `verify_convexity.py`'s own `NLP=CONOPT` option so it exercises the pipeline's real path for `emfl` — **`NLP=` does not select the QCP solver**, so record which solver the listing actually reports (measured 2026-10-12: QCP solver selection is **independent of `NLP=`** — `NLP=IPOPT` still ran CONOPT, `QCP=IPOPT` ran IPOPT; on this install the **default QCP solver is CONOPT**; the demo refused a 1,500-row QCP and allowed a 900-row one); **MCP** (PATH) **above 1,000**. Each must exceed **its own** model type's ceiling, or its demo run cannot fail. Run each also just *under* its ceiling on the demo, to show the size parameter is what flips the result.
 3. **Run each on the demo** (`license=` pointed at the system-directory demo file) — record the refusal line verbatim (the positive control: each probe *can* fail).
 4. **Run each under the effective license** — record `MODEL STATUS`, the solver line, the edition (redacted) and `gams audit lo=2` output. A license that lifts the limit for one solver but not another would split P2/P3 by license.
 5. **Identify a non-identifying discriminator** for licensed vs. demo `.lst` headers and record **only the regex and its classification results** (each paired file → `licensed` / `demo`, plus the inverted-pattern control) — **never the raw header lines**. Task 5's parser keys on the regex.
@@ -370,7 +370,7 @@ N2=$(git grep --untracked -l -E 'Licensee:[[:space:]]+[[:alnum:]]|node:[0-9]' --
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md` — the precedence finding; the three probes (LP > 2,000, NLP > 1,000, MCP > 1,000) with demo refusal (verbatim) and licensed solve for each; the edition-discriminating regex with its classification results (no raw header text)
+- `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md` — the precedence finding; the four probes (LP > 2,000, NLP > 1,000, QCP > 1,000 with its actual solver recorded, MCP > 1,000) with demo refusal (verbatim) and licensed solve for each; the edition-discriminating regex with its classification results (no raw header text)
 - A recommendation on replacing the system-directory demo file (owner action)
 - Operational facts for Task 4 (install path, binding, expiry)
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.5
@@ -378,8 +378,8 @@ N2=$(git grep --untracked -l -E 'Licensee:[[:space:]]+[[:alnum:]]|node:[0-9]' --
 ### Acceptance Criteria
 
 - [ ] Which license file GAMS reads is shown by evidence, not assumed
-- [ ] **Each** of the LP, NLP and MCP probes is sized above its own demo ceiling and **fails on the demo** with the refusal line recorded — the positive control
-- [ ] The same three probes **solve under the effective license** with `MODEL STATUS` recorded
+- [ ] **Each** of the LP, NLP, QCP and MCP probes is sized above its own demo ceiling and **fails on the demo** with the refusal line recorded — the positive control
+- [ ] The same four probes **solve under the effective license** with `MODEL STATUS` recorded, and the **QCP probe's actual solver** is recorded
 - [ ] A non-identifying edition-discriminating regex identified for `.lst` files, recorded **with its classification of every paired file and its inverted-pattern control** — no raw header text committed
 - [ ] No part of the license text appears in any committed file, log excerpt or PR — the fail-closed scan in *Verification* passes, including its positive control
 - [ ] All GAMS runs executed in a scratch directory, not the repo root
@@ -494,9 +494,9 @@ Produce `docs/planning/EPIC_4/SPRINT_40/SCHEMA_3_1_0_DESIGN.md`: the exact field
 1. **Enumerate every writer by grep**, not by recall: every assignment into `mcp_solve` / `convexity` dicts and every `schema_version` literal.
 2. **Define the fields**: `license_edition` (`"licensed"` / `"demo"` / `null`) in both result types; `gams_version` in `convexity_result`. State the null semantics — **unrecorded, never a guessed `"demo"`**.
 3. **Specify the parser extension** to `extract_gams_version` using Task 3's discriminating string; reuse, do not duplicate.
-4. **Specify the migration** (`migrate_schema_v3.1.0.py`): additive, idempotent, `null` for existing rows, chain position after 3.0.0.
+4. **Specify the migration** (`migrate_schema_v3.1.0.py`): additive, idempotent, `null` for existing rows, chain position after 3.0.0 — and it **refreshes the top-level `updated_date`** alongside `schema_version`, as `migrate_schema_v3.0.0.py` does (lines ~151–157, citing `schema.json`'s "timestamp of last modification" and PR #1740's stale-provenance finding) and every prior migration does.
 5. **Specify the `db_manager.py` changes**: `--empty` stamp 3.0.0 → 3.1.0 and its comment; the catalog-init warning's chain.
-6. **List the tests**: migration test; schema tests (accepts new fields, **still rejects an unknown key**); writer tests per stage from licensed and demo `.lst` fixtures; updated `test_db_manager.py` regressions.
+6. **List the tests**: migration test (including an assertion that `updated_date` is refreshed); schema tests (accepts new fields, **still rejects an unknown key**); writer tests per stage from licensed and demo `.lst` fixtures; updated `test_db_manager.py` regressions.
 
 ### Changes
 
@@ -674,8 +674,13 @@ cd "$(git rev-parse --show-toplevel)"
 DOC=docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md
 test -f "$DOC" && echo "✅ doc" || { echo "COHORT_DRY_RUN.md not yet created"; exit 0; }
 
-# Never persisted: the DB and the goldens are unchanged by prep
-git diff --quiet HEAD -- data/gamslib/gamslib_status.json data/gamslib/mcp/ && echo "✅ DB + goldens untouched"
+# Never persisted: neither the task branch's COMMITS nor the working tree touch the
+# DB or goldens. `git diff HEAD` alone would pass once a change was committed, and
+# misses untracked files — so check the branch against main AND the porcelain status.
+P="data/gamslib/gamslib_status.json data/gamslib/mcp/"
+git diff --quiet main...HEAD -- $P && [ -z "$(git status --porcelain --untracked-files=all -- $P)" ] \
+  && echo "✅ DB + goldens untouched (branch vs main, and working tree)" \
+  || echo "❌ DB or goldens changed on this branch or in the working tree"
 
 # Every member of BOTH populations has a row, by identity (names from the DB, not from this plan)
 .venv/bin/python - "$DOC" <<'PY'
@@ -702,7 +707,7 @@ PY
 - [ ] Every member of both populations has a row, checked by identity against the DB predicate
 - [ ] Every non-match has a `kkt_residual.py` verdict and a route; no fix attempted
 - [ ] Every match has attribution showing our MCP solved
-- [ ] DB and goldens untouched (`git diff` clean)
+- [ ] DB and goldens untouched — **no change on the branch vs `main` and none in the working tree, untracked included** (checked in *Verification*)
 - [ ] Wall-clock per model recorded for scheduling
 - [ ] Unknowns 2.1, 2.2, 2.3, 2.4, 3.2 verified and updated in KNOWN_UNKNOWNS.md
 
