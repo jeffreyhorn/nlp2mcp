@@ -121,7 +121,7 @@ On a new branch `planning/sprint40-task5` (from `main`), execute Sprint-40 Prep 
 
 On a new branch `planning/sprint40-task6` (from `main`), execute Sprint-40 Prep Task 6. **Depends on Tasks 1, 2, 3, 4** — its CI decision needs Task 3's binding evidence and Task 4's hosted-runner checklist. (Priority: **Critical**; est. **2–3 h**.) **⚠ Merge this before Task 7 measures anything.**
 
-**Objective:** Produce `docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md` posing the three Day-0 owner decisions with options and consequences — **written before any license-unlocked result exists**, and decided before Task 7's results are read.
+**Objective:** Produce `docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md` posing the three Day-0 owner decisions with options and consequences — **written and answered before any cohort result exists**: the boundary is the start of **Task 7's cohort measurement**. Task 3's synthetic probes and neutrality sample come earlier by design (this task depends on Task 3) and are not cohort results — they are about the toolchain, not about which way any gated model falls.
 
 **Why it exists:** Sprint 39 P1 spent a Day-0 decision on a floor classification the Sprint-38 closer discovered at close, in the favourable direction, and correctly refused to self-approve. Sprint 40 is about to produce up to twenty such classifications at once. **A rule written after the results is a rule fitted to them.**
 

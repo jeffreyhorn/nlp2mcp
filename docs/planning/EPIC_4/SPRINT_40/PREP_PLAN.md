@@ -2,7 +2,7 @@
 
 **Purpose:** Complete the preparation tasks that must land before Sprint 40 Day 1
 **Timeline:** Complete before Sprint 40 Day 1
-**Goal:** Turn the full GAMS license from a possession into *evidence* — a toolchain shown to be licensed, a CI design that never exposes it, and owner decisions taken **before** any license-unlocked result exists — while giving every Sprint-39 carryforward a re-measured disposition
+**Goal:** Turn the full GAMS license from a possession into *evidence* — a toolchain shown to be licensed, a CI design that never exposes it, and owner decisions taken **before** any license-gated **cohort** result exists — while giving every Sprint-39 carryforward a re-measured disposition
 
 **Anchor:** `bd2af6e9` (Sprint 39 close, 2026-09-18) · plan merged at `912d005c` (PR #1745) · **Toolchain:** GAMS **54.2.1** / PATH **5.2.01**
 
@@ -31,7 +31,7 @@ From `../SPRINT_39/SPRINT_RETROSPECTIVE.md` §7 and `../SPRINT_39/SPRINT_40_CARR
 
 ## Executive Summary
 
-Sprint 39 closed at **Solve 111 · Match 95 · Translate 135 · floor 75 · `path_solve_terminated` 0** (measured at `bd2af6e9`; Match 96 → 95 was P7's `weapons` **correction**, not a regression). Its carryforwards are each bounded (`../SPRINT_39/SPRINT_40_CARRYFORWARDS.md`), but the sprint they feed has changed shape: **the project now holds a full, size-unlimited GAMS license**, and the demo's 1,000-row nonlinear limit has gated two populations at different stages for the whole of Epic 4 — **11 MCP solves** inside the 142-candidate corpus and **10 reference NLP solves** outside it.
+Sprint 39 closed at **Solve 111 · Match 95 · Translate 135 · floor 75 · `path_solve_terminated` 0** (measured at `bd2af6e9`; Match 96 → 95 was P7's `weapons` **correction**, not a regression). Its carryforwards are each bounded (`../SPRINT_39/SPRINT_40_CARRYFORWARDS.md`), but the sprint they feed has changed shape: **the project now has a GAMS license obtained as size-unlimited — observed so far as a user-level evaluation license (valid to 2027-09-21); whether it is the *effective* license for every pipeline invocation and lifts the limit on every solver path is Unknown 1.1, Task 3's to prove**, and the demo's 1,000-row nonlinear limit has gated two populations at different stages for the whole of Epic 4 — **11 MCP solves** inside the 142-candidate corpus and **10 reference NLP solves** outside it.
 
 Sprint 40 addresses ten priorities:
 
@@ -148,7 +148,7 @@ Candidate seeds, drawn from `../PROJECT_PLAN.md` Sprint 40 and `../SPRINT_39/SPR
 
 **Three premises were put in doubt by writing the list, before any task ran** — each is an unknown, not a conclusion:
 
-1. **Which license runs, and for which solvers (1.1)** — ⚠ *corrected in PR #1746 review:* this bullet first read *"the license may not be installed"*, from the system-directory `gamslice.txt` (still the 2026-07-13 demo file). The license **is** installed at the **user level** and the log header reports it; the open question is precedence and per-solver coverage. And "full license" must cover **three** solvers — `verify_convexity.py` uses `LP=CPLEX` and `NLP=CONOPT`, MCP solves use PATH — so a solver-selective license would split P3 by license, not by convexity.
+1. **Which license runs, and for which solvers (1.1)** — ⚠ *corrected in PR #1746 review:* this bullet first read *"the license may not be installed"*, from the system-directory `gamslice.txt` (still the 2026-07-13 demo file). The license **is** installed at the **user level** and the log header reports it; the open question is precedence and per-solver coverage. And the license must cover **three** solvers *(four solver paths after PR #1746 review: the QCP model `emfl` selects its own solver, independently of `NLP=`)* — `verify_convexity.py` uses `LP=CPLEX` and `NLP=CONOPT`, MCP solves use PATH — so a solver-selective license would split P3 by license, not by convexity.
 2. **The corpus can grow before the owner decides (3.3):** `kpi_block.py:112` and `batch_parse.get_candidate_models` select candidates by `convexity.status`, so the 142 denominator is **derived** — a licensed convexity run that writes a convex status for any NLP-gated model moves it silently. Task 7's never-persist rule is what prevents this in prep; the sprint needs a mechanism.
 3. **lnts may not be landable as planned (5.1–5.3):** Sprint 39 Day 5's candidate failed its PROCEED signal on substance (`_fx_` rows `INFES`, `robot`/`springchain` perturbed, a label-enumerated guard), and a second dynamics defect (364 `INFES` rows) sits underneath.
 
@@ -304,7 +304,7 @@ test -f docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md && echo "✅ d
 
 ### Objective
 
-Produce `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md`: **which license file GAMS actually reads** (the user-level evaluation license, or the system-directory demo file still present), shown by evidence; and **four probes — LP, NLP, QCP and MCP, each sized above its own demo ceiling** (**per model-type demo ceilings** — linear models (LP, CPLEX) are refused only above **2,000** rows/columns; nonlinear types (NLP via CONOPT, MCP via PATH) above **1,000**) — run **on the demo and on the effective license**, showing each fails on one and solves on the other — plus a **non-identifying regex** that distinguishes the two editions in a `.lst` file (recorded with its classification results, never with raw header text), which Task 5's `license_edition` writer will key on.
+Produce `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md`: **which license file GAMS actually reads** (the user-level evaluation license, or the system-directory demo file still present), shown by evidence; and **four probes — LP, NLP, QCP and MCP, each sized above its own demo ceiling** (**per model-type demo ceilings** — linear models (LP, CPLEX) are refused only above **2,000** rows/columns; nonlinear types (NLP via CONOPT, MCP via PATH) above **1,000**) — run **on the demo and on the effective license**, showing each fails on one and solves on the other — plus a **non-identifying regex** that distinguishes the two editions in a `.lst` file (recorded with its classification results, never with raw header text), which Task 5's `license_edition` writer will key on — **and a first license-neutrality sample** (Unknown 1.5): a stratified set of models **outside** both gated populations re-solved under the effective license and diffed against the DB.
 
 ### Why This Matters
 
@@ -324,7 +324,8 @@ Every license-dependent result in Sprint 40 is only as good as the evidence that
 3. **Run each on the demo** (`license=` pointed at the system-directory demo file) — record the refusal line verbatim (the positive control: each probe *can* fail).
 4. **Run each under the effective license** — record `MODEL STATUS`, the solver line, the edition (redacted) and `gams audit lo=2` output. A license that lifts the limit for one solver but not another would split P2/P3 by license.
 5. **Identify a non-identifying discriminator** for licensed vs. demo `.lst` headers and record **only the regex and its classification results** (each paired file → `licensed` / `demo`, plus the inverted-pattern control) — **never the raw header lines**. Task 5's parser keys on the regex.
-6. **Record operational facts** Task 4 needs: the license file's install path, whether it is node-locked or otherwise bound, its expiry if any.
+6. **License-neutrality sample** (Unknown 1.5): re-solve a stratified sample of models **outside both gated populations** — e.g. 5 cold matches, 5 presolve matches, 1 per failure bucket, named by identity — under the effective license, in a throwaway worktree, and diff outcome / objective / comparison verdict against the DB. **Positive control:** one size-refused model **must** change. Any other row that moves is a toolchain finding to route before any KPI is read. The sprint's first licensed full run is the exhaustive test; this is the early warning.
+7. **Record operational facts** Task 4 needs: the license file's install path, whether it is node-locked or otherwise bound, its expiry if any.
 
 ### Changes
 
@@ -372,6 +373,7 @@ N2=$(git grep --untracked -l -E 'Licensee:[[:space:]]+[[:alnum:]]|node:[0-9]' --
 
 - `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md` — the precedence finding; the four probes (LP > 2,000, NLP > 1,000, QCP > 1,000 with its actual solver recorded, MCP > 1,000) with demo refusal (verbatim) and licensed solve for each; the edition-discriminating regex with its classification results (no raw header text)
 - A recommendation on replacing the system-directory demo file (owner action)
+- The license-neutrality sample: the named models, their before/after outcome, objective and verdict, and the positive-control model's change
 - Operational facts for Task 4 (install path, binding, expiry)
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.5
 
@@ -382,6 +384,7 @@ N2=$(git grep --untracked -l -E 'Licensee:[[:space:]]+[[:alnum:]]|node:[0-9]' --
 - [ ] The same four probes **solve under the effective license** with `MODEL STATUS` recorded, and the **QCP probe's actual solver** is recorded
 - [ ] A non-identifying edition-discriminating regex identified for `.lst` files, recorded **with its classification of every paired file and its inverted-pattern control** — no raw header text committed
 - [ ] No part of the license text appears in any committed file, log excerpt or PR — the fail-closed scan in *Verification* passes, including its positive control
+- [ ] A license-neutrality sample of named models outside both populations is re-solved and diffed against the DB, **with its positive control** (a size-refused model changes); every other moved row is routed
 - [ ] All GAMS runs executed in a scratch directory, not the repo root
 - [ ] Unknowns 1.1, 1.2, 1.5 verified and updated in KNOWN_UNKNOWNS.md
 
@@ -550,7 +553,7 @@ test -f "$DOC" && echo "✅ doc" || echo "SCHEMA_3_1_0_DESIGN.md not yet created
 
 ### Objective
 
-Produce `docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md` posing the three Day-0 owner decisions with their options and consequences — **written before any license-unlocked result exists**, and decided before Task 7's results are read.
+Produce `docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md` posing the three Day-0 owner decisions with their options and consequences — **written and answered before any cohort result exists** (the boundary is the start of Task 7's cohort measurement; Task 3's synthetic probes and neutrality sample, which this task depends on, are not cohort results), and decided before Task 7's results are read.
 
 ### Why This Matters
 
@@ -1119,7 +1122,7 @@ Task 1 (Known Unknowns)
 - [ ] **The license is shown, not asserted** — a probe that fails on the demo and solves licensed, with the edition string identified
 - [ ] **No CI design gives the license to a job that runs PR code**, and the `main`-only branch policy is verified
 - [ ] **The schema change has a closed, grep-derived writer list** including `db_manager.py`
-- [ ] **The three owner decisions are posed before any license-unlocked result exists**, provably from history
+- [ ] **The three owner decisions are answered before any cohort result exists** (before Task 7's first commit), provably from history
 - [ ] **Both populations are measured by identity**, every non-match carrying a residual verdict and a route
 - [ ] **Every Critical/High Known Unknown is resolved or explicitly deferred with a reason**
 - [ ] **lnts's +1 Solve is either justified against Sprint 39 Day 5 or removed from the projection**
@@ -1144,7 +1147,7 @@ Recorded in advance, so it can be recognised:
 
 ### Sprint 40 definition
 - `../PROJECT_PLAN.md` → *Sprint 40 (Weeks 45–46)* — goal, ten priorities, deliverables, acceptance criteria, effort (114–162 h), risk; and the 2026-10-12 changelog entry recording the insertion and the PR #1745 review changes
-- `../GOALS.md` — Epic 4 goals: §7 *Solve Stage: PATH Convergence and Solution Matching* (the NLP-vs-MCP comparison P2/P3 extend to the large models), §8 *Performance, Quality & Release* (P6, P10), §*Success Metrics*, §*Risks & Mitigation* (Risk 2 MCP-NLP divergence, Risk 6 infeasible MCP formulations), §*Dependencies* (External: *"GAMS software installed locally (with valid license)"* — now a full license)
+- `../GOALS.md` — Epic 4 goals: §7 *Solve Stage: PATH Convergence and Solution Matching* (the NLP-vs-MCP comparison P2/P3 extend to the large models), §8 *Performance, Quality & Release* (P6, P10), §*Success Metrics*, §*Risks & Mitigation* (Risk 2 MCP-NLP divergence, Risk 6 infeasible MCP formulations), §*Dependencies* (External: *"GAMS software installed locally (with valid license)"* — now a user-level evaluation license obtained as size-unlimited; its effectiveness and per-solver coverage are Task 3's to prove)
 
 ### Sprint 39 hand-off (the primary source for every carryforward)
 - `../SPRINT_39/SPRINT_40_CARRYFORWARDS.md` — §1 P10 two-class · §2 lnts · §3 sarf · §4 #1737 · §5 diagonal defect · §6 structural sites · §7 smaller items + the license cohort · §8 process findings · §9 banked
