@@ -178,7 +178,7 @@ The `.lst` header carries a stable, parseable line that differs between demo and
 5. Does a demo-refused run still print it — i.e. can `license_edition: "demo"` be recorded for a refusal?
 
 ### How to Verify
-Diff the headers of Unknown 1.1's paired probe `.lst` files (demo vs licensed) for each solver **locally, without committing them**; grep the pattern in a convexity, an MCP and a presolve `.lst`. Write the candidate regex and show it classifies all six paired files correctly **and** misclassifies none when the pattern is deliberately inverted (positive control). **Record only the regex and the classification table** — never the header lines themselves.
+Diff the headers of Unknown 1.1's paired probe `.lst` files (demo vs licensed) for each solver **locally, without committing them**; grep the pattern in a convexity, an MCP and a presolve `.lst`. Write the candidate regex and require it to classify **every generated listing** correctly — at least the **eight** probe listings (four solver variants × demo/licensed) plus the convexity-, MCP- and presolve-stage listings. Then **invert the classifier deliberately and assert the check FAILS** (the positive control): a check that still passes under inversion cannot tell the editions apart. **Record only the regex and the classification table** — never the header lines themselves.
 
 ### Risk if Wrong
 - **`license_edition` written from a guess**, the precise failure the schema's null semantics exist to prevent.
@@ -473,10 +473,10 @@ A meaningful fraction of the nine classify convex (several are textbook convex p
 2. Do the LP models classify `verified_convex` automatically (as other LPs in the corpus did)?
 3. Does any NLP classify `non_convex` or `error` for a reason other than the license?
 4. How long does each convexity solve take at full size?
-5. Does the verifier's output for these models write to the DB as part of the run — see Unknown 3.3?
+5. Does the verifier write anywhere persistent during the run? *(At `912d005c`: only `catalog.json`, and only with `--update-catalog`; it never writes `gamslib_status.json` — see Unknown 3.3 for the application step P3 will need.)*
 
 ### How to Verify
-Run `verify_convexity.py` on each **against a scratch copy of the DB** (never the committed one), licensed; record status, solver, objective and time.
+`verify_convexity.py` has **no status-DB interface**: it reads `data/gamslib/catalog.json`, writes results to `--output <json>`, and touches `catalog.json` **only** with `--update-catalog` (verified at `912d005c`: `CATALOG_PATH` L25, `--output` / `--update-catalog` in its argument parser). Run it **output-only — `--model <id> --output <scratch>.json`, never `--update-catalog`** — in a throwaway worktree, licensed; record status, solver, objective and time from the output JSON. Applying any result to `gamslib_status.json` is a **separate, explicit step** (none exists today — the DB's convexity block came from the one-time `migrate_catalog.py`), which Unknown 3.3 governs.
 
 ### Risk if Wrong
 - **P3 over- or under-sized**; a corpus decision posed for the wrong number of models.
@@ -503,12 +503,12 @@ Sprint 40 prep team
 ### Research Questions
 1. Which code paths select the candidate corpus by convexity status (`kpi_block.py`, `batch_parse.py`, `run_full_test.py`, `check_doc_figures.py`'s facts, `floor_tracker.py`)?
 2. Does writing `verified_convex` for, say, `torsion` change `kpi_block.py`'s "convex candidates" from 142 to 143 on the next run? (Positive control on a scratch DB.)
-3. What mechanism keeps an un-adopted model out — a holding status, a scope list, or never writing to the committed DB until the decision?
+3. What mechanism keeps an un-adopted model out — a holding status, a scope list, or never writing to the committed DB until the decision? **And what step would write a licensed convexity result into `gamslib_status.json` at all?** `verify_convexity.py` writes only `--output` JSON or (with `--update-catalog`) `catalog.json`; the DB's convexity block came from the one-time `migrate_catalog.py` — so P3 needs an explicit application step, and that step is where the hold must live.
 4. What are the options for classifying a license-unlocked cold match in `data/floor_provenance.json` (new `limb`, or exclusion), and what does each do to `floor_tracker.py`?
 5. Can the owner's three answers be committed before the dry run **provably from history** — the answers commit an ancestor of `COHORT_DRY_RUN.md`'s first commit, not merely the brief's creation earlier in time?
 
 ### How to Verify
-On a scratch copy of the DB, set one NLP-gated model's `convexity.status` to `verified_convex` and run `kpi_block.py` against it: the candidate count must move (the positive control for the silent-growth claim). Grep every reader of `CONVEX_STATUSES` / the candidate predicate. Draft the brief's options and confirm none cites a result.
+On a scratch copy of the DB, set one NLP-gated model's `convexity.status` to `verified_convex` and run `kpi_block.py --db <scratch copy>` against it: the candidate count must move (the positive control for the silent-growth claim). Grep every reader of `CONVEX_STATUSES` / the candidate predicate. Draft the brief's options and confirm none cites a result.
 
 ### Risk if Wrong
 - **The headline denominator moves without a decision or a footnote** — percentages silently re-based, the exact thing the S23–S25 scope footnotes exist to prevent.

@@ -10,7 +10,7 @@
 
 **Sprint definition:** `../PROJECT_PLAN.md` → *Sprint 40 (Weeks 45–46): Sprint 39 Carryforward & the Licensed-GAMS Unlock — the License-Gated Cohorts' First NLP-vs-MCP Comparison, Licensed CI, the P10 Two-Class Triage, lnts, sarf's Jacobian Re-Architecture & the Sprint-39 Process Changes*
 
-**Key insight carried from Sprint 39:** the sprint's recurring failure was not a wrong *fix* but a wrong *claim about evidence* — a figure restated per review round until it rotted (four times), a count where an identity was needed, a probe reported as passing that could not have failed (twice), a classification moved without sweeping the sentences that quoted it. Sprint 40 adds a new way to produce that failure at scale: **twenty-one models whose results have never existed**. This prep plan is therefore weighted toward **establishing what counts as evidence before the evidence arrives** — Tasks 3–6 exist so that the first licensed result is read against rules written without knowing it.
+**Key insight carried from Sprint 39:** the sprint's recurring failure was not a wrong *fix* but a wrong *claim about evidence* — a figure restated per review round until it rotted (four times), a count where an identity was needed, a probe reported as passing that could not have failed (twice), a classification moved without sweeping the sentences that quoted it. Sprint 40 adds a new way to produce that failure at scale: **twenty-one models whose results have never existed**. This prep plan is therefore weighted toward **establishing what counts as evidence before the evidence arrives** — Tasks 3–6 exist so that the **first licensed cohort result (Task 7)** is read against rules written without knowing it. Task 3's synthetic probes and neutrality sample come first by design; they test the toolchain, not which way any gated model falls.
 
 ---
 
@@ -59,7 +59,7 @@ This prep plan front-loads the work whose absence would cost the most mid-sprint
 | 3 | Prove the Effective License — Precedence & Per-Solver Fail-Capable Probes | Critical | 3-4 hours | Tasks 1, 2 | P1 (local) — gates P2/P3 and Tasks 5, 7 |
 | 4 | CI License-Isolation Design & Workflow Inventory | High | 3-4 hours | Tasks 1, 3 | P1 (CI) — demo-only PR jobs, trusted licensed workflow |
 | 5 | Schema 3.1.0 `license_edition` Design | High | 2-3 hours | Tasks 1, 3 | P1 (schema) — migration, writers, `db_manager`, tests |
-| 6 | Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind) | Critical | 2-3 hours | Tasks 1, 2, 3, 4 | P1/P2/P3 — the three Day-0 decisions, taken before any result exists |
+| 6 | Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind) | Critical | 2-3 hours | Tasks 1, 2, 3, 4 | P1/P2/P3 — the three owner decisions, answered in prep before any cohort result exists |
 | 7 | License-Gated Cohorts Dry Run — Fingerprints & Routing | Critical | 5-7 hours | Tasks 2, 3, 6 | P2 + P3 — first measurement, GO/NO-GO, never persisted |
 | 8 | lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate | High | 3-4 hours | Tasks 1, 2, 3 | P5 — the +1 Solve rests on an untested premise |
 | 9 | sarf Jacobian O(active) Re-Architecture Design | High | 4-6 hours | Tasks 1, 2 | P6 — the sprint's planned +1 Translate |
@@ -553,7 +553,7 @@ test -f "$DOC" && echo "✅ doc" || echo "SCHEMA_3_1_0_DESIGN.md not yet created
 
 ### Objective
 
-Produce `docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md` posing the three Day-0 owner decisions with their options and consequences — **written and answered before any cohort result exists** (the boundary is the start of Task 7's cohort measurement; Task 3's synthetic probes and neutrality sample, which this task depends on, are not cohort results), and decided before Task 7's results are read.
+Produce `docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md` posing the three owner decisions (scheduled for Day 0 in `PROJECT_PLAN.md`; taken **in prep** here, before Task 7) with their options and consequences — **written and answered before any cohort result exists** (the boundary is the start of Task 7's cohort measurement; Task 3's synthetic probes and neutrality sample, which this task depends on, are not cohort results), and decided before Task 7's results are read.
 
 ### Why This Matters
 
@@ -657,7 +657,7 @@ None of the eleven MCP-gated emits has ever been exercised by a solve, and none 
 
 1. **Confirm Task 3's edition** in every `.lst` the run produces — a demo-produced result is discarded, not recorded.
 2. **MCP-gated (11):** in a scratch copy, re-emit each at HEAD and diff against its golden; run the MCP solve; compare to the NLP reference; run attribution; run `kkt_residual.py` on every non-match. Record translate and solve wall-clock (input to Task 12's nightly-slot sizing).
-3. **NLP-gated (9 in scope):** run convexity verification licensed; for each convex classification, attempt parse → translate → solve → compare with the same evidence.
+3. **NLP-gated (9 in scope):** run `verify_convexity.py` licensed **output-only** (`--model <id> --output <scratch>.json`, never `--update-catalog`; it has no status-DB interface) in the throwaway worktree; for each convex classification, attempt parse → translate → solve → compare with the same evidence.
 4. **Classify each result** into an existing bucket and **route** every non-match (P4 for egypt/shale; `ISSUE_933` for tricp; a new issue stub otherwise) — no fix attempted.
 5. **Do not persist**: no `gamslib_status.json` write, no golden regeneration committed. The sprint's batch is the measurement of record; this is the rehearsal.
 6. **When any model's expected bucket moves**, grep this prep plan and every Sprint-40 prep doc for that model (§7.6).
@@ -1022,7 +1022,7 @@ Produce `docs/planning/EPIC_4/SPRINT_40/PLAN.md` and `docs/planning/EPIC_4/SPRIN
 
 ### Why This Matters
 
-Sprint 40 has three fixed points the schedule must honour rather than discover: **P1 before any license-dependent measurement**, **the Day-0 owner decisions before the P2 batch**, and **P4 after P2** (egypt/shale need their solves). It also inherits a lesson about close rules: Sprint 38 pre-registered a rule against an unstarted track and it went unmet for unrelated reasons; Sprint 39 required every rule to state its precondition, so an unmet rule can be told apart from a missed target.
+Sprint 40 has three fixed points the schedule must honour rather than discover: **P1 before any license-dependent measurement**, **the three owner decisions — already answered and committed in prep (Task 6) — before any cohort measurement**, and **P4 after P2** (egypt/shale need their solves). It also inherits a lesson about close rules: Sprint 38 pre-registered a rule against an unstarted track and it went unmet for unrelated reasons; Sprint 39 required every rule to state its precondition, so an unmet rule can be told apart from a missed target.
 
 ### Background
 
@@ -1033,7 +1033,7 @@ Sprint 40 has three fixed points the schedule must honour rather than discover: 
 ### What Needs to Be Done
 
 1. **Assign priorities to days** with per-day budgets summing ≤ 168 h, no day over 12 h; P1 on Days 0–1; the P2 batch on a nightly slot sized from Task 7's wall-clock.
-2. **Fold in prep verdicts**: Task 8's lnts verdict (keep/re-scope/remove the +1), Task 9's sarf re-estimate, Task 7's routing list, Task 6's decisions (or their Day-0 slot).
+2. **Fold in prep verdicts**: Task 8's lnts verdict (keep/re-scope/remove the +1), Task 9's sarf re-estimate, Task 7's routing list, and **Task 6's recorded answers** — consumed as fixed inputs. There is **no Day-0 fallback**: Task 6 is complete only once all three answers are committed, Task 7 must descend from that commit, and this task depends on both. *(This supersedes `PROJECT_PLAN.md`'s "Day-0 owner decision" timing — the decisions move earlier, into prep, which is what the blind-decision gate requires.)*
 3. **Write the REPLAN exit per track** — the evidence that triggers it and where the budget goes.
 4. **Schedule checkpoints** (Day 5, Day 10) and the final retest, with `--resolve-changed --since-commit bd2af6e9` and the **license-neutrality** check (every row outside the two cohorts keeps its outcome).
 5. **Pre-register the close rules**, each with its precondition; state which take none.
@@ -1075,7 +1075,7 @@ grep -c -i "precondition" "$PLAN"
 ### Acceptance Criteria
 
 - [ ] ≤ 12 h/day and ≤ 168 h total, **validated by the committed script**
-- [ ] P1 precedes every license-dependent measurement; Day-0 decisions precede the P2 batch; P4 follows P2
+- [ ] P1 precedes every license-dependent measurement; Task 6's prep-recorded answers are consumed as fixed inputs (no Day-0 slot); P4 follows P2
 - [ ] Every track has a REPLAN exit with its budget destination
 - [ ] Every close rule states its precondition (or explicitly takes none)
 - [ ] Every unresolved Known Unknown routed to a day
