@@ -54,7 +54,7 @@ This prep plan front-loads the work whose absence would cost the most mid-sprint
 
 | # | Task | Priority | Est. Time | Dependencies | Sprint 40 Goal Addressed |
 |---|------|----------|-----------|--------------|--------------------------|
-| 1 | Create Sprint 40 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 10 priorities + the license unlock |
+| 1 | ✅ Create Sprint 40 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 10 priorities + the license unlock |
 | 2 | Re-Derive the Sprint-39 Baseline & Both License-Gated Populations by Identity | Critical | 2-3 hours | Task 1 | Every priority — the commit-pinned baseline and the two named cohorts |
 | 3 | Install the Full License Locally & Prove It with a Fail-Capable Probe | Critical | 3-4 hours | Tasks 1, 2 | P1 (local) — gates P2/P3 and Tasks 5, 7 |
 | 4 | CI License-Isolation Design & Workflow Inventory | High | 3-4 hours | Tasks 1, 3 | P1 (CI) — demo-only PR jobs, trusted licensed workflow |
@@ -77,12 +77,13 @@ Task 3 gates everything license-dependent: no cohort result is evidence until th
 
 ## Task 1: Create Sprint 40 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-10-12)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** n/a — this task *creates* the unknowns (29 across 10 categories)
 
 ### Objective
 
@@ -96,7 +97,7 @@ Sprint 40 carries a new class of unknown that no prior sprint had: **assumptions
 
 ### Background
 
-`../SPRINT_39/KNOWN_UNKNOWNS.md` is the template: 30 unknowns across 10 categories, each with **Priority / Assumption / Research Questions / How to Verify / Risk if Wrong / Estimated Research Time / Owner / Verification Results**, plus a task-mapping appendix. Its final tally was **11 ✅ / 11 ❌ / 8 🔶**.
+`../SPRINT_39/KNOWN_UNKNOWNS.md` is the template: 30 unknowns across 10 categories, each with **Priority / Assumption / Research Questions / How to Verify / Risk if Wrong / Estimated Research Time / Owner / Verification Results**, plus a task-mapping appendix. Its final tally was **11 ✅ / 11 ❌ / 8 🔶**. <!-- figures-ok: 30 is SPRINT 39's count (the template), not Sprint 40's -->
 
 ⚠ **Sprint 39's Task 1 published a research-time total "derived by summing" that was never summed** (40.0 h written as 33.0 h, then "corrected" to 29.0 h). Derive the total with the snippet in *Verification*, at the point of use.
 
@@ -118,17 +119,42 @@ Candidate seeds, drawn from `../PROJECT_PLAN.md` Sprint 40 and `../SPRINT_39/SPR
 1. **Enumerate the assumptions** in `../PROJECT_PLAN.md`'s Sprint 40 entry and `../SPRINT_39/SPRINT_40_CARRYFORWARDS.md` — every figure, every named file or symbol, every "should".
 2. **Group into categories**, one per sprint priority plus one for the license unlock as a whole, numbered `N.M`.
 3. **For each unknown, write all eight sections**, leaving *Verification Results* empty for the owning task.
-4. **Add a mapping table** — unknown → owning prep task — and add an `**Unknowns Verified:**` line to each of Tasks 2–12 in this plan.
+4. **Add a mapping table** — unknown → owning prep task — and add an `**Unknowns Verified:**` line to each of Tasks 2–11 in this plan (Task 12 integrates rather than owns).
 5. **Flag lineage** — which unknowns descend from a Sprint-39 disposition, and which are new with the license.
 6. **Derive the research-time total by script**, not by addition in prose.
 
 ### Changes
 
-*To be completed*
+- **Created** `docs/planning/EPIC_4/SPRINT_40/KNOWN_UNKNOWNS.md` — 29 unknowns across 10 categories, each with all 8 required sections and 3–5 research questions
+- **Added** the Task-to-Unknown mapping appendix, assigning every unknown to exactly one owning prep task
+- **Updated** this plan's Tasks 2–11 with `Unknowns Verified` metadata, a deliverable and an acceptance-criteria item each
+- **Updated** `CHANGELOG.md` with the Task 1 completion entry
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — 29 unknowns, 10 categories, 33.0 research hours.**
+
+| metric | target | actual |
+|---|---|---|
+| Total unknowns | 22–30 (aim 25+) | **29** |
+| Critical | ~25 % | **7 (24 %)** |
+| High | ~40 % | **11 (38 %)** |
+| Medium | ~25 % | **8 (28 %)** |
+| Low | ~10 % | **3 (10 %)** |
+| Research time | 28–36 h | **33.0 h** — derived by this task's *Verification* snippet, not added in prose |
+| Categories | all sprint components | **10** (one per priority; Category 1 is the license toolchain) |
+
+**Every figure above was produced by script at the commit that adds the file**, including the coverage check (every unknown owned by exactly one task; none orphaned). The 33.0 h fits within Tasks 2–11's 32–45 h budget **at its lower bound** — unlike Sprint 39, whose 40.0 h fitted only near the top.
+
+**Three premises were put in doubt by writing the list, before any task ran** — each is an unknown, not a conclusion:
+
+1. **The license may not be installed (1.1):** the installed `gamslice.txt` dates from the 54.2.1 demo install (2026-07-13). And "full license" must cover **three** solvers — `verify_convexity.py` uses `LP=CPLEX` and `NLP=CONOPT`, MCP solves use PATH — so a solver-selective license would split P3 by license, not by convexity.
+2. **The corpus can grow before the owner decides (3.3):** `kpi_block.py:112` and `batch_parse.get_candidate_models` select candidates by `convexity.status`, so the 142 denominator is **derived** — a licensed convexity run that writes a convex status for any NLP-gated model moves it silently. Task 7's never-persist rule is what prevents this in prep; the sprint needs a mechanism.
+3. **lnts may not be landable as planned (5.1–5.3):** Sprint 39 Day 5's candidate failed its PROCEED signal on substance (`_fx_` rows `INFES`, `robot`/`springchain` perturbed, a label-enumerated guard), and a second dynamics defect (364 `INFES` rows) sits underneath.
+
+**Lineage:** Sprint 39's 30 unknowns all resolved in prep, so none carries open. Categories 2, 5, 6, 7–8 and 10 continue S39 Unknowns 6.2, 3.1–3.3, 4.1–4.4, 5.1–5.3 and 8.1–8.3 respectively; **S39 10.2 (closed as unreachable) is deliberately not re-asked**, and its recommended GitHub #1668 follow-up is recorded under 9.2.
+
+**One deviation from the task prompt, recorded rather than hidden:** the prompt asked for "5 main categories" while listing ten; ten are used. And it asked for metadata on Tasks 2–10; **Task 11 also owns four unknowns**, so it carries the same metadata.
 
 ### Verification
 
@@ -155,25 +181,25 @@ for b in blocks:
 print(f"unknowns: {len(blocks)} | missing-section: {len(bad)} {bad or ''} | research hours (derived): {hrs:.1f}")
 PY
 
-# Categories cover every priority + the license unlock (expect >= 11)
+# Categories: one per priority, Category 1 being the license toolchain (expect 10)
 grep -c "^# Category" "$KU"
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_40/KNOWN_UNKNOWNS.md` with ≥ 22 unknowns across ≥ 11 categories
+- `docs/planning/EPIC_4/SPRINT_40/KNOWN_UNKNOWNS.md` with ≥ 22 unknowns across 10 categories (one per priority) <!-- figures-ok: 22 is the task's minimum threshold, not a count; actual is 29 -->
 - A mapping table from each unknown to its owning prep task
-- An `Unknowns Verified:` line added to each of Tasks 2–12 in this plan
+- An `Unknowns Verified:` line added to each of Tasks 2–11 in this plan (Task 12 integrates)
 - A lineage note separating Sprint-39-descended unknowns from license-new ones
 
 ### Acceptance Criteria
 
-- [ ] Document created at `docs/planning/EPIC_4/SPRINT_40/KNOWN_UNKNOWNS.md`
-- [ ] ≥ 22 unknowns, each with all 8 required sections
-- [ ] Every Sprint-40 priority (P1–P10) has at least one category, plus a license-unlock category
-- [ ] Every unknown maps to exactly one owning prep task; none is orphaned
-- [ ] The lnts-landability premise and the installed-license premise are each an explicit unknown
-- [ ] The research-time total is the figure the verification snippet derives
+- [x] Document created at `docs/planning/EPIC_4/SPRINT_40/KNOWN_UNKNOWNS.md`
+- [x] ≥ 22 unknowns, each with all 8 required sections — **29**, checked by script
+- [x] Every Sprint-40 priority (P1–P10) has at least one category — **10 categories, one per priority; the license unlock is Category 1** *(amended from "plus a separate license-unlock category": the task prompt's category list makes the license toolchain its own category, so a second one would duplicate it)*
+- [x] Every unknown maps to exactly one owning prep task; none is orphaned — checked by script
+- [x] The lnts-landability premise and the installed-license premise are each an explicit unknown — **5.1** and **1.1**
+- [x] The research-time total is the figure the verification snippet derives — **33.0 h**
 
 ---
 
@@ -185,6 +211,7 @@ grep -c "^# Category" "$KU"
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
+**Unknowns Verified:** 3.1 *(also contributes to 2.1 — derived cohort sizes — and 4.1 — the P2 ratchet)*
 
 ### Objective
 
@@ -251,6 +278,7 @@ test -f docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md && echo "✅ d
 
 - `docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md` — figures with commit, both named populations with predicates, per-model size facts, a verdict per figure
 - The MCP-gated and NLP-gated lists in a form Tasks 6, 7 and 12 cite rather than copy
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.1
 
 ### Acceptance Criteria
 
@@ -260,6 +288,7 @@ test -f docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md && echo "✅ d
 - [ ] Cohort size facts derived from the goldens, not recalled
 - [ ] The leak gate run **alone** and its scope line recorded (186 or the difference explained)
 - [ ] Any figure that differs from the close is routed, not silently replaced
+- [ ] Unknowns 3.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -271,6 +300,7 @@ test -f docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md && echo "✅ d
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team (license installation: project owner)
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 1.1, 1.2, 1.5
 
 ### Objective
 
@@ -330,6 +360,7 @@ git grep -c -i "gamslice" -- docs/planning/EPIC_4/SPRINT_40/ | head
 - The full license installed locally (owner action), demo license backed up outside the repo
 - `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md` — probe definition, demo refusal (verbatim), licensed solve, the edition-discriminating string(s)
 - Operational facts for Task 4 (install path, binding, expiry)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.5
 
 ### Acceptance Criteria
 
@@ -338,6 +369,7 @@ git grep -c -i "gamslice" -- docs/planning/EPIC_4/SPRINT_40/ | head
 - [ ] A parseable edition-discriminating string identified for `.lst` files, both forms recorded
 - [ ] No part of the license text appears in any committed file, log excerpt or PR
 - [ ] All GAMS runs executed in a scratch directory, not the repo root
+- [ ] Unknowns 1.1, 1.2, 1.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -349,6 +381,7 @@ git grep -c -i "gamslice" -- docs/planning/EPIC_4/SPRINT_40/ | head
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team (environment creation + secret: project owner)
 **Dependencies:** Tasks 1, 3
+**Unknowns Verified:** 1.3
 
 ### Objective
 
@@ -404,6 +437,7 @@ grep -c "pull_request_target" "$DOC" 2>/dev/null   # the design must address it 
 
 - `docs/planning/EPIC_4/SPRINT_40/CI_LICENSE_DESIGN.md` — workflow inventory, demo-exclusion catalog, `licensed-solve.yml` design, PR-side change, owner checklist
 - A recorded verification (doc citation or test) that the environment branch policy refuses non-`main` refs
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.3
 
 ### Acceptance Criteria
 
@@ -413,6 +447,7 @@ grep -c "pull_request_target" "$DOC" 2>/dev/null   # the design must address it 
 - [ ] `pull_request_target` with a PR-head checkout is explicitly ruled out
 - [ ] Masking + output scan are described as defence in depth, with the scan's positive control
 - [ ] The post-merge detection trade-off is stated
+- [ ] Unknowns 1.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -424,6 +459,7 @@ grep -c "pull_request_target" "$DOC" 2>/dev/null   # the design must address it 
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 3
+**Unknowns Verified:** 1.4
 
 ### Objective
 
@@ -475,6 +511,7 @@ test -f "$DOC" && echo "✅ doc" || echo "SCHEMA_3_1_0_DESIGN.md not yet created
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_40/SCHEMA_3_1_0_DESIGN.md` — fields, null semantics, closed writer list, parser extension, migration spec, `db_manager` changes, test list
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.4
 
 ### Acceptance Criteria
 
@@ -483,6 +520,7 @@ test -f "$DOC" && echo "✅ doc" || echo "SCHEMA_3_1_0_DESIGN.md not yet created
 - [ ] Null semantics stated: existing rows are unknown, never back-filled as `"demo"`
 - [ ] `db_manager.py` `--empty` stamp and catalog-init chain included
 - [ ] Test list includes "still rejects an unknown key"
+- [ ] Unknowns 1.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -494,6 +532,7 @@ test -f "$DOC" && echo "✅ doc" || echo "SCHEMA_3_1_0_DESIGN.md not yet created
 **Deadline:** Before Sprint 40 Day 0 (decisions taken Day 0, before Task 7's results are read)
 **Owner:** Development team (brief); project owner (decisions)
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 3.3
 
 ### Objective
 
@@ -550,6 +589,7 @@ grep -c "^## Decision" "$DOC"
 
 - `docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md` — three decisions, options, consequences, exact edits
 - The owner's recorded answers (Day 0), appended with date
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.3
 
 ### Acceptance Criteria
 
@@ -557,6 +597,7 @@ grep -c "^## Decision" "$DOC"
 - [ ] The brief is committed **before** `COHORT_DRY_RUN.md` (checkable from history)
 - [ ] The corpus option shows both denominators reported in one sentence
 - [ ] No result from either cohort is cited in the brief
+- [ ] Unknowns 3.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -568,6 +609,7 @@ grep -c "^## Decision" "$DOC"
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 2, 3, 6
+**Unknowns Verified:** 2.1, 2.2, 2.3, 2.4, 3.2
 
 ### Objective
 
@@ -628,6 +670,7 @@ PY
 - `docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md` — per-model: edition, golden drift, MCP outcome, comparison, attribution, residual verdict, route, wall-clock
 - Convexity classifications for the nine in-scope NLP-gated models
 - Issue stubs (or routing notes) for every non-match; `ISSUE_933` triaged against a real compile
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.2, 2.3, 2.4, 3.2
 
 ### Acceptance Criteria
 
@@ -637,6 +680,7 @@ PY
 - [ ] Every match has attribution showing our MCP solved
 - [ ] DB and goldens untouched (`git diff` clean)
 - [ ] Wall-clock per model recorded for scheduling
+- [ ] Unknowns 2.1, 2.2, 2.3, 2.4, 3.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -648,6 +692,7 @@ PY
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2, 3
+**Unknowns Verified:** 5.1, 5.2, 5.3
 
 ### Objective
 
@@ -706,6 +751,7 @@ grep -c "Verdict" "$DOC" 2>/dev/null
 
 - `docs/planning/EPIC_4/SPRINT_40/LNTS_LANDABILITY.md` — the Day-5 failure list, the re-run probe, the symbolic-guard sketch, the second-defect scoping, a verdict A/B/C, the Phase-0 gate
 - If verdict C: a recommended edit to P5's projection for Task 12
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 5.1, 5.2, 5.3
 
 ### Acceptance Criteria
 
@@ -714,6 +760,7 @@ grep -c "Verdict" "$DOC" 2>/dev/null
 - [ ] A verdict A, B or C with its budget consequence
 - [ ] The gate's perturbation criterion names `robot`, `springchain` and `otpop`
 - [ ] The +1 Solve is either justified against Day 5 or removed from the projection
+- [ ] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -725,6 +772,7 @@ grep -c "Verdict" "$DOC" 2>/dev/null
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 6.1, 6.2, 6.3
 
 ### Objective
 
@@ -772,6 +820,7 @@ grep -c "measured at" "$DOC" 2>/dev/null   # every profile figure carries its co
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_40/SARF_JACOBIAN_DESIGN.md` — profile at HEAD with commit, entry points, atomicity boundary, fail-before fixture, re-estimate and REPLAN exit
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 6.1, 6.2, 6.3
 
 ### Acceptance Criteria
 
@@ -780,6 +829,7 @@ grep -c "measured at" "$DOC" 2>/dev/null   # every profile figure carries its co
 - [ ] Atomicity boundary stated
 - [ ] A non-sarf fail-before fixture shown to fail before
 - [ ] P6 re-estimated with an explicit REPLAN exit
+- [ ] Unknowns 6.1, 6.2, 6.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -791,6 +841,7 @@ grep -c "measured at" "$DOC" 2>/dev/null   # every profile figure carries its co
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2, 7
+**Unknowns Verified:** 4.1, 4.2, 4.3, 7.1, 7.2, 8.1, 8.2
 
 ### Objective
 
@@ -841,6 +892,7 @@ ls docs/issues/ | grep -i "diagonal\|tsam" || echo "diagonal-defect issue not ye
 - `docs/planning/EPIC_4/SPRINT_40/CORRECTNESS_PRETRACES.md` — per track: traced layer + justification, reproducer, Phase-0 outline with positive control
 - A new issue file for the diagonal-reference defect with its minimal reproducer
 - The structural-site verdict: discriminating input, or dead-code finding with proof scope
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.1, 4.2, 4.3, 7.1, 7.2, 8.1, 8.2
 
 ### Acceptance Criteria
 
@@ -849,6 +901,7 @@ ls docs/issues/ | grep -i "diagonal\|tsam" || echo "diagonal-defect issue not ye
 - [ ] egypt/shale mismatch explained by the Class-A fingerprint or a second defect named
 - [ ] Every probe records its positive control
 - [ ] #1737 left untouched
+- [ ] Unknowns 4.1, 4.2, 4.3, 7.1, 7.2, 8.1, 8.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -860,6 +913,7 @@ ls docs/issues/ | grep -i "diagonal\|tsam" || echo "diagonal-defect issue not ye
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
+**Unknowns Verified:** 9.1, 9.2, 10.1, 10.2
 
 ### Objective
 
@@ -909,6 +963,7 @@ test -f "$DOC" && echo "✅ doc" || echo "PROCESS_AND_SMALL_ITEMS.md not yet cre
 
 - `docs/planning/EPIC_4/SPRINT_40/PROCESS_AND_SMALL_ITEMS.md` — 10a–10e specs with fail-before tests; the P9 catalog with re-verified next steps
 - The ganges embedded-NLP-diverges issue text
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 9.1, 9.2, 10.1, 10.2
 
 ### Acceptance Criteria
 
@@ -916,6 +971,7 @@ test -f "$DOC" && echo "✅ doc" || echo "PROCESS_AND_SMALL_ITEMS.md not yet cre
 - [ ] Each P9 item re-verified on `main` (still reproduces, or closed)
 - [ ] The `model_infeasible` comparison change marked KPI-visible with its own Phase-0 requirement
 - [ ] The ganges issue drafted
+- [ ] Unknowns 9.1, 9.2, 10.1, 10.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
