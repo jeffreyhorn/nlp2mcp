@@ -16,7 +16,7 @@ That is the principal risk this document is organised around. Sprint 39's retros
 
 Three findings made while writing this list already change the plan's premises — each is an unknown below, not a conclusion:
 
-- **The installed license file still dates from the 54.2.1 demo install** (2026-07-13) and mentions the demo — "the project holds a license" and "the license is installed" are different claims (**1.1**).
+- **The license IS installed — at the USER level** (`~/Library/Application Support/GAMS/gamslice.txt`, an evaluation license valid to 2027-09-21), **while the system-directory copy is still the 2026-07-13 demo file.** Which file GAMS reads, and whether the license lifts the size limit for **every** solver the pipeline uses, are the open questions (**1.1**). *(Corrected in PR #1746 review: the first version, reading only the system-directory file, said the license appeared not to be installed.)*
 - **The 142 denominator is derived, not fixed:** `scripts/sprint_audit/kpi_block.py` selects candidates by `convexity.status ∈ {verified_convex, likely_convex}` (line 112), as does `batch_parse.get_candidate_models`. **A licensed convexity run that writes a convex status for any NLP-gated model grows the corpus silently — before the owner's corpus-entry decision exists** (**3.3**).
 - **Sprint 39 Day 5 contradicts the lnts plan:** the banked diff failed its pre-registered PROCEED signal on substance, perturbed `robot` and `springchain`, and was label-enumerated; and removing the contradiction exposed a second (dynamics) defect (**5.1–5.3**).
 
@@ -83,7 +83,7 @@ Three findings made while writing this list already change the plan's premises �
 **Total Unknowns:** 29
 
 **By Priority:**
-- Critical: 7 (24% — could invalidate a reported figure or force a mid-sprint REPLAN: whether the license is actually installed and covers every solver; whether the license changes any non-cohort outcome; whether the MCP-gated cohort translates and yields a bounded work list; whether the corpus can grow before the owner decides; whether lnts is landable; where sarf's time actually goes)
+- Critical: 7 (24% — could invalidate a reported figure or force a mid-sprint REPLAN: which license file GAMS actually reads and whether it covers every solver; whether the license changes any non-cohort outcome; whether the MCP-gated cohort translates and yields a bounded work list; whether the corpus can grow before the owner decides; whether lnts is landable; where sarf's time actually goes)
 - High: 11 (38% — require upfront research or design before Day 1)
 - Medium: 8 (28% — resolvable during implementation)
 - Low: 3 (10% — nice-to-know, low impact)
@@ -129,33 +129,33 @@ Three findings made while writing this list already change the plan's premises �
 
 # Category 1: The Licensed Toolchain — Local and CI
 
-## Unknown 1.1: Is the full license actually installed, and does it lift the size limit for EVERY solver the pipeline uses?
+## Unknown 1.1: Is the user-level license the EFFECTIVE one, and does it lift the size limit for EVERY solver the pipeline uses?
 
 ### Priority
-**Critical** — every license-dependent result in the sprint is only evidence if the licensed edition produced it. If the license is not installed, or covers GAMS but not one of the solvers, P2/P3 produce demo refusals that look like fresh failures.
+**Critical** — every license-dependent result in the sprint is only evidence if the licensed edition produced it. If GAMS can fall back to the system-directory demo file (another binary, another user, a CI runner), or the license covers GAMS but not one of the solvers, P2/P3 produce demo refusals that look like fresh failures.
 
 ### Assumption
-The full license is installed on the development machine, and it lifts the 1,000-row nonlinear limit for **all three solvers the pipeline invokes**: **CPLEX** (`verify_convexity.py` uses `LP=CPLEX` for LP models), **CONOPT** (`NLP=CONOPT` for everything else — including the QCP `emfl`), and **PATH** (every MCP solve).
+The user-level license (`~/Library/Application Support/GAMS/gamslice.txt`, evaluation, valid to 2027-09-21) takes precedence over the system-directory demo file for every way the pipeline invokes `gams`, and it lifts the demo limits — **per model-type demo ceilings** — linear models (LP, CPLEX) are refused only above **2,000** rows/columns; nonlinear types (NLP via CONOPT, MCP via PATH) above **1,000** — for **all three solvers the pipeline invokes**: **CPLEX** (`verify_convexity.py` uses `LP=CPLEX` for LP models), **CONOPT** (`NLP=CONOPT` for everything else — including the QCP `emfl`), and **PATH** (every MCP solve).
 
 ### Research Questions
-1. Is the installed `gamslice.txt` the full license? As of 2026-10-12 it dates from the 54.2.1 install (2026-07-13) and mentions the demo — has it been replaced?
+1. **Precedence:** when both exist, which file does GAMS 54.2.1 read — and is that true for every invocation path the pipeline uses (`shutil.which("gams")` in `test_solve.py` / `batch_translate.py`, subprocesses, a different user or `HOME`)? As of 2026-10-12 the log header reports the evaluation license; the system-directory `gamslice.txt` is still the 2026-07-13 demo file.
 2. Does the license enable CPLEX, CONOPT **and** PATH beyond the demo limits, or only some of them (licenses can be solver-selective)?
 3. Is it node-locked, time-limited, or otherwise bound in a way that affects CI (Unknown 1.3)?
-4. Does a > 1,000-row probe **fail on the demo** (positive control) and **solve licensed**, for each of the three solvers?
-5. Does GAMS 54.2.1 pick up the new file without a reinstall, and does `gams audit lo=2` reflect the change?
+4. Does a probe sized above **its own model type's** demo ceiling (LP > 2,000; NLP/MCP > 1,000) **fail on the demo** (positive control) and **solve licensed**, for each of the three solvers?
+5. Should the system-directory demo file be replaced too, so no fallback path can silently run the demo — and does `gams audit lo=2` report the effective edition?
 
 ### How to Verify
-Back up the demo license outside the repo. Build a scalable synthetic probe with a size parameter (one LP, one NLP, one MCP variant). Run each just over 1,000 rows on the demo — record the refusal line `"exceeds the demo license limits"` verbatim (the positive control) — then install the full license and re-run, recording `MODEL STATUS` and the solver line. All runs in a scratch directory. **Record no license text.**
+Establish precedence by evidence: move the user-level file aside (backup outside the repo), re-run, restore. Build a scalable synthetic probe with a size parameter in three variants, each sized above **its own** demo ceiling: **LP > 2,000** (CPLEX), **NLP > 1,000** (CONOPT), **MCP > 1,000** (PATH) (measured 2026-10-12 under the system-directory demo file: a 1,500-row LP **solved Optimal**, a 2,500-row LP and a 1,500-row NLP were **refused**; both solved under the effective license — so an LP probe sized "just over 1,000" cannot fail on the demo, and would be a vacuous control). Run each under the demo (`license=` pointed at the system-directory demo file) — record the refusal line `"exceeds the demo license limits"` verbatim (the positive control) — then under the effective license, recording `MODEL STATUS` and the solver line. All runs in a scratch directory. **Record no license text.**
 
 ### Risk if Wrong
 - **The whole of P2/P3 measures the demo:** eleven `path_solve_license` rows re-written as `path_solve_license`, or worse, as some other failure mis-attributed to the emit.
 - **Solver-selective license:** LP-type NLP-gated models (airsp, airsp2, indus89, msm, phosdis) stay blocked at CPLEX while NLP models proceed — a P3 result split by license, not by convexity.
 
 ### Estimated Research Time
-1.5 hours (license install, three probe variants × two editions, recording)
+1.5 hours (precedence check, three probe variants × two editions, recording)
 
 ### Owner
-Sprint 40 prep team (license installation: project owner)
+Sprint 40 prep team (license file placement: project owner)
 
 ### Verification Results
 🔍 **Status:** INCOMPLETE
@@ -1114,7 +1114,7 @@ Sprint 40 execution team
 ### Before Sprint 40 Day 1
 
 1. **Prep Task 2** re-derives the baseline and both populations by identity — it owns **3.1** and contributes to **2.1** (size facts) and **4.1** (the ratchet).
-2. **Prep Task 3** must land before any license-dependent unknown is answered: **1.1** (license installed and covering CPLEX/CONOPT/PATH) gates **1.2, 1.5, 2.x, 3.2, 4.2, 5.3**.
+2. **Prep Task 3** must land before any license-dependent unknown is answered: **1.1** (the effective license and its per-solver coverage) gates **1.2, 1.5, 2.x, 3.2, 4.2, 5.3**.
 3. **Prep Task 6** must be committed before Task 7 measures anything — it owns **3.3**, whose answer is only valid if written blind.
 4. **Every Critical and High unknown (18) must reach ✅ VERIFIED, ❌ WRONG or 🔶 PARTIALLY WRONG before Day 1.** A Medium or Low may carry with a stated reason and the day that closes it.
 5. **Prep Task 12** integrates the results into the schedule — in particular **5.1**'s verdict decides whether P5's +1 Solve stays in the projection.
@@ -1139,7 +1139,7 @@ This table shows which prep tasks verify which unknowns. Task numbers refer to `
 | Prep Task | Unknowns Verified | Notes |
 |-----------|-------------------|-------|
 | Task 2: Re-Derive the Sprint-39 Baseline & Both License-Gated Populations by Identity | 3.1 | Owns 3.1 (type + license-free parse/translate of the NLP-gated set). **Contributes to** 2.1 (derived cohort sizes) and 4.1 (the P2 ratchet re-derived). License-free, so it does not wait for Task 3. |
-| Task 3: Install the Full License Locally & Prove It with a Fail-Capable Probe | 1.1, 1.2, 1.5 | Owns the local half of Category 1. **1.1 gates every license-dependent unknown.** 1.5's sample re-solve is the first license-neutrality evidence; the sprint's full run is the exhaustive one. |
+| Task 3: Prove the Effective License — Precedence & Per-Solver Fail-Capable Probes | 1.1, 1.2, 1.5 | Owns the local half of Category 1. **1.1 gates every license-dependent unknown.** 1.5's sample re-solve is the first license-neutrality evidence; the sprint's full run is the exhaustive one. |
 | Task 4: CI License-Isolation Design & Workflow Inventory | 1.3 | Owns the CI half of Category 1, including the throwaway-repo branch-policy test and the demo-motivated exclusion catalog. |
 | Task 5: Schema 3.1.0 `license_edition` Design | 1.4 | Owns the closed writer list. Uses 1.2's discriminating string for the parser extension. |
 | Task 6: Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind) | 3.3 | Owns 3.3, including the scratch-DB positive control for silent corpus growth. **Must be committed before Task 7.** Carries 1.3's license-terms question to the owner. |

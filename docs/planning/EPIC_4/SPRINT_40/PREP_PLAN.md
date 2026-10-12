@@ -46,7 +46,7 @@ Sprint 40 addresses ten priorities:
 9. **P9 (Slack):** the smaller items
 10. **P10 (Infrastructure):** the Sprint-39 process changes as mechanisms
 
-This prep plan front-loads the work whose absence would cost the most mid-sprint: **re-deriving both license-gated populations by identity** (Task 2), **proving the license is actually installed** (Task 3) — the installed `gamslice.txt` on the development machine still dates from the 54.2.1 demo install (2026-07-13) as of 2026-10-12 — **designing CI isolation and the schema change** (Tasks 4–5), **taking the owner decisions blind** (Task 6), and only then **dry-running the cohorts** (Task 7) so the sprint opens on fingerprints rather than on surprises.
+This prep plan front-loads the work whose absence would cost the most mid-sprint: **re-deriving both license-gated populations by identity** (Task 2), **proving the installed license is the effective one and lifts the limit for every solver** (Task 3) — it is installed at the **user level**, while the system-directory `gamslice.txt` is still the 2026-07-13 demo file — **designing CI isolation and the schema change** (Tasks 4–5), **taking the owner decisions blind** (Task 6), and only then **dry-running the cohorts** (Task 7) so the sprint opens on fingerprints rather than on surprises.
 
 ---
 
@@ -56,22 +56,22 @@ This prep plan front-loads the work whose absence would cost the most mid-sprint
 |---|------|----------|-----------|--------------|--------------------------|
 | 1 | ✅ Create Sprint 40 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 10 priorities + the license unlock |
 | 2 | Re-Derive the Sprint-39 Baseline & Both License-Gated Populations by Identity | Critical | 2-3 hours | Task 1 | Every priority — the commit-pinned baseline and the two named cohorts |
-| 3 | Install the Full License Locally & Prove It with a Fail-Capable Probe | Critical | 3-4 hours | Tasks 1, 2 | P1 (local) — gates P2/P3 and Tasks 5, 7 |
+| 3 | Prove the Effective License — Precedence & Per-Solver Fail-Capable Probes | Critical | 3-4 hours | Tasks 1, 2 | P1 (local) — gates P2/P3 and Tasks 5, 7 |
 | 4 | CI License-Isolation Design & Workflow Inventory | High | 3-4 hours | Tasks 1, 3 | P1 (CI) — demo-only PR jobs, trusted licensed workflow |
 | 5 | Schema 3.1.0 `license_edition` Design | High | 2-3 hours | Tasks 1, 3 | P1 (schema) — migration, writers, `db_manager`, tests |
-| 6 | Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind) | Critical | 2-3 hours | Tasks 1, 2 | P1/P2/P3 — the three Day-0 decisions, taken before any result exists |
+| 6 | Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind) | Critical | 2-3 hours | Tasks 1, 2, 3, 4 | P1/P2/P3 — the three Day-0 decisions, taken before any result exists |
 | 7 | License-Gated Cohorts Dry Run — Fingerprints & Routing | Critical | 5-7 hours | Tasks 2, 3, 6 | P2 + P3 — first measurement, GO/NO-GO, never persisted |
 | 8 | lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate | High | 3-4 hours | Tasks 1, 2, 3 | P5 — the +1 Solve rests on an untested premise |
 | 9 | sarf Jacobian O(active) Re-Architecture Design | High | 4-6 hours | Tasks 1, 2 | P6 — the sprint's planned +1 Translate |
-| 10 | Correctness-Track Pre-Traces: turkpow Class A, the Diagonal Defect, the Structural Sites | High | 5-7 hours | Tasks 1, 2, 7 | P4, P7, P8 — named layers and reproducers before Day 1 |
+| 10 | Correctness-Track Pre-Traces: turkpow Class A, the Diagonal Defect, the Structural Sites | High | 5-7 hours | Tasks 1, 2, 7, 9 | P4, P7, P8 — named layers and reproducers before Day 1 |
 | 11 | Process-Mechanism Spec & Smaller-Items Catalog | Medium | 3-4 hours | Tasks 1, 2 | P9 + P10 — the slack absorber and the §7 mechanisms |
 | 12 | Plan Sprint 40 Detailed Schedule | Critical | 3-4 hours | All tasks (1–11) | Day-by-day schedule + REPLAN exits + close rules + budget |
 
 **Total Estimated Time:** ~38–53 hours (~5–7 working days)
 
-**Critical Path:** Tasks **1 → 2 → 3 → 6 → 7 → 10 → 12**
+**Critical Path:** Tasks **1 → 2 → 3 → 4 → 6 → 7 → 10 → 12**
 
-Task 3 gates everything license-dependent: no cohort result is evidence until the edition that produced it is shown, and today's installed license file is not obviously the full one. **Task 6 is deliberately placed *before* Task 7** — the floor-provenance and corpus-entry rules must be written while nobody knows which way the cohorts fall; Sprint 39's P1 established that a favourable classification discovered by the person reporting it is exactly the one that should not be self-approved. Task 10 waits on Task 7 because egypt and shale — two of P4's three models with no solve — get their first solve there.
+Task 3 gates everything license-dependent: no cohort result is evidence until the edition that produced it is shown — and with a demo file still in the system directory, *which* license runs is a question, not a given. **Task 6 waits on Tasks 3 and 4** because its third decision (CI license use) needs Task 3's binding evidence and Task 4's hosted-runner checklist; without them Task 6 could complete, and unblock Task 7, with that decision still pending. **Task 6 is deliberately placed *before* Task 7** — the floor-provenance and corpus-entry rules must be written while nobody knows which way the cohorts fall; Sprint 39's P1 established that a favourable classification discovered by the person reporting it is exactly the one that should not be self-approved. Task 10 waits on Task 7 because egypt and shale — two of P4's three models with no solve — get their first solve there, and on **Task 9** because Unknown 8.2 maps Task 9's touch set against #1737.
 
 ---
 
@@ -148,7 +148,7 @@ Candidate seeds, drawn from `../PROJECT_PLAN.md` Sprint 40 and `../SPRINT_39/SPR
 
 **Three premises were put in doubt by writing the list, before any task ran** — each is an unknown, not a conclusion:
 
-1. **The license may not be installed (1.1):** the installed `gamslice.txt` dates from the 54.2.1 demo install (2026-07-13). And "full license" must cover **three** solvers — `verify_convexity.py` uses `LP=CPLEX` and `NLP=CONOPT`, MCP solves use PATH — so a solver-selective license would split P3 by license, not by convexity.
+1. **Which license runs, and for which solvers (1.1)** — ⚠ *corrected in PR #1746 review:* this bullet first read *"the license may not be installed"*, from the system-directory `gamslice.txt` (still the 2026-07-13 demo file). The license **is** installed at the **user level** and the log header reports it; the open question is precedence and per-solver coverage. And "full license" must cover **three** solvers — `verify_convexity.py` uses `LP=CPLEX` and `NLP=CONOPT`, MCP solves use PATH — so a solver-selective license would split P3 by license, not by convexity.
 2. **The corpus can grow before the owner decides (3.3):** `kpi_block.py:112` and `batch_parse.get_candidate_models` select candidates by `convexity.status`, so the 142 denominator is **derived** — a licensed convexity run that writes a convex status for any NLP-gated model moves it silently. Task 7's never-persist rule is what prevents this in prep; the sprint needs a mechanism.
 3. **lnts may not be landable as planned (5.1–5.3):** Sprint 39 Day 5's candidate failed its PROCEED signal on substance (`_fx_` rows `INFES`, `robot`/`springchain` perturbed, a label-enumerated guard), and a second dynamics defect (364 `INFES` rows) sits underneath.
 
@@ -292,37 +292,37 @@ test -f docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md && echo "✅ d
 
 ---
 
-## Task 3: Install the Full License Locally & Prove It with a Fail-Capable Probe
+## Task 3: Prove the Effective License — Precedence & Per-Solver Fail-Capable Probes
 
 **Status:** 🔵 NOT STARTED
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 40 Day 1
-**Owner:** Development team (license installation: project owner)
+**Owner:** Development team (license file placement: project owner)
 **Dependencies:** Tasks 1, 2
 **Unknowns Verified:** 1.1, 1.2, 1.5
 
 ### Objective
 
-Install the full license on the development machine and produce `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md`: a **> 1,000-row nonlinear probe model** run **on the demo and on the full license**, showing it fails on one and solves on the other — plus the exact, parseable string that distinguishes the two editions in a `.lst` file, which Task 5's `license_edition` writer will key on.
+Produce `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md`: **which license file GAMS actually reads** (the user-level evaluation license, or the system-directory demo file still present), shown by evidence; and **three probes — LP, NLP and MCP, each sized above its own demo ceiling** (**per model-type demo ceilings** — linear models (LP, CPLEX) are refused only above **2,000** rows/columns; nonlinear types (NLP via CONOPT, MCP via PATH) above **1,000**) — run **on the demo and on the effective license**, showing each fails on one and solves on the other — plus the exact, parseable string that distinguishes the two editions in a `.lst` file, which Task 5's `license_edition` writer will key on.
 
 ### Why This Matters
 
-Every license-dependent result in Sprint 40 is only as good as the evidence that the licensed edition produced it. As of 2026-10-12, the installed `gamslice.txt` on the development machine dates from the 54.2.1 install (**2026-07-13**) and still mentions the demo — so "we have a license" and "the license is installed" are **different claims**, and only the second is evidence. A probe that only ever runs licensed cannot distinguish "licensed" from "the probe was too small to hit the limit" — the vacuous-pass failure §7.5 names.
+Every license-dependent result in Sprint 40 is only as good as the evidence that the licensed edition produced it. As of 2026-10-12 the license is installed at the **user level** and the log header reports an evaluation license, but the **system-directory** `gamslice.txt` is still the 2026-07-13 demo file — so "the license is installed" and "every pipeline invocation runs licensed, for every solver" are **different claims**, and only the second is evidence. A probe that only ever runs licensed cannot distinguish "licensed" from "the probe was too small to hit the limit" — the vacuous-pass failure §7.5 names.
 
 ### Background
 
-- **The demo limit is enforced at solve time**: `scripts/gamslib/test_solve.py` and `verify_convexity.py` both detect it by `.lst` substring (`"exceeds the demo license limits"`). The limit is 1,000 rows for nonlinear models (GAMS 53 and 54).
+- **The demo limit is enforced at solve time**: `scripts/gamslib/test_solve.py` and `verify_convexity.py` both detect it by `.lst` substring (`"exceeds the demo license limits"`). The limits are **per model type**: **2,000** rows/columns for linear models (LP) and **1,000** for nonlinear types (NLP, MCP, …) (measured 2026-10-12 under the system-directory demo file: a 1,500-row LP **solved Optimal**, a 2,500-row LP and a 1,500-row NLP were **refused**; both solved under the effective license — so an LP probe sized "just over 1,000" cannot fail on the demo, and would be a vacuous control).
 - **`gams audit lo=2`** prints version information; whether it prints the edition is itself unknown — the `.lst` header line (*"licensed for continuous and discrete problems"*) is the other candidate source.
 - **`src/ir/preprocessor.py`** emulates `%system.license%`-style attributes with a `"gams.license": "demo"` stub — record whether it matters for any model (it is a parse-time emulation, not a solve-time check).
 - **Sensitive data:** never commit, paste or quote any part of the license text in a doc, a log or a PR.
 
 ### What Needs to Be Done
 
-1. **Back up the demo license file** (outside the repo) so the demo run in step 3 remains reproducible.
-2. **Choose or build the probe**: the smallest nonlinear model that exceeds 1,000 rows. Prefer a synthetic model with a size parameter, so the same file can be run just under and just over the limit; use a corpus model only if it is shown to hit the limit on the demo.
-3. **Run it on the demo** — record the refusal line verbatim (this is the positive control: the probe *can* fail).
-4. **Install the full license** and run it again — record `MODEL STATUS`, the edition string, and `gams audit lo=2` output.
+1. **Establish precedence by evidence:** with both files present, which does GAMS read? Move the user-level file aside (backup **outside the repo**), re-run, restore. Check every invocation path the pipeline uses (`shutil.which("gams")`, subprocesses). Recommend whether the system-directory demo file should also be replaced.
+2. **Build three probes from one scalable synthetic model** with a size parameter — **LP** (CPLEX, as `verify_convexity.py` uses `LP=CPLEX`) sized **above 2,000**; **NLP** (CONOPT) **above 1,000**; **MCP** (PATH) **above 1,000**. Each must exceed **its own** model type's ceiling, or its demo run cannot fail. Run each also just *under* its ceiling on the demo, to show the size parameter is what flips the result.
+3. **Run each on the demo** (`license=` pointed at the system-directory demo file) — record the refusal line verbatim (the positive control: each probe *can* fail).
+4. **Run each under the effective license** — record `MODEL STATUS`, the solver line, the edition (redacted) and `gams audit lo=2` output. A license that lifts the limit for one solver but not another would split P2/P3 by license.
 5. **Identify the discriminating string(s)** for licensed vs. demo in the `.lst` header, with both raw lines (sans license text) recorded — Task 5's parser keys on this.
 6. **Record operational facts** Task 4 needs: the license file's install path, whether it is node-locked or otherwise bound, its expiry if any.
 
@@ -351,23 +351,35 @@ cd - >/dev/null
 grep -c "exceeds the demo license limits" "$DOC" 2>/dev/null
 grep -c "MODEL STATUS" "$DOC" 2>/dev/null
 
-# No license text leaked into the repo (count only; never print matches)
-git grep -c -i "gamslice" -- docs/planning/EPIC_4/SPRINT_40/ | head
+# No license text leaked into the repo — FAIL-CLOSED, never prints a match.
+# Patterns are built from the effective license file at run time and deleted;
+# the positive control is the same scan run against the license file itself.
+LIC="${GAMS_LICENSE_FILE:-$HOME/Library/Application Support/GAMS/gamslice.txt}"
+PAT=$(mktemp); sed 's/^[[:space:]]*//;s/[[:space:]]*$//' "$LIC" | awk 'length>=8' > "$PAT"
+grep -q -F -f "$PAT" "$LIC" || { rm -f "$PAT"; echo "❌ control failed: scan cannot see the license"; exit 1; }
+N1=$(git grep -l -F -f "$PAT" -- . | wc -l | tr -d ' '); rm -f "$PAT"
+# Header fields that identify the license but are not lines of the file. The regex
+# is written so it cannot match its own text (an unredacted 'Licensee:' line has a
+# space then an alphanumeric; '<redacted>' does not match).
+N2=$(git grep -l -E 'Licensee:[[:space:]]+[[:alnum:]]|node:[0-9]' -- . | wc -l | tr -d ' ')
+[ "$N1" -eq 0 ] && [ "$N2" -eq 0 ] && echo "✅ no license text in tracked files" \
+  || { echo "❌ license-identifying text in $N1 + $N2 tracked file(s)"; exit 1; }
 ```
 
 ### Deliverables
 
-- The full license installed locally (owner action), demo license backed up outside the repo
-- `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md` — probe definition, demo refusal (verbatim), licensed solve, the edition-discriminating string(s)
+- `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md` — the precedence finding; the three probes (LP > 2,000, NLP > 1,000, MCP > 1,000) with demo refusal (verbatim) and licensed solve for each; the edition-discriminating string(s)
+- A recommendation on replacing the system-directory demo file (owner action)
 - Operational facts for Task 4 (install path, binding, expiry)
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.5
 
 ### Acceptance Criteria
 
-- [ ] The probe **fails on the demo** with the refusal line recorded — the positive control
-- [ ] The same probe **solves licensed** with `MODEL STATUS` recorded
+- [ ] Which license file GAMS reads is shown by evidence, not assumed
+- [ ] **Each** of the LP, NLP and MCP probes is sized above its own demo ceiling and **fails on the demo** with the refusal line recorded — the positive control
+- [ ] The same three probes **solve under the effective license** with `MODEL STATUS` recorded
 - [ ] A parseable edition-discriminating string identified for `.lst` files, both forms recorded
-- [ ] No part of the license text appears in any committed file, log excerpt or PR
+- [ ] No part of the license text appears in any committed file, log excerpt or PR — the fail-closed scan in *Verification* passes, including its positive control
 - [ ] All GAMS runs executed in a scratch directory, not the repo root
 - [ ] Unknowns 1.1, 1.2, 1.5 verified and updated in KNOWN_UNKNOWNS.md
 
@@ -531,7 +543,7 @@ test -f "$DOC" && echo "✅ doc" || echo "SCHEMA_3_1_0_DESIGN.md not yet created
 **Estimated Time:** 2-3 hours
 **Deadline:** Before Sprint 40 Day 0 (decisions taken Day 0, before Task 7's results are read)
 **Owner:** Development team (brief); project owner (decisions)
-**Dependencies:** Tasks 1, 2
+**Dependencies:** Tasks 1, 2, 3, 4
 **Unknowns Verified:** 3.3
 
 ### Objective
@@ -558,7 +570,7 @@ Sprint 39 P1 spent a Day-0 decision on a floor classification that the Sprint-38
 1. **State each decision as a question with 2–4 options**, each with its consequence for the reported figures and the exact file edit it implies.
 2. **Floor:** argue both sides of "license-unlocked matches count toward the genuine floor"; recommend, but leave the decision to the owner.
 3. **Corpus:** show how each option changes the headline denominators, and how Sprint 40 would report both (142-continuity + expanded) in one sentence.
-4. **CI:** carry Task 4's owner checklist verbatim.
+4. **CI:** carry Task 4's owner checklist verbatim, with Task 3's node-locking/binding evidence — both are inputs, which is why this task depends on Tasks 3 and 4.
 5. **Record the brief's commit before Task 7 runs**, so the "written blind" property is checkable from history.
 
 ### Changes
@@ -840,7 +852,7 @@ grep -c "measured at" "$DOC" 2>/dev/null   # every profile figure carries its co
 **Estimated Time:** 5-7 hours
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
-**Dependencies:** Tasks 1, 2, 7
+**Dependencies:** Tasks 1, 2, 7, 9
 **Unknowns Verified:** 4.1, 4.2, 4.3, 7.1, 7.2, 8.1, 8.2
 
 ### Objective
@@ -1058,17 +1070,19 @@ grep -c -i "precondition" "$PLAN"
 ```
 Task 1 (Known Unknowns)
    └─> Task 2 (Baseline + Both Populations by Identity)
-          ├─> Task 3 (Local License + Fail-Capable Probe)
-          │      ├─> Task 4 (CI Isolation Design) ───────────────┐
-          │      ├─> Task 5 (Schema 3.1.0 Design) ───────────────┤
-          │      └─> Task 8 (lnts Landability) ──────────────────┤
-          ├─> Task 6 (Owner Decision Brief — written blind)      │
-          │      └─> Task 7 (Cohort Dry Run) ──> Task 10 (Pre-Traces) ──> Task 12 (Schedule)
-          ├─> Task 9 (sarf Jacobian Design) ─────────────────────┤
-          └─> Task 11 (Process + Small Items) ───────────────────┘
+          ├─> Task 3 (Effective License + Per-Solver Probes)
+          │      ├─> Task 4 (CI Isolation Design) ──┐
+          │      │                                  ├─> Task 6 (Owner Decision Brief — written blind)
+          │      │      (Task 2 also feeds Task 6) ─┘        └─> Task 7 (Cohort Dry Run) ─┐
+          │      ├─> Task 5 (Schema 3.1.0 Design) ───────────────────────────────────────┤
+          │      └─> Task 8 (lnts Landability) ──────────────────────────────────────────┤
+          ├─> Task 9 (sarf Jacobian Design) ──> (touch set) ──┐                          │
+          │                                                   └─> Task 10 (Pre-Traces) <─┘
+          │                                                          └─> Task 12 (Schedule)
+          └─> Task 11 (Process + Small Items) ───────────────────────────> Task 12
 ```
 
-**Task 7 depends on Task 3 as well as Task 6** (results must come from the licensed edition). **Tasks 4, 5, 8, 9 and 11 are parallelisable** once their inputs land. Task 6 is short but on the critical path because its whole value is being committed before Task 7 runs.
+**Task 7 depends on Task 3 as well as Task 6** (results must come from the licensed edition); **Task 6 depends on Tasks 3 and 4** (its CI decision needs their evidence); **Task 10 depends on Tasks 7 and 9**. **Tasks 5, 8, 9 and 11 are parallelisable** once their inputs land; Task 4 is now on the critical path. Task 6 is short but on the critical path because its whole value is being committed before Task 7 runs.
 
 ### Time Budget
 
