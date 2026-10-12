@@ -21,7 +21,7 @@ From `../SPRINT_39/SPRINT_RETROSPECTIVE.md` §7 and `../SPRINT_39/SPRINT_40_CARR
 1. **A figure that changes with the thing it describes is stated once, commit-pinned, and superseded by the next measurement** — every figure in a prep deliverable carries `measured at <sha>`; a later task re-measures rather than re-quotes.
 2. **Pin by identity, not by count** — both license-gated populations are recorded as **named lists** with the predicate that produced them, never as "11" and "10" alone.
 3. **Anchors are code, scoped, nested-aware, unique** — reuse the resolver in `tests/unit/kkt/test_positional_domain_sites.py`.
-4. **The PR description is a mirror** — each prep PR's body is regenerated from the task's `Result` section at the end, or reduced to a pointer.
+4. **The PR description is a pointer, not a mirror** — a two-to-four-line summary, the unknowns verified with their verdicts, and "see `PREP_PLAN.md` Task <Z> *Result*"; never a copy of the `Result` section, which would go stale with the first review round (same rule as `prompts/PREP_TASK_PROMPTS.md`'s standing conventions).
 5. **A probe must be shown able to fail before its pass is believed** — every probe in Tasks 3, 7, 8 and 10 records its positive control.
 6. **When a classification changes, sweep on the changed SET** — when a cohort model's bucket moves in Task 7, grep every prep doc for that model's name.
 7. **Never `git stash` to switch branches** — `git show <ref>:<path>` is read-only.
@@ -304,7 +304,7 @@ test -f docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md && echo "✅ d
 
 ### Objective
 
-Produce `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md`: **which license file GAMS actually reads** (the user-level evaluation license, or the system-directory demo file still present), shown by evidence; and **three probes — LP, NLP and MCP, each sized above its own demo ceiling** (**per model-type demo ceilings** — linear models (LP, CPLEX) are refused only above **2,000** rows/columns; nonlinear types (NLP via CONOPT, MCP via PATH) above **1,000**) — run **on the demo and on the effective license**, showing each fails on one and solves on the other — plus the exact, parseable string that distinguishes the two editions in a `.lst` file, which Task 5's `license_edition` writer will key on.
+Produce `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md`: **which license file GAMS actually reads** (the user-level evaluation license, or the system-directory demo file still present), shown by evidence; and **three probes — LP, NLP and MCP, each sized above its own demo ceiling** (**per model-type demo ceilings** — linear models (LP, CPLEX) are refused only above **2,000** rows/columns; nonlinear types (NLP via CONOPT, MCP via PATH) above **1,000**) — run **on the demo and on the effective license**, showing each fails on one and solves on the other — plus a **non-identifying regex** that distinguishes the two editions in a `.lst` file (recorded with its classification results, never with raw header text), which Task 5's `license_edition` writer will key on.
 
 ### Why This Matters
 
@@ -313,7 +313,7 @@ Every license-dependent result in Sprint 40 is only as good as the evidence that
 ### Background
 
 - **The demo limit is enforced at solve time**: `scripts/gamslib/test_solve.py` and `verify_convexity.py` both detect it by `.lst` substring (`"exceeds the demo license limits"`). The limits are **per model type**: **2,000** rows/columns for linear models (LP) and **1,000** for nonlinear types (NLP, MCP, …) (measured 2026-10-12 under the system-directory demo file: a 1,500-row LP **solved Optimal**, a 2,500-row LP and a 1,500-row NLP were **refused**; both solved under the effective license — so an LP probe sized "just over 1,000" cannot fail on the demo, and would be a vacuous control).
-- **`gams audit lo=2`** prints version information; whether it prints the edition is itself unknown — the `.lst` header line (*"licensed for continuous and discrete problems"*) is the other candidate source.
+- **`gams audit lo=2`** prints version information; whether it prints the edition is itself unknown — the `.lst` header's solver-licensing line is the other candidate source (described, never quoted: header content is not committed).
 - **`src/ir/preprocessor.py`** emulates `%system.license%`-style attributes with a `"gams.license": "demo"` stub — record whether it matters for any model (it is a parse-time emulation, not a solve-time check).
 - **Sensitive data:** never commit, paste or quote any part of the license text in a doc, a log or a PR.
 
@@ -323,7 +323,7 @@ Every license-dependent result in Sprint 40 is only as good as the evidence that
 2. **Build three probes from one scalable synthetic model** with a size parameter — **LP** (CPLEX, as `verify_convexity.py` uses `LP=CPLEX`) sized **above 2,000**; **NLP** (CONOPT) **above 1,000**; **MCP** (PATH) **above 1,000**. Each must exceed **its own** model type's ceiling, or its demo run cannot fail. Run each also just *under* its ceiling on the demo, to show the size parameter is what flips the result.
 3. **Run each on the demo** (`license=` pointed at the system-directory demo file) — record the refusal line verbatim (the positive control: each probe *can* fail).
 4. **Run each under the effective license** — record `MODEL STATUS`, the solver line, the edition (redacted) and `gams audit lo=2` output. A license that lifts the limit for one solver but not another would split P2/P3 by license.
-5. **Identify the discriminating string(s)** for licensed vs. demo in the `.lst` header, with both raw lines (sans license text) recorded — Task 5's parser keys on this.
+5. **Identify a non-identifying discriminator** for licensed vs. demo `.lst` headers and record **only the regex and its classification results** (each paired file → `licensed` / `demo`, plus the inverted-pattern control) — **never the raw header lines**. Task 5's parser keys on the regex.
 6. **Record operational facts** Task 4 needs: the license file's install path, whether it is node-locked or otherwise bound, its expiry if any.
 
 ### Changes
@@ -357,18 +357,20 @@ grep -c "MODEL STATUS" "$DOC" 2>/dev/null
 LIC="${GAMS_LICENSE_FILE:-$HOME/Library/Application Support/GAMS/gamslice.txt}"
 PAT=$(mktemp); sed 's/^[[:space:]]*//;s/[[:space:]]*$//' "$LIC" | awk 'length>=8' > "$PAT"
 grep -q -F -f "$PAT" "$LIC" || { rm -f "$PAT"; echo "❌ control failed: scan cannot see the license"; exit 1; }
-N1=$(git grep -l -F -f "$PAT" -- . | wc -l | tr -d ' '); rm -f "$PAT"
+# --untracked: also scan files not yet added (e.g. LICENSE_PROBE.md before its first
+# commit); git-ignored files are still skipped. Run this BEFORE committing.
+N1=$(git grep --untracked -l -F -f "$PAT" -- . | wc -l | tr -d ' '); rm -f "$PAT"
 # Header fields that identify the license but are not lines of the file. The regex
 # is written so it cannot match its own text (an unredacted 'Licensee:' line has a
 # space then an alphanumeric; '<redacted>' does not match).
-N2=$(git grep -l -E 'Licensee:[[:space:]]+[[:alnum:]]|node:[0-9]' -- . | wc -l | tr -d ' ')
-[ "$N1" -eq 0 ] && [ "$N2" -eq 0 ] && echo "✅ no license text in tracked files" \
-  || { echo "❌ license-identifying text in $N1 + $N2 tracked file(s)"; exit 1; }
+N2=$(git grep --untracked -l -E 'Licensee:[[:space:]]+[[:alnum:]]|node:[0-9]' -- . | wc -l | tr -d ' ')
+[ "$N1" -eq 0 ] && [ "$N2" -eq 0 ] && echo "✅ no license text in tracked or untracked files" \
+  || { echo "❌ license-identifying text in $N1 + $N2 tracked/untracked file(s)"; exit 1; }
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md` — the precedence finding; the three probes (LP > 2,000, NLP > 1,000, MCP > 1,000) with demo refusal (verbatim) and licensed solve for each; the edition-discriminating string(s)
+- `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md` — the precedence finding; the three probes (LP > 2,000, NLP > 1,000, MCP > 1,000) with demo refusal (verbatim) and licensed solve for each; the edition-discriminating regex with its classification results (no raw header text)
 - A recommendation on replacing the system-directory demo file (owner action)
 - Operational facts for Task 4 (install path, binding, expiry)
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.5
@@ -378,7 +380,7 @@ N2=$(git grep -l -E 'Licensee:[[:space:]]+[[:alnum:]]|node:[0-9]' -- . | wc -l |
 - [ ] Which license file GAMS reads is shown by evidence, not assumed
 - [ ] **Each** of the LP, NLP and MCP probes is sized above its own demo ceiling and **fails on the demo** with the refusal line recorded — the positive control
 - [ ] The same three probes **solve under the effective license** with `MODEL STATUS` recorded
-- [ ] A parseable edition-discriminating string identified for `.lst` files, both forms recorded
+- [ ] A non-identifying edition-discriminating regex identified for `.lst` files, recorded **with its classification of every paired file and its inverted-pattern control** — no raw header text committed
 - [ ] No part of the license text appears in any committed file, log excerpt or PR — the fail-closed scan in *Verification* passes, including its positive control
 - [ ] All GAMS runs executed in a scratch directory, not the repo root
 - [ ] Unknowns 1.1, 1.2, 1.5 verified and updated in KNOWN_UNKNOWNS.md
@@ -541,7 +543,7 @@ test -f "$DOC" && echo "✅ doc" || echo "SCHEMA_3_1_0_DESIGN.md not yet created
 **Status:** 🔵 NOT STARTED
 **Priority:** Critical
 **Estimated Time:** 2-3 hours
-**Deadline:** Before Sprint 40 Day 0 (decisions taken Day 0, before Task 7's results are read)
+**Deadline:** Before Task 7 runs — the brief **and the owner's three dated answers** must both be committed first
 **Owner:** Development team (brief); project owner (decisions)
 **Dependencies:** Tasks 1, 2, 3, 4
 **Unknowns Verified:** 3.3
@@ -571,7 +573,7 @@ Sprint 39 P1 spent a Day-0 decision on a floor classification that the Sprint-38
 2. **Floor:** argue both sides of "license-unlocked matches count toward the genuine floor"; recommend, but leave the decision to the owner.
 3. **Corpus:** show how each option changes the headline denominators, and how Sprint 40 would report both (142-continuity + expanded) in one sentence.
 4. **CI:** carry Task 4's owner checklist verbatim, with Task 3's node-locking/binding evidence — both are inputs, which is why this task depends on Tasks 3 and 4.
-5. **Record the brief's commit before Task 7 runs**, so the "written blind" property is checkable from history.
+5. **Record the owner's answers in the brief** — one `**Owner answer (YYYY-MM-DD):** …` line under each `## Decision` — and commit them **before Task 7 runs**. The property that matters is that the **commit containing all three answers is an ancestor of Task 7's first commit**; the brief's creation date alone proves nothing (answers could be filled in later, and commit timestamps do not prove history order).
 
 ### Changes
 
@@ -588,10 +590,19 @@ cd "$(git rev-parse --show-toplevel)"
 DOC=docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md
 test -f "$DOC" && echo "✅ doc" || { echo "OWNER_DECISION_BRIEF.md not yet created"; exit 0; }
 
-# Written blind: the brief's first commit must predate the dry-run doc's first commit
-first() { git log --diff-filter=A --format=%ct -- "$1" | tail -1; }
-B=$(first "$DOC"); D=$(first docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md)
-[ -n "$D" ] && { [ "$B" -lt "$D" ] && echo "✅ brief predates dry run" || echo "❌ brief written after dry run"; } || echo "dry run not yet committed"
+# Decided blind: the EARLIEST commit in which the brief carries all three dated owner
+# answers must be an ANCESTOR of the first commit that adds the dry-run doc.
+# (Creation date alone is not enough, and timestamps do not prove history order.)
+ANS=""
+for c in $(git log --reverse --format=%H -- "$DOC"); do
+  n=$(git show "$c:$DOC" 2>/dev/null | grep -cE '^\*\*Owner answer \([0-9]{4}-[0-9]{2}-[0-9]{2}\):\*\* *[^ ]')
+  [ "$n" -ge 3 ] && { ANS=$c; break; }
+done
+DRY=$(git log --diff-filter=A --format=%H -- docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md | tail -1)
+if [ -z "$ANS" ]; then echo "❌ the three owner answers are not yet committed"
+elif [ -z "$DRY" ]; then echo "✅ answers committed at ${ANS:0:8}; dry run not yet committed"
+elif git merge-base --is-ancestor "$ANS" "$DRY"; then echo "✅ answers (${ANS:0:8}) are an ancestor of the dry run (${DRY:0:8})"
+else echo "❌ dry run (${DRY:0:8}) does not descend from the answers commit (${ANS:0:8})"; fi
 
 # Three decisions posed
 grep -c "^## Decision" "$DOC"
@@ -600,13 +611,14 @@ grep -c "^## Decision" "$DOC"
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md` — three decisions, options, consequences, exact edits
-- The owner's recorded answers (Day 0), appended with date
+- The owner's three answers, each recorded as a dated `**Owner answer (YYYY-MM-DD):**` line under its decision, committed before Task 7 runs
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.3
 
 ### Acceptance Criteria
 
 - [ ] All three decisions posed with options and the exact edit each implies
-- [ ] The brief is committed **before** `COHORT_DRY_RUN.md` (checkable from history)
+- [ ] **All three decisions carry a dated owner answer** (`**Owner answer (YYYY-MM-DD):**`) — posing the questions is not completion
+- [ ] The commit containing all three answers is an **ancestor** of the first commit adding `COHORT_DRY_RUN.md` (checked by `git merge-base --is-ancestor` in *Verification*)
 - [ ] The corpus option shows both denominators reported in one sentence
 - [ ] No result from either cohort is cited in the brief
 - [ ] Unknowns 3.3 verified and updated in KNOWN_UNKNOWNS.md

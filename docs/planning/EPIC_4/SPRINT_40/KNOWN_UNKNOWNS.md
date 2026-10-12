@@ -171,14 +171,14 @@ Sprint 40 prep team (license file placement: project owner)
 The `.lst` header carries a stable, parseable line that differs between demo and licensed runs, and `test_solve.py::extract_gams_version` can be extended to read it.
 
 ### Research Questions
-1. Which header line(s) differ between a demo and a licensed `.lst` of the same model (the S39 probe showed *"GAMS/CPLEX licensed for continuous and discrete problems"* on the demo — what does the full license print)?
+1. Which header line(s) differ between a demo and a licensed `.lst` of the same model — and can that difference be captured by a **non-identifying pattern** (one that matches an edition marker, never licensee, ID or node text)?
 2. Is the line present in the `.lst` of **every** stage — convexity solves (`verify_convexity.py` writes to a temp `output.lst`), MCP solves, and the presolve-embedded NLP?
 3. Is it stable across solvers and model types (LP / NLP / QCP / MCP)?
 4. Can it be read without capturing any license-identifying text (licensee name, serial)?
 5. Does a demo-refused run still print it — i.e. can `license_edition: "demo"` be recorded for a refusal?
 
 ### How to Verify
-Diff the headers of Unknown 1.1's paired probe `.lst` files (demo vs licensed) for each solver; grep the pattern in a convexity, an MCP and a presolve `.lst`. Write the candidate regex and show it classifies all six paired files correctly **and** misclassifies none when the pattern is deliberately inverted (positive control).
+Diff the headers of Unknown 1.1's paired probe `.lst` files (demo vs licensed) for each solver **locally, without committing them**; grep the pattern in a convexity, an MCP and a presolve `.lst`. Write the candidate regex and show it classifies all six paired files correctly **and** misclassifies none when the pattern is deliberately inverted (positive control). **Record only the regex and the classification table** — never the header lines themselves.
 
 ### Risk if Wrong
 - **`license_edition` written from a guess**, the precise failure the schema's null semantics exist to prevent.
@@ -239,7 +239,7 @@ The only code that writes `mcp_solve` or `convexity` records, or stamps a `schem
 ### Research Questions
 1. Which files assign into an `mcp_solve` or `convexity` dict, or construct one? (grep, not recall)
 2. Which files contain a `"3.0.0"` literal — nine hits across `scripts/` and `tests/` at `912d005c` — and which are writers vs. tests?
-3. Does any `scripts/sprint_audit/` tool (e.g. `check_mcp_solve_attribution.py`) write `mcp_solve` fields (`mcp_attribution`, `mcp_completed_own_solve`)?
+3. Does any `scripts/sprint_audit/` tool write `mcp_solve` DB fields? *(At `912d005c`: `check_mcp_solve_attribution.py` writes an `attribution.json` report, not the DB; `mcp_attribution` / `mcp_completed_own_solve` are constructed in `scripts/gamslib/test_solve.py` — confirm no other path does.)*
 4. Does `convexity_result` need `gams_version` added as well as `license_edition` (it lacks it today)?
 5. Does any reader break on an extra field (a strict reader with its own allow-list)?
 
@@ -505,7 +505,7 @@ Sprint 40 prep team
 2. Does writing `verified_convex` for, say, `torsion` change `kpi_block.py`'s "convex candidates" from 142 to 143 on the next run? (Positive control on a scratch DB.)
 3. What mechanism keeps an un-adopted model out — a holding status, a scope list, or never writing to the committed DB until the decision?
 4. What are the options for classifying a license-unlocked cold match in `data/floor_provenance.json` (new `limb`, or exclusion), and what does each do to `floor_tracker.py`?
-5. Can `OWNER_DECISION_BRIEF.md` be committed before `COHORT_DRY_RUN.md`, provably from history?
+5. Can the owner's three answers be committed before the dry run **provably from history** — the answers commit an ancestor of `COHORT_DRY_RUN.md`'s first commit, not merely the brief's creation earlier in time?
 
 ### How to Verify
 On a scratch copy of the DB, set one NLP-gated model's `convexity.status` to `verified_convex` and run `kpi_block.py` against it: the candidate count must move (the positive control for the silent-growth claim). Grep every reader of `CONVEX_STATUSES` / the candidate predicate. Draft the brief's options and confirm none cites a result.
@@ -1115,7 +1115,7 @@ Sprint 40 execution team
 
 1. **Prep Task 2** re-derives the baseline and both populations by identity — it owns **3.1** and contributes to **2.1** (size facts) and **4.1** (the ratchet).
 2. **Prep Task 3** must land before any license-dependent unknown is answered: **1.1** (the effective license and its per-solver coverage) gates **1.2, 1.5, 2.x, 3.2, 4.2, 5.3**.
-3. **Prep Task 6** must be committed before Task 7 measures anything — it owns **3.3**, whose answer is only valid if written blind.
+3. **Prep Task 6's brief and the owner's three dated answers** must be committed before Task 7 measures anything (the answers commit an ancestor of Task 7's first commit) — it owns **3.3**, whose answer is only valid if written blind.
 4. **Every Critical and High unknown (18) must reach ✅ VERIFIED, ❌ WRONG or 🔶 PARTIALLY WRONG before Day 1.** A Medium or Low may carry with a stated reason and the day that closes it.
 5. **Prep Task 12** integrates the results into the schedule — in particular **5.1**'s verdict decides whether P5's +1 Solve stays in the projection.
 
