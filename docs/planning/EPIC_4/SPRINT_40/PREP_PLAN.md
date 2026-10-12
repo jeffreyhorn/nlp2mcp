@@ -1,0 +1,1096 @@
+# Sprint 40 Preparation Plan
+
+**Purpose:** Complete the preparation tasks that must land before Sprint 40 Day 1
+**Timeline:** Complete before Sprint 40 Day 1
+**Goal:** Turn the full GAMS license from a possession into *evidence* — a toolchain shown to be licensed, a CI design that never exposes it, and owner decisions taken **before** any license-unlocked result exists — while giving every Sprint-39 carryforward a re-measured disposition
+
+**Anchor:** `bd2af6e9` (Sprint 39 close, 2026-09-18) · plan merged at `912d005c` (PR #1745) · **Toolchain:** GAMS **54.2.1** / PATH **5.2.01**
+
+> **Which anchor?** Sprint 39's close documents (`SPRINT_LOG.md` §Day 13, `SPRINT_40_CARRYFORWARDS.md`) measure at **`bd2af6e9`**. `54b4eb23` (the close-PR merge) and `912d005c` (this plan's merge) are later, but `git diff bd2af6e9 912d005c -- data/ src/` must be checked in Task 2 rather than assumed empty. Re-derive at the commit you are on, and cite it.
+
+**Sprint definition:** `../PROJECT_PLAN.md` → *Sprint 40 (Weeks 45–46): Sprint 39 Carryforward & the Licensed-GAMS Unlock — the License-Gated Cohorts' First NLP-vs-MCP Comparison, Licensed CI, the P10 Two-Class Triage, lnts, sarf's Jacobian Re-Architecture & the Sprint-39 Process Changes*
+
+**Key insight carried from Sprint 39:** the sprint's recurring failure was not a wrong *fix* but a wrong *claim about evidence* — a figure restated per review round until it rotted (four times), a count where an identity was needed, a probe reported as passing that could not have failed (twice), a classification moved without sweeping the sentences that quoted it. Sprint 40 adds a new way to produce that failure at scale: **twenty-one models whose results have never existed**. This prep plan is therefore weighted toward **establishing what counts as evidence before the evidence arrives** — Tasks 3–6 exist so that the first licensed result is read against rules written without knowing it.
+
+---
+
+## Process Rules This Prep Applies to Itself
+
+From `../SPRINT_39/SPRINT_RETROSPECTIVE.md` §7 and `../SPRINT_39/SPRINT_40_CARRYFORWARDS.md` §8. The project plan requires prep to *adopt* these; prep adopts them first on its own artifacts:
+
+1. **A figure that changes with the thing it describes is stated once, commit-pinned, and superseded by the next measurement** — every figure in a prep deliverable carries `measured at <sha>`; a later task re-measures rather than re-quotes.
+2. **Pin by identity, not by count** — both license-gated populations are recorded as **named lists** with the predicate that produced them, never as "11" and "10" alone.
+3. **Anchors are code, scoped, nested-aware, unique** — reuse the resolver in `tests/unit/kkt/test_positional_domain_sites.py`.
+4. **The PR description is a mirror** — each prep PR's body is regenerated from the task's `Result` section at the end, or reduced to a pointer.
+5. **A probe must be shown able to fail before its pass is believed** — every probe in Tasks 3, 7, 8 and 10 records its positive control.
+6. **When a classification changes, sweep on the changed SET** — when a cohort model's bucket moves in Task 7, grep every prep doc for that model's name.
+7. **Never `git stash` to switch branches** — `git show <ref>:<path>` is read-only.
+8. **The leak gate runs ALONE** — no concurrent pytest, GAMS batch, or second gate.
+
+---
+
+## Executive Summary
+
+Sprint 39 closed at **Solve 111 · Match 95 · Translate 135 · floor 75 · `path_solve_terminated` 0** (measured at `bd2af6e9`; Match 96 → 95 was P7's `weapons` **correction**, not a regression). Its carryforwards are each bounded (`../SPRINT_39/SPRINT_40_CARRYFORWARDS.md`), but the sprint they feed has changed shape: **the project now holds a full, size-unlimited GAMS license**, and the demo's 1,000-row nonlinear limit has gated two populations at different stages for the whole of Epic 4 — **11 MCP solves** inside the 142-candidate corpus and **10 reference NLP solves** outside it.
+
+Sprint 40 addresses ten priorities:
+
+1. **P1 (Infrastructure, Day 0–1):** the licensed toolchain locally and in CI — **PR workflows stay demo-only**; the licensed tier runs in a new trusted `main`-only workflow via a protected-environment secret; schema **3.1.0** adds a per-row `license_edition`
+2. **P2 (Measurement):** the 11-model MCP-gated cohort's first full NLP-vs-MCP comparison — ceiling +11 Solve, **measured, not projected**
+3. **P3 (Measurement + decision):** the 10-model NLP-gated set's convexity evaluation and the **corpus-entry decision** (`andean` is MIP — excluded)
+4. **P4 (Correctness):** the P10 two-class triage, turkpow first
+5. **P5 (KPI):** lnts — **⚠ prep must test whether the banked diff is landable at all** (Sprint 39 Day 5 found a second defect underneath)
+6. **P6 (KPI):** sarf's O(active) Jacobian re-architecture — **+1 Translate**
+7. **P7 (Correctness):** the diagonal-reference defect (`stat_tsam(i,j).. 1 =E= 0;`)
+8. **P8 (Prevention):** the positional-domain follow-ons
+9. **P9 (Slack):** the smaller items
+10. **P10 (Infrastructure):** the Sprint-39 process changes as mechanisms
+
+This prep plan front-loads the work whose absence would cost the most mid-sprint: **re-deriving both license-gated populations by identity** (Task 2), **proving the license is actually installed** (Task 3) — the installed `gamslice.txt` on the development machine still dates from the 54.2.1 demo install (2026-07-13) as of 2026-10-12 — **designing CI isolation and the schema change** (Tasks 4–5), **taking the owner decisions blind** (Task 6), and only then **dry-running the cohorts** (Task 7) so the sprint opens on fingerprints rather than on surprises.
+
+---
+
+## Prep Task Overview
+
+| # | Task | Priority | Est. Time | Dependencies | Sprint 40 Goal Addressed |
+|---|------|----------|-----------|--------------|--------------------------|
+| 1 | Create Sprint 40 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 10 priorities + the license unlock |
+| 2 | Re-Derive the Sprint-39 Baseline & Both License-Gated Populations by Identity | Critical | 2-3 hours | Task 1 | Every priority — the commit-pinned baseline and the two named cohorts |
+| 3 | Install the Full License Locally & Prove It with a Fail-Capable Probe | Critical | 3-4 hours | Tasks 1, 2 | P1 (local) — gates P2/P3 and Tasks 5, 7 |
+| 4 | CI License-Isolation Design & Workflow Inventory | High | 3-4 hours | Tasks 1, 3 | P1 (CI) — demo-only PR jobs, trusted licensed workflow |
+| 5 | Schema 3.1.0 `license_edition` Design | High | 2-3 hours | Tasks 1, 3 | P1 (schema) — migration, writers, `db_manager`, tests |
+| 6 | Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind) | Critical | 2-3 hours | Tasks 1, 2 | P1/P2/P3 — the three Day-0 decisions, taken before any result exists |
+| 7 | License-Gated Cohorts Dry Run — Fingerprints & Routing | Critical | 5-7 hours | Tasks 2, 3, 6 | P2 + P3 — first measurement, GO/NO-GO, never persisted |
+| 8 | lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate | High | 3-4 hours | Tasks 1, 2, 3 | P5 — the +1 Solve rests on an untested premise |
+| 9 | sarf Jacobian O(active) Re-Architecture Design | High | 4-6 hours | Tasks 1, 2 | P6 — the sprint's planned +1 Translate |
+| 10 | Correctness-Track Pre-Traces: turkpow Class A, the Diagonal Defect, the Structural Sites | High | 5-7 hours | Tasks 1, 2, 7 | P4, P7, P8 — named layers and reproducers before Day 1 |
+| 11 | Process-Mechanism Spec & Smaller-Items Catalog | Medium | 3-4 hours | Tasks 1, 2 | P9 + P10 — the slack absorber and the §7 mechanisms |
+| 12 | Plan Sprint 40 Detailed Schedule | Critical | 3-4 hours | All tasks (1–11) | Day-by-day schedule + REPLAN exits + close rules + budget |
+
+**Total Estimated Time:** ~38–53 hours (~5–7 working days)
+
+**Critical Path:** Tasks **1 → 2 → 3 → 6 → 7 → 10 → 12**
+
+Task 3 gates everything license-dependent: no cohort result is evidence until the edition that produced it is shown, and today's installed license file is not obviously the full one. **Task 6 is deliberately placed *before* Task 7** — the floor-provenance and corpus-entry rules must be written while nobody knows which way the cohorts fall; Sprint 39's P1 established that a favourable classification discovered by the person reporting it is exactly the one that should not be self-approved. Task 10 waits on Task 7 because egypt and shale — two of P4's three models with no solve — get their first solve there.
+
+---
+
+## Task 1: Create Sprint 40 Known Unknowns List
+
+**Status:** 🔵 NOT STARTED
+**Priority:** Critical
+**Estimated Time:** 3-4 hours
+**Deadline:** Before Sprint 40 Day 1
+**Owner:** Development team
+**Dependencies:** None
+
+### Objective
+
+Produce `docs/planning/EPIC_4/SPRINT_40/KNOWN_UNKNOWNS.md` enumerating every assumption Sprint 40's plan rests on, categorised by priority, each with research questions, a verification method, a risk-if-wrong and an owner — so that assumptions are refuted **in prep**, when refutation is cheap, rather than on a sprint day.
+
+### Why This Matters
+
+The Known-Unknowns process has caught a materially wrong premise in every recent sprint, and the refutation rate is rising: Sprint 38's prep refuted **32 %** of its assumptions, Sprint 39's **63 %** (19 of 30). Nine of Sprint 39's changed the sprint rather than a figure — P4's cost premise, P7's "all 14 or none", P10's selection yielding no available qualifier.
+
+Sprint 40 carries a new class of unknown that no prior sprint had: **assumptions about results that have never existed**. That eleven goldens exist says nothing about whether they solve (`ferts`'s emit was silently wrong until Sprint 38 Day 11); that nine models are LP/NLP/QCP says nothing about whether they are convex. And at least one carryforward rests on a premise its own source log contradicts — lnts's "re-apply the banked diff" against Sprint 39 Day 5's *"removing the contradiction is not sufficient"*.
+
+### Background
+
+`../SPRINT_39/KNOWN_UNKNOWNS.md` is the template: 30 unknowns across 10 categories, each with **Priority / Assumption / Research Questions / How to Verify / Risk if Wrong / Estimated Research Time / Owner / Verification Results**, plus a task-mapping appendix. Its final tally was **11 ✅ / 11 ❌ / 8 🔶**.
+
+⚠ **Sprint 39's Task 1 published a research-time total "derived by summing" that was never summed** (40.0 h written as 33.0 h, then "corrected" to 29.0 h). Derive the total with the snippet in *Verification*, at the point of use.
+
+Candidate seeds, drawn from `../PROJECT_PLAN.md` Sprint 40 and `../SPRINT_39/SPRINT_40_CARRYFORWARDS.md`:
+
+- **License (P1):** is the installed license the full one? Does the `.lst` header distinguish licensed from demo in a parseable way? Do the license terms permit GitHub-hosted ephemeral runners? Can a protected environment's `main`-only branch policy be bypassed by `workflow_dispatch` from another ref?
+- **Schema (P1):** are `mcp_solve_result` and `convexity_result` the only result types a license-dependent stage writes? Is `run_full_test.py` a mirror or a second writer?
+- **MCP-gated cohort (P2):** do all 11 translate at HEAD within the timeout? Are all 11 goldens byte-identical at HEAD? How many reach a PATH outcome vs. a compile error (`ISSUE_933` tricp)? Is any match a presolve self-match (the `weapons` trap)?
+- **NLP-gated set (P3):** are the nine LP/NLP/QCP models really in scope by type? How many classify convex? Do any parse today?
+- **P10 two-class (P4):** is turkpow's minting site still `t__kkt1` into both coordinates of `vs(t,v)`? Does the ratchet still read 9?
+- **lnts (P5):** is the banked diff landable, given Day 5's REPLAN (`_fx_` rows `INFES`, `robot`/`springchain` drift, a label-enumerated guard, a second dynamics defect)?
+- **sarf (P6):** is 70.9 % still in `compute_constraint_jacobian` at HEAD? Is `gradient.py:453` still dead?
+- **Diagonal defect (P7):** does `stat_tsam(i,j).. 1 =E= 0;` reproduce on `main`, and is the layer `_diff_sum`?
+- **Structural sites (P8):** does a discriminating input exist at 2-D, or only at ≥ 3-D?
+- **Process (P10):** does the local `make check-goldens` really lack `--min-scope`? Is the anchor resolver extractable without changing its behaviour?
+
+### What Needs to Be Done
+
+1. **Enumerate the assumptions** in `../PROJECT_PLAN.md`'s Sprint 40 entry and `../SPRINT_39/SPRINT_40_CARRYFORWARDS.md` — every figure, every named file or symbol, every "should".
+2. **Group into categories**, one per sprint priority plus one for the license unlock as a whole, numbered `N.M`.
+3. **For each unknown, write all eight sections**, leaving *Verification Results* empty for the owning task.
+4. **Add a mapping table** — unknown → owning prep task — and add an `**Unknowns Verified:**` line to each of Tasks 2–12 in this plan.
+5. **Flag lineage** — which unknowns descend from a Sprint-39 disposition, and which are new with the license.
+6. **Derive the research-time total by script**, not by addition in prose.
+
+### Changes
+
+*To be completed*
+
+### Result
+
+*To be completed*
+
+### Verification
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+KU=docs/planning/EPIC_4/SPRINT_40/KNOWN_UNKNOWNS.md
+test -f "$KU" && echo "✅ exists" || { echo "KNOWN_UNKNOWNS.md not yet created"; exit 0; }
+
+# Unknown count (excluding any 'Unknown X.Y' template placeholder)
+grep -c "^## Unknown [0-9]" "$KU"
+
+# Every unknown carries all 8 sections; the research-time total is DERIVED here
+python3 - "$KU" <<'PY'
+import re, sys
+s = open(sys.argv[1]).read()
+req = ['### Priority','### Assumption','### Research Questions','### How to Verify',
+       '### Risk if Wrong','### Estimated Research Time','### Owner','### Verification Results']
+blocks = [b for b in re.split(r'^## Unknown ', s, flags=re.M)[1:] if re.match(r'\d', b)]
+bad = [b.splitlines()[0] for b in blocks if not all(r in b for r in req)]
+hrs = 0.0
+for b in blocks:
+    m = re.search(r'### Estimated Research Time\s*\n+\s*\**~?([\d.]+)', b)
+    hrs += float(m.group(1)) if m else 0
+print(f"unknowns: {len(blocks)} | missing-section: {len(bad)} {bad or ''} | research hours (derived): {hrs:.1f}")
+PY
+
+# Categories cover every priority + the license unlock (expect >= 11)
+grep -c "^# Category" "$KU"
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_40/KNOWN_UNKNOWNS.md` with ≥ 22 unknowns across ≥ 11 categories
+- A mapping table from each unknown to its owning prep task
+- An `Unknowns Verified:` line added to each of Tasks 2–12 in this plan
+- A lineage note separating Sprint-39-descended unknowns from license-new ones
+
+### Acceptance Criteria
+
+- [ ] Document created at `docs/planning/EPIC_4/SPRINT_40/KNOWN_UNKNOWNS.md`
+- [ ] ≥ 22 unknowns, each with all 8 required sections
+- [ ] Every Sprint-40 priority (P1–P10) has at least one category, plus a license-unlock category
+- [ ] Every unknown maps to exactly one owning prep task; none is orphaned
+- [ ] The lnts-landability premise and the installed-license premise are each an explicit unknown
+- [ ] The research-time total is the figure the verification snippet derives
+
+---
+
+## Task 2: Re-Derive the Sprint-39 Baseline & Both License-Gated Populations by Identity
+
+**Status:** 🔵 NOT STARTED
+**Priority:** Critical
+**Estimated Time:** 2-3 hours
+**Deadline:** Before Sprint 40 Day 1
+**Owner:** Development team
+**Dependencies:** Task 1
+
+### Objective
+
+Produce `docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md`: the Sprint-39 close figures re-derived on current `main` with their commit, and **both license-gated populations recorded as named lists with the predicate that produced them**, so every later task — and the sprint — cites one pinned source instead of re-typing members.
+
+### Why This Matters
+
+Every Sprint-40 acceptance criterion is a delta against this baseline, and two of them (`path_solve_license` **11 → 0**, the P3 corpus decision) are defined over **sets**, not counts. A count catches an omission; only an identity catches a swap (§7.2). The Sprint-39 handoff itself recorded the license cohort as **10 / +10** when the DB said **11** — caught only because it was derived (`../SPRINT_39/SPRINT_LOG.md` §Day 9).
+
+### Background
+
+- **Close figures** (`../SPRINT_39/SPRINT_40_CARRYFORWARDS.md`, measured at `bd2af6e9`): Solve 111 · Match 95 (65 cold + 30 presolve) · Translate 135 · floor 75 · `path_solve_terminated` 0 · model_infeasible 7 · path_syntax_error 6 · `path_solve_license` 11 · all-219 Match 98 · `make test` 5,444 · leak scope 186 · P2 ratchet 9.
+- **MCP-gated predicate:** `mcp_solve.outcome_category == "path_solve_license"`.
+- **NLP-gated predicate:** `convexity.error == "Model exceeds demo license limits"` (written by `scripts/gamslib/verify_convexity.py`); one member (`andean`) is MIP — excluded by the MINLP/MIP scope rule, never relaxed.
+- **The floor is not derivable from the DB** — `floor_tracker.py` reads `data/floor_provenance.json`; the mechanical count yields 65.
+
+### What Needs to Be Done
+
+1. **Diff the anchors:** `git diff --stat bd2af6e9 HEAD -- data/ src/ tests/` — record whether anything substantive moved since the close.
+2. **Run `kpi_block.py` and `floor_tracker.py`** and paste their output verbatim with the commit they report.
+3. **Derive both populations by predicate** and record each as a sorted named list, with model type and (for the NLP-gated set) parse/translate status today.
+4. **Record per-model size facts** for the MCP-gated cohort from the goldens (equation/variable counts by `grep`), replacing recalled figures (turkey 3,866; tricp 1,255; egypt ~3,470) with derived ones.
+5. **Re-derive the P2 ratchet** (`make check-index-repeats`) and the leak-gate inventory (`make check-goldens`, **run alone**).
+6. **Record a verdict per figure:** ✅ reproduces / ❌ differs (with the difference routed).
+
+### Changes
+
+*To be completed*
+
+### Result
+
+*To be completed*
+
+### Verification
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+git rev-parse --short HEAD
+git diff --stat bd2af6e9 HEAD -- data/ src/ tests/ | tail -1
+
+# Headline KPIs + floor, each carrying its commit
+.venv/bin/python scripts/sprint_audit/kpi_block.py
+.venv/bin/python scripts/sprint_audit/floor_tracker.py | tail -3
+
+# Both populations BY IDENTITY
+.venv/bin/python - <<'PY'
+import json
+db = json.load(open("data/gamslib/gamslib_status.json"))
+mcp = sorted(m["model_id"] for m in db["models"]
+             if (m.get("mcp_solve") or {}).get("outcome_category") == "path_solve_license")
+nlp = sorted((m["model_id"], m.get("gamslib_type")) for m in db["models"]
+             if (m.get("convexity") or {}).get("error") == "Model exceeds demo license limits")
+print("MCP-gated", len(mcp), mcp)
+print("NLP-gated", len(nlp), nlp)
+PY
+
+# P2 ratchet (expect 9 = baseline 9 unless something landed)
+make check-index-repeats 2>&1 | tail -3
+
+test -f docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md && echo "✅ doc" || echo "doc not yet created"
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md` — figures with commit, both named populations with predicates, per-model size facts, a verdict per figure
+- The MCP-gated and NLP-gated lists in a form Tasks 6, 7 and 12 cite rather than copy
+
+### Acceptance Criteria
+
+- [ ] Every close figure re-derived by tool at a stated commit, none hand-counted
+- [ ] Both populations recorded as **named lists** with the predicate that produced them
+- [ ] `andean` recorded as MIP-excluded, with the scope rule cited
+- [ ] Cohort size facts derived from the goldens, not recalled
+- [ ] The leak gate run **alone** and its scope line recorded (186 or the difference explained)
+- [ ] Any figure that differs from the close is routed, not silently replaced
+
+---
+
+## Task 3: Install the Full License Locally & Prove It with a Fail-Capable Probe
+
+**Status:** 🔵 NOT STARTED
+**Priority:** Critical
+**Estimated Time:** 3-4 hours
+**Deadline:** Before Sprint 40 Day 1
+**Owner:** Development team (license installation: project owner)
+**Dependencies:** Tasks 1, 2
+
+### Objective
+
+Install the full license on the development machine and produce `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md`: a **> 1,000-row nonlinear probe model** run **on the demo and on the full license**, showing it fails on one and solves on the other — plus the exact, parseable string that distinguishes the two editions in a `.lst` file, which Task 5's `license_edition` writer will key on.
+
+### Why This Matters
+
+Every license-dependent result in Sprint 40 is only as good as the evidence that the licensed edition produced it. As of 2026-10-12, the installed `gamslice.txt` on the development machine dates from the 54.2.1 install (**2026-07-13**) and still mentions the demo — so "we have a license" and "the license is installed" are **different claims**, and only the second is evidence. A probe that only ever runs licensed cannot distinguish "licensed" from "the probe was too small to hit the limit" — the vacuous-pass failure §7.5 names.
+
+### Background
+
+- **The demo limit is enforced at solve time**: `scripts/gamslib/test_solve.py` and `verify_convexity.py` both detect it by `.lst` substring (`"exceeds the demo license limits"`). The limit is 1,000 rows for nonlinear models (GAMS 53 and 54).
+- **`gams audit lo=2`** prints version information; whether it prints the edition is itself unknown — the `.lst` header line (*"licensed for continuous and discrete problems"*) is the other candidate source.
+- **`src/ir/preprocessor.py`** emulates `%system.license%`-style attributes with a `"gams.license": "demo"` stub — record whether it matters for any model (it is a parse-time emulation, not a solve-time check).
+- **Sensitive data:** never commit, paste or quote any part of the license text in a doc, a log or a PR.
+
+### What Needs to Be Done
+
+1. **Back up the demo license file** (outside the repo) so the demo run in step 3 remains reproducible.
+2. **Choose or build the probe**: the smallest nonlinear model that exceeds 1,000 rows. Prefer a synthetic model with a size parameter, so the same file can be run just under and just over the limit; use a corpus model only if it is shown to hit the limit on the demo.
+3. **Run it on the demo** — record the refusal line verbatim (this is the positive control: the probe *can* fail).
+4. **Install the full license** and run it again — record `MODEL STATUS`, the edition string, and `gams audit lo=2` output.
+5. **Identify the discriminating string(s)** for licensed vs. demo in the `.lst` header, with both raw lines (sans license text) recorded — Task 5's parser keys on this.
+6. **Record operational facts** Task 4 needs: the license file's install path, whether it is node-locked or otherwise bound, its expiry if any.
+
+### Changes
+
+*To be completed*
+
+### Result
+
+*To be completed*
+
+### Verification
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+DOC=docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md
+test -f "$DOC" && echo "✅ doc" || echo "LICENSE_PROBE.md not yet created"
+
+# Edition evidence, from a scratch dir (never the repo root: GAMS writes next to cwd)
+SCR=$(mktemp -d) && cd "$SCR"
+printf 'variable x; equation e; e.. x =e= 1; model m /all/; solve m using lp minimizing x;\n' > p.gms
+gams p.gms lo=0 >/dev/null 2>&1; grep -i -m2 "licensed\|demo" p.lst | cut -c1-80
+cd - >/dev/null
+
+# The doc must record BOTH runs: the demo refusal (positive control) and the licensed solve
+grep -c "exceeds the demo license limits" "$DOC" 2>/dev/null
+grep -c "MODEL STATUS" "$DOC" 2>/dev/null
+
+# No license text leaked into the repo (count only; never print matches)
+git grep -c -i "gamslice" -- docs/planning/EPIC_4/SPRINT_40/ | head
+```
+
+### Deliverables
+
+- The full license installed locally (owner action), demo license backed up outside the repo
+- `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md` — probe definition, demo refusal (verbatim), licensed solve, the edition-discriminating string(s)
+- Operational facts for Task 4 (install path, binding, expiry)
+
+### Acceptance Criteria
+
+- [ ] The probe **fails on the demo** with the refusal line recorded — the positive control
+- [ ] The same probe **solves licensed** with `MODEL STATUS` recorded
+- [ ] A parseable edition-discriminating string identified for `.lst` files, both forms recorded
+- [ ] No part of the license text appears in any committed file, log excerpt or PR
+- [ ] All GAMS runs executed in a scratch directory, not the repo root
+
+---
+
+## Task 4: CI License-Isolation Design & Workflow Inventory
+
+**Status:** 🔵 NOT STARTED
+**Priority:** High
+**Estimated Time:** 3-4 hours
+**Deadline:** Before Sprint 40 Day 1
+**Owner:** Development team (environment creation + secret: project owner)
+**Dependencies:** Tasks 1, 3
+
+### Objective
+
+Produce `docs/planning/EPIC_4/SPRINT_40/CI_LICENSE_DESIGN.md`: an inventory of every workflow (trigger, whether it installs GAMS, whether it runs PR-controlled code, any demo-motivated exclusion), and a design for the **trusted licensed workflow** — triggers, protected environment, branch policy, secret handling, what it covers — that P1 implements without re-deciding.
+
+### Why This Matters
+
+PR #1745's review found that both GAMS-installing workflows trigger **only on `pull_request`** and run PR-controlled code (`pip install -e .`, repository scripts), so a license secret given to them can be exfiltrated — **same-repository PRs included**; masking and log-scanning cannot stop an encoded or network exfiltration. The plan now keeps PR jobs demo-only and puts the license in a separate `main`-only workflow. That design has load-bearing details (environment branch policy vs. `workflow_dispatch` from another ref; never `pull_request_target` with a PR-head checkout) that must be verified against GitHub's actual behaviour, not assumed.
+
+### Background
+
+- **Installs GAMS:** `.github/workflows/pr19-emit-solve-validation.yml`, `.github/workflows/presolve-divergence.yml` — both pinned to the 54.2.1 `linux_x64_64_sfx.exe` with a SHA-256 guard, in a step named *"Install GAMS demo"*, `pull_request` trigger with path filters.
+- **Does not install GAMS — EIGHT workflows, not the plan's "other four":** `ci.yml`, `gamslib-regression.yml`, `golden-staleness.yml`, `lint.yml`, `nightly.yml`, `performance-check.yml`, `phase0-gate.yml`, `publish-pypi.yml` (derived 2026-10-12 with the *Verification* loop below, at `912d005c`). `../PROJECT_PLAN.md` Sprint 40 P1 names only the first four by name and says *"confirm that at prep from the files, do not take it from this line"* — the count was wrong, the conclusion (none installs GAMS) holds. Re-run the loop; do not take this line either.
+- **Secrets in use today:** only `publish-pypi.yml` (`PYPI_API_TOKEN`, `TEST_PYPI_API_TOKEN`).
+- **Precedent:** the S35 Day-6 demo-expiry incident (53.1.0 demo expired ~2026-07-29; every solve returned rc=7) — the edition-printing `gams audit lo=2` line exists because of it.
+
+### What Needs to Be Done
+
+1. **Inventory all workflows** from the files: trigger(s), path filters, GAMS install (yes/no), secrets referenced, PR-code execution (yes/no). Record by name, not count.
+2. **Catalog demo-motivated exclusions**: model lists, tiers or skips whose comment or history attributes them to the 1,000-row limit (e.g. `.github/path-solve-ci-targets.txt`, the PR19 tier definitions).
+3. **Design `licensed-solve.yml`**: triggers (`push` to `main`, `schedule`, `workflow_dispatch`); the `gams-licensed` environment with a **`main`-only deployment-branch policy** and optional required reviewers; secret written to `$GAMS_DIR/gamslice.txt` at run time; `::add-mask::` per line; in-job output scan with its positive control; what it runs (the two cohorts + each PR workflow's skipped large tier).
+4. **Verify the branch-policy claim**: confirm from GitHub documentation (or a throwaway test repo) that a `workflow_dispatch` on a non-`main` ref is refused the environment — this is what makes the design safe.
+5. **Design the PR-side change**: rename the step, the large-tier skip-with-notice, and the edition print.
+6. **Write the owner checklist** for Task 6: license terms for hosted runners; environment creation; reviewer requirement; where the secret is stored (environment only, **not** repository-wide).
+
+### Changes
+
+*To be completed*
+
+### Result
+
+*To be completed*
+
+### Verification
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+# Inventory by identity: which workflows install GAMS, and what triggers them
+for f in .github/workflows/*.yml; do
+  inst=$(grep -c -i "gams-installer\|Install GAMS" "$f")
+  trig=$(sed -n '/^on:/,/^[a-z]/p' "$f" | grep -oE "pull_request_target|pull_request|push|schedule|workflow_dispatch" | sort -u | tr '\n' ' ')
+  echo "$(basename "$f"): installs_gams=$inst triggers=[$trig]"
+done
+# Secrets referenced today
+grep -rn "secrets\." .github/workflows/ | cut -c1-120
+
+DOC=docs/planning/EPIC_4/SPRINT_40/CI_LICENSE_DESIGN.md
+test -f "$DOC" && echo "✅ doc" || echo "CI_LICENSE_DESIGN.md not yet created"
+grep -c "pull_request_target" "$DOC" 2>/dev/null   # the design must address it explicitly
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_40/CI_LICENSE_DESIGN.md` — workflow inventory, demo-exclusion catalog, `licensed-solve.yml` design, PR-side change, owner checklist
+- A recorded verification (doc citation or test) that the environment branch policy refuses non-`main` refs
+
+### Acceptance Criteria
+
+- [ ] Every workflow inventoried by name with trigger and GAMS-install status, derived from the files
+- [ ] The design gives the secret to **no job that runs PR code** — same-repo PRs included
+- [ ] The `main`-only branch-policy claim is verified, not assumed
+- [ ] `pull_request_target` with a PR-head checkout is explicitly ruled out
+- [ ] Masking + output scan are described as defence in depth, with the scan's positive control
+- [ ] The post-merge detection trade-off is stated
+
+---
+
+## Task 5: Schema 3.1.0 `license_edition` Design
+
+**Status:** 🔵 NOT STARTED
+**Priority:** High
+**Estimated Time:** 2-3 hours
+**Deadline:** Before Sprint 40 Day 1
+**Owner:** Development team
+**Dependencies:** Tasks 1, 3
+
+### Objective
+
+Produce `docs/planning/EPIC_4/SPRINT_40/SCHEMA_3_1_0_DESIGN.md`: the exact field definitions, every writer and initializer touched, the migration's behaviour on existing rows, and the test list — derived from the code, so P1 implements a closed list rather than discovering writers mid-sprint.
+
+### Why This Matters
+
+`data/gamslib/schema.json` is at **3.0.0** and both result types a license-dependent stage writes declare `additionalProperties: false` — an un-migrated field **fails validation**. PR #1745's review found the plan's first writer list incomplete twice over (the convexity record lacks `gams_version` entirely; `db_manager.py` hard-codes the canonical version for `--empty` and lists the migration chain). A third omission found mid-sprint would land after the P2 batch had already written rows without their edition.
+
+### Background
+
+- **Sprint 39 P7** did the last schema bump (2.2.1 → 3.0.0, `mcp_file_used` → `mcp_file_generated`): `scripts/gamslib/migrate_schema_v3.0.0.py`, `tests/gamslib/test_migrate_schema_v3.py`, and the `db_manager.py` comments explaining why `--empty` stamps the canonical version (`../SPRINT_39/PRESOLVE_RECORD_REMEDY.md` §9).
+- **Known writers:** `scripts/gamslib/test_solve.py` (MCP solve record; `extract_gams_version`), `scripts/gamslib/run_full_test.py` (the `gams_version` passthrough), `scripts/gamslib/verify_convexity.py` (convexity record).
+- **Research:** `docs/research/JSON_SCHEMA_BEST_PRACTICES.md`, `docs/research/JSONSCHEMA_LIBRARY_GUIDE.md` — additive-change and versioning conventions.
+
+### What Needs to Be Done
+
+1. **Enumerate every writer by grep**, not by recall: every assignment into `mcp_solve` / `convexity` dicts and every `schema_version` literal.
+2. **Define the fields**: `license_edition` (`"licensed"` / `"demo"` / `null`) in both result types; `gams_version` in `convexity_result`. State the null semantics — **unrecorded, never a guessed `"demo"`**.
+3. **Specify the parser extension** to `extract_gams_version` using Task 3's discriminating string; reuse, do not duplicate.
+4. **Specify the migration** (`migrate_schema_v3.1.0.py`): additive, idempotent, `null` for existing rows, chain position after 3.0.0.
+5. **Specify the `db_manager.py` changes**: `--empty` stamp 3.0.0 → 3.1.0 and its comment; the catalog-init warning's chain.
+6. **List the tests**: migration test; schema tests (accepts new fields, **still rejects an unknown key**); writer tests per stage from licensed and demo `.lst` fixtures; updated `test_db_manager.py` regressions.
+
+### Changes
+
+*To be completed*
+
+### Result
+
+*To be completed*
+
+### Verification
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+# Current contract
+python3 -c "import json;s=json.load(open('data/gamslib/schema.json'));d=s.get('definitions') or s.get('\$defs');[print(k,'additionalProperties=',d[k].get('additionalProperties'),'gams_version' in d[k].get('properties',{})) for k in ('mcp_solve_result','convexity_result')]"
+grep -n '"schema_version"' data/gamslib/gamslib_status.json | head -1
+
+# Every schema_version literal and every gams_version writer (the closed list to design against)
+grep -rn '"3\.0\.0"' scripts/ tests/ | grep -v __pycache__ | cut -c1-120
+grep -rn "gams_version" scripts/gamslib/*.py | grep -v "migrate_" | cut -c1-120
+
+DOC=docs/planning/EPIC_4/SPRINT_40/SCHEMA_3_1_0_DESIGN.md
+test -f "$DOC" && echo "✅ doc" || echo "SCHEMA_3_1_0_DESIGN.md not yet created"
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_40/SCHEMA_3_1_0_DESIGN.md` — fields, null semantics, closed writer list, parser extension, migration spec, `db_manager` changes, test list
+
+### Acceptance Criteria
+
+- [ ] Writer list derived by grep and recorded with the command that produced it
+- [ ] Both `mcp_solve_result` and `convexity_result` covered; `gams_version` added to the latter
+- [ ] Null semantics stated: existing rows are unknown, never back-filled as `"demo"`
+- [ ] `db_manager.py` `--empty` stamp and catalog-init chain included
+- [ ] Test list includes "still rejects an unknown key"
+
+---
+
+## Task 6: Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind)
+
+**Status:** 🔵 NOT STARTED
+**Priority:** Critical
+**Estimated Time:** 2-3 hours
+**Deadline:** Before Sprint 40 Day 0 (decisions taken Day 0, before Task 7's results are read)
+**Owner:** Development team (brief); project owner (decisions)
+**Dependencies:** Tasks 1, 2
+
+### Objective
+
+Produce `docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md` posing the three Day-0 owner decisions with their options and consequences — **written before any license-unlocked result exists**, and decided before Task 7's results are read.
+
+### Why This Matters
+
+Sprint 39 P1 spent a Day-0 decision on a floor classification that the Sprint-38 closer discovered at close, in the favourable direction, and correctly refused to self-approve. Sprint 40 is about to generate up to twenty such classifications at once. **A rule written after the results is a rule fitted to them.** The three decisions:
+
+1. **Floor provenance:** a license-unlocked cold match is neither *methodology* (the emit was never byte-identical-to-pre-fix and matching via warm start) nor *fix-driven genuine* (no emit changed). New `limb` in `data/floor_provenance.json`, or explicit exclusion?
+2. **Corpus entry:** admitting any NLP-gated model moves the denominator off 142. Admit by rule (e.g. "classifies `verified_convex`/`likely_convex` by the existing verifier"), admit case-by-case, or hold at 142 for Epic 4 and record the set as Epic-5 scope?
+3. **CI license use:** do the license terms permit GitHub-hosted ephemeral runners; create `gams-licensed` with required reviewers or not?
+
+### Background
+
+- `data/floor_provenance.json` + `scripts/sprint_audit/floor_tracker.py` — the floor's per-model provenance and limbs (`presolve-match-genuine` added in Sprint 39 P1).
+- `../SPRINT_39/FLOOR_DECISION_BRIEF.md` — the format that let an owner answer in one sitting: evidence, counter-argument, consequences, and **the exact edit each answer implies**.
+- Scope-change precedent: Sprints 23–25 each changed the pipeline scope (160 → 147 → 143 → 142) and footnoted it in the Rolling-KPIs table (`../PROJECT_PLAN.md` footnotes ³, ⁴, ⁶).
+- `docs/research/gamslib_kpi_definitions.md` — how the corpus and the KPIs are defined.
+
+### What Needs to Be Done
+
+1. **State each decision as a question with 2–4 options**, each with its consequence for the reported figures and the exact file edit it implies.
+2. **Floor:** argue both sides of "license-unlocked matches count toward the genuine floor"; recommend, but leave the decision to the owner.
+3. **Corpus:** show how each option changes the headline denominators, and how Sprint 40 would report both (142-continuity + expanded) in one sentence.
+4. **CI:** carry Task 4's owner checklist verbatim.
+5. **Record the brief's commit before Task 7 runs**, so the "written blind" property is checkable from history.
+
+### Changes
+
+*To be completed*
+
+### Result
+
+*To be completed*
+
+### Verification
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+DOC=docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md
+test -f "$DOC" && echo "✅ doc" || { echo "OWNER_DECISION_BRIEF.md not yet created"; exit 0; }
+
+# Written blind: the brief's first commit must predate the dry-run doc's first commit
+first() { git log --diff-filter=A --format=%ct -- "$1" | tail -1; }
+B=$(first "$DOC"); D=$(first docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md)
+[ -n "$D" ] && { [ "$B" -lt "$D" ] && echo "✅ brief predates dry run" || echo "❌ brief written after dry run"; } || echo "dry run not yet committed"
+
+# Three decisions posed
+grep -c "^## Decision" "$DOC"
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md` — three decisions, options, consequences, exact edits
+- The owner's recorded answers (Day 0), appended with date
+
+### Acceptance Criteria
+
+- [ ] All three decisions posed with options and the exact edit each implies
+- [ ] The brief is committed **before** `COHORT_DRY_RUN.md` (checkable from history)
+- [ ] The corpus option shows both denominators reported in one sentence
+- [ ] No result from either cohort is cited in the brief
+
+---
+
+## Task 7: License-Gated Cohorts Dry Run — Fingerprints & Routing
+
+**Status:** 🔵 NOT STARTED
+**Priority:** Critical
+**Estimated Time:** 5-7 hours
+**Deadline:** Before Sprint 40 Day 1
+**Owner:** Development team
+**Dependencies:** Tasks 2, 3, 6
+
+### Objective
+
+Produce `docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md`: the first licensed measurement of both populations — **in a scratch directory, never persisted to the DB** — with per-model fingerprints and a pre-registered routing for every non-match, so P2/P3 open on a known work list.
+
+### Why This Matters
+
+None of the eleven MCP-gated emits has ever been exercised by a solve, and none of the nine in-scope NLP-gated models has ever been classified. The sprint's dominant risk is a **cascade of first-time fingerprints** pulling it into open-ended diagnosis. A prep dry run turns that cascade into a list with a size, before Day 1 — and it is where egypt and shale first get the solve that P4's Class-A fixes need to be verified against.
+
+### Background
+
+- **Known going in** (`../PROJECT_PLAN.md` Sprint 40 P2): egypt and shale carry a **live** P10 Class-A emit defect (expect mismatch); ferts's emit was corrected Sprint 38 Day 11; tricp carries the S38 D11 `slp(n,n)` fix and the **untriaged** `docs/issues/ISSUE_933_tricp-mcp-compilation-errors.md`; turkey is the S35 `$161` "licensed testbed +1"; **robot drifted under Sprint 39's lnts candidate** (`../SPRINT_39/SPRINT_LOG.md` §Day 5) — its baseline solve is now measurable.
+- **Evidence standard per result:** comparison verdict; `scripts/sprint_audit/check_mcp_solve_attribution.py` showing *our* MCP produced its own `MODEL STATUS` (the `weapons` trap); `scripts/diagnostics/kkt_residual.py` verdict for every non-match.
+- **Selection rule** (P10, unchanged since Sprint 38): a model is fixed only with a reproduced fingerprint **and** a named fix surface — everything else is routed or banked.
+- **Research:** `docs/research/CONVEXITY_VERIFICATION_DESIGN.md`, `docs/research/convexity_detection.md` — the classifier the NLP-gated set will go through; `docs/research/GAMSLIB_MODEL_TYPES.md` — the original catalog that recorded "License limits (11)".
+
+### What Needs to Be Done
+
+1. **Confirm Task 3's edition** in every `.lst` the run produces — a demo-produced result is discarded, not recorded.
+2. **MCP-gated (11):** in a scratch copy, re-emit each at HEAD and diff against its golden; run the MCP solve; compare to the NLP reference; run attribution; run `kkt_residual.py` on every non-match. Record translate and solve wall-clock (input to Task 12's nightly-slot sizing).
+3. **NLP-gated (9 in scope):** run convexity verification licensed; for each convex classification, attempt parse → translate → solve → compare with the same evidence.
+4. **Classify each result** into an existing bucket and **route** every non-match (P4 for egypt/shale; `ISSUE_933` for tricp; a new issue stub otherwise) — no fix attempted.
+5. **Do not persist**: no `gamslib_status.json` write, no golden regeneration committed. The sprint's batch is the measurement of record; this is the rehearsal.
+6. **When any model's expected bucket moves**, grep this prep plan and every Sprint-40 prep doc for that model (§7.6).
+
+### Changes
+
+*To be completed*
+
+### Result
+
+*To be completed*
+
+### Verification
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+DOC=docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md
+test -f "$DOC" && echo "✅ doc" || { echo "COHORT_DRY_RUN.md not yet created"; exit 0; }
+
+# Never persisted: the DB and the goldens are unchanged by prep
+git diff --quiet HEAD -- data/gamslib/gamslib_status.json data/gamslib/mcp/ && echo "✅ DB + goldens untouched"
+
+# Every member of BOTH populations has a row, by identity (names from the DB, not from this plan)
+.venv/bin/python - "$DOC" <<'PY'
+import json, sys
+doc = open(sys.argv[1]).read()
+db = json.load(open("data/gamslib/gamslib_status.json"))
+mcp = {m["model_id"] for m in db["models"] if (m.get("mcp_solve") or {}).get("outcome_category") == "path_solve_license"}
+nlp = {m["model_id"] for m in db["models"] if (m.get("convexity") or {}).get("error") == "Model exceeds demo license limits"}
+missing = sorted(x for x in mcp | nlp if f"`{x}`" not in doc)
+print("missing from dry-run doc:", missing or "none")
+PY
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md` — per-model: edition, golden drift, MCP outcome, comparison, attribution, residual verdict, route, wall-clock
+- Convexity classifications for the nine in-scope NLP-gated models
+- Issue stubs (or routing notes) for every non-match; `ISSUE_933` triaged against a real compile
+
+### Acceptance Criteria
+
+- [ ] Every result shown to come from the licensed edition
+- [ ] Every member of both populations has a row, checked by identity against the DB predicate
+- [ ] Every non-match has a `kkt_residual.py` verdict and a route; no fix attempted
+- [ ] Every match has attribution showing our MCP solved
+- [ ] DB and goldens untouched (`git diff` clean)
+- [ ] Wall-clock per model recorded for scheduling
+
+---
+
+## Task 8: lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate
+
+**Status:** 🔵 NOT STARTED
+**Priority:** High
+**Estimated Time:** 3-4 hours
+**Deadline:** Before Sprint 40 Day 1
+**Owner:** Development team
+**Dependencies:** Tasks 1, 2, 3
+
+### Objective
+
+Produce `docs/planning/EPIC_4/SPRINT_40/LNTS_LANDABILITY.md`: a verdict on whether P5's plan — *"author the Phase-0 gate first, with the fail-before, then re-apply the banked diff"* — can deliver **+1 Solve** at all, and if so, the gate; if not, the re-scoped P5 with its budget destination.
+
+### Why This Matters
+
+The carryforward and the project plan both schedule lnts as "re-apply the banked diff" for **+1 Solve → 112**. But the source log says more than that the diff lacked a fail-before (`../SPRINT_39/SPRINT_LOG.md` §Day 5):
+
+- the candidate **failed its pre-registered PROCEED signal on substance** — the `_fx_` rows did not bind (`y2.h50` = 4.8997, `y3.h50` = 41.9700, both `INFES`);
+- it **perturbed `robot` and `springchain`**;
+- its exclusion is **label-enumerated** (`sameas(c,'y2') and sameas(h,'h50')`) — explicitly "not a general fix";
+- and **removing the contradiction is not sufficient**: lnts then fails on its own dynamics (364 `INFES` rows — a **second defect**).
+
+A Phase-0 gate cannot make a non-general fix general, and it cannot make the second defect go away. If prep does not test the premise, P5's 6–10 h and its +1 are planned against a REPLAN that has already happened once.
+
+### Background
+
+- `docs/issues/ISSUE_1694_lnts-contradictory-fx-mechanisms-blanket-zeroing.md` — the PROCEED/REPLAN signal fixed in advance.
+- `../SPRINT_39/LNTS_PROBE_DESIGN.md` — the runtime bound probe.
+- `../SPRINT_39/SPRINT_LOG.md` §Day 4 (layer traced to `emit_gams.py` section 1b; suppression tests `kkt.stationarity_conditions` while the blanket fires on `infer_lead_lag_condition`) and §Day 5 (the REPLAN and the open problem: express "the pruning guard covers the fixed tuple" **symbolically**, via a runtime `ord`/`card` property).
+- **robot** is in the MCP-gated cohort — with the license, its drift can now be judged by a solve, not only by an emit diff.
+
+### What Needs to Be Done
+
+1. **Re-read Day 4–5 in full** and list every condition the banked diff failed, with its evidence.
+2. **Re-run the runtime bound probe on `main`** (it must still show the contradiction — the positive control).
+3. **Assess the symbolic formulation** the Day-5 open problem names: is a runtime `ord`/`card` guard expressible at section 1b without labels? Sketch it; do not land it.
+4. **Assess the second defect** (dynamics `INFES` rows): is it in scope for P5, or a separate issue?
+5. **Verdict:** (A) landable as banked + gate — with evidence the Day-5 failures do not apply; (B) landable only via the symbolic guard — re-estimate; (C) not landable this sprint — bank, free the budget, and remove the +1 from projections.
+6. **Write the Phase-0 gate** for whichever branch survives, including the perturbation criterion for `robot`/`springchain`/`otpop`.
+
+### Changes
+
+*To be completed*
+
+### Result
+
+*To be completed*
+
+### Verification
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+# The Day-5 REPLAN evidence this task must answer
+grep -n "REPLAN\|INFES\|springchain\|label-enumerated\|not sufficient" docs/planning/EPIC_4/SPRINT_39/SPRINT_LOG.md | sed -n '1,15p' | cut -c1-140
+# The fix site still exists where Day 4 traced it
+grep -n "fix_rhs" src/emit/emit_gams.py | head -5
+
+DOC=docs/planning/EPIC_4/SPRINT_40/LNTS_LANDABILITY.md
+test -f "$DOC" && echo "✅ doc" || echo "LNTS_LANDABILITY.md not yet created"
+grep -c "Verdict" "$DOC" 2>/dev/null
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_40/LNTS_LANDABILITY.md` — the Day-5 failure list, the re-run probe, the symbolic-guard sketch, the second-defect scoping, a verdict A/B/C, the Phase-0 gate
+- If verdict C: a recommended edit to P5's projection for Task 12
+
+### Acceptance Criteria
+
+- [ ] Every Day-5 REPLAN condition listed with its evidence and an answer
+- [ ] The runtime probe re-run on `main` and shown to reproduce (positive control)
+- [ ] A verdict A, B or C with its budget consequence
+- [ ] The gate's perturbation criterion names `robot`, `springchain` and `otpop`
+- [ ] The +1 Solve is either justified against Day 5 or removed from the projection
+
+---
+
+## Task 9: sarf Jacobian O(active) Re-Architecture Design
+
+**Status:** 🔵 NOT STARTED
+**Priority:** High
+**Estimated Time:** 4-6 hours
+**Deadline:** Before Sprint 40 Day 1
+**Owner:** Development team
+**Dependencies:** Tasks 1, 2
+
+### Objective
+
+Produce `docs/planning/EPIC_4/SPRINT_40/SARF_JACOBIAN_DESIGN.md`: a re-measured profile of sarf at HEAD, the specific entry points in `compute_constraint_jacobian` an O(active) re-architecture must change, an atomicity plan (what must land together), and the gate — so P6's 20–28 h start on code, not on profiling.
+
+### Why This Matters
+
+Sprint 39 Day 0 re-pointed this work twice: Task 6 refuted the "four call sites" premise (0.5 % of wall-clock), and the attribution placed **70.9 %** in `compute_constraint_jacobian`. That figure is from Sprint 39; the re-architecture's design depends on *where inside* the Jacobian the time goes, which has not been broken down. And three of the four Day-7 defects produced a **wrong answer rather than a crash** — a partial landing is an inconsistent MCP, so the atomicity boundary must be known before any code changes.
+
+### Background
+
+- `../SPRINT_39/SARF_CALLSITE_PLAN.md` — the Sprint-39 attribution and its three branches (B taken).
+- `../SPRINT_38/SARF_REARCH_DESIGN.md` · `../SPRINT_38/DAY7_SARF_GATE_P6C.md` — the O(active) design and the Day-7 lessons (narrowing that is itself O(removed work) does not help; a precomputed position map did).
+- `docs/issues/ISSUE_1385_sarf-symbolic-emit-o-active.md` — the issue and its gate.
+- Gate peculiarities: `make leak-check MODEL=sarf` reports `NO-OP` (no golden); the real gate is the full leak gate plus sarf producing a golden (186 → 187); sarf cannot be its own fail-before fixture (369,024 declared columns).
+
+### What Needs to Be Done
+
+1. **Re-profile sarf at HEAD** with a bounded run (time-boxed; it does not terminate) — confirm or update the 70.9 % and break it down by callee.
+2. **Confirm `gradient.py:453` is still dead** and `_diff_sum`'s self/inclusive shares.
+3. **Name the entry points** inside `compute_constraint_jacobian` that iterate the full rather than the active set, with `file:line` anchors resolved by the shared resolver (§7.3).
+4. **Define the atomicity boundary**: which changes must land in one commit for the MCP to remain consistent.
+5. **Choose a fail-before fixture** that is not sarf (a smaller model sharing the shape) and show it fails before.
+6. **Re-estimate** P6 against the breakdown and state its REPLAN exit (timeout re-trigger; atomicity violation).
+
+### Changes
+
+*To be completed*
+
+### Result
+
+*To be completed*
+
+### Verification
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+grep -n "def compute_constraint_jacobian" src/ad/*.py
+sed -n '445,460p' src/ad/gradient.py
+DOC=docs/planning/EPIC_4/SPRINT_40/SARF_JACOBIAN_DESIGN.md
+test -f "$DOC" && echo "✅ doc" || echo "SARF_JACOBIAN_DESIGN.md not yet created"
+grep -c "measured at" "$DOC" 2>/dev/null   # every profile figure carries its commit
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_40/SARF_JACOBIAN_DESIGN.md` — profile at HEAD with commit, entry points, atomicity boundary, fail-before fixture, re-estimate and REPLAN exit
+
+### Acceptance Criteria
+
+- [ ] Profile re-measured at a stated commit, with the per-callee breakdown inside the Jacobian
+- [ ] Entry points anchored by code, not by line number alone
+- [ ] Atomicity boundary stated
+- [ ] A non-sarf fail-before fixture shown to fail before
+- [ ] P6 re-estimated with an explicit REPLAN exit
+
+---
+
+## Task 10: Correctness-Track Pre-Traces — turkpow Class A, the Diagonal Defect, the Structural Sites
+
+**Status:** 🔵 NOT STARTED
+**Priority:** High
+**Estimated Time:** 5-7 hours
+**Deadline:** Before Sprint 40 Day 1
+**Owner:** Development team
+**Dependencies:** Tasks 1, 2, 7
+
+### Objective
+
+Produce `docs/planning/EPIC_4/SPRINT_40/CORRECTNESS_PRETRACES.md` giving each of P4, P7 and P8 a **traced layer**, a minimal reproducer and a Phase-0 gate outline before Day 1 — and file the diagonal-reference defect's issue.
+
+### Why This Matters
+
+Three of Sprint 38's four Phase-0 gates named the wrong layer; Sprint 39 added the layer field to the template for that reason. All three tracks here have a *named* surface that is still a hypothesis: turkpow's minting site (`t__kkt1` into both coordinates of `vs(t,v)`), the diagonal defect's "probably `_diff_sum`", and the two structural-only sites' guards. Tracing in prep is cheap; discovering the wrong layer on Day 6 costs the day.
+
+### Background
+
+- **P4:** `../SPRINT_39/P2_VIOLATION_TRIAGE.md` — the two-class work list (Class A: dinam, egypt, turkpow ×3, nonsharp ×1; Class B: gussrisk, nonsharp ×1, shale). Task 7 gives egypt and shale their first solve. The P2 ratchet (`scripts/sprint_audit/check_index_repeat_properties.py`) stands at 9 = baseline 9.
+- **P7:** `../SPRINT_39/SPRINT_40_CARRYFORWARDS.md` §5 — `diagsum(j).. sum(i, tsam(i,i))` emits `stat_tsam(i,j).. 1 =E= 0;`; B-3 is called 0× for it.
+- **P8:** `../SPRINT_39/POSITIONAL_DOMAIN_SURVEY.md` · `tests/unit/kkt/test_positional_domain_sites.py` — 16 pinned sites, 11 structural-only; `_match_subset_domain` and `_compute_index_offset_key` (both in `src/kkt/stationarity.py`) indistinguishable across a nine-shape probe with guards disabled. #1737 (`docs/issues/ISSUE_1737_repeated-equation-domain-index-collapse.md`) is load-bearing for the AD layer — **do not narrow it**.
+- **Research:** `docs/research/multidimensional_indexing.md`, `docs/research/nested_subset_indexing_research.md`.
+
+### What Needs to Be Done
+
+1. **turkpow:** trace the alias-minting site from the emitted `vs(t__kkt1,t__kkt1)`-shaped reference back to the code that substitutes it; record the layer with a one-line justification; write the fail-before property test outline.
+2. **egypt / shale:** fold in Task 7's solve results — does the Class-A fingerprint explain the mismatch, or is there a second defect?
+3. **Diagonal defect:** build the minimal reproducer, confirm it on `main`, trace the layer (do not assume `_diff_sum`), and **file the issue** with the reproducer.
+4. **Structural sites:** extend the nine-shape probe to ≥ 3-D and subset-of-subset shapes; either find a discriminating input (shown to fail with the guard disabled — positive control) or record the dead-code finding with its proof scope.
+5. **Write a Phase-0 outline per track** with layer and positive control (the P10b field).
+
+### Changes
+
+*To be completed*
+
+### Result
+
+*To be completed*
+
+### Verification
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+make check-index-repeats 2>&1 | tail -2
+grep -n "def _match_subset_domain\|def _compute_index_offset_key" src/kkt/stationarity.py
+grep -n "test_the_AD_collapse_is_reachable_but_EMIT_refuses_it" tests/unit/kkt/test_positional_domain_sites.py
+DOC=docs/planning/EPIC_4/SPRINT_40/CORRECTNESS_PRETRACES.md
+test -f "$DOC" && echo "✅ doc" || echo "CORRECTNESS_PRETRACES.md not yet created"
+grep -c -i "layer:" "$DOC" 2>/dev/null          # one per track (expect >= 3)
+ls docs/issues/ | grep -i "diagonal\|tsam" || echo "diagonal-defect issue not yet filed"
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_40/CORRECTNESS_PRETRACES.md` — per track: traced layer + justification, reproducer, Phase-0 outline with positive control
+- A new issue file for the diagonal-reference defect with its minimal reproducer
+- The structural-site verdict: discriminating input, or dead-code finding with proof scope
+
+### Acceptance Criteria
+
+- [ ] Each of P4, P7, P8 has a **traced** layer, not a named-by-assumption one
+- [ ] The diagonal-defect issue is filed with a reproducer confirmed on `main`
+- [ ] egypt/shale mismatch explained by the Class-A fingerprint or a second defect named
+- [ ] Every probe records its positive control
+- [ ] #1737 left untouched
+
+---
+
+## Task 11: Process-Mechanism Spec & Smaller-Items Catalog
+
+**Status:** 🔵 NOT STARTED
+**Priority:** Medium
+**Estimated Time:** 3-4 hours
+**Deadline:** Before Sprint 40 Day 1
+**Owner:** Development team
+**Dependencies:** Tasks 1, 2
+
+### Objective
+
+Produce `docs/planning/EPIC_4/SPRINT_40/PROCESS_AND_SMALL_ITEMS.md`: (a) a spec for each P10 mechanism (10a–10e) with its fail-before test, and (b) the P9 smaller-items catalog with each item's next step re-verified on `main` — the sprint's slack absorber.
+
+### Why This Matters
+
+Sprint 39's retrospective recorded seven process changes because each had failed at least once *after* it was written down — the node count rotted once more after the rule existed. A rule that is only written down is the state that already failed; P10 converts the mechanizable ones into checks. P9 is deliberately the schedule filler, which only works if each item is small, known and verified to still exist.
+
+### Background
+
+- `../SPRINT_39/SPRINT_RETROSPECTIVE.md` §7 (seven changes) and `../SPRINT_39/SPRINT_40_CARRYFORWARDS.md` §8 (plus "the leak gate runs ALONE").
+- `../SPRINT_39/PROCESS_INFRA_SPEC.md` — Sprint 39's P8 spec (the layer field) — the precedent for 10b.
+- `scripts/sprint_audit/check_phase0_doc.py` · `Makefile` target `check-goldens` (no `--min-scope` locally; CI derives it from `git ls-files`) · `../SPRINT_39/prompts/PLAN_PROMPTS.md`.
+- **P9 items:** `scripts/integration_health_check.py` bootstrap; the 7 `model_infeasible` models' `skipped` vs `mismatch` (KPI-visible — needs its own Phase-0 doc); `kpi_block.py`'s `all_219_match` key; filing the ganges embedded-NLP-diverges issue (#1378/#1424 class; #1667, #929/#930 open).
+
+### What Needs to Be Done
+
+1. **For each of 10a–10e**, write: the mechanism, where it lives, the fail-before test, and its estimate.
+2. **10a:** confirm the resolver in `test_positional_domain_sites.py` is extractable without behaviour change — list its call sites.
+3. **10b:** draft the positive-control field for the Phase-0 template and the `check_phase0_doc.py` assertion.
+4. **10c:** confirm `make check-goldens` lacks `--min-scope` locally and specify the `git ls-files`-derived value.
+5. **P9:** re-verify each item on `main` (does it still reproduce?), record its next step and estimate; mark the `model_infeasible` comparison change as KPI-visible with its own gate.
+6. **Draft the ganges issue text** (to be filed in-sprint or in prep).
+
+### Changes
+
+*To be completed*
+
+### Result
+
+*To be completed*
+
+### Verification
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+grep -n "^check-goldens" -A2 Makefile
+grep -n "min-scope\|MIN_SCOPE" .github/workflows/golden-staleness.yml | head -3
+.venv/bin/python -S scripts/integration_health_check.py --help >/dev/null 2>&1 && echo "bootstrap OK" || echo "uninstalled-checkout failure reproduces"
+grep -n "all_219_match" scripts/sprint_audit/kpi_block.py | head -2
+DOC=docs/planning/EPIC_4/SPRINT_40/PROCESS_AND_SMALL_ITEMS.md
+test -f "$DOC" && echo "✅ doc" || echo "PROCESS_AND_SMALL_ITEMS.md not yet created"
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_40/PROCESS_AND_SMALL_ITEMS.md` — 10a–10e specs with fail-before tests; the P9 catalog with re-verified next steps
+- The ganges embedded-NLP-diverges issue text
+
+### Acceptance Criteria
+
+- [ ] Each mechanism has a location, a fail-before test and an estimate
+- [ ] Each P9 item re-verified on `main` (still reproduces, or closed)
+- [ ] The `model_infeasible` comparison change marked KPI-visible with its own Phase-0 requirement
+- [ ] The ganges issue drafted
+
+---
+
+## Task 12: Plan Sprint 40 Detailed Schedule
+
+**Status:** 🔵 NOT STARTED
+**Priority:** Critical
+**Estimated Time:** 3-4 hours
+**Deadline:** Before Sprint 40 Day 0
+**Owner:** Development team
+**Dependencies:** All tasks (1–11)
+
+### Objective
+
+Produce `docs/planning/EPIC_4/SPRINT_40/PLAN.md` and `docs/planning/EPIC_4/SPRINT_40/prompts/PLAN_PROMPTS.md`: the 14-day schedule with per-day budgets, REPLAN exits, checkpoints, pre-registered close rules with preconditions, the risk register, acceptance criteria with each figure's source, and one prompt per day.
+
+### Why This Matters
+
+Sprint 40 has three fixed points the schedule must honour rather than discover: **P1 before any license-dependent measurement**, **the Day-0 owner decisions before the P2 batch**, and **P4 after P2** (egypt/shale need their solves). It also inherits a lesson about close rules: Sprint 38 pre-registered a rule against an unstarted track and it went unmet for unrelated reasons; Sprint 39 required every rule to state its precondition, so an unmet rule can be told apart from a missed target.
+
+### Background
+
+- `../SPRINT_39/PLAN.md` + `../SPRINT_39/artifacts/validate_plan.py` — the format and the committed validator (a schedule that validates rather than asserts).
+- `../SPRINT_39/prompts/PLAN_PROMPTS.md` — the day-prompt format, including the "re-derive the PR's file list after committing" and attribution checks.
+- `../PROJECT_PLAN.md` Sprint 40 — per-priority budgets (114–162 h), acceptance criteria, REPLAN exits.
+
+### What Needs to Be Done
+
+1. **Assign priorities to days** with per-day budgets summing ≤ 168 h, no day over 12 h; P1 on Days 0–1; the P2 batch on a nightly slot sized from Task 7's wall-clock.
+2. **Fold in prep verdicts**: Task 8's lnts verdict (keep/re-scope/remove the +1), Task 9's sarf re-estimate, Task 7's routing list, Task 6's decisions (or their Day-0 slot).
+3. **Write the REPLAN exit per track** — the evidence that triggers it and where the budget goes.
+4. **Schedule checkpoints** (Day 5, Day 10) and the final retest, with `--resolve-changed --since-commit bd2af6e9` and the **license-neutrality** check (every row outside the two cohorts keeps its outcome).
+5. **Pre-register the close rules**, each with its precondition; state which take none.
+6. **Write the day prompts** (`prompts/PLAN_PROMPTS.md`), each naming its branch, deliverable and gate, and embedding the §7 rules (PR body as a pointer; figures stated once with commit; leak gate alone; no `git stash`).
+7. **Route every unresolved Known Unknown** to the day that closes it.
+8. **Commit a validator** beside the plan, as Sprint 39 did, and run it.
+
+### Changes
+
+*To be completed*
+
+### Result
+
+*To be completed*
+
+### Verification
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+PLAN=docs/planning/EPIC_4/SPRINT_40/PLAN.md
+if [ ! -f "$PLAN" ]; then
+  echo "PLAN.md does not exist yet — expected until Task 12 produces it; skipping its checks"
+  exit 0
+fi
+echo "✅ PLAN.md"
+test -f docs/planning/EPIC_4/SPRINT_40/prompts/PLAN_PROMPTS.md && echo "✅ prompts"
+test -f docs/planning/EPIC_4/SPRINT_40/artifacts/validate_plan.py && .venv/bin/python docs/planning/EPIC_4/SPRINT_40/artifacts/validate_plan.py
+grep -c "REPLAN" "$PLAN"
+grep -c -i "precondition" "$PLAN"
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_40/PLAN.md` — schedule, budgets, REPLAN exits, checkpoints, close rules with preconditions, risk register, acceptance criteria with sources, unknown routing, prep refutation summary
+- `docs/planning/EPIC_4/SPRINT_40/prompts/PLAN_PROMPTS.md` — one prompt per day
+- `docs/planning/EPIC_4/SPRINT_40/artifacts/validate_plan.py` — the committed schedule validator
+- `CHANGELOG.md` — Sprint 40 Prep entry
+
+### Acceptance Criteria
+
+- [ ] ≤ 12 h/day and ≤ 168 h total, **validated by the committed script**
+- [ ] P1 precedes every license-dependent measurement; Day-0 decisions precede the P2 batch; P4 follows P2
+- [ ] Every track has a REPLAN exit with its budget destination
+- [ ] Every close rule states its precondition (or explicitly takes none)
+- [ ] Every unresolved Known Unknown routed to a day
+- [ ] Day prompts embed the §7 rules and the no-attribution check
+
+---
+
+## Summary and Critical Path
+
+### Critical Path
+
+```
+Task 1 (Known Unknowns)
+   └─> Task 2 (Baseline + Both Populations by Identity)
+          ├─> Task 3 (Local License + Fail-Capable Probe)
+          │      ├─> Task 4 (CI Isolation Design) ───────────────┐
+          │      ├─> Task 5 (Schema 3.1.0 Design) ───────────────┤
+          │      └─> Task 8 (lnts Landability) ──────────────────┤
+          ├─> Task 6 (Owner Decision Brief — written blind)      │
+          │      └─> Task 7 (Cohort Dry Run) ──> Task 10 (Pre-Traces) ──> Task 12 (Schedule)
+          ├─> Task 9 (sarf Jacobian Design) ─────────────────────┤
+          └─> Task 11 (Process + Small Items) ───────────────────┘
+```
+
+**Task 7 depends on Task 3 as well as Task 6** (results must come from the licensed edition). **Tasks 4, 5, 8, 9 and 11 are parallelisable** once their inputs land. Task 6 is short but on the critical path because its whole value is being committed before Task 7 runs.
+
+### Time Budget
+
+| Phase | Tasks | Hours |
+|---|---|---|
+| Foundation | 1, 2 | 5–7 |
+| License infrastructure | 3, 4, 5 | 8–11 |
+| Decision | 6 | 2–3 |
+| Measurement | 7 | 5–7 |
+| Carryforward designs & traces | 8, 9, 10 | 12–17 |
+| Process & slack | 11 | 3–4 |
+| Scheduling | 12 | 3–4 |
+| **Total** | **1–12** | **38–53** |
+
+### Success Criteria for the Prep Phase
+
+- [ ] **The license is shown, not asserted** — a probe that fails on the demo and solves licensed, with the edition string identified
+- [ ] **No CI design gives the license to a job that runs PR code**, and the `main`-only branch policy is verified
+- [ ] **The schema change has a closed, grep-derived writer list** including `db_manager.py`
+- [ ] **The three owner decisions are posed before any license-unlocked result exists**, provably from history
+- [ ] **Both populations are measured by identity**, every non-match carrying a residual verdict and a route
+- [ ] **Every Critical/High Known Unknown is resolved or explicitly deferred with a reason**
+- [ ] **lnts's +1 Solve is either justified against Sprint 39 Day 5 or removed from the projection**
+- [ ] **Every carryforward track has a traced layer** before Day 1
+- [ ] **The schedule fits** (≤ 12 h/day, ≤ 168 h), validated by a committed script
+- [ ] **Prep found at least one wrong premise** — and recorded what it changed
+
+### What Would Make This Prep a Failure
+
+Recorded in advance, so it can be recognised:
+
+- A cohort result is reported without evidence of the edition that produced it
+- The floor-provenance or corpus-entry rule is written after Task 7's results are known
+- Any part of the license text appears in a commit, log excerpt or PR
+- lnts is scheduled as "re-apply the banked diff" without answering Day 5
+- A Sprint-40 day spends its budget diagnosing a cohort fingerprint that Task 7 could have produced
+- A figure in a prep doc is restated in a later doc instead of re-measured or cited by commit
+
+---
+
+## Appendix: Document Cross-References
+
+### Sprint 40 definition
+- `../PROJECT_PLAN.md` → *Sprint 40 (Weeks 45–46)* — goal, ten priorities, deliverables, acceptance criteria, effort (114–162 h), risk; and the 2026-10-12 changelog entry recording the insertion and the PR #1745 review changes
+- `../GOALS.md` — Epic 4 goals: §7 *Solve Stage: PATH Convergence and Solution Matching* (the NLP-vs-MCP comparison P2/P3 extend to the large models), §8 *Performance, Quality & Release* (P6, P10), §*Success Metrics*, §*Risks & Mitigation* (Risk 2 MCP-NLP divergence, Risk 6 infeasible MCP formulations), §*Dependencies* (External: *"GAMS software installed locally (with valid license)"* — now a full license)
+
+### Sprint 39 hand-off (the primary source for every carryforward)
+- `../SPRINT_39/SPRINT_40_CARRYFORWARDS.md` — §1 P10 two-class · §2 lnts · §3 sarf · §4 #1737 · §5 diagonal defect · §6 structural sites · §7 smaller items + the license cohort · §8 process findings · §9 banked
+- `../SPRINT_39/SPRINT_RETROSPECTIVE.md` — §7 the seven process changes
+- `../SPRINT_39/SPRINT_LOG.md` — §Day 4–5 (lnts trace and REPLAN), §Day 9 (license cohort 10 → 11 derived), §Day 13 (close figures)
+- `../SPRINT_39/PLAN.md` · `../SPRINT_39/artifacts/validate_plan.py` · `../SPRINT_39/prompts/PLAN_PROMPTS.md` — schedule, validator and prompt formats
+- *Follow-on items:* Epic 4 records follow-ons as the per-sprint carryforwards file above (the convention since Sprint 33); the only `follow-ons/` directory in the repo is `../../EPIC_1/SPRINT_5/follow-ons/`, which has no bearing on this sprint
+
+### Per-priority background
+- **P1 license + CI + schema:** `.github/workflows/pr19-emit-solve-validation.yml` · `.github/workflows/presolve-divergence.yml` · `data/gamslib/schema.json` · `scripts/gamslib/migrate_schema_v3.0.0.py` · `scripts/gamslib/db_manager.py` · `tests/gamslib/test_migrate_schema_v3.py` · `tests/gamslib/test_db_manager.py` · `../SPRINT_39/PRESOLVE_RECORD_REMEDY.md` §9
+- **P2 MCP-gated cohort:** `scripts/gamslib/run_full_test.py` · `scripts/gamslib/test_solve.py` (`compare_solutions`, `extract_gams_version`) · `scripts/sprint_audit/check_mcp_solve_attribution.py` · `docs/issues/ISSUE_933_tricp-mcp-compilation-errors.md`
+- **P3 NLP-gated set:** `scripts/gamslib/verify_convexity.py` · `data/floor_provenance.json` · `scripts/sprint_audit/floor_tracker.py` · `../SPRINT_39/FLOOR_DECISION_BRIEF.md`
+- **P4 two-class:** `../SPRINT_39/P2_VIOLATION_TRIAGE.md` · `scripts/sprint_audit/check_index_repeat_properties.py` · `scripts/sprint_audit/index_repeat_p2_baseline.json`
+- **P5 lnts:** `docs/issues/ISSUE_1694_lnts-contradictory-fx-mechanisms-blanket-zeroing.md` · `../SPRINT_39/LNTS_PROBE_DESIGN.md`
+- **P6 sarf:** `docs/issues/ISSUE_1385_sarf-symbolic-emit-o-active.md` · `../SPRINT_39/SARF_CALLSITE_PLAN.md` · `../SPRINT_38/SARF_REARCH_DESIGN.md`
+- **P7 / P8 positional domain:** `../SPRINT_39/POSITIONAL_DOMAIN_SURVEY.md` · `tests/unit/kkt/test_positional_domain_sites.py` · `docs/issues/ISSUE_1737_repeated-equation-domain-index-collapse.md` · `docs/issues/ISSUE_1741_pattern-c-b3-repeated-index-collapse.md`
+- **P9 smaller items:** `scripts/integration_health_check.py` · `scripts/sprint_audit/kpi_block.py` · `docs/issues/ISSUE_1667_ganges-deferred-bounds-before-include.md` · `docs/issues/ISSUE_929_ganges-translation-timeout.md`
+- **P10 process:** `../SPRINT_39/PROCESS_INFRA_SPEC.md` · `scripts/sprint_audit/check_phase0_doc.py` · `Makefile` (`check-goldens`)
+
+### Research documents
+- `docs/research/gamslib_kpi_definitions.md` — KPI and corpus definitions (P3's denominator question)
+- `docs/research/CONVEXITY_VERIFICATION_DESIGN.md` · `docs/research/convexity_detection.md` — the convexity classifier the NLP-gated set goes through; the design's solver table records which solvers run under the demo
+- `docs/research/GAMSLIB_MODEL_TYPES.md` — the original catalog, which already recorded "License limits (11)" at Epic 3
+- `docs/research/JSON_SCHEMA_BEST_PRACTICES.md` · `docs/research/JSONSCHEMA_LIBRARY_GUIDE.md` — schema versioning and validation (Task 5)
+- `docs/research/multidimensional_indexing.md` · `docs/research/nested_subset_indexing_research.md` — background for the positional-domain tracks (Task 10)
+
+### Tooling the prep tasks use
+- `scripts/sprint_audit/kpi_block.py` — derived KPI block, carries its commit, warns on a dirty DB
+- `scripts/sprint_audit/floor_tracker.py` — the floor, from provenance, never from the DB
+- `scripts/sprint_audit/check_golden_staleness.py` (`make check-goldens`) — the full-corpus leak gate (186 in-scope); **run alone**
+- `scripts/sprint_audit/check_index_repeat_properties.py` (`make check-index-repeats`) — P1 hard gate + P2 ratchet
+- `scripts/sprint_audit/check_mcp_solve_attribution.py` — spurious-match discriminator
+- `scripts/sprint_audit/check_phase0_doc.py` — Phase-0 compliance
+- `scripts/sprint_audit/check_doc_figures.py` (`make check-doc-figures`) — figures in changed doc lines vs. their sources
+- `scripts/diagnostics/kkt_residual.py` — `CASE_A` / `CASE_B` / `CASE_C` verdicts
+- `scripts/gamslib/run_full_test.py` — pipeline runner, `--resolve-changed --since-commit <SHA>` checkpoint
