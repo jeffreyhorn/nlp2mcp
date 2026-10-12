@@ -6,7 +6,7 @@
 
 **Anchor:** `bd2af6e9` (Sprint 39 close, 2026-09-18) · plan merged at `912d005c` (PR #1745) · **Toolchain:** GAMS **54.2.1** / PATH **5.2.01**
 
-> **Which anchor?** Sprint 39's close documents (`SPRINT_LOG.md` §Day 13, `SPRINT_40_CARRYFORWARDS.md`) measure at **`bd2af6e9`**. `54b4eb23` (the close-PR merge) and `912d005c` (this plan's merge) are later, but `git diff bd2af6e9 912d005c -- data/ src/` must be checked in Task 2 rather than assumed empty. Re-derive at the commit you are on, and cite it.
+> **Which anchor?** Sprint 39's close documents (`SPRINT_LOG.md` §Day 13, `SPRINT_40_CARRYFORWARDS.md`) measure at **`bd2af6e9`**. `54b4eb23` (the close-PR merge) and `912d005c` (the merge of PR #1745, which inserted Sprint 40 into `PROJECT_PLAN.md` — the commit this prep branch was cut from; this `PREP_PLAN.md` itself arrives with PR #1746) are later, but `git diff bd2af6e9 912d005c -- data/ src/` must be checked in Task 2 rather than assumed empty. Re-derive at the commit you are on, and cite it.
 
 **Sprint definition:** `../PROJECT_PLAN.md` → *Sprint 40 (Weeks 45–46): Sprint 39 Carryforward & the Licensed-GAMS Unlock — the License-Gated Cohorts' First NLP-vs-MCP Comparison, Licensed CI, the P10 Two-Class Triage, lnts, sarf's Jacobian Re-Architecture & the Sprint-39 Process Changes*
 
@@ -322,7 +322,7 @@ Every license-dependent result in Sprint 40 is only as good as the evidence that
 1. **Establish precedence by evidence:** with both files present, which does GAMS read? Move the user-level file aside (backup **outside the repo**), re-run, restore. Check every invocation path the pipeline uses (`shutil.which("gams")`, subprocesses). Recommend whether the system-directory demo file should also be replaced.
 2. **Build four probes from one scalable synthetic model** with a size parameter — **LP** (CPLEX, as `verify_convexity.py` uses `LP=CPLEX`) sized **above 2,000**; **NLP** (CONOPT) **above 1,000**; **QCP above 1,000**, run with `verify_convexity.py`'s own `NLP=CONOPT` option so it exercises the pipeline's real path for `emfl` — **`NLP=` does not select the QCP solver**, so record which solver the listing actually reports (measured 2026-10-12: QCP solver selection is **independent of `NLP=`** — `NLP=IPOPT` still ran CONOPT, `QCP=IPOPT` ran IPOPT; on this install the **default QCP solver is CONOPT**; the demo refused a 1,500-row QCP and allowed a 900-row one); **MCP** (PATH) **above 1,000**. Each must exceed **its own** model type's ceiling, or its demo run cannot fail. Run each also just *under* its ceiling on the demo, to show the size parameter is what flips the result.
 3. **Run each on the demo** (`license=` pointed at the system-directory demo file) — record the refusal line verbatim (the positive control: each probe *can* fail).
-4. **Run each under the effective license** — record `MODEL STATUS`, the solver line, the edition (redacted) and `gams audit lo=2` output. A license that lifts the limit for one solver but not another would split P2/P3 by license.
+4. **Run each under the effective license** — record `MODEL STATUS`, the solver line and the **edition classification only** (`licensed` / `demo`). **Inspect `gams audit lo=2` locally but never persist its output** — it can carry the licensee, license ID, license path and node details; record only whether it exposes a usable, non-identifying edition discriminator. A license that lifts the limit for one solver but not another would split P2/P3 by license.
 5. **Identify a non-identifying discriminator** for licensed vs. demo `.lst` headers and record **only the regex and its classification results** (each paired file → `licensed` / `demo`, plus the inverted-pattern control) — **never the raw header lines**. Task 5's parser keys on the regex.
 6. **License-neutrality sample** (Unknown 1.5): re-solve a stratified sample of models **outside both gated populations** — e.g. 5 cold matches, 5 presolve matches, 1 per failure bucket, named by identity — under the effective license, in a throwaway worktree, and diff outcome / objective / comparison verdict against the DB. **Positive control:** one size-refused model **must** change. Any other row that moves is a toolchain finding to route before any KPI is read. The sprint's first licensed full run is the exhaustive test; this is the early warning.
 7. **Record operational facts** Task 4 needs: the license file's install path, whether it is node-locked or otherwise bound, its expiry if any.
@@ -593,19 +593,23 @@ cd "$(git rev-parse --show-toplevel)"
 DOC=docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md
 test -f "$DOC" && echo "✅ doc" || { echo "OWNER_DECISION_BRIEF.md not yet created"; exit 0; }
 
-# Decided blind: the EARLIEST commit in which the brief carries all three dated owner
-# answers must be an ANCESTOR of the first commit that adds the dry-run doc.
-# (Creation date alone is not enough, and timestamps do not prove history order.)
-ANS=""
+# Decided blind: the LAST commit that changed ANY owner-answer line must be an ANCESTOR
+# of the first commit adding the dry-run doc, and must hold all three answers. Using the
+# last change (not the first time three answers appear) also fails answers REVISED after
+# the dry run. Uncommitted answer edits fail too. Timestamps do not prove history order.
+ANS_RE='^\*\*Owner answer \([0-9]{4}-[0-9]{2}-[0-9]{2}\):\*\* *[^ ]'
+LAST=""; PREV=""
 for c in $(git log --reverse --format=%H -- "$DOC"); do
-  n=$(git show "$c:$DOC" 2>/dev/null | grep -cE '^\*\*Owner answer \([0-9]{4}-[0-9]{2}-[0-9]{2}\):\*\* *[^ ]')
-  [ "$n" -ge 3 ] && { ANS=$c; break; }
+  A=$(git show "$c:$DOC" 2>/dev/null | grep -E "$ANS_RE")
+  [ "$A" != "$PREV" ] && { LAST=$c; PREV=$A; }
 done
+N=$(printf '%s' "$PREV" | grep -c .)
 DRY=$(git log --diff-filter=A --format=%H -- docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md | tail -1)
-if [ -z "$ANS" ]; then echo "❌ the three owner answers are not yet committed"
-elif [ -z "$DRY" ]; then echo "✅ answers committed at ${ANS:0:8}; dry run not yet committed"
-elif git merge-base --is-ancestor "$ANS" "$DRY"; then echo "✅ answers (${ANS:0:8}) are an ancestor of the dry run (${DRY:0:8})"
-else echo "❌ dry run (${DRY:0:8}) does not descend from the answers commit (${ANS:0:8})"; fi
+if [ "$(grep -E "$ANS_RE" "$DOC")" != "$PREV" ]; then echo "❌ uncommitted edits to the owner answers"
+elif [ "$N" -lt 3 ]; then echo "❌ the three owner answers are not yet committed"
+elif [ -z "$DRY" ]; then echo "✅ answers last changed at ${LAST:0:8}; dry run not yet committed"
+elif git merge-base --is-ancestor "$LAST" "$DRY"; then echo "✅ answers last changed at ${LAST:0:8}, an ancestor of the dry run (${DRY:0:8})"
+else echo "❌ the answers were committed or REVISED at ${LAST:0:8}, which the dry run (${DRY:0:8}) does not descend from"; fi
 
 # Three decisions posed
 grep -c "^## Decision" "$DOC"
@@ -621,7 +625,7 @@ grep -c "^## Decision" "$DOC"
 
 - [ ] All three decisions posed with options and the exact edit each implies
 - [ ] **All three decisions carry a dated owner answer** (`**Owner answer (YYYY-MM-DD):**`) — posing the questions is not completion
-- [ ] The commit containing all three answers is an **ancestor** of the first commit adding `COHORT_DRY_RUN.md` (checked by `git merge-base --is-ancestor` in *Verification*)
+- [ ] The **last commit that changed any owner answer** holds all three and is an **ancestor** of the first commit adding `COHORT_DRY_RUN.md` — so answers revised after the dry run fail (checked by `git merge-base --is-ancestor` in *Verification*)
 - [ ] The corpus option shows both denominators reported in one sentence
 - [ ] No result from either cohort is cited in the brief
 - [ ] Unknowns 3.3 verified and updated in KNOWN_UNKNOWNS.md
