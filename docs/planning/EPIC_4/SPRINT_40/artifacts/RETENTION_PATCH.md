@@ -23,19 +23,33 @@ A row does not carry the invocation id, so association is by evidence, and must 
 2. Classify each candidate's listing (`parse_solve_summaries` / `Attribution`, and the status/objective lines) and keep those that **match the row** — solver/model status, objective, `mcp_attribution`.
 3. **Exactly one** candidate must match. Zero or several → the row has **no** provenance and its result is not recorded (never pick one).
 
-## Usage
+## Usage — with fail-safe cleanup
+
+The retained listings, and `check_mcp_solve_attribution.py`'s own work directory, contain **raw license headers**. They must not outlive the run — on success **or** failure. Extract the sanitized values first (into the results doc in your **main** checkout), and let an `EXIT` trap delete everything else:
 
 ```bash
-WT=$(mktemp -d)/wt && git worktree add --detach "$WT" main && cd "$WT"
+set -e
+REPO=$(git rev-parse --show-toplevel)
+WTP=$(mktemp -d); WT=$WTP/wt
+export NLP2MCP_RETAIN_LST_DIR=$(mktemp -d)   # retained listings: raw license headers
+ATTR=$(mktemp -d)                              # pass as --workdir to check_mcp_solve_attribution.py
+cleanup() { cd /; git -C "$REPO" worktree remove --force "$WT" 2>/dev/null || true
+            rm -rf "$NLP2MCP_RETAIN_LST_DIR" "$ATTR" "$WTP"; }
+trap cleanup EXIT INT TERM
+git worktree add --detach "$WT" main && cd "$WT"
 python /path/to/apply_retention_patch.py        # the script below, saved OUTSIDE the repo
-export NLP2MCP_RETAIN_LST_DIR=$(mktemp -d)
-# ... run the batch / verifier here; associate rows as above; read edition + solver
-cd - && git worktree remove --force "$WT"
+# ... run the batch / verifier; check_mcp_solve_attribution.py --workdir "$ATTR" ...
+# ... associate rows; write ONLY the sanitized values (edition class, solver, invocation id,
+#     head_sha) into the results doc in "$REPO" -- never listing content
 ```
+
+`check_mcp_solve_attribution.py` otherwise creates its own `mcp_attr_*` directory with `run-*` subdirectories (`tempfile.mkdtemp`, ~L1266–1281) that **keeps** its listings — always pass `--workdir "$ATTR"` so the trap removes it. *(Exercised: with a simulated mid-run failure the trap still removed the retention directory, the attribution directory and the worktree, and unregistered the worktree.)*
 
 Read only the **edition classification** (Task 3's non-identifying regex) and the **solver name** from each retained listing; never commit listing content (license hygiene).
 
 ## Exercised 2026-10-12/13, in a throwaway worktree
+
+**Tested source:** `scripts/gamslib/test_solve.py` (blob `5f5ac476f263`) and `scripts/gamslib/verify_convexity.py` (blob `5dce6807f223`) — byte-identical at `main` `912d005c` and at every commit of this branch (`git diff --name-only 912d005c HEAD -- scripts/ src/` is empty), which is what the patch's source anchors were matched against. If either blob differs where you apply it, re-run these exercises before trusting the patch.
 
 | path | result | retained |
 |---|---|---|
