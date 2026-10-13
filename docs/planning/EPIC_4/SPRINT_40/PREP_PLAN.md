@@ -445,7 +445,7 @@ PR #1745's review found that both GAMS-installing workflows trigger **only on `p
 1. **Inventory all workflows** from the files: trigger(s), path filters, GAMS install (yes/no), secrets referenced, PR-code execution (yes/no). Record by name, not count.
 2. **Catalog demo-motivated exclusions**: model lists, tiers or skips whose comment or history attributes them to the 1,000-row limit (e.g. `.github/path-solve-ci-targets.txt`, the PR19 tier definitions).
 3. **Design `licensed-solve.yml`**: triggers (`push` to `main`, `schedule`, `workflow_dispatch`); the `gams-licensed` environment with a **`main`-only deployment-branch policy** and optional required reviewers; secret written to `$GAMS_DIR/gamslice.txt` at run time; `::add-mask::` per line; in-job output scan with its positive control; what it runs (the two cohorts + each PR workflow's skipped large tier).
-4. **Verify the branch-policy claim**: confirm from GitHub documentation (or a throwaway test repo) that a `workflow_dispatch` on a non-`main` ref is refused the environment — this is what makes the design safe.
+4. **Verify the branch-policy claim empirically** — documentation alone is **not** sufficient, because this policy is the control that keeps the license secret from unmerged refs: in a **throwaway test repository**, create an environment with a `main`-only deployment-branch policy and a dummy secret; dispatch from a **non-`main`** branch and record the **refusal** (the negative control), then from **`main`** and record **access**. Cite GitHub's documentation alongside, not instead. Delete the throwaway repository afterwards.
 5. **Design the PR-side change**: rename the step, the large-tier skip-with-notice, and the edition print.
 6. **Write the owner checklist** for Task 6: license terms for hosted runners; environment creation; reviewer requirement; where the secret is stored (environment only, **not** repository-wide).
 
@@ -478,14 +478,14 @@ grep -c "pull_request_target" "$DOC" 2>/dev/null   # the design must address it 
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_40/CI_LICENSE_DESIGN.md` — workflow inventory, demo-exclusion catalog, `licensed-solve.yml` design, PR-side change, owner checklist
-- A recorded verification (doc citation or test) that the environment branch policy refuses non-`main` refs
+- A recorded **throwaway-repository run** showing the environment refuses a non-`main` dispatch and admits a `main` dispatch (documentation cited alongside, never in place of it)
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.3
 
 ### Acceptance Criteria
 
 - [ ] Every workflow inventoried by name with trigger and GAMS-install status, derived from the files
 - [ ] The design gives the secret to **no job that runs PR code** — same-repo PRs included
-- [ ] The `main`-only branch-policy claim is verified, not assumed
+- [ ] The `main`-only branch-policy claim is verified **empirically** in a throwaway repository — non-`main` refusal **and** `main` access both observed — not assumed and not by citation alone
 - [ ] `pull_request_target` with a PR-head checkout is explicitly ruled out
 - [ ] Masking + output scan are described as defence in depth, with the scan's positive control
 - [ ] The post-merge detection trade-off is stated
@@ -763,7 +763,7 @@ PY
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md` — a **`## Results` table with exactly one row per in-scope model, its first cell the backticked model id**, carrying: edition, solver, invocation id, `head_sha` (the **sanitized provenance** — the only form in which retained-listing evidence leaves the worktree; later tasks, e.g. Task 8's `robot` baseline, use these, never the raw listing), golden drift, MCP outcome, comparison, attribution, residual verdict, route, wall-clock
+- `docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md` — a **`## Results` table with exactly one row per in-scope model, its first cell the backticked model id**, carrying: edition, solver, invocation id, `head_sha` (the **sanitized provenance** — the only form in which retained-listing evidence leaves the worktree; later tasks, e.g. Task 8's `robot` baseline, use these, never the raw listing), golden drift, MCP outcome, **the NLP reference objective, the MCP objective, and their absolute and relative difference** (blank only where no MCP objective exists) — later tasks need the numbers, not just the label: Task 8 reuses `robot`'s row as its sole baseline, and Task 10 (Unknown 4.2) judges whether hand-patched egypt/shale move **toward** the NLP objective, comparison, attribution, residual verdict, route, wall-clock
 - Convexity classifications for the nine in-scope NLP-gated models
 - Issue stubs (or routing notes) for every non-match; `ISSUE_933` triaged against a real compile
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.2, 2.3, 2.4, 3.2
