@@ -599,7 +599,7 @@ Sprint 39 P1 spent a Day-0 decision on a floor classification that the Sprint-38
 2. **Floor:** argue both sides of "license-unlocked matches count toward the genuine floor"; recommend, but leave the decision to the owner.
 3. **Corpus:** show how each option changes the headline denominators, and how Sprint 40 would report both (142-continuity + expanded) in one sentence.
 4. **CI:** carry Task 4's owner checklist verbatim, with Task 3's node-locking/binding evidence — both are inputs, which is why this task depends on Tasks 3 and 4.
-5. **Record the owner's answers in the brief** — one `**Owner answer (YYYY-MM-DD):** …` line under each `## Decision` — and commit them **before Task 7 runs**. The property that matters is that the **commit containing all three answers is an ancestor of Task 7's first commit**; the brief's creation date alone proves nothing (answers could be filled in later, and commit timestamps do not prove history order).
+5. **Record the owner's answers in the brief** — one `**Owner answer (YYYY-MM-DD):** …` line under each `## Decision` — and commit them **before Task 7 runs**. The property that matters is that the **last commit that changed any part of a `## Decision` block** (question, options, consequences, exact edits or answer) is a **strict ancestor of Task 7's first commit**, and that **every Task-7 measurement SHA descends from it**; the brief's creation date alone proves nothing (answers could be filled in later, and commit timestamps do not prove history order). **After Task 7 starts, do not edit any `## Decision` block** — a changed decision is recorded as a new, dated decision in the sprint's own docs.
 
 ### Changes
 
@@ -620,8 +620,11 @@ test -f "$DOC" && echo "✅ doc" || { echo "OWNER_DECISION_BRIEF.md not yet crea
 #  (1) STRUCTURE: the answers commit holds exactly three "## Decision" blocks, each
 #      with exactly ONE non-empty dated owner answer (three answers under one
 #      heading, or a fourth answer, fail);
-#  (2) ORDER: the LAST commit that changed any answer line is a STRICT ancestor of
-#      the first commit adding the dry-run doc (revised or same-commit answers fail);
+#  (2) ORDER: the LAST commit that changed ANY PART OF A DECISION BLOCK -- question,
+#      options, consequences, exact edits or answer -- is a STRICT ancestor of the
+#      first commit adding the dry-run doc. Fingerprinting only the answer lines would
+#      let a decision's wording be refitted after the results while the answer line
+#      stays put. Sections outside the "## Decision" blocks may still be edited;
 #  (3) MEASUREMENT: every measurement SHA Task 7 records on its "**Measured at:**"
 #      line (the head_sha of every retained invocation) DESCENDS from that answers
 #      commit -- so the cohort runs, not just the results commit, came after it.
@@ -629,18 +632,21 @@ ANS_RE='^\*\*Owner answer \([0-9]{4}-[0-9]{2}-[0-9]{2}\):\*\* *[^ ]'
 valid() { awk '/^## Decision/ { n++; c[n] = 0; next }
   /^\*\*Owner answer \([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\):\*\* *[^ ]/ { if (n) c[n]++; else stray++ }
   END { if (n != 3 || stray) exit 1; for (i = 1; i <= 3; i++) if (c[i] != 1) exit 1 }'; }
+# Every line of every "## Decision" block (heading to the next non-Decision "## "
+# heading or EOF) -- the whole decision, not just its answer line.
+blocks() { awk '/^## /{ inb = ($0 ~ /^## Decision/) } inb'; }
 LAST=""; PREV=""
 for c in $(git log --reverse --format=%H -- "$DOC"); do
-  A=$(git show "$c:$DOC" 2>/dev/null | grep -E "$ANS_RE")
+  A=$(git show "$c:$DOC" 2>/dev/null | blocks)
   [ "$A" != "$PREV" ] && { LAST=$c; PREV=$A; }
 done
 DRY_DOC=docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md
 DRY=$(git log --diff-filter=A --format=%H -- "$DRY_DOC" | tail -1)
-if [ "$(grep -E "$ANS_RE" "$DOC")" != "$PREV" ]; then echo "❌ uncommitted edits to the owner answers"; exit 1
+if [ "$(blocks < "$DOC")" != "$PREV" ]; then echo "❌ uncommitted edits to a decision block"; exit 1
 elif [ -z "$LAST" ] || ! git show "$LAST:$DOC" | valid; then echo "❌ the answers commit does not hold exactly one dated answer under each of exactly three ## Decision headings"; exit 1
 elif [ -z "$DRY" ]; then echo "✅ answers last changed at ${LAST:0:8}; dry run not yet committed"
 elif [ "$LAST" = "$DRY" ]; then echo "❌ answers committed in the SAME commit as the dry run (${DRY:0:8}) — a commit is its own ancestor, so the check must be strict"; exit 1
-elif ! git merge-base --is-ancestor "$LAST" "$DRY"; then echo "❌ the answers were committed or REVISED at ${LAST:0:8}, which the dry run (${DRY:0:8}) does not descend from"; exit 1
+elif ! git merge-base --is-ancestor "$LAST" "$DRY"; then echo "❌ a decision block (question, options or answer) was committed or REVISED at ${LAST:0:8}, which the dry run (${DRY:0:8}) does not descend from"; exit 1
 else
   SHAS=$(grep -m1 '^\*\*Measured at:\*\*' "$DRY_DOC" | grep -oE '[0-9a-f]{40}' | sort -u)
   [ -z "$SHAS" ] && { echo "❌ COHORT_DRY_RUN.md records no full measurement SHA on a **Measured at:** line"; exit 1; }
@@ -665,7 +671,7 @@ grep -c "^## Decision" "$DOC"
 
 - [ ] All three decisions posed with options and the exact edit each implies
 - [ ] **Exactly one dated owner answer under each of exactly three `## Decision` headings** (`**Owner answer (YYYY-MM-DD):**`) — posing the questions is not completion, and three answers under one heading or a fourth answer fail
-- [ ] The **last commit that changed any owner answer** holds all three and is a **strict ancestor** of the first commit adding `COHORT_DRY_RUN.md` (an earlier, different commit — Git counts a commit as its own ancestor) — so answers revised after the dry run, or committed together with it, fail; **and every measurement SHA on `COHORT_DRY_RUN.md`'s `**Measured at:**` line descends from the answers commit**, so the cohort runs themselves came after the answers (all checked by `git merge-base --is-ancestor` in *Verification*)
+- [ ] The **last commit that changed any part of a `## Decision` block** (question, options, consequences, exact edits or answer) holds all three answers and is a **strict ancestor** of the first commit adding `COHORT_DRY_RUN.md` (an earlier, different commit — Git counts a commit as its own ancestor) — so answers revised after the dry run, or committed together with it, fail; **and every measurement SHA on `COHORT_DRY_RUN.md`'s `**Measured at:**` line descends from the answers commit**, so the cohort runs themselves came after the answers (all checked by `git merge-base --is-ancestor` in *Verification*)
 - [ ] The corpus option shows both denominators reported in one sentence
 - [ ] No result from either cohort is cited in the brief
 - [ ] Unknowns 3.3 verified and updated in KNOWN_UNKNOWNS.md
