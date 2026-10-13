@@ -1,27 +1,32 @@
-# Retention patch — keep each recorded GAMS invocation's OWN listing
+# Retention patch — keep EVERY recorded GAMS invocation's OWN listing
 
-**Scope: a throwaway `git worktree` only. Never committed.** Used by prep Task 7 (and available to the sprint's P2/P3 batches until schema 3.1.0 makes it unnecessary). The task branch's `git diff main...HEAD -- scripts/ src/` must stay empty.
+**Scope: a throwaway `git worktree` only. Never committed.** Used by prep Task 7 (and by Task 8's candidate solve). The task branch's `git diff main...HEAD -- scripts/ src/` must stay empty.
 
 ## Why
 
-Provenance (license edition, solver actually used) must come from the **same invocation** whose result is recorded — never from a rerun, which is a different invocation (PR #1746 review). But both solve paths delete their listing:
+Provenance (license edition, solver actually used, the commit a measurement ran from) must come from the **same invocation** whose result is recorded — never a rerun (PR #1746 review). And it must cover **every** GAMS invocation Task 7 makes, or Task 6's blind-decision gate checks only part of the measurement. The GAMS launches in the Task-7 toolchain at `912d005c` — the complete inventory, every other `subprocess.run` in these modules launches `gdxdump`, `python -m src.cli` or `git` — are:
 
-- `scripts/gamslib/test_solve.py::solve_mcp` writes `output.lst` inside a `tempfile.TemporaryDirectory()` and, on `TimeoutExpired`, returns from its `except` handler — the directory and the listing are gone. It also resolves its executable itself (preferring `/Library/Frameworks/GAMS.framework/Versions/Current/Resources/gams` over `PATH`), and a cold row records no input path (`mcp_file_generated` is written only after an accepted presolve retry).
-- `scripts/gamslib/verify_convexity.py::verify_model` likewise writes `output.lst` in a `TemporaryDirectory`, and its `--output` JSON carries neither the solver name nor the edition.
+| site | function | produces |
+|---|---|---|
+| `solve_mcp` | `scripts/gamslib/test_solve.py::solve_mcp` | the MCP solve (batch rows; also `kkt_residual.py`'s cold start) |
+| `verify_model` | `scripts/gamslib/verify_convexity.py::verify_model` | the convexity classification |
+| `kkt_residual` | `scripts/diagnostics/kkt_residual.py::run_gams` | the residual-evaluation solve behind the `CASE_A/B/C` verdict |
+| `attribution` | `scripts/sprint_audit/check_mcp_solve_attribution.py::run_one` | the standalone attribution exercise (Unknown 2.3) |
+
+All four delete or bury their listing (temp directories; a cold row records no input path; `solve_mcp` resolves its own executable), so none of it can be reconstructed afterwards.
 
 ## What the patch does
 
-It replaces each function's `with tempfile.TemporaryDirectory() as tmpdir:` with a context manager whose **`finally`** copies the invocation's `output.lst` **and** its `_cmd.json` out of the temp directory before it is removed — so the evidence survives **every** return path: normal, `TimeoutExpired`, and other errors. `_cmd.json` (exact `cmd` — executable and input path — `cwd`, start time, and **`head_sha`**: the commit the worktree is checked out at, so Task 6's gate can require every measurement to descend from the owner-answers commit; a lookup failure records `null`, which fails that gate) is written **into the same temp directory before GAMS launches**, so a listing and its command record are **paired by construction**.
+Each GAMS-launching `subprocess.run(` becomes `_retained_run(<site>, …)`. Before launch it writes `<inv>.cmd.json` — **site**, **phase** (`$NLP2MCP_RETAIN_PHASE`, set by the executor for each tool run: `batch`, `convexity`, `residual`, `attribution`), stem, exact `cmd` (executable and input path), `cwd`, start time and **`head_sha`** (the worktree's checked-out commit; `null` on lookup failure, which fails Task 6's gate). In a **`finally`** — every return path, `TimeoutExpired` included — it copies the listing named by the `o=` argument to `<inv>.lst`. `<inv>` is `<stem>.<time_ns>.<pid>`, unique per invocation; an existing destination is never overwritten (`FileExistsError`). With `NLP2MCP_RETAIN_LST_DIR` unset, behaviour is unchanged. The script **asserts each of the four anchors exactly once** and reports the remaining (non-GAMS) `subprocess.run` calls per module — keep that output with the run.
 
-Each invocation is retained under a **unique invocation id** — `<stem>.<time_ns>.<pid>.lst` / `.cmd.json` — so repeated invocations of the same model (a presolve retry, a follow-up solve) **never overwrite** earlier evidence; the copy **refuses** to overwrite an existing destination (`FileExistsError`). With `NLP2MCP_RETAIN_LST_DIR` unset, behaviour is unchanged.
+## Completeness and association
 
-## Associating a recorded row with its own invocation
-
-A row does not carry the invocation id, so association is by evidence, and must be **unique**:
-
-1. Candidates are the retained invocations whose `cmd.json` input path is the file the row's outcome came from (the cold `<id>_mcp.gms`, or `<id>_mcp_presolve.gms` for a row whose outcome is `model_optimal_presolve`).
-2. Classify each candidate's listing (`parse_solve_summaries` / `Attribution`, and the status/objective lines) and keep those that **match the row** — solver/model status, objective, `mcp_attribution`.
-3. **Exactly one** candidate must match. Zero or several → the row has **no** provenance and its result is not recorded (never pick one).
+- **Completeness:** every GAMS run in Task 7 goes through one of the four tools — **no direct `gams` calls** — and the `**Measured at:**` line lists the `head_sha` of **every** retained `cmd.json`, all sites and phases. So the SHA list covers every measurement by construction; a `null` or missing SHA fails.
+- **Association — exactly one invocation per recorded value**, zero or several → no provenance, value not recorded:
+  - **MCP stage** (`mcp` tuple): phase `batch`, site `solve_mcp`, input `<id>_mcp.gms` (or `<id>_mcp_presolve.gms` for a presolve outcome), whose classified listing matches the row's status, objective and `mcp_attribution`.
+  - **Convexity stage** (`convexity` tuple): phase `convexity`, site `verify_model`, input `<id>.gms`, matching the verifier JSON's status.
+  - **Residual stage** (`residual` tuple): phase `residual`, site `kkt_residual`, input `<id>_mcp_presolve_residual.gms` — the one residual evaluation behind the row's `kkt_residual.py` verdict (its cold-start solve, if run, is a separate `solve_mcp` invocation under phase `residual`).
+  - **Attribution exercise:** phase `attribution` — not a Results-row value, but its SHAs are on the `**Measured at:**` line like every other invocation.
 
 ## Usage — with fail-safe cleanup
 
@@ -37,7 +42,8 @@ cleanup() { cd /; git -C "$REPO" worktree remove --force "$WT" 2>/dev/null || tr
             rm -rf "$NLP2MCP_RETAIN_LST_DIR" "$ATTR" "$WTP"; }
 trap cleanup EXIT INT TERM
 git worktree add --detach "$WT" main && cd "$WT"
-python /path/to/apply_retention_patch.py        # the script below, saved OUTSIDE the repo
+python /path/to/apply_retention_patch.py        # the script below, saved OUTSIDE the repo; keep its output
+export NLP2MCP_RETAIN_PHASE=batch               # set per tool run: batch | convexity | residual | attribution
 # ... run the batch / verifier; check_mcp_solve_attribution.py --workdir "$ATTR" ...
 # ... associate rows; write ONLY the sanitized values (edition class, solver, invocation id,
 #     head_sha) into the results doc in "$REPO" -- never listing content
@@ -47,116 +53,115 @@ python /path/to/apply_retention_patch.py        # the script below, saved OUTSID
 
 Read only the **edition classification** (Task 3's non-identifying regex) and the **solver name** from each retained listing; never commit listing content (license hygiene).
 
-## Exercised 2026-10-12/13, in a throwaway worktree
+## Exercised 2026-10-13, in a throwaway worktree
 
-**Tested source:** `scripts/gamslib/test_solve.py` (blob `5f5ac476f263`) and `scripts/gamslib/verify_convexity.py` (blob `5dce6807f223`) — byte-identical at `main` `912d005c` and at every commit of this branch (`git diff --name-only 912d005c HEAD -- scripts/ src/` is empty), which is what the patch's source anchors were matched against. If either blob differs where you apply it, re-run these exercises before trusting the patch.
+**Tested source:** `scripts/gamslib/test_solve.py` (blob `5f5ac476f263`), `scripts/gamslib/verify_convexity.py` (blob `5dce6807f223`), `scripts/diagnostics/kkt_residual.py` and `scripts/sprint_audit/check_mcp_solve_attribution.py` — all byte-identical at `main` `912d005c` and at every commit of this branch (`git diff --name-only 912d005c HEAD -- scripts/ src/` is empty). If any differs where you apply the patch, re-run these exercises first.
 
 | path | result | retained |
 |---|---|---|
-| `solve_mcp`, normal (`trnsport`) | success · MS 1 · obj 153.675 · `MCP-SOLVED` | listing (MODEL STATUS 1) + `cmd.json` (`Versions/Current` executable) |
-| `solve_mcp`, simulated `TimeoutExpired` with a partial listing | failure · solver status 3 · `path_solve_time_limit` | the **partial** listing + `cmd.json` |
-| `verify_convexity.py --model trnsport --output …` (CLI) | `verified_convex` · solver/model status 1/1 · obj 153.675 | its own listing (SOLVER CPLEX, MODEL STATUS 1) + `cmd.json` (`gams … lo=3 LP=CPLEX`) |
-| **three** `solve_mcp` invocations of the **same** model (two normal, one timeout) | `MCP-SOLVED` ×2, `path_solve_time_limit` | **three distinct `<inv>` pairs, none overwritten**; each `cmd.json` paired with its own listing |
-| `head_sha` recorded by both paths (`solve_mcp`, verifier CLI) | — | both `cmd.json` files carry the worktree's `HEAD` SHA (checked equal to `git rev-parse HEAD`) |
+| `solve_mcp`, normal (`trnsport`, phase `batch`) | `MCP-SOLVED` | listing + `cmd.json`, `head_sha` = worktree `HEAD` |
+| `solve_mcp`, `TimeoutExpired` (fake intercepting only the GAMS launch) | `path_solve_time_limit` | the **partial** listing + `cmd.json`, `head_sha` = worktree `HEAD` |
+| `verify_convexity.py --model trnsport` (phase `convexity`) | rc 0 | its own listing + `cmd.json` |
+| `kkt_residual.py data/gamslib/raw/trnsport.gms --no-cold-start` (phase `residual`) | `CASE_A_OR_C` | the residual-evaluation listing (`trnsport_mcp_presolve_residual`) + `cmd.json` |
+| `check_mcp_solve_attribution.py --models trnsport --workdir …` (phase `attribution`) | `MCP-SOLVED` | its listing (`trnsport_mcp_presolve`) + `cmd.json` |
+| three `solve_mcp` invocations of the **same** model | — | three distinct `<inv>` pairs, none overwritten |
 
-Bugs found by running it, not by reading it: the helper must import `os` itself (`test_solve.py` does not); it must sit **before** `if __name__ == "__main__":` (appended after the guard, the CLI called `main()` before the helper existed; inserted "after the imports" by heuristic, it landed inside a function); and a stem-only destination let a later invocation overwrite an earlier one's evidence (PR #1746 review) — now a unique id per invocation.
+The patch reported exactly one remaining non-GAMS `subprocess.run` in `kkt_residual.py` (`gdxdump`) and one in `check_mcp_solve_attribution.py` (the `src.cli` emit), none in the other two.
+
+Bugs found by running it, not by reading it: the helper must import its own modules (`test_solve.py` does not import `os`); it must sit **before** `if __name__ == "__main__":` (appended after it, the CLI called `main()` first; inserted "after the imports" by heuristic, it landed inside a function); stem-only destinations let a later invocation overwrite an earlier one's evidence; and the first version instrumented only two of the four GAMS-launching sites (PR #1746 review). A test that monkeypatches `subprocess.run` globally also intercepts the helper's own `git rev-parse` — the resulting `null` `head_sha` correctly fails Task 6's gate.
 
 ## `apply_retention_patch.py`
 
 ```python
 """SCRATCH patch for a THROWAWAY worktree only -- never committed.
 
-Retains the ACTUAL GAMS listing (and records the exact command BEFORE launch)
-for both `test_solve.py::solve_mcp` and `verify_convexity.py::verify_model`,
-on every return path (normal, TimeoutExpired, other errors): the
-TemporaryDirectory is wrapped in a context manager whose `finally` copies
-`output.lst` before the directory is removed.
+Retains the ACTUAL GAMS listing of EVERY GAMS invocation Task 7 makes, and records
+its exact command BEFORE launch, by routing each GAMS-launching `subprocess.run(`
+through `_retained_run(site, cmd, **kw)`. Covered sites (the complete inventory of
+GAMS launches in the Task-7 toolchain at 912d005c; the other subprocess calls in
+these modules launch gdxdump, `python -m src.cli` or git, not GAMS):
+
+  scripts/gamslib/test_solve.py::solve_mcp                     site "solve_mcp"
+  scripts/gamslib/verify_convexity.py::verify_model            site "verify_model"
+  scripts/diagnostics/kkt_residual.py::run_gams                site "kkt_residual"
+  scripts/sprint_audit/check_mcp_solve_attribution.py::run_one site "attribution"
+
+The listing named by the `o=` argument is copied in a `finally`, so it survives every
+return path (normal, TimeoutExpired, other errors). Each invocation is retained under
+a UNIQUE id (`<stem>.<time_ns>.<pid>`); an existing destination is never overwritten.
+`cmd.json` records site, phase (`$NLP2MCP_RETAIN_PHASE`, set by the executor per tool
+run -- e.g. `batch`, `residual`, `attribution`), cmd, cwd, start time and head_sha.
 
 Usage (from the worktree root):  python apply_retention_patch.py
-Then run with NLP2MCP_RETAIN_LST_DIR=<dir> set.
+Then run with NLP2MCP_RETAIN_LST_DIR=<dir> (and NLP2MCP_RETAIN_PHASE=<phase>) set.
 """
 
+import re
 from pathlib import Path
 
 HELPER = '''
 # --- SCRATCH retention helper (throwaway worktree only; never committed) ---
-import contextlib as _rcl, json as _rjson, os as _ros, shutil as _rsh, tempfile as _rtmp, time as _rtime
-
-
-@_rcl.contextmanager
-def _retaining_tmpdir(stem):
-    """Copy this invocation's output.lst + _cmd.json out on EVERY exit path, under a
-    UNIQUE invocation id, so repeated invocations of the same stem never overwrite."""
-    with _rtmp.TemporaryDirectory() as _d:
-        try:
-            yield _d
-        finally:
-            _r = _ros.environ.get("NLP2MCP_RETAIN_LST_DIR")
-            if _r:
-                _inv = f"{stem}.{_rtime.time_ns()}.{_ros.getpid()}"
-                for _src, _dst in (("output.lst", f"{_inv}.lst"), ("_cmd.json", f"{_inv}.cmd.json")):
-                    _s, _t = _ros.path.join(_d, _src), _ros.path.join(_r, _dst)
-                    if _ros.path.exists(_s):
-                        if _ros.path.exists(_t):  # never overwrite retained evidence
-                            raise FileExistsError(_t)
-                        _rsh.copy(_s, _t)
-
-
-def _record_cmd(stem, cmd, cwd, tmpdir):
-    """Written INTO this invocation's tmpdir before launch, so it is copied out with
-    -- and paired by construction to -- that invocation's own listing."""
-    if _ros.environ.get("NLP2MCP_RETAIN_LST_DIR"):
-        with open(_ros.path.join(tmpdir, "_cmd.json"), "w") as _f:
-            # head_sha: the commit the measurement ran from, so the blind-decision
-            # gate can require it to DESCEND from the owner-answers commit.
-            _here = _ros.path.dirname(_ros.path.abspath(__file__))
-            try:
-                import subprocess as _rsp
-                _sha = _rsp.run(["git", "-C", _here, "rev-parse", "HEAD"], capture_output=True,
-                                text=True, check=True).stdout.strip()
-            except Exception:
-                _sha = None  # a missing SHA fails the gate; never guessed
-            _rjson.dump({"stem": stem, "cmd": [str(c) for c in cmd], "cwd": str(cwd),
-                         "started_ns": _rtime.time_ns(), "head_sha": _sha}, _f)
+def _retained_run(_site, _cmd, **_kw):
+    """subprocess.run for a GAMS launch, retaining its listing + exact command."""
+    import json as _j, os as _o, shutil as _s, subprocess as _sp, time as _t
+    _r = _o.environ.get("NLP2MCP_RETAIN_LST_DIR")
+    if not _r:
+        return _sp.run(_cmd, **_kw)
+    _args = [str(_a) for _a in _cmd]
+    _stem = _o.path.splitext(_o.path.basename(_args[1]))[0]
+    _inv = f"{_stem}.{_t.time_ns()}.{_o.getpid()}"
+    _here = _o.path.dirname(_o.path.abspath(__file__))
+    try:
+        _sha = _sp.run(["git", "-C", _here, "rev-parse", "HEAD"], capture_output=True,
+                       text=True, check=True).stdout.strip()
+    except Exception:
+        _sha = None  # a missing SHA fails Task 6's gate; never guessed
+    _meta = {"site": _site, "phase": _o.environ.get("NLP2MCP_RETAIN_PHASE"),
+             "stem": _stem, "cmd": _args, "cwd": str(_kw.get("cwd") or _o.getcwd()),
+             "started_ns": _t.time_ns(), "head_sha": _sha}
+    _cj = _o.path.join(_r, f"{_inv}.cmd.json")
+    if _o.path.exists(_cj):
+        raise FileExistsError(_cj)
+    with open(_cj, "w") as _f:          # written BEFORE launch
+        _j.dump(_meta, _f)
+    _lst = next((_a[2:] for _a in _args if _a.startswith("o=")), None)
+    try:
+        return _sp.run(_cmd, **_kw)
+    finally:                            # every exit path, incl. TimeoutExpired
+        if _lst and _o.path.exists(_lst):
+            _t2 = _o.path.join(_r, f"{_inv}.lst")
+            if _o.path.exists(_t2):
+                raise FileExistsError(_t2)
+            _s.copy(_lst, _t2)
 # --- end SCRATCH helper ---
 '''
 
+SITES = [
+    ("scripts/gamslib/test_solve.py", "solve_mcp",
+     "            subprocess.run(\n                cmd,"),
+    ("scripts/gamslib/verify_convexity.py", "verify_model",
+     "            result = subprocess.run(\n                [\"gams\", str(model_path_abs),"),
+    ("scripts/diagnostics/kkt_residual.py", "kkt_residual",
+     "    proc = subprocess.run(\n        [\n            gams_exe,"),
+    ("scripts/sprint_audit/check_mcp_solve_attribution.py", "attribution",
+     "                proc = subprocess.run(\n                    [\n                        gams,"),
+]
 
-def patch(path: str, stem_expr: str, run_anchor: str, cmd_expr: str, cwd_expr: str) -> None:
+for path, site, anchor in SITES:
     p = Path(path)
     t = p.read_text()
-    old_with = "with tempfile.TemporaryDirectory() as tmpdir:"
-    assert t.count(old_with) == 1, (path, t.count(old_with))
-    t = t.replace(old_with, f"with _retaining_tmpdir({stem_expr}) as tmpdir:")
-    assert t.count(run_anchor) == 1, (path, run_anchor)
-    indent = run_anchor[: len(run_anchor) - len(run_anchor.lstrip())]
-    t = t.replace(run_anchor, f"{indent}_record_cmd({stem_expr}, {cmd_expr}, {cwd_expr}, tmpdir)\n{run_anchor}")
-    # Place at module level after all definitions: both functions only call the helper at runtime, so it
-    # just has to exist by then. (Inserting "after the imports" by heuristic put it
-    # inside a function whose multi-line signature closes with a column-0 ")".)
-    # ...but BEFORE any `if __name__ == "__main__":` guard, or a script run as a CLI
-    # (verify_convexity.py) calls main() before the helper is defined.
+    assert t.count(anchor) == 1, (path, "anchor count", t.count(anchor))
+    t = t.replace(anchor, anchor.replace("subprocess.run(", f"_retained_run({site!r}, ", 1))
     guard = '\nif __name__ == "__main__":'
-    if guard in t:
+    if guard in t:  # before the guard, or a CLI calls main() before the helper exists
         i = t.rindex(guard)
-        p.write_text(t[:i] + "\n" + HELPER + t[i:])
+        t = t[:i] + "\n" + HELPER + t[i:]
     else:
-        p.write_text(t.rstrip("\n") + "\n" + HELPER)
-
-
-patch(
-    "scripts/gamslib/test_solve.py",
-    "mcp_path.stem",
-    "            subprocess.run(\n                cmd,",
-    "cmd",
-    "PROJECT_ROOT",
-)
-patch(
-    "scripts/gamslib/verify_convexity.py",
-    "Path(model_path).stem",
-    "            result = subprocess.run(\n                [\"gams\", str(model_path_abs), f\"o={lst_path}\", \"lo=3\", solver_option],",
-    "[\"gams\", str(model_path_abs), f\"o={lst_path}\", \"lo=3\", solver_option]",
-    "tmpdir",
-)
-print("patched test_solve.py and verify_convexity.py")
+        t = t.rstrip("\n") + "\n" + HELPER
+    p.write_text(t)
+    # Report what is left: every remaining subprocess.run must be a non-GAMS launch.
+    rest = len(re.findall(r"subprocess\.run\(", t))
+    print(f"{path}: wrapped site {site!r}; {rest} other subprocess.run call(s) left "
+          "(expected non-GAMS: gdxdump / src.cli / git -- check them)")
+print("patched 4 GAMS-launching sites")
 ```
