@@ -387,7 +387,9 @@ N2=$(scan -E 'Licensee:[[:space:]]+[[:alnum:]]|node:[0-9]') || exit 2
 # mandatory and is the actual guarantee.
 [ "$N1" -eq 0 ] && [ "$N2" -eq 0 ] && [ "${N3:-0}" -eq 0 ] && echo "✅ automated scans clean (limited — complete the manual review)" \
   || { echo "❌ license-identifying text in $N1 + $N2 + ${N3:-0} tracked/untracked file(s)"; exit 1; }
-# MANUAL REVIEW (mandatory): read `git diff main...HEAD` and every new file before
+# MANUAL REVIEW (mandatory): read `git diff main --` (working tree + index vs main --
+# staged, unstaged AND committed; `git diff main...HEAD` is commits-only and empty on a
+# first commit) and every untracked file (`git ls-files --others --exclude-standard`) before
 # committing; confirm no license line, header excerpt, ID, node or licensee text,
 # whole or partial, and record "manual license review: done" in the task's Result.
 ```
@@ -761,7 +763,7 @@ PY
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md` — a **`## Results` table with exactly one row per in-scope model, its first cell the backticked model id**, carrying: edition, golden drift, MCP outcome, comparison, attribution, residual verdict, route, wall-clock
+- `docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md` — a **`## Results` table with exactly one row per in-scope model, its first cell the backticked model id**, carrying: edition, solver, invocation id, `head_sha` (the **sanitized provenance** — the only form in which retained-listing evidence leaves the worktree; later tasks, e.g. Task 8's `robot` baseline, use these, never the raw listing), golden drift, MCP outcome, comparison, attribution, residual verdict, route, wall-clock
 - Convexity classifications for the nine in-scope NLP-gated models
 - Issue stubs (or routing notes) for every non-match; `ISSUE_933` triaged against a real compile
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.2, 2.3, 2.4, 3.2
@@ -809,7 +811,7 @@ A Phase-0 gate cannot make a non-general fix general, and it cannot make the sec
 - `docs/issues/ISSUE_1694_lnts-contradictory-fx-mechanisms-blanket-zeroing.md` — the PROCEED/REPLAN signal fixed in advance.
 - `../SPRINT_39/LNTS_PROBE_DESIGN.md` — the runtime bound probe.
 - `../SPRINT_39/SPRINT_LOG.md` §Day 4 (layer traced to `emit_gams.py` section 1b; suppression tests `kkt.stationarity_conditions` while the blanket fires on `infer_lead_lag_condition`) and §Day 5 (the REPLAN and the open problem: express "the pruning guard covers the fixed tuple" **symbolically**, via a runtime `ord`/`card` property).
-- **robot** is in the MCP-gated cohort — with the license, its drift can now be judged by a solve, not only by an emit diff. **Its baseline is Task 7's dry-run result** (reused, not re-measured), so no cohort result is read before Task 6's answers are committed; this task runs only the **candidate**-emit solve, in a throwaway worktree with the retention patch.
+- **robot** is in the MCP-gated cohort — with the license, its drift can now be judged by a solve, not only by an emit diff. **Its baseline is Task 7's committed `## Results` row and its sanitized provenance** (edition, solver, invocation id, `head_sha`) — reused, not re-measured; Task 7's raw retained listings are deleted with its worktree and are not a cross-task artifact — so no cohort result is read before Task 6's answers are committed; this task runs only the **candidate**-emit solve, in a throwaway worktree with the retention patch.
 
 ### What Needs to Be Done
 
