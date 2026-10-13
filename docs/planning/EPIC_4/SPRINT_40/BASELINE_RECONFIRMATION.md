@@ -17,24 +17,47 @@ $ git diff --stat bd2af6e9 HEAD -- data/ src/ tests/ scripts/
 
 ## 2. KPIs and the genuine floor (verbatim tool output)
 
-```
-$ .venv/bin/python scripts/sprint_audit/kpi_block.py
-**KPI block — derived at `366e91f3`**
-| convex candidates | 142 |   | Parse | 142 |   | Translate | 135 |
-| Solve | 111 |   | Match | 95 |   (cold-optimal 65 · presolve 30)
-| model_infeasible | 7 |   | path_syntax_error | 6 |
-| path_solve_terminated | 0 |   | path_solve_license | 11 |   | all-219 Match | 98 |
-*Genuine floor: NOT derivable from the DB. The mechanical `Match − (presolve ∧ match)` count is 65,
- which is not the floor — read it from the provenance file (P6c).*
+Unchanged stdout+stderr of each command, captured by running it in a throwaway worktree checked out at **`366e91f3`** (both tools stamp the commit they ran at). Both exited 0.
 
-$ .venv/bin/python scripts/sprint_audit/floor_tracker.py      (rc=0)
+`$ .venv/bin/python scripts/sprint_audit/kpi_block.py` — verbatim (it emits Markdown; reproduced as-is, not reflowed):
+
+**KPI block — derived at `366e91f3`**
+
+| quantity | value |
+|---|---|
+| convex candidates | **142** |
+| Parse | **142** |
+| Translate | **135** |
+| Solve | **111** |
+| Match | **95** |
+| &nbsp;&nbsp;cold-optimal | **65** |
+| &nbsp;&nbsp;presolve | **30** |
+| model_infeasible | **7** |
+| path_syntax_error | **6** |
+| path_solve_terminated | **0** |
+| path_solve_license | **11** |
+| all-219 Match | **98** |
+
+*Genuine floor: NOT derivable from the DB. The mechanical `Match − (presolve ∧ match)` count is **65**, which is **not** the floor — read it from the provenance file (P6c).*
+
+`$ .venv/bin/python scripts/sprint_audit/floor_tracker.py` — verbatim, default output (4 lines):
+
+```
 Genuine floor: 75   (derived at 366e91f3)
   = baseline 73 (as of S37-close) + 2 recorded movement(s)
-    + elec   [presolve-match-genuine] S38 — cold emit changed at 82b91c94 …
-    + twocge [presolve-match-genuine] S38 — cold emit changed at 204f35ac …
+    + elec [presolve-match-genuine] S38 — cold emit changed at 82b91c94 (+3/-3): stationarity equations corrected — always-false ut(i,i) diagonal guard replaced by ut(i,j__), spurious outer sum removed. Was path_solve_terminated (solver_version: None, aborting before PATH); now model_optimal_presolve + match. Cold emit reaches MS-1 @ 244.624 vs NLP 243.8128, so the match arrives via the presolve warm start.
+    + twocge [presolve-match-genuine] S38 — cold emit changed at 204f35ac (+10/-0): two nu_*.fx guard lines fixing multipliers for MCP-excluded instances. Was path_solve_terminated (solver_version: None, aborting before PATH); now model_optimal_presolve + match. Cold emit reaches MS-1 @ 55.508 vs NLP 56.7778, so the match arrives via the presolve warm start.
 ```
 
-*(The KPI table is reflowed onto fewer lines; every value is as printed.)*
+`$ .venv/bin/python scripts/sprint_audit/floor_tracker.py --show-mechanical` — verbatim. The DB mechanical-count line is printed **only** with `--show-mechanical` (`floor_tracker.py`: `mech` is computed only `if args.show_mechanical`), so the default run above omits nothing; this run is included so a future comparison has the mechanical figure from the tool itself:
+
+```
+Genuine floor: 75   (derived at 366e91f3)
+  = baseline 73 (as of S37-close) + 2 recorded movement(s)
+    + elec [presolve-match-genuine] S38 — cold emit changed at 82b91c94 (+3/-3): stationarity equations corrected — always-false ut(i,i) diagonal guard replaced by ut(i,j__), spurious outer sum removed. Was path_solve_terminated (solver_version: None, aborting before PATH); now model_optimal_presolve + match. Cold emit reaches MS-1 @ 244.624 vs NLP 243.8128, so the match arrives via the presolve warm start.
+    + twocge [presolve-match-genuine] S38 — cold emit changed at 204f35ac (+10/-0): two nu_*.fx guard lines fixing multipliers for MCP-excluded instances. Was path_solve_terminated (solver_version: None, aborting before PATH); now model_optimal_presolve + match. Cold emit reaches MS-1 @ 55.508 vs NLP 56.7778, so the match arrives via the presolve warm start.
+  DB mechanical count: 65  <-- NOT the floor. The 'cold emit byte-identical to pre-fix' qualifier is not in the DB.
+```
 
 ## 3. The two license-gated populations — by identity, with their predicates
 
