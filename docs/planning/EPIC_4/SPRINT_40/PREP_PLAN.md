@@ -620,8 +620,9 @@ test -f "$DOC" && echo "✅ doc" || { echo "OWNER_DECISION_BRIEF.md not yet crea
 
 # Decided blind -- three checks, each failing with a non-zero exit:
 #  (1) STRUCTURE: the answers commit holds exactly three "## Decision" blocks, each
-#      with exactly ONE non-empty dated owner answer (three answers under one
-#      heading, or a fourth answer, fail);
+#      with exactly ONE non-empty dated owner answer INSIDE that block (three answers
+#      under one heading, a fourth answer, or an answer placed under a later
+#      non-Decision heading such as "## Notes" all fail);
 #  (2) ORDER: the LAST commit that changed ANY PART OF A DECISION BLOCK -- question,
 #      options, consequences, exact edits or answer -- is a STRICT ancestor of the
 #      first commit adding the dry-run doc. Fingerprinting only the answer lines would
@@ -631,8 +632,11 @@ test -f "$DOC" && echo "✅ doc" || { echo "OWNER_DECISION_BRIEF.md not yet crea
 #      line (the head_sha of every retained invocation) DESCENDS from that answers
 #      commit -- so the cohort runs, not just the results commit, came after it.
 ANS_RE='^\*\*Owner answer \([0-9]{4}-[0-9]{2}-[0-9]{2}\):\*\* *[^ ]'
-valid() { awk '/^## Decision/ { n++; c[n] = 0; next }
-  /^\*\*Owner answer \([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\):\*\* *[^ ]/ { if (n) c[n]++; else stray++ }
+# Any "## " heading CLOSES the current block; only "## Decision" opens one. An answer
+# outside an open Decision block (intro, "## Notes", appendix) is stray and fails.
+# ("### " sub-headings do not match "^## " and so stay inside their Decision.)
+valid() { awk '/^## / { inb = ($0 ~ /^## Decision/); if (inb) { n++; c[n] = 0 }; next }
+  /^\*\*Owner answer \([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\):\*\* *[^ ]/ { if (inb) c[n]++; else stray++ }
   END { if (n != 3 || stray) exit 1; for (i = 1; i <= 3; i++) if (c[i] != 1) exit 1 }'; }
 # Every line of every "## Decision" block (heading to the next non-Decision "## "
 # heading or EOF) -- the whole decision, not just its answer line.
