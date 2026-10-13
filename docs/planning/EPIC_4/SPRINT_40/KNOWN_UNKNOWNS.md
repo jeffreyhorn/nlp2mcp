@@ -277,7 +277,7 @@ For every model not in the MCP-gated or NLP-gated populations, a licensed run re
 5. What sample size makes "neutral" a claim rather than an anecdote, before the sprint's full licensed run tests it exhaustively?
 
 ### How to Verify
-After Unknown 1.1 installs the license, re-solve a stratified sample (e.g. 5 cold matches, 5 presolve matches, 1 per failure bucket) in a scratch directory and diff outcome/objective/verdict against the DB. Positive control: one deliberately size-refused model **must** change. The sprint's first full licensed run is the exhaustive test.
+After Unknown 1.1 installs the license, re-solve a stratified sample (e.g. 5 cold matches, 5 presolve matches, 1 per failure bucket) in a scratch directory and diff outcome/objective/verdict against the DB. **Positive control (synthetic — never a real gated model):** run the **same diff procedure** on Task 3's synthetic over-ceiling NLP probe, demo vs effective license; the procedure **must** report the change. A real size-refused DB model cannot serve: every such model is, by definition, in the MCP-gated or NLP-gated population, and reading its licensed outcome before Task 6's answers are committed would break the blind-decision boundary. The sprint's first full licensed run is the exhaustive test.
 
 ### Risk if Wrong
 - **KPI attribution corrupted:** a "+N" partly caused by the toolchain, booked as fixes or cohort unlocks.
