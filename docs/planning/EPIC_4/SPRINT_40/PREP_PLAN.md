@@ -61,7 +61,7 @@ This prep plan front-loads the work whose absence would cost the most mid-sprint
 | 5 | Schema 3.1.0 `license_edition` Design | High | 2-3 hours | Tasks 1, 3 | P1 (schema) — migration, writers, `db_manager`, tests |
 | 6 | Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind) | Critical | 2-3 hours | Tasks 1, 2, 3, 4 | P1/P2/P3 — the three owner decisions, answered in prep before any cohort result exists |
 | 7 | License-Gated Cohorts Dry Run — Fingerprints & Routing | Critical | 5-7 hours | Tasks 2, 3, 6 | P2 + P3 — first measurement, GO/NO-GO, never persisted |
-| 8 | lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate | High | 3-4 hours | Tasks 1, 2, 3 | P5 — the +1 Solve rests on an untested premise |
+| 8 | lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate | High | 3-4 hours | Tasks 1, 2, 3, 7 | P5 — the +1 Solve rests on an untested premise |
 | 9 | sarf Jacobian O(active) Re-Architecture Design | High | 4-6 hours | Tasks 1, 2 | P6 — the sprint's planned +1 Translate |
 | 10 | Correctness-Track Pre-Traces: turkpow Class A, the Diagonal Defect, the Structural Sites | High | 5-7 hours | Tasks 1, 2, 7, 9 | P4, P7, P8 — named layers and reproducers before Day 1 |
 | 11 | Process-Mechanism Spec & Smaller-Items Catalog | Medium | 3-4 hours | Tasks 1, 2 | P9 + P10 — the slack absorber and the §7 mechanisms |
@@ -727,7 +727,7 @@ want = mcp | nlp
 missing = sorted(want - set(rows)); dup = sorted({r for r in rows if rows.count(r) > 1})
 extra = sorted(set(rows) - want)
 print("missing result rows:", missing or "none", "| duplicate rows:", dup or "none", "| rows outside scope:", extra or "none")
-sys.exit(1 if (missing or dup) else 0)
+sys.exit(1 if (missing or dup or extra) else 0)
 PY
 ```
 
@@ -757,7 +757,7 @@ PY
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
-**Dependencies:** Tasks 1, 2, 3
+**Dependencies:** Tasks 1, 2, 3, 7 — Task 7 because `robot` is an MCP-gated cohort member: its licensed result may only be read after Task 6's answers are committed, and Task 7's dry run is the first cohort measurement
 **Unknowns Verified:** 5.1, 5.2, 5.3
 
 ### Objective
@@ -780,7 +780,7 @@ A Phase-0 gate cannot make a non-general fix general, and it cannot make the sec
 - `docs/issues/ISSUE_1694_lnts-contradictory-fx-mechanisms-blanket-zeroing.md` — the PROCEED/REPLAN signal fixed in advance.
 - `../SPRINT_39/LNTS_PROBE_DESIGN.md` — the runtime bound probe.
 - `../SPRINT_39/SPRINT_LOG.md` §Day 4 (layer traced to `emit_gams.py` section 1b; suppression tests `kkt.stationarity_conditions` while the blanket fires on `infer_lead_lag_condition`) and §Day 5 (the REPLAN and the open problem: express "the pruning guard covers the fixed tuple" **symbolically**, via a runtime `ord`/`card` property).
-- **robot** is in the MCP-gated cohort — with the license, its drift can now be judged by a solve, not only by an emit diff.
+- **robot** is in the MCP-gated cohort — with the license, its drift can now be judged by a solve, not only by an emit diff. **Its baseline is Task 7's dry-run result** (reused, not re-measured), so no cohort result is read before Task 6's answers are committed; this task runs only the **candidate**-emit solve, in a throwaway worktree with the retention patch.
 
 ### What Needs to Be Done
 
@@ -1128,15 +1128,15 @@ Task 1 (Known Unknowns)
           │      ├─> Task 4 (CI Isolation Design) ──┐
           │      │                                  ├─> Task 6 (Owner Decision Brief — written blind)
           │      │      (Task 2 also feeds Task 6) ─┘        └─> Task 7 (Cohort Dry Run) ─┐
-          │      ├─> Task 5 (Schema 3.1.0 Design) ───────────────────────────────────────┤
-          │      └─> Task 8 (lnts Landability) ──────────────────────────────────────────┤
+          │      └─> Task 5 (Schema 3.1.0 Design) ───────────────────────────────────────┤
+          │                         Task 7 ──> Task 8 (lnts Landability; reuses Task 7's robot baseline) ──┤
           ├─> Task 9 (sarf Jacobian Design) ──> (touch set) ──┐                          │
           │                                                   └─> Task 10 (Pre-Traces) <─┘
           │                                                          └─> Task 12 (Schedule)
           └─> Task 11 (Process + Small Items) ───────────────────────────> Task 12
 ```
 
-**Task 7 depends on Task 3 as well as Task 6** (results must come from the licensed edition); **Task 6 depends on Tasks 3 and 4** (its CI decision needs their evidence); **Task 10 depends on Tasks 7 and 9**. **Tasks 5, 8, 9 and 11 are parallelisable** once their inputs land; Task 4 is now on the critical path. Task 6 is short but on the critical path because its whole value is being committed before Task 7 runs.
+**Task 7 depends on Task 3 as well as Task 6** (results must come from the licensed edition); **Task 6 depends on Tasks 3 and 4** (its CI decision needs their evidence); **Task 10 depends on Tasks 7 and 9**; **Task 8 depends on Task 7** (it reads `robot`, a cohort member, so it must follow the first cohort measurement and reuse its baseline). **Tasks 5, 9 and 11 are parallelisable** once their inputs land; Task 4 is now on the critical path. Task 6 is short but on the critical path because its whole value is being committed before Task 7 runs.
 
 ### Time Budget
 

@@ -701,13 +701,13 @@ The second defect is either small enough to fold into P5 or is a separate issue 
 4. Did `springchain`'s behaviour-identical drift (MS-1, 289 iters, obj −185.4461) count as "perturbed" under the pre-registered criterion — and should the criterion change?
 
 ### How to Verify
-Reproduce the 364-row `INFES` state from Day 5's candidate in a scratch branch; read the top rows' residuals. Solve `robot` licensed at `main` and with the Day-5 candidate emit; compare.
+Reproduce the 364-row `INFES` state from Day 5's candidate in a scratch branch; read the top rows' residuals. Take `robot`'s licensed **baseline from Task 7's dry run** (not a new solve — `robot` is a cohort member, readable only after Task 6's answers are committed), solve the **Day-5 candidate emit** licensed, and compare.
 
 ### Risk if Wrong
 - **+1 Solve projected for a model that needs two fixes**, one unscoped.
 
 ### Estimated Research Time
-1.0 hour (reproduction, two robot solves)
+1.0 hour (reproduction, one candidate-emit robot solve against Task 7's baseline)
 
 ### Owner
 Sprint 40 prep team
@@ -1144,7 +1144,7 @@ This table shows which prep tasks verify which unknowns. Task numbers refer to `
 | Task 5: Schema 3.1.0 `license_edition` Design | 1.4 | Owns the closed writer list. Uses 1.2's discriminating string for the parser extension. |
 | Task 6: Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind) | 3.3 | Owns 3.3, including the scratch-DB positive control for silent corpus growth. **Must be committed before Task 7.** Carries 1.3's license-terms question to the owner. |
 | Task 7: License-Gated Cohorts Dry Run — Fingerprints & Routing | 2.1, 2.2, 2.3, 2.4, 3.2 | Owns Category 2 and 3.2. Its results feed 4.2 (egypt/shale) and 5.3 (robot). Never persists to the DB — which is also how it avoids triggering 3.3's silent growth. |
-| Task 8: lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate | 5.1, 5.2, 5.3 | Owns Category 5. 5.3's `robot` comparison uses the license (Task 3). Its verdict decides P5's projection. |
+| Task 8: lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate | 5.1, 5.2, 5.3 | Owns Category 5. 5.3's `robot` comparison uses Task 7's baseline, so **Task 8 depends on Task 7**. Its verdict decides P5's projection. |
 | Task 9: sarf Jacobian O(active) Re-Architecture Design | 6.1, 6.2, 6.3 | Owns Category 6. 6.1 can invalidate P6's 20–28 h estimate, as S39's Task 6 did for the previous premise. |
 | Task 10: Correctness-Track Pre-Traces — turkpow Class A, the Diagonal Defect, the Structural Sites | 4.1, 4.2, 4.3, 7.1, 7.2, 8.1, 8.2 | Owns Categories 4, 7 and 8. 4.2 depends on Task 7's egypt/shale results; 8.2 uses Task 9's touch set. The heaviest task by unknown count (7 unknowns, 7.5 h) — Task 12 should check it against the task's 5–7 h estimate. |
 | Task 11: Process-Mechanism Spec & Smaller-Items Catalog | 9.1, 9.2, 10.1, 10.2 | Owns Categories 9 and 10. *(Not in the prompt's "Tasks 2–10" range, but it owns four unknowns, so it carries the same metadata.)* |
