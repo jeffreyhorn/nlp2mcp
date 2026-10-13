@@ -6,7 +6,7 @@
 
 **Anchor:** `bd2af6e9` (Sprint 39 close, 2026-09-18) · plan merged at `912d005c` (PR #1745) · **Toolchain:** GAMS **54.2.1** / PATH **5.2.01**
 
-> **Which anchor?** Sprint 39's close documents (`SPRINT_LOG.md` §Day 13, `SPRINT_40_CARRYFORWARDS.md`) measure at **`bd2af6e9`**. `54b4eb23` (the close-PR merge) and `912d005c` (the merge of PR #1745, which inserted Sprint 40 into `PROJECT_PLAN.md` — the commit this prep branch was cut from; this `PREP_PLAN.md` itself arrives with PR #1746) are later, but `git diff bd2af6e9 912d005c -- data/ src/` must be checked in Task 2 rather than assumed empty. Re-derive at the commit you are on, and cite it.
+> **Which anchor?** Sprint 39's close documents (`SPRINT_LOG.md` §Day 13, `SPRINT_40_CARRYFORWARDS.md`) measure at **`bd2af6e9`**. `54b4eb23` (the close-PR merge) and `912d005c` (the merge of PR #1745, which inserted Sprint 40 into `PROJECT_PLAN.md` — the commit this prep branch was cut from; this `PREP_PLAN.md` itself arrives with PR #1746) are later, but `git diff bd2af6e9 912d005c -- data/ src/ tests/ scripts/` must be checked in Task 2 rather than assumed empty. Re-derive at the commit you are on, and cite it.
 
 **Sprint definition:** `../PROJECT_PLAN.md` → *Sprint 40 (Weeks 45–46): Sprint 39 Carryforward & the Licensed-GAMS Unlock — the License-Gated Cohorts' First NLP-vs-MCP Comparison, Licensed CI, the P10 Two-Class Triage, lnts, sarf's Jacobian Re-Architecture & the Sprint-39 Process Changes*
 
@@ -230,7 +230,7 @@ Every Sprint-40 acceptance criterion is a delta against this baseline, and two o
 
 ### What Needs to Be Done
 
-1. **Diff the anchors:** `git diff --stat bd2af6e9 HEAD -- data/ src/ tests/` — record whether anything substantive moved since the close.
+1. **Diff the anchors:** `git diff --stat bd2af6e9 HEAD -- data/ src/ tests/ scripts/` — record whether anything substantive moved since the close — `scripts/` is included because the baseline figures are produced by tools under `scripts/gamslib` and `scripts/sprint_audit`, so a tooling change is as substantive as a source change.
 2. **Run `kpi_block.py` and `floor_tracker.py`** and paste their output verbatim with the commit they report.
 3. **Derive both populations by predicate** and record each as a sorted named list, with model type and (for the NLP-gated set) parse/translate status today.
 4. **Record per-model size facts** for the MCP-gated cohort — **generated dimensions, not declarations**: run each golden in a scratch directory with `iterlim=0` and read the listing's `MODEL STATISTICS` — `SINGLE EQUATIONS` and `SINGLE VARIABLES`. Counting declarations in the source does **not** measure size (measured 2026-10-12 on `turkey`'s golden: **89** equation blocks vs **3,866** single equations / 3,753 single variables). The demo license prints `MODEL STATISTICS` **before** refusing an over-limit model, so this needs no license (same figures under both editions) — replacing recalled figures (turkey 3,866; tricp 1,255; egypt ~3,470) with measured ones.
@@ -250,7 +250,7 @@ Every Sprint-40 acceptance criterion is a delta against this baseline, and two o
 ```bash
 cd "$(git rev-parse --show-toplevel)"
 git rev-parse --short HEAD
-git diff --stat bd2af6e9 HEAD -- data/ src/ tests/ | tail -1
+git diff --stat bd2af6e9 HEAD -- data/ src/ tests/ scripts/ | tail -1
 
 # Headline KPIs + floor, each carrying its commit
 .venv/bin/python scripts/sprint_audit/kpi_block.py
