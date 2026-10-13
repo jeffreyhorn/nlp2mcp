@@ -11,7 +11,17 @@ Provenance (license edition, solver actually used) must come from the **same inv
 
 ## What the patch does
 
-It replaces each function's `with tempfile.TemporaryDirectory() as tmpdir:` with a context manager whose **`finally`** copies `output.lst` (if present) to `$NLP2MCP_RETAIN_LST_DIR/<stem>.lst` before the directory is removed — so the listing survives **every** return path: normal, `TimeoutExpired`, and other errors. It also writes `<stem>.cmd.json` (exact `cmd` — executable and input path — and `cwd`) **before** launching GAMS. With `NLP2MCP_RETAIN_LST_DIR` unset, behaviour is unchanged.
+It replaces each function's `with tempfile.TemporaryDirectory() as tmpdir:` with a context manager whose **`finally`** copies the invocation's `output.lst` **and** its `_cmd.json` out of the temp directory before it is removed — so the evidence survives **every** return path: normal, `TimeoutExpired`, and other errors. `_cmd.json` (exact `cmd` — executable and input path — `cwd`, and start time) is written **into the same temp directory before GAMS launches**, so a listing and its command record are **paired by construction**.
+
+Each invocation is retained under a **unique invocation id** — `<stem>.<time_ns>.<pid>.lst` / `.cmd.json` — so repeated invocations of the same model (a presolve retry, a follow-up solve) **never overwrite** earlier evidence; the copy **refuses** to overwrite an existing destination (`FileExistsError`). With `NLP2MCP_RETAIN_LST_DIR` unset, behaviour is unchanged.
+
+## Associating a recorded row with its own invocation
+
+A row does not carry the invocation id, so association is by evidence, and must be **unique**:
+
+1. Candidates are the retained invocations whose `cmd.json` input path is the file the row's outcome came from (the cold `<id>_mcp.gms`, or `<id>_mcp_presolve.gms` for a row whose outcome is `model_optimal_presolve`).
+2. Classify each candidate's listing (`parse_solve_summaries` / `Attribution`, and the status/objective lines) and keep those that **match the row** — solver/model status, objective, `mcp_attribution`.
+3. **Exactly one** candidate must match. Zero or several → the row has **no** provenance and its result is not recorded (never pick one).
 
 ## Usage
 
@@ -19,21 +29,22 @@ It replaces each function's `with tempfile.TemporaryDirectory() as tmpdir:` with
 WT=$(mktemp -d)/wt && git worktree add --detach "$WT" main && cd "$WT"
 python /path/to/apply_retention_patch.py        # the script below, saved OUTSIDE the repo
 export NLP2MCP_RETAIN_LST_DIR=$(mktemp -d)
-# ... run the batch / verifier here; read edition + solver from $NLP2MCP_RETAIN_LST_DIR/*.lst
+# ... run the batch / verifier here; associate rows as above; read edition + solver
 cd - && git worktree remove --force "$WT"
 ```
 
 Read only the **edition classification** (Task 3's non-identifying regex) and the **solver name** from each retained listing; never commit listing content (license hygiene).
 
-## Exercised 2026-10-12, in a throwaway worktree
+## Exercised 2026-10-12/13, in a throwaway worktree
 
 | path | result | retained |
 |---|---|---|
-| `solve_mcp`, normal (`trnsport`) | success · MS 1 · obj 153.675 · `MCP-SOLVED` | `trnsport_mcp.lst` (MODEL STATUS 1) + `cmd.json` (`Versions/Current` executable) |
+| `solve_mcp`, normal (`trnsport`) | success · MS 1 · obj 153.675 · `MCP-SOLVED` | listing (MODEL STATUS 1) + `cmd.json` (`Versions/Current` executable) |
 | `solve_mcp`, simulated `TimeoutExpired` with a partial listing | failure · solver status 3 · `path_solve_time_limit` | the **partial** listing + `cmd.json` |
-| `verify_convexity.py --model trnsport --output …` (CLI) | `verified_convex` · solver/model status 1/1 · obj 153.675 | its own `trnsport.lst` (SOLVER CPLEX, MODEL STATUS 1) + `cmd.json` (`gams … lo=3 LP=CPLEX`) |
+| `verify_convexity.py --model trnsport --output …` (CLI) | `verified_convex` · solver/model status 1/1 · obj 153.675 | its own listing (SOLVER CPLEX, MODEL STATUS 1) + `cmd.json` (`gams … lo=3 LP=CPLEX`) |
+| **three** `solve_mcp` invocations of the **same** model (two normal, one timeout) | `MCP-SOLVED` ×2, `path_solve_time_limit` | **three distinct `<inv>` pairs, none overwritten**; each `cmd.json` paired with its own listing |
 
-Two bugs were found by running it, not by reading it: the helper must import `os` itself (`test_solve.py` does not), and it must be placed **before** `if __name__ == "__main__":` (appending after the guard made the CLI call `main()` before the helper existed; inserting "after the imports" by heuristic landed inside a function).
+Bugs found by running it, not by reading it: the helper must import `os` itself (`test_solve.py` does not); it must sit **before** `if __name__ == "__main__":` (appended after the guard, the CLI called `main()` before the helper existed; inserted "after the imports" by heuristic, it landed inside a function); and a stem-only destination let a later invocation overwrite an earlier one's evidence (PR #1746 review) — now a unique id per invocation.
 
 ## `apply_retention_patch.py`
 
@@ -54,26 +65,35 @@ from pathlib import Path
 
 HELPER = '''
 # --- SCRATCH retention helper (throwaway worktree only; never committed) ---
-import contextlib as _rcl, json as _rjson, os as _ros, shutil as _rsh, tempfile as _rtmp
+import contextlib as _rcl, json as _rjson, os as _ros, shutil as _rsh, tempfile as _rtmp, time as _rtime
 
 
 @_rcl.contextmanager
 def _retaining_tmpdir(stem):
+    """Copy this invocation's output.lst + _cmd.json out on EVERY exit path, under a
+    UNIQUE invocation id, so repeated invocations of the same stem never overwrite."""
     with _rtmp.TemporaryDirectory() as _d:
         try:
             yield _d
         finally:
             _r = _ros.environ.get("NLP2MCP_RETAIN_LST_DIR")
-            _l = _ros.path.join(_d, "output.lst")
-            if _r and _ros.path.exists(_l):
-                _rsh.copy(_l, _ros.path.join(_r, f"{stem}.lst"))
+            if _r:
+                _inv = f"{stem}.{_rtime.time_ns()}.{_ros.getpid()}"
+                for _src, _dst in (("output.lst", f"{_inv}.lst"), ("_cmd.json", f"{_inv}.cmd.json")):
+                    _s, _t = _ros.path.join(_d, _src), _ros.path.join(_r, _dst)
+                    if _ros.path.exists(_s):
+                        if _ros.path.exists(_t):  # never overwrite retained evidence
+                            raise FileExistsError(_t)
+                        _rsh.copy(_s, _t)
 
 
-def _record_cmd(stem, cmd, cwd):
-    _r = _ros.environ.get("NLP2MCP_RETAIN_LST_DIR")
-    if _r:
-        with open(_ros.path.join(_r, f"{stem}.cmd.json"), "w") as _f:
-            _rjson.dump({"cmd": [str(c) for c in cmd], "cwd": str(cwd)}, _f)
+def _record_cmd(stem, cmd, cwd, tmpdir):
+    """Written INTO this invocation's tmpdir before launch, so it is copied out with
+    -- and paired by construction to -- that invocation's own listing."""
+    if _ros.environ.get("NLP2MCP_RETAIN_LST_DIR"):
+        with open(_ros.path.join(tmpdir, "_cmd.json"), "w") as _f:
+            _rjson.dump({"stem": stem, "cmd": [str(c) for c in cmd], "cwd": str(cwd),
+                         "started_ns": _rtime.time_ns()}, _f)
 # --- end SCRATCH helper ---
 '''
 
@@ -86,7 +106,7 @@ def patch(path: str, stem_expr: str, run_anchor: str, cmd_expr: str, cwd_expr: s
     t = t.replace(old_with, f"with _retaining_tmpdir({stem_expr}) as tmpdir:")
     assert t.count(run_anchor) == 1, (path, run_anchor)
     indent = run_anchor[: len(run_anchor) - len(run_anchor.lstrip())]
-    t = t.replace(run_anchor, f"{indent}_record_cmd({stem_expr}, {cmd_expr}, {cwd_expr})\n{run_anchor}")
+    t = t.replace(run_anchor, f"{indent}_record_cmd({stem_expr}, {cmd_expr}, {cwd_expr}, tmpdir)\n{run_anchor}")
     # Place at module level after all definitions: both functions only call the helper at runtime, so it
     # just has to exist by then. (Inserting "after the imports" by heuristic put it
     # inside a function whose multi-line signature closes with a column-0 ")".)
