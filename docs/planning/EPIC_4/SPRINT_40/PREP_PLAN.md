@@ -91,7 +91,7 @@ Produce `docs/planning/EPIC_4/SPRINT_40/KNOWN_UNKNOWNS.md` enumerating every ass
 
 ### Why This Matters
 
-The Known-Unknowns process has caught a materially wrong premise in every recent sprint, and the refutation rate is rising: Sprint 38's prep refuted **32 %** of its assumptions, Sprint 39's **63 %** (19 of 30). Nine of Sprint 39's changed the sprint rather than a figure — P4's cost premise, P7's "all 14 or none", P10's selection yielding no available qualifier.
+The Known-Unknowns process has caught a materially wrong premise in every recent sprint, and the refutation rate is rising: Sprint 38's prep refuted **32 %** of its assumptions, Sprint 39's **63 %** (19 of 30). Nine of Sprint 39's refuted unknowns changed the sprint rather than a figure — P4's cost premise, P7's "all 14 or none", P10's selection yielding no available qualifier.
 
 Sprint 40 carries a new class of unknown that no prior sprint had: **assumptions about results that have never existed**. That eleven goldens exist says nothing about whether they solve (`ferts`'s emit was silently wrong until Sprint 38 Day 11); that nine models are LP/NLP/QCP says nothing about whether they are convex. And at least one carryforward rests on a premise its own source log contradicts — lnts's "re-apply the banked diff" against Sprint 39 Day 5's *"removing the contradiction is not sufficient"*.
 
@@ -512,7 +512,7 @@ Produce `docs/planning/EPIC_4/SPRINT_40/SCHEMA_3_1_0_DESIGN.md`: the exact field
 3. **Specify the parser extension** to `extract_gams_version` using Task 3's discriminating string; reuse, do not duplicate. **For `verify_convexity.py` this is more than a parser call:** `verify_convexity.py` cannot supply provenance itself: `verify_model` writes its listing to `output.lst` inside a `tempfile.TemporaryDirectory` that is deleted on return, and its `--output` JSON (`VerificationResult.to_dict()`) carries a numeric `solver_status` but **no solver name and no edition** (verified at `912d005c`). The design must read the edition **and the solver name** from the listing **before** the temporary directory is removed, and add both to `VerificationResult` (and so to `--output`); they reach `convexity_result` **only through** the P3 application writer of step 1.
 4. **Specify the migration** (`migrate_schema_v3.1.0.py`): additive, idempotent, `null` for existing rows, chain position after 3.0.0 — and it **refreshes the top-level `updated_date`** alongside `schema_version`, as `migrate_schema_v3.0.0.py` does (lines ~151–157, citing `schema.json`'s "timestamp of last modification" and PR #1740's stale-provenance finding) and every prior migration does.
 5. **Specify the `db_manager.py` changes**: `--empty` stamp 3.0.0 → 3.1.0 and its comment; the catalog-init warning's chain.
-6. **List the tests**: migration test (including an assertion that `updated_date` is refreshed); schema tests (accepts new fields, **still rejects an unknown key**); writer tests per stage from licensed and demo `.lst` fixtures; updated `test_db_manager.py` regressions.
+6. **List the tests**: migration test (including an assertion that `updated_date` is refreshed); schema tests (accepts new fields, **still rejects an unknown key**); writer tests per stage from **synthetic, non-identifying** licensed and demo listing snippets (hand-written edition lines, or fixtures generated at test runtime) — **never real `.lst` license-header excerpts**, which would commit licensee, ID or node data; updated `test_db_manager.py` regressions.
 
 ### Changes
 
@@ -621,6 +621,7 @@ DRY=$(git log --diff-filter=A --format=%H -- docs/planning/EPIC_4/SPRINT_40/COHO
 if [ "$(grep -E "$ANS_RE" "$DOC")" != "$PREV" ]; then echo "❌ uncommitted edits to the owner answers"
 elif [ "$N" -lt 3 ]; then echo "❌ the three owner answers are not yet committed"
 elif [ -z "$DRY" ]; then echo "✅ answers last changed at ${LAST:0:8}; dry run not yet committed"
+elif [ "$LAST" = "$DRY" ]; then echo "❌ answers committed in the SAME commit as the dry run (${DRY:0:8}) — a commit is its own ancestor, so the check must be strict"
 elif git merge-base --is-ancestor "$LAST" "$DRY"; then echo "✅ answers last changed at ${LAST:0:8}, an ancestor of the dry run (${DRY:0:8})"
 else echo "❌ the answers were committed or REVISED at ${LAST:0:8}, which the dry run (${DRY:0:8}) does not descend from"; fi
 
@@ -638,7 +639,7 @@ grep -c "^## Decision" "$DOC"
 
 - [ ] All three decisions posed with options and the exact edit each implies
 - [ ] **All three decisions carry a dated owner answer** (`**Owner answer (YYYY-MM-DD):**`) — posing the questions is not completion
-- [ ] The **last commit that changed any owner answer** holds all three and is an **ancestor** of the first commit adding `COHORT_DRY_RUN.md` — so answers revised after the dry run fail (checked by `git merge-base --is-ancestor` in *Verification*)
+- [ ] The **last commit that changed any owner answer** holds all three and is a **strict ancestor** of the first commit adding `COHORT_DRY_RUN.md` (an earlier, different commit — Git counts a commit as its own ancestor) — so answers revised after the dry run, or committed together with it, fail (checked by `git merge-base --is-ancestor` in *Verification*)
 - [ ] The corpus option shows both denominators reported in one sentence
 - [ ] No result from either cohort is cited in the brief
 - [ ] Unknowns 3.3 verified and updated in KNOWN_UNKNOWNS.md
