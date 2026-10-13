@@ -766,13 +766,13 @@ A smaller model — synthetic, or a corpus model sharing sarf's sparse-active-se
 4. Does the fixture's emit stay byte-identical across the change (correctness) while its time drops (performance)?
 
 ### How to Verify
-Build or select the fixture; measure translate time at two sizes before the change to show super-linear growth (the positive control that it exercises the expensive path); record its golden.
+Build or select the fixture; **hold the active (referenced) set fixed and scale only the declared cardinality** across at least three sizes, recording translate time **and a work count** (e.g. `differentiate_expr` calls); the positive control is that work grows with **declared** size while the active set does not change — **linear growth is the expected signature**, not super-linear, since the documented bottleneck is O(declared) per row (`../SPRINT_38/SARF_REARCH_DESIGN.md`: differentiation volume "directly proportional to declared columns"; `../SPRINT_38/DAY7_SARF_GATE_P6C.md`: "O(declared) per row"). After the O(active) change the same sweep should be ~flat in declared size. Record its golden.
 
 ### Risk if Wrong
 - **P6 landed on inspection** — the approach Sprint 38 Day 7 showed produces wrong answers.
 
 ### Estimated Research Time
-1.0 hour (selection or generator, two-size timing)
+1.0 hour (selection or generator, a ≥3-size declared-cardinality sweep with the active set fixed)
 
 ### Owner
 Sprint 40 prep team

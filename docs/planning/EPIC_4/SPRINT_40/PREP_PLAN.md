@@ -892,7 +892,7 @@ Sprint 39 Day 0 re-pointed this work twice: Task 6 refuted the "four call sites"
 2. **Confirm `gradient.py:453` is still dead** and `_diff_sum`'s self/inclusive shares.
 3. **Name the entry points** inside `compute_constraint_jacobian` that iterate the full rather than the active set, with `file:line` anchors resolved by the shared resolver (§7.3).
 4. **Define the atomicity boundary**: which changes must land in one commit for the MCP to remain consistent.
-5. **Choose a fail-before fixture** that is not sarf (a smaller model sharing the shape) and show it fails before.
+5. **Choose a fail-before fixture** that is not sarf (a smaller model sharing the shape) and show it fails before: **hold the active (referenced) set fixed and scale only the declared cardinality** across at least three sizes, recording translate time **and a work count** (e.g. `differentiate_expr` calls); the positive control is that work grows with **declared** size while the active set does not change — **linear growth is the expected signature**, not super-linear, since the documented bottleneck is O(declared) per row (`../SPRINT_38/SARF_REARCH_DESIGN.md`: differentiation volume "directly proportional to declared columns"; `../SPRINT_38/DAY7_SARF_GATE_P6C.md`: "O(declared) per row"). After the O(active) change the same sweep should be ~flat in declared size.
 6. **Re-estimate** P6 against the breakdown and state its REPLAN exit (timeout re-trigger; atomicity violation).
 
 ### Changes
@@ -924,7 +924,7 @@ grep -c "measured at" "$DOC" 2>/dev/null   # every profile figure carries its co
 - [ ] Profile re-measured at a stated commit, with the per-callee breakdown inside the Jacobian
 - [ ] Entry points anchored by code, not by line number alone
 - [ ] Atomicity boundary stated
-- [ ] A non-sarf fail-before fixture shown to fail before
+- [ ] A non-sarf fail-before fixture shown to fail before — work growing with **declared** cardinality while the active set is held fixed (linear growth suffices)
 - [ ] P6 re-estimated with an explicit REPLAN exit
 - [ ] Unknowns 6.1, 6.2, 6.3 verified and updated in KNOWN_UNKNOWNS.md
 
