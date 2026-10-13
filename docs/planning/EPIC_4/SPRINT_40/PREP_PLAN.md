@@ -234,7 +234,7 @@ Every Sprint-40 acceptance criterion is a delta against this baseline, and two o
 2. **Run `kpi_block.py` and `floor_tracker.py`** and paste their output verbatim with the commit they report.
 3. **Derive both populations by predicate** and record each as a sorted named list, with model type and (for the NLP-gated set) parse/translate status today.
 4. **Record per-model size facts** for the MCP-gated cohort — **generated dimensions, not declarations**: run each golden in a scratch directory with `iterlim=0` and read the listing's `MODEL STATISTICS` — `SINGLE EQUATIONS` and `SINGLE VARIABLES`. Counting declarations in the source does **not** measure size (measured 2026-10-12 on `turkey`'s golden: **89** equation blocks vs **3,866** single equations / 3,753 single variables). The demo license prints `MODEL STATISTICS` **before** refusing an over-limit model, so this needs no license (same figures under both editions) — replacing recalled figures (turkey 3,866; tricp 1,255; egypt ~3,470) with measured ones.
-5. **Re-derive the P2 ratchet** (`make check-index-repeats`) and the leak-gate inventory (`make check-goldens`, **run alone**).
+5. **Re-derive the P2 ratchet** (`make check-index-repeats`), the leak-gate inventory (`make check-goldens`, **run alone**), **and `make test` explicitly** — run it (alone, never alongside the leak gate) and record `N passed, M skipped` with the commit, **even though this task is docs-only and its quality gate is N/A**: the baseline's `make test` figure (5,444 at the S39 close) is a close figure like any other, and the gate's waiver must not become a reason to re-quote it.
 6. **Record a verdict per figure:** ✅ reproduces / ❌ differs (with the difference routed).
 
 ### Changes
@@ -271,6 +271,10 @@ PY
 # P2 ratchet (expect 9 = baseline 9 unless something landed)
 make check-index-repeats 2>&1 | tail -3
 
+# The test count, re-derived EXPLICITLY (independent of whether the quality gate applies);
+# run alone, never concurrently with the leak gate
+make test 2>&1 | tail -3
+
 test -f docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md && echo "✅ doc" || echo "doc not yet created"
 ```
 
@@ -287,6 +291,7 @@ test -f docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md && echo "✅ d
 - [ ] `andean` recorded as MIP-excluded, with the scope rule cited
 - [ ] Cohort size facts derived from the goldens, not recalled
 - [ ] The leak gate run **alone** and its scope line recorded (186 or the difference explained)
+- [ ] `make test` run **explicitly** and its `N passed, M skipped` recorded with the commit — not re-quoted from the S39 close because the task's quality gate is N/A
 - [ ] Any figure that differs from the close is routed, not silently replaced
 - [ ] Unknowns 3.1 verified and updated in KNOWN_UNKNOWNS.md
 
@@ -611,24 +616,40 @@ cd "$(git rev-parse --show-toplevel)"
 DOC=docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md
 test -f "$DOC" && echo "✅ doc" || { echo "OWNER_DECISION_BRIEF.md not yet created"; exit 0; }
 
-# Decided blind: the LAST commit that changed ANY owner-answer line must be an ANCESTOR
-# of the first commit adding the dry-run doc, and must hold all three answers. Using the
-# last change (not the first time three answers appear) also fails answers REVISED after
-# the dry run. Uncommitted answer edits fail too. Timestamps do not prove history order.
+# Decided blind -- three checks, each failing with a non-zero exit:
+#  (1) STRUCTURE: the answers commit holds exactly three "## Decision" blocks, each
+#      with exactly ONE non-empty dated owner answer (three answers under one
+#      heading, or a fourth answer, fail);
+#  (2) ORDER: the LAST commit that changed any answer line is a STRICT ancestor of
+#      the first commit adding the dry-run doc (revised or same-commit answers fail);
+#  (3) MEASUREMENT: every measurement SHA Task 7 records on its "**Measured at:**"
+#      line (the head_sha of every retained invocation) DESCENDS from that answers
+#      commit -- so the cohort runs, not just the results commit, came after it.
 ANS_RE='^\*\*Owner answer \([0-9]{4}-[0-9]{2}-[0-9]{2}\):\*\* *[^ ]'
+valid() { awk '/^## Decision/ { n++; c[n] = 0; next }
+  /^\*\*Owner answer \([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\):\*\* *[^ ]/ { if (n) c[n]++; else stray++ }
+  END { if (n != 3 || stray) exit 1; for (i = 1; i <= 3; i++) if (c[i] != 1) exit 1 }'; }
 LAST=""; PREV=""
 for c in $(git log --reverse --format=%H -- "$DOC"); do
   A=$(git show "$c:$DOC" 2>/dev/null | grep -E "$ANS_RE")
   [ "$A" != "$PREV" ] && { LAST=$c; PREV=$A; }
 done
-N=$(printf '%s' "$PREV" | grep -c .)
-DRY=$(git log --diff-filter=A --format=%H -- docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md | tail -1)
+DRY_DOC=docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md
+DRY=$(git log --diff-filter=A --format=%H -- "$DRY_DOC" | tail -1)
 if [ "$(grep -E "$ANS_RE" "$DOC")" != "$PREV" ]; then echo "❌ uncommitted edits to the owner answers"; exit 1
-elif [ "$N" -lt 3 ]; then echo "❌ the three owner answers are not yet committed"; exit 1
+elif [ -z "$LAST" ] || ! git show "$LAST:$DOC" | valid; then echo "❌ the answers commit does not hold exactly one dated answer under each of exactly three ## Decision headings"; exit 1
 elif [ -z "$DRY" ]; then echo "✅ answers last changed at ${LAST:0:8}; dry run not yet committed"
 elif [ "$LAST" = "$DRY" ]; then echo "❌ answers committed in the SAME commit as the dry run (${DRY:0:8}) — a commit is its own ancestor, so the check must be strict"; exit 1
-elif git merge-base --is-ancestor "$LAST" "$DRY"; then echo "✅ answers last changed at ${LAST:0:8}, an ancestor of the dry run (${DRY:0:8})"
-else echo "❌ the answers were committed or REVISED at ${LAST:0:8}, which the dry run (${DRY:0:8}) does not descend from"; exit 1; fi
+elif ! git merge-base --is-ancestor "$LAST" "$DRY"; then echo "❌ the answers were committed or REVISED at ${LAST:0:8}, which the dry run (${DRY:0:8}) does not descend from"; exit 1
+else
+  SHAS=$(grep -m1 '^\*\*Measured at:\*\*' "$DRY_DOC" | grep -oE '[0-9a-f]{40}' | sort -u)
+  [ -z "$SHAS" ] && { echo "❌ COHORT_DRY_RUN.md records no full measurement SHA on a **Measured at:** line"; exit 1; }
+  for s in $SHAS; do
+    git merge-base --is-ancestor "$LAST" "$s" 2>/dev/null \
+      || { echo "❌ a measurement ran at ${s:0:8}, which does not descend from the answers commit ${LAST:0:8}"; exit 1; }
+  done
+  echo "✅ answers (${LAST:0:8}) precede the dry-run commit (${DRY:0:8}) and all $(echo $SHAS | wc -w | tr -d ' ') measurement SHA(s)"
+fi
 
 # Three decisions posed
 grep -c "^## Decision" "$DOC"
@@ -643,8 +664,8 @@ grep -c "^## Decision" "$DOC"
 ### Acceptance Criteria
 
 - [ ] All three decisions posed with options and the exact edit each implies
-- [ ] **All three decisions carry a dated owner answer** (`**Owner answer (YYYY-MM-DD):**`) — posing the questions is not completion
-- [ ] The **last commit that changed any owner answer** holds all three and is a **strict ancestor** of the first commit adding `COHORT_DRY_RUN.md` (an earlier, different commit — Git counts a commit as its own ancestor) — so answers revised after the dry run, or committed together with it, fail (checked by `git merge-base --is-ancestor` in *Verification*)
+- [ ] **Exactly one dated owner answer under each of exactly three `## Decision` headings** (`**Owner answer (YYYY-MM-DD):**`) — posing the questions is not completion, and three answers under one heading or a fourth answer fail
+- [ ] The **last commit that changed any owner answer** holds all three and is a **strict ancestor** of the first commit adding `COHORT_DRY_RUN.md` (an earlier, different commit — Git counts a commit as its own ancestor) — so answers revised after the dry run, or committed together with it, fail; **and every measurement SHA on `COHORT_DRY_RUN.md`'s `**Measured at:**` line descends from the answers commit**, so the cohort runs themselves came after the answers (all checked by `git merge-base --is-ancestor` in *Verification*)
 - [ ] The corpus option shows both denominators reported in one sentence
 - [ ] No result from either cohort is cited in the brief
 - [ ] Unknowns 3.3 verified and updated in KNOWN_UNKNOWNS.md
@@ -682,8 +703,9 @@ None of the eleven MCP-gated emits has ever been exercised by a solve, and none 
 2. **MCP-gated (11):** in the throwaway worktree, re-emit each at HEAD and diff against its golden; run the MCP solve; compare to the NLP reference; run `kkt_residual.py` on every non-match. **MCP provenance from the recorded invocation, not a different one.** Run the batch with `run_full_test.py` **inside the throwaway worktree**, so the worktree's own DB copy receives each row's `mcp_attribution` / `mcp_completed_own_solve` — `test_solve.py` parses those from the **actual solve listing** (via `parse_solve_summaries` / `Attribution`, which it imports from `scripts/sprint_audit/check_mcp_solve_attribution.py`) before `solve_mcp` deletes it. **Validate every match from those fields.** For the **edition**, use the **recorded invocation's own listing** — never a rerun. `solve_mcp` deletes `output.lst` with its `TemporaryDirectory` (also on `TimeoutExpired`, where it returns from the `except` handler), a cold row records no input path (`mcp_file_generated` is written only after an accepted presolve retry), and `solve_mcp` resolves its own executable (preferring `Versions/Current` over `PATH`) — so the invocation cannot be reconstructed afterwards. In the throwaway worktree, apply the **retention patch** (`docs/planning/EPIC_4/SPRINT_40/artifacts/RETENTION_PATCH.md`): it copies each solve's own listing out on **every** return path — **including timeout, where the partial listing is kept** — and records the exact command and `cwd` **before** launch. Run the batch with `NLP2MCP_RETAIN_LST_DIR` set; each invocation is retained under a **unique invocation id** (repeated invocations of the same model never overwrite one another). **Associate each row with exactly one invocation** by the artifact's rule — candidates are invocations of the file the row's outcome came from (cold `<id>_mcp.gms`, or `<id>_mcp_presolve.gms` for a presolve outcome), and exactly one must match the row's status, objective and `mcp_attribution` when classified with `parse_solve_summaries` / `Attribution`; zero or several matches → no provenance, result not recorded. Read the edition classification from that one listing. *(Exercised 2026-10-12 — normal, simulated-timeout and verifier-CLI paths; results in the artifact.)* The task branch's `git diff main...HEAD -- scripts/ src/` must stay empty. `check_mcp_solve_attribution.py` re-emits and re-solves a fresh `--nlp-presolve` model, so it is **not** an audit of the dry run's listing — use it only as Unknown 2.3's standalone large-model and positive-control exercise. Record translate and solve wall-clock (input to Task 12's nightly-slot sizing).
 3. **NLP-gated (9 in scope):** run `verify_convexity.py` licensed **output-only** (`--model <id> --output <scratch>.json`, never `--update-catalog`; it has no status-DB interface) in the throwaway worktree. `verify_convexity.py` cannot supply provenance itself: `verify_model` writes its listing to `output.lst` inside a `tempfile.TemporaryDirectory` that is deleted on return, and its `--output` JSON (`VerificationResult.to_dict()`) carries a numeric `solver_status` but **no solver name and no edition** (verified at `912d005c`). **Provenance from the verifier's OWN listing — never a rerun** (a second GAMS invocation cannot prove which edition or solver produced the JSON): in the throwaway worktree, apply the **retention patch** (`docs/planning/EPIC_4/SPRINT_40/artifacts/RETENTION_PATCH.md`), which wraps `verify_model`'s `TemporaryDirectory` so its own `output.lst` is copied out on **every** return path (normal, timeout, error) and records the exact command **before** launch. Read the **edition classification** (Task 3's regex) and the **solver actually used** (the `SOLVER … FROM LINE` line — for the QCP `emfl`, whatever QCP selects) from that retained listing; commit only those two values. A model with no licensed retained listing has no recorded result. Then, for each convex classification, attempt parse → translate → solve → compare with the same evidence.
 4. **Classify each result** into an existing bucket and **route** every non-match (P4 for egypt/shale; `ISSUE_933` for tricp; a new issue stub otherwise) — no fix attempted.
-5. **Do not persist**: no write to the **committed** `gamslib_status.json` and no golden regeneration committed — the throwaway worktree's DB copy *is* written by the run (that is where the recorded attribution comes from) and is discarded with the worktree. The sprint's batch is the measurement of record; this is the rehearsal.
-6. **When any model's expected bucket moves**, grep this prep plan and every Sprint-40 prep doc for that model (§7.6).
+5. **Record the measurement SHAs:** before removing the worktree, collect the `head_sha` of **every** retained invocation's `cmd.json` and write them, in full, on one `**Measured at:** <sha> …` line near the top of `COHORT_DRY_RUN.md`; a `null` `head_sha` is a failure, never omitted. The worktree must be created from a commit that **descends from Task 6's answers commit**. Task 6's *Verification* checks every recorded SHA against that commit — so the cohort **runs**, not merely the results commit, provably came after the answers.
+6. **Do not persist**: no write to the **committed** `gamslib_status.json` and no golden regeneration committed — the throwaway worktree's DB copy *is* written by the run (that is where the recorded attribution comes from) and is discarded with the worktree. The sprint's batch is the measurement of record; this is the rehearsal.
+7. **When any model's expected bucket moves**, grep this prep plan and every Sprint-40 prep doc for that model (§7.6).
 
 ### Changes
 
@@ -745,6 +767,7 @@ PY
 - [ ] Every non-match has a `kkt_residual.py` verdict and a route; no fix attempted
 - [ ] Every match has attribution showing our MCP solved
 - [ ] DB and goldens untouched — **no change on the branch vs `main` and none in the working tree, untracked included** (checked in *Verification*)
+- [ ] A `**Measured at:**` line lists the full `head_sha` of every retained invocation, and each **descends from Task 6's answers commit** (checked by Task 6's *Verification*)
 - [ ] Wall-clock per model recorded for scheduling
 - [ ] Unknowns 2.1, 2.2, 2.3, 2.4, 3.2 verified and updated in KNOWN_UNKNOWNS.md
 

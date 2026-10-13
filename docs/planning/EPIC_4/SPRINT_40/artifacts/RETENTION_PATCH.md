@@ -11,7 +11,7 @@ Provenance (license edition, solver actually used) must come from the **same inv
 
 ## What the patch does
 
-It replaces each function's `with tempfile.TemporaryDirectory() as tmpdir:` with a context manager whose **`finally`** copies the invocation's `output.lst` **and** its `_cmd.json` out of the temp directory before it is removed — so the evidence survives **every** return path: normal, `TimeoutExpired`, and other errors. `_cmd.json` (exact `cmd` — executable and input path — `cwd`, and start time) is written **into the same temp directory before GAMS launches**, so a listing and its command record are **paired by construction**.
+It replaces each function's `with tempfile.TemporaryDirectory() as tmpdir:` with a context manager whose **`finally`** copies the invocation's `output.lst` **and** its `_cmd.json` out of the temp directory before it is removed — so the evidence survives **every** return path: normal, `TimeoutExpired`, and other errors. `_cmd.json` (exact `cmd` — executable and input path — `cwd`, start time, and **`head_sha`**: the commit the worktree is checked out at, so Task 6's gate can require every measurement to descend from the owner-answers commit; a lookup failure records `null`, which fails that gate) is written **into the same temp directory before GAMS launches**, so a listing and its command record are **paired by construction**.
 
 Each invocation is retained under a **unique invocation id** — `<stem>.<time_ns>.<pid>.lst` / `.cmd.json` — so repeated invocations of the same model (a presolve retry, a follow-up solve) **never overwrite** earlier evidence; the copy **refuses** to overwrite an existing destination (`FileExistsError`). With `NLP2MCP_RETAIN_LST_DIR` unset, behaviour is unchanged.
 
@@ -43,6 +43,7 @@ Read only the **edition classification** (Task 3's non-identifying regex) and th
 | `solve_mcp`, simulated `TimeoutExpired` with a partial listing | failure · solver status 3 · `path_solve_time_limit` | the **partial** listing + `cmd.json` |
 | `verify_convexity.py --model trnsport --output …` (CLI) | `verified_convex` · solver/model status 1/1 · obj 153.675 | its own listing (SOLVER CPLEX, MODEL STATUS 1) + `cmd.json` (`gams … lo=3 LP=CPLEX`) |
 | **three** `solve_mcp` invocations of the **same** model (two normal, one timeout) | `MCP-SOLVED` ×2, `path_solve_time_limit` | **three distinct `<inv>` pairs, none overwritten**; each `cmd.json` paired with its own listing |
+| `head_sha` recorded by both paths (`solve_mcp`, verifier CLI) | — | both `cmd.json` files carry the worktree's `HEAD` SHA (checked equal to `git rev-parse HEAD`) |
 
 Bugs found by running it, not by reading it: the helper must import `os` itself (`test_solve.py` does not); it must sit **before** `if __name__ == "__main__":` (appended after the guard, the CLI called `main()` before the helper existed; inserted "after the imports" by heuristic, it landed inside a function); and a stem-only destination let a later invocation overwrite an earlier one's evidence (PR #1746 review) — now a unique id per invocation.
 
@@ -92,8 +93,17 @@ def _record_cmd(stem, cmd, cwd, tmpdir):
     -- and paired by construction to -- that invocation's own listing."""
     if _ros.environ.get("NLP2MCP_RETAIN_LST_DIR"):
         with open(_ros.path.join(tmpdir, "_cmd.json"), "w") as _f:
+            # head_sha: the commit the measurement ran from, so the blind-decision
+            # gate can require it to DESCEND from the owner-answers commit.
+            _here = _ros.path.dirname(_ros.path.abspath(__file__))
+            try:
+                import subprocess as _rsp
+                _sha = _rsp.run(["git", "-C", _here, "rev-parse", "HEAD"], capture_output=True,
+                                text=True, check=True).stdout.strip()
+            except Exception:
+                _sha = None  # a missing SHA fails the gate; never guessed
             _rjson.dump({"stem": stem, "cmd": [str(c) for c in cmd], "cwd": str(cwd),
-                         "started_ns": _rtime.time_ns()}, _f)
+                         "started_ns": _rtime.time_ns(), "head_sha": _sha}, _f)
 # --- end SCRATCH helper ---
 '''
 
