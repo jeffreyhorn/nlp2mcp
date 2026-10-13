@@ -274,10 +274,10 @@ For every model not in the MCP-gated or NLP-gated populations, a licensed run re
 2. Do a sample of currently-matching models (cold and presolve) reproduce byte-identical `MODEL STATUS` and objective licensed?
 3. Do a sample of currently-*failing* models keep their failure bucket — or does any "failure" turn out to have been a hidden license effect?
 4. Does `gams_version` (54.2.1) stay identical, so per-row provenance changes only in `license_edition`?
-5. What sample size makes "neutral" a claim rather than an anecdote, before the sprint's full licensed run tests it exhaustively?
+5. What sample size makes "neutral" a claim rather than an anecdote? *(Whatever the size, a sample cannot establish the **universal** assumption — see How to Verify.)*
 
 ### How to Verify
-After Unknown 1.1 installs the license, re-solve a stratified sample (e.g. 5 cold matches, 5 presolve matches, 1 per failure bucket) in a scratch directory and diff outcome/objective/verdict against the DB. **Positive control (synthetic — never a real gated model):** run the **same diff procedure** on Task 3's synthetic over-ceiling NLP probe, demo vs effective license; the procedure **must** report the change. A real size-refused DB model cannot serve: every such model is, by definition, in the MCP-gated or NLP-gated population, and reading its licensed outcome before Task 6's answers are committed would break the blind-decision boundary. The sprint's first full licensed run is the exhaustive test.
+After Unknown 1.1 installs the license, re-solve a stratified sample (e.g. 5 cold matches, 5 presolve matches, 1 per failure bucket) in a scratch directory and diff outcome/objective/verdict against the DB. **What the sample can and cannot settle:** this assumption is universal ("every model"), so a sample can **refute** it (❌ WRONG, with the moved rows routed) but cannot verify it. A clean sample resolves 1.5 to **🔶 PARTIALLY VERIFIED — sample-neutral at `<sha>`, universal claim routed to the sprint's first licensed full run** (Task 12 routes it; `PROJECT_PLAN.md` Sprint 40 already makes that run's license-neutrality a gate). **Never mark 1.5 ✅ VERIFIED from the sample alone.** **Positive control (synthetic — never a real gated model):** run the **same diff procedure** on Task 3's synthetic over-ceiling NLP probe, demo vs effective license; the procedure **must** report the change. A real size-refused DB model cannot serve: every such model is, by definition, in the MCP-gated or NLP-gated population, and reading its licensed outcome before Task 6's answers are committed would break the blind-decision boundary. The sprint's first full licensed run is the exhaustive test.
 
 ### Risk if Wrong
 - **KPI attribution corrupted:** a "+N" partly caused by the toolchain, booked as fixes or cohort unlocks.
@@ -312,7 +312,7 @@ All 11 goldens (`egypt`, `ferts`, `glider`, `robot`, `shale`, `sroute`, `srpchas
 5. Does `--only-solve` handle rows with `solver_version: None` without re-translating?
 
 ### How to Verify
-Re-emit each in a scratch copy and `cmp` against `data/gamslib/mcp/<model>_mcp.gms`; time each translate; derive sizes by counting equation/variable declarations in the goldens; confirm leak-gate scope membership from `check_golden_staleness.py`'s in-scope list.
+Re-emit each in a scratch copy and `cmp` against `data/gamslib/mcp/<model>_mcp.gms`; time each translate; derive sizes as **generated dimensions, not declarations**: run each golden in a scratch directory with `iterlim=0` and read the listing's `MODEL STATISTICS` — `SINGLE EQUATIONS` and `SINGLE VARIABLES`. Counting declarations in the source does **not** measure size (measured 2026-10-12 on `turkey`'s golden: **89** equation blocks vs **3,866** single equations / 3,753 single variables). The demo license prints `MODEL STATISTICS` **before** refusing an over-limit model, so this needs no license (same figures under both editions); confirm leak-gate scope membership from `check_golden_staleness.py`'s in-scope list.
 
 ### Risk if Wrong
 - **A first measurement of a stale emit**, attributed to the current code.

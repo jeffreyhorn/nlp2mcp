@@ -233,7 +233,7 @@ Every Sprint-40 acceptance criterion is a delta against this baseline, and two o
 1. **Diff the anchors:** `git diff --stat bd2af6e9 HEAD -- data/ src/ tests/` — record whether anything substantive moved since the close.
 2. **Run `kpi_block.py` and `floor_tracker.py`** and paste their output verbatim with the commit they report.
 3. **Derive both populations by predicate** and record each as a sorted named list, with model type and (for the NLP-gated set) parse/translate status today.
-4. **Record per-model size facts** for the MCP-gated cohort from the goldens (equation/variable counts by `grep`), replacing recalled figures (turkey 3,866; tricp 1,255; egypt ~3,470) with derived ones.
+4. **Record per-model size facts** for the MCP-gated cohort — **generated dimensions, not declarations**: run each golden in a scratch directory with `iterlim=0` and read the listing's `MODEL STATISTICS` — `SINGLE EQUATIONS` and `SINGLE VARIABLES`. Counting declarations in the source does **not** measure size (measured 2026-10-12 on `turkey`'s golden: **89** equation blocks vs **3,866** single equations / 3,753 single variables). The demo license prints `MODEL STATISTICS` **before** refusing an over-limit model, so this needs no license (same figures under both editions) — replacing recalled figures (turkey 3,866; tricp 1,255; egypt ~3,470) with measured ones.
 5. **Re-derive the P2 ratchet** (`make check-index-repeats`) and the leak-gate inventory (`make check-goldens`, **run alone**).
 6. **Record a verdict per figure:** ✅ reproduces / ❌ differs (with the difference routed).
 
@@ -404,7 +404,7 @@ N2=$(scan -E 'Licensee:[[:space:]]+[[:alnum:]]|node:[0-9]') || exit 2
 - [ ] No part of the license text appears in any committed file, log excerpt or PR — the automated scans in *Verification* pass **and the mandatory manual review is recorded as done**. The scans are **limited** (measured: whole lines, header fields and ID-run fragments are caught; arbitrary partial quotes mostly are not), so the review, not the scan, is the guarantee
 - [ ] A license-neutrality sample of named models outside both populations is re-solved and diffed against the DB, **with a synthetic positive control** (Task 3's over-ceiling probe, through the same diff procedure, must change) — **no gated model's result is read**; every other moved row is routed
 - [ ] All GAMS runs executed in a scratch directory, not the repo root
-- [ ] Unknowns 1.1, 1.2, 1.5 verified and updated in KNOWN_UNKNOWNS.md
+- [ ] Unknowns 1.1, 1.2 verified and updated in KNOWN_UNKNOWNS.md; **Unknown 1.5 resolved as far as a sample can** — ❌ if the sample refutes it, otherwise 🔶 *sample-neutral*, with the universal claim **routed to the first licensed full run** (never ✅ from the sample)
 
 ---
 
@@ -717,14 +717,23 @@ mcp = {m["model_id"] for m in db["models"] if (m.get("mcp_solve") or {}).get("ou
 # same type scope as the task: andean (MIP, minlp_out_of_scope) is excluded, never measured
 nlp = {m["model_id"] for m in db["models"] if (m.get("convexity") or {}).get("error") == "Model exceeds demo license limits"
        and m.get("gamslib_type") in ("LP", "NLP", "QCP")}
-missing = sorted(x for x in mcp | nlp if f"`{x}`" not in doc)
-print("missing from dry-run doc:", missing or "none")
+# One RESULT ROW per model in the "## Results" table: a row whose FIRST cell is the
+# backticked model id. A name mentioned anywhere else (prose, the confirmation
+# list) does not count -- otherwise a doc with no measurements would pass.
+import re
+sec = doc.split("## Results", 1)[1].split("\n## ", 1)[0] if "## Results" in doc else ""
+rows = re.findall(r"^\|\s*`([A-Za-z0-9_]+)`\s*\|", sec, re.M)
+want = mcp | nlp
+missing = sorted(want - set(rows)); dup = sorted({r for r in rows if rows.count(r) > 1})
+extra = sorted(set(rows) - want)
+print("missing result rows:", missing or "none", "| duplicate rows:", dup or "none", "| rows outside scope:", extra or "none")
+sys.exit(1 if (missing or dup) else 0)
 PY
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md` — per-model: edition, golden drift, MCP outcome, comparison, attribution, residual verdict, route, wall-clock
+- `docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md` — a **`## Results` table with exactly one row per in-scope model, its first cell the backticked model id**, carrying: edition, golden drift, MCP outcome, comparison, attribution, residual verdict, route, wall-clock
 - Convexity classifications for the nine in-scope NLP-gated models
 - Issue stubs (or routing notes) for every non-match; `ISSUE_933` triaged against a real compile
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.2, 2.3, 2.4, 3.2
@@ -732,7 +741,7 @@ PY
 ### Acceptance Criteria
 
 - [ ] Every result shown to come from the licensed edition — for convexity runs, by a **retained listing** whose edition classification and solver name are recorded and whose status matches the verifier JSON
-- [ ] Every member of both populations has a row, checked by identity against the DB predicate
+- [ ] Every in-scope member of both populations has **exactly one result row** in the `## Results` table (first cell = backticked model id), checked by identity against the DB predicate — a mention elsewhere in the doc does not count
 - [ ] Every non-match has a `kkt_residual.py` verdict and a route; no fix attempted
 - [ ] Every match has attribution showing our MCP solved
 - [ ] DB and goldens untouched — **no change on the branch vs `main` and none in the working tree, untracked included** (checked in *Verification*)
@@ -1063,7 +1072,7 @@ Sprint 40 has three fixed points the schedule must honour rather than discover: 
 4. **Schedule checkpoints** (Day 5, Day 10) and the final retest, with `--resolve-changed --since-commit bd2af6e9` and the **license-neutrality** check (every row outside the two cohorts keeps its outcome).
 5. **Pre-register the close rules**, each with its precondition; state which take none.
 6. **Write the day prompts** (`prompts/PLAN_PROMPTS.md`), each naming its branch, deliverable and gate, and embedding the §7 rules (PR body as a pointer; figures stated once with commit; leak gate alone; no `git stash`).
-7. **Route every unresolved Known Unknown** to the day that closes it.
+7. **Route every unresolved Known Unknown** to the day that closes it — including **1.5's universal neutrality claim** (at most 🔶 from Task 3's sample) to the day of the first licensed full run.
 8. **Commit a validator** beside the plan, as Sprint 39 did, and run it.
 
 ### Changes
