@@ -55,7 +55,7 @@ This prep plan front-loads the work whose absence would cost the most mid-sprint
 | # | Task | Priority | Est. Time | Dependencies | Sprint 40 Goal Addressed |
 |---|------|----------|-----------|--------------|--------------------------|
 | 1 | ✅ Create Sprint 40 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 10 priorities + the license unlock |
-| 2 | Re-Derive the Sprint-39 Baseline & Both License-Gated Populations by Identity | Critical | 2-3 hours | Task 1 | Every priority — the commit-pinned baseline and the two named cohorts |
+| 2 | ✅ Re-Derive the Sprint-39 Baseline & Both License-Gated Populations by Identity | Critical | 2-3 hours | Task 1 | Every priority — the commit-pinned baseline and the two named cohorts |
 | 3 | Prove the Effective License — Precedence & Per-Solver Fail-Capable Probes | Critical | 3-4 hours | Tasks 1, 2 | P1 (local) — gates P2/P3 and Tasks 5, 7 |
 | 4 | CI License-Isolation Design & Workflow Inventory | High | 3-4 hours | Tasks 1, 3 | P1 (CI) — demo-only PR jobs, trusted licensed workflow |
 | 5 | Schema 3.1.0 `license_edition` Design | High | 2-3 hours | Tasks 1, 3 | P1 (schema) — migration, writers, `db_manager`, tests |
@@ -205,9 +205,10 @@ grep -c "^# Category" "$KU"
 
 ## Task 2: Re-Derive the Sprint-39 Baseline & Both License-Gated Populations by Identity
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-10-13)
 **Priority:** Critical
 **Estimated Time:** 2-3 hours
+**Time Spent:** ~1.5 hours wall-clock (incl. the 11-min leak gate, the 6-min test suite and two 600 s translate timeouts, all waited out rather than worked)
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1
@@ -239,11 +240,22 @@ Every Sprint-40 acceptance criterion is a delta against this baseline, and two o
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md` — anchor diff, verbatim KPI/floor output, both populations by identity with predicates, the NLP-gated set's type/parse/translate table, cohort sizes as generated dimensions, the P2 ratchet breakdown, leak gate and test suite, a verdict per figure with routing
+- `KNOWN_UNKNOWNS.md` — Unknown **3.1** → 🔶 PARTIALLY WRONG with findings/evidence/decision; contribution notes under **2.1** (cohort sizes) and **4.1** (ratchet), statuses left to Tasks 7 and 10
+- `CHANGELOG.md` — Sprint 40 Prep Task 2 entry
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — the Sprint 39 baseline reproduces exactly at `366e91f3`; the NLP-gated set is smaller in practice than in scope.**
+
+**Nothing moved since the close:** `git diff bd2af6e9 HEAD -- data/ src/ tests/ scripts/` is empty (only `docs/` and `CHANGELOG.md` changed). **Every KPI reproduces** — Solve 111 · Match 95 (65 + 30) · Translate 135 · Parse 142 · floor **75** (provenance file; mechanical 65) · pst 0 · mi 7 · pse 6 · `path_solve_license` 11 · all-219 98 — and so do the P2 ratchet (**9 = baseline 9**, turkpow ×3), the leak gate (**186** in-scope clean, run alone) and the test suite (**5,444 passed, 10 skipped**, run explicitly and alone).
+
+**Both populations are now pinned by identity** (`BASELINE_RECONFIRMATION.md` §3): the 11 MCP-gated models, and the 10 NLP-gated models of which `andean` is MIP-excluded.
+
+**Two findings:**
+
+1. **Only 4 of the 9 in-scope NLP-gated models reach a translated MCP today** (Unknown 3.1 → 🔶): all nine are in scope by type and none of the six that parse is a multi-solve driver, but **6/9 parse** (`emfl`, `indus89`, `phosdis` fail on `%new%`, `Singleton Set` and `for … to …` loops) and **4/9 translate** (`airsp` and `msm` time out at 600 s, cause undiagnosed). Routed to Task 6 (the corpus brief must show what each option would actually admit), Task 7 (end-to-end only for the four) and Sprint 40 P3.
+2. **egypt's recalled size was approximate:** measured **3,447** single equations / **3,537** variables, not "~3,470". Sizes are now measured for all 11 as generated dimensions — **identical under the demo and the effective license**, so the measurement is license-free — e.g. turkey 3,866 (89 equation blocks), ferts 5,702, srpchase 4,005.
 
 ### Verification
 
@@ -286,14 +298,14 @@ test -f docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md && echo "✅ d
 
 ### Acceptance Criteria
 
-- [ ] Every close figure re-derived by tool at a stated commit, none hand-counted
-- [ ] Both populations recorded as **named lists** with the predicate that produced them
-- [ ] `andean` recorded as MIP-excluded, with the scope rule cited
-- [ ] Cohort size facts derived from the goldens, not recalled
-- [ ] The leak gate run **alone** and its scope line recorded (186 or the difference explained)
-- [ ] `make test` run **explicitly** and its `N passed, M skipped` recorded with the commit — not re-quoted from the S39 close because the task's quality gate is N/A
-- [ ] Any figure that differs from the close is routed, not silently replaced
-- [ ] Unknowns 3.1 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Every close figure re-derived by tool at a stated commit, none hand-counted
+- [x] Both populations recorded as **named lists** with the predicate that produced them
+- [x] `andean` recorded as MIP-excluded, with the scope rule cited
+- [x] Cohort size facts derived from the goldens, not recalled
+- [x] The leak gate run **alone** and its scope line recorded (186 or the difference explained)
+- [x] `make test` run **explicitly** and its `N passed, M skipped` recorded with the commit — not re-quoted from the S39 close because the task's quality gate is N/A
+- [x] Any figure that differs from the close is routed, not silently replaced
+- [x] Unknowns 3.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

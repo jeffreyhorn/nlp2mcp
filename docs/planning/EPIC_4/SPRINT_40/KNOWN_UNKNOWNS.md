@@ -327,6 +327,8 @@ Sprint 40 prep team
 ### Verification Results
 🔍 **Status:** INCOMPLETE
 
+**Contribution from Task 2 (2026-10-13, `366e91f3`) — status left to Task 7:** sizes measured as generated dimensions (golden run with `iterlim=0`, `MODEL STATISTICS`), identical under the demo and the effective license: egypt 3,447 eq / 3,537 var · ferts 5,702 / 5,702 · glider 1,531 / 1,637 · robot 1,688 / 1,694 · shale 1,956 / 1,956 · sroute 1,531 / 1,540 · srpchase 4,005 / 4,005 · tabora 1,894 / 1,924 · tfordy 3,155 / 3,157 · tricp 1,255 / 1,400 · turkey 3,866 / 3,753. Recalled turkey 3,866 and tricp 1,255 reproduce; **egypt's "~3,470" does not (3,447)**. Byte-identity, translate times and leak-gate scope membership remain Task 7's. See `BASELINE_RECONFIRMATION.md` §5.
+
 ---
 
 ## Unknown 2.2: Will the cohort's first solves yield a BOUNDED work list — every non-match residual-classified and routable — rather than open-ended diagnosis?
@@ -456,7 +458,20 @@ Read `gamslib_type` from the DB and the `solve` statement from each raw source; 
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — in scope by type ✅, but "most parse" overstates it: **6/9 parse, only 4/9 translate**
+
+**Verified by:** Sprint 40 Prep Task 2 · **Date:** 2026-10-13 · **Measured at:** `366e91f3`
+
+**Findings:**
+- **Q1 — type: ✅.** The raw sources' `solve … using` statements confirm the DB's `gamslib_type` for all nine: LP ×5 (`airsp`, `airsp2`, `indus89`, `msm`, `phosdis`), QCP ×1 (`emfl`), NLP ×3 (`jbearing`, `minsurf`, `torsion`). `andean` is MIP (`minlp_out_of_scope`) — excluded, never relaxed. **No multi-solve driver** among the six that parse, by the pipeline's own `scan_multi_solve_driver` (several have more than one `solve`: `airsp2` ×6, `msm` ×5, `airsp` ×3, `torsion` ×2 — the classifier does not count those as drivers).
+- **Q2 — parse: 6/9.** Fails: `emfl` (L36, `%new%` compile-time variable in a set range), `indus89` (L128, `Singleton Set`), `phosdis` (L609, `for(iter = 1 to 7, …)` loop syntax).
+- **Q3 — translate: 4/9** (`airsp2` 4.8 s, `jbearing` 74.2 s, `minsurf` 23.5 s, `torsion` 15.4 s). `airsp` and `msm` parse but **time out at the pipeline's 600 s** translate limit — cause not diagnosed.
+- **Q4 — duplicates:** `airsp2` is the DECIS stochastic variant of `airsp` (297 vs 170 lines, 355 differing lines) — **not** a near-duplicate; assessed separately.
+- **Q5 — `andean`:** unambiguously MIP.
+
+**Evidence:** `parse_model_file` + `scan_multi_solve_driver` per model; `python -m src.cli <raw> -o <scratch>` with a 600 s timeout; per-model times and error lines in `BASELINE_RECONFIRMATION.md` §4.
+
+**Decision:** The assumption's *scope* half holds; its *"most parse with the current grammar"* half is too optimistic for what P3 can deliver — only **4** of the nine reach a translated MCP today. Routed: **Task 6** (the corpus-entry brief must show how many models each option would actually admit, and that five need work first), **Task 7** (end-to-end dry run only for the four that translate; record the two timeouts and three parse failures as they stand), **Sprint 40 P3** (three grammar items and two undiagnosed translate timeouts).
 
 ---
 
@@ -556,6 +571,8 @@ Sprint 40 prep team
 
 ### Verification Results
 🔍 **Status:** INCOMPLETE
+
+**Contribution from Task 2 (2026-10-13, `366e91f3`) — status left to Task 10:** `make check-index-repeats` reports **P2: 9 violations across 6 models; baseline 9** (P1: 0 in 3,109 heads). Per model from `index_repeat_p2_baseline.json`: **turkpow ×3**, nonsharp ×2, dinam, egypt, gussrisk, shale ×1 each. The minting site and its layer remain Task 10's. See `BASELINE_RECONFIRMATION.md` §6.
 
 ---
 
