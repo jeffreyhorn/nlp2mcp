@@ -478,13 +478,13 @@ PR #1745's review found that both GAMS-installing workflows trigger **only on `p
 - **NEW** `docs/planning/EPIC_4/SPRINT_40/CI_LICENSE_DESIGN.md` — YAML-parsed workflow inventory; demo-exclusion catalog; `licensed-solve.yml` design; throwaway-repo branch-policy verification; hosted-vs-self-hosted assessment; PR-side change; the post-merge detection trade-off; owner checklist
 - `KNOWN_UNKNOWNS.md` — Unknown **1.3** → 🔶 PARTIALLY WRONG
 - `CHANGELOG.md` — Sprint 40 Prep Task 4 entry
-- **External, outside the repo:** throwaway repository `jeffreyhorn/nlp2mcp-envpolicy-probe-20261013` created for the branch-policy test, then neutralized — dummy secret and environment deleted, probe PR closed, repository **archived**. **Not deleted:** the `gh` token lacks `delete_repo`; deletion is an owner action (`CI_LICENSE_DESIGN.md` §7 item 6)
+- **External, outside the repo:** throwaway repository `jeffreyhorn/nlp2mcp-envpolicy-probe-20261013` created for the branch-policy test, then neutralized — dummy secret and environment deleted, probe PR closed, repository **archived**. **Not deleted:** the `gh` token lacks `delete_repo`; deletion is an owner action (`CI_LICENSE_DESIGN.md` §7 item 7)
 
 ### Result
 
 ✅ **COMPLETE — the isolation controls are verified, but the licensed tier should stay local-only for Sprint 40.**
 
-- **Inventory:** 10 workflows; **two** install GAMS (`pr19-emit-solve-validation.yml`, `presolve-divergence.yml`), both `pull_request`-only and running PR-controlled code — they stay demo-only. Only `publish-pypi.yml` uses secrets. **No `pull_request_target`** anywhere.
+- **Inventory:** 10 workflows; **two** install GAMS (`pr19-emit-solve-validation.yml`, `presolve-divergence.yml`), both `pull_request`-only and running PR-controlled code — they stay demo-only. Only `publish-pypi.yml` uses secrets — and as **repository** secrets behind a `workflow_dispatch` that can run any branch, a **pre-existing, non-GAMS exposure** recorded for the owner. **No `pull_request_target`** anywhere.
 - **Branch policy, verified empirically** in a throwaway repository: a `main`-only environment admitted `main` (`SECRET_REACHABLE len=25`, the positive control) and **refused a branch carrying its own copy of the workflow** on `push`, same-repo `pull_request` and `workflow_dispatch`. A measurement slip (reading the script echo as output) was caught by that positive control and is recorded.
 - **Demo limit masked, not excluded:** six MCP-gated models sit in PR19's soft-fail tier and license-fail on every PR as if they were emit failures → the PR-side change reports them as *skipped — over the demo ceiling*.
 - **Runners:** hosted runners are very unlikely to validate the node-locked evaluation license (owner question for GAMS); a **self-hosted runner cannot be restricted to one workflow on a personal-account repo**, and on the licensed machine any job could read the license file directly. **Recommendation: local-only licensed tier** for Sprint 40, audited by Task 5's `license_edition`; `licensed-solve.yml` is ready if a CI-usable license arrives or the repo moves to an organization.

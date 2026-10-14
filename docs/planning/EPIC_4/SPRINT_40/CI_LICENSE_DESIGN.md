@@ -8,20 +8,24 @@
 
 ## 1. Workflow inventory (from the files, parsed as YAML)
 
-| workflow | triggers | installs GAMS | secrets | runs PR-controlled code |
-|---|---|---|---|---|
-| `ci.yml` | `pull_request`, `push` | no | — | yes (checkout + `pip install` + tests) |
-| `gamslib-regression.yml` | `pull_request`, `schedule`, `workflow_dispatch` | no | — | yes on `pull_request` |
-| `golden-staleness.yml` | `pull_request` | no | — | yes |
-| `lint.yml` | `pull_request`, `push` | no | — | yes |
-| `nightly.yml` | `schedule`, `workflow_dispatch` | no | — | no PR trigger (runs the default branch) |
-| `performance-check.yml` | `pull_request` | no | — | yes |
-| `phase0-gate.yml` | `pull_request` | no | — | yes (checkout + repo script) |
-| **`pr19-emit-solve-validation.yml`** | **`pull_request`** | **yes** (54.2.1 demo) | — | **yes** |
-| **`presolve-divergence.yml`** | **`pull_request`** | **yes** (54.2.1 demo) | — | **yes** |
-| `publish-pypi.yml` | `release`, `workflow_dispatch` | no | `PYPI_API_TOKEN`, `TEST_PYPI_API_TOKEN` | no PR trigger |
+Two different questions, kept apart: does a workflow **trigger automatically on a PR**, and **can it run code from a non-default branch at all**? The second is wider. A `workflow_dispatch` runs **whatever ref the dispatcher selects**, including an unmerged same-repository branch, and every workflow here uses an unqualified `actions/checkout` (no `ref:` override), which checks out that selected ref. A `schedule` run always uses the default branch.
 
-**Two install GAMS, eight do not** — re-derived, matching Task 2's count. **Both GAMS-installing workflows trigger only on `pull_request` and run PR-controlled code** (checkout of the PR head, `pip install -e .`, repository scripts) — so neither may ever hold the license. **`pull_request_target` appears nowhere in `.github/`** (`grep -rn pull_request_target .github/` is empty). *(An earlier regex-based pass mis-read `golden-staleness.yml` as also triggering on `push` and missed `publish-pypi.yml`'s `release`; the YAML parse above is authoritative.)*
+| workflow | triggers, with branch / path / type filters | in-job filtering | GAMS | secrets | auto PR trigger | can run non-default-branch code |
+|---|---|---|---|---|---|---|
+| `ci.yml` | `push` (branches: main) · `pull_request` (branches: main) | — | no | — | yes | yes — PR head |
+| `gamslib-regression.yml` | `pull_request` (paths: grammar/parser files, `scripts/ingest_gamslib.py`, the workflow itself) · `schedule` · `workflow_dispatch` | — | no | — | yes (path-filtered) | yes — PR head; any dispatched ref |
+| `golden-staleness.yml` | `pull_request` (branches: main) | decides internally which goldens are in scope | no | — | yes | yes — PR head |
+| `lint.yml` | `push` (branches: main) · `pull_request` (branches: main) | — | no | — | yes | yes — PR head |
+| `nightly.yml` | `schedule` · `workflow_dispatch` | — | no | — | no | **yes — any dispatched ref** (schedule runs `main`) |
+| `performance-check.yml` | `pull_request` (no filters) | — | no | — | yes | yes — PR head |
+| `phase0-gate.yml` | `pull_request` (branches: main) | decides internally whether the PR needs a Phase-0 doc | no | — | yes | yes — PR head (runs the PR's own `check_phase0_doc.py`) |
+| **`pr19-emit-solve-validation.yml`** | **`pull_request`** (branches: main; paths: `src/emit/**/*.py`, `src/kkt/stationarity.py`, `src/kkt/complementarity.py`, `src/ad/derivative_rules.py`, `src/ad/constraint_jacobian.py`, the PR19 scripts, the workflow, `.github/path-solve-ci-targets.txt`) | `skip-emit-solve-ci` label bypass | **yes** (54.2.1 demo) | — | yes (path-filtered) | yes — PR head |
+| **`presolve-divergence.yml`** | **`pull_request`** (branches: main; paths: `src/emit/emit_gams.py`, `src/emit/original_symbols.py`, the divergence script + allowlist, the workflow) | — | **yes** (54.2.1 demo) | — | yes (path-filtered) | yes — PR head |
+| `publish-pypi.yml` | `release` (types: published) · `workflow_dispatch` | — | no | **`PYPI_API_TOKEN`, `TEST_PYPI_API_TOKEN`** (repository secrets, no environment) | no | **yes — any dispatched ref, with the publishing secrets** |
+
+**Two install GAMS, eight do not** — re-derived, matching Task 2's count. **Both GAMS-installing workflows trigger only on `pull_request` (to `main`, path-filtered) and run PR-controlled code** — so neither may ever hold the license. **`pull_request_target` appears nowhere in `.github/`.** *(An earlier regex-based pass mis-read `golden-staleness.yml` as also triggering on `push` and missed `publish-pypi.yml`'s `release`; the YAML parse above is authoritative.)*
+
+**Pre-existing exposure, found while inventorying — not GAMS-related:** `publish-pypi.yml` keeps the PyPI tokens as **repository** secrets and has a `workflow_dispatch` trigger with an unqualified checkout. Anyone with write access can dispatch it on an unmerged branch and that branch's code then runs with the publishing secrets. The same `main`-only environment mechanism verified in §4 closes it: move both tokens into an environment admitting only `main` (or release tags), or switch to PyPI trusted publishing. Recorded for the owner (§7); out of this task's scope to change.
 
 ## 2. Demo-motivated exclusions
 
@@ -42,9 +46,16 @@ jobs:
     runs-on: ubuntu-latest            # GitHub-hosted: a fresh VM per job
     environment: gams-licensed        # main-only deployment-branch policy (§4)
     steps:
-      - uses: actions/checkout@v4     # the default branch -- reviewed code only
+      - uses: actions/checkout@v4     # the triggering ref: main (push/dispatch) or the default branch
+                                      # (schedule); a dispatch from any other ref is refused by the
+                                      # environment before the job starts (verified in §4)
       - name: Install GAMS            # same pinned installer + SHA-256 guard as today
-        run: …
+        run: |
+          …                                         # download, verify SHA-256, install
+          echo "$GAMS_DIR" >> "$GITHUB_PATH"
+          echo "GAMS_DIR=$GAMS_DIR" >> "$GITHUB_ENV"  # persist: a shell variable does NOT survive
+                                                      # into later steps -- without this, the license
+                                                      # and cleanup steps would target /gamslice.txt
       - name: Install license (masked, never echoed)
         env: { GAMS_LICENSE: "${{ secrets.GAMS_LICENSE }}" }
         run: |
@@ -55,11 +66,15 @@ jobs:
       - name: Licensed solves
         run: …   # coverage below
       - name: Output scan (defence in depth)
-        run: …   # git grep --untracked + logs/artifacts vs a pattern file built from the secret;
-                 # positive control: the same scan run against $GAMS_DIR/gamslice.txt must hit
+        if: always()                    # run on failure too -- that is when output most needs checking
+        run: …   # outputs + logs/artifacts vs a pattern file built from the secret; tolerate an absent
+                 # license/pattern file (install may have failed) by reporting "nothing to scan" rather
+                 # than erroring; positive control: the same scan run against $GAMS_DIR/gamslice.txt must hit
       - name: Remove the license (always)
         if: always()
-        run: rm -f "$GAMS_DIR/gamslice.txt"   # plus any copy; must not outlive the job
+        run: |
+          [ -n "${GAMS_DIR:-}" ] || { echo "::warning::GAMS_DIR unset -- install failed before persisting it"; exit 0; }
+          rm -f "$GAMS_DIR/gamslice.txt"    # plus any copy; must not outlive the job
 ```
 
 - **Coverage:** both gated populations (`BASELINE_RECONFIRMATION.md` §3 — the 11 MCP-gated models and the 9 in-scope NLP-gated ones) and PR19's six gated soft-fail targets (§2).
@@ -111,4 +126,5 @@ Keeping the license out of PR jobs means **no PR can be checked against a model 
 3. **Environment (only if a CI-usable license arrives):** create `gams-licensed` with a **`main`-only** deployment-branch policy; decide whether it **requires reviewers**.
 4. **Secret placement:** store `GAMS_LICENSE` **in the environment only** — never as a repository secret.
 5. **System-directory demo file:** replace it with the full license (Task 3's recommendation), so a different user or `HOME` cannot silently fall back to the demo.
-6. **Delete the throwaway repository:** `gh auth refresh -h github.com -s delete_repo && gh repo delete jeffreyhorn/nlp2mcp-envpolicy-probe-20261013 --yes` (it is archived and holds no secret or environment).
+6. **PyPI tokens (pre-existing, not GAMS):** move `PYPI_API_TOKEN` / `TEST_PYPI_API_TOKEN` into an environment admitting only `main` (or release tags), or adopt PyPI trusted publishing — today a dispatch on any branch runs that branch's code with them (§1).
+7. **Delete the throwaway repository:** `gh auth refresh -h github.com -s delete_repo && gh repo delete jeffreyhorn/nlp2mcp-envpolicy-probe-20261013 --yes` (it is archived and holds no secret or environment).
