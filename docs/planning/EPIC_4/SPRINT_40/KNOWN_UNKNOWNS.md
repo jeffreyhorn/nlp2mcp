@@ -408,7 +408,7 @@ Sprint 40 prep team
   - **`turkey` translates in 55 s**, so S39 prep's "could not parse inside 120 s" no longer holds.
 - **Q3:** sizes as measured by Task 2 (contribution below).
 - **Q4:** the whole MCP-gated batch takes **763 s**, ~13 min (max `ferts` 184 s), so it fits a nightly slot.
-- **Q5, read from the code, not re-run:** `--only-solve` requires `nlp2mcp_translate.status == "success"` and then solves the existing MCP without re-translating, whatever `solver_version` holds.
+- **Q5, read from the code, not re-run:** `--only-solve` requires `nlp2mcp_translate.status == "success"` and then solves the existing MCP without re-translating, whatever `solver_version` holds. **Qualified:** that covers only the *initial* translate. The automatic presolve retry still **re-translates** (`--nlp-presolve`, `run_full_test.py` L924–942) after a cold MS 5 or a cold objective mismatch, so `--only-solve` is **not** a golden-only run. **No CLI flag disables the retry today:** `no_presolve_retry` is read only via `getattr(args, "no_presolve_retry", False)` (L929), argparse does not define it (`run_full_test.py --help` has no such option), and only a test sets it.
 
 **Evidence:** `COHORT_DRY_RUN.md` §Results (golden column), §Wall-clock.
 
@@ -505,7 +505,7 @@ Sprint 40 prep team
 **Verified by:** Sprint 40 Prep Task 7 · **Date:** 2026-10-14 · **Measured at:** `79eeccff` (all 53 retained invocations; descends from Task 6's answers commit `b44344a2`)
 
 **Findings:**
-- **Q1, presolve path:** **yes**. 7 of the 11 took the presolve retry (cold MS 5 or a spurious-KKT mismatch).
+- **Q1, presolve path:** **yes**. **8 of the 11** took the presolve retry (cold MS 5 or a spurious-KKT mismatch): `egypt`, `glider`, `robot`, `shale`, `srpchase` (rejected, `NO-SOLVE`), `tfordy`, `tricp`, `turkey`. It reconciles with the 25 batch invocations: 15 cold solves (11 MCP-gated + 4 NLP-gated with an MCP) + 8 MCP-gated retries + 2 NLP-gated retries (`airsp2`, `torsion`).
   - **All 4 matches** (`tfordy`, `turkey`, `airsp2`, `torsion`) are `model_optimal_presolve`, recorded `MCP-SOLVED` / `own=True`.
   - Each was re-derived from that invocation's own retained listing with `parse_solve_summaries` / `Attribution`: 1 candidate, 1 match.
 - **Q2/Q3, at size:** `turkey`, the largest member, gives **`MCP-SOLVED`**. The positional parse picks our `mcp_model` out of three summaries (CONOPT NLP, CPLEX LP, PATH MCP).
