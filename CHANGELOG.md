@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 40 Prep
 
+- **Prep Task 7 COMPLETE (2026-10-14) — both license-gated cohorts measured licensed, in a throwaway worktree; every non-match routed.** New doc: `docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md`. `src/`, `tests/` and `data/` untouched, so the quality gate is N/A.
+  - **Provenance:** 53 retained invocations, all `licensed`, all at `79eeccff` (descends from the answers commit `b44344a2`); exactly one invocation per recorded value.
+  - **MCP-gated (11):** all byte-identical to their goldens, all translate in time. **2 match** (`tfordy`, `turkey`, via presolve); 5 infeasible, 2 abort before PATH, 2 solved non-matches.
+  - **NLP-gated (9):** **all classify convex** (5 verified / 4 likely). **2 match** (`airsp2`, `torsion`); 5 never reach an MCP. ⚠ 4 are multi-solve, and `airsp2`'s classification comes from DECISM.
+  - **Residuals:** 5 × `case_b`, and 6 harness failures on defective `--nlp-presolve` emits. **0 unrouted**; 2 meet P10's rule (P4: egypt, shale).
+  - **`ISSUE_933`:** the compile errors no longer reproduce; the issue is re-scoped (tricp is now `case_b`).
+  - **Unknowns:** 2.1 ✅ · 2.2 🔶 · 2.3 ✅ · 2.4 ✅ · 3.2 ✅.
+
 - **Prep Task 6 COMPLETE (2026-10-14) — owner decisions taken blind, before Task 7.** New doc: `docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md`. `src/`, `tests/` and `data/` untouched — quality gate N/A.
   - **Floor: B.** License-unlocked matches go in a non-counting `license_unlocked` ledger; the floor stays 75; fail-before sub-rule for previously fixed emits.
   - **Corpus: A.** NLP-gated models are admitted iff the licensed verifier classifies them convex; both denominators (142 continuity + expanded) in one sentence.

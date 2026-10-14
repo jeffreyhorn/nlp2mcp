@@ -1,7 +1,7 @@
 # tricp: Translation Timeout — Triangular Graph Circle Packing
 
 **GitHub Issue:** [#933](https://github.com/jeffreyhorn/nlp2mcp/issues/933)
-**Status:** OPEN
+**Status:** OPEN — **re-scoped 2026-10-14** (Sprint 40 Prep Task 7): the compile errors below no longer reproduce; tricp now compiles, reaches PATH and is a `case_b` emit bug. See *Current Status (2026-10-14)* at the end.
 **Severity:** Medium — Model parses but translation times out (>60s)
 **Date:** 2026-02-26
 **Affected Models:** tricp
@@ -100,3 +100,15 @@ The compilation errors stem from three distinct issues in the stationarity build
 3. **$149 on `.fx` statements**: Same uncontrolled `i` issue — `sln.fx(n,n)$(not (e(n,i))) = 0` should remap the condition indices to the stationarity domain (e.g., using distinct alias indices for the two `n` positions).
 
 **Fix requires:** The stationarity builder's condition propagation needs to remap equation domain indices (`i,j` from `eq1(e(i,j))`) to the stationarity equation domain (`n,n` from `stat_slp(n,n)`).
+
+## Current Status (2026-10-14) — Sprint 40 Prep Task 7, licensed
+
+Triaged against a real compile, in a throwaway worktree under the retention patch (`docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md`):
+
+- **Translate:** 3.7 s. The committed golden is **byte-identical** to a HEAD re-emit and carries the Sprint 38 Day 11 repeated-domain fix (`slp(n,n)`).
+- **Compile: clean.** The run's own listing has **0** compile-error markers. None of the 2026-04-01 errors (`$148` ×2, `$149` ×6, `$141`/`$257`) reproduce.
+- **Solve:** PATH runs. The cold MCP is `model_infeasible` (MS 5); the `--nlp-presolve` retry is also MS 5.
+- **`kkt_residual.py`: `case_b` (emit bug).** The worst stationarity row is `stat_x(n1,k0)`, relative residual 1.69, with the same value at every `n`. ⚠ The dual-transfer self-check reports a max equality residual of 6.15e6 while marked consistent; check that first.
+
+**Re-scoped:** the open defect is no longer compilation. It is a **wrong stationarity equation for `x(n,k)`**, routed to Sprint 40 P2 as routing note **R-B-tricp**. The title and the Sprint-21 sections above describe history.
+
