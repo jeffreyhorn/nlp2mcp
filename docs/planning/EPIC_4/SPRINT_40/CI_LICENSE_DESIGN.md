@@ -2,7 +2,7 @@
 
 **Measured at:** `c8f769c4` (`main`) · **Date:** 2026-10-13/14 · **Inputs:** `LICENSE_PROBE.md` (Task 3)
 
-**Bottom line.** The `main`-only environment policy works exactly as designed — verified in a throwaway repository, with the attack case (a branch carrying its own copy of the workflow) refused on `push`, `pull_request` and `workflow_dispatch`. **But the license itself cannot reach CI safely today:** it is evaluation-grade and node-locked in shape (Task 3), so a GitHub-hosted runner is very unlikely to validate it; and the self-hosted fallback cannot be made "never eligible for PR-controlled code" on a **personal-account** repository. **Recommendation for Sprint 40: the licensed tier stays local-only** (the owner's machine), audited by Task 5's per-row `license_edition`; `licensed-solve.yml` below is the design to adopt **if** GAMS provides a CI-usable license (or the repo moves to an organization).
+**Bottom line.** The `main`-only environment policy works exactly as designed — verified in a throwaway repository, with the attack case (a branch carrying its own copy of the workflow) refused on `push`, `pull_request` and `workflow_dispatch`. **But the license itself cannot reach CI safely today:** it is evaluation-grade and node-locked in shape (Task 3). Installing it is not the obstacle: GAMS activates a license from its **access code** (`gamsgetkey <access-code> -o gamslice.txt`, against `license.gams.com`), so CI stores the code, not the file (§3). The obstacle is the license **type**: GAMS documents that a *local* license embeds the node ID of the machine it was activated on and that *"dynamic environments like Docker containers or virtual machines are unsuitable for local licenses"*, so a fresh GitHub-hosted VM per job is the wrong fit unless GAMS supplies a *network* license (§5); and the self-hosted fallback cannot be made "never eligible for PR-controlled code" on a **personal-account** repository. **Recommendation for Sprint 40: the licensed tier stays local-only** (the owner's machine), audited by Task 5's per-row `license_edition`; `licensed-solve.yml` below is the design to adopt **if** GAMS provides a CI-usable license (or the repo moves to an organization).
 
 ---
 
@@ -65,14 +65,22 @@ jobs:
           echo "GAMS_DIR=$GAMS_DIR" >> "$GITHUB_ENV"  # persist: a shell variable does NOT survive
                                                       # into later steps -- without this, the license
                                                       # and cleanup steps would target /gamslice.txt
-      - name: Install license (masked, never echoed)
-        env: { GAMS_LICENSE: "${{ secrets.GAMS_LICENSE }}" }
+      - name: Activate license from the access code (masked, never echoed)
+        env: { GAMS_ACCESS_CODE: "${{ secrets.GAMS_ACCESS_CODE }}" }
         run: |
-          while IFS= read -r l; do [ -n "$l" ] && echo "::add-mask::$l"; done <<< "$GAMS_LICENSE"
-          umask 077; printf '%s\n' "$GAMS_LICENSE" > "$GAMS_DIR/gamslice.txt"
-          grep -v '^[[:space:]]*$' "$GAMS_DIR/gamslice.txt" > "$RUNNER_TEMP/lic-patterns.txt"
-                                      # the ONE pattern file, at a FIXED path -- a second secret copy,
-                                      # so the cleanup step removes it too
+          echo "::add-mask::$GAMS_ACCESS_CODE"          # one line, so masking covers it completely
+          umask 077
+          "$GAMS_DIR/gamsgetkey" "$GAMS_ACCESS_CODE" -o "$GAMS_DIR/gamslice.txt" >/dev/null 2>&1 \
+            || { echo "::error::license activation failed"; exit 1; }   # never -v: verbose curl
+                                                        # diagnostics could echo the request
+          while IFS= read -r l; do [ -n "$l" ] && echo "::add-mask::$l"; done < "$GAMS_DIR/gamslice.txt"
+          { printf '%s\n' "$GAMS_ACCESS_CODE"; grep -v '^[[:space:]]*$' "$GAMS_DIR/gamslice.txt"; } \
+            > "$RUNNER_TEMP/lic-patterns.txt"
+                                      # the ONE pattern file, at a FIXED path -- it holds the access
+                                      # code AND the generated license lines, so it is a secret copy
+                                      # and the cleanup step removes it too
+          # Never -c/--checkout-duration: a checked-out network license cannot be returned early,
+          # so a CI checkout would hold license capacity for its whole period.
       - name: Edition check (classification only -- never raw audit or header output)
         run: …   # tiny probe, ALL output to $RUNNER_TEMP/out/ (stdout+stderr redirected, lo=2 log to
                  # file, o= listing there); scan_local (below) BEFORE printing anything; then print only
@@ -106,13 +114,14 @@ jobs:
           rm -f "$RUNNER_TEMP/lic-patterns.txt"   # first, and independent of GAMS_DIR
           [ -n "${GAMS_DIR:-}" ] || { echo "::warning::GAMS_DIR unset -- install failed before persisting it"; exit 0; }
           rm -f "$GAMS_DIR/gamslice.txt"
-          # every copy listed: the license file and the pattern file. Neither may outlive the job --
+          # every copy listed: the generated license file and the pattern file (the access code
+          # lives only in the masked env var). Neither may outlive the job --
           # on a self-hosted runner (§5) a survivor would be readable by the next job.
 ```
 
 - **Coverage:** both gated populations (`BASELINE_RECONFIRMATION.md` §3 — the 11 MCP-gated models and the 9 in-scope NLP-gated ones) and PR19's six gated soft-fail targets (§2).
 - **Never `pull_request_target` with a PR-head checkout** — it runs with the base repository's secrets while executing the PR's code, the standard exfiltration pattern. This workflow has no PR trigger at all.
-- **Secrets:** `GAMS_LICENSE` stored **in the `gams-licensed` environment only**, never as a repository secret (a repository secret is available to every workflow, including PR-triggered ones).
+- **Secrets:** `GAMS_ACCESS_CODE` (the 36-character access code GAMS delivers) stored **in the `gams-licensed` environment only**, never as a repository secret (a repository secret is available to every workflow, including PR-triggered ones). **The access code is more sensitive than a license file:** a local license file only works on the node it was activated for, while the code can activate the license on a new machine.
 - **Logs and artifacts:** no raw `gams audit`, `.lst` or `.log` license header in any job log or uploaded artifact — a CI log is a published artifact. **Ordering is the control:** every command's output goes to local files first, and only the classification (`edition=…`) and summaries derived from it reach the log — raw listings and logs are never printed. A post-hoc "scan the logs" step is not possible, since the log has already left the runner. The two scanning layers are narrower than that: masking (`::add-mask::`) and `scan_local` both catch **verbatim** secret lines only. Neither catches transformed header text (the licensee or node fields as GAMS reformats them); **capture-and-classify ordering is what keeps those out**, not the scan.
 
 ## 4. Branch-policy verification — throwaway repository
@@ -135,7 +144,11 @@ jobs:
 
 ## 5. Hosted vs self-hosted runners
 
-- **GitHub-hosted (preferred, if the license allows):** each job gets a fresh VM, discarded afterwards — the right isolation. **But Task 3 found the license node-locked in shape** (its run-time header carries node, memory and core-count fields; evaluation edition, expires 2027-09-21), so it will very likely **not validate** on a runner. This was **not** tested — installing the real license in any CI before the owner's decision would itself be the exposure this design prevents. → **Owner question for GAMS** (§7).
+- **GitHub-hosted (preferred, if the license allows):** each job gets a fresh VM, discarded afterwards — the right isolation. Installing the license there is easy (activate from the access code, §3); **whether the license then works is a question of its type.** Task 3 found it node-locked in shape (its run-time header carries node, memory and core-count fields; evaluation edition, expires 2027-09-21). GAMS's documentation is explicit about what that implies:
+  - **Local license:** activation embeds a *permanent node ID*; GAMS recomputes it at start-up and stops with a license error if it differs, and GAMS states that *"dynamic environments like Docker containers or virtual machines are unsuitable for local licenses."* Activating per job would mint a new node-bound license on every runner; whether the terms allow that, and whether each activation consumes something, is **not documented**.
+  - **Network license:** designed for shared use across machines; the job holds a session with the license server and needs **uninterrupted** access to it for the whole run (sessions not renewed within 5 minutes are freed). Hosted runners have outbound internet, so this is the type that fits hosted CI.
+  
+  Not tested: activating the real code in any CI before the owner's decision would itself be the exposure this design prevents. → **Owner question for GAMS** (§7).
 - **Self-hosted on the licensed machine — not acceptable as the repository stands.** Two independent reasons:
   1. **A runner cannot be restricted to one workflow on a personal-account repository.** Restricting a self-hosted runner to *selected workflows* is a **runner-group** setting, which GitHub offers to **organizations** (and enterprises); `jeffreyhorn/nlp2mcp` is owned by a **user**. So any workflow on any branch — a same-repo PR branch, or a fork PR once approved — can target the runner's labels and execute PR-controlled code on it. *(Per GitHub's runner-group documentation; GitHub also advises against self-hosted runners on public repositories.)*
   2. **The environment does not protect a license that lives on the machine.** On the licensed node the license is a file in the user's home directory; a job running there can read it directly, whatever the environment's branch policy. The policy guards the *secret*, not the disk.
@@ -154,10 +167,10 @@ Keeping the license out of PR jobs means **no PR can be checked against a model 
 
 ## 7. Owner checklist (for Task 6, decision 3)
 
-1. **License terms (GAMS):** may this evaluation license be used on GitHub-hosted ephemeral runners, or is it bound to this machine? If bound, can GAMS provide a CI-usable license?
+1. **License terms (GAMS):** is this evaluation license **local** or **network**? If local, may its access code be activated per job on GitHub-hosted ephemeral runners, and does each activation consume anything? If not, can GAMS provide a **network** license (or a CI-usable one) for `licensed-solve.yml`?
 2. **Runner model:** accept **local-only** licensed runs for Sprint 40 (recommended), or move the repository to an organization to enable a self-hosted runner group restricted to `licensed-solve.yml@refs/heads/main` (pinned to the ref, not just the path; §5).
 3. **Environment (only if a CI-usable license arrives):** create `gams-licensed` with a **`main`-only** deployment-branch policy; decide whether it **requires reviewers**.
-4. **Secret placement:** store `GAMS_LICENSE` **in the environment only** — never as a repository secret.
-5. **System-directory demo file:** replace it with the full license (Task 3's recommendation), so a different user or `HOME` cannot silently fall back to the demo.
+4. **Secret placement:** store the access code as `GAMS_ACCESS_CODE` **in the environment only** — never as a repository secret, and never the license file.
+5. **Machine-wide license on this machine (no file copying):** activate from the access code into the machine-wide data directory: `sudo "/Library/Frameworks/GAMS.framework/Versions/54/Resources/gamsgetkey" <access-code> -o "/Library/Application Support/GAMS/gamslice.txt"` (create the directory first). GAMS searches it **second**, after the user-level directory and before the system directory, so a different user or `HOME` no longer falls back silently to the demo. It also lives **outside** the GAMS install, so an upgrade or reinstall cannot overwrite it, removing the caution in Task 3's §5. Confirm afterwards with a `sudo -u <other user>` run of an over-ceiling probe classified `licensed`. ⚠ Same open question as item 1: whether a second activation on this machine counts against the license.
 6. **PyPI publishing (pre-existing, not GAMS):** put the publish job behind a **protected environment in every variant** — tokens as environment secrets, or a trusted publisher configured **with that environment** (trusted publishing without it still accepts a branch copy of the workflow). Then enforce authorization **outside the workflow**, because a tag supplies its own YAML: either **(A)** publish from `main` only (environment `main`-only, no `release` trigger), or **(B)** keep tag-triggered publishing with **required environment reviewers plus a tag ruleset** limiting `v*` tags to maintainers. An in-job ancestry check is additional validation only, never a substitute for (A) or (B). In either case, split build (secretless) from publish (environment + `id-token: write`, runs no repository code). Today one job holds `id-token: write` while it runs the tagged code's tests, and both a dispatch on any branch and a release from an off-`main` tag run unreviewed code with the tokens (§1).
 7. **Delete the throwaway repository:** `gh auth refresh -h github.com -s delete_repo && gh repo delete jeffreyhorn/nlp2mcp-envpolicy-probe-20261013 --yes` (it is archived and holds no secret or environment).
