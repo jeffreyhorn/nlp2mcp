@@ -117,7 +117,18 @@ Nine NLP-gated models are in scope by type: `airsp`, `airsp2`, `emfl`, `indus89`
 - 2 time out at 600 s (`airsp`, `msm`);
 - 3 fail to parse (`emfl`, `indus89`, `phosdis`).
 
-So whatever the rule, **at most 4 can reach Solve without P3 grammar or translate work.** An admitted model that cannot translate lowers Translate, Solve and Match *rates* on the new denominator.
+So whatever the rule, **at most 4 can reach Solve without P3 grammar or translate work.**
+
+**What an admission does to each rate depends on how far the model gets.** The rate definitions are conditional (`PROJECT_PLAN.md` Rolling KPIs, L2564–2567): Parse = parsed / corpus, Translate = translated / **parsed**, Solve = solved / **translated**, Match = matched / corpus.
+
+| an admitted model that… | Parse | Translate | Solve | Match |
+|---|---|---|---|---|
+| fails to parse (`emfl`, `indus89`, `phosdis` today) | ↓ | **unchanged** | **unchanged** | ↓ |
+| parses but does not translate (`airsp`, `msm` today: timeout) | — | ↓ | **unchanged** | ↓ |
+| translates but does not solve | — | — | ↓ | ↓ |
+| solves but does not match | — | — | — | ↓ |
+
+(↓ = can fall; — = the model counts in that rate's numerator and denominator alike, so a pass moves the rate up and a failure at a later stage doesn't move it.) **Parse and Match** are the only rates whose denominator is the corpus size.
 
 ### Options
 
@@ -127,13 +138,15 @@ So whatever the rule, **at most 4 can reach Solve without P3 grammar or translat
 | **written blind?** | **yes**: the rule is fixed now, and the admitted set follows mechanically | **no**: each decision is taken *after* that model's result exists, the pattern this brief exists to avoid | yes |
 | **denominators** | 142 (continuity) **and** 142 + *k* (expanded), both reported | same, *k* chosen | 142 only; the set's results reported separately |
 | **hold (§1)** | W10 `--admit` = the rule's output | `--admit` = the owner's per-model list | W10 run with **no** `--admit`; all nine evaluated in a throwaway worktree only |
-| **risk** | admits models that do not translate (rates fall on the new denominator); disclosed, not hidden | fitted to results | the corpus understates what the toolchain can now reach until Epic 5 |
+| **risk** | admits models that do not yet parse or translate, lowering Parse / Translate / Match (per the table above) on the expanded corpus; disclosed, not hidden | fitted to results | the corpus understates what the toolchain can now reach until Epic 5 |
 
-### Reporting both denominators in one sentence (A or B)
+### Reporting both corpora in one sentence (A or B)
 
-The template, on the Sprint 23–25 footnote precedent:
+**The KPI definitions do not change.** Each rate keeps its existing conditional denominator (table above), computed **within each corpus**: the continuity corpus (the 142) and the expanded corpus (142 + *k*). This brief does not replace them with end-to-end rates over 142 and 142 + *k*. That would be a separate definition change, and nobody has decided it. "Both denominators" in the owner's answer means **both corpora**: for Parse and Match the denominators are 142 and 142 + *k*; for Translate and Solve they are each corpus's parsed and translated counts.
 
-> *Match **M**/142 (**x %**) on the continuity corpus; **M′**/**142+k** (**y %**) on the expanded corpus, which admits **k** NLP-gated models by the Sprint 40 rule (footnote ⁹). Neither figure counts an admission as a recovery.*
+The template, on the Sprint 23–25 footnote precedent. **The KPI name is repeated in each clause and every figure is written as numerator/denominator**, so a checker can verify both clauses (see the exact edits):
+
+> *Match **M**/142 (**x %**) on the continuity corpus; Match **M′**/**142+k** (**y %**) on the expanded corpus, which admits **k** NLP-gated models by the Sprint 40 rule (footnote ⁹). Translate **T**/**P** (continuity) · Translate **T′**/**P′** (expanded), where **P**, **P′** are each corpus's parsed counts. Neither figure counts an admission as a recovery.*
 
 **One rule for every headline KPI** (Parse, Translate, Solve, Match): the continuity figure leads, the expanded figure follows in the same sentence, and a footnote names the admitted models and the rule.
 
@@ -146,7 +159,7 @@ The template, on the Sprint 23–25 footnote precedent:
 ### The case for C (and against A)
 
 - **Epic 4 is a fixed-scope epic in its last sprints.** A denominator change in Sprint 40 makes Sprints 41–43's targets ("≥ 64 % of pipeline scope") ambiguous unless every one of them is restated.
-- Five of the nine cannot translate today, so on the expanded corpus the rates fall for reasons that are P3 grammar work, not emit quality.
+- Five of the nine cannot translate today, so on the expanded corpus Parse, Translate and Match can fall for reasons that are P3 grammar work, not emit quality. Solve is unaffected by those five: they never reach its denominator.
 - **C gives up nothing in evidence:** the nine are still evaluated and reported, just outside the headline.
 
 ### Recommendation
@@ -159,7 +172,16 @@ The template, on the Sprint 23–25 footnote precedent:
   - **New `data/corpus_admissions.json`:** one entry per admitted model (`model_id`, `admitted_sprint: 40`, `rule` (`"verifier-convex"` for A, or the owner's note for B), `classification`, `license_edition`, `evidence`, `pr`).
   - **W10 runs with `--admit $(ids from that file)`.**
   - **`kpi_block.py` gains `--corpus continuity|current`** (default `current`). `continuity` drops ids listed in `corpus_admissions.json`, so **both denominators derive mechanically, and neither is a hand count.** Add a test that `continuity` on today's DB equals today's `current` (142).
-  - **`check_doc_figures.py` gains a `candidates_continuity` fact** beside `candidates`.
+  - **`check_doc_figures.py` becomes corpus-aware.** Today it has **no** `candidates` fact, and its `Match` pattern takes only the figure right after the word "Match", checked against the one corpus `kpi_block` derives. So a correct two-clause sentence whose figures differ ("Match *M*/142 …; Match *M′*/143 …", with *M* ≠ *M′*) would be **rejected**, and an unlabelled second figure would go **unchecked**. Required:
+    - It derives **both** fact sets, `compute_kpis` over each corpus (`--corpus continuity` and `current`), including each KPI's denominator: corpus size for Parse/Match, parsed count for Translate, translated count for Solve.
+    - **A figure written `N/D` is matched to its corpus by its denominator `D`.** `D` must equal that KPI's denominator in one of the two corpora, and `N` is compared with that corpus's numerator. A `D` matching **neither** corpus is an error. When both corpora share a denominator (e.g. no admitted model parses, so the parsed counts are equal), their numerators are also equal, so the match is unambiguous.
+    - **A bare figure without `/D`** keeps today's behaviour, checked against the **continuity** corpus, since continuity leads every sentence.
+    - **Tests:**
+      - a correct two-clause sentence with **differing** figures passes;
+      - a wrong numerator in the **first** clause fails, and a wrong numerator in the **second** clause fails;
+      - a denominator matching neither corpus fails;
+      - the equal-denominator case passes;
+      - a bare figure is checked against continuity.
   - **A `PROJECT_PLAN.md` Rolling-KPIs footnote ⁹** for the S40 column, plus the S41–S43 target lines restated as "≥ x % (continuity) / ≥ y % (expanded)".
 - **If C:**
   - No admission edit; W10 runs with **no** `--admit`.
