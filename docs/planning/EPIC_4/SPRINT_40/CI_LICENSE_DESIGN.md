@@ -10,22 +10,27 @@
 
 Two different questions, kept apart: does a workflow **trigger automatically on a PR**, and **can it run code from a non-default branch at all**? The second is wider. A `workflow_dispatch` runs **whatever ref the dispatcher selects**, including an unmerged same-repository branch, and every workflow here uses an unqualified `actions/checkout` (no `ref:` override), which checks out that selected ref. A `schedule` run always uses the default branch.
 
-| workflow | triggers, with branch / path / type filters | in-job filtering | GAMS | secrets | auto PR trigger | can run non-default-branch code |
+| workflow | triggers, with **every** branch / path / type filter (verbatim from the YAML) | in-job filtering | GAMS | secrets | auto PR trigger | can run non-default-branch code |
 |---|---|---|---|---|---|---|
 | `ci.yml` | `push` (branches: main) · `pull_request` (branches: main) | — | no | — | yes | yes — PR head |
-| `gamslib-regression.yml` | `pull_request` (paths: grammar/parser files, `scripts/ingest_gamslib.py`, the workflow itself) · `schedule` · `workflow_dispatch` | — | no | — | yes (path-filtered) | yes — PR head; any dispatched ref |
+| `gamslib-regression.yml` | `pull_request` (paths: `src/gams/grammar.lark`, `src/gams/parser.py`, `src/ir/parser.py`, `src/ir/symbols.py`, `src/ir/ast.py`, `scripts/ingest_gamslib.py`, `scripts/check_parse_rate_regression.py`, `.github/workflows/gamslib-regression.yml`) · `schedule` · `workflow_dispatch` | — | no | — | yes (path-filtered) | yes — PR head; any dispatched ref |
 | `golden-staleness.yml` | `pull_request` (branches: main) | decides internally which goldens are in scope | no | — | yes | yes — PR head |
 | `lint.yml` | `push` (branches: main) · `pull_request` (branches: main) | — | no | — | yes | yes — PR head |
 | `nightly.yml` | `schedule` · `workflow_dispatch` | — | no | — | no | **yes — any dispatched ref** (schedule runs `main`) |
 | `performance-check.yml` | `pull_request` (no filters) | — | no | — | yes | yes — PR head |
 | `phase0-gate.yml` | `pull_request` (branches: main) | decides internally whether the PR needs a Phase-0 doc | no | — | yes | yes — PR head (runs the PR's own `check_phase0_doc.py`) |
-| **`pr19-emit-solve-validation.yml`** | **`pull_request`** (branches: main; paths: `src/emit/**/*.py`, `src/kkt/stationarity.py`, `src/kkt/complementarity.py`, `src/ad/derivative_rules.py`, `src/ad/constraint_jacobian.py`, the PR19 scripts, the workflow, `.github/path-solve-ci-targets.txt`) | `skip-emit-solve-ci` label bypass | **yes** (54.2.1 demo) | — | yes (path-filtered) | yes — PR head |
-| **`presolve-divergence.yml`** | **`pull_request`** (branches: main; paths: `src/emit/emit_gams.py`, `src/emit/original_symbols.py`, the divergence script + allowlist, the workflow) | — | **yes** (54.2.1 demo) | — | yes (path-filtered) | yes — PR head |
-| `publish-pypi.yml` | `release` (types: published) · `workflow_dispatch` | — | no | **`PYPI_API_TOKEN`, `TEST_PYPI_API_TOKEN`** (repository secrets, no environment) | no | **yes — any dispatched ref, with the publishing secrets** |
+| **`pr19-emit-solve-validation.yml`** | **`pull_request`** (branches: main; paths: `src/emit/**/*.py`, `src/kkt/stationarity.py`, `src/kkt/complementarity.py`, `src/ad/derivative_rules.py`, `src/ad/constraint_jacobian.py`, `scripts/ci/parse_pr19_targets.py`, `scripts/ci/run_pr19_solves.py`, `.github/workflows/pr19-emit-solve-validation.yml`, `.github/path-solve-ci-targets.txt`) | `skip-emit-solve-ci` label bypass | **yes** (54.2.1 demo) | — | yes (path-filtered) | yes — PR head |
+| **`presolve-divergence.yml`** | **`pull_request`** (branches: main; paths: `src/emit/emit_gams.py`, `src/emit/original_symbols.py`, `scripts/diagnostics/check_presolve_divergence.py`, `scripts/diagnostics/presolve_divergence_allowlist.txt`, `.github/workflows/presolve-divergence.yml`) | — | **yes** (54.2.1 demo) | — | yes (path-filtered) | yes — PR head |
+| `publish-pypi.yml` | `release` (types: published) · `workflow_dispatch` | — | no | **`PYPI_API_TOKEN`, `TEST_PYPI_API_TOKEN`** (repository secrets, no environment) | no | **yes, two ways, both in the job that receives the publishing secrets:** any **dispatched** ref; and on `release: published`, the **release tag's commit** — which need not be on `main` |
 
 **Two install GAMS, eight do not** — re-derived, matching Task 2's count. **Both GAMS-installing workflows trigger only on `pull_request` (to `main`, path-filtered) and run PR-controlled code** — so neither may ever hold the license. **`pull_request_target` appears nowhere in `.github/`.** *(An earlier regex-based pass mis-read `golden-staleness.yml` as also triggering on `push` and missed `publish-pypi.yml`'s `release`; the YAML parse above is authoritative.)*
 
-**Pre-existing exposure, found while inventorying — not GAMS-related:** `publish-pypi.yml` keeps the PyPI tokens as **repository** secrets and has a `workflow_dispatch` trigger with an unqualified checkout. Anyone with write access can dispatch it on an unmerged branch and that branch's code then runs with the publishing secrets. The same `main`-only environment mechanism verified in §4 closes it: move both tokens into an environment admitting only `main` (or release tags), or switch to PyPI trusted publishing. Recorded for the owner (§7); out of this task's scope to change.
+**Pre-existing exposure, found while inventorying — not GAMS-related:** `publish-pypi.yml` keeps the PyPI tokens as **repository** secrets and checks out its triggering ref unqualified. Two paths reach those secrets with code that may not be on `main`: a `workflow_dispatch` on any branch, and a `release: published` whose tag points at a commit off `main`. **What does and does not close it:**
+
+- **A protected environment is required in every variant.** Put the publish job behind an environment, and keep the credentials there: the tokens as **environment** secrets, or — for PyPI trusted publishing — the trusted publisher configured **with that environment name**. Trusted publishing alone does **not** close it: PyPI matches the publisher by repository, workflow file and (optionally) environment, not by ref, so without a required environment a branch copy of the workflow would still be accepted.
+- **"Admit release tags" is not enough on its own:** a tag-pattern policy proves the ref is a tag, not that the tag points at a reviewed commit on `main`. Either **publish from `main`** (environment admitting `main` only; build from the `main` commit the release tag must equal, checked in-job with `git merge-base --is-ancestor`), or add **governance that excludes untrusted tag commits** — required reviewers on the environment, plus tag protection so only maintainers can create release tags.
+
+Recorded for the owner (§7); out of this task's scope to change.
 
 ## 2. Demo-motivated exclusions
 
@@ -112,7 +117,7 @@ jobs:
 
 - **Rename** the step from *"Install GAMS demo"* to *"Install GAMS (demo edition)"* and keep the pinned installer and its SHA-256 guard.
 - **Replace the raw `gams audit lo=2` print** with an **edition classification only** (`edition=demo` / `edition=licensed`, from Task 3's regex on a tiny probe listing). Raw audit output can carry the licensee, license ID, license path and node fields; a CI log is published.
-- **Skip with a notice, not a failure, when the demo refuses a model:** detect the refusal line (`**** The model exceeds the demo license limits …`) in `run_pr19_solves.py` and report the model as *skipped — over the demo ceiling* (a `::notice::`), so PR19's six gated targets stop masquerading as emit failures. Their licensed coverage moves to the licensed tier (local-only for now).
+- **Skip with a notice, not a failure, when the demo refuses a model** *(to implement in P1 — `run_pr19_solves.py` has no refusal detection today and records these runs as ordinary failures)*: detect the refusal line (`**** The model exceeds the demo license limits …`) in `run_pr19_solves.py` and report the model as *skipped — over the demo ceiling* (a `::notice::`), so PR19's six gated targets stop masquerading as emit failures. Their licensed coverage moves to the licensed tier (local-only for now).
 - **No secrets** in either workflow — already true; keep it so.
 
 ### The detection trade-off, stated
@@ -126,5 +131,5 @@ Keeping the license out of PR jobs means **no PR can be checked against a model 
 3. **Environment (only if a CI-usable license arrives):** create `gams-licensed` with a **`main`-only** deployment-branch policy; decide whether it **requires reviewers**.
 4. **Secret placement:** store `GAMS_LICENSE` **in the environment only** — never as a repository secret.
 5. **System-directory demo file:** replace it with the full license (Task 3's recommendation), so a different user or `HOME` cannot silently fall back to the demo.
-6. **PyPI tokens (pre-existing, not GAMS):** move `PYPI_API_TOKEN` / `TEST_PYPI_API_TOKEN` into an environment admitting only `main` (or release tags), or adopt PyPI trusted publishing — today a dispatch on any branch runs that branch's code with them (§1).
+6. **PyPI publishing (pre-existing, not GAMS):** put the publish job behind a **protected environment in every variant** — tokens as environment secrets, or a trusted publisher configured **with that environment** (trusted publishing without it still accepts a branch copy of the workflow). Then either publish **from `main`** (in-job check that the release commit is on `main`), or add reviewer + tag-protection governance so an untrusted tag commit cannot publish. Today both a dispatch on any branch and a release from an off-`main` tag run unreviewed code with the tokens (§1).
 7. **Delete the throwaway repository:** `gh auth refresh -h github.com -s delete_repo && gh repo delete jeffreyhorn/nlp2mcp-envpolicy-probe-20261013 --yes` (it is archived and holds no secret or environment).
