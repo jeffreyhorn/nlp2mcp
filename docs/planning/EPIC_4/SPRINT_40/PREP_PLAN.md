@@ -941,9 +941,9 @@ A Phase-0 gate cannot make a non-general fix general, and it cannot make the sec
   - a **narrowed** discriminator (the blanket actually covers the cell, evaluated at emit time from static set order, **and** the demand differs from the blanket value) leaves robot and all five source-pattern false positives (otpop, springchain, catmix, ganges, gangesx) **byte-identical**;
   - a **positional** `ord`/`card` form has **no labels**;
   - but it still enumerates cells, which is an owner judgment for any future landing.
-- **The second defect is an emit defect, not dynamics:** `kkt_residual.py` with the collision removed gives **`case_b` at `stat_step`** (rel 9.66). **The same `stat_step` row leads robot's, glider's and rocket's `case_b` verdicts.** That is a four-model COPS time-step class, **untracked**, so it needs an issue.
+- **The second defect is an emit defect, not dynamics:** `kkt_residual.py` with the collision removed gives **`case_b` at `stat_step`** (rel 9.66). **The same row is robot's worst `case_b` row**, so the class is confirmed for **two** COPS models (lnts, robot). glider (`stat_step` second) and rocket (current verdict `CASE_C_OBJDEF`, `stat_step` second) are unconfirmed candidates. **Untracked**, so it needs an issue.
 - **robot:** the Day-5 candidate stays MS 5 (same bucket as Task 7's baseline). **springchain:** identical solves (MS 1, 289 iterations, −185.446).
-- **For Task 12:** **P5 +1 → +0**, and redirect the freed budget toward the `stat_step` class, which bounds four models. A scheduling recommendation, not a decision.
+- **For Task 12:** **P5 +1 → +0**, and redirect the freed budget toward the `stat_step` class (two confirmed models, two candidates). A scheduling recommendation, not a decision.
 
 ### Verification
 

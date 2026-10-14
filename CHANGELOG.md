@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **The banked diff reproduces Day 5 byte for byte** on `main` (lnts +292 B, robot +135 B, springchain +45 B), and a gate changes neither REPLAN condition (Unknown 5.1 ❌).
   - **The probe still confirms the collision on `main`** (C1–C3; MS 4 @ iteration 0).
   - **Symbolic guard (scratch, never landed):** a narrowed emit-time discriminator leaves robot and all five source-pattern false positives (otpop, springchain, catmix, ganges, gangesx) byte-identical; a positional form has no labels but still enumerates cells (Unknown 5.2 🔶).
-  - **The "second defect" is an emit defect:** `case_b` at **`stat_step`** (rel 9.66). The same row leads robot's, glider's and rocket's verdicts, an untracked four-model COPS class (Unknown 5.3 ✅).
+  - **The "second defect" is an emit defect:** `case_b` at **`stat_step`** (rel 9.66). The same row is robot's worst `case_b` row, an untracked class confirmed for two COPS models; glider and rocket (current verdict `CASE_C_OBJDEF`) are unconfirmed candidates (Unknown 5.3 ✅).
 
 - **Prep Task 7 COMPLETE (2026-10-14) — both license-gated cohorts measured licensed, in a throwaway worktree; every non-match routed.** New doc: `docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md`. `src/`, `tests/` and `data/` untouched, so the quality gate is N/A.
   - **Provenance:** 53 retained invocations, all `licensed`, all at `79eeccff` (descends from the answers commit `b44344a2`); exactly one invocation per recorded value.

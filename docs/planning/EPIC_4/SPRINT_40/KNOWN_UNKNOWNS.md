@@ -948,7 +948,7 @@ Reproduce the 364-row `INFES` state from Day 5's candidate in a scratch branch; 
 Sprint 40 prep team
 
 ### Verification Results
-✅ **Status:** VERIFIED (the second branch) — the second defect is **separate**, and its existence **removes the +1**. But it is **not lnts's dynamics.** It is an **emit (stationarity) defect at `stat_step`**, shared by four COPS time-step models.
+✅ **Status:** VERIFIED (the second branch) — the second defect is **separate**, and its existence **removes the +1**. But it is **not lnts's dynamics.** It is an **emit (stationarity) defect at `stat_step`**, confirmed in two COPS time-step models (lnts, robot), with glider and rocket as unconfirmed candidates.
 
 **Verified by:** Sprint 40 Prep Task 8 · **Date:** 2026-10-14 · **Measured at:** `b134b8b6` (all GAMS invocations licensed, retention-patched, in a scratch worktree; sketch `src/` uncommitted on a never-pushed scratch branch)
 
@@ -957,8 +957,9 @@ Sprint 40 prep team
   - With the collision removed, lnts is still MS 5 (Day-5 candidate @ 1,508 iterations, 365 `INFES` rows by this counter vs Day 5's 364; narrowed sketch @ 226, 208 rows).
   - `kkt_residual.py` gives **`case_b`**, dual transfer consistent, worst row **`stat_step` rel 9.66**; the next four listed rows are below 0.008.
   - The `velo1_eqn` / `tf_eqn` `INFES` rows are downstream of a wrong `stat_step`.
-  - **The same `stat_step` row leads the `case_b` verdict for robot** (rel 10.1, Task 7), **glider** (second row, 0.38, Task 7) and **rocket** (0.497, `ISSUE_1462`). All are COPS models with `tf =e= step*nh`.
-- **Q2:** **untracked.** `ISSUE_1694` calls it "dynamics"; `ISSUE_1462` attributes rocket's residual to the `_fx_`-at-`h0` warm start. **Needs an issue.**
+  - **The same `stat_step` row is the worst `case_b` row for robot** (rel 10.1, Task 7), so the class is **confirmed for lnts and robot** (COPS, `tf =e= step*nh`).
+  - **Unconfirmed candidates:** **glider** (`case_b`, but `stat_step` is second, 0.38) and **rocket**, whose current verdict is **`CASE_C_OBJDEF`** (worst `stat_ht(h0)`, `stat_step` second at 0.497; `SPRINT_38/ROCKET_CONSULTATION_EXTERNAL.md`, superseding `ISSUE_1462`'s Sprint-29 `case_b`).
+- **Q2:** **untracked.** `ISSUE_1694` calls it "dynamics"; `ISSUE_1462` records rocket as `CASE_C_OBJDEF` (latest). **Needs an issue.**
 - **Q3, robot:**
   - **Baseline:** Task 7's committed row (`model_infeasible` MS 5, `MCP-FAILED`, `case_b`; provenance `robot_mcp.1792010281137925000.13402`·`79eeccff`).
   - **Day-5 candidate emit**, solved licensed here: MS 5 @ 27,417 iterations, objective 11.464 vs NLP 9.1469. **Same bucket, so not harmful.**
@@ -969,7 +970,7 @@ Sprint 40 prep team
 
 **Evidence:** `LNTS_LANDABILITY.md` §4.
 
-**Decision:** lnts is banked behind the `stat_step` class. Task 12 decides whether P5's freed budget goes to that class, which bounds four models.
+**Decision:** lnts is banked behind the `stat_step` class. Task 12 decides whether P5's freed budget goes to that class, which bounds two confirmed models (plus two candidates).
 
 ---
 
