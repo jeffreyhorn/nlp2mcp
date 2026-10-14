@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 40 Prep
 
+- **Prep Task 9 COMPLETE (2026-10-14) — sarf Jacobian design: the non-termination is one unfiltered loop.** New docs: `docs/planning/EPIC_4/SPRINT_40/SARF_JACOBIAN_DESIGN.md` and `artifacts/SARF_PROFILING_HARNESS.md`. `src/` and `tests/` untouched, and no `*.py` in the PR, so the quality gate is N/A.
+  - **Root cause:** Sprint 38's referenced-instance filter covers only `_compute_equality_jacobian`. **`_compute_inequality_jacobian` iterates all 369,024 declared `task` instances for 792 rows**, i.e. 292.3 M differentiations (~36 h).
+  - **Prototype (in memory, never landed):** filtering it is byte-identical on the fixture and makes sarf's Jacobian complete (158,666 calls). Behind it: a dense `validate_jacobian_entries` scan (113 s), then a **`RecursionError`** in recursive `simplify`.
+  - **Fixture:** declared-cardinality sweep with the active set fixed; inequality work is linear in declared size, and flat after the filter; golden hashes recorded.
+  - **`gradient.py:453`** is still dead (static check + leak-gate-corpus coverage).
+  - **Re-estimate 14–24 h;** +1 Translate projected only conditionally. Unknowns 6.1 🔶 · 6.2 ✅ · 6.3 🔶.
+
 - **Prep Task 8 COMPLETE (2026-10-14) — lnts: verdict C, not landable this sprint; remove the +1 Solve from P5.** New doc: `docs/planning/EPIC_4/SPRINT_40/LNTS_LANDABILITY.md`. `src/` and `tests/` untouched, so the quality gate is N/A.
   - **The banked diff reproduces Day 5 byte for byte** on `main` (lnts +292 B, robot +135 B, springchain +45 B), and a gate changes neither REPLAN condition (Unknown 5.1 ❌).
   - **The probe still confirms the collision on `main`** (C1–C3; MS 4 @ iteration 0).

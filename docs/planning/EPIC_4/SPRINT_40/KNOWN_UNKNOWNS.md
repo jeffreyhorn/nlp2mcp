@@ -1004,7 +1004,23 @@ Profile sarf with a hard time box (e.g. 10 minutes under `cProfile`/`py-spy`), a
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — the unbounded cost **is** all inside `compute_constraint_jacobian`, in **one** loop that iterates the full rather than the active set. But **"70.9 %" is not a property of sarf.** The run never ends, so the share depends on the cap: **52.5 % at 600 s** here, 70.9 % at Sprint 39's 900 s, tending to 100 %.
+
+**Verified by:** Sprint 40 Prep Task 9 · **Date:** 2026-10-14 · **Measured at:** `8fda6f9d` (scratch harnesses outside the repo; `src/` untouched; load averages recorded per run)
+
+**Findings:**
+- **Q1:** `compute_constraint_jacobian` is 315.2 s of a 600 s `cProfile` window (52.5 %). The positive control (an inserted 5 s sleep) is attributed 5.005 s.
+- **Q2, steady-state self time:** `simplify` 20.9 % · `CaseInsensitiveDict.__contains__` 10.3 % (+ `__getitem__`, `lower`) · `_is_concrete_instance_of` 8.7 % · `isinstance` 8.2 % · import re-resolution 7.1 % · `_diff_sum` 5.6 % · `resolve_set_members` 4.5 %. `_substitute_indices` is not material, and enumeration is 5.7 s total.
+- **Q3:** **`_compute_inequality_jacobian` and `_compute_bound_jacobian` iterate every declared instance.** Sprint 38 Day 7's referenced-instance filter (#1385) was applied **only** to `_compute_equality_jacobian`.
+  - sarf has **792 inequality rows** that reference `task` (369,024 declared), so **292.3 M** differentiations are required, against 1.64 M done by 900 s (~36 h at the measured rate).
+  - The filtered equality path **completes** (122,866 calls).
+  - Also O(declared): the **objective gradient** (369,165 calls) and the **dense `validate_jacobian_entries`** scan (~453 M probes).
+- **Q4:** **nothing.** `src/ad/` is unchanged since 2026-08-25, which predates Sprint 39's measurement. The #1737/#1741 guards are in other files.
+- **Q5:** **yes.** 0–120 s is **parsing** (Earley); after that it is **AD only**.
+
+**Evidence:** `SARF_JACOBIAN_DESIGN.md` §1, §2.
+
+**Decision:** P6 targets the named entry points E1–E4 (filter the inequality and bound paths with the existing R1/R2 construction via one shared helper; filter the gradient; validate sparsely). See Unknown 6.3 for what still stands in the way of +1 Translate.
 
 ---
 
@@ -1035,7 +1051,22 @@ Build or select the fixture; **hold the active (referenced) set fixed and scale 
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — a synthetic fixture reproduces the shape, terminates in seconds before and after, and shows the O(declared) → O(active) difference **exactly**.
+
+**Verified by:** Sprint 40 Prep Task 9 · **Date:** 2026-10-14 · **Measured at:** `8fda6f9d` (scratch harnesses outside the repo; `src/` untouched; load averages recorded per run)
+
+**Findings:**
+- **Q1:** declared ≫ active. sarf's `task` is 369,024 declared, while each row references a small product of sum binders.
+- **Q2:** not needed; a synthetic generator gives exact control.
+- **Q3:** the fixture is `x(i,j)` with `|j| = N` and every row referencing only `x(i,a)`, `a = j1*j5`. Active stays 15 while declared = 3N, for N = 100, 400, 1,600, 6,400.
+  - **Inequality-path differentiations: 1,200 / 4,800 / 19,200 / 76,800**, exactly 4 rows × 3N, so **linear in declared size**.
+  - The equality path is flat at 16. Translate time: 1.4 s → 14.5 s.
+- **Q4:** **yes.** With the filter prototyped in memory, inequality calls are **16 at every size** and the emits are **byte-identical** to the fail-before golden (sha256 recorded per size).
+  - **The golden also caught a real prototype bug**: a mis-indented insertion silently dropped a whole constraint.
+
+**Evidence:** `SARF_JACOBIAN_DESIGN.md` §3, §6.
+
+**Decision:** the fixture and its four hashes are P6's fail-before and correctness gate.
 
 ---
 
@@ -1065,7 +1096,28 @@ Coverage run over the leak-gate corpus for `gradient.py`; read the call graph of
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — **`gradient.py:453` is still dead** ✅, and the O(active) filter **does** fit one commit, being byte-identical (it skips only zero derivatives). But **landing it does not complete sarf**. Two further, never-reached defects appear behind it, so the change that delivers +1 Translate is **not** one commit.
+
+**Verified by:** Sprint 40 Prep Task 9 · **Date:** 2026-10-14 · **Measured at:** `8fda6f9d` (scratch harnesses outside the repo; `src/` untouched; load averages recorded per run)
+
+**Findings:**
+- **Q1, static:** the only references are a docstring and one integration test; no production caller, no `getattr` or string reference.
+- **Q1, coverage of `src/ad/gradient.py`:**
+  - over the leak-gate corpus (186 goldens: 146 cold + 40 presolve), **all 186 measured** (181 at a 900 s cap, 5 re-run at 2,400 s);
+  - **L287 ran** (`compute_objective_gradient`: 27 of 28 statements, the positive control);
+  - `compute_gradient_for_expression` executed only its `def` line;
+  - **L453 never executed**;
+  - the five slow models (dinam, ferts, ganges, gangesx, turkpow) completed at 2,400 s, and the combined result is unchanged: **L453 never executed**.
+- **Q2, what must change together:**
+  - **for the filter, nothing.** Zero derivatives are never stored, and the column set, `col_id`s and order are untouched, so E1 + E2 is self-contained, with one shared helper rather than copies;
+  - **but sarf with the filter prototyped** completes its Jacobian and then hits a **dense `validate_jacobian_entries` scan (113 s)** and a **`RecursionError` in the recursive `simplify`**, reached from `build_stationarity_equations`' indexed branch, after ~450 s.
+- **Q3:** no flag is needed for E1–E4, because byte-identity is the proof. A flag is advisable for the simplify fix, which touches every emit.
+
+**Evidence:** `SARF_JACOBIAN_DESIGN.md` §3, §4, §5, §8.
+
+**Decision:**
+- P6 lands E1–E4 (+ the import hoists) as byte-identical, fixture-gated changes, and diagnoses the recursion as a bounded item.
+- **+1 Translate is projected only if the recursion fix lands and sarf meets ≤ 300 s.** Routed to Task 12.
 
 ---
 
