@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 40 Prep
 
+- **Prep Task 3 COMPLETE (2026-10-13) — the effective license proven, per solver; edition discriminator found; neutrality sample clean.** New doc: `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md`. `src/` and `tests/` untouched — quality gate N/A.
+  - **Precedence (Unknown 1.1 ✅):** the user-level `~/Library/Application Support/GAMS/gamslice.txt` is effective; the system-directory demo is the fallback (user file moved aside under a restore trap → over-ceiling probe refused; restored → solves, SHA-256 identical). All pipeline paths resolve to the one 54.2.1 binary.
+  - **Per-solver probes:** LP 2,500 / NLP, QCP, MCP 1,500 refused on the demo (verbatim refusal lines state the ceilings: 2,000 linear, 1,000 nonlinear) and solved under the license with CPLEX, CONOPT, CONOPT (the default QCP solver) and PATH — no solver-selective gap.
+  - **Edition discriminator (Unknown 1.2 ✅):** non-identifying `.lst` markers (`USER: GAMS Demo,` / the refusal line vs. a non-demo `USER:` prefix, never captured); 20/20 paired listings across probe, convexity, MCP and presolve stages; inverted control fails 20/20.
+  - **Neutrality sample (Unknown 1.5 🔍, routed):** 13 non-gated models through the real pipeline with the retention patch — 20/20 invocations licensed, 0/13 rows changed vs the demo-era DB; synthetic positive control reports the change. Universal claim routed to the first licensed full run.
+  - **Owner recommendation:** replace the system-directory demo file so a different user or `HOME` cannot silently fall back to the demo.
+
 - **Prep Task 2 COMPLETE (2026-10-13) — Sprint 39 baseline re-derived at `366e91f3`; both license-gated populations pinned by identity.** New doc: `docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md`. `src/` and `tests/` untouched — quality gate N/A, but `make test` run explicitly as a baseline figure.
   - **Everything reproduces:** anchor diff `bd2af6e9..HEAD -- data/ src/ tests/ scripts/` empty; Solve 111 · Match 95 (65 + 30) · Translate 135 · Parse 142 · floor 75 (provenance file) · pst 0 · mi 7 · pse 6 · `path_solve_license` 11 · all-219 98; P2 ratchet 9 = baseline 9 (turkpow ×3); leak gate 186 in-scope clean (run alone); `make test` 5,444 passed, 10 skipped (run alone).
   - **Populations by identity:** 11 MCP-gated (egypt, ferts, glider, robot, shale, sroute, srpchase, tabora, tfordy, tricp, turkey); 10 NLP-gated, `andean` MIP-excluded, 9 in scope.
