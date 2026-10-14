@@ -241,12 +241,12 @@ Every Sprint-40 acceptance criterion is a delta against this baseline, and two o
 ### Changes
 
 - **NEW** `docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md` — anchor diff, verbatim KPI/floor output, both populations by identity with predicates, the NLP-gated set's type/parse/translate table, cohort sizes as generated dimensions, the P2 ratchet breakdown, leak gate and test suite, a verdict per figure with routing
-- `KNOWN_UNKNOWNS.md` — Unknown **3.1** → 🔶 PARTIALLY WRONG with findings/evidence/decision; contribution notes under **2.1** (cohort sizes) and **4.1** (ratchet), statuses left to Tasks 7 and 10
+- `KNOWN_UNKNOWNS.md` — Unknown **3.1** → ✅ VERIFIED (in scope, and most parse), with the 4/9 translate gap recorded as a separate routed finding; contribution notes under **2.1** (cohort sizes) and **4.1** (ratchet), statuses left to Tasks 7 and 10
 - `CHANGELOG.md` — Sprint 40 Prep Task 2 entry
 
 ### Result
 
-✅ **COMPLETE — the Sprint 39 baseline reproduces exactly at `366e91f3`; the NLP-gated set is smaller in practice than in scope.**
+✅ **COMPLETE — the Sprint 39 baseline reproduces exactly at `366e91f3`; Unknown 3.1 holds, but only 4 of the 9 NLP-gated models translate today.**
 
 **Nothing moved since the close:** `git diff bd2af6e9 HEAD -- data/ src/ tests/ scripts/` is empty (only `docs/` and `CHANGELOG.md` changed). **Every KPI reproduces** — Solve 111 · Match 95 (65 + 30) · Translate 135 · Parse 142 · floor **75** (provenance file; mechanical 65) · pst 0 · mi 7 · pse 6 · `path_solve_license` 11 · all-219 98 — and so do the P2 ratchet (**9 = baseline 9**, turkpow ×3), the leak gate (**186** in-scope clean, run alone) and the test suite (**5,444 passed, 10 skipped**, run explicitly and alone).
 
@@ -254,7 +254,7 @@ Every Sprint-40 acceptance criterion is a delta against this baseline, and two o
 
 **Two findings:**
 
-1. **Only 4 of the 9 in-scope NLP-gated models reach a translated MCP today** (Unknown 3.1 → 🔶): all nine are in scope by type and none of the six that parse is a multi-solve driver, but **6/9 parse** (`emfl`, `indus89`, `phosdis` fail on `%new%`, `Singleton Set` and `for … to …` loops) and **4/9 translate** (`airsp` and `msm` time out at 600 s, cause undiagnosed). Routed to Task 6 (the corpus brief must show what each option would actually admit), Task 7 (end-to-end only for the four) and Sprint 40 P3.
+1. **Only 4 of the 9 in-scope NLP-gated models reach a translated MCP today** — a separate finding from **Unknown 3.1, which is ✅ VERIFIED** (all nine in scope by type, none of the six that parse a multi-solve driver, and **6/9 parse**, the majority the assumption expected) (`emfl`, `indus89`, `phosdis` fail on `%new%`, `Singleton Set` and `for … to …` loops) and **4/9 translate** (`airsp` and `msm` time out at 600 s, cause undiagnosed). Routed to Task 6 (the corpus brief must show what each option would actually admit), Task 7 (end-to-end only for the four) and Sprint 40 P3.
 2. **egypt's recalled size was approximate:** measured **3,447** single equations / **3,537** variables, not "~3,470". Sizes are now measured for all 11 as generated dimensions — **identical under the demo and the effective license**, so the measurement is license-free — e.g. turkey 3,866 (89 equation blocks), ferts 5,702, srpchase 4,005.
 
 ### Verification

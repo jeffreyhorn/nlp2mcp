@@ -458,7 +458,7 @@ Read `gamslib_type` from the DB and the `solve` statement from each raw source; 
 Sprint 40 prep team
 
 ### Verification Results
-🔶 **Status:** PARTIALLY WRONG — in scope by type ✅, but "most parse" overstates it: **6/9 parse, only 4/9 translate**
+✅ **Status:** VERIFIED — all nine in scope by type, `andean` the only MIP, and **6/9 parse** (a majority, as assumed). *Separate finding, routed below: only **4/9 translate** — translation was not part of this assumption.*
 
 **Verified by:** Sprint 40 Prep Task 2 · **Date:** 2026-10-13 · **Measured at:** `366e91f3`
 
@@ -471,7 +471,7 @@ Sprint 40 prep team
 
 **Evidence:** `parse_model_file` + `scan_multi_solve_driver` per model; `python -m src.cli <raw> -o <scratch>` with a 600 s timeout; per-model times and error lines in `BASELINE_RECONFIRMATION.md` §4.
 
-**Decision:** The assumption's *scope* half holds; its *"most parse with the current grammar"* half is too optimistic for what P3 can deliver — only **4** of the nine reach a translated MCP today. Routed: **Task 6** (the corpus-entry brief must show how many models each option would actually admit, and that five need work first), **Task 7** (end-to-end dry run only for the four that translate; record the two timeouts and three parse failures as they stand), **Sprint 40 P3** (three grammar items and two undiagnosed translate timeouts).
+**Decision:** **Both clauses of the assumption hold** — 9/9 in scope by type (`andean` the only MIP) and 6/9 parse, a majority. *(Corrected in PR #1747 review: this was first graded 🔶 PARTIALLY WRONG, conflating the separate translate result with the parse assumption.)* **Separate finding, routed:** only **4** of the nine reach a translated MCP today — which matters more for P3 than the parse rate does. Routed: **Task 6** (the corpus-entry brief must show how many models each option would actually admit, and that five need work first), **Task 7** (end-to-end dry run only for the four that translate; record the two timeouts and three parse failures as they stand), **Sprint 40 P3** (three grammar items and two undiagnosed translate timeouts).
 
 ---
 

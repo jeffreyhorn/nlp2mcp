@@ -104,12 +104,12 @@ Type from the raw source's `solve … using` statements (comments and `$onText` 
 |---|---|---|---|---|
 | `airsp` | lp ×3 (`alloch`, `allocs` ×2) | no | ✅ 4.5 s | ⏱ **TIMEOUT** (600 s) |
 | `airsp2` | lp ×6 (`fixed` ×4, `expval`, `deteq`) | no | ✅ 3.4 s | ✅ 4.8 s |
-| `emfl` | qcp ×1 | — | ❌ L36 col 46: `%` in `n1*n%new%` (compile-time `%new%` variable) | ❌ (parse) |
-| `indus89` | lp ×1 | — | ❌ L128 col 11: `Singleton Set` | ❌ (parse) |
+| `emfl` | qcp ×1 | — | ❌ 0.11 s — L36 col 46: `%` in `n1*n%new%` (compile-time `%new%` variable) | ❌ 1.53 s (fails on the same parse error) |
+| `indus89` | lp ×1 | — | ❌ 1.93 s — L128 col 11: `Singleton Set` | ❌ 3.39 s (fails on the same parse error) |
 | `jbearing` | nlp ×1 | no | ✅ 0.7 s | ✅ 74.2 s |
 | `minsurf` | nlp ×1 | no | ✅ 0.9 s | ✅ 23.5 s |
 | `msm` | lp ×5 (`msm` ×5) | no | ✅ 3.4 s | ⏱ **TIMEOUT** (600 s) |
-| `phosdis` | lp ×1 | — | ❌ L609 col 10: `for(iter = 1 to 7, …)` loop syntax | ❌ (parse) |
+| `phosdis` | lp ×1 | — | ❌ 0.98 s — L609 col 10: `for(iter = 1 to 7, …)` loop syntax | ❌ 1.75 s (fails on the same parse error) |
 | `torsion` | nlp ×2 (`torsion`, `torsionx`) | no | ✅ 0.6 s | ✅ 15.4 s |
 
 **Summary: 9/9 in scope by type · 6/9 parse · 4/9 translate** (`airsp2`, `jbearing`, `minsurf`, `torsion`) · 2 translate timeouts (`airsp`, `msm`) · 3 parse failures (`emfl`, `indus89`, `phosdis`). The pipeline's classifier marks **none** of the six parsed models a multi-solve driver, despite several having more than one `solve` statement (`airsp2` ×6, `msm` ×5, `airsp` ×3, `torsion` ×2). **`airsp`/`airsp2` are not near-duplicates:** `airsp2` is the DECIS stochastic variant (297 vs 170 lines, 355 differing lines) and is assessed separately. The three parse failures are unclassified for multi-solve status.
@@ -179,11 +179,12 @@ $ make test                     (18:32:27 → 18:38:17, rc=0)
 | NLP-gated set | 10 (9 in scope) | 10 (9 in scope; named in §3.2) | ✅ |
 | egypt size | "~3,470 equations" | 3,447 eqs / 3,537 vars | ❌ approximate recall → corrected |
 | tricp / turkey sizes | 1,255 / 3,866 | 1,255 / 3,866 | ✅ |
-| NLP-gated pipeline state | assumed "most parse" | 6/9 parse, 4/9 translate | 🔶 → Unknown 3.1 |
+| NLP-gated set: in scope + "most parse" (Unknown 3.1) | assumed | 9/9 in scope, **6/9 parse** (a majority) | ✅ → Unknown 3.1 VERIFIED |
+| NLP-gated set: translate (not part of 3.1's assumption) | — | **4/9 translate** | new finding → routed (below) |
 | Leak-gate scope | 186 in-scope (7 allowlisted) | 186 in-scope (7 allowlisted), all clean | ✅ |
 | `make test` | 5,444 passed, 10 skipped | 5,444 passed, 10 skipped, 1 xfailed | ✅ |
 
 ### Differences, routed
 
 - **egypt's size** (§5): the recalled "~3,470" was an approximation; the measured 3,447 / 3,537 replaces it everywhere a size is quoted. → Task 7 (cohort scheduling) and Unknown 2.1.
-- **NLP-gated pipeline state** (§4): only **4 of 9** reach a translated MCP today. → **Task 6** (the corpus-entry decision is about models that can actually run: the brief should show how many would enter under each option, and that 5 need work first), **Task 7** (dry-run only the 4 translating ones end to end; record the 2 timeouts and 3 parse failures as-is), and **Sprint 40 P3** (the three parse failures are grammar work — `%new%` compile-time variables, `Singleton Set`, `for … to …` loops — and the two timeouts are translate-performance work whose cause is **not yet diagnosed** — not assumed to be the sarf class).
+- **NLP-gated translate gap** (§4) — a **separate finding**, not a refutation of Unknown 3.1 (whose assumption — in scope, and *most parse* — holds at 9/9 and 6/9): only **4 of 9** reach a translated MCP today. → **Task 6** (the corpus-entry decision is about models that can actually run: the brief should show how many would enter under each option, and that 5 need work first), **Task 7** (dry-run only the 4 translating ones end to end; record the 2 timeouts and 3 parse failures as-is), and **Sprint 40 P3** (the three parse failures are grammar work — `%new%` compile-time variables, `Singleton Set`, `for … to …` loops — and the two timeouts are translate-performance work whose cause is **not yet diagnosed** — not assumed to be the sarf class).
