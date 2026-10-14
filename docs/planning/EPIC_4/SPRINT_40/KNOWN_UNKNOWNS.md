@@ -297,7 +297,30 @@ The code that writes `mcp_solve` or `convexity` records, or stamps a `schema_ver
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — the list **can be closed** (✅), but the assumed list was **incomplete**: grep found three sites it omits — `run_full_test.py::mark_cascade_not_tested` (two `mcp_solve` constructions), `db_manager.py update` (a hand-writer of any nested field) and `schema.json`'s `description` "(v3.0.0)" (the canonical-version source a test reads). The P3 application writer is designed, with the corpus hold built in.
+
+**Verified by:** Sprint 40 Prep Task 5 · **Date:** 2026-10-14 · **Measured at:** `a8bff1d8`
+
+**Findings:**
+- **Q1, writers (grep, not recall):** 11 sites, W1–W11 in `SCHEMA_3_1_0_DESIGN.md` §3:
+  - `test_solve.py`: `solve_mcp`, plus `update_model_solve_result`, a **fixed-key-list rebuild** (the Sprint 39 "second writer" that once dropped `mcp_attribution`);
+  - `run_full_test.py`: `run_solve_stage`, the **cascade** writer (new), and the presolve copy/restore (no change needed);
+  - `db_manager.py update` (new);
+  - `migrate_catalog.py` (builds `convexity`, but **regenerates a whole DB**, so it is not an apply path);
+  - `verify_convexity.py`: `update_catalog_entry` and `verify_model`;
+  - the new P3 application writer and the new migration.
+- **Q2, `"3.0.0"` literals:** **9** double-quoted hits re-confirmed (`db_manager.py:292`, `migrate_schema_v3.0.0.py:58`, 4 in `test_migrate_schema_v3.py`, 3 in `test_db_manager.py`). An any-quoting grep adds **`schema.json`'s `description`**, which `test_db_manager.py:641` parses as the canonical version. It must move with `db_manager.py:292`.
+- **Q3, `sprint_audit/`:** `check_mcp_solve_attribution.py` is an inspector (writes `attribution.json`; version check pattern-only); `floor_tracker.py`, `kpi_block.py` and `check_doc_figures.py` only read. **No `sprint_audit/` tool writes DB fields.**
+- **Q4:** **yes.** `convexity_result` lacks `gams_version`. It also defines `solver` but **0/219** rows carry it (nothing writes it), and `solver` / `solver_status` / `model_status` / `objective_value` are non-nullable there, so the new writer must omit them when unknown.
+- **Q5, strict readers:** **none break.** No allow-list, `extra='forbid'`, `**row` constructor, exact-key assertion or exact-version comparison on these objects. What does behave differently:
+  - `migrate_schema_v3.0.0.py --validate` stops validating a 3.1.0 DB;
+  - `test_migrate_schema_v3.py`'s rewind of the committed DB would become a hybrid unless its pop list grows (T6);
+  - the top-level `_migration_summary_v3_1_0` must be declared, since the root is `additionalProperties: false`.
+- **Measured on synthetic probes:** a refused demo listing **carries** the `GAMS 54.2.1` header but **no** `SOLVER` line, so refused rows record the version and `demo`, with no solver.
+
+**Evidence:** `SCHEMA_3_1_0_DESIGN.md` §3 (grep commands and the classified table), §4 (probe table), §10 (positive control). A real row with the new fields **fails** the current schema and **passes** a draft 3.1.0 schema; the draft **still rejects** `"unknown"`, a misspelled `licence_edition` and an unknown `convexity` key.
+
+**Decision:** P1 implements the closed list in §11's order. **Schema and first writer go in one commit**, so no writer emits the field before the schema allows it. **W10's `--admit` hold** keeps a licensed convexity write from silently growing the 142 before Task 6's corpus-entry decision (the Unknown 3.3 risk).
 
 ---
 
