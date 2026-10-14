@@ -398,7 +398,21 @@ Re-emit each in a scratch copy and `cmp` against `data/gamslib/mcp/<model>_mcp.g
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — all 11 re-emit **byte-identical** to their goldens at HEAD, and all translate inside the 600 s limit.
+
+**Verified by:** Sprint 40 Prep Task 7 · **Date:** 2026-10-14 · **Measured at:** `79eeccff` (all 53 retained invocations; descends from Task 6's answers commit `b44344a2`)
+
+**Findings:**
+- **Q1:** 11/11 goldens are byte-identical to a HEAD re-emit (`run_full_test.py` re-translates in the worktree; `git diff --quiet` on each golden). **All 11 are in the leak gate's in-scope set** (`check_golden_staleness.discover_goldens()` minus its allowlist).
+- **Q2, translate wall-clock:** `ferts` 167.1 s · `turkey` 55.1 s · `egypt` 49.0 s · `tabora` 40.9 s · `tfordy` 22.8 s · `shale` 19.5 s · `sroute` 14.9 s · `robot` 4.4 s · `glider` 4.4 s · `tricp` 3.7 s · `srpchase` 2.1 s.
+  - **`turkey` translates in 55 s**, so S39 prep's "could not parse inside 120 s" no longer holds.
+- **Q3:** sizes as measured by Task 2 (contribution below).
+- **Q4:** the whole MCP-gated batch takes **763 s**, ~13 min (max `ferts` 184 s), so it fits a nightly slot.
+- **Q5, read from the code, not re-run:** `--only-solve` requires `nlp2mcp_translate.status == "success"` and then solves the existing MCP without re-translating, whatever `solver_version` holds. **Qualified:** that covers only the *initial* translate. The automatic presolve retry still **re-translates** (`--nlp-presolve`, `run_full_test.py` L924–942) after a cold MS 5 or a cold objective mismatch, so `--only-solve` is **not** a golden-only run. **No CLI flag disables the retry today:** `no_presolve_retry` is read only via `getattr(args, "no_presolve_retry", False)` (L929), argparse does not define it (`run_full_test.py --help` has no such option), and only a test sets it.
+
+**Evidence:** `COHORT_DRY_RUN.md` §Results (golden column), §Wall-clock.
+
+**Decision:** P2's batch can read the committed goldens as they stand. No staleness finding.
 
 **Contribution from Task 2 (2026-10-13, `366e91f3`) — status left to Task 7:** sizes measured as generated dimensions (golden run with `iterlim=0`, `MODEL STATISTICS`), identical under the demo and the effective license: egypt 3,447 eq / 3,537 var · ferts 5,702 / 5,702 · glider 1,531 / 1,637 · robot 1,688 / 1,694 · shale 1,956 / 1,956 · sroute 1,531 / 1,540 · srpchase 4,005 / 4,005 · tabora 1,894 / 1,924 · tfordy 3,155 / 3,157 · tricp 1,255 / 1,400 · turkey 3,866 / 3,753. Recalled turkey 3,866 and tricp 1,255 reproduce; **egypt's "~3,470" does not (3,447)**. Byte-identity, translate times and leak-gate scope membership remain Task 7's. See `BASELINE_RECONFIRMATION.md` §5.
 
@@ -433,7 +447,28 @@ Task 7's dry run: per member, record outcome, comparison, attribution and residu
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — the work list **is bounded** (**0 unrouted fingerprints**), but `kkt_residual.py` returned a verdict for only **5 of the 11** non-matches with an MCP, and S39's repeated-domain flag is **not predictive**.
+
+**Verified by:** Sprint 40 Prep Task 7 · **Date:** 2026-10-14 · **Measured at:** `79eeccff` (all 53 retained invocations; descends from Task 6's answers commit `b44344a2`)
+
+**Findings:**
+- **Q1, how far each of the 11 gets:** **11/11 reach a GAMS listing.**
+  - 9 reach a PATH model status: 5 infeasible, 2 solved non-matches, 2 presolve matches.
+  - 2 abort before PATH reports (`ferts`, `tabora`: `no_solve_summary`).
+  - 0 compile errors, and 0 translate failures.
+- **Q2, residual verdicts:** **5 × `case_b` (emit bug):** `glider`, `minsurf`, `robot`, `sroute`, `tricp`. No `case_a`, no `case_c`. The other **6 have no verdict, because the harness itself fails on the `--nlp-presolve` emit** it evaluates:
+  - compile errors: `egypt` and `srpchase` (`$140`), `shale` (`$148`), `jbearing` (`$171`);
+  - execution aborts: `ferts` (`EXECERROR = 46`), `tabora` (`= 36`).
+  - **The assumption "a verdict for each" fails exactly where the presolve emit is defective.**
+- **Q3, repeated-domain cross-tab:** flagged members were non-matches **6 of 7** times, unflagged ones **3 of 4**. **Not predictive** at this size.
+- **Q4:** the largest members ran in budget (max `ferts` 138 s). It needs the license, since it runs the embedded NLP solve.
+- **Q5, P10 selection rule:** only **2** fingerprints meet it today (`egypt`, `shale` → P4). The other 9 non-match models with an MCP are **banked** behind routing notes: R-PRE-140, R-EXEC, R-JB-171, R-B-*.
+
+**Evidence:** `COHORT_DRY_RUN.md` §Routing.
+
+**Decision:** P2's work list is the Routing table, with every class and model named.
+- **Not open-ended**, but **not fix-ready either.**
+- The `--nlp-presolve` emit defects (R-PRE-140, `shale`'s `$148`, R-JB-171) **block the diagnosis tool** as well as the warm start, so they come first.
 
 ---
 
@@ -465,7 +500,21 @@ Sprint 40 prep team
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the standalone tool works at full size and passes its positive control. Every dry-run match is validated from its **own** recorded `mcp_attribution` / `mcp_completed_own_solve`.
+
+**Verified by:** Sprint 40 Prep Task 7 · **Date:** 2026-10-14 · **Measured at:** `79eeccff` (all 53 retained invocations; descends from Task 6's answers commit `b44344a2`)
+
+**Findings:**
+- **Q1, presolve path:** **yes**. **8 of the 11** took the presolve retry (cold MS 5 or a spurious-KKT mismatch): `egypt`, `glider`, `robot`, `shale`, `srpchase` (rejected, `NO-SOLVE`), `tfordy`, `tricp`, `turkey`. It reconciles with the 25 batch invocations: 15 cold solves (11 MCP-gated + 4 NLP-gated with an MCP) + 8 MCP-gated retries + 2 NLP-gated retries (`airsp2`, `torsion`).
+  - **All 4 matches** (`tfordy`, `turkey`, `airsp2`, `torsion`) are `model_optimal_presolve`, recorded `MCP-SOLVED` / `own=True`.
+  - Each was re-derived from that invocation's own retained listing with `parse_solve_summaries` / `Attribution`: 1 candidate, 1 match.
+- **Q2/Q3, at size:** `turkey`, the largest member, gives **`MCP-SOLVED`**. The positional parse picks our `mcp_model` out of three summaries (CONOPT NLP, CPLEX LP, PATH MCP).
+- **Q4, positive control:** `weapons` (the S38 D9 self-match) gives **`EMBEDDED-ONLY`**, correctly not counted; the tool exits 1 by design. `egypt` is **indeterminate**, because its presolve emit does not compile (`NO-SOLVE`).
+- **Q5:** it needs the license, since it re-solves. Wall-clock: **106 s** for all three.
+
+**Evidence:** `COHORT_DRY_RUN.md` §Summary, §Results (attribution column).
+
+**Decision:** P2 validates each match from the row's own recorded attribution fields. The standalone tool remains a spot check, not an audit of the batch's listings.
 
 ---
 
@@ -496,7 +545,19 @@ Read the issue; compile the current golden licensed in a scratch directory; diff
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the S38 D11 fix removed the errors. **`ISSUE_933`'s compile errors do not reproduce**, so the issue is **re-scoped** (not closed).
+
+**Verified by:** Sprint 40 Prep Task 7 · **Date:** 2026-10-14 · **Measured at:** `79eeccff` (all 53 retained invocations; descends from Task 6's answers commit `b44344a2`)
+
+**Findings:**
+- **Q1:** the issue's last recorded state (2026-04-01) is **10 compile errors**: `$148` ×2, `$149` ×6, `$141`/`$257`. Its title and early sections still describe the older Sprint 21 translation timeout.
+- **Q2:** the current golden (byte-identical to HEAD) has **0** compile-error markers in its own retained listing. Licensed, it **reaches PATH**.
+- **Q3:** no errors remain. The open defect is now **wrong**, not uncompilable: cold and retry both MS 5, and `kkt_residual.py` returns `case_b` at `stat_x(n,k0)`, rel 1.69.
+- **Q4:** yes. The errors were the repeated-domain class (`(n,n)` multipliers, uncontrolled indices), and the S38 D11 `slp(n,n)` fix removed them.
+
+**Evidence:** `COHORT_DRY_RUN.md` §ISSUE_933; `docs/issues/ISSUE_933_tricp-mcp-compilation-errors.md` *Current Status (2026-10-14)*.
+
+**Decision:** tricp **can** reach PATH, so P2's ceiling is not reduced by a compile failure. tricp is routed as R-B-tricp, an emit-correctness item.
 
 ---
 
@@ -576,7 +637,23 @@ A meaningful fraction of the nine classify convex (several are textbook convex p
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — **all nine classify convex** under the licensed verifier: **5 `verified_convex`** (the LPs) and **4 `likely_convex`** (`emfl`, `jbearing`, `minsurf`, `torsion`), each without error.
+
+**Verified by:** Sprint 40 Prep Task 7 · **Date:** 2026-10-14 · **Measured at:** `79eeccff` (all 53 retained invocations; descends from Task 6's answers commit `b44344a2`)
+
+**Findings:**
+- **Q1:** see `COHORT_DRY_RUN.md` §Convexity (classification, model status, objective, solver).
+- **Q2:** yes. The five LPs (`airsp`, `airsp2`, `indus89`, `msm`, `phosdis`) are `verified_convex`.
+- **Q3:** none classifies `non_convex` or `error`.
+  - ⚠ **Four are multi-solve**, and the verifier reads the **last** status: `airsp` 3, `airsp2` 6, `msm` 5, `phosdis` 7 `SOLVE` summaries.
+  - **`airsp2`'s classification and objective come from a `DECISM` solve**, not from the requested `LP=CPLEX`.
+  - Routed to P3, before W10 applies them.
+- **Q4:** every convexity solve took **≤ 7 s** (22 s total), inside the verifier's 60 s default.
+- **Q5:** **output-only.** `catalog.json` was unchanged afterwards, and no `gamslib_status.json` was written. Edition and solver come from each run's own retained listing: all `licensed`; CPLEX for the LPs, plus DECISM in `airsp2`; CONOPT for the NLPs and for the QCP `emfl`.
+
+**Evidence:** `COHORT_DRY_RUN.md` §Convexity.
+
+**Decision:** under Task 6 Decision 2 (admit by rule), **all nine are admitted** and the expanded corpus would be **151**. But **five cannot yet reach an MCP** (2 translate timeouts, 3 parse failures). P3 applies the admissions through W10, after settling the multi-solve reference question.
 
 ---
 

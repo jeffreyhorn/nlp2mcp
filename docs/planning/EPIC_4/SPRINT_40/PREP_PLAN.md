@@ -60,7 +60,7 @@ This prep plan front-loads the work whose absence would cost the most mid-sprint
 | 4 | ✅ CI License-Isolation Design & Workflow Inventory | High | 3-4 hours | Tasks 1, 3 | P1 (CI) — demo-only PR jobs, trusted licensed workflow |
 | 5 | ✅ Schema 3.1.0 `license_edition` Design | High | 2-3 hours | Tasks 1, 3 | P1 (schema) — migration, writers, `db_manager`, tests |
 | 6 | ✅ Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind) | Critical | 2-3 hours | Tasks 1, 2, 3, 4 | P1/P2/P3 — the three owner decisions, answered in prep before any cohort result exists |
-| 7 | License-Gated Cohorts Dry Run — Fingerprints & Routing | Critical | 5-7 hours | Tasks 2, 3, 6 | P2 + P3 — first measurement, GO/NO-GO, never persisted |
+| 7 | ✅ License-Gated Cohorts Dry Run — Fingerprints & Routing | Critical | 5-7 hours | Tasks 2, 3, 6 | P2 + P3 — first measurement, GO/NO-GO, never persisted |
 | 8 | lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate | High | 3-4 hours | Tasks 1, 2, 3, 7 | P5 — the +1 Solve rests on an untested premise |
 | 9 | sarf Jacobian O(active) Re-Architecture Design | High | 4-6 hours | Tasks 1, 2 | P6 — the sprint's planned +1 Translate |
 | 10 | Correctness-Track Pre-Traces: turkpow Class A, the Diagonal Defect, the Structural Sites | High | 5-7 hours | Tasks 1, 2, 7, 9 | P4, P7, P8 — named layers and reproducers before Day 1 |
@@ -762,9 +762,10 @@ grep -c "^## Decision" "$DOC"
 
 ## Task 7: License-Gated Cohorts Dry Run — Fingerprints & Routing
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-10-14) — one acceptance criterion only partly met (residual verdicts, see below)
 **Priority:** Critical
 **Estimated Time:** 5-7 hours
+**Time Spent:** ~4.5 hours (≈46 min of it machine time, measured)
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 2, 3, 6
@@ -780,7 +781,7 @@ None of the eleven MCP-gated emits has ever been exercised by a solve, and none 
 
 ### Background
 
-- **Known going in** (`../PROJECT_PLAN.md` Sprint 40 P2): egypt and shale carry a **live** P10 Class-A emit defect (expect mismatch); ferts's emit was corrected Sprint 38 Day 11; tricp carries the S38 D11 `slp(n,n)` fix and the **untriaged** `docs/issues/ISSUE_933_tricp-mcp-compilation-errors.md`; turkey is the S35 `$161` "licensed testbed +1"; **robot drifted under Sprint 39's lnts candidate** (`../SPRINT_39/SPRINT_LOG.md` §Day 5) — its baseline solve is now measurable.
+- **Known going in** (`../PROJECT_PLAN.md` Sprint 40 P2): egypt and shale carry a **live** P10 Class-A emit defect (expect mismatch — *measured by Task 7: both `model_infeasible` (MS 5), so no comparison; their presolve emits do not compile*); ferts's emit was corrected Sprint 38 Day 11; tricp carries the S38 D11 `slp(n,n)` fix and the **untriaged** `docs/issues/ISSUE_933_tricp-mcp-compilation-errors.md`; turkey is the S35 `$161` "licensed testbed +1"; **robot drifted under Sprint 39's lnts candidate** (`../SPRINT_39/SPRINT_LOG.md` §Day 5) — its baseline solve is now measurable.
 - **Evidence standard per result:** comparison verdict; **the row's own recorded `mcp_attribution` / `mcp_completed_own_solve`** showing *our* MCP produced its own `MODEL STATUS` (the `weapons` trap) — parsed by `test_solve.py` from the actual solve listing; `scripts/diagnostics/kkt_residual.py` verdict for every non-match. *(The standalone `scripts/sprint_audit/check_mcp_solve_attribution.py` re-emits and re-solves, so it is used only as Unknown 2.3's separate large-model / positive-control exercise.)*
 - **Selection rule** (P10, unchanged since Sprint 38): a model is fixed only with a reproduced fingerprint **and** a named fix surface — everything else is routed or banked.
 - **Research:** `docs/research/CONVEXITY_VERIFICATION_DESIGN.md`, `docs/research/convexity_detection.md` — the classifier the NLP-gated set will go through; `docs/research/GAMSLIB_MODEL_TYPES.md` — the original catalog that recorded "License limits (11)".
@@ -797,11 +798,31 @@ None of the eleven MCP-gated emits has ever been exercised by a solve, and none 
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md`: the `**Measured at:**` line (all 53 retained invocations, one SHA), the `## Results` table (20 rows with stage-qualified provenance), §Convexity, §Routing, §ISSUE_933, §Wall-clock, §Procedure and provenance
+- `docs/issues/ISSUE_933_tricp-mcp-compilation-errors.md`: re-scoped (compile errors gone; now a `case_b` emit bug)
+- `KNOWN_UNKNOWNS.md`: Unknowns **2.1** ✅, **2.2** 🔶, **2.3** ✅, **2.4** ✅, **3.2** ✅
+- `CHANGELOG.md`: Sprint 40 Prep Task 7 entry
+- `src/`, `tests/` and `data/` untouched, so the quality gate is N/A. The retention patch lived only in the throwaway worktree.
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — both cohorts measured licensed, every result with its own provenance, and every non-match routed.**
+
+- **Provenance:** **53 invocations, all `licensed`, all at `79eeccff`**, which descends from Task 6's answers commit `b44344a2`. Every stage of every row associates with **exactly one** retained invocation.
+- **MCP-gated (11):**
+  - all re-emit **byte-identical** and translate within the timeout (max `ferts` 167 s); all reach a GAMS listing;
+  - **2 match**, both via presolve: `tfordy`, `turkey`;
+  - **9 do not:** 5 infeasible, 2 abort before PATH, 2 solved non-matches.
+- **NLP-gated (9):** **all classify convex** (5 `verified_convex` / 4 `likely_convex`), so all are admitted under Decision 2.
+  - **2 match**, both via presolve: `airsp2`, `torsion`; 2 non-matches;
+  - **5 never reach an MCP:** the two translate timeouts and the three parse failures Task 2 already found.
+  - ⚠ Four are multi-solve, and `airsp2`'s classification comes from a DECISM solve. Routed to P3.
+- **Residuals:** **5 verdicts, all `case_b`.** **6 harness failures**, because the `--nlp-presolve` emit doesn't compile or execute for `egypt`, `srpchase`, `shale`, `jbearing`, `ferts`, `tabora`.
+- **Routes:** **0 unrouted.** **2** meet P10's rule (P4: `egypt`, `shale`); the rest are banked behind routing notes. The repeated-domain flag is not predictive.
+- **`ISSUE_933`:** the compile errors are gone; the issue is re-scoped, since tricp is now `case_b`.
+- **Attribution:** works at size (`turkey` `MCP-SOLVED`), and the positive control behaves (`weapons` `EMBEDDED-ONLY`).
+- **Wall-clock:** the whole cohort pipeline takes ~36 min including two 600 s translate timeouts (~16 min without them), which is Task 12's nightly-slot input.
+- **What P2 would book**, as license-unlocked, not recovered: **+2 Match** and **+4 Solve** in-corpus; `path_solve_license` → 0. **No license-unlocked *cold* match**, so Decision 1's ledger receives nothing from this run.
 
 ### Verification
 
@@ -850,14 +871,14 @@ PY
 
 ### Acceptance Criteria
 
-- [ ] Every result shown to come from the licensed edition — for convexity runs, by a **retained listing** whose edition classification and solver name are recorded and whose status matches the verifier JSON
-- [ ] Every in-scope member of both populations has **exactly one result row** in the `## Results` table (first cell = backticked model id), checked by identity against the DB predicate — a mention elsewhere in the doc does not count
-- [ ] Every non-match has a `kkt_residual.py` verdict and a route; no fix attempted
-- [ ] Every match has attribution showing our MCP solved
-- [ ] DB and goldens untouched — **no change on the branch vs `main` and none in the working tree, untracked included** (checked in *Verification*)
-- [ ] A `**Measured at:**` line lists the full `head_sha` of every retained invocation, and each **descends from Task 6's answers commit** (checked by Task 6's *Verification*)
-- [ ] Wall-clock per model recorded for scheduling
-- [ ] Unknowns 2.1, 2.2, 2.3, 2.4, 3.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Every result shown to come from the licensed edition — for convexity runs, by a **retained listing** whose edition classification and solver name are recorded and whose status matches the verifier JSON
+- [x] Every in-scope member of both populations has **exactly one result row** in the `## Results` table (first cell = backticked model id), checked by identity against the DB predicate — a mention elsewhere in the doc does not count
+- [ ] ⚠ **Partly met:** every non-match has a **route**, and no fix was attempted; but only **5 of the 11** non-matches with an MCP have a `kkt_residual.py` verdict. For the other 6 the harness itself fails on the `--nlp-presolve` emit it evaluates (compile errors or execution aborts). Recorded as Unknown 2.2's 🔶 finding and routed first in P2, not hidden. The 5 models with no MCP at all (translate timeout / parse failure) have nothing to evaluate. — Every non-match has a `kkt_residual.py` verdict and a route; no fix attempted
+- [x] Every match has attribution showing our MCP solved
+- [x] DB and goldens untouched — **no change on the branch vs `main` and none in the working tree, untracked included** (checked in *Verification*)
+- [x] A `**Measured at:**` line lists the full `head_sha` of every retained invocation, and each **descends from Task 6's answers commit** (checked by Task 6's *Verification*)
+- [x] Wall-clock per model recorded for scheduling
+- [x] Unknowns 2.1, 2.2, 2.3, 2.4, 3.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
