@@ -856,7 +856,22 @@ Re-read `../SPRINT_39/SPRINT_LOG.md` §Day 4–5 and `docs/issues/ISSUE_1694_lnt
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — the Day-5 failure was **not procedural**. The banked diff still applies cleanly and its emits reproduce Day 5 **byte for byte** on `main` (lnts +292 B, robot +135 B, springchain +45 B, otpop identical), so both REPLAN conditions fire again. **A gate changes neither.**
+
+**Verified by:** Sprint 40 Prep Task 8 · **Date:** 2026-10-14 · **Measured at:** `b134b8b6` (all GAMS invocations licensed, retention-patched, in a scratch worktree; sketch `src/` uncommitted on a never-pushed scratch branch)
+
+**Findings:**
+- **Q1:**
+  - The `_fx_` rows do not bind: the candidate is MS 5 @ **1,508** iterations, identical to Day 5.
+  - robot and springchain drift again.
+- **Q2:** yes. The exclusion is literally `sameas(c,'y2') and sameas(h,'h50')`, ….
+- **Q3:** **no failure depends on the gate's absence.** A gate would only have stopped the same diff earlier: it detects drift, it does not remove it.
+- **Q4:** **yes.** The runtime probe on `main` still shows `y2.h50`, `y3.h50`, `y4.h50` at `lo = up = 0` (C1 ✓ C2 ✓ C3 ✓) and MS 4 @ iteration 0. The defect is still there.
+- **Q5:** **+0.** lnts does not solve under any variant (Unknown 5.3).
+
+**Evidence:** `LNTS_LANDABILITY.md` §1, §2.
+
+**Decision: verdict C.** Bank lnts; **P5's projection +1 Solve → +0**. Routed to Task 12 for the schedule.
 
 ---
 
@@ -887,7 +902,22 @@ Sketch the guard against Day 4's traced section-1b code; apply it in a scratch b
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — no **existing** emitted set represents the fixed tuples, and the two conditions cannot simply be made the same. But the real discriminator **is** computable at emit time, and it **can** be written without labels: positionally, which is still per-cell enumeration.
+
+**Verified by:** Sprint 40 Prep Task 8 · **Date:** 2026-10-14 · **Measured at:** `b134b8b6` (all GAMS invocations licensed, retention-patched, in a scratch worktree; sketch `src/` uncommitted on a never-pushed scratch branch)
+
+**Findings:**
+- **Q1, the two conditions:** both blankets run over `kkt.stationarity_conditions`.
+  - **Section 1 (stationarity condition)** already enumerates lnts's `_fx_` tuples by label (the golden's line 156), so it leaves `y2.h50` free.
+  - **Section 1b (lead/lag condition)** is built only from equations **with a domain**, and its cache skips scalar equations. lnts's `_fx_` equations are scalar, so 1b zeroes `y2.h50` and `y3.h50`.
+- **Q2:** **no.** The fixed tuples exist only as source labels (`y.fx('y2','h%nh%') = 5` becomes the scalar equation `y_fx_y2_h50`); no emitted set or parameter carries them.
+- **Q3, scratch sketch, never landed:** a **narrowed** discriminator excludes a surviving `_fx_` cell only if the blanket **actually covers** it (the lead/lag condition evaluated false at that tuple from static set order) **and** its demand differs from the blanket's value. Under it, **robot, springchain, otpop, catmix, ganges and gangesx are byte-identical** to `main`. lnts changes by exactly the two contradicted cells. The **positional** form writes those as `ord(c) = 2 and ord(h) = card(h)`, so **no labels**. Positive control: the Day-5 guard differs from both sketches on lnts, robot and springchain.
+- **Q4:** **all five source-pattern false positives** (otpop, springchain, catmix, ganges, gangesx) are **byte-identical** under the sketch, each `main` emit first verified equal to its golden.
+  - **Day 5's drift was semantically empty:** every touched robot and springchain cell was already consistent (demand = blanket value) or outside the blanket.
+
+**Evidence:** `LNTS_LANDABILITY.md` §3 (sketch, diffs, positive control).
+
+**Decision:** the guard design is **banked with lnts**. Whether per-model *positional* enumeration satisfies "not per-model enumeration" is an **owner judgment** the pre-registered signal did not anticipate, to be taken **before** any landing. It is moot this sprint (5.3).
 
 ---
 
@@ -918,7 +948,28 @@ Reproduce the 364-row `INFES` state from Day 5's candidate in a scratch branch; 
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (the second branch) — the second defect is **separate**, and its existence **removes the +1**. But it is **not lnts's dynamics.** It is an **emit (stationarity) defect at `stat_step`**, shared by four COPS time-step models.
+
+**Verified by:** Sprint 40 Prep Task 8 · **Date:** 2026-10-14 · **Measured at:** `b134b8b6` (all GAMS invocations licensed, retention-patched, in a scratch worktree; sketch `src/` uncommitted on a never-pushed scratch branch)
+
+**Findings:**
+- **Q1, mechanism:**
+  - With the collision removed, lnts is still MS 5 (Day-5 candidate @ 1,508 iterations, 365 `INFES` rows by this counter vs Day 5's 364; narrowed sketch @ 226, 208 rows).
+  - `kkt_residual.py` gives **`case_b`**, dual transfer consistent, worst row **`stat_step` rel 9.66**; the next four listed rows are below 0.008.
+  - The `velo1_eqn` / `tf_eqn` `INFES` rows are downstream of a wrong `stat_step`.
+  - **The same `stat_step` row leads the `case_b` verdict for robot** (rel 10.1, Task 7), **glider** (second row, 0.38, Task 7) and **rocket** (0.497, `ISSUE_1462`). All are COPS models with `tf =e= step*nh`.
+- **Q2:** **untracked.** `ISSUE_1694` calls it "dynamics"; `ISSUE_1462` attributes rocket's residual to the `_fx_`-at-`h0` warm start. **Needs an issue.**
+- **Q3, robot:**
+  - **Baseline:** Task 7's committed row (`model_infeasible` MS 5, `MCP-FAILED`, `case_b`; provenance `robot_mcp.1792010281137925000.13402`·`79eeccff`).
+  - **Day-5 candidate emit**, solved licensed here: MS 5 @ 27,417 iterations, objective 11.464 vs NLP 9.1469. **Same bucket, so not harmful.**
+  - The narrowed sketch leaves robot byte-identical.
+- **Q4, springchain:**
+  - It solves identically under both emits (MS 1, 289 iterations, objective −185.446), so it is **perturbed but not broken**.
+  - **Keep the criterion.** The narrowed sketch proves the perturbation was avoidable.
+
+**Evidence:** `LNTS_LANDABILITY.md` §4.
+
+**Decision:** lnts is banked behind the `stat_step` class. Task 12 decides whether P5's freed budget goes to that class, which bounds four models.
 
 ---
 

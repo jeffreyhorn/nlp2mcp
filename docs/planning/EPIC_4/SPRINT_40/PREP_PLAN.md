@@ -61,7 +61,7 @@ This prep plan front-loads the work whose absence would cost the most mid-sprint
 | 5 | ✅ Schema 3.1.0 `license_edition` Design | High | 2-3 hours | Tasks 1, 3 | P1 (schema) — migration, writers, `db_manager`, tests |
 | 6 | ✅ Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind) | Critical | 2-3 hours | Tasks 1, 2, 3, 4 | P1/P2/P3 — the three owner decisions, answered in prep before any cohort result exists |
 | 7 | ✅ License-Gated Cohorts Dry Run — Fingerprints & Routing | Critical | 5-7 hours | Tasks 2, 3, 6 | P2 + P3 — first measurement, GO/NO-GO, never persisted |
-| 8 | lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate | High | 3-4 hours | Tasks 1, 2, 3, 7 | P5 — the +1 Solve rests on an untested premise |
+| 8 | ✅ lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate | High | 3-4 hours | Tasks 1, 2, 3, 7 | P5 — the +1 Solve rests on an untested premise |
 | 9 | sarf Jacobian O(active) Re-Architecture Design | High | 4-6 hours | Tasks 1, 2 | P6 — the sprint's planned +1 Translate |
 | 10 | Correctness-Track Pre-Traces: turkpow Class A, the Diagonal Defect, the Structural Sites | High | 5-7 hours | Tasks 1, 2, 7, 9 | P4, P7, P8 — named layers and reproducers before Day 1 |
 | 11 | Process-Mechanism Spec & Smaller-Items Catalog | Medium | 3-4 hours | Tasks 1, 2 | P9 + P10 — the slack absorber and the §7 mechanisms |
@@ -884,9 +884,10 @@ PY
 
 ## Task 8: lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-10-14)
 **Priority:** High
 **Estimated Time:** 3-4 hours
+**Time Spent:** ~3.5 hours
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2, 3, 7 — Task 7 because `robot` is an MCP-gated cohort member: its licensed result may only be read after Task 6's answers are committed, and Task 7's dry run is the first cohort measurement
@@ -925,11 +926,24 @@ A Phase-0 gate cannot make a non-general fix general, and it cannot make the sec
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_40/LNTS_LANDABILITY.md`: the Day-5 failure list with answers, the probe re-run, the symbolic-guard sketch and its scratch diffs (seven models), the second-defect scoping, the robot / springchain solves, verdict **C**, and the Phase-0 gate
+- `KNOWN_UNKNOWNS.md`: **5.1** ❌, **5.2** 🔶, **5.3** ✅
+- `CHANGELOG.md`: Sprint 40 Prep Task 8 entry
+- `src/` and `tests/` untouched on this branch, so the quality gate is N/A. The guard sketch lived only on a never-pushed scratch branch.
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — verdict C: lnts is not landable this sprint. Remove the +1 Solve from P5's projection.**
+
+- **The banked diff (A) fails exactly as on Day 5:** its emits reproduce byte for byte on `main` (lnts +292 B, robot +135 B, springchain +45 B), and a gate changes neither REPLAN condition. **Unknown 5.1's "procedural" premise is refuted.**
+- **Probe (positive control):** on `main`, `y2.h50`, `y3.h50` and `y4.h50` are all at `lo = up = 0` (C1–C3 ✓); MS 4 @ iteration 0.
+- **Symbolic guard (B), sketched and never landed:**
+  - a **narrowed** discriminator (the blanket actually covers the cell, evaluated at emit time from static set order, **and** the demand differs from the blanket value) leaves robot and all five source-pattern false positives (otpop, springchain, catmix, ganges, gangesx) **byte-identical**;
+  - a **positional** `ord`/`card` form has **no labels**;
+  - but it still enumerates cells, which is an owner judgment for any future landing.
+- **The second defect is an emit defect, not dynamics:** `kkt_residual.py` with the collision removed gives **`case_b` at `stat_step`** (rel 9.66). **The same `stat_step` row leads robot's, glider's and rocket's `case_b` verdicts.** That is a four-model COPS time-step class, **untracked**, so it needs an issue.
+- **robot:** the Day-5 candidate stays MS 5 (same bucket as Task 7's baseline). **springchain:** identical solves (MS 1, 289 iterations, −185.446).
+- **For Task 12:** **P5 +1 → +0**, and redirect the freed budget toward the `stat_step` class, which bounds four models. A scheduling recommendation, not a decision.
 
 ### Verification
 
@@ -953,12 +967,12 @@ grep -c "Verdict" "$DOC" 2>/dev/null
 
 ### Acceptance Criteria
 
-- [ ] Every Day-5 REPLAN condition listed with its evidence and an answer
-- [ ] The runtime probe re-run on `main` and shown to reproduce (positive control)
-- [ ] A verdict A, B or C with its budget consequence
-- [ ] The gate's perturbation criterion names `robot`, `springchain` and `otpop`
-- [ ] The +1 Solve is either justified against Day 5 or removed from the projection
-- [ ] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Every Day-5 REPLAN condition listed with its evidence and an answer
+- [x] The runtime probe re-run on `main` and shown to reproduce (positive control)
+- [x] A verdict A, B or C with its budget consequence
+- [x] The gate's perturbation criterion names `robot`, `springchain` and `otpop`
+- [x] The +1 Solve is either justified against Day 5 or removed from the projection
+- [x] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
