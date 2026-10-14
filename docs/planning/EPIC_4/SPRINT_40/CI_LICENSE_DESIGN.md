@@ -67,14 +67,22 @@ jobs:
           while IFS= read -r l; do [ -n "$l" ] && echo "::add-mask::$l"; done <<< "$GAMS_LICENSE"
           umask 077; printf '%s\n' "$GAMS_LICENSE" > "$GAMS_DIR/gamslice.txt"
       - name: Edition check (classification only -- never raw audit or header output)
-        run: …   # tiny probe; print "edition=licensed|demo" via Task 3's regex; fail unless licensed
+        run: …   # tiny probe, ALL output to $RUNNER_TEMP/out/ (stdout+stderr redirected, lo=2 log to
+                 # file, o= listing there); scan_local (below) BEFORE printing anything; then print only
+                 # "edition=licensed|demo" via Task 3's regex; fail unless licensed
       - name: Licensed solves
-        run: …   # coverage below
-      - name: Output scan (defence in depth)
+        run: …   # coverage below; same rule: every GAMS/pipeline command writes to $RUNNER_TEMP/out/,
+                 # nothing streams to the Actions log; scan_local gates any summary line that is printed
+      - name: Scan before upload (gate)
         if: always()                    # run on failure too -- that is when output most needs checking
-        run: …   # outputs + logs/artifacts vs a pattern file built from the secret; tolerate an absent
-                 # license/pattern file (install may have failed) by reporting "nothing to scan" rather
-                 # than erroring; positive control: the same scan run against $GAMS_DIR/gamslice.txt must hit
+        run: …   # scan_local over everything under $RUNNER_TEMP/out/ that an upload step would ship;
+                 # FAIL on a match, and the upload step runs only if this one succeeded; tolerate an
+                 # absent license/pattern file (install may have failed) by reporting "nothing to scan";
+                 # positive control: the same scan run against $GAMS_DIR/gamslice.txt must hit
+      # scan_local = grep -F -f <pattern file built from the secret> over LOCAL files, exit non-zero on a
+      # match. It cannot scan the Actions log itself: job logs stream off the runner as they are written
+      # and are not downloadable until the job ends, so a later step never sees them. The log is
+      # protected by never writing raw output to it, not by scanning it after the fact.
       - name: Remove the license (always)
         if: always()
         run: |
@@ -85,7 +93,7 @@ jobs:
 - **Coverage:** both gated populations (`BASELINE_RECONFIRMATION.md` §3 — the 11 MCP-gated models and the 9 in-scope NLP-gated ones) and PR19's six gated soft-fail targets (§2).
 - **Never `pull_request_target` with a PR-head checkout** — it runs with the base repository's secrets while executing the PR's code, the standard exfiltration pattern. This workflow has no PR trigger at all.
 - **Secrets:** `GAMS_LICENSE` stored **in the `gams-licensed` environment only**, never as a repository secret (a repository secret is available to every workflow, including PR-triggered ones).
-- **Logs and artifacts:** no raw `gams audit`, `.lst` or `.log` license header in any job log or uploaded artifact — a CI log is a published artifact. The edition is printed as a classification only.
+- **Logs and artifacts:** no raw `gams audit`, `.lst` or `.log` license header in any job log or uploaded artifact — a CI log is a published artifact. **Ordering is the control:** every command's output goes to local files first, those files are scanned (failing on a match) **before** anything is printed or uploaded, and only the classification (`edition=…`) and scanned summaries reach the log. A post-hoc "scan the logs" step is not possible — the log has already left the runner — so masking (`::add-mask::`) covers only the secret's exact lines, and the local-file gate covers transformed header text.
 
 ## 4. Branch-policy verification — throwaway repository
 
