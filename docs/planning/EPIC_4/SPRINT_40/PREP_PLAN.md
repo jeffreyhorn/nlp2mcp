@@ -59,7 +59,7 @@ This prep plan front-loads the work whose absence would cost the most mid-sprint
 | 3 | ✅ Prove the Effective License — Precedence & Per-Solver Fail-Capable Probes | Critical | 3-4 hours | Tasks 1, 2 | P1 (local) — gates P2/P3 and Tasks 5, 7 |
 | 4 | ✅ CI License-Isolation Design & Workflow Inventory | High | 3-4 hours | Tasks 1, 3 | P1 (CI) — demo-only PR jobs, trusted licensed workflow |
 | 5 | ✅ Schema 3.1.0 `license_edition` Design | High | 2-3 hours | Tasks 1, 3 | P1 (schema) — migration, writers, `db_manager`, tests |
-| 6 | Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind) | Critical | 2-3 hours | Tasks 1, 2, 3, 4 | P1/P2/P3 — the three owner decisions, answered in prep before any cohort result exists |
+| 6 | ✅ Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind) | Critical | 2-3 hours | Tasks 1, 2, 3, 4 | P1/P2/P3 — the three owner decisions, answered in prep before any cohort result exists |
 | 7 | License-Gated Cohorts Dry Run — Fingerprints & Routing | Critical | 5-7 hours | Tasks 2, 3, 6 | P2 + P3 — first measurement, GO/NO-GO, never persisted |
 | 8 | lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate | High | 3-4 hours | Tasks 1, 2, 3, 7 | P5 — the +1 Solve rests on an untested premise |
 | 9 | sarf Jacobian O(active) Re-Architecture Design | High | 4-6 hours | Tasks 1, 2 | P6 — the sprint's planned +1 Translate |
@@ -618,9 +618,10 @@ test -f "$DOC" && echo "✅ doc" || echo "SCHEMA_3_1_0_DESIGN.md not yet created
 
 ## Task 6: Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-10-14)
 **Priority:** Critical
 **Estimated Time:** 2-3 hours
+**Time Spent:** ~2.5 hours
 **Deadline:** Before Task 7 runs — the brief **and the owner's three dated answers** must both be committed first
 **Owner:** Development team (brief); project owner (decisions)
 **Dependencies:** Tasks 1, 2, 3, 4
@@ -655,11 +656,32 @@ Sprint 39 P1 spent a Day-0 decision on a floor classification that the Sprint-38
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md`:
+  - the corpus-predicate reader table, the scratch-DB positive control and the hold mechanism (§1);
+  - three `## Decision` blocks, each with options, consequences, arguments, a recommendation, exact edits and **one dated owner answer**;
+  - consequences by answer (§2).
+- `KNOWN_UNKNOWNS.md` — Unknown **3.3** → ✅ VERIFIED
+- `CHANGELOG.md` — Sprint 40 Prep Task 6 entry
+- `src/`, `tests/` and `data/` untouched — quality gate N/A
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — three decisions posed blind and answered by the owner (2026-10-14), before Task 7.**
+
+- **Decision 1, floor: B (separate ledger).**
+  - License-unlocked matches go into a non-counting `license_unlocked` list in `floor_provenance.json`, and the floor stays at 75. The definition is amended, since read literally it would admit a cold match.
+  - **Fail-before sub-rule:** a model whose emit was fixed earlier is credited as fix-driven only if its pre-fix golden, run licensed, does not match.
+- **Decision 2, corpus: A (admit by rule).**
+  - Admitted if and only if the licensed verifier classifies it convex. Both denominators go in one sentence, with a Rolling-KPIs footnote.
+  - **Known blind:** only 4 of the 9 translate today (Task 2).
+- **Decision 3, CI: B (hosted CI, gated on GAMS).** `gams-licensed` is `main`-only, has **no required reviewers**, and keeps `GAMS_ACCESS_CODE` in the environment only. It is created once GAMS confirms a CI-usable license; if GAMS declines, this REPLANs to local-only. **Send checklist item 1 to GAMS now.**
+- **Silent growth confirmed** (scratch DB: 142 → 143, and the model joins the pipeline's run set). **Hold:** Task 5's W10 refuses un-admitted entries, and held models run only in a throwaway worktree.
+- **Side finding routed to Task 12:** `danwolfe` and `decomp` are skipped and convex, so the two `get_candidate_models` disagree (142 vs 140).
+- **The *Verification* script was exercised, and a gap fixed.** On a scratch clone:
+  - **pass:** the branch as is, and answers → measurement → dry run;
+  - **fail, as intended:** a decision reworded *after* the dry run; an answer changed in the *same* commit as the dry run; a measurement SHA older than the answers.
+  - **Gap:** a **stray fourth answer** added outside the Decision blocks **passed**, because `valid()` ran only on the last decision-changing commit, which a change outside the blocks doesn't move. The script now also runs `valid` on the current brief, and that case **fails**.
+- **Unknown 3.3 → ✅ VERIFIED.**
 
 ### Verification
 
@@ -699,6 +721,10 @@ done
 DRY_DOC=docs/planning/EPIC_4/SPRINT_40/COHORT_DRY_RUN.md
 DRY=$(git log --diff-filter=A --format=%H -- "$DRY_DOC" | tail -1)
 if [ "$(blocks < "$DOC")" != "$PREV" ]; then echo "❌ uncommitted edits to a decision block"; exit 1
+# The CURRENT brief must also pass: a stray or fourth answer added later OUTSIDE the
+# Decision blocks leaves the blocks (and so LAST) unchanged, and would otherwise
+# never be examined (found by Task 6's own negative-control run).
+elif ! valid < "$DOC"; then echo "❌ the current brief does not hold exactly one dated answer under each of exactly three ## Decision headings (a stray or extra answer?)"; exit 1
 elif [ -z "$LAST" ] || ! git show "$LAST:$DOC" | valid; then echo "❌ the answers commit does not hold exactly one dated answer under each of exactly three ## Decision headings"; exit 1
 elif [ -z "$DRY" ]; then echo "✅ answers last changed at ${LAST:0:8}; dry run not yet committed"
 elif [ "$LAST" = "$DRY" ]; then echo "❌ answers committed in the SAME commit as the dry run (${DRY:0:8}) — a commit is its own ancestor, so the check must be strict"; exit 1
@@ -725,12 +751,12 @@ grep -c "^## Decision" "$DOC"
 
 ### Acceptance Criteria
 
-- [ ] All three decisions posed with options and the exact edit each implies
-- [ ] **Exactly one dated owner answer under each of exactly three `## Decision` headings** (`**Owner answer (YYYY-MM-DD):**`) — posing the questions is not completion, and three answers under one heading or a fourth answer fail
-- [ ] The **last commit that changed any part of a `## Decision` block** (question, options, consequences, exact edits or answer) holds all three answers and is a **strict ancestor** of the first commit adding `COHORT_DRY_RUN.md` (an earlier, different commit — Git counts a commit as its own ancestor) — so answers revised after the dry run, or committed together with it, fail; **and every measurement SHA on `COHORT_DRY_RUN.md`'s `**Measured at:**` line descends from the answers commit**, so the cohort runs themselves came after the answers (all checked by `git merge-base --is-ancestor` in *Verification*)
-- [ ] The corpus option shows both denominators reported in one sentence
-- [ ] No result from either cohort is cited in the brief
-- [ ] Unknowns 3.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All three decisions posed with options and the exact edit each implies
+- [x] **Exactly one dated owner answer under each of exactly three `## Decision` headings** (`**Owner answer (YYYY-MM-DD):**`) — posing the questions is not completion, and three answers under one heading or a fourth answer fail
+- [x] *(Order half, checkable now: the answers commit precedes any `COHORT_DRY_RUN.md`; the measurement half is checked when Task 7 commits.)* The **last commit that changed any part of a `## Decision` block** (question, options, consequences, exact edits or answer) holds all three answers and is a **strict ancestor** of the first commit adding `COHORT_DRY_RUN.md` (an earlier, different commit — Git counts a commit as its own ancestor) — so answers revised after the dry run, or committed together with it, fail; **and every measurement SHA on `COHORT_DRY_RUN.md`'s `**Measured at:**` line descends from the answers commit**, so the cohort runs themselves came after the answers (all checked by `git merge-base --is-ancestor` in *Verification*)
+- [x] The corpus option shows both denominators reported in one sentence
+- [x] No result from either cohort is cited in the brief
+- [x] Unknowns 3.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

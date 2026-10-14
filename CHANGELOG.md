@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 40 Prep
 
+- **Prep Task 6 COMPLETE (2026-10-14) — owner decisions taken blind, before Task 7.** New doc: `docs/planning/EPIC_4/SPRINT_40/OWNER_DECISION_BRIEF.md`. `src/`, `tests/` and `data/` untouched — quality gate N/A.
+  - **Floor: B.** License-unlocked matches go in a non-counting `license_unlocked` ledger; the floor stays 75; fail-before sub-rule for previously fixed emits.
+  - **Corpus: A.** NLP-gated models are admitted iff the licensed verifier classifies them convex; both denominators (142 continuity + expanded) in one sentence.
+  - **CI: B.** Hosted CI once GAMS confirms a CI-usable license; `gams-licensed` `main`-only, no required reviewers; REPLAN to local-only if GAMS declines.
+  - **Unknown 3.3 ✅:** a convex status on a scratch DB moves the candidates 142 → 143 and adds the model to the pipeline's run set. The hold is Task 5's W10 `--admit` gate, plus throwaway-worktree evaluation.
+  - **Side finding (→ Task 12):** `danwolfe` and `decomp` are skipped but convex, so the two `get_candidate_models` disagree (142 vs 140).
+
 - **Prep Task 5 COMPLETE (2026-10-14) — schema 3.1.0 `license_edition` designed; the writer list closes.** New doc: `docs/planning/EPIC_4/SPRINT_40/SCHEMA_3_1_0_DESIGN.md`. `src/` and `tests/` untouched — quality gate N/A.
   - **Closed, grep-derived writer list (11 sites)**, including three the plan missed: `run_full_test.py::mark_cascade_not_tested`, `db_manager.py update`, and `schema.json`'s `description` "(v3.0.0)" (read by a test as the canonical version).
   - **Fields:** `license_edition` (`licensed` / `demo` / `null`) in `mcp_solve_result` and `convexity_result`; `gams_version` added to `convexity_result`. `null` = unrecorded, never a guessed `"demo"`.
