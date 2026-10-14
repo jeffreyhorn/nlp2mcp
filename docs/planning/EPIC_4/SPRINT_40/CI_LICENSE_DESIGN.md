@@ -85,13 +85,21 @@ jobs:
         run: …   # scan_local over everything under $RUNNER_TEMP/out/ that an upload step would ship;
                  # FAIL on a match, and the upload step runs only if this one succeeded; tolerate an
                  # absent license/pattern file (install may have failed) by reporting "nothing to scan";
-                 # positive control: the same scan run against $GAMS_DIR/gamslice.txt must hit
-      # scan_local = grep -F -f "$RUNNER_TEMP/lic-patterns.txt" over LOCAL files, exit non-zero on a
-      # match. It catches VERBATIM secret lines only -- not transformed header text (e.g. the licensee
+                 # positive control: scan_local on $GAMS_DIR/gamslice.txt must
+                 # return rc 0 (hit) -- quiet, so the license lines themselves are never printed
+      # scan_local PATH... = QUIET fixed-string match, so nothing it matches is ever printed:
+      #   grep -rqF -f "$RUNNER_TEMP/lic-patterns.txt" -- "$@" >/dev/null 2>&1; rc=$?
+      #   rc 0 = MATCH -> fail the gate (and print only "license text found", never the line or file
+      #   content); rc 1 = clean -> pass; rc >= 2 = scan error -> FAIL CLOSED.
+      # This matters most for the positive control: run against gamslice.txt it matches every line,
+      # and a plain `grep -F -f` would print the raw license lines to the Actions log, leaving
+      # masking as the only protection. Only the verdict ("hit" / "no hit") is printed.
+      # It catches VERBATIM secret lines only -- not transformed header text (e.g. the licensee
       # or node fields GAMS reformats into a .lst/.log header); those are kept out by capture-and-
-      # classify ordering, not by this scan (Task 3's own scan is likewise LIMITED). It cannot scan the Actions log itself: job logs stream off the runner as they are written
-      # and are not downloadable until the job ends, so a later step never sees them. The log is
-      # protected by never writing raw output to it, not by scanning it after the fact.
+      # classify ordering, not by this scan (Task 3's own scan is likewise LIMITED). It cannot scan
+      # the Actions log itself: job logs stream off the runner as they are written and are not
+      # downloadable until the job ends, so a later step never sees them. The log is protected by
+      # never writing raw output to it, not by scanning it after the fact.
       - name: Remove the license (always)
         if: always()
         run: |
