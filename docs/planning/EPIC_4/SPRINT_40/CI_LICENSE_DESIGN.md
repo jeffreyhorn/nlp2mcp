@@ -66,6 +66,9 @@ jobs:
         run: |
           while IFS= read -r l; do [ -n "$l" ] && echo "::add-mask::$l"; done <<< "$GAMS_LICENSE"
           umask 077; printf '%s\n' "$GAMS_LICENSE" > "$GAMS_DIR/gamslice.txt"
+          grep -v '^[[:space:]]*$' "$GAMS_DIR/gamslice.txt" > "$RUNNER_TEMP/lic-patterns.txt"
+                                      # the ONE pattern file, at a FIXED path -- a second secret copy,
+                                      # so the cleanup step removes it too
       - name: Edition check (classification only -- never raw audit or header output)
         run: …   # tiny probe, ALL output to $RUNNER_TEMP/out/ (stdout+stderr redirected, lo=2 log to
                  # file, o= listing there); scan_local (below) BEFORE printing anything; then print only
@@ -79,21 +82,26 @@ jobs:
                  # FAIL on a match, and the upload step runs only if this one succeeded; tolerate an
                  # absent license/pattern file (install may have failed) by reporting "nothing to scan";
                  # positive control: the same scan run against $GAMS_DIR/gamslice.txt must hit
-      # scan_local = grep -F -f <pattern file built from the secret> over LOCAL files, exit non-zero on a
-      # match. It cannot scan the Actions log itself: job logs stream off the runner as they are written
+      # scan_local = grep -F -f "$RUNNER_TEMP/lic-patterns.txt" over LOCAL files, exit non-zero on a
+      # match. It catches VERBATIM secret lines only -- not transformed header text (e.g. the licensee
+      # or node fields GAMS reformats into a .lst/.log header); those are kept out by capture-and-
+      # classify ordering, not by this scan (Task 3's own scan is likewise LIMITED). It cannot scan the Actions log itself: job logs stream off the runner as they are written
       # and are not downloadable until the job ends, so a later step never sees them. The log is
       # protected by never writing raw output to it, not by scanning it after the fact.
       - name: Remove the license (always)
         if: always()
         run: |
+          rm -f "$RUNNER_TEMP/lic-patterns.txt"   # first, and independent of GAMS_DIR
           [ -n "${GAMS_DIR:-}" ] || { echo "::warning::GAMS_DIR unset -- install failed before persisting it"; exit 0; }
-          rm -f "$GAMS_DIR/gamslice.txt"    # plus any copy; must not outlive the job
+          rm -f "$GAMS_DIR/gamslice.txt"
+          # every copy listed: the license file and the pattern file. Neither may outlive the job --
+          # on a self-hosted runner (§5) a survivor would be readable by the next job.
 ```
 
 - **Coverage:** both gated populations (`BASELINE_RECONFIRMATION.md` §3 — the 11 MCP-gated models and the 9 in-scope NLP-gated ones) and PR19's six gated soft-fail targets (§2).
 - **Never `pull_request_target` with a PR-head checkout** — it runs with the base repository's secrets while executing the PR's code, the standard exfiltration pattern. This workflow has no PR trigger at all.
 - **Secrets:** `GAMS_LICENSE` stored **in the `gams-licensed` environment only**, never as a repository secret (a repository secret is available to every workflow, including PR-triggered ones).
-- **Logs and artifacts:** no raw `gams audit`, `.lst` or `.log` license header in any job log or uploaded artifact — a CI log is a published artifact. **Ordering is the control:** every command's output goes to local files first, those files are scanned (failing on a match) **before** anything is printed or uploaded, and only the classification (`edition=…`) and scanned summaries reach the log. A post-hoc "scan the logs" step is not possible — the log has already left the runner — so masking (`::add-mask::`) covers only the secret's exact lines, and the local-file gate covers transformed header text.
+- **Logs and artifacts:** no raw `gams audit`, `.lst` or `.log` license header in any job log or uploaded artifact — a CI log is a published artifact. **Ordering is the control:** every command's output goes to local files first, and only the classification (`edition=…`) and summaries derived from it reach the log — raw listings and logs are never printed. A post-hoc "scan the logs" step is not possible, since the log has already left the runner. The two scanning layers are narrower than that: masking (`::add-mask::`) and `scan_local` both catch **verbatim** secret lines only. Neither catches transformed header text (the licensee or node fields as GAMS reformats them); **capture-and-classify ordering is what keeps those out**, not the scan.
 
 ## 4. Branch-policy verification — throwaway repository
 
