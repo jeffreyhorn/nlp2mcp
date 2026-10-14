@@ -96,7 +96,10 @@ jobs:
                  # positive control: scan_local on $GAMS_DIR/gamslice.txt must
                  # return rc 0 (hit) -- quiet, so the license lines themselves are never printed
       # scan_local PATH... = QUIET fixed-string match, so nothing it matches is ever printed:
-      #   grep -rqF -f "$RUNNER_TEMP/lic-patterns.txt" -- "$@" >/dev/null 2>&1; rc=$?
+      #   rc=0; grep -rqF -f "$RUNNER_TEMP/lic-patterns.txt" -- "$@" >/dev/null 2>&1 || rc=$?
+      #   (`|| rc=$?`, not `; rc=$?`: Actions runs bash steps with -e, so a clean scan's exit 1
+      #   would end the step before rc is captured -- checked under bash -e -o pipefail:
+      #   0, 1 and 2 all reach the classification.)
       #   rc 0 = MATCH -> fail the gate (and print only "license text found", never the line or file
       #   content); rc 1 = clean -> pass; rc >= 2 = scan error -> FAIL CLOSED.
       # This matters most for the positive control: run against gamslice.txt it matches every line,
