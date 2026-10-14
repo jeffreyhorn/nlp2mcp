@@ -242,3 +242,22 @@ May the license be used in CI, and if so how? This decision is posed **complete*
 ## 3. What this brief does not do
 
 It cites no cohort result, runs no licensed solve of any gated model, and edits no data file. The positive control used a scratch copy outside the repository, and `git status -- data/` is clean.
+
+## 4. Owner follow-up (2026-10-14): GAMS checklist item 1 answered
+
+**Owner statement (2026-10-14):** the access code **can be activated on every CI run.**
+
+**What this settles.** Decision 3's answer (B) was conditional on GAMS confirming a CI-usable license, and this meets that condition: **P1's CI half proceeds as hosted CI, with no REPLAN to local-only.**
+- **Why it works:** each GitHub-hosted job activates its own license with `gamsgetkey` (`CI_LICENSE_DESIGN.md` §3), so the node ID embedded at activation is that runner's own. GAMS's caution that local licenses are unsuitable for virtual machines concerned *moving* a node-bound license, not activating one per job.
+- **P1 then does three things,** in the order `CI_LICENSE_DESIGN.md` gives:
+  - create `gams-licensed` (`main`-only, no required reviewers);
+  - store `GAMS_ACCESS_CODE` in the environment only;
+  - land `licensed-solve.yml` together with the PR-side change of §6.
+
+**Still not established, and worth asking GAMS when convenient:**
+- whether each activation **consumes** anything, such as an activation count or seat;
+- whether the license is technically *local* or *network*.
+
+Neither blocks P1. If activations turn out to be **limited**, the nightly `schedule` trigger is the first thing to reduce. In every case, **each job needs outbound access to `license.gams.com`**, and a failed activation already fails the job (§3's `gamsgetkey … || exit 1`).
+
+*This section records a fact for P1. It is not a `## Decision` block and changes no answer above.*
