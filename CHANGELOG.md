@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 40 Prep
 
+- **Prep Task 5 COMPLETE (2026-10-14) — schema 3.1.0 `license_edition` designed; the writer list closes.** New doc: `docs/planning/EPIC_4/SPRINT_40/SCHEMA_3_1_0_DESIGN.md`. `src/` and `tests/` untouched — quality gate N/A.
+  - **Closed, grep-derived writer list (11 sites)**, including three the plan missed: `run_full_test.py::mark_cascade_not_tested`, `db_manager.py update`, and `schema.json`'s `description` "(v3.0.0)" (read by a test as the canonical version).
+  - **Fields:** `license_edition` (`licensed` / `demo` / `null`) in `mcp_solve_result` and `convexity_result`; `gams_version` added to `convexity_result`. `null` = unrecorded, never a guessed `"demo"`.
+  - **Designed, not built:** a shared parser beside `extract_gams_version`; `verify_convexity.py` capturing edition, version and solver before its temp dir is deleted; the P3 application writer `apply_convexity_results.py` with an `--admit` corpus hold; `migrate_schema_v3.1.0.py`.
+  - **Positive control:** the new fields fail current validation and pass a draft 3.1.0 schema, which still rejects unknown keys.
+  - **Unknown 1.4 → 🔶 PARTIALLY WRONG:** closable, but the assumed list was incomplete.
+
 - **Prep Task 4 COMPLETE (2026-10-14) — CI license isolation designed and its branch policy verified; recommendation: licensed tier local-only for Sprint 40.** New doc: `docs/planning/EPIC_4/SPRINT_40/CI_LICENSE_DESIGN.md`. `src/` and `tests/` untouched — quality gate N/A.
   - **Inventory (YAML-parsed):** 10 workflows; the two that install GAMS are `pull_request`-only and run PR code, so they stay demo-only; only `publish-pypi.yml` uses secrets; no `pull_request_target`.
   - **Branch policy verified in a throwaway repo:** a `main`-only environment admitted `main` (dummy secret reachable, the positive control) and refused a branch carrying its own copy of the workflow on `push`, same-repo `pull_request` and `workflow_dispatch`. Repo then neutralized and archived; **deletion needs the owner** (`gh` token lacks `delete_repo`).

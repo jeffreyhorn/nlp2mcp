@@ -58,7 +58,7 @@ This prep plan front-loads the work whose absence would cost the most mid-sprint
 | 2 | ✅ Re-Derive the Sprint-39 Baseline & Both License-Gated Populations by Identity | Critical | 2-3 hours | Task 1 | Every priority — the commit-pinned baseline and the two named cohorts |
 | 3 | ✅ Prove the Effective License — Precedence & Per-Solver Fail-Capable Probes | Critical | 3-4 hours | Tasks 1, 2 | P1 (local) — gates P2/P3 and Tasks 5, 7 |
 | 4 | ✅ CI License-Isolation Design & Workflow Inventory | High | 3-4 hours | Tasks 1, 3 | P1 (CI) — demo-only PR jobs, trusted licensed workflow |
-| 5 | Schema 3.1.0 `license_edition` Design | High | 2-3 hours | Tasks 1, 3 | P1 (schema) — migration, writers, `db_manager`, tests |
+| 5 | ✅ Schema 3.1.0 `license_edition` Design | High | 2-3 hours | Tasks 1, 3 | P1 (schema) — migration, writers, `db_manager`, tests |
 | 6 | Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind) | Critical | 2-3 hours | Tasks 1, 2, 3, 4 | P1/P2/P3 — the three owner decisions, answered in prep before any cohort result exists |
 | 7 | License-Gated Cohorts Dry Run — Fingerprints & Routing | Critical | 5-7 hours | Tasks 2, 3, 6 | P2 + P3 — first measurement, GO/NO-GO, never persisted |
 | 8 | lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate | High | 3-4 hours | Tasks 1, 2, 3, 7 | P5 — the +1 Solve rests on an untested premise |
@@ -529,9 +529,10 @@ grep -c "pull_request_target" "$DOC" 2>/dev/null   # the design must address it 
 
 ## Task 5: Schema 3.1.0 `license_edition` Design
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-10-14)
 **Priority:** High
 **Estimated Time:** 2-3 hours
+**Time Spent:** ~2.5 hours
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 3
@@ -562,11 +563,26 @@ Produce `docs/planning/EPIC_4/SPRINT_40/SCHEMA_3_1_0_DESIGN.md`: the exact field
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_40/SCHEMA_3_1_0_DESIGN.md` — the field definitions and null semantics; the closed, grep-derived writer list (W1–W11) with its commands; version stamps; reader survey; the parser extension; `verify_convexity.py` provenance capture; the P3 application writer with its corpus hold; the migration spec; `schema.json` / `db_manager.py` changes; tests T1–T9; the validation positive control; P1's order of work
+- `KNOWN_UNKNOWNS.md` — Unknown **1.4** → 🔶 PARTIALLY WRONG
+- `CHANGELOG.md` — Sprint 40 Prep Task 5 entry
+- `src/` and `tests/` untouched — quality gate N/A
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — the writer list closes, with three sites the plan had missed, and the missing P3 writer is designed.**
+
+- **Closed list:** 11 sites (W1–W11). New beyond the plan:
+  - `run_full_test.py::mark_cascade_not_tested` (two `mcp_solve` constructions);
+  - `db_manager.py update` (hand-writes any nested field);
+  - `schema.json`'s `description` "(v3.0.0)", which `test_db_manager.py` reads as the canonical version.
+- **Fixed-key-list writers:** `update_model_solve_result` and `run_solve_stage` drop any field not named. That is how `mcp_attribution` was lost in Sprint 39, so both are on the list explicitly.
+- **Fields:** `license_edition` (`licensed` / `demo` / `null`) in both result types; `gams_version` in `convexity_result`. **`null` = unrecorded, never a guessed `"demo"`.** Invariant: the key is present everywhere and non-null exactly when a listing was classified.
+- **Parser:** `extract_license_edition` + `extract_solver_name` beside `extract_gams_version` in `test_solve.py`, imported by `verify_convexity.py` (one parser). Synthetic probes: a refused demo listing has the version header but no `SOLVER` line.
+- **P3 application writer** (`apply_convexity_results.py`, designed): `--db` has no default; non-nullable fields are omitted when unknown; replace, not merge; **it refuses any model entering the convex set unless `--admit`ted**. The Unknown 3.3 hold.
+- **Migration:** additive, never overwrites, refuses a second run, refreshes `updated_date`, writes a declared `_migration_summary_v3_1_0`.
+- **Positive control:** the new fields **fail** 3.0.0 validation and **pass** a draft 3.1.0 schema, which still rejects an unknown key.
+- **Unknown 1.4 → 🔶 PARTIALLY WRONG** (closable, but the assumed list was incomplete).
 
 ### Verification
 
@@ -591,12 +607,12 @@ test -f "$DOC" && echo "✅ doc" || echo "SCHEMA_3_1_0_DESIGN.md not yet created
 
 ### Acceptance Criteria
 
-- [ ] Writer list derived by grep and recorded with the command that produced it
-- [ ] Both `mcp_solve_result` and `convexity_result` covered; `gams_version` added to the latter
-- [ ] Null semantics stated: existing rows are unknown, never back-filled as `"demo"`
-- [ ] `db_manager.py` `--empty` stamp and catalog-init chain included
-- [ ] Test list includes "still rejects an unknown key"
-- [ ] Unknowns 1.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Writer list derived by grep and recorded with the command that produced it
+- [x] Both `mcp_solve_result` and `convexity_result` covered; `gams_version` added to the latter
+- [x] Null semantics stated: existing rows are unknown, never back-filled as `"demo"`
+- [x] `db_manager.py` `--empty` stamp and catalog-init chain included
+- [x] Test list includes "still rejects an unknown key"
+- [x] Unknowns 1.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
