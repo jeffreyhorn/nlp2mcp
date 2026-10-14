@@ -609,7 +609,45 @@ On a scratch copy of the DB, set one NLP-gated model's `convexity.status` to `ve
 Sprint 40 prep team (decisions: project owner)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — **the corpus can grow silently** (positive control: one convex status on a scratch DB moves `kpi_block`'s candidates 142 → 143 and adds the model to the pipeline's run set), **and it can be held**: the hold lives at the single writer that would apply licensed convexity results. Both rules were written, and the owner's three answers taken, before any cohort result exists.
+
+**Verified by:** Sprint 40 Prep Task 6 · **Date:** 2026-10-14 · **Measured at:** `028dc665`
+
+**Findings:**
+- **Q1, readers of the candidate predicate** (`grep -rnE "verified_convex|likely_convex|CONVEX_STATUSES" scripts/ src/`):
+  - `kpi_block.py:45,112` (every headline denominator);
+  - `check_doc_figures.py`, via `compute_kpis`;
+  - `run_full_test.py::get_candidate_models` (**what the pipeline runs**);
+  - `batch_parse.py::get_candidate_models`;
+  - `floor_tracker.py` (advisory mechanical count only).
+- **Q2, positive control** on a scratch copy outside the repo, setting `torsion` (`error` today) to `verified_convex`:
+  - `kpi_block --db` candidates **142 → 143**;
+  - `run_full_test`'s set 142 → 143, now including torsion;
+  - `batch_parse` 140 → 141;
+  - copy deleted, `data/` clean.
+- **Q3, hold mechanism:**
+  - Nothing writes verifier output to the live DB today. The first writer will be Task 5's W10 (`apply_convexity_results.py`), which **refuses** a model entering the convex set unless it is `--admit`ted.
+  - Held models are evaluated in a **throwaway worktree**: `run_full_test.py` has no `--db` flag, and `--model` filters *within* the candidates, so a held model cannot run against the committed DB at all.
+  - A holding status was rejected: it would need a schema enum change and a re-audit of every reader.
+- **Q4, floor options:** `floor = baseline + len(entries)`, so **every entry counts +1 whatever its limb**. A non-counting option therefore needs a separate list, not a new limb. Read literally, the current definition **admits** a license-unlocked cold match, so excluding one means amending it.
+- **Q5, provable from history:** the answers are committed in this task's commit, before `COHORT_DRY_RUN.md` exists. The PREP_PLAN *Verification* check was **exercised on a scratch clone**:
+  - **pass:** the branch as is, and answers → measurement → dry run;
+  - **fail, correctly:** a rewording after the dry run, an answer changed in the dry run's own commit, and a measurement SHA predating the answers;
+  - **a stray fourth answer outside the blocks initially *passed*.** `valid()` checked only the last decision-changing commit; it now also checks the current brief, and that case fails.
+- **Side finding, routed to Task 12:**
+  - `danwolfe` and `decomp` are `pipeline_status: skipped` **and** convex: counted in `kpi_block`'s 142, skipped by `batch_parse` (140), and described as excluded by `PROJECT_PLAN.md` footnote ⁴.
+  - The two `get_candidate_models` disagree.
+
+**Evidence:** `OWNER_DECISION_BRIEF.md` §1 (reader table, positive control, hold mechanism) and the three `## Decision` blocks with dated owner answers.
+
+**Decision (owner, 2026-10-14):**
+- **Floor: B.** A separate, non-counting `license_unlocked` ledger, with the fail-before sub-rule.
+- **Corpus: A.** Admit by rule (the licensed verifier's convex classification), with both denominators in one sentence.
+- **CI: B.** Hosted CI gated on GAMS confirming a CI-usable license; `gams-licensed` `main`-only with no required reviewers; REPLAN to local-only if GAMS declines.
+- **Routed to Sprint 40:**
+  - P1: the `floor_tracker` ledger, `corpus_admissions.json` + `kpi_block --corpus`, and the CI half once GAMS answers;
+  - P3: W10's `--admit` from the rule;
+  - Task 12: the danwolfe/decomp consistency check.
 
 ---
 
