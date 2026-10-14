@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 40 Prep
 
+- **Prep Task 4 COMPLETE (2026-10-14) — CI license isolation designed and its branch policy verified; recommendation: licensed tier local-only for Sprint 40.** New doc: `docs/planning/EPIC_4/SPRINT_40/CI_LICENSE_DESIGN.md`. `src/` and `tests/` untouched — quality gate N/A.
+  - **Inventory (YAML-parsed):** 10 workflows; the two that install GAMS are `pull_request`-only and run PR code, so they stay demo-only; only `publish-pypi.yml` uses secrets; no `pull_request_target`.
+  - **Branch policy verified in a throwaway repo:** a `main`-only environment admitted `main` (dummy secret reachable, the positive control) and refused a branch carrying its own copy of the workflow on `push`, same-repo `pull_request` and `workflow_dispatch`. Repo then neutralized and archived; **deletion needs the owner** (`gh` token lacks `delete_repo`).
+  - **Unknown 1.3 → 🔶 PARTIALLY WRONG:** the controls hold, but hosted runners are very unlikely to validate the node-locked license, and a self-hosted runner cannot be restricted to one workflow on a personal-account repo (and could read the license file directly). → local-only licensed tier, audited by Task 5's `license_edition`.
+  - **PR19 masks the demo limit:** six MCP-gated models in its soft-fail tier license-fail on every PR as if emit failures → report them as *skipped — over the demo ceiling*.
+
 - **Prep Task 3 COMPLETE (2026-10-13) — the effective license proven, per solver; edition discriminator found; neutrality sample clean.** New doc: `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md`. `src/` and `tests/` untouched — quality gate N/A.
   - **Precedence (Unknown 1.1 ✅):** the user-level `~/Library/Application Support/GAMS/gamslice.txt` is effective; the system-directory demo is the fallback (user file moved aside under a restore trap → over-ceiling probe refused; restored → solves, SHA-256 identical). All pipeline paths resolve to the one 54.2.1 binary.
   - **Per-solver probes:** LP 2,500 / NLP, QCP, MCP 1,500 refused on the demo (verbatim refusal lines state the ceilings: 2,000 linear, 1,000 nonlinear) and solved under the license with CPLEX, CONOPT, CONOPT (the default QCP solver) and PATH — no solver-selective gap.

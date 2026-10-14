@@ -57,7 +57,7 @@ This prep plan front-loads the work whose absence would cost the most mid-sprint
 | 1 | ✅ Create Sprint 40 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 10 priorities + the license unlock |
 | 2 | ✅ Re-Derive the Sprint-39 Baseline & Both License-Gated Populations by Identity | Critical | 2-3 hours | Task 1 | Every priority — the commit-pinned baseline and the two named cohorts |
 | 3 | ✅ Prove the Effective License — Precedence & Per-Solver Fail-Capable Probes | Critical | 3-4 hours | Tasks 1, 2 | P1 (local) — gates P2/P3 and Tasks 5, 7 |
-| 4 | CI License-Isolation Design & Workflow Inventory | High | 3-4 hours | Tasks 1, 3 | P1 (CI) — demo-only PR jobs, trusted licensed workflow |
+| 4 | ✅ CI License-Isolation Design & Workflow Inventory | High | 3-4 hours | Tasks 1, 3 | P1 (CI) — demo-only PR jobs, trusted licensed workflow |
 | 5 | Schema 3.1.0 `license_edition` Design | High | 2-3 hours | Tasks 1, 3 | P1 (schema) — migration, writers, `db_manager`, tests |
 | 6 | Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind) | Critical | 2-3 hours | Tasks 1, 2, 3, 4 | P1/P2/P3 — the three owner decisions, answered in prep before any cohort result exists |
 | 7 | License-Gated Cohorts Dry Run — Fingerprints & Routing | Critical | 5-7 hours | Tasks 2, 3, 6 | P2 + P3 — first measurement, GO/NO-GO, never persisted |
@@ -440,9 +440,10 @@ N2=$(scan -E 'Licensee:[[:space:]]+[[:alnum:]]|node:[0-9]') || exit 2
 
 ## Task 4: CI License-Isolation Design & Workflow Inventory
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-10-14)
 **Priority:** High
 **Estimated Time:** 3-4 hours
+**Time Spent:** ~2.5 hours
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team (environment creation + secret: project owner)
 **Dependencies:** Tasks 1, 3
@@ -474,11 +475,21 @@ PR #1745's review found that both GAMS-installing workflows trigger **only on `p
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_40/CI_LICENSE_DESIGN.md` — YAML-parsed workflow inventory; demo-exclusion catalog; `licensed-solve.yml` design; throwaway-repo branch-policy verification; hosted-vs-self-hosted assessment; PR-side change; the post-merge detection trade-off; owner checklist
+- `KNOWN_UNKNOWNS.md` — Unknown **1.3** → 🔶 PARTIALLY WRONG
+- `CHANGELOG.md` — Sprint 40 Prep Task 4 entry
+- **External, outside the repo:** throwaway repository `jeffreyhorn/nlp2mcp-envpolicy-probe-20261013` created for the branch-policy test, then neutralized — dummy secret and environment deleted, probe PR closed, repository **archived**. **Not deleted:** the `gh` token lacks `delete_repo`; deletion is an owner action (`CI_LICENSE_DESIGN.md` §7 item 6)
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — the isolation controls are verified, but the licensed tier should stay local-only for Sprint 40.**
+
+- **Inventory:** 10 workflows; **two** install GAMS (`pr19-emit-solve-validation.yml`, `presolve-divergence.yml`), both `pull_request`-only and running PR-controlled code — they stay demo-only. Only `publish-pypi.yml` uses secrets. **No `pull_request_target`** anywhere.
+- **Branch policy, verified empirically** in a throwaway repository: a `main`-only environment admitted `main` (`SECRET_REACHABLE len=25`, the positive control) and **refused a branch carrying its own copy of the workflow** on `push`, same-repo `pull_request` and `workflow_dispatch`. A measurement slip (reading the script echo as output) was caught by that positive control and is recorded.
+- **Demo limit masked, not excluded:** six MCP-gated models sit in PR19's soft-fail tier and license-fail on every PR as if they were emit failures → the PR-side change reports them as *skipped — over the demo ceiling*.
+- **Runners:** hosted runners are very unlikely to validate the node-locked evaluation license (owner question for GAMS); a **self-hosted runner cannot be restricted to one workflow on a personal-account repo**, and on the licensed machine any job could read the license file directly. **Recommendation: local-only licensed tier** for Sprint 40, audited by Task 5's `license_edition`; `licensed-solve.yml` is ready if a CI-usable license arrives or the repo moves to an organization.
+- **Detection trade-off stated:** large-model regressions surface only on the next licensed run — Task 12 should schedule one at each checkpoint.
+- **Owner checklist** for Task 6 decision 3, including deleting the archived throwaway repository.
 
 ### Verification
 
@@ -506,13 +517,13 @@ grep -c "pull_request_target" "$DOC" 2>/dev/null   # the design must address it 
 
 ### Acceptance Criteria
 
-- [ ] Every workflow inventoried by name with trigger and GAMS-install status, derived from the files
-- [ ] The design gives the secret to **no job that runs PR code** — same-repo PRs included
-- [ ] The `main`-only branch-policy claim is verified **empirically** in a throwaway repository — non-`main` refusal **and** `main` access both observed — not assumed and not by citation alone
-- [ ] `pull_request_target` with a PR-head checkout is explicitly ruled out
-- [ ] Masking + output scan are described as defence in depth, with the scan's positive control
-- [ ] The post-merge detection trade-off is stated
-- [ ] Unknowns 1.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Every workflow inventoried by name with trigger and GAMS-install status, derived from the files
+- [x] The design gives the secret to **no job that runs PR code** — same-repo PRs included
+- [x] The `main`-only branch-policy claim is verified **empirically** in a throwaway repository — non-`main` refusal **and** `main` access both observed — not assumed and not by citation alone
+- [x] `pull_request_target` with a PR-head checkout is explicitly ruled out
+- [x] Masking + output scan are described as defence in depth, with the scan's positive control
+- [x] The post-merge detection trade-off is stated
+- [x] Unknowns 1.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

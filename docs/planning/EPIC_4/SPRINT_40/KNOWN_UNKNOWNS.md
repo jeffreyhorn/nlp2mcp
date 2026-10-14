@@ -249,7 +249,22 @@ Read the license terms (owner). In a throwaway repository, create an environment
 Sprint 40 prep team (license terms: project owner)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — the isolation controls hold (✅ `main`-only environment refuses other refs; ✅ no `pull_request_target`), but the license cannot safely reach CI today: hosted runners are very unlikely to validate a node-locked license, and the self-hosted fallback cannot be restricted on a personal-account repo
+
+**Verified by:** Sprint 40 Prep Task 4 · **Date:** 2026-10-14 · **Measured at:** `c8f769c4`
+
+**Findings:**
+- **Q1 — terms / hosted runners: not established, evidence against.** Task 3: evaluation license, expires 2027-09-21, header carries node, memory and core-count fields — node-locked in shape. Not tested in CI on purpose (installing the real license anywhere in CI before the owner's decision is the exposure this design prevents). Owner question for GAMS.
+- **Q2 — branch policy: ✅ verified empirically** in a throwaway public repository: a `main`-only `gams-licensed` environment with a 25-character dummy secret. `main` (`push`, `workflow_dispatch` ×2) reached it (`SECRET_REACHABLE len=25` — the positive control); a branch carrying **its own copy** of the workflow was **refused before the job ran** on `push`, same-repo `pull_request` (`refs/pull/1/merge`) and `workflow_dispatch` ×2 — *"Branch … is not allowed to deploy to gams-licensed due to environment protection rules."*
+- **Q3 — workflows:** 10 workflows, parsed as YAML; only `publish-pypi.yml` uses secrets; the two GAMS-installing workflows are `pull_request`-only and run PR-controlled code, so they must stay demo-only.
+- **Q4 — demo-motivated exclusions:** none by rule; instead **six MCP-gated models sit in PR19's soft-fail tier** (`egypt`, `ferts`, `shale`, `sroute`, `srpchase`, `tfordy`) and license-fail on every PR, indistinguishable from emit failures.
+- **Q5 — binding vs fresh runners:** see Q1.
+- **New: the self-hosted fallback fails its own constraint here.** Restricting a runner to selected workflows is an organization runner-group feature; `jeffreyhorn/nlp2mcp` is user-owned, so any branch's workflow could target the runner — and on the licensed machine the license is a file a job could read directly, whatever the environment policy.
+- **`pull_request_target`:** none anywhere in `.github/`.
+
+**Evidence:** `CI_LICENSE_DESIGN.md` §1 (inventory), §2 (exclusions), §4 (throwaway-repo table, including a recorded measurement slip caught by the positive control), §5 (runner assessment).
+
+**Decision:** The controls the design relies on are real, but **the licensed tier stays local-only for Sprint 40**, audited by Task 5's `license_edition`; `licensed-solve.yml` (§3) is adopted only if GAMS provides a CI-usable license or the repo moves to an organization. Carried to Task 6 decision 3 (owner checklist, `CI_LICENSE_DESIGN.md` §7).
 
 ---
 
