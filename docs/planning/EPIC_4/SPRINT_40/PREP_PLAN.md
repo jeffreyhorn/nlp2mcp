@@ -56,7 +56,7 @@ This prep plan front-loads the work whose absence would cost the most mid-sprint
 |---|------|----------|-----------|--------------|--------------------------|
 | 1 | ✅ Create Sprint 40 Known Unknowns List | Critical | 3-4 hours | None | Proactive unknown identification across all 10 priorities + the license unlock |
 | 2 | ✅ Re-Derive the Sprint-39 Baseline & Both License-Gated Populations by Identity | Critical | 2-3 hours | Task 1 | Every priority — the commit-pinned baseline and the two named cohorts |
-| 3 | Prove the Effective License — Precedence & Per-Solver Fail-Capable Probes | Critical | 3-4 hours | Tasks 1, 2 | P1 (local) — gates P2/P3 and Tasks 5, 7 |
+| 3 | ✅ Prove the Effective License — Precedence & Per-Solver Fail-Capable Probes | Critical | 3-4 hours | Tasks 1, 2 | P1 (local) — gates P2/P3 and Tasks 5, 7 |
 | 4 | CI License-Isolation Design & Workflow Inventory | High | 3-4 hours | Tasks 1, 3 | P1 (CI) — demo-only PR jobs, trusted licensed workflow |
 | 5 | Schema 3.1.0 `license_edition` Design | High | 2-3 hours | Tasks 1, 3 | P1 (schema) — migration, writers, `db_manager`, tests |
 | 6 | Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind) | Critical | 2-3 hours | Tasks 1, 2, 3, 4 | P1/P2/P3 — the three owner decisions, answered in prep before any cohort result exists |
@@ -311,9 +311,10 @@ test -f docs/planning/EPIC_4/SPRINT_40/BASELINE_RECONFIRMATION.md && echo "✅ d
 
 ## Task 3: Prove the Effective License — Precedence & Per-Solver Fail-Capable Probes
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-10-13)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
+**Time Spent:** ~2 hours
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team (license file placement: project owner)
 **Dependencies:** Tasks 1, 2
@@ -346,11 +347,21 @@ Every license-dependent result in Sprint 40 is only as good as the evidence that
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_40/LICENSE_PROBE.md` — precedence finding; the four per-solver probes with the verbatim demo refusals; the edition-discriminating regex with its 20-listing classification table and inverted control; the 13-model neutrality sample, its per-invocation editions and its synthetic positive control; the system-directory recommendation; operational facts for Task 4
+- `KNOWN_UNKNOWNS.md` — **1.1** ✅ VERIFIED, **1.2** ✅ VERIFIED, **1.5** 🔍 INCOMPLETE (sample-neutral at `35b296b3`, routed to the first licensed full run)
+- `CHANGELOG.md` — Sprint 40 Prep Task 3 entry
+- No license file left displaced: the precedence test restored the user-level file under a trap, byte-identical by SHA-256
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — the license is real, effective and solver-complete; the discriminator works; the sample is neutral.**
+
+- **Precedence:** the **user-level** license is what GAMS reads; the system-directory demo is the fallback (user file moved aside → the over-ceiling probe is refused; restored → it solves, checksum identical). Every pipeline path resolves to the one 54.2.1 binary.
+- **Solver coverage — no split:** LP 2,500 / NLP, QCP, MCP 1,500 are **refused on the demo** (the positive control — GAMS's own refusal lines state the ceilings: **2,000** linear, **1,000** nonlinear) and **solve under the effective license** with **CPLEX**, **CONOPT**, **CONOPT** (the default QCP solver — not selected by `NLP=CONOPT`) and **PATH**.
+- **Discriminator (Unknown 1.2):** generic markers only — `USER: GAMS Demo,` / the refusal line ⇒ demo; a `USER:` line that is not `GAMS Demo,` (prefix-matched, never captured) ⇒ licensed; neither ⇒ `None`. **20/20** paired listings correct across the probe, convexity, MCP and presolve stages; inverted control 20/20 wrong, non-zero exit.
+- **Neutrality (Unknown 1.5):** 13 models outside both populations, through the real pipeline with every invocation's own listing retained — **20/20 invocations licensed, 0/13 rows changed**; the same diff on the synthetic probe reports the change. Sample-neutral; universal claim routed to the first licensed full run.
+- **License hygiene:** the fail-closed scan passes, and the **manual license review is done** over `git diff main --` plus the untracked `LICENSE_PROBE.md`: no node, memory, core, licensee, ID or UUID text; every `USER:` occurrence is the generic `USER: GAMS Demo,` marker or the regex.
+- **Recommendation (owner):** replace the system-directory demo file with the full license, so a different user or `HOME` cannot silently run the demo. **For Task 4:** evaluation license to 2027-09-21; node/memory/core fields in its header suggest machine binding — hosted-runner use is an owner question for GAMS.
 
 ### Verification
 
@@ -416,14 +427,14 @@ N2=$(scan -E 'Licensee:[[:space:]]+[[:alnum:]]|node:[0-9]') || exit 2
 
 ### Acceptance Criteria
 
-- [ ] Which license file GAMS reads is shown by evidence, not assumed
-- [ ] **Each** of the LP, NLP, QCP and MCP probes is sized above its own demo ceiling and **fails on the demo** with the refusal line recorded — the positive control
-- [ ] The same four probes **solve under the effective license** with `MODEL STATUS` recorded, and the **QCP probe's actual solver** is recorded
-- [ ] A non-identifying edition-discriminating regex identified for `.lst` files, recorded **with its classification of every paired file and its inverted-pattern control** — no raw header text committed
-- [ ] No part of the license text appears in any committed file, log excerpt or PR — the automated scans in *Verification* pass **and the mandatory manual review is recorded as done**. The scans are **limited** (measured: whole lines, header fields and ID-run fragments are caught; arbitrary partial quotes mostly are not), so the review, not the scan, is the guarantee
-- [ ] A license-neutrality sample of named models outside both populations is re-solved and diffed against the DB, **with a synthetic positive control** (Task 3's over-ceiling probe, through the same diff procedure, must change) — **no gated model's result is read**; every other moved row is routed
-- [ ] Direct GAMS probes run from a scratch directory; pipeline invocations (the neutrality sample) run in their normal cwd **inside the disposable worktree**; none runs in the main checkout
-- [ ] Unknowns 1.1, 1.2 verified and updated in KNOWN_UNKNOWNS.md; **Unknown 1.5 resolved as far as a sample can** — ❌ if the sample refutes it, otherwise the existing status `🔍 **Status:** INCOMPLETE — sample-neutral at `<sha>`; universal claim routed to the first licensed full run` (never ✅ from the sample)
+- [x] Which license file GAMS reads is shown by evidence, not assumed
+- [x] **Each** of the LP, NLP, QCP and MCP probes is sized above its own demo ceiling and **fails on the demo** with the refusal line recorded — the positive control
+- [x] The same four probes **solve under the effective license** with `MODEL STATUS` recorded, and the **QCP probe's actual solver** is recorded
+- [x] A non-identifying edition-discriminating regex identified for `.lst` files, recorded **with its classification of every paired file and its inverted-pattern control** — no raw header text committed
+- [x] No part of the license text appears in any committed file, log excerpt or PR — the automated scans in *Verification* pass **and the mandatory manual review is recorded as done**. The scans are **limited** (measured: whole lines, header fields and ID-run fragments are caught; arbitrary partial quotes mostly are not), so the review, not the scan, is the guarantee
+- [x] A license-neutrality sample of named models outside both populations is re-solved and diffed against the DB, **with a synthetic positive control** (Task 3's over-ceiling probe, through the same diff procedure, must change) — **no gated model's result is read**; every other moved row is routed
+- [x] Direct GAMS probes run from a scratch directory; pipeline invocations (the neutrality sample) run in their normal cwd **inside the disposable worktree**; none runs in the main checkout
+- [x] Unknowns 1.1, 1.2 verified and updated in KNOWN_UNKNOWNS.md; **Unknown 1.5 resolved as far as a sample can** — ❌ if the sample refutes it, otherwise the existing status `🔍 **Status:** INCOMPLETE — sample-neutral at `<sha>`; universal claim routed to the first licensed full run` (never ✅ from the sample)
 
 ---
 

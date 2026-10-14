@@ -158,7 +158,19 @@ Establish precedence by evidence: move the user-level file aside, re-run, restor
 Sprint 40 prep team (license file placement: project owner)
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the user-level license is the effective one for every pipeline invocation, and it lifts the demo limit on all four solver paths
+
+**Verified by:** Sprint 40 Prep Task 3 · **Date:** 2026-10-13 · **Measured at:** `35b296b3`
+
+**Findings:**
+- **Q1 — precedence:** with both files present GAMS reads the **user-level** `~/Library/Application Support/GAMS/gamslice.txt`; with it moved aside (backup outside the repo, restore trap) the same over-ceiling probe is **refused** — the system-directory demo is the fallback; restored, it solves again and the file's SHA-256 is identical to before. Every pipeline path (`gams` on `PATH`, `solve_mcp`'s `Versions/Current`, `kkt_residual.py`'s candidates) resolves to the **one** 54.2.1 binary; 51/53 are never invoked.
+- **Q2/Q4 — solver coverage:** probes above their own ceilings (LP 2,500; NLP/QCP/MCP 1,500) are **refused on the demo and solve under the effective license** for **CPLEX** (LP), **CONOPT** (NLP), the **QCP solver — CONOPT here, the install default, not selected by `NLP=CONOPT`** — and **PATH** (MCP); under-ceiling demo runs solve, so size is what flips the result. No solver-selective gap.
+- **Q3 — binding:** evaluation license, expires 2027-09-21; the run-time header carries node, memory and core-count fields (node-locked in shape) — carried to Task 4 / Unknown 1.3.
+- **Q5:** no reinstall needed; `gams audit lo=2` was inspected locally only (its output can identify the license) — the `.lst` discriminator (Unknown 1.2) is the edition source instead.
+
+**Evidence:** `LICENSE_PROBE.md` §1–§2 (precedence table; per-solver table; the four verbatim refusal lines, which also state the ceilings: 2,000 linear, 1,000 nonlinear).
+
+**Decision:** Verified. One residual risk, recorded as a recommendation rather than a defect: a process with a different user or `HOME` silently falls back to the demo — `LICENSE_PROBE.md` §5 recommends the owner replace the system-directory demo file; Task 5's per-row `license_edition` detects any demo run regardless.
 
 ---
 
@@ -191,7 +203,20 @@ Diff the headers of Unknown 1.1's paired probe `.lst` files (demo vs licensed) f
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — every stage's `.lst` carries a non-identifying edition discriminator
+
+**Verified by:** Sprint 40 Prep Task 3 · **Date:** 2026-10-13 · **Measured at:** `35b296b3`
+
+**Findings:**
+- **Q1:** `.lst` headers do **not** carry the license block (that is the GAMS log); the discriminators are generic markers — a completed demo run's `USER: GAMS Demo, …` header, a refused demo run's `**** The model exceeds the demo license limits …` line, and a completed licensed run's `USER:` line that is **not** `GAMS Demo,` (matched by prefix with a negative lookahead; its licensee text is never captured).
+- **Q2:** present in the **convexity-stage** (`LP=CPLEX`, as `verify_convexity.py`), **MCP-stage** (golden) and **presolve-stage** (one listing holding an NLP and an MCP solve) listings.
+- **Q3:** stable across LP / NLP / QCP / MCP.
+- **Q4:** yes — the regex reads no identifying text.
+- **Q5:** yes — a refused demo run has no `USER:` line but always the refusal line, so `license_edition: "demo"` can be recorded for a refusal; a listing with neither is `None`, never guessed.
+
+**Evidence:** `LICENSE_PROBE.md` §3 — the regex and the classification table: **20/20** paired listings correct; the **inverted** classifier gives 20/20 mismatches and a non-zero exit.
+
+**Decision:** Verified. Task 5's parser keys on this regex (extend `test_solve.py::extract_gams_version`, read before the temp directory is removed).
 
 ---
 
@@ -290,7 +315,17 @@ After Unknown 1.1 installs the license, re-solve a stratified sample (e.g. 5 col
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔍 **Status:** INCOMPLETE — sample-neutral at `35b296b3`; universal claim routed to the first licensed full run
+
+**Verified by:** Sprint 40 Prep Task 3 · **Date:** 2026-10-13 · **Measured at:** `35b296b3`
+
+**Findings (sample evidence):** 13 models outside both gated populations, chosen by identity across strata — cold match `rbrock`, `house`, `pindyck`, `prolog`, `cesam2`; presolve match `mingamma`, `himmel16`, `harker`, `moncge`, `catmix`; solved-mismatch `weapons`; `model_infeasible` `agreste`; `path_syntax_error` `indus` — run through the real pipeline in a throwaway worktree with the retention patch. **All 20 GAMS invocations classified licensed** from their own listings (`head_sha` `35b296b3`). **0 of 13 rows changed** against the committed demo-era DB on outcome, objective (rel. tol. 1e-6) and verdict. `gams_version` unchanged (54.2.1).
+
+**Positive control:** the same diff on the synthetic over-ceiling NLP probe, demo vs licensed, reports `outcome: license_refused → model_status_1; objective: None → 1500.0`.
+
+**Evidence:** `LICENSE_PROBE.md` §4.
+
+**Decision:** The sample does **not** refute neutrality, and a sample cannot verify a universal claim — so 1.5 stays INCOMPLETE by design, **routed to the sprint's first licensed full run** (a `PROJECT_PLAN.md` Sprint 40 gate; Task 12 schedules it). This is the stated exception in *Next Steps*, not a miss.
 
 ---
 
