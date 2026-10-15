@@ -758,7 +758,23 @@ Run the ratchet; grep the turkpow golden for the violating references; instrumen
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — the **layer is KKT/stationarity**, as assumed, but the **minting site is not the cause**. `t__kkt1` is minted correctly and only renames a guard that had **already** collapsed to `vs(t,t)`.
+
+**Verified by:** Sprint 40 Prep Task 10 · **Date:** 2026-10-15 · **Measured at:** `b85afbc0` (scratch probes outside the repo; `src/` untouched)
+
+**Findings:**
+- **Baseline:** `make check-index-repeats` gives P2 **9 = baseline 9**, turkpow ×3.
+- **Instrumented backwards:**
+  - a minting spy shows 2 mints, both at `_add_indexed_jacobian_terms:7624`;
+  - before the mint's rename, the term is **already** `1$(vs(t,t)) … nu_ao(v)`;
+  - the **first wrong output** is `_replace_indices_in_expr`: `vs("1983", v)` → `vs(t,t)`, via its alias layer `{'v': 't'}`.
+- **Why the stray binder:** the AD derivative (captured in the pipeline) keeps the sum binder `v` symbolic on full collapse, **by design** (#720/#1085). That contract breaks when the binder is an alias of another variable-domain index.
+- **Positive control:** the same spy fires on `sambal` (`i__kkt1`, emit correct, no P2 violation).
+- **Ratchet:** fixing it targets 9 → ≤ 6. ⚠ nonsharp's 2 violations sit in a **discrete (MINLP, out-of-scope)** model's golden and cannot be lowered by regeneration.
+
+**Evidence:** `CORRECTNESS_PRETRACES.md` §1.
+
+**Decision:** P4's Class-A layer is **KKT re-symbolisation** (`_replace_indices_in_expr`'s alias layer), with the Phase-0 outline in §1/§7.
 
 **Contribution from Task 2 (2026-10-13, `366e91f3`) — status left to Task 10:** `make check-index-repeats` reports **P2: 9 violations across 6 models; baseline 9** (P1: 0 in 3,109 heads). Per model from `index_repeat_p2_baseline.json`: **turkpow ×3**, nonsharp ×2, dinam, egypt, gussrisk, shale ×1 each. The minting site and its layer remain Task 10's. See `BASELINE_RECONFIRMATION.md` §6.
 
@@ -791,7 +807,19 @@ Using Task 7's results: read the residual's top rows; patch the single violating
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG — neither model's mismatch is explained by its Class-A reference.
+
+**Verified by:** Sprint 40 Prep Task 10 · **Date:** 2026-10-15 · **Measured at:** `b85afbc0` (scratch probes outside the repo; `src/` untouched)
+
+**Findings (licensed; retention patch; 4 invocations, all `licensed` / PATH / 0 compile errors):**
+- **egypt:** the hand-derived correct term `+nu_fodb(r,c)$tranc(r,rp) − nu_fodb(rp,c)$tranc(rp,r)` replaces the golden's collapsed `-(1$(tranc(rp,rp)))*nu_fodb(r,c)`.
+  - PATH's path **changes** (62,176 → 69,730 iterations; terminal objective 1,448,953.756 → 11,645,180), so the reference is live.
+  - It stays **MS 5**, so **another defect sits underneath**, consistent with Task 7's R-PRE-140.
+- **shale:** `ts(tf,tf)` is the offset-0 term of a strictly lower-triangular `ts`, so its correct value is also 0. **Provably inert:** the patched solve is **identical** (MS 5, same objective, same 23,304 iterations).
+
+**Evidence:** `CORRECTNESS_PRETRACES.md` §2.
+
+**Decision:** P4 does **not** book egypt or shale as Class-A recoveries. Each needs the underlying defect diagnosed first.
 
 ---
 
@@ -822,7 +850,22 @@ Trace gussrisk's flagged reference from the parser through the IR to emit, recor
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the context **is in the IR**.
+
+**Verified by:** Sprint 40 Prep Task 10 · **Date:** 2026-10-15 · **Measured at:** `b85afbc0` (scratch probes outside the repo; `src/` untouched)
+
+**Findings:**
+- **gussrisk:** `ParameterDef(domain=('stocks','stocks'), expressions=[(('s','sp'), …)])`. The **declaration** domain and the **assignment's** LHS tuple are both recorded.
+- **The flagged reference** is the emitted **NA-cleanup**, `covar(stocks,stocks)$(NOT …) = 0`. It is built from the declared domain, so it touches only the diagonal.
+- **Fix layer:** **emit**, `original_symbols.emit_post_assignment_na_cleanup`, indexing by distinct per-position symbols.
+- **Against the three Class-B fingerprints:**
+  - gussrisk: the rule applies;
+  - shale `ts(tf,tf)`: a stationarity guard, inert (Unknown 4.2);
+  - nonsharp: **discrete (MINLP), out of scope and refused by the translator**; its reference also reads as a Class-A alias collapse.
+
+**Evidence:** `CORRECTNESS_PRETRACES.md` §3.
+
+**Decision:** the Class-B rule is an emit-layer change keyed on `ParameterDef.expressions`. Its scope is gussrisk.
 
 ---
 
@@ -1153,7 +1196,19 @@ Write the minimal model; translate on `main`; hand-derive the expected row; grep
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — it reproduces, and the term **is** dropped. **Worse than assumed:** the whole constraint and its multiplier vanish.
+
+**Verified by:** Sprint 40 Prep Task 10 · **Date:** 2026-10-15 · **Measured at:** `b85afbc0` (scratch probes outside the repo; `src/` untouched)
+
+**Findings:**
+- `diagsum(j).. sum(i, tsam(i,i)) =e= 1` emits exactly **`stat_tsam(i,j).. 1 =E= 0;`** (linear objective), and **no `diagsum` / `nu_diagsum`** appear in the MCP.
+- **Not legitimately trivial:** the scalar variant's hand-derived row `2*tsam(i,j) + nu_diag$(sameas(i,j)) =E= 0`, hand-patched, **solves MS 1 at 0.333**, matching the NLP's 0.3333.
+- **Corpus:** no golden has a non-zero constant-only stationarity row. The grep's positive control matches the reproducer. Dropped terms in non-constant rows are outside that grep.
+- **Filed: [#1755](https://github.com/jeffreyhorn/nlp2mcp/issues/1755)** (`docs/issues/ISSUE_1755_…md`).
+
+**Evidence:** `CORRECTNESS_PRETRACES.md` §4.
+
+**Decision:** P7 builds from #1755's reproducer and Phase-0 outline.
 
 ---
 
@@ -1183,7 +1238,19 @@ Instrument the AD output for the minimal model (print the derivative expression 
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — the layer **is `_diff_sum`** (in its collapse decision, `_sum_should_collapse`). But the mechanism is **not** misaligned indices: the term is dropped **even when they align** (`tsam('i1','i1')`).
+
+**Verified by:** Sprint 40 Prep Task 10 · **Date:** 2026-10-15 · **Measured at:** `b85afbc0` (scratch probes outside the repo; `src/` untouched)
+
+**Findings:**
+- `differentiate_expr` inside the pipeline returns **0 for all nine instances**.
+- `sys.settrace` gives `_diff_sum` → `_sum_should_collapse` → **`False`** → `_diff_varref` → `Const(0)`.
+- **The cause:** `_sum_should_collapse` returns early on **`len(sum_index_sets) != len(wrt_indices)`**, pairing binders with positions positionally. One binder in two positions (1 vs 2) never collapses.
+- **The drop is downstream:** the all-zero row's multiplier is unreferenced and pruned. It is **not** the empty-equation detector.
+
+**Evidence:** `CORRECTNESS_PRETRACES.md` §4.
+
+**Decision:** the fix maps binder → value from the reference's index positions, collapsing when all occurrences agree. The positive control is that an off-diagonal instance stays 0.
 
 ---
 
@@ -1216,7 +1283,20 @@ Extend the probe in `tests/unit/kkt/test_positional_domain_sites.py`'s style; fo
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — discriminating inputs exist at **3-D with aliases**, and they reach the **emit**.
+
+**Verified by:** Sprint 40 Prep Task 10 · **Date:** 2026-10-15 · **Measured at:** `b85afbc0` (scratch probes outside the repo; `src/` untouched)
+
+**Findings:** each consume-once guard was disabled by rebuilding the function from its own source with the condition neutralised.
+- **Function level:** `_match_subset_domain` differs on 2 of 5 shapes, e.g. `(ii,jj)` vs `(i,k,ip)` gives `jj → ip`, but `jj → i` with the guard off. `_compute_index_offset_key` differs on 4 of 5, e.g. `(1,999,1)` vs `(3,999,999)`. Subset-of-subset shapes do not discriminate.
+- **Emit level** (deterministic across runs):
+  - `msd3` with the guard off turns **`lam_c(i,ip)` into `lam_c(i,i)`**, the Class-A collapse;
+  - `oik3` turns `lam_e(i-1,ip+1)` into `lam_e(i,ip)`.
+- **Positive control met:** a broken guard changes the emit.
+
+**Evidence:** `CORRECTNESS_PRETRACES.md` §5.
+
+**Decision:** promote both structural-only pins to **behavioural** pins, with the guard-neutralised mutant as each pin's fail-before.
 
 ---
 
@@ -1246,7 +1326,24 @@ Map each planned change's touch set (from Tasks 9 and 10) against the detector's
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — P6's E1–E4 do not route through #1737's refusal. **P7 (#1755) and P4 can, indirectly**: the refusal scans only equalities whose **multiplier is referenced**.
+
+**Verified by:** Sprint 40 Prep Task 10 · **Date:** 2026-10-15 · **Measured at:** `b85afbc0` (scratch probes outside the repo; `src/` untouched)
+
+**Findings:**
+- `empty_equation_detector` has one caller (`emit_gams.py:3631`). Its `relevant_eqs` are the equalities whose multiplier is in `kkt.referenced_multipliers`, and its guard `assert_no_repeated_symbol(eq_def.domain, …)` fires on a repeated **equation** domain.
+- **Task 9's E1–E4:** byte-identical, so the referenced set is unchanged, so **no**.
+- **P7:** fixing #1755 newly references multipliers, so **yes**.
+- **P4:** it may restore dropped terms, so **possibly**.
+- **Demonstrated:** `dd(i,i)` with an **unreferenced** multiplier (the #1755 shape) is silently dropped with exit 0. With a **referenced** multiplier, the #1737 refusal fires (exit 1, "domain ('i', 'i') repeats ['i']").
+- `test_the_AD_collapse_is_reachable_but_EMIT_refuses_it` passes.
+
+**Evidence:** `CORRECTNESS_PRETRACES.md` §6.
+
+**Decision:**
+- **#1737 is left untouched.**
+- **P7's gate must expect** shape-(a) models to change from silently wrong to **refused**.
+- **P4 checks** whether its restored terms reference new multipliers.
 
 ---
 

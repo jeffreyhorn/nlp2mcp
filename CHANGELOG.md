@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 40 Prep
 
+- **Prep Task 10 COMPLETE (2026-10-15) — correctness-track pre-traces; diagonal defect filed as #1755.** New: `docs/planning/EPIC_4/SPRINT_40/CORRECTNESS_PRETRACES.md`, `docs/issues/ISSUE_1755_sum-repeated-binder-never-collapses.md`. `src/` and `tests/` untouched, so the quality gate is N/A.
+  - **turkpow (Class A):** the layer is KKT re-symbolisation (`_replace_indices_in_expr`'s alias layer), not the `t__kkt1` mint, which is downstream and correct.
+  - **egypt / shale:** the Class-A reference is not the dominant cause. Patched licensed solves give egypt still MS 5 and shale identical (its reference is inert).
+  - **Class B:** the declaration-vs-assignment context is in the IR; gussrisk's fix is in the emit NA-cleanup.
+  - **Diagonal defect (#1755):** `sum(i, x(i,i))` never collapses (`_sum_should_collapse`'s length check), so the constraint is dropped from the MCP. The hand-derived row is verified by solve.
+  - **Structural sites:** both consume-once guards change the emit on 3-D aliased inputs, so both pins can become behavioural.
+  - **#1737:** fixing #1755 (P7) newly exposes repeated-domain equations to the refusal (demonstrated). #1737 untouched.
+  - Unknowns 4.1 🔶 · 4.2 ❌ · 4.3 ✅ · 7.1 ✅ · 7.2 🔶 · 8.1 ✅ · 8.2 🔶.
+
 - **Prep Task 9 COMPLETE (2026-10-14) — sarf Jacobian design: the non-termination is one unfiltered loop.** New docs: `docs/planning/EPIC_4/SPRINT_40/SARF_JACOBIAN_DESIGN.md` and `artifacts/SARF_PROFILING_HARNESS.md`. `src/` and `tests/` untouched, and no `*.py` in the PR, so the quality gate is N/A.
   - **Root cause:** Sprint 38's referenced-instance filter covers only `_compute_equality_jacobian`. **`_compute_inequality_jacobian` iterates all 369,024 declared `task` instances for 792 rows**, i.e. 292.3 M differentiations (~36 h).
   - **Prototype (in memory, never landed):** filtering it is byte-identical on the fixture and makes sarf's Jacobian complete (158,666 calls; inequality path 41.8 s). Behind it: a dense `validate_jacobian_entries` scan (113–131 s), then a **`RecursionError`** in recursive `simplify`.

@@ -63,7 +63,7 @@ This prep plan front-loads the work whose absence would cost the most mid-sprint
 | 7 | ✅ License-Gated Cohorts Dry Run — Fingerprints & Routing | Critical | 5-7 hours | Tasks 2, 3, 6 | P2 + P3 — first measurement, GO/NO-GO, never persisted |
 | 8 | ✅ lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate | High | 3-4 hours | Tasks 1, 2, 3, 7 | P5 — the +1 Solve rests on an untested premise |
 | 9 | ✅ sarf Jacobian O(active) Re-Architecture Design | High | 4-6 hours | Tasks 1, 2 | P6 — the sprint's planned +1 Translate |
-| 10 | Correctness-Track Pre-Traces: turkpow Class A, the Diagonal Defect, the Structural Sites | High | 5-7 hours | Tasks 1, 2, 7, 9 | P4, P7, P8 — named layers and reproducers before Day 1 |
+| 10 | ✅ Correctness-Track Pre-Traces: turkpow Class A, the Diagonal Defect, the Structural Sites | High | 5-7 hours | Tasks 1, 2, 7, 9 | P4, P7, P8 — named layers and reproducers before Day 1 |
 | 11 | Process-Mechanism Spec & Smaller-Items Catalog | Medium | 3-4 hours | Tasks 1, 2 | P9 + P10 — the slack absorber and the §7 mechanisms |
 | 12 | Plan Sprint 40 Detailed Schedule | Critical | 3-4 hours | All tasks (1–11) | Day-by-day schedule + REPLAN exits + close rules + budget |
 
@@ -1060,9 +1060,10 @@ grep -c "measured at" "$DOC" 2>/dev/null   # every profile figure carries its co
 
 ## Task 10: Correctness-Track Pre-Traces — turkpow Class A, the Diagonal Defect, the Structural Sites
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-10-15)
 **Priority:** High
 **Estimated Time:** 5-7 hours
+**Time Spent:** ~7 hours. The estimate was below the 7.5 h of research its seven unknowns carry, and the actual landed close to that research total.
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2, 7, 9
@@ -1093,11 +1094,22 @@ Three of Sprint 38's four Phase-0 gates named the wrong layer; Sprint 39 added t
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_40/CORRECTNESS_PRETRACES.md`: per track, the traced layer with its justification, the reproducer, the Phase-0 outline with its positive control, and every probe's evidence
+- **NEW** `docs/issues/ISSUE_1755_sum-repeated-binder-never-collapses.md` and GitHub issue **[#1755](https://github.com/jeffreyhorn/nlp2mcp/issues/1755)**: the diagonal-reference defect, with its reproducer confirmed on `main`
+- `KNOWN_UNKNOWNS.md`: 4.1 🔶 · 4.2 ❌ · 4.3 ✅ · 7.1 ✅ · 7.2 🔶 · 8.1 ✅ · 8.2 🔶
+- `CHANGELOG.md`: Sprint 40 Prep Task 10 entry
+- `src/` and `tests/` untouched (all probes were scratch, in-process patches outside the repo), so the quality gate is N/A
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — every track has a traced layer. Two of the five named surfaces were the wrong site, and one hypothesis is refuted outright.**
+
+- **turkpow (Class A):** the layer is **KKT re-symbolisation**. `_replace_indices_in_expr`'s alias layer maps the AD's deliberately symbolic sum binder `v` onto `t` (#1085's contract fails under `Alias (t,v)`). The `t__kkt1` mint is downstream and correct; positive control: `sambal`. Ratchet target 9 → ≤ 6, and nonsharp's 2 cannot move, because it is a discrete model the translator refuses.
+- **egypt / shale:** the Class-A reference is **not** the dominant cause. egypt's hand-patched correct term changes PATH's path but stays MS 5; shale's reference is provably inert (identical solve). Each has a named candidate second defect from Task 7, not yet proven causal.
+- **Class B:** the declaration-vs-assignment context **is in the IR** (`ParameterDef.domain` vs `expressions`). gussrisk's fix layer is **emit** (NA-cleanup).
+- **The diagonal defect:** it reproduces (`stat_tsam(i,j).. 1 =E= 0;`) and **drops the whole constraint**. The layer is **AD**, `_sum_should_collapse`'s length check. The hand-derived row is verified by solve (0.333 = NLP 0.3333). **Filed as #1755.**
+- **Structural sites:** **both guards are live.** 3-D aliased inputs change the **emit** with each guard disabled, so both pins can be promoted to behavioural.
+- **#1737:** P6's E1–E4 don't reach it. **P7 and P4 can, indirectly**: the refusal scans only equalities with a referenced multiplier, so fixing #1755 turns silently-dropped repeated-domain equations into refusals (demonstrated). #1737 is untouched.
 
 ### Verification
 
@@ -1121,12 +1133,12 @@ ls docs/issues/ | grep -i "diagonal\|tsam" || echo "diagonal-defect issue not ye
 
 ### Acceptance Criteria
 
-- [ ] Each of P4, P7, P8 has a **traced** layer, not a named-by-assumption one
-- [ ] The diagonal-defect issue is filed with a reproducer confirmed on `main`
-- [ ] egypt/shale mismatch explained by the Class-A fingerprint or a second defect named
-- [ ] Every probe records its positive control
-- [ ] #1737 left untouched
-- [ ] Unknowns 4.1, 4.2, 4.3, 7.1, 7.2, 8.1, 8.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Each of P4, P7, P8 has a **traced** layer, not a named-by-assumption one
+- [x] The diagonal-defect issue is filed with a reproducer confirmed on `main`
+- [x] egypt/shale mismatch explained by the Class-A fingerprint or a second defect named. *Not the fingerprint, shown by the patched solves. The second defects are **named as candidates** (egypt R-PRE-140, shale's presolve `$148`, both from Task 7) but are not yet proven causal.*
+- [x] Every probe records its positive control
+- [x] #1737 left untouched
+- [x] Unknowns 4.1, 4.2, 4.3, 7.1, 7.2, 8.1, 8.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
