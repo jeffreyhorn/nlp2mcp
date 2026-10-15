@@ -1015,7 +1015,7 @@ Sprint 40 prep team
   - sarf has **792 inequality rows** that reference `task` (369,024 declared), so **292.3 M** differentiations are required, against 1.64 M done by 900 s (~36 h at the measured rate).
   - The filtered equality path **completes** (122,866 calls).
   - Also O(declared): the **objective gradient** (369,165 calls) and the **dense `validate_jacobian_entries`** scan (~453 M probes).
-- **Q4:** **nothing.** `src/ad/` is unchanged since 2026-08-25, which predates Sprint 39's measurement. The #1737/#1741 guards are in other files.
+- **Q4:** **nothing.** `src/ad/` is unchanged since 2026-08-25, which predates Sprint 39's measurement. The #1737/#1741 guards are not in `src/ad/`. #1741's guard (`stationarity.py::_build_pattern_c_dim_mismatch_term`) does share a file with E5, so a builder-side E5 fix needs a guard-impact review (`SARF_JACOBIAN_DESIGN.md` §4, §9).
 - **Q5:** **yes.** 0–120 s is **parsing** (Earley); after that it is **AD only**.
 
 **Evidence:** `SARF_JACOBIAN_DESIGN.md` §1, §2.
