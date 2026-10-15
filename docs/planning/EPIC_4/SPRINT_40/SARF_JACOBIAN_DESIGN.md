@@ -64,6 +64,8 @@
 
 The required figure: 792 inequality rows reference `task` (`labor` 24, `equipb1` 648, `equipb2` 120) × 369,024 declared `task` instances. At ~2,255 differentiations/s, that's **~36 h**.
 
+*Outcome reading: both runs record `rc` as a `SystemExit 1`, because the harness's cap exception subclassed `Exception` and `src/cli.py` converts any `Exception` into `sys.exit(1)` (fixed in the harness artifact; PR #1754 review). They are **cap stops**, not failures: Run A's final snapshot fired at 600.07 s (wall 600.67 s) and Run B's wall is 900.0 s, each at its cap, with Run B stamping the in-flight inequality phase's exit at 900.03 s. The prototype runs in §3, by contrast, end **before** their 1,200 s cap with `maximum recursion depth exceeded`: genuine failures.*
+
 *Run A's 120 s snapshot truncated the cumulative accounting of frames already open, which made the gradient look like 8.7 s. Run B's unprofiled wall clock is the authority for phase times; Run A's self times are the authority for shares.*
 
 ## 2. Entry points — anchored by code (owning function + anchor occurring exactly once in live code)

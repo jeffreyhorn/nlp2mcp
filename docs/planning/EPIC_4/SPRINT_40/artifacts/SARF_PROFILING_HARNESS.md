@@ -14,6 +14,11 @@ These scripts produced every figure in `../SARF_JACOBIAN_DESIGN.md`. They lived 
 
 ⚠ **A second prototype bug, found in review (PR #1754):** the position-map cache used `_T9_POS.setdefault(var_name, {…comprehension…})`. That evaluates the comprehension on **every** call, a cache hit included, so it rebuilt the full declared-position map **per row**: O(declared) per row, the Day-7 trap. The version below builds each map **only on a cache miss** and **counts the builds** (`position_map_builds` in its JSON output). It also patches **E2** (`_compute_bound_jacobian`), and `fixture.py` now carries an `.fx` bound so E2 is actually exercised.
 
+⚠ **A third harness bug, found in review (PR #1754):** `Stop` (the cap exception) subclassed `Exception`. `src/cli.py` (~L756–762) catches `Exception` and calls `sys.exit(1)`, so a cap that fired **during** the translate was recorded as `systemexit 1` / `SystemExit: 1`, indistinguishable from a real failure. **All three scripts now define `Stop(BaseException)`** (verified: a 5 s cap on sarf records `stopped_at_cap` in all three).
+**How the runs recorded *before* this fix were read** (none of the design's conclusions rests on the `rc` field):
+- **Run A** (`prof.py`, `rc: systemexit 1`) and **Run B** (`phases.py`, `rc: SystemExit: 1`) were **cap stops**: Run A's final snapshot fired at 600.07 s (wall 600.67 s) and Run B's wall is 900.0 s, each at its cap, with Run B stamping the in-flight inequality phase's exit at **900.03 s**.
+- **The three `proto.py` sarf runs** (`SystemExit: 1`) were **genuine failures**: each ended well **before** its 1,200 s cap (walls 527.3, 453.7 and 428.9 s), and each run's log records `maximum recursion depth exceeded` (the `-vvv` runs with the full traceback).
+
 ## `prof.py`
 
 ```python
@@ -49,7 +54,7 @@ if control:
     cli.parse_model_file = t9_control_parse
 
 pr = cProfile.Profile()
-class Stop(Exception):
+class Stop(BaseException):  # NOT Exception: src/cli.py catches Exception and sys.exit(1)s, which would mask the cap
     pass
 def on_alarm(signum, frame):
     pr.disable()
@@ -116,7 +121,7 @@ for mod in (cj, gr):
             CNT[CTX[-1]] = CNT.get(CTX[-1], 0) + 1
             return _o(*a, **k)
         mod.differentiate_expr = d
-class Stop(Exception): pass
+class Stop(BaseException): pass  # NOT Exception: src/cli.py catches Exception and sys.exit(1)s, which would mask the cap
 def alarm(*_): raise Stop()
 def dump(rc):
     json.dump({"rc": rc, "cap_s": CAP, "wall": round(time.time() - T0[0], 1), "events": EV, "diff_calls": CNT}, open(out, "w"), indent=1)
@@ -275,7 +280,7 @@ def _mk(_name, _tag):
     return w
 cj._compute_inequality_jacobian = _mk("_compute_inequality_jacobian", "inequality")
 cj._compute_bound_jacobian = _mk("_compute_bound_jacobian", "bound")
-class Stop(Exception): pass
+class Stop(BaseException): pass  # NOT Exception: src/cli.py catches Exception and sys.exit(1)s, which would mask the cap
 signal.signal(signal.SIGALRM, lambda *_: (_ for _ in ()).throw(Stop()))
 signal.alarm(CAP)
 rc = "?"
