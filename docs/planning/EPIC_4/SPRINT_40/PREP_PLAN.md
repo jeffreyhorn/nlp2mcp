@@ -62,7 +62,7 @@ This prep plan front-loads the work whose absence would cost the most mid-sprint
 | 6 | ✅ Owner Decision Brief — Floor Provenance, Corpus Entry & Hosted Runners (written blind) | Critical | 2-3 hours | Tasks 1, 2, 3, 4 | P1/P2/P3 — the three owner decisions, answered in prep before any cohort result exists |
 | 7 | ✅ License-Gated Cohorts Dry Run — Fingerprints & Routing | Critical | 5-7 hours | Tasks 2, 3, 6 | P2 + P3 — first measurement, GO/NO-GO, never persisted |
 | 8 | ✅ lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate | High | 3-4 hours | Tasks 1, 2, 3, 7 | P5 — the +1 Solve rests on an untested premise |
-| 9 | sarf Jacobian O(active) Re-Architecture Design | High | 4-6 hours | Tasks 1, 2 | P6 — the sprint's planned +1 Translate |
+| 9 | ✅ sarf Jacobian O(active) Re-Architecture Design | High | 4-6 hours | Tasks 1, 2 | P6 — the sprint's planned +1 Translate |
 | 10 | Correctness-Track Pre-Traces: turkpow Class A, the Diagonal Defect, the Structural Sites | High | 5-7 hours | Tasks 1, 2, 7, 9 | P4, P7, P8 — named layers and reproducers before Day 1 |
 | 11 | Process-Mechanism Spec & Smaller-Items Catalog | Medium | 3-4 hours | Tasks 1, 2 | P9 + P10 — the slack absorber and the §7 mechanisms |
 | 12 | Plan Sprint 40 Detailed Schedule | Critical | 3-4 hours | All tasks (1–11) | Day-by-day schedule + REPLAN exits + close rules + budget |
@@ -978,9 +978,10 @@ grep -c "Verdict" "$DOC" 2>/dev/null
 
 ## Task 9: sarf Jacobian O(active) Re-Architecture Design
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-10-14)
 **Priority:** High
 **Estimated Time:** 4-6 hours
+**Time Spent:** ~5 hours (plus ~2 h of unattended machine time: profiles, prototype runs, corpus coverage)
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
@@ -1012,11 +1013,23 @@ Sprint 39 Day 0 re-pointed this work twice: Task 6 refuted the "four call sites"
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_40/SARF_JACOBIAN_DESIGN.md`: the profile at `8fda6f9d` (two windows, per-callee self time, sleep positive control) plus an unprofiled phase timing; code-anchored entry points E1–E8; the in-memory filter prototype on the fixture and on sarf; the atomicity boundary; the `gradient.py:453` coverage; the fixture sweep with its golden hashes; the gate; the re-estimate with REPLAN exits; the touch set for Task 10
+- **NEW** `docs/planning/EPIC_4/SPRINT_40/artifacts/SARF_PROFILING_HARNESS.md`: the scratch harness scripts, as text (no `*.py` in the PR)
+- `KNOWN_UNKNOWNS.md`: **6.1** 🔶, **6.2** ✅, **6.3** 🔶
+- `CHANGELOG.md`: Sprint 40 Prep Task 9 entry
+- `src/` and `tests/` untouched, and no `*.py` in the PR, so the quality gate is N/A
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE — the non-termination is one unfiltered loop; filtering it is byte-identical and makes the Jacobian finish, but +1 Translate needs more than that.**
+
+- **Root cause:** Sprint 38 Day 7's referenced-instance filter was applied **only** to `_compute_equality_jacobian`. **`_compute_inequality_jacobian`** (and `_compute_bound_jacobian`) still iterate every declared instance. For sarf that means **792 rows × 369,024 = 292.3 M** differentiations, about 36 h.
+- **Profile:** the "70.9 %" is cap-dependent (52.5 % at 600 s here). Steady state is all AD: `simplify` 20.9 %, case-insensitive lookups ~16 %, instance resolution ~13 %, import re-resolution 7.1 %. The warm-up window is parsing.
+- **Prototype (in memory, never landed):** the inequality path drops to **158,666** calls and **completes**. The fixture emits are **byte-identical** at all four sizes, and the golden **caught a real prototype bug** that silently dropped a constraint.
+- **Behind the Jacobian, never reached before:** a **dense `validate_jacobian_entries`** scan (113–131 s), then a **`RecursionError`** in recursive `simplify`, via `build_stationarity_equations`, after ~425–450 s. *(The corrected prototype's inequality path takes 41.8 s; a first version rebuilt the position map per row, PR #1754 review.)*
+- **Fixture:** inequality work is 1,200 / 4,800 / 19,200 / 76,800 for N = 100 to 6,400 (linear in declared size, active fixed at 15), and flat at 16 after the filter.
+- **`gradient.py:453`:** dead, both statically and by coverage over the leak-gate corpus.
+- **Re-estimate:** **14–24 h** in total. **Recommendation for Task 12:** P6 lands E1–E4 + the import hoists (~8–12 h, byte-identical) and diagnoses the recursion. **Project +1 Translate only conditionally.**
 
 ### Verification
 
@@ -1036,12 +1049,12 @@ grep -c "measured at" "$DOC" 2>/dev/null   # every profile figure carries its co
 
 ### Acceptance Criteria
 
-- [ ] Profile re-measured at a stated commit, with the per-callee breakdown inside the Jacobian
-- [ ] Entry points anchored by code, not by line number alone
-- [ ] Atomicity boundary stated
-- [ ] A non-sarf fail-before fixture shown to fail before — work growing with **declared** cardinality while the active set is held fixed (linear growth suffices)
-- [ ] P6 re-estimated with an explicit REPLAN exit
-- [ ] Unknowns 6.1, 6.2, 6.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Profile re-measured at a stated commit, with the per-callee breakdown inside the Jacobian
+- [x] Entry points anchored by code, not by line number alone
+- [x] Atomicity boundary stated
+- [x] A non-sarf fail-before fixture shown to fail before — work growing with **declared** cardinality while the active set is held fixed (linear growth suffices)
+- [x] P6 re-estimated with an explicit REPLAN exit
+- [x] Unknowns 6.1, 6.2, 6.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
