@@ -12,6 +12,8 @@ These scripts produced every figure in `../SARF_JACOBIAN_DESIGN.md`. They lived 
 
 ⚠ **`proto.py`'s first version had an indentation bug** (12- vs 16-space anchor). It moved the inserted filter out of the per-variable loop and **silently dropped the `cap(i)` constraint** from the fixture's emit. The fixture's byte-identity golden caught it. The version below is the corrected one.
 
+⚠ **A second prototype bug, found in review (PR #1754):** the position-map cache used `_T9_POS.setdefault(var_name, {…comprehension…})`. That evaluates the comprehension on **every** call, a cache hit included, so it rebuilt the full declared-position map **per row**: O(declared) per row, the Day-7 trap. The version below builds each map **only on a cache miss** and **counts the builds** (`position_map_builds` in its JSON output). It also patches **E2** (`_compute_bound_jacobian`), and `fixture.py` now carries an `.fx` bound so E2 is actually exercised.
+
 ## `prof.py`
 
 ```python
@@ -138,7 +140,8 @@ Declared >> active shape, active set FIXED, declared cardinality scaled:
   x(i,j), |i| = 3, |j| = N;  every row references only x(i,a), a(j) = j1*j5.
   obj   (equality,   filtered path)   z =e= sum((i,a), x(i,a))
   cap(i)(inequality, UNfiltered path) sum(a, x(i,a)) =l= 10
-  x.up('i1','j1') = 5                 (a non-default bound: bound path)
+  x.up('i1','j1') = 5                 (an UP bound: normalize puts it in `inequalities`, so it is E1's)
+  x.fx('i2','j2') = 1                 (an FX bound: Rel.EQ, in `equalities`, so _compute_bound_jacobian -- E2 -- processes it)
 
 usage: python fixture.py <outdir> N [N ...]
 Prints one JSON line per N: translate seconds, differentiate_expr calls per
@@ -177,6 +180,7 @@ GMS = """Set i / i1*i3 /, j / j1*j{N} /, a(j) / j1*j5 /;
 Variable z;
 Positive Variable x(i,j);
 x.up('i1','j1') = 5;
+x.fx('i2','j2') = 1;
 Equation obj, cap(i);
 obj..    z =e= sum((i,a), x(i,a));
 cap(i).. sum(a, x(i,a)) =l= 10;
@@ -217,20 +221,25 @@ sys.setrecursionlimit(50000); sys.path.insert(0, os.getcwd())
 gms, out, CAP, pj = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4]
 import src.ad.constraint_jacobian as cj, src.cli as cli  # noqa: E402
 
-src = textwrap.dedent(inspect.getsource(cj._compute_inequality_jacobian))
-OLD = "                for var_indices in var_instances:\n"   # 16 spaces: inside the per-variable loop
-assert src.count(OLD) == 1, src.count(OLD)
-I = " " * 16
-NEW = (I + "_ref = _referenced_index_tuples(constraint_expr, var_name, model_ir)\n"
-       + I + "if _ref is None:\n"
-       + I + "    _eff = var_instances\n"
-       + I + "else:\n"
-       + I + "    _pos = _T9_POS.setdefault(var_name, {t: i for i, t in enumerate(var_instances)})\n"
-       + I + "    _eff = sorted((t for t in _ref if t in _pos), key=_pos.__getitem__)\n"
-       + I + "for var_indices in _eff:\n")
-src = src.replace(OLD, NEW)
-ns = None
-
+def _filtered_source(fn, indent, expr_name):
+    src = textwrap.dedent(inspect.getsource(fn))
+    I = " " * indent
+    OLD = I + "for var_indices in var_instances:\n"
+    assert src.count(OLD) == 1, (fn.__name__, src.count(OLD))
+    NEW = (I + f"_ref = _referenced_index_tuples({expr_name}, var_name, model_ir)\n"
+           + I + "if _ref is None:\n"
+           + I + "    _eff = var_instances\n"
+           + I + "else:\n"
+           + I + "    _pos = _T9_POS.get(var_name)\n"
+           + I + "    if _pos is None:  # build ONCE per variable, on a cache miss only\n"
+           + I + "        _T9_BUILDS[var_name] = _T9_BUILDS.get(var_name, 0) + 1\n"
+           + I + "        _pos = {t: i for i, t in enumerate(var_instances)}\n"
+           + I + "        _T9_POS[var_name] = _pos\n"
+           + I + "    _eff = sorted((t for t in _ref if t in _pos), key=_pos.__getitem__)\n"
+           + I + "for var_indices in _eff:\n")
+    return "from __future__ import annotations\n" + src.replace(OLD, NEW)
+_SRC = {"_compute_inequality_jacobian": _filtered_source(cj._compute_inequality_jacobian, 16, "constraint_expr"),
+        "_compute_bound_jacobian": _filtered_source(cj._compute_bound_jacobian, 12, "bound_expr")}
 T0 = [time.time()]; EV = []; CNT = {}; CTX = ["other"]
 def stamp(n, k): EV.append((round(time.time() - T0[0], 2), n, k))
 def timed(mod, attr, tag=None):
@@ -245,21 +254,27 @@ for a in sorted(dir(cli)):
     f = getattr(cli, a)
     if isinstance(f, _ty.FunctionType) and getattr(f, "__module__", "").startswith("src.") and f.__module__ != "src.cli":
         timed(cli, a, {"compute_objective_gradient": "gradient"}.get(a))
-for a, t in (("_compute_equality_jacobian", "equality"), ("_compute_bound_jacobian", "bound")):
+for a, t in (("_compute_equality_jacobian", "equality"),):
     timed(cj, a, t)
 _od = cj.differentiate_expr
 def _d(*a, **k):
     CNT[CTX[-1]] = CNT.get(CTX[-1], 0) + 1; return _od(*a, **k)
 cj.differentiate_expr = _d
-ns = dict(vars(cj)); ns["_T9_POS"] = {}   # captured AFTER the counter is installed
-src = "from __future__ import annotations\n" + src
-exec(compile(src, "<proto _compute_inequality_jacobian>", "exec"), ns)
-_proto = ns["_compute_inequality_jacobian"]
-def _ineq(*a, **k):
-    stamp("_compute_inequality_jacobian", "enter"); CTX.append("inequality")
-    try: return _proto(*a, **k)
-    finally: CTX.pop(); stamp("_compute_inequality_jacobian", "exit")
-cj._compute_inequality_jacobian = _ineq
+_T9_BUILDS = {}
+_protos = {}
+for _name, _src in _SRC.items():
+    ns = dict(vars(cj)); ns["_T9_POS"] = {}; ns["_T9_BUILDS"] = _T9_BUILDS   # captured AFTER the counter
+    exec(compile(_src, f"<proto {_name}>", "exec"), ns)
+    _protos[_name] = ns[_name]
+def _mk(_name, _tag):
+    _p = _protos[_name]
+    def w(*a, **k):
+        stamp(_name, "enter"); CTX.append(_tag)
+        try: return _p(*a, **k)
+        finally: CTX.pop(); stamp(_name, "exit")
+    return w
+cj._compute_inequality_jacobian = _mk("_compute_inequality_jacobian", "inequality")
+cj._compute_bound_jacobian = _mk("_compute_bound_jacobian", "bound")
 class Stop(Exception): pass
 signal.signal(signal.SIGALRM, lambda *_: (_ for _ in ()).throw(Stop()))
 signal.alarm(CAP)
@@ -270,8 +285,8 @@ except Stop:
     rc = "stopped_at_cap"
 except BaseException as e:
     rc = f"{type(e).__name__}: {e}"[:200]
-json.dump({"rc": rc, "wall": round(time.time() - T0[0], 1), "events": EV, "diff_calls": CNT}, open(pj, "w"), indent=1)
-print(rc, round(time.time() - T0[0], 1), CNT)
+json.dump({"rc": rc, "wall": round(time.time() - T0[0], 1), "events": EV, "diff_calls": CNT, "position_map_builds": _T9_BUILDS}, open(pj, "w"), indent=1)
+print(rc, round(time.time() - T0[0], 1), CNT, 'map_builds=', _T9_BUILDS)
 ```
 
 ## `cov_one.sh`

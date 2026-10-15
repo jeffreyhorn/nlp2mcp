@@ -12,11 +12,11 @@
    - Sprint 38 Day 7's referenced-instance filter (#1385) was applied **only to `_compute_equality_jacobian`**. **`_compute_inequality_jacobian` and `_compute_bound_jacobian` still iterate every declared instance.**
    - sarf has **792 inequality rows** that reference `task` (369,024 declared instances), so that loop asks for **792 × 369,024 = 292.3 M** differentiations: roughly 36 h at the measured rate.
    - The equality path, filtered, completes in 26–59 s.
-2. **Filtering the inequality path works and is byte-identical.** In an in-memory prototype, the inequality path drops from 292.3 M to **158,666** differentiations and **completes** (131–171 s). On the declared-size fixture, the emit is **byte-identical at every size** while the work goes flat.
+2. **Filtering the inequality path works and is byte-identical.** In an in-memory prototype, the inequality path drops from 292.3 M to **158,666** differentiations and **completes** (**41.8 s** in the corrected prototype). On the declared-size fixture, the emit is **byte-identical at every size** while the work goes flat.
 3. **But sarf then hits two more things nobody has seen, because nothing ever got past its Jacobian:**
-   - **`validate_jacobian_entries` scans the Jacobian densely** (rows × columns: (404 + 824) × 369,165 ≈ 453 M probes), taking **113 s**;
+   - **`validate_jacobian_entries` scans the Jacobian densely** (rows × columns: (404 + 824) × 369,165 ≈ 453 M probes), taking **113–131 s**;
    - **`assemble_kkt_system` crashes**: `RecursionError` in the recursive `simplify`, reached from `build_stationarity_equations` on the indexed-variable branch.
-   - **So +1 Translate needs at least three changes, not one, and still faces the ≤ 300 s gate:** ~450 s was spent before the crash, even at light load.
+   - **So +1 Translate needs at least three changes, not one, and still faces the ≤ 300 s gate:** ~425–450 s was spent before the crash, at light load.
 4. **`gradient.py:453` is dead:** statically (no production caller), and dynamically (never executed over **all 186** leak-gate goldens, §5).
 5. **Re-estimate:**
    - **P6 as "+1 Translate this sprint" is high-risk.** Recommended scope for Task 12: land the **filter (E1/E2)** plus **E3/E4** as byte-identical, corpus-safe changes (~8–12 h), and **diagnose the recursion (E5)** as a bounded item.
@@ -73,7 +73,7 @@ Resolved with `_owning_bodies` / `_code_only` from `tests/unit/kkt/test_position
 | id | file :: function | anchor (unique in that function's code) | role |
 |---|---|---|---|
 | **E1** | `src/ad/constraint_jacobian.py` :: `_compute_inequality_jacobian` | `for var_indices in var_instances:` (L1300) | **the non-terminating loop**: rows × **declared** instances, no filter |
-| **E2** | `src/ad/constraint_jacobian.py` :: `_compute_bound_jacobian` | `for var_indices in var_instances:` (L1384) | same shape for bound rows; not hit by sarf (its 2 bounds are among the inequalities), but hit by the fixture |
+| **E2** | `src/ad/constraint_jacobian.py` :: `_compute_bound_jacobian` | `for var_indices in var_instances:` (L1384) | same shape for bound rows. It processes only bounds **not** in `inequalities`, and `normalize_model` puts `.lo`/`.up` bounds there (E1's), so **in the pipeline E2 runs only for `.fx` (`Rel.EQ`) bounds** (`normalize.py:300–304`). sarf has none. The fixture now carries one, so E2 is exercised and gated (§6) |
 | **R1** | `src/ad/constraint_jacobian.py` :: `_compute_equality_jacobian` | `referenced = _referenced_index_tuples(constraint_expr, var_name, model_ir)` (L1174) | the existing filter to **reuse** |
 | **R2** | same | `key=position.__getitem__` (L1181) | its order-preserving sort, not O(declared) filtering (the Day-7 trap) |
 | **E3** | `src/ad/gradient.py` :: `compute_objective_gradient` | `enumerate_variable_instances` (L287) | the objective gradient differentiates **every** declared instance (369,165 calls, 21–69 s) |
@@ -90,20 +90,22 @@ Resolved with `_owning_bodies` / `_code_only` from `tests/unit/kkt/test_position
 
 `_compute_inequality_jacobian` is rebuilt from its **own source**, with the R1/R2 construction inserted before E1's loop, and swapped in at runtime. `src/` on disk is untouched. Recorded in the harness artifact.
 
-- **On the fixture (§6): byte-identical at every size**, and the inequality work goes from 4 × 3N to a flat 16.
-- **On sarf** (cap 1,200 s, load ~5): the Jacobian **completes**.
+- **On the fixture (§6): byte-identical at every size.** Inequality work goes from 4 × 3N to a flat 16, and bound work (E2) from 3N to 1. The declared-position map is built **once per function per variable** (2 builds at every N), never per row.
+- **On sarf**, the Jacobian **completes** in both runs. **Run 1 is contaminated by a prototype bug** (below), and **run 2 is the corrected prototype and the authority**:
 
-| phase | wall |
-|---|---|
-| parse | 10.3 s |
-| gradient (E3, unfiltered) | 20.9 s |
-| equality Jacobian | 26.3 s |
-| **inequality Jacobian, filtered** | **131.2 s**, 158,666 calls (vs 292.3 M) |
-| `validate_jacobian_entries` ×2 (E4) | **113.3 s** |
-| `assemble_kkt_system` | 146.1 s, then **`RecursionError`** |
+| phase | run 1: per-row map rebuild (load ~5) | **run 2: corrected** (load 11 → 4) |
+|---|---|---|
+| parse | 10.3 s | 25.7 s |
+| gradient (E3, unfiltered) | 20.9 s | 46.4 s |
+| equality Jacobian | 26.3 s | 33.3 s |
+| **inequality Jacobian, filtered** | 131.2 s | **41.8 s**: 158,666 calls (vs 292.3 M); each position map built **once** |
+| `validate_jacobian_entries` ×2 (E4) | 113.3 s | 131.3 s |
+| `assemble_kkt_system` | 146.1 s, then **`RecursionError`** | 144.2 s, then **`RecursionError`** |
+| reached before the crash | ~450 s | ~425 s |
 
 - **The crash path:** `assemble_kkt_system` → `build_stationarity_equations` (E5) → `apply_simplification` → `simplify_advanced` → `simplify` (E6), recursing past the CLI's 50,000 limit.
 - ⚠ **A prototype bug of exactly the dangerous kind was caught by the fixture.** The first version's inserted lines landed one indentation level too shallow, so only the last variable per row was differentiated. That silently **dropped the `cap(i)` constraint**: `lam_cap` and `comp_cap` vanished, with no error. **Only the fixture's byte-identity golden caught it.** This is why the fixture is part of the gate (§7).
+- ⚠ **A second prototype bug, found in review (PR #1754).** The position-map cache used `cache.setdefault(var, {…comprehension…})`, which evaluates the comprehension on **every** call, a hit included. So it rebuilt the full 369,024-entry map **per row**: O(declared) per row, the very Day-7 trap §7 forbids. That inflated run 1's inequality time from ~42 s to 131 s (~90 s of rebuild). The flat differentiation count did not reveal it, so the gate now also bounds **map builds** (§7).
 
 ## 4. Atomicity boundary (Unknown 6.3)
 
@@ -136,6 +138,7 @@ Set i / i1*i3 /, j / j1*j<N> /, a(j) / j1*j5 /;
 Variable z;
 Positive Variable x(i,j);
 x.up('i1','j1') = 5;
+x.fx('i2','j2') = 1;
 Equation obj, cap(i);
 obj..    z =e= sum((i,a), x(i,a));
 cap(i).. sum(a, x(i,a)) =l= 10;
@@ -143,18 +146,20 @@ Model m / all /;
 solve m using lp minimizing z;
 ```
 
-Declared `x` = 3N; **active (referenced) `x` = 15 at every size**. It has one equality row (the filtered path), three inequality rows plus a bound row (the unfiltered path; bounds are counted among the inequalities).
+Declared `x` = 3N; **active (referenced) `x` = 15 at every size**.
+- **The rows:** one equality row (the filtered path); three `cap` inequality rows plus the `x.up` bound (`normalize_model` files `.lo`/`.up` bounds under `inequalities`, so all four are **E1**); and the `x.fx` bound, which `normalize_model` files as `Rel.EQ` under `equalities`, so it is processed by **E2** (`_compute_bound_jacobian`).
+- ⚠ **The first version of this fixture had no `.fx` bound and therefore never exercised E2**, while this doc claimed it did (PR #1754 review). Corrected here, and the hashes below are the corrected fixture's.
 
-| N | declared `x` | equality diffs | **inequality diffs, fail-before** | translate, fail-before | inequality diffs, **prototype** | translate, prototype | emit sha256 (**golden**) | prototype emit |
-|---|---|---|---|---|---|---|---|---|
-| 100 | 300 | 16 | **1,200** | 2.19 s* | **16** | 1.1 s | `b9152b4b06d3c8b0dd515f2f0669e626faf9e39e6ce90ddd8c9f1f61cf758602` | byte-identical |
-| 400 | 1,200 | 16 | **4,800** | 1.36 s | **16** | 1.2 s | `6d650c5467b2d5ca1c6b758096d9a7fbc8b31a64d16b872c63d2455209f3f7b1` | byte-identical |
-| 1,600 | 4,800 | 16 | **19,200** | 4.32 s | **16** | 1.6 s | `16ae7ab63ad1dfe25e1222354e69ec5887568225e2d455f9a28b5be1bd94d041` | byte-identical |
-| 6,400 | 19,200 | 16 | **76,800** | 14.49 s | **16** | 3.6 s | `9171a467da3f7c562656c108aa20b097525e660d404ff1368347b0b0badc6c7b` | byte-identical |
+| N | declared `x` | equality diffs | **E1 (inequality) diffs, fail-before** | **E2 (bound) diffs, fail-before** | translate, fail-before | E1 / E2 diffs, **prototype** | position-map builds, prototype | translate, prototype | emit sha256 (**golden**) | prototype emit |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 100 | 300 | 17 | **1,200** | **300** | 1.17 s | **16 / 1** | 2 | 1.1 s | `b9747c0bdf958fe0b81214a474066f947a3830bf78bec8ce30bbf3afe188c646` | byte-identical |
+| 400 | 1,200 | 17 | **4,800** | **1,200** | 0.76 s | **16 / 1** | 2 | 1.5 s | `6b2b96f36f492c1e81ebc9595034e7d9ec771324959615ad5265af747075bbcc` | byte-identical |
+| 1,600 | 4,800 | 17 | **19,200** | **4,800** | 2.34 s | **16 / 1** | 2 | 2.4 s | `894e58f8c48933cb74643529270782df90ef39c3c847cd6cd2574a440d38f18a` | byte-identical |
+| 6,400 | 19,200 | 17 | **76,800** | **19,200** | 9.40 s | **16 / 1** | 2 | 4.2 s | `86e64f13b9e9398baf808653a9447e9364d682f504ec27649474c117a2ddcf43` | byte-identical |
 
-\* includes interpreter warm-up.
+*Each run is a fresh process. Timings are indicative under shared load; the call counts are exact.*
 
-- **Positive control:** the work grows **exactly linearly with declared size** (4 rows × 3N) while the active set is constant. This is the documented O(declared)-per-row signature (`SPRINT_38/SARF_REARCH_DESIGN.md`, `SPRINT_38/DAY7_SARF_GATE_P6C.md`). After the filter it is **flat**.
+- **Positive control:** the work grows **exactly linearly with declared size**, while the active set is constant: E1 = 4 rows × 3N, E2 = 1 bound × 3N. This is the documented O(declared)-per-row signature (`SPRINT_38/SARF_REARCH_DESIGN.md`, `SPRINT_38/DAY7_SARF_GATE_P6C.md`). After the filter both are **flat** (16 and 1).
 - **Correctness:** the emits are **byte-identical** to the fail-before golden at all four sizes.
 - **It terminates in seconds both ways.**
 
@@ -162,24 +167,24 @@ Declared `x` = 3N; **active (referenced) `x` = 15 at every size**. It has one eq
 
 | criterion | requirement |
 |---|---|
-| fixture | all four sizes: emit **sha256 equal** to the §6 golden; inequality `differentiate_expr` count **constant** in N (16) |
+| fixture | all four sizes: emit **sha256 equal** to the §6 golden. Fail-before must show **non-zero E2 (bound-path) work** (3N), so the fixture provably reaches E2. After the change, E1 and E2 `differentiate_expr` counts are **constant** in N (16 and 1), and **declared-position maps are built at most once per function per variable** (a per-row rebuild is O(declared) per row: the Day-7 trap, and a real prototype bug, §3) |
 | leak gate | **full scope**, byte-identical (`make check-goldens`). `make leak-check MODEL=sarf` is `NO-OP` (no golden) and **is not the gate** |
 | sarf (E1–E4) | the Jacobian **completes**; inequality calls ≈ **158,666** (not 292 M); reported phase times |
 | sarf (+1 Translate) | completes at **≤ 300 s** on a nightly slot with a byte-stable golden, scope **186 → 187**; `stat_task` symbolic-index check **with its positive control** (`SPRINT_39/SARF_CALLSITE_PLAN.md` §7); determinism ×3 |
-| Day-7 trap | no narrowing whose own cost is O(declared) per row. Use the sort-by-position construction (R2), never a filtered declared list |
+| Day-7 trap | no narrowing whose own cost is O(declared) per row. Use the sort-by-position construction (R2), never a filtered declared list, **and build each position map once, on a cache miss**. ⚠ `cache.setdefault(key, {…comprehension…})` evaluates the comprehension on **every** call, a hit included: an O(declared) rebuild per row that looks cached (PR #1754 review; it was in this design's own first prototype) |
 
 ## 8. Re-estimate and REPLAN exits
 
 | item | entry points | est. | expected effect on sarf | risk |
 |---|---|---|---|---|
-| filter, inequality + bound paths, one shared helper | E1, E2 (+R1/R2) | **4–6 h** | Jacobian completes (~131–171 s) | low: byte-identical, fixture-gated |
+| filter, inequality + bound paths, one shared helper | E1, E2 (+R1/R2) | **4–6 h** | Jacobian completes (inequality path ~42 s) | low: byte-identical, fixture-gated |
 | gradient filter | E3 | 2–3 h | −21 to −69 s | low |
-| sparse validation | E4 | 1–2 h | −113 s | low |
+| sparse validation | E4 | 1–2 h | −113 to −131 s | low |
 | hoist the two local imports | E7, E8 | 1 h | ~−7 % of AD time | low (S39 verified no cycle) |
 | **`simplify` recursion on deep stationarity expressions** | E5, E6 | **6–12 h, uncertain** | removes the crash; time unknown | **high**: touches every emit |
 | **total** | | **14–24 h** | | |
 
-**+1 Translate is not established by this design.** Even the prototype's crash point (~450 s at light load) is past the 300 s gate before emit has run, and emit has **never** been reached for sarf. **Recommendation to Task 12:**
+**+1 Translate is not established by this design.** Even the prototype's crash point (~425–450 s at light load) is past the 300 s gate before emit has run, and emit has **never** been reached for sarf. **Recommendation to Task 12:**
 - **P6 lands E1–E4 + E7/E8** (≈ 8–12 h): corpus-safe, byte-identical, and they turn sarf from "never finishes the Jacobian" into "reaches KKT assembly";
 - **P6 diagnoses E5/E6** as a bounded item;
 - **Project +1 Translate only if E5/E6 lands and the gate's 300 s is met.**

@@ -1059,10 +1059,12 @@ Sprint 40 prep team
 - **Q1:** declared ≫ active. sarf's `task` is 369,024 declared, while each row references a small product of sum binders.
 - **Q2:** not needed; a synthetic generator gives exact control.
 - **Q3:** the fixture is `x(i,j)` with `|j| = N` and every row referencing only `x(i,a)`, `a = j1*j5`. Active stays 15 while declared = 3N, for N = 100, 400, 1,600, 6,400.
-  - **Inequality-path differentiations: 1,200 / 4,800 / 19,200 / 76,800**, exactly 4 rows × 3N, so **linear in declared size**.
-  - The equality path is flat at 16. Translate time: 1.4 s → 14.5 s.
-- **Q4:** **yes.** With the filter prototyped in memory, inequality calls are **16 at every size** and the emits are **byte-identical** to the fail-before golden (sha256 recorded per size).
-  - **The golden also caught a real prototype bug**: a mis-indented insertion silently dropped a whole constraint.
+  - **E1 (inequality) differentiations: 1,200 / 4,800 / 19,200 / 76,800**, exactly 4 rows × 3N, so **linear in declared size**.
+  - **E2 (bound) differentiations: 300 / 1,200 / 4,800 / 19,200** (one `.fx` bound × 3N). ⚠ The fixture's first version had **no** `.fx` bound and never reached E2: `normalize_model` files `.lo`/`.up` bounds under `inequalities` (E1), and only `.fx` (`Rel.EQ`) bounds reach `_compute_bound_jacobian` (PR #1754 review). Hashes re-recorded.
+  - The equality path is flat at 17.
+- **Q4:** **yes.** With the filter prototyped in memory on E1 and E2, calls are **16 and 1 at every size**, the emits are **byte-identical** to the fail-before golden (sha256 recorded per size), and each declared-position map is built **once per function**, not per row.
+  - **The golden caught one prototype bug** (a mis-indented insertion silently dropped a whole constraint).
+  - **Review caught another the counts missed:** a `setdefault` cache rebuilt the position map **per row**. So the gate now also bounds map builds.
 
 **Evidence:** `SARF_JACOBIAN_DESIGN.md` §3, §6.
 
@@ -1110,7 +1112,7 @@ Sprint 40 prep team
   - the five slow models (dinam, ferts, ganges, gangesx, turkpow) completed at 2,400 s, and the combined result is unchanged: **L453 never executed**.
 - **Q2, what must change together:**
   - **for the filter, nothing.** Zero derivatives are never stored, and the column set, `col_id`s and order are untouched, so E1 + E2 is self-contained, with one shared helper rather than copies;
-  - **but sarf with the filter prototyped** completes its Jacobian and then hits a **dense `validate_jacobian_entries` scan (113 s)** and a **`RecursionError` in the recursive `simplify`**, reached from `build_stationarity_equations`' indexed branch, after ~450 s.
+  - **but sarf with the filter prototyped** completes its Jacobian and then hits a **dense `validate_jacobian_entries` scan (113–131 s)** and a **`RecursionError` in the recursive `simplify`**, reached from `build_stationarity_equations`' indexed branch, after ~425–450 s. The corrected prototype's inequality path takes **41.8 s**: a first version's `setdefault` cache rebuilt the position map per row (PR #1754 review).
 - **Q3:** no flag is needed for E1–E4, because byte-identity is the proof. A flag is advisable for the simplify fix, which touches every emit.
 
 **Evidence:** `SARF_JACOBIAN_DESIGN.md` §3, §4, §5, §8.
