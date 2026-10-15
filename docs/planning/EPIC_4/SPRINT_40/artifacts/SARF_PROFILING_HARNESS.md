@@ -19,6 +19,8 @@ These scripts produced every figure in `../SARF_JACOBIAN_DESIGN.md`. They lived 
 - **Run A** (`prof.py`, `rc: systemexit 1`) and **Run B** (`phases.py`, `rc: SystemExit: 1`) were **cap stops**: Run A's final snapshot fired at 600.07 s (wall 600.67 s) and Run B's wall is 900.0 s, each at its cap, with Run B stamping the in-flight inequality phase's exit at **900.03 s**.
 - **The three `proto.py` sarf runs** (`SystemExit: 1`) were **genuine failures**: each ended well **before** its 1,200 s cap (walls 527.3, 453.7 and 428.9 s), and each run's log records `maximum recursion depth exceeded` (the `-vvv` runs with the full traceback).
 
+⚠ **A fourth finding (PR #1754 review): a per-row scan none of the counters saw.** `_referenced_index_tuples` calls `_declared_domain_labels` for every **fixed** index, and that call rebuilds the whole domain position's canonical-label map. `proto.py` now **counts** those calls, builds and label entries scanned (`label_scans` in its JSON). With `T9_LABEL_CACHE=1` it applies a translation-scoped `(var_name, position)` cache, cleared per `compute_constraint_jacobian` call. Fixture: 9 builds / 3N + 18 entries uncached, versus 2 builds / N + 3 entries cached, byte-identical.
+
 ## `prof.py`
 
 ```python
@@ -278,6 +280,28 @@ def _mk(_name, _tag):
         try: return _p(*a, **k)
         finally: CTX.pop(); stamp(_name, "exit")
     return w
+# --- canonical-label scans (PR #1754 review): count every _declared_domain_labels
+# call and the label entries it scans; with T9_LABEL_CACHE=1, cache per
+# (var_name, position) for the translation, cleared at each compute_constraint_jacobian.
+LBL = {"calls": 0, "builds": 0, "entries_scanned": 0}
+_LBL_CACHE = {}
+_orig_labels = cj._declared_domain_labels
+def _labels(var_name, position, model_ir):
+    LBL["calls"] += 1
+    key = (var_name, position)
+    if os.environ.get("T9_LABEL_CACHE") and key in _LBL_CACHE:
+        return _LBL_CACHE[key]
+    r = _orig_labels(var_name, position, model_ir)
+    LBL["builds"] += 1; LBL["entries_scanned"] += len(r)
+    if os.environ.get("T9_LABEL_CACHE"):
+        _LBL_CACHE[key] = r
+    return r
+cj._declared_domain_labels = _labels   # _referenced_index_tuples resolves it from cj's globals at call time
+_orig_ccj = cli.compute_constraint_jacobian
+def _ccj(*a, **k):
+    _LBL_CACHE.clear()                  # translation-scoped: never reused across a Jacobian call
+    return _orig_ccj(*a, **k)
+cli.compute_constraint_jacobian = _ccj
 cj._compute_inequality_jacobian = _mk("_compute_inequality_jacobian", "inequality")
 cj._compute_bound_jacobian = _mk("_compute_bound_jacobian", "bound")
 class Stop(BaseException): pass  # NOT Exception: src/cli.py catches Exception and sys.exit(1)s, which would mask the cap
@@ -290,8 +314,8 @@ except Stop:
     rc = "stopped_at_cap"
 except BaseException as e:
     rc = f"{type(e).__name__}: {e}"[:200]
-json.dump({"rc": rc, "wall": round(time.time() - T0[0], 1), "events": EV, "diff_calls": CNT, "position_map_builds": _T9_BUILDS}, open(pj, "w"), indent=1)
-print(rc, round(time.time() - T0[0], 1), CNT, 'map_builds=', _T9_BUILDS)
+json.dump({"rc": rc, "wall": round(time.time() - T0[0], 1), "events": EV, "diff_calls": CNT, "position_map_builds": _T9_BUILDS, "label_scans": LBL}, open(pj, "w"), indent=1)
+print(rc, round(time.time() - T0[0], 1), CNT, 'map_builds=', _T9_BUILDS, 'labels=', LBL)
 ```
 
 ## `cov_one.sh`

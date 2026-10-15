@@ -108,6 +108,7 @@ Resolved with `_owning_bodies` / `_code_only` from `tests/unit/kkt/test_position
 - **The crash path:** `assemble_kkt_system` → `build_stationarity_equations` (E5) → `apply_simplification` → `simplify_advanced` → `simplify` (E6), recursing past the CLI's 50,000 limit.
 - ⚠ **A prototype bug of exactly the dangerous kind was caught by the fixture.** The first version's inserted lines landed one indentation level too shallow, so only the last variable per row was differentiated. That silently **dropped the `cap(i)` constraint**: `lam_cap` and `comp_cap` vanished, with no error. **Only the fixture's byte-identity golden caught it.** This is why the fixture is part of the gate (§7).
 - ⚠ **A second prototype bug, found in review (PR #1754).** The position-map cache used `cache.setdefault(var, {…comprehension…})`, which evaluates the comprehension on **every** call, a hit included. So it rebuilt the full 369,024-entry map **per row**: O(declared) per row, the very Day-7 trap §7 forbids. That inflated run 1's inequality time from ~42 s to 131 s (~90 s of rebuild). The flat differentiation count did not reveal it, so the gate now also bounds **map builds** (§7).
+- ⚠ **A third per-row scan, also found in review, that no counter saw.** For every **fixed (literal) index** in a row, `_referenced_index_tuples` calls `_declared_domain_labels` (`constraint_jacobian.py` ~L171, ~L216). That rebuilds the canonical-label dictionary for the **whole** domain position: `resolve_set_members` plus a dict over every member. A row naming `x('i1','j1')` therefore scans all N labels of `j`, while differentiation counts and position-map builds both stay flat. The fix is a **translation-scoped label cache keyed by (variable, position)**, measured in §6 and gated in §7. **On sarf** (uncached, measured): **4,710** label-map builds scanning **122,407** entries. That is small in absolute terms, because sarf's domain positions are small sets, so it is **not** what blocks sarf. But it is per-row work that grows with a position's declared size, so the **gate** must bound it (§7).
 
 ## 4. Atomicity boundary (Unknown 6.3)
 
@@ -119,7 +120,7 @@ Resolved with `_owning_bodies` / `_code_only` from `tests/unit/kkt/test_position
 
 **A flag is unnecessary for E1–E4** (byte-identity is the proof). **It is advisable for E5/E6**, if the fix changes simplification order.
 
-**Shared-helper requirement (Sprint 39 Day-5 lesson, `ISSUE_1694`):** do **not** copy the R1/R2 block into E1 and E2. Factor it into one helper, e.g. `_effective_instances(constraint_expr, var_name, var_instances, position_maps)`, used by all three paths, so the predicate cannot drift between copies.
+**Shared-helper requirement (Sprint 39 Day-5 lesson, `ISSUE_1694`):** do **not** copy the R1/R2 block into E1 and E2. Factor it into one helper, e.g. `_effective_instances(constraint_expr, var_name, var_instances, position_maps)`, used by all three paths, so the predicate cannot drift between copies. **The helper must also own a translation-scoped canonical-label cache** keyed by `(var_name, position)` and cleared per `compute_constraint_jacobian` call, so `_declared_domain_labels` is built at most once per variable position per translation rather than once per fixed index per row (§3, §6).
 
 **#1737 / #1741 interaction** (feeds Task 10, Unknown 8.2): their guards live in `src/ir/index_map.py`, `condition_eval.py`, `kkt/empty_equation_detector.py` and `kkt/repeated_domain.py`, **outside the touch set of E1–E4 and E7/E8**. ⚠ **E5 is the exception:** #1741's guard is `src/kkt/stationarity.py::_build_pattern_c_dim_mismatch_term`, which **shares E5's file**. Sharing a file does not mean the guard changes, but a **builder-side** recursion fix at E5 (changing what `_build_indexed_stationarity_expr` builds) **requires a guard-impact review** before landing. A fix confined to `ad_core.simplify` (E6) does not touch that file. The filter is **repeat-safe**: `_referenced_index_tuples` walks positions with `enumerate(indices)` and resolves labels by `var_def.domain[position]`, never symbol→position, which is the Sprint-39 Task-7 discriminator. sarf's `task(g,t,mn,mn)` has a repeated declared domain, so the gate must include it, and it does: sarf is the target.
 
@@ -163,6 +164,16 @@ Declared `x` = 3N; **active (referenced) `x` = 15 at every size**.
 
 - **Positive control:** the work grows **exactly linearly with declared size**, while the active set is constant: E1 = 4 rows × 3N, E2 = 1 bound × 3N. This is the documented O(declared)-per-row signature (`SPRINT_38/SARF_REARCH_DESIGN.md`, `SPRINT_38/DAY7_SARF_GATE_P6C.md`). After the filter both are **flat** (16 and 1).
 - **Correctness:** the emits are **byte-identical** to the fail-before golden at all four sizes.
+- **Canonical-label scans** (`_declared_domain_labels`; measured with the prototype, PR #1754 review). These are invisible to the differentiation and position-map counters:
+
+| N | label-map builds, uncached | label entries scanned, uncached | builds, **cached** (var, position) | entries scanned, **cached** | emit |
+|---|---|---|---|---|---|
+| 100 | 9 | 318 | **2** | 103 | byte-identical |
+| 400 | 9 | 1,218 | **2** | 403 | byte-identical |
+| 1,600 | 9 | 4,818 | **2** | 1,603 | byte-identical |
+| 6,400 | 9 | 19,218 | **2** | 6,403 | byte-identical |
+
+  Uncached, the scan is **3N + 18**: three fixed-`j` lookups per translation scan all N labels of `j`, and six fixed-`i` lookups scan 3 each. Cached, it is **one build per (variable, position)**, **N + 3** entries, once per translation.
 - **It terminates in seconds both ways.**
 
 ## 7. The gate (P6, for the change this design supports)
@@ -170,6 +181,7 @@ Declared `x` = 3N; **active (referenced) `x` = 15 at every size**.
 | criterion | requirement |
 |---|---|
 | fixture | all four sizes: emit **sha256 equal** to the §6 golden. Fail-before must show **non-zero E2 (bound-path) work** (3N), so the fixture provably reaches E2. After the change, E1 and E2 `differentiate_expr` counts are **constant** in N (16 and 1), and **declared-position maps are built at most once per function per variable** (a per-row rebuild is O(declared) per row: the Day-7 trap, and a real prototype bug, §3) |
+| canonical labels | `_declared_domain_labels` builds **≤ one per (variable, domain position) per translation**, cleared per `compute_constraint_jacobian` call. On the fixture: **2** builds and N + 3 entries at every N (uncached: 9 builds, 3N + 18 entries). A per-fixed-index rebuild is O(declared position size) per row, which §7's Day-7 prohibition covers even though no differentiation count shows it |
 | leak gate | **full scope, byte-identical, and COMPLETE.** `make check-goldens` **exits 0 even when models time out** (`check_golden_staleness.py` ~L475–480: "N slow-emit timeout(s), unverified"; the per-model budget is a hard-coded 600 s), so **exit status 0 is not the gate**. Required: **every** in-scope golden compared, with **zero** timeouts, zero emit failures and zero skips (read the report, or `--json`). Re-run any timed-out model with `--models <ids>` on a quiet machine. If one still exceeds 600 s, emit it directly with no timeout (`python -m src.cli … -o …`, `--nlp-presolve` for presolve goldens) and `cmp` it against its golden. **The count compared must equal the in-scope count.** `make leak-check MODEL=sarf` is `NO-OP` (no golden) and **is not the gate** |
 | sarf (E1–E4) | the Jacobian **completes**; inequality calls ≈ **158,666** (not 292 M); reported phase times |
 | sarf (+1 Translate) | completes at **≤ 300 s** on a nightly slot with a byte-stable golden, scope **186 → 187**; `stat_task` symbolic-index check **with its positive control** (`SPRINT_39/SARF_CALLSITE_PLAN.md` §7); determinism ×3 |

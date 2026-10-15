@@ -1065,6 +1065,7 @@ Sprint 40 prep team
 - **Q4:** **yes.** With the filter prototyped in memory on E1 and E2, calls are **16 and 1 at every size**, the emits are **byte-identical** to the fail-before golden (sha256 recorded per size), and each declared-position map is built **once per function**, not per row.
   - **The golden caught one prototype bug** (a mis-indented insertion silently dropped a whole constraint).
   - **Review caught another the counts missed:** a `setdefault` cache rebuilt the position map **per row**. So the gate now also bounds map builds.
+  - **And a third:** `_declared_domain_labels` rebuilds a domain position's canonical-label map for **every fixed index in every row**: 3N + 18 label entries scanned on the fixture. A translation-scoped `(variable, position)` cache cuts that to 2 builds (N + 3 entries), byte-identical. The gate now bounds label-map builds as well.
 
 **Evidence:** `SARF_JACOBIAN_DESIGN.md` §3, §6.
 
