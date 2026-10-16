@@ -1105,11 +1105,11 @@ Three of Sprint 38's four Phase-0 gates named the wrong layer; Sprint 39 added t
 ✅ **COMPLETE — every track has a traced layer. Two of the five named surfaces were the wrong site, and one hypothesis is refuted outright.**
 
 - **turkpow (Class A):** the layer is **KKT re-symbolisation**. `_replace_indices_in_expr`'s alias layer maps the AD's deliberately symbolic sum binder `v` onto `t` (#1085's contract fails under `Alias (t,v)`). The `t__kkt1` mint is downstream and correct; positive control: `sambal`. Ratchet target 9 → ≤ 6, and nonsharp's 2 cannot move, because it is a discrete model the translator refuses.
-- **egypt / shale:** the Class-A reference is **not** the dominant cause. egypt's hand-patched correct term changes PATH's path but stays MS 5; shale's reference is provably inert (identical solve). Each has a named candidate second defect from Task 7, not yet proven causal.
+- **egypt / shale:** the Class-A references are **live** collapses: restoring each hand-derived term changes PATH's path. But both models stay MS 5, so each fix is **necessary but not sufficient**. *(shale's first patch zeroed an already-zero coefficient and tested nothing; the corrected run restores the dropped `cpu` coupling, PR #1756 review.)*
 - **Class B:** the declaration-vs-assignment context **is in the IR** (`ParameterDef.domain` vs `expressions`). gussrisk's fix layer is **emit** (NA-cleanup).
 - **The diagonal defect:** it reproduces (`stat_tsam(i,j).. 1 =E= 0;`) and **drops the whole constraint**. The layer is **AD**, `_sum_should_collapse`'s length check. The hand-derived row is verified by solve (0.333 = NLP 0.3333). **Filed as #1755.**
 - **Structural sites:** **both guards are live.** 3-D aliased inputs change the **emit** with each guard disabled, so both pins can be promoted to behavioural.
-- **#1737:** P6's E1–E4 don't reach it. **P7 and P4 can, indirectly**: the refusal scans only equalities with a referenced multiplier, so fixing #1755 turns silently-dropped repeated-domain equations into refusals (demonstrated). #1737 is untouched.
+- **#1737:** P6's E1–E4 don't reach it. **P7 and P4 can, indirectly**: the refusal scans only equalities with a referenced multiplier, so fixing #1755 turns silently-dropped repeated-domain equations into refusals (demonstrated). #1737 is untouched. *(Both the equality and the inequality scans reach the assertion; PR #1756 review.)*
 
 ### Verification
 
@@ -1135,7 +1135,7 @@ ls docs/issues/ | grep -i "diagonal\|tsam" || echo "diagonal-defect issue not ye
 
 - [x] Each of P4, P7, P8 has a **traced** layer, not a named-by-assumption one
 - [x] The diagonal-defect issue is filed with a reproducer confirmed on `main`
-- [x] egypt/shale mismatch explained by the Class-A fingerprint or a second defect named. *Not the fingerprint, shown by the patched solves. The second defects are **named as candidates** (egypt R-PRE-140, shale's presolve `$148`, both from Task 7) but are not yet proven causal.*
+- [x] egypt/shale mismatch explained by the Class-A fingerprint or a second defect named. *Not the fingerprint **alone**: both references are live, and restoring each changes PATH's path, but both models stay MS 5. The second defects are **named as candidates** (egypt R-PRE-140, shale's presolve `$148`, both from Task 7) but are not yet proven causal.*
 - [x] Every probe records its positive control
 - [x] #1737 left untouched
 - [x] Unknowns 4.1, 4.2, 4.3, 7.1, 7.2, 8.1, 8.2 verified and updated in KNOWN_UNKNOWNS.md

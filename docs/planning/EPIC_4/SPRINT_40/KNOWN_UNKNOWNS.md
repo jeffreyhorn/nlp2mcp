@@ -807,19 +807,21 @@ Using Task 7's results: read the residual's top rows; patch the single violating
 Sprint 40 prep team
 
 ### Verification Results
-❌ **Status:** WRONG — neither model's mismatch is explained by its Class-A reference.
+❌ **Status:** WRONG — neither model's mismatch is explained by its Class-A reference **alone**. Both references are **live** collapses (restoring the hand-derived term changes PATH's path in each), but both models stay MS 5.
 
 **Verified by:** Sprint 40 Prep Task 10 · **Date:** 2026-10-15 · **Measured at:** `b85afbc0` (scratch probes outside the repo; `src/` untouched)
 
-**Findings (licensed; retention patch; 4 invocations, all `licensed` / PATH / 0 compile errors):**
+**Findings (licensed; retention patch; 6 invocations, all `licensed` / PATH / 0 compile errors):**
 - **egypt:** the hand-derived correct term `+nu_fodb(r,c)$tranc(r,rp) − nu_fodb(rp,c)$tranc(rp,r)` replaces the golden's collapsed `-(1$(tranc(rp,rp)))*nu_fodb(r,c)`.
   - PATH's path **changes** (62,176 → 69,730 iterations; terminal objective 1,448,953.756 → 11,645,180), so the reference is live.
   - It stays **MS 5**, so **another defect sits underneath**, consistent with Task 7's R-PRE-140.
-- **shale:** `ts(tf,tf)` is the offset-0 term of a strictly lower-triangular `ts`, so its correct value is also 0. **Provably inert:** the patched solve is **identical** (MS 5, same objective, same 23,304 iterations).
+- **shale:** `ts(tf,tf)` appears twice in `stat_h`. Its `acap` offset-0 occurrence is legitimately zero. Its **`cpu` occurrence is a live collapse**: `-(1$(ts(tf,tf)))*lam_cpu(m,tf)` keeps only the always-zero diagonal of the correct `-sum(t$ts(t,tf), lam_cpu(m,t))`, so the whole `cpu` coupling is lost.
+  - ⚠ **A first patch zeroed that already-zero coefficient and got an identical solve, which tested nothing** (PR #1756 review).
+  - **Corrected:** restoring the coupling changes PATH's path (23,304 → **33,238** iterations; terminal objective 2.39e-11 → 1.82e-07), but the model stays **MS 5**. Task 7's presolve `$148` is the named candidate for the defect underneath.
 
 **Evidence:** `CORRECTNESS_PRETRACES.md` §2.
 
-**Decision:** P4 does **not** book egypt or shale as Class-A recoveries. Each needs the underlying defect diagnosed first.
+**Decision:** P4 does **not** book egypt or shale as Class-A recoveries. Each Class-A fix is **necessary but not sufficient**. Each needs the underlying defect diagnosed first, with the hand-derived terms as correctness references.
 
 ---
 
@@ -860,7 +862,7 @@ Sprint 40 prep team
 - **Fix layer:** **emit**, `original_symbols.emit_post_assignment_na_cleanup`, indexing by distinct per-position symbols.
 - **Against the three Class-B fingerprints:**
   - gussrisk: the rule applies;
-  - shale `ts(tf,tf)`: a stationarity guard, inert (Unknown 4.2);
+  - shale `ts(tf,tf)`: a stationarity guard, not NA-cleanup. Its `cpu` occurrence is a live Class-A collapse (Unknown 4.2);
   - nonsharp: **discrete (MINLP), out of scope and refused by the translator**; its reference also reads as a Class-A alias collapse.
 
 **Evidence:** `CORRECTNESS_PRETRACES.md` §3.
@@ -1331,10 +1333,13 @@ Sprint 40 prep team
 **Verified by:** Sprint 40 Prep Task 10 · **Date:** 2026-10-15 · **Measured at:** `b85afbc0` (scratch probes outside the repo; `src/` untouched)
 
 **Findings:**
-- `empty_equation_detector` has one caller (`emit_gams.py:3631`). Its `relevant_eqs` are the equalities whose multiplier is in `kkt.referenced_multipliers`, and its guard `assert_no_repeated_symbol(eq_def.domain, …)` fires on a repeated **equation** domain.
+- `detect_empty_equation_instances` is called **twice** from `emit_gams.py`:
+  - for **equalities** (~L3631, `relevant_eqs`: multipliers in `kkt.referenced_multipliers`);
+  - for **inequalities** (~L3662–3675, `relevant_ineqs`, `include_inequalities=True`; every inequality when no referenced set exists).
+  - **Both reach** `assert_no_repeated_symbol(eq_def.domain, …)`, which fires on a repeated equation domain. *(An earlier revision described the equality scan only; PR #1756 review.)*
 - **Task 9's E1–E4:** byte-identical, so the referenced set is unchanged, so **no**.
 - **P7:** fixing #1755 newly references multipliers, so **yes**.
-- **P4:** it may restore dropped terms, so **possibly**.
+- **P4:** it may restore dropped terms, including **inequality** multipliers (shale's `lam_cpu`), so **possibly**, through either scan.
 - **Demonstrated:** `dd(i,i)` with an **unreferenced** multiplier (the #1755 shape) is silently dropped with exit 0. With a **referenced** multiplier, the #1737 refusal fires (exit 1, "domain ('i', 'i') repeats ['i']").
 - `test_the_AD_collapse_is_reachable_but_EMIT_refuses_it` passes.
 
@@ -1343,7 +1348,7 @@ Sprint 40 prep team
 **Decision:**
 - **#1737 is left untouched.**
 - **P7's gate must expect** shape-(a) models to change from silently wrong to **refused**.
-- **P4 checks** whether its restored terms reference new multipliers.
+- **P4 checks** whether its restored terms reference new multipliers, **equality or inequality**.
 
 ---
 

@@ -13,11 +13,11 @@
 | track | named surface (the hypothesis) | traced layer (the finding) | verdict |
 |---|---|---|---|
 | **P4 — turkpow Class A** (4.1) | `t__kkt1` minted into both coordinates of `vs(t,v)` | **KKT re-symbolisation:** `_replace_indices_in_expr`'s alias layer maps a stray **sum binder `v`** to `t`. The binder is left symbolic, **by design** (#720/#1085), in the AD's full-collapse condition. The mint is **downstream** and only renames an already-collapsed `vs(t,t)` | 🔶 layer right, site wrong |
-| **P4 — egypt / shale** (4.2) | the Class-A reference dominates each mismatch | egypt: a hand-patched correct term **changes** PATH's path but stays **MS 5**, so another defect sits underneath. shale: the flagged reference is **provably inert** (strictly-lower `ts`, diagonal ≡ 0), so the patched solve is **identical** | ❌ |
+| **P4 — egypt / shale** (4.2) | the Class-A reference dominates each mismatch | Both references are **live** collapses: restoring the hand-derived term **changes** PATH's path in each. But both stay **MS 5**, so another defect sits underneath. *(A first shale patch zeroed an already-zero coefficient, which tested nothing; corrected in review, see §2)* | ❌ |
 | **P4 — Class B** (4.3) | the IR records whether a repeated-symbol domain is a declaration or an assignment context | **confirmed, it is in the IR**: `ParameterDef.domain` (declaration) vs `ParameterDef.expressions[k][0]` (assignment LHS). gussrisk's fix layer is **emit** (`emit_post_assignment_na_cleanup`) | ✅ |
 | **P7 — diagonal defect** (7.1, 7.2) | "probably `_diff_sum`" | reproduces on `main`, **worse than reported**: the constraint and its multiplier are **dropped entirely**. Layer: **AD**, `derivative_rules._sum_should_collapse`, whose `len(sum_index_sets) != len(wrt_indices)` early return rejects a reference repeating one binder. **Filed: #1755** | ✅ / 🔶 |
 | **P8 — structural sites** (8.1) | no discriminating input exists | **both guards are live:** a 3-D aliased input changes the **emit** with each consume-once guard disabled, so both can be promoted to **behavioural** pins | ✅ |
-| **#1737** (8.2) | no planned change routes through the refusal | **P6 E1–E4: no.** **P7 (#1755) and P4: yes, indirectly.** The refusal scans only equalities whose multiplier is **referenced**, so a fix that newly references a multiplier exposes its equation's domain to the refusal | 🔶 |
+| **#1737** (8.2) | no planned change routes through the refusal | **P6 E1–E4: no.** **P7 (#1755) and P4: yes, indirectly.** The refusal scans equalities **and inequalities** whose multiplier is **referenced** (all inequalities when no referenced set exists), so a fix that newly references a multiplier exposes its equation's domain to the refusal | 🔶 |
 
 ---
 
@@ -27,7 +27,7 @@
 
 **The emitted reference** (`stat_zt(m,v,b,t)`, golden L208): `sum(t__kkt1, ((-1)*(opcostt(m,v,t__kkt1)*dur(b)*1$(vs(t__kkt1,t__kkt1))))*nu_ao(v))`.
 - **The source:** `ao(t).. phio(t) =e= … + sum((mt,v)$vs(t,v), opcostt(mt,v,t)*sum(b, dur(b)*zt(mt,v,b,t)))`, with `Alias (t,v)`.
-- **The correct term:** `opcostt(m,v,t)*dur(b)*nu_ao(t)$vs(t,v)`.
+- **The correct term:** **`-opcostt(m,v,t)*dur(b)*nu_ao(t)$vs(t,v)`**. `zt` is on the **RHS** of `ao` (golden L246), so the LHS − RHS convention gives a **negative** coefficient, matching the captured AD derivative's `(-1)*(…)` below. `stat_phio` uses `+nu_ao(te)` for the LHS's `phio`, so the multiplier convention is not reversed. *(An earlier revision omitted the minus sign; PR #1756 review.)*
 - **What is lost:** the multiplier's index (`nu_ao(v)` should be `nu_ao(t)`) and the guard's second coordinate.
 
 **Traced backwards, with instrumentation at each step:**
@@ -58,7 +58,9 @@
 | egypt, golden | `egypt_golden_mcp.1792102178098244000.44319` | 5 | 1,448,953.756 | 62,176 | `MCP-FAILED` / own |
 | **egypt, patched** | `egypt_patched_mcp.1792102184393261000.44344` | **5** | 11,645,180.0 | 69,730 | `MCP-FAILED` / own |
 | shale, golden | `shale_golden_mcp.1792102188641554000.44350` | 5 | 2.38635e-11 | 23,304 | `MCP-FAILED` / own |
-| **shale, patched** | `shale_patched_mcp.1792102191845932000.44365` | **5** | 2.38635e-11 | 23,304 | `MCP-FAILED` / own |
+| shale, first patch (**vacuous**, see below) | `shale_patched_mcp.1792102191845932000.44365` | 5 | 2.38635e-11 | 23,304 | `MCP-FAILED` / own |
+| shale, golden (re-run) | `shale_golden_mcp.1792161350233229000.95548` | 5 | 2.38635e-11 | 23,304 | `MCP-FAILED` / own |
+| **shale, `cpu` coupling restored** | `shale_cpufix_mcp.1792161357634590000.95572` | **5** | 1.816195e-07 | **33,238** | `MCP-FAILED` / own |
 
 NLP references: egypt **4,134,175.7019**, shale **9,354.8644**.
 
@@ -70,12 +72,14 @@ NLP references: egypt **4,134,175.7019**, shale **9,354.8644**.
   - **The result:** PATH's path changes (iterations and terminal objective both move), so the reference is **live**. But the model stays **locally infeasible**, so the Class-A reference is **not the dominant cause**.
   - **Consistent with Task 7:** egypt's `--nlp-presolve` emit fails to compile (`$140`, R-PRE-140), which is a second defect.
   - MS-5 objectives are terminal values at an infeasible point, so neither run "moves toward" the NLP objective in any meaningful sense.
-- **The shale patch:** `1$(ts(tf,tf))` → `0`, both occurrences in `stat_h(m,tf)`.
-  - **The source:** `ts(tf,tfp)$(ord(tfp) < ord(tf)) = 1`, strictly lower-triangular, and `t(tf)`. `stat_h` enumerates `acap(t)`'s rows as ordinal offsets `t = tf + k`.
-  - **Why it is inert:** the offset-0 term's correct value is `ts(tf,tf) = 0`, so the flagged reference is **provably inert**.
-  - **The result:** the patched solve is **identical** in status, objective and iterations. **shale's infeasibility is caused elsewhere.** S39's "B origin, A effect" holds as a P2 property finding, but not as an explanation of the solve.
+- **shale. The flagged reference is a live collapse, and the first patch was vacuous** (PR #1756 review).
+  - **The source:** `ts(tf,tfp)$(ord(tfp) < ord(tf)) = 1`, strictly lower-triangular, and `t(tf)`. `ts(tf,tf)` appears twice in `stat_h(m,tf)`:
+    - **In the `acap` offset-0 term:** legitimately zero, since the diagonal of `ts` is 0.
+    - **In the `cpu` term:** `((-1) * 1$(ts(tf,tf))) * lam_cpu(m,tf)`, the **diagonal only**, which is always 0. The source is `cpu(m,t).. sum(p, b(m,p)*z(p,t)) =l= sum(tf$ts(t,tf), h(m,tf))` (`comp_cpu`, golden L363), so the correct contribution is **`-sum(t$ts(t,tf), lam_cpu(m,t))`**: every row `t` the cell feeds. **The whole `cpu` coupling into `stat_h` is lost.** That is the Class-A coordinate collapse, not an inert reference.
+  - ⚠ **The first patch (`1$(ts(tf,tf))` → `0`) tested nothing.** It replaced an already-zero coefficient with zero, so the "identical solve" compared the defective row with itself.
+  - **Corrected experiment:** the `cpu` term is replaced by `((-1) * sum(t$(ts(t,tf)), lam_cpu(m,t)))` and re-solved licensed. PATH's path **changes** (23,304 → **33,238** iterations; terminal objective 2.39e-11 → 1.82e-07), so the reference is **live**. But the model stays **MS 5**, so **the restored coupling is necessary but not sufficient**: another defect sits underneath, as with egypt. Task 7's shale presolve `$148` is the named candidate.
 
-**Phase-0 consequence:** P4 must not claim egypt or shale as Class-A recoveries. Both need the defect underneath diagnosed first (egypt: R-PRE-140 and its cold MS 5; shale: its own cold MS 5).
+**Phase-0 consequence:** P4 must not claim egypt or shale as Class-A recoveries. **Both references are live collapses, and fixing each is necessary, but neither fix is sufficient.** The defect underneath must be diagnosed first (egypt: R-PRE-140 and its cold MS 5; shale: its cold MS 5, with the presolve `$148` as the candidate). The hand-derived terms above are each one's correctness reference.
 
 ## 3. Class B — is the context in the IR? (Unknown 4.3)
 
@@ -90,7 +94,7 @@ NLP references: egypt **4,134,175.7019**, shale **9,354.8644**.
 | fingerprint | rule applies? | note |
 |---|---|---|
 | gussrisk `covar(stocks,stocks)` | **yes**: this is the NA-cleanup case | |
-| shale `ts(tf,tf)` | no | a stationarity guard, not NA-cleanup; and inert (§2) |
+| shale `ts(tf,tf)` | no | a stationarity guard, not NA-cleanup. Its `cpu` occurrence is a live Class-A collapse (§2); its `acap` offset-0 occurrence is legitimately zero |
 | nonsharp `inter(col,col,stm)` | no | ⚠ **nonsharp is discrete (MINLP), out of scope and refused by the translator.** Its stationarity reference also reads as the Class-A row/variable alias collapse, not a context problem, but that reading is from the golden only and cannot be exercised |
 
 ## 4. The diagonal-reference defect (Unknowns 7.1, 7.2) — filed as #1755
@@ -157,18 +161,23 @@ Sprint 39's nine 2-D shapes left both guards byte-identical. Extended to **≥ 3
 
 ## 6. #1737 — does a planned change route through the refusal? (Unknown 8.2)
 
-`src/kkt/empty_equation_detector.py` has **one caller**: `src/emit/emit_gams.py:3631` (`detect_empty_equation_instances`). Its #1737 guard is `assert_no_repeated_symbol(eq_def.domain, …)` (L130). **The equations it scans are `relevant_eqs`: equalities whose multiplier is in `kkt.referenced_multipliers`.**
+`src/kkt/empty_equation_detector.py` has **one caller**: `src/emit/emit_gams.py:3631` (`detect_empty_equation_instances`). Its #1737 guard is `assert_no_repeated_symbol(eq_def.domain, …)` (L130). **It is called twice:**
+- **for equalities** (`relevant_eqs`: equalities whose multiplier is in `kkt.referenced_multipliers`);
+- **for inequalities** (`emit_gams.py` ~L3662–3675: `relevant_ineqs`, `include_inequalities=True`; **every** inequality when no referenced set exists).
+
+**Both scans reach the repeated-domain assertion** (PR #1756 review: an earlier revision described the equality scan only).
 
 | planned change | changes equation domains? | changes `referenced_multipliers`? | routes through the refusal? |
 |---|---|---|---|
 | P6, Task 9's E1–E4 (filters, sparse validation) | no | **no**: byte-identical by construction | **no** |
 | P6, E5/E6 (`simplify` recursion) | no | only if simplification changes which terms survive | conditional: needs its own check |
 | **P7, #1755** (`_sum_should_collapse`) | no | **yes**: it restores multipliers like `nu_diagsum` | **yes, indirectly** |
-| **P4, Class A** (re-symbolisation) | no | possibly: it restores dropped terms (egypt's `nu_fodb(rp,c)`) | **possibly** |
+| **P4, Class A** (re-symbolisation) | no | possibly: it restores dropped terms (egypt's `nu_fodb(rp,c)`; **shale's inequality multiplier `lam_cpu(m,t)`** via the inequality scan) | **possibly**, through either scan |
 
 **Demonstrated, not inferred:** two tiny models with a **repeated equation domain** `dd(i,i)`.
 - **(a)** `dd(i,i).. sum(j, tsam(j,j)) =e= 1`: the multiplier is **unreferenced** (#1755). Exit 0: **`dd` is silently dropped, and no refusal fires.**
 - **(b)** `dd(i,i).. x(i) =e= 1`: referenced. Exit 1: **`Error: Invalid model - empty-equation scan of 'dd': domain ('i', 'i') repeats ['i'] …`.**
+- **The same holds for an inequality** whose multiplier becomes referenced: the inequality scan reaches the same assertion. *(By code reading: the same function, `include_inequalities=True`. Only the equality case above was executed.)*
 - **So the P7 fix turns models of shape (a) from silently wrong into refused.** That is the correct direction, but it is a **visible behaviour change** P7's gate must expect, and #1737 must remain untouched.
 - `test_the_AD_collapse_is_reachable_but_EMIT_refuses_it` **passes** (1 passed).
 
@@ -177,7 +186,7 @@ Sprint 39's nine 2-D shapes left both guards byte-identical. Extended to **≥ 3
 | track | layer | fail-before | positive control | ratchet / gate |
 |---|---|---|---|---|
 | P4 Class A (turkpow) | KKT re-symbolisation (`_replace_indices_in_expr`, alias layer) | synthetic `Alias (t,v)` fixture: P2 holds on the emit; the multiplier is indexed by the equation index | the same fixture with distinct sets passes before and after | P2 **9 → ≤ 6**, `--update-baseline` in the same commit (nonsharp's 2 cannot move: out of scope) |
-| P4 egypt/shale | **undiagnosed second defect** (egypt: R-PRE-140; shale: cold MS 5) | — | — | **do not book as Class-A recoveries** |
+| P4 egypt/shale | **live Class-A collapses, each necessary but not sufficient**, plus an undiagnosed second defect (egypt: R-PRE-140; shale: cold MS 5, presolve `$148`) | each golden's flagged term (above) | restoring the hand-derived term changes PATH's path (both models) | **do not book as Class-A recoveries** until the defect underneath is fixed |
 | P4 Class B (gussrisk) | emit (`emit_post_assignment_na_cleanup`) | the cleanup touches only the diagonal | a non-repeated parameter's cleanup is unchanged | P2 −1 |
 | P7 diagonal (#1755) | AD (`_sum_should_collapse`) | the reproducer emits `1 =E= 0` and drops `diagsum` | the off-diagonal derivative stays 0; the scalar variant solves to 0.3333 | leak gate complete; expect #1737 refusals for shape-(a) models |
 | P8 structural sites | KKT (`_match_subset_domain`, `_compute_index_offset_key`) | — (a promotion, not a fix) | the guard neutralised → the emit changes (§5) | 2 structural pins → behavioural |
