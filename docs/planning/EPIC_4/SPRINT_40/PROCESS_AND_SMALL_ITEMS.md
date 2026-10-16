@@ -19,14 +19,14 @@ section records that positive control next to its result.
 | **10c** the leak gate runs alone | `--min-scope` catches a vacuous scope but **not** contention, which shows up as timeouts | `--min-scope` **and** a new `--fail-on-unverified` in `make check-goldens` | 1.5 h |
 | **10d** the PR body is a pointer | `check_doc_figures.scan_line` already flags a stale figure in arbitrary text | a `--text FILE` mode, run on the PR body before `gh pr create` and on every review round | 2.0 h |
 | **10e** review-round rules | not recorded in CONTRIBUTING today | one CONTRIBUTING section, plus `SPRINT_40/prompts/PLAN_PROMPTS.md`, with a grep check | 1.0 h |
-| **P9a** 7 `model_infeasible` → `mismatch` | **0** `kpi_block` figures move, but **two** code sites are needed and the checkpoint gate reads it as 7 moves | **KPI-visible**: own Phase-0 doc (§P9a.4); the owner decides whether to do it | 3–4 h |
-| **P9b** `integration_health_check.py` | still fails uninstalled, **and fails installed too** (8 of 13 examples) | bootstrap is 2 lines; the owner decides whether to repair or retire the script | 0.5–1.5 h |
+| **P9a** 7 `model_infeasible` → `mismatch` | **0** `kpi_block` figures move, but **two** code sites are needed and the checkpoint gate reads it as 7 moves | **KPI-visible**: own Phase-0 doc (§P9a.4). **Owner: relabel as `mismatch`** | 3–4 h |
+| **P9b** `integration_health_check.py` | still fails uninstalled, **and fails installed too** (8 of 13 examples) | **Owner: retire the script** | 0.5 h |
 | **P9c** `all_219_match` key | present; **4** readers | rename it in one commit with its readers | 0.5 h |
-| **P9d** ganges embedded-NLP-diverges issue | still unfiled (`--state all`) | issue text drafted (Appendix A); filing is the owner's call | 0.25 h |
+| **P9d** ganges embedded-NLP-diverges issue | was unfiled (`--state all`) | **filed as #1758** from Appendix A (owner, 2026-10-16) | done |
 | **P9e** #1668 | **already CLOSED** on 2026-09-03 (`COMPLETED`) | none; drop from P9 | 0 |
 | *(carried)* #933 tricp | OPEN, untriaged, last updated 2026-04-01 | triage or close | 0.5 h |
 
-**P10 total: 8.5 h** (PROJECT_PLAN budgets ~10–14 h). **P9 total: 5–7 h** (budget ~6–10 h).
+**P10 total: 8.5 h** (PROJECT_PLAN budgets ~10–14 h). **P9 total: 4.5–5.5 h** after the owner answers (P9a 3–4 · P9b retire 0.5 · P9c 0.5 · #933 0.5; P9d filed). The budget is ~6–10 h.
 
 ---
 
@@ -374,6 +374,10 @@ fix. Its Phase-0 doc must carry:
   "NLP optimal, our MCP proved infeasible" is a reporting-semantics call, not
   an engineering one.
 
+**Owner answer (2026-10-16):** report these 7 rows as `mismatch`. P9a is
+therefore a sprint item, landed behind the Phase-0 doc above with both code
+sites.
+
 **Estimate:** 3–4 h, including the doc, both sites, a fixture test and the
 7-model DB re-run.
 
@@ -408,6 +412,11 @@ fix. Its Phase-0 doc must carry:
   the repo root (1.5 h); or
 - **(ii)** retire the script (0.5 h). Nothing calls it.
 
+**Owner answer (2026-10-16):** retire the script. Delete
+`scripts/integration_health_check.py` in the sprint. That is a `*.py` change,
+so the quality gate applies. First confirm again that nothing references it
+(`grep -rn integration_health_check` outside `docs/`).
+
 ## P9c. `kpi_block.py`'s `all_219_match` key — Unknown 9.2(b)
 
 The key is still present (`kpi_block.py:139`). **Readers:**
@@ -436,10 +445,10 @@ returns **no** issue for the 6th blocker. Related issues:
 ganges/gangesx are both `likely_convex` · `path_syntax_error` · `not_tested`
 in the DB.
 
-**Next step:** file Appendix A, which is the **owner's call**. Its figures
-date from Sprint 37 Day 4, measured before the license, and were not
-re-measured here. Re-confirm them with the #1667 control patch before filing.
-**0.25 h** to file, plus about 1 h to re-confirm.
+**Filed as [#1758](https://github.com/jeffreyhorn/nlp2mcp/issues/1758)**
+(owner, 2026-10-16), from Appendix A. The issue states that its figures date
+from Sprint 37 Day 4, before the license, and were not re-measured. Re-confirm
+them with the #1667 control patch before starting work (about 1 h).
 
 ## P9e. #1668 — Unknown 9.2(d)
 
@@ -459,7 +468,7 @@ rather than as filler. **0.5 h.**
 
 ---
 
-## Appendix A — DRAFT issue text: ganges embedded-NLP divergence (do not post)
+## Appendix A — issue text: ganges embedded-NLP divergence (filed as #1758, 2026-10-16)
 
 > **Title:** ganges/gangesx: embedded `ganges0` NLP diverges from the standalone source under `--nlp-presolve` (#1378/#1424 class)
 >
@@ -504,5 +513,4 @@ rather than as filler. **0.5 h.**
 > Closed on measurement (Sprint 39 Unknown 10.2): both fix directions were
 > measured and closed. The `$149` rebind is not landable as banked because it
 > mis-pairs `p(g)` with `eta(g,gp,h)` on prolog. ganges' remaining blockers are
-> tracked in #1667 and the embedded-NLP-divergence issue (see Appendix A of
-> `SPRINT_40/PROCESS_AND_SMALL_ITEMS.md`).
+> tracked in #1667 and in #1758 (the embedded-NLP divergence).

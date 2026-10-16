@@ -1181,8 +1181,8 @@ Sprint 39's retrospective recorded seven process changes because each had failed
 
 - **NEW** `docs/planning/EPIC_4/SPRINT_40/PROCESS_AND_SMALL_ITEMS.md`, containing:
   - the 10a–10e specs, each with its location, fail-before test and estimate (P10: 8.5 h);
-  - the P9 catalog, re-verified on `main` (P9: 5–7 h);
-  - drafts, **not posted**: the ganges embedded-NLP-diverges issue text (Appendix A) and the #1668 close note (Appendix B, moot).
+  - the P9 catalog, re-verified on `main` (P9: 4.5–5.5 h after the owner answers);
+  - the ganges embedded-NLP-diverges issue text (Appendix A), **filed as #1758** on the owner's instruction (2026-10-16), and the #1668 close note (Appendix B, moot, not posted).
 - `KNOWN_UNKNOWNS.md`: 9.1 🔶 · 9.2 🔶 · 10.1 ✅ · 10.2 🔶.
 - `CHANGELOG.md`: the Sprint 40 Prep Task 11 entry.
 - `src/` and `tests/` untouched, so the quality gate is N/A. The resolver extraction stayed on a local scratch branch (`b79c1278`, never pushed); the P9a relabel ran on a scratch DB; the leak-gate controls ran in a scratch worktree and through a faked `check_one` outside the repo.
@@ -1199,10 +1199,10 @@ Sprint 39's retrospective recorded seven process changes because each had failed
   - **0** `kpi_block` figures move.
   - But the DB holds `not_tested` (pipeline cascade), not `skipped`, so **Case 6 alone is inert**. Two sites are needed.
   - The `--resolve-changed` checkpoint reads the change as **7 `forward`** moves, and any later regression to `not_tested` as **NO-GO**.
-  - It needs its own Phase-0 requirement (§P9a.4); the verdict semantics are the owner's call.
-- **P9b:** `integration_health_check.py` fails uninstalled **and installed** (8 of 13 examples). The owner chooses between repair and retire.
+  - It needs its own Phase-0 requirement (§P9a.4). **Owner answer (2026-10-16): report the 7 as `mismatch`.**
+- **P9b:** `integration_health_check.py` fails uninstalled **and installed** (8 of 13 examples). **Owner answer (2026-10-16): retire it.**
 - **P9c:** the key is present, with 4 readers.
-- **P9d:** the ganges issue is still unfiled, and its text is drafted.
+- **P9d:** the ganges issue was still unfiled. Drafted here and **filed as #1758** (owner, 2026-10-16).
 - **P9e:** **#1668 is already CLOSED** (2026-09-03), so it is dropped from P9.
 
 ### Verification
@@ -1228,7 +1228,7 @@ test -f "$DOC" && echo "✅ doc" || echo "PROCESS_AND_SMALL_ITEMS.md not yet cre
 - [x] Each mechanism has a location, a fail-before test and an estimate
 - [x] Each P9 item re-verified on `main` (still reproduces, or closed)
 - [x] The `model_infeasible` comparison change marked KPI-visible with its own Phase-0 requirement
-- [x] The ganges issue drafted
+- [x] The ganges issue drafted (filed as #1758, 2026-10-16)
 - [x] Unknowns 9.1, 9.2, 10.1, 10.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---

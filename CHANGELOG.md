@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **10c:** a locally derived `--min-scope` catches a vacuous scope but not contention, which shows up as unverified timeouts that the plain sweep passes (rc 0). The spec adds `--fail-on-unverified`.
   - **10d/10e:** the PR body is checked with a `check_doc_figures --text` mode; the review-round rules go in CONTRIBUTING with a grep test.
   - **P9a (KPI-visible):** the relabel to `mismatch` moves 0 `kpi_block` figures. It needs two code sites, though, because the DB holds `not_tested`, not `skipped`, and the checkpoint gate reads it as 7 forward moves. It needs its own Phase-0 doc.
-  - **P9b–P9e:** `integration_health_check.py` fails even when installed (8 of 13 examples). `all_219_match` has 4 readers. The ganges issue is still unfiled; its text is drafted but not posted. #1668 was already closed on 2026-09-03.
+  - **Owner answers (2026-10-16):** report the 7 as `mismatch` (P9a); retire `integration_health_check.py` (P9b); file the ganges issue (#1758).
+  - **P9b–P9e:** `integration_health_check.py` fails even when installed (8 of 13 examples). `all_219_match` has 4 readers. The ganges issue was still unfiled; drafted here and filed as #1758 on the owner's instruction. #1668 was already closed on 2026-09-03.
   - Unknowns 9.1 🔶 · 9.2 🔶 · 10.1 ✅ · 10.2 🔶.
 
 - **Prep Task 10 COMPLETE (2026-10-15) — correctness-track pre-traces; diagonal defect filed as #1755.** New: `docs/planning/EPIC_4/SPRINT_40/CORRECTNESS_PRETRACES.md`, `docs/issues/ISSUE_1755_sum-repeated-binder-never-collapses.md`. `src/` and `tests/` untouched, so the quality gate is N/A.

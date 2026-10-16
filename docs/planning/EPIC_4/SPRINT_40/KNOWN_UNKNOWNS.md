@@ -1398,7 +1398,7 @@ Sprint 40 prep team
 
 **Decision:**
 - **KPI-visible:** its own Phase-0 doc, with the requirements in §P9a.4 (both sites, the identity pin, a positive control that Case-6-only is inert, and the checkpoint consequence).
-- Whether `mismatch` is the more honest verdict is the **owner's** call.
+- Whether `mismatch` is the more honest verdict is the **owner's** call. **Owner answer (2026-10-16): report the 7 as `mismatch`.**
 
 ---
 
@@ -1447,9 +1447,9 @@ Sprint 40 prep team
 **Evidence:** `PROCESS_AND_SMALL_ITEMS.md` §P9b–P9e, Appendices A–B.
 
 **Decision:**
-- (a) is **re-scoped**: bootstrap + repair (1.5 h) or retire (0.5 h), the owner's choice.
+- (a) is **re-scoped**: bootstrap + repair (1.5 h) or retire (0.5 h). **Owner answer (2026-10-16): retire.**
 - (b) rename in one commit with its readers.
-- (c) issue text drafted, **not posted**.
+- (c) issue text drafted, then **filed as #1758** on the owner's instruction (2026-10-16).
 - (d) **dropped from P9**.
 - #933 is triaged with the P2 license-gated batch.
 
