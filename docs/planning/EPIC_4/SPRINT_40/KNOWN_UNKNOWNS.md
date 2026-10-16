@@ -1381,7 +1381,24 @@ Grep every reader of the comparison status; on a scratch DB, apply the relabel t
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — **no headline KPI moves** (0 of `kpi_block`'s quantities), but the change is **not** "only Case 6's label". The DB holds `not_tested`, not `skipped`, so Case 6 alone is **inert**. The relabel needs two sites, and it moves the checkpoint gate's input.
+
+**Verified by:** Sprint 40 Prep Task 11 · **Date:** 2026-10-16 · **Measured at:** `0cb24ff2` (scratch branch / scratch DB / probes outside the repo; `src/` untouched)
+
+**Findings:**
+- **Identity:** agreste, camcge, cesam, fawley, lnts, mine, rocket. These are the same 7 named in `test_solve.py:956–957`.
+- **All 7 hold `comparison_status: "not_tested"`** ("Skipped due to solve failure"). `run_full_test.py:1149–1151` cascades on `status != "success"`, so `compare_solutions` never runs for them. The `skipped`/`compare_mcp_failed` label is the **function's** verdict, never written to the DB.
+- **Scratch replay** (Case 6 rebuilt from source with `and nlp_infeasible` dropped): all 7 become `mismatch/compare_status_mismatch`. Exactly **7 of 219** rows change. The scratch DB validates against the schema (0 errors).
+- **`kpi_block.py --json`:** byte-identical against the scratch DB. Match / floor / doc-figure facts read only `== "match"`.
+- **Moves:**
+  - `db_manager` status tally: `mismatch` 15 → 22, `not_tested` 31 → 24.
+  - `--resolve-changed` checkpoint (`_bucket_severity`): 1 → 11, i.e. **7 `forward`** moves. The reverse (a compare-less run afterwards) is classified **`backward` = NO-GO**.
+
+**Evidence:** `PROCESS_AND_SMALL_ITEMS.md` §P9a; `/tmp/t11/p9a.py`.
+
+**Decision:**
+- **KPI-visible:** its own Phase-0 doc, with the requirements in §P9a.4 (both sites, the identity pin, a positive control that Case-6-only is inert, and the checkpoint consequence).
+- Whether `mismatch` is the more honest verdict is the **owner's** call.
 
 ---
 
@@ -1412,7 +1429,29 @@ Run the health check without the package installed; grep `kpi_block.py`; `gh iss
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — two of the four are as described (the `all_219_match` key is present; the ganges issue is unfiled). One is **larger** (the health check fails even installed). One is **already done** (#1668 was closed 2026-09-03).
+
+**Verified by:** Sprint 40 Prep Task 11 · **Date:** 2026-10-16 · **Measured at:** `0cb24ff2` (scratch branch / scratch DB / probes outside the repo; `src/` untouched)
+
+**Findings:**
+- **(a) `integration_health_check.py`:**
+  - **Uninstalled** (`PYTHONPATH=<site-packages> python -S`): rc 1, `No module named 'src'`. It reproduces.
+  - **Installed:** **also rc 1**, 5 passed / 8 failed of 13. A CWD-relative `examples/*.gms` glob overwrites the hard-coded list, and the 8 failures are example-file defects.
+  - It is wired to nothing.
+  - ⚠ The PREP_PLAN check (plain `-S`) cannot confirm a fix: `-S` also hides `lark`.
+- **(b) `all_219_match`:** present (`kpi_block.py:139`), with **4** readers: `kpi_block.py:160`/`:186`, `check_doc_figures.py:457–461`, and `test_gate_scope_assertions.py:391–396`.
+- **(c) ganges:** `gh issue list --state all --search ganges` gives 29 issues, **none** for the 6th blocker. #1667, #929 and #930 are OPEN.
+- **(d) #1668:** **CLOSED, `COMPLETED`, 2026-09-03T00:33:59Z**, with 0 comments. The premise is stale.
+- **Extra:** #933 (tricp) is OPEN and untriaged (last updated 2026-04-01).
+
+**Evidence:** `PROCESS_AND_SMALL_ITEMS.md` §P9b–P9e, Appendices A–B.
+
+**Decision:**
+- (a) is **re-scoped**: bootstrap + repair (1.5 h) or retire (0.5 h), the owner's choice.
+- (b) rename in one commit with its readers.
+- (c) issue text drafted, **not posted**.
+- (d) **dropped from P9**.
+- #933 is triaged with the P2 license-gated batch.
 
 ---
 
@@ -1445,7 +1484,26 @@ List call sites; extract in a scratch branch; run the module's tests; compare th
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — the extraction is a pure refactor, and it found two weaker resolvers to migrate.
+
+**Verified by:** Sprint 40 Prep Task 11 · **Date:** 2026-10-16 · **Measured at:** `0cb24ff2` (scratch branch / scratch DB / probes outside the repo; `src/` untouched)
+
+**Findings:**
+- **Dependencies:** `ast`, `functools`, `tokenize` and the project root only. There are no fixtures and no module globals beyond the two site tables.
+- **Scratch extraction** (local commit `b79c1278`, never pushed) creates `tests/helpers/anchor_resolver.py`, which holds:
+  - `_code_only` and `_owning_bodies`, moved verbatim;
+  - `AnchorError` and `resolve_unique`.
+- **Results:**
+  - **16/16** `CATALOGUED_SITES` resolve identically, and their owning-body text is identical.
+  - **11** module tests pass.
+  - **Positive controls:** the ambiguous anchor `used_var_positions` (3× in `_match_subset_domain`) and an absent anchor are both **refused**.
+- **Weaker resolvers:**
+  - `test_run_full_test_path_relative.py:60` uses whole-module `in src`. A mutant that renames the key and leaves the old text in a comment **passes** it; `_code_only` counts that anchor **1 → 0**.
+  - `test_check_doc_figures.py:418` filters comments ad hoc by line prefix.
+
+**Evidence:** `PROCESS_AND_SMALL_ITEMS.md` §10a.
+
+**Decision:** land the helper with a fail-before test, then migrate both weaker resolvers (2.5 h).
 
 ---
 
@@ -1476,7 +1534,28 @@ Read `check_phase0_doc.py` and `../SPRINT_39/PROCESS_INFRA_SPEC.md`; run the che
 Sprint 40 prep team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+🔶 **Status:** PARTIALLY WRONG — (a) holds: the added-only rule fails **0** of 42 docs. (b) the derivation works and catches a vacuous scope, but **contention does not reduce the scope count. It causes timeouts**, which `--min-scope` passes (rc 0).
+
+**Verified by:** Sprint 40 Prep Task 11 · **Date:** 2026-10-16 · **Measured at:** `0cb24ff2` (scratch branch / scratch DB / probes outside the repo; `src/` untouched)
+
+**Findings:**
+- **(a) Grandfathering mechanism:** S39 P8a grandfathered by **PR git status** (`missing_for_added`, applied only to `added` docs), not by a date or a list.
+- **(a) Dry run over 42 Phase-0 docs under `docs/`:**
+  - 0 carry `**Positive control:**`;
+  - an unconditional requirement fails **42/42**;
+  - added-only fails **0**;
+  - the draft regex's own positive control works.
+  - ⚠ The `**Layer:**` field is enforced but documented nowhere in CONTRIBUTING.
+- **(b) The `Makefile`:** `check-goldens` has no `--min-scope`. CI derives **193** from `git ls-files`.
+- **(b) Positive control 1** (no raw sources): the Makefile form passes vacuously with rc **0**; the CI form gives rc **2**.
+- **(b) The S39 incident** (`SPRINT_39/SPRINT_LOG.md`) was "All in-scope goldens clean" **with 2 unverified timeouts**, i.e. 184 of 186.
+- **(b) Positive control 2:** faking ganges/gangesx timeouts reproduces that message with rc **0**, both plain and with `--min-scope 193`. Under `--expect-drift`, timeouts already block.
+
+**Evidence:** `PROCESS_AND_SMALL_ITEMS.md` §10b–10c; `/tmp/t11/p10c_timeout.py`.
+
+**Decision:**
+- 10b: the field is required on **added** docs only, documented together with `**Layer:**`.
+- 10c: `make check-goldens` gets the derived `--min-scope` **and** a new `--fail-on-unverified` (rc 3). CI stays soft on timeouts, a separate decision.
 
 ---
 

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 40 Prep
 
+- **Prep Task 11 COMPLETE (2026-10-16): process-mechanism specs (P10) and the smaller-items catalog (P9).** New doc: `docs/planning/EPIC_4/SPRINT_40/PROCESS_AND_SMALL_ITEMS.md`. `src/` and `tests/` untouched, so the quality gate is N/A; every probe ran on a scratch branch, a scratch DB, or outside the repo.
+  - **10a:** extracting the anchor resolver is a pure refactor (16/16 sites identical; ambiguous and absent anchors refused). Two weaker resolvers should migrate; one passes a mutant the shared resolver refuses.
+  - **10b:** a `**Positive control:**` field required only on added Phase-0 docs fails 0 of 42 existing docs; required unconditionally it would fail all 42.
+  - **10c:** a locally derived `--min-scope` catches a vacuous scope but not contention, which shows up as unverified timeouts that the plain sweep passes (rc 0). The spec adds `--fail-on-unverified`.
+  - **10d/10e:** the PR body is checked with a `check_doc_figures --text` mode; the review-round rules go in CONTRIBUTING with a grep test.
+  - **P9a (KPI-visible):** the relabel to `mismatch` moves 0 `kpi_block` figures. It needs two code sites, though, because the DB holds `not_tested`, not `skipped`, and the checkpoint gate reads it as 7 forward moves. It needs its own Phase-0 doc.
+  - **P9b–P9e:** `integration_health_check.py` fails even when installed (8 of 13 examples). `all_219_match` has 4 readers. The ganges issue is still unfiled; its text is drafted but not posted. #1668 was already closed on 2026-09-03.
+  - Unknowns 9.1 🔶 · 9.2 🔶 · 10.1 ✅ · 10.2 🔶.
+
 - **Prep Task 10 COMPLETE (2026-10-15) — correctness-track pre-traces; diagonal defect filed as #1755.** New: `docs/planning/EPIC_4/SPRINT_40/CORRECTNESS_PRETRACES.md`, `docs/issues/ISSUE_1755_sum-repeated-binder-never-collapses.md`. `src/` and `tests/` untouched, so the quality gate is N/A.
   - **turkpow (Class A):** the layer is KKT re-symbolisation (`_replace_indices_in_expr`'s alias layer), not the `t__kkt1` mint, which is downstream and correct.
   - **egypt / shale:** both Class-A references are live collapses (restoring each changes PATH's path), but both models stay MS 5, so each fix is necessary but not sufficient.
