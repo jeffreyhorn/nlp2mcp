@@ -165,6 +165,41 @@ def main() -> int:
                     f"{occupied[prio][0]}-{occupied[prio][1]}",
                 )
 
+    # ------------------------------------- budget table vs the schedule
+    # Each priority's SCHEDULED column must equal the sum of its allocations,
+    # with exactly one row per priority. A P4 budget of "160 h" passed every
+    # other check, because nothing read this column (PR #1759 review).
+    if rows:
+        budget = plan.split("### Budget against", 1)[-1].split("\n\n**", 1)[0]
+        sums: dict[str, int] = {}
+        for _, _, _, alloc in rows:
+            for lbl, hrs in PART.findall(alloc):
+                sums[lbl] = sums.get(lbl, 0) + int(hrs)
+        groups: dict[str, tuple[str, ...]] = {f"P{i}": (f"P{i}",) for i in range(1, 11)}
+        groups |= {"retest": ("RT", "close"), "checkpoints": ("CK",), "baseline": ("baseline",)}
+        seen: dict[str, list[int]] = {}
+        for first, hrs in re.findall(r"^\| ([^|]+?) \| (\d+) h \|", budget, re.M):
+            m_p = re.match(r"(P\d+)\b", first)
+            if m_p:
+                key = m_p.group(1)
+            elif "retest" in first:
+                key = "retest"
+            elif "checkpoint" in first:
+                key = "checkpoints"
+            elif "baseline" in first:
+                key = "baseline"
+            else:
+                check(False, f"budget row {first!r} maps to no schedule label")
+                continue
+            seen.setdefault(key, []).append(int(hrs))
+        for key, members in groups.items():
+            want_h = sum(sums.get(lbl, 0) for lbl in members)
+            got = seen.get(key, [])
+            check(
+                got == [want_h],
+                f"budget table: exactly one {key} row, scheduled {want_h} h (found {got})",
+            )
+
     # ------------------------------------------------------------ close rules
     for rule in sorted(set(re.findall(r"\*\*(C\d+)\*\*", plan)), key=lambda r: int(r[1:])):
         check(
@@ -220,6 +255,17 @@ def main() -> int:
         f"plus {counts['incomplete']} 🔍 routed"
     )
     check(tally in plan, f"the unknown tally is derived ({tally})")
+    # The resolved NUMERATOR as well as the emoji breakdown: "28 of 29 were
+    # resolved" edited to "27 of 29" left the breakdown intact and passed
+    # (PR #1759 review). Every such phrase must equal the derived count.
+    resolved = counts["verified"] + counts["wrong"] + counts["partial"]
+    stated = re.findall(r"(\d+) of (\d+) unknowns (?:were|are) resolved", plan)
+    check(bool(stated), "PLAN.md states how many unknowns were resolved")
+    for got_r, got_n in stated:
+        check(
+            (int(got_r), int(got_n)) == (resolved, n),
+            f"stated resolved count {got_r} of {got_n} is the derived {resolved} of {n}",
+        )
     refuted = counts["wrong"] + counts["partial"]
     check(
         f"**{refuted} of {n} assumptions were refuted or partially refuted**" in plan,

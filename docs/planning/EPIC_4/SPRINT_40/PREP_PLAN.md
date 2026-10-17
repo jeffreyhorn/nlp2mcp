@@ -1321,7 +1321,8 @@ Sprint 40 has three fixed points the schedule must honour rather than discover: 
     - an ungrouped stale figure (`2163`) escaped the grouped-digits regex;
     - a file-count `<N>` was not rejected.
 
-    Each now has a check and a control (plus a dropped-P9 control), so **23 of 23** are caught. As in Sprint 39, every validator hole found in review becomes a mutation control.
+    Each now has a check and a control (plus a dropped-P9 control), so 23 of 23 were caught after that round.
+  - **The second round found two more:** the budget table's scheduled column was never compared with the schedule (a P4 of "160 h" passed), and the "28 of 29 resolved" numerator was not derived. Both are now checked, with controls for each and for a duplicated budget row: **26 of 26** caught. As in Sprint 39, every validator hole found in review becomes a mutation control.
 
 ### Verification
 

@@ -119,7 +119,7 @@ TOTAL **131 h** against a **168 h** cap; heaviest day **12 h**.
 | a cohort re-emit is **not** byte-identical | `cmp` against the committed golden. Task 7 found 11/11 identical at `79eeccff` | a **staleness finding**, not a solve result. Route it to the change that drifted the golden, and do not book that model |
 | a result has no attribution | `check_mcp_solve_attribution.py` is not `MCP-SOLVED` for a claimed match | **not booked** (the `weapons` trap) |
 | a non-match fingerprint needs diagnosis | anything other than the 2 P10-rule qualifiers (`egypt`, `shale`) | **route, do not fix in place.** Open the routing-note issue (R-PRE-140, R-EXEC, R-JB-171, R-B-*); the budget stays in P2's band |
-| `turkey`'s pre-fix golden **matches** under the license | the fail-before sub-rule (Decision 1) | turkey is **not** credited fix-driven genuine. It is reported license-unlocked, and the floor does not move for it |
+| `turkey`'s pre-fix golden **matches** under the license | the fail-before sub-rule (Decision 1) | turkey is **not** credited fix-driven genuine. Its match is presolve-only, so it falls under the existing rule (methodology, not counted) and does **not** enter the cold-match ledger. The floor does not move for it |
 
 ### P3: the NLP-gated set (Days 2–5)
 
@@ -209,7 +209,7 @@ Task 9's three exits, unchanged (`SARF_JACOBIAN_DESIGN.md` §8):
 | **C2** | **Three-gate firm landing:** a per-model Phase-0 doc (layer named, **positive control** named) **and** an *unqualified*, uncontended leak-gate pass **and** in `main`. Two of three is not a landing | **none** | cannot be voided |
 | **C3** | **Cohort moves are reported as LICENSE-UNLOCKED, never as recovered,** stated **once**, pinned to the batch commit, and kept separate from fix-driven moves | **P2's batch started** | no cohort movement exists to report; the closeout says so |
 | **C4** | **The headline is on the 142-candidate corpus**, with the expanded scope (142 + *k* admitted by rule) **in the same sentence**, plus a Rolling-KPIs footnote. A scope addition is never booked as a recovery | **P3's admission (W10 `--admit`) started** | report on 142 only, and say no model was admitted |
-| **C5** | **The floor is read from `data/floor_provenance.json` under Decision 1 (B):** license-unlocked matches go in the non-counting `license_unlocked` ledger, reported as 75 + *k*. A previously-fixed model counts as fix-driven genuine only if its pre-fix golden, run licensed, **does not** match | **none**. Decision 1 is a committed fixed input (`b44344a2`) | cannot be voided |
+| **C5** | **The floor is read from `data/floor_provenance.json` under Decision 1 (B).** Each **license-unlocked COLD match** goes in the non-counting `license_unlocked` ledger, and the floor is reported as **"floor 75 (+*k* license-unlocked, not counted)"**. A **presolve-only** match of an unlocked model stays under the **existing** rule: methodology, not counted, and **not** in the ledger, unless an emit fix changed its cold emit. A previously-fixed model counts as fix-driven genuine only if its pre-fix golden, run licensed, **does not** match (the fail-before sub-rule). Task 7's four matches are all presolve-only, so the dry run predicts **no ledger entry** (`OWNER_DECISION_BRIEF.md` §Decision 1, "Applies under every option") | **none**. Decision 1 is a committed fixed input (`b44344a2`) | cannot be voided |
 | **C6** | **Every figure is derived at execution time** and carries the commit it was measured at. The PR body is a pointer; a figure is stated once | **none** | cannot be voided |
 | **C7** | **+1 Translate → 136** is reported only if sarf newly produces a byte-stable golden at **≤ 300 s** | **P6's E5/E6 item started** | **VOID.** Translate reports 135 flat, naming P6 as E1–E4 only |
 | **C8** | **License neutrality:** every row outside the two populations keeps its outcome on the first licensed full run. **No KPI is reported before this passes** | **none** | cannot be voided |
@@ -237,7 +237,7 @@ A fixed "+7, these seven" assertion would then fail a correct relabel, or report
 | Match, continuity (142) | ≥ 95, **excluding** the cohort | `kpi_block.py`; cohort matches per **C3** (dry run: +2, both presolve) |
 | Translate | 135 → **135**; 136 only under **C7** | `kpi_block.py` |
 | expanded scope | reported per **C4** | `kpi_block.py --corpus` (P1) over `corpus_admissions.json` |
-| genuine floor | ≥ 75, plus the `license_unlocked` ledger count | `floor_tracker.py`, per **C5**; never the mechanical DB count (65) |
+| genuine floor | ≥ 75, with the `license_unlocked` (cold-match) ledger count beside it, not in it | `floor_tracker.py`, per **C5**; never the mechanical DB count (65) |
 | `path_solve_license` | 11 → **0**, every cohort row `license_edition: "licensed"` | `kpi_block.py` + the DB rows |
 | `path_solve_terminated` | **0** outside the populations | **C1**; the influx is listed by identity |
 | model_infeasible / path_syntax_error | ≤ 7 / ≤ 6 **excluding the influx** | `kpi_block.py`. The lnts −1 is **removed** (Task 8, verdict C) |
@@ -255,6 +255,7 @@ A fixed "+7, these seven" assertion would then fail a correct relabel, or report
 - "+1 Solve via lnts" and "model_infeasible 7 → 6": removed by Task 8's verdict C.
 - "+1 Translate via sarf" as a target: conditional under **C7**.
 - "the owner decides floor classification on Day 0": decided in prep (`b44344a2`).
+- "keep `gams audit lo=2` as the edition-printing line" (P1): superseded by `CI_LICENSE_DESIGN.md` §6. Raw audit output can carry licensee, license-ID, path and node fields, and CI logs are published, so PR workflows print an **edition classification only**.
 
 ## 7. Risk register
 

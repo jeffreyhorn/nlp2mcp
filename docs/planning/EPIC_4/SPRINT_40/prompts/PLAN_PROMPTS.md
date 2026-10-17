@@ -115,11 +115,11 @@ Branch `planning/sprint40-day1-ci`.
   - Mask with `::add-mask::`.
   - Scan its own outputs in-job, with a pattern file written from the secret and deleted after. The positive control is the scan run against the license file itself, which must hit.
 - **The PR side, same PR:**
-  - rename the step to *"Install GAMS"*;
-  - keep `gams audit lo=2`;
+  - rename the step to *"Install GAMS (demo edition)"*, keeping the pinned installer and its SHA-256 guard (`CI_LICENSE_DESIGN.md` §6);
+  - **replace the raw `gams audit lo=2` print with an edition classification only**, in **both** GAMS-installing PR workflows (`pr19-emit-solve-validation.yml`, `presolve-divergence.yml`). Run a tiny probe, **capture** its listing to a file without echoing it, apply Task 3's discriminator, and print only `edition=demo` / `edition=licensed`. Raw audit output can carry licensee, license-ID, path and node fields, and a CI log is published;
   - teach `run_pr19_solves.py` to detect the demo refusal and report *skipped: over the demo ceiling*, instead of letting six cohort models license-fail as if they were emit failures.
 - **Decision 1's ledger:**
-  - add the `license_unlocked` list (non-counting) to `data/floor_provenance.json`, and `floor_tracker.py` reporting **75 + *k***;
+  - add the `license_unlocked` list (non-counting, **cold matches only**) to `data/floor_provenance.json`, and make `floor_tracker.py` report **"floor 75 (+*k* license-unlocked, not counted)"**. Presolve-only matches stay under the existing rule and never enter the list;
   - amend the floor definition so a cold license-unlocked match is not read as genuine.
 - **Decision 2's readers:** `corpus_admissions.json` + `kpi_block.py --corpus continuity|current`, reporting both denominators. Include the test that `continuity` on today's DB equals `current` (142).
 - **`check_doc_figures.py` becomes corpus-aware, before any admission** (`OWNER_DECISION_BRIEF.md` §Decision 2; P3 admits on Day 3). Today it checks headline figures against one fact set, so a **correct** continuity/expanded sentence with different numerators would fail the mandatory pre-push gate the moment W10 admits a model.
@@ -171,7 +171,8 @@ Branch `planning/sprint40-day3-cohort`.
   - the comparison verdict;
   - `check_mcp_solve_attribution.py` (`MCP-SOLVED` for any claimed match, or it is not booked);
   - for every non-match, a `kkt_residual.py` verdict **or** the recorded harness failure. Task 7: the presolve emit fails to compile or execute for 6 models.
-- Run turkey's pre-fix golden licensed. **If it matches, turkey is license-unlocked, not fix-driven** (C5).
+- Run turkey's pre-fix golden licensed. **If it matches, turkey is not fix-driven** (C5). Its match is presolve-only, so it falls under the existing rule (methodology, not counted) and **does not** enter the cold-match ledger.
+- **Only a license-unlocked COLD match enters the `license_unlocked` ledger.** Task 7's four matches were all presolve-only, so expect none; a cold match here is a finding to record by identity.
 - Persist the batch rows, and report them **once, pinned to the batch commit**, with the pre-written C3 wording (`PLAN.md` §5). **License-unlocked, never recovered.**
 - **C1:** cohort rows at `path_solve_terminated` are a **first-measurement influx, listed by identity**. Task 7 measured `ferts` and `tabora` there. They are not a regression and not part of the 0.
 
@@ -365,7 +366,7 @@ Branch `planning/sprint40-day13-close`.
 **Check every close rule against its precondition** (`PLAN.md` §5) and state each verdict. A **VOID** rule is not the same as an unmet one. Report:
 - the cohort per **C3**;
 - the scope per **C4**;
-- the floor per **C5**, as 75 + the ledger;
+- the floor per **C5**: "floor 75 (+*k* license-unlocked, not counted)", where *k* counts **cold** matches only;
 - the influx per **C1**, by identity.
 
 **Derive every closing figure.** A count of findings is a figure too.
