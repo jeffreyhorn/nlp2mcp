@@ -65,7 +65,7 @@ This prep plan front-loads the work whose absence would cost the most mid-sprint
 | 9 | ✅ sarf Jacobian O(active) Re-Architecture Design | High | 4-6 hours | Tasks 1, 2 | P6 — the sprint's planned +1 Translate |
 | 10 | ✅ Correctness-Track Pre-Traces: turkpow Class A, the Diagonal Defect, the Structural Sites | High | 5-7 hours | Tasks 1, 2, 7, 9 | P4, P7, P8 — named layers and reproducers before Day 1 |
 | 11 | ✅ Process-Mechanism Spec & Smaller-Items Catalog | Medium | 3-4 hours | Tasks 1, 2 | P9 + P10 — the slack absorber and the §7 mechanisms |
-| 12 | Plan Sprint 40 Detailed Schedule | Critical | 3-4 hours | All tasks (1–11) | Day-by-day schedule + REPLAN exits + close rules + budget |
+| 12 | ✅ Plan Sprint 40 Detailed Schedule | Critical | 3-4 hours | All tasks (1–11) | Day-by-day schedule + REPLAN exits + close rules + budget |
 
 **Total Estimated Time:** ~38–53 hours (~5–7 working days)
 
@@ -1235,9 +1235,10 @@ test -f "$DOC" && echo "✅ doc" || echo "PROCESS_AND_SMALL_ITEMS.md not yet cre
 
 ## Task 12: Plan Sprint 40 Detailed Schedule
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-10-17)
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
+**Time Spent:** ~4 hours, at the top of the estimate. The validator's mutation controls took the extra time, and they found one defect in it.
 **Deadline:** Before Sprint 40 Day 0
 **Owner:** Development team
 **Dependencies:** All tasks (1–11)
@@ -1269,11 +1270,52 @@ Sprint 40 has three fixed points the schedule must honour rather than discover: 
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_40/PLAN.md`:
+  - the 14-day schedule (Day 0 = 2026-10-18);
+  - per-day budgets against both the PROJECT_PLAN bands and the prep re-estimates;
+  - fixed points, REPLAN exits per track, checkpoints and the license-neutrality gate;
+  - close rules C1–C9 with preconditions;
+  - acceptance criteria with each figure's source;
+  - the risk register, the unknown routing and the prep-refutation summary.
+- **NEW** `docs/planning/EPIC_4/SPRINT_40/prompts/PLAN_PROMPTS.md`: one prompt per day (14). Each names its branch, deliverable and gate, and the preamble embeds the standing conventions:
+  - the PR body as a pointer;
+  - figures stated once, with their commit;
+  - the leak gate alone;
+  - no `git stash`;
+  - pin by identity and sweep the changed set (the 10e rules);
+  - license hygiene, with a measured scan;
+  - the no-attribution grep.
+- **NEW** `docs/planning/EPIC_4/SPRINT_40/artifacts/validate_plan.py`: the committed validator, Sprint 39's checks plus Sprint 40's fixed points. It derives the unknown tally and the refutation rate from `KNOWN_UNKNOWNS.md`.
+- `KNOWN_UNKNOWNS.md`: the resolution check (every unknown resolved or routed), recorded under *Next Steps*.
+- `CHANGELOG.md`: the Sprint 40 Prep Task 12 entry.
+- **Quality gate run**, because the validator is a `*.py` file: `make typecheck && make format && make lint && make test` all pass. `src/` and `tests/` are untouched.
+  - **`make test`: 5,444 passed, 10 skipped, 1 xfailed**, run alone.
+  - **Two earlier full runs failed only on 60 s `src.cli` timeouts** in `TestDeterminismFast` (3 failures, then 1, `chenery` both times), at 15-min load averages of 190–460. Each test passes alone (`chenery` in 10.8 s), and the clean run above was taken at load ~28.
+  - `make format`/`make lint` cover only `src/` and `tests/`, so the validator was also checked directly with ruff, black and mypy.
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE. 129 h over 14 days (heaviest day 10 h), validated by the committed script. GO for Day 0, with no owner decision outstanding.**
+
+- **Fixed points honoured:**
+  - P1 on Days 0–1, with no P2, P3 or RT hours before Day 2;
+  - **RT** (the license-neutrality gate) as Day 2's first block;
+  - P4 from Day 6, after P2 ends on Day 4;
+  - checkpoints on Days 5 and 10 (`--resolve-changed --since-commit bd2af6e9`, scope discovered then asserted, each plus a licensed cohort re-run);
+  - the P2 batch on a nightly slot, sized from Task 7's **2,162 s**;
+  - **P9a after Checkpoint 2**, because its 7 relabels read as `forward` moves.
+- **Prep verdicts folded in:**
+  - **lnts +1 Solve removed** (Task 8, verdict C), with P5 redirected to the `stat_step` class;
+  - sarf at the low end of Task 9's 14–24 h, with **+1 Translate conditional (C7)**;
+  - CI **hosted** (Decision 3 B, met by the per-run activation statement), with local-only as the pre-registered P1 exit;
+  - Task 6's three answers consumed as fixed inputs: **no Day-0 slot**.
+- **Close rules:** C1–C9. **Five of the nine take no precondition.**
+  - **C1 now names its population.** Task 7 measured `ferts` and `tabora` at `path_solve_terminated`, so a literal "maintain 0" would have reported a first measurement as a regression. That influx is reported by identity.
+- **Unknowns:** 28 of 29 resolved. **1.5** is routed to Day 2's neutrality gate by design.
+- **Refutation rate:** **48 %** (14 of 29), derived by the validator.
+- **Validator positive control:** **19 mutation controls**. Each injects one defect into a scratch copy of PLAN.md or PLAN_PROMPTS.md: a day's hours, a misplaced priority, an unrouted unknown, a stale tally or figure, a prompt heading's hours, a duplicated day heading, a dropped convention, a wrong checkpoint anchor, or a stale baseline.
+  - The first run caught **18 of 19**. The miss was the nightly figure: PLAN.md states it twice, so an `in` test passed with one copy stale.
+  - The check now compares every cited copy, and **19 of 19** are caught.
 
 ### Verification
 
@@ -1300,12 +1342,12 @@ grep -c -i "precondition" "$PLAN"
 
 ### Acceptance Criteria
 
-- [ ] ≤ 12 h/day and ≤ 168 h total, **validated by the committed script**
-- [ ] P1 precedes every license-dependent measurement; Task 6's prep-recorded answers are consumed as fixed inputs (no Day-0 slot); P4 follows P2
-- [ ] Every track has a REPLAN exit with its budget destination
-- [ ] Every close rule states its precondition (or explicitly takes none)
-- [ ] Every unresolved Known Unknown routed to a day
-- [ ] Day prompts embed the §7 rules and the no-attribution check
+- [x] ≤ 12 h/day and ≤ 168 h total, **validated by the committed script**
+- [x] P1 precedes every license-dependent measurement; Task 6's prep-recorded answers are consumed as fixed inputs (no Day-0 slot); P4 follows P2
+- [x] Every track has a REPLAN exit with its budget destination
+- [x] Every close rule states its precondition (or explicitly takes none)
+- [x] Every unresolved Known Unknown routed to a day
+- [x] Day prompts embed the §7 rules and the no-attribution check
 
 ---
 
@@ -1345,16 +1387,16 @@ Task 1 (Known Unknowns)
 
 ### Success Criteria for the Prep Phase
 
-- [ ] **The license is shown, not asserted** — a probe that fails on the demo and solves licensed, with the edition string identified
-- [ ] **No CI design gives the license to a job that runs PR code**, and the `main`-only branch policy is verified
-- [ ] **The schema change has a closed, grep-derived writer list** including `db_manager.py`
-- [ ] **The three owner decisions are answered before any cohort result exists** (before Task 7's first commit), provably from history
-- [ ] **Both populations are measured by identity**, every non-match carrying a residual verdict and a route
-- [ ] **Every Critical/High Known Unknown is resolved or explicitly deferred with a reason**
-- [ ] **lnts's +1 Solve is either justified against Sprint 39 Day 5 or removed from the projection**
-- [ ] **Every carryforward track has a traced layer** before Day 1
-- [ ] **The schedule fits** (≤ 12 h/day, ≤ 168 h), validated by a committed script
-- [ ] **Prep found at least one wrong premise** — and recorded what it changed
+- [x] **The license is shown, not asserted** — a probe that fails on the demo and solves licensed, with the edition string identified
+- [x] **No CI design gives the license to a job that runs PR code**, and the `main`-only branch policy is verified
+- [x] **The schema change has a closed, grep-derived writer list** including `db_manager.py`
+- [x] **The three owner decisions are answered before any cohort result exists** (before Task 7's first commit), provably from history
+- [x] **Both populations are measured by identity**, every non-match carrying a residual verdict and a route. *Met with a recorded exception:* every non-match has a route, but **6 of the 11** with an MCP have a recorded **harness failure** instead of a verdict, because their presolve emit itself fails (Task 7, Unknown 2.2 🔶). The sprint's correctness gate accepts the recorded failure (`PLAN.md` §6)
+- [x] **Every Critical/High Known Unknown is resolved or explicitly deferred with a reason**
+- [x] **lnts's +1 Solve is either justified against Sprint 39 Day 5 or removed from the projection**
+- [x] **Every carryforward track has a traced layer** before Day 1
+- [x] **The schedule fits** (≤ 12 h/day, ≤ 168 h), validated by a committed script
+- [x] **Prep found at least one wrong premise** — and recorded what it changed
 
 ### What Would Make This Prep a Failure
 

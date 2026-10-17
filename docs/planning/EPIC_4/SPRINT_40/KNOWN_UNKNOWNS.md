@@ -1612,9 +1612,18 @@ Sprint 40 execution team
 4. **Every Critical and High unknown (18) must reach ✅ VERIFIED, ❌ WRONG or 🔶 PARTIALLY WRONG before Day 1** — with **one stated exception: Unknown 1.5's universal neutrality claim**, which by construction only the first licensed full run can close; a clean Task-3 sample leaves it at `🔍 INCOMPLETE — sample-neutral at <sha>; routed`, which is a resolution of everything prep *can* establish, not a miss. A Medium or Low may carry with a stated reason and the day that closes it.
 5. **Prep Task 12** integrates the results into the schedule — in particular **5.1**'s verdict decides whether P5's +1 Solve stays in the projection.
 
+### Resolution check (Prep Task 12, 2026-10-17, at `d43091ae`)
+
+**Every unknown is resolved or routed.** 28 of 29 are resolved: 14 ✅ · 2 ❌ · 12 🔶. The remaining one, **1.5**, stays 🔍 by design and is routed to **Day 2** (the license-neutrality gate, close rule C8), the stated exception in item 4 above.
+- **All 18 Critical and High unknowns** are resolved, except 1.5.
+- **Every unknown appears in `PLAN.md` §8's routing table** against the day that consumes it.
+- **Item 5 is answered:** Task 8's verdict C removed P5's +1 Solve. P5 is redirected to the `stat_step` class.
+
+This check is **derived, not counted by hand.** `artifacts/validate_plan.py` reads the statuses above, recomputes the tally and the refutation rate (14 of 29, 48 %), and fails if `PLAN.md` misstates either. It also fails if §8 omits an unknown, or routes one that doesn't exist.
+
 ### Success Criterion for This Document
 
-**Prep should refute something.** Sprint 38 refuted 32 %, Sprint 39 **63 %**. This list has at least three assumptions that the writing of it already put in doubt (1.1, 3.3, 5.1). **A prep phase that confirms everything has probably not looked hard enough.**
+**Prep should refute something.** Sprint 40 refuted **48 %** (2 ❌ + 12 🔶 of 29). Sprint 38 refuted 32 %, Sprint 39 **63 %**. This list has at least three assumptions that the writing of it already put in doubt (1.1, 3.3, 5.1). **A prep phase that confirms everything has probably not looked hard enough.**
 
 ### During Sprint 40
 
