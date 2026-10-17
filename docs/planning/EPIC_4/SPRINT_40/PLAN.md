@@ -148,7 +148,7 @@ TOTAL **131 h** against a **168 h** cap; heaviest day **12 h**.
 Task 9's three exits, unchanged (`SARF_JACOBIAN_DESIGN.md` §8):
 1. **Timeout re-trigger:** after E1–E4, sarf still exceeds the cap **before** `assemble_kkt_system` → stop and re-attribute.
 2. **Atomicity:** **any** golden or fixture-hash change from E1–E4 → a `_referenced_index_tuples` false negative. Stop.
-3. **E5/E6 balloons:** a change to `simplify`'s algorithm (rather than to the expression's shape) → its own issue, and **C7 becomes VOID**.
+3. **E5/E6 balloons:** a change to `simplify`'s algorithm (rather than to the expression's shape) → its own issue. **C7 still applies**, because its precondition (E5/E6 started) was met. It is **unmet**: Translate reports 135 flat, naming the re-scoped issue. *VOID is reserved for E5/E6 never starting* (§5: a precondition is a start state, never an outcome).
 
 ### P8: the structural pins (Days 7–8)
 
@@ -266,7 +266,7 @@ A fixed "+7, these seven" assertion would then fail a correct relabel, or report
 | **license text leaks** into a log, artifact or commit | low, but irreversible | **isolation, not detection:** the secret is only in the `main`-only environment. Masking and the in-job scan are defence in depth. Scan every diff before commit; never commit `USER:`/licensee lines |
 | the neutrality run moves a non-cohort row | low (Task 3: 0/13 on the sample) | **C8** blocks KPI reporting until it is explained |
 | the corpus grows silently | **confirmed possible** (Task 6: 142 → 143 on a scratch DB) | W10 refuses un-`--admit`ted models; `kpi_block --corpus` reports both. The danwolfe/decomp disagreement (142 vs 140) is checked in P1 |
-| sarf's recursion fix touches every emit | high, if attempted | E5/E6 is a bounded diagnosis; **C7** voids rather than stretching the track |
+| sarf's recursion fix touches every emit | high, if attempted | E5/E6 is a bounded diagnosis. If it needs an algorithm change, re-scope it, and **C7 is reported unmet** (Translate flat) rather than stretching the track |
 | the leak gate passes on unverified timeouts | **measured** (Task 11: rc 0 with `--min-scope 193`) | P10c lands on Day 1, before any `src/` landing relies on the gate |
 | a figure is quoted stale | **high**: it recurred in every prep PR review round | **C6**; `make check-doc-figures` before every push, and on the PR body once P10d lands |
 

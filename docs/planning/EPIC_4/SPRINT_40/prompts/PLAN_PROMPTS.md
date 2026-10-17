@@ -306,7 +306,7 @@ The same rules as Checkpoint 1, plus the licensed cohort re-run.
 - Land E1–E4 + E7/E8 (C2), with the leak gate alone.
 - Then **diagnose E5/E6**, the `simplify` recursion behind `build_stationarity_equations`, **as a bounded item**.
 - **C7's precondition is E5/E6 starting.** **+1 Translate → 136** is reported only if sarf produces a byte-stable golden at ≤ 300 s.
-- If the fix needs `simplify`'s algorithm changed rather than the expression's shape, re-scope it to its own issue. **C7 is then VOID.**
+- If the fix needs `simplify`'s algorithm changed rather than the expression's shape, re-scope it to its own issue. **C7 still applies, because E5/E6 started, and is reported UNMET:** Translate 135 flat, naming the issue. **C7 is VOID only if E5/E6 never starts.**
 - ⚠ A builder-side E5 fix touches `stationarity.py`, which also holds #1741's guard, so it needs a guard-impact review.
 
 **P5 (1 h):** land the `stat_step` fix behind its gate (C2), or bank it with its mechanism named.
