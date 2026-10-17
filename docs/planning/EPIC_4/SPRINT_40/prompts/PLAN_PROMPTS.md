@@ -103,11 +103,11 @@ Branch `planning/sprint40-day0-schema`.
 
 **REPLAN exits:** `PLAN.md` §3 P1.
 
-## Day 1 (2026-10-19) — P1: CI, the ledger and the corpus reader · 8 h · + P10: 10c, the leak gate fails on timeouts · 2 h
+## Day 1 (2026-10-19) — P1: CI, the ledger and the corpus readers · 10 h · + P10: 10c, the leak gate fails on timeouts · 2 h
 
 Branch `planning/sprint40-day1-ci`.
 
-**P1 (8 h).** `CI_LICENSE_DESIGN.md` §3 and §6.
+**P1 (10 h).** `CI_LICENSE_DESIGN.md` §3 and §6, and `OWNER_DECISION_BRIEF.md` §Decision 2.
 
 - **Owner action first:** create the `gams-licensed` environment (deployment branches **`main` only**, **no required reviewers**) and store `GAMS_ACCESS_CODE` **there only**, never as a repository secret.
 - Land `.github/workflows/licensed-solve.yml`, triggered by `push` to `main`, `schedule` and `workflow_dispatch`. **Never `pull_request_target`.**
@@ -121,7 +121,13 @@ Branch `planning/sprint40-day1-ci`.
 - **Decision 1's ledger:**
   - add the `license_unlocked` list (non-counting) to `data/floor_provenance.json`, and `floor_tracker.py` reporting **75 + *k***;
   - amend the floor definition so a cold license-unlocked match is not read as genuine.
-- **Decision 2's reader:** `corpus_admissions.json` + `kpi_block.py --corpus`, reporting both denominators.
+- **Decision 2's readers:** `corpus_admissions.json` + `kpi_block.py --corpus continuity|current`, reporting both denominators. Include the test that `continuity` on today's DB equals `current` (142).
+- **`check_doc_figures.py` becomes corpus-aware, before any admission** (`OWNER_DECISION_BRIEF.md` §Decision 2; P3 admits on Day 3). Today it checks headline figures against one fact set, so a **correct** continuity/expanded sentence with different numerators would fail the mandatory pre-push gate the moment W10 admits a model.
+  - Derive **both** fact sets (`compute_kpis` over each corpus), each with its KPI denominators.
+  - Match a figure written `N/D` to its corpus by `D`; a `D` matching neither corpus is an error.
+  - Check a bare figure against **continuity**.
+  - Tests: a correct two-clause sentence with differing figures passes; a wrong numerator in either clause fails; a `D` matching neither corpus fails; the equal-denominator case passes; a bare figure is checked against continuity.
+  - P10d's `--text` mode (Day 12) does **not** cover this.
 - **The danwolfe / decomp check** (Task 6 side finding): `kpi_block` counts them (142) and `batch_parse.get_candidate_models` skips them (140). Make the two readers agree, or state in the code why they differ. Pin the pair **by identity**.
 
 **P1 Phase-0 gate:**
@@ -170,7 +176,7 @@ Branch `planning/sprint40-day3-cohort`.
 - **C1:** cohort rows at `path_solve_terminated` are a **first-measurement influx, listed by identity**. Task 7 measured `ferts` and `tabora` there. They are not a regression and not part of the 0.
 
 **P3 (4 h):**
-- W10 `--admit` for every model the licensed verifier classified convex (Decision 2: admit **by rule**).
+- W10 `--admit` for every model the licensed verifier classified convex (Decision 2: admit **by rule**). ⚠ **Only after Day 1's corpus-aware `check_doc_figures.py` is on `main`.** Without it, the first correct two-denominator sentence fails `make check-doc-figures`.
 - **Record the multi-solve reference question.** `airsp2` classifies from a `DECISM` solve, and `airsp`, `msm`, `phosdis` are multi-solve too. Keep any affected comparison out of the headline until it is settled (`PLAN.md` §3 P3).
 - Run the pipeline for the admitted models.
 
@@ -210,14 +216,17 @@ Branch `planning/sprint40-day5-diagonal`.
 **Checkpoint 1 (2 h), end of day:**
 
 ```bash
-# discover the scope first (dry run), then assert it
-git diff --name-only bd2af6e9 HEAD -- data/gamslib/mcp/ | wc -l
+# discover the scope first: the resolver's own MODEL count (not a file count)
+.venv/bin/python scripts/gamslib/run_full_test.py --resolve-changed --since-commit bd2af6e9 \
+  --dry-run --json 2>/dev/null | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("error") or len(d["changed_models"]))'
+# then assert it
 .venv/bin/python scripts/gamslib/run_full_test.py \
   --resolve-changed --since-commit bd2af6e9 --min-scope <N>
 ```
 
 - **NO-GO on any `backward` or `missing` row.** It never persists.
-- If `<N>` is 0, the run needs `--allow-empty` and **certifies nothing**. Say so; do not report it as a GO over the corpus.
+- `<N>` is the dry run's **model** count. The resolver dedupes a model's cold and presolve goldens, so a `git diff | wc -l` file count over-states it and would falsely reject the checkpoint.
+- If the dry run reports the empty-selection error, the run needs `--allow-empty` and **certifies nothing**. Say so; do not report it as a GO over the corpus.
 - **Plus a licensed re-run of the 11 cohort models**, because PR workflows are demo-only (Task 4's trade-off).
 
 ## Day 6 (2026-10-24) — P7: #1755 finish · 3 h · + P4: turkpow, Class A · 7 h
@@ -281,10 +290,11 @@ Branch `planning/sprint40-day9-sarf`.
 
 Branch `planning/sprint40-day10-sarf`.
 
-**Checkpoint 2 runs FIRST, before P6 lands and before P9a** (Day 11 relabels 7 rows, which would read as 7 `forward` moves):
+**Checkpoint 2 runs FIRST, before P6 lands and before P9a** (Day 11's relabels would read as `forward` moves):
 
 ```bash
-git diff --name-only bd2af6e9 HEAD -- data/gamslib/mcp/ | wc -l
+.venv/bin/python scripts/gamslib/run_full_test.py --resolve-changed --since-commit bd2af6e9 \
+  --dry-run --json 2>/dev/null | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("error") or len(d["changed_models"]))'
 .venv/bin/python scripts/gamslib/run_full_test.py \
   --resolve-changed --since-commit bd2af6e9 --min-scope <N>
 ```
@@ -305,11 +315,14 @@ The same rules as Checkpoint 1, plus the licensed cohort re-run.
 Branch `planning/sprint40-day11-small`.
 
 **P9 (6 h).** `PROCESS_AND_SMALL_ITEMS.md` Part 2. The owner answers are recorded there.
-- **P9a, report the 7 `model_infeasible` rows as `mismatch`.** It is **KPI-visible**, so it gets its own Phase-0 doc per §P9a.4:
+- **P9a, report own-infeasible MCPs against an optimal NLP as `mismatch`.** It is **KPI-visible**, so it gets its own Phase-0 doc per §P9a.4:
   - **both sites:** `test_solve.py`'s `_own_infeasible_answer` **and** the cascade at `run_full_test.py` ~L1149–1151. A Case-6-only change is **inert**;
-  - an **identity pin** on agreste, camcge, cesam, fawley, lnts, mine, rocket;
+  - **derive the affected set first, from today's DB, with the widened condition, and pin it by identity** in two parts (`PLAN.md` §5 C9):
+    - the remainder of **prep's 7** (agreste, camcge, cesam, fawley, lnts, mine, rocket), dropping by name any that P5 or another landing moved;
+    - the **cohort additions** P2 persisted. Task 7 measured `egypt`, `robot`, `shale`, `sroute` and `tricp` as own-infeasible; re-derive, do not copy.
+  - **Never assert "+7" or prep's list alone**: a correct relabel would fail it;
   - **positive control:** the cascade site unchanged ⇒ the DB stays byte-identical;
-  - report per **C9**: `mismatch` +7 / `not_tested` −7, **0** `kpi_block` figures move, and the 7 checkpoint `forward` moves are **relabels**. **Do not add a checkpoint exception.**
+  - report per **C9**: the **measured** `mismatch` +*k* / `not_tested` −*k*, **0** `kpi_block` figures move, and the *k* checkpoint `forward` moves are **relabels**. **Do not add a checkpoint exception.**
 - **P9b:** retire `scripts/integration_health_check.py`. First confirm `grep -rn integration_health_check` finds no reader outside `docs/`.
 - **P9c:** rename `all_219_match` → `all_models_match` across its 4 readers in one commit, then run `make check-doc-figures`.
 

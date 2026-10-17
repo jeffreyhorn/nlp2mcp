@@ -47,6 +47,10 @@ ANCHOR = "bd2af6e9"
 ANSWERS = "b44344a2"
 #: Labels that need the license toolchain P1 delivers.
 LICENSED = ("P2", "P3", "RT")
+#: Every label the schedule must carry. Checked as a SET before any ordering
+#: check: an ordering check over a label that is absent (or mistyped, e.g.
+#: P40 for P4) has nothing to compare and silently passes (PR #1759 review).
+REQUIRED_LABELS = {f"P{i}" for i in range(1, 11)} | {"RT", "CK", "baseline", "close"}
 STATUS = {"✅": "verified", "❌": "wrong", "🔶": "partial", "🔍": "incomplete"}
 
 
@@ -93,6 +97,12 @@ def main() -> int:
             check(date == want, f"Day {d} is {want}")
 
         # ------------------------------------------------------- fixed points
+        labels = {lbl for _, _, _, alloc in rows for lbl, _ in PART.findall(alloc)}
+        check(
+            labels == REQUIRED_LABELS,
+            f"the schedule carries exactly the required labels "
+            f"(missing {sorted(REQUIRED_LABELS - labels)}, unknown {sorted(labels - REQUIRED_LABELS)})",
+        )
         p1 = _days(rows, "P1")
         check(p1 == [0, 1], f"P1 occupies exactly Days 0-1 ({p1})")
         for label in LICENSED:
@@ -243,10 +253,14 @@ def main() -> int:
     if wall:
         # EVERY cited wall-clock figure, not "at least one": the plan states it
         # twice, so an `in` test passed with one copy stale (mutation control).
-        cited_s = re.findall(r"\*\*(\d{1,3}(?:,\d{3})+) s\*\*", plan)
+        # Both spellings, grouped or not, normalised before comparing: a regex
+        # for "2,162" alone let an ungrouped stale "2163" escape (PR #1759
+        # review). Any bold "**N s**" in PLAN.md is read as this figure.
+        want_s = int(wall.group(1).replace(",", ""))
+        cited_s = [int(x.replace(",", "")) for x in re.findall(r"\*\*(\d[\d,]*) s\*\*", plan)]
         check(
-            bool(cited_s) and set(cited_s) == {wall.group(1)},
-            f"every cited nightly-slot figure is Task 7's {wall.group(1)} s ({cited_s})",
+            bool(cited_s) and set(cited_s) == {want_s},
+            f"every cited nightly-slot figure is Task 7's {want_s} s ({cited_s})",
         )
 
     # ------------------------------------------------------------- prompts
@@ -254,13 +268,24 @@ def main() -> int:
         check(False, f"{PROMPTS.name} exists")
     else:
         pr = PROMPTS.read_text(encoding="utf-8")
+        # Each checkpoint is two commands: the dry run that DISCOVERS the model
+        # count, then the run that ASSERTS it. A file count is the wrong <N>:
+        # the resolver dedupes cold + presolve goldens (PR #1759 review).
         check(
-            pr.count("--resolve-changed --since-commit") == 2,
-            "both checkpoints carry a runnable command",
+            pr.count("--resolve-changed --since-commit") == 4,
+            "both checkpoints carry a discovery and an asserted command (4)",
         )
         check(
-            pr.count(f"--resolve-changed --since-commit {ANCHOR}") == 2,
-            f"both checkpoints anchor to {ANCHOR}",
+            pr.count(f"--resolve-changed --since-commit {ANCHOR} --min-scope <N>") == 2,
+            f"both asserted checkpoints anchor to {ANCHOR} with --min-scope",
+        )
+        check(
+            pr.count(f"--resolve-changed --since-commit {ANCHOR} \\\n  --dry-run --json") == 2,
+            "both checkpoints discover <N> from the resolver's dry-run model count",
+        )
+        check(
+            not re.search(r"git diff --name-only[^\n`]*\|\s*wc -l", pr),
+            "no checkpoint derives <N> from a file count",
         )
         check(
             "licence" not in pr.lower() and "licence" not in plan.lower(),

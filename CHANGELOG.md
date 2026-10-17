@@ -10,14 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Sprint 40 Prep
 
 - **Prep Task 12 COMPLETE (2026-10-17): the Sprint 40 schedule. Prep is complete; GO for Day 0.** New: `docs/planning/EPIC_4/SPRINT_40/PLAN.md`, `prompts/PLAN_PROMPTS.md` and `artifacts/validate_plan.py`. The validator is a `*.py` file, so the quality gate was run.
-  - **Schedule:** 129 h over Days 0–13 (Day 0 = 2026-10-18), heaviest day 10 h, against the 168 h cap.
+  - **Schedule:** 131 h over Days 0–13 (Day 0 = 2026-10-18), heaviest day 12 h, against the 168 h cap.
     - P1 on Days 0–1, with the license-neutrality gate (RT) first on Day 2.
     - P4 after P2; checkpoints on Days 5 and 10, each with a licensed cohort re-run.
     - The P2 batch on a nightly slot (Task 7: 2,162 s); P9a's relabel after Checkpoint 2.
   - **Prep verdicts folded in:** lnts's +1 Solve removed (P5 → the `stat_step` class); sarf at the low end with +1 Translate conditional; CI hosted, with local-only as a pre-registered exit; the three owner answers as fixed inputs, with no Day-0 slot.
   - **Close rules C1–C9** with preconditions; five take none. C1 names its population, because Task 7 put two cohort models at `path_solve_terminated` as a first measurement.
   - **Unknowns:** 28 of 29 resolved; 1.5 routed to Day 2 by design. Refutation rate 48 %, derived by the validator.
-  - **Validator controls:** 19 mutation controls, 19 caught after one fix. The first run missed a stale copy of a figure stated twice.
+  - **Validator controls:** 23 mutation controls, all caught. The first run missed a stale copy of a figure stated twice; PR #1759 review added a required-label-set check, an ungrouped-figure check and a model-count checkpoint-discovery check, each with its own control.
 
 - **Prep Task 11 COMPLETE (2026-10-16): process-mechanism specs (P10) and the smaller-items catalog (P9).** New doc: `docs/planning/EPIC_4/SPRINT_40/PROCESS_AND_SMALL_ITEMS.md`. `src/` and `tests/` untouched, so the quality gate is N/A; every probe ran on a scratch branch, a scratch DB, or outside the repo.
   - **10a:** extracting the anchor resolver is a pure refactor (16/16 sites identical; ambiguous and absent anchors refused). Two weaker resolvers should migrate; one passes a mutant the shared resolver refuses.

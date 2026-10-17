@@ -25,7 +25,7 @@
 | Day | date | h | allocation |
 |---|---|---|---|
 | **0** | 2026-10-18 | 10 | **baseline** 2h · **P1** 8h |
-| **1** | 2026-10-19 | 10 | **P1** 8h · **P10** 2h |
+| **1** | 2026-10-19 | 12 | **P1** 10h · **P10** 2h |
 | **2** | 2026-10-20 | 10 | **RT** 3h · **P2** 5h · **P3** 2h |
 | **3** | 2026-10-21 | 10 | **P2** 6h · **P3** 4h |
 | **4** | 2026-10-22 | 10 | **P2** 5h · **P3** 5h |
@@ -39,7 +39,7 @@
 | **12** | 2026-10-30 | 4 | **P10** 4h |
 | **13** | 2026-10-31 | 6 | **close** 6h |
 
-TOTAL **129 h** against a **168 h** cap; heaviest day **10 h**.
+TOTAL **131 h** against a **168 h** cap; heaviest day **12 h**.
 
 **Labels:**
 - **RT** is the license-neutrality gate on the first licensed full run (§4).
@@ -57,7 +57,7 @@ TOTAL **129 h** against a **168 h** cap; heaviest day **10 h**.
 
 | priority | scheduled | PROJECT_PLAN | prep re-estimate | |
 |---|---|---|---|---|
-| P1 licensed toolchain + CI + schema 3.1.0 | 16 h | 14–18 h | Tasks 3/4/5: local half proven in prep; CI half unblocked (§2) | ✅ |
+| P1 licensed toolchain + CI + schema 3.1.0 | 18 h | 14–18 h | Tasks 3/4/5: local half proven in prep; CI half unblocked (§2); plus the corpus-aware `check_doc_figures.py` that Decision 2 requires before any admission (`OWNER_DECISION_BRIEF.md` §Decision 2) | ✅ at the top of the band |
 | P2 MCP-gated cohort | 16 h | 16–22 h | Task 7: batch is **2,162 s** wall; 0 unrouted fingerprints | ✅ |
 | P3 NLP-gated set | 12 h | 10–14 h | Task 7: all 9 classify convex, so all are admitted by rule | ✅ |
 | P4 two-class triage | 16 h | 14–20 h | Task 10: turkpow's layer traced; egypt/shale necessary but not sufficient | ✅ |
@@ -80,7 +80,7 @@ TOTAL **129 h** against a **168 h** cap; heaviest day **10 h**.
   **+1 Translate is not projected** (close rule **C7**).
 - **P5 keeps its band but changes its object.** Task 8's verdict C removed lnts's +1 Solve. It redirected the budget to the `stat_step` emit class, which has 2 confirmed models (lnts, robot) and 2 candidates (glider, rocket).
 
-**The total, 129 h, sits 39 h under the cap deliberately.** The cohort tracks (P2, P3) are first measurements of 20 never-solved emits. The plan's dominant risk is a cascade of first-time fingerprints, and slack is what absorbs it without breaking the measure-and-route rule.
+**The total, 131 h, sits 37 h under the cap deliberately.** The cohort tracks (P2, P3) are first measurements of 20 never-solved emits. The plan's dominant risk is a cascade of first-time fingerprints, and slack is what absorbs it without breaking the measure-and-route rule.
 
 ## 2. Fixed points
 
@@ -91,7 +91,7 @@ TOTAL **129 h** against a **168 h** cap; heaviest day **10 h**.
 | **RT before any cohort KPI** | the license should affect only size-refused solves. Any other row that moves is a toolchain finding, and must be explained before a figure is reported | Day 2, first block |
 | **the P2 batch on a nightly slot** | Task 7 measured the whole two-population pipeline at **2,162 s** (~36 min), or ~16 min without the two translate timeouts. It fits a nightly slot with room for the retention of every listing | night of Day 2; analysed Days 3–4 |
 | **P4 after P2** | egypt and shale need their licensed solves to verify a Class-A fix against | P2 ends Day 4; P4 starts Day 6 |
-| **P9a after Checkpoint 2** | P9a moves 7 rows `not_tested` → `mismatch`. `--resolve-changed` reads those as 7 `forward` moves (Task 11), which would confound a checkpoint | Day 11 |
+| **P9a after Checkpoint 2** | P9a moves every qualifying row `not_tested` → `mismatch`, and `--resolve-changed` reads each one as a `forward` move (Task 11), which would confound a checkpoint. **The set is derived when P9a starts, not taken from prep** (§5 C9) | Day 11 |
 | **checkpoints** | Day 5 and Day 10 | both `--resolve-changed --since-commit bd2af6e9` |
 | **final retest** | ≥ 3 `PYTHONHASHSEED`, byte-identical | Day 13 |
 
@@ -150,6 +150,31 @@ Task 9's three exits, unchanged (`SARF_JACOBIAN_DESIGN.md` §8):
 2. **Atomicity:** **any** golden or fixture-hash change from E1–E4 → a `_referenced_index_tuples` false negative. Stop.
 3. **E5/E6 balloons:** a change to `simplify`'s algorithm (rather than to the expression's shape) → its own issue, and **C7 becomes VOID**.
 
+### P8: the structural pins (Days 7–8)
+
+| trigger | evidence | budget goes to |
+|---|---|---|
+| a 3-D aliased fixture does **not** discriminate when re-run on `main` | the assertion passes with the consume-once guard neutralised (Task 10's mutation result does not reproduce) | stop. Record the guard as dead **at the probed shapes**, with the proof scope, as `PROJECT_PLAN.md` P8 allows. Remaining hours → slack |
+| promoting a pin needs an `src/` change | anything beyond a test is required | out of scope. P8 is tests only; route the change to its own issue |
+
+### P9: the smaller items (Day 11)
+
+| trigger | evidence | budget goes to |
+|---|---|---|
+| P9a's derived set differs from what its Phase-0 doc predicted | the Day-11 identity pin (§5 C9) | **re-pin and re-state before landing.** Never assert prep's 7 |
+| P9a's change moves any `kpi_block` figure | `kpi_block.py --json` before/after | stop: it is no longer a relabel. Bank it behind its Phase-0 doc |
+| P9b finds a reader of `integration_health_check.py` | `grep -rn integration_health_check` outside `docs/` | do not delete. Re-carry with the reader named |
+| P9c's rename breaks `check_doc_figures` | `make check-doc-figures` | fix in the same commit; the fact's `source` string names the key |
+
+### P10: the process mechanisms (Days 1, 11–12)
+
+| trigger | evidence | budget goes to |
+|---|---|---|
+| a mechanism's fail-before test passes **before** the change | the test run against `main` | the test is vacuous. Rewrite it before landing the mechanism (§7.5) |
+| 10c's `--fail-on-unverified` makes the local gate fail on an uncontended run | a timeout with nothing else running | the 600 s budget is too tight for that model. Record it; do not loosen the flag. Run that model alone |
+| 10a's extraction changes a resolved anchor | the 16-site before/after comparison | stop. It is not a pure refactor (Unknown 10.1). Keep the resolver where it is, and re-carry |
+| a mechanism overruns its estimate | hours against `PROCESS_AND_SMALL_ITEMS.md` | land the finished mechanisms, re-carry the rest by name. **10e (rules recorded) is the last to drop**, because it costs 1 h and the prompts already carry the rules |
+
 ### P7: #1755 (Days 5–6)
 
 | trigger | evidence | budget goes to |
@@ -188,11 +213,17 @@ Task 9's three exits, unchanged (`SARF_JACOBIAN_DESIGN.md` §8):
 | **C6** | **Every figure is derived at execution time** and carries the commit it was measured at. The PR body is a pointer; a figure is stated once | **none** | cannot be voided |
 | **C7** | **+1 Translate → 136** is reported only if sarf newly produces a byte-stable golden at **≤ 300 s** | **P6's E5/E6 item started** | **VOID.** Translate reports 135 flat, naming P6 as E1–E4 only |
 | **C8** | **License neutrality:** every row outside the two populations keeps its outcome on the first licensed full run. **No KPI is reported before this passes** | **none** | cannot be voided |
-| **C9** | **P9a's 7 `forward` moves are RELABELS, not fixes.** `mismatch` +7 / `not_tested` −7, with no change to any `kpi_block` figure, in the same sentence as their reason | **P9a started** | the rows stay `not_tested`; the closeout says P9a did not start |
+| **C9** | **P9a's `forward` moves are RELABELS, not fixes.** The affected set is **derived and pinned by identity when P9a starts**, in two parts: the remainder of prep's 7 (any that P5 or another landing moved first is dropped, by name), and the **cohort additions** (rows that P2 persisted as an own-infeasible MCP against an optimal NLP). Report the **measured** `mismatch` +*k* / `not_tested` −*k*, with no change to any `kpi_block` figure, in the same sentence as their reason | **P9a started** | the rows stay `not_tested`; the closeout says P9a did not start |
 
 **Five of nine take no precondition** (C1, C2, C5, C6, C8). That shows preconditions aren't being used as an escape hatch: the rules that guard correctness and reporting discipline can't be voided at all.
 
 **C1's wording is a prep finding, not a softening.** Task 7 measured two in-corpus cohort models at `path_solve_terminated`. Read literally, "`path_solve_terminated` maintains 0" would report a first measurement as a regression. The rule now names its population, and the influx is pinned by identity.
+
+**C9's set is not prep's 7, and that is a consequence of the schedule.** Prep's 7 (agreste, camcge, cesam, fawley, lnts, mine, rocket) describe the prep DB. By Day 11:
+- P2 has persisted the cohort, and Task 7 measured five own-infeasible MCPs there (`egypt`, `robot`, `shale`, `sroute`, `tricp`). P4 expects egypt and shale to **stay** infeasible, so they qualify too.
+- P5 may have moved lnts.
+
+A fixed "+7, these seven" assertion would then fail a correct relabel, or report it wrongly. Derive the set from the DB at P9a's start, using the widened condition itself, and pin it.
 
 **Reporting rule for C3, pre-written** (to be used verbatim, with the realized figures filled in from the batch commit):
 
@@ -229,7 +260,7 @@ Task 9's three exits, unchanged (`SARF_JACOBIAN_DESIGN.md` §8):
 
 | risk | likelihood | mitigation |
 |---|---|---|
-| **a cascade of first-time fingerprints** pulls P2/P3 into open-ended diagnosis | **high**: Task 7 found 9 of 11 non-matches, 6 of them with no residual verdict because the presolve emit itself fails | measure and route by rule (P10's rule: a reproduced fingerprint **and** a named fix surface). Only egypt/shale qualify today. 39 h of slack |
+| **a cascade of first-time fingerprints** pulls P2/P3 into open-ended diagnosis | **high**: Task 7 found 9 of 11 non-matches, 6 of them with no residual verdict because the presolve emit itself fails | measure and route by rule (P10's rule: a reproduced fingerprint **and** a named fix surface). Only egypt/shale qualify today. 37 h of slack |
 | hosted activation fails or is rate-limited | low–medium: activations may be counted (unknown) | P1 exit → local-only (Decision 3's A). The checkpoints' licensed re-runs carry the large-model coverage; reduce the nightly `schedule` first |
 | **license text leaks** into a log, artifact or commit | low, but irreversible | **isolation, not detection:** the secret is only in the `main`-only environment. Masking and the in-job scan are defence in depth. Scan every diff before commit; never commit `USER:`/licensee lines |
 | the neutrality run moves a non-cohort row | low (Task 3: 0/13 on the sample) | **C8** blocks KPI reporting until it is explained |

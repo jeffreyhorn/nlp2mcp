@@ -1295,7 +1295,7 @@ Sprint 40 has three fixed points the schedule must honour rather than discover: 
 
 ### Result
 
-✅ **COMPLETE. 129 h over 14 days (heaviest day 10 h), validated by the committed script. GO for Day 0, with no owner decision outstanding.**
+✅ **COMPLETE. 131 h over 14 days (heaviest day 12 h), validated by the committed script. GO for Day 0, with no owner decision outstanding.**
 
 - **Fixed points honoured:**
   - P1 on Days 0–1, with no P2, P3 or RT hours before Day 2;
@@ -1303,7 +1303,7 @@ Sprint 40 has three fixed points the schedule must honour rather than discover: 
   - P4 from Day 6, after P2 ends on Day 4;
   - checkpoints on Days 5 and 10 (`--resolve-changed --since-commit bd2af6e9`, scope discovered then asserted, each plus a licensed cohort re-run);
   - the P2 batch on a nightly slot, sized from Task 7's **2,162 s**;
-  - **P9a after Checkpoint 2**, because its 7 relabels read as `forward` moves.
+  - **P9a after Checkpoint 2**, because its relabels read as `forward` moves. Its set is derived and pinned when P9a starts (C9), not taken from prep's 7.
 - **Prep verdicts folded in:**
   - **lnts +1 Solve removed** (Task 8, verdict C), with P5 redirected to the `stat_step` class;
   - sarf at the low end of Task 9's 14–24 h, with **+1 Translate conditional (C7)**;
@@ -1316,6 +1316,12 @@ Sprint 40 has three fixed points the schedule must honour rather than discover: 
 - **Validator positive control:** **19 mutation controls**. Each injects one defect into a scratch copy of PLAN.md or PLAN_PROMPTS.md: a day's hours, a misplaced priority, an unrouted unknown, a stale tally or figure, a prompt heading's hours, a duplicated day heading, a dropped convention, a wrong checkpoint anchor, or a stale baseline.
   - The first run caught **18 of 19**. The miss was the nightly figure: PLAN.md states it twice, so an `in` test passed with one copy stale.
   - The check now compares every cited copy, and **19 of 19** are caught.
+  - **PR #1759 review found three more holes, which these controls had not exercised:**
+    - a missing or mistyped priority (`P4` → `P40`) silently skipped its ordering check;
+    - an ungrouped stale figure (`2163`) escaped the grouped-digits regex;
+    - a file-count `<N>` was not rejected.
+
+    Each now has a check and a control (plus a dropped-P9 control), so **23 of 23** are caught. As in Sprint 39, every validator hole found in review becomes a mutation control.
 
 ### Verification
 
