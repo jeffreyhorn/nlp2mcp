@@ -17,7 +17,7 @@ section records that positive control next to its result.
 | **10a** one anchor resolver | extraction is a pure refactor: 16/16 sites resolve identically | land `tests/helpers/anchor_resolver.py`; migrate **2** weaker resolvers | 2.5 h |
 | **10b** positive-control field | an unconditional requirement fails **42/42** docs; the added-only rule fails **0** | `**Positive control:**` field, enforced on added docs only (P8a's pattern) | 1.5 h |
 | **10c** the leak gate runs alone | `--min-scope` catches a vacuous scope but **not** contention, which shows up as timeouts | `--min-scope` **and** a new `--fail-on-unverified` in `make check-goldens` | 1.5 h |
-| **10d** the PR body is a pointer | `check_doc_figures.scan_line` already flags a stale figure in arbitrary text | a `--text FILE` mode, run on the PR body before `gh pr create` and on every review round | 2.0 h |
+| **10d** the PR body is a pointer | `check_doc_figures.scan_line` already flags a stale figure in arbitrary text | a `--text FILE` mode, wired through the `Makefile`'s `TEXT=`, run on the PR body before `gh pr create` and on every review round | 2.5 h |
 | **10e** review-round rules | not recorded in CONTRIBUTING today | one CONTRIBUTING section, plus `SPRINT_40/prompts/PLAN_PROMPTS.md`, with a grep check | 1.0 h |
 | **P9a** 7 `model_infeasible` → `mismatch` | **0** `kpi_block` figures move, but **two** code sites are needed and the checkpoint gate reads it as 7 moves | **KPI-visible**: own Phase-0 doc (§P9a.4). **Owner: relabel as `mismatch`** | 3–4 h |
 | **P9b** `integration_health_check.py` | still fails uninstalled, **and fails installed too** (8 of 13 examples) | **Owner: retire the script** | 0.5 h |
@@ -26,7 +26,7 @@ section records that positive control next to its result.
 | **P9e** #1668 | **already CLOSED** on 2026-09-03 (`COMPLETED`) | none; drop from P9 | 0 |
 | *(carried)* #933 tricp | OPEN, untriaged, last updated 2026-04-01 | triage or close | 0.5 h |
 
-**P10 total: 8.5 h** (PROJECT_PLAN budgets ~10–14 h). **P9 total: 4.5–5.5 h** after the owner answers (P9a 3–4 · P9b retire 0.5 · P9c 0.5 · #933 0.5; P9d filed). The budget is ~6–10 h.
+**P10 total: 9.0 h** (PROJECT_PLAN budgets ~10–14 h). **P9 total: 4.5–5.5 h** after the owner answers (P9a 3–4 · P9b retire 0.5 · P9c 0.5 · #933 0.5; P9d filed). The budget is ~6–10 h.
 
 ---
 
@@ -140,8 +140,15 @@ vacuous passes:
 **Mechanism.**
 
 - **Location:** `check_phase0_doc.py`.
-  - Add `POSITIVE_CONTROL_FIELD = re.compile(r"^\*\*Positive control:\*\*\s*\S", re.M)`.
-    The `\S` rejects an empty field.
+  - Add `POSITIVE_CONTROL_FIELD = re.compile(r"^\*\*Positive control:\*\*[ \t]*\S", re.M)`.
+    The `[ \t]*` is load-bearing. With `\s*`, the class consumes the newline,
+    and `\S` then matches the **next** line's first character, so an empty
+    field followed by a heading or `**Layer:**` would pass. Measured on three
+    inputs, `\s*` vs `[ \t]*`:
+    - empty field + `## Next`: accepted vs **rejected**;
+    - whitespace-only field + `**Layer:** x`: accepted vs **rejected**;
+    - a real control: accepted by both.
+    *(An earlier revision of this spec used `\s*`; PR #1757 review.)*
   - Append it to `missing_for_added()` next to the layer check.
   - Document the field in `CONTRIBUTING.md` §Phase 0 Acceptance Gates →
     Workflow step 2 (L443). ⚠ That step describes only "the 4 required
@@ -152,7 +159,11 @@ vacuous passes:
   - an `added` fixture doc with every current field but no positive control is
     **accepted today** and must be **rejected after**;
   - the same doc with `status == "modified"` must still be accepted. That is
-    the grandfathering control.
+    the grandfathering control;
+  - two **rejection** cases for an `added` doc: an empty field followed by a
+    heading, and a whitespace-only field followed by `**Layer:**`. Both must be
+    rejected. They fail against the `\s*` form, which is what makes them a
+    real test of the regex.
 
   The draft regex's own positive control already ran: it accepts a doc with
   the field and rejects one without.
@@ -247,6 +258,13 @@ invisible to it.
 - **Location:**
   - `check_doc_figures.py` gets `--text FILE`, which scans every line of
     `FILE` through `scan_line` with the same exemptions and movement-line rule.
+  - **The `Makefile` target forwards `TEXT`.** `check-doc-figures`
+    (`Makefile:105–110`) knows only `FACTS` and `BASE` and always passes
+    `--base`, so `TEXT=` would today be silently ignored and the run would
+    scan the doc diff instead. Add an `else ifdef TEXT` branch that runs
+    `check_doc_figures.py --text $(TEXT)`. Keep the `FACTS` branch and the
+    default `--base $(or $(BASE),origin/main)` branch unchanged. *(PR #1757
+    review.)*
   - The `SPRINT_40/prompts/PLAN_PROMPTS.md` "Before creating the PR" block
     gains `make check-doc-figures TEXT=/tmp/pr-body.md`.
   - The review-round template gains two steps:
@@ -258,8 +276,16 @@ invisible to it.
   - a body file containing `Match 96` with pinned truths `{"Match": 95}`: today <!-- figures-ok: deliberately stale fixture input for the 10d fail-before test -->
     rc 2 (unknown option), after **rc 1 with one finding**;
   - the same file with `Match 95` → rc 0. That is the positive and negative
-    control pair.
-- **Estimate: 2.0 h** (option + tests 1.5 h, prompt text 0.5 h).
+    control pair;
+  - **through the `Makefile` entry point**, run as a subprocess with
+    `make check-doc-figures TEXT=<stale body>` while the doc diff is clean. It
+    must exit non-zero. Today it exits 0, because `TEXT` is dropped and only
+    the clean diff is scanned. A test of the CLI option alone would pass while
+    the documented command still checks the wrong input;
+  - `make check-doc-figures` with no `TEXT` still runs `--base`, which pins
+    the default mode.
+- **Estimate: 2.5 h** (option + tests 1.5 h, `Makefile` branch + entry-point
+  test 0.5 h, prompt text 0.5 h).
 
 ## 10e. Review-round rules recorded (§7.2, §7.6, §7.7)
 
@@ -349,7 +375,19 @@ exemption widened; `src/` and `scripts/` on disk are untouched.
 The checkpoint row is the one that matters. On landing, `_classify_bucket_move`
 reports **7 forward moves**, which is not an emit improvement. **Afterwards,
 any run in which these rows fall back to `not_tested` is classified `backward`,
-which is a checkpoint NO-GO.** One example is a run without the compare stage.
+which is a checkpoint NO-GO.** That is correct behaviour, not a reason to
+relax the checkpoint. A stage-limited run cannot cause it:
+- `--only-parse` and `--only-translate` set `run_compare = False` and leave
+  `solution_comparison` untouched;
+- `--only-solve` runs the compare stage;
+- `--resolve-changed` rejects every `--only-*` flag (`run_full_test.py:844–876`,
+  `:1426–1438`).
+
+So a later `not_tested` on these rows can only come from a real
+full-pipeline fallback, such as the solve no longer completing. Ranking that
+`backward` is exactly what the checkpoint is for. *(An earlier revision cited
+"a run without the compare stage" as an example; that scenario does not exist.
+PR #1757 review.)*
 
 ### P9a.4 Its own Phase-0 requirement
 
@@ -367,9 +405,9 @@ fix. Its Phase-0 doc must carry:
   (§7.2).
 - **Positive control:** with the cascade site unchanged, the DB must stay
   byte-identical. This proves the second site is load-bearing.
-- **Regression note:** after landing, a compare-less run must not be read as
-  7 regressions. Either the checkpoint learns the label change, or the doc
-  records the expected `backward`.
+- **Regression note:** none needed for the checkpoint. After landing, a
+  fall-back to `not_tested` is a real full-pipeline regression and is correctly
+  `backward` (§P9a.3). **Do not add a checkpoint exception.**
 - **Owner decision:** whether `mismatch` is the more honest verdict for
   "NLP optimal, our MCP proved infeasible" is a reporting-semantics call, not
   an engineering one.

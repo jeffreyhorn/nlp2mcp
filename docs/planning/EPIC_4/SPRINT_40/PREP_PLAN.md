@@ -1180,7 +1180,7 @@ Sprint 39's retrospective recorded seven process changes because each had failed
 ### Changes
 
 - **NEW** `docs/planning/EPIC_4/SPRINT_40/PROCESS_AND_SMALL_ITEMS.md`, containing:
-  - the 10a–10e specs, each with its location, fail-before test and estimate (P10: 8.5 h);
+  - the 10a–10e specs, each with its location, fail-before test and estimate (P10: 9.0 h);
   - the P9 catalog, re-verified on `main` (P9: 4.5–5.5 h after the owner answers);
   - the ganges embedded-NLP-diverges issue text (Appendix A), **filed as #1758** on the owner's instruction (2026-10-16), and the #1668 close note (Appendix B, moot, not posted).
 - `KNOWN_UNKNOWNS.md`: 9.1 🔶 · 9.2 🔶 · 10.1 ✅ · 10.2 🔶.

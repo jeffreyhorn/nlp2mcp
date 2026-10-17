@@ -1392,7 +1392,7 @@ Sprint 40 prep team
 - **`kpi_block.py --json`:** byte-identical against the scratch DB. Match / floor / doc-figure facts read only `== "match"`.
 - **Moves:**
   - `db_manager` status tally: `mismatch` 15 → 22, `not_tested` 31 → 24.
-  - `--resolve-changed` checkpoint (`_bucket_severity`): 1 → 11, i.e. **7 `forward`** moves. The reverse (a compare-less run afterwards) is classified **`backward` = NO-GO**.
+  - `--resolve-changed` checkpoint (`_bucket_severity`): 1 → 11, i.e. **7 `forward`** moves. The reverse, a later fall-back to `not_tested`, is classified **`backward` = NO-GO**. Only a real full-pipeline regression can cause it: stage-limited runs either leave the comparison untouched or include it, and `--resolve-changed` rejects `--only-*`. So it is correct, and no exception is warranted. *(PR #1757 review.)*
 
 **Evidence:** `PROCESS_AND_SMALL_ITEMS.md` §P9a; `/tmp/t11/p9a.py`.
 
