@@ -64,7 +64,7 @@ This prep plan front-loads the work whose absence would cost the most mid-sprint
 | 8 | ✅ lnts — Is the Banked Diff Landable? Premise Test & Phase-0 Gate | High | 3-4 hours | Tasks 1, 2, 3, 7 | P5 — the +1 Solve rests on an untested premise |
 | 9 | ✅ sarf Jacobian O(active) Re-Architecture Design | High | 4-6 hours | Tasks 1, 2 | P6 — the sprint's planned +1 Translate |
 | 10 | ✅ Correctness-Track Pre-Traces: turkpow Class A, the Diagonal Defect, the Structural Sites | High | 5-7 hours | Tasks 1, 2, 7, 9 | P4, P7, P8 — named layers and reproducers before Day 1 |
-| 11 | Process-Mechanism Spec & Smaller-Items Catalog | Medium | 3-4 hours | Tasks 1, 2 | P9 + P10 — the slack absorber and the §7 mechanisms |
+| 11 | ✅ Process-Mechanism Spec & Smaller-Items Catalog | Medium | 3-4 hours | Tasks 1, 2 | P9 + P10 — the slack absorber and the §7 mechanisms |
 | 12 | Plan Sprint 40 Detailed Schedule | Critical | 3-4 hours | All tasks (1–11) | Day-by-day schedule + REPLAN exits + close rules + budget |
 
 **Total Estimated Time:** ~38–53 hours (~5–7 working days)
@@ -1144,9 +1144,10 @@ ls docs/issues/ | grep -i "diagonal\|tsam" || echo "diagonal-defect issue not ye
 
 ## Task 11: Process-Mechanism Spec & Smaller-Items Catalog
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ **COMPLETE** (2026-10-16)
 **Priority:** Medium
 **Estimated Time:** 3-4 hours
+**Time Spent:** ~4 hours. That is the top of the estimate: two of the four unknowns turned out larger than the carryforward described (P9a's second code site; 10c's timeout path).
 **Deadline:** Before Sprint 40 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 2
@@ -1178,11 +1179,31 @@ Sprint 39's retrospective recorded seven process changes because each had failed
 
 ### Changes
 
-*To be completed*
+- **NEW** `docs/planning/EPIC_4/SPRINT_40/PROCESS_AND_SMALL_ITEMS.md`, containing:
+  - the 10a–10e specs, each with its location, fail-before test and estimate (P10: 9.0 h);
+  - the P9 catalog, re-verified on `main` (P9: 4.5–5.5 h after the owner answers);
+  - the ganges embedded-NLP-diverges issue text (Appendix A), **filed as #1758** on the owner's instruction (2026-10-16), and the #1668 close note (Appendix B, moot, not posted).
+- `KNOWN_UNKNOWNS.md`: 9.1 🔶 · 9.2 🔶 · 10.1 ✅ · 10.2 🔶.
+- `CHANGELOG.md`: the Sprint 40 Prep Task 11 entry.
+- `src/` and `tests/` untouched, so the quality gate is N/A. The resolver extraction stayed on a local scratch branch (`b79c1278`, never pushed); the P9a relabel ran on a scratch DB; the leak-gate controls ran in a scratch worktree and through a faked `check_one` outside the repo.
 
 ### Result
 
-*To be completed*
+✅ **COMPLETE. Every mechanism has a location, a fail-before test and an estimate. Every P9 item is re-verified; two are not as described.**
+
+- **10a:** the extraction is a pure refactor: **16/16** sites resolve identically, 11 tests pass, and ambiguous and absent anchors are refused. **Two weaker resolvers** were found, and one of them passes a mutant the shared resolver refuses.
+- **10b:** P8a's added-only grandfathering carries over. A required `**Positive control:**` field fails **0** of 42 existing Phase-0 docs; required unconditionally it would fail **42/42**. (Separately: the `**Layer:**` field is enforced but undocumented in CONTRIBUTING.)
+- **10c:** deriving `--min-scope` locally catches a vacuous scope (rc 0 → 2). It does **not** catch the S39 incident. **Contention causes timeouts, not a smaller scope**, and the plain sweep passes them (reproduced: rc 0 with `--min-scope 193`). The mechanism therefore adds `--fail-on-unverified` to the local target.
+- **10d/10e:** `check_doc_figures.scan_line` already flags a stale figure in arbitrary text, so a `--text FILE` mode checks the PR body. 10e is a CONTRIBUTING section plus a grep test.
+- **P9a (KPI-visible):**
+  - **0** `kpi_block` figures move.
+  - But the DB holds `not_tested` (pipeline cascade), not `skipped`, so **Case 6 alone is inert**. Two sites are needed.
+  - The `--resolve-changed` checkpoint reads the change as **7 `forward`** moves, and any later regression to `not_tested` as **NO-GO**.
+  - It needs its own Phase-0 requirement (§P9a.4). **Owner answer (2026-10-16): report the 7 as `mismatch`.**
+- **P9b:** `integration_health_check.py` fails uninstalled **and installed** (8 of 13 examples). **Owner answer (2026-10-16): retire it.**
+- **P9c:** the key is present, with 4 readers.
+- **P9d:** the ganges issue was still unfiled. Drafted here and **filed as #1758** (owner, 2026-10-16).
+- **P9e:** **#1668 is already CLOSED** (2026-09-03), so it is dropped from P9.
 
 ### Verification
 
@@ -1204,11 +1225,11 @@ test -f "$DOC" && echo "✅ doc" || echo "PROCESS_AND_SMALL_ITEMS.md not yet cre
 
 ### Acceptance Criteria
 
-- [ ] Each mechanism has a location, a fail-before test and an estimate
-- [ ] Each P9 item re-verified on `main` (still reproduces, or closed)
-- [ ] The `model_infeasible` comparison change marked KPI-visible with its own Phase-0 requirement
-- [ ] The ganges issue drafted
-- [ ] Unknowns 9.1, 9.2, 10.1, 10.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Each mechanism has a location, a fail-before test and an estimate
+- [x] Each P9 item re-verified on `main` (still reproduces, or closed)
+- [x] The `model_infeasible` comparison change marked KPI-visible with its own Phase-0 requirement
+- [x] The ganges issue drafted (filed as #1758, 2026-10-16)
+- [x] Unknowns 9.1, 9.2, 10.1, 10.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
