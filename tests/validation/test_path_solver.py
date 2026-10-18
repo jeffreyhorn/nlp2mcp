@@ -47,9 +47,15 @@ def _check_path_available() -> bool:
         # copy) in cwd. This probe runs at IMPORT time in every xdist worker,
         # from the repo root, under a 5 s timeout -- so under load the kill
         # left `225xx/` dirs in the repo root. Run it in a throwaway dir.
+        #
+        # ⚠ The timeout is 30 s, not 5. A timeout here does not fail anything:
+        # it makes PATH_AVAILABLE False, and every PATH test in this module
+        # SKIPS. Uncontended, the banner takes ~0.7 s, but a full `make test`
+        # at load ~65 hit 5 s and silently skipped 2 tests. A missing GAMS
+        # still returns at once (FileNotFoundError); only a hung one waits.
         with tempfile.TemporaryDirectory(prefix="gams_probe_") as scratch:
             result = subprocess.run(
-                [gams_exe], capture_output=True, text=True, timeout=5, cwd=scratch
+                [gams_exe], capture_output=True, text=True, timeout=30, cwd=scratch
             )
 
         # Check if GAMS banner appears in output (either stdout or stderr)
