@@ -83,49 +83,86 @@ def _names_gams(expr: ast.AST) -> bool:
     return False
 
 
-def _external_tempdirs(fn: ast.AST) -> set[str]:
-    """Names bound by ``with tempfile.TemporaryDirectory(...) as NAME`` with no
-    ``dir=``. Only those are guaranteed to live outside the checkout. A
-    ``dir=PROJECT_ROOT`` temp dir does not qualify: a kill of the caller skips
-    its cleanup (PR #1760 review)."""
+def _pos(node: ast.AST) -> tuple[int, int]:
+    return (getattr(node, "lineno", 0), getattr(node, "col_offset", 0))
+
+
+def _external_tempdirs(fn: ast.AST, call: ast.Call) -> set[str]:
+    """Names bound by a ``with tempfile.TemporaryDirectory(...) as NAME`` that
+    has no ``dir=`` AND whose body contains ``call``, so the directory exists at
+    that launch. A ``dir=PROJECT_ROOT`` temp dir does not qualify: a kill of the
+    caller skips its cleanup. Nor does a name from a ``with`` that ``call`` is
+    not inside: that directory is already deleted, or not yet made (PR #1760
+    review)."""
     names: set[str] = set()
     for node in ast.walk(fn):
-        if isinstance(node, (ast.With, ast.AsyncWith)):
-            for item in node.items:
-                call = item.context_expr
-                if (
-                    isinstance(call, ast.Call)
-                    and getattr(call.func, "attr", "") == "TemporaryDirectory"
-                    and not any(k.arg == "dir" for k in call.keywords)
-                    and isinstance(item.optional_vars, ast.Name)
-                ):
-                    names.add(item.optional_vars.id)
+        if not isinstance(node, (ast.With, ast.AsyncWith)):
+            continue
+        if not any(c is call for stmt in node.body for c in ast.walk(stmt)):
+            continue
+        for item in node.items:
+            ctx = item.context_expr
+            if (
+                isinstance(ctx, ast.Call)
+                and getattr(ctx.func, "attr", "") == "TemporaryDirectory"
+                and not any(k.arg == "dir" for k in ctx.keywords)
+                and isinstance(item.optional_vars, ast.Name)
+            ):
+                names.add(item.optional_vars.id)
     return names
 
 
-def _argv(fn: ast.AST, arg: ast.AST, seen: frozenset[str] = frozenset()) -> list[ast.AST]:
-    """The elements a subprocess argv can contain, resolved through the forms
-    the corpus uses: a list literal, ``[*cmd, ...]``, a name assigned a list,
-    ``cmd += [...]`` and ``cmd.append(x)`` / ``cmd.extend([...])``. ``seen``
-    stops a self-referencing name (``cmd = cmd + [...]``) from recursing."""
+def _argv(
+    fn: ast.AST,
+    arg: ast.AST,
+    at: tuple[int, int],
+    seen: frozenset[tuple[str, tuple[int, int]]] = frozenset(),
+) -> list[ast.AST]:
+    """The elements ``arg`` can hold when the statement at position ``at`` runs.
+
+    Resolved through the forms the corpus uses: a list literal, ``[*cmd, ...]``,
+    ``a + b``, and a name. A name resolves to its LAST assignment before ``at``,
+    plus the ``+=`` / ``.append`` / ``.extend`` between that assignment and
+    ``at``. A mutation AFTER the launch must not protect it: an earlier version
+    took every mutation in the function, so ``run(cmd)`` followed by
+    ``cmd.append(procDirPath)`` and a second ``run(cmd)`` reported BOTH
+    launches as protected (PR #1760 review).
+
+    This is straight-line resolution. Branches are not told apart: an
+    assignment in either arm of an ``if`` counts. In ``cmd = cmd + [...]`` the
+    right-hand ``cmd`` resolves at the assignment's OWN position, i.e. to the
+    assignment before it. Every recursion moves to a strictly earlier position,
+    so it terminates; ``seen`` (name, position) is a second guard.
+    """
     if isinstance(arg, ast.List):
         out: list[ast.AST] = []
         for elt in arg.elts:
-            out.extend(_argv(fn, elt.value, seen) if isinstance(elt, ast.Starred) else [elt])
+            out.extend(_argv(fn, elt.value, at, seen) if isinstance(elt, ast.Starred) else [elt])
         return out
     if isinstance(arg, ast.BinOp) and isinstance(arg.op, ast.Add):
-        return _argv(fn, arg.left, seen) + _argv(fn, arg.right, seen)
-    if not isinstance(arg, ast.Name) or arg.id in seen:
+        return _argv(fn, arg.left, at, seen) + _argv(fn, arg.right, at, seen)
+    if not isinstance(arg, ast.Name) or (arg.id, at) in seen:
         return []
-    seen = seen | {arg.id}
-    out = []
-    for node in ast.walk(fn):
-        if isinstance(node, ast.Assign) and any(
-            isinstance(tg, ast.Name) and tg.id == arg.id for tg in node.targets
-        ):
-            out.extend(_argv(fn, node.value, seen))
-        elif isinstance(node, ast.AugAssign) and getattr(node.target, "id", "") == arg.id:
-            out.extend(_argv(fn, node.value, seen))
+    seen = seen | {(arg.id, at)}
+    assigns = sorted(
+        (
+            n
+            for n in ast.walk(fn)
+            if isinstance(n, ast.Assign)
+            and _pos(n) < at
+            and any(isinstance(tg, ast.Name) and tg.id == arg.id for tg in n.targets)
+        ),
+        key=_pos,
+    )
+    if not assigns:
+        return []
+    base = assigns[-1]
+    out = _argv(fn, base.value, _pos(base), seen)
+    for node in sorted(ast.walk(fn), key=_pos):
+        if not (_pos(base) < _pos(node) < at):
+            continue
+        if isinstance(node, ast.AugAssign) and getattr(node.target, "id", "") == arg.id:
+            out.extend(_argv(fn, node.value, _pos(node), seen))
         elif (
             isinstance(node, ast.Call)
             and isinstance(node.func, ast.Attribute)
@@ -134,7 +171,7 @@ def _argv(fn: ast.AST, arg: ast.AST, seen: frozenset[str] = frozenset()) -> list
             and node.args
         ):
             a = node.args[0]
-            out.extend(_argv(fn, a, seen) if node.func.attr == "extend" else [a])
+            out.extend(_argv(fn, a, _pos(node), seen) if node.func.attr == "extend" else [a])
     return out
 
 
@@ -177,10 +214,10 @@ def scan(source: str, rel: str) -> dict[str, tuple[bool, list[str | None]]]:
                 visit(child, f"{prefix}{child.name}.")
             elif isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 qual = f"{prefix}{child.name}"
-                external = _external_tempdirs(child)
                 launches: list[tuple[bool, str | None]] = []
                 for call in _launches(child):
-                    argv = _argv(child, call.args[0]) if call.args else []
+                    external = _external_tempdirs(child, call)
+                    argv = _argv(child, call.args[0], _pos(call)) if call.args else []
                     if not argv or not _names_gams(argv[0]):
                         continue
                     values = [v for v in map(_procdir_value, argv) if v is not None]
@@ -310,6 +347,40 @@ def test_the_argv_is_resolved_through_assigned_and_starred_lists() -> None:
     assert got["x.py::starred"][0] is True
     assert got["x.py::appended"][0] is True
     assert got["x.py::self_ref"][0] is False
+
+
+def test_a_mutation_after_a_launch_does_not_protect_it() -> None:
+    """PR #1760 review: with every mutation in the function counted, the FIRST
+    launch below was reported protected by an append that only happens later."""
+    src = (
+        "import subprocess, tempfile\n"
+        "def two(gams_exe, gms):\n"
+        "    cmd = [gams_exe, gms]\n"
+        "    with tempfile.TemporaryDirectory() as pd:\n"
+        "        subprocess.run(cmd)\n"
+        "        cmd.append(f'procDirPath={pd}')\n"
+        "        subprocess.run(cmd)\n"
+        "def reassigned(gams_exe, gms):\n"
+        "    with tempfile.TemporaryDirectory() as pd:\n"
+        "        cmd = [gams_exe, gms, f'procDirPath={pd}']\n"
+        "        cmd = [gams_exe, gms]\n"
+        "        subprocess.run(cmd)\n"
+    )
+    got = scan(src, "x.py")
+    assert got["x.py::two"][0] is False  # one launch of two is unprotected
+    assert got["x.py::reassigned"][0] is False  # the last assignment wins
+
+
+def test_the_launch_must_be_inside_the_tempdir_block() -> None:
+    """A launch after the ``with`` closes names a directory that no longer exists."""
+    src = (
+        "import subprocess, tempfile\n"
+        "def after(gams_exe, gms):\n"
+        "    with tempfile.TemporaryDirectory() as pd:\n"
+        "        pass\n"
+        "    subprocess.run([gams_exe, gms, f'procDirPath={pd}'])\n"
+    )
+    assert scan(src, "x.py")["x.py::after"][0] is False
 
 
 def test_the_guard_ignores_non_gams_subprocesses() -> None:
