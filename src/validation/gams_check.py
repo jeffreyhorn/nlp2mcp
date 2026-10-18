@@ -8,6 +8,7 @@ GAMS validation is optional and only runs if GAMS is available on the system.
 
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 
@@ -102,13 +103,17 @@ def validate_gams_syntax(gams_file: str, gams_executable: str | None = None) -> 
     #   - Presence of "COMPILATION TIME" → successful compilation
     #   - Presence of "****" or "Error" → compilation failed
     try:
-        result = subprocess.run(
-            [gams_executable, str(gams_path), "action=c"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-            cwd=gams_path.parent,  # Run in file's directory
-        )
+        # procDirPath moves GAMS's process dir (`225a/`, which holds a
+        # license copy) into a temp dir. Without it, a killed compile leaves
+        # that dir in cwd, which is the file's own directory.
+        with tempfile.TemporaryDirectory(prefix="gams_procdir_") as procdir:
+            result = subprocess.run(
+                [gams_executable, str(gams_path), "action=c", f"procDirPath={procdir}"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                cwd=gams_path.parent,  # Run in file's directory
+            )
 
         # Note: Exit code is intentionally ignored (see comment above)
         # But we capture it for diagnostic purposes if needed

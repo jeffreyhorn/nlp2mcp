@@ -1108,6 +1108,9 @@ def run_one(
                         "lo=2",
                         f"reslim={reslim}",
                         f"ScrDir={scr}",
+                        # ScrDir alone leaves GAMS's process dir (with a
+                        # license copy) in cwd = PROJECT_ROOT on a kill.
+                        f"procDirPath={scr}",
                     ],
                     capture_output=True,
                     text=True,

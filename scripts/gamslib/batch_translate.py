@@ -43,6 +43,7 @@ import logging
 import os
 import subprocess
 import sys
+import tempfile
 import time
 import traceback
 from datetime import UTC, datetime
@@ -367,12 +368,17 @@ def validate_mcp_file(mcp_path: Path) -> dict[str, Any]:
             f"o={os.devnull}",  # Suppress listing file (cross-platform)
         ]
 
-        proc = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=compile_check_timeout,
-        )
+        # cwd stays the caller's: presolve emits `$include` a repo-relative
+        # path. procDirPath moves GAMS's process dir (`225a/`, which holds a
+        # license copy) into a temp dir, so a timeout-killed compile cannot
+        # leave it in the working tree.
+        with tempfile.TemporaryDirectory(prefix="gams_procdir_") as procdir:
+            proc = subprocess.run(
+                [*cmd, f"procDirPath={procdir}"],
+                capture_output=True,
+                text=True,
+                timeout=compile_check_timeout,
+            )
 
         elapsed = time.perf_counter() - start_time
 

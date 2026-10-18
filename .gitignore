@@ -61,8 +61,16 @@ build/
 output/
 results/
 
-# GAMS temporary/scratch directories
-[0-9][0-9][0-9][a-z]/
+# GAMS temporary/scratch directories. A GAMS *process directory* is named
+# like `225a/`, then `225b/` ... `225bq/` once the single letters are used,
+# so the suffix is one OR MORE letters. It holds `gamslice.dat`, a copy of
+# the license. GAMS removes it on a normal exit but leaves it in cwd when
+# killed (e.g. a timeout). Every launch site passes `procDirPath=<tempdir>`
+# so this pattern is the backstop, not the mechanism.
+[0-9][0-9][0-9][a-z]*/
+# License files must never be committed, wherever a stray copy lands.
+**/gamslice.dat
+**/gamslice.txt
 # Python tempfile.mkdtemp() scratch dirs (emit/test/diagnostic runs)
 tmp*/
 **/gamsnext.sh

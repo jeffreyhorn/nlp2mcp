@@ -97,6 +97,9 @@ def _solve_one(model: str, repo_root: Path, scratch_base: Path, reslim: int) -> 
                 "lo=0",
                 f"reslim={reslim}",
                 f"ScrDir={scratch_dir}",
+                # ScrDir alone leaves GAMS's process dir (with a license copy)
+                # in cwd = repo_root when the run is killed.
+                f"procDirPath={scratch_dir}",
                 f"o={lst_path}",
             ],
             cwd=repo_root,

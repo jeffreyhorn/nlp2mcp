@@ -13,6 +13,7 @@ Requirements:
 import re
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -42,7 +43,14 @@ def _check_path_available() -> bool:
 
         # Try running GAMS with no arguments - it should print help/version info
         # GAMS returns non-zero but prints version info to stderr
-        result = subprocess.run([gams_exe], capture_output=True, text=True, timeout=5)
+        # A bare `gams` still creates its process dir (`225a/`, with a license
+        # copy) in cwd. This probe runs at IMPORT time in every xdist worker,
+        # from the repo root, under a 5 s timeout -- so under load the kill
+        # left `225xx/` dirs in the repo root. Run it in a throwaway dir.
+        with tempfile.TemporaryDirectory(prefix="gams_probe_") as scratch:
+            result = subprocess.run(
+                [gams_exe], capture_output=True, text=True, timeout=5, cwd=scratch
+            )
 
         # Check if GAMS banner appears in output (either stdout or stderr)
         output = result.stdout + result.stderr

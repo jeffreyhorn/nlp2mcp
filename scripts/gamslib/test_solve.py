@@ -1173,8 +1173,13 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
             # Run GAMS with PATH solver. cwd must be the project root so that
             # the repo-relative `$include "data/gamslib/raw/<model>.gms"` line
             # emitted by `--nlp-presolve` resolves (#1275 changed the include
-            # from absolute to repo-relative). ScrDir keeps scratch files
-            # (`225a/`, .gdx, .pf) out of the project tree.
+            # from absolute to repo-relative).
+            #
+            # ⚠ ScrDir does NOT move GAMS's process directory (`225a/`, which
+            # holds a copy of the license as `gamslice.dat`): measured, it
+            # still lands in cwd -- here the repo root -- and is left there
+            # whenever the run is killed (a timeout under load). procDirPath
+            # is what relocates it; ScrDir keeps the .gdx/.pf scratch.
             cmd = [
                 gams_exe,
                 str(mcp_path),
@@ -1182,6 +1187,7 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
                 "lo=3",  # Detailed log output
                 f"reslim={timeout}",  # Time limit
                 f"ScrDir={tmpdir}",
+                f"procDirPath={tmpdir}",
             ]
 
             subprocess.run(

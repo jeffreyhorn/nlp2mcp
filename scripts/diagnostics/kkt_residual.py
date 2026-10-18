@@ -921,6 +921,9 @@ def run_gams(gms_path: Path, scratch: Path, gams_exe: str, timeout: int = 120) -
             "lo=2",
             f"reslim={timeout}",
             f"ScrDir={scratch}",
+            # ScrDir alone leaves the process dir (`225a/`, with a license
+            # copy) in cwd = PROJECT_ROOT when the run is killed.
+            f"procDirPath={scratch}",
         ],
         capture_output=True,
         text=True,
