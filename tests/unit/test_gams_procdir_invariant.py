@@ -36,7 +36,7 @@ SUBPROCESS_CALLS = {"run", "Popen", "check_output", "call", "check_call"}
 #: Launchers whose cwd is already a fresh temp dir, so the process dir lands
 #: there and is deleted with it. ``path::qualified function``.
 CWD_IS_A_TEMP_DIR = {
-    "scripts/gamslib/verify_convexity.py::verify_model",
+    "scripts/gamslib/verify_convexity.py::_run_verification",
     "tests/integration/test_nlp_presolve.py::TestNLPPresolveGAMSSolve.test_bearing_solves_with_presolve",
     "tests/integration/test_nlp_presolve.py::TestNLPPresolveGAMSSolve.test_bearing_fails_without_presolve",
     "tests/validation/test_path_solver.py::_check_path_available",

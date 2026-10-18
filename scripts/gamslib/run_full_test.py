@@ -557,6 +557,9 @@ def run_solve_stage(
         "solver": "PATH",
         "solver_version": result.get("solver_version"),
         "gams_version": result.get("gams_version"),
+        # Sprint 40 P1 (schema 3.1.0): fixed key list, so it must be NAMED or it
+        # is dropped. Always present; null = no listing was classified.
+        "license_edition": result.get("license_edition"),
         "solver_status": result.get("solver_status"),
         "solver_status_text": result.get("solver_status_text"),
         "model_status": result.get("model_status"),
@@ -680,6 +683,8 @@ def mark_cascade_not_tested(
         model["mcp_solve"] = {
             "status": "not_tested",
             "solve_date": cascade_date,
+            # No GAMS ran for a cascade skip, so the edition is unrecorded.
+            "license_edition": None,
         }
         model["solution_comparison"] = {
             "comparison_status": "not_tested",
@@ -695,6 +700,8 @@ def mark_cascade_not_tested(
         model["mcp_solve"] = {
             "status": "not_tested",
             "solve_date": cascade_date,
+            # No GAMS ran for a cascade skip, so the edition is unrecorded.
+            "license_edition": None,
         }
         model["solution_comparison"] = {
             "comparison_status": "not_tested",

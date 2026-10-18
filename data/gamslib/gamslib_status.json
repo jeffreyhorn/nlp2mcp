@@ -1,7 +1,7 @@
 {
-  "schema_version": "3.0.0",
+  "schema_version": "3.1.0",
   "created_date": "2026-01-26T16:07:08Z",
-  "updated_date": "2026-09-14T16:55:16.207954+00:00",
+  "updated_date": "2026-10-18T22:57:29.111409+00:00",
   "total_models": 219,
   "models": [
     {
@@ -26,7 +26,9 @@
         "objective_value": 225.1946,
         "solve_time_seconds": 0.373,
         "non_convex_reason": "Indefinite lambda matrix in u-quadratic criterion (lambda(money,gov-expend)=0.444 makes the symmetric part have eigenvalues approximately [-0.047, 1.047]); MCP/PATH finds a different valid KKT stationary point than NLP/CONOPT does. Sprint 25 Day 8 (PR #1310) re-reviewed and confirmed: the structural emission is correct (matches qabel's clean form post-#1311+#1312); residual rel_diff is genuine non-convex KKT multi-stationary-point behavior. (Note: verification_date is the original solve check; updated_date below reflects when this non_convex classification was added.)",
-        "updated_date": "2026-04-25"
+        "updated_date": "2026-04-25",
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -61,7 +63,8 @@
         "objective_value": 158.15,
         "solve_time_seconds": 3.96,
         "iterations": 0,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -102,7 +105,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 17706.43,
-        "solve_time_seconds": 0.549
+        "solve_time_seconds": 0.549,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -136,7 +141,8 @@
         "error": {
           "category": "model_infeasible",
           "message": "Model: Locally Infeasible (status 5)"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -170,7 +176,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 1566.0422,
-        "solve_time_seconds": 0.452
+        "solve_time_seconds": 0.452,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -208,7 +216,8 @@
         "iterations": 3792,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/aircraft_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/aircraft_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "skipped",
@@ -248,7 +257,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:57:29Z",
         "solve_time_seconds": 0.497,
-        "error": "Model exceeds demo license limits"
+        "error": "Model exceeds demo license limits",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -269,7 +280,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:57:29Z",
         "solve_time_seconds": 0.501,
-        "error": "Model exceeds demo license limits"
+        "error": "Model exceeds demo license limits",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -292,7 +305,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 441003.5953,
-        "solve_time_seconds": 0.326
+        "solve_time_seconds": 0.326,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -328,7 +343,8 @@
         "objective_value": 441003.595,
         "solve_time_seconds": 0.4179,
         "iterations": 58,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -371,7 +387,9 @@
         "objective_value": 2.9821,
         "solve_time_seconds": 3.004,
         "error": "Model is Infeasible",
-        "reason": "minlp_out_of_scope"
+        "reason": "minlp_out_of_scope",
+        "license_edition": null,
+        "gams_version": null
       },
       "original_gamslib_type": "NLP",
       "pipeline_status": {
@@ -401,7 +419,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": -1.765,
-        "solve_time_seconds": 0.383
+        "solve_time_seconds": 0.383,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -437,7 +457,8 @@
         "objective_value": -1.765,
         "solve_time_seconds": 0.7357,
         "iterations": 2664,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -478,7 +499,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 79.3413,
-        "solve_time_seconds": 0.319
+        "solve_time_seconds": 0.319,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -508,7 +531,8 @@
         "objective_value": 79.341,
         "solve_time_seconds": 0.4355,
         "iterations": 25,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -555,7 +579,9 @@
         "solve_time_seconds": 0.657,
         "error": "Model exceeds demo license limits",
         "reason": "minlp_out_of_scope",
-        "original_status": "error"
+        "original_status": "error",
+        "license_edition": null,
+        "gams_version": null
       },
       "original_gamslib_type": "LP",
       "pipeline_status": {
@@ -585,7 +611,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 24515.6483,
-        "solve_time_seconds": 1.21
+        "solve_time_seconds": 1.21,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -623,7 +651,8 @@
         "iterations": 22,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/apl1p_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/apl1p_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "skipped",
@@ -665,7 +694,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 15902.4936,
-        "solve_time_seconds": 1.095
+        "solve_time_seconds": 1.095,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -697,7 +728,8 @@
         "iterations": 9,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/apl1pca_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/apl1pca_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "skipped",
@@ -743,7 +775,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:57:39Z",
         "solve_time_seconds": 2.142,
-        "error": "No solve summary found in listing file"
+        "error": "No solve summary found in listing file",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -766,7 +800,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 19517.3319,
-        "solve_time_seconds": 0.334
+        "solve_time_seconds": 0.334,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -804,7 +840,8 @@
         "iterations": 2554,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/bearing_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/bearing_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -845,7 +882,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 4.98,
-        "solve_time_seconds": 0.476
+        "solve_time_seconds": 0.476,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -881,7 +920,8 @@
         "objective_value": 4.98,
         "solve_time_seconds": 0.4211,
         "iterations": 5,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -922,7 +962,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 191.7346,
-        "solve_time_seconds": 0.356
+        "solve_time_seconds": 0.356,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -956,7 +998,8 @@
         "error": {
           "category": "model_infeasible",
           "message": "Model: Infeasible (status 4)"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -990,7 +1033,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 4.2841,
-        "solve_time_seconds": 0.327
+        "solve_time_seconds": 0.327,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -1022,7 +1067,8 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/camshape_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/camshape_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -1069,7 +1115,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": -0.0481,
-        "solve_time_seconds": 0.352
+        "solve_time_seconds": 0.352,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -1101,7 +1149,8 @@
         "iterations": 1042,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/catmix_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/catmix_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -1148,7 +1197,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": -3.0011,
-        "solve_time_seconds": 0.329
+        "solve_time_seconds": 0.329,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -1186,7 +1237,8 @@
         "iterations": 500,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/cclinpts_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/cclinpts_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -1227,7 +1279,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 0.0096,
-        "solve_time_seconds": 0.529
+        "solve_time_seconds": 0.529,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -1261,7 +1315,8 @@
         "error": {
           "category": "model_infeasible",
           "message": "Model: Infeasible (status 4)"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -1295,7 +1350,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.508,
-        "solve_time_seconds": 0.35
+        "solve_time_seconds": 0.35,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -1325,7 +1382,8 @@
         "objective_value": 0.508,
         "solve_time_seconds": 1.1726,
         "iterations": 2508,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -1372,7 +1430,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 5.0723,
-        "solve_time_seconds": 0.351
+        "solve_time_seconds": 0.351,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -1404,7 +1464,8 @@
         "iterations": 4,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/chain_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/chain_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -1451,7 +1512,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 179.1336,
-        "solve_time_seconds": 0.333
+        "solve_time_seconds": 0.333,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -1481,7 +1544,8 @@
         "objective_value": 179.134,
         "solve_time_seconds": 0.45,
         "iterations": 4,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -1529,7 +1593,9 @@
         "model_status": 2,
         "objective_value": 29.8944,
         "solve_time_seconds": 0.475,
-        "error": "Unexpected status combination"
+        "error": "Unexpected status combination",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -1552,7 +1618,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": -47.7065,
-        "solve_time_seconds": 0.308
+        "solve_time_seconds": 0.308,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -1588,7 +1656,8 @@
         "objective_value": -47.707,
         "solve_time_seconds": 0.4611,
         "iterations": 16,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -1629,7 +1698,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 1058.9199,
-        "solve_time_seconds": 0.313
+        "solve_time_seconds": 0.313,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -1665,7 +1736,8 @@
         "objective_value": 1058.92,
         "solve_time_seconds": 0.6906,
         "iterations": 3813,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -1706,7 +1778,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 40561.5739,
-        "solve_time_seconds": 0.335
+        "solve_time_seconds": 0.335,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -1738,7 +1812,8 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/china_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/china_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -1785,7 +1860,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 4.5742,
-        "solve_time_seconds": 0.312
+        "solve_time_seconds": 0.312,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -1823,7 +1900,8 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/circle_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/circle_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -1866,7 +1944,9 @@
         "objective_value": 9.1606,
         "solve_time_seconds": 0.316,
         "error": "Model is Locally Infeasible",
-        "reason": "legacy_excluded"
+        "reason": "legacy_excluded",
+        "license_edition": null,
+        "gams_version": null
       },
       "pipeline_status": {
         "status": "skipped",
@@ -1895,7 +1975,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 93.75,
-        "solve_time_seconds": 0.605
+        "solve_time_seconds": 0.605,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -1929,7 +2011,8 @@
         "error": {
           "category": "path_syntax_error",
           "message": "Parse error: compilation_error"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -1963,7 +2046,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.3702,
-        "solve_time_seconds": 0.314
+        "solve_time_seconds": 0.314,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -2001,7 +2086,8 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/cpack_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/cpack_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -2042,7 +2128,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 3359.4684,
-        "solve_time_seconds": 9.54
+        "solve_time_seconds": 9.54,
+        "license_edition": null,
+        "gams_version": null
       },
       "model_statistics": {
         "variables": 5,
@@ -2076,7 +2164,8 @@
       },
       "mcp_solve": {
         "status": "not_tested",
-        "solve_date": "2026-06-20T21:04:58.641105+00:00"
+        "solve_date": "2026-06-20T21:04:58.641105+00:00",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -2104,7 +2193,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 60.0,
-        "solve_time_seconds": 1.445
+        "solve_time_seconds": 1.445,
+        "license_edition": null,
+        "gams_version": null
       },
       "model_statistics": {
         "variables": 6,
@@ -2138,7 +2229,8 @@
       },
       "mcp_solve": {
         "status": "not_tested",
-        "solve_date": "2026-06-20T21:05:02.952365+00:00"
+        "solve_date": "2026-06-20T21:05:02.952365+00:00",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -2166,7 +2258,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 1898.52,
-        "solve_time_seconds": 0.34
+        "solve_time_seconds": 0.34,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -2196,7 +2290,8 @@
         "objective_value": 1898.52,
         "solve_time_seconds": 0.4648,
         "iterations": 157,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -2244,7 +2339,9 @@
         "model_status": 2,
         "objective_value": 1589042.3862,
         "solve_time_seconds": 0.481,
-        "error": "Unexpected status combination"
+        "error": "Unexpected status combination",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -2267,7 +2364,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 251.366,
-        "solve_time_seconds": 0.387
+        "solve_time_seconds": 0.387,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -2301,7 +2400,8 @@
         "error": {
           "category": "path_syntax_error",
           "message": "Parse error: compilation_error"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -2335,7 +2435,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 7.9546,
-        "solve_time_seconds": 0.936
+        "solve_time_seconds": 0.936,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -2371,7 +2473,8 @@
         "objective_value": 7.955,
         "solve_time_seconds": 0.4221,
         "iterations": 143,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -2410,7 +2513,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:57:59Z",
         "solve_time_seconds": 0.212,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -2433,7 +2538,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 539570.5027,
-        "solve_time_seconds": 0.894
+        "solve_time_seconds": 0.894,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -2463,7 +2570,8 @@
         "objective_value": 381401.119,
         "solve_time_seconds": 1.053,
         "iterations": 188,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -2510,7 +2618,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 4134175.7019,
-        "solve_time_seconds": 0.36
+        "solve_time_seconds": 0.36,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -2544,7 +2654,8 @@
         "error": {
           "category": "path_solve_license",
           "message": "Parse error: license_limit"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -2578,7 +2689,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 243.8128,
-        "solve_time_seconds": 0.347
+        "solve_time_seconds": 0.347,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -2610,7 +2723,8 @@
         "iterations": 1,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/elec_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/elec_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -2655,7 +2769,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:58:02Z",
         "solve_time_seconds": 1.798,
-        "error": "No solve summary found in listing file"
+        "error": "No solve summary found in listing file",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -2676,7 +2792,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:58:03Z",
         "solve_time_seconds": 0.278,
-        "error": "Model exceeds demo license limits"
+        "error": "Model exceeds demo license limits",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -2701,7 +2819,9 @@
         "objective_value": -3315000.0001,
         "solve_time_seconds": 15.813,
         "error": "Model is Infeasible",
-        "reason": "legacy_excluded"
+        "reason": "legacy_excluded",
+        "license_edition": null,
+        "gams_version": null
       },
       "pipeline_status": {
         "status": "skipped",
@@ -2730,7 +2850,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 15.2947,
-        "solve_time_seconds": 0.332
+        "solve_time_seconds": 0.332,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -2762,7 +2884,8 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/etamac_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/etamac_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -2809,7 +2932,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 2899.2528,
-        "solve_time_seconds": 0.338
+        "solve_time_seconds": 0.338,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -2843,7 +2968,8 @@
         "error": {
           "category": "model_infeasible",
           "message": "Model: Locally Infeasible (status 5)"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -2877,7 +3003,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 1.0465,
-        "solve_time_seconds": 0.345
+        "solve_time_seconds": 0.345,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -2907,7 +3035,8 @@
         "objective_value": 1.046,
         "solve_time_seconds": 0.4933,
         "iterations": 339,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -2955,7 +3084,9 @@
         "model_status": 1,
         "objective_value": 96.75,
         "solve_time_seconds": 1.127,
-        "reason": "legacy_excluded"
+        "reason": "legacy_excluded",
+        "license_edition": null,
+        "gams_version": null
       },
       "model_statistics": {
         "variables": 2,
@@ -2992,7 +3123,9 @@
         "objective_value": 13.406,
         "solve_time_seconds": 0.497,
         "error": "Model uses MINLP solve (binary variable yf); discrete models are not suitable for KKT/MCP transformation",
-        "reason": "minlp_out_of_scope"
+        "reason": "minlp_out_of_scope",
+        "license_edition": null,
+        "gams_version": null
       },
       "model_statistics": {
         "variables": 13,
@@ -3028,7 +3161,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 58793.8227,
-        "solve_time_seconds": 0.472
+        "solve_time_seconds": 0.472,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -3062,7 +3197,8 @@
         "error": {
           "category": "path_solve_license",
           "message": "Parse error: license_limit"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -3096,7 +3232,9 @@
         "solver_status": 1,
         "model_status": 16,
         "solve_time_seconds": 0.441,
-        "error": "Unexpected status combination"
+        "error": "Unexpected status combination",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -3119,7 +3257,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 6395.5444,
-        "solve_time_seconds": 0.368
+        "solve_time_seconds": 0.368,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -3153,7 +3293,8 @@
         "error": {
           "category": "path_syntax_error",
           "message": "Parse error: compilation_error"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -3187,7 +3328,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 6395.5444,
-        "solve_time_seconds": 0.372
+        "solve_time_seconds": 0.372,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -3221,7 +3364,8 @@
         "error": {
           "category": "path_syntax_error",
           "message": "Parse error: compilation_error"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -3253,7 +3397,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:58:23Z",
         "solve_time_seconds": 0.211,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -3278,7 +3424,9 @@
         "objective_value": 89.0858,
         "solve_time_seconds": 0.352,
         "reason": "minlp_out_of_scope",
-        "original_status": "likely_convex"
+        "original_status": "likely_convex",
+        "license_edition": null,
+        "gams_version": null
       },
       "model_statistics": {
         "variables": 7,
@@ -3314,7 +3462,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 1282.3997,
-        "solve_time_seconds": 1.043
+        "solve_time_seconds": 1.043,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -3348,7 +3498,8 @@
         "error": {
           "category": "path_solve_license",
           "message": "Parse error: license_limit"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -3382,7 +3533,9 @@
         "solve_time_seconds": 0.219,
         "error": "GAMS compilation error",
         "reason": "minlp_out_of_scope",
-        "original_status": "error"
+        "original_status": "error",
+        "license_edition": null,
+        "gams_version": null
       },
       "original_gamslib_type": "LP",
       "pipeline_status": {
@@ -3412,7 +3565,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": -543.5651,
-        "solve_time_seconds": 0.341
+        "solve_time_seconds": 0.341,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -3442,7 +3597,8 @@
         "objective_value": -543.565,
         "solve_time_seconds": 0.4612,
         "iterations": 119,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -3490,7 +3646,9 @@
         "model_status": 14,
         "objective_value": 0.0,
         "solve_time_seconds": 0.962,
-        "error": "Solver error (model status=14)"
+        "error": "Solver error (model status=14)",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -3514,7 +3672,9 @@
         "model_status": 14,
         "objective_value": 0.0,
         "solve_time_seconds": 0.539,
-        "error": "Solver error (model status=14)"
+        "error": "Solver error (model status=14)",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -3535,7 +3695,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:58:29Z",
         "solve_time_seconds": 2.354,
-        "error": "No solve summary found in listing file"
+        "error": "No solve summary found in listing file",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -3558,7 +3720,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 148.2143,
-        "solve_time_seconds": 0.507
+        "solve_time_seconds": 0.507,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -3588,7 +3752,8 @@
         "objective_value": 148.214,
         "solve_time_seconds": 0.4315,
         "iterations": 0,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -3635,7 +3800,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 706.3091,
-        "solve_time_seconds": 2.259
+        "solve_time_seconds": 2.259,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -3667,7 +3834,8 @@
         "iterations": 91,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/harker_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/harker_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -3714,7 +3882,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 87.159,
-        "solve_time_seconds": 0.335
+        "solve_time_seconds": 0.335,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -3746,7 +3916,8 @@
         "iterations": 12,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/hhfair_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/hhfair_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -3793,7 +3964,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 13.9288,
-        "solve_time_seconds": 0.388
+        "solve_time_seconds": 0.388,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -3823,7 +3996,8 @@
         "objective_value": 13.929,
         "solve_time_seconds": 0.4397,
         "iterations": 3,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -3870,7 +4044,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": -30665.5387,
-        "solve_time_seconds": 0.449
+        "solve_time_seconds": 0.449,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -3906,7 +4082,8 @@
         "objective_value": -30665.539,
         "solve_time_seconds": 0.4302,
         "iterations": 64,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -3947,7 +4124,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.675,
-        "solve_time_seconds": 0.412
+        "solve_time_seconds": 0.412,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -3985,7 +4164,8 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/himmel16_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/himmel16_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -4026,7 +4206,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 4500.0,
-        "solve_time_seconds": 0.428
+        "solve_time_seconds": 0.428,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -4062,7 +4244,8 @@
         "objective_value": 4500.0,
         "solve_time_seconds": 0.4402,
         "iterations": 128,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -4103,7 +4286,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": -26272.5168,
-        "solve_time_seconds": 0.344
+        "solve_time_seconds": 0.344,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -4139,7 +4324,8 @@
         "objective_value": -26272.514,
         "solve_time_seconds": 0.4594,
         "iterations": 26,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -4180,7 +4366,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 4366944.1598,
-        "solve_time_seconds": 0.347
+        "solve_time_seconds": 0.347,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -4216,7 +4404,8 @@
         "objective_value": 4366944.16,
         "solve_time_seconds": 0.4298,
         "iterations": 182,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -4257,7 +4446,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 287.1357,
-        "solve_time_seconds": 0.954
+        "solve_time_seconds": 0.954,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -4293,7 +4484,8 @@
         "objective_value": 287.105,
         "solve_time_seconds": 0.4391,
         "iterations": 483,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -4335,7 +4527,9 @@
         "model_status": 2,
         "objective_value": 0.0,
         "solve_time_seconds": 1.679,
-        "error": "Unexpected status combination"
+        "error": "Unexpected status combination",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -4358,7 +4552,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 1.1317,
-        "solve_time_seconds": 0.491
+        "solve_time_seconds": 0.491,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -4390,7 +4586,8 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/imsl_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/imsl_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -4437,7 +4634,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 901.1615,
-        "solve_time_seconds": 0.39
+        "solve_time_seconds": 0.39,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -4471,7 +4670,8 @@
         "error": {
           "category": "path_syntax_error",
           "message": "Parse error: compilation_error"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -4503,7 +4703,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:58:38Z",
         "solve_time_seconds": 0.335,
-        "error": "Model exceeds demo license limits"
+        "error": "Model exceeds demo license limits",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -4527,7 +4729,9 @@
         "model_status": 2,
         "objective_value": 7.6203,
         "solve_time_seconds": 1.188,
-        "reason": "legacy_excluded"
+        "reason": "legacy_excluded",
+        "license_edition": null,
+        "gams_version": null
       },
       "model_statistics": {
         "variables": 7,
@@ -4562,7 +4766,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 26.0914,
-        "solve_time_seconds": 0.455
+        "solve_time_seconds": 0.455,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -4594,7 +4800,8 @@
         "iterations": 3,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/irscge_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/irscge_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -4641,7 +4848,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 114.0397,
-        "solve_time_seconds": 0.358
+        "solve_time_seconds": 0.358,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -4663,7 +4872,8 @@
       },
       "mcp_solve": {
         "status": "not_tested",
-        "solve_date": "2026-06-20T21:59:21.654102+00:00"
+        "solve_date": "2026-06-20T21:59:21.654102+00:00",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -4695,7 +4905,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:58:40Z",
         "solve_time_seconds": 0.243,
-        "error": "Model exceeds demo license limits"
+        "error": "Model exceeds demo license limits",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -4718,7 +4930,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 21343.0556,
-        "solve_time_seconds": 0.351
+        "solve_time_seconds": 0.351,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -4754,7 +4968,8 @@
         "objective_value": 21343.056,
         "solve_time_seconds": 0.4211,
         "iterations": 665,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -4795,7 +5010,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 2613.0,
-        "solve_time_seconds": 0.477
+        "solve_time_seconds": 0.477,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -4825,7 +5042,8 @@
         "objective_value": 2613.0,
         "solve_time_seconds": 0.4144,
         "iterations": 41,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -4872,7 +5090,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 339.213,
-        "solve_time_seconds": 0.341
+        "solve_time_seconds": 0.341,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -4902,7 +5122,8 @@
         "objective_value": 339.213,
         "solve_time_seconds": 0.4433,
         "iterations": 2,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -4949,7 +5170,9 @@
         "solve_time_seconds": 0.238,
         "error": "GAMS compilation error",
         "reason": "minlp_out_of_scope",
-        "original_status": "error"
+        "original_status": "error",
+        "license_edition": null,
+        "gams_version": null
       },
       "original_gamslib_type": "LP",
       "pipeline_status": {
@@ -4979,7 +5202,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 381.8533,
-        "solve_time_seconds": 0.784
+        "solve_time_seconds": 0.784,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -5009,7 +5234,8 @@
         "objective_value": 381.853,
         "solve_time_seconds": 0.4402,
         "iterations": 62,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5056,7 +5282,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 2257.7976,
-        "solve_time_seconds": 0.328
+        "solve_time_seconds": 0.328,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -5088,7 +5316,8 @@
         "iterations": 673,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/launch_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/launch_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5135,7 +5364,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 14085.1398,
-        "solve_time_seconds": 0.454
+        "solve_time_seconds": 0.454,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -5171,7 +5402,8 @@
         "objective_value": 14085.14,
         "solve_time_seconds": 0.4051,
         "iterations": 3,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5212,7 +5444,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": -1138.4106,
-        "solve_time_seconds": 0.331
+        "solve_time_seconds": 0.331,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -5250,7 +5484,8 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/like_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/like_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5292,7 +5527,9 @@
         "model_status": 6,
         "objective_value": 0.0,
         "solve_time_seconds": 8.661,
-        "error": "Solver did not complete normally (status=5)"
+        "error": "Solver did not complete normally (status=5)",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -5315,7 +5552,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 4024.3928,
-        "solve_time_seconds": 7.14
+        "solve_time_seconds": 7.14,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -5347,7 +5586,8 @@
         "iterations": 1433,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/lmp2_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/lmp2_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -5395,7 +5635,9 @@
         "model_status": 6,
         "objective_value": 0.0,
         "solve_time_seconds": 8.201,
-        "error": "Solver did not complete normally (status=5)"
+        "error": "Solver did not complete normally (status=5)",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -5418,7 +5660,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.5547,
-        "solve_time_seconds": 0.34
+        "solve_time_seconds": 0.34,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -5452,7 +5696,8 @@
         "error": {
           "category": "model_infeasible",
           "message": "Model: Infeasible (status 4)"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -5488,7 +5733,9 @@
         "objective_value": 20244.0,
         "solve_time_seconds": 11.461,
         "error": "Model uses MIP solve statements (not NLP). Additionally, dynamic subset fallback causes combinatorial explosion in constraint count (546 inequalities, 529 bounds), making Jacobian computation infeasible.",
-        "reason": "minlp_out_of_scope"
+        "reason": "minlp_out_of_scope",
+        "license_edition": null,
+        "gams_version": null
       },
       "original_gamslib_type": "LP",
       "pipeline_status": {
@@ -5518,7 +5765,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 25.7679,
-        "solve_time_seconds": 0.48
+        "solve_time_seconds": 0.48,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -5550,7 +5799,8 @@
         "iterations": 3,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/lrgcge_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/lrgcge_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5597,7 +5847,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 0.0,
-        "solve_time_seconds": 0.529
+        "solve_time_seconds": 0.529,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -5629,7 +5881,8 @@
         "iterations": 389,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/marco_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/marco_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5676,7 +5929,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 2401.5773,
-        "solve_time_seconds": 0.349
+        "solve_time_seconds": 0.349,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -5712,7 +5967,8 @@
         "objective_value": 2401.577,
         "solve_time_seconds": 0.4313,
         "iterations": 1280,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5753,7 +6009,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 1.0,
-        "solve_time_seconds": 0.319
+        "solve_time_seconds": 0.319,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -5791,7 +6049,8 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/mathopt1_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/mathopt1_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5832,7 +6091,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.0,
-        "solve_time_seconds": 0.313
+        "solve_time_seconds": 0.313,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -5868,7 +6129,8 @@
         "objective_value": 0.0,
         "solve_time_seconds": 0.5297,
         "iterations": 31,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5909,7 +6171,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.0,
-        "solve_time_seconds": 0.346
+        "solve_time_seconds": 0.346,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -5941,7 +6205,8 @@
         "iterations": 3,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/mathopt3_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/mathopt3_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -5988,7 +6253,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.0,
-        "solve_time_seconds": 0.75
+        "solve_time_seconds": 0.75,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -6020,7 +6287,8 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/mathopt4_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/mathopt4_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -6067,7 +6335,9 @@
         "solve_time_seconds": 0.244,
         "error": "No solve summary found in listing file",
         "reason": "minlp_out_of_scope",
-        "original_status": "error"
+        "original_status": "error",
+        "license_edition": null,
+        "gams_version": null
       },
       "original_gamslib_type": "LP",
       "pipeline_status": {
@@ -6097,7 +6367,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.3528,
-        "solve_time_seconds": 0.353
+        "solve_time_seconds": 0.353,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -6135,7 +6407,8 @@
         "iterations": 2881,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/maxmin_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/maxmin_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -6177,7 +6450,9 @@
         "model_status": 2,
         "objective_value": 0.0308,
         "solve_time_seconds": 1.509,
-        "reason": "legacy_excluded"
+        "reason": "legacy_excluded",
+        "license_edition": null,
+        "gams_version": null
       },
       "model_statistics": {
         "variables": 4,
@@ -6210,7 +6485,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:59:25Z",
         "solve_time_seconds": 0.213,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -6233,7 +6510,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 27569.5989,
-        "solve_time_seconds": 0.403
+        "solve_time_seconds": 0.403,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -6255,7 +6534,8 @@
       },
       "mcp_solve": {
         "status": "not_tested",
-        "solve_date": "2026-06-20T22:14:07.021381+00:00"
+        "solve_date": "2026-06-20T22:14:07.021381+00:00",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -6289,7 +6569,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 538.8112,
-        "solve_time_seconds": 0.358
+        "solve_time_seconds": 0.358,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -6325,7 +6607,8 @@
         "objective_value": 538.811,
         "solve_time_seconds": 0.4465,
         "iterations": 83,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -6366,7 +6649,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 27.8719,
-        "solve_time_seconds": 0.359
+        "solve_time_seconds": 0.359,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -6402,7 +6687,8 @@
         "objective_value": 27.872,
         "solve_time_seconds": 0.4276,
         "iterations": 6,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -6443,7 +6729,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 27.8719,
-        "solve_time_seconds": 0.347
+        "solve_time_seconds": 0.347,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -6479,7 +6767,8 @@
         "objective_value": 27.872,
         "solve_time_seconds": 0.4091,
         "iterations": 6,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -6518,7 +6807,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:59:27Z",
         "solve_time_seconds": 0.203,
-        "error": "No solve summary found in listing file"
+        "error": "No solve summary found in listing file",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -6541,7 +6832,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 17500.0,
-        "solve_time_seconds": 0.357
+        "solve_time_seconds": 0.357,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -6575,7 +6868,8 @@
         "error": {
           "category": "model_infeasible",
           "message": "Model: Locally Infeasible (status 5)"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -6609,7 +6903,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": -0.1215,
-        "solve_time_seconds": 0.482
+        "solve_time_seconds": 0.482,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -6647,7 +6943,8 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/mingamma_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/mingamma_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -6691,7 +6988,9 @@
         "solve_time_seconds": 0.969,
         "error": "Unexpected status combination",
         "reason": "minlp_out_of_scope",
-        "original_status": "unknown"
+        "original_status": "unknown",
+        "license_edition": null,
+        "gams_version": null
       },
       "original_gamslib_type": "NLP",
       "pipeline_status": {
@@ -6719,7 +7018,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:59:29Z",
         "solve_time_seconds": 0.278,
-        "error": "Model exceeds demo license limits"
+        "error": "Model exceeds demo license limits",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -6742,7 +7043,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 25.3176,
-        "solve_time_seconds": 0.337
+        "solve_time_seconds": 0.337,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -6772,7 +7075,8 @@
         "objective_value": 25.318,
         "solve_time_seconds": 0.4538,
         "iterations": 2,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -6819,7 +7123,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": -155.3468,
-        "solve_time_seconds": 0.341
+        "solve_time_seconds": 0.341,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -6849,7 +7155,8 @@
         "objective_value": -155.347,
         "solve_time_seconds": 0.4955,
         "iterations": 43,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -6896,7 +7203,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 25.9819,
-        "solve_time_seconds": 0.5
+        "solve_time_seconds": 0.5,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -6928,7 +7237,8 @@
         "iterations": 3,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/moncge_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/moncge_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -6973,7 +7283,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:59:30Z",
         "solve_time_seconds": 0.248,
-        "error": "Model exceeds demo license limits"
+        "error": "Model exceeds demo license limits",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -6996,7 +7308,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 3385.433,
-        "solve_time_seconds": 1.023
+        "solve_time_seconds": 1.023,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -7018,7 +7332,8 @@
       },
       "mcp_solve": {
         "status": "not_tested",
-        "solve_date": "2026-06-20T22:25:27.941617+00:00"
+        "solve_date": "2026-06-20T22:25:27.941617+00:00",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -7054,7 +7369,9 @@
         "objective_value": 0.0,
         "solve_time_seconds": 1.462,
         "reason": "minlp_out_of_scope",
-        "original_status": "likely_convex"
+        "original_status": "likely_convex",
+        "license_edition": null,
+        "gams_version": null
       },
       "model_statistics": {
         "variables": 4,
@@ -7088,7 +7405,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:59:34Z",
         "solve_time_seconds": 0.724,
-        "error": "No solve summary found in listing file"
+        "error": "No solve summary found in listing file",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -7113,7 +7432,9 @@
         "objective_value": 0.8938,
         "solve_time_seconds": 1.303,
         "reason": "minlp_out_of_scope",
-        "original_status": "likely_convex"
+        "original_status": "likely_convex",
+        "license_edition": null,
+        "gams_version": null
       },
       "model_statistics": {
         "variables": 15,
@@ -7150,7 +7471,9 @@
         "model_status": 1,
         "objective_value": -1.6032,
         "solve_time_seconds": 0.364,
-        "reason": "legacy_excluded"
+        "reason": "legacy_excluded",
+        "license_edition": null,
+        "gams_version": null
       },
       "model_statistics": {
         "variables": 25,
@@ -7185,7 +7508,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 4217.7978,
-        "solve_time_seconds": 0.635
+        "solve_time_seconds": 0.635,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -7215,7 +7540,8 @@
         "objective_value": 4217.798,
         "solve_time_seconds": 0.5127,
         "iterations": 485,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -7262,7 +7588,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 1075.5471,
-        "solve_time_seconds": 0.345
+        "solve_time_seconds": 0.345,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -7298,7 +7626,8 @@
         "objective_value": 1075.547,
         "solve_time_seconds": 1.3251,
         "iterations": 12796,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -7339,7 +7668,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 19468.0877,
-        "solve_time_seconds": 0.341
+        "solve_time_seconds": 0.341,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -7369,7 +7700,8 @@
         "objective_value": 19468.087,
         "solve_time_seconds": 0.4829,
         "iterations": 315,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -7416,7 +7748,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 4615.4242,
-        "solve_time_seconds": 0.633
+        "solve_time_seconds": 0.633,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -7448,7 +7782,8 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/paperco_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/paperco_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -7495,7 +7830,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.9167,
-        "solve_time_seconds": 0.435
+        "solve_time_seconds": 0.435,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -7525,7 +7862,8 @@
         "objective_value": 0.917,
         "solve_time_seconds": 0.4888,
         "iterations": 11,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -7572,7 +7910,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 294070.0,
-        "solve_time_seconds": 0.327
+        "solve_time_seconds": 0.327,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -7602,7 +7942,8 @@
         "objective_value": 294070.0,
         "solve_time_seconds": 0.7837,
         "iterations": 6489,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -7647,7 +7988,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:59:38Z",
         "solve_time_seconds": 0.243,
-        "error": "Model exceeds demo license limits"
+        "error": "Model exceeds demo license limits",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -7670,7 +8013,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 1170.4863,
-        "solve_time_seconds": 0.359
+        "solve_time_seconds": 0.359,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -7700,7 +8045,8 @@
         "objective_value": 1170.486,
         "solve_time_seconds": 0.5847,
         "iterations": 358,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -7745,7 +8091,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:59:39Z",
         "solve_time_seconds": 0.209,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -7768,7 +8116,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 5353268.6287,
-        "solve_time_seconds": 0.34
+        "solve_time_seconds": 0.34,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -7804,7 +8154,8 @@
         "objective_value": 5353268.629,
         "solve_time_seconds": 0.5667,
         "iterations": 452,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -7845,7 +8196,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.7797,
-        "solve_time_seconds": 0.368
+        "solve_time_seconds": 0.368,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -7877,7 +8230,8 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/polygon_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/polygon_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -7922,7 +8276,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:59:40Z",
         "solve_time_seconds": 0.21,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -7943,7 +8299,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:59:40Z",
         "solve_time_seconds": 0.201,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -7966,7 +8324,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 0.2984,
-        "solve_time_seconds": 0.337
+        "solve_time_seconds": 0.337,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -8002,7 +8362,8 @@
         "objective_value": 0.298,
         "solve_time_seconds": 0.4834,
         "iterations": 18,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -8043,7 +8404,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 2410.8283,
-        "solve_time_seconds": 0.487
+        "solve_time_seconds": 0.487,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -8079,7 +8442,8 @@
         "objective_value": 2410.828,
         "solve_time_seconds": 0.5234,
         "iterations": 31,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -8120,7 +8484,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 14.1661,
-        "solve_time_seconds": 0.335
+        "solve_time_seconds": 0.335,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -8150,7 +8516,8 @@
         "objective_value": 14.166,
         "solve_time_seconds": 0.5307,
         "iterations": 3,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -8197,7 +8564,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 18666.6667,
-        "solve_time_seconds": 0.368
+        "solve_time_seconds": 0.368,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -8233,7 +8602,8 @@
         "objective_value": 18666.667,
         "solve_time_seconds": 0.5193,
         "iterations": 13,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -8272,7 +8642,9 @@
         "status": "error",
         "verification_date": "2026-01-01T14:59:42Z",
         "solve_time_seconds": 0.368,
-        "error": "No solve summary found in listing file"
+        "error": "No solve summary found in listing file",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -8295,7 +8667,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 17845.6087,
-        "solve_time_seconds": 3.897
+        "solve_time_seconds": 3.897,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -8327,7 +8701,8 @@
         "iterations": 4,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/prodsp2_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/prodsp2_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -8374,7 +8749,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": -0.0,
-        "solve_time_seconds": 0.627
+        "solve_time_seconds": 0.627,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -8404,7 +8781,8 @@
         "objective_value": -6.2528e-13,
         "solve_time_seconds": 0.5774,
         "iterations": 107,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -8453,7 +8831,9 @@
         "objective_value": 0.5333,
         "solve_time_seconds": 0.334,
         "non_convex_reason": "Concave revenue function x(i)**0.5 in objective; multiple KKT points expected",
-        "updated_date": "2026-03-17"
+        "updated_date": "2026-03-17",
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -8482,7 +8862,8 @@
         "objective_value": 0.387,
         "solve_time_seconds": 0.4029,
         "iterations": 39,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -8529,7 +8910,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.4035,
-        "solve_time_seconds": 31.068
+        "solve_time_seconds": 31.068,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -8561,7 +8944,8 @@
         "iterations": 17,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/ps10_s_mn_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/ps10_s_mn_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "skipped",
@@ -8609,7 +8993,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.9167,
-        "solve_time_seconds": 0.336
+        "solve_time_seconds": 0.336,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -8639,7 +9025,8 @@
         "objective_value": 0.917,
         "solve_time_seconds": 0.502,
         "iterations": 11,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -8686,7 +9073,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 1.25,
-        "solve_time_seconds": 0.329
+        "solve_time_seconds": 0.329,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -8716,7 +9105,8 @@
         "objective_value": 1.25,
         "solve_time_seconds": 0.5374,
         "iterations": 9,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -8763,7 +9153,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.8333,
-        "solve_time_seconds": 0.335
+        "solve_time_seconds": 0.335,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -8799,7 +9191,8 @@
         "objective_value": 0.833,
         "solve_time_seconds": 0.5343,
         "iterations": 8,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -8842,7 +9235,9 @@
         "objective_value": 0.8654,
         "solve_time_seconds": 0.446,
         "non_convex_reason": "Concave revenue function x(i)**0.5 in objective; multiple KKT points expected",
-        "updated_date": "2026-03-17"
+        "updated_date": "2026-03-17",
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -8873,7 +9268,8 @@
         "iterations": 2,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/ps2_f_s_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/ps2_f_s_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -8922,7 +9318,9 @@
         "objective_value": 0.8654,
         "solve_time_seconds": 0.331,
         "non_convex_reason": "Concave revenue function x(i)**0.5 in objective; multiple KKT points expected",
-        "updated_date": "2026-03-17"
+        "updated_date": "2026-03-17",
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -8953,7 +9351,8 @@
         "iterations": 2,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/ps2_s_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/ps2_s_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -9000,7 +9399,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 1.375,
-        "solve_time_seconds": 0.33
+        "solve_time_seconds": 0.33,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -9030,7 +9431,8 @@
         "objective_value": 1.375,
         "solve_time_seconds": 0.5792,
         "iterations": 14,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -9079,7 +9481,9 @@
         "objective_value": 1.1615,
         "solve_time_seconds": 0.322,
         "non_convex_reason": "Concave revenue function x(i)**0.5 in objective; multiple KKT points expected",
-        "updated_date": "2026-03-17"
+        "updated_date": "2026-03-17",
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -9108,7 +9512,8 @@
         "objective_value": 1.056,
         "solve_time_seconds": 0.4373,
         "iterations": 16,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -9157,7 +9562,9 @@
         "objective_value": 1.1615,
         "solve_time_seconds": 0.351,
         "non_convex_reason": "Concave revenue function x(i)**0.5 in objective; multiple KKT points expected",
-        "updated_date": "2026-03-17"
+        "updated_date": "2026-03-17",
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -9188,7 +9595,8 @@
         "iterations": 4,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/ps3_s_gic_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/ps3_s_gic_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -9237,7 +9645,9 @@
         "objective_value": 1.0517,
         "solve_time_seconds": 0.597,
         "non_convex_reason": "Concave revenue function x(i)**0.5 in objective; multiple KKT points expected",
-        "updated_date": "2026-03-17"
+        "updated_date": "2026-03-17",
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -9266,7 +9676,8 @@
         "objective_value": 1.029,
         "solve_time_seconds": 0.411,
         "iterations": 21,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -9315,7 +9726,9 @@
         "objective_value": -0.607,
         "solve_time_seconds": 0.494,
         "non_convex_reason": "Concave revenue function x(i)**0.5 in objective; multiple KKT points expected",
-        "updated_date": "2026-03-17"
+        "updated_date": "2026-03-17",
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -9344,7 +9757,8 @@
         "objective_value": -0.617,
         "solve_time_seconds": 0.4602,
         "iterations": 17,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -9391,7 +9805,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.4254,
-        "solve_time_seconds": 30.877
+        "solve_time_seconds": 30.877,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -9423,7 +9839,8 @@
         "iterations": 7,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/ps5_s_mn_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/ps5_s_mn_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "skipped",
@@ -9471,7 +9888,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 46965.0362,
-        "solve_time_seconds": 0.351
+        "solve_time_seconds": 0.351,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -9507,7 +9926,8 @@
         "objective_value": 46965.036,
         "solve_time_seconds": 0.5464,
         "iterations": 0,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -9551,7 +9971,9 @@
         "solve_time_seconds": 0.784,
         "error": "Unexpected status combination",
         "reason": "minlp_out_of_scope",
-        "original_status": "unknown"
+        "original_status": "unknown",
+        "license_edition": null,
+        "gams_version": null
       },
       "original_gamslib_type": "QCP",
       "pipeline_status": {
@@ -9579,7 +10001,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:00:54Z",
         "solve_time_seconds": 0.195,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -9602,7 +10026,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 1589042.3862,
-        "solve_time_seconds": 0.326
+        "solve_time_seconds": 0.326,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -9632,7 +10058,8 @@
         "objective_value": 1589042.386,
         "solve_time_seconds": 0.5804,
         "iterations": 1468,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -9677,7 +10104,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:00:57Z",
         "solve_time_seconds": 2.714,
-        "error": "No solve summary found in listing file"
+        "error": "No solve summary found in listing file",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -9698,7 +10127,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:00:57Z",
         "solve_time_seconds": 0.207,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -9719,7 +10150,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:00:58Z",
         "solve_time_seconds": 0.404,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -9740,7 +10173,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:00:58Z",
         "solve_time_seconds": 0.206,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -9761,7 +10196,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:00:58Z",
         "solve_time_seconds": 0.207,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -9782,7 +10219,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:00:58Z",
         "solve_time_seconds": 0.219,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -9803,7 +10242,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:00:59Z",
         "solve_time_seconds": 0.213,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -9824,7 +10265,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:00:59Z",
         "solve_time_seconds": 0.218,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -9847,7 +10290,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 3.9682,
-        "solve_time_seconds": 0.341
+        "solve_time_seconds": 0.341,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -9879,7 +10324,8 @@
         "iterations": 11,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/qsambal_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/qsambal_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -9926,7 +10372,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 25.6834,
-        "solve_time_seconds": 0.495
+        "solve_time_seconds": 0.495,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -9956,7 +10404,8 @@
         "objective_value": 25.683,
         "solve_time_seconds": 1.3818,
         "iterations": 1010,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -10003,7 +10452,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 2.4875,
-        "solve_time_seconds": 0.34
+        "solve_time_seconds": 0.34,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -10039,7 +10490,8 @@
         "objective_value": 2.487,
         "solve_time_seconds": 0.5455,
         "iterations": 371,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -10080,7 +10532,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.0,
-        "solve_time_seconds": 0.336
+        "solve_time_seconds": 0.336,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -10116,7 +10570,8 @@
         "objective_value": 3.43265e-20,
         "solve_time_seconds": 0.5327,
         "iterations": 5,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -10157,7 +10612,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 11025.0,
-        "solve_time_seconds": 0.356
+        "solve_time_seconds": 0.356,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -10193,7 +10650,8 @@
         "objective_value": 11025.0,
         "solve_time_seconds": 0.4855,
         "iterations": 295,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -10234,7 +10692,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 9.1469,
-        "solve_time_seconds": 0.464
+        "solve_time_seconds": 0.464,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -10268,7 +10728,8 @@
         "error": {
           "category": "path_solve_license",
           "message": "Parse error: license_limit"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -10302,7 +10763,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": -2.3296,
-        "solve_time_seconds": 0.675
+        "solve_time_seconds": 0.675,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -10334,7 +10797,8 @@
         "iterations": 1385,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/robustlp_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/robustlp_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -10381,7 +10845,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 1.0128,
-        "solve_time_seconds": 0.46
+        "solve_time_seconds": 0.46,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -10415,7 +10881,8 @@
         "error": {
           "category": "model_infeasible",
           "message": "Model: Locally Infeasible (status 5)"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -10449,7 +10916,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 3.9682,
-        "solve_time_seconds": 0.41
+        "solve_time_seconds": 0.41,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -10481,7 +10950,8 @@
         "iterations": 11,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/sambal_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/sambal_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -10528,7 +10998,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 726.6794,
-        "solve_time_seconds": 0.488
+        "solve_time_seconds": 0.488,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -10564,7 +11036,8 @@
         "objective_value": 726.679,
         "solve_time_seconds": 0.5503,
         "iterations": 19,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -10605,7 +11078,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 4351376.5614,
-        "solve_time_seconds": 2.552
+        "solve_time_seconds": 2.552,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -10627,7 +11102,8 @@
       },
       "mcp_solve": {
         "status": "not_tested",
-        "solve_date": "2026-06-20T22:32:11.938195+00:00"
+        "solve_date": "2026-06-20T22:32:11.938195+00:00",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -10661,7 +11137,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 79122.6599,
-        "solve_time_seconds": 0.415
+        "solve_time_seconds": 0.415,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -10683,7 +11161,8 @@
       },
       "mcp_solve": {
         "status": "not_tested",
-        "solve_date": "2026-06-20T22:42:25.501067+00:00"
+        "solve_date": "2026-06-20T22:42:25.501067+00:00",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -10715,7 +11194,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:01:23Z",
         "solve_time_seconds": 16.441,
-        "error": "No solve summary found in listing file"
+        "error": "No solve summary found in listing file",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -10736,7 +11217,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:01:32Z",
         "solve_time_seconds": 9.525,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -10759,7 +11242,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 163.98,
-        "solve_time_seconds": 2.117
+        "solve_time_seconds": 2.117,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -10791,7 +11276,8 @@
         "iterations": 3,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/senstran_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/senstran_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "skipped",
@@ -10839,7 +11325,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 9354.8644,
-        "solve_time_seconds": 0.394
+        "solve_time_seconds": 0.394,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -10873,7 +11361,8 @@
         "error": {
           "category": "path_solve_license",
           "message": "Parse error: license_limit"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -10907,7 +11396,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 5.5409,
-        "solve_time_seconds": 0.448
+        "solve_time_seconds": 0.448,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -10937,7 +11428,8 @@
         "objective_value": 5.541,
         "solve_time_seconds": 0.5624,
         "iterations": 22,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -10982,7 +11474,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:01:36Z",
         "solve_time_seconds": 0.217,
-        "error": "No solve summary found in listing file"
+        "error": "No solve summary found in listing file",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -11005,7 +11499,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 6.0,
-        "solve_time_seconds": 0.706
+        "solve_time_seconds": 0.706,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -11035,7 +11531,8 @@
         "objective_value": 6.0,
         "solve_time_seconds": 0.5342,
         "iterations": 0,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -11082,7 +11579,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 3466.38,
-        "solve_time_seconds": 0.878
+        "solve_time_seconds": 0.878,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -11112,7 +11611,8 @@
         "objective_value": 3466.38,
         "solve_time_seconds": 0.5424,
         "iterations": 172,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -11159,7 +11659,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 7906.9463,
-        "solve_time_seconds": 0.848
+        "solve_time_seconds": 0.848,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -11191,7 +11693,8 @@
         "iterations": 57,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/spatequ_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/spatequ_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -11236,7 +11739,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:01:40Z",
         "solve_time_seconds": 1.604,
-        "error": "No solve summary found in listing file"
+        "error": "No solve summary found in listing file",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -11257,7 +11762,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:01:41Z",
         "solve_time_seconds": 1.117,
-        "error": "No solve summary found in listing file"
+        "error": "No solve summary found in listing file",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -11278,7 +11785,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:01:41Z",
         "solve_time_seconds": 0.242,
-        "error": "No solve summary found in listing file"
+        "error": "No solve summary found in listing file",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -11301,7 +11810,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 27.1441,
-        "solve_time_seconds": 0.442
+        "solve_time_seconds": 0.442,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -11331,7 +11842,8 @@
         "objective_value": 27.144,
         "solve_time_seconds": 0.5589,
         "iterations": 2,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -11378,7 +11890,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": -185.4461,
-        "solve_time_seconds": 0.439
+        "solve_time_seconds": 0.439,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -11408,7 +11922,8 @@
         "objective_value": -185.446,
         "solve_time_seconds": 0.5678,
         "iterations": 289,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -11456,7 +11971,9 @@
         "model_status": 2,
         "objective_value": -2109.7818,
         "solve_time_seconds": 0.594,
-        "error": "Unexpected status combination"
+        "error": "Unexpected status combination",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -11479,7 +11996,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 2613.0,
-        "solve_time_seconds": 14.042
+        "solve_time_seconds": 14.042,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -11509,7 +12028,8 @@
         "objective_value": 2613.0,
         "solve_time_seconds": 0.528,
         "iterations": 41,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -11556,7 +12076,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 6468.0,
-        "solve_time_seconds": 0.368
+        "solve_time_seconds": 0.368,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -11590,7 +12112,8 @@
         "error": {
           "category": "path_solve_license",
           "message": "Parse error: license_limit"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -11624,7 +12147,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 0.4001,
-        "solve_time_seconds": 0.746
+        "solve_time_seconds": 0.746,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -11658,7 +12183,8 @@
         "error": {
           "category": "path_solve_license",
           "message": "Parse error: license_limit"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -11692,7 +12218,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 26.0926,
-        "solve_time_seconds": 0.486
+        "solve_time_seconds": 0.486,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -11724,7 +12252,8 @@
         "iterations": 3,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/stdcge_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/stdcge_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -11769,7 +12298,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:01:58Z",
         "solve_time_seconds": 0.201,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -11792,7 +12323,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 8471.9573,
-        "solve_time_seconds": 0.373
+        "solve_time_seconds": 0.373,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -11826,7 +12359,8 @@
         "error": {
           "category": "path_solve_license",
           "message": "Parse error: license_limit"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -11860,7 +12394,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 102.0362,
-        "solve_time_seconds": 0.572
+        "solve_time_seconds": 0.572,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -11894,7 +12430,8 @@
         "error": {
           "category": "path_solve_license",
           "message": "Parse error: license_limit"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -11928,7 +12465,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 2177.796,
-        "solve_time_seconds": 0.807
+        "solve_time_seconds": 0.807,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -11960,7 +12499,8 @@
         "iterations": 0,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/tforss_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/tforss_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -12005,7 +12545,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:02:06Z",
         "solve_time_seconds": 5.376,
-        "error": "No solve summary found in listing file"
+        "error": "No solve summary found in listing file",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -12026,7 +12568,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:02:06Z",
         "solve_time_seconds": 0.307,
-        "error": "Model exceeds demo license limits"
+        "error": "Model exceeds demo license limits",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -12049,7 +12593,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 3838.2686,
-        "solve_time_seconds": 1.105
+        "solve_time_seconds": 1.105,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -12083,7 +12629,8 @@
         "error": {
           "category": "path_solve_license",
           "message": "Parse error: license_limit"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -12117,7 +12664,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.0,
-        "solve_time_seconds": 0.349
+        "solve_time_seconds": 0.349,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -12155,7 +12704,8 @@
         "iterations": 3,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/trig_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/trig_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -12198,7 +12748,9 @@
         "objective_value": 0.1052,
         "solve_time_seconds": 0.5,
         "error": "Model is Locally Infeasible",
-        "reason": "legacy_excluded"
+        "reason": "legacy_excluded",
+        "license_edition": null,
+        "gams_version": null
       },
       "pipeline_status": {
         "status": "skipped",
@@ -12225,7 +12777,9 @@
         "status": "error",
         "verification_date": "2026-01-01T15:02:11Z",
         "solve_time_seconds": 2.949,
-        "error": "No solve summary found in listing file"
+        "error": "No solve summary found in listing file",
+        "license_edition": null,
+        "gams_version": null
       }
     },
     {
@@ -12248,7 +12802,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 153.675,
-        "solve_time_seconds": 0.383
+        "solve_time_seconds": 0.383,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -12284,7 +12840,8 @@
         "objective_value": 153.675,
         "solve_time_seconds": 0.5103,
         "iterations": 30,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -12327,7 +12884,9 @@
         "objective_value": 8.7958,
         "solve_time_seconds": 1.311,
         "reason": "minlp_out_of_scope",
-        "original_status": "likely_convex"
+        "original_status": "likely_convex",
+        "license_edition": null,
+        "gams_version": null
       },
       "model_statistics": {
         "variables": 6,
@@ -12363,7 +12922,9 @@
         "solve_time_seconds": 0.212,
         "error": "GAMS compilation error",
         "reason": "minlp_out_of_scope",
-        "original_status": "error"
+        "original_status": "error",
+        "license_edition": null,
+        "gams_version": null
       },
       "original_gamslib_type": "NLP",
       "pipeline_status": {
@@ -12393,7 +12954,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.4499,
-        "solve_time_seconds": 0.531
+        "solve_time_seconds": 0.531,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -12429,7 +12992,8 @@
         "objective_value": 0.45,
         "solve_time_seconds": 0.6267,
         "iterations": 340,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -12470,7 +13034,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 29078.2106,
-        "solve_time_seconds": 0.674
+        "solve_time_seconds": 0.674,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -12504,7 +13070,8 @@
         "error": {
           "category": "path_solve_license",
           "message": "Parse error: license_limit"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -12538,7 +13105,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 12657.7708,
-        "solve_time_seconds": 0.392
+        "solve_time_seconds": 0.392,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -12572,7 +13141,8 @@
         "error": {
           "category": "path_syntax_error",
           "message": "Parse error: compilation_error"
-        }
+        },
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
@@ -12606,7 +13176,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 56.7778,
-        "solve_time_seconds": 0.5
+        "solve_time_seconds": 0.5,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -12638,7 +13210,8 @@
         "iterations": 7,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/twocge_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/twocge_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -12685,7 +13258,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 1571.0476,
-        "solve_time_seconds": 0.489
+        "solve_time_seconds": 0.489,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -12715,7 +13290,8 @@
         "objective_value": 1571.048,
         "solve_time_seconds": 0.5332,
         "iterations": 715,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -12762,7 +13338,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 1.0,
-        "solve_time_seconds": 0.332
+        "solve_time_seconds": 0.332,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -12792,7 +13370,8 @@
         "objective_value": 1.0,
         "solve_time_seconds": 0.5153,
         "iterations": 1,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -12839,7 +13418,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 1735.5696,
-        "solve_time_seconds": 0.341
+        "solve_time_seconds": 0.341,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -12871,7 +13452,8 @@
         "iterations": 24,
         "outcome_category": "model_optimal",
         "mcp_attribution": "MCP-SOLVED",
-        "mcp_completed_own_solve": true
+        "mcp_completed_own_solve": true,
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -12918,7 +13500,9 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": -600.0,
-        "solve_time_seconds": 0.348
+        "solve_time_seconds": 0.348,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -12954,7 +13538,8 @@
         "objective_value": -600.0,
         "solve_time_seconds": 0.5962,
         "iterations": 8,
-        "outcome_category": "model_optimal"
+        "outcome_category": "model_optimal",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -12995,7 +13580,9 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 20941621.7948,
-        "solve_time_seconds": 0.478
+        "solve_time_seconds": 0.478,
+        "license_edition": null,
+        "gams_version": null
       },
       "nlp2mcp_parse": {
         "status": "success",
@@ -13027,7 +13614,8 @@
         "iterations": 10,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/worst_mcp_presolve.gms"
+        "mcp_file_generated": "data/gamslib/mcp/worst_mcp_presolve.gms",
+        "license_edition": null
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -13075,6 +13663,14 @@
       "from": "mcp_file_used",
       "to": "mcp_file_generated",
       "rows": 48
+    }
+  },
+  "_migration_summary_v3_1_0": {
+    "to_version": "3.1.0",
+    "added": {
+      "mcp_solve.license_edition": 150,
+      "convexity.license_edition": 219,
+      "convexity.gams_version": 219
     }
   }
 }

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/jeffreyhorn/nlp2mcp/data/gamslib/schema.json",
   "title": "GAMSLIB Model Status Database",
-  "description": "Schema for tracking GAMSLIB model status through the nlp2mcp pipeline (v3.0.0)",
+  "description": "Schema for tracking GAMSLIB model status through the nlp2mcp pipeline (v3.1.0)",
   "type": "object",
   "required": ["schema_version", "models"],
   "additionalProperties": false,
@@ -51,6 +51,11 @@
       "_migration_summary_v3_0_0": {
         "type": "object",
         "description": "Bookkeeping block written by migrate_schema_v3.0.0.py (the mcp_file_used -> mcp_file_generated rename). Informational only.",
+        "additionalProperties": true
+      },
+      "_migration_summary_v3_1_0": {
+        "type": "object",
+        "description": "Bookkeeping block written by migrate_schema_v3.1.0.py (the additive license_edition / convexity.gams_version fields). Informational only.",
         "additionalProperties": true
       }
   },
@@ -286,6 +291,15 @@
         "timed_out": {
           "type": "boolean",
           "description": "True if the convexity check timed out."
+        },
+        "gams_version": {
+          "type": ["string", "null"],
+          "description": "GAMS version of the run that produced this record (e.g. '54.2.1'), from its listing header. null = unrecorded. Added schema 3.1.0 (Sprint 40 P1), matching mcp_solve_result.gams_version."
+        },
+        "license_edition": {
+          "type": ["string", "null"],
+          "enum": ["licensed", "demo", null],
+          "description": "Edition of the GAMS run that produced this record, classified from that run's own listing: 'licensed' or 'demo'. null = UNRECORDED (no listing was classified, or the row predates schema 3.1.0) -- never a guess; a pre-license row is null, not 'demo'. Added schema 3.1.0 (Sprint 40 P1)."
         }
       }
     },
@@ -483,6 +497,11 @@
         "gams_version": {
           "type": ["string", "null"],
           "description": "GAMS version that produced this row (e.g., '54.2.1'), extracted from the .lst header. Distinct from the top-level gams_version, which records the version the models were SOURCED with. Added Sprint 37 Day 10 so a version transition is a DB query rather than a corpus re-solve."
+        },
+        "license_edition": {
+          "type": ["string", "null"],
+          "enum": ["licensed", "demo", null],
+          "description": "Edition of the GAMS run that produced this record, classified from that run's own listing: 'licensed' or 'demo'. null = UNRECORDED (no listing was classified, or the row predates schema 3.1.0) -- never a guess; a pre-license row is null, not 'demo'. Added schema 3.1.0 (Sprint 40 P1)."
         },
         "solver_status": {
           "type": ["integer", "null"],

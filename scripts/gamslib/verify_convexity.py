@@ -22,6 +22,17 @@ from typing import Optional
 
 # Project paths
 PROJECT_ROOT = Path(__file__).parent.parent.parent
+
+# Sprint 40 P1 (schema 3.1.0): ONE parser for the listing's edition, version and
+# solver, shared with the MCP stage -- reused, never copied (SCHEMA_3_1_0_DESIGN
+# §4). `scripts/` is a namespace package, hence the path insert.
+sys.path.insert(0, str(PROJECT_ROOT))
+from scripts.gamslib.test_solve import (  # noqa: E402
+    extract_gams_version,
+    extract_license_edition,
+    extract_solver_name,
+)
+
 CATALOG_PATH = PROJECT_ROOT / "data" / "gamslib" / "catalog.json"
 RAW_DIR = PROJECT_ROOT / "data" / "gamslib" / "raw"
 
@@ -99,6 +110,16 @@ class VerificationResult:
     solve_time_seconds: float
     timed_out: bool
     error_message: Optional[str]
+    # Sprint 40 P1 (schema 3.1.0): provenance of THIS run, read from its own
+    # listing. None = no listing was classified (never a guess). Defaulted, so
+    # every existing positional construction stays valid; `to_dict()` (the
+    # `--output` JSON) carries them automatically.
+    license_edition: Optional[str] = None
+    gams_version: Optional[str] = None
+    solver: Optional[str] = None
+    # Per-result UTC RFC 3339 stamp, set when this model's run finishes. The
+    # report envelope's date is a BATCH stamp and is never copied into a row.
+    verification_date: Optional[str] = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
@@ -319,7 +340,33 @@ def verify_model(
     model_type: str,
     timeout_seconds: int = 60,
 ) -> VerificationResult:
-    """Verify convexity of a single GAMS model.
+    """Verify convexity of a single GAMS model, stamped with its provenance.
+
+    Every return, including those before any listing exists, gets a UTC
+    ``verification_date``. The listing's edition, GAMS version and solver are
+    read ONCE, from the listing the run itself produced, and only when one was
+    read. The text is captured inside the run's temp dir, before it is
+    deleted. Returns that never saw a listing keep ``None``.
+    """
+    listing: list[str] = []
+    result = _run_verification(model_id, model_path, model_type, timeout_seconds, listing)
+    if listing:
+        lst_content = listing[0]
+        result.license_edition = extract_license_edition(lst_content)
+        result.gams_version = extract_gams_version(lst_content)
+        result.solver = extract_solver_name(lst_content)
+    result.verification_date = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    return result
+
+
+def _run_verification(
+    model_id: str,
+    model_path: Path,
+    model_type: str,
+    timeout_seconds: int,
+    listing: list[str],
+) -> VerificationResult:
+    """Run the convexity check; append the listing text to ``listing`` once read.
 
     Args:
         model_id: Model identifier
@@ -423,6 +470,9 @@ def verify_model(
 
         with open(lst_path) as f:
             lst_content = f.read()
+        # Hand the text out NOW: the temp dir (and the file) is deleted when this
+        # `with` block exits, and every return below is inside it.
+        listing.append(lst_content)
 
         # Check for license errors
         if "The model exceeds the demo license limits" in lst_content:
@@ -547,6 +597,20 @@ def update_catalog_entry(
         model["solve_time_seconds"] = round(result.solve_time_seconds, 3)
     elif "solve_time_seconds" in model:
         del model["solve_time_seconds"]
+
+    # Sprint 40 P1 (schema 3.1.0): the run's provenance, as flat catalog fields
+    # that `migrate_catalog.transform_entry` (W7) carries into `convexity`.
+    # Same present-or-delete pattern as above: a re-run without a listing must
+    # not leave an older run's provenance behind.
+    for flat, value in (
+        ("license_edition", result.license_edition),
+        ("gams_version", result.gams_version),
+        ("convexity_solver", result.solver),
+    ):
+        if value is not None:
+            model[flat] = value
+        elif flat in model:
+            del model[flat]
 
     # Record or clear any verification error message
     if result.error_message:
@@ -756,7 +820,9 @@ def main() -> None:
     # Output results
     if args.output:
         output_data = {
-            "verification_date": time.strftime("%Y-%m-%d %H:%M:%S"),
+            # UTC RFC 3339, like the per-result stamps. Local time with no offset
+            # fails `format: date-time`. A BATCH stamp: never copied into a row.
+            "verification_date": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "total_models": len(results),
             "verified_convex": verified_count,
             "likely_convex": likely_count,
