@@ -913,23 +913,26 @@ def run_gams(gms_path: Path, scratch: Path, gams_exe: str, timeout: int = 120) -
     returns 0 (the MCP solve interrupts at iteration 0 but executes cleanly), so
     this does not false-positive on the residual-only evaluation."""
     lst_path = scratch / f"{gms_path.stem}.lst"
-    proc = subprocess.run(
-        [
-            gams_exe,
-            str(gms_path),
-            f"o={lst_path}",
-            "lo=2",
-            f"reslim={timeout}",
-            f"ScrDir={scratch}",
-            # ScrDir alone leaves the process dir (`225a/`, with a license
-            # copy) in cwd = PROJECT_ROOT when the run is killed.
-            f"procDirPath={scratch}",
-        ],
-        capture_output=True,
-        text=True,
-        timeout=timeout + 30,
-        cwd=str(PROJECT_ROOT),
-    )
+    # procDirPath gets its OWN system temp dir, not ``scratch``. ``scratch`` is
+    # under PROJECT_ROOT/output and is RETAINED on failure, so a killed run would
+    # leave GAMS's process dir (and its license copy) inside the checkout.
+    # Listings and ScrDir stay in ``scratch`` for diagnosis.
+    with tempfile.TemporaryDirectory(prefix="gams_procdir_") as procdir:
+        proc = subprocess.run(
+            [
+                gams_exe,
+                str(gms_path),
+                f"o={lst_path}",
+                "lo=2",
+                f"reslim={timeout}",
+                f"ScrDir={scratch}",
+                f"procDirPath={procdir}",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=timeout + 30,
+            cwd=str(PROJECT_ROOT),
+        )
     if proc.returncode != 0:
         detail = (proc.stderr or proc.stdout or "").strip()[-1500:]
         lst_errors = ""

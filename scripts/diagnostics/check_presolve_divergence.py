@@ -90,20 +90,25 @@ def _run_gams(gms: Path, scratch_dir: Path) -> tuple[str, int]:
     """
     lst = scratch_dir / (gms.stem + ".lst")
     try:
-        proc = subprocess.run(
-            [
-                "gams",
-                str(gms),
-                "lo=2",
-                f"o={lst}",
-                f"ScrDir={scratch_dir}",
-                f"procDirPath={scratch_dir}",
-            ],
-            cwd=str(PROJECT_ROOT),
-            capture_output=True,
-            text=True,
-            timeout=300,
-        )
+        # procDirPath gets its OWN system temp dir, not ``scratch_dir``, which is a
+        # TemporaryDirectory(dir=PROJECT_ROOT): if this script is killed, its
+        # cleanup never runs and GAMS's process dir (and its license copy) would
+        # stay inside the checkout. Listings and ScrDir stay in ``scratch_dir``.
+        with tempfile.TemporaryDirectory(prefix="gams_procdir_") as procdir:
+            proc = subprocess.run(
+                [
+                    "gams",
+                    str(gms),
+                    "lo=2",
+                    f"o={lst}",
+                    f"ScrDir={scratch_dir}",
+                    f"procDirPath={procdir}",
+                ],
+                cwd=str(PROJECT_ROOT),
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
     except FileNotFoundError:
         return "", 127  # gams not on PATH
     except subprocess.TimeoutExpired:
