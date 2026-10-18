@@ -78,8 +78,11 @@ def _run_gams(gms: Path, scratch_dir: Path) -> tuple[str, int]:
 
     Runs with ``cwd=PROJECT_ROOT`` so the presolve emit's
     ``$include "data/gamslib/raw/<model>.gms"`` resolves, while directing the
-    listing (``o=``) and GAMS scratch (``ScrDir=``) into *scratch_dir* (a temp
-    dir) so the run never litters the repo root.
+    listing (``o=``), GAMS scratch (``ScrDir=``) and GAMS's process directory
+    (``procDirPath=``) into *scratch_dir* (a temp dir), so the run never
+    litters the repo root. ⚠ ``ScrDir`` alone does NOT move the process
+    directory (``225a/``, which holds a license copy); a killed run leaves it
+    in cwd unless ``procDirPath`` is set.
 
     Never raises: a missing ``gams`` binary returns the sentinel code 127 and a
     >300s timeout returns 124, so a single slow model or an un-provisioned runner
@@ -87,13 +90,25 @@ def _run_gams(gms: Path, scratch_dir: Path) -> tuple[str, int]:
     """
     lst = scratch_dir / (gms.stem + ".lst")
     try:
-        proc = subprocess.run(
-            ["gams", str(gms), "lo=2", f"o={lst}", f"ScrDir={scratch_dir}"],
-            cwd=str(PROJECT_ROOT),
-            capture_output=True,
-            text=True,
-            timeout=300,
-        )
+        # procDirPath gets its OWN system temp dir, not ``scratch_dir``, which is a
+        # TemporaryDirectory(dir=PROJECT_ROOT): if this script is killed, its
+        # cleanup never runs and GAMS's process dir (and its license copy) would
+        # stay inside the checkout. Listings and ScrDir stay in ``scratch_dir``.
+        with tempfile.TemporaryDirectory(prefix="gams_procdir_") as procdir:
+            proc = subprocess.run(
+                [
+                    "gams",
+                    str(gms),
+                    "lo=2",
+                    f"o={lst}",
+                    f"ScrDir={scratch_dir}",
+                    f"procDirPath={procdir}",
+                ],
+                cwd=str(PROJECT_ROOT),
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
     except FileNotFoundError:
         return "", 127  # gams not on PATH
     except subprocess.TimeoutExpired:

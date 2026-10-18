@@ -26,6 +26,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -90,20 +91,26 @@ def _solve_one(model: str, repo_root: Path, scratch_base: Path, reslim: int) -> 
     start = time.monotonic()
     error: str | None = None
     try:
-        completed = subprocess.run(
-            [
-                "gams",
-                str(mcp_path),
-                "lo=0",
-                f"reslim={reslim}",
-                f"ScrDir={scratch_dir}",
-                f"o={lst_path}",
-            ],
-            cwd=repo_root,
-            capture_output=True,
-            text=True,
-            timeout=reslim + 30,
-        )
+        # procDirPath gets its OWN system temp dir, not ``scratch_dir``: that lives
+        # under --scratch-base, which is persisted (and can be any path), so a killed
+        # run would leave GAMS's process dir (and its license copy) there.
+        # Listings and ScrDir stay in ``scratch_dir``.
+        with tempfile.TemporaryDirectory(prefix="gams_procdir_") as procdir:
+            completed = subprocess.run(
+                [
+                    "gams",
+                    str(mcp_path),
+                    "lo=0",
+                    f"reslim={reslim}",
+                    f"ScrDir={scratch_dir}",
+                    f"procDirPath={procdir}",
+                    f"o={lst_path}",
+                ],
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+                timeout=reslim + 30,
+            )
         rc = completed.returncode
     except subprocess.TimeoutExpired:
         rc = 124

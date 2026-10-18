@@ -1098,7 +1098,13 @@ def run_one(
         return Attribution(model_id, error=f"cannot clear stale listing {lst}: {exc}")
 
     try:
-        with tempfile.TemporaryDirectory(dir=str(workdir)) as scr:
+        # procDirPath gets its OWN system temp dir, not ``scr``: ``scr`` lives under
+        # --workdir, which may be inside the checkout, so a killed run would leave
+        # the process dir (and its license copy) there.
+        with (
+            tempfile.TemporaryDirectory(dir=str(workdir)) as scr,
+            tempfile.TemporaryDirectory(prefix="gams_procdir_") as procdir,
+        ):
             try:
                 proc = subprocess.run(
                     [
@@ -1108,6 +1114,7 @@ def run_one(
                         "lo=2",
                         f"reslim={reslim}",
                         f"ScrDir={scr}",
+                        f"procDirPath={procdir}",
                     ],
                     capture_output=True,
                     text=True,

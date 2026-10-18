@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **GAMS process directories no longer leak into the working tree (and with them a license copy).** GAMS creates a process directory (`225a/`, `225b/` … `225bq/`) in its cwd and leaves it there when killed. Since the full license, it holds `gamslice.dat`.
+  - **Measured on 54.2.1:** `ScrDir=` does **not** move it, despite two code comments saying so; `procDirPath=` does, on a normal exit and on `kill -9`.
+  - **Every GAMS launcher that ran from the repo root or a repo directory now passes `procDirPath=<tempdir>`:** `test_solve.solve_mcp`, `kkt_residual`, `check_presolve_divergence`, `check_mcp_solve_attribution`, `run_pr19_solves`, `batch_translate.validate_mcp_file` and `gams_check.validate_gams_syntax`. Their cwd is unchanged, because presolve emits `$include` a repo-relative path. **`<tempdir>` is always a dedicated system `TemporaryDirectory()`, never the launcher's scratch dir:** `kkt_residual`'s scratch lives under `PROJECT_ROOT/output` and is retained on failure, `check_presolve_divergence`'s is a `TemporaryDirectory(dir=PROJECT_ROOT)` that survives a kill, and the other two may be persisted paths (PR #1760 review).
+  - **The import-time `gams` probe in `tests/validation/test_path_solver.py` now runs in a throwaway directory.** It ran from the repo root in every xdist worker under a 5 s timeout, and was the source of the `225bq/`/`225cm/` dirs seen during Sprint 40 prep. **Its timeout is now 30 s:** a timeout there makes `PATH_AVAILABLE` False and **skips** the module's PATH tests silently. A full `make test` at load ~65 skipped 2 that way, although the banner takes ~0.7 s uncontended.
+  - **`.gitignore`:** the process-dir pattern now matches one or more letters (`[0-9][0-9][0-9][a-z]*/`; the old one missed `225bq/`), and `gamslice.dat`/`gamslice.txt` are ignored at any depth.
+  - **New `tests/unit/test_gams_procdir_invariant.py`** (AST scan of `src/`, `scripts/`, `tests/`) reads each GAMS launch's **actual argv**, resolved through `cmd = [...]`, `[*cmd, ...]`, `.append`, `+=` and `+`. It fails unless `procDirPath=<name>` is in that argv with `<name>` bound by a `TemporaryDirectory()` without `dir=` whose `with` block contains the launch. The argv is resolved **at each launch**: the last assignment before it, plus only the mutations between that assignment and the launch, so a later `cmd.append(...)` cannot protect an earlier launch. Docstrings and comments never count. The exception is a named list of launchers whose cwd is a temp dir; the test checks that each of those passes a non-repo `cwd=`. It fails on unfixed `main`, on a launch whose docstring mentions `procDirPath=` but whose argv omits it, and on `procDirPath=<the scratch dir>`.
+
 ### Sprint 40 Prep
 
 - **Prep Task 12 COMPLETE (2026-10-17): the Sprint 40 schedule. Prep is complete; GO for Day 0.** New: `docs/planning/EPIC_4/SPRINT_40/PLAN.md`, `prompts/PLAN_PROMPTS.md` and `artifacts/validate_plan.py`. The validator is a `*.py` file, so the quality gate was run.
