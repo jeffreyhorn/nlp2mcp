@@ -42,6 +42,19 @@ _SOLVER_STATUS = re.compile(
 # input, but the targets JSON could be hand-edited to bypass that — this is
 # the defense-in-depth check at the consumer.
 _MODEL_NAME = re.compile(r"^[A-Za-z0-9_]+$")
+# The demo edition's refusal line (Sprint 40 P1, CI_LICENSE_DESIGN.md §6). PR
+# workflows run the DEMO by design -- the license never reaches PR code -- so a
+# model over the demo ceiling is refused at generation. Before this, that
+# refusal was recorded as an ordinary solve failure, indistinguishable from an
+# emit regression. Generic GAMS text only; nothing licensee-specific.
+_DEMO_REFUSAL = re.compile(r"^\*{4} The model exceeds the demo license limits\b", re.MULTILINE)
+
+
+def _demo_refused(lst_path: Path) -> bool:
+    """True if the listing is the demo edition refusing the model's size."""
+    if not lst_path.is_file():
+        return False
+    return bool(_DEMO_REFUSAL.search(lst_path.read_text(errors="replace")))
 
 
 def _read_status(lst_path: Path) -> tuple[str, str]:
@@ -78,6 +91,11 @@ def _solve_one(model: str, repo_root: Path, scratch_base: Path, reslim: int) -> 
     scratch_dir = scratch_base / model
     scratch_dir.mkdir(parents=True, exist_ok=True)
     lst_path = scratch_dir / f"{model}_mcp.lst"
+    # Never let a previous run's listing answer for this one (PR #1762 review,
+    # the same defect as run_licensed_solves.py). --scratch-base is persisted,
+    # so a GAMS that failed to write would otherwise leave an OLD listing to be
+    # read as this run's status, or as a demo refusal it never made.
+    lst_path.unlink(missing_ok=True)
     if not mcp_path.is_file():
         return {
             "model": model,
@@ -132,6 +150,19 @@ def _solve_one(model: str, repo_root: Path, scratch_base: Path, reslim: int) -> 
             "error": "`gams` not found on PATH",
         }
     wall_time = round(time.monotonic() - start, 2)
+    if _demo_refused(lst_path):
+        # Not an emit result at all: the demo would not generate the model.
+        # `passed` stays False, so the HARD tier still fails if one of its
+        # demo-sized canaries ever outgrows the ceiling; `skipped` says why.
+        return {
+            "model": model,
+            "rc": rc,
+            "wall_time": wall_time,
+            "model_status": "n/a (over the demo ceiling)",
+            "solver_status": "n/a (over the demo ceiling)",
+            "passed": False,
+            "skipped": "over the demo ceiling",
+        }
     model_status, solver_status = _read_status(lst_path)
     # Pass requires rc=0 AND MODEL STATUS=1 (Optimal/Solved) AND SOLVER STATUS=1
     # (Normal Completion). MODEL STATUS alone can stay at 1 from a prior
@@ -329,7 +360,16 @@ def main() -> int:
             return 2
         result = _solve_one(model, repo_root, scratch_base, per_model_reslim)
         results.append(result)
-        marker = "✓" if result["passed"] else "✗"
+        if result.get("skipped"):
+            # A notice, not an error: the license never reaches PR jobs, so a
+            # model over the demo ceiling is covered by licensed-solve.yml on
+            # `main` instead.
+            print(
+                f"::notice::{result['model']}: skipped: {result['skipped']} "
+                f"(covered by licensed-solve.yml on main)",
+                flush=True,
+            )
+        marker = "✓" if result["passed"] else ("⏭" if result.get("skipped") else "✗")
         print(
             f"  {marker} {result['model']:<13} rc={result['rc']} {result['wall_time']:>5.2f}s  "
             f"{result['model_status']}",

@@ -86,7 +86,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "scripts" / "sprint_audit"))
 try:
     from check_golden_staleness import discover_goldens, load_allowlist  # noqa: E402
     from floor_tracker import compute_floor  # noqa: E402
-    from kpi_block import compute_kpis  # noqa: E402
+    from kpi_block import compute_kpis, load_admissions  # noqa: E402
 finally:
     sys.path[:] = _SAVED_SYS_PATH
 
@@ -230,6 +230,9 @@ NUM = r"\d+(?:\.\d+)?"
 #: checked as BOTH populations and could raise a false candidate-Match finding.
 #: One pattern makes the disagreement unrepresentable.
 _ALL_POPULATION_MATCH = re.compile(r"\ball-(?P<population>\d+)\s+Match")
+#: An optional ``/D`` after a KPI figure ("Match 95/142"): the denominator names
+#: WHICH corpus the figure is over (Sprint 40 P1, Decision 2).
+_DEN = r"(?:\s*/\s*\**(?P<den>\d+)\**)?"
 
 #: ``A → B`` states a movement, so the left figure is historical by
 #: construction. Such lines are skipped — but reported, never silently.
@@ -297,7 +300,45 @@ def _kpis() -> dict[str, Any]:
     Cached on the assumption that the DB does not change mid-run, which holds for
     a CLI invocation. Tests that mutate the DB must call ``_kpis.cache_clear()``.
     """
+    # ⚠ The CONTINUITY corpus (Sprint 40 P1, owner Decision 2 = A): the DB minus
+    # the ids in data/corpus_admissions.json. A BARE figure ("Match 95") is
+    # checked against continuity, because continuity leads every sentence (close
+    # rule C4). With no admissions this is the unchanged 142-model block.
+    return compute_kpis(_load(DB_PATH), exclude=load_admissions())
+
+
+@functools.lru_cache(maxsize=1)
+def _kpis_current() -> dict[str, Any]:
+    """The CURRENT corpus: every model the DB classifies convex (no exclusion)."""
     return compute_kpis(_load(DB_PATH))
+
+
+#: KPI facts a doc may write as ``N/D``, with the key of each one's DENOMINATOR in
+#: the KPI block: Match over the corpus size, Translate over the parsed count,
+#: Solve over the translated count (OWNER_DECISION_BRIEF.md §Decision 2). (There
+#: is no Parse fact in this registry, so Parse is not here.)
+_DENOMINATOR_OF: dict[str, str] = {
+    "Match": "candidates",
+    "Translate": "parse",
+    "Solve": "translate",
+}
+_CORPORA = ("continuity", "current")
+
+
+def _corpus_truths() -> dict[str, float | int]:
+    """``<fact>|<corpus>`` and ``<fact>|<corpus>|den`` for every N/D-capable fact.
+
+    Both corpora, each with its own denominator, derived from one function. A
+    cited ``N/D`` is matched to its corpus by ``D`` in :func:`scan_line`.
+    """
+    blocks = {"continuity": _kpis(), "current": _kpis_current()}
+    out: dict[str, float | int] = {}
+    key_of = {"Match": "match", "Translate": "translate", "Solve": "solve"}
+    for fact, den in _DENOMINATOR_OF.items():
+        for corpus, k in blocks.items():
+            out[f"{fact}|{corpus}"] = k[key_of[fact]]
+            out[f"{fact}|{corpus}|den"] = k[den]
+    return out
 
 
 def _floor() -> int:
@@ -427,13 +468,13 @@ FACTS: tuple[Fact, ...] = (
         name="Solve",
         derive=_kpi("solve"),
         source="scripts/sprint_audit/kpi_block.py  ->  solve",
-        patterns=(re.compile(rf"\bSolve\s+\**(?P<value>{NUM})\**"),),
+        patterns=(re.compile(rf"\bSolve\s+\**(?P<value>{NUM})\**{_DEN}"),),
     ),
     Fact(
         name="Match",
         derive=_kpi("match"),
         source="scripts/sprint_audit/kpi_block.py  ->  match",
-        patterns=(re.compile(rf"(?<!-)\bMatch\s+\**(?P<value>{NUM})\**"),),
+        patterns=(re.compile(rf"(?<!-)\bMatch\s+\**(?P<value>{NUM})\**{_DEN}"),),
         # "all-<n> Match" is a different population from the 142-candidate one.
         # ⚠ SHARED with the fact below, not a hardcoded 219 (PR #1740 review):
         # the corpus size is itself a figure, so an `all-220 Match` line would
@@ -466,7 +507,7 @@ FACTS: tuple[Fact, ...] = (
         name="Translate",
         derive=_kpi("translate"),
         source="scripts/sprint_audit/kpi_block.py  ->  translate",
-        patterns=(re.compile(rf"\bTranslate\s+\**(?P<value>{NUM})\**"),),
+        patterns=(re.compile(rf"\bTranslate\s+\**(?P<value>{NUM})\**{_DEN}"),),
     ),
     Fact(
         name="genuine floor",
@@ -752,7 +793,6 @@ def scan_line(
             continue
         if any(p.search(text) for p in fact.skip_if):
             continue
-        truth = truths[fact.name]
         for pattern in fact.patterns:
             for m in pattern.finditer(text):
                 cited_raw = m.group("value")
@@ -762,7 +802,42 @@ def scan_line(
                     cited = float(cited_raw)
                 except ValueError:
                     continue
-                if abs(cited - float(truth)) <= 1e-9:
+                truth: float | int | str = truths[fact.name]
+                source = fact.source
+                den = m.groupdict().get("den")
+                if den is not None and f"{fact.name}|continuity|den" in truths:
+                    # `N/D`: match the figure to the corpus whose denominator is D.
+                    corpora = [
+                        c for c in _CORPORA if float(truths[f"{fact.name}|{c}|den"]) == float(den)
+                    ]
+                    if not corpora:
+                        dens = "/".join(str(truths[f"{fact.name}|{c}|den"]) for c in _CORPORA)
+                        if (fact.name, cited_raw + "/" + den) in seen:
+                            continue
+                        seen.add((fact.name, cited_raw + "/" + den))
+                        findings.append(
+                            Finding(
+                                path=path,
+                                lineno=lineno,
+                                fact=fact.label(m),
+                                cited=f"{cited_raw}/{den}",
+                                truth=f"a denominator of {dens} (continuity/current)",
+                                source=f"{fact.source} (denominator matches neither corpus)",
+                                line=text.strip(),
+                            )
+                        )
+                        continue
+                    # Equal denominators imply equal numerators (the brief's
+                    # equal-denominator case), so either matching corpus serves.
+                    ok = any(
+                        abs(cited - float(truths[f"{fact.name}|{c}"])) <= 1e-9 for c in corpora
+                    )
+                    if ok:
+                        continue
+                    truth = truths[f"{fact.name}|{corpora[0]}"]
+                    source = f"{fact.source} ({corpora[0]} corpus, denominator {den})"
+                    cited_raw = f"{cited_raw}/{den}"
+                elif abs(cited - float(truth)) <= 1e-9:
                     continue
                 # Several patterns per fact may match the same figure.
                 if (fact.name, cited_raw) in seen:
@@ -775,7 +850,7 @@ def scan_line(
                         fact=fact.label(m),
                         cited=cited_raw,
                         truth=f"{truth}",
-                        source=fact.source,
+                        source=source,
                         line=text.strip(),
                     )
                 )
@@ -794,6 +869,10 @@ def derive_truths() -> dict[str, float | int]:
             truths[fact.name] = fact.derive()
         except FileNotFoundError:
             continue
+    try:
+        truths.update(_corpus_truths())
+    except FileNotFoundError:
+        pass
     return truths
 
 

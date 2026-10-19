@@ -87,8 +87,16 @@ regen-goldens:
 check-index-repeats:
 	$(PYTHON) scripts/sprint_audit/check_index_repeat_properties.py
 
+# Sprint 40 P10c: the leak gate must FAIL, not pass quietly, on a narrowed run.
+#   --min-scope        derived from git ls-files, exactly as CI does, so a
+#                      missing raw corpus (a vacuous sweep) fails (rc 2);
+#   --fail-on-unverified  any timeout fails (rc 3). Contention produces timeouts,
+#                      not a smaller scope, so --min-scope alone would pass it.
+# Run it ALONE: nothing else on the machine.
 check-goldens:
-	$(PYTHON) scripts/sprint_audit/check_golden_staleness.py
+	@MIN_SCOPE=$$(git ls-files 'data/gamslib/mcp/*.gms' | wc -l | tr -d ' '); \
+	test "$$MIN_SCOPE" -gt 0 || { echo "ERROR: git ls-files found no goldens -- the floor would be vacuous"; exit 1; }; \
+	$(PYTHON) scripts/sprint_audit/check_golden_staleness.py --min-scope "$$MIN_SCOPE" --fail-on-unverified
 
 # Doc-figure check — flags a figure cited in a CHANGED doc line that contradicts
 # the source it was derived from (the DB, the provenance file, a verdict table,

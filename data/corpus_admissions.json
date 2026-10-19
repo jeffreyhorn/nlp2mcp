@@ -1,0 +1,35 @@
+{
+  "_README": [
+    "Corpus admissions (Sprint 40 P1; owner Decision 2 = A, OWNER_DECISION_BRIEF.md,",
+    "answered 2026-10-14 at b44344a2).",
+    "",
+    "The candidate corpus is DERIVED: kpi_block.py, floor_tracker.py and",
+    "batch_parse select models by convexity.status in {verified_convex,",
+    "likely_convex}. So a licensed convexity run that writes a convex status",
+    "silently GROWS the corpus (Prep Task 6 measured 142 -> 143 on a scratch DB).",
+    "",
+    "Decision 2 admits an in-scope NLP-gated model BY RULE: iff the licensed",
+    "verify_convexity.py classifies it verified_convex / likely_convex. Every",
+    "admission is listed here, by identity, so both denominators derive",
+    "mechanically and neither is a hand count:",
+    "",
+    "  kpi_block.py --corpus current     everything the DB classifies convex",
+    "  kpi_block.py --corpus continuity  current MINUS the ids listed here",
+    "                                    (the 142-model series, for continuity)",
+    "",
+    "Headline KPIs are reported with BOTH, in one sentence (close rule C4).",
+    "The P3 application writer (apply_convexity_results.py --admit) is the only",
+    "path that may move a model into the convex set, and it takes its --admit",
+    "ids from this file. MINLP/MIP are never admitted: out of scope."
+  ],
+  "_admission_schema": {
+    "model_id": "the admitted model",
+    "admitted_sprint": "sprint of admission (40)",
+    "rule": "'verifier-convex' (Decision 2 = A)",
+    "classification": "the licensed verifier's status: verified_convex | likely_convex",
+    "license_edition": "edition of the verifier run that classified it: licensed",
+    "evidence": "the verifier run, in one line, with its commit",
+    "pr": "the PR that admitted it"
+  },
+  "admissions": []
+}

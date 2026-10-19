@@ -27,6 +27,14 @@ that looks authoritative and is wrong, because the "cold emit byte-identical to
 pre-fix" qualifier lives only in the hand-maintained partition. This tool prints
 that mechanical count under an explicit ``NOT the genuine floor`` label so it can
 never be mistaken for one, and points at the provenance file (P6c) instead.
+
+Two denominators (Sprint 40 P1, owner Decision 2 = A)
+-----------------------------------------------------
+``--corpus current`` (the default) covers every model the DB classifies convex.
+``--corpus continuity`` drops the models listed in ``data/corpus_admissions.json``,
+so the 142-model series continues after licensed models are admitted by rule.
+Both come from :func:`compute_kpis` -- neither is a hand count -- and a headline
+reports both in one sentence. With no admissions the two are identical.
 """
 
 from __future__ import annotations
@@ -40,8 +48,22 @@ from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATABASE_PATH = PROJECT_ROOT / "data" / "gamslib" / "gamslib_status.json"
+ADMISSIONS_PATH = PROJECT_ROOT / "data" / "corpus_admissions.json"
 
 #: Convexity statuses that put a model in the candidate corpus the KPIs cover.
+#:
+#: ⚠ THE KPI CORPUS IS NOT THE PIPELINE'S RUN SET, AND THE DIFFERENCE IS PINNED
+#: (Sprint 40 P1, Prep Task 6 side finding). This selects on convexity ALONE, so
+#: it counts `danwolfe` and `decomp`, convex LPs whose `pipeline_status` is
+#: `skipped` (`multi_solve_driver_out_of_scope`). `batch_parse.get_candidate_models`
+#: honours that skip, so it runs 140 while this reports 142. Both models parse and
+#: never translate, so they sit in the Parse numerator and in every denominator.
+#: Kept DELIBERATELY, for series continuity: the 142 headline has always included
+#: them. Re-basing to 140 would move every headline rate mid-series, and that is a
+#: reporting decision for the owner, not a side effect of tidying a reader.
+#: (PROJECT_PLAN footnote 4 describes them as excluded; the computed series never
+#: did exclude them.) `tests/unit/sprint_audit/test_kpi_corpus.py` pins the
+#: difference to exactly these two ids, so a third cannot drift in unnoticed.
 CONVEX_STATUSES = frozenset({"verified_convex", "likely_convex"})
 
 #: Outcome categories that count as a solve (the presolve retry counts too).
@@ -102,14 +124,43 @@ def _compare(model: dict[str, Any]) -> str | None:
     return (model.get("solution_comparison") or {}).get("comparison_status")
 
 
-def compute_kpis(db: dict[str, Any]) -> dict[str, Any]:
+def load_admissions(path: Path | None = None) -> frozenset[str]:
+    """Model ids admitted to the corpus by rule (``data/corpus_admissions.json``).
+
+    An absent file means no admissions (pre-Sprint-40 checkouts). A malformed
+    one RAISES: silently treating it as empty would make ``continuity`` equal
+    ``current`` while claiming otherwise.
+    """
+    target = path if path is not None else ADMISSIONS_PATH
+    if not target.exists():
+        return frozenset()
+    data = json.loads(target.read_text())
+    entries = data.get("admissions")
+    if not isinstance(entries, list) or not all(
+        isinstance(e, dict) and isinstance(e.get("model_id"), str) and e["model_id"]
+        for e in entries
+    ):
+        raise ValueError(f"{target}: 'admissions' must be a list of objects with a model_id")
+    return frozenset(e["model_id"] for e in entries)
+
+
+def compute_kpis(db: dict[str, Any], exclude: frozenset[str] = frozenset()) -> dict[str, Any]:
     """Derive the KPI block from a loaded results DB.
 
     Pure: takes the parsed DB, returns the figures. Keyed on ``model_id`` — never
     ``model_name``, which holds the human description.
+
+    ``exclude`` drops those model ids from the CANDIDATE corpus (the continuity
+    corpus passes the admitted ids). It never touches ``all_219_match`` /
+    ``total_models``, which are computed over every model.
     """
     models = db.get("models", [])
-    candidates = [m for m in models if (m.get("convexity") or {}).get("status") in CONVEX_STATUSES]
+    candidates = [
+        m
+        for m in models
+        if (m.get("convexity") or {}).get("status") in CONVEX_STATUSES
+        and m.get("model_id") not in exclude
+    ]
 
     cold_match = sum(
         1 for m in candidates if _compare(m) == "match" and _outcome(m) == "model_optimal"
@@ -144,6 +195,20 @@ def compute_kpis(db: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _corpus_label(k: dict[str, Any]) -> str:
+    """Which corpus the block covers, when the caller said (``--corpus``).
+
+    Once a model is admitted, an unlabelled block is ambiguous between the two
+    denominators, which is exactly the confusion Decision 2's rule exists to
+    prevent.
+    """
+    if "corpus" not in k:
+        return ""
+    return (
+        f" · corpus {k['corpus']} ({k['candidates']} candidates, {k.get('admitted', 0)} admitted)"
+    )
+
+
 def _render_markdown(k: dict[str, Any], sha: str, dirty: bool) -> str:
     rows = [
         ("convex candidates", k["candidates"]),
@@ -159,7 +224,7 @@ def _render_markdown(k: dict[str, Any], sha: str, dirty: bool) -> str:
         ("path_solve_license", k["path_solve_license"]),
         (f"all-{k['total_models']} Match", k["all_219_match"]),
     ]
-    out = [f"**KPI block — derived at `{sha}`**", ""]
+    out = [f"**KPI block — derived at `{sha}`{_corpus_label(k)}**", ""]
     if dirty:
         out.append(
             "> ⚠ **The results DB has uncommitted changes.** These figures are NOT "
@@ -179,12 +244,24 @@ def _render_markdown(k: dict[str, Any], sha: str, dirty: bool) -> str:
 
 
 def _render_line(k: dict[str, Any], sha: str, dirty: bool) -> str:
+    # ⚠ With a corpus named, Solve/Match/Translate are written `N/D` (PR #1762
+    # review). `check_doc_figures.py` checks a BARE figure against the
+    # continuity corpus, so once a model is admitted a correct, verbatim
+    # `--corpus current` line would be flagged. `N/D` lets the checker match
+    # each figure to its corpus by the denominator: Solve over the translated
+    # count, Match over the corpus size, Translate over the parsed count.
+    if "corpus" in k:
+        solve = f"{k['solve']}/{k['translate']}"
+        match = f"{k['match']}/{k['candidates']}"
+        translate = f"{k['translate']}/{k['parse']}"
+    else:
+        solve, match, translate = k["solve"], k["match"], k["translate"]
     line = (
-        f"Solve {k['solve']} · Match {k['match']} "
+        f"Solve {solve} · Match {match} "
         f"({k['match_cold']} cold + {k['match_presolve']} presolve) · "
-        f"Translate {k['translate']} · mi {k['model_infeasible']} · "
+        f"Translate {translate} · mi {k['model_infeasible']} · "
         f"pse {k['path_syntax_error']} · all-{k['total_models']} {k['all_219_match']} "
-        f"— derived at {sha}"
+        f"— derived at {sha}{_corpus_label(k)}"
     )
     return line + ("  [WARNING: DB has uncommitted changes]" if dirty else "")
 
@@ -205,6 +282,16 @@ def main() -> int:
         default=str(DATABASE_PATH),
         help="path to the results DB (default: data/gamslib/gamslib_status.json)",
     )
+    ap.add_argument(
+        "--corpus",
+        choices=("current", "continuity"),
+        default="current",
+        help=(
+            "current = every model the DB classifies convex (default); continuity = "
+            "current minus the ids in data/corpus_admissions.json (the 142 series)"
+        ),
+    )
+    ap.add_argument("--admissions", default=str(ADMISSIONS_PATH), help=argparse.SUPPRESS)
     args = ap.parse_args()
 
     db_path = Path(args.db)
@@ -217,7 +304,15 @@ def main() -> int:
         print(f"ERROR: could not read results DB at {db_path}: {exc}", file=sys.stderr)
         return 2
 
-    kpis = compute_kpis(db)
+    try:
+        admitted = load_admissions(Path(args.admissions))
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        print(f"ERROR: could not read corpus admissions: {exc}", file=sys.stderr)
+        return 2
+    exclude = admitted if args.corpus == "continuity" else frozenset()
+    kpis = compute_kpis(db, exclude=exclude)
+    kpis["corpus"] = args.corpus
+    kpis["admitted"] = len(admitted)
     sha = _measured_at()
     dirty = _dirty_db(db_path)
 

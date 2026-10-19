@@ -1,0 +1,131 @@
+name: licensed-solve
+
+# Sprint 40 P1 -- the TRUSTED licensed tier (docs/planning/EPIC_4/SPRINT_40/
+# CI_LICENSE_DESIGN.md §3; owner Decision 3 = B, hosted, unblocked 2026-10-14 by
+# "the access code can be activated on every CI run").
+#
+# ⚠ ISOLATION, NOT DETECTION, IS THE CONTROL:
+#   * No PR trigger of any kind -- in particular NEVER `pull_request_target`
+#     (base-repo secrets + PR-head code = the standard exfiltration pattern).
+#   * The secret lives ONLY in the `gams-licensed` environment, whose
+#     deployment-branch policy admits `main` alone. A dispatch from any other
+#     ref (or a branch carrying its own copy of this file) is refused before the
+#     job starts -- verified in a throwaway repository (§4).
+#   * Every GAMS byte goes to files under $RUNNER_TEMP/out; the log gets only
+#     an edition classification and a status summary derived from those files.
+#     Masking and the in-job scan are defence in depth for VERBATIM secret lines
+#     only; capture-and-classify ORDERING is what keeps reformatted header text
+#     (licensee/node fields) out. Nothing is uploaded.
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: licensed-solve
+  cancel-in-progress: false
+
+jobs:
+  licensed:
+    runs-on: ubuntu-latest
+    environment: gams-licensed
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install GAMS
+        env:
+          # Same pinned installer + SHA-256 guard as the PR workflows.
+          GAMS_INSTALLER_URL: "https://d37drm4t2jghv5.cloudfront.net/distributions/54.2.1/linux/linux_x64_64_sfx.exe"
+          GAMS_INSTALLER_SHA256: "47ff12dc51426a916a34e77c90fe5c20c3d10867c8dc1667ffa8b9c4d8d7096f"
+        run: |
+          curl -fSL -o /tmp/gams-installer.exe "$GAMS_INSTALLER_URL"
+          ACTUAL_SHA256=$(sha256sum /tmp/gams-installer.exe | awk '{print $1}')
+          echo "Actual SHA256 of downloaded installer: $ACTUAL_SHA256"
+          echo "Pinned SHA256 in workflow:             $GAMS_INSTALLER_SHA256"
+          if [ "$ACTUAL_SHA256" != "$GAMS_INSTALLER_SHA256" ]; then
+            echo "::error::GAMS installer SHA256 mismatch"; exit 1
+          fi
+          chmod +x /tmp/gams-installer.exe
+          mkdir -p "$HOME/gams"
+          /tmp/gams-installer.exe -q -d "$HOME/gams" >/dev/null
+          GAMS_DIR=$(ls -dt "$HOME"/gams/gams*_linux_x64_64_sfx 2>/dev/null | head -1)
+          if [ -z "$GAMS_DIR" ]; then echo "::error::GAMS install dir not found"; exit 1; fi
+          echo "$GAMS_DIR" >> "$GITHUB_PATH"
+          # Persist for later steps: a shell variable does NOT survive a step,
+          # and without this the license and cleanup steps would target
+          # /gamslice.txt.
+          echo "GAMS_DIR=$GAMS_DIR" >> "$GITHUB_ENV"
+
+      - name: Activate license from the access code (masked, never echoed)
+        env:
+          GAMS_ACCESS_CODE: ${{ secrets.GAMS_ACCESS_CODE }}
+        run: |
+          [ -n "$GAMS_ACCESS_CODE" ] || { echo "::error::GAMS_ACCESS_CODE is empty (environment secret missing?)"; exit 1; }
+          echo "::add-mask::$GAMS_ACCESS_CODE"
+          [ -x "$GAMS_DIR/gamsgetkey" ] || { echo "::error::gamsgetkey not found in the GAMS install"; exit 1; }
+          umask 077
+          # Never -v: verbose diagnostics could echo the request. Never
+          # -c/--checkout-duration: a checked-out network license cannot be
+          # returned early.
+          "$GAMS_DIR/gamsgetkey" "$GAMS_ACCESS_CODE" -o "$GAMS_DIR/gamslice.txt" >/dev/null 2>&1 \
+            || { echo "::error::license activation failed"; exit 1; }
+          while IFS= read -r l; do [ -n "$l" ] && echo "::add-mask::$l"; done < "$GAMS_DIR/gamslice.txt"
+          # The ONE pattern file, at a fixed path. It holds the access code AND
+          # the license lines, so it is a secret copy: the cleanup step removes it.
+          { printf '%s\n' "$GAMS_ACCESS_CODE"; grep -v '^[[:space:]]*$' "$GAMS_DIR/gamslice.txt"; } \
+            > "$RUNNER_TEMP/lic-patterns.txt"
+
+      - name: Edition check (classification only -- never raw audit output)
+        run: python3 scripts/ci/gams_edition.py --gams "$GAMS_DIR/gams" --require licensed
+
+      - name: Licensed solves (listings stay on the runner; summary only)
+        run: |
+          python3 scripts/ci/run_licensed_solves.py \
+            --out "$RUNNER_TEMP/out/listings" \
+            --summary "$RUNNER_TEMP/out/summary.json"
+
+      - name: Scan what this job reports (gate)
+        if: always()
+        run: |
+          # scan_local: QUIET fixed-string match, so nothing it matches is ever
+          # printed. `|| rc=$?` (not `; rc=$?`): bash -e would end the step on a
+          # clean scan's exit 1 before rc is captured.
+          scan_local() { rc=0; grep -rqF -f "$RUNNER_TEMP/lic-patterns.txt" -- "$@" >/dev/null 2>&1 || rc=$?; return 0; }
+          if [ ! -s "$RUNNER_TEMP/lic-patterns.txt" ]; then
+            echo "no pattern file (activation did not run) -- nothing to scan"; exit 0
+          fi
+          # Positive control: the scan must HIT the license file itself.
+          scan_local "$GAMS_DIR/gamslice.txt"
+          [ "$rc" -eq 0 ] || { echo "::error::scan positive control failed (rc=$rc): the scan cannot see license text"; exit 1; }
+          echo "scan positive control: hit (as required)"
+          # The report: the summary is the only thing this job prints from GAMS
+          # results. The listings under out/listings are NOT reported and NOT
+          # uploaded, because they carry the header by design.
+          if [ -f "$RUNNER_TEMP/out/summary.json" ]; then
+            scan_local "$RUNNER_TEMP/out/summary.json"
+            case "$rc" in
+              1) echo "summary: no license text" ;;
+              0) echo "::error::license text found in the summary"; exit 1 ;;
+              *) echo "::error::scan error (rc=$rc) -- failing closed"; exit 1 ;;
+            esac
+          fi
+
+      - name: Remove the license (always)
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/lic-patterns.txt"
+          rm -rf "$RUNNER_TEMP/out"
+          [ -n "${GAMS_DIR:-}" ] || { echo "::warning::GAMS_DIR unset -- install failed before persisting it"; exit 0; }
+          rm -f "$GAMS_DIR/gamslice.txt"

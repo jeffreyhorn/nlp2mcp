@@ -21,6 +21,17 @@ non-zero on divergence. It never computes a floor from the DB, and there is no
 flag that makes it do so — that path is the one that produces 65 and looks
 authoritative.
 
+**The license-unlocked ledger (Sprint 40 P1, owner Decision 1 = B).** A cold
+match that exists only because the full license replaced the demo (the emit
+never changed) is NOT genuine. It is recorded in the provenance file's
+``license_unlocked`` list and reported BESIDE the floor, never in it:
+
+    floor 75 (+k license-unlocked, not counted)
+
+The ledger takes COLD matches only (``limb: license-unlocked-cold-match``); a
+presolve-only match stays under the existing rule and never enters it. A model
+may not be in both the floor and the ledger.
+
     python scripts/sprint_audit/floor_tracker.py            # report + assert
     python scripts/sprint_audit/floor_tracker.py --json     # machine-readable
     python scripts/sprint_audit/floor_tracker.py --show-mechanical
@@ -40,6 +51,10 @@ PROVENANCE_PATH = PROJECT_ROOT / "data" / "floor_provenance.json"
 DATABASE_PATH = PROJECT_ROOT / "data" / "gamslib" / "gamslib_status.json"
 
 CONVEX_STATUSES = frozenset({"verified_convex", "likely_convex"})
+
+#: The only limb the non-counting ledger accepts: COLD matches. A presolve-only
+#: match of an unlocked model stays under the existing rule (Decision 1).
+LEDGER_LIMB = "license-unlocked-cold-match"
 
 
 def _measured_at() -> str:
@@ -66,6 +81,18 @@ def compute_floor(provenance: dict[str, Any]) -> int:
     if not isinstance(entries, list):
         raise ValueError("floor provenance: entries is missing or not a list")
     return count + len(entries)
+
+
+def license_unlocked(provenance: dict[str, Any]) -> list[dict[str, Any]]:
+    """The non-counting ledger. Absent means empty (pre-Sprint-40 files).
+
+    ⚠ Deliberately NOT part of :func:`compute_floor`: the floor is
+    ``baseline + entries`` and nothing else, so these never move it.
+    """
+    ledger = provenance.get("license_unlocked", [])
+    if not isinstance(ledger, list):
+        raise ValueError("floor provenance: license_unlocked is not a list")
+    return ledger
 
 
 def mechanical_count(db: dict[str, Any]) -> int:
@@ -119,6 +146,34 @@ def validate_entries(provenance: dict[str, Any]) -> list[str]:
                 f"inflates the floor silently"
             )
         seen.add(key)
+
+    counted = {
+        str(e.get("model_id")) for e in provenance.get("entries") or [] if isinstance(e, dict)
+    }
+    seen_ledger: set[str] = set()
+    ledger = provenance.get("license_unlocked", [])
+    for i, entry in enumerate(ledger if isinstance(ledger, list) else []):
+        if not isinstance(entry, dict):
+            problems.append(f"license_unlocked {i}: not an object")
+            continue
+        mid = str(entry.get("model_id"))
+        for field in required:
+            if not entry.get(field):
+                problems.append(f"license_unlocked {i} ({mid}): missing {field!r}")
+        if entry.get("limb") != LEDGER_LIMB:
+            problems.append(
+                f"license_unlocked {i} ({mid}): limb {entry.get('limb')!r} is not "
+                f"{LEDGER_LIMB!r}. The ledger takes COLD matches only; a presolve-only "
+                f"match stays under the existing rule"
+            )
+        if mid in counted:
+            problems.append(
+                f"license_unlocked {i} ({mid}): also an `entries` item. A model is either "
+                f"fix-driven genuine (counted) or license-unlocked (not counted), never both"
+            )
+        if mid in seen_ledger:
+            problems.append(f"license_unlocked {i} ({mid}): duplicate")
+        seen_ledger.add(mid)
     return problems
 
 
@@ -148,6 +203,7 @@ def main() -> int:
 
     try:
         floor = compute_floor(provenance)
+        ledger = license_unlocked(provenance)
     except ValueError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
@@ -180,6 +236,7 @@ def main() -> int:
                     "baseline_count": baseline.get("count"),
                     "baseline_as_of": baseline.get("as_of"),
                     "entries": len(entries),
+                    "license_unlocked_not_counted": len(ledger),
                     "diverged": diverged,
                     "problems": problems,
                     "mechanical_count_NOT_the_floor": mech,
@@ -189,7 +246,10 @@ def main() -> int:
             )
         )
     else:
-        print(f"Genuine floor: {floor}   (derived at {sha})")
+        print(
+            f"Genuine floor: {floor} (+{len(ledger)} license-unlocked, not counted)"
+            f"   (derived at {sha})"
+        )
         print(
             f"  = baseline {baseline.get('count')} (as of {baseline.get('as_of')}) "
             f"+ {len(entries)} recorded movement(s)"
@@ -199,6 +259,12 @@ def main() -> int:
                 f"    + {entry.get('model_id')} [{entry.get('limb')}] "
                 f"S{entry.get('since_sprint')} — {entry.get('evidence')}"
             )
+        for entry in ledger:
+            if isinstance(entry, dict):
+                print(
+                    f"    · {entry.get('model_id')} [{entry.get('limb')}] "
+                    f"S{entry.get('since_sprint')} — NOT COUNTED — {entry.get('evidence')}"
+                )
         if mech is not None:
             print(
                 f"  DB mechanical count: {mech}  <-- NOT the floor. The "

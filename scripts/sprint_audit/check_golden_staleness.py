@@ -211,6 +211,16 @@ def main() -> int:
         help="under --expect-drift, do not fail on timed-out (unverified) goldens",
     )
     ap.add_argument(
+        "--fail-on-unverified",
+        dest="fail_on_unverified",
+        action="store_true",
+        help=(
+            "plain sweep: exit 3 (not 0) when any golden TIMED OUT. Contention shows "
+            "up as timeouts, not as a smaller scope, so --min-scope alone passes a "
+            "contended run (Sprint 40 P10c). `make check-goldens` passes it; CI does not."
+        ),
+    )
+    ap.add_argument(
         "--min-scope",
         dest="min_scope",
         type=int,
@@ -263,9 +273,11 @@ def main() -> int:
         have = {mid for (mid, _pre, _gp) in goldens}
         missing = sorted(
             {
-                p.name[: -len("_mcp_presolve.gms")]
-                if p.name.endswith("_mcp_presolve.gms")
-                else p.name[: -len("_mcp.gms")]
+                (
+                    p.name[: -len("_mcp_presolve.gms")]
+                    if p.name.endswith("_mcp_presolve.gms")
+                    else p.name[: -len("_mcp.gms")]
+                )
                 for p in MCP_DIR.glob("*_mcp*.gms")
             }
             - have
@@ -294,9 +306,7 @@ def main() -> int:
         # Under --expect-drift, --fix refreshes ONLY the expected models: an
         # unexpected drift is a leak to be surfaced, never a golden to rewrite.
         futs = {
-            ex.submit(
-                check_one, mid, pre, gp, args.fix and (not expected or mid in expected)
-            ): mid
+            ex.submit(check_one, mid, pre, gp, args.fix and (not expected or mid in expected)): mid
             for (mid, pre, gp) in in_scope
         }
         for fut in concurrent.futures.as_completed(futs):
@@ -472,7 +482,30 @@ def main() -> int:
             return 0
         return 1
 
+    def strict_unverified() -> bool:
+        """Sprint 40 P10c (PROCESS_AND_SMALL_ITEMS.md §10c): under
+        --fail-on-unverified, ANY timeout turns a would-be pass into rc 3.
+
+        Without it, a contended run reported success over FEWER models than the
+        scope, at rc 0. That is the Sprint 39 incident: 2 timeouts (184 of 186),
+        which `--min-scope` cannot see, because contention does not shrink the
+        DISCOVERED count. It is checked on EVERY success path of the plain sweep,
+        `--fix` included: there, refreshed goldens fill `drifted`, so a check
+        kept only on the all-clean path was skipped (PR #1762 review).
+        """
+        if not (timed_out and args.fail_on_unverified):
+            return False
+        print(
+            f"  UNVERIFIED: {len(timed_out)} golden(s) timed out, so the sweep "
+            f"covered {len(results) - len(timed_out)} of {len(results)} in-scope "
+            f"goldens. NOT a pass. Re-run the leak gate ALONE (nothing else using "
+            f"the machine)."
+        )
+        return True
+
     if not drifted and not failed:
+        if strict_unverified():
+            return 3
         print(
             "  All in-scope goldens clean"
             + (f" ({len(timed_out)} slow-emit timeout(s), unverified)." if timed_out else ".")
@@ -485,7 +518,9 @@ def main() -> int:
         for r in drifted:
             print(f"    {r['status'].upper()}: {r['golden']} ({r.get('delta_bytes', 0):+d} bytes)")
         # A nondeterministic emit is a hard failure even under --fix.
-        return 1 if failed else 0
+        if failed:
+            return 1
+        return 3 if strict_unverified() else 0
 
     print(f"  {len(drifted)} golden(s) drifted from the current emit:")
     for r in drifted:
