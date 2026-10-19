@@ -244,10 +244,22 @@ def _render_markdown(k: dict[str, Any], sha: str, dirty: bool) -> str:
 
 
 def _render_line(k: dict[str, Any], sha: str, dirty: bool) -> str:
+    # ⚠ With a corpus named, Solve/Match/Translate are written `N/D` (PR #1762
+    # review). `check_doc_figures.py` checks a BARE figure against the
+    # continuity corpus, so once a model is admitted a correct, verbatim
+    # `--corpus current` line would be flagged. `N/D` lets the checker match
+    # each figure to its corpus by the denominator: Solve over the translated
+    # count, Match over the corpus size, Translate over the parsed count.
+    if "corpus" in k:
+        solve = f"{k['solve']}/{k['translate']}"
+        match = f"{k['match']}/{k['candidates']}"
+        translate = f"{k['translate']}/{k['parse']}"
+    else:
+        solve, match, translate = k["solve"], k["match"], k["translate"]
     line = (
-        f"Solve {k['solve']} · Match {k['match']} "
+        f"Solve {solve} · Match {match} "
         f"({k['match_cold']} cold + {k['match_presolve']} presolve) · "
-        f"Translate {k['translate']} · mi {k['model_infeasible']} · "
+        f"Translate {translate} · mi {k['model_infeasible']} · "
         f"pse {k['path_syntax_error']} · all-{k['total_models']} {k['all_219_match']} "
         f"— derived at {sha}{_corpus_label(k)}"
     )

@@ -151,3 +151,53 @@ def test_licensed_solves_FAIL_when_the_run_was_the_demo(tmp_path, capsys) -> Non
     rc, out, _ = _licensed_run(tmp_path, HEADER + REFUSAL, capsys)
     assert rc == 1
     assert "not run under the licensed edition: trnsport" in out
+
+
+# ------------------------------------- stale listings (PR #1762 review)
+
+
+def test_licensed_solves_never_classify_a_stale_listing(tmp_path, capsys) -> None:
+    """A reused --out holds the PREVIOUS licensed listing. If GAMS then fails to
+    start, the stale file must not be read as this run's result."""
+    targets = tmp_path / "t.txt"
+    targets.write_text("trnsport\n")
+    stale = tmp_path / "out" / "trnsport" / "trnsport_mcp.lst"
+    stale.parent.mkdir(parents=True)
+    stale.write_text(HEADER + LICENSEE + "\n" + SOLVED)
+    mcp = tmp_path / "data" / "gamslib" / "mcp" / "trnsport_mcp.gms"
+    mcp.parent.mkdir(parents=True)
+    mcp.write_text("* golden\n")
+    with (
+        patch.object(rls, "PROJECT_ROOT", tmp_path),
+        patch.object(rls.subprocess, "run", side_effect=FileNotFoundError()),
+    ):
+        rc = rls.main(
+            [
+                "--targets",
+                str(targets),
+                "--out",
+                str(tmp_path / "out"),
+                "--summary",
+                str(tmp_path / "s.json"),
+            ]
+        )
+    assert rc == 1, "a run that produced no listing is not a licensed run"
+    assert json.loads((tmp_path / "s.json").read_text())["results"][0]["edition"] == "unknown"
+
+
+def test_pr19_never_reads_a_stale_refusal(tmp_path) -> None:
+    """Same defect in run_pr19_solves.py: a persisted --scratch-base must not make a
+    GAMS that never ran look like a demo refusal."""
+    mcp = tmp_path / "data" / "gamslib" / "mcp" / "egypt_mcp.gms"
+    mcp.parent.mkdir(parents=True)
+    mcp.write_text("* golden\n")
+    stale = tmp_path / "scratch" / "egypt" / "egypt_mcp.lst"
+    stale.parent.mkdir(parents=True)
+    stale.write_text(HEADER + REFUSAL)
+    # GAMS RUNS but writes no listing. (A missing executable returns before the
+    # listing is read, so it cannot exercise this; the first version of this
+    # test used it and stayed green with the fix reverted.)
+    with patch.object(pr19.subprocess, "run", return_value=MagicMock(returncode=3)):
+        r = pr19._solve_one("egypt", tmp_path, tmp_path / "scratch", 30)
+    assert "skipped" not in r, "a stale refusal must not be reported as this run's"
+    assert r["model_status"] == "n/a (no lst)"

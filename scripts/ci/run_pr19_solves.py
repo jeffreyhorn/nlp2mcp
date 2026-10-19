@@ -91,6 +91,11 @@ def _solve_one(model: str, repo_root: Path, scratch_base: Path, reslim: int) -> 
     scratch_dir = scratch_base / model
     scratch_dir.mkdir(parents=True, exist_ok=True)
     lst_path = scratch_dir / f"{model}_mcp.lst"
+    # Never let a previous run's listing answer for this one (PR #1762 review,
+    # the same defect as run_licensed_solves.py). --scratch-base is persisted,
+    # so a GAMS that failed to write would otherwise leave an OLD listing to be
+    # read as this run's status, or as a demo refusal it never made.
+    lst_path.unlink(missing_ok=True)
     if not mcp_path.is_file():
         return {
             "model": model,

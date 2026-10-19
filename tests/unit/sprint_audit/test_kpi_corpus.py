@@ -124,3 +124,52 @@ def test_the_kpi_corpus_and_the_pipeline_run_set_differ_by_exactly_two_named_mod
     for mid in ("danwolfe", "decomp"):
         row = next(m for m in DB["models"] if m["model_id"] == mid)
         assert row["pipeline_status"]["reason"] == "multi_solve_driver_out_of_scope"
+
+
+def test_the_current_corpus_line_passes_the_doc_figure_checker_after_an_admission(tmp_path) -> None:
+    """PR #1762 review: a BARE figure is checked against continuity, so once a model
+    is admitted a correct `--corpus current` line must carry `N/D` to be matched to
+    its own corpus. Both lines, rendered from one admitted scratch DB, must pass."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "cdf_for_kpi", PROJECT_ROOT / "scripts" / "sprint_audit" / "check_doc_figures.py"
+    )
+    assert spec and spec.loader
+    cdf = importlib.util.module_from_spec(spec)
+    # Registered BEFORE exec: the module defines dataclasses, which resolve their
+    # own module through sys.modules.
+    sys.modules["cdf_for_kpi"] = cdf
+    try:
+        spec.loader.exec_module(cdf)
+    except BaseException:
+        sys.modules.pop("cdf_for_kpi", None)
+        raise
+
+    db, mid = _admit_one(DB)
+    # Make the admitted model ADD to the numerators, so the corpora really differ.
+    row = next(m for m in db["models"] if m["model_id"] == mid)
+    row["nlp2mcp_parse"] = {"status": "success"}
+    row["nlp2mcp_translate"] = {"status": "success"}
+    row["mcp_solve"] = {"status": "success", "outcome_category": "model_optimal"}
+    row["solution_comparison"] = {"comparison_status": "match"}
+    blocks = {"continuity": compute_kpis(db, exclude=frozenset({mid})), "current": compute_kpis(db)}
+    assert blocks["current"]["match"] == blocks["continuity"]["match"] + 1
+
+    truths: dict = {"Match": blocks["continuity"]["match"], "Solve": blocks["continuity"]["solve"],
+                    "Translate": blocks["continuity"]["translate"]}  # fmt: skip
+    key = {"Match": "match", "Translate": "translate", "Solve": "solve"}
+    for fact, den in cdf._DENOMINATOR_OF.items():
+        for corpus, k in blocks.items():
+            truths[f"{fact}|{corpus}"] = k[key[fact]]
+            truths[f"{fact}|{corpus}|den"] = k[den]
+
+    sys.path.insert(0, str(PROJECT_ROOT / "scripts" / "sprint_audit"))
+    try:
+        from kpi_block import _render_line
+    finally:
+        sys.path.pop(0)
+    for corpus, k in blocks.items():
+        line = _render_line({**k, "corpus": corpus, "admitted": 1}, "abc1234", dirty=False)
+        findings, reason = cdf.scan_line(Path("x.md"), 1, line, truths)
+        assert reason is None and findings == [], (corpus, line, findings)

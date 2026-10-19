@@ -64,6 +64,10 @@ def solve_one(model: str, repo_root: Path, out: Path, reslim: int) -> dict:
     work = out / model
     work.mkdir(parents=True, exist_ok=True)
     lst = work / f"{model}_mcp.lst"
+    # Never let a previous run's listing answer for this one (PR #1762 review).
+    # With --out reused, a GAMS that failed to start would leave the OLD
+    # licensed listing in place, and it would be classified as this run's.
+    lst.unlink(missing_ok=True)
     start = time.monotonic()
     rc: int
     error: str | None = None

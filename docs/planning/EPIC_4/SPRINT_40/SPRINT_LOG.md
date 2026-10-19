@@ -217,6 +217,13 @@ Specification: `SCHEMA_3_1_0_DESIGN.md`.
   - the first `gams_edition` mutant was malformed and leaked nothing, so it proved nothing. It was replaced by one that prints the listing.
 - **Knock-on:** the procdir invariant now covers the two new GAMS launchers (`gams_edition.classify`, `run_licensed_solves.solve_one`), and both pass it.
 
+### PR #1762 review round 1
+
+- **Stale listings:** `run_licensed_solves.py` **and** `run_pr19_solves.py` (the same defect, found by sweeping for it) now delete the model's listing before GAMS starts. A reused `--out` / persisted `--scratch-base` can no longer have an OLD listing classified as this run's result.
+- **`--fix --fail-on-unverified`** returned 0 when one golden was refreshed and another timed out. The strict check now guards **every** success path of the plain sweep.
+- **`kpi_block.py --format line`** writes Solve/Match/Translate as `N/D` when a corpus is named. Otherwise a correct `--corpus current` line would be checked as continuity and flagged after the first admission.
+- **Each fix has a revert control, all caught.** The first PR19 stale-listing test was **vacuous**: a missing GAMS returns before the listing is read, so it stayed green with the fix reverted. It now uses the real hazard, GAMS running without writing a listing.
+
 ### Gate
 
 `make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,551 passed**, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs created. That was at a load average of about 35 at start, rising to about 134 by the end, with no timeouts.

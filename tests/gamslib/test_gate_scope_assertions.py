@@ -537,3 +537,30 @@ class TestLeakGateFailsOnUnverified:
         assert "git ls-files 'data/gamslib/mcp/*.gms'" in recipe
         assert '--min-scope "$$MIN_SCOPE"' in recipe
         assert "--fail-on-unverified" in recipe
+
+
+class TestFailOnUnverifiedUnderFix:
+    """PR #1762 review: under `--fix`, a refreshed golden fills `drifted`, so a strict
+    check kept only on the all-clean path was skipped and the run returned 0."""
+
+    def test_fix_with_a_timeout_still_returns_3(self, monkeypatch, capsys):
+        import scripts.sprint_audit.check_golden_staleness as g
+
+        goldens = [(m, False, Path(f"data/gamslib/mcp/{m}_mcp.gms")) for m in ("ganges", "abel")]
+        monkeypatch.setattr(g, "discover_goldens", lambda: goldens)
+        monkeypatch.setattr(g, "load_allowlist", lambda: set())
+        monkeypatch.setattr(
+            g,
+            "check_one",
+            lambda mid, pre, gp, fix: {
+                "model": mid,
+                "golden": str(gp),
+                "status": "timeout" if mid == "ganges" else "fixed",
+                "delta_bytes": 0,
+            },
+        )
+        monkeypatch.setattr(sys, "argv", ["x", "--fix", "--fail-on-unverified"])
+        assert g.main() == 3
+        assert "NOT a pass" in capsys.readouterr().out
+        monkeypatch.setattr(sys, "argv", ["x", "--fix"])
+        assert g.main() == 0, "without the flag, --fix keeps its old behaviour"
