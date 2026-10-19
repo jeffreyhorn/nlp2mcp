@@ -1029,13 +1029,13 @@ def test_a_bare_figure_is_checked_against_continuity() -> None:
 
 
 def test_the_live_truths_carry_both_corpora_and_agree_today() -> None:
-    """No admissions yet: both corpora are the same 142, so the pairs agree."""
+    """No admissions yet: both corpora are the same 140, so the pairs agree."""
     cdf._kpis.cache_clear()
     cdf._kpis_current.cache_clear()
     truths = cdf.derive_truths()
     for fact in ("Match", "Translate", "Solve"):
         assert truths[f"{fact}|continuity"] == truths[f"{fact}|current"] == truths[fact]
-    assert truths["Match|continuity|den"] == truths["Match|current|den"] == 142
+    assert truths["Match|continuity|den"] == truths["Match|current|den"] == 140
 
 
 def test_a_bare_figure_follows_CONTINUITY_once_a_model_is_admitted(monkeypatch) -> None:

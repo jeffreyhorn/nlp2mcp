@@ -1,9 +1,11 @@
 """``kpi_block.py --corpus continuity|current`` (Sprint 40 P1, owner Decision 2 = A).
 
-Admission is by rule, so the 142 denominator would otherwise grow silently with
-the first licensed convexity run (Prep Task 6: 142 -> 143 on a scratch DB). Both
-denominators must derive mechanically from one function, and ``continuity`` must
-stay the 142 series however many models are admitted.
+Admission is by rule, so the candidate denominator would otherwise grow silently
+with the first licensed convexity run (Prep Task 6: 142 -> 143 on a scratch DB).
+Both denominators must derive mechanically from one function, and ``continuity``
+must stay the base series however many models are admitted. The base is **140**
+since the owner's Sprint 40 re-base (2026-10-19): the corpus rule is convex AND
+not ``pipeline_status: skipped``, applied identically by all three readers.
 """
 
 from __future__ import annotations
@@ -26,12 +28,12 @@ DB = json.loads((PROJECT_ROOT / "data" / "gamslib" / "gamslib_status.json").read
 
 
 def test_continuity_equals_current_on_todays_db() -> None:
-    """No admissions yet, so the two corpora are the same 142 (Decision 2's own test)."""
+    """No admissions yet, so the two corpora are the same 140 (Decision 2's own test)."""
     admitted = load_admissions()
     assert admitted == frozenset()
     current, continuity = compute_kpis(DB), compute_kpis(DB, exclude=admitted)
     assert current == continuity
-    assert current["candidates"] == 142
+    assert current["candidates"] == 140
 
 
 def _admit_one(db: dict) -> tuple[dict, str]:
@@ -42,6 +44,7 @@ def _admit_one(db: dict) -> tuple[dict, str]:
         for m in db["models"]
         if (m.get("convexity") or {}).get("status") not in ("verified_convex", "likely_convex")
         and m.get("gamslib_type") in ("LP", "NLP", "QCP")
+        and (m.get("pipeline_status") or {}).get("status") != "skipped"
     )
     model["convexity"]["status"] = "likely_convex"
     return db, model["model_id"]
@@ -51,8 +54,8 @@ def test_an_admitted_model_grows_current_but_not_continuity() -> None:
     db, mid = _admit_one(DB)
     current = compute_kpis(db)
     continuity = compute_kpis(db, exclude=frozenset({mid}))
-    assert current["candidates"] == 143, "the silent growth this guards against"
-    assert continuity == compute_kpis(DB), "continuity is the unchanged 142 series"
+    assert current["candidates"] == 141, "the silent growth this guards against"
+    assert continuity == compute_kpis(DB), "continuity is the unchanged 140 series"
     assert current["all_219_match"] == continuity["all_219_match"], "never corpus-scoped"
 
 
@@ -90,12 +93,12 @@ def test_the_cli_reports_both_corpora_through_an_admissions_file(tmp_path: Path)
     con = json.loads(
         _cli("--json", "--db", str(dbf), "--admissions", str(adm), "--corpus", "continuity").stdout
     )
-    assert (cur["corpus"], cur["candidates"], cur["admitted"]) == ("current", 143, 1)
-    assert (con["corpus"], con["candidates"], con["admitted"]) == ("continuity", 142, 1)
+    assert (cur["corpus"], cur["candidates"], cur["admitted"]) == ("current", 141, 1)
+    assert (con["corpus"], con["candidates"], con["admitted"]) == ("continuity", 140, 1)
     line = _cli(
         "--format", "line", "--db", str(dbf), "--admissions", str(adm), "--corpus", "continuity"
     )
-    assert "corpus continuity (142 candidates, 1 admitted)" in line.stdout
+    assert "corpus continuity (140 candidates, 1 admitted)" in line.stdout
 
 
 def test_a_malformed_admissions_file_fails_the_cli(tmp_path: Path) -> None:
@@ -104,26 +107,39 @@ def test_a_malformed_admissions_file_fails_the_cli(tmp_path: Path) -> None:
     assert _cli("--json", "--admissions", str(adm)).returncode == 2
 
 
-def test_the_kpi_corpus_and_the_pipeline_run_set_differ_by_exactly_two_named_models() -> None:
-    """Prep Task 6 side finding, pinned BY IDENTITY: `kpi_block` (142) keeps the two
-    convex multi-solve drivers that `batch_parse` skips (140). A count would pass
-    if one of them were swapped for a third model; the set does not."""
+def test_all_three_corpus_readers_select_the_same_140_models() -> None:
+    """Owner decision, Sprint 40 (2026-10-19): re-based 142 -> 140. `kpi_block`,
+    `batch_parse` and `run_full_test` each select the corpus, and before the
+    re-base they disagreed (142 / 140 / 142). Pinned as one IDENTICAL set, not a
+    count, so a swap cannot pass, and the two out-of-scope multi-solve drivers
+    are named so their exclusion is explicit."""
     sys.path.insert(0, str(PROJECT_ROOT))
     try:
-        from scripts.gamslib.batch_parse import get_candidate_models
+        from scripts.gamslib.batch_parse import get_candidate_models as bp_candidates
+        from scripts.gamslib.run_full_test import get_candidate_models as rft_candidates
+    finally:
+        sys.path.pop(0)
+    sys.path.insert(0, str(PROJECT_ROOT / "scripts" / "sprint_audit"))
+    try:
+        import kpi_block
     finally:
         sys.path.pop(0)
     kpi_ids = {
         m["model_id"]
         for m in DB["models"]
-        if (m.get("convexity") or {}).get("status") in ("verified_convex", "likely_convex")
+        if (m.get("convexity") or {}).get("status") in kpi_block.CONVEX_STATUSES
+        and (m.get("pipeline_status") or {}).get("status") != "skipped"
     }
-    run_ids = {m["model_id"] for m in get_candidate_models(DB)}
-    assert kpi_ids - run_ids == {"danwolfe", "decomp"}
-    assert run_ids <= kpi_ids
+    assert compute_kpis(DB)["candidates"] == len(kpi_ids) == 140
+    assert {m["model_id"] for m in bp_candidates(DB)} == kpi_ids
+    assert {m["model_id"] for m in rft_candidates(DB)} == kpi_ids
     for mid in ("danwolfe", "decomp"):
         row = next(m for m in DB["models"] if m["model_id"] == mid)
         assert row["pipeline_status"]["reason"] == "multi_solve_driver_out_of_scope"
+        assert (
+            row["convexity"]["status"] == "verified_convex"
+        ), "excluded by the skip, not by convexity"
+        assert mid not in kpi_ids
 
 
 def test_the_current_corpus_line_passes_the_doc_figure_checker_after_an_admission(tmp_path) -> None:

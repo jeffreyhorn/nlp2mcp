@@ -32,7 +32,8 @@ Two denominators (Sprint 40 P1, owner Decision 2 = A)
 -----------------------------------------------------
 ``--corpus current`` (the default) covers every model the DB classifies convex.
 ``--corpus continuity`` drops the models listed in ``data/corpus_admissions.json``,
-so the 142-model series continues after licensed models are admitted by rule.
+so the continuity series (140 since the Sprint 40 re-base) continues after
+licensed models are admitted by rule.
 Both come from :func:`compute_kpis` -- neither is a hand count -- and a headline
 reports both in one sentence. With no admissions the two are identical.
 """
@@ -52,18 +53,16 @@ ADMISSIONS_PATH = PROJECT_ROOT / "data" / "corpus_admissions.json"
 
 #: Convexity statuses that put a model in the candidate corpus the KPIs cover.
 #:
-#: ⚠ THE KPI CORPUS IS NOT THE PIPELINE'S RUN SET, AND THE DIFFERENCE IS PINNED
-#: (Sprint 40 P1, Prep Task 6 side finding). This selects on convexity ALONE, so
-#: it counts `danwolfe` and `decomp`, convex LPs whose `pipeline_status` is
-#: `skipped` (`multi_solve_driver_out_of_scope`). `batch_parse.get_candidate_models`
-#: honours that skip, so it runs 140 while this reports 142. Both models parse and
-#: never translate, so they sit in the Parse numerator and in every denominator.
-#: Kept DELIBERATELY, for series continuity: the 142 headline has always included
-#: them. Re-basing to 140 would move every headline rate mid-series, and that is a
-#: reporting decision for the owner, not a side effect of tidying a reader.
-#: (PROJECT_PLAN footnote 4 describes them as excluded; the computed series never
-#: did exclude them.) `tests/unit/sprint_audit/test_kpi_corpus.py` pins the
-#: difference to exactly these two ids, so a third cannot drift in unnoticed.
+#: ⚠ CORPUS = convex AND NOT `pipeline_status: skipped` (OWNER DECISION, Sprint 40,
+#: 2026-10-19: RE-BASED 142 -> 140). The convexity filter alone used to count
+#: `danwolfe` and `decomp`, convex LP multi-solve drivers that the project
+#: declared out of scope in Sprint 24 (`multi_solve_driver_out_of_scope`) and
+#: that translation REFUSES, so they sat in every denominator as two permanent
+#: translate failures. PROJECT_PLAN footnote 4 already called them excluded; the
+#: computed corpus now agrees with it. The same rule is applied by
+#: `batch_parse.get_candidate_models` and `run_full_test.get_candidate_models`,
+#: and tests/unit/sprint_audit/test_kpi_corpus.py pins all three readers to one
+#: identical set, so they cannot drift apart again.
 CONVEX_STATUSES = frozenset({"verified_convex", "likely_convex"})
 
 #: Outcome categories that count as a solve (the presolve retry counts too).
@@ -159,6 +158,7 @@ def compute_kpis(db: dict[str, Any], exclude: frozenset[str] = frozenset()) -> d
         m
         for m in models
         if (m.get("convexity") or {}).get("status") in CONVEX_STATUSES
+        and (m.get("pipeline_status") or {}).get("status") != "skipped"
         and m.get("model_id") not in exclude
     ]
 
@@ -287,8 +287,8 @@ def main() -> int:
         choices=("current", "continuity"),
         default="current",
         help=(
-            "current = every model the DB classifies convex (default); continuity = "
-            "current minus the ids in data/corpus_admissions.json (the 142 series)"
+            "current = every in-scope model the DB classifies convex (default); continuity "
+            "= current minus the ids in data/corpus_admissions.json (the 140 series)"
         ),
     )
     ap.add_argument("--admissions", default=str(ADMISSIONS_PATH), help=argparse.SUPPRESS)

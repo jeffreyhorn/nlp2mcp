@@ -204,7 +204,7 @@ Branch `planning/sprint40-day4-routing`.
 Branch `planning/sprint40-day5-diagonal`.
 
 **P3 (1 h), close rule C4:**
-- one sentence carrying the 142 continuity figure **and** the expanded figure;
+- one sentence carrying the 140 continuity figure (re-based from 142 on 2026-10-19) **and** the expanded figure;
 - the Rolling-KPIs footnote, in the S23–S25 precedent's form.
 
 **P7 (7 h).** `ISSUE_1755` and `CORRECTNESS_PRETRACES.md` §4.

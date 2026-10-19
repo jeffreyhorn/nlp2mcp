@@ -117,6 +117,11 @@ def mechanical_count(db: dict[str, Any]) -> int:
         convexity = model.get("convexity")
         if not isinstance(convexity, dict) or convexity.get("status") not in CONVEX_STATUSES:
             continue
+        # Same corpus rule as kpi_block (Sprint 40 re-base 142 -> 140): an
+        # explicit pipeline skip is out of the corpus.
+        pipeline = model.get("pipeline_status")
+        if isinstance(pipeline, dict) and pipeline.get("status") == "skipped":
+            continue
         comparison = model.get("solution_comparison")
         if not isinstance(comparison, dict) or comparison.get("comparison_status") != "match":
             continue
