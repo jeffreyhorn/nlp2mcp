@@ -133,7 +133,7 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Install GAMS demo
+      - name: Install GAMS (demo edition)
         if: steps.check-label.outputs.skip != 'true'
         env:
           # Pin installer URL + expected SHA256. Bumping the GAMS version
@@ -181,16 +181,19 @@ jobs:
           GAMS_DIR=$(ls -dt "$HOME"/gams/gams*_linux_x64_64_sfx 2>/dev/null | head -1)  # -t: newest install first (deterministic if multiple exist)
           if [ -z "$GAMS_DIR" ]; then echo "ERROR: GAMS install dir not found under $HOME/gams"; ls -la "$HOME/gams"; exit 1; fi
           echo "$GAMS_DIR" >> $GITHUB_PATH
-          # Smoke-check the installer landed (use absolute path — `$GITHUB_PATH`
-          # only takes effect for SUBSEQUENT steps, so plain `gams` won't resolve
-          # in this same step). Use `gams audit` (canonical version+license dump
-          # that exits 0); `gams --version` parses `--version` as a positional
-          # input file on the demo and exits non-zero.
-          "$GAMS_DIR/gams" audit lo=2
+          # Smoke-check the installer landed (absolute path: `$GITHUB_PATH` only
+          # takes effect for SUBSEQUENT steps). ⚠ Sprint 40 P1: NEVER the raw
+          # `gams audit lo=2` -- that dump can carry licensee, license-ID, path
+          # and node fields, and this log is published. gams_edition.py runs a
+          # probe with all output captured and prints only `edition=...`.
+          # `--require demo` makes every PR run prove the license never reached
+          # it (CI_LICENSE_DESIGN.md §6).
+          python3 scripts/ci/gams_edition.py --gams "$GAMS_DIR/gams" --require demo
 
       - name: Verify GAMS on PATH (separate step so $GITHUB_PATH applies)
         if: steps.check-label.outputs.skip != 'true'
-        run: gams audit lo=2
+        # Edition classification only -- never raw audit output (see above).
+        run: python3 scripts/ci/gams_edition.py --require demo
 
       - name: Read target list
         # Run with `always()` so the targets JSON exists even when the upstream
@@ -277,9 +280,9 @@ jobs:
                 marker,
                 '## 🧪 PR19 Pre-Merge Solve Validation — SETUP FAILED',
                 '',
-                'Neither the Tier 0/1 hard-fail tier nor the Pattern C soft-fail tier produced results. Most common cause: the `Install GAMS demo` step failed at the SHA256 verify check (GAMS installer hash mismatch — pinned value no longer matches the upstream installer).',
+                'Neither the Tier 0/1 hard-fail tier nor the Pattern C soft-fail tier produced results. Most common cause: the `Install GAMS (demo edition)` step failed at the SHA256 verify check (GAMS installer hash mismatch — pinned value no longer matches the upstream installer).',
                 '',
-                `**Action:** check the [workflow run logs](${runUrl}) for the \`Install GAMS demo\` step — it always prints two lines, \`Actual SHA256 of downloaded installer: <hash>\` and \`Pinned SHA256 in workflow: <hash>\`. Copy the actual hash and pin it in \`.github/workflows/pr19-emit-solve-validation.yml\`'s \`GAMS_INSTALLER_SHA256\` env var.`,
+                `**Action:** check the [workflow run logs](${runUrl}) for the \`Install GAMS (demo edition)\` step — it always prints two lines, \`Actual SHA256 of downloaded installer: <hash>\` and \`Pinned SHA256 in workflow: <hash>\`. Copy the actual hash and pin it in \`.github/workflows/pr19-emit-solve-validation.yml\`'s \`GAMS_INSTALLER_SHA256\` env var.`,
                 '',
                 'If the SHA256 is already pinned correctly, see the run logs for the underlying error.',
               ].join('\n');
@@ -289,10 +292,15 @@ jobs:
               // showing both columns lets reviewers diagnose abnormal
               // PATH terminations (e.g., MODEL STATUS=1 + SOLVER STATUS=3
               // Resource Interrupt) without digging into artifacts.
+              // `skipped` = the DEMO refused the model's size (Sprint 40 P1).
+              // That is not an emit result, so it is neither ✅ nor a failure;
+              // its licensed coverage is licensed-solve.yml on `main`.
+              const verdict = (m, fail) =>
+                m.passed ? '✅' : (m.skipped ? `⏭ skipped: ${m.skipped}` : fail);
               const renderTier01Row = (m) =>
-                `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.solver_status} | ${m.passed ? '✅' : '❌'} |`;
+                `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.solver_status} | ${verdict(m, '❌')} |`;
               const renderPatternCRow = (m) =>
-                `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.solver_status} | ${m.passed ? '✅' : '⚠ expected pre-fix'} |`;
+                `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.solver_status} | ${verdict(m, '⚠ expected pre-fix')} |`;
 
               // Fallback row must occupy all 6 columns of its host table —
               // a single-cell row breaks Markdown table rendering when the

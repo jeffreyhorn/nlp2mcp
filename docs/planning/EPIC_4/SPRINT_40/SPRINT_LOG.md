@@ -99,3 +99,129 @@ Specification: `SCHEMA_3_1_0_DESIGN.md`.
 `make format`/`lint` cover only `src/` and `tests/`, so the changed `scripts/` files were also checked directly against `main`:
 - the ruff counts are unchanged, except in `verify_convexity.py`, which gains 4 `UP045`. Those are the new dataclass fields, kept in the file's existing `Optional[...]` style, which the 7 findings already on `main` share;
 - the new migration is ruff-, black- and mypy-clean.
+
+---
+
+## Day 1 — 2026-10-19 · P1: CI, the ledger and the corpus readers · 10 h · + P10c · 2 h
+
+**Branch:** `planning/sprint40-day1-ci` · **Base:** `81ab8e46` · `scripts/`, `tests/`, `data/`, `.github/` and the `Makefile` changed, so the quality gate was run (see *Gate*).
+
+**Owner action, done and verified before the work** (2026-10-18): the `gams-licensed` environment exists. Its custom branch policy is `branch:main` only, it has **no** required-reviewer rule, and `GAMS_ACCESS_CODE` is an **environment** secret. The repository-level secrets are still only the older `PYPI_API_TOKEN`.
+
+### CI: the licensed tier (`CI_LICENSE_DESIGN.md` §3)
+
+- **New `.github/workflows/licensed-solve.yml`:**
+  - triggers on `push` to `main`, `schedule` and `workflow_dispatch`, and **nothing else**: no PR trigger of any kind, never `pull_request_target`;
+  - runs in `environment: gams-licensed`;
+  - installs GAMS with the same pinned installer and SHA-256 guard;
+  - activates the license with `gamsgetkey … || exit 1`, after checking the binary exists;
+  - masks the access code and every license line.
+- **What it prints:** an **edition check** (`--require licensed`) and **licensed solves** of the targets, as a summary only. Listings stay on the runner. **Nothing is uploaded.**
+- **Scan gate:**
+  - **positive control:** the scan must hit the license file itself;
+  - it then scans the one thing the job reports, the summary, and fails closed on a scan error.
+  - The `rc` logic was exercised under `bash -e`: hit 0, clean 1, missing file 2.
+- **`always()` cleanup:** removes the license, the pattern file and the outputs.
+- **Targets** (`.github/licensed-solve-targets.txt`): the 11 MCP-gated models **by identity**, solved from their committed cold goldens (none has an `$include`). The 9 NLP-gated models join once P3 gives them goldens.
+- **`scripts/ci/run_licensed_solves.py`, run locally against all 11** (licensed, about 44 s): **all 11 `edition=licensed`**, and the summary carries no header text. Its cold outcomes match Prep Task 7:
+  - egypt, glider, robot, shale, tricp and turkey: MS 5;
+  - sroute: MS 4;
+  - ferts and tabora: rc 3;
+  - srpchase and tfordy: MS 1.
+
+  These are measurements and are not gated here; P2 owns them.
+- **The real activation test is the first run on `main` after merge.** It goes in Day 2's log.
+
+### CI: the PR side (`CI_LICENSE_DESIGN.md` §6)
+
+- **Both GAMS-installing PR workflows** (`pr19-emit-solve-validation.yml`, `presolve-divergence.yml`):
+  - the step is renamed *"Install GAMS (demo edition)"*, with the SHA-256 guard kept;
+  - **all three raw `gams audit lo=2` prints are replaced** by `scripts/ci/gams_edition.py --require demo`.
+- **`gams_edition.py`:** runs a tiny probe with **all** output (stdout, stderr, listing, process dir) captured in a temp dir, classifies it with the one shared parser, and prints only `edition=…` and the version. It is stdlib-only, because PR19 never `pip install`s. Measured locally:
+
+  | case | output | rc |
+  |---|---|---|
+  | effective license, `--require licensed` | `edition=licensed` | 0 |
+  | demo license | `edition=demo` | 0 |
+  | demo license, `--require licensed` | mismatch | 1 |
+  | no GAMS | `edition=unknown` | 2 |
+
+  `--require demo` in the PR workflows means **every PR run now proves the license never reached it**.
+- **`run_pr19_solves.py` detects the demo refusal.** It reports the model as **`skipped: over the demo ceiling`**, with a `::notice::` and ⏭ in the PR comment. That covers the six Pattern-C cohort targets, which used to fail as if they were emit failures. `passed` stays false, so a **hard-tier** canary that ever outgrew the demo would still fail its tier.
+- **This PR touches both workflows**, so their runs on it are the Phase-0 gate's **same-repo negative control**: `edition=demo` and the ⏭ skips. `licensed-solve.yml` has no PR trigger, so a PR cannot even request its environment. The refusal of a non-`main` ref was verified in the throwaway repository (§4).
+
+### P1 Phase-0 gate: the > 1,000-row probe, local half
+
+| edition | 1,500-row NLP |
+|---|---|
+| licensed | rc 0, **MODEL STATUS 2 Locally Optimal**, SOLVER STATUS 1 |
+| demo | rc 7, **refused** (the demo-ceiling line); no SOLVE SUMMARY |
+
+### Decision 1's ledger (`data/floor_provenance.json`, `floor_tracker.py`)
+
+- **The definition is amended in the file's `_README`:**
+  - a license-unlocked **cold** match is not genuine;
+  - presolve-only matches stay under the existing rule;
+  - the fail-before sub-rule applies;
+  - no model may be both counted and in the ledger.
+- **New `license_unlocked` list (empty) and its schema.** `floor_tracker.py` reports **"Genuine floor: 75 (+0 license-unlocked, not counted)"**.
+- **The ledger is deliberately outside `compute_floor`.** The doc-figure "floor" fact keeps reading 75.
+- **Validation:** limb must be `license-unlocked-cold-match`; never also an `entries` item; no duplicates; audit fields required.
+- **First unit tests for the tracker:** `tests/unit/sprint_audit/test_floor_tracker.py`.
+
+### Decision 2's readers
+
+- **New `data/corpus_admissions.json`**, empty, with its rule and schema.
+- **`kpi_block.py --corpus current|continuity`:** `continuity` drops the admitted ids, through `compute_kpis(exclude=…)`. Every block now states its corpus. Today both report **142**.
+- **`check_doc_figures.py` is corpus-aware, before Day 3's first admission:**
+  - a bare figure is checked against **continuity**;
+  - Solve, Match and Translate accept `N/D` and are matched to the corpus whose denominator is `D` (corpus size, parsed count, translated count);
+  - a `D` matching neither corpus is a finding.
+  - Tests cover all five cases from the brief, plus a forced-admission test proving the bare figure follows continuity.
+  - ⚠ There is no `Parse` fact in the registry, so Parse is not covered. Adding one would start checking every "Parse N" in the docs, so it was left out deliberately.
+
+### The danwolfe / decomp check (Prep Task 6 side finding)
+
+`kpi_block` (142) and `batch_parse.get_candidate_models` (140) differ by **exactly `{danwolfe, decomp}`**: convex LPs whose `pipeline_status` is `skipped` (`multi_solve_driver_out_of_scope`). They parse and never translate.
+
+**Resolved by the prompt's second option: the reason is stated in the code**, at both readers, and **pinned by identity** in `test_kpi_corpus.py`.
+
+⚠ **Owner question, not decided here.** PROJECT_PLAN footnote 4 says these two were *excluded* in Sprint 24, but the computed 142 has always *included* them. Re-basing to 140 would move every headline rate mid-series, which close rule C4 exists to prevent happening implicitly. It is recorded for the owner.
+
+### P10c: the leak gate fails on timeouts (`PROCESS_AND_SMALL_ITEMS.md` §10c)
+
+- **`check_golden_staleness.py --fail-on-unverified`** returns **3** when any golden timed out. It prints "covered N of M … NOT a pass".
+- **`make check-goldens`** derives `--min-scope` from `git ls-files`, exactly as CI does, and passes both flags.
+- **CI's plain call stays soft**, which a test pins.
+- **Tests:** a faked timeout gives rc 3 with the flag and rc 0 without it, and **`--min-scope` alone passes a contended run** (the reason the flag exists). A further test checks that the Makefile recipe carries both flags.
+
+### Tests, and their controls
+
+- **New:**
+  - `tests/unit/sprint_audit/test_floor_tracker.py`;
+  - `tests/unit/sprint_audit/test_kpi_corpus.py`;
+  - `tests/unit/test_ci_license_scripts.py`. Every CI-script test asserts that **no `USER:` text** reaches what the script prints or writes, using a synthetic licensee.
+- **Extended:** `test_check_doc_figures.py` (two corpora) and `test_gate_scope_assertions.py` (P10c).
+- **9 mutants, each applied in a throwaway worktree:**
+  - the ledger counted in the floor;
+  - the ledger accepting any limb;
+  - the continuity exclusion removed;
+  - `N/D` resolution removed;
+  - bare figures checked against current;
+  - `--fail-on-unverified` returning 0;
+  - PR19 refusal detection off;
+  - `gams_edition` echoing the listing;
+  - the licensed-edition gate removed.
+- **All 9 are caught.** Two were not caught on the first run, and both were fixed:
+  - the bare-figure mutant passed, because the live test runs with no admissions, where the two corpora agree. A forced-admission test now catches it;
+  - the first `gams_edition` mutant was malformed and leaked nothing, so it proved nothing. It was replaced by one that prints the listing.
+- **Knock-on:** the procdir invariant now covers the two new GAMS launchers (`gams_edition.classify`, `run_licensed_solves.solve_one`), and both pass it.
+
+### Gate
+
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,551 passed**, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs created. That was at a load average of about 35 at start, rising to about 134 by the end, with no timeouts.
+
+The changed `scripts/` files were also checked directly against `main`:
+- ruff counts are unchanged;
+- black only touched lines this PR changed;
+- the two new CI scripts are ruff-, black- and mypy-clean. One unused import, found by that check, was removed.

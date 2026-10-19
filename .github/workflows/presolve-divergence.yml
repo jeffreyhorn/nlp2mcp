@@ -66,7 +66,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .
 
-      - name: Install GAMS demo
+      - name: Install GAMS (demo edition)
         if: steps.skip.outputs.skip != 'true'
         env:
           # Pinned installer URL + SHA256 (supply-chain guard) — mirrors
@@ -97,7 +97,10 @@ jobs:
 
       - name: Verify GAMS on PATH
         if: steps.skip.outputs.skip != 'true'
-        run: gams audit lo=2
+        # ⚠ Sprint 40 P1: edition classification only, NEVER the raw
+        # `gams audit lo=2` (licensee/license-ID/path/node fields; this log is
+        # published). `--require demo`: the license must never reach a PR job.
+        run: python3 scripts/ci/gams_edition.py --require demo
 
       # The gitignored GAMSLib corpus must be present (the detector skips any
       # model whose raw source is absent). Provision the in-scope models so the

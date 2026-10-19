@@ -281,6 +281,12 @@ def get_candidate_models(database: dict[str, Any]) -> list[dict[str, Any]]:
         # Schema 2.2.0: explicit per-model skip overrides convexity status.
         # Catches MINLPs whose convexity verifier reported "likely_convex"
         # before the discrete-source detector existed.
+        #
+        # ⚠ So this run set (140) is NOT the KPI corpus (`kpi_block`, 142). The
+        # difference is exactly `danwolfe` and `decomp`, convex multi-solve
+        # drivers skipped as out of scope, which `kpi_block` keeps for series
+        # continuity. It is deliberate, and pinned by identity in
+        # tests/unit/sprint_audit/test_kpi_corpus.py (Sprint 40 P1).
         if (model.get("pipeline_status") or {}).get("status") == "skipped":
             continue
         status = model.get("convexity", {}).get("status")

@@ -24,11 +24,15 @@ case: sarf has no golden).
 from __future__ import annotations
 
 import argparse
+import sys
+from pathlib import Path
 from typing import Any
 
 import pytest
 
 from scripts.gamslib.run_full_test import run_resolve_changed
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _args(**over: Any) -> argparse.Namespace:
@@ -477,3 +481,59 @@ def test_golden_path_mapping_unchanged(path, expected):
     from scripts.gamslib.run_full_test import _model_id_from_golden_path
 
     assert _model_id_from_golden_path(path) == expected
+
+
+class TestLeakGateFailsOnUnverified:
+    """Sprint 40 P10c: contention TIMES OUT goldens; it does not shrink the scope.
+
+    So `--min-scope` alone passes a contended run, which is the Sprint 39 incident:
+    "All in-scope goldens clean" with 2 unverified timeouts, a claim over 184 of
+    186. `--fail-on-unverified` makes the local gate fail (rc 3) instead. CI's
+    plain call stays soft: a hosted runner may legitimately exceed the budget.
+    """
+
+    @staticmethod
+    def _run(monkeypatch, argv: list[str], timed_out: set[str]) -> int:
+        import scripts.sprint_audit.check_golden_staleness as g
+
+        goldens = [
+            (m, False, Path(f"data/gamslib/mcp/{m}_mcp.gms"))
+            for m in ("ganges", "abel", "trnsport")
+        ]
+        monkeypatch.setattr(g, "discover_goldens", lambda: goldens)
+        monkeypatch.setattr(g, "load_allowlist", lambda: set())
+        monkeypatch.setattr(
+            g,
+            "check_one",
+            lambda mid, pre, gp, fix: {
+                "golden": str(gp),
+                "status": "timeout" if mid in timed_out else "clean",
+            },
+        )
+        monkeypatch.setattr(sys, "argv", ["check_golden_staleness.py", *argv])
+        return g.main()
+
+    def test_fail_on_unverified_returns_3_on_a_timeout(self, monkeypatch, capsys):
+        assert self._run(monkeypatch, ["--fail-on-unverified"], {"ganges"}) == 3
+        out = capsys.readouterr().out
+        assert "NOT a pass" in out and "2 of 3" in out
+        assert "All in-scope goldens clean" not in out
+
+    def test_the_plain_sweep_stays_soft_for_CI(self, monkeypatch, capsys):
+        """Pins CI's behaviour: the same timeout without the flag is still rc 0."""
+        assert self._run(monkeypatch, [], {"ganges"}) == 0
+        assert "unverified" in capsys.readouterr().out
+
+    def test_min_scope_alone_passes_a_contended_run(self, monkeypatch):
+        """The reason the flag exists: the scope count is untouched by a timeout."""
+        assert self._run(monkeypatch, ["--min-scope", "3"], {"ganges"}) == 0
+
+    def test_a_clean_sweep_still_passes_with_the_flag(self, monkeypatch):
+        assert self._run(monkeypatch, ["--fail-on-unverified", "--min-scope", "3"], set()) == 0
+
+    def test_make_check_goldens_passes_both_flags(self):
+        text = (PROJECT_ROOT / "Makefile").read_text()
+        recipe = text.split("\ncheck-goldens:\n", 1)[1].split("\n\n", 1)[0]
+        assert "git ls-files 'data/gamslib/mcp/*.gms'" in recipe
+        assert '--min-scope "$$MIN_SCOPE"' in recipe
+        assert "--fail-on-unverified" in recipe

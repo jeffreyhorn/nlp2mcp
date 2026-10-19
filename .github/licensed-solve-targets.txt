@@ -1,0 +1,25 @@
+# licensed-solve.yml targets (Sprint 40 P1, CI_LICENSE_DESIGN.md §3).
+#
+# The 11-model MCP-gated cohort, pinned BY IDENTITY: every model whose
+# mcp_solve.outcome_category was `path_solve_license` at the Sprint 39 close
+# (BASELINE_RECONFIRMATION.md §3, re-derived from the DB at 81ab8e46). It
+# includes PR19's six Pattern-C targets (egypt, ferts, shale, sroute, srpchase,
+# tfordy), which the demo refuses on every PR and which therefore get their
+# licensed coverage here instead.
+#
+# Each is solved from its committed COLD golden (data/gamslib/mcp/<id>_mcp.gms).
+# None carries an $include, so the job needs no raw corpus.
+#
+# The 9 NLP-gated models are NOT here: they have no golden until P3 admits and
+# translates them (Days 2-5). Add them by identity once they do.
+egypt
+ferts
+glider
+robot
+shale
+sroute
+srpchase
+tabora
+tfordy
+tricp
+turkey

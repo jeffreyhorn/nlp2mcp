@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 40
 
+- **Day 1 (2026-10-19): P1's CI half, the floor ledger and the corpus readers, plus P10c.** Detail: `docs/planning/EPIC_4/SPRINT_40/SPRINT_LOG.md` §Day 1.
+  - **New `licensed-solve.yml`.** It runs on push to `main`, nightly and on dispatch, in the `main`-only `gams-licensed` environment; it never has a PR trigger. It activates the license from `GAMS_ACCESS_CODE`, then masks it, checks the edition and solves the 11 MCP-gated models. It prints a summary only, uploads nothing, scans its report with a positive control, and always removes the license.
+  - **The PR workflows stay demo-only.** Every raw `gams audit` print is replaced by `gams_edition.py --require demo`, which prints the edition only. `run_pr19_solves.py` reports a demo refusal as *skipped: over the demo ceiling* instead of an emit failure.
+  - **Floor ledger (Decision 1):** a non-counting `license_unlocked` list, cold matches only. The tracker reports "floor 75 (+k license-unlocked, not counted)".
+  - **Corpus readers (Decision 2):** `corpus_admissions.json`, `kpi_block.py --corpus current|continuity`, and a corpus-aware `check_doc_figures.py` (bare figure = continuity; `N/D` matched by denominator). Both corpora are 142 today.
+  - **danwolfe/decomp:** the 142-vs-140 reader difference is documented at both readers and pinned by identity. Re-basing to 140 is left as an owner question.
+  - **P10c:** `make check-goldens` derives `--min-scope` and passes `--fail-on-unverified` (rc 3 on any timeout); CI stays soft.
+  - **Tests:** 9 mutation controls, all caught.
+
 - **Day 0 (2026-10-18): the baseline reproduces, and P1's schema 3.1.0 lands.** Detail: `docs/planning/EPIC_4/SPRINT_40/SPRINT_LOG.md` §Day 0.
   - **Baseline at `cd5c6b7e`:** Solve 111 · Match 95 (65 + 30) · Translate 135 · floor 75 · `path_solve_terminated` 0 · `path_solve_license` 11. The only `src/` change since `bd2af6e9` is PR #1760's emit-neutral `procDirPath` argument in `gams_check.py`.
   - **Schema 3.1.0:** `license_edition` (`licensed` / `demo` / `null`) in `mcp_solve_result` and `convexity_result`, plus `convexity_result.gams_version`. `null` = unrecorded, never a guessed `"demo"`.

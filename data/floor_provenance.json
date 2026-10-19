@@ -15,7 +15,24 @@
     "",
     "It can be ACCUMULATED. This file declares an opaque baseline and appends",
     "one auditable entry per movement:   floor = baseline.count + len(entries).",
-    "The baseline is never re-litigated."
+    "The baseline is never re-litigated.",
+    "",
+    "DEFINITION AMENDED, Sprint 40 P1 (owner Decision 1 = B, OWNER_DECISION_BRIEF.md,",
+    "answered 2026-10-14 at b44344a2): a GENUINE floor movement is a match a real",
+    "emit fix produced. A LICENSE-UNLOCKED cold match -- a model whose cold emit was",
+    "never changed, and only became runnable once the full license replaced the",
+    "demo -- is NOT genuine and NOT counted. It is recorded in `license_unlocked`,",
+    "a separate, NON-COUNTING ledger, and reported beside the floor:",
+    "'floor 75 (+k license-unlocked, not counted)'.",
+    "",
+    "* The ledger takes COLD matches only. A presolve-only (warm-start) match of an",
+    "  unlocked model stays under the EXISTING rule: methodology, not counted, and",
+    "  NOT in this ledger, unless an emit fix changed its cold emit.",
+    "* Fail-before sub-rule: a model whose emit was fixed in an earlier sprint but",
+    "  could never run is credited as fix-driven genuine (an `entries` item) ONLY if",
+    "  its pre-fix golden, run under the license, does NOT match. Otherwise it is",
+    "  license-unlocked like the rest.",
+    "* A model may not appear in both `entries` and `license_unlocked`."
   ],
   "baseline": {
     "count": 73,
@@ -47,5 +64,13 @@
     "since_sprint": "sprint number in which it landed",
     "evidence": "what changed, in one line",
     "pr": "the PR that landed it"
+  },
+  "license_unlocked": [],
+  "_license_unlocked_schema": {
+    "model_id": "the license-unlocked model",
+    "limb": "must be 'license-unlocked-cold-match' (cold matches only; presolve-only matches never enter)",
+    "since_sprint": "sprint in which the licensed run measured it",
+    "evidence": "the licensed run, in one line, with its batch commit",
+    "pr": "the PR that recorded it"
   }
 }

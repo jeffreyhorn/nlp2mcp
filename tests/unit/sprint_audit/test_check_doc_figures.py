@@ -971,3 +971,92 @@ def test_the_all_population_exclusion_is_DYNAMIC_not_hardcoded_219():
 
     # And a correct all-220 figure is clean — not flagged by the candidate fact.
     assert _facts("Solve **111** · all-220 Match **98**") == set()
+
+
+# ------------------------------------------- two corpora (Sprint 40 P1, Decision 2)
+
+#: Pinned, so these tests do not depend on a DB that moves: continuity 95/142 and
+#: current 97/151 for Match; Translate shares its denominator (no admitted model
+#: parses), so both corpora give 135/142.
+_TWO_CORPORA = {
+    "Match": 95,
+    "Match|continuity": 95,
+    "Match|continuity|den": 142,
+    "Match|current": 97,
+    "Match|current|den": 151,
+    "Translate": 135,
+    "Translate|continuity": 135,
+    "Translate|continuity|den": 142,
+    "Translate|current": 135,
+    "Translate|current|den": 142,
+}
+
+
+def _scan_two_corpora(line: str) -> list:
+    findings, reason = cdf.scan_line(Path("x.md"), 1, line, _TWO_CORPORA)
+    assert reason is None, reason
+    return findings
+
+
+def test_a_correct_two_corpus_sentence_with_differing_figures_passes() -> None:
+    assert _scan_two_corpora("Match 95/142 (continuity) and Match 97/151 (expanded).") == []
+
+
+def test_a_wrong_numerator_in_either_clause_fails() -> None:
+    first = _scan_two_corpora("Match 96/142 (continuity) and Match 97/151 (expanded).")
+    second = _scan_two_corpora("Match 95/142 (continuity) and Match 98/151 (expanded).")
+    assert [f.cited for f in first] == ["96/142"]
+    assert "continuity corpus" in first[0].source
+    assert [f.cited for f in second] == ["98/151"]
+    assert "current corpus" in second[0].source
+
+
+def test_a_denominator_matching_neither_corpus_fails() -> None:
+    (finding,) = _scan_two_corpora("Match 95/150 across the corpus.")
+    assert finding.cited == "95/150"
+    assert "matches neither corpus" in finding.source
+
+
+def test_the_equal_denominator_case_passes() -> None:
+    assert _scan_two_corpora("Translate 135/142 in both corpora.") == []
+    assert [f.cited for f in _scan_two_corpora("Translate 134/142.")] == ["134/142"]
+
+
+def test_a_bare_figure_is_checked_against_continuity() -> None:
+    assert _scan_two_corpora("Match 95 at close.") == []
+    (finding,) = _scan_two_corpora("Match 97 at close.")  # the CURRENT figure, written bare
+    assert (finding.cited, finding.truth) == ("97", "95")
+
+
+def test_the_live_truths_carry_both_corpora_and_agree_today() -> None:
+    """No admissions yet: both corpora are the same 142, so the pairs agree."""
+    cdf._kpis.cache_clear()
+    cdf._kpis_current.cache_clear()
+    truths = cdf.derive_truths()
+    for fact in ("Match", "Translate", "Solve"):
+        assert truths[f"{fact}|continuity"] == truths[f"{fact}|current"] == truths[fact]
+    assert truths["Match|continuity|den"] == truths["Match|current|den"] == 142
+
+
+def test_a_bare_figure_follows_CONTINUITY_once_a_model_is_admitted(monkeypatch) -> None:
+    """With no admissions both corpora agree, so only a forced admission can tell
+    whether the bare-figure truth is continuity (as required) or current. This
+    admits one real convex model and checks the live derivation."""
+    import json as _json
+
+    db = _json.loads(cdf.DB_PATH.read_text())
+    convex = next(
+        m["model_id"]
+        for m in db["models"]
+        if (m.get("convexity") or {}).get("status") in ("verified_convex", "likely_convex")
+    )
+    monkeypatch.setattr(cdf, "load_admissions", lambda *a: frozenset({convex}))
+    cdf._kpis.cache_clear()
+    cdf._kpis_current.cache_clear()
+    try:
+        truths = cdf.derive_truths()
+    finally:
+        cdf._kpis.cache_clear()
+        cdf._kpis_current.cache_clear()
+    assert truths["Match|continuity|den"] == truths["Match|current|den"] - 1
+    assert truths["Match"] == truths["Match|continuity"], "a bare figure is continuity"
