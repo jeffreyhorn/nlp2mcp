@@ -198,7 +198,8 @@ def validate_filters(args: argparse.Namespace) -> None:
 def get_candidate_models(database: dict[str, Any]) -> list[dict[str, Any]]:
     """Get list of candidate models for processing.
 
-    Candidates are models with convexity.status = 'verified_convex' or 'likely_convex'.
+    Candidates are models with convexity.status = 'verified_convex' or 'likely_convex'
+    and no `pipeline_status: skipped` (the KPI corpus; 140 since Sprint 40).
 
     Args:
         database: Loaded database dictionary
@@ -208,6 +209,14 @@ def get_candidate_models(database: dict[str, Any]) -> list[dict[str, Any]]:
     """
     candidates = []
     for model in database.get("models", []):
+        # Owner decision, Sprint 40, 2026-10-19 (re-based 142 -> 140): an
+        # explicit `pipeline_status: skipped` takes the model out of the corpus,
+        # exactly as in `batch_parse.get_candidate_models` and
+        # `kpi_block.compute_kpis`. Before this, the runner re-ran `danwolfe` and
+        # `decomp` (out-of-scope multi-solve drivers), and translation refused
+        # them, writing two permanent translate failures into the DB.
+        if (model.get("pipeline_status") or {}).get("status") == "skipped":
+            continue
         status = model.get("convexity", {}).get("status")
         if status in ("verified_convex", "likely_convex"):
             candidates.append(model)

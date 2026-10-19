@@ -282,11 +282,10 @@ def get_candidate_models(database: dict[str, Any]) -> list[dict[str, Any]]:
         # Catches MINLPs whose convexity verifier reported "likely_convex"
         # before the discrete-source detector existed.
         #
-        # ⚠ So this run set (140) is NOT the KPI corpus (`kpi_block`, 142). The
-        # difference is exactly `danwolfe` and `decomp`, convex multi-solve
-        # drivers skipped as out of scope, which `kpi_block` keeps for series
-        # continuity. It is deliberate, and pinned by identity in
-        # tests/unit/sprint_audit/test_kpi_corpus.py (Sprint 40 P1).
+        # This rule IS the KPI corpus (owner decision, Sprint 40, 2026-10-19:
+        # re-based 142 -> 140). `kpi_block.compute_kpis` and
+        # `run_full_test.get_candidate_models` apply the same rule, and
+        # tests/unit/sprint_audit/test_kpi_corpus.py pins all three to one set.
         if (model.get("pipeline_status") or {}).get("status") == "skipped":
             continue
         status = model.get("convexity", {}).get("status")

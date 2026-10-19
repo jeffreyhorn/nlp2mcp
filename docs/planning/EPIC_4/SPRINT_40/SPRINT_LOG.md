@@ -232,3 +232,41 @@ The changed `scripts/` files were also checked directly against `main`:
 - ruff counts are unchanged;
 - black only touched lines this PR changed;
 - the two new CI scripts are ruff-, black- and mypy-clean. One unused import, found by that check, was removed.
+
+---
+
+## Owner decision — 2026-10-19 · the KPI corpus is re-based 142 → 140
+
+**Branch:** `planning/sprint40-rebase-140` · **Measured at:** `135d1037`
+
+**Decision (owner, 2026-10-19):** re-base the headline corpus from **142 to 140**, removing **`danwolfe`** and **`decomp`**.
+
+**Why the question existed** (Prep Task 6 side finding, Day 1):
+- `kpi_block.py` selected the corpus by convexity alone, so it counted both models.
+- `batch_parse.get_candidate_models` honoured their `pipeline_status: skipped` (`multi_solve_driver_out_of_scope`), so it selected 140.
+- `run_full_test.get_candidate_models` did **not** honour the skip. So the pipeline kept re-running both models, and translation refused them every time, writing two permanent translate failures into the DB.
+- PROJECT_PLAN footnote 4 described them as excluded since Sprint 24; the computed series never excluded them.
+
+**What changed:**
+- **One corpus rule, three readers.** A candidate is convex **and** not `pipeline_status: skipped`. `kpi_block.compute_kpis`, `batch_parse.get_candidate_models` and `run_full_test.get_candidate_models` all apply it, and `floor_tracker`'s advisory mechanical count does too.
+- **`tests/unit/sprint_audit/test_kpi_corpus.py`** pins all three readers to **one identical 140-model set**, a set rather than a count. Both models are named, and the test asserts they are excluded by the skip, not by convexity. Removing the skip from any one reader fails it (3 mutants, all caught).
+- **PROJECT_PLAN:**
+  - new Rolling-KPIs **footnote ⁹**, marked on the S40 Parse, Translate and Match cells;
+  - **footnote 4 corrected**;
+  - the Sprint 40 acceptance criteria restated on 140;
+  - P3's ceiling becomes "at most 149".
+- **`SPRINT_40/PLAN.md`:** close rule C4 and the acceptance table now say 140. **`PLAN_PROMPTS.md`:** Day 5 now says 140. Records of past findings, such as Task 6 and Day 1, are left as written.
+
+**Effect, measured at `135d1037`.** No count moved; only the denominators did.
+
+| | 142 (before) | 140 (after) |
+|---|---|---|
+| Parse | 142/142 · 100.0% | 140/140 · 100.0% |
+| Translate | 135/142 · 95.1% | **135/140 · 96.4%** |
+| Solve | 111/135 · 82.2% | 111/135 · 82.2% |
+| Match | 95/142 · 66.9% | **95/140 · 67.9%** |
+| genuine floor | 75 | 75 (neither model ever matched) |
+
+⚠ **The Translate and Match rate rises are a RE-BASE, not progress.** Across this boundary, compare counts, not rates. That is what footnote ⁹ is for.
+
+**Decision 2's continuity series is this 140.** No NLP-gated model had been admitted when the re-base landed, so continuity and current are both 140 today.

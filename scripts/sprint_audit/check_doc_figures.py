@@ -220,7 +220,7 @@ def is_live_doc(path: Path, sprint_dir: Path | None = None) -> bool:
 #: exact figure it was written to catch.
 NUM = r"\d+(?:\.\d+)?"
 
-#: A line citing the **all-<n>** population rather than the 142-candidate one.
+#: A line citing the **all-<n>** population rather than the candidate-corpus one.
 #:
 #: ⚠ SHARED BY THE TWO `Match` FACTS ON PURPOSE (PR #1740 review). The candidate
 #: `Match` fact excludes these lines and the `all-219 Match` fact claims them, so
@@ -230,7 +230,7 @@ NUM = r"\d+(?:\.\d+)?"
 #: checked as BOTH populations and could raise a false candidate-Match finding.
 #: One pattern makes the disagreement unrepresentable.
 _ALL_POPULATION_MATCH = re.compile(r"\ball-(?P<population>\d+)\s+Match")
-#: An optional ``/D`` after a KPI figure ("Match 95/142"): the denominator names
+#: An optional ``/D`` after a KPI figure ("Match 95/140"): the denominator names
 #: WHICH corpus the figure is over (Sprint 40 P1, Decision 2).
 _DEN = r"(?:\s*/\s*\**(?P<den>\d+)\**)?"
 
@@ -303,7 +303,8 @@ def _kpis() -> dict[str, Any]:
     # ⚠ The CONTINUITY corpus (Sprint 40 P1, owner Decision 2 = A): the DB minus
     # the ids in data/corpus_admissions.json. A BARE figure ("Match 95") is
     # checked against continuity, because continuity leads every sentence (close
-    # rule C4). With no admissions this is the unchanged 142-model block.
+    # rule C4). With no admissions this is the unchanged block (140 candidates since the
+    # Sprint 40 re-base).
     return compute_kpis(_load(DB_PATH), exclude=load_admissions())
 
 
@@ -475,7 +476,7 @@ FACTS: tuple[Fact, ...] = (
         derive=_kpi("match"),
         source="scripts/sprint_audit/kpi_block.py  ->  match",
         patterns=(re.compile(rf"(?<!-)\bMatch\s+\**(?P<value>{NUM})\**{_DEN}"),),
-        # "all-<n> Match" is a different population from the 142-candidate one.
+        # "all-<n> Match" is a different population from the candidate corpus.
         # ⚠ SHARED with the fact below, not a hardcoded 219 (PR #1740 review):
         # the corpus size is itself a figure, so an `all-220 Match` line would
         # have been checked as BOTH populations and could raise a false

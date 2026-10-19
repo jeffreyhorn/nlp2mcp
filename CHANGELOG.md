@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 40
 
+- **Owner decision (2026-10-19): the KPI corpus is re-based from 142 to 140.** `danwolfe` and `decomp` (convex LP multi-solve drivers, `pipeline_status: skipped`, refused by translation) leave the corpus.
+  - **One rule:** a candidate is convex **and** not skipped. It is applied identically by `kpi_block.py`, `batch_parse` and `run_full_test`, which had disagreed (142/140/142), and a test pins all three to one 140-model set.
+  - **No count moved.** Translate 135/140 (96.4%) and Match 95/140 (67.9%) are a re-base, not progress.
+  - **PROJECT_PLAN** gains footnote ⁹ and a corrected footnote 4.
+  - **Sprint 40's** close rule C4 and acceptance criteria now say 140.
+  - Detail: `SPRINT_40/SPRINT_LOG.md`.
+
 - **Day 1 (2026-10-19): P1's CI half, the floor ledger and the corpus readers, plus P10c.** Detail: `docs/planning/EPIC_4/SPRINT_40/SPRINT_LOG.md` §Day 1.
   - **New `licensed-solve.yml`.** It runs on push to `main`, nightly and on dispatch, in the `main`-only `gams-licensed` environment; it never has a PR trigger. It activates the license from `GAMS_ACCESS_CODE`, then masks it, checks the edition and solves the 11 MCP-gated models. It prints a summary only, uploads nothing, scans its report with a positive control, and always removes the license.
   - **The PR workflows stay demo-only.** Every raw `gams audit` print is replaced by `gams_edition.py --require demo`, which prints the edition only. `run_pr19_solves.py` reports a demo refusal as *skipped: over the demo ceiling* instead of an emit failure.
