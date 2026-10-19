@@ -119,16 +119,12 @@ def test_all_three_corpus_readers_select_the_same_140_models() -> None:
         from scripts.gamslib.run_full_test import get_candidate_models as rft_candidates
     finally:
         sys.path.pop(0)
-    sys.path.insert(0, str(PROJECT_ROOT / "scripts" / "sprint_audit"))
-    try:
-        import kpi_block
-    finally:
-        sys.path.pop(0)
+    # OBSERVE kpi_block's membership, never re-implement it (PR #1763 review):
+    # a copy of the filter would agree with itself, and a total alone cannot see
+    # a swap of one wrong model in for one right model out. `compute_kpis` on a
+    # one-model DB reports candidates == 1 exactly when that model is in.
     kpi_ids = {
-        m["model_id"]
-        for m in DB["models"]
-        if (m.get("convexity") or {}).get("status") in kpi_block.CONVEX_STATUSES
-        and (m.get("pipeline_status") or {}).get("status") != "skipped"
+        m["model_id"] for m in DB["models"] if compute_kpis({"models": [m]})["candidates"] == 1
     }
     assert compute_kpis(DB)["candidates"] == len(kpi_ids) == 140
     assert {m["model_id"] for m in bp_candidates(DB)} == kpi_ids
