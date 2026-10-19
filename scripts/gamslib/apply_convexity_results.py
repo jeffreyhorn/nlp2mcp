@@ -18,15 +18,27 @@ Task 6 measured 142 -> 143 on a scratch DB). So this writer holds the corpus:
   continuity series would grow silently anyway;
 * a refusal is a non-zero exit naming the models; nothing is written, and
   nothing is skipped silently;
-* a status change that LEAVES the corpus, or stays outside it, is applied and
-  listed in the summary, because it moves the denominator too.
+* entering also requires a LICENSED classification (``license_edition ==
+  "licensed"``). Decision 2 admits by the licensed verifier's result, so a
+  demo or unclassified result never expands the corpus. Updates to models
+  already inside are not restricted;
+* the admissions ledger is read by ``kpi_block.load_admissions``, the same
+  reader the continuity corpus uses, so a malformed entry refuses the run
+  rather than being filtered out;
+* the summary reports CANDIDATE movement (convex AND not ``pipeline_status:
+  skipped``, as ``kpi_block`` counts it). A status change that LEAVES the
+  corpus, or stays outside it, is applied and listed, because it moves the
+  denominator too. The hold above stays on the convex-set transition, so it
+  applies even to a skipped model.
 
 Mapping, per result (``convexity`` is REPLACED, never merged, so no field from
 an older run survives under a new run's provenance):
 
 * ``convexity_status`` -> ``status``;
-* ``verification_date``: the result's OWN stamp, copied verbatim. A result
-  without one (a pre-3.1.0 verifier) is REFUSED, never back-dated from the
+* ``verification_date``: the result's OWN stamp, copied verbatim, and REFUSED
+  unless it is an RFC 3339 date-time (jsonschema does not enforce ``format``
+  here, so ``--validate`` alone would let a malformed stamp through). A result
+  without one (a pre-3.1.0 verifier) is refused, never back-dated from the
   report envelope's batch stamp;
 * ``solver_status``, ``model_status``, ``objective_value``,
   ``solve_time_seconds``, ``timed_out``, ``solver``; ``error_message`` -> ``error``.
@@ -64,6 +76,12 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.gamslib.db_manager import create_backup  # noqa: E402
 
+# ONE reader for the admissions ledger: kpi_block's. A second, laxer reader here
+# (one that dropped malformed entries) let this writer admit models from a
+# ledger that `kpi_block --corpus continuity` then REJECTS (PR #1764 review).
+from scripts.sprint_audit.check_mcp_solve_attribution import _RFC3339  # noqa: E402
+from scripts.sprint_audit.kpi_block import load_admissions  # noqa: E402
+
 SCHEMA_PATH = PROJECT_ROOT / "data" / "gamslib" / "schema.json"
 ADMISSIONS_PATH = PROJECT_ROOT / "data" / "corpus_admissions.json"
 CONVEX_STATUSES = frozenset({"verified_convex", "likely_convex"})
@@ -97,6 +115,14 @@ def convexity_from_result(result: dict[str, Any]) -> dict[str, Any]:
             f"{result.get('model_id')!r}: no per-result verification_date (a pre-3.1.0 "
             f"verifier report?). Refused, not back-dated from the batch stamp"
         )
+    if not is_rfc3339(vdate):
+        # jsonschema does NOT enforce `format: date-time` here (no format
+        # checker), so --validate alone would write a malformed stamp that the
+        # attribution inspector then rejects (PR #1764 review).
+        raise Refusal(
+            f"{result.get('model_id')!r}: verification_date {vdate!r} is not an RFC 3339 "
+            f"date-time"
+        )
     conv: dict[str, Any] = {"status": result["convexity_status"], "verification_date": vdate}
     for src, dst in _OPTIONAL:
         if result.get(src) is not None:
@@ -106,14 +132,32 @@ def convexity_from_result(result: dict[str, Any]) -> dict[str, Any]:
     return conv
 
 
+def is_rfc3339(value: object) -> bool:
+    """RFC 3339 date-time, as the attribution inspector enforces it.
+
+    The SHAPE regex is the inspector's own (`T` separator, a required offset),
+    and `fromisoformat` checks the RANGES a regex cannot (month 13, hour 25).
+    """
+    if not isinstance(value, str) or not _RFC3339.fullmatch(value):
+        return False
+    try:
+        datetime.fromisoformat(value.replace("Z", "+00:00").replace("z", "+00:00"))
+    except ValueError:
+        return False
+    return True
+
+
 def load_admitted_record(path: Path) -> frozenset[str]:
-    """Ids recorded in ``data/corpus_admissions.json`` (Decision 2's ledger)."""
-    if not path.exists():
-        return frozenset()
-    entries = json.loads(path.read_text(encoding="utf-8")).get("admissions")
-    if not isinstance(entries, list):
-        raise Refusal(f"{path}: 'admissions' must be a list")
-    return frozenset(e["model_id"] for e in entries if isinstance(e, dict) and e.get("model_id"))
+    """Ids recorded in ``data/corpus_admissions.json`` (Decision 2's ledger).
+
+    Delegates to ``kpi_block.load_admissions`` so that a ledger this writer
+    accepts is exactly a ledger the continuity reader accepts. A malformed
+    entry REFUSES the run; it is never filtered out.
+    """
+    try:
+        return load_admissions(path)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        raise Refusal(f"refused, nothing written: corpus admissions ledger: {exc}") from exc
 
 
 def plan(
@@ -131,6 +175,7 @@ def plan(
     problems: list[str] = []
     planned: dict[str, dict[str, Any]] = {}
     summary: dict[str, list[str]] = {"entering": [], "leaving": [], "outside": [], "inside": []}
+    entered_convex: list[str] = []  # what --admit is checked against
 
     seen: set[str] = set()
     for r in results:
@@ -156,7 +201,20 @@ def plan(
             continue
         was_in = (model.get("convexity") or {}).get("status") in CONVEX_STATUSES
         now_in = conv["status"] in CONVEX_STATUSES
+        # THE HOLD is on the CONVEX-SET transition, so it applies even to a model
+        # that is pipeline-skipped. The SUMMARY below reports CANDIDATE movement,
+        # which also excludes skipped models (PR #1764 review).
         if now_in and not was_in:
+            if r.get("license_edition") != "licensed":
+                # Decision 2 admits by the LICENSED verifier's classification
+                # (OWNER_DECISION_BRIEF.md §Decision 2). A demo or unclassified
+                # result never expands the corpus (PR #1764 review).
+                problems.append(
+                    f"{mid}: would enter the convex set on a "
+                    f"license_edition={r.get('license_edition')!r} result. Admission "
+                    f"needs a LICENSED classification (Decision 2)"
+                )
+                continue
             if mid not in admit:
                 problems.append(
                     f"{mid}: would ENTER the corpus ({conv['status']}) without --admit. "
@@ -169,16 +227,20 @@ def plan(
                     f"Record it first, or `kpi_block --corpus continuity` cannot drop it"
                 )
                 continue
+            entered_convex.append(mid)
+        skipped = (model.get("pipeline_status") or {}).get("status") == "skipped"
+        was_cand, now_cand = was_in and not skipped, now_in and not skipped
+        if now_cand and not was_cand:
             summary["entering"].append(mid)
-        elif was_in and not now_in:
+        elif was_cand and not now_cand:
             summary["leaving"].append(mid)
-        elif now_in:
+        elif now_cand:
             summary["inside"].append(mid)
         else:
             summary["outside"].append(mid)
         planned[mid] = conv
 
-    unused = sorted(admit - set(summary["entering"]))
+    unused = sorted(admit - set(entered_convex))
     if unused:
         problems.append(f"--admit ids that do not enter the corpus in this input: {unused}")
     if problems:

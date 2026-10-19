@@ -355,8 +355,16 @@ The changed `scripts/` files were also checked directly against `main`:
   - the MIP refusal: `andean` admitted and recorded, asserted on the planner's own message;
   - the missing date: asserted on the refusal itself, because a `null` date would also fail schema validation.
 
+### PR #1764 review round 1 (W10)
+
+- **`verification_date` must be RFC 3339.** It uses the attribution inspector's shape regex plus a range check. jsonschema does not enforce `format` here, so `--validate` alone would have written a malformed stamp that the inspector then rejects.
+- **One admissions reader.** W10 now reads the ledger with `kpi_block.load_admissions`. Its first version **filtered out** malformed entries, so it could admit from a ledger the continuity reader then rejects. This is the same class of defect as the 142/140 reader split.
+- **Entry requires `license_edition == "licensed"`**, because Decision 2 admits by the licensed verifier's classification. Updates to models already inside are not restricted.
+- **The summary reports CANDIDATE movement** (convex and not skipped, as `kpi_block` counts). A skipped `danwolfe` changing status is no longer reported as leaving the corpus. The hold stays on the convex-set transition, so it still applies to skipped models.
+- **22 tests. 10 mutants (the 6 from before plus one per fix), all caught.**
+
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,567 passed**, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs. `make check-doc-figures` is clean.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,567 passed** at the first push, then **5,577** after the review round, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs. `make check-doc-figures` is clean.
 
 ⚠ **A false positive found and worked around, not fixed.** The fact *"presolve rows whose generated file is absent"* includes the pattern `all N rows`, which reads ANY "all *N* rows …" sentence as that count. It flagged this log's edition sentence. The sentence was reworded. Narrowing the pattern is a checker change with its own tests, so it is left for a separate PR.

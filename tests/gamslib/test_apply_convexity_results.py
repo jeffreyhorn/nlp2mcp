@@ -219,3 +219,96 @@ def test_plan_reports_every_problem_at_once() -> None:
         w10.plan(copy.deepcopy(db), results, frozenset(), frozenset())
     msg = str(exc.value)
     assert "torsion" in msg and "airsp" in msg and "andean" in msg
+
+
+# ----------------------------------------------- PR #1764 review: round 1
+
+
+@pytest.mark.parametrize(
+    "bad", ["not-a-date", "2026-10-19", "2026-10-19 23:17:14Z", "2026-13-01T00:00:00Z"]
+)
+def test_a_malformed_verification_date_is_refused(bad: str) -> None:
+    """jsonschema does not enforce `format: date-time` here, so --validate alone
+    would write these. The shape AND the ranges are checked, as the inspector does."""
+    with pytest.raises(w10.Refusal, match="not an RFC 3339"):
+        w10.convexity_from_result(_result(verification_date=bad))
+
+
+def test_a_ledger_with_a_malformed_entry_refuses_the_run(tmp_path) -> None:
+    """A mixed valid/invalid ledger: kpi_block.load_admissions rejects it, so this
+    writer must too. Filtering out the bad entry would admit torsion from a ledger
+    the continuity reader cannot then read."""
+    db = tmp_path / "db.json"
+    db.write_text(DB_PATH.read_text())
+    inp = tmp_path / "in.json"
+    inp.write_text(json.dumps({"results": [_result()]}))
+    adm = tmp_path / "adm.json"
+    adm.write_text(json.dumps({"admissions": [{"model_id": "torsion"}, {}]}))
+    rc = w10.main(
+        [
+            "--input",
+            str(inp),
+            "--db",
+            str(db),
+            "--admissions",
+            str(adm),
+            "--admit",
+            "torsion",
+            "--no-backup",
+        ]
+    )
+    assert rc == 1
+    assert _row(json.loads(db.read_text()), "torsion")["convexity"]["status"] == "error"
+
+
+@pytest.mark.parametrize("edition", ["demo", None])
+def test_entry_needs_a_licensed_classification(tmp_path, edition) -> None:
+    """Admitted AND recorded, so only the edition rule can refuse it."""
+    rc, db = _run(
+        tmp_path, [_result(license_edition=edition)], admit=["torsion"], recorded=["torsion"]
+    )
+    assert rc == 1
+    assert _row(db, "torsion")["convexity"]["status"] == "error"
+
+
+def test_an_update_inside_the_corpus_is_not_restricted_by_edition(tmp_path) -> None:
+    rc, db = _run(
+        tmp_path,
+        [
+            _result(
+                "trnsport",
+                convexity_status="verified_convex",
+                solver="CPLEX",
+                license_edition="demo",
+            )
+        ],
+    )
+    assert rc == 0
+    assert _row(db, "trnsport")["convexity"]["license_edition"] == "demo"
+
+
+def test_a_skipped_model_does_not_count_as_corpus_movement(tmp_path, caplog) -> None:
+    """danwolfe is convex but pipeline-skipped, so it is not a candidate. An error
+    result changes its convex status but NOT the denominator."""
+    caplog.set_level(logging.INFO)
+    rc, db = _run(
+        tmp_path, [_result("danwolfe", convexity_status="error", solver=None, error_message="x")]
+    )
+    assert rc == 0
+    assert "outside" in caplog.text and "leaving" not in caplog.text
+    assert "candidate corpus moves" not in caplog.text
+
+
+def test_the_hold_still_applies_to_a_skipped_model_entering_the_convex_set() -> None:
+    """The hold is on the CONVEX-SET transition, even when the model would not
+    become a candidate."""
+    db = json.loads(DB_PATH.read_text())
+    row = _row(db, "danwolfe")
+    row["convexity"] = {"status": "error", "verification_date": "2026-01-01T00:00:00Z"}
+    with pytest.raises(w10.Refusal, match="danwolfe: would ENTER"):
+        w10.plan(
+            db,
+            [_result("danwolfe", convexity_status="verified_convex", solver="CPLEX")],
+            frozenset(),
+            frozenset(),
+        )
