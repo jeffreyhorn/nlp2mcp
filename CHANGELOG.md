@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 40
 
+- **Day 2 (2026-10-20): the license-neutrality gate holds, the cohort batch is measured, and W10 lands.** Detail: `docs/planning/EPIC_4/SPRINT_40/SPRINT_LOG.md` §Day 2.
+  - **P1 gate complete:** both `licensed-solve.yml` runs on `main` succeeded (hosted-runner activation, `edition=licensed`, 11/11 licensed, scan control hit, 0 `USER:` lines), and PR #1762's demo-only runs were the negative control.
+  - **RT (C8):** the first licensed full run (140 candidates, 79 min, uncontended, never persisted). 198 models outside the populations, 1 moved: `iswnm`, a stale 2026-06 translate timeout now translating in 62 s, with identical compile errors under both editions. It is not a license effect. **Unknown 1.5 closed.**
+  - **P2:** all 11 cohort goldens are byte-identical at HEAD. turkey's pre-fix golden is pinned (`95ba01ea^`). The batch (11.5 min) wrote every row `licensed`, and every bucket reproduces RT.
+  - **P3:** licensed convexity of the 9 NLP-gated models gives all convex (5 verified, 4 likely), output-only.
+  - **New `apply_convexity_results.py` (W10):** replace-not-merge, schema-correct omission, and the corpus hold (`--admit` **and** a `corpus_admissions.json` record). 12 tests, 6 mutants caught.
+
 - **Owner decision (2026-10-19): the KPI corpus is re-based from 142 to 140.** `danwolfe` and `decomp` (convex LP multi-solve drivers, `pipeline_status: skipped`, refused by translation) leave the corpus.
   - **One rule:** a candidate is convex **and** not skipped. It is applied identically by `kpi_block.py`, `batch_parse` and `run_full_test`, which had disagreed (142/140/142), and a test pins all three to one 140-model set.
   - **No count moved.** Translate 135/140 (96.4%) and Match 95/140 (67.9%) are a re-base, not progress.

@@ -270,3 +270,93 @@ The changed `scripts/` files were also checked directly against `main`:
 ⚠ **The Translate and Match rate rises are a RE-BASE, not progress.** Across this boundary, compare counts, not rates. That is what footnote ⁹ is for.
 
 **Decision 2's continuity series is this 140.** No NLP-gated model had been admitted when the re-base landed, so continuity and current are both 140 today.
+
+---
+
+## Day 2 — 2026-10-20 · RT: the license-neutrality gate · 3 h · + P2: batch preparation · 5 h · + P3: licensed convexity · 2 h
+
+**Branch:** `planning/sprint40-day2-neutrality` · **Base:** `94fe8271` (the corpus is 140 since the re-base, PROJECT_PLAN ⁹).
+
+### P1's gate, the licensed half: recorded as the Day 1 prompt requires
+
+- **`licensed-solve.yml`'s first runs on `main` both succeeded.** `39294915808` ran at `135d1037` and `39327845244` at `94fe8271`. In each:
+  - the license activated from `GAMS_ACCESS_CODE` on a **GitHub-hosted** runner, which was the open question behind the CI design;
+  - the edition check read `edition=licensed`;
+  - **all 11 targets ran licensed**;
+  - the scan gate's positive control **hit**, and the summary carried **no license text**;
+  - the license was removed;
+  - **0 `USER:` lines appeared in the published log.**
+- **The negative control** was PR #1762's own demo-only runs:
+  - PR19 printed `edition=demo` twice, and showed **⏭ skipped: over the demo ceiling** with a `::notice::` for exactly the six over-ceiling cohort models;
+  - presolve-divergence printed `edition=demo` and checked 40 models;
+  - 0 `USER:` lines in either log.
+- **P1's Phase-0 gate is complete.**
+
+### RT: the first licensed full run, close rule C8
+
+- **The run:** `run_full_test.py`, all 140 candidates, in a throwaway worktree at `94fe8271` with the raw corpus copied in. 2026-10-19T21:36 → 22:55Z, **79 min**, rc 0, 140 processed, 0 skipped. **The load average stayed ≈ 3 throughout, so load-induced timeouts are not a factor.** It was never persisted.
+  - ⚠ The first launch was **void** and is recorded as such. The raw corpus was copied into `raw/raw/`, so all 140 models were skipped as "file not found". It was fixed, smoke-tested on one model, and relaunched.
+- **The diff,** against the committed DB, on outcome, objective (rel 1e-6), verdict, parse and translate: **198 models outside the two populations, 1 moved.**
+
+  | model | before | after | cause |
+  |---|---|---|---|
+  | `iswnm` | translate **timeout** (600 s, recorded 2026-06-20) | translate **success** in 62 s → `path_syntax_error` | **a stale row, not the license** |
+
+  - Translation is pure Python and never calls GAMS.
+  - The committed row predated the AD speed-ups since Sprint 28, and was never re-run.
+  - The new MCP fails to compile with **identical errors under both editions** (`$140`, `$141`, `$257`; no refusal), measured by compiling it licensed and demo.
+  - ⚠ When a persisted run lands it, report it as a **stale-row correction** (Translate +1, `path_syntax_error` +1, issue #931), **not** as a fix.
+- **Editions:** every one of the **136** solved rows from this run carries `licensed`. The 4 `null` rows (`mexls`, `nebrazil`, `saras`, `sarf`) are cascade `not_tested` rows: translation failed, no GAMS ran, so there is nothing to classify. That is writer W4, correct by design.
+- **C8 holds. Unknown 1.5 is CLOSED:** the license changes no outcome outside the size-refused populations.
+
+### P2: batch preparation
+
+- **Byte identity:** `check_golden_staleness.py --models <the 11> --fail-on-unverified` re-emitted all 11 cohort models at HEAD: **11 checked, 0 drifted, 0 failed, 0 unverified.** Every committed golden is current, so the batch measures the committed emits.
+- **turkey's pre-fix golden is pinned for Decision 1's fail-before sub-rule:**
+  - turkey's golden last changed at **`95ba01ea`** (Sprint 35 Day 6, "turkey $161 compile-recovery"), which is a one-line diff;
+  - the pre-fix golden is `95ba01ea^:data/gamslib/mcp/turkey_mcp.gms` (sha256 `ad6d57d21c0e4ba6…`); the current one is `70aaddac99c91a8f…`;
+  - there is no committed turkey presolve golden;
+  - the licensed run of the pre-fix golden is Day 3's.
+- **The batch:** one `run_full_test.py --model <id>` per model, in a throwaway worktree at `94fe8271` (`/tmp/p2/wt`). 23:16 → 23:28Z, **11.5 min**, rc 0 for all 11.
+  - ⚠ **Deviation:** the prompt says "tonight's nightly slot". The slot was sized to be unattended and uncontended, and the machine was idle (load ≈ 4), so it ran then.
+  - **Every row carries `license_edition: licensed`** and its attribution.
+  - **All 11 buckets reproduce RT exactly:**
+    - `tfordy` and `turkey`: `model_optimal_presolve` + **match**, `MCP-SOLVED`;
+    - `glider` (presolve) and `srpchase` (cold): solve, **mismatch**;
+    - `egypt`, `robot`, `shale`, `sroute` and `tricp`: `model_infeasible`, `MCP-FAILED`;
+    - `ferts` and `tabora`: `path_solve_terminated`, `NO-SOLVE`.
+  - It generated **8 `<id>_mcp_presolve.gms`** files, one for each model that took the presolve retry. Day 3 decides what to persist.
+  - ⚠ **`tricp` writes `cp.eps` into the working directory** (its source plots). Run from the repo root, it leaves an untracked file. One more reason never to `git add -A` after a pipeline run.
+
+### P3: licensed convexity (output-only)
+
+- **The run:** `verify_convexity.py --model <id> --timeout 600 --output <scratch>` for the 9 in-scope NLP-gated models. `andean` is MIP: excluded, never relaxed. The working tree stayed clean (no `catalog.json` or DB write).
+- **All 9 classify convex: 5 `verified_convex`** (airsp, airsp2, indus89, msm, phosdis) **and 4 `likely_convex`** (emfl, jbearing, minsurf, torsion). This matches Prep Task 7.
+  - Every result carries W9's new provenance: `licensed`, the solver actually used, `54.2.1`, and a per-result UTC `verification_date`.
+  - ⚠ **`airsp2` classifies from a `DECISM` solve**, not the CPLEX LP that was requested. This is the multi-solve reference question (`PLAN.md` §3 P3) to settle before its comparison enters a headline.
+- **W10, `scripts/gamslib/apply_convexity_results.py`:**
+  - `--db` is required, with no default;
+  - `convexity` is **replaced, not merged**;
+  - non-nullable fields are omitted when `None`, so a successful result writes no `error: null`;
+  - `license_edition` and `gams_version` are always written;
+  - each result's own `verification_date` is copied verbatim, and a result without one is **refused**;
+  - **the corpus hold:** a model entering the convex set is refused unless it is `--admit`-ted **and recorded in `data/corpus_admissions.json`**. The record is required so that `kpi_block --corpus continuity` can drop it; without it, continuity would grow silently anyway;
+  - an `--admit` that admits nothing is refused;
+  - MINLP/MIP and unknown ids are refused;
+  - every problem is reported in one run, and nothing is written on refusal;
+  - it validates before writing and backs up to the git-ignored `data/gamslib/archive/`.
+- **On the real report, against a scratch DB:**
+  - with no `--admit`, it **refuses all 9**;
+  - with `--admit` but no record, it **refuses**;
+  - with both, it applies and validates, and the summary says "the candidate corpus moves by +9: report both denominators (C4)";
+  - afterwards `kpi_block --corpus current` reports **149** candidates and `--corpus continuity` **140**. The committed DB was untouched.
+- **Tests: `tests/gamslib/test_apply_convexity_results.py` (12), with 6 mutants, all caught.** The first run let three survive, because three tests were **vacuous**: each was refused by a *different* guard than the one it claimed to test. Each now isolates its guard:
+  - the hold: the model is recorded but not admitted;
+  - the MIP refusal: `andean` admitted and recorded, asserted on the planner's own message;
+  - the missing date: asserted on the refusal itself, because a `null` date would also fail schema validation.
+
+### Gate
+
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,567 passed**, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs. `make check-doc-figures` is clean.
+
+⚠ **A false positive found and worked around, not fixed.** The fact *"presolve rows whose generated file is absent"* includes the pattern `all N rows`, which reads ANY "all *N* rows …" sentence as that count. It flagged this log's edition sentence. The sentence was reworded. Narrowing the pattern is a checker change with its own tests, so it is left for a separate PR.
