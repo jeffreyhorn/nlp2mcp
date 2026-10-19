@@ -289,7 +289,7 @@ def cmd_init(args: argparse.Namespace) -> int:
         # src/diagnostics/convexity_numerical.py. The weakness was always here;
         # only its visibility changed.
         database: dict[str, Any] = {
-            "schema_version": "3.0.0",
+            "schema_version": "3.1.0",
             "created_date": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "updated_date": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "total_models": 0,
@@ -335,9 +335,10 @@ def cmd_init(args: argparse.Namespace) -> int:
         # because `schema.json` constrains `schema_version` to a SemVer pattern
         # rather than to one value.
         #
-        # ⚠ The `--empty` path above still stamps 3.0.0, and that stays correct:
-        # it has `models: []`, so there is no model for the semantic transforms
-        # to have anything to say about.
+        # ⚠ The `--empty` path above stamps the canonical version (3.1.0 since
+        # Sprint 40 P1), and that stays correct: it has `models: []`, so there is
+        # no model for the semantic transforms (or v3.1.0's additive
+        # `license_edition` fields) to have anything to say about.
         logger.warning(
             "Database initialized at schema %s from catalog.json. The semantic "
             "migrations have NOT run: v2.2.0 installs the discrete-model "
@@ -346,7 +347,7 @@ def cmd_init(args: argparse.Namespace) -> int:
             "gates on that block. Until the chain is run, discrete models may be "
             "treated as candidates. Run, in order: migrate_schema_v2.1.0.py, "
             "migrate_schema_v2.2.0.py, migrate_schema_v2.2.1.py, "
-            "migrate_schema_v3.0.0.py",
+            "migrate_schema_v3.0.0.py, migrate_schema_v3.1.0.py",
             database.get("schema_version"),
         )
 

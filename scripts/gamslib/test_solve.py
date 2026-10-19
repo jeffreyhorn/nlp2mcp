@@ -409,6 +409,51 @@ def extract_gams_version(lst_content: str) -> str | None:
     return match.group(1) if match else None
 
 
+# License edition (Sprint 40 P1, schema 3.1.0; LICENSE_PROBE.md §3). GENERIC GAMS
+# text only. A licensed listing's `USER:` line names the licensee, so it is
+# matched by PREFIX, through a negative lookahead, and NEVER captured, returned,
+# logged or stored.
+#
+# Measured on GAMS 54.2.1 (Sprint 40 Day 0, synthetic probes): the effective
+# license -> one non-demo `USER:` line; the demo license on a small model ->
+# `USER: GAMS Demo,`; the demo on an over-ceiling model -> the refusal line and
+# NO `USER:` line at all. The demo patterns are tested first, so a listing that
+# somehow carries both reads as demo.
+_DEMO_EDITION = re.compile(
+    r"^(?:\*{4} The model exceeds the demo license limits\b|USER: GAMS Demo,)", re.M
+)
+_LICENSED_EDITION = re.compile(r"^USER: (?!GAMS Demo,)", re.M)
+
+# The solver that actually ran, from the SOLVE SUMMARY
+# ("     SOLVER  CONOPT   FROM LINE  3"). Read, never inferred from the option
+# passed: QCP runs CONOPT by default whatever `NLP=` says (Prep Task 3).
+_SOLVER_LINE = re.compile(r"^\s+SOLVER\s+(\S+)\s+FROM LINE\b", re.M)
+
+
+def extract_license_edition(lst_content: str) -> str | None:
+    """Classify the GAMS edition that produced a listing.
+
+    Returns ``"demo"``, ``"licensed"``, or ``None`` when neither marker is
+    present. ``None`` means *unrecorded*: it is never guessed as ``"demo"``
+    (schema 3.1.0 null semantics). Nothing from the ``USER:`` line is returned.
+    """
+    if _DEMO_EDITION.search(lst_content):
+        return "demo"
+    if _LICENSED_EDITION.search(lst_content):
+        return "licensed"
+    return None
+
+
+def extract_solver_name(lst_content: str) -> str | None:
+    """The solver named in the listing's last SOLVE SUMMARY, or ``None``.
+
+    The last match wins: a multi-solve listing reports its final solve. A
+    demo-refused listing has no SOLVE SUMMARY, so it returns ``None``.
+    """
+    matches = _SOLVER_LINE.findall(lst_content)
+    return matches[-1] if matches else None
+
+
 def categorize_solve_outcome(
     solver_status: int | None,
     model_status: int | None,
@@ -1162,6 +1207,8 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
             "iterations": None,
             "outcome_category": PATH_SOLVE_TERMINATED,
             "error": "GAMS executable not found",
+            # No GAMS ran, so no listing was classified: null, never guessed.
+            "license_edition": None,
         }
 
     mcp_path = Path(mcp_path).absolute()
@@ -1212,6 +1259,8 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
                 "iterations": None,
                 "outcome_category": PATH_SOLVE_TIME_LIMIT,
                 "error": f"Timeout after {timeout} seconds",
+                # The run was killed before its listing could be classified.
+                "license_edition": None,
             }
 
         # Parse .lst file
@@ -1227,6 +1276,8 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
                 "iterations": None,
                 "outcome_category": PATH_SOLVE_TERMINATED,
                 "error": "No .lst file generated",
+                # No listing, nothing to classify.
+                "license_edition": None,
             }
 
         lst_content = lst_path.read_text()
@@ -1317,6 +1368,7 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
         # Extract PATH solver version from .lst file
         path_version = extract_path_version(lst_content)
         gams_version = extract_gams_version(lst_content)
+        license_edition = extract_license_edition(lst_content)
 
         # Get objective value (try explicit line first, then variable extraction)
         objective = parsed.get("objective_value")
@@ -1399,6 +1451,9 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
             # Sprint 37 Day 10: per-row GAMS provenance. `solver_version` is
             # PATH's version and cannot answer "which GAMS produced this row".
             "gams_version": gams_version,
+            # Sprint 40 P1 (schema 3.1.0): the edition of THIS run, from its own
+            # listing. None when neither marker is present -- never guessed.
+            "license_edition": license_edition,
             "solver_status": solver_status,
             "solver_status_text": (
                 SOLVER_STATUS_DESCRIPTIONS.get(solver_status, "Unknown") if solver_status else None
@@ -1468,6 +1523,10 @@ def update_model_solve_result(
         "solver": "PATH",
         "solver_version": solve_result.get("solver_version"),
         "gams_version": solve_result.get("gams_version"),
+        # Sprint 40 P1 (schema 3.1.0). ALWAYS written, null included: this is a
+        # fixed-key-list writer, and a field it does not name VANISHES on this
+        # path -- how `mcp_attribution` was lost in Sprint 39 (below).
+        "license_edition": solve_result.get("license_edition"),
         "solver_status": solve_result["solver_status"],
         "solver_status_text": solve_result["solver_status_text"],
         "model_status": solve_result["model_status"],

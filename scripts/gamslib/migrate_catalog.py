@@ -178,6 +178,18 @@ def transform_entry(entry: dict[str, Any], migration_date: str) -> dict[str, Any
         if "verification_error" in entry and entry["verification_error"]:
             convexity["error"] = entry["verification_error"]
 
+        # Sprint 40 P1 (schema 3.1.0): run provenance written by
+        # `verify_convexity.update_catalog_entry`, copied ONLY when present.
+        # Absent is not "demo": a catalog-initialized DB gets `license_edition:
+        # null` from migrate_schema_v3.1.0.py, at the end of the chain.
+        for flat, nested in (
+            ("license_edition", "license_edition"),
+            ("gams_version", "gams_version"),
+            ("convexity_solver", "solver"),
+        ):
+            if entry.get(flat) is not None:
+                convexity[nested] = entry[flat]
+
         new_entry["convexity"] = convexity
 
     # Pipeline stages are NOT added - they're absent until tested

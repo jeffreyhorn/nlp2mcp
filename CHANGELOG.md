@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 40
+
+- **Day 0 (2026-10-18): the baseline reproduces, and P1's schema 3.1.0 lands.** Detail: `docs/planning/EPIC_4/SPRINT_40/SPRINT_LOG.md` §Day 0.
+  - **Baseline at `cd5c6b7e`:** Solve 111 · Match 95 (65 + 30) · Translate 135 · floor 75 · `path_solve_terminated` 0 · `path_solve_license` 11. The only `src/` change since `bd2af6e9` is PR #1760's emit-neutral `procDirPath` argument in `gams_check.py`.
+  - **Schema 3.1.0:** `license_edition` (`licensed` / `demo` / `null`) in `mcp_solve_result` and `convexity_result`, plus `convexity_result.gams_version`. `null` = unrecorded, never a guessed `"demo"`.
+  - **One parser** (`extract_license_edition`, `extract_solver_name` in `test_solve.py`), verified against real 54.2.1 listings, licensed and demo.
+  - **Writers W1–W9 and W11** (`migrate_schema_v3.1.0.py`), including the two fixed-key-list writers that silently drop unnamed fields. W10, the P3 application writer with its corpus hold, is scheduled for Days 2–3.
+  - **The committed DB is migrated:** 150 + 219 + 219 fields added, all `null`; otherwise identical, and `kpi_block` figures unchanged.
+  - **Tests:** a positive control against the 3.0.0 schema and 10 mutants, every one caught.
+
 ### Fixed
 
 - **GAMS process directories no longer leak into the working tree (and with them a license copy).** GAMS creates a process directory (`225a/`, `225b/` … `225bq/`) in its cwd and leaves it there when killed. Since the full license, it holds `gamslice.dat`.

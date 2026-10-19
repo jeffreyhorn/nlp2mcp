@@ -208,9 +208,16 @@ def test_a_real_migration_validates_against_the_ACTUAL_schema(tmp_path):
     # on the `weapons` row — fields that did not exist at 2.2.1 — so the
     # "round trip" started from a HYBRID and the test could validate migrated
     # output without ever exercising the pre-migration shape it claims to cover.
-    _POST_MIGRATION_FIELDS = ("mcp_attribution", "mcp_completed_own_solve")
+    #
+    # ⚠ Sprint 40 P1 (schema 3.1.0, SCHEMA_3_1_0_DESIGN R4/T6): the committed DB
+    # is now 3.1.0, so the rewind must ALSO strip v3.1.0's additive fields. Kept,
+    # they make the same hybrid -- and the run still passes, because
+    # `schema.json` is the 3.1.0 one, which accepts them.
+    _POST_MIGRATION_FIELDS = ("mcp_attribution", "mcp_completed_own_solve", "license_edition")
+    _POST_MIGRATION_CONVEXITY_FIELDS = ("license_edition", "gams_version")
     src["schema_version"] = "2.2.1"
     src.pop("_migration_summary_v3_0_0", None)
+    src.pop("_migration_summary_v3_1_0", None)
     for m in src["models"]:
         solve = m.get("mcp_solve")
         if isinstance(solve, dict):
@@ -218,6 +225,10 @@ def test_a_real_migration_validates_against_the_ACTUAL_schema(tmp_path):
                 solve["mcp_file_used"] = solve.pop("mcp_file_generated")
             for field in _POST_MIGRATION_FIELDS:
                 solve.pop(field, None)
+        conv = m.get("convexity")
+        if isinstance(conv, dict):
+            for field in _POST_MIGRATION_CONVEXITY_FIELDS:
+                conv.pop(field, None)
 
     # …and assert it, so the fixture cannot silently drift back into a hybrid
     # the next time a field is added to `mcp_solve`.
@@ -226,6 +237,12 @@ def test_a_real_migration_validates_against_the_ACTUAL_schema(tmp_path):
         for m in src["models"]
         if isinstance(m.get("mcp_solve"), dict)
     ), "the fixture must carry no post-migration field"
+    assert not any(
+        set(_POST_MIGRATION_CONVEXITY_FIELDS) & set(m["convexity"])
+        for m in src["models"]
+        if isinstance(m.get("convexity"), dict)
+    ), "…in convexity either"
+    assert "_migration_summary_v3_1_0" not in src
     assert any(
         "mcp_file_used" in m["mcp_solve"]
         for m in src["models"]

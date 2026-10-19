@@ -716,6 +716,11 @@ class TestCmdInitStampsTheCanonicalVersion:
         assert "have NOT run" in warning
         assert "migrate_schema_v2.2.0.py" in warning, "the discrete-model skip block"
         assert "migrate_schema_v2.2.1.py" in warning, "the multi-solve exclusion"
+        # Sprint 40 P1: the chain ends with v3.1.0, AFTER v3.0.0 (its FROM version).
+        assert "migrate_schema_v3.1.0.py" in warning, "the license_edition migration"
+        assert warning.index("migrate_schema_v3.0.0.py") < warning.index(
+            "migrate_schema_v3.1.0.py"
+        ), "v3.1.0 refuses any start but 3.0.0, so it must be listed after it"
 
     def test_the_discrete_skip_block_is_what_makes_this_matter(self):
         """⚠ The CONSUMER, asserted rather than described.
