@@ -11,7 +11,6 @@ are the owner's answer:
 
 from __future__ import annotations
 
-import copy
 import importlib.util
 import json
 import subprocess
@@ -29,6 +28,32 @@ _SPEC.loader.exec_module(ft)
 COMMITTED = json.loads((PROJECT_ROOT / "data" / "floor_provenance.json").read_text())
 
 
+def _fixture() -> dict:
+    """A deterministic provenance file: baseline 73 + 2 counted entries = 75.
+
+    The behavioural tests build on THIS, never on the committed file, which
+    moves whenever the floor does (Sprint 40 Day 3 added turkey, 75 -> 76). A
+    test pinned to the committed figure would break on every genuine landing,
+    and one that put a since-counted model in the ledger would start failing
+    the "never both" rule for the wrong reason.
+    """
+    return {
+        "baseline": {"count": 73, "as_of": "S37-close"},
+        "expected_floor": 75,
+        "entries": [
+            {
+                "model_id": m,
+                "limb": "presolve-match-genuine",
+                "since_sprint": 38,
+                "evidence": "cold emit changed by an emit fix",
+                "pr": "0000",
+            }
+            for m in ("elec", "twocge")
+        ],
+        "license_unlocked": [],
+    }
+
+
 def _ledger_entry(model: str = "tfordy", limb: str = "license-unlocked-cold-match") -> dict:
     return {
         "model_id": model,
@@ -39,14 +64,20 @@ def _ledger_entry(model: str = "tfordy", limb: str = "license-unlocked-cold-matc
     }
 
 
-def test_the_committed_file_has_an_empty_ledger_and_floor_75() -> None:
-    assert COMMITTED["license_unlocked"] == []
-    assert ft.compute_floor(COMMITTED) == COMMITTED["expected_floor"] == 75
+def test_the_committed_file_is_self_consistent() -> None:
+    # The figure itself is pinned by `expected_floor` (the tracker exits on a
+    # divergence), so this test asserts consistency, not a number.
+    assert ft.compute_floor(COMMITTED) == COMMITTED["expected_floor"]
     assert ft.validate_entries(COMMITTED) == []
 
 
+def test_the_fixture_floor_is_75() -> None:
+    assert ft.compute_floor(_fixture()) == _fixture()["expected_floor"] == 75
+    assert ft.validate_entries(_fixture()) == []
+
+
 def test_a_ledger_entry_never_moves_the_floor() -> None:
-    prov = copy.deepcopy(COMMITTED)
+    prov = _fixture()
     before = ft.compute_floor(prov)
     prov["license_unlocked"] = [_ledger_entry("tfordy"), _ledger_entry("turkey")]
     assert ft.compute_floor(prov) == before
@@ -55,21 +86,21 @@ def test_a_ledger_entry_never_moves_the_floor() -> None:
 
 
 def test_only_cold_matches_enter_the_ledger() -> None:
-    prov = copy.deepcopy(COMMITTED)
+    prov = _fixture()
     prov["license_unlocked"] = [_ledger_entry(limb="license-unlocked-presolve-match")]
     problems = ft.validate_entries(prov)
     assert any("COLD matches only" in p for p in problems), problems
 
 
 def test_a_model_is_never_both_counted_and_in_the_ledger() -> None:
-    prov = copy.deepcopy(COMMITTED)
+    prov = _fixture()
     counted = prov["entries"][0]["model_id"]
     prov["license_unlocked"] = [_ledger_entry(counted)]
     assert any("never both" in p for p in ft.validate_entries(prov))
 
 
 def test_ledger_entries_need_the_same_audit_fields_and_no_duplicates() -> None:
-    prov = copy.deepcopy(COMMITTED)
+    prov = _fixture()
     bad = _ledger_entry()
     del bad["evidence"]
     prov["license_unlocked"] = [bad, _ledger_entry("x"), _ledger_entry("x")]
@@ -79,7 +110,7 @@ def test_ledger_entries_need_the_same_audit_fields_and_no_duplicates() -> None:
 
 
 def test_a_pre_sprint_40_file_without_a_ledger_still_works() -> None:
-    prov = copy.deepcopy(COMMITTED)
+    prov = _fixture()
     del prov["license_unlocked"]
     assert ft.license_unlocked(prov) == []
     assert ft.compute_floor(prov) == 75
@@ -102,7 +133,7 @@ def _run(tmp_path: Path, prov: dict, *args: str) -> subprocess.CompletedProcess:
 
 
 def test_the_report_states_the_ledger_beside_the_floor(tmp_path) -> None:
-    prov = copy.deepcopy(COMMITTED)
+    prov = _fixture()
     prov["license_unlocked"] = [_ledger_entry("tfordy")]
     out = _run(tmp_path, prov)
     assert out.returncode == 0, out.stderr
@@ -113,6 +144,6 @@ def test_the_report_states_the_ledger_beside_the_floor(tmp_path) -> None:
 
 
 def test_an_invalid_ledger_fails_the_tracker(tmp_path) -> None:
-    prov = copy.deepcopy(COMMITTED)
+    prov = _fixture()
     prov["license_unlocked"] = [_ledger_entry(limb="presolve-match-genuine")]
     assert _run(tmp_path, prov).returncode == 1

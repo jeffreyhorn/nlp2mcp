@@ -32,5 +32,87 @@
     "evidence": "the verifier run, in one line, with its commit",
     "pr": "the PR that admitted it"
   },
-  "admissions": []
+  "admissions": [
+    {
+      "model_id": "airsp",
+      "admitted_sprint": 40,
+      "rule": "verifier-convex",
+      "classification": "verified_convex",
+      "license_edition": "licensed",
+      "evidence": "verify_convexity.py --model airsp --timeout 600 at 94fe8271: verified_convex, CPLEX MS 1, GAMS 54.2.1 licensed, 2026-10-19T23:16:56Z (Sprint 40 Day 2)",
+      "pr": "1765"
+    },
+    {
+      "model_id": "airsp2",
+      "admitted_sprint": 40,
+      "rule": "verifier-convex",
+      "classification": "verified_convex",
+      "license_edition": "licensed",
+      "evidence": "verify_convexity.py --model airsp2 --timeout 600 at 94fe8271: verified_convex, DECISM MS 1, GAMS 54.2.1 licensed, 2026-10-19T23:17:00Z (Sprint 40 Day 2)",
+      "pr": "1765"
+    },
+    {
+      "model_id": "emfl",
+      "admitted_sprint": 40,
+      "rule": "verifier-convex",
+      "classification": "likely_convex",
+      "license_edition": "licensed",
+      "evidence": "verify_convexity.py --model emfl --timeout 600 at 94fe8271: likely_convex, CONOPT MS 2, GAMS 54.2.1 licensed, 2026-10-19T23:17:05Z (Sprint 40 Day 2)",
+      "pr": "1765"
+    },
+    {
+      "model_id": "indus89",
+      "admitted_sprint": 40,
+      "rule": "verifier-convex",
+      "classification": "verified_convex",
+      "license_edition": "licensed",
+      "evidence": "verify_convexity.py --model indus89 --timeout 600 at 94fe8271: verified_convex, CPLEX MS 1, GAMS 54.2.1 licensed, 2026-10-19T23:17:07Z (Sprint 40 Day 2)",
+      "pr": "1765"
+    },
+    {
+      "model_id": "jbearing",
+      "admitted_sprint": 40,
+      "rule": "verifier-convex",
+      "classification": "likely_convex",
+      "license_edition": "licensed",
+      "evidence": "verify_convexity.py --model jbearing --timeout 600 at 94fe8271: likely_convex, CONOPT MS 2, GAMS 54.2.1 licensed, 2026-10-19T23:17:08Z (Sprint 40 Day 2)",
+      "pr": "1765"
+    },
+    {
+      "model_id": "minsurf",
+      "admitted_sprint": 40,
+      "rule": "verifier-convex",
+      "classification": "likely_convex",
+      "license_edition": "licensed",
+      "evidence": "verify_convexity.py --model minsurf --timeout 600 at 94fe8271: likely_convex, CONOPT MS 2, GAMS 54.2.1 licensed, 2026-10-19T23:17:09Z (Sprint 40 Day 2)",
+      "pr": "1765"
+    },
+    {
+      "model_id": "msm",
+      "admitted_sprint": 40,
+      "rule": "verifier-convex",
+      "classification": "verified_convex",
+      "license_edition": "licensed",
+      "evidence": "verify_convexity.py --model msm --timeout 600 at 94fe8271: verified_convex, CPLEX MS 1, GAMS 54.2.1 licensed, 2026-10-19T23:17:11Z (Sprint 40 Day 2)",
+      "pr": "1765"
+    },
+    {
+      "model_id": "phosdis",
+      "admitted_sprint": 40,
+      "rule": "verifier-convex",
+      "classification": "verified_convex",
+      "license_edition": "licensed",
+      "evidence": "verify_convexity.py --model phosdis --timeout 600 at 94fe8271: verified_convex, CPLEX MS 1, GAMS 54.2.1 licensed, 2026-10-19T23:17:13Z (Sprint 40 Day 2)",
+      "pr": "1765"
+    },
+    {
+      "model_id": "torsion",
+      "admitted_sprint": 40,
+      "rule": "verifier-convex",
+      "classification": "likely_convex",
+      "license_edition": "licensed",
+      "evidence": "verify_convexity.py --model torsion --timeout 600 at 94fe8271: likely_convex, CONOPT MS 2, GAMS 54.2.1 licensed, 2026-10-19T23:17:14Z (Sprint 40 Day 2)",
+      "pr": "1765"
+    }
+  ]
 }

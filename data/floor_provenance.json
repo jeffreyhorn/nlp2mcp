@@ -41,7 +41,7 @@
     "decided_by": "owner",
     "note": "In-corpus only. The historical figure 76 credited three non_convex, OUT-OF-CORPUS models (ps2_f_s, ps2_s, ps3_s_gic) from the Sprint-31 +4; 76 - 3 = 73. The S31-S37 series was therefore overstated by 3, and Sprint 37's advance re-reads as 72 -> 73. Per-model records for the opaque 'S28 genuine 68' block were never kept and are NOT reconstructible -- only 14 of the 76 were ever attributable by name. Option (a) (in-corpus) was chosen over (b) (keep 76 with a documented scope) because the floor is reported in the same breath as Solve and Match, which are strictly in-corpus; a metric whose corpus differs silently from its neighbours is the more dangerous of the two states."
   },
-  "expected_floor": 75,
+  "expected_floor": 76,
   "entries": [
     {
       "model_id": "elec",
@@ -56,6 +56,13 @@
       "since_sprint": 38,
       "evidence": "cold emit changed at 204f35ac (+10/-0): two nu_*.fx guard lines fixing multipliers for MCP-excluded instances. Was path_solve_terminated (solver_version: None, aborting before PATH); now model_optimal_presolve + match. Cold emit reaches MS-1 @ 55.508 vs NLP 56.7778, so the match arrives via the presolve warm start.",
       "pr": "1703"
+    },
+    {
+      "model_id": "turkey",
+      "limb": "presolve-match-genuine",
+      "since_sprint": 40,
+      "evidence": "cold emit changed at 95ba01ea (S35 Day 6, +1/-1): domain-less 2-D set `ao` now quoted per component ('oil-crops'.sunflower), ending $161 x6. Never runnable under the demo (path_solve_license); licensed (Sprint 40 Day 3, batch f1771435): model_optimal_presolve + match @ 29078.2106, MCP-SOLVED. Fail-before sub-rule (Decision 1) HOLDS: the pre-fix golden 95ba01ea^ (sha256 ad6d57d21c0e4ba6...) run licensed fails compile ($161, $257), so it does not match. Current cold emit reaches MS-5 @ -5.473, so the match arrives via the presolve warm start.",
+      "pr": "1765"
     }
   ],
   "_entry_schema": {
