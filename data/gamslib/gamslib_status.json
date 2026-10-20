@@ -1,7 +1,7 @@
 {
   "schema_version": "3.1.0",
   "created_date": "2026-01-26T16:07:08Z",
-  "updated_date": "2026-10-19T23:28:03.930518+00:00",
+  "updated_date": "2026-10-20T02:51:22.657617+00:00",
   "total_models": 219,
   "models": [
     {
@@ -254,12 +254,16 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "error",
-        "verification_date": "2026-01-01T14:57:29Z",
-        "solve_time_seconds": 0.497,
-        "error": "Model exceeds demo license limits",
-        "license_edition": null,
-        "gams_version": null
+        "status": "verified_convex",
+        "verification_date": "2026-10-19T23:16:56Z",
+        "solver_status": 1,
+        "model_status": 1,
+        "objective_value": 1566.0422,
+        "solve_time_seconds": 1.119135856628418,
+        "timed_out": false,
+        "solver": "CPLEX",
+        "license_edition": "licensed",
+        "gams_version": "54.2.1"
       }
     },
     {
@@ -277,12 +281,16 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "error",
-        "verification_date": "2026-01-01T14:57:29Z",
-        "solve_time_seconds": 0.501,
-        "error": "Model exceeds demo license limits",
-        "license_edition": null,
-        "gams_version": null
+        "status": "verified_convex",
+        "verification_date": "2026-10-19T23:17:00Z",
+        "solver_status": 1,
+        "model_status": 1,
+        "objective_value": 1037.246,
+        "solve_time_seconds": 4.208530902862549,
+        "timed_out": false,
+        "solver": "DECISM",
+        "license_edition": "licensed",
+        "gams_version": "54.2.1"
       }
     },
     {
@@ -2791,12 +2799,16 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "error",
-        "verification_date": "2026-01-01T14:58:03Z",
-        "solve_time_seconds": 0.278,
-        "error": "Model exceeds demo license limits",
-        "license_edition": null,
-        "gams_version": null
+        "status": "likely_convex",
+        "verification_date": "2026-10-19T23:17:05Z",
+        "solver_status": 1,
+        "model_status": 2,
+        "objective_value": 46.8675,
+        "solve_time_seconds": 4.996516227722168,
+        "timed_out": false,
+        "solver": "CONOPT",
+        "license_edition": "licensed",
+        "gams_version": "54.2.1"
       }
     },
     {
@@ -4717,12 +4729,16 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "error",
-        "verification_date": "2026-01-01T14:58:38Z",
-        "solve_time_seconds": 0.335,
-        "error": "Model exceeds demo license limits",
-        "license_edition": null,
-        "gams_version": null
+        "status": "verified_convex",
+        "verification_date": "2026-10-19T23:17:07Z",
+        "solver_status": 1,
+        "model_status": 1,
+        "objective_value": 114873.6556,
+        "solve_time_seconds": 1.181427001953125,
+        "timed_out": false,
+        "solver": "CPLEX",
+        "license_edition": "licensed",
+        "gams_version": "54.2.1"
       }
     },
     {
@@ -4919,12 +4935,16 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "error",
-        "verification_date": "2026-01-01T14:58:40Z",
-        "solve_time_seconds": 0.243,
-        "error": "Model exceeds demo license limits",
-        "license_edition": null,
-        "gams_version": null
+        "status": "likely_convex",
+        "verification_date": "2026-10-19T23:17:08Z",
+        "solver_status": 1,
+        "model_status": 2,
+        "objective_value": -0.1548,
+        "solve_time_seconds": 0.7859189510345459,
+        "timed_out": false,
+        "solver": "CONOPT",
+        "license_edition": "licensed",
+        "gams_version": "54.2.1"
       }
     },
     {
@@ -7032,12 +7052,16 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "error",
-        "verification_date": "2026-01-01T14:59:29Z",
-        "solve_time_seconds": 0.278,
-        "error": "Model exceeds demo license limits",
-        "license_edition": null,
-        "gams_version": null
+        "status": "likely_convex",
+        "verification_date": "2026-10-19T23:17:09Z",
+        "solver_status": 1,
+        "model_status": 2,
+        "objective_value": 2.5195,
+        "solve_time_seconds": 0.7467160224914551,
+        "timed_out": false,
+        "solver": "CONOPT",
+        "license_edition": "licensed",
+        "gams_version": "54.2.1"
       }
     },
     {
@@ -7297,12 +7321,16 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "error",
-        "verification_date": "2026-01-01T14:59:30Z",
-        "solve_time_seconds": 0.248,
-        "error": "Model exceeds demo license limits",
-        "license_edition": null,
-        "gams_version": null
+        "status": "verified_convex",
+        "verification_date": "2026-10-19T23:17:11Z",
+        "solver_status": 1,
+        "model_status": 1,
+        "objective_value": 3957.98,
+        "solve_time_seconds": 1.5202980041503906,
+        "timed_out": false,
+        "solver": "CPLEX",
+        "license_edition": "licensed",
+        "gams_version": "54.2.1"
       }
     },
     {
@@ -8002,12 +8030,16 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "error",
-        "verification_date": "2026-01-01T14:59:38Z",
-        "solve_time_seconds": 0.243,
-        "error": "Model exceeds demo license limits",
-        "license_edition": null,
-        "gams_version": null
+        "status": "verified_convex",
+        "verification_date": "2026-10-19T23:17:13Z",
+        "solver_status": 1,
+        "model_status": 1,
+        "objective_value": 959033.0,
+        "solve_time_seconds": 1.8000171184539795,
+        "timed_out": false,
+        "solver": "CPLEX",
+        "license_edition": "licensed",
+        "gams_version": "54.2.1"
       }
     },
     {
@@ -12614,12 +12646,16 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "error",
-        "verification_date": "2026-01-01T15:02:06Z",
-        "solve_time_seconds": 0.307,
-        "error": "Model exceeds demo license limits",
-        "license_edition": null,
-        "gams_version": null
+        "status": "likely_convex",
+        "verification_date": "2026-10-19T23:17:14Z",
+        "solver_status": 1,
+        "model_status": 2,
+        "objective_value": -0.4175,
+        "solve_time_seconds": 0.6736419200897217,
+        "timed_out": false,
+        "solver": "CONOPT",
+        "license_edition": "licensed",
+        "gams_version": "54.2.1"
       }
     },
     {
