@@ -1,7 +1,7 @@
 # Emitter: Multiplier naming exceeds GAMS 63-char identifier limit on models with synthetic element hashes (ferts)
 
 **GitHub Issue:** [#1290](https://github.com/jeffreyhorn/nlp2mcp/issues/1290)
-**Status:** OPEN — Sprint 25 Priority 2
+**Status:** CLOSED 2026-10-20 (Sprint 40 Day 4) — no longer reproduces: 0 compile errors, identifiers hash-truncated; ferts now tracked as #1767 (was: OPEN — Sprint 25 Priority 2)
 **Severity:** Medium — Blocks 1 of 5 Sprint 25 Priority 2 recovered-translate models (`ferts`)
 **Date:** 2026-04-20
 **Affected Models:** `ferts` (observed); any model with hashed element names combined into multiplier names

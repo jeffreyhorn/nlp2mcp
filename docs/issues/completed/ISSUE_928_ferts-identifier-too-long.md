@@ -1,7 +1,7 @@
 # ferts: Translation Timeout — Egypt Static Fertilizer Model
 
 **GitHub Issue:** [#928](https://github.com/jeffreyhorn/nlp2mcp/issues/928)
-**Status:** OPEN
+**Status:** CLOSED 2026-10-20 (Sprint 40 Day 4) — no longer reproduces: 0 compile errors, identifiers hash-truncated; ferts now tracked as #1767
 **Severity:** Medium — Model parses but translation times out (>60s)
 **Date:** 2026-02-26
 **Affected Models:** ferts

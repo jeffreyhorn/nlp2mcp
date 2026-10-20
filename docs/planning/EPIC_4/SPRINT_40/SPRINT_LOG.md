@@ -548,8 +548,8 @@ Each note reproduces its fingerprint (licensed GAMS 54.2.1, committed goldens at
 
 Every live doc that named a cohort or admitted model's bucket was checked. Sprint logs, CHANGELOG entries and completed issues are history and were left alone.
 
-- **`ISSUE_927` (egypt "demo license limit"):** superseded. A dated status was added, plus a GitHub comment suggesting closure (the owner's call).
-- **`ISSUE_928`, `ISSUE_1290` (ferts 63-character identifiers):** **no longer reproduce.** The golden compiles with 0 errors; the only ≥ 64-character tokens are in `*` comments, and the identifiers are hash-truncated. Dated status added, and GitHub comments suggest closure.
+- **`ISSUE_927` (egypt "demo license limit"):** superseded. **Closed by owner decision** (2026-10-20, as not planned), and the doc moved to `docs/issues/completed/`.
+- **`ISSUE_928`, `ISSUE_1290` (ferts 63-character identifiers):** **no longer reproduce.** The golden compiles with 0 errors; the only ≥ 64-character tokens are in `*` comments, and the identifiers are hash-truncated. **Closed by owner decision** (2026-10-20, as completed), and both docs moved to `docs/issues/completed/`.
 - **`ISSUE_1385`:** the srpchase wrong-answer measurement, added.
 - **`ISSUE_1755`:** egypt recorded as a related sibling (#1776), **not** an instance. Its "latent in the corpus" scope line stands.
 - **`data/gamslib/convexity_report.md`:** its 2026-01-01 "License Limit Errors" list is marked superseded by the Day 2/3 licensed verification.
@@ -577,7 +577,7 @@ Every live doc that named a cohort or admitted model's bucket was checked. Sprin
 
 - **Unrouted non-match fingerprints: 0.**
 - **Issues opened: 11** (#1766–#1776). **Existing issues updated: 7** (#919, #933, #1385, #1755, #927, #928, #1290).
-- **Owner decisions surfaced, not taken:** closing #927, #928 and #1290.
+- **Closed by owner decision:** #927, #928 and #1290. Their docs moved to `docs/issues/completed/`.
 
 ### Gate
 

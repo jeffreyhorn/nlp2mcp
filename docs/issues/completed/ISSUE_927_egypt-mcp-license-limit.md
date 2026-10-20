@@ -1,7 +1,7 @@
 # egypt: Translation Timeout — Large LP Agricultural Model
 
 **GitHub Issue:** [#927](https://github.com/jeffreyhorn/nlp2mcp/issues/927)
-**Status:** OPEN
+**Status:** CLOSED 2026-10-20 (Sprint 40 Day 4) — superseded: the full license removed the demo limit; open defects are #1776, #1766 and P4
 **Severity:** Medium — Model parses but translation times out (>60s)
 **Date:** 2026-02-26
 **Affected Models:** egypt
