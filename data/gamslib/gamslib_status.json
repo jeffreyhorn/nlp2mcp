@@ -1,7 +1,7 @@
 {
   "schema_version": "3.1.0",
   "created_date": "2026-01-26T16:07:08Z",
-  "updated_date": "2026-10-20T02:51:22.657617+00:00",
+  "updated_date": "2026-10-20T03:22:30.530862+00:00",
   "total_models": 219,
   "models": [
     {
@@ -264,6 +264,40 @@
         "solver": "CPLEX",
         "license_edition": "licensed",
         "gams_version": "54.2.1"
+      },
+      "nlp2mcp_parse": {
+        "status": "success",
+        "parse_date": "2026-10-20T03:00:01.977305+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "parse_time_seconds": 2.7639,
+        "variables_count": 6,
+        "equations_count": 7
+      },
+      "model_statistics": {
+        "variables": 6,
+        "equations": 7,
+        "parameters": 0,
+        "sets": 7
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-10-20T03:10:02.126475+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "translate_time_seconds": 600.0221,
+        "error": {
+          "category": "timeout",
+          "message": "Translation timeout after 600 seconds"
+        }
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-10-20T03:10:02.129384+00:00",
+        "license_edition": null
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-10-20T03:10:02.129384+00:00",
+        "notes": "Skipped due to translate failure"
       }
     },
     {
@@ -291,6 +325,65 @@
         "solver": "DECISM",
         "license_edition": "licensed",
         "gams_version": "54.2.1"
+      },
+      "nlp2mcp_parse": {
+        "status": "success",
+        "parse_date": "2026-10-20T03:10:04.367046+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "parse_time_seconds": 1.843,
+        "variables_count": 5,
+        "equations_count": 7
+      },
+      "model_statistics": {
+        "variables": 5,
+        "equations": 7,
+        "parameters": 0,
+        "sets": 5
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-10-20T03:10:06.937331+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "translate_time_seconds": 2.5219,
+        "output_file": "data/gamslib/mcp/airsp2_mcp.gms"
+      },
+      "mcp_solve": {
+        "status": "success",
+        "solve_date": "2026-10-20T03:10:13.687694+00:00",
+        "solver": "PATH",
+        "solver_version": "5.2.01",
+        "gams_version": "54.2.1",
+        "license_edition": "licensed",
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": 1037.246,
+        "solve_time_seconds": 3.7316,
+        "iterations": 8,
+        "outcome_category": "model_optimal_presolve",
+        "mcp_attribution": "MCP-SOLVED",
+        "mcp_completed_own_solve": true,
+        "presolve_required": true,
+        "mcp_file_generated": "data/gamslib/mcp/airsp2_mcp_presolve.gms"
+      },
+      "solution_comparison": {
+        "comparison_status": "match",
+        "comparison_date": "2026-10-20T03:10:13.688159+00:00",
+        "nlp_objective": 1037.246,
+        "mcp_objective": 1037.246,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0,
+        "objective_match": true,
+        "tolerance_absolute": 1e-08,
+        "tolerance_relative": 0.002,
+        "nlp_solver_status": 1,
+        "nlp_model_status": 1,
+        "mcp_solver_status": 1,
+        "mcp_model_status": 1,
+        "status_match": true,
+        "comparison_result": "compare_objective_match",
+        "notes": "Match within tolerance (diff=0.00e+00, tol=2.07e+00)"
       }
     },
     {
@@ -2809,6 +2902,30 @@
         "solver": "CONOPT",
         "license_edition": "licensed",
         "gams_version": "54.2.1"
+      },
+      "nlp2mcp_parse": {
+        "status": "failure",
+        "parse_date": "2026-10-20T03:10:14.488374+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "parse_time_seconds": 0.4423,
+        "error": {
+          "category": "lexer_invalid_char",
+          "message": "Error: Parse error at line 36, column 46: Unexpected character: '%'\n  n  'total number of new facilities'    / n1*n%new%  /\n                                               ^\n\nSuggestion: This character is not valid in this context"
+        }
+      },
+      "nlp2mcp_translate": {
+        "status": "not_tested",
+        "translate_date": "2026-10-20T03:10:14.538941+00:00"
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-10-20T03:10:14.538941+00:00",
+        "license_edition": null
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-10-20T03:10:14.538941+00:00",
+        "notes": "Skipped due to parse failure"
       }
     },
     {
@@ -4739,6 +4856,30 @@
         "solver": "CPLEX",
         "license_edition": "licensed",
         "gams_version": "54.2.1"
+      },
+      "nlp2mcp_parse": {
+        "status": "failure",
+        "parse_date": "2026-10-20T03:10:16.185849+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "parse_time_seconds": 1.2922,
+        "error": {
+          "category": "lexer_invalid_char",
+          "message": "Error: Parse error at line 128, column 11: Unexpected character: 'S'\n  Singleton Set\n            ^\n\nSuggestion: This character is not valid in this context"
+        }
+      },
+      "nlp2mcp_translate": {
+        "status": "not_tested",
+        "translate_date": "2026-10-20T03:10:16.248980+00:00"
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-10-20T03:10:16.248980+00:00",
+        "license_edition": null
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-10-20T03:10:16.248980+00:00",
+        "notes": "Skipped due to parse failure"
       }
     },
     {
@@ -4945,6 +5086,54 @@
         "solver": "CONOPT",
         "license_edition": "licensed",
         "gams_version": "54.2.1"
+      },
+      "nlp2mcp_parse": {
+        "status": "success",
+        "parse_date": "2026-10-20T03:10:17.505093+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "parse_time_seconds": 0.8866,
+        "variables_count": 2,
+        "equations_count": 1
+      },
+      "model_statistics": {
+        "variables": 2,
+        "equations": 1,
+        "parameters": 0,
+        "sets": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-10-20T03:10:55.320010+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "translate_time_seconds": 37.7589,
+        "output_file": "data/gamslib/mcp/jbearing_mcp.gms"
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-10-20T03:10:56.071656+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "gams_version": "54.2.1",
+        "license_edition": "licensed",
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.6604,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "mcp_attribution": "NO-SOLVE",
+        "mcp_completed_own_solve": false,
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-10-20T03:10:56.071744+00:00",
+        "notes": "Skipped due to solve failure"
       }
     },
     {
@@ -7062,6 +7251,54 @@
         "solver": "CONOPT",
         "license_edition": "licensed",
         "gams_version": "54.2.1"
+      },
+      "nlp2mcp_parse": {
+        "status": "success",
+        "parse_date": "2026-10-20T03:10:57.572088+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "parse_time_seconds": 1.0633,
+        "variables_count": 2,
+        "equations_count": 1
+      },
+      "model_statistics": {
+        "variables": 2,
+        "equations": 1,
+        "parameters": 0,
+        "sets": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-10-20T03:11:10.681428+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "translate_time_seconds": 13.0464,
+        "output_file": "data/gamslib/mcp/minsurf_mcp.gms"
+      },
+      "mcp_solve": {
+        "status": "failure",
+        "solve_date": "2026-10-20T03:11:41.631313+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "gams_version": "54.2.1",
+        "license_edition": "licensed",
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 30.8258,
+        "iterations": null,
+        "outcome_category": "path_solve_terminated",
+        "mcp_attribution": "NO-SOLVE",
+        "mcp_completed_own_solve": false,
+        "error": {
+          "category": "path_solve_terminated",
+          "message": "Parse error: no_solve_summary"
+        }
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-10-20T03:11:41.631427+00:00",
+        "notes": "Skipped due to solve failure"
       }
     },
     {
@@ -7331,6 +7568,40 @@
         "solver": "CPLEX",
         "license_edition": "licensed",
         "gams_version": "54.2.1"
+      },
+      "nlp2mcp_parse": {
+        "status": "success",
+        "parse_date": "2026-10-20T03:11:44.497561+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "parse_time_seconds": 2.427,
+        "variables_count": 9,
+        "equations_count": 7
+      },
+      "model_statistics": {
+        "variables": 9,
+        "equations": 7,
+        "parameters": 0,
+        "sets": 9
+      },
+      "nlp2mcp_translate": {
+        "status": "failure",
+        "translate_date": "2026-10-20T03:21:44.758708+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "translate_time_seconds": 600.0847,
+        "error": {
+          "category": "timeout",
+          "message": "Translation timeout after 600 seconds"
+        }
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-10-20T03:21:44.762604+00:00",
+        "license_edition": null
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-10-20T03:21:44.762604+00:00",
+        "notes": "Skipped due to translate failure"
       }
     },
     {
@@ -8040,6 +8311,30 @@
         "solver": "CPLEX",
         "license_edition": "licensed",
         "gams_version": "54.2.1"
+      },
+      "nlp2mcp_parse": {
+        "status": "failure",
+        "parse_date": "2026-10-20T03:21:46.303888+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "parse_time_seconds": 1.1983,
+        "error": {
+          "category": "lexer_invalid_char",
+          "message": "Error: Parse error at line 609, column 10: Unexpected character: '='\n  for(iter = 1 to 7, count = 0; loop(ss$(count < 4), s(ss) = yes; count = count+1; ); ss(s) = no; solve route minimizing cost using lp; sroute(s,d) = round(-nb.m(s,d),-1); s(s)  = no; );\n           ^\n\nSuggestion: This character is not valid in this context"
+        }
+      },
+      "nlp2mcp_translate": {
+        "status": "not_tested",
+        "translate_date": "2026-10-20T03:21:46.369888+00:00"
+      },
+      "mcp_solve": {
+        "status": "not_tested",
+        "solve_date": "2026-10-20T03:21:46.369888+00:00",
+        "license_edition": null
+      },
+      "solution_comparison": {
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-10-20T03:21:46.369888+00:00",
+        "notes": "Skipped due to parse failure"
       }
     },
     {
@@ -12656,6 +12951,65 @@
         "solver": "CONOPT",
         "license_edition": "licensed",
         "gams_version": "54.2.1"
+      },
+      "nlp2mcp_parse": {
+        "status": "success",
+        "parse_date": "2026-10-20T03:21:47.595596+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "parse_time_seconds": 0.8971,
+        "variables_count": 6,
+        "equations_count": 6
+      },
+      "model_statistics": {
+        "variables": 6,
+        "equations": 6,
+        "parameters": 0,
+        "sets": 2
+      },
+      "nlp2mcp_translate": {
+        "status": "success",
+        "translate_date": "2026-10-20T03:22:02.469240+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "translate_time_seconds": 14.83,
+        "output_file": "data/gamslib/mcp/torsion_mcp.gms"
+      },
+      "mcp_solve": {
+        "status": "success",
+        "solve_date": "2026-10-20T03:22:30.530310+00:00",
+        "solver": "PATH",
+        "solver_version": "5.2.01",
+        "gams_version": "54.2.1",
+        "license_edition": "licensed",
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": -0.4175,
+        "solve_time_seconds": 6.3886,
+        "iterations": 0,
+        "outcome_category": "model_optimal_presolve",
+        "mcp_attribution": "MCP-SOLVED",
+        "mcp_completed_own_solve": true,
+        "presolve_required": true,
+        "mcp_file_generated": "data/gamslib/mcp/torsion_mcp_presolve.gms"
+      },
+      "solution_comparison": {
+        "comparison_status": "match",
+        "comparison_date": "2026-10-20T03:22:30.530734+00:00",
+        "nlp_objective": -0.4175,
+        "mcp_objective": -0.4175,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0,
+        "objective_match": true,
+        "tolerance_absolute": 1e-08,
+        "tolerance_relative": 0.002,
+        "nlp_solver_status": 1,
+        "nlp_model_status": 2,
+        "mcp_solver_status": 1,
+        "mcp_model_status": 1,
+        "status_match": true,
+        "comparison_result": "compare_objective_match",
+        "notes": "Match within tolerance (diff=0.00e+00, tol=8.35e-04)"
       }
     },
     {
