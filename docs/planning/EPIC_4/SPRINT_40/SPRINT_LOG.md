@@ -603,7 +603,7 @@ Every live doc that named a cohort or admitted model's bucket was checked. Sprin
   - Traced: it does return False here, but making it return True would only reach the full-collapse branch, whose `zip(..., strict=True)` cannot pair 1 binder with 2 positions.
   - **The derivative is lost in `_diff_sum`'s single-binder partial-match loop,** which symbolizes **one position per attempt** (`('i','i1')`, then `('i1','i')`) and so never matches `tsam(i,i)`.
   - Sprint 39 recorded three of four gates naming the wrong layer; this one was checked before the code was written.
-- **The fix** (`_diff_sum_repeated_binder`, run only after every existing attempt returned zero): place the binder at **every** position it occupies, **only when the `wrt` values there are equal**, then substitute it back.
+- **The fix** (`_diff_sum_repeated_binder`, run only after every existing attempt returned zero): place the binder at **every** position it occupies, **only when the `wrt` values there are equal**, then substitute it back. The result is the **whole** derivative: every distinct layout once, plus the summed remainder (PR #1779 review round 1).
 
 | criterion | result |
 |---|---|
@@ -614,7 +614,7 @@ Every live doc that named a cohort or admitted model's bucket was checked. Sprin
 | #1737 | shape (a) `dd(i,i)` moves from **silently dropped** to **refused**. Pinned; #1737 untouched |
 | leak gate | `make check-goldens` **alone**: **200 in-scope, all clean**, rc 0 with `--fail-on-unverified` (17:55 → 18:12Z). **Byte-identical corpus-wide** |
 | `check-index-repeats` | P1 0 / 3,370; P2 11 = baseline |
-| mutation controls (throwaway worktrees) | revert → 8 of 9 fail · drop equal-values → the positive control fails · exact spelling → the case test fails |
+| mutation controls (throwaway worktrees) | revert → 11 of 12 fail · drop equal-values → the positive control fails · exact spelling → the case test fails · (after review round 1) drop the remainder / first layout only / no layout dedup → each fails its mixed-reference test |
 
 - **A vacuous test caught by the controls.** The first case-insensitivity test, `tsam(i,I)`, passed with the fix **reverted**. `main` already handled that two-position form by accident: #1111's free-index conversion treats `I` as a distinct free index. It was replaced with a three-position `w(i,I,i)`, which `main` and the exact-spelling mutant both get wrong, and the accidental form is kept as a pin.
 - **Where the measurement differed from the prediction:**
@@ -625,6 +625,14 @@ Every live doc that named a cohort or admitted model's bucket was checked. Sprin
   - `test_pattern_c_alias_offset_gate.py` asserted that a diagonal reference *never* reaches Pattern-C B-3. Now that the reference differentiates, B-3 is consulted and **declines** (`None`), so the test asserts "reached and declined" and is renamed.
   - ⚠ A mutant showed #1741's guard is **not** the only decliner for that fixture, so the test claims only "B-3 declines". `ISSUE_1741` is updated.
 - **Out of scope, unchanged:** #1776 (the equal-count sibling).
+
+### PR #1779 review round 1 (P7)
+
+- **The helper returned a partial derivative for mixed references, and the review was right.** It returned the first layout's collapsed contribution and nothing else:
+  - `sum(i, x(i,i) + x('i1','i1'))` gave **1, not 4**. `main` had given 3, so this was a regression in that shape;
+  - `sum(i, w(i,i,'i1') + w('i1',i,i))` gave **1, not 2**.
+- **Fixed:** every distinct layout counts once, plus the summed remainder (the caller's normal case), and the two parts are disjoint. Three value-checked regressions cover the two cases and a shared layout (no double count). **12 tests; 7 mutants, all caught.** The leak gate was re-run alone (below).
+- **A pre-existing sibling, routed:** the #1086 loop before the helper returns its *first* non-zero attempt, so `sum(i, x(i,'i1') + x(i,i))` gives 1, not 2. That is unchanged from `main`, and filed as **#1780**: changing the loop needs its own Phase-0 gate.
 
 ### Checkpoint 1 (end of day): GO
 
@@ -639,8 +647,8 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed**, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
-- `make check-goldens` (the leak gate) is complete and clean, as above.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+- `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, both at the landing and **re-run alone after review round 1**.
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.
 - `check_phase0_doc.py` PASS.

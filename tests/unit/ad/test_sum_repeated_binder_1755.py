@@ -50,6 +50,33 @@ def _d(body, var: str, wrt: tuple[str, ...]):
     return differentiate_expr(Sum(("i",), body, None), var, wrt, _config())
 
 
+def _value(expr) -> float:
+    """Numeric value of a constant derivative, expanding `Sum` over `i`'s 3 members.
+
+    The mixed-reference cases (PR #1779 review) must be judged on the VALUE: a
+    partial result such as `1 + 0` is a well-formed expression, only a wrong one.
+    Product-rule leftovers like `x(i2,i2) * 0` are evaluated at two different
+    variable values, and both must agree, so a non-constant result cannot pass.
+    """
+
+    def ev(node, xval: float) -> float:
+        if isinstance(node, Const):
+            return node.value
+        if isinstance(node, VarRef):
+            return xval
+        if isinstance(node, Sum):
+            assert node.index_sets == ("i",) and node.condition is None, node
+            return 3 * ev(node.body, xval)  # the body is constant in `i` here
+        if isinstance(node, Binary) and node.op in ("+", "*"):
+            lhs, rhs = ev(node.left, xval), ev(node.right, xval)
+            return lhs + rhs if node.op == "+" else lhs * rhs
+        raise AssertionError(f"unexpected node in a derivative: {node}")
+
+    a, b = ev(expr, 7.0), ev(expr, 11.0)
+    assert a == b, f"the derivative is not constant: {expr}"
+    return a
+
+
 class TestTheDiagonalDifferentiates:
     def test_the_diagonal_is_one(self):
         # FAIL-BEFORE: this returned Sum((i), Const(0.0)) on main.
@@ -79,6 +106,28 @@ class TestTheDiagonalDifferentiates:
     def test_a_concrete_position_must_still_match(self):
         assert _d(VarRef("v", ("i", "i", "k1")), "v", ("i1", "i1", "k1")) == Const(1.0)
         assert _is_zero(_d(VarRef("v", ("i", "i", "k1")), "v", ("i1", "i1", "k2")))
+
+    def test_MIXED_a_collapsing_and_a_summed_reference_both_count(self):
+        # PR #1779 review. d/dx('i1','i1') of sum(i, x(i,i) + x('i1','i1')) over
+        # i = {i1,i2,i3} is 1 (the diagonal, at i = i1) + 3 (the concrete
+        # reference, once per iteration) = 4. The first revision returned the
+        # collapsed part alone (1), dropping the summed remainder.
+        body = Binary("+", VarRef("x", ("i", "i")), VarRef("x", ("i1", "i1")))
+        assert _value(_d(body, "x", ("i1", "i1"))) == 4.0
+
+    def test_MIXED_two_different_layouts_both_count(self):
+        # sum(i, w(i,i,'i1') + w('i1',i,i)) at w('i1','i1','i1'): each layout
+        # collapses at i = i1, so the derivative is 2, not the first layout's 1.
+        body = Binary("+", VarRef("w", ("i", "i", "i1")), VarRef("w", ("i1", "i", "i")))
+        assert _value(_d(body, "w", ("i1", "i1", "i1"))) == 2.0
+
+    def test_one_layout_shared_by_two_references_counts_once(self):
+        # sum(i, x(i,i) + 2*x(i,i)) at x('i2','i2') is 3. Both references share a
+        # layout, which one symbolic differentiation covers, so it is not doubled.
+        body = Binary(
+            "+", VarRef("x", ("i", "i")), Binary("*", Const(2.0), VarRef("x", ("i", "i")))
+        )
+        assert _value(_d(body, "x", ("i2", "i2"))) == 3.0
 
     def test_the_binder_is_substituted_through_the_body(self):
         # d sum(i, sqr(tsam(i,i))) / d tsam('i2','i2') = 2*tsam('i2','i2').

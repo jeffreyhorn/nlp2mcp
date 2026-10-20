@@ -2996,11 +2996,28 @@ def _diff_sum_repeated_binder(
     the binder carries the SAME concrete value. ``tsam('i1','i2')`` has no single
     value for ``i`` and must stay 0: the off-diagonal positive control.
 
-    Returns ``None`` when no reference qualifies, so the caller's fallthrough is
+    The result is the WHOLE derivative of the sum (PR #1779 review):
+
+    * every distinct repeated-binder **layout** contributes once.
+      ``sum(i, w(i,i,'i1') + w('i1',i,i))`` has two layouts, ``(i,i,'i1')`` and
+      ``('i1',i,i)``, and both count. Two references with the SAME layout are
+      covered by one symbolic differentiation of the whole body, so a layout is
+      never counted twice;
+    * plus the **summed remainder**, for references that do not collapse:
+      ``sum(i, x(i,i) + x('i1','i1'))`` keeps ``x('i1','i1')`` in every iteration
+      (3 of the 4).
+
+    The two parts are disjoint. A concrete reference differentiates to 0 against
+    a symbolic layout, and a binder-indexed one to 0 against the concrete
+    ``wrt`` (the binder is bound).
+
+    Returns ``None`` when no layout contributes, so the caller's fallthrough is
     unchanged.
     """
     sum_idx = expr.index_sets[0]
     key = sum_idx.lower()  # GAMS identifiers are case-insensitive: i and I repeat
+    # layout (symbolic wrt) -> (the binder's spellings there, its single value)
+    layouts: dict[tuple[str | IndexOffset, ...], tuple[tuple[str, ...], str]] = {}
     for ref in _find_var_indices_in_body(expr.body, wrt_var):
         if len(ref) != len(wrt_indices):
             continue
@@ -3010,21 +3027,44 @@ def _diff_sum_repeated_binder(
         values = {wrt_indices[p] for p in positions}
         if len(values) != 1:
             continue  # inconsistent values: no single value for the binder
-        value = next(iter(values))
-        if not isinstance(value, str) or not _is_concrete_instance_of(value, sum_idx, config):
+        candidate = next(iter(values))
+        if not isinstance(candidate, str) or not _is_concrete_instance_of(
+            candidate, sum_idx, config
+        ):
             continue
         symbolic_wrt = tuple(ref[p] if p in positions else w for p, w in enumerate(wrt_indices))
+        spellings = tuple(dict.fromkeys(str(ref[p]) for p in positions))
+        layouts.setdefault(symbolic_wrt, (spellings, candidate))
+
+    contributions: list[Expr] = []
+    for symbolic_wrt, (spellings, value) in layouts.items():
         body_derivative = differentiate_expr(
             expr.body, wrt_var, symbolic_wrt, config, bound_indices=bound_indices
         )
         if _is_structurally_zero(body_derivative):
             continue
-        spellings = tuple(dict.fromkeys(str(ref[p]) for p in positions))
-        result = _substitute_sum_indices(body_derivative, spellings, (value,) * len(spellings))
+        part = _substitute_sum_indices(body_derivative, spellings, (value,) * len(spellings))
         if expr.condition is not None:
-            result = Binary("*", result, _ensure_numeric_condition(expr.condition))
-        return result
-    return None
+            part = Binary("*", part, _ensure_numeric_condition(expr.condition))
+        contributions.append(part)
+    if not contributions:
+        return None
+
+    # The summed remainder: exactly what the caller's normal case would return.
+    remainder = differentiate_expr(
+        expr.body,
+        wrt_var,
+        wrt_indices,
+        config,
+        bound_indices=bound_indices | frozenset(expr.index_sets),
+    )
+    if not _is_structurally_zero(remainder):
+        contributions.append(Sum(expr.index_sets, remainder, expr.condition))
+
+    result = contributions[0]
+    for part in contributions[1:]:
+        result = Binary("+", result, part)
+    return result
 
 
 def _sum_should_collapse(
