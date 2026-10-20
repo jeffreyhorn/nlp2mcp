@@ -69,3 +69,20 @@ This is likely a bug in the automatic differentiation or KKT condition generatio
 ## Impact
 
 307 execution errors. Model compiles cleanly but SOLVE aborts. The KKT equations are fundamentally incorrect.
+
+## Current Status (2026-10-20) — Sprint 40 Day 4: re-measured licensed, routing note R-B-sroute
+
+Measured at `de0a7186` (Day 3 batch `f1771435`), GAMS 54.2.1 licensed.
+
+- **The original symptom is gone.** The 307 "empty equation but associated variable is NOT fixed" execution errors no longer occur. The MCP compiles and PATH runs: `model_infeasible` (**MS 4**), `MCP-FAILED`, and the presolve retry is also MS 4.
+- **The defect this issue named still reproduces, in a new form.** `kkt_residual.py` gives **`case_b`** (emit bug), with a consistent dual transfer (max equality residual 0) and a dual scale of 260:
+
+  | row | raw | relative |
+  |---|---|---|
+  | `stat_x(portland,chicago,boston)` | 260 | **1.000** |
+  | `stat_x(portland,chicago,memphis)` | 239 | 0.919 |
+  | `stat_x(portland,chicago,kansas-cty)` | 215 | 0.827 |
+  | `stat_x(chicago,portland,losangeles)` | 200 | 0.769 |
+
+- A **relative residual of 1.0 on the worst row** means the whole gradient is unexplained at the NLP point. That fits this issue's root cause: `stat_x` drops the dual terms of `nb(i,ip)` when `x` appears under permuted indices with dollar conditions, as in `sum(ipp$darc(ipp,ip), x(i,ipp,ip))`.
+- **First step:** trace `stat_x(portland,chicago,boston)`'s terms against a hand derivative. Which `nu_nb` terms are missing?

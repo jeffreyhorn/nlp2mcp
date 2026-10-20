@@ -515,3 +515,70 @@ The first `make test` on this branch failed 6 tests. Each one had pinned **the s
 ### Gate
 
 `make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,580 passed**, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs. `make check-index-repeats` passes: P1 0 / 3,370, P2 11 = baseline. `make check-doc-figures` is clean.
+
+---
+
+## Day 4 — 2026-10-22 · P2: route every non-match · 5 h · + P3: pipeline results and the corpus record · 5 h
+
+**Branch:** `planning/sprint40-day4-routing` · **Base:** `de0a7186`. Measured and routed; **nothing fixed in place** (P10's rule).
+
+### P2: the routing notes, opened
+
+Each note reproduces its fingerprint (licensed GAMS 54.2.1, committed goldens at `de0a7186`), names a fix surface or the first step to find one, and is opened as a GitHub issue with an issue document under `docs/issues/`.
+
+| route | models | issue | fingerprint → surface |
+|---|---|---|---|
+| **R-PRE-140** | egypt, srpchase | **#1766** | The presolve dual-transfer block initializes `.l` for multipliers **the MCP never declares** (`lam_landb`, `lam_waterb`; `nu_slack`, `lam_demand`). The `$140` is a symptom: **both models' source equations are dropped upstream**, by two different defects (next rows). |
+| ↳ egypt's drop | egypt | **#1776** (new) | **AD, traced:** `_diff_sum`'s partial-match branches are gated on `len(wrt) > len(binders)` and `<`. Equal counts, as in `sum((c,z)…, xcrop(r,c)…)`, fall through to an assumed positional correspondence, so the derivative is 0. `landb` and `waterb` vanish, and **`labbal` silently loses its `xcrop` terms.** 10-line reproducer. A sibling of #1755, so P7 is the natural owner. |
+| ↳ srpchase's drop | srpchase | **#1385** (comment) | The #1385 dynamic-subset short-circuit skips `slack` and `demand` entirely. **Without `demand`, the cold MCP "solves" at objective 0** against an NLP of 0.4001. P6's surface; srpchase is its minimal fail-before. |
+| **R-EXEC** | ferts, tabora (+ minsurf, P3) | **#1767** | **The execution-error lines, captured this time, sanitized.** ferts: 36× `comp_mb.lam_mb` *empty equation, variable NOT fixed* (`EXECERROR = 36`). tabora: 36× `comp_lb.lam_lb` (`36`). minsurf: 4× `v_fx_<corner>.nu_v_fx_<corner>` *unmatched equation* (`4`). Data-empty inequality instances need their multiplier fixed (the #1041 class); minsurf's corners are a separate shape. |
+| **R-B-glider** | glider | **#1768** | `case_b`, `stat_cl(h0)` at **exactly 2.000**: a doubled or sign-flipped `h0` term. `stat_step` is second (0.38); glider is P5's candidate. |
+| **R-B-sroute** | sroute | **#919** (re-measured) | The 307 empty-equation errors are gone; it is now MS 4 and `case_b`. Its worst row `stat_x(portland,chicago,boston)` has **relative residual 1.000**: the whole gradient is unexplained, which fits #919's "dual terms of `nb` dropped". |
+| **R-B-tricp** | tricp | **#933** (re-scoped and retitled) | ⚠ **The 6.15e6 equality residual was checked first, as the note required. It is a real primal defect:** the source's `eq1(e(i,j))` is violated at the transferred NLP point in **42 of 54** instances (max 6.154e6 at `eq1(n7,n9)`; `defobj` 4.5e-13). The emitted `eq1` reads faithful, so the suspect is the transferred point (`eq1` is declared `(n,n)`, the repeated-domain class). The harness counts equality residuals as informational, which is why it said "consistent". **The `case_b` verdict is not the whole story.** |
+| **R-B-robot** | robot | **#1769** → **P5** | `case_b` at **`stat_step`** (rel 10.13), the same row as lnts. A confirmed member of P5's class. |
+| **P4** | egypt, shale | (P4) | Class-A `tranc(rp,rp)` / `ts(tf,tf)`, unchanged. ⚠ **egypt also has #1776's AD cause.** Re-measure it after P7 before attributing anything to P4. |
+
+- **`ISSUE_933`'s re-scope is committed.** The doc's re-scope was already in Prep Task 7 (`ddccb2c1`). What was missing was the GitHub side, done today: retitled, plus the re-scope comment with the `eq1` finding. The doc carries a new *Current Status (2026-10-20)*.
+- **Corrected before commit (the verification discipline).** The first draft of #1766 and of the #1755 comment said egypt's drop "matches `_sum_should_collapse`'s positional pairing".
+  - **Instrumenting it refuted that.** `_sum_should_collapse` returns False for the failing two-binder sum **and** for the working one-binder sum, so it is not where they diverge.
+  - The trace then located `_diff_sum`'s `>` / `<` gates, and the mechanism was filed as its own issue, **#1776**.
+  - #1766, the #1755 comment and the #927 comment were corrected in place. #1770's classification as "the repeated-index family" is marked as a hypothesis, because the builder has not been traced.
+
+### P2: sweep of the changed set
+
+Every live doc that named a cohort or admitted model's bucket was checked. Sprint logs, CHANGELOG entries and completed issues are history and were left alone.
+
+- **`ISSUE_927` (egypt "demo license limit"):** superseded. A dated status was added, plus a GitHub comment suggesting closure (the owner's call).
+- **`ISSUE_928`, `ISSUE_1290` (ferts 63-character identifiers):** **no longer reproduce.** The golden compiles with 0 errors; the only ≥ 64-character tokens are in `*` comments, and the identifiers are hash-truncated. Dated status added, and GitHub comments suggest closure.
+- **`ISSUE_1385`:** the srpchase wrong-answer measurement, added.
+- **`ISSUE_1755`:** egypt recorded as a related sibling (#1776), **not** an instance. Its "latent in the corpus" scope line stands.
+- **`data/gamslib/convexity_report.md`:** its 2026-01-01 "License Limit Errors" list is marked superseded by the Day 2/3 licensed verification.
+- **No other live doc** (guides, schema docs, PROJECT_PLAN's current sections) quotes a cohort model's old bucket. PROJECT_PLAN's Sprint 40 section dates its list "as recorded at the S39 close", which is correct as written.
+
+### P3: results for the admitted models, and their routes
+
+- **Reaching an MCP (4):**
+  - `airsp2` and `torsion` **match via presolve**, both `MCP-SOLVED`; both are multi-solve, so they stay out of the headline;
+  - `jbearing` → **#1770** (R-JB-171);
+  - `minsurf` → **#1767** (R-EXEC) + **#1771** (R-B-minsurf).
+- **`jbearing`'s `$171`:** the stationarity body writes **`v(nx+1,nx)` and `v(nx,nx)`** where `v(nx+1,ny)` and `v(nx,ny)` are meant, so position 2 takes position 1's index. `check-index-repeats` P1 checks heads only, so it cannot see this.
+- **`minsurf`:** `kkt_residual.py` re-run, **`case_b`, `stat_v(x39,y6)` rel 40.18**, reproducing Task 7. Its `stat_v` wraps its terms in `sum((i,j), … 1$(nx(i) and ny(j)))` although no term depends on `i`/`j`; jbearing shares the construction. Recorded as a lead, not a diagnosis.
+- **Reaching none (5), routed:**
+  - parse: `emfl` → **#1772** (`$eval` unsupported, so `%new%` reaches the lexer); `indus89` → **#1773** (`Singleton Set`); `phosdis` → **#1774** (`for(s = a to b, …)`, with its solve inside the loop);
+  - translate: `airsp`, `msm` → **#1775** (600 s, uncontended).
+- **The corpus record:** `docs/planning/EPIC_4/SPRINT_40/CORPUS_RECORD.md`. Both denominators come from `kpi_block.py --corpus` at `de0a7186`:
+  - **continuity 140:** Solve 115, Match 97;
+  - **current 149:** Solve 117/139, Match 99/149;
+  - plus the admitted 9 by identity, with outcome and route.
+  
+  It is the source for Day 5's C4 sentence.
+
+### Counts
+
+- **Unrouted non-match fingerprints: 0.**
+- **Issues opened: 11** (#1766–#1776). **Existing issues updated: 7** (#919, #933, #1385, #1755, #927, #928, #1290).
+- **Owner decisions surfaced, not taken:** closing #927, #928 and #1290.
+
+### Gate
+
+**No `src/` or `tests/` change** (the stable-scope waiver). The changes are docs, issue documents and one generated-report note. `git diff main...HEAD --name-only | grep -c '\.py$'` is 0 at the final commit. `make check-doc-figures` is clean.

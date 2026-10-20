@@ -54,3 +54,7 @@ The synthetic-element-hashing pass (used when element names contain GAMS-illegal
 - `src/emit/emit_gams.py`
 - `tests/unit/kkt/` — name-length regression test
 - `data/gamslib/raw/ferts.gms` — reference source
+
+## Current Status (2026-10-20) — Sprint 40 Day 4: no longer reproduces
+
+At `de0a7186`, licensed, `ferts_mcp.gms` compiles with **0 errors** (no `$109`). The only ≥ 64-character tokens are in `*` comments; the emitted identifiers are hash-truncated (e.g. `xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_z_8`). ferts is now `path_solve_terminated`, tracked as #1767. Closing is suggested on GitHub (with #928).

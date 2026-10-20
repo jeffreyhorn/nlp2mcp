@@ -301,3 +301,7 @@ For Sprint 27 prep:
 - **Sprint 27 #1381** — Pattern C Phase B redesign (same class of design-validation gap)
 - **Sprint 26 Day 4 Priority 5 #1334 re-investigation PR** — separate docs-only PR; not affected by this issue
 - **#885, #931, #932, #1185, #1228** — translate-timeout candidates that carry forward to Sprint 27 alongside this issue
+
+## srpchase measured licensed (Sprint 40 Day 4, 2026-10-20)
+
+The short-circuit silently drops `slack` and `demand`: the translate warns, and neither equation nor its multiplier is in `srpchase_mcp.gms`. **Without `demand`, the cold MCP solves (MS 1) at objective 0 against an NLP of 0.4001**, booked `mismatch` / `MCP-SOLVED`: a wrong answer, not a crash. The presolve emit still initializes `nu_slack.l` and `lam_demand.l`, so it fails `$140` ×2. That symptom is routed as #1766. ⚠ For Sprint 40 P6 (sarf): a replacement must not drop rows on a model this small. srpchase is the minimal fail-before.

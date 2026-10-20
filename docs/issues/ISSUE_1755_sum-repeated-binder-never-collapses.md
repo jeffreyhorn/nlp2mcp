@@ -27,7 +27,7 @@ solve m using lp minimizing z;
 
 **Correct row (hand-derived, verified by solve):** for the scalar variant `diag.. sum(i, tsam(i,i)) =e= 1;` with objective `sum((i,j), sqr(tsam(i,j)))`, the correct row is `stat_tsam(i,j).. 2*tsam(i,j) + nu_diag$(sameas(i,j)) =E= 0;`. A hand-patched MCP solves **MS 1 at objective 0.333**, matching the NLP's 0.3333 (MS 2).
 
-**Scope:** no committed golden contains a non-zero constant-only stationarity row, so the pattern is latent in the corpus. But a dropped term in a row that has other terms would not show up in that grep.
+**Scope:** no committed golden contains a non-zero constant-only stationarity row, so the pattern is latent in the corpus. (egypt's dropped constraints share the outcome but not the gate: see *A related corpus case* below and #1776.) But a dropped term in a row that has other terms would not show up in that grep.
 
 **Fix direction:** collapse when every position referencing the same binder carries the same concrete value. That is a binder→value map built from the reference's index positions, not `zip(binders, wrt)`.
 
@@ -45,3 +45,12 @@ A `sys.settrace` of one diagonal differentiation gives `_diff_sum` → `_sum_sho
 - **Pass-after:** `diagsum` and `nu_diagsum` are present, and `stat_tsam` carries `nu_diagsum` on the diagonal only. The scalar variant solves to the NLP objective (0.3333).
 - **Positive control:** an off-diagonal instance (`tsam('i1','i2')`) still differentiates to **0**, so the fix must not collapse inconsistent binder values.
 - **Corpus:** the full leak gate, byte-identical, **complete** (no unverified timeouts). A golden that changes is a candidate *corpus* instance of this defect, and is to be examined rather than refreshed blindly.
+
+## A related corpus case: egypt — a SIBLING, now #1776 (Sprint 40 Day 4, 2026-10-20)
+
+- egypt's `landb(r,tm).. sum((c,z)$zr(z,r), xcrop(r,c)*land(c,z,tm)) =l= …` gets **0 Jacobian entries**, and `landb`, `waterb` and their multipliers vanish from `egypt_mcp.gms`. `labbal` silently loses its `xcrop` terms.
+- **The outcome is this issue's** (derivative 0, constraint dropped), **but the gate is different.**
+  - `_sum_should_collapse` returns False both for egypt's two-binder sum and for a working one-binder variant, so the collapse decision is not where they diverge.
+  - The divergence is in `_diff_sum`: its partial-index-match branches are gated on `len(wrt) > len(binders)` and `<`. Equal counts (2 and 2) fall through to an assumed positional correspondence.
+- Filed with a 10-line reproducer and the instrumented trace as **#1776**.
+- Both need the same thing, a binder→position map built from the reference's index positions, so one helper may serve both. That makes P7 the natural owner of #1776 too.

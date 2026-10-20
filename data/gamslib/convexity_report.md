@@ -208,6 +208,8 @@ Models excluded due to infeasibility:
 
 ### License Limit Errors (11)
 
+> ⚠ **Superseded for this list (Sprint 40, 2026-10-20).** This report is a 2026-01-01 snapshot under the demo license. On Sprint 40 Day 2 the full license re-verified the 9 in-scope models below: all classify convex (5 `verified_convex`: airsp, airsp2, indus89, msm, phosdis; 4 `likely_convex`: emfl, jbearing, minsurf, torsion). Day 3 admitted them by rule (`data/corpus_admissions.json`). `andean` is MIP: excluded, never relaxed. The live classification is the results DB's `convexity` field, not this report.
+
 Models that exceed GAMS demo license limits (NLP: 1000 rows/cols, LP: 2000 rows/cols):
 
 - airsp

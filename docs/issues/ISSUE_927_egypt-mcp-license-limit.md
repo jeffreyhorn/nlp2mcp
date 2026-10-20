@@ -90,3 +90,7 @@ The model has 11 variables and 11 equations but with multi-dimensional domains (
 **Current blocker: Demo license limit.** The MCP has 3,470 equations which exceeds the demo license limit of 1,000 rows/columns for nonlinear model types. The model is structurally correct but cannot be solved without a full GAMS license.
 
 Parse: ~71s | Translate: ~137s | Compile: OK | Solve: FAIL (license)
+
+## Current Status (2026-10-20) — Sprint 40 Day 4: superseded
+
+The premise is gone. Sprint 40 runs the full license, and the Day 3 batch (`f1771435`) solved egypt licensed: no license refusal, no translate timeout. egypt is now `model_infeasible` (MS 5), `MCP-FAILED`. Its open defects are #1776 (`landb`, `labbal` and `waterb` lose their `xcrop` terms), #1766 (the presolve `$140`) and Sprint 40 P4 (Class-A `tranc(rp,rp)`). Closing is suggested on GitHub; it is the owner's call.
