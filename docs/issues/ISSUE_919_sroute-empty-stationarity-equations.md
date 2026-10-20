@@ -84,5 +84,13 @@ Measured at `de0a7186` (Day 3 batch `f1771435`), GAMS 54.2.1 licensed.
   | `stat_x(portland,chicago,kansas-cty)` | 215 | 0.827 |
   | `stat_x(chicago,portland,losangeles)` | 200 | 0.769 |
 
-- A **relative residual of 1.0 on the worst row** means the whole gradient is unexplained at the NLP point. That fits this issue's root cause: `stat_x` drops the dual terms of `nb(i,ip)` when `x` appears under permuted indices with dollar conditions, as in `sum(ipp$darc(ipp,ip), x(i,ipp,ip))`.
-- **First step:** trace `stat_x(portland,chicago,boston)`'s terms against a hand derivative. Which `nu_nb` terms are missing?
+- **How to read the numbers (corrected in PR #1777 review).** `kkt_residual.py` normalizes every row by **one global dual scale**: the largest transferred multiplier magnitude, floored at 1 (`dual_scale`, 260 here). A relative 1.000 means only that the raw residual (260) equals that scale. **It does not establish that this row's whole gradient is missing.**
+- **The golden already carries `lam_nb`.** `nb` is an `=g=` inequality, so its multiplier is `lam_nb`, not `nu_nb`. The emitted row is
+
+  ```gams
+  stat_x(i,ip,ipp).. darc(i,ip) + (1$(darc(ip,ipp)) * lam_nb(i,ip))$((not sameas(i, ipp))) - piL_x(i,ip,ipp) =E= 0;
+  ```
+
+  - **A lead, not a diagnosis:** the row has **one** `lam_nb` term. In the source, `x(i,ip,ipp)` appears in `nb(i,ip)`'s right-hand side, and also, with its indices permuted, in the left-hand sum `sum(ipp$darc(ipp,ip), x(i,ipp,ip))` of another `nb` row. That second contribution, or its index mapping, may be missing or misindexed.
+  - Whether that is this issue's original "dual terms dropped under permuted indices" is **provisional** until traced.
+- **First step:** hand-derive `∂L/∂x(portland,chicago,boston)`: the objective term, every `lam_nb` contribution with its sign and index, and the bound term `piL_x`. Compare each with the emitted row.

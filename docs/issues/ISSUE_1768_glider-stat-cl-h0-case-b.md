@@ -1,4 +1,4 @@
-# ISSUE #1768 — R-B-glider: case_b emit bug, stat_cl(h0) relative residual exactly 2.0 (stat_step second; P5 candidate)
+# ISSUE #1768 — R-B-glider: case_b emit bug, stat_cl(h0) worst row, relative residual 2.0 on the global dual scale (stat_step second; P5 candidate)
 
 **GitHub:** [#1768](https://github.com/jeffreyhorn/nlp2mcp/issues/1768) · **Status:** 🔴 **OPEN** — filed Sprint 40 Day 4 (2026-10-20), routed, not fixed in place
 
@@ -18,11 +18,12 @@
 
 ## Reading
 
-- **`stat_cl(h0)` at exactly 2.000** looks like a doubled or sign-flipped term at the **first** time point. That is the shape of an initial-condition or boundary term emitted twice, or with the wrong sign.
+- **How to read 2.000 (corrected in PR #1777 review).** `kkt_residual.py` normalizes every row by **one global dual scale**: the largest transferred multiplier magnitude, floored at 1 (129.2 here). The relative 2.000 is raw 258.4 over that scale, not over the magnitude of any term in `stat_cl(h0)`. **It does not by itself establish a doubled or sign-flipped term.**
+- *Hypothesis, pending the per-row derivative trace:* an initial-condition or boundary term at the **first** time point emitted twice, or with the wrong sign. The concentration at `h0`, with `h10`/`h11` at 0.137, points that way, but it is not evidence of the mechanism.
 - **`stat_step` is second.** glider is one of P5's two unconfirmed `stat_step` candidates (`KNOWN_UNKNOWNS.md` 5.x; lnts and robot are the confirmed pair). If P5's fix lands, re-measure glider before tracing `stat_cl(h0)`: the two may interact through `step`.
 
 ## First step
 
-Trace `stat_cl(h0)`'s terms against a hand derivative at `h0`: which term is doubled? Then check whether `stat_step` reproduces P5's mechanism.
+Trace `stat_cl(h0)`'s terms against a hand derivative at `h0`: is any term missing, doubled or sign-flipped? Then check whether `stat_step` reproduces P5's mechanism.
 
 **Not fixed in place** (P10's rule: route, then fix with a Phase-0 gate).
