@@ -27,13 +27,17 @@ sys.path.pop(0)
 DB = json.loads((PROJECT_ROOT / "data" / "gamslib" / "gamslib_status.json").read_text())
 
 
-def test_continuity_equals_current_on_todays_db() -> None:
-    """No admissions yet, so the two corpora are the same 140 (Decision 2's own test)."""
-    admitted = load_admissions()
-    assert admitted == frozenset()
-    current, continuity = compute_kpis(DB), compute_kpis(DB, exclude=admitted)
-    assert current == continuity
-    assert current["candidates"] == 140
+ADMITTED = load_admissions()
+
+
+def test_continuity_is_the_140_series_and_current_adds_the_admissions() -> None:
+    """Continuity stays the 140 base series however many models are admitted;
+    current is 140 plus every recorded admission (9 since Sprint 40 Day 3).
+    Stated against the admissions file, not a fixed count of admissions."""
+    current, continuity = compute_kpis(DB), compute_kpis(DB, exclude=ADMITTED)
+    assert continuity["candidates"] == 140
+    assert current["candidates"] == 140 + len(ADMITTED)
+    assert current["all_219_match"] == continuity["all_219_match"], "never corpus-scoped"
 
 
 def _admit_one(db: dict) -> tuple[dict, str]:
@@ -53,9 +57,10 @@ def _admit_one(db: dict) -> tuple[dict, str]:
 def test_an_admitted_model_grows_current_but_not_continuity() -> None:
     db, mid = _admit_one(DB)
     current = compute_kpis(db)
-    continuity = compute_kpis(db, exclude=frozenset({mid}))
-    assert current["candidates"] == 141, "the silent growth this guards against"
-    assert continuity == compute_kpis(DB), "continuity is the unchanged 140 series"
+    continuity = compute_kpis(db, exclude=ADMITTED | {mid})
+    assert current["candidates"] == compute_kpis(DB)["candidates"] + 1, "the silent growth"
+    assert continuity == compute_kpis(DB, exclude=ADMITTED), "continuity is unchanged"
+    assert continuity["candidates"] == 140
     assert current["all_219_match"] == continuity["all_219_match"], "never corpus-scoped"
 
 
@@ -88,17 +93,19 @@ def test_the_cli_reports_both_corpora_through_an_admissions_file(tmp_path: Path)
     db, mid = _admit_one(DB)
     dbf, adm = tmp_path / "db.json", tmp_path / "adm.json"
     dbf.write_text(json.dumps(db))
-    adm.write_text(json.dumps({"admissions": [{"model_id": mid}]}))
+    ids = sorted(ADMITTED | {mid})
+    adm.write_text(json.dumps({"admissions": [{"model_id": i} for i in ids]}))
     cur = json.loads(_cli("--json", "--db", str(dbf), "--admissions", str(adm)).stdout)
     con = json.loads(
         _cli("--json", "--db", str(dbf), "--admissions", str(adm), "--corpus", "continuity").stdout
     )
-    assert (cur["corpus"], cur["candidates"], cur["admitted"]) == ("current", 141, 1)
-    assert (con["corpus"], con["candidates"], con["admitted"]) == ("continuity", 140, 1)
+    n = len(ids)
+    assert (cur["corpus"], cur["candidates"], cur["admitted"]) == ("current", 140 + n, n)
+    assert (con["corpus"], con["candidates"], con["admitted"]) == ("continuity", 140, n)
     line = _cli(
         "--format", "line", "--db", str(dbf), "--admissions", str(adm), "--corpus", "continuity"
     )
-    assert "corpus continuity (140 candidates, 1 admitted)" in line.stdout
+    assert f"corpus continuity (140 candidates, {n} admitted)" in line.stdout
 
 
 def test_a_malformed_admissions_file_fails_the_cli(tmp_path: Path) -> None:
@@ -107,7 +114,7 @@ def test_a_malformed_admissions_file_fails_the_cli(tmp_path: Path) -> None:
     assert _cli("--json", "--admissions", str(adm)).returncode == 2
 
 
-def test_all_three_corpus_readers_select_the_same_140_models() -> None:
+def test_all_three_corpus_readers_select_the_same_models() -> None:
     """Owner decision, Sprint 40 (2026-10-19): re-based 142 -> 140. `kpi_block`,
     `batch_parse` and `run_full_test` each select the corpus, and before the
     re-base they disagreed (142 / 140 / 142). Pinned as one IDENTICAL set, not a
@@ -126,7 +133,11 @@ def test_all_three_corpus_readers_select_the_same_140_models() -> None:
     kpi_ids = {
         m["model_id"] for m in DB["models"] if compute_kpis({"models": [m]})["candidates"] == 1
     }
-    assert compute_kpis(DB)["candidates"] == len(kpi_ids) == 140
+    # The readers select the CURRENT corpus: the 140 base series plus every
+    # admission (Sprint 40 Day 3 admitted 9). Continuity is that set minus them.
+    assert compute_kpis(DB)["candidates"] == len(kpi_ids) == 140 + len(ADMITTED)
+    assert ADMITTED <= kpi_ids
+    assert len(kpi_ids - ADMITTED) == 140
     assert {m["model_id"] for m in bp_candidates(DB)} == kpi_ids
     assert {m["model_id"] for m in rft_candidates(DB)} == kpi_ids
     for mid in ("danwolfe", "decomp"):

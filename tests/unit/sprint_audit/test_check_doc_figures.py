@@ -1028,14 +1028,20 @@ def test_a_bare_figure_is_checked_against_continuity() -> None:
     assert (finding.cited, finding.truth) == ("97", "95")
 
 
-def test_the_live_truths_carry_both_corpora_and_agree_today() -> None:
-    """No admissions yet: both corpora are the same 140, so the pairs agree."""
+def test_the_live_truths_carry_both_corpora() -> None:
+    """The bare figure IS continuity; continuity stays the 140 base series and
+    current is 140 plus the recorded admissions (9 since Sprint 40 Day 3). Stated
+    against the admissions file, not a fixed count, so the next admission does
+    not break it for the wrong reason."""
     cdf._kpis.cache_clear()
     cdf._kpis_current.cache_clear()
     truths = cdf.derive_truths()
+    admitted = len(cdf.load_admissions())
     for fact in ("Match", "Translate", "Solve"):
-        assert truths[f"{fact}|continuity"] == truths[f"{fact}|current"] == truths[fact]
-    assert truths["Match|continuity|den"] == truths["Match|current|den"] == 140
+        assert truths[f"{fact}|continuity"] == truths[fact]
+        assert truths[f"{fact}|current"] >= truths[f"{fact}|continuity"]
+    assert truths["Match|continuity|den"] == 140
+    assert truths["Match|current|den"] == 140 + admitted
 
 
 def test_a_bare_figure_follows_CONTINUITY_once_a_model_is_admitted(monkeypatch) -> None:

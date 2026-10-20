@@ -374,3 +374,144 @@ The changed `scripts/` files were also checked directly against `main`:
 `make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,567 passed** at the first push, then **5,577** after review round 1, and **5,579** after round 2, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs. `make check-doc-figures` is clean.
 
 ⚠ **A false positive found and worked around, not fixed.** The fact *"presolve rows whose generated file is absent"* includes the pattern `all N rows`, which reads ANY "all *N* rows …" sentence as that count. It flagged this log's edition sentence. The sentence was reworded. Narrowing the pattern is a checker change with its own tests, so it is left for a separate PR.
+
+---
+
+## Day 3 — 2026-10-21 · P2: batch results, attribution and residuals · 6 h · + P3: admission by rule · 4 h
+
+**Branch:** `planning/sprint40-day3-cohort` · **Base:** `a428f909`.
+
+### P2: the batch, persisted (the C3 pin)
+
+- **The batch commit is `f1771435`.** It holds the 11 cohort rows and the 8 `<id>_mcp_presolve.gms` emits from Day 2's batch (throwaway worktree at `94fe8271`).
+  - The results DB is byte-unchanged between `94fe8271` and `a428f909` (`git diff --quiet`). The batch DB differs from `main` only in those 11 rows and `updated_date`, so the rows were ported verbatim, not re-run.
+  - **All 8 presolve emits are persisted**, including the 5 whose retry did not solve. That follows the committed convention: 6 such files are already committed for rows that do not reference them (agreste, cesam, fawley, korcge, otpop, rocket).
+- **C3, the pre-written wording, with the figures from `kpi_block.py` at `f1771435`:**
+
+  > **Cohort result — license-unlocked, not recovered** (batch at `f1771435`): of the 11 MCP-gated models, `4` solve and `2` match; `path_solve_license` → `0`. None of these is a fix: the emits are byte-identical to their committed goldens; only the ability to run them changed.
+
+  - The 4 that solve are `glider`, `srpchase`, `tfordy` and `turkey`, and the 2 that match are `tfordy` and `turkey`. On the 140-model corpus, Solve moves 111 → 115 and Match 95 → 97, all from the cohort.
+  - turkey's floor credit (below) is for its **Sprint 35** fix, under the fail-before sub-rule. It does not make the Sprint 40 move a fix, and it is booked separately (C5).
+- **C1: `path_solve_terminated` is 2, and both are cohort rows: `ferts` and `tabora`.** That is a **first-measurement influx**, as Task 7 predicted, not a regression. Over every row outside the two populations it stays **0**.
+
+### P2: per-model verdict, attribution and residual
+
+Every model has a comparison verdict, an attribution, and either a KKT-residual verdict or a recorded harness failure. Attribution comes from two sources:
+- **row:** the pipeline's own `mcp_attribution`, which classifies the solve the row claims;
+- **standalone:** `check_mcp_solve_attribution.py` over all 11 (`--workdir` scratch, licensed). It always classifies the **presolve** emit.
+
+`kkt_residual.py` ran on the 9 non-matches. Both runs were in the throwaway worktree: each launches GAMS with `cwd` at the project root, and `tricp` writes `cp.eps` there.
+
+| model | outcome | verdict | row attribution | standalone (presolve emit) | KKT residual | route (Day 4) |
+|---|---|---|---|---|---|---|
+| `tfordy` | `model_optimal_presolve` | **match** | `MCP-SOLVED` | `MCP-SOLVED` (antala/LP, antalb/LP, then mcp_model MS 1) | — (match) | — |
+| `turkey` | `model_optimal_presolve` | **match** | `MCP-SOLVED` | `MCP-SOLVED` (turkeyn/NLP, turkeyl/LP, then mcp_model MS 1) | — (match) | — |
+| `glider` | `model_optimal_presolve` | mismatch | `MCP-SOLVED` | `MCP-SOLVED` | **`case_b`**, worst `stat_cl(h0)`, rel 2.0 | R-B-glider |
+| `srpchase` | `model_optimal` (cold) | mismatch | `MCP-SOLVED` | `NO-SOLVE` (the presolve emit does not compile) | harness failed: `$140` ×2 | R-PRE-140 |
+| `egypt` | `model_infeasible` | `not_tested` | `MCP-FAILED` | `NO-SOLVE` | harness failed: `$140` ×2 | P4 + R-PRE-140 |
+| `shale` | `model_infeasible` | `not_tested` | `MCP-FAILED` | `NO-SOLVE` | harness failed: `$148` ×2 | P4 |
+| `robot` | `model_infeasible` | `not_tested` | `MCP-FAILED` | `MCP-FAILED` (MS 5) | **`case_b`**, worst `stat_step`, rel 10.1 | R-B-robot → P5 |
+| `sroute` | `model_infeasible` | `not_tested` | `MCP-FAILED` | `MCP-FAILED` (MS 4) | **`case_b`**, worst `stat_x(portland,chicago,boston)`, rel 1.0 | R-B-sroute |
+| `tricp` | `model_infeasible` | `not_tested` | `MCP-FAILED` | `MCP-FAILED` (MS 5) | **`case_b`**, worst `stat_x(n1,k0)`, rel 1.69 | R-B-tricp |
+| `ferts` | `path_solve_terminated` | `not_tested` | `NO-SOLVE` | `EMBEDDED-ONLY` (stat2/LP MS 1) | harness failed: `EXECERROR = 46` | R-EXEC |
+| `tabora` | `path_solve_terminated` | `not_tested` | `NO-SOLVE` | `EMBEDDED-ONLY` (tabora/LP MS 1) | harness failed: `EXECERROR = 36` | R-EXEC |
+
+- **Both claimed matches are `MCP-SOLVED` in both sources,** so both are booked. Neither is the `weapons` shape.
+- **Every row reproduces Task 7's dry run** (`COHORT_DRY_RUN.md`), at `79eeccff` then and `94fe8271` now:
+  - the 4 `case_b` verdicts;
+  - the 5 harness failures and their listing errors;
+  - 6 harness failures were expected, because Task 7 also counted `jbearing`, which is P3's (Day 4).
+- **Measured, not routed.** Day 4 opens the routing notes.
+
+### P2: the floor (C5)
+
+- **No license-unlocked COLD match, so the ledger stays empty.** The only cold solve, `srpchase`, mismatches.
+- **`tfordy` is methodology: not counted, and not in the ledger.** Its match is presolve-only, and no emit fix is identified for it. Its golden last changed at `e0be4fb1` (Sprint 26, a pipeline-retest regeneration). The fail-before sub-rule applies only to a model whose emit a named fix changed. Without one, there is no pre-fix golden to run.
+- **`turkey`: the fail-before sub-rule holds, so it is credited fix-driven genuine. Floor 75 → 76.**
+  - **The fix:** `95ba01ea` (Sprint 35 Day 6, a one-line golden diff) quotes the domain-less 2-D set `ao` per component, ending `$161` ×6. turkey was `path_solve_license` under the demo, so its match could never be measured.
+  - **Fail-before:** the pre-fix golden `95ba01ea^:data/gamslib/mcp/turkey_mcp.gms` (sha256 `ad6d57d21c0e4ba6…`, pinned on Day 2), run **licensed**, fails to compile: `$161` ×6, then the `$257`/`$141` cascade. **It does not match.**
+  - That is decisive for the presolve emit as well. A compile error stops the whole file, and the presolve emit carries the same MCP body after its `$include`.
+  - **The current cold golden** (licensed) reaches **MS 5 @ -5.473** against an NLP of 29078.2106. The match therefore arrives through the presolve warm start: the `presolve-match-genuine` limb, the same shape as `elec` and `twocge` in Sprint 38.
+  - **Recorded** as an `entries` item in `data/floor_provenance.json`, with `expected_floor` 76. `floor_tracker.py`: **"Genuine floor: 76 (+0 license-unlocked, not counted)"**.
+  - ⚠ The PLAN's REPLAN row for turkey covers only the case where the pre-fix golden **matches**. This is the other branch, read directly from the owner's sub-rule (`OWNER_DECISION_BRIEF.md` §Decision 1, answered at `b44344a2`): *"credited as fix-driven genuine only if its pre-fix golden, run under the license, does not match."*
+- **`test_floor_tracker.py` no longer pins the committed figure.** It read the committed file and asserted 75. One test also put `turkey` in the ledger, which the "never both" rule would now reject for the wrong reason. The behavioural tests build on a deterministic in-test fixture: baseline 73 plus 2 entries, 75. The committed file gets a self-consistency test instead, because `expected_floor` already pins its number. This is the same fragility as PR #1764's round 2.
+
+### P3: admission by rule (Decision 2 = A)
+
+- **Precondition met:** Day 1's corpus-aware `check_doc_figures.py` is on `main` (PR #1762, `135d1037`).
+- **The 9 are recorded by identity** in `data/corpus_admissions.json`, one entry each with its classification and the Day 2 verifier run as evidence. W10 was then applied for real (`191ed91f`): `apply_convexity_results.py --input <Day 2's report> --db data/gamslib/gamslib_status.json --admit <the 9> --validate`.
+  - Validation passed, and the summary read "the candidate corpus moves by +9 / -0: report both denominators (close rule C4)".
+  - **5 `verified_convex`:** airsp, airsp2, indus89, msm, phosdis. **4 `likely_convex`:** emfl, jbearing, minsurf, torsion.
+  - `andean` is MIP: excluded, never relaxed.
+- **Both denominators derive mechanically from `kpi_block.py` at `191ed91f`:** `--corpus current` **149** candidates, and `--corpus continuity` **140**. At admission the Solve and Match figures were the same on both (115 and 97), because no admitted model had a pipeline row yet.
+- **The multi-solve reference question, recorded (`PLAN.md` §3 P3).** The verifier classifies a model from its **last** solve. For a multi-solve model that may not be the solve the comparison should use. `airsp2` is the visible case: it classifies from a `DECISM` solve, not the requested CPLEX LP.
+
+  | model | solve statements | shape |
+  |---|---|---|
+  | `airsp` | 3 | `alloch`, then `allocs` twice (LP) |
+  | `airsp2` | 6 | `fixed`, `expval`, `deteq`, `fixed` … (LP; one solved by DECISM) |
+  | `msm` | 5 | `msm` five times (LP) |
+  | `phosdis` | 1, **in a loop** | `loop(ss$(count < 4), … solve route …)` with `solveOpt = replace` |
+  | `torsion` | 2 | `torsion`, then `torsionx` (a second formulation, NLP) |
+
+  - ⚠ **`torsion` is a fifth case**, which the PLAN's list of four omits. It solves two **different models**, so "the NLP objective" has two candidates.
+  - Each is admitted by rule anyway, because Decision 2 is on classification. **Every comparison among these five stays out of the headline until the reference question is settled.**
+
+### P3: the pipeline for the admitted models
+
+- **The run:** `run_full_test.py --model <id>`, one model at a time, in a throwaway worktree at the admission commit `191ed91f`. 02:59 → 03:22Z, **22.5 min**, rc 0 for all 9, load ≈ 3–6. It started only after Day 3's residual runs had finished, so nothing contended with the 600 s translate budget.
+  - The worktree DB differed from the branch only in these 9 rows. The rows and the 6 goldens the run generated are persisted in `570d1c1b`.
+  - The goldens are `airsp2_mcp`, `airsp2_mcp_presolve`, `jbearing_mcp`, `minsurf_mcp`, `torsion_mcp` and `torsion_mcp_presolve`. None contains license text.
+- **All 9 reproduce Task 7:**
+
+  | model | parse | translate | outcome | verdict | attribution |
+  |---|---|---|---|---|---|
+  | `airsp2` | ✓ | ✓ 2.5 s | `model_optimal_presolve` | **match** @ 1037.246 | `MCP-SOLVED` |
+  | `torsion` | ✓ | ✓ 14.8 s | `model_optimal_presolve` | **match** @ -0.4175 | `MCP-SOLVED` |
+  | `jbearing` | ✓ | ✓ 37.8 s | `path_syntax_error` | `not_tested` | `NO-SOLVE` |
+  | `minsurf` | ✓ | ✓ 13.0 s | `path_solve_terminated` | `not_tested` | `NO-SOLVE` |
+  | `airsp` | ✓ | **timeout** (600 s) | — | `not_tested` | — |
+  | `msm` | ✓ | **timeout** (600 s) | — | `not_tested` | — |
+  | `emfl` | ✗ `lexer_invalid_char` | — | — | `not_tested` | — |
+  | `indus89` | ✗ `lexer_invalid_char` | — | — | `not_tested` | — |
+  | `phosdis` | ✗ `lexer_invalid_char` | — | — | `not_tested` | — |
+
+  - **Both matches are presolve-only and both models are multi-solve** (above). Under C5 they are methodology: not counted, and not in the ledger. Under the reference question, **neither enters the headline** until it is settled.
+  - **C1:** `minsurf` at `path_solve_terminated` is an **NLP-gated first measurement**, as Task 7 predicted. It is reported by identity, not as a regression.
+- **The two denominators, from `kpi_block.py` at `570d1c1b`:**
+
+  | quantity | continuity (140) | current (149) |
+  |---|---|---|
+  | Parse | 140 | 146 |
+  | Translate | 135 | 139 |
+  | Solve | 115 | 117 |
+  | Match | 97 | 99 |
+  | `path_solve_terminated` | 2 | 3 |
+  | `path_syntax_error` | 6 | 7 |
+
+  - The scope additions add **+2 Solve and +2 Match on `current` only**, and both are the multi-solve presolve matches. **None is booked as a recovery (C4).**
+  - The expanded-scope headline sentence is Day 5's. The corpus record is Day 4's.
+- **Routing is Day 4's:** R-JB-171 (jbearing), R-EXEC and R-B-minsurf (minsurf), parse (emfl, indus89, phosdis) and translate performance (airsp, msm).
+
+### What the persisted rows broke, and why each change is not a loosening
+
+The first `make test` on this branch failed 6 tests. Each one had pinned **the state before Day 3**, not a property.
+
+- **`check-index-repeats`, P2 (a CI gate): 2 "new" violations, both already-baselined defects in a new file.**
+  - `egypt_mcp_presolve: tranc(rp,rp)` and `shale_mcp_presolve: ts(tf,tf)` are the **same** Class-A guards the baseline already holds for `egypt_mcp` and `shale_mcp`. The presolve emit carries the same MCP body after its `$include`, so committing it adds a second copy of a known defect, not a new one.
+  - The baseline grows **9 → 11** (`--update-baseline`, both entries named). P1 is still 0 over 3,370 heads.
+  - **P4 owns both** (Class-A `tranc(rp,rp)` and `ts(tf,tf)`, `PLAN.md` §3). One fix removes each defect from both emits, and the baseline then shrinks by 2 per model.
+- **`test_kpi_corpus.py` (4) and `test_check_doc_figures.py` (1)** asserted *"no admissions yet, so both corpora are 140"*. That was Day 1's state, which Day 3 ends by design. They now state the invariant instead:
+  - **continuity stays 140** (the re-based base series);
+  - **current = 140 + the admissions recorded in `data/corpus_admissions.json`**;
+  - the three corpus readers still select one **identical** set. That set is now the current corpus, and continuity is that set minus the admissions.
+  - The scratch-admission tests admit one more model **on top of** the committed admissions. Derived, not counted, so the next admission does not break them for the wrong reason.
+- **`test_floor_tracker.py`:** see the floor section above.
+
+**Controls.**
+- Dropping turkey's entry while `expected_floor` stays 76 fails the floor self-consistency test.
+- Dropping one admission from `data/corpus_admissions.json`, while its row stays convex in the DB, fails all 5 rewritten corpus tests. That is the silent growth they guard against.
+
+### Gate
+
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,580 passed**, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs. `make check-index-repeats` passes: P1 0 / 3,370, P2 11 = baseline. `make check-doc-figures` is clean.
