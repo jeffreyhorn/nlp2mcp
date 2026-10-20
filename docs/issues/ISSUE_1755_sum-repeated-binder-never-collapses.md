@@ -118,6 +118,33 @@ The **off-diagonal** instance must still differentiate to **0**: `d sum(i, tsam(
 - **REPLAN** if any golden changes for a reason other than this shape, or if the fix needs to touch `_sum_should_collapse`'s full-collapse branch (that is #1776's territory, and would mix the two defects).
 - **Out of scope:** #1776 (equal binder/index counts, the `else`/full-collapse side). It shares the function and a future binder→position helper, but not this gate.
 
+## Phase 0 results (Sprint 40 Day 5): PROCEED, with one finding routed
+
+**The fix:** `_diff_sum_repeated_binder` (`src/ad/derivative_rules.py`), called at the end of the single-binder loop, only after every existing attempt returned zero. It places the binder at every position it occupies, but only when the `wrt` values there are equal (case-insensitively for the spelling), then substitutes it back.
+
+| criterion | result |
+|---|---|
+| fail-before, at the layer | `d sum(i, tsam(i,i)) / d tsam('i1','i1')` was `Sum((i), Const(0.0))`; now `Const(1.0)` |
+| **positive control** | the off-diagonal `('i1','i2')` stays 0, as do `w(i,i,i)` at `('i3','i3','i1')` and `v(i,i,'k1')` at `('i1','i1','k2')` |
+| scalar variant, emit | `stat_tsam(i,j).. 2 * tsam(i,j) + nu_diag$(<the diagonal>) =E= 0;` with `diag.nu_diag` paired: **the hand-derived row** |
+| scalar variant, **solve** | PATH MS 1 at **0.333**, against the NLP's 0.3333 |
+| reproducer, emit | `diagsum` and `nu_diagsum` present and paired; `nu_diagsum` on the diagonal only; no `1 =E= 0` |
+| #1737 | shape (a) `dd(i,i).. sum(j, tsam(j,j)) =e= 1` is now **refused** (it was silently dropped). Pinned. #1737 untouched |
+| leak gate | `make check-goldens`, alone: **200 in-scope goldens, all clean**, rc 0 with `--fail-on-unverified`. **Byte-identical corpus-wide**, as predicted |
+| `check-index-repeats` | P1 0 / 3,370; P2 11 = baseline |
+| mutation controls | revert the fix: 8 of 9 tests fail; drop the equal-values condition: the positive control fails; exact-spelling instead of case-insensitive: the case test fails |
+
+**Where the measurement differed from the prediction (recorded, not smoothed over):**
+
+1. **The indexed reproducer's row is not the hand-derived one.** AD now returns 1 for every `j`, but the stationarity row aggregates the cross-instance multipliers wrongly: at `(i1,i1)` it gives `2·nu_diagsum(i1)`, not `nu_diagsum(i1)+nu_diagsum(i2)+nu_diagsum(i3)`. **That is a separate, pre-existing defect, filed as #1778.**
+   - A reproducer with **no** repeated binder (`e(j).. sum(i, tsam(i,'i1')) =e= 1`) emits byte-identically on an untouched `main` and solves to a **wrong 0.375** against an NLP of 0.3333.
+   - Its guard `nu_e(i)$(ord(i) = k)` looks like the phantom-IndexOffset family (#1381/#1714): a hypothesis, not traced.
+   - It is latent in the corpus (0 goldens match the shape). #1755's own criteria are met; its pass-after named the diagonal placement and the scalar solve, both of which hold.
+2. **A pinned reachability claim became live.** `test_pattern_c_alias_offset_gate.py` asserted that a diagonal reference *never* reaches Pattern-C B-3. Because #1755 makes the reference differentiate, B-3 is now consulted and **declines** (returns `None`). The test now asserts "reached and declined", and the change is recorded in ISSUE_1741.
+   - ⚠ Measured by mutation: #1741's own guard is not the only decliner for that fixture.
+
+**Out of scope, unchanged:** #1776, the equal-count `_diff_sum` sibling.
+
 ## A related corpus case: egypt — a SIBLING, now #1776 (Sprint 40 Day 4, 2026-10-20)
 
 - egypt's `landb(r,tm).. sum((c,z)$zr(z,r), xcrop(r,c)*land(c,z,tm)) =l= …` gets **0 Jacobian entries**, and `landb`, `waterb` and their multipliers vanish from `egypt_mcp.gms`. `labbal` silently loses its `xcrop` terms.

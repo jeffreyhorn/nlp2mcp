@@ -909,7 +909,7 @@ def test_b3_declines_a_repeated_EQ_DOMAIN(tmp_path):
 
 
 @pytest.mark.unit
-def test_b3_is_never_reached_by_either_repeat_shape(tmp_path, monkeypatch):
+def test_b3_ordering_and_reachability_for_both_repeat_shapes(tmp_path, monkeypatch):
     """⚠ Caller-level ORDERING and REACHABILITY, instrumented (PR #1742 review).
 
     The review asked for an `_emit_mini_mcp` case proving the standard path
@@ -975,10 +975,32 @@ solve m using nlp minimizing z;
         f"B-3 was called {calls['n']} time(s) first"
     )
 
-    # --- fact 2: a DIAGONAL VARIABLE REFERENCE never reaches B-3 either ------
+    # --- fact 2: a DIAGONAL VARIABLE REFERENCE reaches B-3, which DECLINES ----
     # ⚠ `tsam(i,i)`, an actual diagonal reference — the earlier fixture used
     # `tsam(i,j)` and so exercised nothing of this claim. This one EMITS
-    # (no exception), so the zero is about reachability, not about an abort.
+    # (no exception).
+    #
+    # ⚠ CHANGED by #1755 (Sprint 40 P7), as this assertion's own message
+    # anticipated. Until #1755, `sum(i, tsam(i,i))` differentiated to 0, so the
+    # reference never reached stationarity and B-3 was never consulted. Now it
+    # differentiates to 1 on the diagonal, so B-3 IS consulted: a LIVE path. The
+    # property is therefore stronger than "unreachable": B-3 is reached and EVERY
+    # call returns `None` (the standard path takes it). The corpus-level
+    # verification the old message asked for is Day 5's complete leak gate:
+    # 200 in-scope goldens, byte-identical.
+    # ⚠ MEASURED: for THIS fixture the #1741 `src_indices` guard is NOT the only
+    # decliner. Neutralizing it leaves this test green, because another bail-out
+    # in the builder also returns None. So this pins "B-3 declines", not "the
+    # #1741 guard declines"; the guard's own pin is the unit test on `_pos`.
+    returns: list[object] = []
+
+    def _spy_returns(*a, **k):
+        calls["n"] += 1
+        out = real(*a, **k)
+        returns.append(out)
+        return out
+
+    monkeypatch.setattr(st, "_build_pattern_c_dim_mismatch_term", _spy_returns)
     diagonal_reference = """\
 Set i / a1, a2 /;
 Alias (i,j);
@@ -991,10 +1013,14 @@ solve m using nlp minimizing z;
 """
     calls["n"] = 0
     _emit_mini_mcp(tmp_path, diagonal_reference, "mini_diagonal_ref.gms")
-    assert calls["n"] == 0, (
-        "a diagonal variable reference is expected never to reach B-3; it was "
-        f"called {calls['n']} time(s). If this fires, the guard's `src_indices` "
-        "half has become a LIVE path and needs corpus-level verification."
+    # Non-vacuity: the live path is actually exercised (it was 0 before #1755).
+    assert calls["n"] > 0, (
+        "since #1755 the diagonal reference differentiates to 1 and reaches B-3; "
+        "0 calls means the reference is being zeroed again (a #1755 regression)"
+    )
+    assert returns and all(r is None for r in returns), (
+        "B-3 must DECLINE a diagonal reference (return None, standard path); "
+        f"it returned {returns!r}"
     )
 
 

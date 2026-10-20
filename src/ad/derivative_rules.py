@@ -2430,6 +2430,15 @@ def _diff_sum(
                                 "*", result_body, _ensure_numeric_condition(expr.condition)
                             )
                         return result_body
+            # Issue #1755: the attempts above symbolize ONE position each, so a
+            # reference that repeats the binder (sum(i, tsam(i,i)) w.r.t.
+            # tsam('i1','i1')) never matches and the derivative is lost. Tried
+            # only after they all fail, so a shape they handle cannot change.
+            repeated = _diff_sum_repeated_binder(
+                expr, wrt_var, wrt_indices, config, bound_indices=bound_indices
+            )
+            if repeated is not None:
+                return repeated
         else:
             matched_indices, matched_concrete, remaining_indices, partial_symbolic_wrt = (
                 _partial_index_match(expr.index_sets, wrt_indices, config)
@@ -2969,6 +2978,53 @@ def _enumerate_matchings(
 
     _backtrack(0, set(), [])
     return result
+
+
+def _diff_sum_repeated_binder(
+    expr: Sum,
+    wrt_var: str,
+    wrt_indices: tuple[str | IndexOffset, ...],
+    config: Config | None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
+) -> Expr | None:
+    """Collapse a single-binder sum whose reference repeats the binder (#1755).
+
+    ``sum(i, tsam(i,i))`` w.r.t. ``tsam('i1','i1')``: the binder sits at two
+    positions, so it is placed at BOTH and differentiated symbolically, then
+    substituted back to ``'i1'``. This is valid only when every position holding
+    the binder carries the SAME concrete value. ``tsam('i1','i2')`` has no single
+    value for ``i`` and must stay 0: the off-diagonal positive control.
+
+    Returns ``None`` when no reference qualifies, so the caller's fallthrough is
+    unchanged.
+    """
+    sum_idx = expr.index_sets[0]
+    key = sum_idx.lower()  # GAMS identifiers are case-insensitive: i and I repeat
+    for ref in _find_var_indices_in_body(expr.body, wrt_var):
+        if len(ref) != len(wrt_indices):
+            continue
+        positions = [p for p, idx in enumerate(ref) if isinstance(idx, str) and idx.lower() == key]
+        if len(positions) < 2:
+            continue
+        values = {wrt_indices[p] for p in positions}
+        if len(values) != 1:
+            continue  # inconsistent values: no single value for the binder
+        value = next(iter(values))
+        if not isinstance(value, str) or not _is_concrete_instance_of(value, sum_idx, config):
+            continue
+        symbolic_wrt = tuple(ref[p] if p in positions else w for p, w in enumerate(wrt_indices))
+        body_derivative = differentiate_expr(
+            expr.body, wrt_var, symbolic_wrt, config, bound_indices=bound_indices
+        )
+        if _is_structurally_zero(body_derivative):
+            continue
+        spellings = tuple(dict.fromkeys(str(ref[p]) for p in positions))
+        result = _substitute_sum_indices(body_derivative, spellings, (value,) * len(spellings))
+        if expr.condition is not None:
+            result = Binary("*", result, _ensure_numeric_condition(expr.condition))
+        return result
+    return None
 
 
 def _sum_should_collapse(

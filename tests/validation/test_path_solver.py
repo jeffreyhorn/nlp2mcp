@@ -13,6 +13,7 @@ Requirements:
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -406,6 +407,45 @@ class TestPATHSolverValidation:
         lst_content = lst_file.read_text()
         kkt_ok, kkt_msg = _check_kkt_residuals(lst_content)
         assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"
+
+
+@pytest.mark.validation
+def test_issue_1755_the_diagonal_reference_solves_to_the_nlp_optimum(tmp_path):
+    """#1755 pass-after: ``diag.. sum(i, tsam(i,i)) =e= 1`` keeps its multiplier.
+
+    Before the fix ``diag`` and ``nu_diag`` were dropped, so the MCP solved the
+    unconstrained problem (tsam = 0, objective 0). The NLP optimum is 1/3
+    (tsam = 1/3 on the diagonal); the hand-derived MCP reaches it.
+    """
+    source = tmp_path / "diag.gms"
+    source.write_text(
+        "Set i / i1*i3 /;\n"
+        "Alias (i,j);\n"
+        "Variable tsam(i,j), z;\n"
+        "Equation diag, obj;\n"
+        "diag.. sum(i, tsam(i,i)) =e= 1;\n"
+        "obj.. z =e= sum((i,j), sqr(tsam(i,j)));\n"
+        "Model m / all /;\n"
+        "solve m using nlp minimizing z;\n"
+    )
+    mcp = tmp_path / "diag_mcp.gms"
+    translate = subprocess.run(
+        [sys.executable, "-m", "src.cli", str(source), "-o", str(mcp)],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    assert translate.returncode == 0, translate.stderr
+
+    gams_exe = find_gams_executable()
+    assert gams_exe is not None, "GAMS executable not found"
+    success, message, _ = _solve_gams(mcp, gams_exe)
+    assert success, f"PATH solve failed: {message}"
+
+    lst = (tmp_path / "diag_mcp.lst").read_text()
+    match = re.search(r"PARAMETER nlp2mcp_obj_val\s+=\s+([-+0-9.eE]+)", lst)
+    assert match, "nlp2mcp_obj_val not displayed"
+    assert abs(float(match.group(1)) - 1.0 / 3.0) < 1e-3, match.group(1)
 
 
 @pytest.mark.validation
