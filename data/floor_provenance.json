@@ -62,7 +62,7 @@
       "limb": "presolve-match-genuine",
       "since_sprint": 40,
       "evidence": "cold emit changed at 95ba01ea (S35 Day 6, +1/-1): domain-less 2-D set `ao` now quoted per component ('oil-crops'.sunflower), ending $161 x6. Never runnable under the demo (path_solve_license); licensed (Sprint 40 Day 3, batch f1771435): model_optimal_presolve + match @ 29078.2106, MCP-SOLVED. Fail-before sub-rule (Decision 1) HOLDS: the pre-fix golden 95ba01ea^ (sha256 ad6d57d21c0e4ba6...) run licensed fails compile ($161, $257), so it does not match. Current cold emit reaches MS-5 @ -5.473, so the match arrives via the presolve warm start.",
-      "pr": "TBD"
+      "pr": "1765"
     }
   ],
   "_entry_schema": {
