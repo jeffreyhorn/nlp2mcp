@@ -1,7 +1,7 @@
-# tricp: Translation Timeout — Triangular Graph Circle Packing
+# tricp: case_b `stat_x(n,k0)`, and `eq1` violated at the transferred NLP point (was: translation timeout, then MCP compilation errors)
 
 **GitHub Issue:** [#933](https://github.com/jeffreyhorn/nlp2mcp/issues/933)
-**Status:** OPEN — **re-scoped 2026-10-14** (Sprint 40 Prep Task 7): the compile errors below no longer reproduce; tricp now compiles, reaches PATH and is a `case_b` emit bug. See *Current Status (2026-10-14)* at the end.
+**Status:** OPEN — **re-scoped 2026-10-14** (Sprint 40 Prep Task 7), **committed on GitHub 2026-10-20** (Sprint 40 Day 4: retitled, routing note R-B-tricp). The compile errors below no longer reproduce; tricp compiles, reaches PATH and is a `case_b` emit bug, and its `eq1` is violated at the transferred NLP point. See the two *Current Status* sections at the end.
 **Severity:** Medium — Model parses but translation times out (>60s)
 **Date:** 2026-02-26
 **Affected Models:** tricp
@@ -112,3 +112,16 @@ Triaged against a real compile, in a throwaway worktree under the retention patc
 
 **Re-scoped:** the open defect is no longer compilation. It is a **wrong stationarity equation for `x(n,k)`**, routed to Sprint 40 P2 as routing note **R-B-tricp**. The title and the Sprint-21 sections above describe history.
 
+## Current Status (2026-10-20) — Sprint 40 Day 4: R-B-tricp, and the 6.15e6 equality residual
+
+Measured at `de0a7186` (Day 3 batch `f1771435`), GAMS 54.2.1 licensed.
+
+- **The compile errors this issue was titled for no longer reproduce** (Prep Task 7; re-confirmed on the Day 3 batch). tricp compiles, reaches PATH, and is `model_infeasible` (MS 5), `MCP-FAILED`.
+- **`kkt_residual.py`: `case_b`.** The worst row is `stat_x(n1,k0)` at relative 1.69, with the same value at every `n`.
+- **⚠ The "max equality residual 6.15e6 while consistent" was checked first, as the routing note required. It is a real primal defect, not a harness artifact.**
+  - The rows are the source's own equality **`eq1(e(i,j))`**: **42 of 54** instances are violated at the transferred NLP point, by up to **6.154e6** (`eq1(n7,n9)`).
+  - `defobj` is satisfied (4.5e-13).
+  - The emitted `eq1(i,j)$(e(i,j)).. sum(k, sqr(x(i,k) - x(j,k))) =E= sqr(r(i) + r(j)) + slp(i,j) - sln(i,j)` reads faithful to the source, so the suspect is the **transferred point**: the `x`, `r`, `slp` or `sln` levels.
+  - `eq1` is declared `eq1(n,n)`: a **repeated declaration domain**, the Sprint 38 Day 11 / Sprint 39 Task 7 positional-domain class.
+  - The harness reports equality residuals as informational only, which is why it called the transfer "consistent". That is a limitation to record, not a reason to trust the `case_b` verdict as the whole story.
+- **First step:** load the NLP solution and evaluate `eq1(n7,n9)` in GAMS directly, against the MCP-side levels after the transfer. Which variable's level differs? Then re-read the `stat_x` verdict on a point that satisfies `eq1`.

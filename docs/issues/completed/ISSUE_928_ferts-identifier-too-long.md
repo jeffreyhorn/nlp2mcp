@@ -1,7 +1,7 @@
 # ferts: Translation Timeout — Egypt Static Fertilizer Model
 
 **GitHub Issue:** [#928](https://github.com/jeffreyhorn/nlp2mcp/issues/928)
-**Status:** OPEN
+**Status:** CLOSED 2026-10-20 (Sprint 40 Day 4) — no longer reproduces: 0 compile errors, identifiers hash-truncated; ferts now tracked as #1767
 **Severity:** Medium — Model parses but translation times out (>60s)
 **Date:** 2026-02-26
 **Affected Models:** ferts
@@ -86,3 +86,7 @@ Same as other LP timeout models — LP-specific fast path, sparsity-aware Jacobi
 Fix: Truncate or shorten the naming scheme for generated MCP variables when element names are long.
 
 Parse: ~35s | Translate: completes | Compile: FAIL | Solve: N/A
+
+## Current Status (2026-10-20) — Sprint 40 Day 4: no longer reproduces
+
+At `de0a7186`, licensed, `ferts_mcp.gms` compiles with **0 errors** (no `$109`). The only ≥ 64-character tokens are in `*` comments; the emitted identifiers are hash-truncated. ferts is now `path_solve_terminated` (36× `comp_mb.lam_mb` empty-and-unfixed pairs), tracked as #1767. Closing is suggested on GitHub (with #1290).

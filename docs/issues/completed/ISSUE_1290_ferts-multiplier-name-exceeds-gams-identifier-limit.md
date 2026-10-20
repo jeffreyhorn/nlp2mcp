@@ -1,7 +1,7 @@
 # Emitter: Multiplier naming exceeds GAMS 63-char identifier limit on models with synthetic element hashes (ferts)
 
 **GitHub Issue:** [#1290](https://github.com/jeffreyhorn/nlp2mcp/issues/1290)
-**Status:** OPEN — Sprint 25 Priority 2
+**Status:** CLOSED 2026-10-20 (Sprint 40 Day 4) — no longer reproduces: 0 compile errors, identifiers hash-truncated; ferts now tracked as #1767 (was: OPEN — Sprint 25 Priority 2)
 **Severity:** Medium — Blocks 1 of 5 Sprint 25 Priority 2 recovered-translate models (`ferts`)
 **Date:** 2026-04-20
 **Affected Models:** `ferts` (observed); any model with hashed element names combined into multiplier names
@@ -54,3 +54,7 @@ The synthetic-element-hashing pass (used when element names contain GAMS-illegal
 - `src/emit/emit_gams.py`
 - `tests/unit/kkt/` — name-length regression test
 - `data/gamslib/raw/ferts.gms` — reference source
+
+## Current Status (2026-10-20) — Sprint 40 Day 4: no longer reproduces
+
+At `de0a7186`, licensed, `ferts_mcp.gms` compiles with **0 errors** (no `$109`). The only ≥ 64-character tokens are in `*` comments; the emitted identifiers are hash-truncated (e.g. `xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_z_8`). ferts is now `path_solve_terminated`, tracked as #1767. Closing is suggested on GitHub (with #928).

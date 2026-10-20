@@ -69,3 +69,30 @@ This is likely a bug in the automatic differentiation or KKT condition generatio
 ## Impact
 
 307 execution errors. Model compiles cleanly but SOLVE aborts. The KKT equations are fundamentally incorrect.
+
+## Current Status (2026-10-20) — Sprint 40 Day 4: re-measured licensed, routing note R-B-sroute
+
+Measured at `de0a7186` (Day 3 batch `f1771435`), GAMS 54.2.1 licensed.
+
+- **The original symptom is gone.** The 307 "empty equation but associated variable is NOT fixed" execution errors no longer occur. The MCP compiles and PATH runs: `model_infeasible` (**MS 4**), `MCP-FAILED`, and the presolve retry is also MS 4.
+- **The defect this issue named still reproduces, in a new form.** `kkt_residual.py` gives **`case_b`** (emit bug), with a consistent dual transfer (max equality residual 0) and a dual scale of 260:
+
+  | row | raw | relative |
+  |---|---|---|
+  | `stat_x(portland,chicago,boston)` | 260 | **1.000** |
+  | `stat_x(portland,chicago,memphis)` | 239 | 0.919 |
+  | `stat_x(portland,chicago,kansas-cty)` | 215 | 0.827 |
+  | `stat_x(chicago,portland,losangeles)` | 200 | 0.769 |
+
+- **How to read the numbers (corrected in PR #1777 review).** `kkt_residual.py` normalizes every row by **one global dual scale**: the largest transferred multiplier magnitude, floored at 1 (`dual_scale`, 260 here). A relative 1.000 means only that the raw residual (260) equals that scale. **It does not establish that this row's whole gradient is missing.**
+- **The golden already carries `lam_nb`.** `nb` is an `=g=` inequality, so its multiplier is `lam_nb`, not `nu_nb`. The emitted row is
+
+  ```gams
+  stat_x(i,ip,ipp).. darc(i,ip) + (1$(darc(ip,ipp)) * lam_nb(i,ip))$((not sameas(i, ipp))) - piL_x(i,ip,ipp) =E= 0;
+  ```
+
+  - **Leads, not a diagnosis (hypotheses until traced):**
+    - **The objective coefficient's indices.** The source's `cd.. cost =e= sum((i,ip,ipp), darc(ip,ipp)*x(i,ip,ipp))` gives `∂cost/∂x(i,ip,ipp) = darc(ip,ipp)`. The emitted row has **`darc(i,ip)`**.
+    - **The `lam_nb` terms.** `x(i,ip,ipp)` is *outgoing* in `nb(i,ip)` (right-hand sum, `darc(ip,ipp)`) and *incoming* in `nb(i,ipp)` (left-hand sum `sum(ipp'$darc(ipp',ipp), x(i,ipp',ipp))` at `ipp' = ip`). That means two `lam_nb` contributions with opposite signs, at `(i,ip)` and `(i,ipp)`. The emitted row has **one**, at `(i,ip)`.
+    - Both look like the same index permutation over `(i,ip,ipp)`. Whether that is this issue's original "dual terms dropped under permuted indices" is **provisional**.
+- **First step:** hand-derive `∂L/∂x(portland,chicago,boston)` and compare it term by term with the emitted row: the **objective coefficient** (which `darc` index pair), **both** the incoming and outgoing `lam_nb` terms (sign and index), and `piL_x`. Do not attribute the residual to a missing term before this trace.
