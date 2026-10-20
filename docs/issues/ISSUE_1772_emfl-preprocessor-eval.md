@@ -1,4 +1,4 @@
-# ISSUE #1772 — emfl: an inline `$if … $eval` is never evaluated, so %new% reaches the lexer
+# ISSUE #1772 — emfl: inline-guarded `$eval` does not define `%new%` (it reaches the lexer)
 
 **GitHub:** [#1772](https://github.com/jeffreyhorn/nlp2mcp/issues/1772) · **Status:** 🔴 **OPEN** — filed Sprint 40 Day 4 (2026-10-20), routed, not fixed in place
 

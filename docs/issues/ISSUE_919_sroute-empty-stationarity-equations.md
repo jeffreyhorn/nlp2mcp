@@ -91,6 +91,8 @@ Measured at `de0a7186` (Day 3 batch `f1771435`), GAMS 54.2.1 licensed.
   stat_x(i,ip,ipp).. darc(i,ip) + (1$(darc(ip,ipp)) * lam_nb(i,ip))$((not sameas(i, ipp))) - piL_x(i,ip,ipp) =E= 0;
   ```
 
-  - **A lead, not a diagnosis:** the row has **one** `lam_nb` term. In the source, `x(i,ip,ipp)` appears in `nb(i,ip)`'s right-hand side, and also, with its indices permuted, in the left-hand sum `sum(ipp$darc(ipp,ip), x(i,ipp,ip))` of another `nb` row. That second contribution, or its index mapping, may be missing or misindexed.
-  - Whether that is this issue's original "dual terms dropped under permuted indices" is **provisional** until traced.
-- **First step:** hand-derive `∂L/∂x(portland,chicago,boston)`: the objective term, every `lam_nb` contribution with its sign and index, and the bound term `piL_x`. Compare each with the emitted row.
+  - **Leads, not a diagnosis (hypotheses until traced):**
+    - **The objective coefficient's indices.** The source's `cd.. cost =e= sum((i,ip,ipp), darc(ip,ipp)*x(i,ip,ipp))` gives `∂cost/∂x(i,ip,ipp) = darc(ip,ipp)`. The emitted row has **`darc(i,ip)`**.
+    - **The `lam_nb` terms.** `x(i,ip,ipp)` is *outgoing* in `nb(i,ip)` (right-hand sum, `darc(ip,ipp)`) and *incoming* in `nb(i,ipp)` (left-hand sum `sum(ipp'$darc(ipp',ipp), x(i,ipp',ipp))` at `ipp' = ip`). That means two `lam_nb` contributions with opposite signs, at `(i,ip)` and `(i,ipp)`. The emitted row has **one**, at `(i,ip)`.
+    - Both look like the same index permutation over `(i,ip,ipp)`. Whether that is this issue's original "dual terms dropped under permuted indices" is **provisional**.
+- **First step:** hand-derive `∂L/∂x(portland,chicago,boston)` and compare it term by term with the emitted row: the **objective coefficient** (which `darc` index pair), **both** the incoming and outgoing `lam_nb` terms (sign and index), and `piL_x`. Do not attribute the residual to a missing term before this trace.

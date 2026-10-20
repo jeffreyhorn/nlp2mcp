@@ -40,7 +40,7 @@ All 9 were admitted by rule: the licensed verifier classified each one convex (S
 | `minsurf` | likely_convex | MCP | `path_solve_terminated` | #1767 (R-EXEC) + #1771 (R-B-minsurf) |
 | `airsp` | verified_convex | — | translate timeout (600 s) | #1775 |
 | `msm` | verified_convex | — | translate timeout (600 s) | #1775 |
-| `emfl` | likely_convex | — | parse: an inline `$if … $eval` is never evaluated (line-leading `$eval` is supported) | #1772 |
+| `emfl` | likely_convex | — | parse: inline-guarded `$eval` does not define `%new%` (standalone `$eval` is already implemented) | #1772 |
 | `indus89` | verified_convex | — | parse: `Singleton Set` unsupported | #1773 |
 | `phosdis` | verified_convex | — | parse: `for` statement unsupported | #1774 |
 
