@@ -36,6 +36,6 @@ Handle the inline form in the **conditional-directive processing** (`extract_con
 - The condition (`not set N`) must be honoured: evaluate only when it holds.
 - A result `_safe_eval_arithmetic` cannot evaluate should fail loudly, not stay literal.
 
-**Reach in the corpus:** the inline form appears in **`emfl`** and in **`srpchase`** (`$ifE mod(%DIM%,2)=1 $eval DIM %DIM%+1`). srpchase parses today, so its inline `$eval` is skipped **silently**. That is harmless only while `%DIM%` is already odd. Check srpchase's `DIM` after the fix. The line-leading form (supported) appears in `gqapsdp`, `spbenders4` and `springchain`.
+**Reach in the corpus:** the inline form appears in **`emfl`** and in **`srpchase`** (`$ifE mod(%DIM%,2)=1 $eval DIM %DIM%+1`). srpchase parses today, so its inline `$eval` is skipped **silently**. `mod(%DIM%,2)=1` is true for an **odd** `DIM`, which GAMS increments (999 → 1000). So skipping the directive is harmless only while `%DIM%` is already **even**, as it is by default (`$set DIM 1000`). An odd override would silently produce an odd node count. Check srpchase's `DIM` after the fix. The line-leading form (supported) appears in `gqapsdp`, `spbenders4` and `springchain`.
 
 **Not fixed in place.**

@@ -1,4 +1,4 @@
-# ISSUE #1766 — R-PRE-140: presolve dual transfer initializes multipliers the MCP never declared ($140) — egypt (#1755 drop), srpchase (#1385 drop)
+# ISSUE #1766 — R-PRE-140: presolve dual transfer initializes multipliers the MCP never declared ($140) — egypt (#1776 drop), srpchase (#1385 drop)
 
 **GitHub:** [#1766](https://github.com/jeffreyhorn/nlp2mcp/issues/1766) · **Status:** 🔴 **OPEN** — filed Sprint 40 Day 4 (2026-10-20), routed, not fixed in place
 
