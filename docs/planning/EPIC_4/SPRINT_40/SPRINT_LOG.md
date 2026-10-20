@@ -363,8 +363,14 @@ The changed `scripts/` files were also checked directly against `main`:
 - **The summary reports CANDIDATE movement** (convex and not skipped, as `kpi_block` counts). A skipped `danwolfe` changing status is no longer reported as leaving the corpus. The hold stays on the convex-set transition, so it still applies to skipped models.
 - **22 tests. 10 mutants (the 6 from before plus one per fix), all caught.**
 
+### PR #1764 review round 2 (W10)
+
+- **The write is atomic.** W10 now persists through `db_manager.save_database` (a same-directory temp file, then a rename). The old `write_text` truncated the live DB first, so a disk-full or interrupted write could leave partial JSON, and `--no-backup` removes the only recovery. A test simulates a half-written document followed by a write error: the live DB is untouched and still parseable.
+- **The tests use a deterministic fixture DB**, independent of the committed one. Day 3's admission of `torsion` would otherwise have made the "entering without `--admit`" test pass for the wrong reason, and the admitted case fail on an unused `--admit`. Every starting state is now explicit, and a test checks that the fixture is itself schema-valid.
+- **24 tests. 11 mutants, all caught**, including a non-atomic in-place write.
+
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,567 passed** at the first push, then **5,577** after the review round, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs. `make check-doc-figures` is clean.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,567 passed** at the first push, then **5,577** after review round 1, and **5,579** after round 2, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs. `make check-doc-figures` is clean.
 
 ⚠ **A false positive found and worked around, not fixed.** The fact *"presolve rows whose generated file is absent"* includes the pattern `all N rows`, which reads ANY "all *N* rows …" sentence as that count. It flagged this log's edition sentence. The sentence was reworded. Narrowing the pattern is a checker change with its own tests, so it is left for a separate PR.

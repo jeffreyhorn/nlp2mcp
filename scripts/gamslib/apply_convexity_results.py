@@ -74,7 +74,7 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.gamslib.db_manager import create_backup  # noqa: E402
+from scripts.gamslib.db_manager import create_backup, save_database  # noqa: E402
 
 # ONE reader for the admissions ledger: kpi_block's. A second, laxer reader here
 # (one that dropped malformed entries) let this writer admit models from a
@@ -323,7 +323,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if not args.no_backup:
         create_backup(args.db)  # data/gamslib/archive/, which is git-ignored
-    args.db.write_text(json.dumps(database, indent=2) + "\n", encoding="utf-8")
+    # ATOMIC: a same-directory temp file, then a rename (db_manager.save_database).
+    # `write_text` truncated the live DB first, so a disk-full or interrupted
+    # write could leave partial JSON in place of the validated DB, and
+    # --no-backup disables the only recovery (PR #1764 review).
+    save_database(database, args.db)
     logger.info("wrote %d model(s) to %s", len(planned), args.db)
     return 0
 
