@@ -582,3 +582,65 @@ Every live doc that named a cohort or admitted model's bucket was checked. Sprin
 ### Gate
 
 **No `src/` or `tests/` change** (the stable-scope waiver). The changes are docs, issue documents and one generated-report note. `git diff main...HEAD --name-only | grep -c '\.py$'` is 0 at the final commit. `make check-doc-figures` is clean.
+
+---
+
+## Day 5 — 2026-10-23 · P3: the expanded-scope sentence · 1 h · + P7: #1755, the diagonal defect · 7 h · + Checkpoint 1 · 2 h
+
+**Branch:** `planning/sprint40-day5-diagonal` · **Base:** `abc82d30`.
+
+### P3: the expanded-scope sentence (close rule C4)
+
+> **At `abc82d30`, on the 140-candidate continuity corpus (re-based from 142 on 2026-10-19), Solve is 115/135 and Match 97/140; on the expanded scope of 149 (140 + 9 admitted by rule, Decision 2), Solve is 117/139 and Match 99/149. The +2 and +2 are scope additions, not recoveries.**
+
+- Both figures come from `kpi_block.py --corpus continuity|current` at `abc82d30` (`CORPUS_RECORD.md` is the per-model record).
+- **The Rolling-KPIs footnote is ¹⁰** (`PROJECT_PLAN.md`), in the S23–S25 form ("pipeline scope changed from X to Y", with rates stated relative to the new scope). It marks the S40 Translate, Solve and Match cells, and it says explicitly that the current corpus's **rates are not comparable** with the series: Match falls to 66.4% on 149, although no model regressed.
+
+### P7: #1755, the diagonal-reference defect
+
+- **Phase-0 gate first:** `a9f13e5d` (`ISSUE_1755` § *Phase 0: Acceptance Gate*; `check_phase0_doc.py` PASS). The `src/` landing is the following commit.
+- **The layer was re-located by a call trace, before writing the gate.** Prep named `_sum_should_collapse`'s `len(...) != len(...)` early return.
+  - Traced: it does return False here, but making it return True would only reach the full-collapse branch, whose `zip(..., strict=True)` cannot pair 1 binder with 2 positions.
+  - **The derivative is lost in `_diff_sum`'s single-binder partial-match loop,** which symbolizes **one position per attempt** (`('i','i1')`, then `('i1','i')`) and so never matches `tsam(i,i)`.
+  - Sprint 39 recorded three of four gates naming the wrong layer; this one was checked before the code was written.
+- **The fix** (`_diff_sum_repeated_binder`, run only after every existing attempt returned zero): place the binder at **every** position it occupies, **only when the `wrt` values there are equal**, then substitute it back.
+
+| criterion | result |
+|---|---|
+| fail-before at the layer | `Sum((i), Const(0.0))` → `Const(1.0)` on the diagonal |
+| **positive control** | the off-diagonal `('i1','i2')` stays **0**, as do the three-position and mixed-concrete variants |
+| scalar variant | the emit **is the hand-derived row** (`2*tsam(i,j) + nu_diag$(diagonal)`); PATH **MS 1 at 0.333** = NLP 0.3333 |
+| reproducer | `diagsum` and `nu_diagsum` present and paired, `nu_diagsum` on the diagonal only, no `1 =E= 0` |
+| #1737 | shape (a) `dd(i,i)` moves from **silently dropped** to **refused**. Pinned; #1737 untouched |
+| leak gate | `make check-goldens` **alone**: **200 in-scope, all clean**, rc 0 with `--fail-on-unverified` (17:55 → 18:12Z). **Byte-identical corpus-wide** |
+| `check-index-repeats` | P1 0 / 3,370; P2 11 = baseline |
+| mutation controls (throwaway worktrees) | revert → 8 of 9 fail · drop equal-values → the positive control fails · exact spelling → the case test fails |
+
+- **A vacuous test caught by the controls.** The first case-insensitivity test, `tsam(i,I)`, passed with the fix **reverted**. `main` already handled that two-position form by accident: #1111's free-index conversion treats `I` as a distinct free index. It was replaced with a three-position `w(i,I,i)`, which `main` and the exact-spelling mutant both get wrong, and the accidental form is kept as a pin.
+- **Where the measurement differed from the prediction:**
+  - **The indexed reproducer's row is not the hand-derived one.** AD is now right (1 for every `j`), but the stationarity row aggregates the cross-instance multipliers wrongly (`2·nu_diagsum(i1)` at `(i1,i1)`).
+  - **That is a pre-existing, independent defect, filed as #1778.** A reproducer with no repeated binder is byte-identical on an untouched `main` and **solves to a wrong 0.375** against an NLP of 0.3333. It is latent in the corpus: 0 goldens carry the shape, and the positive control matches.
+  - Its `nu_e(i)$(ord(i) = k)` guard looks like the phantom-IndexOffset family (#1381/#1714): a hypothesis.
+- **A pinned reachability claim became live, as its own message anticipated.**
+  - `test_pattern_c_alias_offset_gate.py` asserted that a diagonal reference *never* reaches Pattern-C B-3. Now that the reference differentiates, B-3 is consulted and **declines** (`None`), so the test asserts "reached and declined" and is renamed.
+  - ⚠ A mutant showed #1741's guard is **not** the only decliner for that fixture, so the test claims only "B-3 declines". `ISSUE_1741` is updated.
+- **Out of scope, unchanged:** #1776 (the equal-count sibling).
+
+### Checkpoint 1 (end of day): GO
+
+Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus copied in. The run launches GAMS with `cwd` at that root, and `tricp` writes `cp.eps` there. 18:31 → 18:55Z. **Nothing was persisted.**
+
+- **Scope first: the resolver's own MODEL count.** `--resolve-changed --since-commit bd2af6e9 --dry-run --json` reports **12** changed-golden models: airsp2, egypt, glider, jbearing, minsurf, robot, shale, srpchase, tfordy, torsion, tricp, turkey. These are the goldens Day 3 committed. No empty-selection error, so no `--allow-empty`: the run certifies these 12.
+- **`--resolve-changed --since-commit bd2af6e9 --min-scope 12`: GO, rc 0.** **All 12 held their bucket.** 0 `backward`, 0 `missing`, `= same` on every row.
+- **Plus the licensed re-run of the 11 cohort models** (PR workflows are demo-only): `run_full_test.py --model <id>` for each.
+  - **All 11 reproduce their committed rows exactly**, on outcome, verdict, attribution, `license_edition` and objective (4 dp).
+  - No other row of the worktree DB changed.
+  - Every row is `licensed`.
+
+### Gate
+
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed**, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+- `make check-goldens` (the leak gate) is complete and clean, as above.
+- `make check-index-repeats`: P1 0, P2 = baseline.
+- `make check-doc-figures` is clean.
+- `check_phase0_doc.py` PASS.
