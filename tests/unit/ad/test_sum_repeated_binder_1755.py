@@ -21,7 +21,7 @@ import pytest
 
 from src.ad.derivative_rules import differentiate_expr
 from src.config import Config
-from src.ir.ast import Binary, Call, Const, ParamRef, Sum, VarRef
+from src.ir.ast import Binary, Call, Const, DollarConditional, ParamRef, Sum, VarRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import SetDef
 
@@ -50,6 +50,16 @@ def _d(body, var: str, wrt: tuple[str, ...]):
     return differentiate_expr(Sum(("i",), body, None), var, wrt, _config())
 
 
+#: Parameter values for `_value`, by (name, concrete indices). Only concrete keys
+#: exist, so a parameter whose binder was NOT substituted fails loudly.
+PARAMS = {
+    ("c", ("i1",)): 5.0,
+    ("c", ("i2",)): 7.0,
+    ("active", ("i1",)): 1.0,
+    ("active", ("i2",)): 0.0,
+}
+
+
 def _value(expr) -> float:
     """Numeric value of a constant derivative, expanding `Sum` over `i`'s 3 members.
 
@@ -65,10 +75,13 @@ def _value(expr) -> float:
         if isinstance(node, VarRef):
             return xval
         if isinstance(node, ParamRef):
-            # Only a SUBSTITUTED coefficient has a value; c(i) or c(I) left in a
+            # Only a SUBSTITUTED parameter has a value: c(i) or c(I) left in a
             # collapsed derivative is a bug, so it must not evaluate.
-            assert node.indices == ("i1",), f"unsubstituted coefficient: {node}"
-            return 5.0
+            key = (node.name, node.indices)
+            assert key in PARAMS, f"unsubstituted or unexpected parameter: {node}"
+            return PARAMS[key]
+        if isinstance(node, DollarConditional):
+            return ev(node.value_expr, xval) if ev(node.condition, xval) != 0 else 0.0
         if isinstance(node, Sum):
             assert node.index_sets == ("i",) and node.condition is None, node
             return 3 * ev(node.body, xval)  # the body is constant in `i` here
@@ -148,6 +161,37 @@ class TestTheDiagonalDifferentiates:
             Binary("*", ParamRef("c", ("I",)), VarRef("w", ("i", "I", "i"))),
         )
         assert _value(_d(body, "w", ("i1", "i1", "i1"))) == 2 * 5.0
+
+    def test_an_uppercase_binder_ONLY_in_a_coefficient_is_substituted(self):
+        # PR #1779 review round 3. `I` appears in no reference to x, only in c(I).
+        # The spellings came from x's references alone, so c(I) survived.
+        body = Binary("*", ParamRef("c", ("I",)), VarRef("x", ("i", "i")))
+        assert _value(_d(body, "x", ("i1", "i1"))) == 5.0  # c('i1')
+
+    def test_each_layout_substitutes_the_coefficient_with_ITS_OWN_value(self):
+        # sum(i, c(I)*(w(i,i,'i2','i2') + w('i1','i1',i,i))) at w('i1','i1','i2','i2'):
+        # the first layout binds i = i1 and the second i = i2, so the derivative
+        # is c('i1') + c('i2') = 12. One symbolic c(I) cannot carry both.
+        body = Binary(
+            "*",
+            ParamRef("c", ("I",)),
+            Binary(
+                "+",
+                VarRef("w", ("i", "i", "i2", "i2")),
+                VarRef("w", ("i1", "i1", "i", "i")),
+            ),
+        )
+        assert _value(_d(body, "w", ("i1", "i1", "i2", "i2"))) == 5.0 + 7.0
+
+    def test_each_layout_keeps_ITS_OWN_binding_in_the_condition(self):
+        # sum(i$active(i), w(i,i,'i2','i2') + w('i1','i1',i,i)) at
+        # w('i1','i1','i2','i2') = active('i1') + active('i2') = 1 + 0 = 1.
+        # The same symbolic active(i) on both layouts cannot give 1.
+        body = Binary("+", VarRef("w", ("i", "i", "i2", "i2")), VarRef("w", ("i1", "i1", "i", "i")))
+        out = differentiate_expr(
+            Sum(("i",), body, ParamRef("active", ("i",))), "w", ("i1", "i1", "i2", "i2"), _config()
+        )
+        assert _value(out) == 1.0
 
     def test_the_binder_is_substituted_through_the_body(self):
         # d sum(i, sqr(tsam(i,i))) / d tsam('i2','i2') = 2*tsam('i2','i2').

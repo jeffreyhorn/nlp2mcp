@@ -642,6 +642,22 @@ Every live doc that named a cohort or admitted model's bucket was checked. Sprin
 - **The regression** covers the plain case (2) and one with a coefficient under both spellings. The test's evaluator refuses an unsubstituted `c(i)` / `c(I)`, so the substitution cannot pass silently.
 - **Mutants:** the previous revision fails it (4 ≠ 2); canonical keys without merged spellings fail it (`c(I)` left). **13 tests**; reverting the fix fails 12 of them. The leak gate was re-run alone (below).
 
+### PR #1779 review round 3 (P7)
+
+Two findings without threads, both confirmed at the AD level first:
+
+- **Coefficient-only case variants.** Spellings came only from references to the differentiated variable, so `sum(i, c(I)*x(i,i))` left `c(I)`. In the two-layout case, one symbolic `c(I)` could not carry two bindings.
+  - **Fixed:** `_binder_spellings` collects every spelling of the binder across the body and condition. A nested aggregation that re-binds the name is skipped; GAMS rejects that anyway (`$125`).
+  - Now `c('i1')`, and `c('i1') + c('i2')` across two layouts.
+- **Layout-specific conditions.** Every layout received the same symbolic `active(i)`.
+  - **Fixed:** each layout's condition is substituted with **its own** binder value: `active('i1') + active('i2')`.
+- **4 value-checked regressions; 16 tests; 3 new mutants, all caught.** The previous revision fails all three; a symbolic condition fails the condition test; reference-only spellings fail both coefficient tests.
+- ⚠ **End-to-end, the condition is still lost one layer later, and this round does not fix that.** Two NLPs measured: a single layout with the binder in positions 3–4 (cond1), and the reviewer's two-layout case (cond2).
+  - AD now returns `act('i1')` / `act('i2')` per instance.
+  - The **stationarity** generalization then maps both back to `act(i)`, the variable's first domain position. So cond1's MCP still aborts (`e.nu_e` unmatched) and cond2's solves to **0.667 against 0.5**, **byte-identically before and after** this round.
+  - Recorded on **#1778** as two more stationarity-layer reproducers, possibly the same root. Latent in the corpus.
+  - The coefficient case solves correctly end to end (0.034 vs 0.0345), both before and after.
+
 ### Checkpoint 1 (end of day): GO
 
 Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus copied in. The run launches GAMS with `cwd` at that root, and `tricp` writes `cp.eps` there. 18:31 → 18:55Z. **Nothing was persisted.**
@@ -655,7 +671,7 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1 and **5,594** after round 2, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2 and **5,597** after round 3, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
 - `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, at the landing and **re-run alone after review rounds 1 and 2**. ⚠ Round 2's first two runs were **UNVERIFIED**, 195 of 200 with 5 timeouts: external machine load reached a 15-min average ≈ 100, which my runs did not cause. `--fail-on-unverified` refused both, as P10c intends. The third run, started only after five consecutive quiet minutes (1-min load < 8), was **complete and clean** (18:03 → 18:33Z).
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.

@@ -2980,6 +2980,42 @@ def _enumerate_matchings(
     return result
 
 
+def _binder_spellings(expr: Sum, sum_idx: str) -> tuple[str, ...]:
+    """Every spelling of the binder ``sum_idx`` used in ``expr``'s body and condition.
+
+    GAMS identifiers are case-insensitive, but index substitution is not, so each
+    spelling (``i``, ``I``) must be mapped explicitly. A nested aggregation that
+    re-binds the name is skipped (it shadows the binder; GAMS itself rejects
+    re-controlling an index, ``$125``). ``sum_idx`` is always included.
+    """
+    key = sum_idx.lower()
+    found: dict[str, None] = {sum_idx: None}
+
+    def name_of(idx: object) -> object:
+        return idx.base if isinstance(idx, IndexOffset) else idx
+
+    def walk(node: object) -> None:
+        if isinstance(node, (Sum, Prod)) and any(s.lower() == key for s in node.index_sets):
+            return
+        if isinstance(node, SymbolRef) and node.name.lower() == key:
+            found[node.name] = None
+        for idx in getattr(node, "indices", None) or ():
+            name = name_of(idx)
+            if isinstance(name, str) and name.lower() == key:
+                found[name] = None
+            if isinstance(idx, IndexOffset):
+                walk(idx.offset)
+        children = getattr(node, "children", None)
+        if callable(children):
+            for child in children():
+                walk(child)
+
+    walk(expr.body)
+    if expr.condition is not None:
+        walk(expr.condition)
+    return tuple(found)
+
+
 def _diff_sum_repeated_binder(
     expr: Sum,
     wrt_var: str,
@@ -3016,12 +3052,16 @@ def _diff_sum_repeated_binder(
     """
     sum_idx = expr.index_sets[0]
     key = sum_idx.lower()  # GAMS identifiers are case-insensitive: i and I repeat
-    # layout -> (every spelling of the binder seen there, its single value).
-    # The KEY uses the canonical binder spelling at the binder positions, because
-    # index matching is case-insensitive: w(i,i,i) and w(i,I,i) are ONE layout,
-    # and one symbolic differentiation counts both references (PR #1779 review).
-    # Their spellings are MERGED, so substitution replaces `i` and `I` alike.
-    layouts: dict[tuple[str | IndexOffset, ...], tuple[tuple[str, ...], str]] = {}
+    # Every spelling of the binder ANYWHERE in the body or condition, not only in
+    # references to the differentiated variable: `sum(i, c(I)*x(i,i))` must
+    # substitute the coefficient's `I` too (PR #1779 review, round 3).
+    # Substitution is case-sensitive, so each spelling is mapped explicitly.
+    spellings = _binder_spellings(expr, sum_idx)
+    # layout -> its single binder value. The KEY uses the canonical binder
+    # spelling at the binder positions, because index matching is
+    # case-insensitive: w(i,i,i) and w(i,I,i) are ONE layout, and one symbolic
+    # differentiation counts both references (PR #1779 review, round 2).
+    layouts: dict[tuple[str | IndexOffset, ...], str] = {}
     for ref in _find_var_indices_in_body(expr.body, wrt_var):
         if len(ref) != len(wrt_indices):
             continue
@@ -3037,20 +3077,27 @@ def _diff_sum_repeated_binder(
         ):
             continue
         symbolic_wrt = tuple(sum_idx if p in positions else w for p, w in enumerate(wrt_indices))
-        seen, _ = layouts.get(symbolic_wrt, ((), candidate))
-        spellings = tuple(dict.fromkeys((*seen, sum_idx, *(str(ref[p]) for p in positions))))
-        layouts[symbolic_wrt] = (spellings, candidate)
+        layouts.setdefault(symbolic_wrt, candidate)
 
     contributions: list[Expr] = []
-    for symbolic_wrt, (spellings, value) in layouts.items():
+    for symbolic_wrt, value in layouts.items():
         body_derivative = differentiate_expr(
             expr.body, wrt_var, symbolic_wrt, config, bound_indices=bound_indices
         )
         if _is_structurally_zero(body_derivative):
             continue
-        part = _substitute_sum_indices(body_derivative, spellings, (value,) * len(spellings))
+        concrete = (value,) * len(spellings)
+        part = _substitute_sum_indices(body_derivative, spellings, concrete)
         if expr.condition is not None:
-            part = Binary("*", part, _ensure_numeric_condition(expr.condition))
+            # The condition is bound to THIS layout's value, concretely
+            # (PR #1779 review, round 3). Kept symbolic (the #1085 convention for
+            # the full-collapse path), `active(i)` is mapped downstream to the
+            # variable's FIRST domain position. That is wrong whenever the binder
+            # sits elsewhere: `w('i1','i1',i,i)` tested `active('i1')` and dropped
+            # the multiplier. With two layouts, one symbolic guard cannot hold
+            # both bindings at all.
+            condition = _substitute_sum_indices(expr.condition, spellings, concrete)
+            part = Binary("*", part, _ensure_numeric_condition(condition))
         contributions.append(part)
     if not contributions:
         return None

@@ -57,3 +57,27 @@ At `(i1,i1)` the emitted row gives `2*tsam + 2*nu_e(i1)`, not `nu_e(i1)+nu_e(i2)
 Trace where `stat_tsam`'s cross-instance terms for `e(j')` are built (the stationarity layer, `_add_indexed_jacobian_terms` or its offset path), and check whether an `IndexOffset` is formed and then dropped. Then grep the goldens for `nu_\w+\((\w+)\)\$\(ord\(\1\) = \d+\)`: a multiplier indexed by the bare index beside an `ord(...)=k` guard.
 
 **Not fixed in place.**
+
+## Two more reproducers (Sprint 40 Day 5, PR #1779 review round 3)
+
+
+After #1755's round-3 fix, AD returns the correct per-instance derivative with each layout's own binding: `act('i1')` at `w(i1,i1,i1,i1)` and `act('i2')` at `w(i1,i1,i2,i2)` (instrumented in the pipeline). **The stationarity row then generalizes both to `act(i)`**, the variable's FIRST domain position, although the binder's value sits at positions 3–4:
+
+```gams
+Set i / i1*i3 /;  Alias (i,j,k,l);
+Parameter act(i) / i2 1 /;
+Variable w(i,j,k,l), z;  Equation e, obj;
+e.. sum(i$act(i), w('i1','i1',i,i)) =e= 1;                     * cond1
+* e.. sum(i$act(i), w(i,i,'i2','i2') + w('i1','i1',i,i)) =e= 1;  * cond2, with act / i1 1 /
+obj.. z =e= sum((i,j,k,l), sqr(w(i,j,k,l)));
+Model m / all /;  solve m using nlp minimizing z;
+```
+
+| | NLP | emitted MCP |
+|---|---|---|
+| cond1 | 1.0 | **aborts**: `act(i)` is tested at `i = i1` (0), so `nu_e` drops from every row and `e.nu_e` is unmatched (`EXECERROR = 1`) |
+| cond2 | 0.5 | MS 1 at **0.667**, a silent wrong answer |
+
+- Both emits are **identical before and after** #1755's round-3 AD fix. The binding is lost in the stationarity generalization, not in AD.
+- Like this issue's `nu_e(i)$(ord(i)=k)`, it is concrete→symbolic index mapping over aliased positions. The root may be shared; unverified.
+- Latent in the corpus: the #1779 leak gate is byte-identical.
