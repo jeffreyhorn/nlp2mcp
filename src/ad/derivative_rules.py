@@ -3016,7 +3016,11 @@ def _diff_sum_repeated_binder(
     """
     sum_idx = expr.index_sets[0]
     key = sum_idx.lower()  # GAMS identifiers are case-insensitive: i and I repeat
-    # layout (symbolic wrt) -> (the binder's spellings there, its single value)
+    # layout -> (every spelling of the binder seen there, its single value).
+    # The KEY uses the canonical binder spelling at the binder positions, because
+    # index matching is case-insensitive: w(i,i,i) and w(i,I,i) are ONE layout,
+    # and one symbolic differentiation counts both references (PR #1779 review).
+    # Their spellings are MERGED, so substitution replaces `i` and `I` alike.
     layouts: dict[tuple[str | IndexOffset, ...], tuple[tuple[str, ...], str]] = {}
     for ref in _find_var_indices_in_body(expr.body, wrt_var):
         if len(ref) != len(wrt_indices):
@@ -3032,9 +3036,10 @@ def _diff_sum_repeated_binder(
             candidate, sum_idx, config
         ):
             continue
-        symbolic_wrt = tuple(ref[p] if p in positions else w for p, w in enumerate(wrt_indices))
-        spellings = tuple(dict.fromkeys(str(ref[p]) for p in positions))
-        layouts.setdefault(symbolic_wrt, (spellings, candidate))
+        symbolic_wrt = tuple(sum_idx if p in positions else w for p, w in enumerate(wrt_indices))
+        seen, _ = layouts.get(symbolic_wrt, ((), candidate))
+        spellings = tuple(dict.fromkeys((*seen, sum_idx, *(str(ref[p]) for p in positions))))
+        layouts[symbolic_wrt] = (spellings, candidate)
 
     contributions: list[Expr] = []
     for symbolic_wrt, (spellings, value) in layouts.items():

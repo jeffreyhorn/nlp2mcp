@@ -132,13 +132,13 @@ The **off-diagonal** instance must still differentiate to **0**: `d sum(i, tsam(
 | #1737 | shape (a) `dd(i,i).. sum(j, tsam(j,j)) =e= 1` is now **refused** (it was silently dropped). Pinned. #1737 untouched |
 | leak gate | `make check-goldens`, alone: **200 in-scope goldens, all clean**, rc 0 with `--fail-on-unverified`. **Byte-identical corpus-wide**, as predicted |
 | `check-index-repeats` | P1 0 / 3,370; P2 11 = baseline |
-| mutation controls | revert the fix: 11 of 12 tests fail; drop the equal-values condition: the positive control fails; exact spelling instead of case-insensitive: the case test fails; drop the summed remainder, keep only the first layout, or stop deduplicating layouts: each fails its mixed-reference test |
+| mutation controls | revert the fix: 12 of 13 tests fail (round 1's count); drop the equal-values condition: the positive control fails; exact spelling instead of case-insensitive: the case test fails; drop the summed remainder, keep only the first layout, or stop deduplicating layouts: each fails its mixed-reference test; key layouts by spelling, or merge no spellings: the mixed-case test fails (review round 2) |
 
 **PR #1779 review: the result is the WHOLE derivative.** The first revision returned the first matching layout's collapsed contribution alone. With mixed references that dropped the rest:
 - `sum(i, x(i,i) + x('i1','i1'))` at `x('i1','i1')` gave **1, not 4**. The concrete reference's summed contribution (3) was lost. On `main` the fallthrough gave 3, so this was a regression in that shape.
 - `sum(i, w(i,i,'i1') + w('i1',i,i))` gave **1, not 2**.
 
-The helper now sums **every distinct layout once**, plus the **summed remainder** (exactly the caller's normal case). The two parts are disjoint. Regressions cover both cases, plus a shared-layout case that must not double-count; each is judged on its **value**.
+The helper now sums **every distinct layout once**, plus the **summed remainder** (exactly the caller's normal case). **Round 2:** a layout is keyed by the canonical binder spelling, because index matching is case-insensitive. `w(i,i,i)` and `w(i,I,i)` are one layout, and their spellings are merged for substitution. Keyed by spelling, they counted 4, not 2. The two parts are disjoint. Regressions cover both cases, plus a shared-layout case that must not double-count; each is judged on its **value**.
 
 - ⚠ **A related pre-existing limitation, out of scope:** the #1086 loop *before* the helper returns its **first** non-zero attempt. So `sum(i, x(i,'i1') + x(i,i))` still gives 1, not 2, the same as on `main`. Filed as **#1780**: changing that loop needs its own gate.
 

@@ -64,6 +64,11 @@ def _value(expr) -> float:
             return node.value
         if isinstance(node, VarRef):
             return xval
+        if isinstance(node, ParamRef):
+            # Only a SUBSTITUTED coefficient has a value; c(i) or c(I) left in a
+            # collapsed derivative is a bug, so it must not evaluate.
+            assert node.indices == ("i1",), f"unsubstituted coefficient: {node}"
+            return 5.0
         if isinstance(node, Sum):
             assert node.index_sets == ("i",) and node.condition is None, node
             return 3 * ev(node.body, xval)  # the body is constant in `i` here
@@ -128,6 +133,21 @@ class TestTheDiagonalDifferentiates:
             "+", VarRef("x", ("i", "i")), Binary("*", Const(2.0), VarRef("x", ("i", "i")))
         )
         assert _value(_d(body, "x", ("i2", "i2"))) == 3.0
+
+    def test_MIXED_CASE_one_layout_counts_once_and_substitutes_both_spellings(self):
+        # PR #1779 review round 2. Index matching is case-insensitive, so
+        # w(i,i,i) and w(i,I,i) are ONE layout. Keyed by spelling, they were two,
+        # and each symbolic differentiation counted both references: 4, not 2.
+        body = Binary("+", VarRef("w", ("i", "i", "i")), VarRef("w", ("i", "I", "i")))
+        assert _value(_d(body, "w", ("i1", "i1", "i1"))) == 2.0
+        # With a coefficient that needs substituting under BOTH spellings:
+        # d/dw('i1','i1','i1') of sum(i, c(i)*w(i,i,i) + c(I)*w(i,I,i)) = 2*c('i1').
+        body = Binary(
+            "+",
+            Binary("*", ParamRef("c", ("i",)), VarRef("w", ("i", "i", "i"))),
+            Binary("*", ParamRef("c", ("I",)), VarRef("w", ("i", "I", "i"))),
+        )
+        assert _value(_d(body, "w", ("i1", "i1", "i1"))) == 2 * 5.0
 
     def test_the_binder_is_substituted_through_the_body(self):
         # d sum(i, sqr(tsam(i,i))) / d tsam('i2','i2') = 2*tsam('i2','i2').

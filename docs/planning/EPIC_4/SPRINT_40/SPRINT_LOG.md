@@ -614,7 +614,7 @@ Every live doc that named a cohort or admitted model's bucket was checked. Sprin
 | #1737 | shape (a) `dd(i,i)` moves from **silently dropped** to **refused**. Pinned; #1737 untouched |
 | leak gate | `make check-goldens` **alone**: **200 in-scope, all clean**, rc 0 with `--fail-on-unverified` (17:55 → 18:12Z). **Byte-identical corpus-wide** |
 | `check-index-repeats` | P1 0 / 3,370; P2 11 = baseline |
-| mutation controls (throwaway worktrees) | revert → 11 of 12 fail · drop equal-values → the positive control fails · exact spelling → the case test fails · (after review round 1) drop the remainder / first layout only / no layout dedup → each fails its mixed-reference test |
+| mutation controls (throwaway worktrees) | revert → 12 of 13 fail · drop equal-values → the positive control fails · exact spelling → the case test fails · (after review round 1) drop the remainder / first layout only / no layout dedup → each fails its mixed-reference test |
 
 - **A vacuous test caught by the controls.** The first case-insensitivity test, `tsam(i,I)`, passed with the fix **reverted**. `main` already handled that two-position form by accident: #1111's free-index conversion treats `I` as a distinct free index. It was replaced with a three-position `w(i,I,i)`, which `main` and the exact-spelling mutant both get wrong, and the accidental form is kept as a pin.
 - **Where the measurement differed from the prediction:**
@@ -634,6 +634,14 @@ Every live doc that named a cohort or admitted model's bucket was checked. Sprin
 - **Fixed:** every distinct layout counts once, plus the summed remainder (the caller's normal case), and the two parts are disjoint. Three value-checked regressions cover the two cases and a shared layout (no double count). **12 tests; 7 mutants, all caught.** The leak gate was re-run alone (below).
 - **A pre-existing sibling, routed:** the #1086 loop before the helper returns its *first* non-zero attempt, so `sum(i, x(i,'i1') + x(i,i))` gives 1, not 2. That is unchanged from `main`, and filed as **#1780**: changing the loop needs its own Phase-0 gate.
 
+### PR #1779 review round 2 (P7)
+
+- **Layouts were keyed by spelling, but index matching is case-insensitive.** `sum(i, w(i,i,i) + w(i,I,i))` at `w('i1','i1','i1')` gave **4, not 2**. The two references made two keys, and each symbolic differentiation counted both.
+  - The same input also left a coefficient `c(I)` **unsubstituted** in one layout.
+- **Fixed:** the key uses the canonical binder spelling at the binder positions, and the original spellings of every reference sharing a key are **merged**, so substitution replaces `i` and `I` alike.
+- **The regression** covers the plain case (2) and one with a coefficient under both spellings. The test's evaluator refuses an unsubstituted `c(i)` / `c(I)`, so the substitution cannot pass silently.
+- **Mutants:** the previous revision fails it (4 ≠ 2); canonical keys without merged spellings fail it (`c(I)` left). **13 tests**; reverting the fix fails 12 of them. The leak gate was re-run alone (below).
+
 ### Checkpoint 1 (end of day): GO
 
 Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus copied in. The run launches GAMS with `cwd` at that root, and `tricp` writes `cp.eps` there. 18:31 → 18:55Z. **Nothing was persisted.**
@@ -647,8 +655,8 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
-- `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, both at the landing and **re-run alone after review round 1**.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1 and **5,594** after round 2, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+- `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, at the landing and **re-run alone after review rounds 1 and 2**. ⚠ Round 2's first two runs were **UNVERIFIED**, 195 of 200 with 5 timeouts: external machine load reached a 15-min average ≈ 100, which my runs did not cause. `--fail-on-unverified` refused both, as P10c intends. The third run, started only after five consecutive quiet minutes (1-min load < 8), was **complete and clean** (18:03 → 18:33Z).
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.
 - `check_phase0_doc.py` PASS.
