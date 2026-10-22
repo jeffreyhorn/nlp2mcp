@@ -106,9 +106,7 @@ class TestTheDiagonalDifferentiates:
         # would return 1 here.
         assert _is_zero(_d(VarRef("tsam", ("i", "i")), "tsam", ("i1", "i2")))
 
-    @pytest.mark.parametrize(
-        "wrt", [("i1", "I1"), ("I1", "i1"), ("i1", "'i1'"), ("'i1'", "i1")]
-    )
+    @pytest.mark.parametrize("wrt", [("i1", "I1"), ("I1", "i1"), ("i1", "'i1'"), ("'i1'", "i1")])
     def test_a_case_or_quote_varied_TARGET_is_still_the_diagonal(self, wrt):
         # PR #1779 review round 4. `_indices_match` strips quotes and ignores
         # case, so these name the same element in both coordinates. A raw-string
