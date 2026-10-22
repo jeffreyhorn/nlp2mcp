@@ -677,6 +677,21 @@ Two findings without threads, both reproduced first:
 - **Regressions:** fully noncanonical targets (2) with a nonlinear body, their off-diagonal controls (2), and the body condition, active and inactive. **28 tests.**
 - **Mutants:** the previous revision fails all 3 new tests; no guarded-zero recognition fails the body-condition test; no declared-spelling lookup fails both noncanonical tests.
 
+### PR #1779 review round 6 (P7)
+
+Two findings without threads, both reproduced first:
+
+- **A quotient body hid the diagonal.** `sum(i, x(i,i)/2)` gave 0, not 0.5. Each single-position attempt left `(2*0 - x*0)/2^2`, a quotient with a zero numerator, which the loop took for a match. The same happened with `x(i,i)/c(i)`.
+  - **Fixed in `_is_structurally_zero`:** a quotient is zero when its numerator is (the denominator is non-zero wherever the expression is defined). This again reaches every caller, and the leak gate decides.
+- **A quoted label spelled like the binder was counted.** With `Set i / i, i1, i2 /`, `sum(i, x(i,i) + x('i','i'))` at `x('i1','i1')` gave **2, not 1**. The parser keeps the label quoted (`"i"`), but index matching strips quotes, so the symbolic `(i,i)` target matched it.
+  - **Fixed:** each layout is differentiated against a **fresh placeholder** for the binder, which no label in the expression can spell. The rest of the body is left intact.
+- **Regressions:** both quotient forms, and the quoted label. **30 tests.** **Mutants:** the previous revision fails both; no quotient-zero recognition fails the quotient test; no fresh placeholder fails the quoted-label test.
+- ⚠ **A cost regression, found by the leak gate and fixed.** The first gate run on this round was UNVERIFIED (198 of 200), with ferts and ganges timed out on a quiet machine.
+  - Paired emits of ferts (`main` vs this branch, alternating order) were **byte-identical** but slower: 405 s vs 246 s, then 252 s vs 210 s.
+  - `cProfile` attributed it: the helper runs on **1.39 M** calls in ferts (nearly every single-binder `_diff_sum`), and each call re-walked the body. That was **6.5%** of the profiled emit.
+  - **Fixed:** an early return before any whole-expression walk when no reference repeats the binder, and the loop's already-computed reference list passed in instead of a second walk. The helper is now **1.6%**, and the emit is still byte-identical to the golden.
+- ⚠ **Pre-existing and unchanged, recorded in the test:** a **target** element spelled like the binder (`x('i','i')` at `('i','i')`) cannot be told from the binder in the bare-string index representation. `main` returns the same wrong value, so this PR does not change it.
+
 ### Checkpoint 1 (end of day): GO
 
 Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus copied in. The run launches GAMS with `cwd` at that root, and `tricp` writes `cp.eps` there. 18:31 → 18:55Z. **Nothing was persisted.**
@@ -690,7 +705,7 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4 and **5,609** after round 5, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5 and **5,611** after round 6, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
 - `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, at the landing and **re-run alone after review rounds 1 and 2**. ⚠ Round 2's first two runs were **UNVERIFIED**, 195 of 200 with 5 timeouts: external machine load reached a 15-min average ≈ 100, which my runs did not cause. `--fail-on-unverified` refused both, as P10c intends. The third run, started only after five consecutive quiet minutes (1-min load < 8), was **complete and clean** (18:03 → 18:33Z).
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.

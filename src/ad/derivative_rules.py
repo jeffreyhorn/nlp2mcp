@@ -1838,6 +1838,12 @@ def _is_structurally_zero(expr: Expr) -> bool:
             return _is_structurally_zero(expr.left) and _is_structurally_zero(expr.right)
         if expr.op == "*":
             return _is_structurally_zero(expr.left) or _is_structurally_zero(expr.right)
+        if expr.op == "/":
+            # A quotient with a zero numerator is 0 wherever it is defined
+            # (PR #1779 review, round 6). The quotient rule leaves
+            # `(c*0 - x*0) / c^2` for `x(i,i)/c(i)`, which the single-binder loop
+            # took for a match, returning before #1755's fallback.
+            return _is_structurally_zero(expr.left)
     if isinstance(expr, Unary):
         if expr.op == "-":
             return _is_structurally_zero(expr.child)
@@ -2440,7 +2446,19 @@ def _diff_sum(
             # tsam('i1','i1')) never matches and the derivative is lost. Tried
             # only after they all fail, so a shape they handle cannot change.
             repeated = _diff_sum_repeated_binder(
-                expr, wrt_var, wrt_indices, config, bound_indices=bound_indices
+                expr,
+                wrt_var,
+                wrt_indices,
+                config,
+                bound_indices=bound_indices,
+                # Reuse the loop's walk (computed when model_ir is set): this
+                # helper runs on nearly every single-binder call, and a second
+                # walk of the body cost ~6.5% of ferts' emit (profiled).
+                refs=(
+                    var_indices_in_body
+                    if config is not None and config.model_ir is not None
+                    else None
+                ),
             )
             if repeated is not None:
                 return repeated
@@ -3012,6 +3030,43 @@ def _declared_member_spelling(value: str, sum_idx: str, config: Config | None) -
     return stripped if _is_concrete_instance_of(stripped, sum_idx, config) else None
 
 
+def _fresh_binder_name(sum_idx: str, expr: Sum) -> str:
+    """A placeholder for ``sum_idx`` that no identifier or label in ``expr`` spells."""
+    taken = {s.lower() for s in _all_index_names(expr)}
+    candidate = f"{sum_idx}__binder1755"
+    n = 0
+    while candidate.lower() in taken:
+        n += 1
+        candidate = f"{sum_idx}__binder1755_{n}"
+    return candidate
+
+
+def _all_index_names(expr: Sum) -> set[str]:
+    """Every string index or symbol name in ``expr`` (quotes stripped)."""
+    names: set[str] = set(expr.index_sets)
+
+    def walk(node: object) -> None:
+        if isinstance(node, SymbolRef):
+            names.add(_strip_quotes(node.name))
+        for idx in getattr(node, "indices", None) or ():
+            base = idx.base if isinstance(idx, IndexOffset) else idx
+            if isinstance(base, str):
+                names.add(_strip_quotes(base))
+            if isinstance(idx, IndexOffset):
+                walk(idx.offset)
+        for s in getattr(node, "index_sets", None) or ():
+            names.add(s)
+        children = getattr(node, "children", None)
+        if callable(children):
+            for child in children():
+                walk(child)
+
+    walk(expr.body)
+    if expr.condition is not None:
+        walk(expr.condition)
+    return names
+
+
 def _binder_spellings(expr: Sum, sum_idx: str) -> tuple[str, ...]:
     """Every spelling of the binder ``sum_idx`` used in ``expr``'s body and condition.
 
@@ -3055,6 +3110,7 @@ def _diff_sum_repeated_binder(
     config: Config | None,
     *,
     bound_indices: frozenset[str] = frozenset(),
+    refs: list[tuple[str | IndexOffset, ...]] | None = None,
 ) -> Expr | None:
     """Collapse a single-binder sum whose reference repeats the binder (#1755).
 
@@ -3084,17 +3140,12 @@ def _diff_sum_repeated_binder(
     """
     sum_idx = expr.index_sets[0]
     key = sum_idx.lower()  # GAMS identifiers are case-insensitive: i and I repeat
-    # Every spelling of the binder ANYWHERE in the body or condition, not only in
-    # references to the differentiated variable: `sum(i, c(I)*x(i,i))` must
-    # substitute the coefficient's `I` too (PR #1779 review, round 3).
-    # Substitution is case-sensitive, so each spelling is mapped explicitly.
-    spellings = _binder_spellings(expr, sum_idx)
     # layout -> its single binder value. The KEY uses the canonical binder
     # spelling at the binder positions, because index matching is
     # case-insensitive: w(i,i,i) and w(i,I,i) are ONE layout, and one symbolic
     # differentiation counts both references (PR #1779 review, round 2).
     layouts: dict[tuple[str | IndexOffset, ...], str] = {}
-    for ref in _find_var_indices_in_body(expr.body, wrt_var):
+    for ref in refs if refs is not None else _find_var_indices_in_body(expr.body, wrt_var):
         if len(ref) != len(wrt_indices):
             continue
         positions = [p for p, idx in enumerate(ref) if isinstance(idx, str) and idx.lower() == key]
@@ -3119,16 +3170,33 @@ def _diff_sum_repeated_binder(
             continue
         symbolic_wrt = tuple(sum_idx if p in positions else w for p, w in enumerate(wrt_indices))
         layouts.setdefault(symbolic_wrt, candidate)
+    # Nearly every call has no repeated-binder reference at all, so return before
+    # any whole-expression walk below (PR #1779 review round 6).
+    if not layouts:
+        return None
 
+    # Every spelling of the binder ANYWHERE in the body or condition, not only in
+    # references to the differentiated variable: `sum(i, c(I)*x(i,i))` must
+    # substitute the coefficient's `I` too (PR #1779 review, round 3).
+    # Substitution is case-sensitive, so each spelling is mapped explicitly.
+    spellings = _binder_spellings(expr, sum_idx)
     contributions: list[Expr] = []
+    # The binder is renamed to a FRESH placeholder for the layout differentiation
+    # (PR #1779 review, round 6). Index matching strips quotes, so a quoted label
+    # spelled like the binder (`x('i','i')` with `i` also a member) would match a
+    # symbolic `(i,i)` target and be counted. A placeholder no label can spell keeps
+    # the binder distinct; every other factor of the body is left intact.
+    fresh = _fresh_binder_name(sum_idx, expr)
+    renamed_body = _substitute_sum_indices(expr.body, spellings, (fresh,) * len(spellings))
     for symbolic_wrt, value in layouts.items():
+        fresh_wrt = tuple(fresh if w == sum_idx else w for w in symbolic_wrt)
         body_derivative = differentiate_expr(
-            expr.body, wrt_var, symbolic_wrt, config, bound_indices=bound_indices
+            renamed_body, wrt_var, fresh_wrt, config, bound_indices=bound_indices
         )
         if _is_structurally_zero(body_derivative):
             continue
         concrete = (value,) * len(spellings)
-        part = _substitute_sum_indices(body_derivative, spellings, concrete)
+        part = _substitute_sum_indices(body_derivative, (fresh,), (value,))
         if expr.condition is not None:
             # The condition is bound to THIS layout's value, concretely
             # (PR #1779 review, round 3). Kept symbolic (the #1085 convention for

@@ -85,9 +85,13 @@ def _value(expr) -> float:
         if isinstance(node, Sum):
             assert node.index_sets == ("i",) and node.condition is None, node
             return 3 * ev(node.body, xval)  # the body is constant in `i` here
-        if isinstance(node, Binary) and node.op in ("+", "*"):
+        if isinstance(node, Binary) and node.op in ("+", "-", "*", "/"):
             lhs, rhs = ev(node.left, xval), ev(node.right, xval)
-            return lhs + rhs if node.op == "+" else lhs * rhs
+            if node.op == "+":
+                return lhs + rhs
+            if node.op == "-":
+                return lhs - rhs
+            return lhs * rhs if node.op == "*" else lhs / rhs
         raise AssertionError(f"unexpected node in a derivative: {node}")
 
     a, b = ev(expr, 7.0), ev(expr, 11.0)
@@ -139,6 +143,17 @@ class TestTheDiagonalDifferentiates:
         body = DollarConditional(VarRef("x", ("i", "i")), ParamRef("active", ("i",)))
         assert _value(_d(body, "x", ("i1", "i1"))) == 1.0
         assert _value(_d(body, "x", ("i2", "i2"))) == 0.0
+
+    def test_a_QUOTIENT_body_does_not_hide_the_diagonal(self):
+        # PR #1779 review round 6. sum(i, x(i,i)/2): each single-position attempt
+        # gives (2*0 - x*0)/2^2, a quotient with a zero numerator that the loop
+        # took for a match, so the derivative was 0, not 0.5. 0.5*x(i,i) worked.
+        assert (
+            _value(_d(Binary("/", VarRef("x", ("i", "i")), Const(2.0)), "x", ("i1", "i1"))) == 0.5
+        )
+        # A parameter denominator: d/dx('i1','i1') of sum(i, x(i,i)/c(i)) = 1/c('i1').
+        body = Binary("/", VarRef("x", ("i", "i")), ParamRef("c", ("i",)))
+        assert _value(_d(body, "x", ("i1", "i1"))) == 1.0 / 5.0
 
     def test_a_case_only_repeat_is_a_repeat(self):
         # GAMS identifiers are case-insensitive, so `I` is the binder `i`.
@@ -320,3 +335,23 @@ solve m using nlp minimizing z;
     )
     assert out.returncode != 0, "dd must be refused, not silently dropped"
     assert "repeats" in (out.stdout + out.stderr), out.stdout + out.stderr
+
+
+def test_a_quoted_label_spelled_like_the_binder_is_not_the_binder():
+    """PR #1779 review round 6. With ``Set i / i, i1, i2 /``, the reference
+    ``x('i','i')`` names the ELEMENT ``i``, and the parser keeps it quoted
+    (``"i"``). Index matching strips quotes, so differentiating the body against
+    a symbolic ``(i,i)`` target also counted it: ``sum(i, x(i,i) + x('i','i'))``
+    at ``x('i1','i1')`` gave 2, not 1. The layout now differentiates against a
+    fresh placeholder for the binder, which no label can spell."""
+    model_ir = ModelIR()
+    model_ir.sets["i"] = SetDef(name="i", members=["i", "i1", "i2"])
+    config = Config()
+    config.model_ir = model_ir
+    body = Binary("+", VarRef("x", ("i", "i")), VarRef("x", ('"i"', '"i"')))
+    out = differentiate_expr(Sum(("i",), body, None), "x", ("i1", "i1"), config)
+    assert _value(out) == 1.0
+    # ⚠ NOT asserted, pre-existing: when the TARGET element is spelled like the
+    # binder (`x('i','i')` at `('i','i')`), the bare-string index representation
+    # cannot tell the element `i` from the binder `i`. main returns 1 for
+    # sum(i, x('i','i')) there, not 3; this PR does not change that.
