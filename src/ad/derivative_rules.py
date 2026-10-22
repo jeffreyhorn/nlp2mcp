@@ -1841,6 +1841,11 @@ def _is_structurally_zero(expr: Expr) -> bool:
     if isinstance(expr, Unary):
         if expr.op == "-":
             return _is_structurally_zero(expr.child)
+    if isinstance(expr, DollarConditional):
+        # `0$cond` is 0 whatever `cond` is (PR #1779 review, round 5). Unrecognized,
+        # `sum(i, x(i,i)$active(i))` produced a guarded zero that the single-binder
+        # loop took for a successful match, returning before #1755's fallback.
+        return _is_structurally_zero(expr.value_expr)
     return False
 
 
@@ -2980,6 +2985,33 @@ def _enumerate_matchings(
     return result
 
 
+def _declared_member_spelling(value: str, sum_idx: str, config: Config | None) -> str | None:
+    """``value`` as the set ``sum_idx`` declares it, or ``None`` if it is not a member.
+
+    Matching ignores case and surrounding quotes, as ``_indices_match`` does, so
+    ``'I1'`` and ``"'i1'"`` resolve to the declared ``i1``. Without a resolvable
+    set, the existing heuristic decides on the raw and the unquoted spelling.
+    """
+    if _is_concrete_instance_of(value, sum_idx, config):
+        return value
+    norm = _strip_quotes(value).lower()
+    if config is not None and config.model_ir is not None:
+        model_ir = config.model_ir
+        if sum_idx in model_ir.sets or sum_idx in model_ir.aliases:
+            from .index_mapping import resolve_set_members
+
+            try:
+                members, _ = resolve_set_members(sum_idx, model_ir, quiet=True)
+            except ValueError:
+                return None
+            for member in members or ():
+                if _strip_quotes(str(member)).lower() == norm:
+                    return str(member)
+            return None
+    stripped = _strip_quotes(value)
+    return stripped if _is_concrete_instance_of(stripped, sum_idx, config) else None
+
+
 def _binder_spellings(expr: Sum, sum_idx: str) -> tuple[str, ...]:
     """Every spelling of the binder ``sum_idx`` used in ``expr``'s body and condition.
 
@@ -3076,9 +3108,12 @@ def _diff_sum_repeated_binder(
         # diagonal; ('i1','i2') is not.
         if len({_strip_quotes(str(v)).lower() for v in at}) != 1:
             continue  # inconsistent values: no single value for the binder
-        # Keep a spelling that passes set membership, for the substitution.
+        # The DECLARED member spelling, for the substitution (PR #1779 review,
+        # round 5): ('I1','I1') or ("'i1'","'i1'") name i1 although neither
+        # coordinate spells it that way, and membership is a raw lookup.
         candidate = next(
-            (str(v) for v in at if _is_concrete_instance_of(str(v), sum_idx, config)), None
+            (m for m in (_declared_member_spelling(str(v), sum_idx, config) for v in at) if m),
+            None,
         )
         if candidate is None:
             continue

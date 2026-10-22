@@ -665,6 +665,18 @@ Two findings without threads, both confirmed at the AD level first:
 - **Regressions:** case- and quote-varied targets in both coordinate orders (4), plus varied off-diagonal controls (3). **23 tests.**
 - **Mutants:** the previous revision and a raw-string comparison each fail the 4 varied tests; removing the check fails 7, including the off-diagonal controls.
 
+### PR #1779 review round 5 (P7)
+
+Two findings without threads, both reproduced first:
+
+- **A body-level dollar condition hid the diagonal.** In `sum(i, x(i,i)$active(i))`, the loop produced `0$active('i1')`. `_is_structurally_zero` did not recognize a guarded zero, so the loop took it for a match and returned before #1755's fallback.
+  - **Fixed in `_is_structurally_zero`** (`0$cond` is 0 whatever `cond` is), as suggested. Result: `1$active('i1')`.
+  - ⚠ This touches every caller of `_is_structurally_zero` (5 sites, all in `derivative_rules.py`), not only #1755's. The leak gate below is therefore what decides that no golden moved.
+- **A fully noncanonical target stayed at 0.** For `('I1','I1')` or `("'i1'","'i1'")`, no coordinate used the declared spelling, and membership is a raw lookup.
+  - **Fixed:** `_declared_member_spelling` resolves the normalized target to the declared member through `resolve_set_members`, so the substitution writes `x(i1,i1)`.
+- **Regressions:** fully noncanonical targets (2) with a nonlinear body, their off-diagonal controls (2), and the body condition, active and inactive. **28 tests.**
+- **Mutants:** the previous revision fails all 3 new tests; no guarded-zero recognition fails the body-condition test; no declared-spelling lookup fails both noncanonical tests.
+
 ### Checkpoint 1 (end of day): GO
 
 Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus copied in. The run launches GAMS with `cwd` at that root, and `tricp` writes `cp.eps` there. 18:31 → 18:55Z. **Nothing was persisted.**
@@ -678,7 +690,7 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3 and **5,604** after round 4, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4 and **5,609** after round 5, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
 - `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, at the landing and **re-run alone after review rounds 1 and 2**. ⚠ Round 2's first two runs were **UNVERIFIED**, 195 of 200 with 5 timeouts: external machine load reached a 15-min average ≈ 100, which my runs did not cause. `--fail-on-unverified` refused both, as P10c intends. The third run, started only after five consecutive quiet minutes (1-min load < 8), was **complete and clean** (18:03 → 18:33Z).
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.

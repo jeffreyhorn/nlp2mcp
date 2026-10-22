@@ -120,6 +120,26 @@ class TestTheDiagonalDifferentiates:
     def test_POSITIVE_CONTROL_a_varied_off_diagonal_stays_zero(self, wrt):
         assert _is_zero(_d(VarRef("x", ("i", "i")), "x", wrt))
 
+    @pytest.mark.parametrize("wrt", [("I1", "I1"), ("'i1'", "'i1'")])
+    def test_a_FULLY_noncanonical_target_resolves_to_the_declared_member(self, wrt):
+        # PR #1779 review round 5: neither coordinate spells `i1` as declared, so
+        # a raw membership test found no candidate and the derivative stayed 0.
+        assert _d(VarRef("x", ("i", "i")), "x", wrt) == Const(1.0)
+        out = _d(Call("sqr", (VarRef("x", ("i", "i")),)), "x", wrt)
+        assert "x(i1,i1)" in str(out), out  # substituted with the DECLARED spelling
+
+    @pytest.mark.parametrize("wrt", [("I1", "I2"), ("'i1'", "'i2'")])
+    def test_POSITIVE_CONTROL_a_fully_noncanonical_off_diagonal_stays_zero(self, wrt):
+        assert _is_zero(_d(VarRef("x", ("i", "i")), "x", wrt))
+
+    def test_a_BODY_level_dollar_condition_does_not_hide_the_diagonal(self):
+        # PR #1779 review round 5. sum(i, x(i,i)$active(i)): the loop got
+        # `0$active('i1')`, took the guarded zero for a match, and returned before
+        # the #1755 fallback. Active i1 -> 1; inactive i2 -> 0.
+        body = DollarConditional(VarRef("x", ("i", "i")), ParamRef("active", ("i",)))
+        assert _value(_d(body, "x", ("i1", "i1"))) == 1.0
+        assert _value(_d(body, "x", ("i2", "i2"))) == 0.0
+
     def test_a_case_only_repeat_is_a_repeat(self):
         # GAMS identifiers are case-insensitive, so `I` is the binder `i`.
         # ⚠ The two-position w(i,I) is NOT a discriminator: main already returns
