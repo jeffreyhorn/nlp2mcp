@@ -658,6 +658,13 @@ Two findings without threads, both confirmed at the AD level first:
   - Recorded on **#1778** as two more stationarity-layer reproducers, possibly the same root. Latent in the corpus.
   - The coefficient case solves correctly end to end (0.034 vs 0.0345), both before and after.
 
+### PR #1779 review round 4 (P7)
+
+- **The equal-values check compared raw strings, but `_indices_match` strips quotes and ignores case.** So `('i1','I1')` and `('i1',"'i1'")`, the same element in both coordinates, were treated as inconsistent, and `sum(i, x(i,i))` stayed at 0.
+- **Fixed:** values are compared as `_indices_match` compares them, and the substitution keeps a spelling that passes the existing set-membership check (`x(i1,i1)`).
+- **Regressions:** case- and quote-varied targets in both coordinate orders (4), plus varied off-diagonal controls (3). **23 tests.**
+- **Mutants:** the previous revision and a raw-string comparison each fail the 4 varied tests; removing the check fails 7, including the off-diagonal controls.
+
 ### Checkpoint 1 (end of day): GO
 
 Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus copied in. The run launches GAMS with `cwd` at that root, and `tricp` writes `cp.eps` there. 18:31 → 18:55Z. **Nothing was persisted.**
@@ -671,7 +678,7 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2 and **5,597** after round 3, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3 and **5,604** after round 4, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
 - `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, at the landing and **re-run alone after review rounds 1 and 2**. ⚠ Round 2's first two runs were **UNVERIFIED**, 195 of 200 with 5 timeouts: external machine load reached a 15-min average ≈ 100, which my runs did not cause. `--fail-on-unverified` refused both, as P10c intends. The third run, started only after five consecutive quiet minutes (1-min load < 8), was **complete and clean** (18:03 → 18:33Z).
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.

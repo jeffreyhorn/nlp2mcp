@@ -106,6 +106,22 @@ class TestTheDiagonalDifferentiates:
         # would return 1 here.
         assert _is_zero(_d(VarRef("tsam", ("i", "i")), "tsam", ("i1", "i2")))
 
+    @pytest.mark.parametrize(
+        "wrt", [("i1", "I1"), ("I1", "i1"), ("i1", "'i1'"), ("'i1'", "i1")]
+    )
+    def test_a_case_or_quote_varied_TARGET_is_still_the_diagonal(self, wrt):
+        # PR #1779 review round 4. `_indices_match` strips quotes and ignores
+        # case, so these name the same element in both coordinates. A raw-string
+        # equality check called them inconsistent and left the derivative at 0.
+        assert _d(VarRef("x", ("i", "i")), "x", wrt) == Const(1.0)
+        # The substituted spelling is the one that passes set membership: i1.
+        out = _d(Call("sqr", (VarRef("x", ("i", "i")),)), "x", wrt)
+        assert "x(i1,i1)" in str(out), out
+
+    @pytest.mark.parametrize("wrt", [("i1", "i2"), ("I1", "i2"), ("'i1'", "i2")])
+    def test_POSITIVE_CONTROL_a_varied_off_diagonal_stays_zero(self, wrt):
+        assert _is_zero(_d(VarRef("x", ("i", "i")), "x", wrt))
+
     def test_a_case_only_repeat_is_a_repeat(self):
         # GAMS identifiers are case-insensitive, so `I` is the binder `i`.
         # ⚠ The two-position w(i,I) is NOT a discriminator: main already returns

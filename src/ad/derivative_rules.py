@@ -3068,13 +3068,19 @@ def _diff_sum_repeated_binder(
         positions = [p for p, idx in enumerate(ref) if isinstance(idx, str) and idx.lower() == key]
         if len(positions) < 2:
             continue
-        values = {wrt_indices[p] for p in positions}
-        if len(values) != 1:
+        at = [wrt_indices[p] for p in positions]
+        if not all(isinstance(v, str) for v in at):
+            continue
+        # Equal the way `_indices_match` compares: quotes stripped, case-insensitive
+        # (PR #1779 review, round 4). ('i1','I1') and ('i1',"'i1'") are the
+        # diagonal; ('i1','i2') is not.
+        if len({_strip_quotes(str(v)).lower() for v in at}) != 1:
             continue  # inconsistent values: no single value for the binder
-        candidate = next(iter(values))
-        if not isinstance(candidate, str) or not _is_concrete_instance_of(
-            candidate, sum_idx, config
-        ):
+        # Keep a spelling that passes set membership, for the substitution.
+        candidate = next(
+            (str(v) for v in at if _is_concrete_instance_of(str(v), sum_idx, config)), None
+        )
+        if candidate is None:
             continue
         symbolic_wrt = tuple(sum_idx if p in positions else w for p, w in enumerate(wrt_indices))
         layouts.setdefault(symbolic_wrt, candidate)
