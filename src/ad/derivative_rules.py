@@ -3038,9 +3038,35 @@ def _declared_member_spelling(value: str, sum_idx: str, config: Config | None) -
     return stripped if _is_concrete_instance_of(stripped, sum_idx, config) else None
 
 
-def _fresh_binder_name(sum_idx: str, expr: Sum) -> str:
-    """A placeholder for ``sum_idx`` that no identifier or label in ``expr`` spells."""
+def _fresh_binder_name(
+    sum_idx: str,
+    expr: Sum,
+    wrt_indices: tuple[str | IndexOffset, ...] = (),
+    config: Config | None = None,
+) -> str:
+    """A placeholder for ``sum_idx`` that nothing in scope can spell.
+
+    Reserved against the expression's own names, the TARGET labels, and every set
+    or alias name and declared member in the model (PR #1779 review, round 8).
+    Fresh within the expression alone was not enough:
+    ``w('i1','i1','i__binder1755')`` matched the renamed ``w(i,i,i)``, and an
+    inner ``sum(k, x(k,k))`` with ``k = {i__binder1755}`` took the placeholder for
+    one of its members. Reached only when a repeated-binder layout exists, so the
+    model-wide scan does not run on the common path.
+    """
     taken = {s.lower() for s in _all_index_names(expr)}
+    for w in wrt_indices:
+        base = w.base if isinstance(w, IndexOffset) else w
+        if isinstance(base, str):
+            taken.add(_strip_quotes(base).lower())
+    model_ir = config.model_ir if config is not None else None
+    if model_ir is not None:
+        for name, sdef in model_ir.sets.items():
+            taken.add(str(name).lower())
+            for member in getattr(sdef, "members", None) or ():
+                taken.add(_strip_quotes(str(member)).lower())
+        for name in model_ir.aliases:
+            taken.add(str(name).lower())
     candidate = f"{sum_idx}__binder1755"
     n = 0
     while candidate.lower() in taken:
@@ -3194,7 +3220,7 @@ def _diff_sum_repeated_binder(
     # spelled like the binder (`x('i','i')` with `i` also a member) would match a
     # symbolic `(i,i)` target and be counted. A placeholder no label can spell keeps
     # the binder distinct; every other factor of the body is left intact.
-    fresh = _fresh_binder_name(sum_idx, expr)
+    fresh = _fresh_binder_name(sum_idx, expr, wrt_indices, config)
     renamed_body = _substitute_sum_indices(expr.body, spellings, (fresh,) * len(spellings))
     for symbolic_wrt, value in layouts.items():
         fresh_wrt = tuple(fresh if w == sum_idx else w for w in symbolic_wrt)

@@ -375,3 +375,33 @@ def test_a_quoted_label_spelled_like_the_binder_is_not_the_binder():
     # binder (`x('i','i')` at `('i','i')`), the bare-string index representation
     # cannot tell the element `i` from the binder `i`. main returns 1 for
     # sum(i, x('i','i')) there, not 3; this PR does not change that.
+
+
+def _config_with(**sets: list[str]) -> Config:
+    model_ir = ModelIR()
+    for name, members in sets.items():
+        model_ir.sets[name] = SetDef(name=name, members=members)
+    config = Config()
+    config.model_ir = model_ir
+    return config
+
+
+def test_the_placeholder_cannot_collide_with_a_TARGET_label():
+    """PR #1779 review round 8. With i = {i1, i2, i__binder1755}, the target
+    w('i1','i1','i__binder1755') matched the renamed three-position w(i,i,i),
+    giving 1 instead of 0. Neither reference is that instance."""
+    config = _config_with(i=["i1", "i2", "i__binder1755"])
+    body = Binary("+", VarRef("w", ("i", "i", "i2")), VarRef("w", ("i", "i", "i")))
+    out = differentiate_expr(Sum(("i",), body, None), "w", ("i1", "i1", "i__binder1755"), config)
+    assert _is_zero(out) or _value(out) == 0.0, out
+
+
+def test_the_placeholder_cannot_collide_with_a_MEMBER_of_another_set():
+    """With k = {i__binder1755}, the inner sum(k, x(k,k)) took the placeholder for
+    a member of k and contributed 1, so the derivative was 2, not 1. Reserving the
+    target labels alone does not fix this; the model's set members must be reserved
+    too."""
+    config = _config_with(i=["i1", "i2", "i3"], k=["i__binder1755"])
+    body = Binary("+", VarRef("x", ("i", "i")), Sum(("k",), VarRef("x", ("k", "k")), None))
+    out = differentiate_expr(Sum(("i",), body, None), "x", ("i1", "i1"), config)
+    assert _value(out) == 1.0, out

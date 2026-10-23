@@ -702,6 +702,14 @@ Two findings without threads, both reproduced first:
   - **The re-run waited for the 1- *and* 5-min averages to stay below 6 for 10 minutes. It was complete and clean** (23:44 → 00:10Z).
   - ⚠ **A vacuous assertion was caught by that control.** The coefficient test first checked only that `sum(k, c(k))` *appears*, and it passed on the previous revision, whose wrong output contains it multiplied by 0. It now asserts the coefficient multiplied by the diagonal's 1.
 
+### PR #1779 review round 8 (P7)
+
+- **The round-6 placeholder was fresh only within the expression.** Two collisions, both reproduced:
+  - **A target label:** with `i = {i1, i2, i__binder1755}`, the target `w('i1','i1','i__binder1755')` matched the renamed `w(i,i,i)`, giving 1 instead of 0.
+  - **Another set's member:** with `k = {i__binder1755}`, the inner `sum(k, x(k,k))` took the placeholder for a member of `k`, giving 2 instead of 1.
+- **Fixed:** the placeholder is also reserved against the normalized target labels and against every set or alias name and declared member in the model. That runs only when a repeated-binder layout exists, so it stays off the common path.
+- **Regressions:** both collisions. **35 tests.** The previous revision fails both; reserving target labels alone fails the member case, as the review predicted.
+
 ### Checkpoint 1 (end of day): GO
 
 Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus copied in. The run launches GAMS with `cwd` at that root, and `tricp` writes `cp.eps` there. 18:31 → 18:55Z. **Nothing was persisted.**
@@ -715,7 +723,7 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6 and **5,614** after round 7, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6, **5,614** after round 7 and **5,616** after round 8, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
 - `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, at the landing and **re-run alone after review rounds 1 and 2**. ⚠ Round 2's first two runs were **UNVERIFIED**, 195 of 200 with 5 timeouts: external machine load reached a 15-min average ≈ 100, which my runs did not cause. `--fail-on-unverified` refused both, as P10c intends. The third run, started only after five consecutive quiet minutes (1-min load < 8), was **complete and clean** (18:03 → 18:33Z).
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.
