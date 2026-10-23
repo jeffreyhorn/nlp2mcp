@@ -218,12 +218,12 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_exports(c).. ((-1) * pe(c)) + (1$(ce(c)) * nu_dem(c))$(cn(c)) - piL_exports(c) =E= 0;
+stat_exports(c).. ((-1) * pe(c)$(ce(c))) + (1$(ce(c)) * nu_dem(c))$(cn(c)) - piL_exports(c) =E= 0;
 stat_flab(t).. (((-1) * rwage) * nu_ares - lam_laborbal(t) - piL_flab(t) + piU_flab(t))$(flab.up(t) - flab.lo(t) > 1e-10) =E= 0;
-stat_imports(c).. pm(c) + (((-1) * 1$(cm(c))) * nu_dem(c))$(cn(c)) - piL_imports(c) =E= 0;
+stat_imports(c).. pm(c)$(cm(c)) + (((-1) * 1$(cm(c))) * nu_dem(c))$(cn(c)) - piL_imports(c) =E= 0;
 stat_labcost.. nu_alab - nu_acost =E= 0;
 stat_mcost.. nu_amisc - nu_acost =E= 0;
-stat_natcon(c).. (((-1) * (alpha(c) + beta(c) * natcon(c))) + nu_dem(c)$(cn(c)) - piL_natcon(c))$(cn(c)) =E= 0;
+stat_natcon(c).. (((-1) * (alpha(c) + 0.5 * beta(c) * 2 * natcon(c))$(cn(c))) + nu_dem(c)$(cn(c)) - piL_natcon(c))$(cn(c)) =E= 0;
 stat_natprod(c).. nu_proc(c) - nu_dem(c)$(cn(c)) - piL_natprod(c) =E= 0;
 stat_pcost.. nu_aplow - nu_acost =E= 0;
 stat_rescost.. nu_ares - nu_acost =E= 0;

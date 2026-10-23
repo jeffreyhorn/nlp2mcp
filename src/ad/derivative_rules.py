@@ -2175,6 +2175,38 @@ def _try_diff_sum_offset_crossterms(
     return result
 
 
+def _runtime_subset_guard(index_sets: tuple[str, ...], config: Config | None) -> Expr | None:
+    """``ii(ii)`` for each binder that is a DYNAMIC subset, AND-combined; else ``None``.
+
+    A dynamic subset has no static members and a parent domain: its membership is
+    assigned at execution time, and AD resolves it to the parent's elements
+    (#723). An alias of such a subset is resolved to the subset. A static set or
+    subset needs no guard: membership resolution already rejects its
+    non-members.
+    """
+    if config is None or config.model_ir is None:
+        return None
+    model_ir = config.model_ir
+    guard: Expr | None = None
+    for binder in index_sets:
+        target = binder
+        seen: set[str] = set()
+        while target in model_ir.aliases and target not in seen:
+            seen.add(target)
+            alias = model_ir.aliases[target]
+            target = getattr(alias, "target", alias)
+            if not isinstance(target, str):
+                break
+        sdef = model_ir.sets.get(target) if isinstance(target, str) else None
+        if sdef is None or isinstance(sdef, (list, tuple, set, frozenset)):
+            continue
+        if getattr(sdef, "members", None) or not getattr(sdef, "domain", None):
+            continue
+        test = SetMembershipTest(target, (SymbolRef(binder),))
+        guard = test if guard is None else Binary("and", guard, test)
+    return guard
+
+
 def _diff_sum(
     expr: Sum,
     wrt_var: str,
@@ -2243,6 +2275,25 @@ def _diff_sum(
     # `stat_p`). Resolve the offset to its fixed element, then differentiate in
     # SUM-PRESERVING mode so every iterate contributes: `∂ sum(t, c(t)*v(last))
     # / ∂v(last) = sum(t, c(t))`. Tightly gated to the exact idiom.
+    # A DYNAMIC-subset binder carries an implicit runtime restriction: GAMS
+    # iterates only the members assigned at execution time, while AD resolves the
+    # binder to its PARENT's elements (#723). A collapsed contribution must keep
+    # that restriction, or `sum(ii, x(ii,ii))` reaches `x('i2','i2')` with i2 not
+    # in ii (PR #1779 review, round 9). It is ANDed into the condition every
+    # collapse path already preserves. The normal (non-collapsing) case below
+    # returns the ORIGINAL sum, so a sum that does not collapse is unchanged.
+    #
+    # ⚠ Attached to the BODY as a dollar condition, NOT ANDed into the sum's
+    # condition. The stationarity builder lifts a collapsed sum's condition into
+    # the ROW guard and maps its sum index onto the row's domain, but it does not
+    # map inside an `and`: srkandw's `tn(t,sn) and sn(sn)` left `sn` uncontrolled
+    # (`$149`, path_syntax_error; measured by the resolver). As a body factor the
+    # guard is differentiated and substituted like any other term.
+    original_expr = expr
+    _runtime_guard = _runtime_subset_guard(expr.index_sets, config)
+    if _runtime_guard is not None:
+        expr = Sum(expr.index_sets, DollarConditional(expr.body, _runtime_guard), expr.condition)
+
     if (
         wrt_indices is not None
         and len(wrt_indices) == 1
@@ -2508,13 +2559,14 @@ def _diff_sum(
     # Normal case: differentiate the body expression, passing wrt_indices through
     # Augment bound_indices with this sum's index_sets — these are iteration variables
     # that should NOT be treated as free alias indices during alias-aware matching.
-    new_bound = bound_indices | frozenset(expr.index_sets)
+    new_bound = bound_indices | frozenset(original_expr.index_sets)
     body_derivative = differentiate_expr(
-        expr.body, wrt_var, wrt_indices, config, bound_indices=new_bound
+        original_expr.body, wrt_var, wrt_indices, config, bound_indices=new_bound
     )
 
-    # Return a new Sum with the same index sets, differentiated body, and condition
-    return Sum(expr.index_sets, body_derivative, expr.condition)
+    # Return a new Sum with the same index sets, differentiated body, and condition.
+    # The ORIGINAL condition: the runtime-subset guard is for collapsed results only.
+    return Sum(original_expr.index_sets, body_derivative, original_expr.condition)
 
 
 def _partial_index_match(
@@ -3469,7 +3521,9 @@ def _substitute_sum_indices(
     return _apply_index_substitution(expr, substitution)
 
 
-def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
+def _apply_index_substitution(
+    expr: Expr, substitution: dict[str, str], *, card_operands: bool = False
+) -> Expr:
     """
     Recursively apply index substitution to an expression.
 
@@ -3504,16 +3558,33 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
         return ParamRef(expr.name, new_indices)
     elif isinstance(expr, Binary):
         # Recursively substitute in both operands
-        new_left = _apply_index_substitution(expr.left, substitution)
-        new_right = _apply_index_substitution(expr.right, substitution)
+        new_left = _apply_index_substitution(expr.left, substitution, card_operands=card_operands)
+        new_right = _apply_index_substitution(expr.right, substitution, card_operands=card_operands)
         return Binary(expr.op, new_left, new_right)
     elif isinstance(expr, Unary):
         # Recursively substitute in child
-        new_child = _apply_index_substitution(expr.child, substitution)
+        new_child = _apply_index_substitution(expr.child, substitution, card_operands=card_operands)
         return Unary(expr.op, new_child)
     elif isinstance(expr, Call):
+        # `card(s)` takes a SET, not an iterator value: substituting `s -> i1`
+        # turns the subset's cardinality into `card(i1)`, losing it (PR #1779
+        # review, round 9). Its operand is left alone, as
+        # `constraint_jacobian._substitute_single_index` already does; `ord(s)`
+        # and every other call are substituted normally.
+        #
+        # ⚠ EXCEPT inside an IndexOffset's offset (`card_operands=True`). There
+        # `card(t) - ord(t)` is a RELATIVE position, and `card` must follow `ord`
+        # onto the same set. otpop's `p(t + (card(t) - ord(t)))` became
+        # `p(tt + (card(t) - ord(tt)))`, pointing at the wrong element and losing
+        # the cold match (measured by the resolver), while #1178's existing
+        # behaviour, substituting both, gives `card(tt) - ord(tt)`.
+        if expr.func.lower() == "card" and not card_operands:
+            return expr
         # Recursively substitute in all arguments
-        new_args = tuple(_apply_index_substitution(arg, substitution) for arg in expr.args)
+        new_args = tuple(
+            _apply_index_substitution(arg, substitution, card_operands=card_operands)
+            for arg in expr.args
+        )
         return Call(expr.func, new_args)
     elif isinstance(expr, (Sum, Prod)):
         # The aggregation's bound variables are the index variables defined by its
@@ -3522,22 +3593,27 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
         # expression after filtering those bound index variables out of the
         # substitution map.
         filtered_sub = {k: v for k, v in substitution.items() if k not in expr.index_sets}
-        new_body = _apply_index_substitution(expr.body, filtered_sub)
+        new_body = _apply_index_substitution(expr.body, filtered_sub, card_operands=card_operands)
         new_condition = (
-            _apply_index_substitution(expr.condition, filtered_sub)
+            _apply_index_substitution(expr.condition, filtered_sub, card_operands=card_operands)
             if expr.condition is not None
             else None
         )
         return type(expr)(expr.index_sets, new_body, new_condition)
     elif isinstance(expr, DollarConditional):
         # Substitute in both value_expr and condition
-        new_value = _apply_index_substitution(expr.value_expr, substitution)
-        new_cond = _apply_index_substitution(expr.condition, substitution)
+        new_value = _apply_index_substitution(
+            expr.value_expr, substitution, card_operands=card_operands
+        )
+        new_cond = _apply_index_substitution(
+            expr.condition, substitution, card_operands=card_operands
+        )
         return DollarConditional(new_value, new_cond)
     elif isinstance(expr, SetMembershipTest):
         # Substitute indices in SetMembershipTest (e.g., ri(j) → ri(j1) on collapse)
         new_idx_list: list[Expr] = [
-            _apply_index_substitution(idx, substitution) for idx in expr.indices
+            _apply_index_substitution(idx, substitution, card_operands=card_operands)
+            for idx in expr.indices
         ]
         return SetMembershipTest(expr.set_name, tuple(new_idx_list))
     elif isinstance(expr, IndexOffset):
@@ -3545,7 +3621,7 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
         # (e.g., IndexOffset("t", Binary("-", Call("card", SymbolRef("t")), ...))
         # needs "t" in the offset expression substituted too).
         new_base = substitution.get(expr.base, expr.base)
-        new_offset = _apply_index_substitution(expr.offset, substitution)
+        new_offset = _apply_index_substitution(expr.offset, substitution, card_operands=True)
         return IndexOffset(new_base, new_offset, expr.circular)
     else:
         # CompileTimeConstant etc. — pass through unchanged
@@ -3582,7 +3658,7 @@ def _substitute_index(
         # The offset may contain SymbolRef/Call nodes referencing sum indices
         # (e.g., card(t) - ord(t)) that need substitution after sum collapse.
         new_base = substitution.get(idx.base, idx.base)
-        new_offset = _apply_index_substitution(idx.offset, substitution)
+        new_offset = _apply_index_substitution(idx.offset, substitution, card_operands=True)
         return IndexOffset(new_base, new_offset, idx.circular)
 
 

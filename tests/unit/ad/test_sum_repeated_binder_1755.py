@@ -21,7 +21,16 @@ import pytest
 
 from src.ad.derivative_rules import differentiate_expr
 from src.config import Config
-from src.ir.ast import Binary, Call, Const, DollarConditional, ParamRef, Sum, VarRef
+from src.ir.ast import (
+    Binary,
+    Call,
+    Const,
+    DollarConditional,
+    ParamRef,
+    SetMembershipTest,
+    Sum,
+    VarRef,
+)
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import SetDef
 
@@ -60,7 +69,7 @@ PARAMS = {
 }
 
 
-def _value(expr) -> float:
+def _value(expr, members: set | None = None) -> float:
     """Numeric value of a constant derivative, expanding `Sum` over `i`'s 3 members.
 
     The mixed-reference cases (PR #1779 review) must be judged on the VALUE: a
@@ -80,6 +89,11 @@ def _value(expr) -> float:
             key = (node.name, node.indices)
             assert key in PARAMS, f"unsubstituted or unexpected parameter: {node}"
             return PARAMS[key]
+        if isinstance(node, SetMembershipTest):
+            assert members is not None, f"membership test without a membership table: {node}"
+            (idx,) = node.indices
+            name = getattr(idx, "name", idx)
+            return 1.0 if (node.set_name, name) in members else 0.0
         if isinstance(node, DollarConditional):
             return ev(node.value_expr, xval) if ev(node.condition, xval) != 0 else 0.0
         if isinstance(node, Sum):
@@ -405,3 +419,103 @@ def test_the_placeholder_cannot_collide_with_a_MEMBER_of_another_set():
     body = Binary("+", VarRef("x", ("i", "i")), Sum(("k",), VarRef("x", ("k", "k")), None))
     out = differentiate_expr(Sum(("i",), body, None), "x", ("i1", "i1"), config)
     assert _value(out) == 1.0, out
+
+
+# --- PR #1779 review round 9: shared-machinery fixes ---------------------------
+
+
+def _subset_config(static_s: bool = True) -> Config:
+    """i = {i1,i2,i3}; s(i) = {i1,i2} (static); ii(i) dynamic (no static members)."""
+    model_ir = ModelIR()
+    model_ir.sets["i"] = SetDef(name="i", members=["i1", "i2", "i3"])
+    model_ir.sets["s"] = SetDef(name="s", members=["i1", "i2"], domain=("i",))
+    model_ir.sets["ii"] = SetDef(name="ii", members=[], domain=("i",))
+    config = Config()
+    config.model_ir = model_ir
+    return config
+
+
+def test_CARD_operand_is_not_substituted_in_a_diagonal_collapse():
+    # card(s) is the subset's cardinality (2). Substituted, it became card(i1),
+    # which stationarity maps back to the PARENT's cardinality (3).
+    from src.ir.ast import SymbolRef
+
+    body = Binary("*", Call("card", (SymbolRef("s"),)), VarRef("x", ("s", "s")))
+    out = differentiate_expr(Sum(("s",), body, None), "x", ("i1", "i1"), _subset_config())
+    assert "Call(card, (SymbolRef(s)))" in str(out), out
+    assert "card, (SymbolRef(i1))" not in str(out), out
+
+
+def test_CARD_operand_is_not_substituted_in_a_single_position_collapse_either():
+    # The shared substitution: the pre-existing single-position path had the same
+    # card(s) -> card(i1) loss on main.
+    from src.ir.ast import SymbolRef
+
+    body = Binary("*", Call("card", (SymbolRef("s"),)), VarRef("y", ("s",)))
+    out = differentiate_expr(Sum(("s",), body, None), "y", ("i1",), _subset_config())
+    assert "Call(card, (SymbolRef(s)))" in str(out), out
+
+
+def test_ORD_is_still_substituted():
+    # Only card() is set-level; ord(s) is the iterate's position and must follow it.
+    from src.ir.ast import SymbolRef
+
+    body = Binary("*", Call("ord", (SymbolRef("s"),)), VarRef("y", ("s",)))
+    out = differentiate_expr(Sum(("s",), body, None), "y", ("i1",), _subset_config())
+    assert "Call(ord, (SymbolRef(i1)))" in str(out), out
+
+
+@pytest.mark.parametrize(
+    "wrt, member, expected",
+    [(("i1", "i1"), "i1", 1.0), (("i2", "i2"), "i1", 0.0)],
+)
+def test_a_DYNAMIC_subset_binder_keeps_its_runtime_membership(wrt, member, expected):
+    """sum(ii, x(ii,ii)) with ii assigned at runtime. AD resolves ii to the
+    PARENT's elements, so the collapsed derivative must carry ii(<value>):
+    active -> 1, inactive -> 0. It was an unguarded 1 for both."""
+    from src.ir.ast import SetMembershipTest
+
+    out = differentiate_expr(
+        Sum(("ii",), VarRef("x", ("ii", "ii")), None), "x", wrt, _subset_config()
+    )
+    tests = [n for n in _walk(out) if isinstance(n, SetMembershipTest)]
+    assert tests and all(t.set_name == "ii" for t in tests), out
+    assert _value(out, members={("ii", member)}) == expected
+
+
+def test_a_STATIC_subset_binder_gets_no_runtime_guard():
+    # Membership resolution already rejects a static subset's non-members, so a
+    # guard would only add text (and move goldens) for nothing.
+    from src.ir.ast import SetMembershipTest
+
+    out = differentiate_expr(
+        Sum(("s",), VarRef("x", ("s", "s")), None), "x", ("i1", "i1"), _subset_config()
+    )
+    assert not [n for n in _walk(out) if isinstance(n, SetMembershipTest)], out
+
+
+def _walk(node):
+    yield node
+    children = getattr(node, "children", None)
+    if callable(children):
+        for child in children():
+            yield from _walk(child)
+
+
+def test_CARD_inside_an_INDEX_OFFSET_follows_ord_onto_the_same_set():
+    """The #1335 time-reversal idiom `p(t + (card(t) - ord(t)))` is a RELATIVE
+    position: `card` and `ord` must be substituted TOGETHER (#1178). Preserving
+    `card` there gave otpop `p(tt + (card(t) - ord(tt)))`, the wrong element, and
+    lost its cold match (measured by the resolver in PR #1779 review round 9). A
+    `card()` used as a value keeps its operand; inside an offset it does not."""
+    from src.ad.derivative_rules import _substitute_sum_indices
+    from src.ir.ast import IndexOffset, SymbolRef
+
+    offset = Binary("-", Call("card", (SymbolRef("t"),)), Call("ord", (SymbolRef("t"),)))
+    ref = ParamRef("p", (IndexOffset("t", offset, False),))
+    out = _substitute_sum_indices(ref, ("t",), ("t1",))
+    assert "card, (SymbolRef(t1))" in str(out) and "ord, (SymbolRef(t1))" in str(out), out
+    # ...while a card() VALUE keeps its set operand.
+    value = Binary("*", Call("card", (SymbolRef("t"),)), ParamRef("q", ("t",)))
+    out = _substitute_sum_indices(value, ("t",), ("t1",))
+    assert "card, (SymbolRef(t))" in str(out) and "q(t1)" in str(out), out

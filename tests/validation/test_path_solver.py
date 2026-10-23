@@ -448,6 +448,76 @@ def test_issue_1755_the_diagonal_reference_solves_to_the_nlp_optimum(tmp_path):
     assert abs(float(match.group(1)) - 1.0 / 3.0) < 1e-3, match.group(1)
 
 
+def _translate_and_solve(tmp_path, name: str, source: str) -> tuple[float, str]:
+    """Translate ``source`` into an MCP in ``tmp_path``, solve it, return (obj, emit)."""
+    src = tmp_path / f"{name}.gms"
+    src.write_text(source)
+    mcp = tmp_path / f"{name}_mcp.gms"
+    translate = subprocess.run(
+        [sys.executable, "-m", "src.cli", str(src), "-o", str(mcp)],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    assert translate.returncode == 0, translate.stderr
+    gams_exe = find_gams_executable()
+    assert gams_exe is not None, "GAMS executable not found"
+    success, message, _ = _solve_gams(mcp, gams_exe)
+    assert success, f"PATH solve failed: {message}"
+    lst = (tmp_path / f"{name}_mcp.lst").read_text()
+    match = re.search(r"PARAMETER nlp2mcp_obj_val\s+=\s+([-+0-9.eE]+)", lst)
+    assert match, "nlp2mcp_obj_val not displayed"
+    return float(match.group(1)), mcp.read_text()
+
+
+@pytest.mark.validation
+def test_a_dynamic_subset_diagonal_keeps_its_runtime_membership(tmp_path):
+    """PR #1779 review round 9. ``ii`` is assigned at runtime and the objective
+    reaches the FULL variable domain, so no common subset guard exists for the
+    row. Without the membership guard the multiplier reached the excluded
+    x(i2,i2). The NLP optimum is 1 (x(i1,i1) = 1)."""
+    obj, emit = _translate_and_solve(
+        tmp_path,
+        "dyn",
+        "Set i / i1, i2 /;\nAlias (i,j);\nSet ii(i);\nii(i) = yes$(ord(i) = 1);\n"
+        "Variable x(i,j), z;\nEquation e, obj;\n"
+        "e.. sum(ii, x(ii,ii)) =e= 1;\n"
+        "obj.. z =e= sum((i,j), sqr(x(i,j)));\n"
+        "Model m / all /;\nsolve m using nlp minimizing z;\n",
+    )
+    stat = next(line for line in emit.splitlines() if line.startswith("stat_x("))
+    assert "1$(ii(i)) * nu_e" in stat, stat
+    assert abs(obj - 1.0) < 1e-3, obj
+
+
+@pytest.mark.validation
+def test_a_card_coefficient_keeps_the_subset_cardinality(tmp_path):
+    """PR #1779 review round 9. ``card(s)`` with s = {i1,i2} is 2, not the parent's
+    3: x(i1,i1) = x(i2,i2) = 1/4 and the objective is 0.125 (with 3 it would be
+    1/18). The NLP optimum is 0.125."""
+    obj, emit = _translate_and_solve(
+        tmp_path,
+        "card",
+        "Set i / i1*i3 /;\nAlias (i,j);\nSet s(i) / i1, i2 /;\n"
+        "Variable x(i,j), z;\nEquation e, obj;\n"
+        "e.. sum(s, card(s)*x(s,s)) =e= 1;\n"
+        "obj.. z =e= sum((i,j), sqr(x(i,j)));\n"
+        "Model m / all /;\nsolve m using nlp minimizing z;\n",
+    )
+    # ⚠ The objective alone does NOT discriminate: the model is symmetric on the
+    # diagonal, so a wrong coefficient (the parent's card(i) = 3) cancels from the
+    # primal and still gives 0.125 (measured). The coefficient shows in the ROW
+    # and in the multiplier: nu_e = -2*x/card = -0.25 with card(s) = 2, -0.1667
+    # with card(i) = 3. And `card(s)` must be checked in the stationarity row:
+    # the original constraint line carries it either way.
+    stat = next(line for line in emit.splitlines() if line.startswith("stat_x("))
+    assert "card(s)" in stat and "card(i)" not in stat, stat
+    assert abs(obj - 0.125) < 1e-3, obj
+    lst = (tmp_path / "card_mcp.lst").read_text()
+    nu = re.search(r"---- VAR nu_e\s+\S+\s+([-+0-9.eE]+)", lst)
+    assert nu and abs(float(nu.group(1)) + 0.25) < 1e-3, nu and nu.group(1)
+
+
 @pytest.mark.validation
 class TestPATHAvailability:
     """Test PATH solver availability detection."""

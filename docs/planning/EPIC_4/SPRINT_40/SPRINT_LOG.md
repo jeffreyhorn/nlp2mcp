@@ -710,6 +710,27 @@ Two findings without threads, both reproduced first:
 - **Fixed:** the placeholder is also reserved against the normalized target labels and against every set or alias name and declared member in the model. That runs only when a repeated-binder layout exists, so it stays off the common path.
 - **Regressions:** both collisions. **35 tests.** The previous revision fails both; reserving target labels alone fails the member case, as the review predicted.
 
+### PR #1779 review round 9 (P7): the shared collapse machinery, by owner decision
+
+Two findings, both **pre-existing in the shared collapse path**: measured on `main`, the single-position collapse had both. The reviewer asked for human validation. **The owner chose to fix the shared machinery in this PR** (option 3 of 3 offered).
+
+- **`card()` operands.** `_apply_index_substitution` turned `card(s)` into `card(i1)`, so the subset's cardinality became the parent's.
+  - **Fixed:** a `card()` used as a **value** keeps its set operand. `ord()` and all other calls are still substituted.
+  - ⚠ **Except inside an `IndexOffset`'s offset** (`card_operands=True`): there `card(t) - ord(t)` is a relative position, and `card` must follow `ord` onto the same set (#1178's behaviour).
+  - The first version preserved `card` everywhere. The resolver caught otpop's `p(t + (card(t) - ord(t)))` becoming `p(tt + (card(t) - ord(tt)))`: the wrong element, and the cold match lost (`model_optimal` → `model_optimal_presolve`). With the offset exception, otpop's emit is **byte-identical** to its golden.
+- **Dynamic-subset membership.** A collapsed contribution over a runtime-assigned subset (`ii(i) = yes$…`, no static members) dropped the restriction. AD resolves the binder to the parent's elements (#723), so `sum(ii, x(ii,ii))` gave an unguarded 1 at an excluded cell.
+  - **Fixed:** `_diff_sum` attaches `ii(ii)` to the **body** as a dollar condition for every collapse path. The normal, non-collapsing case uses the original sum. Static subsets need no guard.
+  - ⚠ The first version ANDed the guard into the sum's **condition**. The stationarity builder lifts that condition into the row and `.fx` guards and does not map the sum index inside an `and`, so srkandw's emit had an uncontrolled `sn` (`$149`). **The resolver caught it as BACKWARD (match → `path_syntax_error`).** On the body, srkandw solves to 2613 = NLP.
+- **End-to-end, both measured with GAMS (NLP vs MCP):**
+  - a runtime subset with a full-domain objective: NLP 1.0; `main` **0.000**; this branch **1.000**, and the row carries `1$(ii(i)) * nu_e`;
+  - a `card(s)` coefficient: NLP 0.125; `main` **0.000**; this branch **0.125** with `nu_e = -0.25`.
+  - ⚠ The objective alone does not discriminate the `card` fix: the model is symmetric, so the wrong coefficient (parent `card(i)` = 3) cancels from the primal. The test checks the **row** and `nu_e` (−0.1667 with 3), and fails with the fix reverted.
+- **Corpus (examined, not refreshed blindly):** the leak gate showed **19 drifted goldens over 15 models**, all small guard additions. Each drifted model was regenerated and re-solved by the resolver (`--resolve-changed --min-scope 15`, throwaway worktree): **GO, 14 hold their bucket.**
+  - The 15th, **abel**, moved mismatch → match. **That is a stale DB row, not this change:** the *committed* golden also solves to 225.195 = NLP today; the row was written 2026-04-21 at 158.15. **It is not booked as a fix.** A persisted run will correct it.
+  - The 19 goldens are committed. `check-index-repeats` is unchanged.
+- **Regressions:** `card` preserved (diagonal and single-position), `ord` still substituted, `card` inside an offset following `ord`, a dynamic subset active and inactive, a static subset unguarded, and two GAMS solves. **42 + 2 tests.**
+- **Mutants:** reverting the `card` fix fails the `card` tests and the GAMS `nu_e` check; disabling the guard fails both subset tests and the GAMS solve; preserving `card` inside offsets fails the offset test.
+
 ### Checkpoint 1 (end of day): GO
 
 Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus copied in. The run launches GAMS with `cwd` at that root, and `tricp` writes `cp.eps` there. 18:31 → 18:55Z. **Nothing was persisted.**
@@ -723,7 +744,7 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6, **5,614** after round 7 and **5,616** after round 8, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6, **5,614** after round 7, **5,616** after round 8 and **5,625** after round 9, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
 - `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, at the landing and **re-run alone after review rounds 1 and 2**. ⚠ Round 2's first two runs were **UNVERIFIED**, 195 of 200 with 5 timeouts: external machine load reached a 15-min average ≈ 100, which my runs did not cause. `--fail-on-unverified` refused both, as P10c intends. The third run, started only after five consecutive quiet minutes (1-min load < 8), was **complete and clean** (18:03 → 18:33Z).
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.

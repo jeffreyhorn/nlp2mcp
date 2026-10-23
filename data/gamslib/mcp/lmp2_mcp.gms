@@ -131,7 +131,7 @@ Equations
 Alias(p, p__);
 
 * Stationarity equations
-stat_x(nn).. (sum(p, ((-1) * cc(p,nn)) * nu_Products(p)) + sum(m, (((-1) * A(m,nn)) * lam_Constraints(m))$(m(m))) - piL_x(nn))$(n(nn)) =E= 0;
+stat_x(nn).. (sum(p, ((-1) * cc(p,nn)$(n(nn))) * nu_Products(p)) + sum(m, (((-1) * A(m,nn)$(n(nn))) * lam_Constraints(m))$(m(m))) - piL_x(nn))$(n(nn)) =E= 0;
 stat_y(p).. prod(p__, y(p__)) * 1 / y(p) + nu_Products(p) =E= 0;
 
 * Inequality complementarity equations
