@@ -692,6 +692,16 @@ Two findings without threads, both reproduced first:
   - **Fixed:** an early return before any whole-expression walk when no reference repeats the binder, and the loop's already-computed reference list passed in instead of a second walk. The helper is now **1.6%**, and the emit is still byte-identical to the golden.
 - ⚠ **Pre-existing and unchanged, recorded in the test:** a **target** element spelled like the binder (`x('i','i')` at `('i','i')`) cannot be told from the binder in the bare-string index representation. `main` returns the same wrong value, so this PR does not change it.
 
+### PR #1779 review round 7 (P7)
+
+- **A zero-valued nested sum hid the diagonal.** In `sum(i, x(i,i) + sum(k, c(k)))`, the inner sum's derivative `sum(k, 0)` was taken for a match, and the loop returned `0 + sum(k, 0)` instead of 1. The same happened with a nested variable sum, and with a sum-valued coefficient `sum(k, c(k)) * x(i,i)`.
+- **Fixed in `_is_structurally_zero`:** a `Sum` whose body is structurally zero is zero over any domain. ⚠ **Not `Prod`:** a product over an empty domain is 1.
+- **Regressions:** an independent inner sum, a nested variable sum, and a sum-valued coefficient. **33 tests.** The previous revision fails all 3.
+- **Gate:** the first leak-gate run was **UNVERIFIED**, 196 of 200: ferts, ganges, gangesx and turkpow timed out, although the 1-min load was low at the start.
+  - Paired emits (previous commit vs this one) were byte-identical, with **no cost regression**: turkpow 228 s vs 254 s, ferts 187 s vs 186 s. The 15-min load averages, 34 and 23, showed bursts of outside load that the 1-min check misses.
+  - **The re-run waited for the 1- *and* 5-min averages to stay below 6 for 10 minutes. It was complete and clean** (23:44 → 00:10Z).
+  - ⚠ **A vacuous assertion was caught by that control.** The coefficient test first checked only that `sum(k, c(k))` *appears*, and it passed on the previous revision, whose wrong output contains it multiplied by 0. It now asserts the coefficient multiplied by the diagonal's 1.
+
 ### Checkpoint 1 (end of day): GO
 
 Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus copied in. The run launches GAMS with `cwd` at that root, and `tricp` writes `cp.eps` there. 18:31 → 18:55Z. **Nothing was persisted.**
@@ -705,7 +715,7 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5 and **5,611** after round 6, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6 and **5,614** after round 7, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
 - `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, at the landing and **re-run alone after review rounds 1 and 2**. ⚠ Round 2's first two runs were **UNVERIFIED**, 195 of 200 with 5 timeouts: external machine load reached a 15-min average ≈ 100, which my runs did not cause. `--fail-on-unverified` refused both, as P10c intends. The third run, started only after five consecutive quiet minutes (1-min load < 8), was **complete and clean** (18:03 → 18:33Z).
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.

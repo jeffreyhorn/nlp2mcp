@@ -1847,6 +1847,14 @@ def _is_structurally_zero(expr: Expr) -> bool:
     if isinstance(expr, Unary):
         if expr.op == "-":
             return _is_structurally_zero(expr.child)
+    if isinstance(expr, Sum):
+        # `sum(k, 0)` is 0 over any domain, empty or not (PR #1779 review, round 7).
+        # A nested sum's zero derivative was taken for a match, so the
+        # single-binder loop returned before #1755's fallback:
+        # `sum(i, x(i,i) + sum(k, c(k)))` gave `0 + sum(k, 0)`, not 1.
+        # ⚠ NOT `Prod`: a product over an EMPTY domain is 1, so a zero body
+        # does not make it structurally zero.
+        return _is_structurally_zero(expr.body)
     if isinstance(expr, DollarConditional):
         # `0$cond` is 0 whatever `cond` is (PR #1779 review, round 5). Unrecognized,
         # `sum(i, x(i,i)$active(i))` produced a guarded zero that the single-binder

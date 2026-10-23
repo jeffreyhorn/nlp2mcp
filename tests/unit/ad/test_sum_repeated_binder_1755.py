@@ -83,8 +83,9 @@ def _value(expr) -> float:
         if isinstance(node, DollarConditional):
             return ev(node.value_expr, xval) if ev(node.condition, xval) != 0 else 0.0
         if isinstance(node, Sum):
-            assert node.index_sets == ("i",) and node.condition is None, node
-            return 3 * ev(node.body, xval)  # the body is constant in `i` here
+            assert len(node.index_sets) == 1 and node.condition is None, node
+            card = {"i": 3, "k": 2}[node.index_sets[0]]  # the test sets' sizes
+            return card * ev(node.body, xval)  # the body is constant in the index here
         if isinstance(node, Binary) and node.op in ("+", "-", "*", "/"):
             lhs, rhs = ev(node.left, xval), ev(node.right, xval)
             if node.op == "+":
@@ -154,6 +155,25 @@ class TestTheDiagonalDifferentiates:
         # A parameter denominator: d/dx('i1','i1') of sum(i, x(i,i)/c(i)) = 1/c('i1').
         body = Binary("/", VarRef("x", ("i", "i")), ParamRef("c", ("i",)))
         assert _value(_d(body, "x", ("i1", "i1"))) == 1.0 / 5.0
+
+    def test_an_independent_INNER_SUM_does_not_hide_the_diagonal(self):
+        # PR #1779 review round 7. sum(i, x(i,i) + sum(k, c(k))): the inner sum's
+        # derivative `sum(k, 0)` was taken for a match, so the loop returned 0.
+        body = Binary("+", VarRef("x", ("i", "i")), Sum(("k",), ParamRef("c", ("k",)), None))
+        assert _value(_d(body, "x", ("i1", "i1"))) == 1.0
+
+    def test_a_nested_VARIABLE_sum_does_not_hide_the_diagonal(self):
+        body = Binary("+", VarRef("x", ("i", "i")), Sum(("k",), VarRef("y", ("k",)), None))
+        assert _value(_d(body, "x", ("i1", "i1"))) == 1.0
+
+    def test_a_SUM_VALUED_coefficient_is_kept(self):
+        # d/dx('i1','i1') of sum(i, sum(k, c(k)) * x(i,i)) = sum(k, c(k)).
+        body = Binary("*", Sum(("k",), ParamRef("c", ("k",)), None), VarRef("x", ("i", "i")))
+        out = _d(body, "x", ("i1", "i1"))
+        # ⚠ Asserting the coefficient merely APPEARS would be vacuous: the wrong
+        # output also contains it, multiplied by 0 (measured on the previous
+        # revision). It must appear multiplied by the diagonal's 1.
+        assert "Binary(*, Sum((k), ParamRef(c(k))), Const(1.0))" in str(out), out
 
     def test_a_case_only_repeat_is_a_repeat(self):
         # GAMS identifiers are case-insensitive, so `I` is the binder `i`.
