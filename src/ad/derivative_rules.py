@@ -2249,12 +2249,41 @@ def _guard_coordinate(
     if p >= len(declared):
         return binder
     symbol = str(declared[p])
-    if symbol == "*" or symbol.lower() in {s.lower() for s in index_sets}:
+    # Not a binder of this sum, nor of any ENCLOSING sum (the stack's last entry
+    # is this sum). `sum(i, sum(ii, x(ii,i)))`: the inner guard over `i` was
+    # captured by the outer collapse, giving `ii('i2')` at x('i1','i2').
+    taken = {s.lower() for s in index_sets}
+    for enclosing in _ENCLOSING_BINDERS:
+        taken.update(s.lower() for s in enclosing)
+    if symbol == "*" or symbol.lower() in taken:
         return binder
     return symbol
 
 
+#: Binders of the sums ENCLOSING the one being differentiated, innermost last.
+#: A runtime-subset guard written over a declared domain symbol must not use a
+#: symbol one of them binds: the enclosing collapse would substitute it with the
+#: wrong coordinate (PR #1779 review, round 11). Single-threaded, like the rest of AD.
+_ENCLOSING_BINDERS: list[tuple[str, ...]] = []
+
+
 def _diff_sum(
+    expr: Sum,
+    wrt_var: str,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
+    config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
+) -> Expr:
+    """Derivative of a sum; see :func:`_diff_sum_impl`. Tracks enclosing binders."""
+    _ENCLOSING_BINDERS.append(expr.index_sets)
+    try:
+        return _diff_sum_impl(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
+    finally:
+        _ENCLOSING_BINDERS.pop()
+
+
+def _diff_sum_impl(
     expr: Sum,
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,

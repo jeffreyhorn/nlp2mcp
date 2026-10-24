@@ -81,3 +81,22 @@ Model m / all /;  solve m using nlp minimizing z;
 - Both emits are **identical before and after** #1755's round-3 AD fix. The binding is lost in the stationarity generalization, not in AD.
 - Like this issue's `nu_e(i)$(ord(i)=k)`, it is concrete→symbolic index mapping over aliased positions. The root may be shared; unverified.
 - Latent in the corpus: the #1779 leak gate is byte-identical.
+
+## Another reproducer: an outer binder on the first coordinate (Sprint 40 Day 5, PR #1779 review round 11)
+
+
+```gams
+Set i / i1, i2 /;  Alias (i,j);  Set ii(i);  ii(i) = yes$(ord(i) = 1);
+Variable x(i,j), z;  Equation obj;
+obj.. z =e= sum(i, sum(ii, sqr(x(ii,i) - 1))) + sum((i,j), sqr(x(i,j)));
+Model m / all /;  solve m using nlp minimizing z;
+```
+
+| | row | MCP |
+|---|---|---|
+| NLP | | **1.0** |
+| `main` | `stat_x(i,j).. 2 * x(j,j) =E= 0;` | 2.000 (also loses the #1755 term) |
+| #1779 | `((2*(x(j,j) - 1))$(ii(j)) + 2*x(j,j))$(sameas(j,'i1')) + …` | 1.500 |
+
+- The AD derivative is now correct per instance (the guard is `ii('i1')` at `x('i1','i2')`).
+- The row's variable references and guard are mapped to `j` in BOTH positions. This is the same element-to-coordinate generalization over aliased positions as this issue's `nu_e(i)$(ord(i)=k)`, and the round-3 `act(i)` cases.

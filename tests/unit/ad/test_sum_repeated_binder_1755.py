@@ -519,3 +519,53 @@ def test_CARD_inside_an_INDEX_OFFSET_follows_ord_onto_the_same_set():
     value = Binary("*", Call("card", (SymbolRef("t"),)), ParamRef("q", ("t",)))
     out = _substitute_sum_indices(value, ("t",), ("t1",))
     assert "card, (SymbolRef(t))" in str(out) and "q(t1)" in str(out), out
+
+
+def _nested_config() -> Config:
+    """x(i,j), Alias(i,j), runtime ii(i) (dynamic, no static members)."""
+    from src.ir.symbols import AliasDef, VariableDef
+
+    model_ir = ModelIR()
+    model_ir.sets["i"] = SetDef(name="i", members=["i1", "i2"])
+    model_ir.sets["ii"] = SetDef(name="ii", members=[], domain=("i",))
+    model_ir.aliases["j"] = AliasDef(name="j", target="i")
+    model_ir.variables["x"] = VariableDef(name="x", domain=("i", "j"))
+    config = Config()
+    config.model_ir = model_ir
+    return config
+
+
+def _guard_value(out, wrt: tuple[str, str], active: set[str]) -> float:
+    """Evaluate a collapsed derivative's runtime guard at the target ``wrt``.
+
+    A guard over a declared domain symbol (``ii(i)``) names a COORDINATE of the
+    variable, so it is read at that coordinate of the target; a concrete one
+    (``ii('i1')``) is read as written."""
+    coords = {"i": wrt[0], "j": wrt[1]}
+    members = set()
+    for node in _walk(out):
+        if isinstance(node, SetMembershipTest):
+            (idx,) = node.indices
+            name = getattr(idx, "name", idx)
+            if coords.get(name, name) in active:
+                members.add((node.set_name, name))
+    return _value(out, members=members)
+
+
+@pytest.mark.parametrize(
+    "wrt, expected",
+    [(("i1", "i2"), 1.0), (("i2", "i2"), 0.0)],
+    ids=["active", "excluded"],
+)
+def test_an_ENCLOSING_sum_cannot_capture_the_guard_coordinate(wrt, expected):
+    """PR #1779 review round 11. In sum(i, sum(ii, x(ii,i))) the inner guard was
+    written over the declared coordinate `i`, which the OUTER binder `i` then
+    substituted with the second coordinate: ii('i2') at x('i1','i2'), 0 instead of
+    1. The guard now falls back to the binder when an enclosing sum binds the
+    symbol, so it collapses to the right element first. Nested and flat agree."""
+    config = _nested_config()
+    nested = Sum(("i",), Sum(("ii",), VarRef("x", ("ii", "i")), None), None)
+    flat = Sum(("ii",), VarRef("x", ("ii", wrt[1])), None)
+    active = {"i1"}
+    assert _guard_value(differentiate_expr(nested, "x", wrt, config), wrt, active) == expected
+    assert _guard_value(differentiate_expr(flat, "x", wrt, config), wrt, active) == expected
