@@ -750,6 +750,12 @@ Two findings, both **pre-existing in the shared collapse path**: measured on `ma
 - **`test_positional_domain_sites.py`'s catalogue** pinned two sites by the function name `_diff_sum`. The body moved intact into `_diff_sum_impl` (`_diff_sum` is now the binder-stack wrapper), so the catalogue was repointed with the same anchors.
 - ⚠ **End to end this shape is still wrong, for a pre-existing reason:** stationarity generalizes the row to `x(j,j)` (`main`: `2*x(j,j) =E= 0`, MCP 2.000; here 1.500; NLP 1.0). This is the same aliased-coordinate mapping family; added to **#1778**.
 
+### PR #1779 review round 12 (P7)
+
+- **A FREE index captured the guard, with no enclosing sum.** In `sum(ii, x(ii,i))` with a symbolic free `i` (the equation's own index), #1111's free-index recovery substituted the guard's declared `i` from the second coordinate: `ii('i2')` at `x('i1','i2')`, 0 instead of 1. Round 11's flat control used a literal second index, so it could not see this.
+- **Fixed:** the declared symbol is used only if NOTHING else in the body uses that name. Every name in the body now counts as occupied, as do the enclosing binders; on any clash the guard stays on the binder. The round-10 aliased-coordinate solve still passes, because its body uses only binder names.
+- **Regression:** a symbolic free index, active and excluded. The previous revision fails the active case.
+
 ### Checkpoint 1 (end of day): GO
 
 Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus copied in. The run launches GAMS with `cwd` at that root, and `tricp` writes `cp.eps` there. 18:31 → 18:55Z. **Nothing was persisted.**
@@ -763,7 +769,7 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6, **5,614** after round 7, **5,616** after round 8, **5,625** after round 9, **5,626** after round 10 and **5,628** after round 11, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6, **5,614** after round 7, **5,616** after round 8, **5,625** after round 9, **5,626** after round 10, **5,628** after round 11 and **5,630** after round 12, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
 - `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, at the landing and **re-run alone after review rounds 1 and 2**. ⚠ Round 2's first two runs were **UNVERIFIED**, 195 of 200 with 5 timeouts: external machine load reached a 15-min average ≈ 100, which my runs did not cause. `--fail-on-unverified` refused both, as P10c intends. The third run, started only after five consecutive quiet minutes (1-min load < 8), was **complete and clean** (18:03 → 18:33Z).
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.

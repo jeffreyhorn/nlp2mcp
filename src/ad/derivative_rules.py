@@ -2255,6 +2255,11 @@ def _guard_coordinate(
     taken = {s.lower() for s in index_sets}
     for enclosing in _ENCLOSING_BINDERS:
         taken.update(s.lower() for s in enclosing)
+    # ...nor ANY name the body itself uses (PR #1779 review, round 12): a FREE
+    # index is substituted too. In `sum(ii, x(ii,i))` the free `i` sits at the
+    # second position, and #1111's free-index recovery substituted the guard's
+    # `i` from it, giving `ii('i2')` at x('i1','i2') with no enclosing sum at all.
+    taken.update(n.lower() for n in _all_index_names(Sum((), body, None)) if n.lower() != key)
     if symbol == "*" or symbol.lower() in taken:
         return binder
     return symbol

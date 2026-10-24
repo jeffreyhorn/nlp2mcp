@@ -569,3 +569,20 @@ def test_an_ENCLOSING_sum_cannot_capture_the_guard_coordinate(wrt, expected):
     active = {"i1"}
     assert _guard_value(differentiate_expr(nested, "x", wrt, config), wrt, active) == expected
     assert _guard_value(differentiate_expr(flat, "x", wrt, config), wrt, active) == expected
+
+
+@pytest.mark.parametrize(
+    "wrt, expected",
+    [(("i1", "i2"), 1.0), (("i2", "i2"), 0.0)],
+    ids=["active", "excluded"],
+)
+def test_a_FREE_index_cannot_capture_the_guard_coordinate(wrt, expected):
+    """PR #1779 review round 12. sum(ii, x(ii,i)) with a SYMBOLIC free `i` (the
+    equation's own index): #1111's free-index recovery substituted the guard's
+    declared `i` from the second coordinate, giving ii('i2') at x('i1','i2') with
+    no enclosing sum. The flat control above uses a LITERAL second index, so it
+    could not see this. Any name the body uses now counts as occupied."""
+    config = _nested_config()
+    body = Sum(("ii",), VarRef("x", ("ii", "i")), None)
+    out = differentiate_expr(body, "x", wrt, config)
+    assert _guard_value(out, wrt, {"i1"}) == expected, out
