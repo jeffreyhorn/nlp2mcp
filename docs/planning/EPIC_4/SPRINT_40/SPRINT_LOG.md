@@ -582,3 +582,195 @@ Every live doc that named a cohort or admitted model's bucket was checked. Sprin
 ### Gate
 
 **No `src/` or `tests/` change** (the stable-scope waiver). The changes are docs, issue documents and one generated-report note. `git diff main...HEAD --name-only | grep -c '\.py$'` is 0 at the final commit. `make check-doc-figures` is clean.
+
+---
+
+## Day 5 — 2026-10-23 · P3: the expanded-scope sentence · 1 h · + P7: #1755, the diagonal defect · 7 h · + Checkpoint 1 · 2 h
+
+**Branch:** `planning/sprint40-day5-diagonal` · **Base:** `abc82d30`.
+
+### P3: the expanded-scope sentence (close rule C4)
+
+> **At `abc82d30`, on the 140-candidate continuity corpus (re-based from 142 on 2026-10-19), Solve is 115/135 and Match 97/140; on the expanded scope of 149 (140 + 9 admitted by rule, Decision 2), Solve is 117/139 and Match 99/149. The +2 and +2 are scope additions, not recoveries.**
+
+- Both figures come from `kpi_block.py --corpus continuity|current` at `abc82d30` (`CORPUS_RECORD.md` is the per-model record).
+- **The Rolling-KPIs footnote is ¹⁰** (`PROJECT_PLAN.md`), in the S23–S25 form ("pipeline scope changed from X to Y", with rates stated relative to the new scope). It marks the S40 Translate, Solve and Match cells, and it says explicitly that the current corpus's **rates are not comparable** with the series: Match falls to 66.4% on 149, although no model regressed.
+
+### P7: #1755, the diagonal-reference defect
+
+- **Phase-0 gate first:** `a9f13e5d` (`ISSUE_1755` § *Phase 0: Acceptance Gate*; `check_phase0_doc.py` PASS). The `src/` landing is the following commit.
+- **The layer was re-located by a call trace, before writing the gate.** Prep named `_sum_should_collapse`'s `len(...) != len(...)` early return.
+  - Traced: it does return False here, but making it return True would only reach the full-collapse branch, whose `zip(..., strict=True)` cannot pair 1 binder with 2 positions.
+  - **The derivative is lost in `_diff_sum`'s single-binder partial-match loop,** which symbolizes **one position per attempt** (`('i','i1')`, then `('i1','i')`) and so never matches `tsam(i,i)`.
+  - Sprint 39 recorded three of four gates naming the wrong layer; this one was checked before the code was written.
+- **The fix** (`_diff_sum_repeated_binder`, run only after every existing attempt returned zero): place the binder at **every** position it occupies, **only when the `wrt` values there are equal**, then substitute it back. The result is the **whole** derivative: every distinct layout once, plus the summed remainder (PR #1779 review round 1).
+
+| criterion | result |
+|---|---|
+| fail-before at the layer | `Sum((i), Const(0.0))` → `Const(1.0)` on the diagonal |
+| **positive control** | the off-diagonal `('i1','i2')` stays **0**, as do the three-position and mixed-concrete variants |
+| scalar variant | the emit **is the hand-derived row** (`2*tsam(i,j) + nu_diag$(diagonal)`); PATH **MS 1 at 0.333** = NLP 0.3333 |
+| reproducer | `diagsum` and `nu_diagsum` present and paired, `nu_diagsum` on the diagonal only, no `1 =E= 0` |
+| #1737 | shape (a) `dd(i,i)` moves from **silently dropped** to **refused**. Pinned; #1737 untouched |
+| leak gate | `make check-goldens` **alone**: **200 in-scope, all clean**, rc 0 with `--fail-on-unverified` (17:55 → 18:12Z). **Byte-identical corpus-wide** |
+| `check-index-repeats` | P1 0 / 3,370; P2 11 = baseline |
+| mutation controls (throwaway worktrees) | revert → 12 of 13 fail · drop equal-values → the positive control fails · exact spelling → the case test fails · (after review round 1) drop the remainder / first layout only / no layout dedup → each fails its mixed-reference test |
+
+- **A vacuous test caught by the controls.** The first case-insensitivity test, `tsam(i,I)`, passed with the fix **reverted**. `main` already handled that two-position form by accident: #1111's free-index conversion treats `I` as a distinct free index. It was replaced with a three-position `w(i,I,i)`, which `main` and the exact-spelling mutant both get wrong, and the accidental form is kept as a pin.
+- **Where the measurement differed from the prediction:**
+  - **The indexed reproducer's row is not the hand-derived one.** AD is now right (1 for every `j`), but the stationarity row aggregates the cross-instance multipliers wrongly (`2·nu_diagsum(i1)` at `(i1,i1)`).
+  - **That is a pre-existing, independent defect, filed as #1778.** A reproducer with no repeated binder is byte-identical on an untouched `main` and **solves to a wrong 0.375** against an NLP of 0.3333. It is latent in the corpus: 0 goldens carry the shape, and the positive control matches.
+  - Its `nu_e(i)$(ord(i) = k)` guard looks like the phantom-IndexOffset family (#1381/#1714): a hypothesis.
+- **A pinned reachability claim became live, as its own message anticipated.**
+  - `test_pattern_c_alias_offset_gate.py` asserted that a diagonal reference *never* reaches Pattern-C B-3. Now that the reference differentiates, B-3 is consulted and **declines** (`None`), so the test asserts "reached and declined" and is renamed.
+  - ⚠ A mutant showed #1741's guard is **not** the only decliner for that fixture, so the test claims only "B-3 declines". `ISSUE_1741` is updated.
+- **Out of scope, unchanged:** #1776 (the equal-count sibling).
+
+### PR #1779 review round 1 (P7)
+
+- **The helper returned a partial derivative for mixed references, and the review was right.** It returned the first layout's collapsed contribution and nothing else:
+  - `sum(i, x(i,i) + x('i1','i1'))` gave **1, not 4**. `main` had given 3, so this was a regression in that shape;
+  - `sum(i, w(i,i,'i1') + w('i1',i,i))` gave **1, not 2**.
+- **Fixed:** every distinct layout counts once, plus the summed remainder (the caller's normal case), and the two parts are disjoint. Three value-checked regressions cover the two cases and a shared layout (no double count). **12 tests; 7 mutants, all caught.** The leak gate was re-run alone (below).
+- **A pre-existing sibling, routed:** the #1086 loop before the helper returns its *first* non-zero attempt, so `sum(i, x(i,'i1') + x(i,i))` gives 1, not 2. That is unchanged from `main`, and filed as **#1780**: changing the loop needs its own Phase-0 gate.
+
+### PR #1779 review round 2 (P7)
+
+- **Layouts were keyed by spelling, but index matching is case-insensitive.** `sum(i, w(i,i,i) + w(i,I,i))` at `w('i1','i1','i1')` gave **4, not 2**. The two references made two keys, and each symbolic differentiation counted both.
+  - The same input also left a coefficient `c(I)` **unsubstituted** in one layout.
+- **Fixed:** the key uses the canonical binder spelling at the binder positions, and the original spellings of every reference sharing a key are **merged**, so substitution replaces `i` and `I` alike.
+- **The regression** covers the plain case (2) and one with a coefficient under both spellings. The test's evaluator refuses an unsubstituted `c(i)` / `c(I)`, so the substitution cannot pass silently.
+- **Mutants:** the previous revision fails it (4 ≠ 2); canonical keys without merged spellings fail it (`c(I)` left). **13 tests**; reverting the fix fails 12 of them. The leak gate was re-run alone (below).
+
+### PR #1779 review round 3 (P7)
+
+Two findings without threads, both confirmed at the AD level first:
+
+- **Coefficient-only case variants.** Spellings came only from references to the differentiated variable, so `sum(i, c(I)*x(i,i))` left `c(I)`. In the two-layout case, one symbolic `c(I)` could not carry two bindings.
+  - **Fixed:** `_binder_spellings` collects every spelling of the binder across the body and condition. A nested aggregation that re-binds the name is skipped; GAMS rejects that anyway (`$125`).
+  - Now `c('i1')`, and `c('i1') + c('i2')` across two layouts.
+- **Layout-specific conditions.** Every layout received the same symbolic `active(i)`.
+  - **Fixed:** each layout's condition is substituted with **its own** binder value: `active('i1') + active('i2')`.
+- **4 value-checked regressions; 16 tests; 3 new mutants, all caught.** The previous revision fails all three; a symbolic condition fails the condition test; reference-only spellings fail both coefficient tests.
+- ⚠ **End-to-end, the condition is still lost one layer later, and this round does not fix that.** Two NLPs measured: a single layout with the binder in positions 3–4 (cond1), and the reviewer's two-layout case (cond2).
+  - AD now returns `act('i1')` / `act('i2')` per instance.
+  - The **stationarity** generalization then maps both back to `act(i)`, the variable's first domain position. So cond1's MCP still aborts (`e.nu_e` unmatched) and cond2's solves to **0.667 against 0.5**, **byte-identically before and after** this round.
+  - Recorded on **#1778** as two more stationarity-layer reproducers, possibly the same root. Latent in the corpus.
+  - The coefficient case solves correctly end to end (0.034 vs 0.0345), both before and after.
+
+### PR #1779 review round 4 (P7)
+
+- **The equal-values check compared raw strings, but `_indices_match` strips quotes and ignores case.** So `('i1','I1')` and `('i1',"'i1'")`, the same element in both coordinates, were treated as inconsistent, and `sum(i, x(i,i))` stayed at 0.
+- **Fixed:** values are compared as `_indices_match` compares them, and the substitution keeps a spelling that passes the existing set-membership check (`x(i1,i1)`).
+- **Regressions:** case- and quote-varied targets in both coordinate orders (4), plus varied off-diagonal controls (3). **23 tests.**
+- **Mutants:** the previous revision and a raw-string comparison each fail the 4 varied tests; removing the check fails 7, including the off-diagonal controls.
+
+### PR #1779 review round 5 (P7)
+
+Two findings without threads, both reproduced first:
+
+- **A body-level dollar condition hid the diagonal.** In `sum(i, x(i,i)$active(i))`, the loop produced `0$active('i1')`. `_is_structurally_zero` did not recognize a guarded zero, so the loop took it for a match and returned before #1755's fallback.
+  - **Fixed in `_is_structurally_zero`** (`0$cond` is 0 whatever `cond` is), as suggested. Result: `1$active('i1')`.
+  - ⚠ This touches every caller of `_is_structurally_zero` (5 sites, all in `derivative_rules.py`), not only #1755's. The leak gate below is therefore what decides that no golden moved.
+- **A fully noncanonical target stayed at 0.** For `('I1','I1')` or `("'i1'","'i1'")`, no coordinate used the declared spelling, and membership is a raw lookup.
+  - **Fixed:** `_declared_member_spelling` resolves the normalized target to the declared member through `resolve_set_members`, so the substitution writes `x(i1,i1)`.
+- **Regressions:** fully noncanonical targets (2) with a nonlinear body, their off-diagonal controls (2), and the body condition, active and inactive. **28 tests.**
+- **Mutants:** the previous revision fails all 3 new tests; no guarded-zero recognition fails the body-condition test; no declared-spelling lookup fails both noncanonical tests.
+
+### PR #1779 review round 6 (P7)
+
+Two findings without threads, both reproduced first:
+
+- **A quotient body hid the diagonal.** `sum(i, x(i,i)/2)` gave 0, not 0.5. Each single-position attempt left `(2*0 - x*0)/2^2`, a quotient with a zero numerator, which the loop took for a match. The same happened with `x(i,i)/c(i)`.
+  - **Fixed in `_is_structurally_zero`:** a quotient is zero when its numerator is (the denominator is non-zero wherever the expression is defined). This again reaches every caller, and the leak gate decides.
+- **A quoted label spelled like the binder was counted.** With `Set i / i, i1, i2 /`, `sum(i, x(i,i) + x('i','i'))` at `x('i1','i1')` gave **2, not 1**. The parser keeps the label quoted (`"i"`), but index matching strips quotes, so the symbolic `(i,i)` target matched it.
+  - **Fixed:** each layout is differentiated against a **fresh placeholder** for the binder, which no label in the expression can spell. The rest of the body is left intact.
+- **Regressions:** both quotient forms, and the quoted label. **30 tests.** **Mutants:** the previous revision fails both; no quotient-zero recognition fails the quotient test; no fresh placeholder fails the quoted-label test.
+- ⚠ **A cost regression, found by the leak gate and fixed.** The first gate run on this round was UNVERIFIED (198 of 200), with ferts and ganges timed out on a quiet machine.
+  - Paired emits of ferts (`main` vs this branch, alternating order) were **byte-identical** but slower: 405 s vs 246 s, then 252 s vs 210 s.
+  - `cProfile` attributed it: the helper runs on **1.39 M** calls in ferts (nearly every single-binder `_diff_sum`), and each call re-walked the body. That was **6.5%** of the profiled emit.
+  - **Fixed:** an early return before any whole-expression walk when no reference repeats the binder, and the loop's already-computed reference list passed in instead of a second walk. The helper is now **1.6%**, and the emit is still byte-identical to the golden.
+- ⚠ **Pre-existing and unchanged, recorded in the test:** a **target** element spelled like the binder (`x('i','i')` at `('i','i')`) cannot be told from the binder in the bare-string index representation. `main` returns the same wrong value, so this PR does not change it.
+
+### PR #1779 review round 7 (P7)
+
+- **A zero-valued nested sum hid the diagonal.** In `sum(i, x(i,i) + sum(k, c(k)))`, the inner sum's derivative `sum(k, 0)` was taken for a match, and the loop returned `0 + sum(k, 0)` instead of 1. The same happened with a nested variable sum, and with a sum-valued coefficient `sum(k, c(k)) * x(i,i)`.
+- **Fixed in `_is_structurally_zero`:** a `Sum` whose body is structurally zero is zero over any domain. ⚠ **Not `Prod`:** a product over an empty domain is 1.
+- **Regressions:** an independent inner sum, a nested variable sum, and a sum-valued coefficient. **33 tests.** The previous revision fails all 3.
+- **Gate:** the first leak-gate run was **UNVERIFIED**, 196 of 200: ferts, ganges, gangesx and turkpow timed out, although the 1-min load was low at the start.
+  - Paired emits (previous commit vs this one) were byte-identical, with **no cost regression**: turkpow 228 s vs 254 s, ferts 187 s vs 186 s. The 15-min load averages, 34 and 23, showed bursts of outside load that the 1-min check misses.
+  - **The re-run waited for the 1- *and* 5-min averages to stay below 6 for 10 minutes. It was complete and clean** (23:44 → 00:10Z).
+  - ⚠ **A vacuous assertion was caught by that control.** The coefficient test first checked only that `sum(k, c(k))` *appears*, and it passed on the previous revision, whose wrong output contains it multiplied by 0. It now asserts the coefficient multiplied by the diagonal's 1.
+
+### PR #1779 review round 8 (P7)
+
+- **The round-6 placeholder was fresh only within the expression.** Two collisions, both reproduced:
+  - **A target label:** with `i = {i1, i2, i__binder1755}`, the target `w('i1','i1','i__binder1755')` matched the renamed `w(i,i,i)`, giving 1 instead of 0.
+  - **Another set's member:** with `k = {i__binder1755}`, the inner `sum(k, x(k,k))` took the placeholder for a member of `k`, giving 2 instead of 1.
+- **Fixed:** the placeholder is also reserved against the normalized target labels and against every set or alias name and declared member in the model. That runs only when a repeated-binder layout exists, so it stays off the common path.
+- **Regressions:** both collisions. **35 tests.** The previous revision fails both; reserving target labels alone fails the member case, as the review predicted.
+
+### PR #1779 review round 9 (P7): the shared collapse machinery, by owner decision
+
+Two findings, both **pre-existing in the shared collapse path**: measured on `main`, the single-position collapse had both. The reviewer asked for human validation. **The owner chose to fix the shared machinery in this PR** (option 3 of 3 offered).
+
+- **`card()` operands.** `_apply_index_substitution` turned `card(s)` into `card(i1)`, so the subset's cardinality became the parent's.
+  - **Fixed:** a `card()` used as a **value** keeps its set operand. `ord()` and all other calls are still substituted.
+  - ⚠ **Except inside an `IndexOffset`'s offset** (`card_operands=True`): there `card(t) - ord(t)` is a relative position, and `card` must follow `ord` onto the same set (#1178's behaviour).
+  - The first version preserved `card` everywhere. The resolver caught otpop's `p(t + (card(t) - ord(t)))` becoming `p(tt + (card(t) - ord(tt)))`: the wrong element, and the cold match lost (`model_optimal` → `model_optimal_presolve`). With the offset exception, otpop's emit is **byte-identical** to its golden.
+- **Dynamic-subset membership.** A collapsed contribution over a runtime-assigned subset (`ii(i) = yes$…`, no static members) dropped the restriction. AD resolves the binder to the parent's elements (#723), so `sum(ii, x(ii,ii))` gave an unguarded 1 at an excluded cell.
+  - **Fixed:** `_diff_sum` attaches `ii(ii)` to the **body** as a dollar condition for every collapse path. The normal, non-collapsing case uses the original sum. Static subsets need no guard.
+  - ⚠ The first version ANDed the guard into the sum's **condition**. The stationarity builder lifts that condition into the row and `.fx` guards and does not map the sum index inside an `and`, so srkandw's emit had an uncontrolled `sn` (`$149`). **The resolver caught it as BACKWARD (match → `path_syntax_error`).** On the body, srkandw solves to 2613 = NLP.
+- **End-to-end, both measured with GAMS (NLP vs MCP):**
+  - a runtime subset with a full-domain objective: NLP 1.0; `main` **0.000**; this branch **1.000**, and the row carries `1$(ii(i)) * nu_e`;
+  - a `card(s)` coefficient: NLP 0.125; `main` **0.000**; this branch **0.125** with `nu_e = -0.25`.
+  - ⚠ The objective alone does not discriminate the `card` fix: the model is symmetric, so the wrong coefficient (parent `card(i)` = 3) cancels from the primal. The test checks the **row** and `nu_e` (−0.1667 with 3), and fails with the fix reverted.
+- **Corpus (examined, not refreshed blindly):** the leak gate showed **19 drifted goldens over 15 models**, all small guard additions. Each drifted model was regenerated and re-solved by the resolver (`--resolve-changed --min-scope 15`, throwaway worktree): **GO, 14 hold their bucket.**
+  - The 15th, **abel**, moved mismatch → match. **That is a stale DB row, not this change:** the *committed* golden also solves to 225.195 = NLP today; the row was written 2026-04-21 at 158.15. **It is not booked as a fix.** A persisted run will correct it.
+  - The 19 goldens are committed. `check-index-repeats` is unchanged.
+- **Regressions:** `card` preserved (diagonal and single-position), `ord` still substituted, `card` inside an offset following `ord`, a dynamic subset active and inactive, a static subset unguarded, and two GAMS solves. **42 + 2 tests.**
+- **Mutants:** reverting the `card` fix fails the `card` tests and the GAMS `nu_e` check; disabling the guard fails both subset tests and the GAMS solve; preserving `card` inside offsets fails the offset test.
+
+### PR #1779 review round 10 (P7)
+
+- **A runtime-subset guard lost its coordinate in stationarity.** With `Alias(i,j)`, `ii(i) = {i1}`, `jj(i) = {i2}` and objective `sum((ii,jj), sqr(x(ii,jj) - 1)) + sum((i,j), sqr(x(i,j)))`:
+  - NLP **0.5**; this branch **1.000** (row guard `ii(i) and jj(i)`, never true, so the gradient at `(i1,i2)` was zeroed); `main` **1.250** (no guard at all).
+- **Mechanism (instrumented):** the guard was written over the binder, so a collapse made it concrete. Stationarity's element-to-set map is right for the instance `(i1,i2)` (`i2 → j`), but a DIAGONAL instance put `i1` in both coordinates, and the generalized row took `jj('i1') → jj(i)`.
+- **Fixed:** when every reference to the differentiated variable places the binder at ONE position, the guard is written over that position's **declared domain symbol** (`ii(i) and jj(j)`), which stationarity leaves alone. Otherwise, or if that symbol is a binder of the same sum, it stays on the binder.
+  - The aliased model now solves to **0.500** = NLP, with row guard `ii(i) and jj(j)`.
+- **The corpus had it:** round 9's committed cesam2 golden carried `$(ii(i) and ii(i))` on its objective term. It is now `$(ii(i) and ii(j))`; the leak gate's only drift, re-solved by the resolver: **GO**, match held.
+- **Regression:** the aliased end-to-end solve (row guard and objective). A mutant that writes the guard on the binder again fails it.
+
+### PR #1779 review round 11 (P7)
+
+- **An enclosing sum captured the guard's coordinate.** In `sum(i, sum(ii, x(ii,i)))`, the inner guard was written over the declared coordinate `i`, which is also the OUTER binder. The outer collapse substituted it with the second coordinate: `ii('i2')` at `x('i1','i2')`, so 0 instead of 1.
+- **Fixed:** `_diff_sum` keeps a stack of enclosing binders (`_ENCLOSING_BINDERS`), and the guard falls back to the binder when ANY enclosing sum binds its declared symbol. It then collapses to the right element first: `ii('i1')`, active, and `ii('i2')` at `(i2,i2)`, excluded. A separate channel is used, not `bound_indices`, which also drives alias matching.
+- **Regressions:** nested against flat, active and excluded. The previous revision fails the active case; the excluded one cannot discriminate.
+- **Leak gate:** clean, 200 goldens with 0 drift, so the fix changes no committed emit.
+- **`test_positional_domain_sites.py`'s catalogue** pinned two sites by the function name `_diff_sum`. The body moved intact into `_diff_sum_impl` (`_diff_sum` is now the binder-stack wrapper), so the catalogue was repointed with the same anchors.
+- ⚠ **End to end this shape is still wrong, for a pre-existing reason:** stationarity generalizes the row to `x(j,j)` (`main`: `2*x(j,j) =E= 0`, MCP 2.000; here 1.500; NLP 1.0). This is the same aliased-coordinate mapping family; added to **#1778**.
+
+### PR #1779 review round 12 (P7)
+
+- **A FREE index captured the guard, with no enclosing sum.** In `sum(ii, x(ii,i))` with a symbolic free `i` (the equation's own index), #1111's free-index recovery substituted the guard's declared `i` from the second coordinate: `ii('i2')` at `x('i1','i2')`, 0 instead of 1. Round 11's flat control used a literal second index, so it could not see this.
+- **Fixed:** the declared symbol is used only if NOTHING else in the body uses that name. Every name in the body now counts as occupied, as do the enclosing binders; on any clash the guard stays on the binder. The round-10 aliased-coordinate solve still passes, because its body uses only binder names.
+- **Regression:** a symbolic free index, active and excluded. The previous revision fails the active case.
+
+### Checkpoint 1 (end of day): GO
+
+Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus copied in. The run launches GAMS with `cwd` at that root, and `tricp` writes `cp.eps` there. 18:31 → 18:55Z. **Nothing was persisted.**
+
+- **Scope first: the resolver's own MODEL count.** `--resolve-changed --since-commit bd2af6e9 --dry-run --json` reports **12** changed-golden models: airsp2, egypt, glider, jbearing, minsurf, robot, shale, srpchase, tfordy, torsion, tricp, turkey. These are the goldens Day 3 committed. No empty-selection error, so no `--allow-empty`: the run certifies these 12.
+- **`--resolve-changed --since-commit bd2af6e9 --min-scope 12`: GO, rc 0.** **All 12 held their bucket.** 0 `backward`, 0 `missing`, `= same` on every row.
+- **Plus the licensed re-run of the 11 cohort models** (PR workflows are demo-only): `run_full_test.py --model <id>` for each.
+  - **All 11 reproduce their committed rows exactly**, on outcome, verdict, attribution, `license_edition` and objective (4 dp).
+  - No other row of the worktree DB changed.
+  - Every row is `licensed`.
+
+### Gate
+
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6, **5,614** after round 7, **5,616** after round 8, **5,625** after round 9, **5,626** after round 10, **5,628** after round 11 and **5,630** after round 12, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+- `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, at the landing and **re-run alone after review rounds 1 and 2**. ⚠ Round 2's first two runs were **UNVERIFIED**, 195 of 200 with 5 timeouts: external machine load reached a 15-min average ≈ 100, which my runs did not cause. `--fail-on-unverified` refused both, as P10c intends. The third run, started only after five consecutive quiet minutes (1-min load < 8), was **complete and clean** (18:03 → 18:33Z).
+- `make check-index-repeats`: P1 0, P2 = baseline.
+- `make check-doc-figures` is clean.
+- `check_phase0_doc.py` PASS.

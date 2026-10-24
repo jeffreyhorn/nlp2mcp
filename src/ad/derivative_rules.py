@@ -1838,9 +1838,28 @@ def _is_structurally_zero(expr: Expr) -> bool:
             return _is_structurally_zero(expr.left) and _is_structurally_zero(expr.right)
         if expr.op == "*":
             return _is_structurally_zero(expr.left) or _is_structurally_zero(expr.right)
+        if expr.op == "/":
+            # A quotient with a zero numerator is 0 wherever it is defined
+            # (PR #1779 review, round 6). The quotient rule leaves
+            # `(c*0 - x*0) / c^2` for `x(i,i)/c(i)`, which the single-binder loop
+            # took for a match, returning before #1755's fallback.
+            return _is_structurally_zero(expr.left)
     if isinstance(expr, Unary):
         if expr.op == "-":
             return _is_structurally_zero(expr.child)
+    if isinstance(expr, Sum):
+        # `sum(k, 0)` is 0 over any domain, empty or not (PR #1779 review, round 7).
+        # A nested sum's zero derivative was taken for a match, so the
+        # single-binder loop returned before #1755's fallback:
+        # `sum(i, x(i,i) + sum(k, c(k)))` gave `0 + sum(k, 0)`, not 1.
+        # ⚠ NOT `Prod`: a product over an EMPTY domain is 1, so a zero body
+        # does not make it structurally zero.
+        return _is_structurally_zero(expr.body)
+    if isinstance(expr, DollarConditional):
+        # `0$cond` is 0 whatever `cond` is (PR #1779 review, round 5). Unrecognized,
+        # `sum(i, x(i,i)$active(i))` produced a guarded zero that the single-binder
+        # loop took for a successful match, returning before #1755's fallback.
+        return _is_structurally_zero(expr.value_expr)
     return False
 
 
@@ -2156,7 +2175,120 @@ def _try_diff_sum_offset_crossterms(
     return result
 
 
+def _runtime_subset_guard(
+    index_sets: tuple[str, ...],
+    config: Config | None,
+    body: Expr | None = None,
+    wrt_var: str | None = None,
+) -> Expr | None:
+    """``ii(ii)`` for each binder that is a DYNAMIC subset, AND-combined; else ``None``.
+
+    A dynamic subset has no static members and a parent domain: its membership is
+    assigned at execution time, and AD resolves it to the parent's elements
+    (#723). An alias of such a subset is resolved to the subset. A static set or
+    subset needs no guard: membership resolution already rejects its
+    non-members.
+    """
+    if config is None or config.model_ir is None:
+        return None
+    model_ir = config.model_ir
+    guard: Expr | None = None
+    for binder in index_sets:
+        target = binder
+        seen: set[str] = set()
+        while target in model_ir.aliases and target not in seen:
+            seen.add(target)
+            alias = model_ir.aliases[target]
+            target = getattr(alias, "target", alias)
+            if not isinstance(target, str):
+                break
+        sdef = model_ir.sets.get(target) if isinstance(target, str) else None
+        if sdef is None or isinstance(sdef, (list, tuple, set, frozenset)):
+            continue
+        if getattr(sdef, "members", None) or not getattr(sdef, "domain", None):
+            continue
+        test = SetMembershipTest(
+            target, (SymbolRef(_guard_coordinate(binder, index_sets, model_ir, body, wrt_var)),)
+        )
+        guard = test if guard is None else Binary("and", guard, test)
+    return guard
+
+
+def _guard_coordinate(
+    binder: str,
+    index_sets: tuple[str, ...],
+    model_ir: Any,
+    body: Expr | None,
+    wrt_var: str | None,
+) -> str:
+    """The symbol a runtime-subset guard is written over (PR #1779 review, round 10).
+
+    Written over the BINDER, the guard is substituted with a concrete element when
+    the sum collapses, and stationarity must then guess the element's coordinate.
+    On a diagonal instance the guess is ambiguous: `sum((ii,jj), sqr(x(ii,jj)-1))`
+    with `Alias(i,j)` generalized `ii('i1') and jj('i1')` to `ii(i) and jj(i)`,
+    which zeroed the gradient at the active cell (i1,i2). So when every reference
+    to the differentiated variable puts the binder at ONE position, the guard is
+    written over that position's DECLARED domain symbol (`ii(i) and jj(j)`), which
+    stationarity leaves alone. Otherwise, or when that symbol is itself a binder
+    of this sum, it stays on the binder (the previous behaviour).
+    """
+    if body is None or wrt_var is None or wrt_var not in model_ir.variables:
+        return binder
+    declared = model_ir.variables[wrt_var].domain or ()
+    key = binder.lower()
+    positions = {
+        p
+        for ref in _find_var_indices_in_body(body, wrt_var)
+        for p, idx in enumerate(ref)
+        if isinstance(idx, str) and idx.lower() == key
+    }
+    if len(positions) != 1:
+        return binder
+    (p,) = positions
+    if p >= len(declared):
+        return binder
+    symbol = str(declared[p])
+    # Not a binder of this sum, nor of any ENCLOSING sum (the stack's last entry
+    # is this sum). `sum(i, sum(ii, x(ii,i)))`: the inner guard over `i` was
+    # captured by the outer collapse, giving `ii('i2')` at x('i1','i2').
+    taken = {s.lower() for s in index_sets}
+    for enclosing in _ENCLOSING_BINDERS:
+        taken.update(s.lower() for s in enclosing)
+    # ...nor ANY name the body itself uses (PR #1779 review, round 12): a FREE
+    # index is substituted too. In `sum(ii, x(ii,i))` the free `i` sits at the
+    # second position, and #1111's free-index recovery substituted the guard's
+    # `i` from it, giving `ii('i2')` at x('i1','i2') with no enclosing sum at all.
+    taken.update(n.lower() for n in _all_index_names(Sum((), body, None)) if n.lower() != key)
+    if symbol == "*" or symbol.lower() in taken:
+        return binder
+    return symbol
+
+
+#: Binders of the sums ENCLOSING the one being differentiated, innermost last.
+#: A runtime-subset guard written over a declared domain symbol must not use a
+#: symbol one of them binds: the enclosing collapse would substitute it with the
+#: wrong coordinate (PR #1779 review, round 11). Single-threaded, like the rest of AD.
+_ENCLOSING_BINDERS: list[tuple[str, ...]] = []
+
+
 def _diff_sum(
+    expr: Sum,
+    wrt_var: str,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
+    config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
+) -> Expr:
+    """Derivative of a sum; see :func:`_diff_sum_impl`. Tracks enclosing binders."""
+    _ENCLOSING_BINDERS.append(expr.index_sets)
+    try:
+        return _diff_sum_impl(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
+    finally:
+        _ENCLOSING_BINDERS.pop()
+
+
+def _diff_sum_impl(
     expr: Sum,
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
@@ -2224,6 +2356,25 @@ def _diff_sum(
     # `stat_p`). Resolve the offset to its fixed element, then differentiate in
     # SUM-PRESERVING mode so every iterate contributes: `∂ sum(t, c(t)*v(last))
     # / ∂v(last) = sum(t, c(t))`. Tightly gated to the exact idiom.
+    # A DYNAMIC-subset binder carries an implicit runtime restriction: GAMS
+    # iterates only the members assigned at execution time, while AD resolves the
+    # binder to its PARENT's elements (#723). A collapsed contribution must keep
+    # that restriction, or `sum(ii, x(ii,ii))` reaches `x('i2','i2')` with i2 not
+    # in ii (PR #1779 review, round 9). It is ANDed into the condition every
+    # collapse path already preserves. The normal (non-collapsing) case below
+    # returns the ORIGINAL sum, so a sum that does not collapse is unchanged.
+    #
+    # ⚠ Attached to the BODY as a dollar condition, NOT ANDed into the sum's
+    # condition. The stationarity builder lifts a collapsed sum's condition into
+    # the ROW guard and maps its sum index onto the row's domain, but it does not
+    # map inside an `and`: srkandw's `tn(t,sn) and sn(sn)` left `sn` uncontrolled
+    # (`$149`, path_syntax_error; measured by the resolver). As a body factor the
+    # guard is differentiated and substituted like any other term.
+    original_expr = expr
+    _runtime_guard = _runtime_subset_guard(expr.index_sets, config, expr.body, wrt_var)
+    if _runtime_guard is not None:
+        expr = Sum(expr.index_sets, DollarConditional(expr.body, _runtime_guard), expr.condition)
+
     if (
         wrt_indices is not None
         and len(wrt_indices) == 1
@@ -2430,6 +2581,27 @@ def _diff_sum(
                                 "*", result_body, _ensure_numeric_condition(expr.condition)
                             )
                         return result_body
+            # Issue #1755: the attempts above symbolize ONE position each, so a
+            # reference that repeats the binder (sum(i, tsam(i,i)) w.r.t.
+            # tsam('i1','i1')) never matches and the derivative is lost. Tried
+            # only after they all fail, so a shape they handle cannot change.
+            repeated = _diff_sum_repeated_binder(
+                expr,
+                wrt_var,
+                wrt_indices,
+                config,
+                bound_indices=bound_indices,
+                # Reuse the loop's walk (computed when model_ir is set): this
+                # helper runs on nearly every single-binder call, and a second
+                # walk of the body cost ~6.5% of ferts' emit (profiled).
+                refs=(
+                    var_indices_in_body
+                    if config is not None and config.model_ir is not None
+                    else None
+                ),
+            )
+            if repeated is not None:
+                return repeated
         else:
             matched_indices, matched_concrete, remaining_indices, partial_symbolic_wrt = (
                 _partial_index_match(expr.index_sets, wrt_indices, config)
@@ -2468,13 +2640,14 @@ def _diff_sum(
     # Normal case: differentiate the body expression, passing wrt_indices through
     # Augment bound_indices with this sum's index_sets — these are iteration variables
     # that should NOT be treated as free alias indices during alias-aware matching.
-    new_bound = bound_indices | frozenset(expr.index_sets)
+    new_bound = bound_indices | frozenset(original_expr.index_sets)
     body_derivative = differentiate_expr(
-        expr.body, wrt_var, wrt_indices, config, bound_indices=new_bound
+        original_expr.body, wrt_var, wrt_indices, config, bound_indices=new_bound
     )
 
-    # Return a new Sum with the same index sets, differentiated body, and condition
-    return Sum(expr.index_sets, body_derivative, expr.condition)
+    # Return a new Sum with the same index sets, differentiated body, and condition.
+    # The ORIGINAL condition: the runtime-subset guard is for collapsed results only.
+    return Sum(original_expr.index_sets, body_derivative, original_expr.condition)
 
 
 def _partial_index_match(
@@ -2971,6 +3144,257 @@ def _enumerate_matchings(
     return result
 
 
+def _declared_member_spelling(value: str, sum_idx: str, config: Config | None) -> str | None:
+    """``value`` as the set ``sum_idx`` declares it, or ``None`` if it is not a member.
+
+    Matching ignores case and surrounding quotes, as ``_indices_match`` does, so
+    ``'I1'`` and ``"'i1'"`` resolve to the declared ``i1``. Without a resolvable
+    set, the existing heuristic decides on the raw and the unquoted spelling.
+    """
+    if _is_concrete_instance_of(value, sum_idx, config):
+        return value
+    norm = _strip_quotes(value).lower()
+    if config is not None and config.model_ir is not None:
+        model_ir = config.model_ir
+        if sum_idx in model_ir.sets or sum_idx in model_ir.aliases:
+            from .index_mapping import resolve_set_members
+
+            try:
+                members, _ = resolve_set_members(sum_idx, model_ir, quiet=True)
+            except ValueError:
+                return None
+            for member in members or ():
+                if _strip_quotes(str(member)).lower() == norm:
+                    return str(member)
+            return None
+    stripped = _strip_quotes(value)
+    return stripped if _is_concrete_instance_of(stripped, sum_idx, config) else None
+
+
+def _fresh_binder_name(
+    sum_idx: str,
+    expr: Sum,
+    wrt_indices: tuple[str | IndexOffset, ...] = (),
+    config: Config | None = None,
+) -> str:
+    """A placeholder for ``sum_idx`` that nothing in scope can spell.
+
+    Reserved against the expression's own names, the TARGET labels, and every set
+    or alias name and declared member in the model (PR #1779 review, round 8).
+    Fresh within the expression alone was not enough:
+    ``w('i1','i1','i__binder1755')`` matched the renamed ``w(i,i,i)``, and an
+    inner ``sum(k, x(k,k))`` with ``k = {i__binder1755}`` took the placeholder for
+    one of its members. Reached only when a repeated-binder layout exists, so the
+    model-wide scan does not run on the common path.
+    """
+    taken = {s.lower() for s in _all_index_names(expr)}
+    for w in wrt_indices:
+        base = w.base if isinstance(w, IndexOffset) else w
+        if isinstance(base, str):
+            taken.add(_strip_quotes(base).lower())
+    model_ir = config.model_ir if config is not None else None
+    if model_ir is not None:
+        for name, sdef in model_ir.sets.items():
+            taken.add(str(name).lower())
+            for member in getattr(sdef, "members", None) or ():
+                taken.add(_strip_quotes(str(member)).lower())
+        for name in model_ir.aliases:
+            taken.add(str(name).lower())
+    candidate = f"{sum_idx}__binder1755"
+    n = 0
+    while candidate.lower() in taken:
+        n += 1
+        candidate = f"{sum_idx}__binder1755_{n}"
+    return candidate
+
+
+def _all_index_names(expr: Sum) -> set[str]:
+    """Every string index or symbol name in ``expr`` (quotes stripped)."""
+    names: set[str] = set(expr.index_sets)
+
+    def walk(node: object) -> None:
+        if isinstance(node, SymbolRef):
+            names.add(_strip_quotes(node.name))
+        for idx in getattr(node, "indices", None) or ():
+            base = idx.base if isinstance(idx, IndexOffset) else idx
+            if isinstance(base, str):
+                names.add(_strip_quotes(base))
+            if isinstance(idx, IndexOffset):
+                walk(idx.offset)
+        for s in getattr(node, "index_sets", None) or ():
+            names.add(s)
+        children = getattr(node, "children", None)
+        if callable(children):
+            for child in children():
+                walk(child)
+
+    walk(expr.body)
+    if expr.condition is not None:
+        walk(expr.condition)
+    return names
+
+
+def _binder_spellings(expr: Sum, sum_idx: str) -> tuple[str, ...]:
+    """Every spelling of the binder ``sum_idx`` used in ``expr``'s body and condition.
+
+    GAMS identifiers are case-insensitive, but index substitution is not, so each
+    spelling (``i``, ``I``) must be mapped explicitly. A nested aggregation that
+    re-binds the name is skipped (it shadows the binder; GAMS itself rejects
+    re-controlling an index, ``$125``). ``sum_idx`` is always included.
+    """
+    key = sum_idx.lower()
+    found: dict[str, None] = {sum_idx: None}
+
+    def name_of(idx: object) -> object:
+        return idx.base if isinstance(idx, IndexOffset) else idx
+
+    def walk(node: object) -> None:
+        if isinstance(node, (Sum, Prod)) and any(s.lower() == key for s in node.index_sets):
+            return
+        if isinstance(node, SymbolRef) and node.name.lower() == key:
+            found[node.name] = None
+        for idx in getattr(node, "indices", None) or ():
+            name = name_of(idx)
+            if isinstance(name, str) and name.lower() == key:
+                found[name] = None
+            if isinstance(idx, IndexOffset):
+                walk(idx.offset)
+        children = getattr(node, "children", None)
+        if callable(children):
+            for child in children():
+                walk(child)
+
+    walk(expr.body)
+    if expr.condition is not None:
+        walk(expr.condition)
+    return tuple(found)
+
+
+def _diff_sum_repeated_binder(
+    expr: Sum,
+    wrt_var: str,
+    wrt_indices: tuple[str | IndexOffset, ...],
+    config: Config | None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
+    refs: list[tuple[str | IndexOffset, ...]] | None = None,
+) -> Expr | None:
+    """Collapse a single-binder sum whose reference repeats the binder (#1755).
+
+    ``sum(i, tsam(i,i))`` w.r.t. ``tsam('i1','i1')``: the binder sits at two
+    positions, so it is placed at BOTH and differentiated symbolically, then
+    substituted back to ``'i1'``. This is valid only when every position holding
+    the binder carries the SAME concrete value. ``tsam('i1','i2')`` has no single
+    value for ``i`` and must stay 0: the off-diagonal positive control.
+
+    The result is the WHOLE derivative of the sum (PR #1779 review):
+
+    * every distinct repeated-binder **layout** contributes once.
+      ``sum(i, w(i,i,'i1') + w('i1',i,i))`` has two layouts, ``(i,i,'i1')`` and
+      ``('i1',i,i)``, and both count. Two references with the SAME layout are
+      covered by one symbolic differentiation of the whole body, so a layout is
+      never counted twice;
+    * plus the **summed remainder**, for references that do not collapse:
+      ``sum(i, x(i,i) + x('i1','i1'))`` keeps ``x('i1','i1')`` in every iteration
+      (3 of the 4).
+
+    The two parts are disjoint. A concrete reference differentiates to 0 against
+    a symbolic layout, and a binder-indexed one to 0 against the concrete
+    ``wrt`` (the binder is bound).
+
+    Returns ``None`` when no layout contributes, so the caller's fallthrough is
+    unchanged.
+    """
+    sum_idx = expr.index_sets[0]
+    key = sum_idx.lower()  # GAMS identifiers are case-insensitive: i and I repeat
+    # layout -> its single binder value. The KEY uses the canonical binder
+    # spelling at the binder positions, because index matching is
+    # case-insensitive: w(i,i,i) and w(i,I,i) are ONE layout, and one symbolic
+    # differentiation counts both references (PR #1779 review, round 2).
+    layouts: dict[tuple[str | IndexOffset, ...], str] = {}
+    for ref in refs if refs is not None else _find_var_indices_in_body(expr.body, wrt_var):
+        if len(ref) != len(wrt_indices):
+            continue
+        positions = [p for p, idx in enumerate(ref) if isinstance(idx, str) and idx.lower() == key]
+        if len(positions) < 2:
+            continue
+        at = [wrt_indices[p] for p in positions]
+        if not all(isinstance(v, str) for v in at):
+            continue
+        # Equal the way `_indices_match` compares: quotes stripped, case-insensitive
+        # (PR #1779 review, round 4). ('i1','I1') and ('i1',"'i1'") are the
+        # diagonal; ('i1','i2') is not.
+        if len({_strip_quotes(str(v)).lower() for v in at}) != 1:
+            continue  # inconsistent values: no single value for the binder
+        # The DECLARED member spelling, for the substitution (PR #1779 review,
+        # round 5): ('I1','I1') or ("'i1'","'i1'") name i1 although neither
+        # coordinate spells it that way, and membership is a raw lookup.
+        candidate = next(
+            (m for m in (_declared_member_spelling(str(v), sum_idx, config) for v in at) if m),
+            None,
+        )
+        if candidate is None:
+            continue
+        symbolic_wrt = tuple(sum_idx if p in positions else w for p, w in enumerate(wrt_indices))
+        layouts.setdefault(symbolic_wrt, candidate)
+    # Nearly every call has no repeated-binder reference at all, so return before
+    # any whole-expression walk below (PR #1779 review round 6).
+    if not layouts:
+        return None
+
+    # Every spelling of the binder ANYWHERE in the body or condition, not only in
+    # references to the differentiated variable: `sum(i, c(I)*x(i,i))` must
+    # substitute the coefficient's `I` too (PR #1779 review, round 3).
+    # Substitution is case-sensitive, so each spelling is mapped explicitly.
+    spellings = _binder_spellings(expr, sum_idx)
+    contributions: list[Expr] = []
+    # The binder is renamed to a FRESH placeholder for the layout differentiation
+    # (PR #1779 review, round 6). Index matching strips quotes, so a quoted label
+    # spelled like the binder (`x('i','i')` with `i` also a member) would match a
+    # symbolic `(i,i)` target and be counted. A placeholder no label can spell keeps
+    # the binder distinct; every other factor of the body is left intact.
+    fresh = _fresh_binder_name(sum_idx, expr, wrt_indices, config)
+    renamed_body = _substitute_sum_indices(expr.body, spellings, (fresh,) * len(spellings))
+    for symbolic_wrt, value in layouts.items():
+        fresh_wrt = tuple(fresh if w == sum_idx else w for w in symbolic_wrt)
+        body_derivative = differentiate_expr(
+            renamed_body, wrt_var, fresh_wrt, config, bound_indices=bound_indices
+        )
+        if _is_structurally_zero(body_derivative):
+            continue
+        concrete = (value,) * len(spellings)
+        part = _substitute_sum_indices(body_derivative, (fresh,), (value,))
+        if expr.condition is not None:
+            # The condition is bound to THIS layout's value, concretely
+            # (PR #1779 review, round 3). Kept symbolic (the #1085 convention for
+            # the full-collapse path), `active(i)` is mapped downstream to the
+            # variable's FIRST domain position. That is wrong whenever the binder
+            # sits elsewhere: `w('i1','i1',i,i)` tested `active('i1')` and dropped
+            # the multiplier. With two layouts, one symbolic guard cannot hold
+            # both bindings at all.
+            condition = _substitute_sum_indices(expr.condition, spellings, concrete)
+            part = Binary("*", part, _ensure_numeric_condition(condition))
+        contributions.append(part)
+    if not contributions:
+        return None
+
+    # The summed remainder: exactly what the caller's normal case would return.
+    remainder = differentiate_expr(
+        expr.body,
+        wrt_var,
+        wrt_indices,
+        config,
+        bound_indices=bound_indices | frozenset(expr.index_sets),
+    )
+    if not _is_structurally_zero(remainder):
+        contributions.append(Sum(expr.index_sets, remainder, expr.condition))
+
+    result = contributions[0]
+    for part in contributions[1:]:
+        result = Binary("+", result, part)
+    return result
+
+
 def _sum_should_collapse(
     sum_index_sets: tuple[str, ...],
     wrt_indices: tuple[str | IndexOffset, ...],
@@ -3178,7 +3602,9 @@ def _substitute_sum_indices(
     return _apply_index_substitution(expr, substitution)
 
 
-def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
+def _apply_index_substitution(
+    expr: Expr, substitution: dict[str, str], *, card_operands: bool = False
+) -> Expr:
     """
     Recursively apply index substitution to an expression.
 
@@ -3213,16 +3639,33 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
         return ParamRef(expr.name, new_indices)
     elif isinstance(expr, Binary):
         # Recursively substitute in both operands
-        new_left = _apply_index_substitution(expr.left, substitution)
-        new_right = _apply_index_substitution(expr.right, substitution)
+        new_left = _apply_index_substitution(expr.left, substitution, card_operands=card_operands)
+        new_right = _apply_index_substitution(expr.right, substitution, card_operands=card_operands)
         return Binary(expr.op, new_left, new_right)
     elif isinstance(expr, Unary):
         # Recursively substitute in child
-        new_child = _apply_index_substitution(expr.child, substitution)
+        new_child = _apply_index_substitution(expr.child, substitution, card_operands=card_operands)
         return Unary(expr.op, new_child)
     elif isinstance(expr, Call):
+        # `card(s)` takes a SET, not an iterator value: substituting `s -> i1`
+        # turns the subset's cardinality into `card(i1)`, losing it (PR #1779
+        # review, round 9). Its operand is left alone, as
+        # `constraint_jacobian._substitute_single_index` already does; `ord(s)`
+        # and every other call are substituted normally.
+        #
+        # ⚠ EXCEPT inside an IndexOffset's offset (`card_operands=True`). There
+        # `card(t) - ord(t)` is a RELATIVE position, and `card` must follow `ord`
+        # onto the same set. otpop's `p(t + (card(t) - ord(t)))` became
+        # `p(tt + (card(t) - ord(tt)))`, pointing at the wrong element and losing
+        # the cold match (measured by the resolver), while #1178's existing
+        # behaviour, substituting both, gives `card(tt) - ord(tt)`.
+        if expr.func.lower() == "card" and not card_operands:
+            return expr
         # Recursively substitute in all arguments
-        new_args = tuple(_apply_index_substitution(arg, substitution) for arg in expr.args)
+        new_args = tuple(
+            _apply_index_substitution(arg, substitution, card_operands=card_operands)
+            for arg in expr.args
+        )
         return Call(expr.func, new_args)
     elif isinstance(expr, (Sum, Prod)):
         # The aggregation's bound variables are the index variables defined by its
@@ -3231,22 +3674,27 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
         # expression after filtering those bound index variables out of the
         # substitution map.
         filtered_sub = {k: v for k, v in substitution.items() if k not in expr.index_sets}
-        new_body = _apply_index_substitution(expr.body, filtered_sub)
+        new_body = _apply_index_substitution(expr.body, filtered_sub, card_operands=card_operands)
         new_condition = (
-            _apply_index_substitution(expr.condition, filtered_sub)
+            _apply_index_substitution(expr.condition, filtered_sub, card_operands=card_operands)
             if expr.condition is not None
             else None
         )
         return type(expr)(expr.index_sets, new_body, new_condition)
     elif isinstance(expr, DollarConditional):
         # Substitute in both value_expr and condition
-        new_value = _apply_index_substitution(expr.value_expr, substitution)
-        new_cond = _apply_index_substitution(expr.condition, substitution)
+        new_value = _apply_index_substitution(
+            expr.value_expr, substitution, card_operands=card_operands
+        )
+        new_cond = _apply_index_substitution(
+            expr.condition, substitution, card_operands=card_operands
+        )
         return DollarConditional(new_value, new_cond)
     elif isinstance(expr, SetMembershipTest):
         # Substitute indices in SetMembershipTest (e.g., ri(j) → ri(j1) on collapse)
         new_idx_list: list[Expr] = [
-            _apply_index_substitution(idx, substitution) for idx in expr.indices
+            _apply_index_substitution(idx, substitution, card_operands=card_operands)
+            for idx in expr.indices
         ]
         return SetMembershipTest(expr.set_name, tuple(new_idx_list))
     elif isinstance(expr, IndexOffset):
@@ -3254,7 +3702,7 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
         # (e.g., IndexOffset("t", Binary("-", Call("card", SymbolRef("t")), ...))
         # needs "t" in the offset expression substituted too).
         new_base = substitution.get(expr.base, expr.base)
-        new_offset = _apply_index_substitution(expr.offset, substitution)
+        new_offset = _apply_index_substitution(expr.offset, substitution, card_operands=True)
         return IndexOffset(new_base, new_offset, expr.circular)
     else:
         # CompileTimeConstant etc. — pass through unchanged
@@ -3291,7 +3739,7 @@ def _substitute_index(
         # The offset may contain SymbolRef/Call nodes referencing sum indices
         # (e.g., card(t) - ord(t)) that need substitution after sum collapse.
         new_base = substitution.get(idx.base, idx.base)
-        new_offset = _apply_index_substitution(idx.offset, substitution)
+        new_offset = _apply_index_substitution(idx.offset, substitution, card_operands=True)
         return IndexOffset(new_base, new_offset, idx.circular)
 
 

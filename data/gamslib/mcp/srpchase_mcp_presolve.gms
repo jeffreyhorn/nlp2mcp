@@ -127,7 +127,7 @@ Equations
 
 $onMultiR
 * Stationarity equations
-stat_x(n).. (prob(n) * price(n) - piL_x(n))$(srn(n)) =E= 0;
+stat_x(n).. ((prob(n) * price(n))$(srn(n)) - piL_x(n))$(srn(n)) =E= 0;
 stat_y(n).. ((-1) * piL_y(n)) =E= 0;
 
 * Inequality complementarity equations
