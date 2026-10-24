@@ -2175,7 +2175,12 @@ def _try_diff_sum_offset_crossterms(
     return result
 
 
-def _runtime_subset_guard(index_sets: tuple[str, ...], config: Config | None) -> Expr | None:
+def _runtime_subset_guard(
+    index_sets: tuple[str, ...],
+    config: Config | None,
+    body: Expr | None = None,
+    wrt_var: str | None = None,
+) -> Expr | None:
     """``ii(ii)`` for each binder that is a DYNAMIC subset, AND-combined; else ``None``.
 
     A dynamic subset has no static members and a parent domain: its membership is
@@ -2202,9 +2207,51 @@ def _runtime_subset_guard(index_sets: tuple[str, ...], config: Config | None) ->
             continue
         if getattr(sdef, "members", None) or not getattr(sdef, "domain", None):
             continue
-        test = SetMembershipTest(target, (SymbolRef(binder),))
+        test = SetMembershipTest(
+            target, (SymbolRef(_guard_coordinate(binder, index_sets, model_ir, body, wrt_var)),)
+        )
         guard = test if guard is None else Binary("and", guard, test)
     return guard
+
+
+def _guard_coordinate(
+    binder: str,
+    index_sets: tuple[str, ...],
+    model_ir: Any,
+    body: Expr | None,
+    wrt_var: str | None,
+) -> str:
+    """The symbol a runtime-subset guard is written over (PR #1779 review, round 10).
+
+    Written over the BINDER, the guard is substituted with a concrete element when
+    the sum collapses, and stationarity must then guess the element's coordinate.
+    On a diagonal instance the guess is ambiguous: `sum((ii,jj), sqr(x(ii,jj)-1))`
+    with `Alias(i,j)` generalized `ii('i1') and jj('i1')` to `ii(i) and jj(i)`,
+    which zeroed the gradient at the active cell (i1,i2). So when every reference
+    to the differentiated variable puts the binder at ONE position, the guard is
+    written over that position's DECLARED domain symbol (`ii(i) and jj(j)`), which
+    stationarity leaves alone. Otherwise, or when that symbol is itself a binder
+    of this sum, it stays on the binder (the previous behaviour).
+    """
+    if body is None or wrt_var is None or wrt_var not in model_ir.variables:
+        return binder
+    declared = model_ir.variables[wrt_var].domain or ()
+    key = binder.lower()
+    positions = {
+        p
+        for ref in _find_var_indices_in_body(body, wrt_var)
+        for p, idx in enumerate(ref)
+        if isinstance(idx, str) and idx.lower() == key
+    }
+    if len(positions) != 1:
+        return binder
+    (p,) = positions
+    if p >= len(declared):
+        return binder
+    symbol = str(declared[p])
+    if symbol == "*" or symbol.lower() in {s.lower() for s in index_sets}:
+        return binder
+    return symbol
 
 
 def _diff_sum(
@@ -2290,7 +2337,7 @@ def _diff_sum(
     # (`$149`, path_syntax_error; measured by the resolver). As a body factor the
     # guard is differentiated and substituted like any other term.
     original_expr = expr
-    _runtime_guard = _runtime_subset_guard(expr.index_sets, config)
+    _runtime_guard = _runtime_subset_guard(expr.index_sets, config, expr.body, wrt_var)
     if _runtime_guard is not None:
         expr = Sum(expr.index_sets, DollarConditional(expr.body, _runtime_guard), expr.condition)
 

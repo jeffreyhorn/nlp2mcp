@@ -731,6 +731,16 @@ Two findings, both **pre-existing in the shared collapse path**: measured on `ma
 - **Regressions:** `card` preserved (diagonal and single-position), `ord` still substituted, `card` inside an offset following `ord`, a dynamic subset active and inactive, a static subset unguarded, and two GAMS solves. **42 + 2 tests.**
 - **Mutants:** reverting the `card` fix fails the `card` tests and the GAMS `nu_e` check; disabling the guard fails both subset tests and the GAMS solve; preserving `card` inside offsets fails the offset test.
 
+### PR #1779 review round 10 (P7)
+
+- **A runtime-subset guard lost its coordinate in stationarity.** With `Alias(i,j)`, `ii(i) = {i1}`, `jj(i) = {i2}` and objective `sum((ii,jj), sqr(x(ii,jj) - 1)) + sum((i,j), sqr(x(i,j)))`:
+  - NLP **0.5**; this branch **1.000** (row guard `ii(i) and jj(i)`, never true, so the gradient at `(i1,i2)` was zeroed); `main` **1.250** (no guard at all).
+- **Mechanism (instrumented):** the guard was written over the binder, so a collapse made it concrete. Stationarity's element-to-set map is right for the instance `(i1,i2)` (`i2 → j`), but a DIAGONAL instance put `i1` in both coordinates, and the generalized row took `jj('i1') → jj(i)`.
+- **Fixed:** when every reference to the differentiated variable places the binder at ONE position, the guard is written over that position's **declared domain symbol** (`ii(i) and jj(j)`), which stationarity leaves alone. Otherwise, or if that symbol is a binder of the same sum, it stays on the binder.
+  - The aliased model now solves to **0.500** = NLP, with row guard `ii(i) and jj(j)`.
+- **The corpus had it:** round 9's committed cesam2 golden carried `$(ii(i) and ii(i))` on its objective term. It is now `$(ii(i) and ii(j))`; the leak gate's only drift, re-solved by the resolver: **GO**, match held.
+- **Regression:** the aliased end-to-end solve (row guard and objective). A mutant that writes the guard on the binder again fails it.
+
 ### Checkpoint 1 (end of day): GO
 
 Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus copied in. The run launches GAMS with `cwd` at that root, and `tricp` writes `cp.eps` there. 18:31 → 18:55Z. **Nothing was persisted.**
@@ -744,7 +754,7 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6, **5,614** after round 7, **5,616** after round 8 and **5,625** after round 9, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6, **5,614** after round 7, **5,616** after round 8, **5,625** after round 9 and **5,626** after round 10, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
 - `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, at the landing and **re-run alone after review rounds 1 and 2**. ⚠ Round 2's first two runs were **UNVERIFIED**, 195 of 200 with 5 timeouts: external machine load reached a 15-min average ≈ 100, which my runs did not cause. `--fail-on-unverified` refused both, as P10c intends. The third run, started only after five consecutive quiet minutes (1-min load < 8), was **complete and clean** (18:03 → 18:33Z).
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.

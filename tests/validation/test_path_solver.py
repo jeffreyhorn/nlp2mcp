@@ -519,6 +519,28 @@ def test_a_card_coefficient_keeps_the_subset_cardinality(tmp_path):
 
 
 @pytest.mark.validation
+def test_distinct_dynamic_subsets_on_ALIASED_coordinates_keep_their_coordinates(tmp_path):
+    """PR #1779 review round 10. ``ii(i) = {i1}``, ``jj(i) = {i2}``, Alias(i,j); the
+    objective's guarded term ``sum((ii,jj), sqr(x(ii,jj) - 1))`` must keep
+    ``ii`` on the FIRST coordinate and ``jj`` on the SECOND. A concrete guard was
+    generalized through a diagonal instance to ``ii(i) and jj(i)``, never true,
+    which zeroed the gradient at the active cell (i1,i2): the MCP solved to 1.0.
+    The NLP optimum is 0.5 (x(i1,i2) = 0.5)."""
+    obj, emit = _translate_and_solve(
+        tmp_path,
+        "aliased",
+        "Set i / i1, i2 /;\nAlias (i,j);\nSet ii(i), jj(i);\n"
+        "ii(i) = yes$(ord(i) = 1);\njj(i) = yes$(ord(i) = 2);\n"
+        "Variable x(i,j), z;\nEquation obj;\n"
+        "obj.. z =e= sum((ii,jj), sqr(x(ii,jj) - 1)) + sum((i,j), sqr(x(i,j)));\n"
+        "Model m / all /;\nsolve m using nlp minimizing z;\n",
+    )
+    stat = next(line for line in emit.splitlines() if line.startswith("stat_x("))
+    assert "ii(i) and jj(j)" in stat, stat
+    assert abs(obj - 0.5) < 1e-3, obj
+
+
+@pytest.mark.validation
 class TestPATHAvailability:
     """Test PATH solver availability detection."""
 
