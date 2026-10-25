@@ -197,7 +197,9 @@ CATALOGUED_SITES: tuple[tuple[str, str, str, str], ...] = (
     ),
     (
         "src/ad/derivative_rules.py",
-        "_diff_sum",
+        # `_diff_sum_impl` since Sprint 40 Day 5 (PR #1779): `_diff_sum` is now a
+        # thin wrapper that tracks enclosing binders, and the body moved intact.
+        "_diff_sum_impl",
         "enumerate(wrt_indices)",
         "ALREADY GUARDED",
     ),
@@ -206,7 +208,7 @@ CATALOGUED_SITES: tuple[tuple[str, str, str, str], ...] = (
         # bail-out. Collapsed into the `enumerate(wrt_indices)` row until
         # PR #1743 review; it is a different remedy at a different line.
         "src/ad/derivative_rules.py",
-        "_diff_sum",
+        "_diff_sum_impl",
         "if sym_j in seen_sym:",
         "ALREADY GUARDED",
     ),
@@ -482,7 +484,7 @@ def test_every_site_has_exactly_one_strength_class():
         "_match_subset_domain",
         "_compute_index_offset_key",
         "_remap_condition_to_domain",
-        "_diff_sum",
+        "_diff_sum_impl",
         "_handle_assign",
     }
 
@@ -532,8 +534,8 @@ def test_the_catalog_covers_both_verdicts_and_the_shared_function():
         ("_compute_index_offset_key", "if vi not in used_var and eq_roots[ei] == var_roots[vi]:"),
         ("_remap_condition_to_domain", "set_declared_domain[pos]"),
         ("_sigma_sp_domain_collision", "any(vi < later for vi in canon_hits)"),
-        ("_diff_sum", "enumerate(wrt_indices)"),
-        ("_diff_sum", "if sym_j in seen_sym:"),
+        ("_diff_sum_impl", "enumerate(wrt_indices)"),
+        ("_diff_sum_impl", "if sym_j in seen_sym:"),
         ("_handle_assign", "domain_name = param.domain[pos]"),
         ("_handle_aggregation", "for pos, dname in enumerate(domain_indices):"),
     }, by_verdict["ALREADY GUARDED"]

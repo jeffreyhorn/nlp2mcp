@@ -308,11 +308,11 @@ Equations
 $onMultiR
 * Stationarity equations
 stat_anut(nt,r).. (-1) * lam_nutb(nt,r) - piL_anut(nt,r) =E= 0;
-stat_exports(c).. (((-1) * pe(c)) - nu_demb(c)$(cn(c)) - piL_exports(c) + piU_exports(c))$(cn(c) and exports.up(c) - exports.lo(c) > 1e-10) =E= 0;
+stat_exports(c).. (((-1) * pe(c)$(cn(c))) - nu_demb(c)$(cn(c)) - piL_exports(c) + piU_exports(c))$(cn(c) and exports.up(c) - exports.lo(c) > 1e-10) =E= 0;
 stat_flab(r,tm).. (day * regwagm(r,tm) - lam_labbal(r,tm) - piL_flab(r,tm) + piU_flab(r,tm))$(flab.up(r,tm) - flab.lo(r,tm) > 1e-10) =E= 0;
-stat_fodder(r,c).. nu_fodb(r,c)$(cf(c)) + sum(nt, ((-1) * (0.01 * cropdat(c,nt))) * lam_nutb(nt,r)) + (grdf * lam_gfodb(r))$(sameas(c, 'barley') or sameas(c, 'lo-berseem') or sameas(c, 'n-maize') or sameas(c, 'rice') or sameas(c, 's-maize') or sameas(c, 'sh-berseem') or sameas(c, 'sorghum') or sameas(c, 'sugarcane') or sameas(c, 'wheat')) - piL_fodder(r,c) =E= 0;
-stat_imports(c).. (pm(c) + nu_demb(c)$(cn(c)) - piL_imports(c) + piU_imports(c))$(cn(c) and imports.up(c) - imports.lo(c) > 1e-10) =E= 0;
-stat_natq(c,g).. (((-1) * ws(c,g)) + (((-1) * qs(c,g)) * nu_demb(c))$(cn(c)) + nu_conv(c)$(cn(c)) - piL_natq(c,g))$(cn(c)) =E= 0;
+stat_fodder(r,c).. nu_fodb(r,c)$(cf(c)) + sum(nt, ((-1) * (0.01 * cropdat(c,nt))$(cf(c))) * lam_nutb(nt,r)) + (grdf * lam_gfodb(r))$(sameas(c, 'barley') or sameas(c, 'lo-berseem') or sameas(c, 'n-maize') or sameas(c, 'rice') or sameas(c, 's-maize') or sameas(c, 'sh-berseem') or sameas(c, 'sorghum') or sameas(c, 'sugarcane') or sameas(c, 'wheat')) - piL_fodder(r,c) =E= 0;
+stat_imports(c).. (((-1) * (((-1) * pm(c)))$(cn(c))) + nu_demb(c)$(cn(c)) - piL_imports(c) + piU_imports(c))$(cn(c) and imports.up(c) - imports.lo(c) > 1e-10) =E= 0;
+stat_natq(c,g).. (((-1) * ws(c,g)$(cn(c))) + (((-1) * qs(c,g)) * nu_demb(c))$(cn(c)) + nu_conv(c)$(cn(c)) - piL_natq(c,g))$(cn(c)) =E= 0;
 stat_sales(c).. (((1 - los(c)) * nu_demb(c))$(cn(c)) + lam_comb(c)$(cn(c)) - piL_sales(c))$(cn(c)) =E= 0;
 stat_tlab(r,tm).. 2 * day * regwagm(r,tm) - lam_labbal(r,tm) - piL_tlab(r,tm) =E= 0;
 stat_trans(c,r,rp).. stran(r,rp)$(ct(c)) + (((-1) * (1$(tranc(rp,rp)))$(ct(c))) * nu_fodb(r,c))$(cf(c)) - piL_trans(c,r,rp) =E= 0;

@@ -13,6 +13,7 @@ Requirements:
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -406,6 +407,224 @@ class TestPATHSolverValidation:
         lst_content = lst_file.read_text()
         kkt_ok, kkt_msg = _check_kkt_residuals(lst_content)
         assert kkt_ok, f"KKT conditions not satisfied: {kkt_msg}"
+
+
+@pytest.mark.validation
+def test_issue_1755_the_diagonal_reference_solves_to_the_nlp_optimum(tmp_path):
+    """#1755 pass-after: ``diag.. sum(i, tsam(i,i)) =e= 1`` keeps its multiplier.
+
+    Before the fix ``diag`` and ``nu_diag`` were dropped, so the MCP solved the
+    unconstrained problem (tsam = 0, objective 0). The NLP optimum is 1/3
+    (tsam = 1/3 on the diagonal); the hand-derived MCP reaches it.
+    """
+    source = tmp_path / "diag.gms"
+    source.write_text(
+        "Set i / i1*i3 /;\n"
+        "Alias (i,j);\n"
+        "Variable tsam(i,j), z;\n"
+        "Equation diag, obj;\n"
+        "diag.. sum(i, tsam(i,i)) =e= 1;\n"
+        "obj.. z =e= sum((i,j), sqr(tsam(i,j)));\n"
+        "Model m / all /;\n"
+        "solve m using nlp minimizing z;\n"
+    )
+    mcp = tmp_path / "diag_mcp.gms"
+    translate = subprocess.run(
+        [sys.executable, "-m", "src.cli", str(source), "-o", str(mcp)],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    assert translate.returncode == 0, translate.stderr
+
+    gams_exe = find_gams_executable()
+    assert gams_exe is not None, "GAMS executable not found"
+    success, message, _ = _solve_gams(mcp, gams_exe)
+    assert success, f"PATH solve failed: {message}"
+
+    lst = (tmp_path / "diag_mcp.lst").read_text()
+    match = re.search(r"PARAMETER nlp2mcp_obj_val\s+=\s+([-+0-9.eE]+)", lst)
+    assert match, "nlp2mcp_obj_val not displayed"
+    assert abs(float(match.group(1)) - 1.0 / 3.0) < 1e-3, match.group(1)
+
+
+def _translate_and_solve(tmp_path, name: str, source: str) -> tuple[float, str]:
+    """Translate ``source`` into an MCP in ``tmp_path``, solve it, return (obj, emit)."""
+    src = tmp_path / f"{name}.gms"
+    src.write_text(source)
+    mcp = tmp_path / f"{name}_mcp.gms"
+    translate = subprocess.run(
+        [sys.executable, "-m", "src.cli", str(src), "-o", str(mcp)],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    assert translate.returncode == 0, translate.stderr
+    gams_exe = find_gams_executable()
+    assert gams_exe is not None, "GAMS executable not found"
+    success, message, _ = _solve_gams(mcp, gams_exe)
+    assert success, f"PATH solve failed: {message}"
+    lst = (tmp_path / f"{name}_mcp.lst").read_text()
+    match = re.search(r"PARAMETER nlp2mcp_obj_val\s+=\s+([-+0-9.eE]+)", lst)
+    assert match, "nlp2mcp_obj_val not displayed"
+    return float(match.group(1)), mcp.read_text()
+
+
+@pytest.mark.validation
+def test_a_dynamic_subset_diagonal_keeps_its_runtime_membership(tmp_path):
+    """PR #1779 review round 9. ``ii`` is assigned at runtime and the objective
+    reaches the FULL variable domain, so no common subset guard exists for the
+    row. Without the membership guard the multiplier reached the excluded
+    x(i2,i2). The NLP optimum is 1 (x(i1,i1) = 1)."""
+    obj, emit = _translate_and_solve(
+        tmp_path,
+        "dyn",
+        "Set i / i1, i2 /;\nAlias (i,j);\nSet ii(i);\nii(i) = yes$(ord(i) = 1);\n"
+        "Variable x(i,j), z;\nEquation e, obj;\n"
+        "e.. sum(ii, x(ii,ii)) =e= 1;\n"
+        "obj.. z =e= sum((i,j), sqr(x(i,j)));\n"
+        "Model m / all /;\nsolve m using nlp minimizing z;\n",
+    )
+    stat = next(line for line in emit.splitlines() if line.startswith("stat_x("))
+    assert "1$(ii(i)) * nu_e" in stat, stat
+    assert abs(obj - 1.0) < 1e-3, obj
+
+
+@pytest.mark.validation
+def test_a_card_coefficient_keeps_the_subset_cardinality(tmp_path):
+    """PR #1779 review round 9. ``card(s)`` with s = {i1,i2} is 2, not the parent's
+    3: x(i1,i1) = x(i2,i2) = 1/4 and the objective is 0.125 (with 3 it would be
+    1/18). The NLP optimum is 0.125."""
+    obj, emit = _translate_and_solve(
+        tmp_path,
+        "card",
+        "Set i / i1*i3 /;\nAlias (i,j);\nSet s(i) / i1, i2 /;\n"
+        "Variable x(i,j), z;\nEquation e, obj;\n"
+        "e.. sum(s, card(s)*x(s,s)) =e= 1;\n"
+        "obj.. z =e= sum((i,j), sqr(x(i,j)));\n"
+        "Model m / all /;\nsolve m using nlp minimizing z;\n",
+    )
+    # ⚠ The objective alone does NOT discriminate: the model is symmetric on the
+    # diagonal, so a wrong coefficient (the parent's card(i) = 3) cancels from the
+    # primal and still gives 0.125 (measured). The coefficient shows in the ROW
+    # and in the multiplier: nu_e = -2*x/card = -0.25 with card(s) = 2, -0.1667
+    # with card(i) = 3. And `card(s)` must be checked in the stationarity row:
+    # the original constraint line carries it either way.
+    stat = next(line for line in emit.splitlines() if line.startswith("stat_x("))
+    assert "card(s)" in stat and "card(i)" not in stat, stat
+    assert abs(obj - 0.125) < 1e-3, obj
+    lst = (tmp_path / "card_mcp.lst").read_text()
+    nu = re.search(r"---- VAR nu_e\s+\S+\s+([-+0-9.eE]+)", lst)
+    assert nu and abs(float(nu.group(1)) + 0.25) < 1e-3, nu and nu.group(1)
+
+
+@pytest.mark.validation
+def test_distinct_dynamic_subsets_on_ALIASED_coordinates_keep_their_coordinates(tmp_path):
+    """PR #1779 review round 10. ``ii(i) = {i1}``, ``jj(i) = {i2}``, Alias(i,j); the
+    objective's guarded term ``sum((ii,jj), sqr(x(ii,jj) - 1))`` must keep
+    ``ii`` on the FIRST coordinate and ``jj`` on the SECOND. A concrete guard was
+    generalized through a diagonal instance to ``ii(i) and jj(i)``, never true,
+    which zeroed the gradient at the active cell (i1,i2): the MCP solved to 1.0.
+    The NLP optimum is 0.5 (x(i1,i2) = 0.5)."""
+    obj, emit = _translate_and_solve(
+        tmp_path,
+        "aliased",
+        "Set i / i1, i2 /;\nAlias (i,j);\nSet ii(i), jj(i);\n"
+        "ii(i) = yes$(ord(i) = 1);\njj(i) = yes$(ord(i) = 2);\n"
+        "Variable x(i,j), z;\nEquation obj;\n"
+        "obj.. z =e= sum((ii,jj), sqr(x(ii,jj) - 1)) + sum((i,j), sqr(x(i,j)));\n"
+        "Model m / all /;\nsolve m using nlp minimizing z;\n",
+    )
+    stat = next(line for line in emit.splitlines() if line.startswith("stat_x("))
+    assert "ii(i) and jj(j)" in stat, stat
+    assert abs(obj - 0.5) < 1e-3, obj
+
+
+@pytest.mark.validation
+def test_an_initialized_then_PRUNED_subset_keeps_its_runtime_guard(tmp_path):
+    """PR #1779 review round 13. `Set s(i) / i1, i2 /; s(i) = yes$(ord(i) = 1);`
+    keeps both members in the IR, so a "has static members" shortcut skipped the
+    guard and the multiplier reached the excluded x('i2','i2'): MCP 2.0. The NLP
+    optimum is 1.0."""
+    obj, emit = _translate_and_solve(
+        tmp_path,
+        "pruned",
+        "Set i / i1*i2 /;\nAlias (i,j);\nSet s(i) / i1, i2 /;\ns(i) = yes$(ord(i) = 1);\n"
+        "Variable x(i,j), z;\nEquation e, obj;\n"
+        "e.. sum(s, x(s,s)) =e= 1;\n"
+        "obj.. z =e= sum((i,j), sqr(x(i,j)));\n"
+        "Model m / all /;\nsolve m using nlp minimizing z;\n",
+    )
+    stat = next(line for line in emit.splitlines() if line.startswith("stat_x("))
+    assert "1$(s(i)) * nu_e" in stat, stat
+    assert abs(obj - 1.0) < 1e-3, obj
+
+
+@pytest.mark.validation
+def test_disjoint_subsets_in_a_PARTIAL_collapse_keep_separate_guards(tmp_path):
+    """PR #1779 review round 13. x(i), ii = {i1}, jj = {i2}: in
+    `sum((ii,jj), x(ii)*x(jj))` neither reference holds both binders, so neither
+    guard may be promoted to a declared coordinate. Promoted, both became
+    `ii(i) and jj(i)`, never true, zeroing the cross term: MCP 1.0. The NLP optimum
+    is 2/3 (x = 2/3)."""
+    obj, _ = _translate_and_solve(
+        tmp_path,
+        "disjoint",
+        "Set i / i1, i2 /;\nSet ii(i), jj(i);\n"
+        "ii(i) = yes$(ord(i) = 1);\njj(i) = yes$(ord(i) = 2);\n"
+        "Variable x(i), z;\nEquation obj;\n"
+        "obj.. z =e= sum((ii,jj), x(ii)*x(jj)) + sum(i, sqr(x(i) - 1));\n"
+        "Model m / all /;\nsolve m using nlp minimizing z;\n",
+    )
+    assert abs(obj - 2.0 / 3.0) < 1e-3, obj
+
+
+@pytest.mark.validation
+def test_a_preserved_CARD_operand_does_not_displace_the_guard_coordinate(tmp_path):
+    """PR #1779 review round 13. The aliased-coordinate model with a `card(j)`
+    coefficient: the preserved operand `j` was counted as occupied, so the `jj`
+    guard fell back to a label and one row branch generalized to `jj(i)`. The
+    solve can still come out right (the active cell sat in the correct branch), so
+    the ROW is asserted. NLP optimum 2/3."""
+    obj, emit = _translate_and_solve(
+        tmp_path,
+        "cardj",
+        "Set i / i1, i2 /;\nAlias (i,j);\nSet ii(i), jj(i);\n"
+        "ii(i) = yes$(ord(i) = 1);\njj(i) = yes$(ord(i) = 2);\n"
+        "Variable x(i,j), z;\nEquation obj;\n"
+        "obj.. z =e= sum((ii,jj), card(j)*sqr(x(ii,jj) - 1)) + sum((i,j), sqr(x(i,j)));\n"
+        "Model m / all /;\nsolve m using nlp minimizing z;\n",
+    )
+    stat = next(line for line in emit.splitlines() if line.startswith("stat_x("))
+    assert "ii(i) and jj(j)" in stat and "jj(i)" not in stat, stat
+    assert abs(obj - 2.0 / 3.0) < 1e-3, obj
+
+
+@pytest.mark.validation
+def test_a_QUOTED_label_variant_keeps_the_aliased_guard_coordinates(tmp_path):
+    """PR #1779 review round 14: the aliased-coordinate model with a quoted label
+    ``p('j')``. The row must keep ``ii(i) and jj(j)``. Only the ROW is asserted:
+    the MCP does not compile today because its data line is emitted as
+    ``p(j) = 1;`` (the label read as the alias, $171), a separate pre-existing
+    emitter defect, #1781."""
+    src = tmp_path / "quoted.gms"
+    src.write_text(
+        "Set i / i1, i2 /;\nAlias (i,j);\nSet lab / j /;\nParameter p(lab) / j 1 /;\n"
+        "Set ii(i), jj(i);\nii(i) = yes$(ord(i) = 1);\njj(i) = yes$(ord(i) = 2);\n"
+        "Variable x(i,j), z;\nEquation obj;\n"
+        "obj.. z =e= sum((ii,jj), sqr(x(ii,jj) - p('j'))) + sum((i,j), sqr(x(i,j)));\n"
+        "Model m / all /;\nsolve m using nlp minimizing z;\n"
+    )
+    mcp = tmp_path / "quoted_mcp.gms"
+    out = subprocess.run(
+        [sys.executable, "-m", "src.cli", str(src), "-o", str(mcp)],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    assert out.returncode == 0, out.stderr
+    stat = next(line for line in mcp.read_text().splitlines() if line.startswith("stat_x("))
+    assert "ii(i) and jj(j)" in stat and "jj(i)" not in stat, stat
 
 
 @pytest.mark.validation

@@ -52,15 +52,17 @@ serve**. Measured, and pinned by an anti-merge control in the test.
 ⚠ **MEASURED ORDERING: the `eq_domain` half is defence in depth behind an
 earlier raise.** A repeated EQUATION domain raises at the Day-9 `#1737` guard
 (`empty_equation_detector`'s `assert_no_repeated_symbol`) **before** B-3 is
-consulted, and a diagonal VARIABLE reference never reaches B-3 at all — the
-builder is called **0 times** for such a model. So this half is not reachable
-end-to-end today; it holds if a future caller reaches the builder without going
+consulted, and a diagonal VARIABLE reference never reached B-3 at all — the
+builder was called **0 times** for such a model (true until Sprint 40 Day 5; ⚠ since #1755 the reference IS reached
+and declined, see the update below). So this half was not reachable
+end-to-end then; it holds if a future caller reaches the builder without going
 through the empty-equation scan.
 
 Both facts are **COUNTED, not narrated** —
-`test_b3_is_never_reached_by_either_repeat_shape` spies on
-`_build_pattern_c_dim_mismatch_term` and asserts the call count is **0** for each
-shape. ⚠ A `pytest.raises` alone does NOT establish the ordering: it passes
+`test_b3_ordering_and_reachability_for_both_repeat_shapes` (named
+`test_b3_is_never_reached_by_either_repeat_shape` until Sprint 40 Day 5) spies on
+`_build_pattern_c_dim_mismatch_term`: **0** calls for the repeated equation domain,
+and for the diagonal variable reference, see the update below. ⚠ A `pytest.raises` alone does NOT establish the ordering: it passes
 unchanged if B-3 runs first and the raise arrives afterwards (PR #1742 review —
 an earlier revision of that test claimed both facts while establishing neither,
 and its fixture used `tsam(i,j)`, which is not a diagonal reference at all). The
@@ -68,6 +70,14 @@ counter runs against a **non-vacuity control** on cesam2 first, because a spy
 that was never wired reads 0 exactly like a real zero. Mutation-checked:
 disabling the `#1737` guard fails the ordering assertion, and unwiring the spy
 fails the control.
+
+**⚠ Updated Sprint 40 Day 5 (#1755): the diagonal-reference half is now LIVE.**
+- Until #1755, `sum(i, tsam(i,i))` differentiated to 0, which is why a diagonal reference never reached B-3.
+- With #1755 fixed it differentiates to 1 on the diagonal. B-3 **is** consulted (once, for the fixture), and it **declines**: the call returns `None`, and the standard path emits the row.
+- ⚠ **Measured by mutation:** for that fixture, this guard is **not the only** decliner. Neutralizing it leaves the test green, because another bail-out in the builder also returns `None`. So the integration test pins "B-3 declines", not "this guard declines". The guard's own pin remains the `_pos` unit test.
+- The test now asserts both: calls > 0 (reverting #1755 fails it) and every return is `None`.
+- The corpus-level verification its old message asked for is Day 5's complete leak gate: 200 in-scope goldens, byte-identical.
+- ⚠ The standard path's row for that fixture is itself wrong (an aggregation defect independent of B-3), tracked as #1778.
 
 ## Phase 0: Acceptance Gate
 
