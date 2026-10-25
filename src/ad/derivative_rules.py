@@ -2998,9 +2998,16 @@ def _partial_collapse_sum(
                 # renamed binder's alias, so the surviving sum would iterate
                 # that set's domain instead (6 instead of 12). AD-generated
                 # aliases are not in model_ir yet, so this cannot reserve them.
+                # ...nor ANY model identifier (round 17): GAMS has one namespace,
+                # so a binder renamed to a parameter's name (`k___`) made the
+                # emitter declare `Alias(ii,k___)` over it, and the MCP did not
+                # compile. Sets, aliases, parameters, variables, equations and
+                # declared models are all reserved.
                 if config is not None and config.model_ir is not None:
-                    in_use |= {str(n).lower() for n in config.model_ir.sets}
-                    in_use |= {str(n).lower() for n in config.model_ir.aliases}
+                    mir = config.model_ir
+                    for table in ("sets", "aliases", "params", "variables", "equations"):
+                        in_use |= {str(n).lower() for n in getattr(mir, table, None) or ()}
+                    in_use |= {str(n).lower() for n in getattr(mir, "declared_models", None) or ()}
                 while (
                     new_name.lower() in matched_lower
                     or new_name in sum_index_sets

@@ -792,3 +792,29 @@ def test_a_rename_cannot_take_an_existing_model_SET_or_ALIAS_name(kind):
         coords={"k__": "k___"},
     )
     assert value == 12.0, (value, out)
+
+
+def test_a_rename_cannot_take_a_PARAMETER_name():
+    """PR #1779 review round 17. GAMS has ONE identifier namespace. With
+    `Parameter k___(i)`, the rename picked `k___` for the surviving binder, and the
+    emitter then declared `Alias(ii,k___)`, which conflicts with the parameter so
+    the MCP cannot compile. Every model symbol table is now reserved."""
+    from src.ir.symbols import AliasDef, ParameterDef, VariableDef
+
+    model_ir = ModelIR()
+    model_ir.sets["i"] = SetDef(name="i", members=["a", "b"])
+    model_ir.sets["ii"] = SetDef(name="ii", members=[], domain=("i",))
+    model_ir.aliases["k"] = AliasDef(name="k", target="ii")
+    model_ir.aliases["k__"] = AliasDef(name="k__", target="i")
+    model_ir.params["k___"] = ParameterDef(name="k___", domain=("i",))
+    model_ir.variables["x"] = VariableDef(name="x", domain=("k__",))
+    config = Config()
+    config.model_ir = model_ir
+    body = Binary("*", Call("sqr", (VarRef("x", ("ii",)),)), ParamRef("k___", ("k",)))
+    out = differentiate_expr(Sum(("ii", "k"), body, None), "x", ("b",), config)
+    binders = {b.lower() for node in _walk(out) if isinstance(node, Sum) for b in node.index_sets}
+    assert "k___" not in binders, binders
+    value = _numeric(
+        out, config, {("a",): 1.0, ("b",): 3.0}, members={"ii": {"a", "b"}}, coords={"k__": "b"}
+    )
+    assert value == 12.0, (value, out)  # 2 * x(b) * |k| = 2*3*2, with k___(.) = 1

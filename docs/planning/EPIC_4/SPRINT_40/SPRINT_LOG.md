@@ -806,6 +806,12 @@ Two findings, both checked as **values** with a test-side evaluator that expands
 - **Regressions:** a set collision and a (case-differing) alias collision, value-checked at 12. The previous revision fails both.
   - The test evaluator now resolves a generated binder by stripping ALL trailing underscores. Stripping one at a time stopped at the colliding set.
 
+### PR #1779 review round 17 (P7)
+
+- **The rename could take a parameter's name.** GAMS has one identifier namespace. With `Parameter k___(i)`, the surviving binder became `k___`, and the emitter declared `Alias(ii,k___)` over the parameter, so the MCP could not compile.
+- **Fixed:** the rename reserves EVERY model identifier, case-insensitively: sets, aliases, parameters, variables, equations and declared models.
+- **Regression:** a parameter-name collision, value-checked at 12. The previous revision fails it (its surviving sum binds `k___`).
+
 ### Checkpoint 1 (end of day): GO
 
 Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus copied in. The run launches GAMS with `cwd` at that root, and `tricp` writes `cp.eps` there. 18:31 → 18:55Z. **Nothing was persisted.**
@@ -819,7 +825,7 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6, **5,614** after round 7, **5,616** after round 8, **5,625** after round 9, **5,626** after round 10, **5,628** after round 11, **5,630** after round 12, **5,633** after round 13, **5,636** after round 14, **5,638** after round 15 and **5,640** after round 16, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6, **5,614** after round 7, **5,616** after round 8, **5,625** after round 9, **5,626** after round 10, **5,628** after round 11, **5,630** after round 12, **5,633** after round 13, **5,636** after round 14, **5,638** after round 15, **5,640** after round 16 and **5,641** after round 17, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
 - `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, at the landing and **re-run alone after review rounds 1 and 2**. ⚠ Round 2's first two runs were **UNVERIFIED**, 195 of 200 with 5 timeouts: external machine load reached a 15-min average ≈ 100, which my runs did not cause. `--fail-on-unverified` refused both, as P10c intends. The third run, started only after five consecutive quiet minutes (1-min load < 8), was **complete and clean** (18:03 → 18:33Z).
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.
