@@ -22,8 +22,6 @@
     "ts(tf,tf)"
   ],
   "turkpow_mcp": [
-    "vs(t__kkt1,t__kkt1)",
-    "vs(t__kkt2,t__kkt2)",
     "vs(v,v)"
   ]
 }

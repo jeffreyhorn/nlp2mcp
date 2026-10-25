@@ -628,6 +628,24 @@ def test_a_QUOTED_label_variant_keeps_the_aliased_guard_coordinates(tmp_path):
 
 
 @pytest.mark.validation
+def test_issue_1782_aliased_class_a_fixture_solves_to_the_nlp_optimum(tmp_path):
+    """#1782 (Sprint 40 P4): Alias(t,v), z(v,t), e(t).. sum(v$s(t,v), c(v,t)*z(v,t)).
+    The equation index was matched to the aliased position `v`: the emit summed
+    over a minted t__kkt1 with nu_e(v) and solved to 0.045. NLP optimum 0.0318."""
+    obj, _ = _translate_and_solve(
+        tmp_path,
+        "class_a",
+        "Set t / t1*t3 /;\nAlias (t,v);\nSet s(t,v);\ns(t,v) = yes$(ord(t) <= ord(v));\n"
+        "Parameter c(t,v);\nc(t,v) = 1 + ord(t) + 2*ord(v);\n"
+        "Variable z(v,t), obj;\nEquation e(t), defobj;\n"
+        "e(t).. sum(v$s(t,v), c(v,t)*z(v,t)) =e= 1;\n"
+        "defobj.. obj =e= sum((v,t), sqr(z(v,t)));\n"
+        "Model m / all /;\nsolve m using nlp minimizing obj;\n",
+    )
+    assert abs(obj - 0.0318) < 1e-3, obj
+
+
+@pytest.mark.validation
 class TestPATHAvailability:
     """Test PATH solver availability detection."""
 

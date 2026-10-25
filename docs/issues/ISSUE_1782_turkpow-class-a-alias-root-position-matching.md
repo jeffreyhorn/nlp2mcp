@@ -78,3 +78,29 @@ The same fixture with **distinct** sets (`Set v / v1*v3 /`, no `Alias`) already 
 - ⚠ **Bounded, not fixed here: turkpow's THIRD violation `vs(v,v)`** in `stat_ht(m,v)`. In `pr(t).. … sum(v$vs(t,v), ht(mt,v))` the equation index `t` has **no** counterpart in `ht(m,v)`, and the canonical pass still pairs it with `v`, its alias. The correct term sums over `t`: `sum(t$vs(t,v), …*lam_pr(t))`. The emit keeps only the diagonal.
   - The exact-name pass cannot reach this: no position is named `t`.
   - It needs a "position whose value IS the eq index" discriminator, i.e. a new design. **Carried to Day 7.** It also touches #1778's family: #1778's freej2 moves from 0.375 to 0.360 under this change, NLP 0.3333, so it is changed but not fixed.
+
+## Phase 0 results (Sprint 40 Day 6): PROCEED for the `stat_zt` shape; the `stat_ht` shape is bounded
+
+**The fix:** two exact-name preferences.
+- `_compute_index_offset_key` gets a pass 0 that matches the variable position declared with the equation index's own name.
+- `_match_subset_domain` tries that same-named position before the same-position preference.
+
+**The alias-remap layer is NOT changed.** Measured unnecessary: with only the two matchers fixed, the row is correct.
+
+| criterion | result |
+|---|---|
+| fail-before (`main`) | `sum(t__kkt1, c(v,t__kkt1)*1$(s(t__kkt1,t__kkt1))*nu_e(v))`, MCP 0.045 vs NLP 0.0318 |
+| pass-after | `c(v,t)*1$(s(t,v))*nu_e(t)`, the hand-derived row; MCP **0.032** = NLP |
+| positive control (distinct sets) | byte-identical |
+| necessity | without the offset-key pass: `nu_e(v)`; without the subset-domain preference: a `t__kkt1` sum |
+| P2 ratchet | **11 → 9**: turkpow's `vs(t__kkt1,t__kkt1)` and `vs(t__kkt2,t__kkt2)` are gone; `--update-baseline` in this commit |
+| corpus (leak gate + resolver) | **5 goldens over 3 models drifted** (sambal, qsambal and their presolves; turkpow). **GO: all 3 held their bucket** |
+| mutation controls | `main`: 4 tests fail; without the offset-key pass: 3; without the subset-domain preference: 4. The positive control passes in all |
+
+**A pre-trace judgment corrected: sambal was not a correct positive control.** The pre-trace called sambal's minted emit correct. It was the same defect:
+- the committed golden had `sum(i__kkt1, -1$(xb(i,i__kkt1)) * nu_cbal(i))`;
+- `cbal(j).. t(j) =e= sum(i$xb(i,j), x(i,j))` gives `−1$(xb(i,j)) * nu_cbal(j)`, which is **the new emit**.
+
+sambal and qsambal hold their **presolve** match. Their cold solves stay wrong (old 1028, new 781, NLP 3.97) for other reasons, so this corrects a term but moves no bucket.
+
+**Bounded, carried to Day 7:** turkpow's `stat_ht` `vs(v,v)` (an eq index with no variable counterpart; see the PROCEED/REPLAN signal above). turkpow stays `path_syntax_error` for other reasons, unchanged.

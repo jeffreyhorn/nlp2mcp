@@ -5241,11 +5241,18 @@ def _match_subset_domain(
                 return True
             return False
 
-        # Prefer same-position match first when lengths align, to avoid
-        # greedy first-match mapping to the wrong position when multiple
-        # var_domain positions resolve to the same canonical set.
+        # Prefer the var position declared with the SAME NAME (Sprint 40 P4,
+        # Class A / turkpow), then the same position, then any other. With
+        # Alias(t,v), e(t) and z(v,t), both positions canonicalize to `t`, and
+        # the same-position preference returned {t: v}: the mult index was
+        # treated as an independent iteration variable, minted as t__kkt1 and
+        # summed over, giving nu_e(v) and the repeated guard s(t,t).
         matched = False
-        if p < len(var_domain):
+        for k in range(len(var_domain)):
+            if str(var_domain[k]).lower() == str(mult_idx).lower():
+                matched = _try_match(k)
+                break
+        if not matched and p < len(var_domain):
             matched = _try_match(p)
         if not matched:
             for k in range(len(var_domain)):
@@ -5470,8 +5477,24 @@ def _compute_index_offset_key(
 
             used_var: set[int] = set()
             for ei in range(len(eq_domain)):
-                # First pass: prefer exact canonical match (same set/alias)
                 matched = False
+                # Pass 0 (Sprint 40 P4, Class A / turkpow): the variable position
+                # declared with the SAME NAME as the equation index. With
+                # Alias(t,v), e(t) and z(v,t), both positions canonicalize to `t`,
+                # and the canonical pass below took position 0 (`v`), leaving the
+                # genuine `t` "unmatched": nu_e(v) and a repeated guard s(t,t).
+                for vi in range(len(var_domain)):
+                    if (
+                        vi not in used_var
+                        and str(eq_domain[ei]).lower() == str(var_domain[vi]).lower()
+                    ):
+                        offsets_list[vi] = _compute_offset_at(ei, vi)
+                        used_var.add(vi)
+                        matched = True
+                        break
+                if matched:
+                    continue
+                # First pass: prefer exact canonical match (same set/alias)
                 for vi in range(len(var_domain)):
                     if vi not in used_var and eq_canons[ei] == var_canons[vi]:
                         offsets_list[vi] = _compute_offset_at(ei, vi)

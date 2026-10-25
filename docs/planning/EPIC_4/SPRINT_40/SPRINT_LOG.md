@@ -830,3 +830,43 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.
 - `check_phase0_doc.py` PASS.
+
+---
+
+## Day 6 — 2026-10-24 · P7: #1755 finish · 3 h · + P4: turkpow, Class A · 7 h
+
+**Branch:** `planning/sprint40-day6-turkpow` · **Base:** `3539f994` (PR #1779, 17 review rounds). The calendar runs about two days behind the plan's dates.
+
+### P7: #1755 finish — landed (C2)
+
+- **The three gates hold:**
+  - the Phase-0 doc (`ISSUE_1755`, with layer and positive control);
+  - an unqualified, uncontended leak-gate pass: complete and clean through every review round, the last one 0 drift;
+  - **in `main`** at `3539f994`.
+- **Determinism ×3** (`PYTHONHASHSEED` 0 / 1 / 42) on all **15** models whose goldens #1779's shared-machinery changes touched: **1 distinct hash each, byte-identical to the committed golden.**
+  - turkpow, ganges and gangesx ran in a `main` worktree.
+  - ⚠ The first run used the repo's working tree, and P4's edits landed mid-run. It was stopped and those three re-run against `main`, so every figure is `main`'s.
+
+### P4: turkpow, Class A — #1782
+
+- **Phase-0 gate first:** `819d7850` (`ISSUE_1782`; `check_phase0_doc.py` PASS).
+- **Fail-before reproduced:** `Alias(t,v)`, `z(v,t)`, `e(t).. sum(v$s(t,v), c(v,t)*z(v,t))` emits `sum(t__kkt1, c(v,t__kkt1)*1$(s(t__kkt1,t__kkt1))*nu_e(v))`. MCP **0.045** vs NLP **0.0318**.
+- **The positive control needed distinct LABELS, not just distinct sets.** My first control reused `t1*t3` for both sets, which reintroduced the element-to-set ambiguity: the emit was garbled and the MCP did not solve. With `v / v1*v3 /` it emits the hand-derived row and solves to 0.026 = NLP.
+- **The layer, refined by measurement.** The pre-trace named the alias ChainMap layer. Instrumented, the `{'v': 't'}` remap is a CONSEQUENCE: two matchers pair the eq index with a variable position by **alias root**, and both take position 0 (`v`):
+  - `_compute_index_offset_key`'s canonical pass, which leaves `t` "unmatched", hence `nu_e(v)`;
+  - `_match_subset_domain`'s same-position preference, which returns `{t: v}`, hence the minted `t__kkt1` sum.
+- **The fix:** an exact-name preference in each matcher. **Necessity measured:** the alias-layer change I tried first was not needed and is dropped; removing either matcher fix breaks the fixture.
+- **Results:** the fixture emits `c(v,t)*1$(s(t,v))*nu_e(t)` and solves to **0.032** = NLP; the positive control is byte-identical.
+  - **P2: 11 → 9.** turkpow's two minted repeats are gone; `--update-baseline` in the same commit.
+- **Corpus:** 5 goldens over 3 models drifted (turkpow, sambal, qsambal); the resolver gives **GO, all held**.
+  - ⚠ **The pre-trace's positive control was wrong.** sambal's "correct" minted emit had the same defect (`nu_cbal(i)` summed over `i__kkt1`). The new emit is the hand-derived `−1$(xb(i,j)) * nu_cbal(j)`.
+  - sambal and qsambal keep their presolve match; their cold solves stay wrong for other reasons (1028 → 781, NLP 3.97).
+- **Mutation controls:** `main` fails 4 tests; no offset-key pass, 3; no subset-domain preference, 4. The positive control passes in all.
+- **Bounded, carried to Day 7: turkpow's third violation `vs(v,v)`** (`stat_ht`). There the eq index `t` has NO variable counterpart, and the canonical pass pairs it with its alias `v`. It needs a new discriminator, so it is not quick. It touches #1778's family: freej2 moves 0.375 → 0.360, NLP 0.3333, changed but not fixed. **#1778 stays open, tracked with it.**
+
+### Gate
+
+`make typecheck && make format && make lint && make test`: typecheck, format and lint clean; **5,646 passed**, 10 skipped, no `225*` dirs.
+- `make check-index-repeats`: P1 0 / 3,370; **P2 9 = baseline** (from 11).
+- The leak gate is complete; every drifted golden was re-solved (GO).
+- `check_phase0_doc.py` PASS.
