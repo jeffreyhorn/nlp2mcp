@@ -662,9 +662,12 @@ def _numeric(expr, config, xvals, pvals=None, members=None, coords=None):
         target = name
         # A binder renamed by _partial_collapse_sum (`k` -> `k____`) iterates the
         # original binder's set.
-        while target not in model_ir.sets and target not in model_ir.aliases:
+        # It is not a model symbol, so strip ALL trailing underscores back to the
+        # original binder: stopping at the first known name would land on an
+        # unrelated model set spelled like an intermediate rename (round 16).
+        if target not in model_ir.sets and target not in model_ir.aliases:
             assert target.endswith("_"), f"unknown binder {name}"
-            target = target[:-1]
+            target = target.rstrip("_")
         while target in model_ir.aliases:
             target = model_ir.aliases[target].target
         if target in members:  # a dynamic subset: iterate exactly its members
@@ -754,4 +757,38 @@ def test_a_rename_cannot_capture_a_concrete_TARGET_label():
     out = differentiate_expr(Sum(("ii", "k"), body, None), "x", ("k___",), config)
     xvals = {("a",): 1.0, ("k___",): 3.0}
     value = _numeric(out, config, xvals, members={"ii": {"a", "k___"}}, coords={"k__": "k___"})
+    assert value == 12.0, (value, out)
+
+
+@pytest.mark.parametrize("kind", ["set", "alias"])
+def test_a_rename_cannot_take_an_existing_model_SET_or_ALIAS_name(kind):
+    """PR #1779 review round 16. The round-15 fixture plus a model symbol named
+    `k____`, the name the rename would pick next. The emitter accepts an existing
+    set or alias as the renamed binder's alias, so the surviving sum iterated that
+    symbol's domain: 6 instead of 12. Model set and alias names are now reserved."""
+    from src.ir.symbols import AliasDef, VariableDef
+
+    model_ir = ModelIR()
+    model_ir.sets["i"] = SetDef(name="i", members=["a", "k___"])
+    model_ir.sets["ii"] = SetDef(name="ii", members=[], domain=("i",))
+    model_ir.aliases["k"] = AliasDef(name="k", target="ii")
+    model_ir.aliases["k__"] = AliasDef(name="k__", target="i")
+    if kind == "set":
+        model_ir.sets["k____"] = SetDef(name="k____", members=["a"], domain=("i",))
+    else:
+        model_ir.aliases["K____"] = AliasDef(name="K____", target="i")  # case-insensitive
+    model_ir.variables["x"] = VariableDef(name="x", domain=("k__",))
+    config = Config()
+    config.model_ir = model_ir
+    body = Binary("*", Call("sqr", (VarRef("x", ("ii",)),)), ParamRef("p", ("k",)))
+    out = differentiate_expr(Sum(("ii", "k"), body, None), "x", ("k___",), config)
+    binders = {b.lower() for node in _walk(out) if isinstance(node, Sum) for b in node.index_sets}
+    assert "k____" not in binders, binders
+    value = _numeric(
+        out,
+        config,
+        {("a",): 1.0, ("k___",): 3.0},
+        members={"ii": {"a", "k___"}},
+        coords={"k__": "k___"},
+    )
     assert value == 12.0, (value, out)

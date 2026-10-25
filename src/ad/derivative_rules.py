@@ -2993,6 +2993,14 @@ def _partial_collapse_sum(
                     base = w.base if isinstance(w, IndexOffset) else w
                     if isinstance(base, str):
                         in_use.add(_strip_quotes(base).lower())
+                # ...nor an existing model SET or ALIAS (PR #1779 review, round
+                # 16): the emitter accepts an existing `Set k____(i)` as the
+                # renamed binder's alias, so the surviving sum would iterate
+                # that set's domain instead (6 instead of 12). AD-generated
+                # aliases are not in model_ir yet, so this cannot reserve them.
+                if config is not None and config.model_ir is not None:
+                    in_use |= {str(n).lower() for n in config.model_ir.sets}
+                    in_use |= {str(n).lower() for n in config.model_ir.aliases}
                 while (
                     new_name.lower() in matched_lower
                     or new_name in sum_index_sets
