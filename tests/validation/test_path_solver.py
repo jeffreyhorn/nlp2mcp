@@ -541,6 +541,66 @@ def test_distinct_dynamic_subsets_on_ALIASED_coordinates_keep_their_coordinates(
 
 
 @pytest.mark.validation
+def test_an_initialized_then_PRUNED_subset_keeps_its_runtime_guard(tmp_path):
+    """PR #1779 review round 13. `Set s(i) / i1, i2 /; s(i) = yes$(ord(i) = 1);`
+    keeps both members in the IR, so a "has static members" shortcut skipped the
+    guard and the multiplier reached the excluded x('i2','i2'): MCP 2.0. The NLP
+    optimum is 1.0."""
+    obj, emit = _translate_and_solve(
+        tmp_path,
+        "pruned",
+        "Set i / i1*i2 /;\nAlias (i,j);\nSet s(i) / i1, i2 /;\ns(i) = yes$(ord(i) = 1);\n"
+        "Variable x(i,j), z;\nEquation e, obj;\n"
+        "e.. sum(s, x(s,s)) =e= 1;\n"
+        "obj.. z =e= sum((i,j), sqr(x(i,j)));\n"
+        "Model m / all /;\nsolve m using nlp minimizing z;\n",
+    )
+    stat = next(line for line in emit.splitlines() if line.startswith("stat_x("))
+    assert "1$(s(i)) * nu_e" in stat, stat
+    assert abs(obj - 1.0) < 1e-3, obj
+
+
+@pytest.mark.validation
+def test_disjoint_subsets_in_a_PARTIAL_collapse_keep_separate_guards(tmp_path):
+    """PR #1779 review round 13. x(i), ii = {i1}, jj = {i2}: in
+    `sum((ii,jj), x(ii)*x(jj))` neither reference holds both binders, so neither
+    guard may be promoted to a declared coordinate. Promoted, both became
+    `ii(i) and jj(i)`, never true, zeroing the cross term: MCP 1.0. The NLP optimum
+    is 2/3 (x = 2/3)."""
+    obj, _ = _translate_and_solve(
+        tmp_path,
+        "disjoint",
+        "Set i / i1, i2 /;\nSet ii(i), jj(i);\n"
+        "ii(i) = yes$(ord(i) = 1);\njj(i) = yes$(ord(i) = 2);\n"
+        "Variable x(i), z;\nEquation obj;\n"
+        "obj.. z =e= sum((ii,jj), x(ii)*x(jj)) + sum(i, sqr(x(i) - 1));\n"
+        "Model m / all /;\nsolve m using nlp minimizing z;\n",
+    )
+    assert abs(obj - 2.0 / 3.0) < 1e-3, obj
+
+
+@pytest.mark.validation
+def test_a_preserved_CARD_operand_does_not_displace_the_guard_coordinate(tmp_path):
+    """PR #1779 review round 13. The aliased-coordinate model with a `card(j)`
+    coefficient: the preserved operand `j` was counted as occupied, so the `jj`
+    guard fell back to a label and one row branch generalized to `jj(i)`. The
+    solve can still come out right (the active cell sat in the correct branch), so
+    the ROW is asserted. NLP optimum 2/3."""
+    obj, emit = _translate_and_solve(
+        tmp_path,
+        "cardj",
+        "Set i / i1, i2 /;\nAlias (i,j);\nSet ii(i), jj(i);\n"
+        "ii(i) = yes$(ord(i) = 1);\njj(i) = yes$(ord(i) = 2);\n"
+        "Variable x(i,j), z;\nEquation obj;\n"
+        "obj.. z =e= sum((ii,jj), card(j)*sqr(x(ii,jj) - 1)) + sum((i,j), sqr(x(i,j)));\n"
+        "Model m / all /;\nsolve m using nlp minimizing z;\n",
+    )
+    stat = next(line for line in emit.splitlines() if line.startswith("stat_x("))
+    assert "ii(i) and jj(j)" in stat and "jj(i)" not in stat, stat
+    assert abs(obj - 2.0 / 3.0) < 1e-3, obj
+
+
+@pytest.mark.validation
 class TestPATHAvailability:
     """Test PATH solver availability detection."""
 

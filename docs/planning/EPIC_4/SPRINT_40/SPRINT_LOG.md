@@ -756,6 +756,23 @@ Two findings, both **pre-existing in the shared collapse path**: measured on `ma
 - **Fixed:** the declared symbol is used only if NOTHING else in the body uses that name. Every name in the body now counts as occupied, as do the enclosing binders; on any clash the guard stays on the binder. The round-10 aliased-coordinate solve still passes, because its body uses only binder names.
 - **Regression:** a symbolic free index, active and excluded. The previous revision fails the active case.
 
+### PR #1779 review round 13 (P7)
+
+Three findings, each reproduced end to end against the NLP (`HEAD` = round 12):
+
+| case | NLP | `HEAD` | fixed |
+|---|---|---|---|
+| initialized-then-pruned subset `Set s(i) / i1, i2 /; s(i) = yes$(ord(i) = 1);` | 1.0 | **2.000** | **1.000** |
+| disjoint runtime subsets in a partial collapse, `sum((ii,jj), x(ii)*x(jj))` | 0.667 | **1.000** | **0.667** |
+| the aliased case with a `card(j)` coefficient | 0.667 | 0.667, but one row branch carried `jj(i)` | 0.667, row `ii(i) and jj(j)` |
+
+- **Runtime mutability:** declared members do not make a set static. A set is now guarded if it has no static members (#723) **or** it is the target of any execution-time set assignment (`model_ir.set_assignments`).
+  - ⚠ Not done: widening member *resolution* for a reassigned set (to cover elements added at runtime). That changes instance enumeration corpus-wide and is a separate change.
+- **Promotion requires a consistent binder position:** EVERY reference to the variable must hold the binder at exactly one position, and the same one. Otherwise the guard stays on the binder.
+- **Occupancy follows the substitution rules:** `_capturable_names` skips a preserved `card()` operand, except inside an IndexOffset's offset.
+- **Regressions:** the three end-to-end solves. Each mutant (no assignment check; a position union; occupancy counting `card` operands) fails exactly its own test.
+- **Leak gate:** clean, 200 goldens with **0 drift**.
+
 ### Checkpoint 1 (end of day): GO
 
 Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus copied in. The run launches GAMS with `cwd` at that root, and `tricp` writes `cp.eps` there. 18:31 → 18:55Z. **Nothing was persisted.**
@@ -769,7 +786,7 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6, **5,614** after round 7, **5,616** after round 8, **5,625** after round 9, **5,626** after round 10, **5,628** after round 11 and **5,630** after round 12, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6, **5,614** after round 7, **5,616** after round 8, **5,625** after round 9, **5,626** after round 10, **5,628** after round 11, **5,630** after round 12 and **5,633** after round 13, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
 - `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, at the landing and **re-run alone after review rounds 1 and 2**. ⚠ Round 2's first two runs were **UNVERIFIED**, 195 of 200 with 5 timeouts: external machine load reached a 15-min average ≈ 100, which my runs did not cause. `--fail-on-unverified` refused both, as P10c intends. The third run, started only after five consecutive quiet minutes (1-min load < 8), was **complete and clean** (18:03 → 18:33Z).
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.

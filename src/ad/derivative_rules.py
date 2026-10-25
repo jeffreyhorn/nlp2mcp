@@ -2205,13 +2205,60 @@ def _runtime_subset_guard(
         sdef = model_ir.sets.get(target) if isinstance(target, str) else None
         if sdef is None or isinstance(sdef, (list, tuple, set, frozenset)):
             continue
-        if getattr(sdef, "members", None) or not getattr(sdef, "domain", None):
+        # Runtime-mutable: no static members (a #723 dynamic subset), OR the target
+        # of any execution-time set assignment. Declared members do not make a
+        # set static: `Set s(i) / i1, i2 /; s(i) = yes$(ord(i) = 1);` keeps both
+        # members in the IR, and without a guard `sum(s, x(s,s))` reached the
+        # excluded x('i2','i2') (PR #1779 review, round 13).
+        assigned = {
+            str(getattr(a, "set_name", "")).lower()
+            for a in getattr(model_ir, "set_assignments", None) or ()
+        }
+        has_members = bool(getattr(sdef, "members", None))
+        if target.lower() not in assigned and (has_members or not getattr(sdef, "domain", None)):
             continue
         test = SetMembershipTest(
             target, (SymbolRef(_guard_coordinate(binder, index_sets, model_ir, body, wrt_var)),)
         )
         guard = test if guard is None else Binary("and", guard, test)
     return guard
+
+
+def _capturable_names(expr: Expr) -> set[str]:
+    """Names in ``expr`` that index substitution can actually rewrite.
+
+    Mirrors ``_apply_index_substitution``: a ``card()`` operand is NOT rewritten
+    (round 9), so it does not occupy a name, EXCEPT inside an IndexOffset's offset,
+    where ``card`` follows ``ord``. Counting a preserved ``card(j)`` as occupied made
+    the ``jj`` guard fall back to a concrete label, which stationarity generalized
+    to ``jj(i)`` (PR #1779 review, round 13).
+    """
+    names: set[str] = set()
+
+    def walk(node: object, in_offset: bool) -> None:
+        if isinstance(node, Call) and node.func.lower() == "card" and not in_offset:
+            return
+        if isinstance(node, SymbolRef):
+            names.add(_strip_quotes(node.name))
+        for idx in getattr(node, "indices", None) or ():
+            base = idx.base if isinstance(idx, IndexOffset) else idx
+            if isinstance(base, str):
+                names.add(_strip_quotes(base))
+            if isinstance(idx, IndexOffset):
+                walk(idx.offset, True)
+        for s in getattr(node, "index_sets", None) or ():
+            names.add(s)
+        if isinstance(node, IndexOffset):
+            names.add(_strip_quotes(str(node.base)))
+            walk(node.offset, True)
+            return
+        children = getattr(node, "children", None)
+        if callable(children):
+            for child in children():
+                walk(child, in_offset)
+
+    walk(expr, False)
+    return names
 
 
 def _guard_coordinate(
@@ -2237,12 +2284,17 @@ def _guard_coordinate(
         return binder
     declared = model_ir.variables[wrt_var].domain or ()
     key = binder.lower()
-    positions = {
-        p
-        for ref in _find_var_indices_in_body(body, wrt_var)
-        for p, idx in enumerate(ref)
-        if isinstance(idx, str) and idx.lower() == key
-    }
+    # EVERY reference to the variable must hold the binder at exactly one position,
+    # and the same one (PR #1779 review, round 13). A reference that omits it
+    # breaks the binder-to-coordinate link: in `sum((ii,jj), x(ii)*x(jj))` with
+    # `x(i)`, a union of positions promoted both guards to `ii(i) and jj(i)`, a
+    # false conjunction that zeroed both partial-collapse contributions.
+    positions: set[int] = set()
+    for ref in _find_var_indices_in_body(body, wrt_var):
+        here = [p for p, idx in enumerate(ref) if isinstance(idx, str) and idx.lower() == key]
+        if len(here) != 1:
+            return binder
+        positions.add(here[0])
     if len(positions) != 1:
         return binder
     (p,) = positions
@@ -2259,7 +2311,7 @@ def _guard_coordinate(
     # index is substituted too. In `sum(ii, x(ii,i))` the free `i` sits at the
     # second position, and #1111's free-index recovery substituted the guard's
     # `i` from it, giving `ii('i2')` at x('i1','i2') with no enclosing sum at all.
-    taken.update(n.lower() for n in _all_index_names(Sum((), body, None)) if n.lower() != key)
+    taken.update(n.lower() for n in _capturable_names(body) if n.lower() != key)
     if symbol == "*" or symbol.lower() in taken:
         return binder
     return symbol
