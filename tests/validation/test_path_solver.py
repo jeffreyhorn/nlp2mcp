@@ -601,6 +601,33 @@ def test_a_preserved_CARD_operand_does_not_displace_the_guard_coordinate(tmp_pat
 
 
 @pytest.mark.validation
+def test_a_QUOTED_label_variant_keeps_the_aliased_guard_coordinates(tmp_path):
+    """PR #1779 review round 14: the aliased-coordinate model with a quoted label
+    ``p('j')``. The row must keep ``ii(i) and jj(j)``. Only the ROW is asserted:
+    the MCP does not compile today because its data line is emitted as
+    ``p(j) = 1;`` (the label read as the alias, $171), a separate pre-existing
+    emitter defect, #1781."""
+    src = tmp_path / "quoted.gms"
+    src.write_text(
+        "Set i / i1, i2 /;\nAlias (i,j);\nSet lab / j /;\nParameter p(lab) / j 1 /;\n"
+        "Set ii(i), jj(i);\nii(i) = yes$(ord(i) = 1);\njj(i) = yes$(ord(i) = 2);\n"
+        "Variable x(i,j), z;\nEquation obj;\n"
+        "obj.. z =e= sum((ii,jj), sqr(x(ii,jj) - p('j'))) + sum((i,j), sqr(x(i,j)));\n"
+        "Model m / all /;\nsolve m using nlp minimizing z;\n"
+    )
+    mcp = tmp_path / "quoted_mcp.gms"
+    out = subprocess.run(
+        [sys.executable, "-m", "src.cli", str(src), "-o", str(mcp)],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    assert out.returncode == 0, out.stderr
+    stat = next(line for line in mcp.read_text().splitlines() if line.startswith("stat_x("))
+    assert "ii(i) and jj(j)" in stat and "jj(i)" not in stat, stat
+
+
+@pytest.mark.validation
 class TestPATHAvailability:
     """Test PATH solver availability detection."""
 

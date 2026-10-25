@@ -586,3 +586,55 @@ def test_a_FREE_index_cannot_capture_the_guard_coordinate(wrt, expected):
     body = Sum(("ii",), VarRef("x", ("ii", "i")), None)
     out = differentiate_expr(body, "x", wrt, config)
     assert _guard_value(out, wrt, {"i1"}) == expected, out
+
+
+def test_a_QUOTED_label_does_not_occupy_the_guard_coordinate():
+    """PR #1779 review round 14. A literal label ``p('j')`` (kept quoted, ``"j"``)
+    is never rewritten by substitution, so it must not occupy the declared
+    coordinate ``j``. Stripping its quotes did, forcing the ``jj`` guard back onto
+    its binder, which stationarity then generalized to ``jj(i)``."""
+    from src.ir.symbols import AliasDef, VariableDef
+
+    model_ir = ModelIR()
+    model_ir.sets["i"] = SetDef(name="i", members=["i1", "i2"])
+    model_ir.sets["ii"] = SetDef(name="ii", members=[], domain=("i",))
+    model_ir.sets["jj"] = SetDef(name="jj", members=[], domain=("i",))
+    model_ir.aliases["j"] = AliasDef(name="j", target="i")
+    model_ir.variables["x"] = VariableDef(name="x", domain=("i", "j"))
+    config = Config()
+    config.model_ir = model_ir
+    body = Call("sqr", (Binary("-", VarRef("x", ("ii", "jj")), ParamRef("p", ('"j"',))),))
+    out = differentiate_expr(Sum(("ii", "jj"), body, None), "x", ("i1", "i2"), config)
+    tests = {
+        (n.set_name, getattr(n.indices[0], "name", None))
+        for n in _walk(out)
+        if isinstance(n, SetMembershipTest)
+    }
+    assert ("jj", "j") in tests and ("ii", "i") in tests, out
+
+
+def test_a_promoted_coordinate_is_not_captured_by_a_RENAMED_remaining_binder():
+    """PR #1779 review round 14. i = {a,b}, runtime ii = {a}, Alias(ii,k),
+    Alias(i,k__), x(k__): in sum((ii,k), x(ii)*p(k)) the promoted guard is
+    ii(k__), and _partial_collapse_sum renamed the remaining binder k to k__,
+    capturing it inside the surviving sum (1 instead of 0 at x('b')). The rename
+    now avoids every name the body already uses."""
+    from src.ir.symbols import AliasDef, VariableDef
+
+    model_ir = ModelIR()
+    model_ir.sets["i"] = SetDef(name="i", members=["a", "b"])
+    model_ir.sets["ii"] = SetDef(name="ii", members=[], domain=("i",))
+    model_ir.aliases["k"] = AliasDef(name="k", target="ii")
+    model_ir.aliases["k__"] = AliasDef(name="k__", target="i")
+    model_ir.variables["x"] = VariableDef(name="x", domain=("k__",))
+    config = Config()
+    config.model_ir = model_ir
+    body = Binary("*", VarRef("x", ("ii",)), ParamRef("p", ("k",)))
+    out = differentiate_expr(Sum(("ii", "k"), body, None), "x", ("b",), config)
+    guard_symbols = {
+        getattr(n.indices[0], "name", None) for n in _walk(out) if isinstance(n, SetMembershipTest)
+    }
+    assert "k__" in guard_symbols, out  # the promoted coordinate guard survives
+    for node in _walk(out):
+        if isinstance(node, Sum):
+            assert "k__" not in node.index_sets, f"guard captured by {node.index_sets}"

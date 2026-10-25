@@ -773,6 +773,17 @@ Three findings, each reproduced end to end against the NLP (`HEAD` = round 12):
 - **Regressions:** the three end-to-end solves. Each mutant (no assignment check; a position union; occupancy counting `card` operands) fails exactly its own test.
 - **Leak gate:** clean, 200 goldens with **0 drift**.
 
+### PR #1779 review round 14 (P7)
+
+Two findings without threads, both reproduced:
+
+- **A quoted label occupied a coordinate.** The occupancy scan stripped quotes, but substitution matches names exactly and never rewrites the quoted label `"j"`. So `p('j')` marked the coordinate `j` as occupied, and the `jj` guard fell back to its binder. On the aliased model, `HEAD`'s row had a `jj(i)` branch.
+  - **Fixed:** `_capturable_names` keeps quotes. The row is now `(2*(x(i,j) - p("j")))$(ii(i) and jj(j)) + 2*x(i,j)`.
+  - ⚠ That MCP cannot be solved today, for a **separate pre-existing emitter defect, filed as #1781:** the data line is emitted `p(j) = 1;`, so the label is read as the alias (`$171`). Identical on `main`. The regression asserts the row only.
+- **A renamed remaining binder captured a promoted guard.** In `sum((ii,k), x(ii)*p(k))` with `Alias(ii,k)`, `Alias(i,k__)` and `x(k__)`, the promoted guard is `ii(k__)`. `_partial_collapse_sum` renamed the surviving binder `k` to `k__`, capturing it (1 instead of 0 at `x('b')`).
+  - **Fixed:** the rename also avoids every name the body or condition uses, so `k` becomes `k___`.
+- **Regressions:** the quoted label (AD and emitted row) and the rename capture. The previous revision fails all 3; quote-stripping fails the two quoted tests; dropping the in-use check fails the rename test.
+
 ### Checkpoint 1 (end of day): GO
 
 Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus copied in. The run launches GAMS with `cwd` at that root, and `tricp` writes `cp.eps` there. 18:31 → 18:55Z. **Nothing was persisted.**
@@ -786,7 +797,7 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6, **5,614** after round 7, **5,616** after round 8, **5,625** after round 9, **5,626** after round 10, **5,628** after round 11, **5,630** after round 12 and **5,633** after round 13, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6, **5,614** after round 7, **5,616** after round 8, **5,625** after round 9, **5,626** after round 10, **5,628** after round 11, **5,630** after round 12, **5,633** after round 13 and **5,636** after round 14, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
 - `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, at the landing and **re-run alone after review rounds 1 and 2**. ⚠ Round 2's first two runs were **UNVERIFIED**, 195 of 200 with 5 timeouts: external machine load reached a 15-min average ≈ 100, which my runs did not cause. `--fail-on-unverified` refused both, as P10c intends. The third run, started only after five consecutive quiet minutes (1-min load < 8), was **complete and clean** (18:03 → 18:33Z).
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.

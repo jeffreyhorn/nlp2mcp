@@ -2229,7 +2229,10 @@ def _capturable_names(expr: Expr) -> set[str]:
 
     Mirrors ``_apply_index_substitution``: a ``card()`` operand is NOT rewritten
     (round 9), so it does not occupy a name, EXCEPT inside an IndexOffset's offset,
-    where ``card`` follows ``ord``. Counting a preserved ``card(j)`` as occupied made
+    where ``card`` follows ``ord``. Quotes are KEPT: substitution matches names
+    exactly, so the quoted label ``'j'`` can never be captured, and stripping it
+    wrongly occupied the coordinate ``j`` (PR #1779 review, round 14). Counting a
+    preserved ``card(j)`` as occupied made
     the ``jj`` guard fall back to a concrete label, which stationarity generalized
     to ``jj(i)`` (PR #1779 review, round 13).
     """
@@ -2239,17 +2242,17 @@ def _capturable_names(expr: Expr) -> set[str]:
         if isinstance(node, Call) and node.func.lower() == "card" and not in_offset:
             return
         if isinstance(node, SymbolRef):
-            names.add(_strip_quotes(node.name))
+            names.add(node.name)
         for idx in getattr(node, "indices", None) or ():
             base = idx.base if isinstance(idx, IndexOffset) else idx
             if isinstance(base, str):
-                names.add(_strip_quotes(base))
+                names.add(base)
             if isinstance(idx, IndexOffset):
                 walk(idx.offset, True)
         for s in getattr(node, "index_sets", None) or ():
             names.add(s)
         if isinstance(node, IndexOffset):
-            names.add(_strip_quotes(str(node.base)))
+            names.add(str(node.base))
             walk(node.offset, True)
             return
         children = getattr(node, "children", None)
@@ -2977,7 +2980,17 @@ def _partial_collapse_sum(
                         break
             if needs_rename:
                 new_name = ridx + "__"
-                while new_name.lower() in matched_lower or new_name in sum_index_sets:
+                # ...nor any name the body or condition already uses (PR #1779
+                # review, round 14): a promoted runtime-subset guard `ii(k__)`
+                # was captured when the remaining binder `k` became `k__`.
+                in_use = {n.lower() for n in _capturable_names(working_body)}
+                if working_condition is not None:
+                    in_use |= {n.lower() for n in _capturable_names(working_condition)}
+                while (
+                    new_name.lower() in matched_lower
+                    or new_name in sum_index_sets
+                    or new_name.lower() in in_use
+                ):
                     new_name += "_"
                 # Rename in body and condition
                 working_body = _substitute_sum_indices(working_body, (ridx,), (new_name,))
