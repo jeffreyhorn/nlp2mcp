@@ -638,3 +638,120 @@ def test_a_promoted_coordinate_is_not_captured_by_a_RENAMED_remaining_binder():
     for node in _walk(out):
         if isinstance(node, Sum):
             assert "k__" not in node.index_sets, f"guard captured by {node.index_sets}"
+
+
+def _numeric(expr, config, xvals, pvals=None, members=None, coords=None):
+    """Evaluate a derivative NUMERICALLY, expanding Sum/Prod over the config's sets.
+
+    The round-15 findings are about values (16 vs 32, 8 vs 12), so they are
+    checked as values. A binder is expanded by substituting each member of its set,
+    resolved through aliases, and a dynamic subset iterates its parent's members
+    with its own membership supplied by ``members``.
+    """
+    from src.ad.derivative_rules import _substitute_sum_indices
+    from src.ir.ast import Prod, SymbolRef
+
+    model_ir = config.model_ir
+    pvals = pvals or {}
+    members = members or {}
+    # A guard promoted to a declared COORDINATE (e.g. `ii(k__)`) names the target's
+    # coordinate, which stationarity maps to the row index; read it at the target.
+    coords = coords or {}
+
+    def elements(name: str) -> list[str]:
+        target = name
+        # A binder renamed by _partial_collapse_sum (`k` -> `k____`) iterates the
+        # original binder's set.
+        while target not in model_ir.sets and target not in model_ir.aliases:
+            assert target.endswith("_"), f"unknown binder {name}"
+            target = target[:-1]
+        while target in model_ir.aliases:
+            target = model_ir.aliases[target].target
+        if target in members:  # a dynamic subset: iterate exactly its members
+            return sorted(members[target])
+        sdef = model_ir.sets[target]
+        return list(sdef.members) if sdef.members else elements(sdef.domain[0])
+
+    def ev(node):
+        if isinstance(node, Const):
+            return node.value
+        if isinstance(node, VarRef):
+            return xvals[node.indices]
+        if isinstance(node, ParamRef):
+            return pvals.get((node.name, node.indices), 1.0)
+        if isinstance(node, SetMembershipTest):
+            (idx,) = node.indices
+            name = getattr(idx, "name", idx)
+            return 1.0 if coords.get(name, name) in members.get(node.set_name, ()) else 0.0
+        if isinstance(node, DollarConditional):
+            return ev(node.value_expr) if ev(node.condition) != 0 else 0.0
+        if isinstance(node, Call) and node.func == "sqr":
+            return ev(node.args[0]) ** 2
+        if isinstance(node, Binary):
+            if node.op == "and":
+                return 1.0 if ev(node.left) != 0 and ev(node.right) != 0 else 0.0
+            a, b = ev(node.left), ev(node.right)
+            return {"+": a + b, "-": a - b, "*": a * b, "/": a / b if b else 0.0}[node.op]
+        if isinstance(node, (Sum, Prod)):
+            total = 0.0 if isinstance(node, Sum) else 1.0
+            combos = [()]
+            for b in node.index_sets:
+                combos = [c + (e,) for c in combos for e in elements(b)]
+            for combo in combos:
+                if node.condition is not None:
+                    cond = _substitute_sum_indices(node.condition, node.index_sets, combo)
+                    if ev(cond) == 0:
+                        continue
+                body = _substitute_sum_indices(node.body, node.index_sets, combo)
+                value = ev(body)
+                total = total + value if isinstance(node, Sum) else total * value
+            return total
+        if isinstance(node, SymbolRef):
+            raise AssertionError(f"unbound symbol in a numeric derivative: {node}")
+        raise AssertionError(f"unhandled node: {node}")
+
+    return ev(expr)
+
+
+def test_an_enclosing_PRODUCT_cannot_capture_the_guard_coordinate():
+    """PR #1779 review round 15. x(i), i = {a,b}, k = {k1,k2}, runtime ii = {a}:
+    prod((i,k), sum(ii, x(ii))) = x(a)^4, so d/dx('a') = 4*x(a)^3 = 32 at x(a) = 2.
+    The product's log-derivative sum re-binds `i`, and the promoted guard `ii(i)`
+    was captured, excluding half the terms: 16. Products now push their binders
+    like sums."""
+    from src.ir.ast import Prod
+    from src.ir.symbols import VariableDef
+
+    model_ir = ModelIR()
+    model_ir.sets["i"] = SetDef(name="i", members=["a", "b"])
+    model_ir.sets["k"] = SetDef(name="k", members=["k1", "k2"])
+    model_ir.sets["ii"] = SetDef(name="ii", members=[], domain=("i",))
+    model_ir.variables["x"] = VariableDef(name="x", domain=("i",))
+    config = Config()
+    config.model_ir = model_ir
+    expr = Prod(("i", "k"), Sum(("ii",), VarRef("x", ("ii",)), None), None)
+    out = differentiate_expr(expr, "x", ("a",), config)
+    value = _numeric(out, config, {("a",): 2.0, ("b",): 5.0}, members={"ii": {"a"}})
+    assert value == 32.0, (value, out)
+
+
+def test_a_rename_cannot_capture_a_concrete_TARGET_label():
+    """PR #1779 review round 15. The round-14 fixture with i = {a, k___} and
+    runtime ii = i: renaming the remaining binder `k` to `k___` turned the concrete
+    x('k___') in the surviving sum into the binder. d/dx('k___') of
+    sum((ii,k), sqr(x(ii))*p(k)) with p = 1 is 2*x(k___)*|k| = 2*3*2 = 12; it was 8."""
+    from src.ir.symbols import AliasDef, VariableDef
+
+    model_ir = ModelIR()
+    model_ir.sets["i"] = SetDef(name="i", members=["a", "k___"])
+    model_ir.sets["ii"] = SetDef(name="ii", members=[], domain=("i",))
+    model_ir.aliases["k"] = AliasDef(name="k", target="ii")
+    model_ir.aliases["k__"] = AliasDef(name="k__", target="i")
+    model_ir.variables["x"] = VariableDef(name="x", domain=("k__",))
+    config = Config()
+    config.model_ir = model_ir
+    body = Binary("*", Call("sqr", (VarRef("x", ("ii",)),)), ParamRef("p", ("k",)))
+    out = differentiate_expr(Sum(("ii", "k"), body, None), "x", ("k___",), config)
+    xvals = {("a",): 1.0, ("k___",): 3.0}
+    value = _numeric(out, config, xvals, members={"ii": {"a", "k___"}}, coords={"k__": "k___"})
+    assert value == 12.0, (value, out)

@@ -784,6 +784,21 @@ Two findings without threads, both reproduced:
   - **Fixed:** the rename also avoids every name the body or condition uses, so `k` becomes `k___`.
 - **Regressions:** the quoted label (AD and emitted row) and the rename capture. The previous revision fails all 3; quote-stripping fails the two quoted tests; dropping the in-use check fails the rename test.
 
+### PR #1779 review round 15 (P7)
+
+Two findings, both checked as **values** with a test-side evaluator that expands `Sum`/`Prod` over the IR's sets:
+
+| case | correct | previous revision | fixed |
+|---|---|---|---|
+| `prod((i,k), sum(ii, x(ii)))` at `x('a') = 2`, runtime `ii = {a}` (`= x(a)^4`) | 32 | **16** | **32** |
+| round-14 fixture with `i = {a, k___}`, `sqr(x(ii))*p(k)` at `x('k___') = 3` | 12 | **8** | **12** |
+
+- **An enclosing `Prod` captured the guard.** Only `Sum` binders were tracked. The product's logarithmic-derivative sum re-binds `i`, so the promoted `ii(i)` tested the product's iterate.
+  - **Fixed:** `_diff_prod` is a thin wrapper pushing its binders onto `_ENCLOSING_BINDERS`, the same channel as `_diff_sum` (not `bound_indices`). The guard is now `ii('a')`.
+- **A rename captured a concrete target label.** Round 14's rename avoided names in the body but not the target: `k` became `k___`, the label being differentiated, and the concrete `x(k___)` inside the surviving sum turned into the binder.
+  - **Fixed:** the rename also reserves the normalized target labels, including IndexOffset bases (`k` → `k____`).
+- **Regressions:** both, value-checked. The previous revision gives exactly the reviewer's 16 and 8.
+
 ### Checkpoint 1 (end of day): GO
 
 Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus copied in. The run launches GAMS with `cwd` at that root, and `tricp` writes `cp.eps` there. 18:31 → 18:55Z. **Nothing was persisted.**
@@ -797,7 +812,7 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 
 ### Gate
 
-`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6, **5,614** after round 7, **5,616** after round 8, **5,625** after round 9, **5,626** after round 10, **5,628** after round 11, **5,630** after round 12, **5,633** after round 13 and **5,636** after round 14, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
+`make typecheck && make format && make lint && make test`, run alone: typecheck, format and lint clean; **5,590 passed** at the first push and **5,593** after review round 1, **5,594** after round 2, **5,597** after round 3, **5,604** after round 4, **5,609** after round 5, **5,611** after round 6, **5,614** after round 7, **5,616** after round 8, **5,625** after round 9, **5,626** after round 10, **5,628** after round 11, **5,630** after round 12, **5,633** after round 13, **5,636** after round 14 and **5,638** after round 15, 10 skipped (the usual 10), 0 `test_path_solver` skips, no `225*` process dirs.
 - `make check-goldens` (the leak gate) is complete and clean: 200 in-scope, byte-identical, at the landing and **re-run alone after review rounds 1 and 2**. ⚠ Round 2's first two runs were **UNVERIFIED**, 195 of 200 with 5 timeouts: external machine load reached a 15-min average ≈ 100, which my runs did not cause. `--fail-on-unverified` refused both, as P10c intends. The third run, started only after five consecutive quiet minutes (1-min load < 8), was **complete and clean** (18:03 → 18:33Z).
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.

@@ -2986,6 +2986,13 @@ def _partial_collapse_sum(
                 in_use = {n.lower() for n in _capturable_names(working_body)}
                 if working_condition is not None:
                     in_use |= {n.lower() for n in _capturable_names(working_condition)}
+                # ...nor a concrete TARGET label (PR #1779 review, round 15): with
+                # an element named `k___`, renaming `k` to `k___` turned the
+                # concrete `x(k___)` inside the surviving sum into the binder.
+                for w in wrt_indices:
+                    base = w.base if isinstance(w, IndexOffset) else w
+                    if isinstance(base, str):
+                        in_use.add(_strip_quotes(base).lower())
                 while (
                     new_name.lower() in matched_lower
                     or new_name in sum_index_sets
@@ -3814,6 +3821,28 @@ def _substitute_index(
 
 
 def _diff_prod(
+    expr: Prod,
+    wrt_var: str,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
+    config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
+) -> Expr:
+    """Derivative of a product; see :func:`_diff_prod_impl`. Tracks its binders.
+
+    A product's binders enclose its body exactly as a sum's do, and its
+    derivative's logarithmic-derivative sum re-binds them: `prod((i,k),
+    sum(ii, x(ii)))` captured a promoted guard `ii(i)`, giving 16 instead of 32
+    (PR #1779 review, round 15). Same channel as `_diff_sum`, not `bound_indices`.
+    """
+    _ENCLOSING_BINDERS.append(expr.index_sets)
+    try:
+        return _diff_prod_impl(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
+    finally:
+        _ENCLOSING_BINDERS.pop()
+
+
+def _diff_prod_impl(
     expr: Prod,
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
