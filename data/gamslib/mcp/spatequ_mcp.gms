@@ -52,7 +52,7 @@ Variables
     nu_SUP(r,c)
     nu_SDBAL(c)
     nu_SX(r,c)
-    nu_DX(r,c)
+    nu_DX(rr,c)
 ;
 
 Positive Variables

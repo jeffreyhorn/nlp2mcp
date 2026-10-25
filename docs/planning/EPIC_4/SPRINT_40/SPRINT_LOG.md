@@ -864,9 +864,21 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - **Mutation controls:** `main` fails 4 tests; no offset-key pass, 3; no subset-domain preference, 4. The positive control passes in all.
 - **Bounded, carried to Day 7: turkpow's third violation `vs(v,v)`** (`stat_ht`). There the eq index `t` has NO variable counterpart, and the canonical pass pairs it with its alias `v`. It needs a new discriminator, so it is not quick. It touches #1778's family: freej2 moves 0.375 → 0.360, NLP 0.3333, changed but not fixed. **#1778 stays open, tracked with it.**
 
+### PR #1783 review round 1 (P4)
+
+- **The declared-NAME preference was a heuristic, and the review found where it is wrong.** An equation index binds the variable position its REFERENCE occupies, which need not be the position with its name:
+  - **reversed equal-arity domain**, `e(j,i).. x(j,i)` with `x(i,j)`: the name preference emitted `nu_e(j,i)`, with wrong multiplier values (−12 vs −16 at `(i1,i2)`). The objective cannot show it, because the primal is pinned;
+  - **fixed coordinate**, `e(t).. z(t,'t1')` with `z(v,t)`: `t` binds position 0. The name preference broke it outright: the MCP did not solve, where `main` and the NLP give 14.0.
+- **Fixed:** the binding is read from the equation body. `_eq_index_ref_binding` binds an equation index only where it occupies exactly ONE position across every reference to the variable. Both matchers use that binding first and otherwise fall back to `main`'s logic (canonical, root, same-position).
+  - The #1782 fixture keeps its hand-derived row.
+  - Fixed-coordinate and transposed-sum references solve to NLP (14.0, 0.0201).
+  - The reversed domain is back to `nu_e(i,j)` with `nu_e(i1,i2) = −16`.
+- **Mutation controls:** the name heuristic fails exactly the review's regressions (reversed, fixed coordinate, its solve, the multiplier values); `main` fails the original fixture.
+- **Corpus:** one more golden drifted, **spatequ**, by one line: its multiplier declaration `nu_DX(r,c)` became `nu_DX(rr,c)`. In `DX(r,c).. sum(rr, X(rr,r,c))` the equation index `r` binds `X`'s position 1, declared `rr`, an alias of `r`. Same set, no other line changes, and the resolver holds the bucket. The P2 ratchet stays at 9.
+
 ### Gate
 
-`make typecheck && make format && make lint && make test`: typecheck, format and lint clean; **5,646 passed**, 10 skipped, no `225*` dirs.
+`make typecheck && make format && make lint && make test`: typecheck, format and lint clean; **5,646 passed** at the first push and **5,652** after review round 1, 10 skipped, no `225*` dirs.
 - `make check-index-repeats`: P1 0 / 3,370; **P2 9 = baseline** (from 11).
 - The leak gate is complete; every drifted golden was re-solved (GO).
 - `check_phase0_doc.py` PASS.

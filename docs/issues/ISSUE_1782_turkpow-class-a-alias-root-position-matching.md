@@ -104,3 +104,11 @@ The same fixture with **distinct** sets (`Set v / v1*v3 /`, no `Alias`) already 
 sambal and qsambal hold their **presolve** match. Their cold solves stay wrong (old 1028, new 781, NLP 3.97) for other reasons, so this corrects a term but moves no bucket.
 
 **Bounded, carried to Day 7:** turkpow's `stat_ht` `vs(v,v)` (an eq index with no variable counterpart; see the PROCEED/REPLAN signal above). turkpow stays `path_syntax_error` for other reasons, unchanged.
+
+## PR #1783 review round 1: the binding comes from the REFERENCE
+
+- **The declared-name preference was replaced.** It broke a reversed equal-arity domain (`e(j,i).. x(j,i)`: `nu_e(j,i)`, wrong multiplier values) and a fixed-coordinate reference (`e(t).. z(t,'t1')`: the MCP did not solve).
+- `_eq_index_ref_binding` reads, from the equation body, the variable position each equation index actually occupies. It binds only when there is exactly one such position across every reference; otherwise both matchers keep `main`'s logic.
+- **The fixture, turkpow, sambal and qsambal are unchanged from the name-based result.**
+- One extra golden (spatequ) re-spells a multiplier declaration over the alias `rr` (the same set); the resolver holds its bucket.
+- **Note for Day 7:** the binding also says when an equation index occupies NO position, which is turkpow's `stat_ht` case. It is not used yet: the fallback is unchanged by design.

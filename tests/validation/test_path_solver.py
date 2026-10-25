@@ -646,6 +646,55 @@ def test_issue_1782_aliased_class_a_fixture_solves_to_the_nlp_optimum(tmp_path):
 
 
 @pytest.mark.validation
+@pytest.mark.parametrize(
+    "name, source, nlp",
+    [
+        (
+            "fixed",
+            "Set t / t1*t3 /;\nAlias (t,v);\nVariable z(v,t), obj;\nEquation e(t), defobj;\n"
+            "e(t).. z(t,'t1') =e= ord(t);\ndefobj.. obj =e= sum((v,t), sqr(z(v,t)));\n"
+            "Model m / all /;\nsolve m using nlp minimizing obj;\n",
+            14.0,
+        ),
+        (
+            "tsum",
+            "Set t / t1*t3 /;\nAlias (t,v);\nParameter c(t,v);\n"
+            "c(t,v) = 1 + ord(t) + 2*ord(v);\nVariable z(v,t), obj;\nEquation e(t), defobj;\n"
+            "e(t).. sum(v, c(t,v)*z(t,v)) =e= 1;\n"
+            "defobj.. obj =e= sum((v,t), sqr(z(v,t)));\n"
+            "Model m / all /;\nsolve m using nlp minimizing obj;\n",
+            0.0201,
+        ),
+    ],
+)
+def test_issue_1782_reference_bindings_solve_to_the_nlp_optimum(tmp_path, name, source, nlp):
+    """PR #1783 review: an equation index binds the variable position its
+    REFERENCE occupies. A fixed-coordinate reference z(t,'t1') and a transposed sum
+    z(t,v) both bind position 0; a declared-name preference broke the first (no
+    model status). NLP optima: 14.0 and 0.0201."""
+    obj, _ = _translate_and_solve(tmp_path, name, source)
+    assert abs(obj - nlp) < 1e-3, obj
+
+
+@pytest.mark.validation
+def test_issue_1782_reversed_domain_multiplier_values(tmp_path):
+    """PR #1783 review: e(j,i).. x(j,i) with x(i,j). The primal is pinned, so the
+    objective cannot see a transposed multiplier; its VALUE can: nu_e('i1','i2') =
+    -2*ord(i)*c = -16 (positional) vs -12 when emitted as nu_e(j,i)."""
+    _translate_and_solve(
+        tmp_path,
+        "rev",
+        "Set i / i1*i3 /;\nAlias (i,j);\nParameter c(i,j);\nc(i,j) = 1 + ord(i) + 3*ord(j);\n"
+        "Variable x(i,j), obj;\nEquation e(j,i), defobj;\ne(j,i).. x(j,i) =e= c(j,i);\n"
+        "defobj.. obj =e= sum((i,j), ord(i)*sqr(x(i,j)));\n"
+        "Model m / all /;\nsolve m using nlp minimizing obj;\n",
+    )
+    lst = (tmp_path / "rev_mcp.lst").read_text()
+    m = re.search(r"VAR nu_e.*?\ni1\.i2\s+\S+\s+([-+0-9.eE]+)", lst, re.S)
+    assert m and abs(float(m.group(1)) + 16.0) < 1e-3, m and m.group(1)
+
+
+@pytest.mark.validation
 class TestPATHAvailability:
     """Test PATH solver availability detection."""
 

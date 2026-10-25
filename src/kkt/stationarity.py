@@ -5181,10 +5181,56 @@ def _find_superset_in_domain(
     return None
 
 
+def _eq_index_ref_binding(eq_def: Any, var_name: str, eq_domain: tuple[str, ...]) -> dict[int, int]:
+    """eq-domain position -> the variable position that index BINDS (#1782).
+
+    Read from the equation body's references to ``var_name``: an equation index
+    is bound to a variable position only when it occupies exactly ONE position
+    across every reference (an IndexOffset counts by its base). An index absent
+    from the references, or found at more than one position, is left out, and
+    the caller falls back to its canonical/root/same-position matching.
+    """
+    if eq_def is None:
+        return {}
+    domain = tuple(getattr(eq_def, "domain", None) or eq_domain)
+    if len(domain) != len(eq_domain):
+        return {}
+    key = var_name.lower()
+    refs: list[tuple] = []
+
+    def walk(node: object) -> None:
+        if isinstance(node, VarRef) and node.name.lower() == key:
+            refs.append(tuple(node.indices))
+        children = getattr(node, "children", None)
+        if callable(children):
+            for child in children():
+                walk(child)
+
+    for part in tuple(getattr(eq_def, "lhs_rhs", None) or ()) + (
+        getattr(eq_def, "condition", None),
+    ):
+        if part is not None:
+            walk(part)
+    binding: dict[int, int] = {}
+    for ei, name in enumerate(domain):
+        target = str(name).lower()
+        positions = {
+            p
+            for ref in refs
+            for p, idx in enumerate(ref)
+            if isinstance(idx.base if isinstance(idx, IndexOffset) else idx, str)
+            and str(idx.base if isinstance(idx, IndexOffset) else idx).lower() == target
+        }
+        if len(positions) == 1:
+            binding[ei] = positions.pop()
+    return binding
+
+
 def _match_subset_domain(
     mult_domain: tuple[str, ...],
     var_domain: tuple[str, ...],
     model_ir: ModelIR,
+    ref_binding: dict[int, int] | None = None,
 ) -> dict[str, str] | None:
     """Try to match mult_domain indices to var_domain indices via subset/alias.
 
@@ -5241,17 +5287,18 @@ def _match_subset_domain(
                 return True
             return False
 
-        # Prefer the var position declared with the SAME NAME (Sprint 40 P4,
-        # Class A / turkpow), then the same position, then any other. With
-        # Alias(t,v), e(t) and z(v,t), both positions canonicalize to `t`, and
-        # the same-position preference returned {t: v}: the mult index was
-        # treated as an independent iteration variable, minted as t__kkt1 and
-        # summed over, giving nu_e(v) and the repeated guard s(t,t).
+        # Prefer the var position this mult index ACTUALLY binds in the
+        # equation's references (Sprint 40 P4, #1782), then the same position,
+        # then any other. With Alias(t,v), e(t) and z(v,t), both positions
+        # canonicalize to `t`, and the same-position preference returned
+        # {t: v}: the mult index was treated as an independent iteration
+        # variable, minted as t__kkt1 and summed over. A declared-NAME
+        # preference broke a reversed equal-arity domain (`e(j,i).. x(j,i)`
+        # with x(i,j) needs {j: i, i: j}; PR #1783 review), so the binding
+        # comes from the reference itself.
         matched = False
-        for k in range(len(var_domain)):
-            if str(var_domain[k]).lower() == str(mult_idx).lower():
-                matched = _try_match(k)
-                break
+        if ref_binding and p in ref_binding:
+            matched = _try_match(ref_binding[p])
         if not matched and p < len(var_domain):
             matched = _try_match(p)
         if not matched:
@@ -5356,6 +5403,7 @@ def _compute_index_offset_key(
     var_domain: tuple[str, ...],
     model_ir: ModelIR,
     _domain_cache: dict | None = None,
+    ref_binding: dict[int, int] | None = None,
 ) -> tuple[int, ...]:
     """Compute the positional offset between equation and variable indices.
 
@@ -5478,20 +5526,20 @@ def _compute_index_offset_key(
             used_var: set[int] = set()
             for ei in range(len(eq_domain)):
                 matched = False
-                # Pass 0 (Sprint 40 P4, Class A / turkpow): the variable position
-                # declared with the SAME NAME as the equation index. With
-                # Alias(t,v), e(t) and z(v,t), both positions canonicalize to `t`,
-                # and the canonical pass below took position 0 (`v`), leaving the
-                # genuine `t` "unmatched": nu_e(v) and a repeated guard s(t,t).
-                for vi in range(len(var_domain)):
-                    if (
-                        vi not in used_var
-                        and str(eq_domain[ei]).lower() == str(var_domain[vi]).lower()
-                    ):
+                # Pass 0 (Sprint 40 P4, #1782): the variable position the
+                # equation index ACTUALLY binds in the equation body's references
+                # (`ref_binding`, from `_eq_index_ref_binding`). With Alias(t,v),
+                # e(t) and z(v,t), both positions canonicalize to `t` and the
+                # canonical pass below took position 0 (`v`), leaving the genuine
+                # `t` "unmatched": nu_e(v) and a repeated guard s(t,t). Not the
+                # declared NAME: `e(t).. z(t,'t1')` binds position 0 though
+                # position 1 is named `t` (PR #1783 review).
+                if ref_binding and ei in ref_binding:
+                    vi = ref_binding[ei]
+                    if vi < len(var_domain) and vi not in used_var:
                         offsets_list[vi] = _compute_offset_at(ei, vi)
                         used_var.add(vi)
                         matched = True
-                        break
                 if matched:
                     continue
                 # First pass: prefer exact canonical match (same set/alias)
@@ -6828,6 +6876,11 @@ def _add_indexed_jacobian_terms(
                 # These need separate stationarity terms with different multiplier indices.
                 # Group entries by the relationship between eq_indices and var_indices.
                 offset_groups: dict[tuple[int, ...], list[tuple[int, int]]] = {}
+                # #1782: where each equation index sits in this equation's
+                # references to the variable, computed once per group.
+                ref_binding = _eq_index_ref_binding(
+                    kkt.model_ir.equations.get(eq_name_base), var_name, mult_domain
+                )
                 for entry_row_id, entry_col_id in entries:
                     _, entry_eq_indices = jacobian.index_mapping.row_to_eq[entry_row_id]
                     _, entry_var_indices = jacobian.index_mapping.col_to_var[entry_col_id]
@@ -6839,6 +6892,7 @@ def _add_indexed_jacobian_terms(
                         var_domain,
                         kkt.model_ir,
                         _domain_cache=domain_cache,
+                        ref_binding=ref_binding,
                     )
                     if not allow_nonzero_offsets and any(
                         o != 0 and o != _SENTINEL_UNMATCHED for o in offset_key
@@ -7580,7 +7634,9 @@ def _add_indexed_jacobian_terms(
                     # disjoint cases like ('ii','jj') vs ('i','j') AND mixed
                     # cases like ('ii','j') vs ('i','j') where some indices
                     # overlap by name but others are subset/alias-related.
-                    subset_rename = _match_subset_domain(mult_domain, var_domain, kkt.model_ir)
+                    subset_rename = _match_subset_domain(
+                        mult_domain, var_domain, kkt.model_ir, ref_binding=ref_binding
+                    )
 
                     # Issue #1104: For dimension-mismatch with alias-only
                     # renames, the standard _rewrite_subset_to_superset is

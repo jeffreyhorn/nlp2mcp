@@ -83,9 +83,10 @@ def test_POSITIVE_CONTROL_distinct_sets_are_unchanged(tmp_path):
     assert row == EXPECTED_ROW, row
 
 
-def test_match_subset_domain_prefers_the_same_NAMED_position():
-    """The unit of the second fix: e(t) against z(v,t) under Alias(t,v) must need
-    NO rename (t is already a position). It returned {t: v}."""
+def test_match_subset_domain_follows_the_REFERENCE_binding():
+    """The unit of the second fix: e(t) against z(v,t) under Alias(t,v). With the
+    reference binding {0: 1} (``t`` sits at z's position 1) no rename is needed;
+    without one, the same-position fallback keeps its old answer {t: v}."""
     from src.ir.model_ir import ModelIR
     from src.ir.symbols import AliasDef, SetDef
     from src.kkt.stationarity import _match_subset_domain
@@ -93,4 +94,66 @@ def test_match_subset_domain_prefers_the_same_NAMED_position():
     model_ir = ModelIR()
     model_ir.sets["t"] = SetDef(name="t", members=["t1", "t2", "t3"])
     model_ir.aliases["v"] = AliasDef(name="v", target="t")
-    assert _match_subset_domain(("t",), ("v", "t"), model_ir) == {}
+    assert _match_subset_domain(("t",), ("v", "t"), model_ir, ref_binding={0: 1}) == {}
+    assert _match_subset_domain(("t",), ("v", "t"), model_ir) == {"t": "v"}
+
+
+# --- PR #1783 review: the binding comes from the REFERENCE, not the declared name ---
+
+REVERSED = """\
+Set i / i1*i3 /;
+Alias (i,j);
+Parameter c(i,j);
+c(i,j) = 1 + ord(i) + 3*ord(j);
+Variable x(i,j), obj;
+Equation e(j,i), defobj;
+e(j,i).. x(j,i) =e= c(j,i);
+defobj.. obj =e= sum((i,j), ord(i)*sqr(x(i,j)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+FIXED_COORDINATE = """\
+Set t / t1*t3 /;
+Alias (t,v);
+Variable z(v,t), obj;
+Equation e(t), defobj;
+e(t).. z(t,'t1') =e= ord(t);
+defobj.. obj =e= sum((v,t), sqr(z(v,t)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+TRANSPOSED_SUM = """\
+Set t / t1*t3 /;
+Alias (t,v);
+Parameter c(t,v);
+c(t,v) = 1 + ord(t) + 2*ord(v);
+Variable z(v,t), obj;
+Equation e(t), defobj;
+e(t).. sum(v, c(t,v)*z(t,v)) =e= 1;
+defobj.. obj =e= sum((v,t), sqr(z(v,t)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+
+def test_a_REVERSED_equal_arity_domain_keeps_its_positional_multiplier(tmp_path):
+    # e(j,i).. x(j,i) with x(i,j): j binds position 0. A declared-NAME preference
+    # (position 1 is named `j`) emitted nu_e(j,i), with wrong multiplier values.
+    emit = _emit(tmp_path, REVERSED)
+    row = next(line for line in emit.splitlines() if line.startswith("stat_x("))
+    assert "nu_e(i,j)" in row and "nu_e(j,i)" not in row, row
+
+
+def test_a_FIXED_COORDINATE_reference_binds_the_coordinate_it_occupies(tmp_path):
+    # e(t).. z(t,'t1'): t binds z's position 0 although position 1 is named `t`.
+    # The name preference produced spurious offsets and an MCP that did not solve.
+    row = _stat_row(_emit(tmp_path, FIXED_COORDINATE))
+    assert row == "stat_z(v,t).. 2 * z(v,t) + nu_e(v)$(sameas(t, 't1')) =E= 0;", row
+
+
+def test_a_TRANSPOSED_sum_reference_binds_position_zero(tmp_path):
+    # e(t).. sum(v, c(t,v)*z(t,v)): t binds z's position 0.
+    row = _stat_row(_emit(tmp_path, TRANSPOSED_SUM))
+    assert row == "stat_z(v,t).. 2 * z(v,t) + c(v,t) * nu_e(v) =E= 0;", row
