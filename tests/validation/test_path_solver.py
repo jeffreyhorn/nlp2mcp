@@ -665,13 +665,23 @@ def test_issue_1782_aliased_class_a_fixture_solves_to_the_nlp_optimum(tmp_path):
             "Model m / all /;\nsolve m using nlp minimizing obj;\n",
             0.0201,
         ),
+        (
+            "multi",
+            "Set i / a, b, c /;\nAlias (i,j,k);\nVariable z(i,j,k), obj;\n"
+            "Equation e(i,j), defobj;\ne(i,j).. z('a',i,j) =e= ord(i) + ord(j);\n"
+            "defobj.. obj =e= sum((i,j,k), sqr(z(i,j,k)));\n"
+            "Model m / all /;\nsolve m using nlp minimizing obj;\n",
+            156.0,
+        ),
     ],
 )
 def test_issue_1782_reference_bindings_solve_to_the_nlp_optimum(tmp_path, name, source, nlp):
     """PR #1783 review: an equation index binds the variable position its
     REFERENCE occupies. A fixed-coordinate reference z(t,'t1') and a transposed sum
     z(t,v) both bind position 0; a declared-name preference broke the first (no
-    model status). NLP optima: 14.0 and 0.0201."""
+    model status). Review round 3: a multi-index binding z('a',i,j) must not rename
+    the already-remapped multiplier a second time (nu_e(k,k) failed to solve).
+    NLP optima: 14.0, 0.0201 and 156."""
     obj, _ = _translate_and_solve(tmp_path, name, source)
     assert abs(obj - nlp) < 1e-3, obj
 

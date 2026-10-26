@@ -5,7 +5,9 @@ With ``Alias(t,v)``, ``e(t)`` and ``z(v,t)``, both of z's positions canonicalize
 ``t``. ``_compute_index_offset_key`` and ``_match_subset_domain`` each took position
 0 (``v``), so the multiplier became ``nu_e(v)``, the genuine ``t`` was minted as
 ``t__kkt1`` and summed over, and the guard repeated a coordinate: ``s(t,t)``. Both
-now prefer the variable position declared with the equation index's own NAME.
+now follow the variable position the equation index's REFERENCE occupies
+(``_eq_index_ref_binding``, PR #1783 review rounds 1-2). In ``_match_subset_domain``
+the binding only suppresses a rename, never creates one (round 3).
 """
 
 from __future__ import annotations
@@ -191,3 +193,42 @@ def test_the_binding_requires_the_SAME_single_position_in_EVERY_reference():
     )
     # repeated within one reference
     assert _eq_index_ref_binding(eq(VarRef("z", ("t", "t"))), "z", ("t",)) == {}
+
+
+# --- PR #1783 review round 3: the binding is applied ONCE ---
+
+MULTI_INDEX = """\
+Set i / a, b, c /;
+Alias (i,j,k);
+Variable z(i,j,k), obj;
+Equation e(i,j), defobj;
+e(i,j).. z('a',i,j) =e= ord(i) + ord(j);
+defobj.. obj =e= sum((i,j,k), sqr(z(i,j,k)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+
+def test_a_MULTI_INDEX_binding_does_not_rename_the_remapped_multiplier(tmp_path):
+    # The binding {0: 1, 1: 2} is right; the dimension-mismatch branch already
+    # builds nu_e(j,k). Deriving the rename {i: j, j: k} from the binding and
+    # applying it again made it nu_e(k,k), losing a coordinate (MCP did not solve).
+    row = _stat_row(_emit(tmp_path, MULTI_INDEX))
+    assert row == "stat_z(i,j,k).. 2 * z(i,j,k) + nu_e(j,k)$(sameas(i, 'a')) =E= 0;", row
+
+
+def test_match_subset_domain_never_CREATES_a_rename_from_the_binding():
+    """The binding only suppresses a rename (when the bound position carries the
+    mult index's own name); it is never the source of one."""
+    from src.ir.model_ir import ModelIR
+    from src.ir.symbols import AliasDef, SetDef
+    from src.kkt.stationarity import _match_subset_domain
+
+    model_ir = ModelIR()
+    model_ir.sets["i"] = SetDef(name="i", members=["a", "b", "c"])
+    model_ir.aliases["j"] = AliasDef(name="j", target="i")
+    model_ir.aliases["k"] = AliasDef(name="k", target="i")
+    binding = {0: 1, 1: 2}
+    assert _match_subset_domain(
+        ("i", "j"), ("i", "j", "k"), model_ir, ref_binding=binding
+    ) == _match_subset_domain(("i", "j"), ("i", "j", "k"), model_ir)

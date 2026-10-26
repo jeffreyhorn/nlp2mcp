@@ -892,9 +892,16 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - **Mixed bound + independent references are broken on every version** (the fixed cell needs `sum(t', coef·nu_e(t'))`). Both reproducers are on **#1778**, recorded as known failures, not asserted. The general fix goes with turkpow's `stat_ht` (Day 7).
 - **Regression:** the binding unit test covers consistent (`{0: 1}`), mixed, inconsistent and repeated-in-one-reference cases.
 
+### PR #1783 review round 3 (P4)
+
+- **The binding was applied twice.** On `Alias(i,j,k)`, `z(i,j,k)`, `e(i,j).. z('a',i,j)` the dimension-mismatch branch already built `nu_e(j,k)`; `_match_subset_domain` derived the rename `{i: j, j: k}` from the same binding, and the term rewrite made it `nu_e(k,k)`. The MCP did not solve (NLP 156). `main` emits garbled offset terms there and also fails.
+- **Fixed:** in `_match_subset_domain` the binding only suppresses a rename (it is accepted only when the bound position carries the mult index's own name) and never creates one. The emit is `nu_e(j,k)$(sameas(i,'a'))`, solving to 156.
+- **Regressions:** an emitted-row unit test, a "never creates a rename" unit test, and a validation solve. Dropping the name check fails all three.
+- **Corpus:** spatequ's round-1 re-spelling `nu_DX(rr,c)` is undone; its golden is byte-identical to `main` again (that rename came from the binding). The resolver holds the bucket. The other goldens and P2 = 9 are unchanged.
+
 ### Gate
 
-`make typecheck && make format && make lint && make test`: typecheck, format and lint clean; **5,646 passed** at the first push, **5,652** after review round 1 and **5,653** after round 2, 10 skipped, no `225*` dirs.
+`make typecheck && make format && make lint && make test`: typecheck, format and lint clean; **5,646 passed** at the first push, **5,652** after review round 1, **5,653** after round 2 and **5,656** after round 3, 10 skipped, no `225*` dirs.
 - `make check-index-repeats`: P1 0 / 3,370; **P2 9 = baseline** (from 11).
 - The leak gate is complete; every drifted golden was re-solved (GO).
 - `check_phase0_doc.py` PASS.

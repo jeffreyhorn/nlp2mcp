@@ -116,3 +116,10 @@ sambal and qsambal hold their **presolve** match. Their cold solves stay wrong (
 ## PR #1783 review round 2: the same single position in EVERY reference
 
 The binding requires the index at the same single position in every reference. A union let a fixed-cell reference independent of the index slip through: on `e(t).. 2*z('t3',t) - z('t2','t4')` it gave MCP 37.75 against NLP 7.5. The strict rule matches `main`. Mixed bound + independent references stay broken on every version; they are tracked on #1778.
+
+## PR #1783 review round 3: the binding is applied ONCE
+
+On `Alias(i,j,k)`, `z(i,j,k)`, `e(i,j).. z('a',i,j)` the binding `{0: 1, 1: 2}` is correct, and the dimension-mismatch branch already places the multiplier on the variable's coordinates (`nu_e(j,k)`). `_match_subset_domain` turned the same binding into the rename `{i: j, j: k}`, and `_rewrite_subset_to_superset` applied it a second time, giving `nu_e(k,k)`: a lost coordinate, and an MCP that did not solve (NLP 156).
+
+**Fixed:** in `_match_subset_domain` the binding only SUPPRESSES a rename. It is accepted only when the bound position carries the mult index's own name; it never creates a rename. Every other case keeps `main`'s same-position / any-position matching. The offset-key pass is unchanged. The new emit is `nu_e(j,k)$(sameas(i,'a'))` and solves to 156. The #1782 fixture and the round 1–2 regressions are unchanged. spatequ's round-1 re-spelling (`nu_DX(rr,c)`) came from a binding-created rename, so it is undone: that golden is byte-identical to `main` again.
+

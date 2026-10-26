@@ -5306,8 +5306,22 @@ def _match_subset_domain(
         # preference broke a reversed equal-arity domain (`e(j,i).. x(j,i)`
         # with x(i,j) needs {j: i, i: j}; PR #1783 review), so the binding
         # comes from the reference itself.
+        #
+        # ⚠ The binding only SUPPRESSES a rename, it never CREATES one (PR #1783
+        # review, round 3): it is accepted only when the bound position carries
+        # the mult index's own name (no rename). In the dimension-mismatch path
+        # the element mapping has ALREADY placed the multiplier on the
+        # variable's coordinates, so a binding-derived rename is applied a second
+        # time: Alias(i,j,k), z(i,j,k), e(i,j).. z('a',i,j) built nu_e(j,k), and
+        # the rename {i: j, j: k} then made it nu_e(k,k). Any other case keeps
+        # main's same-position / any-position matching exactly.
         matched = False
-        if ref_binding and p in ref_binding:
+        if (
+            ref_binding
+            and p in ref_binding
+            and ref_binding[p] < len(var_domain)
+            and str(var_domain[ref_binding[p]]).lower() == str(mult_idx).lower()
+        ):
             matched = _try_match(ref_binding[p])
         if not matched and p < len(var_domain):
             matched = _try_match(p)
