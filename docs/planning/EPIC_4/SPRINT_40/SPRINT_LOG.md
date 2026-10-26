@@ -963,6 +963,7 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
   - **Fixed:** the rename also reserves every index name in the derivative, free or bound (`_index_names_in`). It picks `t__kkt1`, and the fixture solves to 1.229.
 - **Regressions:** each case has an emitted-row unit test and a validation solve. Reverting either fix fails exactly its own test.
 - **Corpus:** dinam drifted by −11 B and holds its bucket (resolver GO). The other in-scope goldens are clean. ferts, ganges and turkpow timed out under load (unverified); re-run alone with `--fail-on-unverified`, all three are clean, so the gate is complete.
+- **CI: `PR19 emit solve validation` failed in its `Post Set up Python 3.12` step** after every real step had passed. `ubuntu-latest` rolled from 24.04 to 26.04, and setup-python's cache key includes the OS version, so the cache missed. This job never pip-installs, so `~/.cache/pip` did not exist and the post-job save errored. **Fixed:** `cache: "pip"` is removed from that workflow. The other three workflows with a pip cache (`ci`, `nightly`, `gamslib-regression`) do `pip install`, so they are not exposed.
 
 ### Found and routed (not fixed in place)
 
