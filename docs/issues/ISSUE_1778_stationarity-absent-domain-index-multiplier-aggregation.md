@@ -100,3 +100,23 @@ Model m / all /;  solve m using nlp minimizing z;
 
 - The AD derivative is now correct per instance (the guard is `ii('i1')` at `x('i1','i2')`).
 - The row's variable references and guard are mapped to `j` in BOTH positions. This is the same element-to-coordinate generalization over aliased positions as this issue's `nu_e(i)$(ord(i)=k)`, and the round-3 `act(i)` cases.
+
+## Mixed bound + independent references (Sprint 40 Day 6, PR #1783 review round 2)
+
+
+```gams
+Set t / t1*t3 /;  Alias (t,v);  Variable z(v,t), obj;  Equation e(t), defobj;
+e(t).. z('t1',t) + z('t1','t1') =e= ord(t);                 * shape A, NLP 8.75
+* shape B (t / t1*t5 /, w(t) = ord(t)):  e(t).. 2*z('t3',t) - z('t2','t4') =e= w(t);   NLP 7.5
+defobj.. obj =e= sum((v,t), sqr(z(v,t)));
+```
+
+| version | shape A | shape B |
+|---|---|---|
+| `main` | MCP fails (no model status) | fails |
+| union reference binding (PR #1783 first revision) | 8.750 ✓ | **37.75, a silent wrong answer** |
+| strict reference binding (as merged in #1783) | fails | fails |
+
+- One reference binds the equation index (`z(…,t)`); another is a FIXED cell independent of it (`z('t1','t1')`, `z('t2','t4')`). Every equation row contributes to the fixed cell, so its stationarity term must be `sum(t', coef·nu_e(t'))`.
+- The stationarity generalization has no way to express that. The union binding's success on shape A was the offset grouping happening to line up; on shape B the fixed cell took the bound reference's coefficient.
+- **#1783 keeps the strict rule:** it never infers a binding from a reference that does not involve the index, and it matches `main`. The general fix belongs here, with the same absent-index logic turkpow's `stat_ht` needs (Sprint 40 Day 7).

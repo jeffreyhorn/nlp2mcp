@@ -830,3 +830,78 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - `make check-index-repeats`: P1 0, P2 = baseline.
 - `make check-doc-figures` is clean.
 - `check_phase0_doc.py` PASS.
+
+---
+
+## Day 6 — 2026-10-24 · P7: #1755 finish · 3 h · + P4: turkpow, Class A · 7 h
+
+**Branch:** `planning/sprint40-day6-turkpow` · **Base:** `3539f994` (PR #1779, 17 review rounds). The calendar runs about two days behind the plan's dates.
+
+### P7: #1755 finish — landed (C2)
+
+- **The three gates hold:**
+  - the Phase-0 doc (`ISSUE_1755`, with layer and positive control);
+  - an unqualified, uncontended leak-gate pass: complete and clean through every review round, the last one 0 drift;
+  - **in `main`** at `3539f994`.
+- **Determinism ×3** (`PYTHONHASHSEED` 0 / 1 / 42) on all **15** models whose goldens #1779's shared-machinery changes touched: **1 distinct hash each, byte-identical to the committed golden.**
+  - turkpow, ganges and gangesx ran in a `main` worktree.
+  - ⚠ The first run used the repo's working tree, and P4's edits landed mid-run. It was stopped and those three re-run against `main`, so every figure is `main`'s.
+
+### P4: turkpow, Class A — #1782
+
+- **Phase-0 gate first:** `819d7850` (`ISSUE_1782`; `check_phase0_doc.py` PASS).
+- **Fail-before reproduced:** `Alias(t,v)`, `z(v,t)`, `e(t).. sum(v$s(t,v), c(v,t)*z(v,t))` emits `sum(t__kkt1, c(v,t__kkt1)*1$(s(t__kkt1,t__kkt1))*nu_e(v))`. MCP **0.045** vs NLP **0.0318**.
+- **The positive control needed distinct LABELS, not just distinct sets.** My first control reused `t1*t3` for both sets, which reintroduced the element-to-set ambiguity: the emit was garbled and the MCP did not solve. With `v / v1*v3 /` it emits the hand-derived row and solves to 0.026 = NLP.
+- **The layer, refined by measurement.** The pre-trace named the alias ChainMap layer. Instrumented, the `{'v': 't'}` remap is a CONSEQUENCE: two matchers pair the eq index with a variable position by **alias root**, and both take position 0 (`v`):
+  - `_compute_index_offset_key`'s canonical pass, which leaves `t` "unmatched", hence `nu_e(v)`;
+  - `_match_subset_domain`'s same-position preference, which returns `{t: v}`, hence the minted `t__kkt1` sum.
+- **The fix:** an exact-name preference in each matcher. **Necessity measured:** the alias-layer change I tried first was not needed and is dropped; removing either matcher fix breaks the fixture.
+- **Results:** the fixture emits `c(v,t)*1$(s(t,v))*nu_e(t)` and solves to **0.032** = NLP; the positive control is byte-identical.
+  - **P2: 11 → 9.** turkpow's two minted repeats are gone; `--update-baseline` in the same commit.
+- **Corpus:** 5 goldens over 3 models drifted (turkpow, sambal, qsambal); the resolver gives **GO, all held**.
+  - ⚠ **The pre-trace's positive control was wrong.** sambal's "correct" minted emit had the same defect (`nu_cbal(i)` summed over `i__kkt1`). The new emit is the hand-derived `−1$(xb(i,j)) * nu_cbal(j)`.
+  - sambal and qsambal keep their presolve match; their cold solves stay wrong for other reasons (1028 → 781, NLP 3.97).
+- **Mutation controls:** `main` fails 4 tests; no offset-key pass, 3; no subset-domain preference, 4. The positive control passes in all.
+- **Bounded, carried to Day 7: turkpow's third violation `vs(v,v)`** (`stat_ht`). There the eq index `t` has NO variable counterpart, and the canonical pass pairs it with its alias `v`. It needs a new discriminator, so it is not quick. It touches #1778's family: freej2 moves 0.375 → 0.360, NLP 0.3333, changed but not fixed. **#1778 stays open, tracked with it.**
+
+### PR #1783 review round 1 (P4)
+
+- **The declared-NAME preference was a heuristic, and the review found where it is wrong.** An equation index binds the variable position its REFERENCE occupies, which need not be the position with its name:
+  - **reversed equal-arity domain**, `e(j,i).. x(j,i)` with `x(i,j)`: the name preference emitted `nu_e(j,i)`, with wrong multiplier values (−12 vs −16 at `(i1,i2)`). The objective cannot show it, because the primal is pinned;
+  - **fixed coordinate**, `e(t).. z(t,'t1')` with `z(v,t)`: `t` binds position 0. The name preference broke it outright: the MCP did not solve, where `main` and the NLP give 14.0.
+- **Fixed:** the binding is read from the equation body. `_eq_index_ref_binding` binds an equation index only where it occupies exactly ONE position across every reference to the variable. Both matchers use that binding first and otherwise fall back to `main`'s logic (canonical, root, same-position).
+  - The #1782 fixture keeps its hand-derived row.
+  - Fixed-coordinate and transposed-sum references solve to NLP (14.0, 0.0201).
+  - The reversed domain is back to `nu_e(i,j)` with `nu_e(i1,i2) = −16`.
+- **Mutation controls:** the name heuristic fails exactly the review's regressions (reversed, fixed coordinate, its solve, the multiplier values); `main` fails the original fixture.
+- **Corpus:** one more golden drifted, **spatequ**, by one line: its multiplier declaration `nu_DX(r,c)` became `nu_DX(rr,c)`. In `DX(r,c).. sum(rr, X(rr,r,c))` the equation index `r` binds `X`'s position 1, declared `rr`, an alias of `r`. Same set, no other line changes, and the resolver holds the bucket. The P2 ratchet stays at 9.
+
+### PR #1783 review round 2 (P4)
+
+- **The review asked for a strict rule:** bind an equation index only at the SAME single position in EVERY reference. My first revision took the union, so a reference independent of the index (a fixed cell) could not veto the binding.
+- **I first argued to keep the union, then measured a second shape. The second shape refuted it:**
+
+  | version | `e(t).. z('t1',t) + z('t1','t1')` (NLP 8.75) | `e(t).. 2*z('t3',t) - z('t2','t4')` (NLP 7.5) |
+  |---|---|---|
+  | `main` | fails | fails |
+  | union (round 1) | 8.750 ✓ | **37.75: a silent wrong answer** |
+  | strict (round 2) | fails | fails |
+
+  The union's success on the first shape was the offset grouping happening to line up. On the second, the fixed cell took the bound reference's coefficient.
+- **Fixed as reviewed:** the strict rule. It never infers a binding from a reference that does not involve the index, and it matches `main` on both shapes, turning the silent wrong answer back into a visible failure.
+- **Mixed bound + independent references are broken on every version** (the fixed cell needs `sum(t', coef·nu_e(t'))`). Both reproducers are on **#1778**, recorded as known failures, not asserted. The general fix goes with turkpow's `stat_ht` (Day 7).
+- **Regression:** the binding unit test covers consistent (`{0: 1}`), mixed, inconsistent and repeated-in-one-reference cases.
+
+### PR #1783 review round 3 (P4)
+
+- **The binding was applied twice.** On `Alias(i,j,k)`, `z(i,j,k)`, `e(i,j).. z('a',i,j)` the dimension-mismatch branch already built `nu_e(j,k)`; `_match_subset_domain` derived the rename `{i: j, j: k}` from the same binding, and the term rewrite made it `nu_e(k,k)`. The MCP did not solve (NLP 156). `main` emits garbled offset terms there and also fails.
+- **Fixed:** in `_match_subset_domain` the binding only suppresses a rename (it is accepted only when the bound position carries the mult index's own name) and never creates one. The emit is `nu_e(j,k)$(sameas(i,'a'))`, solving to 156.
+- **Regressions:** an emitted-row unit test, a "never creates a rename" unit test, and a validation solve. Dropping the name check fails all three.
+- **Corpus:** spatequ's round-1 re-spelling `nu_DX(rr,c)` is undone; its golden is byte-identical to `main` again (that rename came from the binding). The resolver holds the bucket. The other goldens and P2 = 9 are unchanged.
+
+### Gate
+
+`make typecheck && make format && make lint && make test`: typecheck, format and lint clean; **5,646 passed** at the first push, **5,652** after review round 1, **5,653** after round 2 and **5,656** after round 3, 10 skipped, no `225*` dirs.
+- `make check-index-repeats`: P1 0 / 3,370; **P2 9 = baseline** (from 11).
+- The leak gate is complete; every drifted golden was re-solved (GO).
+- `check_phase0_doc.py` PASS.

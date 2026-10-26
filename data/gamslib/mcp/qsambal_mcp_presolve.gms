@@ -20,7 +20,6 @@ Sets
 ;
 
 Alias(i, j);
-Alias(i, i__kkt1);
 
 Parameters
     xb(i,j) /lab.h1 15, lab.h2 3, lab.p1 130, lab.p2 80, h1.lab na, h2.lab na, p1.h1 15, p1.h2 130, p1.p2 20, p2.h1 25, p2.h2 40, p2.p1 55/
@@ -95,7 +94,7 @@ Equations
 $onMultiR
 * Stationarity equations
 stat_t(i).. tb(i) * tw(i) * 2 * (tb(i) - t(i)) * (-1) / sqr(tb(i)) * 1$(tw(i)) + nu_rbal(i) + nu_cbal(i) =E= 0;
-stat_x(i,j).. (xb(i,j) * xw(i,j) * 2 * (xb(i,j) - x(i,j)) * (-1) / sqr(xb(i,j)) * 1$(xw(i,j)) + ((-1) * 1$(xb(i,j))) * nu_rbal(i) + sum(i__kkt1, ((-1) * 1$(xb(i,i__kkt1))) * nu_cbal(i)))$(xw(i,j)) =E= 0;
+stat_x(i,j).. (xb(i,j) * xw(i,j) * 2 * (xb(i,j) - x(i,j)) * (-1) / sqr(xb(i,j)) * 1$(xw(i,j)) + ((-1) * 1$(xb(i,j))) * nu_rbal(i) + ((-1) * 1$(xb(i,j))) * nu_cbal(j))$(xw(i,j)) =E= 0;
 
 * Original equality equations
 rbal(i).. t(i) =E= sum(j$(xb(i,j)), x(i,j));

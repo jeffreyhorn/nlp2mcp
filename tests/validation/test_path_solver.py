@@ -628,6 +628,83 @@ def test_a_QUOTED_label_variant_keeps_the_aliased_guard_coordinates(tmp_path):
 
 
 @pytest.mark.validation
+def test_issue_1782_aliased_class_a_fixture_solves_to_the_nlp_optimum(tmp_path):
+    """#1782 (Sprint 40 P4): Alias(t,v), z(v,t), e(t).. sum(v$s(t,v), c(v,t)*z(v,t)).
+    The equation index was matched to the aliased position `v`: the emit summed
+    over a minted t__kkt1 with nu_e(v) and solved to 0.045. NLP optimum 0.0318."""
+    obj, _ = _translate_and_solve(
+        tmp_path,
+        "class_a",
+        "Set t / t1*t3 /;\nAlias (t,v);\nSet s(t,v);\ns(t,v) = yes$(ord(t) <= ord(v));\n"
+        "Parameter c(t,v);\nc(t,v) = 1 + ord(t) + 2*ord(v);\n"
+        "Variable z(v,t), obj;\nEquation e(t), defobj;\n"
+        "e(t).. sum(v$s(t,v), c(v,t)*z(v,t)) =e= 1;\n"
+        "defobj.. obj =e= sum((v,t), sqr(z(v,t)));\n"
+        "Model m / all /;\nsolve m using nlp minimizing obj;\n",
+    )
+    assert abs(obj - 0.0318) < 1e-3, obj
+
+
+@pytest.mark.validation
+@pytest.mark.parametrize(
+    "name, source, nlp",
+    [
+        (
+            "fixed",
+            "Set t / t1*t3 /;\nAlias (t,v);\nVariable z(v,t), obj;\nEquation e(t), defobj;\n"
+            "e(t).. z(t,'t1') =e= ord(t);\ndefobj.. obj =e= sum((v,t), sqr(z(v,t)));\n"
+            "Model m / all /;\nsolve m using nlp minimizing obj;\n",
+            14.0,
+        ),
+        (
+            "tsum",
+            "Set t / t1*t3 /;\nAlias (t,v);\nParameter c(t,v);\n"
+            "c(t,v) = 1 + ord(t) + 2*ord(v);\nVariable z(v,t), obj;\nEquation e(t), defobj;\n"
+            "e(t).. sum(v, c(t,v)*z(t,v)) =e= 1;\n"
+            "defobj.. obj =e= sum((v,t), sqr(z(v,t)));\n"
+            "Model m / all /;\nsolve m using nlp minimizing obj;\n",
+            0.0201,
+        ),
+        (
+            "multi",
+            "Set i / a, b, c /;\nAlias (i,j,k);\nVariable z(i,j,k), obj;\n"
+            "Equation e(i,j), defobj;\ne(i,j).. z('a',i,j) =e= ord(i) + ord(j);\n"
+            "defobj.. obj =e= sum((i,j,k), sqr(z(i,j,k)));\n"
+            "Model m / all /;\nsolve m using nlp minimizing obj;\n",
+            156.0,
+        ),
+    ],
+)
+def test_issue_1782_reference_bindings_solve_to_the_nlp_optimum(tmp_path, name, source, nlp):
+    """PR #1783 review: an equation index binds the variable position its
+    REFERENCE occupies. A fixed-coordinate reference z(t,'t1') and a transposed sum
+    z(t,v) both bind position 0; a declared-name preference broke the first (no
+    model status). Review round 3: a multi-index binding z('a',i,j) must not rename
+    the already-remapped multiplier a second time (nu_e(k,k) failed to solve).
+    NLP optima: 14.0, 0.0201 and 156."""
+    obj, _ = _translate_and_solve(tmp_path, name, source)
+    assert abs(obj - nlp) < 1e-3, obj
+
+
+@pytest.mark.validation
+def test_issue_1782_reversed_domain_multiplier_values(tmp_path):
+    """PR #1783 review: e(j,i).. x(j,i) with x(i,j). The primal is pinned, so the
+    objective cannot see a transposed multiplier; its VALUE can: nu_e('i1','i2') =
+    -2*ord(i)*c = -16 (positional) vs -12 when emitted as nu_e(j,i)."""
+    _translate_and_solve(
+        tmp_path,
+        "rev",
+        "Set i / i1*i3 /;\nAlias (i,j);\nParameter c(i,j);\nc(i,j) = 1 + ord(i) + 3*ord(j);\n"
+        "Variable x(i,j), obj;\nEquation e(j,i), defobj;\ne(j,i).. x(j,i) =e= c(j,i);\n"
+        "defobj.. obj =e= sum((i,j), ord(i)*sqr(x(i,j)));\n"
+        "Model m / all /;\nsolve m using nlp minimizing obj;\n",
+    )
+    lst = (tmp_path / "rev_mcp.lst").read_text()
+    m = re.search(r"VAR nu_e.*?\ni1\.i2\s+\S+\s+([-+0-9.eE]+)", lst, re.S)
+    assert m and abs(float(m.group(1)) + 16.0) < 1e-3, m and m.group(1)
+
+
+@pytest.mark.validation
 class TestPATHAvailability:
     """Test PATH solver availability detection."""
 
