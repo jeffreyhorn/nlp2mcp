@@ -5185,10 +5185,11 @@ def _eq_index_ref_binding(eq_def: Any, var_name: str, eq_domain: tuple[str, ...]
     """eq-domain position -> the variable position that index BINDS (#1782).
 
     Read from the equation body's references to ``var_name``: an equation index
-    is bound to a variable position only when it occupies exactly ONE position
-    across every reference (an IndexOffset counts by its base). An index absent
-    from the references, or found at more than one position, is left out, and
-    the caller falls back to its canonical/root/same-position matching.
+    is bound to a variable position only when EVERY reference holds it at exactly
+    one position, the same in all of them (an IndexOffset counts by its base). An
+    index absent from any reference, repeated within one, or at different
+    positions across references is left out, and the caller falls back to its
+    canonical/root/same-position matching.
     """
     if eq_def is None:
         return {}
@@ -5214,15 +5215,24 @@ def _eq_index_ref_binding(eq_def: Any, var_name: str, eq_domain: tuple[str, ...]
     binding: dict[int, int] = {}
     for ei, name in enumerate(domain):
         target = str(name).lower()
-        positions = {
-            p
+        # The SAME single position in EVERY reference (PR #1783 review, round 2).
+        # A union also bound an index from a reference that does not involve it:
+        # in `e(t).. 2*z('t3',t) - z('t2','t4')` the second reference is
+        # independent of `t`, yet the union bound `t` to position 1 for every
+        # Jacobian entry of (e, z), and the fixed cell got the bound reference's
+        # coefficient: a silent wrong answer (MCP 37.75, NLP 7.5). An index
+        # absent from any reference now leaves the binding to the fallback.
+        per_ref = [
+            [
+                p
+                for p, idx in enumerate(ref)
+                if isinstance(idx.base if isinstance(idx, IndexOffset) else idx, str)
+                and str(idx.base if isinstance(idx, IndexOffset) else idx).lower() == target
+            ]
             for ref in refs
-            for p, idx in enumerate(ref)
-            if isinstance(idx.base if isinstance(idx, IndexOffset) else idx, str)
-            and str(idx.base if isinstance(idx, IndexOffset) else idx).lower() == target
-        }
-        if len(positions) == 1:
-            binding[ei] = positions.pop()
+        ]
+        if per_ref and all(len(ps) == 1 for ps in per_ref) and len({ps[0] for ps in per_ref}) == 1:
+            binding[ei] = per_ref[0][0]
     return binding
 
 

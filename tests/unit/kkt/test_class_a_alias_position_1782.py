@@ -157,3 +157,37 @@ def test_a_TRANSPOSED_sum_reference_binds_position_zero(tmp_path):
     # e(t).. sum(v, c(t,v)*z(t,v)): t binds z's position 0.
     row = _stat_row(_emit(tmp_path, TRANSPOSED_SUM))
     assert row == "stat_z(v,t).. 2 * z(v,t) + c(v,t) * nu_e(v) =E= 0;", row
+
+
+def test_the_binding_requires_the_SAME_single_position_in_EVERY_reference():
+    """PR #1783 review round 2. A reference independent of the equation index
+    (`z('t1','t1')`, `z('t2','t4')`) must not let the OTHER reference's position
+    stand as the binding: a union did, and on `e(t).. 2*z('t3',t) - z('t2','t4')`
+    it produced a silent wrong answer (MCP 37.75 vs NLP 7.5). Mixed references now
+    leave the binding to the fallback (main's behaviour; that shape is a
+    stationarity defect tracked on #1778)."""
+    from src.ir.ast import Binary, Const, VarRef
+    from src.ir.symbols import EquationDef, Rel
+    from src.kkt.stationarity import _eq_index_ref_binding
+
+    def eq(*refs):
+        body = refs[0]
+        for r in refs[1:]:
+            body = Binary("+", body, r)
+        return EquationDef(name="e", domain=("t",), relation=Rel.EQ, lhs_rhs=(body, Const(1.0)))
+
+    bound = VarRef("z", ("v", "t"))
+    assert _eq_index_ref_binding(eq(bound), "z", ("t",)) == {0: 1}
+    assert _eq_index_ref_binding(eq(bound, VarRef("z", ("v", "t"))), "z", ("t",)) == {0: 1}
+    # mixed: one reference holds `t`, another does not
+    assert (
+        _eq_index_ref_binding(eq(VarRef("z", ("t1", "t")), VarRef("z", ("t1", "t1"))), "z", ("t",))
+        == {}
+    )
+    # inconsistent positions across references
+    assert (
+        _eq_index_ref_binding(eq(VarRef("z", ("t", "t1")), VarRef("z", ("t1", "t"))), "z", ("t",))
+        == {}
+    )
+    # repeated within one reference
+    assert _eq_index_ref_binding(eq(VarRef("z", ("t", "t"))), "z", ("t",)) == {}

@@ -112,3 +112,7 @@ sambal and qsambal hold their **presolve** match. Their cold solves stay wrong (
 - **The fixture, turkpow, sambal and qsambal are unchanged from the name-based result.**
 - One extra golden (spatequ) re-spells a multiplier declaration over the alias `rr` (the same set); the resolver holds its bucket.
 - **Note for Day 7:** the binding also says when an equation index occupies NO position, which is turkpow's `stat_ht` case. It is not used yet: the fallback is unchanged by design.
+
+## PR #1783 review round 2: the same single position in EVERY reference
+
+The binding requires the index at the same single position in every reference. A union let a fixed-cell reference independent of the index slip through: on `e(t).. 2*z('t3',t) - z('t2','t4')` it gave MCP 37.75 against NLP 7.5. The strict rule matches `main`. Mixed bound + independent references stay broken on every version; they are tracked on #1778.

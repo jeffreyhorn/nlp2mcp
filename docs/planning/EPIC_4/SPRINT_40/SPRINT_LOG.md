@@ -876,9 +876,25 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - **Mutation controls:** the name heuristic fails exactly the review's regressions (reversed, fixed coordinate, its solve, the multiplier values); `main` fails the original fixture.
 - **Corpus:** one more golden drifted, **spatequ**, by one line: its multiplier declaration `nu_DX(r,c)` became `nu_DX(rr,c)`. In `DX(r,c).. sum(rr, X(rr,r,c))` the equation index `r` binds `X`'s position 1, declared `rr`, an alias of `r`. Same set, no other line changes, and the resolver holds the bucket. The P2 ratchet stays at 9.
 
+### PR #1783 review round 2 (P4)
+
+- **The review asked for a strict rule:** bind an equation index only at the SAME single position in EVERY reference. My first revision took the union, so a reference independent of the index (a fixed cell) could not veto the binding.
+- **I first argued to keep the union, then measured a second shape. The second shape refuted it:**
+
+  | version | `e(t).. z('t1',t) + z('t1','t1')` (NLP 8.75) | `e(t).. 2*z('t3',t) - z('t2','t4')` (NLP 7.5) |
+  |---|---|---|
+  | `main` | fails | fails |
+  | union (round 1) | 8.750 ✓ | **37.75: a silent wrong answer** |
+  | strict (round 2) | fails | fails |
+
+  The union's success on the first shape was the offset grouping happening to line up. On the second, the fixed cell took the bound reference's coefficient.
+- **Fixed as reviewed:** the strict rule. It never infers a binding from a reference that does not involve the index, and it matches `main` on both shapes, turning the silent wrong answer back into a visible failure.
+- **Mixed bound + independent references are broken on every version** (the fixed cell needs `sum(t', coef·nu_e(t'))`). Both reproducers are on **#1778**, recorded as known failures, not asserted. The general fix goes with turkpow's `stat_ht` (Day 7).
+- **Regression:** the binding unit test covers consistent (`{0: 1}`), mixed, inconsistent and repeated-in-one-reference cases.
+
 ### Gate
 
-`make typecheck && make format && make lint && make test`: typecheck, format and lint clean; **5,646 passed** at the first push and **5,652** after review round 1, 10 skipped, no `225*` dirs.
+`make typecheck && make format && make lint && make test`: typecheck, format and lint clean; **5,646 passed** at the first push, **5,652** after review round 1 and **5,653** after round 2, 10 skipped, no `225*` dirs.
 - `make check-index-repeats`: P1 0 / 3,370; **P2 9 = baseline** (from 11).
 - The leak gate is complete; every drifted golden was re-solved (GO).
 - `check_phase0_doc.py` PASS.
