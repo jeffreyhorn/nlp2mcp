@@ -123,3 +123,52 @@ On `Alias(i,j,k)`, `z(i,j,k)`, `e(i,j).. z('a',i,j)` the binding `{0: 1, 1: 2}` 
 
 **Fixed:** in `_match_subset_domain` the binding only SUPPRESSES a rename. It is accepted only when the bound position carries the mult index's own name; it never creates a rename. Every other case keeps `main`'s same-position / any-position matching. The offset-key pass is unchanged. The new emit is `nu_e(j,k)$(sameas(i,'a'))` and solves to 156. The #1782 fixture and the round 1–2 regressions are unchanged. spatequ's round-1 re-spelling (`nu_DX(rr,c)`) came from a binding-created rename, so it is undone: that golden is byte-identical to `main` again.
 
+
+## Phase 0: Acceptance Gate (Sprint 40 Day 7, P4): turkpow `stat_ht`, the Pattern C binder
+
+### Layer
+
+**KKT / stationarity**: the Pattern C swap in `_add_indexed_jacobian_terms`. That is the gate `_find_pattern_c_alias_sum` and its consumer `_apply_pattern_c_swap_to_term`.
+- **Measured on Day 7:** `pr(t).. sum(mt, … sum(v$vs(t,v), ht(mt,v)))` is a Pattern C shape. The gate fires (binder `v`, eq index `t`) and consolidates the offsets to zero. The matchers Day 6 fixed are NOT the layer here: an "absent from every reference" pass in `_compute_index_offset_key` left the row byte-identical.
+- **The swap failed twice:**
+  - **It is written for launch's naming.** `iweight(s)`, `sum(ss$ge(ss,s), …)`: the eq index name `s` is also the variable's position name. It exchanges binder ↔ EQ index. For `ht(m,v)` the binder IS the position name `v`, so the representative's labels and the binder both map to `v`, and the eq coordinate is lost before the swap runs: `vs(v,v) * lam_pr(v)`.
+  - **It fires only on an all-zero offset key.** The dimension-mismatch key `(999, 0)` never reaches it, so `zh(m,b,t)` / `db(b,t).. sum(bp$bs(bp,b), zh(mh,bp,t))` keeps #1307's `sum(bp, bs(bp,b) * lam_db(b,t))`, a multiplier not indexed by the summed index.
+
+### Nearest Existing Mechanism
+
+**Nearest:** the launch swap itself (Sprint 26 Day 1 Phase A, restricted by #1398 to self-aliases). It is correct whenever the variable is declared over the eq index's name, and launch must stay byte-identical.
+
+**Why it does not apply:** its swap pair is (binder, eq index). The invariant it relies on is (binder, **the variable position the binder occupies**), and the two coincide only under launch's naming.
+
+**Also considered and rejected:** building the term from the source body, as B-1 does (`_build_plain_alias_consolidated_term`). B-1 is 1-D only. Generalising it means re-deriving the coefficient, guards and conditions outside the standard path, which is a much wider change.
+
+### Positive Control
+
+**The launch shape is unchanged:** `h(t)` (variable declared over the eq index's name), `pr(t).. sum(v$vs(t,v), h(v))` emits `sum(v, ((-1) * 1$(vs(v,t))) * lam_pr(v))` before and after. launch's golden must not drift.
+
+### Hand-Derived KKT Shape
+
+- `pr(t).. sum(m, a(m)·sum(v$vs(t,v), h(m,v))) ≥ …`: `∂ pr(t') / ∂ h(m,v) = a(m)·[vs(t',v)]` for EVERY `t'`. The eq index occupies no variable position.
+- **Stationarity:** `… − sum(t', a(m)·vs(t',v)·lam_pr(t'))`. The eq index is summed, under a name the row's domain does not use.
+- **shale's `cpu(m,t).. … =l= sum(tf$ts(t,tf), h(m,tf))`** with `t(tf)`: `… − sum(t'$t(t'), ts(t',tf)·lam_cpu(m,t'))`, which is Task 10 §2's hand-derived restored coupling.
+
+### Expected Emit Pattern
+
+- The swap pairs the binder with the variable position it occupies (the same single position in every reference, `_binder_var_position`), and only when the eq index is absent from every reference to the variable. A binder named like a variable position is first renamed to an alias of the same set that neither the variable nor the multiplier uses.
+- **turkpow `stat_ht`:** `sum(t__kkt1, … vs(t__kkt1,v) … lam_pr(t__kkt1))$(t(t__kkt1))`. **P2: `vs(v,v)` gone.**
+- **turkpow `stat_zh`:** `sum(bp, bs(b,bp) * lam_db(bp,t))`.
+- **shale:** admitted through the gate as a subset ↔ parent pair (`t(tf)` with binder `tf`), only where the binder-position swap applies, never through the legacy offset-0 swap that #1398 restricted. **P2: `ts(tf,tf)` gone** (golden + presolve).
+- **egypt (`tranc(rp,rp)`) is NOT this shape:** its two references hold the eq index at different positions (`trans(cf,rp,r) − trans(cf,r,rp)`), so the binder has no single position. It needs per-reference grouping and is carried to Day 8.
+
+### Verification Methodology
+
+1. **Fail-before / pass-after** on fixtures for each shape, each with its GAMS solve against the NLP optimum: binder named like the position (7.68), turkpow `ht` (0.0944), `zh` (112.264; `main` 558), shale `cpu` (9.9375; `main` 11.545).
+2. The launch-shape positive control, byte-identical.
+3. `make check-index-repeats`, ratchet **9 → ≤ 6** with `--update-baseline` in the same commit.
+4. The full leak gate, with every drifted golden re-solved by `--resolve-changed`; then `make test`.
+
+### PROCEED/REPLAN Signal
+
+- **PROCEED** if 1–4 hold and the resolver holds every bucket.
+- **REPLAN** on any backward move, or if launch drifts.
+- **egypt / shale stay MS 5:** expected (Task 10, necessary not sufficient). shale's candidate underlying defect is routed as **#1786** (a subset-defined equation sums over its bound subset index: `stat_z`).
