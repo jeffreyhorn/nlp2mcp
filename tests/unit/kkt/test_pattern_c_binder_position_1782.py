@@ -145,6 +145,47 @@ solve mm using nlp minimizing obj;
 """
 
 
+# PR #1788 review: dinam's `mb(i,t).. es(i)*sum(tep$ts(t,tep), zmi(t,tep)*em(tep))`
+# against `em(te)`. The eq coordinate already has its own index (`t`), so the
+# binder is only the variable's coordinate. The binder <-> position EXCHANGE
+# corrupted the bound coefficient (zmi(t,tep)) and kept a spurious sum(tep, ...).
+# NLP 10.5238 (with the exchange: 11.779).
+BOUND_COEFFICIENT = """\
+Set te / 1*5 /, t(te) / 2*5 /, i / i1*i2 /;
+Alias (te,tep);
+Parameter ts(te,tep), zmi(te,tep), es(i), d(i,te);
+ts(te,tep) = 1$(ord(te) >= ord(tep));
+zmi(te,tep) = 2 - 0.3*(ord(te) - ord(tep));
+es(i) = ord(i);
+d(i,te) = ord(i) + ord(te);
+Positive Variable em(te);
+Variable obj;
+Equation mb(i,te), defobj;
+mb(i,t).. es(i)*sum(tep$ts(t,tep), zmi(t,tep)*em(tep)) =g= d(i,t);
+defobj.. obj =e= sum(te, ord(te)*sqr(em(te)));
+Model mm / all /;
+solve mm using nlp minimizing obj;
+"""
+
+# PR #1788 review: the coefficient sums over `w`, an alias of the binder's set.
+# The renamed binder must avoid it. NLP 1.2288 (binder renamed to `w`: 1.600).
+COEFFICIENT_SUM = """\
+Set t / t1*t4 /;
+Alias (t,v,w);
+Set vs(t,v);
+vs(t,v) = yes$(ord(t) >= ord(v));
+Parameter a(t);
+a(t) = ord(t)/4;
+Positive Variable h(v);
+Variable obj;
+Equation pr(t), defobj;
+pr(t).. sum(v$vs(t,v), sum(w, a(w))*h(v)) =g= ord(t);
+defobj.. obj =e= sum(v, ord(v)*sqr(h(v)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+
 def _emit(tmp_path: Path, source: str) -> str:
     src = tmp_path / "model.gms"
     src.write_text(source)
@@ -216,6 +257,20 @@ def test_shale_acap_shape_uses_the_RELATED_binder_of_a_multi_index_sum(tmp_path)
 def test_shale_acap_with_a_PARAMETER_guard_skips_the_offset_substitution(tmp_path):
     row = _row(_emit(tmp_path, SHALE_ACAP_PARAM), "stat_h(")
     assert "1$(ts(tfp,tf))" in row and "tf+1" not in row, row
+
+
+def test_a_BOUND_coefficient_keeps_its_coordinate_and_the_binder_sum_goes(tmp_path):
+    row = _row(_emit(tmp_path, BOUND_COEFFICIENT), "stat_em(")
+    assert row == (
+        "stat_em(te).. 2 * ord(te) * em(te) + sum((i,t), (((-1) * (es(i) * zmi(t,te)"
+        " * 1$(ts(t,te)))) * lam_mb(i,t))$(t(t))) - piL_em(te) =E= 0;"
+    ), row
+
+
+def test_the_renamed_binder_avoids_a_COEFFICIENT_sum_binder(tmp_path):
+    row = _row(_emit(tmp_path, COEFFICIENT_SUM), "stat_h(")
+    assert "sum(w, a(w))" in row and "a(v)" not in row, row
+    assert "sum(w, ((-1)" not in row, "the outer binder must not reuse `w`: " + row
 
 
 def test_the_swap_needs_the_eq_index_ABSENT_from_every_reference():

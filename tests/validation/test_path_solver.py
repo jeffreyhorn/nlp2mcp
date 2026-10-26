@@ -715,6 +715,8 @@ def test_issue_1782_reversed_domain_multiplier_values(tmp_path):
         ("SHALE_CPU", 9.9375),
         ("SHALE_ACAP", 16.6848),
         ("SHALE_ACAP_PARAM", 11.2545),
+        ("BOUND_COEFFICIENT", 10.5238),
+        ("COEFFICIENT_SUM", 1.2288),
     ],
 )
 def test_pattern_c_binder_position_solves_to_the_nlp_optimum(tmp_path, fixture, nlp):

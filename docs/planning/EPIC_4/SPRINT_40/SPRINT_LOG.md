@@ -952,7 +952,17 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
     - **`main`'s tfordy emit is already Case B:** the KKT-residual harness gives `stat_w` rel 1.27 and `stat_v` rel 1.0 at the NLP point, identical on both versions. So the committed match rested on the presolve warm start, and the corrected row changes PATH's path.
     - The defect underneath is egypt's two-reference shape (`pfs`'s `v(s,k,t,te)` and `v(s,k,tp,t)`), plus a collapsed `yv(t,t,…)`. Both are routed as **#1787**, the Day 8 target.
     - tfordy is not in `floor_provenance.json`, so **the floor is unaffected. When a persisted run lands it, Match moves −1**; report it as exposed by a correct row, not as a regression of a sound match.
-- **Gate:** `make typecheck && make format && make lint && make test`: clean; **5,676 passed**, 10 skipped, no `225*` dirs. `make check-index-repeats`: P1 0 / 3,370, P2 6 = baseline. `check_phase0_doc.py` PASS.
+- **Gate:** `make typecheck && make format && make lint && make test`: clean; **5,676 passed** at the first push and **5,680** after review round 1, 10 skipped, no `225*` dirs. `make check-index-repeats`: P1 0 / 3,370, P2 6 = baseline. `check_phase0_doc.py` PASS.
+
+### PR #1788 review round 1 (P4)
+
+- **The binder ↔ position exchange corrupted a bound coefficient.** dinam's `mb(i,t).. es(i)*sum(tep$ts(t,tep), zmi(t,tep)*em(tep))` against `em(te)` arrives with the eq coordinate already its own summed index (`lam_mb(i,t)`), not spelled as the variable's position. Exchanging `tep` ↔ `te` turned the bound `zmi(t,te)` into `zmi(t,tep)` and kept a spurious `sum(tep, …)`. My first push shipped that in dinam's golden (path_syntax_error either way, so the resolver could not see it). On a fixture it is a silent wrong answer: MCP 11.779 vs NLP 10.5238.
+  - **Fixed:** `_apply_binder_position_swap` reads how the multiplier spells the eq coordinate. Launch's form (the eq coordinate is spelled as the position) keeps the exchange. Otherwise the binder is substituted by the position and its outer sum dropped.
+  - dinam's `stat_em` is now the hand-derived `sum((i,t), es(i)*zmi(t,te)*ts(t,te)*lam_mb(i,t))`. The fixture solves to 10.524.
+- **The renamed binder could capture a coefficient's own sum binder.** With `Alias(t,v,w)` and `sum(w, a(w))` in the coefficient, the rename picked `w`, and the swap turned the inner `a(w)` into `a(v)` (MCP 1.600 vs NLP 1.2288).
+  - **Fixed:** the rename also reserves every index name in the derivative, free or bound (`_index_names_in`). It picks `t__kkt1`, and the fixture solves to 1.229.
+- **Regressions:** each case has an emitted-row unit test and a validation solve. Reverting either fix fails exactly its own test.
+- **Corpus:** dinam drifted by −11 B and holds its bucket (resolver GO). The other in-scope goldens are clean. ferts, ganges and turkpow timed out under load (unverified); re-run alone with `--fail-on-unverified`, all three are clean, so the gate is complete.
 
 ### Found and routed (not fixed in place)
 

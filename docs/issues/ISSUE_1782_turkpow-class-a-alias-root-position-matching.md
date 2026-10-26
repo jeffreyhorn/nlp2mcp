@@ -186,3 +186,8 @@ On `Alias(i,j,k)`, `z(i,j,k)`, `e(i,j).. z('a',i,j)` the binding `{0: 1, 1: 2}` 
   - **tfordy BACKWARD** (presolve match → `model_infeasible`). Its changed row is correct, but its emit was already Case B underneath (#1787). The owner decided to land it, recorded and routed.
 - **Day 6's bounded item (turkpow's `stat_ht` `vs(v,v)`) is closed.**
 - **Still open under P4:** egypt (#1787, Day 8).
+
+## PR #1788 review round 1
+
+- **The exchange is right only in launch's form**, where the multiplier spells the eq coordinate as the variable's position. When the eq coordinate already has its own index (dinam's `mb(i,t)` against `em(te)`), the binder is substituted by the position and its outer sum dropped (`_apply_binder_position_swap`). The exchange had corrupted the bound `zmi(t,te)`.
+- **The renamed binder also avoids every index the derivative uses** (`_index_names_in`), so it cannot capture a coefficient's own `sum(w, …)`.

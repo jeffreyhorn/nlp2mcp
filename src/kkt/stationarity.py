@@ -584,6 +584,86 @@ def _index_absent_from_var_refs(eq_def: Any, var_name: str, index: str) -> bool:
     return seen
 
 
+def _index_names_in(expr: Expr) -> set[str]:
+    """Every index name ``expr`` uses, lowercased: reference indices (an
+    IndexOffset by its base), SymbolRef names and Sum/Prod binders."""
+    names: set[str] = set()
+    stack: list[Expr] = [expr]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, (VarRef, ParamRef, MultiplierRef)):
+            for idx in node.indices:
+                base = idx.base if isinstance(idx, IndexOffset) else idx
+                if isinstance(base, str):
+                    names.add(base.lower())
+        elif isinstance(node, SymbolRef):
+            names.add(node.name.lower())
+        if isinstance(node, (Sum, Prod)):
+            names.update(str(i).lower() for i in node.index_sets)
+        stack.extend(node.children())
+    return names
+
+
+def _eq_index_position(eq_def: Any, eq_index: str) -> int | None:
+    """Position of ``eq_index`` in ``eq_def``'s domain (case-insensitive), or None."""
+    domain = tuple(getattr(eq_def, "domain", None) or ())
+    hits = [p for p, d in enumerate(domain) if str(d).lower() == eq_index.lower()]
+    return hits[0] if len(hits) == 1 else None
+
+
+def _apply_binder_position_swap(
+    term: Expr,
+    binder: str,
+    position_name: str,
+    mult_name: str,
+    eq_position: int | None,
+) -> Expr:
+    """The Sprint 40 Day 7 Pattern C rewrite (#1782): the binder IS the
+    variable's coordinate ``position_name``.
+
+    Two pre-swap forms reach here, told apart by how the multiplier spells the
+    eq coordinate:
+
+    * **launch's form** — the eq coordinate was identified with the variable's
+      position (``sum(ss, ge(ss,s) * nu(s))``): exchange binder ↔ position, so
+      the outer sum ranges over the eq coordinate (``sum(ss, ge(s,ss) * nu(ss))``);
+    * **already separate** — the eq coordinate has its own index (dinam's
+      ``mb(i,t).. sum(tep$ts(t,tep), zmi(t,tep)*em(tep))`` against ``em(te)``:
+      ``sum(tep, sum((i,t), zmi(t,te) * ts(t,tep) * lam_mb(i,t)))``). Exchanging
+      there corrupts the bound coefficient (``zmi(t,tep)``, PR #1788 review).
+      Substitute binder → position instead, and drop the binder's outer sum:
+      nothing is left for it to range over.
+    """
+    spelled: str | None = None
+    if eq_position is not None:
+        stack: list[Expr] = [term]
+        while stack and spelled is None:
+            node = stack.pop()
+            if (
+                isinstance(node, MultiplierRef)
+                and node.name == mult_name
+                and eq_position < len(node.indices)
+            ):
+                idx = node.indices[eq_position]
+                spelled = idx if isinstance(idx, str) else None
+            stack.extend(node.children())
+    if spelled is None or spelled.lower() == position_name.lower():
+        return _apply_pattern_c_swap_to_term(term, binder, position_name)
+    rename = {binder.lower(): position_name}
+    if isinstance(term, Sum) and any(i.lower() == binder.lower() for i in term.index_sets):
+        rest = tuple(i for i in term.index_sets if i.lower() != binder.lower())
+        body = _rewrite_subset_to_superset(term.body, rename)
+        cond = (
+            _rewrite_subset_to_superset(term.condition, rename)
+            if term.condition is not None
+            else None
+        )
+        if rest:
+            return Sum(rest, body, cond)
+        return body if cond is None else DollarConditional(value_expr=body, condition=cond)
+    return _rewrite_subset_to_superset(term, rename)
+
+
 def _apply_pattern_c_swap_to_term(
     term: Expr,
     alias_name: str,
@@ -7477,9 +7557,15 @@ def _add_indexed_jacobian_terms(
                             # Not the eq index either: the equal-arity path's
                             # eq→var rename (``subset_rename``, {t: v}) would
                             # catch it and collapse the coordinates again.
+                            # ...nor any index the derivative already uses,
+                            # free or bound: a coefficient's own ``sum(w, a(w))``
+                            # would capture a binder renamed to ``w`` (PR #1788
+                            # review).
                             _pc_new = _get_or_create_fresh_alias(
                                 _resolve_alias_target(_pc_binder, kkt.model_ir),
-                                _pc_var_names | {str(d).lower() for d in mult_domain},
+                                _pc_var_names
+                                | {str(d).lower() for d in mult_domain}
+                                | _index_names_in(derivative),
                                 kkt.model_ir,
                             )
                             derivative = _rewrite_subset_to_superset(
@@ -8164,8 +8250,17 @@ def _add_indexed_jacobian_terms(
                     # GAMS-equivalent of the target form ``sum(alias$cond(
                     # eq_dom, alias), coeff * nu_eq(alias))`` (per Sprint 25
                     # SPRINT_LOG.md Day 11 §"Open follow-ups (revised)").
-                    if pc_swap is not None:
-                        term = _apply_pattern_c_swap_to_term(term, pc_swap[0], pc_swap[1])
+                    if pc_swap is not None and pattern_c_info is not None:
+                        term = _apply_binder_position_swap(
+                            term,
+                            pc_swap[0],
+                            pc_swap[1],
+                            name_func(eq_name_base),
+                            _eq_index_position(
+                                kkt.model_ir.equations.get(eq_name_base),
+                                pattern_c_info["eq_domain_index"],
+                            ),
+                        )
                     elif (
                         pattern_c_info is not None
                         and not pattern_c_info.get("binder_swap_only")
