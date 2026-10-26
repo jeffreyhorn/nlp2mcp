@@ -705,6 +705,41 @@ def test_issue_1782_reversed_domain_multiplier_values(tmp_path):
 
 
 @pytest.mark.validation
+@pytest.mark.parametrize(
+    "fixture, nlp",
+    [
+        ("BINDER_IS_POSITION_NAME", 7.68),
+        ("LAUNCH_SHAPE", 7.68),
+        ("TURKPOW_HT", 0.0944),
+        ("TURKPOW_ZH", 112.264),
+        ("SHALE_CPU", 9.9375),
+        ("SHALE_ACAP", 16.6848),
+        ("SHALE_ACAP_PARAM", 11.2545),
+    ],
+)
+def test_pattern_c_binder_position_solves_to_the_nlp_optimum(tmp_path, fixture, nlp):
+    """Sprint 40 Day 7 (#1782, P4): the Pattern C swap pairs the binder with the
+    variable position it occupies. Before: the binder-named-like-the-position and
+    turkpow `ht` shapes lost the eq coordinate (no solve / MCP 2.0 vs 1.536), the
+    `zh` shape solved to 558, the shale `cpu` shape to 11.545 and `acap` to 180. The fixtures live
+    in the unit module, so the emitted rows and these solves share one source."""
+    import importlib.util
+
+    path = (
+        Path(__file__).resolve().parents[1]
+        / "unit"
+        / "kkt"
+        / "test_pattern_c_binder_position_1782.py"
+    )
+    spec = importlib.util.spec_from_file_location("_pattern_c_binder_fixtures", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    obj, _ = _translate_and_solve(tmp_path, fixture.lower(), getattr(module, fixture))
+    assert abs(obj - nlp) < 1e-3 * max(1.0, abs(nlp)), obj
+
+
+@pytest.mark.validation
 class TestPATHAvailability:
     """Test PATH solver availability detection."""
 

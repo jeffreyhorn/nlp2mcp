@@ -1,6 +1,6 @@
 # ISSUE #1782 — turkpow Class A: an equation index matched to an aliased variable position by alias root
 
-**GitHub:** [#1782](https://github.com/jeffreyhorn/nlp2mcp/issues/1782) · **Status:** 🟡 **IN PROGRESS** — Sprint 40 P4 (Day 6)
+**GitHub:** [#1782](https://github.com/jeffreyhorn/nlp2mcp/issues/1782) · **Status:** 🟡 **IN PROGRESS** — Sprint 40 P4 (Days 6–7; egypt continues on Day 8 as #1787)
 **Layer:** **KKT / stationarity** — the eq-index → variable-position matchers `_compute_index_offset_key` and `_match_subset_domain` (`src/kkt/stationarity.py`)
 
 
@@ -172,3 +172,17 @@ On `Alias(i,j,k)`, `z(i,j,k)`, `e(i,j).. z('a',i,j)` the binding `{0: 1, 1: 2}` 
 - **PROCEED** if 1–4 hold and the resolver holds every bucket.
 - **REPLAN** on any backward move, or if launch drifts.
 - **egypt / shale stay MS 5:** expected (Task 10, necessary not sufficient). shale's candidate underlying defect is routed as **#1786** (a subset-defined equation sums over its bound subset index: `stat_z`).
+
+## Day 7 results: PROCEED on turkpow and shale, tfordy landed by owner decision
+
+- **The fix has four parts, each necessary by mutation** (detail in `SPRINT_LOG.md` §Day 7):
+  1. The swap pairs the binder with the variable position it occupies, and only when the eq index is absent from every reference. A binder named like a variable position is first renamed to an unused alias.
+  2. That alias gets a self-mapping in the element map.
+  3. The gate admits subset ↔ parent pairs and a multi-index sum's related binder, on these terms only (`binder_swap_only`).
+  4. The #1162 offset substitution is skipped where the swap applies.
+- ⚠ **Two parts were invisible to set-valued fixtures.** turkpow's `vs` and shale's `ts` are PARAMETERS, and a `ParamRef`'s indices go through the declared-domain mapping and the offset substitution, which a `SetMembershipTest`'s do not.
+- **Corpus:**
+  - turkpow, shale and dinam hold their buckets; P2 is **9 → 6**.
+  - **tfordy BACKWARD** (presolve match → `model_infeasible`). Its changed row is correct, but its emit was already Case B underneath (#1787). The owner decided to land it, recorded and routed.
+- **Day 6's bounded item (turkpow's `stat_ht` `vs(v,v)`) is closed.**
+- **Still open under P4:** egypt (#1787, Day 8).

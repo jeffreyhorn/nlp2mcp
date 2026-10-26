@@ -905,3 +905,69 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - `make check-index-repeats`: P1 0 / 3,370; **P2 9 = baseline** (from 11).
 - The leak gate is complete; every drifted golden was re-solved (GO).
 - `check_phase0_doc.py` PASS.
+
+## Day 7 — 2026-10-26 · P4: land turkpow, start egypt and shale · 5 h · + P8: the structural pins become behavioural · 5 h
+
+**Branch:** `planning/sprint40-day7-classa` · **Base:** `500ffa1f` (PR #1783).
+
+### P4: turkpow's `stat_ht` and shale: the Pattern C binder (#1782)
+
+- **Phase-0 gate first:** `c33757ef`. It is a second gate section in `ISSUE_1782`, and `check_phase0_doc.py` passes.
+- **The layer, measured.** `pr(t).. sum(mt, … sum(v$vs(t,v), ht(mt,v)))` is a **Pattern C** shape, and the gate fires (binder `v`, eq index `t`).
+  - Day 6's carry-over guess, a "position whose value IS the eq index" discriminator in the matchers, is not the layer. An "absent from every reference" pass in `_compute_index_offset_key` left the row byte-identical, and was dropped.
+  - The swap (`_apply_pattern_c_swap_to_term`) exchanged the binder with the **eq index**. That pair is right only under launch's naming, where the variable is declared over the eq index's name.
+  - It fired only on an all-zero offset key, so a dimension-mismatch key `(999, 0)` never reached it.
+- **The fix (`src/kkt/stationarity.py`):** the swap pairs the binder with **the variable position it occupies**, `_binder_var_position` (the same single position in every reference). It applies only when the eq index is absent from every reference to the variable (`_index_absent_from_var_refs`). Four parts, each necessary (measured by mutation):
+  1. **A binder named like a variable position is renamed first,** to an alias of the same set that neither the variable nor the multiplier uses (an existing alias, else a fresh `__kkt` one). The eq index itself is not safe: the equal-arity path's eq→var rename would catch it.
+  2. **A self-mapping for the renamed binder in the element map,** keeping the map's type. A `ParamRef` index absent from the map is sent to the declared domain's name, so turkpow's PARAMETER `vs(t,v)` turned `t__kkt1` back into `v`: `vs("t__kkt1","t__kkt1")`, quoted.
+  3. **The gate admits a subset ↔ parent pair** (shale's `t(tf)` with binder `tf`) **and the related binder of a multi-index sum** (shale's `acap`: `sum((m,tf)$ts(t,tf), …)`, where the first binder `m` is unrelated). Both only on the binder-position terms, never through the legacy offset-0 swap that #1398 restricted (`binder_swap_only`).
+  4. **The #1162 offset substitution is skipped where the swap applies.** The gate requires a body with no IndexOffset on the variable's sets, so the eq label's distance from the representative is the sum's iteration. Without the skip, shale's PARAMETER `ts(t,tf)` became `ts(tf+1,tf)`.
+- ⚠ **Set-valued fixtures hid two of the four.** `vs` and `ts` are PARAMETERS in turkpow and shale. A `SetMembershipTest`'s symbols are rewritten by neither the declared-domain mapping nor the offset substitution, so my first fixtures passed while the corpus emit was wrong. Every fixture whose guard is a parameter in the source now uses a parameter.
+- **Fixtures, each solved against its NLP optimum:**
+
+  | shape | before | after | NLP |
+  |---|---|---|---|
+  | binder named like the variable's position, equal arity | no solve (`vs(t,t)`, `t` uncontrolled) | 7.680 | 7.68 |
+  | turkpow `ht` (dim mismatch, subset `t(te)`, dynamic `mt`, PARAMETER `vs`) | `vs(v,v)` (simpler variant: 2.0 vs 1.536) | 0.0944 | 0.0944 |
+  | turkpow `zh` (`sum(bp$bs(bp,b), zh(m,bp,t))`) | **558** (silent) | 112.264 | 112.264 |
+  | shale `cpu` (subset ↔ parent) | **11.545** (silent) | 9.9375 | 9.9375 |
+  | shale `acap` (related binder second) | **180** (silent) | 16.685 | 16.6848 |
+  | shale `acap`, PARAMETER `ts`, `t` missing the first element | 25.618 (with the offset substitution) | 11.254 | 11.2545 |
+  | **positive control:** launch shape (`h(t)`) | 7.680 | 7.680, byte-identical row | 7.68 |
+
+- **Mutation controls:** on `main`, every new P4 test fails except the two launch-shape controls. Each part removed alone fails its own tests:
+  - no binder rename: 4;
+  - no absence gate: Day 6's `#1782` fixture (2), the `ao`/`zt` shape where the eq index IS in the reference;
+  - no self-mapping: turkpow `ht`;
+  - no related-binder admission: shale `cpu` and `acap`.
+- **egypt is not this shape** (`tranc(rp,rp)`). Its two references hold the eq index at different positions (`trans(cf,rp,r) − trans(cf,r,rp)`), so the binder has no single position and the change leaves it byte-identical. It needs per-reference grouping (entries keyed by which variable position the eq label occupies, off-diagonal representatives). A 15-line fixture reproduces it. **Filed as #1787 with tfordy's `stat_v` (below) and carried to Day 8.**
+
+- **P2: 9 → 6** (the plan's ≤ 6), with `--update-baseline` in this commit. turkpow's `vs(v,v)` and shale's `ts(tf,tf)` (golden + presolve) are gone. The remaining 6 are dinam's `ts2(te,te)`, egypt ×2 (#1787, Day 8), gussrisk, and nonsharp ×2 (a refused MINLP; regeneration cannot move it).
+- **Corpus:** the leak gate is complete (200 in-scope, no timeouts). 6 goldens over 4 models drifted, and every one was re-solved by `--resolve-changed`:
+  - **turkpow** `path_syntax_error` = same. `stat_ht` is the hand-derived `sum(t__kkt1, … vs(t__kkt1,v) … lam_pr(t__kkt1))`, and the `lam_db` terms of `stat_zh` / `stat_zt` are `sum(bp, bs(b,bp) * lam_db(bp,t))`. `nu_ao(t)` (Day 6) is untouched.
+  - **shale** `model_infeasible` = same. The `cpu` coupling is restored to Task 10's hand-derived `sum(t$ts(t,tf), …)`. `acap`'s eight phantom `nu_acap(tf±k)$(ord(m) = k)` terms are one `sum(tfp, …)`. **Still MS 5, as Task 10 predicted** (necessary, not sufficient); the candidate underlying defect is routed as #1786.
+  - **dinam** `path_syntax_error` = same. `stat_em`'s `ts(t,tep)` / `zmi(t,te)` and `stat_v(jd,te)`'s `ts2(te,te) * lam_cap(jd,te)` are now `sum(tep, ts2(tep,te) * lam_cap(jd,tep))`, the same Pattern C correction.
+  - ⛔ **tfordy BACKWARD: `model_optimal_presolve` + match → `model_infeasible`. The resolver said NO-GO; the owner decided to land it, recorded and routed.**
+    - The changed row is the CORRECT one. `ainvc(t).. phik(t) =e= sgm*sum(tp$avl(t,tp), sum(m, nu(m)*h(m,tp)))` gives `sum(tp, avl(tp,t)*nu_ainvc(tp))`; the old row was #1307's `sum(tp, avl(t,tp))*nu_ainvc(t)`.
+    - **`main`'s tfordy emit is already Case B:** the KKT-residual harness gives `stat_w` rel 1.27 and `stat_v` rel 1.0 at the NLP point, identical on both versions. So the committed match rested on the presolve warm start, and the corrected row changes PATH's path.
+    - The defect underneath is egypt's two-reference shape (`pfs`'s `v(s,k,t,te)` and `v(s,k,tp,t)`), plus a collapsed `yv(t,t,…)`. Both are routed as **#1787**, the Day 8 target.
+    - tfordy is not in `floor_provenance.json`, so **the floor is unaffected. When a persisted run lands it, Match moves −1**; report it as exposed by a correct row, not as a regression of a sound match.
+- **Gate:** `make typecheck && make format && make lint && make test`: clean; **5,676 passed**, 10 skipped, no `225*` dirs. `make check-index-repeats`: P1 0 / 3,370, P2 6 = baseline. `check_phase0_doc.py` PASS.
+
+### Found and routed (not fixed in place)
+
+- **#1787** (Day 8): a variable referenced twice, with the eq index at different positions, keeps one term (egypt `tranc(rp,rp)`, tfordy `stat_v`).
+- **#1786** (shale's candidate underlying defect): a subset-defined equation SUMS over its bound subset index when another eq index has no variable counterpart. shale's `stat_z` has it on every subset balance. The 10-line reproducer is a silent wrong answer: MCP 9.03 vs NLP 3.69.
+- **#1785:** the objective gradient re-symbolises `ord()` onto the wrong index, for an aliased 2-D variable (MCP 19 vs NLP 0) and for a subset (`ord(t)` → `ord(tf)`, 18.03 vs 17.25). Both are silent wrong answers on 6–7 line models.
+- **#1784:** a lead/lag reference inside a sum over a 3-D variable's middle index gets phantom `$(ord(k) = n)` guards, and the MCP does not solve. This is §5's `oik3` fixture: its emit is defective on every version.
+- #1784–#1786 are byte-identical on an untouched `main` worktree.
+
+### P8: the structural pins become behavioural
+
+- `_match_subset_domain`'s `if k in used_var_positions:` and both `_compute_index_offset_key` consume-once guards are now **behavioural** pins (`tests/unit/kkt/test_positional_domain_sites.py`). They use §5's 3-D aliased / subset inputs:
+  - `_match_subset_domain`: `(ii,jj)` vs `(i,k,ip)` gives `{ii: i, jj: ip}` (guard off: `{ii: i, jj: i}`); alias-only `(ip,ipp)` vs `(i,k,ipp)` gives `{ip: i}` (guard off: `{ip: i, ipp: i}`);
+  - `_compute_index_offset_key`: eq `('b','c')` against var `('a','k1','b')` gives `(1, 999, 1)` (guard off: `(2, 999, 999)`), the canonical pass on `(i,ip)` and the root pass on `(ii,jj)`. Each input leaves the OTHER pass's guard-off result unchanged, so the two rows cannot stand in for each other;
+  - at emit level, `msd3`: `lam_c(i,ip)` (the MCP solves to the NLP optimum, 2.0) vs `lam_c(i,i)` with the guard off.
+- **Positive control:** each pin rebuilds its function from its own source with only that guard neutralised and asserts the result changes. Separately, mutating the guard in `src/` (anchor text kept) fails exactly that guard's own pins.
+- **The strength partition moves 5 / 11 → 8 / 8** (behavioural / structural), derived and asserted by identity as before.
+- ⚠ **Proof scope for `_compute_index_offset_key`: function level.** Day 6's pass 0 (the reference binding) now binds an index before either pass runs whenever every reference holds it at one position. So §5's `oik3` emit no longer changes with either guard off. The passes and their guards are reached for indices without a reference binding.

@@ -452,7 +452,39 @@ def _find_pattern_c_alias_sum(
                         "alias_name": alias_name,
                         "eq_domain_index": eq_idx_name,
                         "condition": expr.condition,
+                        "binder_position": _binder_var_position(expr.body, var_name, alias_name),
                     }
+                # Sprint 40 Day 7 (shale ``cpu(m,t).. ... =l= sum(tf$ts(t,tf),
+                # h(m,tf))``, ``t(tf)``): a binder over the PARENT of the eq
+                # index's subset is the same universe, so the swap is valid. It
+                # is admitted only where the binder-position swap applies (the
+                # binder holds one variable position, the eq index none), never
+                # through the legacy offset-0 swap that #1398 restricted
+                # (``binder_swap_only``).
+                #
+                # Likewise a LATER binder of a multi-index sum (shale's
+                # ``acap(t).. … sum((m,tf)$ts(t,tf), nu(m)*h(m,tf))``): the first
+                # binder ``m`` is unrelated to ``t``, so the binder that IS
+                # related is tried in turn, on the same binder-position terms.
+                if _index_absent_from_var_refs_in(expr.body, var_name, eq_idx_name):
+                    eq_canon = _resolve_alias_target(eq_idx_name, model_ir)
+                    for cand in (i.lower() for i in expr.index_sets):
+                        if _resolve_alias_target(cand, model_ir) not in target_canonical_sets:
+                            continue
+                        related = _subset_parent_related(cand, eq_idx_name, model_ir) or (
+                            cand != alias_name and _resolve_alias_target(cand, model_ir) == eq_canon
+                        )
+                        if not related:
+                            continue
+                        _pos = _binder_var_position(expr.body, var_name, cand)
+                        if _pos is not None:
+                            return {
+                                "alias_name": cand,
+                                "eq_domain_index": eq_idx_name,
+                                "condition": expr.condition,
+                                "binder_position": _pos,
+                                "binder_swap_only": True,
+                            }
 
     if isinstance(expr, (Sum, Prod)):
         new_bound = bound_indices | frozenset(idx.lower() for idx in expr.index_sets)
@@ -471,6 +503,85 @@ def _find_pattern_c_alias_sum(
         if found is not None:
             return found
     return None
+
+
+def _subset_parent_related(a: str, b: str, model_ir: ModelIR) -> bool:
+    """One of ``a``/``b`` resolves to a 1-D subset whose parent is the other's set."""
+    ca, cb = _resolve_alias_target(a, model_ir), _resolve_alias_target(b, model_ir)
+
+    def parent(c: str) -> str | None:
+        sdef = model_ir.sets.get(c)
+        dom = getattr(sdef, "domain", None) if sdef is not None else None
+        if dom and len(dom) == 1:
+            return _resolve_alias_target(str(dom[0]), model_ir)
+        return None
+
+    return ca != cb and (parent(ca) == cb or parent(cb) == ca)
+
+
+def _index_absent_from_var_refs_in(expr: Expr, var_name: str, index: str) -> bool:
+    """True when no reference to ``var_name`` inside ``expr`` holds ``index``."""
+    key, target = var_name.lower(), index.lower()
+    stack: list[Expr] = [expr]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, VarRef) and node.name.lower() == key:
+            for idx in node.indices:
+                base = idx.base if isinstance(idx, IndexOffset) else idx
+                if isinstance(base, str) and base.lower() == target:
+                    return False
+        stack.extend(node.children())
+    return True
+
+
+def _binder_var_position(body: Expr, var_name: str, binder: str) -> int | None:
+    """The variable position the Pattern C sum ``binder`` occupies (#1782, Day 7).
+
+    The SAME single position in every reference to ``var_name`` in ``body``;
+    ``None`` when a reference lacks the binder, repeats it, or holds it elsewhere.
+    """
+    key, target = var_name.lower(), binder.lower()
+    positions: set[int] = set()
+    seen = False
+
+    def walk(node: Expr) -> bool:
+        nonlocal seen
+        if isinstance(node, VarRef) and node.name.lower() == key:
+            seen = True
+            ps = [
+                p
+                for p, idx in enumerate(node.indices)
+                if isinstance(idx, str) and idx.lower() == target
+            ]
+            if len(ps) != 1:
+                return False
+            positions.add(ps[0])
+        return all(walk(c) for c in node.children())
+
+    if not walk(body) or not seen or len(positions) != 1:
+        return None
+    return positions.pop()
+
+
+def _index_absent_from_var_refs(eq_def: Any, var_name: str, index: str) -> bool:
+    """True when no reference to ``var_name`` in ``eq_def`` holds ``index`` (an
+    IndexOffset counts by its base), and at least one reference exists."""
+    key, target = var_name.lower(), index.lower()
+    seen = False
+    for part in tuple(getattr(eq_def, "lhs_rhs", None) or ()) + (
+        getattr(eq_def, "condition", None),
+    ):
+        stack = [part] if part is not None else []
+        while stack:
+            node = stack.pop()
+            if isinstance(node, VarRef) and node.name.lower() == key:
+                seen = True
+                for idx in node.indices:
+                    base = idx.base if isinstance(idx, IndexOffset) else idx
+                    if isinstance(base, str) and base.lower() == target:
+                        return False
+            stack.extend(node.children())
+    return seen
 
 
 def _apply_pattern_c_swap_to_term(
@@ -503,8 +614,8 @@ def _apply_pattern_c_swap_to_term(
     upstream collapsed it), the swap is applied to the whole expression.
     """
     swap_map = {
-        alias_name: eq_domain_index,
-        eq_domain_index: alias_name,
+        alias_name.lower(): eq_domain_index,
+        eq_domain_index.lower(): alias_name,
     }
     if isinstance(term, Sum):
         new_body = _rewrite_subset_to_superset(term.body, swap_map)
@@ -7281,7 +7392,26 @@ def _add_indexed_jacobian_terms(
                             )
                         )
                         _eq_circular_cache[eq_name_base] = _has_circular
-                    if not _has_circular:
+                    # Sprint 40 Day 7 (#1782): does the Pattern C binder swap
+                    # (below) apply? Decided HERE because it also rules out the
+                    # offset substitution: the gate requires a body with no
+                    # IndexOffset on the variable's sets, so the eq label's
+                    # distance from the representative is the sum's iteration,
+                    # not a lead/lag. shale's PARAMETER ``ts(t,tf)`` otherwise
+                    # became ``ts(tf+1,tf)`` (a Set's membership test is not
+                    # rewritten, which is why set-valued fixtures did not show it).
+                    _pc_binder_swap = bool(
+                        pattern_c_info is not None
+                        and pattern_c_info.get("binder_position") is not None
+                        and pattern_c_info["binder_position"] < len(var_domain)
+                        and all(o in (0, _SENTINEL_UNMATCHED) for o in offset_key)
+                        and _index_absent_from_var_refs(
+                            kkt.model_ir.equations.get(eq_name_base),
+                            var_name,
+                            pattern_c_info["eq_domain_index"],
+                        )
+                    )
+                    if not _has_circular and not _pc_binder_swap:
                         _, _rep_var_idx = jacobian.index_mapping.col_to_var[group_col_id]
                         derivative = _apply_offset_substitution(
                             derivative,
@@ -7320,6 +7450,58 @@ def _add_indexed_jacobian_terms(
                             for elem, setname in dict(constraint_element_to_set).items()
                             if str(setname).lower() not in _pinned_sets
                         }
+
+                    # Sprint 40 Day 7 (#1782, turkpow ``stat_ht``): the Pattern C
+                    # swap below pairs the sum binder with the VARIABLE position it
+                    # occupies. launch's ``iweight(s)`` / ``sum(ss$ge(ss,s), ...)``
+                    # has binder ``ss`` and position ``s`` (= the eq index). With
+                    # ``ht(m,v)`` / ``pr(t).. sum(v$vs(t,v), ht(mt,v))`` the binder
+                    # IS the position's name ``v``: the representative's labels
+                    # map to ``v`` too, the eq coordinate is lost (``vs(v,v)*
+                    # lam_pr(v)``) and the swap has nothing to undo. Rename such
+                    # a binder first to a name of the same set that neither the
+                    # variable nor the multiplier uses (an existing alias, else a
+                    # fresh one).
+                    #
+                    # Only where the eq index is ABSENT from every reference to
+                    # the variable: then the binder carries the variable's
+                    # coordinate and the eq index must be summed. ``ao(t).. sum((mt,
+                    # v)$vs(t,v), ... zt(mt,v,b,t))`` holds ``t`` in the reference:
+                    # ``t`` binds its own position and there is nothing to swap.
+                    pc_swap: tuple[str, str] | None = None
+                    if _pc_binder_swap and pattern_c_info is not None:
+                        _pc_binder = pattern_c_info["alias_name"]
+                        _pc_pos_name = var_domain[pattern_c_info["binder_position"]]
+                        _pc_var_names = {str(d).lower() for d in var_domain}
+                        if _pc_binder.lower() in _pc_var_names:
+                            # Not the eq index either: the equal-arity path's
+                            # eq→var rename (``subset_rename``, {t: v}) would
+                            # catch it and collapse the coordinates again.
+                            _pc_new = _get_or_create_fresh_alias(
+                                _resolve_alias_target(_pc_binder, kkt.model_ir),
+                                _pc_var_names | {str(d).lower() for d in mult_domain},
+                                kkt.model_ir,
+                            )
+                            derivative = _rewrite_subset_to_superset(
+                                derivative, {_pc_binder.lower(): _pc_new}
+                            )
+                            _pc_binder = _pc_new
+                            # A self-mapping keeps the new binder symbolic: a
+                            # ParamRef index absent from the map is otherwise sent
+                            # to the declared domain's name (turkpow's parameter
+                            # ``vs(t,v)`` turned ``t__kkt1`` back into ``v``). Same
+                            # mapping type, since ``_replace_matching_indices``
+                            # branches on ChainMap.
+                            if isinstance(deriv_element_to_set, ChainMap):
+                                deriv_element_to_set = deriv_element_to_set.new_child(
+                                    {_pc_new: _pc_new}
+                                )
+                            else:
+                                deriv_element_to_set = {
+                                    **deriv_element_to_set,
+                                    _pc_new: _pc_new,
+                                }
+                        pc_swap = (_pc_binder, _pc_pos_name)
 
                     # Replace indices in derivative expression using constraint-aware mapping
                     # Issue #620: Pass var_domain as equation_domain for subset substitution
@@ -7982,7 +8164,13 @@ def _add_indexed_jacobian_terms(
                     # GAMS-equivalent of the target form ``sum(alias$cond(
                     # eq_dom, alias), coeff * nu_eq(alias))`` (per Sprint 25
                     # SPRINT_LOG.md Day 11 §"Open follow-ups (revised)").
-                    if pattern_c_info is not None and all(o == 0 for o in offset_key):
+                    if pc_swap is not None:
+                        term = _apply_pattern_c_swap_to_term(term, pc_swap[0], pc_swap[1])
+                    elif (
+                        pattern_c_info is not None
+                        and not pattern_c_info.get("binder_swap_only")
+                        and all(o == 0 for o in offset_key)
+                    ):
                         term = _apply_pattern_c_swap_to_term(
                             term,
                             pattern_c_info["alias_name"],
