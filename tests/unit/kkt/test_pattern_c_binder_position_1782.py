@@ -1,4 +1,4 @@
-"""#1782 (Sprint 40 Day 7, P4): the Pattern C swap pairs the sum binder with the
+"""#1782 (Sprint 40 Day 7, P4): the Pattern C rewrite pairs the sum binder with the
 VARIABLE position it occupies.
 
 launch's ``dweight(s).. ... sum(ss$ge(ss,s), iweight(ss))`` with ``iweight(s)``:
@@ -18,6 +18,14 @@ offset key. turkpow breaks both:
 shale's ``cpu(m,t).. ... =l= sum(tf$ts(t,tf), h(m,tf))`` is the same shape over a
 subset ``t(tf)`` and its parent (``ts(tf,tf)`` in P2), and its ``acap(t).. …
 sum((m,tf)$ts(t,tf), nu(m)*h(m,tf))`` holds the related binder SECOND.
+
+Since PR #1788 review round 2 there is no exchange at all: before
+re-symbolisation, the symbolic binder becomes the variable's position name and the
+representative's eq label a placeholder eq coordinate; afterwards only the
+multiplier's eq index is pointed at it. In launch's form the eq coordinate and the
+variable's own coordinate are BOTH spelled as the position name once re-symbolised,
+so any whole-term exchange moved row-bound factors (``a(v)``, ``2*h(v)``) with the
+multiplier; ``main``'s launch swap has that defect too for non-unit coefficients.
 """
 
 from __future__ import annotations
@@ -147,8 +155,8 @@ solve mm using nlp minimizing obj;
 
 # PR #1788 review: dinam's `mb(i,t).. es(i)*sum(tep$ts(t,tep), zmi(t,tep)*em(tep))`
 # against `em(te)`. The eq coordinate already has its own index (`t`), so the
-# binder is only the variable's coordinate. The binder <-> position EXCHANGE
-# corrupted the bound coefficient (zmi(t,tep)) and kept a spurious sum(tep, ...).
+# binder is only the variable's coordinate. The round-1 binder <-> position
+# exchange corrupted the bound coefficient (zmi(t,tep)) and kept a spurious sum.
 # NLP 10.5238 (with the exchange: 11.779).
 BOUND_COEFFICIENT = """\
 Set te / 1*5 /, t(te) / 2*5 /, i / i1*i2 /;
@@ -168,7 +176,7 @@ solve mm using nlp minimizing obj;
 """
 
 # PR #1788 review: the coefficient sums over `w`, an alias of the binder's set.
-# The renamed binder must avoid it. NLP 1.2288 (binder renamed to `w`: 1.600).
+# The placeholder eq coordinate must avoid it. NLP 1.2288 (when it took `w`: 1.600).
 COEFFICIENT_SUM = """\
 Set t / t1*t4 /;
 Alias (t,v,w);
@@ -184,6 +192,71 @@ defobj.. obj =e= sum(v, ord(v)*sqr(h(v)));
 Model m / all /;
 solve m using nlp minimizing obj;
 """
+
+
+# PR #1788 review round 2: launch's form spells the eq coordinate AND the
+# variable's own coordinate as the position name, so the exchange moved
+# row-bound factors with the multiplier.
+# - a coefficient of the binder (a(v) became a(t__kkt1)). NLP 1.8655 (exchange: 1.999).
+ROW_BOUND_COEFFICIENT = """\
+Set t / t1*t4 /;
+Alias (t,v);
+Set vs(t,v);
+vs(t,v) = yes$(ord(t) >= ord(v));
+Parameter a(t);
+a(t) = 1 + ord(t)/2;
+Positive Variable h(v);
+Variable obj;
+Equation pr(t), defobj;
+pr(t).. sum(v$vs(t,v), a(v)*h(v)) =g= ord(t);
+defobj.. obj =e= sum(v, ord(v)*sqr(h(v)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+# - the same with the variable declared over the eq index's name (launch's own
+#   naming; `main` emits a(v) for a(t) here too).
+ROW_BOUND_COEFFICIENT_LAUNCH_NAMING = ROW_BOUND_COEFFICIENT.replace(
+    "Positive Variable h(v);", "Positive Variable h(t);"
+)
+
+# - a nonlinear derivative factor (2*h(v) became 2*h(t__kkt1)). NLP 8.9208 (13.617).
+ROW_BOUND_NONLINEAR = """\
+Set t / t1*t4 /;
+Alias (t,v);
+Set vs(t,v);
+vs(t,v) = yes$(ord(t) >= ord(v));
+Variable h(v), obj;
+Equation pr(t), defobj;
+pr(t).. sum(v$vs(t,v), sqr(h(v))) =l= ord(t);
+defobj.. obj =e= sum(v, ord(v)*sqr(h(v) - 2));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+# - an equation condition with its own binder `w`, an alias of the binder's set,
+#   attached after re-symbolisation (the eq coordinate must not reuse `w`). NLP 7.68.
+EQUATION_GUARD = """\
+Set t / t1*t4 /;
+Alias (t,v,w);
+Set vs(t,v);
+vs(t,v) = yes$(ord(t) >= ord(v));
+Parameter a(t) / t1 0.25, t2 0.5, t3 0.75, t4 1 /;
+Positive Variable h(v);
+Variable obj;
+Equation pr(t), defobj;
+pr(t)$(sum(w, a(w)) >= 1).. sum(v$vs(t,v), h(v)) =g= ord(t);
+defobj.. obj =e= sum(v, ord(v)*sqr(h(v)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+
+# - an equation condition over the EQ index: it must follow the eq coordinate,
+#   not the variable's position (`ord(v) > 1`). NLP 1.8655 (on `ord(v)`: 2.924).
+EQUATION_CONDITION_ON_EQ_INDEX = ROW_BOUND_COEFFICIENT.replace(
+    "pr(t).. sum(v$vs(t,v), a(v)*h(v))", "pr(t)$(ord(t) > 1).. sum(v$vs(t,v), a(v)*h(v))"
+)
 
 
 def _emit(tmp_path: Path, source: str) -> str:
@@ -241,7 +314,9 @@ def test_turkpow_zh_shape_indexes_the_multiplier_by_the_summed_index(tmp_path):
 def test_shale_cpu_shape_over_a_subset_and_its_parent(tmp_path):
     # FAIL-BEFORE: (((-1) * 1$(ts(tf,tf))) * lam_cpu(m,tf))$(t(tf)): the diagonal only.
     row = _row(_emit(tmp_path, SHALE_CPU), "stat_h(")
-    assert "sum(tfp, (((-1) * 1$(ts(tfp,tf))) * lam_cpu(m,tfp))$(t(tfp)))" in row, row
+    assert (
+        "sum(t__kkt1, (((-1) * 1$(ts(t__kkt1,tf))) * lam_cpu(m,t__kkt1))$(t(t__kkt1)))" in row
+    ), row
     assert "ts(tf,tf)" not in row, row
 
 
@@ -249,21 +324,23 @@ def test_shale_acap_shape_uses_the_RELATED_binder_of_a_multi_index_sum(tmp_path)
     # FAIL-BEFORE: per-offset phantoms, ((... ts(tf,tf) ...) * nu_acap(tf+1))$(ord(m) = 1) ...
     row = _row(_emit(tmp_path, SHALE_ACAP), "stat_h(")
     assert row == (
-        "stat_h(m,tf).. 2 * ord(tf) * (h(m,tf) - 1) + sum(tfp, (((-1) * (nu(m) * 1$(ts(tfp,tf))))"
-        " * nu_acap(tfp))$(t(tfp))) - piL_h(m,tf) =E= 0;"
+        "stat_h(m,tf).. 2 * ord(tf) * (h(m,tf) - 1) + sum(t__kkt1, (((-1) * (nu(m)"
+        " * 1$(ts(t__kkt1,tf)))) * nu_acap(t__kkt1))$(t(t__kkt1))) - piL_h(m,tf) =E= 0;"
     ), row
 
 
 def test_shale_acap_with_a_PARAMETER_guard_skips_the_offset_substitution(tmp_path):
     row = _row(_emit(tmp_path, SHALE_ACAP_PARAM), "stat_h(")
-    assert "1$(ts(tfp,tf))" in row and "tf+1" not in row, row
+    assert "1$(ts(t__kkt1,tf))" in row and "tf+1" not in row, row
 
 
 def test_a_BOUND_coefficient_keeps_its_coordinate_and_the_binder_sum_goes(tmp_path):
     row = _row(_emit(tmp_path, BOUND_COEFFICIENT), "stat_em(")
+    # The eq coordinate is the binder's own name `tep` (free once it stands for
+    # `te`); the standard path's sum((i,t)$sameas(t,te), ...) pin is gone.
     assert row == (
-        "stat_em(te).. 2 * ord(te) * em(te) + sum((i,t), (((-1) * (es(i) * zmi(t,te)"
-        " * 1$(ts(t,te)))) * lam_mb(i,t))$(t(t))) - piL_em(te) =E= 0;"
+        "stat_em(te).. 2 * ord(te) * em(te) + sum(tep, sum(i, (((-1) * (es(i) * zmi(tep,te)"
+        " * 1$(ts(tep,te)))) * lam_mb(i,tep))$(t(tep)))) - piL_em(te) =E= 0;"
     ), row
 
 
@@ -271,6 +348,40 @@ def test_the_renamed_binder_avoids_a_COEFFICIENT_sum_binder(tmp_path):
     row = _row(_emit(tmp_path, COEFFICIENT_SUM), "stat_h(")
     assert "sum(w, a(w))" in row and "a(v)" not in row, row
     assert "sum(w, ((-1)" not in row, "the outer binder must not reuse `w`: " + row
+
+
+def test_a_ROW_BOUND_coefficient_keeps_the_variable_position(tmp_path):
+    row = _row(_emit(tmp_path, ROW_BOUND_COEFFICIENT), "stat_h(")
+    assert row == (
+        "stat_h(v).. 2 * ord(v) * h(v) + sum(t__kkt1, ((-1) * (a(v) * 1$(vs(t__kkt1,v))))"
+        " * lam_pr(t__kkt1)) - piL_h(v) =E= 0;"
+    ), row
+
+
+def test_a_ROW_BOUND_coefficient_under_launch_naming(tmp_path):
+    row = _row(_emit(tmp_path, ROW_BOUND_COEFFICIENT_LAUNCH_NAMING), "stat_h(")
+    assert row == (
+        "stat_h(t).. 2 * ord(t) * h(t) + sum(v, ((-1) * (a(t) * 1$(vs(v,t)))) * lam_pr(v))"
+        " - piL_h(t) =E= 0;"
+    ), row
+
+
+def test_a_ROW_BOUND_nonlinear_factor_keeps_the_variable_position(tmp_path):
+    row = _row(_emit(tmp_path, ROW_BOUND_NONLINEAR), "stat_h(")
+    assert "2 * h(v) * 1$(vs(t__kkt1,v)) * lam_pr(t__kkt1)" in row, row
+    assert "h(t__kkt1)" not in row, row
+
+
+def test_the_eq_coordinate_avoids_an_EQUATION_CONDITION_binder(tmp_path):
+    row = _row(_emit(tmp_path, EQUATION_GUARD), "stat_h(")
+    assert "$(sum(w, a(w)) >= 1)" in row and "a(v)" not in row, row
+    assert "sum(w, (" not in row, "the eq coordinate must not reuse `w`: " + row
+
+
+def test_the_EQUATION_CONDITION_follows_the_eq_coordinate(tmp_path):
+    assert "pr(t)$(ord(t) > 1).." in EQUATION_CONDITION_ON_EQ_INDEX, "fixture must apply"
+    row = _row(_emit(tmp_path, EQUATION_CONDITION_ON_EQ_INDEX), "stat_h(")
+    assert "$(ord(t__kkt1) > 1)" in row and "ord(v) > 1" not in row, row
 
 
 def test_the_swap_needs_the_eq_index_ABSENT_from_every_reference():

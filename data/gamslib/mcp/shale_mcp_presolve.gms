@@ -400,7 +400,7 @@ Equations
 
 $onMultiR
 * Stationarity equations
-stat_h(m,tf).. (sum(tfp, (((-1) * (sigma * nu(m) * 1$(ts(tfp,tf)))) * nu_acap(tfp))$(t(tfp))) + sum(tfp, (((-1) * 1$(ts(tfp,tf))) * lam_cpu(m,tfp))$(t(tfp))) - piL_h(m,tf))$(sum(t, 1$(ts(t,tf)))) =E= 0;
+stat_h(m,tf).. (sum(tp, (((-1) * (sigma * nu(m) * 1$(ts(tp,tf)))) * nu_acap(tp))$(t(tp))) + sum(tp, (((-1) * 1$(ts(tp,tf))) * lam_cpu(m,tp))$(t(tp))) - piL_h(m,tf))$(sum(t, 1$(ts(t,tf)))) =E= 0;
 stat_phig.. 1 + nu_agw =E= 0;
 stat_phik(tf).. ((((-1) * (theta * del(tf) * (-1))))$(t(tf)) + nu_acap(tf)$(t(tf)))$(t(tf)) =E= 0;
 stat_phio(tf).. ((((-1) * (theta * del(tf) * (-1))))$(t(tf)) + nu_aopc(tf)$(t(tf)))$(t(tf)) =E= 0;

@@ -917,7 +917,7 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
   - Day 6's carry-over guess, a "position whose value IS the eq index" discriminator in the matchers, is not the layer. An "absent from every reference" pass in `_compute_index_offset_key` left the row byte-identical, and was dropped.
   - The swap (`_apply_pattern_c_swap_to_term`) exchanged the binder with the **eq index**. That pair is right only under launch's naming, where the variable is declared over the eq index's name.
   - It fired only on an all-zero offset key, so a dimension-mismatch key `(999, 0)` never reached it.
-- **The fix (`src/kkt/stationarity.py`):** the swap pairs the binder with **the variable position it occupies**, `_binder_var_position` (the same single position in every reference). It applies only when the eq index is absent from every reference to the variable (`_index_absent_from_var_refs`). Four parts, each necessary (measured by mutation):
+- **The fix (`src/kkt/stationarity.py`; ⚠ parts 1–2 and the exchange itself are REPLACED in PR #1788 review round 2, see there):** the swap pairs the binder with **the variable position it occupies**, `_binder_var_position` (the same single position in every reference). It applies only when the eq index is absent from every reference to the variable (`_index_absent_from_var_refs`). Four parts, each necessary (measured by mutation):
   1. **A binder named like a variable position is renamed first,** to an alias of the same set that neither the variable nor the multiplier uses (an existing alias, else a fresh `__kkt` one). The eq index itself is not safe: the equal-arity path's eq→var rename would catch it.
   2. **A self-mapping for the renamed binder in the element map,** keeping the map's type. A `ParamRef` index absent from the map is sent to the declared domain's name, so turkpow's PARAMETER `vs(t,v)` turned `t__kkt1` back into `v`: `vs("t__kkt1","t__kkt1")`, quoted.
   3. **The gate admits a subset ↔ parent pair** (shale's `t(tf)` with binder `tf`) **and the related binder of a multi-index sum** (shale's `acap`: `sum((m,tf)$ts(t,tf), …)`, where the first binder `m` is unrelated). Both only on the binder-position terms, never through the legacy offset-0 swap that #1398 restricted (`binder_swap_only`).
@@ -964,6 +964,32 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - **Regressions:** each case has an emitted-row unit test and a validation solve. Reverting either fix fails exactly its own test.
 - **Corpus:** dinam drifted by −11 B and holds its bucket (resolver GO). The other in-scope goldens are clean. ferts, ganges and turkpow timed out under load (unverified); re-run alone with `--fail-on-unverified`, all three are clean, so the gate is complete.
 - **CI: `PR19 emit solve validation` failed in its `Post Set up Python 3.12` step** after every real step had passed. `ubuntu-latest` rolled from 24.04 to 26.04, and setup-python's cache key includes the OS version, so the cache missed. This job never pip-installs, so `~/.cache/pip` did not exist and the post-job save errored. **Fixed:** `cache: "pip"` is removed from that workflow. The other three workflows with a pip cache (`ci`, `nightly`, `gamslib-regression`) do `pip install`, so they are not exposed.
+
+### PR #1788 review round 2 (P4): no exchange at all
+
+- **The exchange is unsound in launch's own form.** Once re-symbolised, the eq coordinate and the variable's coordinate are BOTH spelled as the position name, so a whole-term exchange moves row-bound factors with the multiplier:
+  - a coefficient, `a(v)` → `a(t__kkt1)` (MCP 1.999 vs NLP 1.8655);
+  - a nonlinear derivative factor, `2*h(v)` → `2*h(t__kkt1)` (13.617 vs 8.9208);
+  - and, as it turned out, `main`'s launch swap too, for any non-unit coefficient (`a(v)` for `a(t)` under launch's naming). launch itself has unit coefficients, so its golden is unaffected.
+  - Separately, the equation condition was attached after re-symbolisation, so its own binder `w` was not reserved, and `sum(w, a(w))` became `sum(w__, a(v))` (no solve).
+- **Replaced by a rewrite BEFORE re-symbolisation**, where the two coordinates are still apart:
+  - **the representative** is chosen so that its eq label at the pattern's eq position is not among the variable instance's labels;
+  - **the symbolic binder** becomes the variable's position name, and **the eq label a placeholder eq coordinate `E*`.** `E*` is the binder's own name when that is free once it stands for the position (launch's `ss` and dinam's `tep` stay), else an unused alias of the eq index's set. The reserved names cover the variable's and multiplier's domains, the derivative's indices and the equation condition's;
+  - **the equation condition's eq index** is renamed to `E*` before it is attached;
+  - **finally (`_finish_binder_position_rewrite`) only the multiplier's eq index** is pointed at `E*`. If the standard path had made it a summed index pinned by `sameas` (the dimension-mismatch path's `sum((i,t)$sameas(t,te), …)`: dinam is that form too, not a "separate" one as round 1 thought), the index leaves its sum with its pin. `E*` is summed.
+- **Regressions**, each an emitted-row unit test plus a validation solve:
+
+  | fixture | before | after | NLP |
+  |---|---|---|---|
+  | row-bound coefficient | 1.999 | 1.865 | 1.8655 |
+  | same, launch's naming (`main` wrong too) | 1.999 | 1.865 | 1.8655 |
+  | row-bound nonlinear factor | 13.617 | 8.921 | 8.9208 |
+  | equation condition with its own binder | no solve | 7.680 | 7.68 |
+  | equation condition over the eq index | (2.924 without the rename) | 1.865 | 1.8655 |
+
+  All 15 earlier fixtures still solve to their NLP optima, and the launch-shape row is byte-identical. Mutation: dropping the label placeholder fails 10 tests; the condition-name reservation, the condition rename and the `sameas`-pin removal each fail exactly their own.
+- **Corpus:** the leak gate is complete (no timeouts). Only dinam and shale drift, and both are renames of the summed eq coordinate: shale's `tfp` → its existing alias `tp` of `t`, and dinam's `stat_em` / `stat_v` now use `tep` / `tp`. The resolver holds both (GO). turkpow, tfordy and launch are byte-identical. `make test`: **5,690 passed**.
+- **Found on the way:** the emitter drops `a(t) = ord(t)/4;` when `a` is used only in an equation condition (`$141`, identical on `main`). The fixture uses literal data.
 
 ### Found and routed (not fixed in place)
 

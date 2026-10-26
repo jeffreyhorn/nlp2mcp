@@ -191,3 +191,16 @@ On `Alias(i,j,k)`, `z(i,j,k)`, `e(i,j).. z('a',i,j)` the binding `{0: 1, 1: 2}` 
 
 - **The exchange is right only in launch's form**, where the multiplier spells the eq coordinate as the variable's position. When the eq coordinate already has its own index (dinam's `mb(i,t)` against `em(te)`), the binder is substituted by the position and its outer sum dropped (`_apply_binder_position_swap`). The exchange had corrupted the bound `zmi(t,te)`.
 - **The renamed binder also avoids every index the derivative uses** (`_index_names_in`), so it cannot capture a coefficient's own `sum(w, …)`.
+
+## PR #1788 review round 2: no exchange at all
+
+The binder ↔ position exchange (rounds 0–1) is unsound in launch's own form. Once re-symbolised, the eq coordinate and the variable's own coordinate are both spelled as the position name, so the exchange moved row-bound coefficients (`a(v)`) and nonlinear factors (`2*h(v)`) with the multiplier. `main`'s launch swap has the same defect for non-unit coefficients.
+
+**Replaced** by a rewrite before re-symbolisation:
+- a representative whose eq label is not among the variable's labels;
+- the binder becomes the position name, and the eq label a placeholder eq coordinate (the binder's own name when free, else an unused alias, reserving the condition's names too);
+- the equation condition follows that placeholder;
+- `_finish_binder_position_rewrite` points only the multiplier's eq index at it, dropping a `sameas` pin the dimension-mismatch path had added.
+
+Detail and fixtures: `SPRINT_LOG.md` §Day 7, PR #1788 review round 2.
+

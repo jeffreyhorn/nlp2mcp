@@ -456,8 +456,8 @@ def _find_pattern_c_alias_sum(
                     }
                 # Sprint 40 Day 7 (shale ``cpu(m,t).. ... =l= sum(tf$ts(t,tf),
                 # h(m,tf))``, ``t(tf)``): a binder over the PARENT of the eq
-                # index's subset is the same universe, so the swap is valid. It
-                # is admitted only where the binder-position swap applies (the
+                # index's subset is the same universe, so the rewrite is valid. It
+                # is admitted only where the binder-position rewrite applies (the
                 # binder holds one variable position, the eq index none), never
                 # through the legacy offset-0 swap that #1398 restricted
                 # (``binder_swap_only``).
@@ -611,57 +611,107 @@ def _eq_index_position(eq_def: Any, eq_index: str) -> int | None:
     return hits[0] if len(hits) == 1 else None
 
 
-def _apply_binder_position_swap(
+def _finish_binder_position_rewrite(
     term: Expr,
-    binder: str,
+    eq_star: str,
     position_name: str,
     mult_name: str,
     eq_position: int | None,
 ) -> Expr:
-    """The Sprint 40 Day 7 Pattern C rewrite (#1782): the binder IS the
-    variable's coordinate ``position_name``.
+    """Finish the Sprint 40 Day 7 Pattern C rewrite (#1782; PR #1788 review).
 
-    Two pre-swap forms reach here, told apart by how the multiplier spells the
-    eq coordinate:
-
-    * **launch's form** — the eq coordinate was identified with the variable's
-      position (``sum(ss, ge(ss,s) * nu(s))``): exchange binder ↔ position, so
-      the outer sum ranges over the eq coordinate (``sum(ss, ge(s,ss) * nu(ss))``);
-    * **already separate** — the eq coordinate has its own index (dinam's
-      ``mb(i,t).. sum(tep$ts(t,tep), zmi(t,tep)*em(tep))`` against ``em(te)``:
-      ``sum(tep, sum((i,t), zmi(t,te) * ts(t,tep) * lam_mb(i,t)))``). Exchanging
-      there corrupts the bound coefficient (``zmi(t,tep)``, PR #1788 review).
-      Substitute binder → position instead, and drop the binder's outer sum:
-      nothing is left for it to range over.
+    The derivative already holds the eq coordinate as ``eq_star`` and the
+    variable's as ``position_name``. What remains is the multiplier, which the
+    standard path builds from the domain and ties to the variable's position:
+    either spelled as it (launch's ``nu(s)``, ``lam_pr(v)``), or as its own
+    summed index pinned there by ``sameas`` (the dimension-mismatch path's
+    ``sum((i,t)$sameas(t,te), … lam_mb(i,t))`` for dinam's ``mb(i,t)`` against
+    ``em(te)``). Either way the multiplier's eq index becomes ``eq_star``; a summed
+    index leaves its sum together with its ``sameas`` pin (other uses, such as a
+    subset-membership guard, follow it to ``eq_star``); and ``eq_star`` is summed.
+    Row-bound coefficients are not touched.
     """
+    if eq_position is None:
+        return term
     spelled: str | None = None
-    if eq_position is not None:
-        stack: list[Expr] = [term]
-        while stack and spelled is None:
-            node = stack.pop()
-            if (
-                isinstance(node, MultiplierRef)
-                and node.name == mult_name
-                and eq_position < len(node.indices)
-            ):
-                idx = node.indices[eq_position]
-                spelled = idx if isinstance(idx, str) else None
-            stack.extend(node.children())
-    if spelled is None or spelled.lower() == position_name.lower():
-        return _apply_pattern_c_swap_to_term(term, binder, position_name)
-    rename = {binder.lower(): position_name}
-    if isinstance(term, Sum) and any(i.lower() == binder.lower() for i in term.index_sets):
-        rest = tuple(i for i in term.index_sets if i.lower() != binder.lower())
-        body = _rewrite_subset_to_superset(term.body, rename)
-        cond = (
-            _rewrite_subset_to_superset(term.condition, rename)
-            if term.condition is not None
-            else None
+    stack: list[Expr] = [term]
+    while stack and spelled is None:
+        node = stack.pop()
+        if (
+            isinstance(node, MultiplierRef)
+            and node.name == mult_name
+            and eq_position < len(node.indices)
+        ):
+            idx = node.indices[eq_position]
+            spelled = idx if isinstance(idx, str) else None
+        stack.extend(node.children())
+    if spelled is None or spelled.lower() == eq_star.lower():
+        return term
+    old = spelled.lower()
+    separate = old != position_name.lower()
+
+    def is_pin(c: Expr) -> bool:
+        return (
+            isinstance(c, Call)
+            and c.func == "sameas"
+            and bool(c.args)
+            and isinstance(c.args[0], SymbolRef)
+            and c.args[0].name.lower() == old
         )
-        if rest:
-            return Sum(rest, body, cond)
-        return body if cond is None else DollarConditional(value_expr=body, condition=cond)
-    return _rewrite_subset_to_superset(term, rename)
+
+    def strip_pin(c: Expr) -> Expr | None:
+        if is_pin(c):
+            return None
+        if isinstance(c, Binary) and c.op == "and":
+            left, right = strip_pin(c.left), strip_pin(c.right)
+            if left is None:
+                return right
+            if right is None:
+                return left
+            return Binary("and", left, right)
+        return c
+
+    def walk(e: Expr) -> Expr:
+        if isinstance(e, MultiplierRef) and e.name == mult_name and eq_position < len(e.indices):
+            new = list(e.indices)
+            new[eq_position] = eq_star
+            return MultiplierRef(e.name, tuple(new))
+        if isinstance(e, Sum):
+            body = walk(e.body)
+            if not separate:
+                return Sum(e.index_sets, body, e.condition)
+            rest = tuple(i for i in e.index_sets if i.lower() != old)
+            if not rest:
+                return body if e.condition is None else DollarConditional(body, e.condition)
+            return Sum(rest, body, e.condition)
+        if isinstance(e, Binary):
+            return Binary(e.op, walk(e.left), walk(e.right))
+        if isinstance(e, Unary):
+            return Unary(e.op, walk(e.child))
+        if isinstance(e, DollarConditional):
+            inner = walk(e.value_expr)
+            cond = strip_pin(e.condition) if separate else e.condition
+            return inner if cond is None else DollarConditional(inner, cond)
+        return e
+
+    term = walk(term)
+    if separate:
+        term = _rewrite_subset_to_superset(term, {old: eq_star})
+    if eq_star.lower() not in _index_names_bound_in(term):
+        term = Sum((eq_star,), term)
+    return term
+
+
+def _index_names_bound_in(expr: Expr) -> set[str]:
+    """Names bound by a Sum/Prod anywhere in ``expr``, lowercased."""
+    bound: set[str] = set()
+    stack: list[Expr] = [expr]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, (Sum, Prod)):
+            bound.update(str(i).lower() for i in node.index_sets)
+        stack.extend(node.children())
+    return bound
 
 
 def _apply_pattern_c_swap_to_term(
@@ -7220,6 +7270,40 @@ def _add_indexed_jacobian_terms(
                                 continue
                             group_row_id, group_col_id = _rid, _cid
                             break
+                    # Sprint 40 Day 7 (#1782): the Pattern C binder rewrite (below)
+                    # needs a representative whose eq label at the pattern's eq
+                    # position is NOT among the variable instance's labels, so the
+                    # eq coordinate and the variable's coordinate stay apart when
+                    # the labels are re-symbolised (PR #1788 review).
+                    _pc_gate = bool(
+                        pattern_c_info is not None
+                        and pattern_c_info.get("binder_position") is not None
+                        and pattern_c_info["binder_position"] < len(var_domain)
+                        and all(o in (0, _SENTINEL_UNMATCHED) for o in offset_key)
+                        and _index_absent_from_var_refs(
+                            kkt.model_ir.equations.get(eq_name_base),
+                            var_name,
+                            pattern_c_info["eq_domain_index"],
+                        )
+                    )
+                    _pc_eq_pos: int | None = None
+                    if _pc_gate and pattern_c_info is not None:
+                        _pc_eq_pos = _eq_index_position(
+                            kkt.model_ir.equations.get(eq_name_base),
+                            pattern_c_info["eq_domain_index"],
+                        )
+                        _pc_rep = None
+                        if _pc_eq_pos is not None:
+                            for _rid, _cid in [(group_row_id, group_col_id), *group_entries]:
+                                _, _eidx = jacobian.index_mapping.row_to_eq[_rid]
+                                _, _vidx = jacobian.index_mapping.col_to_var[_cid]
+                                if _pc_eq_pos < len(_eidx) and _eidx[_pc_eq_pos] not in _vidx:
+                                    _pc_rep = (_rid, _cid)
+                                    break
+                        if _pc_rep is None:
+                            _pc_gate = False
+                        else:
+                            group_row_id, group_col_id = _pc_rep
                     derivative = jacobian.get_derivative(group_row_id, group_col_id)
                     _, group_eq_indices = jacobian.index_mapping.row_to_eq[group_row_id]
 
@@ -7472,7 +7556,7 @@ def _add_indexed_jacobian_terms(
                             )
                         )
                         _eq_circular_cache[eq_name_base] = _has_circular
-                    # Sprint 40 Day 7 (#1782): does the Pattern C binder swap
+                    # Sprint 40 Day 7 (#1782): does the Pattern C binder rewrite
                     # (below) apply? Decided HERE because it also rules out the
                     # offset substitution: the gate requires a body with no
                     # IndexOffset on the variable's sets, so the eq label's
@@ -7480,16 +7564,14 @@ def _add_indexed_jacobian_terms(
                     # not a lead/lag. shale's PARAMETER ``ts(t,tf)`` otherwise
                     # became ``ts(tf+1,tf)`` (a Set's membership test is not
                     # rewritten, which is why set-valued fixtures did not show it).
+                    # (Re-checked: the #1110 multi-pattern step may have switched
+                    # the representative.)
                     _pc_binder_swap = bool(
-                        pattern_c_info is not None
-                        and pattern_c_info.get("binder_position") is not None
-                        and pattern_c_info["binder_position"] < len(var_domain)
-                        and all(o in (0, _SENTINEL_UNMATCHED) for o in offset_key)
-                        and _index_absent_from_var_refs(
-                            kkt.model_ir.equations.get(eq_name_base),
-                            var_name,
-                            pattern_c_info["eq_domain_index"],
-                        )
+                        _pc_gate
+                        and _pc_eq_pos is not None
+                        and _pc_eq_pos < len(group_eq_indices)
+                        and group_eq_indices[_pc_eq_pos]
+                        not in jacobian.index_mapping.col_to_var[group_col_id][1]
                     )
                     if not _has_circular and not _pc_binder_swap:
                         _, _rep_var_idx = jacobian.index_mapping.col_to_var[group_col_id]
@@ -7531,63 +7613,75 @@ def _add_indexed_jacobian_terms(
                             if str(setname).lower() not in _pinned_sets
                         }
 
-                    # Sprint 40 Day 7 (#1782, turkpow ``stat_ht``): the Pattern C
-                    # swap below pairs the sum binder with the VARIABLE position it
-                    # occupies. launch's ``iweight(s)`` / ``sum(ss$ge(ss,s), ...)``
-                    # has binder ``ss`` and position ``s`` (= the eq index). With
-                    # ``ht(m,v)`` / ``pr(t).. sum(v$vs(t,v), ht(mt,v))`` the binder
-                    # IS the position's name ``v``: the representative's labels
-                    # map to ``v`` too, the eq coordinate is lost (``vs(v,v)*
-                    # lam_pr(v)``) and the swap has nothing to undo. Rename such
-                    # a binder first to a name of the same set that neither the
-                    # variable nor the multiplier uses (an existing alias, else a
-                    # fresh one).
-                    #
-                    # Only where the eq index is ABSENT from every reference to
-                    # the variable: then the binder carries the variable's
-                    # coordinate and the eq index must be summed. ``ao(t).. sum((mt,
-                    # v)$vs(t,v), ... zt(mt,v,b,t))`` holds ``t`` in the reference:
-                    # ``t`` binds its own position and there is nothing to swap.
+                    # Sprint 40 Day 7 (#1782, turkpow ``stat_ht``; PR #1788 review):
+                    # the Pattern C binder rewrite. The eq index is ABSENT from
+                    # every reference to the variable, so the sum binder carries
+                    # the variable's coordinate and the eq coordinate must be
+                    # summed. Both are fixed here, BEFORE re-symbolisation, where
+                    # they are still apart: the symbolic binder becomes the
+                    # variable's position name, and the representative's eq label
+                    # a placeholder eq coordinate ``E*`` (an alias of the eq
+                    # index's set that nothing in the row uses). Fixing them after
+                    # re-symbolisation is impossible in launch's form: there the
+                    # eq coordinate and the variable's own coordinate are BOTH
+                    # spelled as the position name, and an exchange moved
+                    # row-bound coefficients (``a(v)``, ``2*h(v)``) with the
+                    # multiplier. ``ao(t).. sum((mt,v)$vs(t,v), … zt(mt,v,b,t))``
+                    # holds ``t`` in the reference and never reaches here.
                     pc_swap: tuple[str, str] | None = None
-                    if _pc_binder_swap and pattern_c_info is not None:
+                    _pc_cond_rename: dict[str, str] | None = None
+                    if _pc_binder_swap and pattern_c_info is not None and _pc_eq_pos is not None:
                         _pc_binder = pattern_c_info["alias_name"]
                         _pc_pos_name = var_domain[pattern_c_info["binder_position"]]
-                        _pc_var_names = {str(d).lower() for d in var_domain}
-                        if _pc_binder.lower() in _pc_var_names:
-                            # Not the eq index either: the equal-arity path's
-                            # eq→var rename (``subset_rename``, {t: v}) would
-                            # catch it and collapse the coordinates again.
-                            # ...nor any index the derivative already uses,
-                            # free or bound: a coefficient's own ``sum(w, a(w))``
-                            # would capture a binder renamed to ``w`` (PR #1788
-                            # review).
-                            _pc_new = _get_or_create_fresh_alias(
-                                _resolve_alias_target(_pc_binder, kkt.model_ir),
-                                _pc_var_names
-                                | {str(d).lower() for d in mult_domain}
-                                | _index_names_in(derivative),
+                        _pc_eq_idx = pattern_c_info["eq_domain_index"]
+                        _pc_eq_def = kkt.model_ir.equations.get(eq_name_base)
+                        _pc_cond = getattr(_pc_eq_def, "condition", None)
+                        # Reserve every name the row can contain: the variable's
+                        # and multiplier's domains, the derivative's indices (free
+                        # or bound: a coefficient's own ``sum(w, a(w))``) and the
+                        # equation condition's (attached later).
+                        _pc_bound = _rewrite_subset_to_superset(
+                            derivative, {_pc_binder.lower(): _pc_pos_name}
+                        )
+                        _pc_reserved = (
+                            {str(d).lower() for d in var_domain}
+                            | {str(d).lower() for d in mult_domain}
+                            | {_pc_eq_idx.lower()}
+                            | _index_names_in(_pc_bound)
+                            | (_index_names_in(_pc_cond) if _pc_cond is not None else set())
+                        )
+                        # The binder's own name is free once it stands for the
+                        # variable's position (launch's ``ss`` stays ``ss``);
+                        # otherwise an unused alias of the eq index's set.
+                        if _pc_binder.lower() not in _pc_reserved:
+                            _pc_eq_star = _pc_binder
+                        else:
+                            _pc_eq_star = _get_or_create_fresh_alias(
+                                _resolve_alias_target(_pc_eq_idx, kkt.model_ir),
+                                _pc_reserved | {_pc_binder.lower()},
                                 kkt.model_ir,
                             )
-                            derivative = _rewrite_subset_to_superset(
-                                derivative, {_pc_binder.lower(): _pc_new}
-                            )
-                            _pc_binder = _pc_new
-                            # A self-mapping keeps the new binder symbolic: a
-                            # ParamRef index absent from the map is otherwise sent
-                            # to the declared domain's name (turkpow's parameter
-                            # ``vs(t,v)`` turned ``t__kkt1`` back into ``v``). Same
-                            # mapping type, since ``_replace_matching_indices``
-                            # branches on ChainMap.
-                            if isinstance(deriv_element_to_set, ChainMap):
-                                deriv_element_to_set = deriv_element_to_set.new_child(
-                                    {_pc_new: _pc_new}
-                                )
-                            else:
-                                deriv_element_to_set = {
-                                    **deriv_element_to_set,
-                                    _pc_new: _pc_new,
-                                }
-                        pc_swap = (_pc_binder, _pc_pos_name)
+                        derivative = _rewrite_subset_to_superset(
+                            derivative,
+                            {
+                                _pc_binder.lower(): _pc_pos_name,
+                                str(group_eq_indices[_pc_eq_pos]).lower(): _pc_eq_star,
+                            },
+                        )
+                        _pc_cond_rename = {_pc_eq_idx.lower(): _pc_eq_star}
+                        # Self-mappings keep both symbolic: a ParamRef index absent
+                        # from the map is otherwise sent to its declared domain's
+                        # name (turkpow's PARAMETER ``vs(t,v)``). Same mapping type,
+                        # since ``_replace_matching_indices`` branches on ChainMap.
+                        _pc_self = {_pc_eq_star: _pc_eq_star, _pc_pos_name: _pc_pos_name}
+                        if isinstance(deriv_element_to_set, ChainMap):
+                            deriv_element_to_set = deriv_element_to_set.new_child(_pc_self)
+                        else:
+                            deriv_element_to_set = {**deriv_element_to_set, **_pc_self}
+                        constraint_element_to_set = ChainMap(
+                            {_pc_eq_star: _pc_eq_star}, constraint_element_to_set
+                        )
+                        pc_swap = (_pc_eq_star, _pc_pos_name)
 
                     # Replace indices in derivative expression using constraint-aware mapping
                     # Issue #620: Pass var_domain as equation_domain for subset substitution
@@ -7885,7 +7979,11 @@ def _add_indexed_jacobian_terms(
                     eq_def = kkt.model_ir.equations.get(eq_name_base)
                     if eq_def is not None and eq_def.condition is not None:
                         indexed_condition = _replace_indices_in_expr(
-                            eq_def.condition,
+                            (
+                                _rewrite_subset_to_superset(eq_def.condition, _pc_cond_rename)
+                                if _pc_cond_rename
+                                else eq_def.condition
+                            ),
                             var_domain,
                             constraint_element_to_set,
                             kkt.model_ir,
@@ -8250,16 +8348,9 @@ def _add_indexed_jacobian_terms(
                     # GAMS-equivalent of the target form ``sum(alias$cond(
                     # eq_dom, alias), coeff * nu_eq(alias))`` (per Sprint 25
                     # SPRINT_LOG.md Day 11 §"Open follow-ups (revised)").
-                    if pc_swap is not None and pattern_c_info is not None:
-                        term = _apply_binder_position_swap(
-                            term,
-                            pc_swap[0],
-                            pc_swap[1],
-                            name_func(eq_name_base),
-                            _eq_index_position(
-                                kkt.model_ir.equations.get(eq_name_base),
-                                pattern_c_info["eq_domain_index"],
-                            ),
+                    if pc_swap is not None:
+                        term = _finish_binder_position_rewrite(
+                            term, pc_swap[0], pc_swap[1], name_func(eq_name_base), _pc_eq_pos
                         )
                     elif (
                         pattern_c_info is not None
