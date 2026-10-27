@@ -223,3 +223,7 @@ Detail and fixtures: `SPRINT_LOG.md` §Day 7, PR #1788 review round 2.
 
 - A binder-only admission is also withdrawn before consolidation when the eq index occurs in ANY reference to the variable in the equation (a direct reference beside the sum). The rewrite would reject it later, after the offsets were consolidated.
 
+## PR #1788 review round 7
+
+- Every sum carrying the variable's coordinate is rebound in its own scope (`_position_binders`). With `sum(v$…, h(v)) + sum(w$…, h(w))`, rebinding only `v` had left `w` free and overcounted. Shapes outside that contract get no rewrite.
+

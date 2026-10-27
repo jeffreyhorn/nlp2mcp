@@ -649,6 +649,52 @@ def _rename_iterators_keeping_card(expr: Expr, rename: dict[str, str]) -> Expr:
     return restore(_rewrite_subset_to_superset(hold(expr), rename))
 
 
+def _position_binders(eq_def: Any, var_name: str, position: int) -> set[str] | None:
+    """The binders that carry ``var_name``'s coordinate ``position`` (#1782).
+
+    Every reference to the variable in the equation must hold, at ``position``,
+    the binder of an enclosing Sum (and that name nowhere else in the reference).
+    Returns those binder names, lowercased: one per independently named sum
+    (``sum(v$vs(t,v), h(v)) + sum(w$vs(t,w), h(w))`` gives {v, w}). Returns None
+    for any other shape: the binder rewrite then does not apply (PR #1788 review).
+    """
+    key = var_name.lower()
+    found: set[str] = set()
+    ok = True
+
+    def walk(node: Expr, bound: frozenset[str]) -> None:
+        nonlocal ok
+        if not ok:
+            return
+        if isinstance(node, VarRef) and node.name.lower() == key:
+            names = [(idx.base if isinstance(idx, IndexOffset) else idx) for idx in node.indices]
+            at = names[position] if position < len(names) else None
+            if not isinstance(at, str) or isinstance(node.indices[position], IndexOffset):
+                ok = False
+                return
+            low = at.lower()
+            others = [str(n).lower() for p, n in enumerate(names) if p != position]
+            if low not in bound or low in others:
+                ok = False
+                return
+            found.add(low)
+            return
+        if isinstance(node, (Sum, Prod)):
+            inner = bound | frozenset(str(i).lower() for i in node.index_sets)
+            for child in node.children():
+                walk(child, inner)
+            return
+        for child in node.children():
+            walk(child, bound)
+
+    for part in tuple(getattr(eq_def, "lhs_rhs", None) or ()) + (
+        getattr(eq_def, "condition", None),
+    ):
+        if part is not None:
+            walk(part, frozenset())
+    return found if ok and found else None
+
+
 def _binder_rep_ok(eq_labels: tuple, var_labels: tuple, eq_position: int) -> bool:
     """A usable representative for the Pattern C binder rewrite (#1782).
 
@@ -7075,6 +7121,10 @@ def _add_indexed_jacobian_terms(
                             if (
                                 _pos is None
                                 or pattern_c_info.get("binder_position") is None
+                                or _position_binders(
+                                    eq_def_for_gate, var_name, pattern_c_info["binder_position"]
+                                )
+                                is None
                                 or not _index_absent_from_var_refs(
                                     eq_def_for_gate, var_name, pattern_c_info["eq_domain_index"]
                                 )
@@ -7380,9 +7430,19 @@ def _add_indexed_jacobian_terms(
                     # position is NOT among the variable instance's labels, so the
                     # eq coordinate and the variable's coordinate stay apart when
                     # the labels are re-symbolised (PR #1788 review).
+                    _pc_binders: set[str] | None = (
+                        _position_binders(
+                            kkt.model_ir.equations.get(eq_name_base),
+                            var_name,
+                            pattern_c_info["binder_position"],
+                        )
+                        if pattern_c_info is not None
+                        and pattern_c_info.get("binder_position") is not None
+                        else None
+                    )
                     _pc_gate = bool(
                         pattern_c_info is not None
-                        and pattern_c_info.get("binder_position") is not None
+                        and _pc_binders is not None
                         and pattern_c_info["binder_position"] < len(var_domain)
                         and all(o in (0, _SENTINEL_UNMATCHED) for o in offset_key)
                         and _index_absent_from_var_refs(
@@ -7750,9 +7810,14 @@ def _add_indexed_jacobian_terms(
                         # and multiplier's domains, the derivative's indices (free
                         # or bound: a coefficient's own ``sum(w, a(w))``) and the
                         # equation condition's (attached later).
-                        _pc_bound = _rewrite_subset_to_superset(
-                            derivative, {_pc_binder.lower(): _pc_pos_name}
+                        # EVERY sum carrying the coordinate is rebound, each in
+                        # its own scope: ``sum(v$vs(t,v), h(v)) + sum(w$vs(t,w),
+                        # h(w))`` keeps both binders symbolic in the derivative
+                        # (PR #1788 review).
+                        _pc_binder_map = dict.fromkeys(
+                            _pc_binders or {_pc_binder.lower()}, _pc_pos_name
                         )
+                        _pc_bound = _rewrite_subset_to_superset(derivative, _pc_binder_map)
                         _pc_reserved = (
                             {str(d).lower() for d in var_domain}
                             | {str(d).lower() for d in mult_domain}
@@ -7783,7 +7848,7 @@ def _add_indexed_jacobian_terms(
                         derivative = _rewrite_subset_to_superset(
                             derivative,
                             {
-                                _pc_binder.lower(): _pc_pos_name,
+                                **_pc_binder_map,
                                 str(group_eq_indices[_pc_eq_pos]).lower(): _pc_eq_star,
                             },
                         )

@@ -1029,6 +1029,16 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
   - The pre-#1782 path is itself wrong for mixed direct + summed references: NLP 3.8221 / 12.8859, that path 85.953 / 28.0, identical on `main`. That is #1778's mixed-reference family.
 - **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,702 passed**, no `225*` dirs.
 
+### PR #1788 review round 7 (P4)
+
+- **Independently named sums over the same variable coordinate.** In `e(t).. sum(v$vs(t,v), h(v)) + sum(w$vs(t,w), a(w)*h(w)) =g= 5 - ord(t)` the rewrite rebound only the first sum's `v`. The second guard's `w` stayed free, and the free-index wrap summed the whole derivative over it: `sum((t__kkt1,w), (vs(t__kkt1,v) + a(v)*vs(t__kkt1,w)) * lam_e(t__kkt1))`, MCP 5.440 vs NLP 4.0. `main` does not solve this model (`vs(t,t)`, `t` uncontrolled).
+  - **Fixed by rebinding each sum within its own scope:** `_position_binders` collects every binder that carries the variable's coordinate, and requires each reference to the variable to hold an enclosing sum's binder at that position, and nowhere else in it. All of them map to the position name before re-symbolisation.
+  - Any other shape (a reference outside such a sum, or the binder elsewhere in the reference) gets no rewrite, and its binder-only admission is withdrawn before consolidation, as in rounds 5–6.
+  - The row is now `sum(w, (vs(w,v) + a(v)*vs(w,v)) * lam_e(w))`, solving to 4.0.
+- **Regression:** `MIXED_BINDERS`, where only the second sum's binder is renamed: an emitted-row unit test plus a validation solve. Rebinding only the first binder fails it.
+- ⚠ This finding came from the review's "previously missed" summary, with no comment thread, so the reply is a new inline comment at the flagged line.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,704 passed**, no `225*` dirs.
+
 ### Found and routed (not fixed in place)
 
 - **#1787** (Day 8): a variable referenced twice, with the eq index at different positions, keeps one term (egypt `tranc(rp,rp)`, tfordy `stat_v`).

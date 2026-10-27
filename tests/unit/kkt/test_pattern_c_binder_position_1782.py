@@ -379,6 +379,26 @@ solve mm using nlp minimizing obj;
 """
 
 
+# PR #1788 review round 7: two INDEPENDENTLY named sums carry the same variable
+# coordinate (only the second sum's binder is renamed, `w`). Rebinding only the
+# first left `w` free, and the free-index wrap summed the whole derivative over it
+# (MCP 5.440). Both binders are now rebound, each in its own scope. NLP 4.0.
+MIXED_BINDERS = """\
+Set t / t1*t4 /;
+Alias (t,v,w);
+Set vs(t,v);
+vs(t,v) = yes$(ord(t) >= ord(v));
+Parameter a(t) / t1 1, t2 2, t3 3, t4 4 /;
+Positive Variable h(v);
+Variable obj;
+Equation e(t), defobj;
+e(t).. sum(v$vs(t,v), h(v)) + sum(w$vs(t,w), a(w)*h(w)) =g= 5 - ord(t);
+defobj.. obj =e= sum(v, ord(v)*sqr(h(v)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+
 def _emit(tmp_path: Path, source: str) -> str:
     src = tmp_path / "model.gms"
     src.write_text(source)
@@ -598,6 +618,12 @@ def test_a_binder_only_admission_the_rewrite_cannot_serve_is_WITHDRAWN(
         var_name,
     )
     assert found is not None and found.get("binder_swap_only"), found
+
+
+def test_independently_named_sums_are_EACH_rebound(tmp_path):
+    row = _row(_emit(tmp_path, MIXED_BINDERS), "stat_h(")
+    assert "sum(w, ((-1) * (1$(vs(w,v)) + a(v) * 1$(vs(w,v)))) * lam_e(w))" in row, row
+    assert "sum((" not in row, "no second binder may be left free and summed: " + row
 
 
 def test_the_swap_needs_the_eq_index_ABSENT_from_every_reference():
