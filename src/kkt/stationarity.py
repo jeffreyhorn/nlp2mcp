@@ -622,10 +622,14 @@ def _rename_free_indices(
     held: dict[str, Expr] = {}
 
     def scoped(e: Expr) -> Expr:
-        bound = [str(i) for i in e.index_sets]  # type: ignore[attr-defined]
+        parts = _reduction_call_parts(e, model_ir) if isinstance(e, Call) else None
+        if parts is not None:
+            bound, cond, body = list(parts[0]), parts[1], parts[2]
+        else:
+            bound = [str(i) for i in e.index_sets]  # type: ignore[attr-defined]
+            body = e.body  # type: ignore[attr-defined]
+            cond = e.condition  # type: ignore[attr-defined]
         inner = {k: v for k, v in rename.items() if k not in {b.lower() for b in bound}}
-        body = e.body  # type: ignore[attr-defined]
-        cond = e.condition  # type: ignore[attr-defined]
         dests = {str(v).lower() for v in inner.values()}
         if inner and model_ir is not None:
             reserved = dests | set(inner) | _index_names_in(e)
@@ -642,6 +646,9 @@ def _rename_free_indices(
         body = _rename_free_indices(body, inner, model_ir)
         if cond is not None:
             cond = _rename_free_indices(cond, inner, model_ir)
+        if isinstance(e, Call):
+            args = (*(SymbolRef(b) for b in bound), *((cond,) if cond is not None else ()), body)
+            return Call(e.func, tuple(args))
         return type(e)(tuple(bound), body, cond)  # type: ignore[call-arg]
 
     def card_of_set(e: Call) -> Expr:
@@ -660,9 +667,17 @@ def _rename_free_indices(
         return Call(e.func, args)
 
     def hold(e: Expr) -> Expr:
-        if isinstance(e, (Sum, Prod)) or (isinstance(e, Call) and e.func.lower() == "card"):
+        reduction = isinstance(e, Call) and _reduction_call_parts(e, model_ir) is not None
+        if (
+            isinstance(e, (Sum, Prod))
+            or reduction
+            or (isinstance(e, Call) and e.func.lower() == "card")
+        ):
             key = f"__scoped_{len(held)}__"
-            held[key] = scoped(e) if isinstance(e, (Sum, Prod)) else card_of_set(e)  # type: ignore[arg-type]
+            if isinstance(e, (Sum, Prod)) or reduction:
+                held[key] = scoped(e)
+            else:
+                held[key] = card_of_set(e)  # type: ignore[arg-type]
             return SymbolRef(key)
         if isinstance(e, Call):
             return Call(e.func, tuple(hold(a) for a in e.args))
@@ -5267,6 +5282,37 @@ def _replace_matching_indices(
     return tuple(new_indices)
 
 
+def _reduction_call_parts(
+    call: Call, model_ir: ModelIR | None
+) -> tuple[list[str], Expr | None, Expr] | None:
+    """Split an indexed ``smax``/``smin`` Call into (binders, condition, body).
+
+    The parser stores ``smax((i,j)$cond, body)`` as ``Call(smax, (SymbolRef(i),
+    SymbolRef(j), cond, body))``: a prefix of set/alias names (the binders), an
+    optional condition, then the body. Returns None for any other Call, including
+    the binary ``smax(a, b)``. Without ``model_ir`` a binder cannot be told from a
+    scalar symbol, so the prefix is accepted only when a condition or a second
+    binder makes the indexed form unambiguous.
+    """
+    if call.func.lower() not in ("smax", "smin") or len(call.args) < 2:
+        return None
+    binders: list[str] = []
+    for arg in call.args[:-1]:
+        if not isinstance(arg, SymbolRef):
+            break
+        if model_ir is not None and not (arg.name in model_ir.sets or arg.name in model_ir.aliases):
+            break
+        binders.append(arg.name)
+    if not binders:
+        return None
+    rest = call.args[len(binders) : -1]
+    if len(rest) > 1:
+        return None
+    if model_ir is None and not rest and len(binders) < 2:
+        return None
+    return binders, (rest[0] if rest else None), call.args[-1]
+
+
 def _collect_free_indices(expr: Expr, model_ir: ModelIR) -> set[str]:
     """Collect all free (unbound) symbolic set indices in an expression.
 
@@ -5310,6 +5356,18 @@ def _collect_free_indices(expr: Expr, model_ir: ModelIR) -> set[str]:
         if isinstance(e, Unary):
             return _walk(e.child, bound)
         if isinstance(e, Call):
+            # ``card(...)`` takes a SET, not an iterator (PR #1788 review).
+            if e.func.lower() == "card":
+                return set()
+            # An indexed ``smax``/``smin`` binds its own index (PR #1788 review).
+            parts = _reduction_call_parts(e, model_ir)
+            if parts is not None:
+                binders, cond, body = parts
+                inner = bound | frozenset(b.lower() for b in binders)
+                free = _walk(body, inner)
+                if cond is not None:
+                    free |= _walk(cond, inner)
+                return free
             free = set()
             for arg in e.args:
                 free |= _walk(arg, bound)
@@ -8040,7 +8098,23 @@ def _add_indexed_jacobian_terms(
                         # from the map is otherwise sent to its declared domain's
                         # name (turkpow's PARAMETER ``vs(t,v)``). Same mapping type,
                         # since ``_replace_matching_indices`` branches on ChainMap.
-                        _pc_self = {_pc_eq_star: _pc_eq_star, _pc_pos_name: _pc_pos_name}
+                        # Every row coordinate, not only the pattern's position: the
+                        # dimension-mismatch ``alias_remap`` otherwise maps another
+                        # one onto its alias (``s(E*,m,v,w)`` -> ``s(E*,m,w,w)``,
+                        # PR #1788 review).
+                        _pc_self = {
+                            _pc_eq_star: _pc_eq_star,
+                            **{str(d): str(d) for d in var_domain},
+                            # ...and every symbolic name now in the derivative,
+                            # including binders the scoped rename alpha-renamed
+                            # (``smax(t__kkt1, c(t__kkt1,v))``: the PARAMETER's
+                            # declared domain would otherwise take them).
+                            **{
+                                n: n
+                                for n in _index_names_in(derivative)
+                                if n in kkt.model_ir.sets or n in kkt.model_ir.aliases
+                            },
+                        }
                         if isinstance(deriv_element_to_set, ChainMap):
                             deriv_element_to_set = deriv_element_to_set.new_child(_pc_self)
                         else:

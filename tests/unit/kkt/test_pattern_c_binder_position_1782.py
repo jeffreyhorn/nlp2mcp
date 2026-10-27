@@ -491,6 +491,59 @@ solve mm using nlp minimizing obj;
 """
 
 
+# PR #1788 review round 10:
+# - an alias-named equation domain (`pr(q)`, Alias(t,q,w)): `card(w)` becomes
+#   `card(t)`, and the free-index collector took the SET operand for an iterator
+#   and summed over it (`sum((t,t__kkt1), ...)`). NLP 192.
+CARD_ALIAS_EQ_DOMAIN = """\
+Set t / t1*t4 /;
+Alias (t,q,w);
+Set vs(t,q);
+vs(t,q) = yes$(ord(t) >= ord(q));
+Positive Variable h(q);
+Variable obj;
+Equation pr(q), defobj;
+pr(q).. sum(w$vs(q,w), card(w)*h(w)) =g= 20*ord(q);
+defobj.. obj =e= sum(q, ord(q)*sqr(h(q)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+# - indexed `smax` in the guard binds its own index (a Call, not a Sum): `{w: v}`
+#   captured `smax(v, c(v,w))` as `smax(v, c(v,v))`. NLP 14.3662 (no solve).
+SMAX_CONDITION_SCOPE = """\
+Set t / t1*t3 /;
+Alias (t,v,w);
+Set vs(t,v);
+vs(t,v) = yes$(ord(t) >= ord(v));
+Parameter c(t,v);
+c(t,v) = ord(t) + 3*ord(v);
+Positive Variable h(v), z(t);
+Variable obj;
+Equation e(t), defobj;
+e(t).. sum(w$(vs(t,w) and smax(v, c(v,w)) > 8), h(w)) + z(t) =g= ord(t);
+defobj.. obj =e= sum(v, ord(v)*sqr(h(v))) + sum(t, 5*sqr(z(t)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+# - a three-axis aliased guard: every row coordinate needs a self-mapping, or the
+#   dimension-mismatch alias_remap sends `v` to `w` (`s(E*,m,w,w)`). NLP 0.6667.
+THREE_AXIS_GUARD = """\
+Set t / a, b, c, d /;
+Alias (t,m,v,w);
+Set s(t,m,v,w);
+s(t,m,v,w) = yes$(ord(t) >= ord(m) and ord(v) < ord(w));
+Positive Variable x(m,v,w);
+Variable obj;
+Equation e(t), defobj;
+e(t).. sum((m,v,w)$s(t,m,v,w), x(m,v,w)) =g= ord(t);
+defobj.. obj =e= sum((m,v,w), sqr(x(m,v,w)));
+Model mm / all /;
+solve mm using nlp minimizing obj;
+"""
+
+
 def _emit(tmp_path: Path, source: str) -> str:
     src = tmp_path / "model.gms"
     src.write_text(source)
@@ -771,6 +824,36 @@ def test_PERMUTED_positions_keep_the_row_bound_factor(tmp_path):
     row = _row(_emit(tmp_path, PERMUTED_POSITIONS), "stat_h(")
     assert "h(t__kkt1" not in row and ",t__kkt1)" not in row.split("lam_e")[0], row
     assert "lam_e(t__kkt1)" in row, row
+
+
+def test_a_CARD_operand_is_never_summed_as_a_free_index(tmp_path):
+    row = _row(_emit(tmp_path, CARD_ALIAS_EQ_DOMAIN), "stat_h(")
+    assert "card(t)" in row and "sum((" not in row, row
+
+
+def test_collect_free_indices_treats_card_and_smax_operands_as_BOUND():
+    from src.ir.ast import Binary, Call, ParamRef, SymbolRef
+    from src.ir.parser import parse_model_text
+    from src.kkt.stationarity import _collect_free_indices
+
+    model = parse_model_text(SMAX_CONDITION_SCOPE)
+    card = Call("card", (SymbolRef("w"),))
+    assert _collect_free_indices(card, model) == set()
+    smax = Call("smax", (SymbolRef("v"), ParamRef("c", ("v", "w"))))
+    assert _collect_free_indices(smax, model) == {"w"}
+    # positive control: an ordinary Call still exposes its free indices
+    ordv = Binary("+", Call("ord", (SymbolRef("v"),)), card)
+    assert _collect_free_indices(ordv, model) == {"v"}
+
+
+def test_an_indexed_SMAX_binder_is_scoped_and_alpha_renamed(tmp_path):
+    row = _row(_emit(tmp_path, SMAX_CONDITION_SCOPE), "stat_h(")
+    assert "c(v,v)" not in row and "smax(t__kkt1, c(t__kkt1,v)) > 8" in row, row
+
+
+def test_a_THREE_AXIS_guard_keeps_every_row_coordinate(tmp_path):
+    row = _row(_emit(tmp_path, THREE_AXIS_GUARD), "stat_x(")
+    assert "1$(s(t__kkt1,m,v,w))" in row, row
 
 
 def test_the_swap_needs_the_eq_index_ABSENT_from_every_reference():

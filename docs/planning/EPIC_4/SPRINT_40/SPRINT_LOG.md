@@ -1060,6 +1060,19 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - ⚠ **Process slip, recovered:** while measuring a pre-fix control I copied the pre-round source over `src/kkt/stationarity.py` and did not restore it, losing the uncommitted round-9 code. It was restored from the saved copy, the one later edit re-applied, and every function checked for before testing. From now on, controls are measured on a scratch copy, never in place without a verified restore.
 - **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**. `make test` first hit one load-timing failure, `test_performance_overhead_acceptable` (159% vs the 150% threshold; it times the metrics pipeline, which this PR does not touch). It passed 3/3 alone, and the full re-run gave **5,712 passed**, no `225*` dirs.
 
+### PR #1788 review round 10 (P4)
+
+- **`card()` operands counted as free indices.** With an alias-named equation domain (`pr(q)`, `Alias(t,q,w)`), `card(w)` became `card(t)`, and `_collect_free_indices` took the SET operand for an iterator and wrapped the term in `sum(t, …)`. **Fixed in `_collect_free_indices` itself:** a `card(...)` operand is never a free index. This is a general fix, since every `Call` argument used to be walked as an index.
+- **Indexed `smax` / `smin` are `Call` nodes and bind their own index.** `{w: v}` captured `smax(v, c(v,w))` as `smax(v, c(v,v))` (no solve).
+  - **Fixed:** `_reduction_call_parts` reads the parser's form (a prefix of set/alias names, an optional condition, the body).
+  - `_rename_free_indices` scopes and alpha-renames it like a Sum, and `_collect_free_indices` binds its index.
+  - The alpha-renamed binder also needs a self-mapping, or the PARAMETER `c`'s declared domain takes it back. So the self-maps now cover every set/alias name in the rewritten derivative. Solves to 14.366 = NLP.
+- **Every row coordinate needs a self-mapping.** With `x(m,v,w)` and a three-axis aliased guard, the dimension-mismatch `alias_remap` sent `v` to `w`: `s(E*,m,w,w)`, no solve. **Fixed:** the self-maps cover every variable-domain name. Solves to 0.667 = NLP.
+- **Regressions:** `CARD_ALIAS_EQ_DOMAIN` (row; its solve agrees either way), a direct `_collect_free_indices` unit test (`card` bound, `smax` binder bound, `ord` still free), `SMAX_CONDITION_SCOPE` (row + solve) and `THREE_AXIS_GUARD` (row + solve).
+  - Mutation: the `card` rule fails its two tests, and the `smax` scoping fails its own.
+  - ⚠ The two self-map extensions (row coordinates; derivative names) overlap on these fixtures: removing either alone leaves the tests green, and removing both fails `THREE_AXIS_GUARD` and `SMAX_CONDITION_SCOPE`.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. The general `_collect_free_indices` change moves no golden. `make test`: **5,719 passed**, no `225*` dirs.
+
 ### Found and routed (not fixed in place)
 
 - **#1787** (Day 8): a variable referenced twice, with the eq index at different positions, keeps one term (egypt `tranc(rp,rp)`, tfordy `stat_v`).

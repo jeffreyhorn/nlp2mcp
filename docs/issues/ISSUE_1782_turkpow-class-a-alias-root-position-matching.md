@@ -239,3 +239,9 @@ Detail and fixtures: `SPRINT_LOG.md` §Day 7, PR #1788 review round 2.
 - In the finishing step, a multiplier index spelled as ANY row coordinate is not a summed index.
 - The permuted-positions fixture with out-of-order binders also needs #1776 (AD positional binder pairing).
 
+## PR #1788 review round 10
+
+- `_collect_free_indices` never treats a `card(...)` operand as a free index, and binds an indexed `smax`/`smin`'s own index.
+- `_rename_free_indices` scopes and alpha-renames indexed `smax`/`smin` (`_reduction_call_parts`).
+- The re-symbolisation self-maps cover every row coordinate and every symbolic name in the rewritten derivative.
+
