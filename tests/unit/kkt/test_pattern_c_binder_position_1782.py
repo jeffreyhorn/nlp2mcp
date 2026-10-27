@@ -307,6 +307,44 @@ PARENT_BINDER_CARD = BOUND_COEFFICIENT.replace("mb(i,t).. ", "mb(i,t)$(card(t) =
 PARENT_BINDER_ORD = BOUND_COEFFICIENT.replace("mb(i,t).. ", "mb(i,t)$(ord(t) > 1).. ")
 
 
+# PR #1788 review round 5: a scalar already named like the placeholder alias.
+# GAMS has one symbol namespace, so `Alias(t, t__kkt1)` beside `Scalar t__kkt1`
+# did not compile ($195). NLP 7.68.
+NAME_COLLISION = """\
+Set t / t1*t4 /;
+Alias (t,v);
+Set vs(t,v);
+vs(t,v) = yes$(ord(t) >= ord(v));
+Scalar t__kkt1 / 1 /;
+Positive Variable h(v);
+Variable obj;
+Equation pr(t), defobj;
+pr(t).. sum(v$vs(t,v), h(v)) =g= ord(t)*t__kkt1;
+defobj.. obj =e= sum(v, ord(v)*sqr(h(v)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+# PR #1788 review round 5: independent sets `k` and `i` share the label `a`, so no
+# representative is usable for the binder rewrite (its eq label is always among
+# the variable's labels, or those repeat). The binder-only admission is withdrawn
+# BEFORE consolidation and the pair keeps the pre-#1782 path. (That path is wrong
+# here too, for the shared-label ambiguity tracked on #1778: `x(k,k)`, phantom
+# offsets; NLP 2.6667.)
+SHARED_LABELS = """\
+Set i / a, b /, k / a /;
+Alias (i,v);
+Parameter c(i) / a 1, b 2 /;
+Positive Variable x(k,v);
+Variable obj;
+Equation e(i), defobj;
+e(i).. sum((k,v)$(ord(i) > 0), x(k,v)) =g= ord(i);
+defobj.. obj =e= sum((k,v), c(v)*sqr(x(k,v)));
+Model mm / all /;
+solve mm using nlp minimizing obj;
+"""
+
+
 def _emit(tmp_path: Path, source: str) -> str:
     src = tmp_path / "model.gms"
     src.write_text(source)
@@ -457,6 +495,60 @@ def test_a_PARENT_binder_is_not_reused_for_an_ORD_guard(tmp_path):
     assert "mb(i,t)$(ord(t) > 1).." in PARENT_BINDER_ORD, "fixture must apply"
     row = _row(_emit(tmp_path, PARENT_BINDER_ORD), "stat_em(")
     assert "$(ord(t__kkt1) > 1)" in row and "ord(tep)" not in row, row
+
+
+def test_a_placeholder_never_takes_an_existing_IDENTIFIER(tmp_path):
+    emit = _emit(tmp_path, NAME_COLLISION)
+    row = _row(emit, "stat_h(")
+    assert "sum(t__kkt2, ((-1) * 1$(vs(t__kkt2,v))) * lam_pr(t__kkt2))" in row, row
+    assert "Alias(t, t__kkt1)" not in emit, "must not alias over the scalar t__kkt1"
+
+
+def test_SHARED_LABELS_withdraw_the_binder_only_admission(monkeypatch):
+    """With no usable representative, the emit equals the pre-#1782 path: the same
+    model with the binder-only admission switched off."""
+    import src.kkt.stationarity as st
+    from src.ad.constraint_jacobian import compute_constraint_jacobian
+    from src.ad.gradient import compute_objective_gradient
+    from src.config import Config
+    from src.emit.expr_to_gams import expr_to_gams
+    from src.ir.normalize import normalize_model
+    from src.ir.parser import parse_model_text
+    from src.kkt.assemble import assemble_kkt_system
+
+    def stat_x() -> str:
+        model = parse_model_text(SHARED_LABELS)
+        eqs, _ = normalize_model(model)
+        config = Config()
+        gradient = compute_objective_gradient(model, config)
+        j_eq, j_ineq = compute_constraint_jacobian(model, eqs, config)
+        kkt = assemble_kkt_system(model, gradient, j_eq, j_ineq, config)
+        return expr_to_gams(st.build_stationarity_equations(kkt, config)["stat_x"].lhs_rhs[0])
+
+    admitted = stat_x()
+    real = st._find_pattern_c_alias_sum
+
+    def without_binder_only(*args, **kwargs):
+        found = real(*args, **kwargs)
+        return None if found is not None and found.get("binder_swap_only") else found
+
+    monkeypatch.setattr(st, "_find_pattern_c_alias_sum", without_binder_only)
+    assert admitted == stat_x()
+    # Non-vacuity: the pattern IS admitted for the binder rewrite on this model.
+    monkeypatch.setattr(st, "_find_pattern_c_alias_sum", real)
+    model = parse_model_text(SHARED_LABELS)
+    eq = model.equations["e"]
+    from src.ir.ast import Binary
+
+    body = Binary("-", eq.lhs_rhs[0], eq.lhs_rhs[1])
+    found = st._find_pattern_c_alias_sum(
+        body,
+        frozenset({"k", "i"}),
+        model,
+        frozenset({"i"}),
+        "x",
+    )
+    assert found is not None and found.get("binder_swap_only"), found
 
 
 def test_the_swap_needs_the_eq_index_ABSENT_from_every_reference():

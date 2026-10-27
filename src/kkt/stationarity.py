@@ -649,6 +649,22 @@ def _rename_iterators_keeping_card(expr: Expr, rename: dict[str, str]) -> Expr:
     return restore(_rewrite_subset_to_superset(hold(expr), rename))
 
 
+def _binder_rep_ok(eq_labels: tuple, var_labels: tuple, eq_position: int) -> bool:
+    """A usable representative for the Pattern C binder rewrite (#1782).
+
+    The eq label at the pattern's eq position must not be among the variable
+    instance's labels (it is renamed to the eq coordinate wherever it occurs), and
+    the default selector's collision checks hold: distinct variable labels
+    (#1086) and distinct equation labels (#1278).
+    """
+    return (
+        eq_position < len(eq_labels)
+        and eq_labels[eq_position] not in var_labels
+        and len(set(var_labels)) == len(var_labels)
+        and len(set(eq_labels)) == len(eq_labels)
+    )
+
+
 def _eq_index_position(eq_def: Any, eq_index: str) -> int | None:
     """Position of ``eq_index`` in ``eq_def``'s domain (case-insensitive), or None."""
     domain = tuple(getattr(eq_def, "domain", None) or ())
@@ -5184,11 +5200,24 @@ def _get_or_create_fresh_alias(
         if target.lower() == root_set.lower() and aname.lower() not in used_names:
             return aname.lower()
 
-    # Create a fresh alias
+    # Create a fresh alias. GAMS has ONE symbol namespace, so the name must not be
+    # any existing identifier -- a scalar or set named ``t__kkt1`` beside a minted
+    # ``Alias(t, t__kkt1)`` does not compile (PR #1788 review).
+    taken = {
+        str(n).lower()
+        for table in (
+            model_ir.sets,
+            model_ir.aliases,
+            model_ir.params,
+            model_ir.variables,
+            model_ir.equations,
+        )
+        for n in table
+    } | {str(n).lower() for n in (*model_ir.declared_models, *model_ir.acronyms)}
     counter = 1
     while True:
         candidate = f"{root_set}__kkt{counter}"
-        if candidate.lower() not in used_names and candidate.lower() not in model_ir.aliases:
+        if candidate.lower() not in used_names and candidate.lower() not in taken:
             model_ir.aliases[candidate] = AliasDef(name=candidate, target=root_set)
             return candidate
         counter += 1
@@ -7028,6 +7057,26 @@ def _add_indexed_jacobian_terms(
                             eq_domain_canonical,
                             var_name,
                         )
+                        # Sprint 40 Day 7 (#1782; PR #1788 review): a pattern
+                        # admitted ONLY for the binder rewrite needs a usable
+                        # representative, decided BEFORE consolidation. Without
+                        # one (labels shared across the variable's sets) the
+                        # rewrite cannot run, and consolidating would leave
+                        # neither rewrite active: withdraw the admission, so the
+                        # pair keeps the pre-#1782 path.
+                        if pattern_c_info is not None and pattern_c_info.get("binder_swap_only"):
+                            _pos = _eq_index_position(
+                                eq_def_for_gate, pattern_c_info["eq_domain_index"]
+                            )
+                            if _pos is None or not any(
+                                _binder_rep_ok(
+                                    jacobian.index_mapping.row_to_eq[_rid][1],
+                                    jacobian.index_mapping.col_to_var[_cid][1],
+                                    _pos,
+                                )
+                                for _rid, _cid in entries
+                            ):
+                                pattern_c_info = None
                         if pattern_c_info is not None:
                             allow_nonzero_offsets = False
                         else:
@@ -7347,12 +7396,7 @@ def _add_indexed_jacobian_terms(
                                 # distinct equation labels, or the element map
                                 # sends two coordinates to one name (``h(v,v)``,
                                 # PR #1788 review).
-                                if (
-                                    _pc_eq_pos < len(_eidx)
-                                    and _eidx[_pc_eq_pos] not in _vidx
-                                    and len(set(_vidx)) == len(_vidx)
-                                    and len(set(_eidx)) == len(_eidx)
-                                ):
+                                if _binder_rep_ok(_eidx, _vidx, _pc_eq_pos):
                                     _pc_rep = (_rid, _cid)
                                     break
                         if _pc_rep is None:

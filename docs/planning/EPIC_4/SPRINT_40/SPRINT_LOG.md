@@ -1009,6 +1009,16 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - **Regressions:** `PARENT_BINDER_CARD` (an emitted-row unit test plus a validation solve: no solve → 10.524 = NLP) and `PARENT_BINDER_ORD` (an emitted-row unit test; its solve happens to agree either way). Allowing the parent again fails 3 tests; not holding `card` fails exactly its own.
 - **Corpus:** the leak gate is complete (no timeouts). Only dinam drifts (−5 B): `stat_em`'s eq coordinate is now `tp`, dinam's alias of `t`, in place of `tep`. The resolver holds it (GO). `make test`: **5,697 passed**, no `225*` dirs.
 
+### PR #1788 review round 5 (P4)
+
+- **No usable representative left neither rewrite active.** With labels shared across the variable's independent sets (`k / a /` beside `i / a, b /`), every entry fails the representative checks. The binder-only admission (round 0's later-binder / subset gate) had already consolidated the entries, so the row lost cross-equation contributions.
+  - **Fixed:** for a binder-only pattern, the representative's existence is checked BEFORE consolidation (`_binder_rep_ok` over all entries). Without one, the admission is withdrawn and the pair keeps the pre-#1782 path, byte-identical to it.
+  - That path is wrong here too, for the shared-label ambiguity, so the reproducer is recorded on #1778. A position-aware rename cannot fix it: a label shared across sets cannot be attributed to a coordinate.
+- **The placeholder alias could take an existing identifier.** `Scalar t__kkt1` beside a minted `Alias(t, t__kkt1)` does not compile (`$195`, one GAMS namespace).
+  - **Fixed in the shared `_get_or_create_fresh_alias`:** a minted name skips every set, alias, parameter, variable, equation, model and acronym name. That fixes every caller, not only this one. The fixture mints `t__kkt2` and solves to 7.68 = NLP.
+- **Regressions:** `SHARED_LABELS` (the emit equals the same model with the binder-only admission switched off, plus a non-vacuity check that the admission fires) and `NAME_COLLISION` (an emitted-row unit test plus a validation solve). Removing either fix fails exactly its own test.
+- **Corpus:** the leak gate drifted **0** goldens. ferts and ganges timed out under load (≈150); re-run alone with `--fail-on-unverified` both are clean, so all 200 are verified. `make test`: **5,700 passed**, no `225*` dirs.
+
 ### Found and routed (not fixed in place)
 
 - **#1787** (Day 8): a variable referenced twice, with the eq index at different positions, keeps one term (egypt `tranc(rp,rp)`, tfordy `stat_v`).

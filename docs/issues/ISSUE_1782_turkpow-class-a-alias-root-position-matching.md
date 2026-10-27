@@ -214,3 +214,8 @@ Detail and fixtures: `SPRINT_LOG.md` §Day 7, PR #1788 review round 2.
 - **The eq coordinate reuses the binder's name only when the binder ranges over exactly the eq index's set.** A parent-set binder (dinam's `tep` over `te` for `t(te)`) changed the equation condition's `card(t)` / `ord(t)`.
 - **Renames leave `card(...)` operands alone** (`_rename_iterators_keeping_card`).
 
+## PR #1788 review round 5
+
+- A binder-only pattern with no usable representative (labels shared across the variable's sets) is withdrawn BEFORE consolidation and keeps the pre-#1782 path. The shared-label ambiguity itself is on #1778.
+- The shared `_get_or_create_fresh_alias` never mints a name that is already a model identifier.
+
