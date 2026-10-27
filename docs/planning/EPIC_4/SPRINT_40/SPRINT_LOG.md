@@ -991,6 +991,15 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - **Corpus:** the leak gate is complete (no timeouts). Only dinam and shale drift, and both are renames of the summed eq coordinate: shale's `tfp` → its existing alias `tp` of `t`, and dinam's `stat_em` / `stat_v` now use `tep` / `tp`. The resolver holds both (GO). turkpow, tfordy and launch are byte-identical. `make test`: **5,690 passed**.
 - **Found on the way:** the emitter drops `a(t) = ord(t)/4;` when `a` is used only in an equation condition (`$141`, identical on `main`). The fixture uses literal data.
 
+### PR #1788 review round 3 (P4)
+
+- **The round-2 representative search dropped the default selector's collision checks** (#1086 / #1278: distinct variable labels, distinct equation labels). With `Alias(t,m,v)`, `h(m,v)` and `e(t).. sum((m,v)$s(t,v), sqr(h(m,v)))`, it could take `e(b)` / `h(a,a)`, and the element map sent both variable coordinates to `v`: `2*h(v,v)` (MCP 4.983 vs NLP 3.169). **Fixed:** it keeps both checks. The row is `2*h(m,v)`, solving to 3.169.
+- **A binder over a SUBSET lent its name to the eq coordinate.** With `ss` of `s(i)` against `e(i)`, `sum(ss, … lam_e(ss))` dropped `e('c')` and the MCP did not solve.
+  - **Fixed:** the binder's name is reused only when its set CONTAINS the eq index's (`_set_contains`: the same set or a subset ancestor). dinam's `tep` over `te` for `t(te)` still qualifies.
+  - Otherwise an alias of the eq index's set is used (`i__kkt1`), and the fixture solves to 3.0 = NLP.
+- **Regressions:** `MULTI_AXIS_ALIAS` and `SUBSET_BINDER`, each an emitted-row unit test plus a validation solve. Removing either fix fails exactly its own test. The fixture's weighted objective first hit #1785 (`c(v,v)` in the gradient), so it uses an unweighted one.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts, so no golden changes. `make test`: **5,694 passed**, no `225*` dirs.
+
 ### Found and routed (not fixed in place)
 
 - **#1787** (Day 8): a variable referenced twice, with the eq index at different positions, keeps one term (egypt `tranc(rp,rp)`, tfordy `stat_v`).

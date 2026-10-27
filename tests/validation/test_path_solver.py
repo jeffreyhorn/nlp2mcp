@@ -722,6 +722,8 @@ def test_issue_1782_reversed_domain_multiplier_values(tmp_path):
         ("ROW_BOUND_NONLINEAR", 8.9208),
         ("EQUATION_GUARD", 7.68),
         ("EQUATION_CONDITION_ON_EQ_INDEX", 1.8655),
+        ("MULTI_AXIS_ALIAS", 3.1690),
+        ("SUBSET_BINDER", 3.0),
     ],
 )
 def test_pattern_c_binder_position_solves_to_the_nlp_optimum(tmp_path, fixture, nlp):

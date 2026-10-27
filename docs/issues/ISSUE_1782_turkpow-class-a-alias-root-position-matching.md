@@ -204,3 +204,8 @@ The binder ↔ position exchange (rounds 0–1) is unsound in launch's own form.
 
 Detail and fixtures: `SPRINT_LOG.md` §Day 7, PR #1788 review round 2.
 
+## PR #1788 review round 3
+
+- The representative keeps the default selector's checks for distinct variable and equation labels; without them `h(m,v)` collapsed to `h(v,v)`.
+- The binder's name becomes the eq coordinate only when its set contains the eq index's (`_set_contains`). A subset binder would drop the multipliers outside the subset.
+

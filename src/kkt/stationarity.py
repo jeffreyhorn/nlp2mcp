@@ -604,6 +604,21 @@ def _index_names_in(expr: Expr) -> set[str]:
     return names
 
 
+def _set_contains(outer: str, inner: str, model_ir: ModelIR) -> bool:
+    """``outer``'s set is ``inner``'s set or one of its (1-D) subset ancestors."""
+    target = _resolve_alias_target(outer, model_ir)
+    current: str | None = _resolve_alias_target(inner, model_ir)
+    seen: set[str] = set()
+    while current is not None and current not in seen:
+        if current == target:
+            return True
+        seen.add(current)
+        sdef = model_ir.sets.get(current)
+        dom = getattr(sdef, "domain", None) if sdef is not None else None
+        current = _resolve_alias_target(str(dom[0]), model_ir) if dom and len(dom) == 1 else None
+    return False
+
+
 def _eq_index_position(eq_def: Any, eq_index: str) -> int | None:
     """Position of ``eq_index`` in ``eq_def``'s domain (case-insensitive), or None."""
     domain = tuple(getattr(eq_def, "domain", None) or ())
@@ -7297,7 +7312,17 @@ def _add_indexed_jacobian_terms(
                             for _rid, _cid in [(group_row_id, group_col_id), *group_entries]:
                                 _, _eidx = jacobian.index_mapping.row_to_eq[_rid]
                                 _, _vidx = jacobian.index_mapping.col_to_var[_cid]
-                                if _pc_eq_pos < len(_eidx) and _eidx[_pc_eq_pos] not in _vidx:
+                                # Keep the default selector's collision checks
+                                # (#1086/#1278): distinct variable labels and
+                                # distinct equation labels, or the element map
+                                # sends two coordinates to one name (``h(v,v)``,
+                                # PR #1788 review).
+                                if (
+                                    _pc_eq_pos < len(_eidx)
+                                    and _eidx[_pc_eq_pos] not in _vidx
+                                    and len(set(_vidx)) == len(_vidx)
+                                    and len(set(_eidx)) == len(_eidx)
+                                ):
                                     _pc_rep = (_rid, _cid)
                                     break
                         if _pc_rep is None:
@@ -7651,9 +7676,16 @@ def _add_indexed_jacobian_terms(
                             | (_index_names_in(_pc_cond) if _pc_cond is not None else set())
                         )
                         # The binder's own name is free once it stands for the
-                        # variable's position (launch's ``ss`` stays ``ss``);
-                        # otherwise an unused alias of the eq index's set.
-                        if _pc_binder.lower() not in _pc_reserved:
+                        # variable's position (launch's ``ss`` stays ``ss``), but
+                        # only if its set CONTAINS the eq index's (the same set, or
+                        # a parent: dinam's ``tep`` over ``te`` for ``t(te)``). A
+                        # binder over a SUBSET (``ss`` of ``s(i)`` against
+                        # ``e(i)``) would drop the multipliers outside it (PR #1788
+                        # review).
+                        # Otherwise an unused alias of the eq index's set.
+                        if _pc_binder.lower() not in _pc_reserved and _set_contains(
+                            _pc_binder, _pc_eq_idx, kkt.model_ir
+                        ):
                             _pc_eq_star = _pc_binder
                         else:
                             _pc_eq_star = _get_or_create_fresh_alias(

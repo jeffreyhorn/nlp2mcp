@@ -259,6 +259,43 @@ EQUATION_CONDITION_ON_EQ_INDEX = ROW_BOUND_COEFFICIENT.replace(
 )
 
 
+# PR #1788 review round 3: the representative must keep the default selector's
+# collision checks (distinct variable / equation labels). Two aliased variable
+# coordinates (`m`, `v`) and a representative `h(a,a)` gave `2*h(v,v)`.
+# NLP 3.1690 (with h(v,v): 4.983).
+MULTI_AXIS_ALIAS = """\
+Set t / a, b, c /;
+Alias (t,m,v);
+Set s(t,v);
+s(t,v) = yes$(ord(t) >= ord(v));
+Parameter c(t,v);
+c(t,v) = 1 + ord(t) + 2*ord(v);
+Variable h(m,v), obj;
+Equation e(t), defobj;
+e(t).. sum((m,v)$s(t,v), sqr(h(m,v))) =l= ord(t);
+defobj.. obj =e= sum((m,v), sqr(h(m,v) - 1)) + sum(v, ord(v)*h("a",v));
+Model mm / all /;
+solve mm using nlp minimizing obj;
+"""
+
+# PR #1788 review round 3: a binder over a SUBSET (`ss` of `s(i)`) against an eq
+# index over the parent (`e(i)`) must not lend its name to the eq coordinate:
+# sum(ss, ... lam_e(ss)) drops e('c'). NLP 3.0 (reusing `ss`: no solve).
+SUBSET_BINDER = """\
+Set i / a, b, c /, s(i) / a, b /, k / k1, k2 /;
+Alias (s,ss);
+Parameter a(i,i);
+a(i,s) = 1$(ord(i) >= ord(s));
+Positive Variable x(s,k);
+Variable obj;
+Equation e(i), defobj;
+e(i).. sum((ss,k)$a(i,ss), x(ss,k)) =g= ord(i);
+defobj.. obj =e= sum((s,k), ord(s)*sqr(x(s,k)));
+Model mm / all /;
+solve mm using nlp minimizing obj;
+"""
+
+
 def _emit(tmp_path: Path, source: str) -> str:
     src = tmp_path / "model.gms"
     src.write_text(source)
@@ -382,6 +419,18 @@ def test_the_EQUATION_CONDITION_follows_the_eq_coordinate(tmp_path):
     assert "pr(t)$(ord(t) > 1).." in EQUATION_CONDITION_ON_EQ_INDEX, "fixture must apply"
     row = _row(_emit(tmp_path, EQUATION_CONDITION_ON_EQ_INDEX), "stat_h(")
     assert "$(ord(t__kkt1) > 1)" in row and "ord(v) > 1" not in row, row
+
+
+def test_the_representative_keeps_distinct_MULTI_AXIS_coordinates(tmp_path):
+    row = _row(_emit(tmp_path, MULTI_AXIS_ALIAS), "stat_h(")
+    assert "2 * h(m,v) * 1$(s(t__kkt1,v)) * lam_e(t__kkt1)" in row, row
+    assert "h(v,v)" not in row, row
+
+
+def test_a_SUBSET_binder_does_not_name_the_eq_coordinate(tmp_path):
+    row = _row(_emit(tmp_path, SUBSET_BINDER), "stat_x(")
+    assert "sum(i__kkt1, ((-1) * 1$(a(i__kkt1,s))) * lam_e(i__kkt1))" in row, row
+    assert "lam_e(ss)" not in row, row
 
 
 def test_the_swap_needs_the_eq_index_ABSENT_from_every_reference():
