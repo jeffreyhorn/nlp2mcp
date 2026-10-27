@@ -1046,6 +1046,20 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - **Regression:** `COEFFICIENT_SUM_MIXED_BINDERS` (`COEFFICIENT_SUM` combined with `MIXED_BINDERS`): an emitted-row unit test plus a validation solve. A scope-blind rename fails exactly that test.
 - **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,706 passed**, no `225*` dirs.
 
+### PR #1788 review round 9 (P4)
+
+- **A nested binder that is a rename destination captured the renamed name.** `e(t).. sum(w$(vs(t,w) and sum(v, c(v,w)) > 20), h(w))` with `{w: v}` gave `sum(v, c(v,v))`, which activated the first row's term (15 → 24 > 20): MCP 86.976 vs NLP 14.3662.
+  - **Fixed:** `_rename_free_indices` alpha-renames such a binder to a fresh alias of its set before applying the map (only in the rewriting pass: the name-collecting pass mints nothing). The row has `sum(t__kkt1, c(t__kkt1,v)) > 20`, and the fixture solves to 14.366.
+- **`card()` in the derivative.**
+  - For a SUBSET binder beside a full-set one (`sum(s$vs(t,s), card(s)*h(s))` with `sum(v$…, h(v))`), the subset sum contributes only where `s` holds, which a single representative cannot carry. **The binders at the pattern's position must now range over ONE set,** or the shape keeps the pre-#1782 path. It is byte-identical to it there, and `card(s)` is not rewritten.
+  - **The derivative rewrite now holds `card()` operands too.** A rebound binder's operand becomes its SET (`card(w)` → `card(t)`), because leaving the alias name behind made it a free index that the free-index wrap summed over: `sum((t__kkt1,w), …)`.
+- **Permuted variable positions** (`h(v,m)`, binder `m` at position 1): the multiplier is spelled `v`, a ROW coordinate, which the finishing step took for a summed index, so it moved the row-bound `h(v,m)` to the eq coordinate.
+  - **Fixed:** only a name that is no row coordinate counts as "separate".
+  - ⚠ The reviewer's exact fixture also lists the binders out of reference order (`(m,v)` against `h(v,m)`). The AD derivative is then itself wrong (#1776: positional binder pairing gives `h(b,a)*sameas(b,a)*sameas(a,b)`), so it solves on no version. The test pins only the stationarity property, and the reproducer is on #1776. With the binders in reference order the row is correct: 3.168 = NLP.
+- **Regressions:** `CONDITION_SCOPE` (row + solve), `MIXED_SUBSET_BINDER_CARD` (keeps the pre-#1782 path, with a non-vacuity check that the same-set rule decides it), `CARD_SAME_SET` (row + solve) and `PERMUTED_POSITIONS` (row). Removing each of the four fixes fails exactly its own test.
+- ⚠ **Process slip, recovered:** while measuring a pre-fix control I copied the pre-round source over `src/kkt/stationarity.py` and did not restore it, losing the uncommitted round-9 code. It was restored from the saved copy, the one later edit re-applied, and every function checked for before testing. From now on, controls are measured on a scratch copy, never in place without a verified restore.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**. `make test` first hit one load-timing failure, `test_performance_overhead_acceptable` (159% vs the 150% threshold; it times the metrics pipeline, which this PR does not touch). It passed 3/3 alone, and the full re-run gave **5,712 passed**, no `225*` dirs.
+
 ### Found and routed (not fixed in place)
 
 - **#1787** (Day 8): a variable referenced twice, with the eq index at different positions, keeps one term (egypt `tranc(rp,rp)`, tfordy `stat_v`).

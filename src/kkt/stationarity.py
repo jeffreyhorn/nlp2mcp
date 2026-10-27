@@ -604,25 +604,65 @@ def _index_names_in(expr: Expr) -> set[str]:
     return names
 
 
-def _rename_free_indices(expr: Expr, rename: dict[str, str]) -> Expr:
+def _rename_free_indices(
+    expr: Expr, rename: dict[str, str], model_ir: ModelIR | None = None
+) -> Expr:
     """``_rewrite_subset_to_superset`` that respects Sum/Prod scopes (#1782).
 
-    A name a nested Sum/Prod binds is local to it and is not renamed there:
-    rebinding the Pattern C binders ``{v, w} -> v`` must leave a coefficient's
-    own ``sum(w, a(w))`` alone (PR #1788 review). Keys are lowercased names.
+    * A name a nested Sum/Prod binds is local to it and is not renamed there:
+      ``{v, w} -> v`` must leave a coefficient's own ``sum(w, a(w))`` alone.
+    * A nested binder that is a rename DESTINATION would capture the renamed
+      name (``{w: v}`` inside ``sum(v, c(v,w))`` gives ``c(v,v)``), so it is
+      alpha-renamed to a fresh alias of its set first (needs ``model_ir``).
+    * ``card(...)`` operands are sets, not iterators, and are left alone.
+    (PR #1788 review.) Keys are lowercased names.
     """
     if not rename:
         return expr
     held: dict[str, Expr] = {}
 
+    def scoped(e: Expr) -> Expr:
+        bound = [str(i) for i in e.index_sets]  # type: ignore[attr-defined]
+        inner = {k: v for k, v in rename.items() if k not in {b.lower() for b in bound}}
+        body = e.body  # type: ignore[attr-defined]
+        cond = e.condition  # type: ignore[attr-defined]
+        dests = {str(v).lower() for v in inner.values()}
+        if inner and model_ir is not None:
+            reserved = dests | set(inner) | _index_names_in(e)
+            for pos, b in enumerate(bound):
+                if b.lower() in dests:
+                    fresh = _get_or_create_fresh_alias(
+                        _resolve_alias_target(b, model_ir), reserved, model_ir
+                    )
+                    reserved.add(fresh.lower())
+                    body = _rename_free_indices(body, {b.lower(): fresh}, model_ir)
+                    if cond is not None:
+                        cond = _rename_free_indices(cond, {b.lower(): fresh}, model_ir)
+                    bound[pos] = fresh
+        body = _rename_free_indices(body, inner, model_ir)
+        if cond is not None:
+            cond = _rename_free_indices(cond, inner, model_ir)
+        return type(e)(tuple(bound), body, cond)  # type: ignore[call-arg]
+
+    def card_of_set(e: Call) -> Expr:
+        # ``card(w)`` counts w's SET. A rebound binder's alias name would be left
+        # behind as a free index (and summed over), so it becomes the set itself.
+        if model_ir is None:
+            return e
+        args = tuple(
+            (
+                SymbolRef(_resolve_alias_target(a.name, model_ir))
+                if isinstance(a, SymbolRef) and a.name.lower() in rename
+                else a
+            )
+            for a in e.args
+        )
+        return Call(e.func, args)
+
     def hold(e: Expr) -> Expr:
-        if isinstance(e, (Sum, Prod)):
-            bound = {str(i).lower() for i in e.index_sets}
-            inner = {k: v for k, v in rename.items() if k not in bound}
-            body = _rename_free_indices(e.body, inner)
-            cond = _rename_free_indices(e.condition, inner) if e.condition is not None else None
+        if isinstance(e, (Sum, Prod)) or (isinstance(e, Call) and e.func.lower() == "card"):
             key = f"__scoped_{len(held)}__"
-            held[key] = type(e)(e.index_sets, body, cond)
+            held[key] = scoped(e) if isinstance(e, (Sum, Prod)) else card_of_set(e)  # type: ignore[arg-type]
             return SymbolRef(key)
         if isinstance(e, Call):
             return Call(e.func, tuple(hold(a) for a in e.args))
@@ -695,7 +735,9 @@ def _rename_iterators_keeping_card(expr: Expr, rename: dict[str, str]) -> Expr:
     return restore(_rewrite_subset_to_superset(hold(expr), rename))
 
 
-def _position_binders(eq_def: Any, var_name: str, position: int) -> set[str] | None:
+def _position_binders(
+    eq_def: Any, var_name: str, position: int, model_ir: ModelIR | None = None
+) -> set[str] | None:
     """The binders that carry ``var_name``'s coordinate ``position`` (#1782).
 
     Every reference to the variable in the equation must hold, at ``position``,
@@ -738,7 +780,65 @@ def _position_binders(eq_def: Any, var_name: str, position: int) -> set[str] | N
     ):
         if part is not None:
             walk(part, frozenset())
-    return found if ok and found else None
+    if not ok or not found:
+        return None
+    # All of them over ONE set: a binder over a subset (``sum(s$…, h(s))`` beside
+    # ``sum(v$…, h(v))``) contributes only where its membership holds, which a
+    # single representative cannot carry (PR #1788 review).
+    if model_ir is not None and len({_resolve_alias_target(b, model_ir) for b in found}) > 1:
+        return None
+    return found
+
+
+def _binder_position_map(
+    eq_def: Any, var_name: str, var_domain: tuple[str, ...], position_binders: set[str]
+) -> dict[str, str] | None:
+    """Every sum binder that occupies a variable position, mapped to that
+    position's name (#1782; PR #1788 review).
+
+    The pattern's binders map to their position; any OTHER binder of the
+    references (``sum((m,v)$s(t,v), sqr(h(v,m)))``: ``m`` at position 1, ``v`` at
+    position 0) maps to its own position too, so the whole reference is
+    re-symbolised by position rather than by name. A binder found at two
+    different positions returns None.
+    """
+    key = var_name.lower()
+    out: dict[str, str] = {}
+    ok = True
+
+    def walk(node: Expr, bound: frozenset[str]) -> None:
+        nonlocal ok
+        if not ok:
+            return
+        if isinstance(node, VarRef) and node.name.lower() == key:
+            for p, idx in enumerate(node.indices):
+                if not isinstance(idx, str) or p >= len(var_domain):
+                    continue
+                low = idx.lower()
+                if low not in bound:
+                    continue
+                target = str(var_domain[p])
+                if out.get(low, target) != target:
+                    ok = False
+                    return
+                out[low] = target
+            return
+        if isinstance(node, (Sum, Prod)):
+            inner = bound | frozenset(str(i).lower() for i in node.index_sets)
+            for child in node.children():
+                walk(child, inner)
+            return
+        for child in node.children():
+            walk(child, bound)
+
+    for part in tuple(getattr(eq_def, "lhs_rhs", None) or ()) + (
+        getattr(eq_def, "condition", None),
+    ):
+        if part is not None:
+            walk(part, frozenset())
+    if not ok or not position_binders <= set(out):
+        return None
+    return out
 
 
 def _binder_rep_ok(eq_labels: tuple, var_labels: tuple, eq_position: int) -> bool:
@@ -770,6 +870,7 @@ def _finish_binder_position_rewrite(
     position_name: str,
     mult_name: str,
     eq_position: int | None,
+    row_domain: tuple[str, ...] = (),
 ) -> Expr:
     """Finish the Sprint 40 Day 7 Pattern C rewrite (#1782; PR #1788 review).
 
@@ -801,7 +902,12 @@ def _finish_binder_position_rewrite(
     if spelled is None or spelled.lower() == eq_star.lower():
         return term
     old = spelled.lower()
-    separate = old != position_name.lower()
+    # A multiplier index spelled as ANY row coordinate is the launch form (only
+    # the multiplier moves); only a genuinely summed index is "separate". With
+    # ``h(v,m)`` and the binder at position 1, the multiplier is spelled ``v``
+    # (position 0): renaming ``v`` everywhere moved ``h(v,m)`` (PR #1788 review).
+    row_names = {str(d).lower() for d in row_domain} | {position_name.lower()}
+    separate = old not in row_names
 
     def is_pin(c: Expr) -> bool:
         return (
@@ -7168,7 +7274,23 @@ def _add_indexed_jacobian_terms(
                                 _pos is None
                                 or pattern_c_info.get("binder_position") is None
                                 or _position_binders(
-                                    eq_def_for_gate, var_name, pattern_c_info["binder_position"]
+                                    eq_def_for_gate,
+                                    var_name,
+                                    pattern_c_info["binder_position"],
+                                    kkt.model_ir,
+                                )
+                                is None
+                                or _binder_position_map(
+                                    eq_def_for_gate,
+                                    var_name,
+                                    var_domain,
+                                    _position_binders(
+                                        eq_def_for_gate,
+                                        var_name,
+                                        pattern_c_info["binder_position"],
+                                        kkt.model_ir,
+                                    )
+                                    or set(),
                                 )
                                 is None
                                 or not _index_absent_from_var_refs(
@@ -7481,6 +7603,7 @@ def _add_indexed_jacobian_terms(
                             kkt.model_ir.equations.get(eq_name_base),
                             var_name,
                             pattern_c_info["binder_position"],
+                            kkt.model_ir,
                         )
                         if pattern_c_info is not None
                         and pattern_c_info.get("binder_position") is not None
@@ -7489,6 +7612,13 @@ def _add_indexed_jacobian_terms(
                     _pc_gate = bool(
                         pattern_c_info is not None
                         and _pc_binders is not None
+                        and _binder_position_map(
+                            kkt.model_ir.equations.get(eq_name_base),
+                            var_name,
+                            var_domain,
+                            _pc_binders,
+                        )
+                        is not None
                         and pattern_c_info["binder_position"] < len(var_domain)
                         and all(o in (0, _SENTINEL_UNMATCHED) for o in offset_key)
                         and _index_absent_from_var_refs(
@@ -7860,9 +7990,15 @@ def _add_indexed_jacobian_terms(
                         # its own scope: ``sum(v$vs(t,v), h(v)) + sum(w$vs(t,w),
                         # h(w))`` keeps both binders symbolic in the derivative
                         # (PR #1788 review).
-                        _pc_binder_map = dict.fromkeys(
-                            _pc_binders or {_pc_binder.lower()}, _pc_pos_name
-                        )
+                        _pc_binder_map = _binder_position_map(
+                            _pc_eq_def,
+                            var_name,
+                            var_domain,
+                            _pc_binders or {_pc_binder.lower()},
+                        ) or dict.fromkeys(_pc_binders or {_pc_binder.lower()}, _pc_pos_name)
+                        # (Never None here: the gate required the map.)
+                        # (No model_ir: this pass only collects names, so it must
+                        # not mint aliases.)
                         _pc_bound = _rename_free_indices(derivative, _pc_binder_map)
                         _pc_reserved = (
                             {str(d).lower() for d in var_domain}
@@ -7897,6 +8033,7 @@ def _add_indexed_jacobian_terms(
                                 **_pc_binder_map,
                                 str(group_eq_indices[_pc_eq_pos]).lower(): _pc_eq_star,
                             },
+                            kkt.model_ir,
                         )
                         _pc_cond_rename = {_pc_eq_idx.lower(): _pc_eq_star}
                         # Self-mappings keep both symbolic: a ParamRef index absent
@@ -8580,7 +8717,12 @@ def _add_indexed_jacobian_terms(
                     # SPRINT_LOG.md Day 11 §"Open follow-ups (revised)").
                     if pc_swap is not None:
                         term = _finish_binder_position_rewrite(
-                            term, pc_swap[0], pc_swap[1], name_func(eq_name_base), _pc_eq_pos
+                            term,
+                            pc_swap[0],
+                            pc_swap[1],
+                            name_func(eq_name_base),
+                            _pc_eq_pos,
+                            var_domain,
                         )
                     elif (
                         pattern_c_info is not None

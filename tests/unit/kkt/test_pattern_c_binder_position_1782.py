@@ -418,6 +418,79 @@ solve m using nlp minimizing obj;
 """
 
 
+# PR #1788 review round 9:
+# - a guard's own nested sum binds a rename DESTINATION: `{w: v}` inside
+#   `sum(v, c(v,w))` captured it as `c(v,v)`, activating the first row's term
+#   (15 -> 24 > 20). The nested binder is alpha-renamed. NLP 14.3662 (86.976).
+CONDITION_SCOPE = """\
+Set t / t1*t3 /;
+Alias (t,v,w);
+Set vs(t,v);
+vs(t,v) = yes$(ord(t) >= ord(v));
+Parameter c(t,v);
+c(t,v) = ord(t) + 3*ord(v);
+Positive Variable h(v), z(t);
+Variable obj;
+Equation e(t), defobj;
+e(t).. sum(w$(vs(t,w) and sum(v, c(v,w)) > 20), h(w)) + z(t) =g= ord(t);
+defobj.. obj =e= sum(v, ord(v)*sqr(h(v))) + sum(t, 5*sqr(z(t)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+# - a binder over a SUBSET beside one over the full set: the subset sum only
+#   contributes where its membership holds, which one representative cannot
+#   carry, so the shape keeps the pre-#1782 path (and `card(s)` is not rewritten).
+MIXED_SUBSET_BINDER_CARD = """\
+Set t / t1*t4 /, s(t) / t2, t4 /;
+Alias (t,v);
+Set vs(t,v);
+vs(t,v) = yes$(ord(t) >= ord(v));
+Positive Variable h(v);
+Variable obj;
+Equation e(t), defobj;
+e(t).. sum(v$vs(t,v), h(v)) + sum(s$vs(t,s), card(s)*h(s)) =g= 20*ord(t);
+defobj.. obj =e= sum(v, ord(v)*sqr(h(v)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+# - `card(w)` of a rebound same-set binder becomes the set's `card(t)` rather
+#   than leaving `w` free (the free-index wrap summed over it).
+CARD_SAME_SET = """\
+Set t / t1*t4 /;
+Alias (t,v,w);
+Set vs(t,v);
+vs(t,v) = yes$(ord(t) >= ord(v));
+Positive Variable h(v);
+Variable obj;
+Equation e(t), defobj;
+e(t).. sum(v$vs(t,v), h(v)) + sum(w$vs(t,w), card(w)*h(w)) =g= 20*ord(t);
+defobj.. obj =e= sum(v, ord(v)*sqr(h(v)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+# - the variable's positions permuted (`h(v,m)`, binder `m` at position 1): the
+#   multiplier spelled `v` is a ROW coordinate, so the row-bound `h(v,m)` must not
+#   move to the eq coordinate. ⚠ This exact shape also lists the binders out of
+#   reference order (`(m,v)` vs `h(v,m)`), so the AD derivative is itself wrong
+#   (#1776: positional binder pairing, `h(b,a)*sameas(b,a)`), and it does not
+#   solve on any version. Only the stationarity property is pinned here.
+PERMUTED_POSITIONS = """\
+Set t / a, b, c /;
+Alias (t,m,v);
+Set s(t,v);
+s(t,v) = yes$(ord(t) >= ord(v));
+Variable h(v,m), obj;
+Equation e(t), defobj;
+e(t).. sum((m,v)$s(t,v), sqr(h(v,m))) =l= ord(t);
+defobj.. obj =e= sum((v,m), sqr(h(v,m) - 1)) + sum(m, ord(m)*h("a",m));
+Model mm / all /;
+solve mm using nlp minimizing obj;
+"""
+
+
 def _emit(tmp_path: Path, source: str) -> str:
     src = tmp_path / "model.gms"
     src.write_text(source)
@@ -648,6 +721,56 @@ def test_independently_named_sums_are_EACH_rebound(tmp_path):
 def test_rebinding_respects_a_coefficient_sum_SCOPE(tmp_path):
     row = _row(_emit(tmp_path, COEFFICIENT_SUM_MIXED_BINDERS), "stat_h(")
     assert "sum(w, a(w)) * 1$(vs(t__kkt1,v))" in row and "a(v)" not in row, row
+
+
+def test_a_nested_binder_that_is_a_rename_DESTINATION_is_alpha_renamed(tmp_path):
+    row = _row(_emit(tmp_path, CONDITION_SCOPE), "stat_h(")
+    assert "c(v,v)" not in row and "c(v__,v__)" not in row, row
+    assert "sum(t__kkt1, c(t__kkt1,v)) > 20" in row, row
+
+
+def test_CARD_of_a_rebound_binder_counts_its_set(tmp_path):
+    row = _row(_emit(tmp_path, CARD_SAME_SET), "stat_h(")
+    assert "sum((" not in row, "no rebound binder may be left free and summed: " + row
+
+
+def test_a_MIXED_SUBSET_binder_keeps_the_pre_1782_path(monkeypatch):
+    import src.kkt.stationarity as st
+    from src.ir.parser import parse_model_text
+
+    real = st._position_binders
+    model = parse_model_text(MIXED_SUBSET_BINDER_CARD)
+    eq = model.equations["e"]
+    # Non-vacuity: without the same-set rule the binders {v, s} WOULD be accepted.
+    assert real(eq, "h", 0) == {"v", "s"}
+    assert real(eq, "h", 0, model) is None
+
+    def stat_h() -> str:
+        from src.ad.constraint_jacobian import compute_constraint_jacobian
+        from src.ad.gradient import compute_objective_gradient
+        from src.config import Config
+        from src.emit.expr_to_gams import expr_to_gams
+        from src.ir.normalize import normalize_model
+        from src.kkt.assemble import assemble_kkt_system
+
+        m = parse_model_text(MIXED_SUBSET_BINDER_CARD)
+        eqs, _ = normalize_model(m)
+        config = Config()
+        gradient = compute_objective_gradient(m, config)
+        j_eq, j_ineq = compute_constraint_jacobian(m, eqs, config)
+        kkt = assemble_kkt_system(m, gradient, j_eq, j_ineq, config)
+        return expr_to_gams(st.build_stationarity_equations(kkt, config)["stat_h"].lhs_rhs[0])
+
+    current = stat_h()
+    assert "card(v)" not in current, current
+    monkeypatch.setattr(st, "_position_binders", lambda *a, **k: None)
+    assert current == stat_h(), "the mixed-set shape must keep the pre-#1782 path"
+
+
+def test_PERMUTED_positions_keep_the_row_bound_factor(tmp_path):
+    row = _row(_emit(tmp_path, PERMUTED_POSITIONS), "stat_h(")
+    assert "h(t__kkt1" not in row and ",t__kkt1)" not in row.split("lam_e")[0], row
+    assert "lam_e(t__kkt1)" in row, row
 
 
 def test_the_swap_needs_the_eq_index_ABSENT_from_every_reference():

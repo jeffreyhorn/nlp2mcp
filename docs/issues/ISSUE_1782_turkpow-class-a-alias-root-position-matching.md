@@ -231,3 +231,11 @@ Detail and fixtures: `SPRINT_LOG.md` §Day 7, PR #1788 review round 2.
 
 - The binder rebinding respects Sum/Prod scopes (`_rename_free_indices`): a coefficient's own `sum(w, a(w))` is not rewritten by the `{v, w} → v` map.
 
+## PR #1788 review round 9
+
+- A nested binder that is a rename destination is alpha-renamed first (no capture).
+- `card()` operands in the derivative count the binder's SET.
+- Binders at the pattern's position must range over one set; otherwise the pre-#1782 path is kept.
+- In the finishing step, a multiplier index spelled as ANY row coordinate is not a summed index.
+- The permuted-positions fixture with out-of-order binders also needs #1776 (AD positional binder pairing).
+
