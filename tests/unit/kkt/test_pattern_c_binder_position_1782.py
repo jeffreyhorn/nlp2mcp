@@ -345,6 +345,40 @@ solve mm using nlp minimizing obj;
 """
 
 
+# PR #1788 review round 6: a DIRECT reference beside the sum (`x(t)` with
+# `sum(tf$ts(t,tf), x(tf))`) rejects the binder rewrite, so the binder-only
+# admissions must not consolidate first: the subset (`t(tf)`) admission here ...
+MIXED_SUBSET = """\
+Set tf / 1*5 /, t(tf) / 2*5 /;
+Alias (tf,tfp);
+Set ts(tf,tfp);
+ts(tf,tfp)$(ord(tfp) < ord(tf)) = yes;
+Variable x(tf), obj;
+Equation e(tf), defobj;
+e(t).. x(t) =e= 0.5*sum(tf$ts(t,tf), x(tf)) + 1;
+defobj.. obj =e= sum(tf, ord(tf)*sqr(x(tf)));
+Model mm / all /;
+solve mm using nlp minimizing obj;
+"""
+
+# ... and the later-binder admission (`h('m1',t)` beside `sum((m,tf)$ts(t,tf), ...)`).
+# Both keep the pre-#1782 path, which is itself wrong for mixed references (the
+# #1778 family): NLP 3.8221 / 12.8859, that path 85.953 / 28.0.
+MIXED_LATER_BINDER = """\
+Set tf / 1*5 /, t(tf) / 2*5 /, m / m1*m2 /;
+Alias (tf,tfp);
+Set ts(tf,tfp);
+ts(tf,tfp)$(ord(tfp) < ord(tf)) = yes;
+Positive Variable h(m,tf);
+Variable obj;
+Equation e(tf), defobj;
+e(t).. h('m1',t) + 0.5*sum((m,tf)$ts(t,tf), h(m,tf)) =g= ord(t);
+defobj.. obj =e= sum((m,tf), ord(tf)*sqr(h(m,tf)));
+Model mm / all /;
+solve mm using nlp minimizing obj;
+"""
+
+
 def _emit(tmp_path: Path, source: str) -> str:
     src = tmp_path / "model.gms"
     src.write_text(source)
@@ -504,28 +538,44 @@ def test_a_placeholder_never_takes_an_existing_IDENTIFIER(tmp_path):
     assert "Alias(t, t__kkt1)" not in emit, "must not alias over the scalar t__kkt1"
 
 
-def test_SHARED_LABELS_withdraw_the_binder_only_admission(monkeypatch):
-    """With no usable representative, the emit equals the pre-#1782 path: the same
-    model with the binder-only admission switched off."""
+@pytest.mark.parametrize(
+    "fixture, stat, var_name, var_canon",
+    [
+        ("SHARED_LABELS", "stat_x", "x", {"k", "i"}),
+        ("MIXED_SUBSET", "stat_x", "x", {"tf"}),
+        ("MIXED_LATER_BINDER", "stat_h", "h", {"m", "tf"}),
+    ],
+)
+def test_a_binder_only_admission_the_rewrite_cannot_serve_is_WITHDRAWN(
+    monkeypatch, fixture, stat, var_name, var_canon
+):
+    """When the binder rewrite cannot run, the binder-only admission is withdrawn
+    BEFORE consolidation, so the emit equals the pre-#1782 path: the same model
+    with that admission switched off. Shared labels leave no usable representative
+    (round 5); a direct reference beside the sum rejects the rewrite (round 6),
+    for both the subset (`t(tf)`) and the later-binder admission."""
     import src.kkt.stationarity as st
     from src.ad.constraint_jacobian import compute_constraint_jacobian
     from src.ad.gradient import compute_objective_gradient
     from src.config import Config
     from src.emit.expr_to_gams import expr_to_gams
+    from src.ir.ast import Binary
     from src.ir.normalize import normalize_model
     from src.ir.parser import parse_model_text
     from src.kkt.assemble import assemble_kkt_system
 
-    def stat_x() -> str:
-        model = parse_model_text(SHARED_LABELS)
+    source = globals()[fixture]
+
+    def row() -> str:
+        model = parse_model_text(source)
         eqs, _ = normalize_model(model)
         config = Config()
         gradient = compute_objective_gradient(model, config)
         j_eq, j_ineq = compute_constraint_jacobian(model, eqs, config)
         kkt = assemble_kkt_system(model, gradient, j_eq, j_ineq, config)
-        return expr_to_gams(st.build_stationarity_equations(kkt, config)["stat_x"].lhs_rhs[0])
+        return expr_to_gams(st.build_stationarity_equations(kkt, config)[stat].lhs_rhs[0])
 
-    admitted = stat_x()
+    admitted = row()
     real = st._find_pattern_c_alias_sum
 
     def without_binder_only(*args, **kwargs):
@@ -533,20 +583,19 @@ def test_SHARED_LABELS_withdraw_the_binder_only_admission(monkeypatch):
         return None if found is not None and found.get("binder_swap_only") else found
 
     monkeypatch.setattr(st, "_find_pattern_c_alias_sum", without_binder_only)
-    assert admitted == stat_x()
+    assert admitted == row()
+
     # Non-vacuity: the pattern IS admitted for the binder rewrite on this model.
     monkeypatch.setattr(st, "_find_pattern_c_alias_sum", real)
-    model = parse_model_text(SHARED_LABELS)
+    model = parse_model_text(source)
     eq = model.equations["e"]
-    from src.ir.ast import Binary
-
-    body = Binary("-", eq.lhs_rhs[0], eq.lhs_rhs[1])
+    eq_canon = frozenset(st._resolve_alias_target(d, model) for d in eq.domain)
     found = st._find_pattern_c_alias_sum(
-        body,
-        frozenset({"k", "i"}),
+        Binary("-", eq.lhs_rhs[0], eq.lhs_rhs[1]),
+        frozenset(var_canon),
         model,
-        frozenset({"i"}),
-        "x",
+        eq_canon,
+        var_name,
     )
     assert found is not None and found.get("binder_swap_only"), found
 

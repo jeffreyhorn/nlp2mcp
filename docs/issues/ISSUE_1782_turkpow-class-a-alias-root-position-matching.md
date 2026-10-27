@@ -219,3 +219,7 @@ Detail and fixtures: `SPRINT_LOG.md` §Day 7, PR #1788 review round 2.
 - A binder-only pattern with no usable representative (labels shared across the variable's sets) is withdrawn BEFORE consolidation and keeps the pre-#1782 path. The shared-label ambiguity itself is on #1778.
 - The shared `_get_or_create_fresh_alias` never mints a name that is already a model identifier.
 
+## PR #1788 review round 6
+
+- A binder-only admission is also withdrawn before consolidation when the eq index occurs in ANY reference to the variable in the equation (a direct reference beside the sum). The rewrite would reject it later, after the offsets were consolidated.
+

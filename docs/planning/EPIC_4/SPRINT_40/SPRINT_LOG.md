@@ -1019,6 +1019,16 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - **Regressions:** `SHARED_LABELS` (the emit equals the same model with the binder-only admission switched off, plus a non-vacuity check that the admission fires) and `NAME_COLLISION` (an emitted-row unit test plus a validation solve). Removing either fix fails exactly its own test.
 - **Corpus:** the leak gate drifted **0** goldens. ferts and ganges timed out under load (≈150); re-run alone with `--fail-on-unverified` both are clean, so all 200 are verified. `make test`: **5,700 passed**, no `225*` dirs.
 
+### PR #1788 review round 6 (P4)
+
+- **A direct reference beside the sum rejected the rewrite after consolidation.** In `e(t).. h('m1',t) + 0.5*sum((m,tf)$ts(t,tf), h(m,tf))`, the later-binder admission passed the representative check. Then `_pc_gate`'s whole-equation absence test failed on `h('m1',t)`, after the offsets had been consolidated, so the row lost the per-offset terms: it was no longer the pre-#1782 path.
+  - **Fixed:** the pre-consolidation check for a binder-only admission also requires the rewrite's own preconditions on the whole equation: a binder position, and the eq index absent from every reference to the variable. Otherwise the admission is withdrawn.
+- **Regressions:** the round-5 test, parametrized as `test_a_binder_only_admission_the_rewrite_cannot_serve_is_WITHDRAWN` (emit = admission-off path, plus non-vacuity), now covers `SHARED_LABELS`, `MIXED_SUBSET` (`x(t)` beside `sum(tf$ts(t,tf), x(tf))`) and `MIXED_LATER_BINDER`.
+  - Removing the whole-equation check fails `MIXED_LATER_BINDER`.
+  - ⚠ `MIXED_SUBSET` is byte-identical to the pre-#1782 path with or without the check, as measured, so it guards the property but does not discriminate the fix.
+  - The pre-#1782 path is itself wrong for mixed direct + summed references: NLP 3.8221 / 12.8859, that path 85.953 / 28.0, identical on `main`. That is #1778's mixed-reference family.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,702 passed**, no `225*` dirs.
+
 ### Found and routed (not fixed in place)
 
 - **#1787** (Day 8): a variable referenced twice, with the eq index at different positions, keeps one term (egypt `tranc(rp,rp)`, tfordy `stat_v`).

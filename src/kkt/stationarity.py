@@ -7068,13 +7068,24 @@ def _add_indexed_jacobian_terms(
                             _pos = _eq_index_position(
                                 eq_def_for_gate, pattern_c_info["eq_domain_index"]
                             )
-                            if _pos is None or not any(
-                                _binder_rep_ok(
-                                    jacobian.index_mapping.row_to_eq[_rid][1],
-                                    jacobian.index_mapping.col_to_var[_cid][1],
-                                    _pos,
+                            # ...and the rewrite's own preconditions, on the WHOLE
+                            # equation: a direct reference elsewhere (``x(t)``
+                            # beside ``sum(tf$ts(t,tf), x(tf))``) rejects the
+                            # rewrite later, after consolidation (PR #1788 review).
+                            if (
+                                _pos is None
+                                or pattern_c_info.get("binder_position") is None
+                                or not _index_absent_from_var_refs(
+                                    eq_def_for_gate, var_name, pattern_c_info["eq_domain_index"]
                                 )
-                                for _rid, _cid in entries
+                                or not any(
+                                    _binder_rep_ok(
+                                        jacobian.index_mapping.row_to_eq[_rid][1],
+                                        jacobian.index_mapping.col_to_var[_cid][1],
+                                        _pos,
+                                    )
+                                    for _rid, _cid in entries
+                                )
                             ):
                                 pattern_c_info = None
                         if pattern_c_info is not None:
