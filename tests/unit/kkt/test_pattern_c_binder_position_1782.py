@@ -399,6 +399,25 @@ solve m using nlp minimizing obj;
 """
 
 
+# PR #1788 review round 8: COEFFICIENT_SUM combined with MIXED_BINDERS. The
+# combined {v, w} -> v rebinding must not reach the coefficient's own
+# `sum(w, a(w))` (it became `sum(w, a(v))`, MCP 31.392). NLP 25.3884.
+COEFFICIENT_SUM_MIXED_BINDERS = """\
+Set t / t1*t4 /;
+Alias (t,v,w);
+Set vs(t,v);
+vs(t,v) = yes$(ord(t) >= ord(v));
+Parameter a(t) / t1 1, t2 2, t3 3, t4 4 /;
+Positive Variable h(v);
+Variable obj;
+Equation e(t), defobj;
+e(t).. sum(v$vs(t,v), sum(w, a(w))*h(v)) + sum(w$vs(t,w), h(w)) =g= 20*ord(t);
+defobj.. obj =e= sum(v, ord(v)*sqr(h(v)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+
 def _emit(tmp_path: Path, source: str) -> str:
     src = tmp_path / "model.gms"
     src.write_text(source)
@@ -624,6 +643,11 @@ def test_independently_named_sums_are_EACH_rebound(tmp_path):
     row = _row(_emit(tmp_path, MIXED_BINDERS), "stat_h(")
     assert "sum(w, ((-1) * (1$(vs(w,v)) + a(v) * 1$(vs(w,v)))) * lam_e(w))" in row, row
     assert "sum((" not in row, "no second binder may be left free and summed: " + row
+
+
+def test_rebinding_respects_a_coefficient_sum_SCOPE(tmp_path):
+    row = _row(_emit(tmp_path, COEFFICIENT_SUM_MIXED_BINDERS), "stat_h(")
+    assert "sum(w, a(w)) * 1$(vs(t__kkt1,v))" in row and "a(v)" not in row, row
 
 
 def test_the_swap_needs_the_eq_index_ABSENT_from_every_reference():

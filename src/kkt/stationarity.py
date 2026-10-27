@@ -604,6 +604,52 @@ def _index_names_in(expr: Expr) -> set[str]:
     return names
 
 
+def _rename_free_indices(expr: Expr, rename: dict[str, str]) -> Expr:
+    """``_rewrite_subset_to_superset`` that respects Sum/Prod scopes (#1782).
+
+    A name a nested Sum/Prod binds is local to it and is not renamed there:
+    rebinding the Pattern C binders ``{v, w} -> v`` must leave a coefficient's
+    own ``sum(w, a(w))`` alone (PR #1788 review). Keys are lowercased names.
+    """
+    if not rename:
+        return expr
+    held: dict[str, Expr] = {}
+
+    def hold(e: Expr) -> Expr:
+        if isinstance(e, (Sum, Prod)):
+            bound = {str(i).lower() for i in e.index_sets}
+            inner = {k: v for k, v in rename.items() if k not in bound}
+            body = _rename_free_indices(e.body, inner)
+            cond = _rename_free_indices(e.condition, inner) if e.condition is not None else None
+            key = f"__scoped_{len(held)}__"
+            held[key] = type(e)(e.index_sets, body, cond)
+            return SymbolRef(key)
+        if isinstance(e, Call):
+            return Call(e.func, tuple(hold(a) for a in e.args))
+        if isinstance(e, Binary):
+            return Binary(e.op, hold(e.left), hold(e.right))
+        if isinstance(e, Unary):
+            return Unary(e.op, hold(e.child))
+        if isinstance(e, DollarConditional):
+            return DollarConditional(hold(e.value_expr), hold(e.condition))
+        return e
+
+    def restore(e: Expr) -> Expr:
+        if isinstance(e, SymbolRef) and e.name in held:
+            return held[e.name]
+        if isinstance(e, Call):
+            return Call(e.func, tuple(restore(a) for a in e.args))
+        if isinstance(e, Binary):
+            return Binary(e.op, restore(e.left), restore(e.right))
+        if isinstance(e, Unary):
+            return Unary(e.op, restore(e.child))
+        if isinstance(e, DollarConditional):
+            return DollarConditional(restore(e.value_expr), restore(e.condition))
+        return e
+
+    return restore(_rewrite_subset_to_superset(hold(expr), rename))
+
+
 def _rename_iterators_keeping_card(expr: Expr, rename: dict[str, str]) -> Expr:
     """``_rewrite_subset_to_superset`` that leaves ``card(...)`` operands alone.
 
@@ -7817,7 +7863,7 @@ def _add_indexed_jacobian_terms(
                         _pc_binder_map = dict.fromkeys(
                             _pc_binders or {_pc_binder.lower()}, _pc_pos_name
                         )
-                        _pc_bound = _rewrite_subset_to_superset(derivative, _pc_binder_map)
+                        _pc_bound = _rename_free_indices(derivative, _pc_binder_map)
                         _pc_reserved = (
                             {str(d).lower() for d in var_domain}
                             | {str(d).lower() for d in mult_domain}
@@ -7845,7 +7891,7 @@ def _add_indexed_jacobian_terms(
                                 _pc_reserved | {_pc_binder.lower()},
                                 kkt.model_ir,
                             )
-                        derivative = _rewrite_subset_to_superset(
+                        derivative = _rename_free_indices(
                             derivative,
                             {
                                 **_pc_binder_map,

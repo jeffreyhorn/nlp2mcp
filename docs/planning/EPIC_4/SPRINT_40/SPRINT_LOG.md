@@ -1039,6 +1039,13 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - ⚠ This finding came from the review's "previously missed" summary, with no comment thread, so the reply is a new inline comment at the flagged line.
 - **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,704 passed**, no `225*` dirs.
 
+### PR #1788 review round 8 (P4)
+
+- **The combined rebinding crossed sum scopes.** In `e(t).. sum(v$vs(t,v), sum(w,a(w))*h(v)) + sum(w$vs(t,w), h(w))`, round 7's `{v, w} → v` map also rewrote the coefficient's own `sum(w, a(w))` to `sum(w, a(v))`: 4·a(v) in place of 10 (MCP 31.392 vs NLP 25.3884 with RHS `20*ord(t)`).
+  - **Fixed:** both derivative rewrites use `_rename_free_indices`, which leaves a name alone inside any Sum/Prod that binds it. The row keeps `sum(w, a(w))` and solves to 25.388.
+- **Regression:** `COEFFICIENT_SUM_MIXED_BINDERS` (`COEFFICIENT_SUM` combined with `MIXED_BINDERS`): an emitted-row unit test plus a validation solve. A scope-blind rename fails exactly that test.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,706 passed**, no `225*` dirs.
+
 ### Found and routed (not fixed in place)
 
 - **#1787** (Day 8): a variable referenced twice, with the eq index at different positions, keeps one term (egypt `tranc(rp,rp)`, tfordy `stat_v`).

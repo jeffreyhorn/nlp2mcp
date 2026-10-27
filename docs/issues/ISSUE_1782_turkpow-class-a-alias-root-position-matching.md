@@ -227,3 +227,7 @@ Detail and fixtures: `SPRINT_LOG.md` §Day 7, PR #1788 review round 2.
 
 - Every sum carrying the variable's coordinate is rebound in its own scope (`_position_binders`). With `sum(v$…, h(v)) + sum(w$…, h(w))`, rebinding only `v` had left `w` free and overcounted. Shapes outside that contract get no rewrite.
 
+## PR #1788 review round 8
+
+- The binder rebinding respects Sum/Prod scopes (`_rename_free_indices`): a coefficient's own `sum(w, a(w))` is not rewritten by the `{v, w} → v` map.
+

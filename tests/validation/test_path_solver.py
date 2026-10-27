@@ -727,6 +727,7 @@ def test_issue_1782_reversed_domain_multiplier_values(tmp_path):
         ("PARENT_BINDER_CARD", 10.5238),
         ("NAME_COLLISION", 7.68),
         ("MIXED_BINDERS", 4.0),
+        ("COEFFICIENT_SUM_MIXED_BINDERS", 25.3884),
     ],
 )
 def test_pattern_c_binder_position_solves_to_the_nlp_optimum(tmp_path, fixture, nlp):
