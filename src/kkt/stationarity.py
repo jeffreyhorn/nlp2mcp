@@ -604,19 +604,49 @@ def _index_names_in(expr: Expr) -> set[str]:
     return names
 
 
-def _set_contains(outer: str, inner: str, model_ir: ModelIR) -> bool:
-    """``outer``'s set is ``inner``'s set or one of its (1-D) subset ancestors."""
-    target = _resolve_alias_target(outer, model_ir)
-    current: str | None = _resolve_alias_target(inner, model_ir)
-    seen: set[str] = set()
-    while current is not None and current not in seen:
-        if current == target:
-            return True
-        seen.add(current)
-        sdef = model_ir.sets.get(current)
-        dom = getattr(sdef, "domain", None) if sdef is not None else None
-        current = _resolve_alias_target(str(dom[0]), model_ir) if dom and len(dom) == 1 else None
-    return False
+def _rename_iterators_keeping_card(expr: Expr, rename: dict[str, str]) -> Expr:
+    """``_rewrite_subset_to_superset`` that leaves ``card(...)`` operands alone.
+
+    ``card(t)`` takes a SET, not the iterator: renaming the eq index ``t`` to the
+    eq coordinate must not change which set is counted (PR #1788 review).
+    """
+    held: dict[str, Call] = {}
+
+    def hold(e: Expr) -> Expr:
+        if isinstance(e, Call) and e.func.lower() == "card":
+            key = f"__card_operand_{len(held)}__"
+            held[key] = e
+            return SymbolRef(key)
+        if isinstance(e, Call):
+            return Call(e.func, tuple(hold(a) for a in e.args))
+        if isinstance(e, Binary):
+            return Binary(e.op, hold(e.left), hold(e.right))
+        if isinstance(e, Unary):
+            return Unary(e.op, hold(e.child))
+        if isinstance(e, DollarConditional):
+            return DollarConditional(hold(e.value_expr), hold(e.condition))
+        if isinstance(e, (Sum, Prod)):
+            cond = hold(e.condition) if e.condition is not None else None
+            return type(e)(e.index_sets, hold(e.body), cond)
+        return e
+
+    def restore(e: Expr) -> Expr:
+        if isinstance(e, SymbolRef) and e.name in held:
+            return held[e.name]
+        if isinstance(e, Call):
+            return Call(e.func, tuple(restore(a) for a in e.args))
+        if isinstance(e, Binary):
+            return Binary(e.op, restore(e.left), restore(e.right))
+        if isinstance(e, Unary):
+            return Unary(e.op, restore(e.child))
+        if isinstance(e, DollarConditional):
+            return DollarConditional(restore(e.value_expr), restore(e.condition))
+        if isinstance(e, (Sum, Prod)):
+            cond = restore(e.condition) if e.condition is not None else None
+            return type(e)(e.index_sets, restore(e.body), cond)
+        return e
+
+    return restore(_rewrite_subset_to_superset(hold(expr), rename))
 
 
 def _eq_index_position(eq_def: Any, eq_index: str) -> int | None:
@@ -711,7 +741,7 @@ def _finish_binder_position_rewrite(
 
     term = walk(term)
     if separate:
-        term = _rewrite_subset_to_superset(term, {old: eq_star})
+        term = _rename_iterators_keeping_card(term, {old: eq_star})
     if eq_star.lower() not in _index_names_bound_in(term):
         term = Sum((eq_star,), term)
     return term
@@ -7677,15 +7707,17 @@ def _add_indexed_jacobian_terms(
                         )
                         # The binder's own name is free once it stands for the
                         # variable's position (launch's ``ss`` stays ``ss``), but
-                        # only if its set CONTAINS the eq index's (the same set, or
-                        # a parent: dinam's ``tep`` over ``te`` for ``t(te)``). A
-                        # binder over a SUBSET (``ss`` of ``s(i)`` against
-                        # ``e(i)``) would drop the multipliers outside it (PR #1788
-                        # review).
+                        # only if it ranges over EXACTLY the eq index's set. A
+                        # binder over a SUBSET (``ss`` of ``s(i)`` against ``e(i)``)
+                        # drops the multipliers outside it; one over a PARENT
+                        # (dinam's ``tep`` over ``te`` for ``t(te)``) changes what
+                        # ``ord(t)`` / ``card(t)`` mean in the equation condition
+                        # (``card(tep) = 4`` is false where ``card(t) = 4`` holds;
+                        # PR #1788 review).
                         # Otherwise an unused alias of the eq index's set.
-                        if _pc_binder.lower() not in _pc_reserved and _set_contains(
-                            _pc_binder, _pc_eq_idx, kkt.model_ir
-                        ):
+                        if _pc_binder.lower() not in _pc_reserved and _resolve_alias_target(
+                            _pc_binder, kkt.model_ir
+                        ) == _resolve_alias_target(_pc_eq_idx, kkt.model_ir):
                             _pc_eq_star = _pc_binder
                         else:
                             _pc_eq_star = _get_or_create_fresh_alias(
@@ -8012,7 +8044,7 @@ def _add_indexed_jacobian_terms(
                     if eq_def is not None and eq_def.condition is not None:
                         indexed_condition = _replace_indices_in_expr(
                             (
-                                _rewrite_subset_to_superset(eq_def.condition, _pc_cond_rename)
+                                _rename_iterators_keeping_card(eq_def.condition, _pc_cond_rename)
                                 if _pc_cond_rename
                                 else eq_def.condition
                             ),

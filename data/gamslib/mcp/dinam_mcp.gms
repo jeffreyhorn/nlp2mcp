@@ -455,7 +455,7 @@ stat_con(te).. ((-1) * w1(te)) + ((((-1) * (gamma * (-1))) * nu_h(te+1))$(ord(te
 stat_e(i,te).. ((((-1) * nu_exdef(te))$(t(te)))$(im(i) and t(te)) + (1$(im(i)) * lam_mb(i,te))$(t(te)) - piL_e(i,te) + piU_e(i,te))$(im(i) and t(te) and e.up(i,te) - e.lo(i,te) > 1e-10) =E= 0;
 stat_ea(te).. ((pvv * nu_exdef(te))$(t(te)) - nu_fexch(te)$(t(te)) + sum((i,t__), (csm(i) * lam_mb(i,t__))$(t(t__))) - piL_ea(te))$(t(te)) =E= 0;
 stat_ed(s,te).. ((-1) * piL_ed(s,te)) =E= 0;
-stat_em(te).. sum(tp, (((-1) * 1$(ts(te,tp))) * nu_exdef(te))$(t(te))) + sum(tep, sum(i, (es(i) * zmi(tep,te) * 1$(ts(tep,te)) * lam_mb(i,tep))$(t(tep)))) - piL_em(te) =E= 0;
+stat_em(te).. sum(tp, (((-1) * 1$(ts(te,tp))) * nu_exdef(te))$(t(te))) + sum(tp, sum(i, (es(i) * zmi(tp,te) * 1$(ts(tp,te)) * lam_mb(i,tp))$(t(tp)))) - piL_em(te) =E= 0;
 stat_fc(te).. (((-1) * nu_fgap(te))$(t(te)) - piL_fc(te))$(t(te)) =E= 0;
 stat_fdp(te).. (sum(tp, (pci * 1$(ts2(te,tp)) * nu_fgap(te))$(t(te))) - nu_fgap(te)$(t(te)) + lam_ffdp$(t(te)) - piL_fdp(te) + piU_fdp(te))$(t(te) and fdp.up(te) - fdp.lo(te) > 1e-10) =E= 0;
 stat_gdp(te).. (nu_gdp_fx_1968$(sameas(te, '1968')) - nu_ggdp(te)$(t(te)) + ((((-1) * (mps * (-1))) * lam_dsc(te+1))$(ord(te) <= card(te) - 1))$(t(te+1)) + (((-1) * mps) * lam_dsc(te))$(t(te)) - piL_gdp(te))$(t(te)) =E= 0;

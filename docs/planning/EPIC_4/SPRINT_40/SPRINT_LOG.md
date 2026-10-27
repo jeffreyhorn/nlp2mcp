@@ -995,10 +995,19 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 
 - **The round-2 representative search dropped the default selector's collision checks** (#1086 / #1278: distinct variable labels, distinct equation labels). With `Alias(t,m,v)`, `h(m,v)` and `e(t).. sum((m,v)$s(t,v), sqr(h(m,v)))`, it could take `e(b)` / `h(a,a)`, and the element map sent both variable coordinates to `v`: `2*h(v,v)` (MCP 4.983 vs NLP 3.169). **Fixed:** it keeps both checks. The row is `2*h(m,v)`, solving to 3.169.
 - **A binder over a SUBSET lent its name to the eq coordinate.** With `ss` of `s(i)` against `e(i)`, `sum(ss, … lam_e(ss))` dropped `e('c')` and the MCP did not solve.
-  - **Fixed:** the binder's name is reused only when its set CONTAINS the eq index's (`_set_contains`: the same set or a subset ancestor). dinam's `tep` over `te` for `t(te)` still qualifies.
+  - **Fixed:** the binder's name is reused only when its set CONTAINS the eq index's (`_set_contains`: the same set or a subset ancestor). dinam's `tep` over `te` for `t(te)` still qualified. ⚠ *Narrowed to the SAME set in round 4.*
   - Otherwise an alias of the eq index's set is used (`i__kkt1`), and the fixture solves to 3.0 = NLP.
 - **Regressions:** `MULTI_AXIS_ALIAS` and `SUBSET_BINDER`, each an emitted-row unit test plus a validation solve. Removing either fix fails exactly its own test. The fixture's weighted objective first hit #1785 (`c(v,v)` in the gradient), so it uses an unweighted one.
 - **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts, so no golden changes. `make test`: **5,694 passed**, no `225*` dirs.
+
+### PR #1788 review round 4 (P4)
+
+- **Reusing a PARENT-set binder as the eq coordinate changes the equation condition's meaning.** With dinam's shape and `mb(i,t)$(card(t) = 4)..`, the coordinate `tep` (over `te`, 5 elements) turned the guard into `card(tep) = 4`, false everywhere, so the multiplier contribution vanished and the MCP did not solve. `ord(t)` has the same problem, since it counts within the subset.
+- **Fixed, both ways:**
+  - the binder's name is reused only when it ranges over **exactly** the eq index's set. Round 3's `_set_contains` (which allowed a parent) is removed, so dinam's eq coordinate is now an alias of `t`;
+  - the condition rename and the final rename both leave `card(...)` operands alone (`_rename_iterators_keeping_card`), so the guard stays `card(t) = 4`.
+- **Regressions:** `PARENT_BINDER_CARD` (an emitted-row unit test plus a validation solve: no solve → 10.524 = NLP) and `PARENT_BINDER_ORD` (an emitted-row unit test; its solve happens to agree either way). Allowing the parent again fails 3 tests; not holding `card` fails exactly its own.
+- **Corpus:** the leak gate is complete (no timeouts). Only dinam drifts (−5 B): `stat_em`'s eq coordinate is now `tp`, dinam's alias of `t`, in place of `tep`. The resolver holds it (GO). `make test`: **5,697 passed**, no `225*` dirs.
 
 ### Found and routed (not fixed in place)
 

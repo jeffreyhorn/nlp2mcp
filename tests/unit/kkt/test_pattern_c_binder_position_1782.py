@@ -296,6 +296,17 @@ solve mm using nlp minimizing obj;
 """
 
 
+# PR #1788 review round 4: with the PARENT-set binder `tep` reused as the eq
+# coordinate, the equation condition's `card(t)` became `card(tep)` (5, not 4),
+# so the guard was false everywhere. The eq coordinate now ranges over `t`'s own
+# set, and `card()` operands are not renamed. NLP 10.5238 (card(tep): no solve).
+PARENT_BINDER_CARD = BOUND_COEFFICIENT.replace("mb(i,t).. ", "mb(i,t)$(card(t) = 4).. ")
+
+# The same for `ord(t)`: it counts within the subset, so `ord(tep)` selects other
+# instances. (Its solve happens to agree; the emitted guard is what is pinned.)
+PARENT_BINDER_ORD = BOUND_COEFFICIENT.replace("mb(i,t).. ", "mb(i,t)$(ord(t) > 1).. ")
+
+
 def _emit(tmp_path: Path, source: str) -> str:
     src = tmp_path / "model.gms"
     src.write_text(source)
@@ -373,11 +384,13 @@ def test_shale_acap_with_a_PARAMETER_guard_skips_the_offset_substitution(tmp_pat
 
 def test_a_BOUND_coefficient_keeps_its_coordinate_and_the_binder_sum_goes(tmp_path):
     row = _row(_emit(tmp_path, BOUND_COEFFICIENT), "stat_em(")
-    # The eq coordinate is the binder's own name `tep` (free once it stands for
-    # `te`); the standard path's sum((i,t)$sameas(t,te), ...) pin is gone.
+    # The eq coordinate is an alias of `t` itself (`tep` ranges over the PARENT
+    # `te`, so it is not reused); the standard path's sum((i,t)$sameas(t,te), ...)
+    # pin is gone.
     assert row == (
-        "stat_em(te).. 2 * ord(te) * em(te) + sum(tep, sum(i, (((-1) * (es(i) * zmi(tep,te)"
-        " * 1$(ts(tep,te)))) * lam_mb(i,tep))$(t(tep)))) - piL_em(te) =E= 0;"
+        "stat_em(te).. 2 * ord(te) * em(te) + sum(t__kkt1, sum(i, (((-1) * (es(i)"
+        " * zmi(t__kkt1,te) * 1$(ts(t__kkt1,te)))) * lam_mb(i,t__kkt1))$(t(t__kkt1))))"
+        " - piL_em(te) =E= 0;"
     ), row
 
 
@@ -431,6 +444,19 @@ def test_a_SUBSET_binder_does_not_name_the_eq_coordinate(tmp_path):
     row = _row(_emit(tmp_path, SUBSET_BINDER), "stat_x(")
     assert "sum(i__kkt1, ((-1) * 1$(a(i__kkt1,s))) * lam_e(i__kkt1))" in row, row
     assert "lam_e(ss)" not in row, row
+
+
+def test_a_PARENT_binder_is_not_reused_and_CARD_is_preserved(tmp_path):
+    assert "mb(i,t)$(card(t) = 4).." in PARENT_BINDER_CARD, "fixture must apply"
+    row = _row(_emit(tmp_path, PARENT_BINDER_CARD), "stat_em(")
+    assert "$(card(t) = 4)" in row and "card(tep)" not in row, row
+    assert "lam_mb(i,t__kkt1)" in row and "lam_mb(i,tep)" not in row, row
+
+
+def test_a_PARENT_binder_is_not_reused_for_an_ORD_guard(tmp_path):
+    assert "mb(i,t)$(ord(t) > 1).." in PARENT_BINDER_ORD, "fixture must apply"
+    row = _row(_emit(tmp_path, PARENT_BINDER_ORD), "stat_em(")
+    assert "$(ord(t__kkt1) > 1)" in row and "ord(tep)" not in row, row
 
 
 def test_the_swap_needs_the_eq_index_ABSENT_from_every_reference():

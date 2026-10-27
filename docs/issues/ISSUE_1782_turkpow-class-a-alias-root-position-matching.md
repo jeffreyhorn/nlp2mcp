@@ -207,5 +207,10 @@ Detail and fixtures: `SPRINT_LOG.md` §Day 7, PR #1788 review round 2.
 ## PR #1788 review round 3
 
 - The representative keeps the default selector's checks for distinct variable and equation labels; without them `h(m,v)` collapsed to `h(v,v)`.
-- The binder's name becomes the eq coordinate only when its set contains the eq index's (`_set_contains`). A subset binder would drop the multipliers outside the subset.
+- The binder's name becomes the eq coordinate only when its set contains the eq index's (`_set_contains`). A subset binder would drop the multipliers outside the subset. ⚠ *Narrowed to the SAME set in round 4.*
+
+## PR #1788 review round 4
+
+- **The eq coordinate reuses the binder's name only when the binder ranges over exactly the eq index's set.** A parent-set binder (dinam's `tep` over `te` for `t(te)`) changed the equation condition's `card(t)` / `ord(t)`.
+- **Renames leave `card(...)` operands alone** (`_rename_iterators_keeping_card`).
 
