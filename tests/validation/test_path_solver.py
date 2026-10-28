@@ -733,6 +733,7 @@ def test_issue_1782_reversed_domain_multiplier_values(tmp_path):
         ("CARD_ALIAS_EQ_DOMAIN", 192.0),
         ("SMAX_CONDITION_SCOPE", 14.3662),
         ("THREE_AXIS_GUARD", 0.6667),
+        ("NESTED_REDUCTION", 14.3662),
     ],
 )
 def test_pattern_c_binder_position_solves_to_the_nlp_optimum(tmp_path, fixture, nlp):

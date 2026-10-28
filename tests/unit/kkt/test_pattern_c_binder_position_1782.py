@@ -544,6 +544,44 @@ solve mm using nlp minimizing obj;
 """
 
 
+# PR #1788 review round 11:
+# - the alpha-rename inside a NESTED reduction must not pick an existing alias an
+#   enclosing reduction binds: `sum(q, a(q)*smax(v, c(v,w)))` became
+#   `sum(q, a(q)*smax(q, c(q,v)))` (no solve). It now always mints. NLP 14.3662.
+NESTED_REDUCTION = """\
+Set t / t1*t3 /;
+Alias (t,v,w,q);
+Set vs(t,v);
+vs(t,v) = yes$(ord(t) >= ord(v));
+Parameter c(t,v), a(t);
+c(t,v) = ord(t) + 3*ord(v);
+a(t) = ord(t);
+Positive Variable h(v), z(t);
+Variable obj;
+Equation e(t), defobj;
+e(t).. sum(w$(vs(t,w) and sum(q, a(q)*smax(v, c(v,w))) > 40), h(w)) + z(t) =g= ord(t);
+defobj.. obj =e= sum(v, ord(v)*sqr(h(v))) + sum(t, 5*sqr(z(t)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+# - two aliased equation axes (`e(t,m)` against `h(m,v)`): downstream alias
+#   matching remapped the position-bound derivative (`h(v,v)`, `lam_e(E,v)`), so
+#   the shape keeps the pre-#1782 path (itself wrong here, as on `main`).
+TWO_EQ_AXES = """\
+Set t / a, b, c /;
+Alias (t,m,v);
+Set vs(t,v);
+vs(t,v) = yes$(ord(t) >= ord(v));
+Variable h(m,v), obj;
+Equation e(t,m), defobj;
+e(t,m).. sum(v$vs(t,v), sqr(h(m,v))) =l= 0.5*ord(t);
+defobj.. obj =e= sum((m,v), sqr(h(m,v) - 1));
+Model mm / all /;
+solve mm using nlp minimizing obj;
+"""
+
+
 def _emit(tmp_path: Path, source: str) -> str:
     src = tmp_path / "model.gms"
     src.write_text(source)
@@ -854,6 +892,43 @@ def test_an_indexed_SMAX_binder_is_scoped_and_alpha_renamed(tmp_path):
 def test_a_THREE_AXIS_guard_keeps_every_row_coordinate(tmp_path):
     row = _row(_emit(tmp_path, THREE_AXIS_GUARD), "stat_x(")
     assert "1$(s(t__kkt1,m,v,w))" in row, row
+
+
+def test_an_alpha_rename_never_reuses_an_ENCLOSING_binder(tmp_path):
+    row = _row(_emit(tmp_path, NESTED_REDUCTION), "stat_h(")
+    assert "smax(q," not in row and "sum(q, a(q) * smax(t__kkt1, c(t__kkt1,v)))" in row, row
+
+
+def test_TWO_aliased_eq_axes_keep_the_pre_1782_path(monkeypatch):
+    import src.kkt.stationarity as st
+    from src.ad.constraint_jacobian import compute_constraint_jacobian
+    from src.ad.gradient import compute_objective_gradient
+    from src.config import Config
+    from src.emit.expr_to_gams import expr_to_gams
+    from src.ir.normalize import normalize_model
+    from src.ir.parser import parse_model_text
+    from src.kkt.assemble import assemble_kkt_system
+
+    model = parse_model_text(TWO_EQ_AXES)
+    eq = model.equations["e"]
+    # Non-vacuity: the binder IS found, and the new rule is what rejects it.
+    binders = st._position_binders(eq, "h", 1, model)
+    assert binders == {"v"}
+    assert st._another_eq_axis_shares_the_binder_set(eq, "t", binders, model)
+
+    def stat_h() -> str:
+        m = parse_model_text(TWO_EQ_AXES)
+        eqs, _ = normalize_model(m)
+        config = Config()
+        gradient = compute_objective_gradient(m, config)
+        j_eq, j_ineq = compute_constraint_jacobian(m, eqs, config)
+        kkt = assemble_kkt_system(m, gradient, j_eq, j_ineq, config)
+        return expr_to_gams(st.build_stationarity_equations(kkt, config)["stat_h"].lhs_rhs[0])
+
+    current = stat_h()
+    assert "h(v,v)" not in current, current
+    monkeypatch.setattr(st, "_position_binders", lambda *a, **k: None)
+    assert current == stat_h(), "two aliased eq axes must keep the pre-#1782 path"
 
 
 def test_the_swap_needs_the_eq_index_ABSENT_from_every_reference():

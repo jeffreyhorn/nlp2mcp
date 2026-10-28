@@ -635,8 +635,11 @@ def _rename_free_indices(
             reserved = dests | set(inner) | _index_names_in(e)
             for pos, b in enumerate(bound):
                 if b.lower() in dests:
+                    # Always a NEW alias: an existing one may be bound by an
+                    # ENCLOSING reduction (``sum(q, …smax(v, c(v,w)))`` gave
+                    # ``smax(q, c(q,v))``, reusing the controlled ``q``).
                     fresh = _get_or_create_fresh_alias(
-                        _resolve_alias_target(b, model_ir), reserved, model_ir
+                        _resolve_alias_target(b, model_ir), reserved, model_ir, reuse_existing=False
                     )
                     reserved.add(fresh.lower())
                     body = _rename_free_indices(body, {b.lower(): fresh}, model_ir)
@@ -854,6 +857,26 @@ def _binder_position_map(
     if not ok or not position_binders <= set(out):
         return None
     return out
+
+
+def _another_eq_axis_shares_the_binder_set(
+    eq_def: Any, eq_index: str, binders: set[str], model_ir: ModelIR
+) -> bool:
+    """True when an equation index OTHER than the pattern's ``eq_index`` ranges
+    over the binders' set (``e(t,m)`` with ``Alias(t,m,v)`` and binder ``v``).
+
+    Downstream alias matching then maps that axis onto the variable's position
+    (``{t: m, m: v}``) and collapses the already position-bound derivative
+    (``h(m,v)`` -> ``h(v,v)``), so the binder rewrite does not apply (PR #1788
+    review).
+    """
+    canons = {_resolve_alias_target(b, model_ir) for b in binders}
+    for d in tuple(getattr(eq_def, "domain", None) or ()):
+        if str(d).lower() == eq_index.lower():
+            continue
+        if _resolve_alias_target(str(d), model_ir) in canons:
+            return True
+    return False
 
 
 def _binder_rep_ok(eq_labels: tuple, var_labels: tuple, eq_position: int) -> bool:
@@ -5431,6 +5454,7 @@ def _get_or_create_fresh_alias(
     root_set: str,
     used_names: set[str],
     model_ir: ModelIR,
+    reuse_existing: bool = True,
 ) -> str:
     """Find an existing unused alias or create a fresh one for *root_set*.
 
@@ -5450,8 +5474,10 @@ def _get_or_create_fresh_alias(
     Returns:
         A lowercase alias name suitable for use as a summation index.
     """
-    # Search existing aliases targeting root_set
-    for aname, adef in model_ir.aliases.items():
+    # Search existing aliases targeting root_set (unless a genuinely NEW name is
+    # required: an existing alias may be bound by an enclosing reduction the
+    # caller cannot see, PR #1788 review)
+    for aname, adef in model_ir.aliases.items() if reuse_existing else ():
         target = adef.target if hasattr(adef, "target") else str(adef)
         if target.lower() == root_set.lower() and aname.lower() not in used_names:
             return aname.lower()
@@ -7338,6 +7364,18 @@ def _add_indexed_jacobian_terms(
                                     kkt.model_ir,
                                 )
                                 is None
+                                or _another_eq_axis_shares_the_binder_set(
+                                    eq_def_for_gate,
+                                    pattern_c_info["eq_domain_index"],
+                                    _position_binders(
+                                        eq_def_for_gate,
+                                        var_name,
+                                        pattern_c_info["binder_position"],
+                                        kkt.model_ir,
+                                    )
+                                    or set(),
+                                    kkt.model_ir,
+                                )
                                 or _binder_position_map(
                                     eq_def_for_gate,
                                     var_name,
@@ -7670,6 +7708,12 @@ def _add_indexed_jacobian_terms(
                     _pc_gate = bool(
                         pattern_c_info is not None
                         and _pc_binders is not None
+                        and not _another_eq_axis_shares_the_binder_set(
+                            kkt.model_ir.equations.get(eq_name_base),
+                            pattern_c_info["eq_domain_index"],
+                            _pc_binders,
+                            kkt.model_ir,
+                        )
                         and _binder_position_map(
                             kkt.model_ir.equations.get(eq_name_base),
                             var_name,

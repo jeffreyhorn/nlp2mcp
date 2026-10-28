@@ -245,3 +245,8 @@ Detail and fixtures: `SPRINT_LOG.md` §Day 7, PR #1788 review round 2.
 - `_rename_free_indices` scopes and alpha-renames indexed `smax`/`smin` (`_reduction_call_parts`).
 - The re-symbolisation self-maps cover every row coordinate and every symbolic name in the rewritten derivative.
 
+## PR #1788 review round 11
+
+- The scoped rename's alpha-rename always mints a new alias, never an existing one that an enclosing reduction may bind.
+- A second equation index over the binder's set (`e(t,m)` with `Alias(t,m,v)`) rejects the binder rewrite before consolidation.
+

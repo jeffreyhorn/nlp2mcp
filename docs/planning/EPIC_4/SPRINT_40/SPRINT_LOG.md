@@ -1073,6 +1073,13 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
   - ⚠ The two self-map extensions (row coordinates; derivative names) overlap on these fixtures: removing either alone leaves the tests green, and removing both fails `THREE_AXIS_GUARD` and `SMAX_CONDITION_SCOPE`.
 - **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. The general `_collect_free_indices` change moves no golden. `make test`: **5,719 passed**, no `225*` dirs.
 
+### PR #1788 review round 11 (P4)
+
+- **The alpha-rename could reuse an alias bound by an ENCLOSING reduction.** `{w: v}` in `sum(q, a(q)*smax(v, c(v,w)))` picked the existing alias `q`: `smax(q, c(q,v))` inside `sum(q, …)`, no solve. **Fixed:** the alpha-rename always mints a genuinely new alias (`_get_or_create_fresh_alias(..., reuse_existing=False)`; the shared default is unchanged). It solves to 14.366 = NLP.
+- **Two aliased equation axes.** With `e(t,m)` against `h(m,v)`, downstream alias matching applied `{t: m, m: v}` to the position-bound derivative: `h(v,v)` and `lam_e(E,v)`. **Fixed by rejection before consolidation** (`_another_eq_axis_shares_the_binder_set`: another eq index over the binder's set), so the shape keeps the pre-#1782 path, byte-identical to `main`. That path is itself wrong here; `main` is too.
+- **Regressions:** `NESTED_REDUCTION` (row + solve) and `TWO_EQ_AXES` (pre-#1782 path, with non-vacuity checks that the binder is found and that the new rule rejects it). Removing either fix fails exactly its own test.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,722 passed**, no `225*` dirs.
+
 ### Found and routed (not fixed in place)
 
 - **#1787** (Day 8): a variable referenced twice, with the eq index at different positions, keeps one term (egypt `tranc(rp,rp)`, tfordy `stat_v`).
