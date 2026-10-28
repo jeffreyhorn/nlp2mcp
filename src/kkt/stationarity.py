@@ -895,6 +895,36 @@ def _binder_rep_ok(eq_labels: tuple, var_labels: tuple, eq_position: int) -> boo
     )
 
 
+def _eligible_binder_rep(
+    jacobian: Any, entries: list[tuple[int, int]], eq_position: int
+) -> tuple[int, int] | None:
+    """A usable representative for the binder rewrite, from the MAJORITY
+    derivative-structure group (#1782; PR #1788 review).
+
+    The #1110 multi-pattern step later switches the representative to a majority
+    entry when the derivatives differ in structure. An eligible entry outside the
+    majority would therefore be replaced by an ineligible one after a binder-only
+    admission had consolidated the offsets, leaving neither rewrite active. This
+    mirrors that step's grouping (largest group, ties in entry order) and returns
+    the first entry of it that ``_binder_rep_ok`` accepts, or None.
+    """
+    groups: dict[str, list[tuple[int, int]]] = {}
+    for rid, cid in entries:
+        key = _derivative_structure_key(jacobian.get_derivative(rid, cid))
+        groups.setdefault(key, []).append((rid, cid))
+    if not groups:
+        return None
+    majority = sorted(groups.values(), key=len, reverse=True)[0]
+    for rid, cid in majority:
+        if _binder_rep_ok(
+            jacobian.index_mapping.row_to_eq[rid][1],
+            jacobian.index_mapping.col_to_var[cid][1],
+            eq_position,
+        ):
+            return (rid, cid)
+    return None
+
+
 def _eq_index_position(eq_def: Any, eq_index: str) -> int | None:
     """Position of ``eq_index`` in ``eq_def``'s domain (case-insensitive), or None."""
     domain = tuple(getattr(eq_def, "domain", None) or ())
@@ -7392,14 +7422,7 @@ def _add_indexed_jacobian_terms(
                                 or not _index_absent_from_var_refs(
                                     eq_def_for_gate, var_name, pattern_c_info["eq_domain_index"]
                                 )
-                                or not any(
-                                    _binder_rep_ok(
-                                        jacobian.index_mapping.row_to_eq[_rid][1],
-                                        jacobian.index_mapping.col_to_var[_cid][1],
-                                        _pos,
-                                    )
-                                    for _rid, _cid in entries
-                                )
+                                or _eligible_binder_rep(jacobian, entries, _pos) is None
                             ):
                                 pattern_c_info = None
                         if pattern_c_info is not None:
@@ -7735,19 +7758,17 @@ def _add_indexed_jacobian_terms(
                             kkt.model_ir.equations.get(eq_name_base),
                             pattern_c_info["eq_domain_index"],
                         )
-                        _pc_rep = None
-                        if _pc_eq_pos is not None:
-                            for _rid, _cid in [(group_row_id, group_col_id), *group_entries]:
-                                _, _eidx = jacobian.index_mapping.row_to_eq[_rid]
-                                _, _vidx = jacobian.index_mapping.col_to_var[_cid]
-                                # Keep the default selector's collision checks
-                                # (#1086/#1278): distinct variable labels and
-                                # distinct equation labels, or the element map
-                                # sends two coordinates to one name (``h(v,v)``,
-                                # PR #1788 review).
-                                if _binder_rep_ok(_eidx, _vidx, _pc_eq_pos):
-                                    _pc_rep = (_rid, _cid)
-                                    break
+                        # Keep the default selector's collision checks (#1086 /
+                        # #1278, via ``_binder_rep_ok``: distinct variable and
+                        # equation labels, or the element map sends two
+                        # coordinates to one name, ``h(v,v)``), and pick from the
+                        # MAJORITY structure group, which the #1110 step below
+                        # would otherwise switch to (PR #1788 review).
+                        _pc_rep = (
+                            _eligible_binder_rep(jacobian, list(group_entries), _pc_eq_pos)
+                            if _pc_eq_pos is not None
+                            else None
+                        )
                         if _pc_rep is None:
                             _pc_gate = False
                         else:
@@ -7817,6 +7838,18 @@ def _add_indexed_jacobian_terms(
                                     for __r, __c in majority_entries:
                                         __vidx = jacobian.index_mapping.col_to_var[__c][1]
                                         if len(set(__vidx)) == len(__vidx):
+                                            _mr, _mc = __r, __c
+                                            break
+                                # The binder rewrite needs a representative it
+                                # can use; ``_eligible_binder_rep`` chose one from
+                                # this same majority group.
+                                if _pc_gate and _pc_eq_pos is not None:
+                                    for __r, __c in majority_entries:
+                                        if _binder_rep_ok(
+                                            jacobian.index_mapping.row_to_eq[__r][1],
+                                            jacobian.index_mapping.col_to_var[__c][1],
+                                            _pc_eq_pos,
+                                        ):
                                             _mr, _mc = __r, __c
                                             break
                                 group_row_id, group_col_id = _mr, _mc

@@ -931,6 +931,47 @@ def test_TWO_aliased_eq_axes_keep_the_pre_1782_path(monkeypatch):
     assert current == stat_h(), "two aliased eq axes must keep the pre-#1782 path"
 
 
+def test_the_representative_comes_from_the_MAJORITY_structure_group():
+    """PR #1788 review round 12: the #1110 multi-pattern step switches to a
+    majority-structure entry, so an eligible representative from the MINORITY
+    would be replaced by an ineligible one after a binder-only admission had
+    consolidated the offsets. ``_eligible_binder_rep`` mirrors that grouping."""
+    from types import SimpleNamespace
+
+    from src.ir.ast import Binary, Const, ParamRef
+    from src.kkt.stationarity import _eligible_binder_rep
+
+    plain = ParamRef("a", ("x",))  # structure A
+    other = Binary("+", Const(1.0), ParamRef("a", ("x",)))  # structure B
+
+    def jac(rows, cols, derivs):
+        return SimpleNamespace(
+            get_derivative=lambda r, c: derivs[(r, c)],
+            index_mapping=SimpleNamespace(row_to_eq=rows, col_to_var=cols),
+        )
+
+    rows = {0: ("e", ("t1",)), 1: ("e", ("t2",)), 2: ("e", ("t3",))}
+    cols = {0: ("h", ("t2",)), 1: ("h", ("t3",)), 2: ("h", ("t1",))}
+    # (0,0): eq t1 / var t2 -> eligible; (1,1): t2/t3 eligible; (2,1): t3/t3 not.
+    entries = [(0, 0), (1, 1), (2, 1)]
+
+    # Majority = structure B {(1,1), (2,1)}; its eligible entry is (1,1), chosen
+    # even though the minority entry (0,0) comes first.
+    derivs = {(0, 0): plain, (1, 1): other, (2, 1): other}
+    assert _eligible_binder_rep(jac(rows, cols, derivs), entries, 0) == (1, 1)
+
+    # Only the MINORITY holds an eligible entry: majority = structure B over the
+    # two ineligible entries (2,1) t3/t3 and (3,3) t1/t1 -> None, so the
+    # admission is withdrawn before consolidation.
+    rows[3], cols[3] = ("e", ("t1",)), ("h", ("t1",))
+    derivs = {(0, 0): plain, (2, 1): other, (3, 3): other}
+    assert _eligible_binder_rep(jac(rows, cols, derivs), [(0, 0), (2, 1), (3, 3)], 0) is None
+
+    # Positive control: one structure group -> its first eligible entry.
+    same = {(0, 0): plain, (1, 1): plain, (2, 1): plain}
+    assert _eligible_binder_rep(jac(rows, cols, same), entries, 0) == (0, 0)
+
+
 def test_the_swap_needs_the_eq_index_ABSENT_from_every_reference():
     """`ao(t).. sum((mt,v)$vs(t,v), ... zt(mt,v,b,t))` holds `t` in the reference,
     so `t` binds its own position and nothing may be swapped. A first revision

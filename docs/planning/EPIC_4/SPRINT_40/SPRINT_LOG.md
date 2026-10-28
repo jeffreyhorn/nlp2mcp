@@ -1080,6 +1080,16 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - **Regressions:** `NESTED_REDUCTION` (row + solve) and `TWO_EQ_AXES` (pre-#1782 path, with non-vacuity checks that the binder is found and that the new rule rejects it). Removing either fix fails exactly its own test.
 - **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,722 passed**, no `225*` dirs.
 
+### PR #1788 review round 12 (P4)
+
+- **The review raised one concern in its summary, with no comment thread:** the #1110 multi-pattern step switches the representative to a majority-structure entry. An eligible representative from the MINORITY would then be replaced by an ineligible one after a binder-only admission had consolidated the offsets, leaving neither rewrite active.
+- **Fixed defensively:** `_eligible_binder_rep` mirrors the #1110 grouping (largest derivative-structure group, ties in entry order) and returns an eligible entry of the majority. Three places use it:
+  - the pre-consolidation check, which withdraws the admission when the majority has none;
+  - the group's representative choice;
+  - the #1110 switch, which prefers an eligible majority entry.
+- ⚠ **No corpus model or fixture reaches it:** in every admitted shape so far, all of a pair's entries share one derivative structure, so the multi-pattern step never fires. It is pinned by a unit test on a stub Jacobian (eligible entry in the majority vs only in the minority, plus a single-group control). Ignoring the majority grouping fails it.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,723 passed**, no `225*` dirs.
+
 ### Found and routed (not fixed in place)
 
 - **#1787** (Day 8): a variable referenced twice, with the eq index at different positions, keeps one term (egypt `tranc(rp,rp)`, tfordy `stat_v`).

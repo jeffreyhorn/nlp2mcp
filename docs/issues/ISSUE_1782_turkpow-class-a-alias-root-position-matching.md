@@ -250,3 +250,7 @@ Detail and fixtures: `SPRINT_LOG.md` §Day 7, PR #1788 review round 2.
 - The scoped rename's alpha-rename always mints a new alias, never an existing one that an enclosing reduction may bind.
 - A second equation index over the binder's set (`e(t,m)` with `Alias(t,m,v)`) rejects the binder rewrite before consolidation.
 
+## PR #1788 review round 12
+
+- The binder rewrite's representative comes from the majority derivative-structure group (`_eligible_binder_rep`), the group the #1110 multi-pattern step switches to. Without one, a binder-only admission is withdrawn before consolidation.
+
