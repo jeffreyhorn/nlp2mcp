@@ -1,6 +1,6 @@
 # ISSUE #1782 — turkpow Class A: an equation index matched to an aliased variable position by alias root
 
-**GitHub:** [#1782](https://github.com/jeffreyhorn/nlp2mcp/issues/1782) · **Status:** 🟡 **IN PROGRESS** — Sprint 40 P4 (Day 6)
+**GitHub:** [#1782](https://github.com/jeffreyhorn/nlp2mcp/issues/1782) · **Status:** 🟡 **IN PROGRESS** — Sprint 40 P4 (Days 6–7; egypt continues on Day 8 as #1787)
 **Layer:** **KKT / stationarity** — the eq-index → variable-position matchers `_compute_index_offset_key` and `_match_subset_domain` (`src/kkt/stationarity.py`)
 
 
@@ -122,4 +122,135 @@ The binding requires the index at the same single position in every reference. A
 On `Alias(i,j,k)`, `z(i,j,k)`, `e(i,j).. z('a',i,j)` the binding `{0: 1, 1: 2}` is correct, and the dimension-mismatch branch already places the multiplier on the variable's coordinates (`nu_e(j,k)`). `_match_subset_domain` turned the same binding into the rename `{i: j, j: k}`, and `_rewrite_subset_to_superset` applied it a second time, giving `nu_e(k,k)`: a lost coordinate, and an MCP that did not solve (NLP 156).
 
 **Fixed:** in `_match_subset_domain` the binding only SUPPRESSES a rename. It is accepted only when the bound position carries the mult index's own name; it never creates a rename. Every other case keeps `main`'s same-position / any-position matching. The offset-key pass is unchanged. The new emit is `nu_e(j,k)$(sameas(i,'a'))` and solves to 156. The #1782 fixture and the round 1–2 regressions are unchanged. spatequ's round-1 re-spelling (`nu_DX(rr,c)`) came from a binding-created rename, so it is undone: that golden is byte-identical to `main` again.
+
+
+## Phase 0: Acceptance Gate (Sprint 40 Day 7, P4): turkpow `stat_ht`, the Pattern C binder
+
+### Layer
+
+**KKT / stationarity**: the Pattern C swap in `_add_indexed_jacobian_terms`. That is the gate `_find_pattern_c_alias_sum` and its consumer `_apply_pattern_c_swap_to_term`.
+- **Measured on Day 7:** `pr(t).. sum(mt, … sum(v$vs(t,v), ht(mt,v)))` is a Pattern C shape. The gate fires (binder `v`, eq index `t`) and consolidates the offsets to zero. The matchers Day 6 fixed are NOT the layer here: an "absent from every reference" pass in `_compute_index_offset_key` left the row byte-identical.
+- **The swap failed twice:**
+  - **It is written for launch's naming.** `iweight(s)`, `sum(ss$ge(ss,s), …)`: the eq index name `s` is also the variable's position name. It exchanges binder ↔ EQ index. For `ht(m,v)` the binder IS the position name `v`, so the representative's labels and the binder both map to `v`, and the eq coordinate is lost before the swap runs: `vs(v,v) * lam_pr(v)`.
+  - **It fires only on an all-zero offset key.** The dimension-mismatch key `(999, 0)` never reaches it, so `zh(m,b,t)` / `db(b,t).. sum(bp$bs(bp,b), zh(mh,bp,t))` keeps #1307's `sum(bp, bs(bp,b) * lam_db(b,t))`, a multiplier not indexed by the summed index.
+
+### Nearest Existing Mechanism
+
+**Nearest:** the launch swap itself (Sprint 26 Day 1 Phase A, restricted by #1398 to self-aliases). It is correct whenever the variable is declared over the eq index's name, and launch must stay byte-identical.
+
+**Why it does not apply:** its swap pair is (binder, eq index). The invariant it relies on is (binder, **the variable position the binder occupies**), and the two coincide only under launch's naming.
+
+**Also considered and rejected:** building the term from the source body, as B-1 does (`_build_plain_alias_consolidated_term`). B-1 is 1-D only. Generalising it means re-deriving the coefficient, guards and conditions outside the standard path, which is a much wider change.
+
+### Positive Control
+
+**The launch shape is unchanged:** `h(t)` (variable declared over the eq index's name), `pr(t).. sum(v$vs(t,v), h(v))` emits `sum(v, ((-1) * 1$(vs(v,t))) * lam_pr(v))` before and after. launch's golden must not drift.
+
+### Hand-Derived KKT Shape
+
+- `pr(t).. sum(m, a(m)·sum(v$vs(t,v), h(m,v))) ≥ …`: `∂ pr(t') / ∂ h(m,v) = a(m)·[vs(t',v)]` for EVERY `t'`. The eq index occupies no variable position.
+- **Stationarity:** `… − sum(t', a(m)·vs(t',v)·lam_pr(t'))`. The eq index is summed, under a name the row's domain does not use.
+- **shale's `cpu(m,t).. … =l= sum(tf$ts(t,tf), h(m,tf))`** with `t(tf)`: `… − sum(t'$t(t'), ts(t',tf)·lam_cpu(m,t'))`, which is Task 10 §2's hand-derived restored coupling.
+
+### Expected Emit Pattern
+
+- The swap pairs the binder with the variable position it occupies (the same single position in every reference, `_binder_var_position`), and only when the eq index is absent from every reference to the variable. A binder named like a variable position is first renamed to an alias of the same set that neither the variable nor the multiplier uses.
+- **turkpow `stat_ht`:** `sum(t__kkt1, … vs(t__kkt1,v) … lam_pr(t__kkt1))$(t(t__kkt1))`. **P2: `vs(v,v)` gone.**
+- **turkpow `stat_zh`:** `sum(bp, bs(b,bp) * lam_db(bp,t))`.
+- **shale:** admitted through the gate as a subset ↔ parent pair (`t(tf)` with binder `tf`), only where the binder-position swap applies, never through the legacy offset-0 swap that #1398 restricted. **P2: `ts(tf,tf)` gone** (golden + presolve).
+- **egypt (`tranc(rp,rp)`) is NOT this shape:** its two references hold the eq index at different positions (`trans(cf,rp,r) − trans(cf,r,rp)`), so the binder has no single position. It needs per-reference grouping and is carried to Day 8.
+
+### Verification Methodology
+
+1. **Fail-before / pass-after** on fixtures for each shape, each with its GAMS solve against the NLP optimum: binder named like the position (7.68), turkpow `ht` (0.0944), `zh` (112.264; `main` 558), shale `cpu` (9.9375; `main` 11.545).
+2. The launch-shape positive control, byte-identical.
+3. `make check-index-repeats`, ratchet **9 → ≤ 6** with `--update-baseline` in the same commit.
+4. The full leak gate, with every drifted golden re-solved by `--resolve-changed`; then `make test`.
+
+### PROCEED/REPLAN Signal
+
+- **PROCEED** if 1–4 hold and the resolver holds every bucket.
+- **REPLAN** on any backward move, or if launch drifts.
+- **egypt / shale stay MS 5:** expected (Task 10, necessary not sufficient). shale's candidate underlying defect is routed as **#1786** (a subset-defined equation sums over its bound subset index: `stat_z`).
+
+## Day 7 results: PROCEED on turkpow and shale, tfordy landed by owner decision
+
+- **The fix has four parts, each necessary by mutation** (detail in `SPRINT_LOG.md` §Day 7):
+  1. The swap pairs the binder with the variable position it occupies, and only when the eq index is absent from every reference. A binder named like a variable position is first renamed to an unused alias.
+  2. That alias gets a self-mapping in the element map.
+  3. The gate admits subset ↔ parent pairs and a multi-index sum's related binder, on these terms only (`binder_swap_only`).
+  4. The #1162 offset substitution is skipped where the swap applies.
+- ⚠ **Two parts were invisible to set-valued fixtures.** turkpow's `vs` and shale's `ts` are PARAMETERS, and a `ParamRef`'s indices go through the declared-domain mapping and the offset substitution, which a `SetMembershipTest`'s do not.
+- **Corpus:**
+  - turkpow, shale and dinam hold their buckets; P2 is **9 → 6**.
+  - **tfordy BACKWARD** (presolve match → `model_infeasible`). Its changed row is correct, but its emit was already Case B underneath (#1787). The owner decided to land it, recorded and routed.
+- **Day 6's bounded item (turkpow's `stat_ht` `vs(v,v)`) is closed.**
+- **Still open under P4:** egypt (#1787, Day 8).
+
+## PR #1788 review round 1
+
+- **The exchange is right only in launch's form**, where the multiplier spells the eq coordinate as the variable's position. When the eq coordinate already has its own index (dinam's `mb(i,t)` against `em(te)`), the binder is substituted by the position and its outer sum dropped (`_apply_binder_position_swap`). The exchange had corrupted the bound `zmi(t,te)`.
+- **The renamed binder also avoids every index the derivative uses** (`_index_names_in`), so it cannot capture a coefficient's own `sum(w, …)`.
+
+## PR #1788 review round 2: no exchange at all
+
+The binder ↔ position exchange (rounds 0–1) is unsound in launch's own form. Once re-symbolised, the eq coordinate and the variable's own coordinate are both spelled as the position name, so the exchange moved row-bound coefficients (`a(v)`) and nonlinear factors (`2*h(v)`) with the multiplier. `main`'s launch swap has the same defect for non-unit coefficients.
+
+**Replaced** by a rewrite before re-symbolisation:
+- a representative whose eq label is not among the variable's labels;
+- the binder becomes the position name, and the eq label a placeholder eq coordinate (the binder's own name when free, else an unused alias, reserving the condition's names too);
+- the equation condition follows that placeholder;
+- `_finish_binder_position_rewrite` points only the multiplier's eq index at it, dropping a `sameas` pin the dimension-mismatch path had added.
+
+Detail and fixtures: `SPRINT_LOG.md` §Day 7, PR #1788 review round 2.
+
+## PR #1788 review round 3
+
+- The representative keeps the default selector's checks for distinct variable and equation labels; without them `h(m,v)` collapsed to `h(v,v)`.
+- The binder's name becomes the eq coordinate only when its set contains the eq index's (`_set_contains`). A subset binder would drop the multipliers outside the subset. ⚠ *Narrowed to the SAME set in round 4.*
+
+## PR #1788 review round 4
+
+- **The eq coordinate reuses the binder's name only when the binder ranges over exactly the eq index's set.** A parent-set binder (dinam's `tep` over `te` for `t(te)`) changed the equation condition's `card(t)` / `ord(t)`.
+- **Renames leave `card(...)` operands alone** (`_rename_iterators_keeping_card`).
+
+## PR #1788 review round 5
+
+- A binder-only pattern with no usable representative (labels shared across the variable's sets) is withdrawn BEFORE consolidation and keeps the pre-#1782 path. The shared-label ambiguity itself is on #1778.
+- The shared `_get_or_create_fresh_alias` never mints a name that is already a model identifier.
+
+## PR #1788 review round 6
+
+- A binder-only admission is also withdrawn before consolidation when the eq index occurs in ANY reference to the variable in the equation (a direct reference beside the sum). The rewrite would reject it later, after the offsets were consolidated.
+
+## PR #1788 review round 7
+
+- Every sum carrying the variable's coordinate is rebound in its own scope (`_position_binders`). With `sum(v$…, h(v)) + sum(w$…, h(w))`, rebinding only `v` had left `w` free and overcounted. Shapes outside that contract get no rewrite.
+
+## PR #1788 review round 8
+
+- The binder rebinding respects Sum/Prod scopes (`_rename_free_indices`): a coefficient's own `sum(w, a(w))` is not rewritten by the `{v, w} → v` map.
+
+## PR #1788 review round 9
+
+- A nested binder that is a rename destination is alpha-renamed first (no capture).
+- `card()` operands in the derivative count the binder's SET.
+- Binders at the pattern's position must range over one set; otherwise the pre-#1782 path is kept.
+- In the finishing step, a multiplier index spelled as ANY row coordinate is not a summed index.
+- The permuted-positions fixture with out-of-order binders also needs #1776 (AD positional binder pairing).
+
+## PR #1788 review round 10
+
+- `_collect_free_indices` never treats a `card(...)` operand as a free index, and binds an indexed `smax`/`smin`'s own index.
+- `_rename_free_indices` scopes and alpha-renames indexed `smax`/`smin` (`_reduction_call_parts`).
+- The re-symbolisation self-maps cover every row coordinate and every symbolic name in the rewritten derivative.
+
+## PR #1788 review round 11
+
+- The scoped rename's alpha-rename always mints a new alias, never an existing one that an enclosing reduction may bind.
+- A second equation index over the binder's set (`e(t,m)` with `Alias(t,m,v)`) rejects the binder rewrite before consolidation.
+
+## PR #1788 review round 12
+
+- The binder rewrite's representative comes from the majority derivative-structure group (`_eligible_binder_rep`), the group the #1110 multi-pattern step switches to. Without one, a binder-only admission is withdrawn before consolidation.
 

@@ -14,14 +14,5 @@
   "nonsharp_mcp": [
     "inter(col,col,stm)",
     "inter(col__kkt1,col__kkt1,stm)"
-  ],
-  "shale_mcp": [
-    "ts(tf,tf)"
-  ],
-  "shale_mcp_presolve": [
-    "ts(tf,tf)"
-  ],
-  "turkpow_mcp": [
-    "vs(v,v)"
   ]
 }

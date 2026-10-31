@@ -129,9 +129,12 @@ jobs:
       - name: Set up Python 3.12
         if: steps.check-label.outputs.skip != 'true'
         uses: actions/setup-python@v5
+        # No `cache: "pip"`: this job never pip-installs (its scripts use only
+        # the standard library and repo modules), so `~/.cache/pip` is never created. With a cache
+        # miss (the ubuntu-latest roll to 26.04 changed the cache key), the
+        # post-job save step fails the job on the missing directory.
         with:
           python-version: "3.12"
-          cache: "pip"
 
       - name: Install GAMS (demo edition)
         if: steps.check-label.outputs.skip != 'true'

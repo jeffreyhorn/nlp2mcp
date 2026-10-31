@@ -236,7 +236,7 @@ Alias(t, t__);
 
 $onMultiR
 * Stationarity equations
-stat_h(m,t).. sum(tp, ((-1) * (sgm * nu(m) * 1$(avl(t,tp)))) * nu_ainvc(t)) + sum(tp, ((-1) * 1$(avl(tp,t))) * lam_cap(m,tp)) - piL_h(m,t) =E= 0;
+stat_h(m,t).. sum(tp, ((-1) * (sgm * nu(m) * 1$(avl(tp,t)))) * nu_ainvc(tp)) + sum(tp, ((-1) * 1$(avl(tp,t))) * lam_cap(m,tp)) - piL_h(m,t) =E= 0;
 stat_phik(t).. ((-1) * (delt(t) * (-1))) + nu_ainvc(t) =E= 0;
 stat_phil(t).. ((-1) * (delt(t) * (-1))) + nu_acutc(t)$(t(t)) =E= 0;
 stat_phip(t).. ((-1) * (delt(t) * (-1))) + nu_aplnt(t) =E= 0;

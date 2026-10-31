@@ -120,3 +120,52 @@ defobj.. obj =e= sum((v,t), sqr(z(v,t)));
 - One reference binds the equation index (`z(…,t)`); another is a FIXED cell independent of it (`z('t1','t1')`, `z('t2','t4')`). Every equation row contributes to the fixed cell, so its stationarity term must be `sum(t', coef·nu_e(t'))`.
 - The stationarity generalization has no way to express that. The union binding's success on shape A was the offset grouping happening to line up; on shape B the fixed cell took the bound reference's coefficient.
 - **#1783 keeps the strict rule:** it never infers a binding from a reference that does not involve the index, and it matches `main`. The general fix belongs here, with the same absent-index logic turkpow's `stat_ht` needs (Sprint 40 Day 7).
+
+## Another reproducer: labels shared across INDEPENDENT sets (Sprint 40 Day 7, PR #1788 review round 5)
+
+```gams
+Set i / a, b /, k / a /;
+Alias (i,v);
+Parameter c(i) / a 1, b 2 /;
+Positive Variable x(k,v);
+Variable obj;
+Equation e(i), defobj;
+e(i).. sum((k,v)$(ord(i) > 0), x(k,v)) =g= ord(i);
+defobj.. obj =e= sum((k,v), c(v)*sqr(x(k,v)));
+Model mm / all /;
+solve mm using nlp minimizing obj;
+```
+
+On `main` (and on PR #1788, which deliberately falls back to `main`'s path here):
+
+```
+stat_x(k,v).. 2 * c(k) * x(k,k) + ((-1) * 1$(ord(v) > 0)) * lam_e(v) + (((((-1) * 1$(ord(v) > 0)) * lam_e(v+1))…$(ord(k) = 1))$(sameas(v, 'a')) + … =E= 0;
+```
+
+The MCP does not solve; the NLP gives 2.6667.
+
+- **The cause:** the label `a` belongs to both `k` and `i`/`v`, so concrete → symbolic mapping cannot tell them apart. The gradient gives `c(k)` / `x(k,k)`, and the Jacobian gives phantom `lam_e(v±1)$(ord(k) = 1)` offsets.
+- **Why PR #1788 does not apply its binder rewrite:** it renames the representative's eq label everywhere, which is sound only when that label is not also a variable label, and here no entry qualifies. So it withdraws the admission before consolidation.
+- Same concrete → symbolic family as this issue and #1785.
+
+## More mixed direct + summed references (Sprint 40 Day 7, PR #1788 review round 6)
+
+The equation index appears directly AND inside a sum over a related set, so the summed contribution's cross-equation terms are wrong on `main`, and on PR #1788, which keeps `main`'s path for these on purpose:
+
+```gams
+* (a) subset t(tf), NLP 3.8221, MCP 85.953
+Set tf / 1*5 /, t(tf) / 2*5 /;  Alias (tf,tfp);
+Set ts(tf,tfp);  ts(tf,tfp)$(ord(tfp) < ord(tf)) = yes;
+Variable x(tf), obj;  Equation e(tf), defobj;
+e(t).. x(t) =e= 0.5*sum(tf$ts(t,tf), x(tf)) + 1;
+defobj.. obj =e= sum(tf, ord(tf)*sqr(x(tf)));
+```
+
+`main` emits `stat_x(tf).. 2*ord(tf)*x(tf) + ((-1)*(0.5*1$(ts(tf,tf))))*nu_e(tf)$(t(tf)) + nu_e(tf)$(t(tf))`. Only the diagonal survives, and `ts(tf,tf)` is always 0.
+
+```gams
+* (b) a later binder, NLP 12.8859, MCP 28.0
+e(t).. h('m1',t) + 0.5*sum((m,tf)$ts(t,tf), h(m,tf)) =g= ord(t);    * h(m,tf), m / m1*m2 /
+```
+
+`main` emits phantom `lam_e(tf+k)$(ord(m) = k)` offsets, and the #1110 multi-pattern correction is skipped (a UserWarning).

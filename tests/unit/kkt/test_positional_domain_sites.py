@@ -12,14 +12,15 @@ silently absorbed the `NOT REACHABLE` site.)
 ⚠⚠ **WHAT THIS MODULE ACTUALLY ASSERTS — two different strengths, and the
 difference matters** (PR #1743 review).
 
-* **BEHAVIOURAL (5)** — the collapse or the remedy is executed and its result
-  asserted: all four `_substitute_indices` shapes, and
-  `_sigma_sp_domain_collision`'s ordering conjunct.
-* **STRUCTURAL ONLY (11)** — the site's anchor text is asserted to exist inside
+* **BEHAVIOURAL (8)** — the collapse or the remedy is executed and its result
+  asserted: all four `_substitute_indices` shapes,
+  `_sigma_sp_domain_collision`'s ordering conjunct, and (Sprint 40 P8)
+  `_match_subset_domain`'s and both `_compute_index_offset_key` passes'
+  consume-once guards.
+* **STRUCTURAL ONLY (8)** — the site's anchor text is asserted to exist inside
   its owning function, nothing is executed: `_handle_aggregation`'s
   `expanded_indices.index(...)`, `_try_dotted_key_lookup`,
-  `_apply_alias_offset_to_deriv`, `_match_subset_domain`, both
-  `_compute_index_offset_key` passes, `_remap_condition_to_domain`, `_diff_sum`'s
+  `_apply_alias_offset_to_deriv`, `_remap_condition_to_domain`, `_diff_sum`'s
   two sites, `_handle_assign`, and `_handle_aggregation`'s `seen_domain` path.
   **A guard at these sites could keep its anchor text while its state update or
   early return is broken, and this module would not notice.**
@@ -44,6 +45,9 @@ DISABLED produced **byte-identical results in every case**. A behavioural pin
 built on any of them would have asserted nothing while looking rigorous, which
 is the precise failure this PR hit three times already. Narrowing the claim is
 the honest outcome; a discriminating input for those two sites is open work.
+**Closed by Sprint 40 P8:** Prep Task 10 found ≥ 3-D aliased / subset inputs
+that do discriminate (`CORRECTNESS_PRETRACES.md` §5), and the three guards are
+now behavioural pins, each failing with its guard neutralised.
 
 ⚠ **THE SURVEY CITES SITES BY LINE NUMBER AND THOSE NUMBERS ROT.** Measured at
 Day 12: all six `stationarity.py` citations had drifted **+318 to +346**, and
@@ -60,7 +64,9 @@ earlier revision said *"these tests assert those remedies fire"*, which the
 strength table above already contradicted two paragraphs earlier). Only
 `_sigma_sp_domain_collision` is pinned **behaviourally**; the other **eight**
 guarded rows are **structural only** (9 `ALREADY GUARDED` − 1 behavioural = 8;
-an earlier revision said seven — PR #1743 review). The instruction not to re-guard them
+an earlier revision said seven — PR #1743 review). *(Sprint 40 P8: now 4
+behavioural, adding `_match_subset_domain` and both `_compute_index_offset_key`
+passes, so 5 guarded rows remain structural only.)* The instruction not to re-guard them
 stands on the survey's measurement, not on coverage in this file.
 """
 
@@ -153,9 +159,10 @@ CATALOGUED_SITES: tuple[tuple[str, str, str, str], ...] = (
     ),
     # ------------------------------------------------------- ALREADY GUARDED
     # ⚠ DO NOT add guards for these — the survey measured the remedies as
-    # already complete. ⚠ Most rows below are STRUCTURAL-ONLY pins (anchor text,
-    # nothing executed); only `_sigma_sp_domain_collision` is asserted
-    # behaviourally. See the strength table in the module docstring.
+    # already complete. ⚠ Five rows below are STRUCTURAL-ONLY pins (anchor text,
+    # nothing executed); `_sigma_sp_domain_collision`, `_match_subset_domain` and
+    # both `_compute_index_offset_key` passes are asserted behaviourally (the
+    # last three since Sprint 40 P8). See `BEHAVIOURALLY_PINNED`.
     (
         "src/kkt/stationarity.py",
         "_match_subset_domain",
@@ -378,6 +385,25 @@ BEHAVIOURALLY_PINNED: frozenset[tuple[str, str, str]] = frozenset(
             "_sigma_sp_domain_collision",
             "any(vi < later for vi in canon_hits)",
         ),
+        # Sprint 40 P8 (Day 7): promoted from structural, on Prep Task 10's
+        # discriminating 3-D inputs (`CORRECTNESS_PRETRACES.md` §5). Pinned by
+        # the `..._consume_once_guard(s)_are_BEHAVIOURAL` tests at the end of
+        # this module, each with a guard-neutralised positive control.
+        (
+            "src/kkt/stationarity.py",
+            "_match_subset_domain",
+            "if k in used_var_positions:",
+        ),
+        (
+            "src/kkt/stationarity.py",
+            "_compute_index_offset_key",
+            "if vi not in used_var and eq_canons[ei] == var_canons[vi]:",
+        ),
+        (
+            "src/kkt/stationarity.py",
+            "_compute_index_offset_key",
+            "if vi not in used_var and eq_roots[ei] == var_roots[vi]:",
+        ),
     }
 )
 
@@ -462,8 +488,8 @@ def test_every_site_has_exactly_one_strength_class():
 
     assert len(behavioural) + len(structural) == len(CATALOGUED_SITES), "partition must cover all"
     assert not (set(behavioural) & set(structural)), "partition must be disjoint"
-    assert len(behavioural) == 5, [s[1] for s in behavioural]
-    assert len(structural) == 11, [s[1] for s in structural]
+    assert len(behavioural) == 8, [s[1] for s in behavioural]
+    assert len(structural) == 8, [s[1] for s in structural]
 
     # ⚠ Every `BEHAVIOURALLY_PINNED` entry must actually appear in the catalog,
     # or a typo there would silently shrink the behavioural set to nothing.
@@ -476,13 +502,13 @@ def test_every_site_has_exactly_one_strength_class():
         "_substitute_indices",
         "_substitute_indices._sub_idx",
         "_sigma_sp_domain_collision",
+        "_match_subset_domain",
+        "_compute_index_offset_key",
     }
     assert {s[1] for s in structural} == {
         "_handle_aggregation",
         "_try_dotted_key_lookup",
         "_apply_alias_offset_to_deriv",
-        "_match_subset_domain",
-        "_compute_index_offset_key",
         "_remap_condition_to_domain",
         "_diff_sum_impl",
         "_handle_assign",
@@ -794,3 +820,166 @@ def test_sigma_sp_collision_requires_TWO_canonical_hits():
 
     # No hit at all → declines.
     assert _sigma_sp_domain_collision(("q",), ("s", "i", "sp"), canon) is None
+
+
+# --------------------------------------------------------------------------
+# Sprint 40 P8 (Day 7): the consume-once guards, promoted to BEHAVIOURAL pins
+# --------------------------------------------------------------------------
+#
+# Sprint 39's nine 2-D probe shapes left both functions byte-identical with the
+# guards disabled, so their rows were structural only. Prep Task 10
+# (`CORRECTNESS_PRETRACES.md` §5) found discriminating 3-D aliased / subset
+# inputs. Each pin below asserts the guard-ON result AND, as its positive
+# control, that rebuilding the function from its own source with ONLY that
+# guard neutralised changes the result: the assertion fails without the guard.
+#
+# ⚠ PROOF SCOPE for `_compute_index_offset_key`: the pins are function-level
+# (``ref_binding=None``). At emit level Sprint 40 Day 6's pass 0 (#1782, the
+# REFERENCE binding) now binds an index before either pass runs whenever every
+# reference holds it at one position, so §5's `oik3` emit no longer changes with
+# either guard off. The passes, and their guards, are reached for indices with
+# no reference binding. (`oik3`'s own emit is also defective on every version:
+# a phantom `$(ord(k) = 1)` guard; routed, not asserted here.)
+
+
+def _neutralised(fn, guard: str, replacement: str):
+    """``fn`` rebuilt from its own source with ``guard`` replaced, exactly once."""
+    import inspect
+    import textwrap
+
+    import src.kkt.stationarity as st
+
+    source = textwrap.dedent(inspect.getsource(fn))
+    assert source.count(guard) == 1, f"the guard must occur exactly once: {guard!r}"
+    namespace = dict(vars(st))
+    exec(compile(source.replace(guard, replacement), st.__file__, "exec"), namespace)
+    return namespace[fn.__name__]
+
+
+def _aliased_3d_ir():
+    from src.ir.model_ir import ModelIR
+    from src.ir.symbols import AliasDef, SetDef
+
+    model_ir = ModelIR()
+    model_ir.sets["i"] = SetDef(name="i", members=["a", "b", "c"])
+    model_ir.sets["k"] = SetDef(name="k", members=["k1", "k2"])
+    model_ir.aliases["ip"] = AliasDef(name="ip", target="i")
+    model_ir.aliases["ipp"] = AliasDef(name="ipp", target="i")
+    model_ir.sets["ii"] = SetDef(name="ii", members=["a", "b"], domain=("i",))
+    model_ir.sets["jj"] = SetDef(name="jj", members=["b", "c"], domain=("i",))
+    return model_ir
+
+
+_MSD_GUARD = "if k in used_var_positions:"
+_CANON_GUARD = "if vi not in used_var and eq_canons[ei] == var_canons[vi]:"
+_ROOT_GUARD = "if vi not in used_var and eq_roots[ei] == var_roots[vi]:"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "mult_domain, var_domain, guarded, unguarded",
+    [
+        # own position fails -> scan: `jj` must skip the consumed position 0
+        (("ii", "jj"), ("i", "k", "ip"), {"ii": "i", "jj": "ip"}, {"ii": "i", "jj": "i"}),
+        # alias-only: `ipp` keeps its own position 2 (no rename)
+        (("ip", "ipp"), ("i", "k", "ipp"), {"ip": "i"}, {"ip": "i", "ipp": "i"}),
+    ],
+)
+def test_match_subset_domain_consume_once_guard_is_BEHAVIOURAL(
+    mult_domain, var_domain, guarded, unguarded
+):
+    from src.kkt.stationarity import _match_subset_domain
+
+    model_ir = _aliased_3d_ir()
+    assert _match_subset_domain(mult_domain, var_domain, model_ir) == guarded
+    # Positive control: without the guard two mult indices claim position 0.
+    off = _neutralised(_match_subset_domain, _MSD_GUARD, "if False:")
+    assert off(mult_domain, var_domain, model_ir) == unguarded
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "eq_domain, guard, guard_off, guarded, unguarded",
+    [
+        # aliased eq (i,ip) vs var (i,k,ip): the CANONICAL pass's guard
+        (
+            ("i", "ip"),
+            _CANON_GUARD,
+            "if eq_canons[ei] == var_canons[vi]:",
+            (1, 999, 1),
+            (2, 999, 999),
+        ),
+        # subset eq (ii,jj) vs var (i,k,ip): the ROOT pass's guard
+        (
+            ("ii", "jj"),
+            _ROOT_GUARD,
+            "if eq_roots[ei] == var_roots[vi]:",
+            (1, 999, 1),
+            (2, 999, 999),
+        ),
+    ],
+)
+def test_compute_index_offset_key_consume_once_guards_are_BEHAVIOURAL(
+    eq_domain, guard, guard_off, guarded, unguarded
+):
+    """Eq instance ('b','c') against var instance ('a','k1','b'). With its guard,
+    the second eq index takes var position 2 (offset ord(c)-ord(b) = 1); without
+    it, both claim position 0 and the second overwrites the first."""
+    from src.kkt.stationarity import _compute_index_offset_key
+
+    model_ir = _aliased_3d_ir()
+    args = (("b", "c"), ("a", "k1", "b"), eq_domain, ("i", "k", "ip"), model_ir)
+    assert _compute_index_offset_key(*args) == guarded
+    off = _neutralised(_compute_index_offset_key, guard, guard_off)
+    assert off(*args) == unguarded
+    # Each guard is pinned by ITS OWN input: neutralising the OTHER pass's guard
+    # leaves this result unchanged, so the two rows cannot stand in for each other.
+    other, other_off = (
+        (_ROOT_GUARD, "if eq_roots[ei] == var_roots[vi]:")
+        if guard == _CANON_GUARD
+        else (_CANON_GUARD, "if eq_canons[ei] == var_canons[vi]:")
+    )
+    assert _neutralised(_compute_index_offset_key, other, other_off)(*args) == guarded
+
+
+_MSD3 = """
+Set i / a, b, c /, k / k1, k2 /;
+Alias (i,ip);
+Set ii(i) / a, b /, jj(i) / b, c /;
+Variable x(i,k,ip), obj;
+Equation c(ii,jj), defobj;
+c(ii,jj).. sum(k, x(ii,k,jj)) =l= 1;
+defobj.. obj =e= sum((i,k,ip), sqr(x(i,k,ip) - 1));
+Model m / all /; solve m using nlp minimizing obj;
+"""
+
+
+@pytest.mark.unit
+def test_match_subset_domain_guard_reaches_the_EMIT(monkeypatch):
+    """§5's `msd3` at emit level. Guarded: `lam_c(i,ip)` (the MCP solves to the
+    NLP optimum, 2.0). Without the guard: `lam_c(i,i)`, the Class-A collapse."""
+    import src.kkt.stationarity as st
+    from src.ad.constraint_jacobian import compute_constraint_jacobian
+    from src.ad.gradient import compute_objective_gradient
+    from src.config import Config
+    from src.emit.expr_to_gams import expr_to_gams
+    from src.ir.normalize import normalize_model
+    from src.ir.parser import parse_model_text
+    from src.kkt.assemble import assemble_kkt_system
+
+    def stat_x() -> str:
+        model = parse_model_text(_MSD3)
+        eqs, _ = normalize_model(model)
+        config = Config()
+        gradient = compute_objective_gradient(model, config)
+        j_eq, j_ineq = compute_constraint_jacobian(model, eqs, config)
+        kkt = assemble_kkt_system(model, gradient, j_eq, j_ineq, config)
+        return expr_to_gams(st.build_stationarity_equations(kkt, config)["stat_x"].lhs_rhs[0])
+
+    guarded = stat_x()
+    assert "lam_c(i,ip)" in guarded and "lam_c(i,i)" not in guarded, guarded
+    monkeypatch.setattr(
+        st, "_match_subset_domain", _neutralised(st._match_subset_domain, _MSD_GUARD, "if False:")
+    )
+    unguarded = stat_x()
+    assert "lam_c(i,i)" in unguarded, unguarded

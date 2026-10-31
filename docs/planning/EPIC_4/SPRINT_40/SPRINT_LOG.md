@@ -905,3 +905,205 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - `make check-index-repeats`: P1 0 / 3,370; **P2 9 = baseline** (from 11).
 - The leak gate is complete; every drifted golden was re-solved (GO).
 - `check_phase0_doc.py` PASS.
+
+## Day 7 — 2026-10-26 · P4: land turkpow, start egypt and shale · 5 h · + P8: the structural pins become behavioural · 5 h
+
+**Branch:** `planning/sprint40-day7-classa` · **Base:** `500ffa1f` (PR #1783).
+
+### P4: turkpow's `stat_ht` and shale: the Pattern C binder (#1782)
+
+- **Phase-0 gate first:** `c33757ef`. It is a second gate section in `ISSUE_1782`, and `check_phase0_doc.py` passes.
+- **The layer, measured.** `pr(t).. sum(mt, … sum(v$vs(t,v), ht(mt,v)))` is a **Pattern C** shape, and the gate fires (binder `v`, eq index `t`).
+  - Day 6's carry-over guess, a "position whose value IS the eq index" discriminator in the matchers, is not the layer. An "absent from every reference" pass in `_compute_index_offset_key` left the row byte-identical, and was dropped.
+  - The swap (`_apply_pattern_c_swap_to_term`) exchanged the binder with the **eq index**. That pair is right only under launch's naming, where the variable is declared over the eq index's name.
+  - It fired only on an all-zero offset key, so a dimension-mismatch key `(999, 0)` never reached it.
+- **The fix (`src/kkt/stationarity.py`; ⚠ parts 1–2 and the exchange itself are REPLACED in PR #1788 review round 2, see there):** the swap pairs the binder with **the variable position it occupies**, `_binder_var_position` (the same single position in every reference). It applies only when the eq index is absent from every reference to the variable (`_index_absent_from_var_refs`). Four parts, each necessary (measured by mutation):
+  1. **A binder named like a variable position is renamed first,** to an alias of the same set that neither the variable nor the multiplier uses (an existing alias, else a fresh `__kkt` one). The eq index itself is not safe: the equal-arity path's eq→var rename would catch it.
+  2. **A self-mapping for the renamed binder in the element map,** keeping the map's type. A `ParamRef` index absent from the map is sent to the declared domain's name, so turkpow's PARAMETER `vs(t,v)` turned `t__kkt1` back into `v`: `vs("t__kkt1","t__kkt1")`, quoted.
+  3. **The gate admits a subset ↔ parent pair** (shale's `t(tf)` with binder `tf`) **and the related binder of a multi-index sum** (shale's `acap`: `sum((m,tf)$ts(t,tf), …)`, where the first binder `m` is unrelated). Both only on the binder-position terms, never through the legacy offset-0 swap that #1398 restricted (`binder_swap_only`).
+  4. **The #1162 offset substitution is skipped where the swap applies.** The gate requires a body with no IndexOffset on the variable's sets, so the eq label's distance from the representative is the sum's iteration. Without the skip, shale's PARAMETER `ts(t,tf)` became `ts(tf+1,tf)`.
+- ⚠ **Set-valued fixtures hid two of the four.** `vs` and `ts` are PARAMETERS in turkpow and shale. A `SetMembershipTest`'s symbols are rewritten by neither the declared-domain mapping nor the offset substitution, so my first fixtures passed while the corpus emit was wrong. Every fixture whose guard is a parameter in the source now uses a parameter.
+- **Fixtures, each solved against its NLP optimum:**
+
+  | shape | before | after | NLP |
+  |---|---|---|---|
+  | binder named like the variable's position, equal arity | no solve (`vs(t,t)`, `t` uncontrolled) | 7.680 | 7.68 |
+  | turkpow `ht` (dim mismatch, subset `t(te)`, dynamic `mt`, PARAMETER `vs`) | `vs(v,v)` (simpler variant: 2.0 vs 1.536) | 0.0944 | 0.0944 |
+  | turkpow `zh` (`sum(bp$bs(bp,b), zh(m,bp,t))`) | **558** (silent) | 112.264 | 112.264 |
+  | shale `cpu` (subset ↔ parent) | **11.545** (silent) | 9.9375 | 9.9375 |
+  | shale `acap` (related binder second) | **180** (silent) | 16.685 | 16.6848 |
+  | shale `acap`, PARAMETER `ts`, `t` missing the first element | 25.618 (with the offset substitution) | 11.254 | 11.2545 |
+  | **positive control:** launch shape (`h(t)`) | 7.680 | 7.680, byte-identical row | 7.68 |
+
+- **Mutation controls:** on `main`, every new P4 test fails except the two launch-shape controls. Each part removed alone fails its own tests:
+  - no binder rename: 4;
+  - no absence gate: Day 6's `#1782` fixture (2), the `ao`/`zt` shape where the eq index IS in the reference;
+  - no self-mapping: turkpow `ht`;
+  - no related-binder admission: shale `cpu` and `acap`.
+- **egypt is not this shape** (`tranc(rp,rp)`). Its two references hold the eq index at different positions (`trans(cf,rp,r) − trans(cf,r,rp)`), so the binder has no single position and the change leaves it byte-identical. It needs per-reference grouping (entries keyed by which variable position the eq label occupies, off-diagonal representatives). A 15-line fixture reproduces it. **Filed as #1787 with tfordy's `stat_v` (below) and carried to Day 8.**
+
+- **P2: 9 → 6** (the plan's ≤ 6), with `--update-baseline` in this commit. turkpow's `vs(v,v)` and shale's `ts(tf,tf)` (golden + presolve) are gone. The remaining 6 are dinam's `ts2(te,te)`, egypt ×2 (#1787, Day 8), gussrisk, and nonsharp ×2 (a refused MINLP; regeneration cannot move it).
+- **Corpus:** the leak gate is complete (200 in-scope, no timeouts). 6 goldens over 4 models drifted, and every one was re-solved by `--resolve-changed`:
+  - **turkpow** `path_syntax_error` = same. `stat_ht` is the hand-derived `sum(t__kkt1, … vs(t__kkt1,v) … lam_pr(t__kkt1))`, and the `lam_db` terms of `stat_zh` / `stat_zt` are `sum(bp, bs(b,bp) * lam_db(bp,t))`. `nu_ao(t)` (Day 6) is untouched.
+  - **shale** `model_infeasible` = same. The `cpu` coupling is restored to Task 10's hand-derived `sum(t$ts(t,tf), …)`. `acap`'s eight phantom `nu_acap(tf±k)$(ord(m) = k)` terms are one `sum(tfp, …)`. **Still MS 5, as Task 10 predicted** (necessary, not sufficient); the candidate underlying defect is routed as #1786.
+  - **dinam** `path_syntax_error` = same. `stat_em`'s `ts(t,tep)` / `zmi(t,te)` and `stat_v(jd,te)`'s `ts2(te,te) * lam_cap(jd,te)` are now `sum(tep, ts2(tep,te) * lam_cap(jd,tep))`, the same Pattern C correction.
+  - ⛔ **tfordy BACKWARD: `model_optimal_presolve` + match → `model_infeasible`. The resolver said NO-GO; the owner decided to land it, recorded and routed.**
+    - The changed row is the CORRECT one. `ainvc(t).. phik(t) =e= sgm*sum(tp$avl(t,tp), sum(m, nu(m)*h(m,tp)))` gives `sum(tp, avl(tp,t)*nu_ainvc(tp))`; the old row was #1307's `sum(tp, avl(t,tp))*nu_ainvc(t)`.
+    - **`main`'s tfordy emit is already Case B:** the KKT-residual harness gives `stat_w` rel 1.27 and `stat_v` rel 1.0 at the NLP point, identical on both versions. So the committed match rested on the presolve warm start, and the corrected row changes PATH's path.
+    - The defect underneath is egypt's two-reference shape (`pfs`'s `v(s,k,t,te)` and `v(s,k,tp,t)`), plus a collapsed `yv(t,t,…)`. Both are routed as **#1787**, the Day 8 target.
+    - tfordy is not in `floor_provenance.json`, so **the floor is unaffected. When a persisted run lands it, Match moves −1**; report it as exposed by a correct row, not as a regression of a sound match.
+- **Gate:** `make typecheck && make format && make lint && make test`: clean; **5,676 passed** at the first push and **5,680** after review round 1, 10 skipped, no `225*` dirs. `make check-index-repeats`: P1 0 / 3,370, P2 6 = baseline. `check_phase0_doc.py` PASS.
+
+### PR #1788 review round 1 (P4)
+
+- **The binder ↔ position exchange corrupted a bound coefficient.** dinam's `mb(i,t).. es(i)*sum(tep$ts(t,tep), zmi(t,tep)*em(tep))` against `em(te)` arrives with the eq coordinate already its own summed index (`lam_mb(i,t)`), not spelled as the variable's position. Exchanging `tep` ↔ `te` turned the bound `zmi(t,te)` into `zmi(t,tep)` and kept a spurious `sum(tep, …)`. My first push shipped that in dinam's golden (path_syntax_error either way, so the resolver could not see it). On a fixture it is a silent wrong answer: MCP 11.779 vs NLP 10.5238.
+  - **Fixed:** `_apply_binder_position_swap` reads how the multiplier spells the eq coordinate. Launch's form (the eq coordinate is spelled as the position) keeps the exchange. Otherwise the binder is substituted by the position and its outer sum dropped.
+  - dinam's `stat_em` is now the hand-derived `sum((i,t), es(i)*zmi(t,te)*ts(t,te)*lam_mb(i,t))`. The fixture solves to 10.524.
+- **The renamed binder could capture a coefficient's own sum binder.** With `Alias(t,v,w)` and `sum(w, a(w))` in the coefficient, the rename picked `w`, and the swap turned the inner `a(w)` into `a(v)` (MCP 1.600 vs NLP 1.2288).
+  - **Fixed:** the rename also reserves every index name in the derivative, free or bound (`_index_names_in`). It picks `t__kkt1`, and the fixture solves to 1.229.
+- **Regressions:** each case has an emitted-row unit test and a validation solve. Reverting either fix fails exactly its own test.
+- **Corpus:** dinam drifted by −11 B and holds its bucket (resolver GO). The other in-scope goldens are clean. ferts, ganges and turkpow timed out under load (unverified); re-run alone with `--fail-on-unverified`, all three are clean, so the gate is complete.
+- **CI: `PR19 emit solve validation` failed in its `Post Set up Python 3.12` step** after every real step had passed. `ubuntu-latest` rolled from 24.04 to 26.04, and setup-python's cache key includes the OS version, so the cache missed. This job never pip-installs, so `~/.cache/pip` did not exist and the post-job save errored. **Fixed:** `cache: "pip"` is removed from that workflow. The other three workflows with a pip cache (`ci`, `nightly`, `gamslib-regression`) do `pip install`, so they are not exposed.
+
+### PR #1788 review round 2 (P4): no exchange at all
+
+- **The exchange is unsound in launch's own form.** Once re-symbolised, the eq coordinate and the variable's coordinate are BOTH spelled as the position name, so a whole-term exchange moves row-bound factors with the multiplier:
+  - a coefficient, `a(v)` → `a(t__kkt1)` (MCP 1.999 vs NLP 1.8655);
+  - a nonlinear derivative factor, `2*h(v)` → `2*h(t__kkt1)` (13.617 vs 8.9208);
+  - and, as it turned out, `main`'s launch swap too, for any non-unit coefficient (`a(v)` for `a(t)` under launch's naming). launch itself has unit coefficients, so its golden is unaffected.
+  - Separately, the equation condition was attached after re-symbolisation, so its own binder `w` was not reserved, and `sum(w, a(w))` became `sum(w__, a(v))` (no solve).
+- **Replaced by a rewrite BEFORE re-symbolisation**, where the two coordinates are still apart:
+  - **the representative** is chosen so that its eq label at the pattern's eq position is not among the variable instance's labels;
+  - **the symbolic binder** becomes the variable's position name, and **the eq label a placeholder eq coordinate `E*`.** `E*` is the binder's own name when that is free once it stands for the position (launch's `ss` and dinam's `tep` stay), else an unused alias of the eq index's set. The reserved names cover the variable's and multiplier's domains, the derivative's indices and the equation condition's;
+  - **the equation condition's eq index** is renamed to `E*` before it is attached;
+  - **finally (`_finish_binder_position_rewrite`) only the multiplier's eq index** is pointed at `E*`. If the standard path had made it a summed index pinned by `sameas` (the dimension-mismatch path's `sum((i,t)$sameas(t,te), …)`: dinam is that form too, not a "separate" one as round 1 thought), the index leaves its sum with its pin. `E*` is summed.
+- **Regressions**, each an emitted-row unit test plus a validation solve:
+
+  | fixture | before | after | NLP |
+  |---|---|---|---|
+  | row-bound coefficient | 1.999 | 1.865 | 1.8655 |
+  | same, launch's naming (`main` wrong too) | 1.999 | 1.865 | 1.8655 |
+  | row-bound nonlinear factor | 13.617 | 8.921 | 8.9208 |
+  | equation condition with its own binder | no solve | 7.680 | 7.68 |
+  | equation condition over the eq index | (2.924 without the rename) | 1.865 | 1.8655 |
+
+  All 15 earlier fixtures still solve to their NLP optima, and the launch-shape row is byte-identical. Mutation: dropping the label placeholder fails 10 tests; the condition-name reservation, the condition rename and the `sameas`-pin removal each fail exactly their own.
+- **Corpus:** the leak gate is complete (no timeouts). Only dinam and shale drift, and both are renames of the summed eq coordinate: shale's `tfp` → its existing alias `tp` of `t`, and dinam's `stat_em` / `stat_v` now use `tep` / `tp`. The resolver holds both (GO). turkpow, tfordy and launch are byte-identical. `make test`: **5,690 passed**.
+- **Found on the way:** the emitter drops `a(t) = ord(t)/4;` when `a` is used only in an equation condition (`$141`, identical on `main`). The fixture uses literal data.
+
+### PR #1788 review round 3 (P4)
+
+- **The round-2 representative search dropped the default selector's collision checks** (#1086 / #1278: distinct variable labels, distinct equation labels). With `Alias(t,m,v)`, `h(m,v)` and `e(t).. sum((m,v)$s(t,v), sqr(h(m,v)))`, it could take `e(b)` / `h(a,a)`, and the element map sent both variable coordinates to `v`: `2*h(v,v)` (MCP 4.983 vs NLP 3.169). **Fixed:** it keeps both checks. The row is `2*h(m,v)`, solving to 3.169.
+- **A binder over a SUBSET lent its name to the eq coordinate.** With `ss` of `s(i)` against `e(i)`, `sum(ss, … lam_e(ss))` dropped `e('c')` and the MCP did not solve.
+  - **Fixed:** the binder's name is reused only when its set CONTAINS the eq index's (`_set_contains`: the same set or a subset ancestor). dinam's `tep` over `te` for `t(te)` still qualified. ⚠ *Narrowed to the SAME set in round 4.*
+  - Otherwise an alias of the eq index's set is used (`i__kkt1`), and the fixture solves to 3.0 = NLP.
+- **Regressions:** `MULTI_AXIS_ALIAS` and `SUBSET_BINDER`, each an emitted-row unit test plus a validation solve. Removing either fix fails exactly its own test. The fixture's weighted objective first hit #1785 (`c(v,v)` in the gradient), so it uses an unweighted one.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts, so no golden changes. `make test`: **5,694 passed**, no `225*` dirs.
+
+### PR #1788 review round 4 (P4)
+
+- **Reusing a PARENT-set binder as the eq coordinate changes the equation condition's meaning.** With dinam's shape and `mb(i,t)$(card(t) = 4)..`, the coordinate `tep` (over `te`, 5 elements) turned the guard into `card(tep) = 4`, false everywhere, so the multiplier contribution vanished and the MCP did not solve. `ord(t)` has the same problem, since it counts within the subset.
+- **Fixed, both ways:**
+  - the binder's name is reused only when it ranges over **exactly** the eq index's set. Round 3's `_set_contains` (which allowed a parent) is removed, so dinam's eq coordinate is now an alias of `t`;
+  - the condition rename and the final rename both leave `card(...)` operands alone (`_rename_iterators_keeping_card`), so the guard stays `card(t) = 4`.
+- **Regressions:** `PARENT_BINDER_CARD` (an emitted-row unit test plus a validation solve: no solve → 10.524 = NLP) and `PARENT_BINDER_ORD` (an emitted-row unit test; its solve happens to agree either way). Allowing the parent again fails 3 tests; not holding `card` fails exactly its own.
+- **Corpus:** the leak gate is complete (no timeouts). Only dinam drifts (−5 B): `stat_em`'s eq coordinate is now `tp`, dinam's alias of `t`, in place of `tep`. The resolver holds it (GO). `make test`: **5,697 passed**, no `225*` dirs.
+
+### PR #1788 review round 5 (P4)
+
+- **No usable representative left neither rewrite active.** With labels shared across the variable's independent sets (`k / a /` beside `i / a, b /`), every entry fails the representative checks. The binder-only admission (round 0's later-binder / subset gate) had already consolidated the entries, so the row lost cross-equation contributions.
+  - **Fixed:** for a binder-only pattern, the representative's existence is checked BEFORE consolidation (`_binder_rep_ok` over all entries). Without one, the admission is withdrawn and the pair keeps the pre-#1782 path, byte-identical to it.
+  - That path is wrong here too, for the shared-label ambiguity, so the reproducer is recorded on #1778. A position-aware rename cannot fix it: a label shared across sets cannot be attributed to a coordinate.
+- **The placeholder alias could take an existing identifier.** `Scalar t__kkt1` beside a minted `Alias(t, t__kkt1)` does not compile (`$195`, one GAMS namespace).
+  - **Fixed in the shared `_get_or_create_fresh_alias`:** a minted name skips every set, alias, parameter, variable, equation, model and acronym name. That fixes every caller, not only this one. The fixture mints `t__kkt2` and solves to 7.68 = NLP.
+- **Regressions:** `SHARED_LABELS` (the emit equals the same model with the binder-only admission switched off, plus a non-vacuity check that the admission fires) and `NAME_COLLISION` (an emitted-row unit test plus a validation solve). Removing either fix fails exactly its own test.
+- **Corpus:** the leak gate drifted **0** goldens. ferts and ganges timed out under load (≈150); re-run alone with `--fail-on-unverified` both are clean, so all 200 are verified. `make test`: **5,700 passed**, no `225*` dirs.
+
+### PR #1788 review round 6 (P4)
+
+- **A direct reference beside the sum rejected the rewrite after consolidation.** In `e(t).. h('m1',t) + 0.5*sum((m,tf)$ts(t,tf), h(m,tf))`, the later-binder admission passed the representative check. Then `_pc_gate`'s whole-equation absence test failed on `h('m1',t)`, after the offsets had been consolidated, so the row lost the per-offset terms: it was no longer the pre-#1782 path.
+  - **Fixed:** the pre-consolidation check for a binder-only admission also requires the rewrite's own preconditions on the whole equation: a binder position, and the eq index absent from every reference to the variable. Otherwise the admission is withdrawn.
+- **Regressions:** the round-5 test, parametrized as `test_a_binder_only_admission_the_rewrite_cannot_serve_is_WITHDRAWN` (emit = admission-off path, plus non-vacuity), now covers `SHARED_LABELS`, `MIXED_SUBSET` (`x(t)` beside `sum(tf$ts(t,tf), x(tf))`) and `MIXED_LATER_BINDER`.
+  - Removing the whole-equation check fails `MIXED_LATER_BINDER`.
+  - ⚠ `MIXED_SUBSET` is byte-identical to the pre-#1782 path with or without the check, as measured, so it guards the property but does not discriminate the fix.
+  - The pre-#1782 path is itself wrong for mixed direct + summed references: NLP 3.8221 / 12.8859, that path 85.953 / 28.0, identical on `main`. That is #1778's mixed-reference family.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,702 passed**, no `225*` dirs.
+
+### PR #1788 review round 7 (P4)
+
+- **Independently named sums over the same variable coordinate.** In `e(t).. sum(v$vs(t,v), h(v)) + sum(w$vs(t,w), a(w)*h(w)) =g= 5 - ord(t)` the rewrite rebound only the first sum's `v`. The second guard's `w` stayed free, and the free-index wrap summed the whole derivative over it: `sum((t__kkt1,w), (vs(t__kkt1,v) + a(v)*vs(t__kkt1,w)) * lam_e(t__kkt1))`, MCP 5.440 vs NLP 4.0. `main` does not solve this model (`vs(t,t)`, `t` uncontrolled).
+  - **Fixed by rebinding each sum within its own scope:** `_position_binders` collects every binder that carries the variable's coordinate, and requires each reference to the variable to hold an enclosing sum's binder at that position, and nowhere else in it. All of them map to the position name before re-symbolisation.
+  - Any other shape (a reference outside such a sum, or the binder elsewhere in the reference) gets no rewrite, and its binder-only admission is withdrawn before consolidation, as in rounds 5–6.
+  - The row is now `sum(w, (vs(w,v) + a(v)*vs(w,v)) * lam_e(w))`, solving to 4.0.
+- **Regression:** `MIXED_BINDERS`, where only the second sum's binder is renamed: an emitted-row unit test plus a validation solve. Rebinding only the first binder fails it.
+- ⚠ This finding came from the review's "previously missed" summary, with no comment thread, so the reply is a new inline comment at the flagged line.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,704 passed**, no `225*` dirs.
+
+### PR #1788 review round 8 (P4)
+
+- **The combined rebinding crossed sum scopes.** In `e(t).. sum(v$vs(t,v), sum(w,a(w))*h(v)) + sum(w$vs(t,w), h(w))`, round 7's `{v, w} → v` map also rewrote the coefficient's own `sum(w, a(w))` to `sum(w, a(v))`: 4·a(v) in place of 10 (MCP 31.392 vs NLP 25.3884 with RHS `20*ord(t)`).
+  - **Fixed:** both derivative rewrites use `_rename_free_indices`, which leaves a name alone inside any Sum/Prod that binds it. The row keeps `sum(w, a(w))` and solves to 25.388.
+- **Regression:** `COEFFICIENT_SUM_MIXED_BINDERS` (`COEFFICIENT_SUM` combined with `MIXED_BINDERS`): an emitted-row unit test plus a validation solve. A scope-blind rename fails exactly that test.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,706 passed**, no `225*` dirs.
+
+### PR #1788 review round 9 (P4)
+
+- **A nested binder that is a rename destination captured the renamed name.** `e(t).. sum(w$(vs(t,w) and sum(v, c(v,w)) > 20), h(w))` with `{w: v}` gave `sum(v, c(v,v))`, which activated the first row's term (15 → 24 > 20): MCP 86.976 vs NLP 14.3662.
+  - **Fixed:** `_rename_free_indices` alpha-renames such a binder to a fresh alias of its set before applying the map (only in the rewriting pass: the name-collecting pass mints nothing). The row has `sum(t__kkt1, c(t__kkt1,v)) > 20`, and the fixture solves to 14.366.
+- **`card()` in the derivative.**
+  - For a SUBSET binder beside a full-set one (`sum(s$vs(t,s), card(s)*h(s))` with `sum(v$…, h(v))`), the subset sum contributes only where `s` holds, which a single representative cannot carry. **The binders at the pattern's position must now range over ONE set,** or the shape keeps the pre-#1782 path. It is byte-identical to it there, and `card(s)` is not rewritten.
+  - **The derivative rewrite now holds `card()` operands too.** A rebound binder's operand becomes its SET (`card(w)` → `card(t)`), because leaving the alias name behind made it a free index that the free-index wrap summed over: `sum((t__kkt1,w), …)`.
+- **Permuted variable positions** (`h(v,m)`, binder `m` at position 1): the multiplier is spelled `v`, a ROW coordinate, which the finishing step took for a summed index, so it moved the row-bound `h(v,m)` to the eq coordinate.
+  - **Fixed:** only a name that is no row coordinate counts as "separate".
+  - ⚠ The reviewer's exact fixture also lists the binders out of reference order (`(m,v)` against `h(v,m)`). The AD derivative is then itself wrong (#1776: positional binder pairing gives `h(b,a)*sameas(b,a)*sameas(a,b)`), so it solves on no version. The test pins only the stationarity property, and the reproducer is on #1776. With the binders in reference order the row is correct: 3.168 = NLP.
+- **Regressions:** `CONDITION_SCOPE` (row + solve), `MIXED_SUBSET_BINDER_CARD` (keeps the pre-#1782 path, with a non-vacuity check that the same-set rule decides it), `CARD_SAME_SET` (row + solve) and `PERMUTED_POSITIONS` (row). Removing each of the four fixes fails exactly its own test.
+- ⚠ **Process slip, recovered:** while measuring a pre-fix control I copied the pre-round source over `src/kkt/stationarity.py` and did not restore it, losing the uncommitted round-9 code. It was restored from the saved copy, the one later edit re-applied, and every function checked for before testing. From now on, controls are measured on a scratch copy, never in place without a verified restore.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**. `make test` first hit one load-timing failure, `test_performance_overhead_acceptable` (159% vs the 150% threshold; it times the metrics pipeline, which this PR does not touch). It passed 3/3 alone, and the full re-run gave **5,712 passed**, no `225*` dirs.
+
+### PR #1788 review round 10 (P4)
+
+- **`card()` operands counted as free indices.** With an alias-named equation domain (`pr(q)`, `Alias(t,q,w)`), `card(w)` became `card(t)`, and `_collect_free_indices` took the SET operand for an iterator and wrapped the term in `sum(t, …)`. **Fixed in `_collect_free_indices` itself:** a `card(...)` operand is never a free index. This is a general fix, since every `Call` argument used to be walked as an index.
+- **Indexed `smax` / `smin` are `Call` nodes and bind their own index.** `{w: v}` captured `smax(v, c(v,w))` as `smax(v, c(v,v))` (no solve).
+  - **Fixed:** `_reduction_call_parts` reads the parser's form (a prefix of set/alias names, an optional condition, the body).
+  - `_rename_free_indices` scopes and alpha-renames it like a Sum, and `_collect_free_indices` binds its index.
+  - The alpha-renamed binder also needs a self-mapping, or the PARAMETER `c`'s declared domain takes it back. So the self-maps now cover every set/alias name in the rewritten derivative. Solves to 14.366 = NLP.
+- **Every row coordinate needs a self-mapping.** With `x(m,v,w)` and a three-axis aliased guard, the dimension-mismatch `alias_remap` sent `v` to `w`: `s(E*,m,w,w)`, no solve. **Fixed:** the self-maps cover every variable-domain name. Solves to 0.667 = NLP.
+- **Regressions:** `CARD_ALIAS_EQ_DOMAIN` (row; its solve agrees either way), a direct `_collect_free_indices` unit test (`card` bound, `smax` binder bound, `ord` still free), `SMAX_CONDITION_SCOPE` (row + solve) and `THREE_AXIS_GUARD` (row + solve).
+  - Mutation: the `card` rule fails its two tests, and the `smax` scoping fails its own.
+  - ⚠ The two self-map extensions (row coordinates; derivative names) overlap on these fixtures: removing either alone leaves the tests green, and removing both fails `THREE_AXIS_GUARD` and `SMAX_CONDITION_SCOPE`.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. The general `_collect_free_indices` change moves no golden. `make test`: **5,719 passed**, no `225*` dirs.
+
+### PR #1788 review round 11 (P4)
+
+- **The alpha-rename could reuse an alias bound by an ENCLOSING reduction.** `{w: v}` in `sum(q, a(q)*smax(v, c(v,w)))` picked the existing alias `q`: `smax(q, c(q,v))` inside `sum(q, …)`, no solve. **Fixed:** the alpha-rename always mints a genuinely new alias (`_get_or_create_fresh_alias(..., reuse_existing=False)`; the shared default is unchanged). It solves to 14.366 = NLP.
+- **Two aliased equation axes.** With `e(t,m)` against `h(m,v)`, downstream alias matching applied `{t: m, m: v}` to the position-bound derivative: `h(v,v)` and `lam_e(E,v)`. **Fixed by rejection before consolidation** (`_another_eq_axis_shares_the_binder_set`: another eq index over the binder's set), so the shape keeps the pre-#1782 path, byte-identical to `main`. That path is itself wrong here; `main` is too.
+- **Regressions:** `NESTED_REDUCTION` (row + solve) and `TWO_EQ_AXES` (pre-#1782 path, with non-vacuity checks that the binder is found and that the new rule rejects it). Removing either fix fails exactly its own test.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,722 passed**, no `225*` dirs.
+
+### PR #1788 review round 12 (P4)
+
+- **The review raised one concern in its summary, with no comment thread:** the #1110 multi-pattern step switches the representative to a majority-structure entry. An eligible representative from the MINORITY would then be replaced by an ineligible one after a binder-only admission had consolidated the offsets, leaving neither rewrite active.
+- **Fixed defensively:** `_eligible_binder_rep` mirrors the #1110 grouping (largest derivative-structure group, ties in entry order) and returns an eligible entry of the majority. Three places use it:
+  - the pre-consolidation check, which withdraws the admission when the majority has none;
+  - the group's representative choice;
+  - the #1110 switch, which prefers an eligible majority entry.
+- ⚠ **No corpus model or fixture reaches it:** in every admitted shape so far, all of a pair's entries share one derivative structure, so the multi-pattern step never fires. It is pinned by a unit test on a stub Jacobian (eligible entry in the majority vs only in the minority, plus a single-group control). Ignoring the majority grouping fails it.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,723 passed**, no `225*` dirs.
+
+### Found and routed (not fixed in place)
+
+- **#1787** (Day 8): a variable referenced twice, with the eq index at different positions, keeps one term (egypt `tranc(rp,rp)`, tfordy `stat_v`).
+- **#1786** (shale's candidate underlying defect): a subset-defined equation SUMS over its bound subset index when another eq index has no variable counterpart. shale's `stat_z` has it on every subset balance. The 10-line reproducer is a silent wrong answer: MCP 9.03 vs NLP 3.69.
+- **#1785:** the objective gradient re-symbolises `ord()` onto the wrong index, for an aliased 2-D variable (MCP 19 vs NLP 0) and for a subset (`ord(t)` → `ord(tf)`, 18.03 vs 17.25). Both are silent wrong answers on 6–7 line models.
+- **#1784:** a lead/lag reference inside a sum over a 3-D variable's middle index gets phantom `$(ord(k) = n)` guards, and the MCP does not solve. This is §5's `oik3` fixture: its emit is defective on every version.
+- #1784–#1786 are byte-identical on an untouched `main` worktree.
+
+### P8: the structural pins become behavioural
+
+- `_match_subset_domain`'s `if k in used_var_positions:` and both `_compute_index_offset_key` consume-once guards are now **behavioural** pins (`tests/unit/kkt/test_positional_domain_sites.py`). They use §5's 3-D aliased / subset inputs:
+  - `_match_subset_domain`: `(ii,jj)` vs `(i,k,ip)` gives `{ii: i, jj: ip}` (guard off: `{ii: i, jj: i}`); alias-only `(ip,ipp)` vs `(i,k,ipp)` gives `{ip: i}` (guard off: `{ip: i, ipp: i}`);
+  - `_compute_index_offset_key`: eq `('b','c')` against var `('a','k1','b')` gives `(1, 999, 1)` (guard off: `(2, 999, 999)`), the canonical pass on `(i,ip)` and the root pass on `(ii,jj)`. Each input leaves the OTHER pass's guard-off result unchanged, so the two rows cannot stand in for each other;
+  - at emit level, `msd3`: `lam_c(i,ip)` (the MCP solves to the NLP optimum, 2.0) vs `lam_c(i,i)` with the guard off.
+- **Positive control:** each pin rebuilds its function from its own source with only that guard neutralised and asserts the result changes. Separately, mutating the guard in `src/` (anchor text kept) fails exactly that guard's own pins.
+- **The strength partition moves 5 / 11 → 8 / 8** (behavioural / structural), derived and asserted by identity as before.
+- ⚠ **Proof scope for `_compute_index_offset_key`: function level.** Day 6's pass 0 (the reference binding) now binds an index before either pass runs whenever every reference holds it at one position. So §5's `oik3` emit no longer changes with either guard off. The passes and their guards are reached for indices without a reference binding.

@@ -50,3 +50,17 @@ Decide correspondence **by the variable's index positions**, not by binder count
 **Scope check before fixing:** grep the goldens for constraints whose multiplier is absent while the source equation is in the solved model. "Absent multiplier" is the loud form; a dropped term in a surviving row (`labbal`) is the silent one.
 
 **Not fixed in place.** P7 (#1755) is the natural owner: it is the same function and the same helper, and a Phase-0 gate is required.
+
+## Another reproducer: binders listed out of reference order (Sprint 40 Day 7, PR #1788 review round 9)
+
+```gams
+Set t / a, b, c /;  Alias (t,m,v);
+Set s(t,v);  s(t,v) = yes$(ord(t) >= ord(v));
+Variable h(v,m), obj;  Equation e(t), defobj;
+e(t).. sum((m,v)$s(t,v), sqr(h(v,m))) =l= ord(t);
+defobj.. obj =e= sum((v,m), sqr(h(v,m) - 1)) + sum(m, ord(m)*h("a",m));
+```
+
+The AD derivative of `e` with respect to `h('a','b')` is `2*h(b,a) * sameas(b,a) * sameas(a,b) * 1$(s(…,v))`. `_diff_sum` paired the binders `(m,v)` with `h`'s indices by POSITION (`m → a`, `v → b`), not by where they occur in `h(v,m)`. The result is the transposed cell under two always-false guards. The MCP does not solve on `main` (MS 5) or on PR #1788 (NLP 3.1682).
+
+With the binders listed in reference order (`sum((v,m)$s(t,v), sqr(h(v,m)))`), PR #1788 emits the hand-derived row and solves to 3.168.
