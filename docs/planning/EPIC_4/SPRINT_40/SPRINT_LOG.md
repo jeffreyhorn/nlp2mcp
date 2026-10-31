@@ -1107,3 +1107,55 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - **Positive control:** each pin rebuilds its function from its own source with only that guard neutralised and asserts the result changes. Separately, mutating the guard in `src/` (anchor text kept) fails exactly that guard's own pins.
 - **The strength partition moves 5 / 11 → 8 / 8** (behavioural / structural), derived and asserted by identity as before.
 - ⚠ **Proof scope for `_compute_index_offset_key`: function level.** Day 6's pass 0 (the reference binding) now binds an index before either pass runs whenever every reference holds it at one position. So §5's `oik3` emit no longer changes with either guard off. The passes and their guards are reached for indices without a reference binding.
+
+## Day 8 — 2026-10-31 · P4: finish, plus the Class-B design · 4 h · + P8: finish · 1 h · + P5: the `stat_step` class · 5 h
+
+**Branch:** `planning/sprint40-day8-statstep` · **Base:** `e5915ad2` (PR #1788, 12 review rounds). **Phase-0 gates first:** `20e73350` (#1787, #1790, #1789).
+
+### P4: egypt (#1787)
+
+- **Shape:** `fodb(r,cf).. … + sum(rp$tranc(r,rp), trans(cf,rp,r) - trans(cf,r,rp))$ct(cf)` against `trans(c,r,rp)`. The two references hold the eq index at different variable positions. The Pattern C consolidation kept one representative's derivative, on a diagonal instance: `1$(tranc(rp,rp))*nu_fodb(r,c)`, P2's `tranc(rp,rp)`.
+- **Fixed** (`_multi_reference_layouts`, `_build_multi_reference_terms`): one term per placement of the eq indices. Each comes from an entry whose eq labels sit at that placement's positions and at no other's, so its derivative holds only that reference. It is re-symbolised by position before the element map (variable labels and the reference's binder become the variable's position names), and the multiplier and the equation condition follow the eq indices. The pair skips the consolidation.
+- **egypt's `stat_trans`** is now Prep Task 10 §2's hand-derived pair: `-nu_fodb(rp,c)$tranc(rp,r) + nu_fodb(r,c)$tranc(r,rp)` under `$ct(c)$cf(c)`.
+- **Fixtures:** `TWO_REFERENCES` (no solve → 1.3333 = NLP) and `EGYPT_SHAPE` (subset `cf`, outer `$ct`, a PARAMETER `tranc`, another variable: 34.75 silent → 33.25 = NLP). Switching the path off fails all three unit tests.
+- ⚠ **I first wrote that tfordy's `pfs` was not this shape.** That was from a fixture that repeated `v`'s domain. The real `v(s,k,t,te)` does not, and the leak gate shows `stat_v` gaining exactly #1787's predicted second term, `−vpos(t,te)*lam_pfs(s,k,te)`. tfordy stays `model_infeasible`: `lbal`'s collapsed `yv(t,t,…)` remains.
+- **shale: finished on Day 7** (Class A). Its remaining defect is #1786, routed per plan; no Solve projected.
+
+### P4: Class B (#1790), designed and implemented
+
+- **Design:** the declaration and the assignment context are both in the IR (`ParameterDef.domain` vs `expressions[k][0]`). The fix layer is **emit**, `emit_post_assignment_na_cleanup`. A repeated declared domain (`covar(stocks,stocks)`) made the NA-cleanup line touch only the diagonal.
+- **Implemented, since budget remained** (`_cleanup_indices`): the first assignment LHS of distinct set/alias names, else unused aliases, else the declared domain. gussrisk's line 52 becomes `covar(s,sp)$(…) = 0;`.
+- **Tests:** `test_na_cleanup_repeated_domain.py` (LHS, alias fallback, no-repeat control); the pre-fix emitter fails the first two.
+- **nonsharp has one reference of each class** (`inter(col,col,stm)`, `inter(col__kkt1,col__kkt1,stm)`). It is a MINLP the translator refuses, so regeneration cannot move either, and they are recorded as two items, not one.
+
+### P8: finish
+
+P8 landed in PR #1788 (three behavioural pins, 8 / 8). Its one open item, an emit-level pin for `_compute_index_offset_key`, is pre-empted by Day 6's reference binding (recorded on Day 7). **P8 is complete.**
+
+### P5: the `stat_step` class (#1789)
+
+- **Filed #1789**: no issue tracked it. The Phase-0 doc is `ISSUE_1789`.
+- **Reconfirmed, licensed** (`kkt_residual.py`): lnts `CASE_B`, worst `stat_step` rel **9.66**; robot `CASE_B`, worst `stat_step` rel **10.1**, then a smaller boundary group (`stat_the(h0)` 0.21, `stat_rho(h0)` 0.18, `stat_rho(h50)` 0.17), not claimed by this item.
+- **Traced: ONE mechanism, two symptoms, so no split** (PLAN §3 P5). `_add_jacobian_transpose_terms_scalar` builds a scalar variable's term for an indexed constraint from `entries[0]`'s derivative alone, mapped by membership only, with no offset grouping or substitution (cf. #1045 / #1162 in the indexed path):
+  - **lead head** (lnts `pos_eqn(c+2,h+1)`): the representative holds `u(h1) + u(h2)`, both mapped to `h`, giving `2*u(h)`;
+  - **lag head** (robot `rho_eqn(h-1)`): `entries[0]` is the boundary instance, with only `u(h1)`, so a term is dropped.
+- **Minimal reproducers:** MCP 68.577 (lead) / 72.689 (lag) vs NLP 68.5456.
+- **lnts verdict C stands:** the banked diff is not re-applied, and no Solve is projected. Candidates glider and rocket are unconfirmed.
+- The fix is Days 9–10, behind the committed gate.
+
+### Gate
+
+`make typecheck && make format && make lint && make test`: clean; **5,731 passed**, 10 skipped, no `225*` dirs. `make check-index-repeats`: **P2 6 → 3**, with `--update-baseline` in this commit (egypt ×2, gussrisk). Left: dinam's `ts2(te,te)` in `stat_ka`, a mixed direct + summed reference (#1778's family), and nonsharp ×2.
+
+**Leak gate:** complete, no timeouts. 8 goldens over 5 models drifted, all re-solved by `--resolve-changed`:
+
+| model | change | bucket |
+|---|---|---|
+| egypt | `stat_trans`: both reference terms | `model_infeasible` = same (expected, Task 10) |
+| gussrisk | NA cleanup `covar(s,sp)` | `model_optimal` + match = same |
+| harker | `stat_t`: the network balance gets both `+nu_nbal(np) − nu_nbal(n)` (it had one) | presolve match = same |
+| **sroute** | `stat_x`: both `lam_nb` references, the second with its own `not sameas(i,ip)` | **`model_infeasible` → presolve match ✅ forward**; methodology, not floor (presolve-only) |
+| tfordy | `stat_v`: `pfs`'s second reference | `model_infeasible` (resolver: "BACKWARD" against the DB row) |
+
+- **tfordy's "BACKWARD" is not a new regression.** The DB still holds the pre-Day-7 match, because nothing has been persisted since. Day 7's golden, landed by owner decision, was already `model_infeasible`, and today's emit is also `model_infeasible`. So relative to the committed golden the bucket is unchanged, and the change adds a correct term.
+- **sroute** is booked as a presolve match when a persisted run lands it. It needs a `check_mcp_solve_attribution` check before any claim.

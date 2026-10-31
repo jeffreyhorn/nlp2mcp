@@ -759,6 +759,22 @@ def test_pattern_c_binder_position_solves_to_the_nlp_optimum(tmp_path, fixture, 
 
 
 @pytest.mark.validation
+@pytest.mark.parametrize("fixture, nlp", [("TWO_REFERENCES", 1.3333), ("EGYPT_SHAPE", 33.25)])
+def test_multi_reference_solves_to_the_nlp_optimum(tmp_path, fixture, nlp):
+    """Sprint 40 Day 8 (#1787, P4): one term per reference. Before: no solve /
+    34.75 (silent). The fixtures live in the unit module."""
+    import importlib.util
+
+    path = Path(__file__).resolve().parents[1] / "unit" / "kkt" / "test_multi_reference_1787.py"
+    spec = importlib.util.spec_from_file_location("_multi_reference_fixtures", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    obj, _ = _translate_and_solve(tmp_path, fixture.lower(), getattr(module, fixture))
+    assert abs(obj - nlp) < 1e-3 * max(1.0, abs(nlp)), obj
+
+
+@pytest.mark.validation
 class TestPATHAvailability:
     """Test PATH solver availability detection."""
 

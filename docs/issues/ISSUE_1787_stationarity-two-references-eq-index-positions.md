@@ -78,4 +78,14 @@ Prep Task 10 §2: `∂/∂trans(c,r,rp)` of `fodb(r',cf).. … + sum(rp'$tranc(r
 - **PROCEED** if 1–3 hold and the resolver holds every bucket.
 - **REPLAN** on any backward move.
 - **egypt staying MS 5 is expected** (Task 10: necessary, not sufficient).
-- **tfordy's `pfs` is not this pass's shape:** its variable `v(k,te,te)` repeats a domain, and its sums are binder-only admissions. It stays on #1787.
+- **tfordy's `pfs`:** ⚠ first thought not this pass's shape, from a fixture that repeated `v`'s domain. The real `v(s,k,t,te)` does not, and the leak gate shows the second term restored (see Day 8 results). tfordy also needs its collapsed `yv(t,t,…)` fixed, so it stays on #1787.
+
+## Day 8 results
+
+- **egypt:** both `stat_trans` terms; P2 `tranc(rp,rp)` gone (golden + presolve). Still `model_infeasible`, as expected.
+- **Also fixed by the same pass** (leak gate, resolver):
+  - **harker**'s `stat_t` network balance (`+nu_nbal(np) − nu_nbal(n)`, match held);
+  - **sroute**'s `stat_x` (`model_infeasible` → presolve match);
+  - **tfordy**'s `pfs` second reference (still infeasible: `yv(t,t,…)` remains).
+- **Open here:** tfordy's `lbal` `yv(t,t,…)` collapse.
+

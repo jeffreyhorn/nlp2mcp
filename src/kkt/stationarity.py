@@ -925,6 +925,144 @@ def _eligible_binder_rep(
     return None
 
 
+def _multi_reference_layouts(eq_def: Any, var_name: str) -> list[dict[str, int]] | None:
+    """Per-reference index layouts for #1787's shape (Sprint 40 Day 8).
+
+    Every reference to ``var_name`` must use only symbols -- equation indices or
+    binders of an enclosing Sum -- each at one position, with EVERY equation
+    index present. Returns one ``{symbol: position}`` layout per DISTINCT
+    placement of the equation indices (lowercased symbols), or None unless there
+    are at least two: egypt's ``sum(rp$tranc(r,rp), trans(cf,rp,r) -
+    trans(cf,r,rp))`` gives ``{cf:0, rp:1, r:2}`` and ``{cf:0, r:1, rp:2}``.
+    """
+    eq_dom = [str(d).lower() for d in (getattr(eq_def, "domain", None) or ())]
+    if not eq_dom:
+        return None
+    key = var_name.lower()
+    layouts: dict[tuple[int, ...], dict[str, int]] = {}
+    ok = True
+
+    def walk(node: Expr, bound: frozenset[str]) -> None:
+        nonlocal ok
+        if not ok:
+            return
+        if isinstance(node, VarRef) and node.name.lower() == key:
+            layout: dict[str, int] = {}
+            for p, idx in enumerate(node.indices):
+                if not isinstance(idx, str):
+                    ok = False
+                    return
+                low = idx.lower()
+                if low in layout or (low not in bound and low not in eq_dom):
+                    ok = False
+                    return
+                layout[low] = p
+            if any(e not in layout for e in eq_dom):
+                ok = False
+                return
+            layouts.setdefault(tuple(layout[e] for e in eq_dom), layout)
+            return
+        if isinstance(node, (Sum, Prod)):
+            inner = bound | frozenset(str(i).lower() for i in node.index_sets)
+            for child in node.children():
+                walk(child, inner)
+            return
+        for child in node.children():
+            walk(child, bound)
+
+    for part in tuple(getattr(eq_def, "lhs_rhs", None) or ()) + (
+        getattr(eq_def, "condition", None),
+    ):
+        if part is not None:
+            walk(part, frozenset())
+    if not ok or len(layouts) < 2:
+        return None
+    return list(layouts.values())
+
+
+def _build_multi_reference_terms(
+    kkt: Any,
+    jacobian: Any,
+    entries: list[tuple[int, int]],
+    eq_def: Any,
+    var_name: str,
+    var_domain: tuple[str, ...],
+    mult_name: str,
+    element_to_set: Mapping[str, str],
+) -> Expr | None:
+    """#1787 (Sprint 40 Day 8): one stationarity term per REFERENCE when the
+    references hold the equation index at different variable positions.
+
+    egypt's ``fodb(r,cf).. sum(rp$tranc(r,rp), trans(cf,rp,r) - trans(cf,r,rp))``
+    against ``trans(c,r,rp)`` needs ``nu_fodb(rp,c)$tranc(rp,r) -
+    nu_fodb(r,c)$tranc(r,rp)``; consolidating every entry into one representative
+    kept a single term (on a diagonal instance, ``1$(tranc(rp,rp))``).
+
+    For each layout, the representative is an entry whose eq labels sit at THIS
+    layout's positions and at no other layout's (so its derivative holds only
+    this reference), with distinct labels throughout. Its derivative is
+    re-symbolised by position, before the element map: every variable label and
+    every binder of the reference become the variable's position names; the
+    multiplier and the equation condition follow the eq indices to theirs.
+    Returns the summed terms, or None to keep the standard path.
+    """
+    layouts = _multi_reference_layouts(eq_def, var_name)
+    if layouts is None:
+        return None
+    model_ir = kkt.model_ir
+    eq_dom = [str(d).lower() for d in (getattr(eq_def, "domain", None) or ())]
+    if len(set(eq_dom)) != len(eq_dom):
+        return None
+
+    def matches(layout: dict[str, int], e_lab: tuple, v_lab: tuple) -> bool:
+        return all(
+            layout[e] < len(v_lab) and e_lab[k] == v_lab[layout[e]] for k, e in enumerate(eq_dom)
+        )
+
+    total: Expr | None = None
+    for layout in layouts:
+        rep_entry = None
+        for rid, cid in entries:
+            e_lab = tuple(jacobian.index_mapping.row_to_eq[rid][1])
+            v_lab = tuple(jacobian.index_mapping.col_to_var[cid][1])
+            if len(set(v_lab)) != len(v_lab) or len(set(e_lab)) != len(e_lab):
+                continue
+            if matches(layout, e_lab, v_lab) and not any(
+                matches(other, e_lab, v_lab) for other in layouts if other is not layout
+            ):
+                rep_entry = (rid, cid, v_lab)
+                break
+        if rep_entry is None:
+            return None
+        rid, cid, v_lab = rep_entry
+        derivative = jacobian.get_derivative(rid, cid)
+        if derivative is None:
+            return None
+        rename = {str(lab).lower(): str(var_domain[p]) for p, lab in enumerate(v_lab)}
+        binders = {s: p for s, p in layout.items() if s not in eq_dom}
+        rename.update({b: str(var_domain[p]) for b, p in binders.items()})
+        derivative = _rename_free_indices(derivative, rename, model_ir)
+        self_map = {str(d): str(d) for d in var_domain}
+        mapping: Mapping[str, str] = (
+            element_to_set.new_child(self_map)
+            if isinstance(element_to_set, ChainMap)
+            else {**element_to_set, **self_map}
+        )
+        coeff = _replace_indices_in_expr(
+            derivative, var_domain, mapping, model_ir, equation_domain=var_domain
+        )
+        mult = MultiplierRef(mult_name, tuple(str(var_domain[layout[e]]) for e in eq_dom))
+        term: Expr = Binary("*", coeff, mult)
+        cond = getattr(eq_def, "condition", None)
+        if cond is not None:
+            cond = _rename_iterators_keeping_card(
+                cond, {e: str(var_domain[layout[e]]) for e in eq_dom}
+            )
+            term = DollarConditional(value_expr=term, condition=cond)
+        total = term if total is None else Binary("+", total, term)
+    return total
+
+
 def _eq_index_position(eq_def: Any, eq_index: str) -> int | None:
     """Position of ``eq_index`` in ``eq_def``'s domain (case-insensitive), or None."""
     domain = tuple(getattr(eq_def, "domain", None) or ())
@@ -7425,6 +7563,31 @@ def _add_indexed_jacobian_terms(
                                 or _eligible_binder_rep(jacobian, entries, _pos) is None
                             ):
                                 pattern_c_info = None
+                        # Sprint 40 Day 8 (#1787): the references hold the eq index
+                        # at DIFFERENT variable positions (egypt's ``trans(cf,rp,r)
+                        # - trans(cf,r,rp)``). Consolidating would keep one term,
+                        # so build one per reference and skip the offset groups.
+                        if pattern_c_info is not None and not pattern_c_info.get(
+                            "binder_swap_only"
+                        ):
+                            _mn = name_func(eq_name_base)
+                            _mr_term = (
+                                _build_multi_reference_terms(
+                                    kkt,
+                                    jacobian,
+                                    entries,
+                                    eq_def_for_gate,
+                                    var_name,
+                                    var_domain,
+                                    _mn,
+                                    element_to_set,
+                                )
+                                if _mn in multipliers
+                                else None
+                            )
+                            if _mr_term is not None:
+                                expr = Binary("+", expr, _mr_term)
+                                continue
                         if pattern_c_info is not None:
                             allow_nonzero_offsets = False
                         else:

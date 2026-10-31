@@ -149,6 +149,56 @@ def _param_assignment_has_division(param_def: ParameterDef) -> bool:
     return False
 
 
+def _cleanup_indices(param_def, model_ir: ModelIR) -> tuple[str, ...]:
+    """Distinct per-position indices for a parameter's NA-cleanup line.
+
+    Sprint 40 Day 8 (Class B, gussrisk): a declaration may repeat a symbol --
+    ``covar(stocks,stocks)`` -- and in GAMS a repeated controlling index is one
+    iterator, so the cleanup touched only the DIAGONAL while the assignment
+    ``covar(s,sp) = ...`` filled the full matrix. The declaration context and the
+    assignment's LHS tuple are both in the IR, so a repeated declared domain is
+    replaced by the first assignment LHS whose indices are distinct set/alias
+    names, else by unused existing aliases of the repeated set. A domain without
+    repeats is returned unchanged.
+    """
+    domain = tuple(str(d) for d in param_def.domain)
+    if len({d.lower() for d in domain}) == len(domain):
+        return domain
+
+    def is_index(name: object) -> bool:
+        return isinstance(name, str) and (name in model_ir.sets or name in model_ir.aliases)
+
+    for lhs, _expr in getattr(param_def, "expressions", None) or ():
+        lhs = tuple(lhs)
+        if (
+            len(lhs) == len(domain)
+            and all(is_index(i) for i in lhs)
+            and len({str(i).lower() for i in lhs}) == len(lhs)
+        ):
+            return tuple(str(i) for i in lhs)
+
+    used: set[str] = set()
+    out: list[str] = []
+    for d in domain:
+        if d.lower() not in used:
+            out.append(d)
+            used.add(d.lower())
+            continue
+        alias = next(
+            (
+                a
+                for a, adef in model_ir.aliases.items()
+                if str(getattr(adef, "target", "")).lower() == d.lower() and a.lower() not in used
+            ),
+            None,
+        )
+        if alias is None:
+            return domain  # nothing distinct available: keep the declared domain
+        out.append(alias)
+        used.add(alias.lower())
+    return tuple(out)
+
+
 def emit_post_assignment_na_cleanup(
     model_ir: ModelIR,
     model_relevant_params: set[str] | None = None,
@@ -204,7 +254,7 @@ def emit_post_assignment_na_cleanup(
         if not _param_assignment_has_division(param_def):
             continue
 
-        domain_str = ",".join(param_def.domain)
+        domain_str = ",".join(_cleanup_indices(param_def, model_ir))
         ref = f"{name}({domain_str})"
         cleanup_lines.append(f"{ref}$(NOT ({ref} > -inf and {ref} < inf)) = 0;")
 
