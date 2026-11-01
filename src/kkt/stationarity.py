@@ -605,7 +605,10 @@ def _index_names_in(expr: Expr) -> set[str]:
 
 
 def _rename_free_indices(
-    expr: Expr, rename: dict[str, str], model_ir: ModelIR | None = None
+    expr: Expr,
+    rename: dict[str, str],
+    model_ir: ModelIR | None = None,
+    reserved: frozenset[str] = frozenset(),
 ) -> Expr:
     """``_rewrite_subset_to_superset`` that respects Sum/Prod scopes (#1782).
 
@@ -615,9 +618,13 @@ def _rename_free_indices(
       name (``{w: v}`` inside ``sum(v, c(v,w))`` gives ``c(v,v)``), so it is
       alpha-renamed to a fresh alias of its set first (needs ``model_ir``).
     * ``card(...)`` operands are sets, not iterators, and are left alone.
+    * A nested binder named like a ``reserved`` name (the stationarity row's
+      controlled indices) is alpha-renamed too: ``sum(rp, a(r,rp))`` inside a
+      row over ``rp`` would re-control ``rp`` (PR #1791 review).
     (PR #1788 review.) Keys are lowercased names.
     """
-    if not rename:
+    reserved = frozenset(r.lower() for r in reserved)
+    if not rename and not reserved:
         return expr
     held: dict[str, Expr] = {}
 
@@ -631,24 +638,24 @@ def _rename_free_indices(
             cond = e.condition  # type: ignore[attr-defined]
         inner = {k: v for k, v in rename.items() if k not in {b.lower() for b in bound}}
         dests = {str(v).lower() for v in inner.values()}
-        if inner and model_ir is not None:
-            reserved = dests | set(inner) | _index_names_in(e)
+        if (inner or reserved) and model_ir is not None:
+            taken = dests | set(inner) | set(reserved) | _index_names_in(e)
             for pos, b in enumerate(bound):
-                if b.lower() in dests:
+                if b.lower() in dests or b.lower() in reserved:
                     # Always a NEW alias: an existing one may be bound by an
                     # ENCLOSING reduction (``sum(q, …smax(v, c(v,w)))`` gave
                     # ``smax(q, c(q,v))``, reusing the controlled ``q``).
                     fresh = _get_or_create_fresh_alias(
-                        _resolve_alias_target(b, model_ir), reserved, model_ir, reuse_existing=False
+                        _resolve_alias_target(b, model_ir), taken, model_ir, reuse_existing=False
                     )
-                    reserved.add(fresh.lower())
+                    taken.add(fresh.lower())
                     body = _rename_free_indices(body, {b.lower(): fresh}, model_ir)
                     if cond is not None:
                         cond = _rename_free_indices(cond, {b.lower(): fresh}, model_ir)
                     bound[pos] = fresh
-        body = _rename_free_indices(body, inner, model_ir)
+        body = _rename_free_indices(body, inner, model_ir, reserved)
         if cond is not None:
-            cond = _rename_free_indices(cond, inner, model_ir)
+            cond = _rename_free_indices(cond, inner, model_ir, reserved)
         if isinstance(e, Call):
             args = (*(SymbolRef(b) for b in bound), *((cond,) if cond is not None else ()), body)
             return Call(e.func, tuple(args))
@@ -705,7 +712,7 @@ def _rename_free_indices(
             return DollarConditional(restore(e.value_expr), restore(e.condition))
         return e
 
-    return restore(_rewrite_subset_to_superset(hold(expr), rename))
+    return restore(_rewrite_subset_to_superset(hold(expr), rename) if rename else hold(expr))
 
 
 def _rename_iterators_keeping_card(expr: Expr, rename: dict[str, str]) -> Expr:
@@ -960,7 +967,16 @@ def _multi_reference_layouts(eq_def: Any, var_name: str) -> list[dict[str, int]]
             if any(e not in layout for e in eq_dom):
                 ok = False
                 return
-            layouts.setdefault(tuple(layout[e] for e in eq_dom), layout)
+            # Every reference with this placement contributes its OWN binder
+            # mapping (``sum(j$a(i,j), x(i,j)) + sum(k$b(i,k), x(i,k))``: j and
+            # k both at position 1, PR #1791 review); a binder at two positions
+            # within one placement cannot be rewritten by position.
+            merged = layouts.setdefault(tuple(layout[e] for e in eq_dom), {})
+            for sym, pos in layout.items():
+                if merged.get(sym, pos) != pos:
+                    ok = False
+                    return
+                merged[sym] = pos
             return
         if isinstance(node, (Sum, Prod)):
             inner = bound | frozenset(str(i).lower() for i in node.index_sets)
@@ -1041,7 +1057,8 @@ def _build_multi_reference_terms(
         rename = {str(lab).lower(): str(var_domain[p]) for p, lab in enumerate(v_lab)}
         binders = {s: p for s, p in layout.items() if s not in eq_dom}
         rename.update({b: str(var_domain[p]) for b, p in binders.items()})
-        derivative = _rename_free_indices(derivative, rename, model_ir)
+        row_names = frozenset(str(d).lower() for d in var_domain)
+        derivative = _rename_free_indices(derivative, rename, model_ir, row_names)
         self_map = {str(d): str(d) for d in var_domain}
         mapping: Mapping[str, str] = (
             element_to_set.new_child(self_map)
@@ -1055,8 +1072,10 @@ def _build_multi_reference_terms(
         term: Expr = Binary("*", coeff, mult)
         cond = getattr(eq_def, "condition", None)
         if cond is not None:
-            cond = _rename_iterators_keeping_card(
-                cond, {e: str(var_domain[layout[e]]) for e in eq_dom}
+            # Scope-aware: a nested binder that captures a renamed eq index or
+            # re-controls a row index is alpha-renamed (PR #1791 review).
+            cond = _rename_free_indices(
+                cond, {e: str(var_domain[layout[e]]) for e in eq_dom}, model_ir, row_names
             )
             term = DollarConditional(value_expr=term, condition=cond)
         total = term if total is None else Binary("+", total, term)

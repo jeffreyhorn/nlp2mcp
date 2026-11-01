@@ -89,3 +89,8 @@ Prep Task 10 §2: `∂/∂trans(c,r,rp)` of `fodb(r',cf).. … + sum(rp'$tranc(r
   - **tfordy**'s `pfs` second reference (still infeasible: `yv(t,t,…)` remains).
 - **Open here:** tfordy's `lbal` `yv(t,t,…)` collapse.
 
+## PR #1791 review round 1
+
+- Every reference's binder mapping is kept within its placement (two sums over different binders at one position).
+- The equation condition is renamed scope-aware, alpha-renaming nested binders that would capture the renamed eq index or re-control a row index.
+

@@ -759,7 +759,15 @@ def test_pattern_c_binder_position_solves_to_the_nlp_optimum(tmp_path, fixture, 
 
 
 @pytest.mark.validation
-@pytest.mark.parametrize("fixture, nlp", [("TWO_REFERENCES", 1.3333), ("EGYPT_SHAPE", 33.25)])
+@pytest.mark.parametrize(
+    "fixture, nlp",
+    [
+        ("TWO_REFERENCES", 1.3333),
+        ("EGYPT_SHAPE", 33.25),
+        ("BINDERS_PER_PLACEMENT", 0.3241),
+        ("NESTED_CONDITION_BINDER", 1.3333),
+    ],
+)
 def test_multi_reference_solves_to_the_nlp_optimum(tmp_path, fixture, nlp):
     """Sprint 40 Day 8 (#1787, P4): one term per reference. Before: no solve /
     34.75 (silent). The fixtures live in the unit module."""

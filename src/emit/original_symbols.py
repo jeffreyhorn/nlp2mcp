@@ -165,31 +165,45 @@ def _cleanup_indices(param_def, model_ir: ModelIR) -> tuple[str, ...]:
     if len({d.lower() for d in domain}) == len(domain):
         return domain
 
-    def is_index(name: object) -> bool:
-        return isinstance(name, str) and (name in model_ir.sets or name in model_ir.aliases)
+    def root(name: str) -> str:
+        seen: set[str] = set()
+        cur = name
+        while cur.lower() in model_ir.aliases and cur.lower() not in seen:
+            seen.add(cur.lower())
+            cur = str(getattr(model_ir.aliases[cur], "target", cur))
+        return cur.lower()
+
+    def covers(name: object, declared: str) -> bool:
+        # The LHS index must range over the FULL declared set at its position:
+        # an alias of it, not a subset (``p(s,j)`` with ``s(i)`` covers only
+        # ``s``, PR #1791 review).
+        return (
+            isinstance(name, str)
+            and (name in model_ir.sets or name in model_ir.aliases)
+            and root(name) == root(declared)
+        )
 
     for lhs, _expr in getattr(param_def, "expressions", None) or ():
         lhs = tuple(lhs)
         if (
             len(lhs) == len(domain)
-            and all(is_index(i) for i in lhs)
+            and all(covers(i, d) for i, d in zip(lhs, domain, strict=True))
             and len({str(i).lower() for i in lhs}) == len(lhs)
         ):
             return tuple(str(i) for i in lhs)
 
-    used: set[str] = set()
+    # Reserve EVERY declared name up front, so a replacement never takes one a
+    # later position needs (``p(i,i,j)`` must become ``p(i,k,j)``, PR #1791 review).
+    used: set[str] = {d.lower() for d in domain}
+    seen: set[str] = set()
     out: list[str] = []
     for d in domain:
-        if d.lower() not in used:
+        if d.lower() not in seen:
             out.append(d)
-            used.add(d.lower())
+            seen.add(d.lower())
             continue
         alias = next(
-            (
-                a
-                for a, adef in model_ir.aliases.items()
-                if str(getattr(adef, "target", "")).lower() == d.lower() and a.lower() not in used
-            ),
+            (a for a in model_ir.aliases if root(a) == root(d) and a.lower() not in used),
             None,
         )
         if alias is None:

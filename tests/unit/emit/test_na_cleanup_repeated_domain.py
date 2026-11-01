@@ -57,3 +57,28 @@ def test_POSITIVE_CONTROL_a_domain_without_repeats_is_unchanged():
     )
     out = emit_post_assignment_na_cleanup(model)
     assert "p(i,k)$(NOT (p(i,k) > -inf and p(i,k) < inf)) = 0;" in out, out
+
+
+def test_a_SUBSET_lhs_is_not_accepted_as_the_cleanup_domain():
+    """PR #1791 review: `p(s,j) = …` with `s(i)` covers only the subset; the cleanup
+    must cover the full declared matrix (here via the alias fallback)."""
+    model = parse_model_text(
+        BASE.replace("Alias (i,j,k);", "Alias (i,j,k);\nSet s(i) / a /;").format(
+            assign="p(s,j) = 1/q(s,j);\np(i,j) = 1/q(i,j);"
+        )
+    )
+    out = emit_post_assignment_na_cleanup(model)
+    assert "p(s," not in out, out
+    assert "p(i,j)$(NOT (p(i,j) > -inf" in out, out
+
+
+def test_the_alias_fallback_RESERVES_the_declared_names():
+    """PR #1791 review: `p(i,i,j)` with a literal LHS must become `p(i,k,j)`;
+    taking `j` for position 2 left nothing distinct for position 3."""
+    src = (
+        BASE.replace("Parameter q(i,i), p(i,i);", "Parameter q(i,i), p(i,i,j);")
+        .replace("p(i,j)*x(i)", "p(i,j,'a')*x(i)")
+        .format(assign="p('a',j,k) = 1/q(j,k);")
+    )
+    out = emit_post_assignment_na_cleanup(parse_model_text(src))
+    assert "p(i,k,j)$(NOT (p(i,k,j) > -inf" in out, out

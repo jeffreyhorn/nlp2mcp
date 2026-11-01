@@ -67,3 +67,9 @@ Not a KKT change. **The target line** is `covar(s,sp)$(NOT (covar(s,sp) > -inf a
 
 - **PROCEED** if 1–2 hold, only gussrisk drifts, and its bucket holds.
 - **REPLAN** on any other drift.
+
+## PR #1791 review round 1
+
+- An assignment LHS is accepted only when each index's alias chain resolves to the FULL declared set at that position (a subset LHS such as `p(s,j)` is not).
+- The alias fallback reserves every declared name first (`p(i,i,j)` → `p(i,k,j)`).
+

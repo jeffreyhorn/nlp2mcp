@@ -55,6 +55,45 @@ solve m using nlp minimizing obj;
 """
 
 
+# PR #1791 review: two references share a placement but use DIFFERENT binders
+# (`sum(j$a(i,j), x(i,j)) + sum(k$b(i,k), x(i,k))`); each binder's mapping must be
+# kept, or `b(i,k)` keeps an uncontrolled `k`. NLP 0.3241 (before: no solve).
+BINDERS_PER_PLACEMENT = """\
+Set i / i1*i3 /;
+Alias (i,j,k);
+Set a(i,j), b(i,j), c(i,j);
+a(i,j) = yes$(ord(j) > ord(i)); b(i,j) = yes$(ord(j) = ord(i) + 1); c(i,j) = yes$(ord(j) < ord(i));
+Parameter wt(i,j);
+wt(i,j) = 1 + mod(7*ord(i) + 3*ord(j), 5)/4;
+Positive Variable x(i,j);
+Variable obj;
+Equation e(i), defobj;
+e(i).. sum(j$a(i,j), x(i,j)) + sum(k$b(i,k), x(i,k)) - sum(j$c(i,j), x(j,i)) =g= 3 - 2*ord(i);
+defobj.. obj =e= sum((i,j), wt(i,j)*sqr(x(i,j)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+# PR #1791 review: an equation condition with its own binder named like a row
+# index (`sum(rp$tranc(r,rp), 1) > 0` in a row over `rp`): mapping `r` to `rp`
+# captured it (`tranc(rp__,rp__)`). NLP 1.3333 (before: 2.222).
+NESTED_CONDITION_BINDER = """\
+Set r / r1*r3 /, c / c1*c2 /;
+Alias (r,rp);
+Set tranc(r,rp);
+tranc(r,rp) = yes$(ord(r) <> ord(rp));
+Parameter d(r,c);
+d(r,c) = ord(r) - 2 + ord(c)/4;
+Positive Variable trans(c,r,rp);
+Variable obj;
+Equation fodb(r,c), defobj;
+fodb(r,c)$(sum(rp$tranc(r,rp), 1) > 0).. sum(rp$tranc(r,rp), trans(c,rp,r) - trans(c,r,rp)) =e= d(r,c) - sum(rp, d(rp,c))/card(r);
+defobj.. obj =e= sum((c,r,rp), sqr(trans(c,r,rp)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+
 def _emit(tmp_path: Path, source: str) -> str:
     src = tmp_path / "model.gms"
     src.write_text(source)
@@ -86,6 +125,17 @@ def test_the_EGYPT_shape_keeps_both_terms_under_its_conditions(tmp_path):
     assert "1$(tranc(rp,r)))$(ct(c))) * nu_fodb(rp,c))$(cf(c))" in row, row
     assert "1$(tranc(r,rp)))$(ct(c))) * nu_fodb(r,c))$(cf(c))" in row, row
     assert "tranc(rp,rp)" not in row, row
+
+
+def test_every_reference_KEEPS_its_binder_mapping(tmp_path):
+    row = _row(_emit(tmp_path, BINDERS_PER_PLACEMENT), "stat_x(")
+    assert "(1$(a(i,j)) + 1$(b(i,j)))) * lam_e(i)" in row and "b(i,k)" not in row, row
+
+
+def test_a_condition_binder_never_CAPTURES_or_RE_CONTROLS_a_row_index(tmp_path):
+    row = _row(_emit(tmp_path, NESTED_CONDITION_BINDER), "stat_trans(")
+    assert "tranc(rp__,rp__)" not in row and "sum(rp," not in row, row
+    assert "$(sum(r__kkt1$(tranc(rp,r__kkt1)), 1) > 0)" in row, row
 
 
 def test_the_layouts_need_every_eq_index_and_two_placements():

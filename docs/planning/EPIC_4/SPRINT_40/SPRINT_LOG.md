@@ -1159,3 +1159,15 @@ P8 landed in PR #1788 (three behavioural pins, 8 / 8). Its one open item, an emi
 
 - **tfordy's "BACKWARD" is not a new regression.** The DB still holds the pre-Day-7 match, because nothing has been persisted since. Day 7's golden, landed by owner decision, was already `model_infeasible`, and today's emit is also `model_infeasible`. So relative to the committed golden the bucket is unchanged, and the change adds a correct term.
 - **sroute** is booked as a presolve match when a persisted run lands it. It needs a `check_mcp_solve_attribution` check before any claim.
+
+### PR #1791 review round 1
+
+- **Class-B cleanup (#1790):**
+  - **A subset LHS was accepted.** `p(s,j) = …` with `s(i)` would index the cleanup by the subset, missing every cell outside it, including the diagonal the old line covered. **Fixed:** an LHS index is accepted only when its alias chain resolves to the declared set at that position.
+  - **The alias fallback could take a later declared name.** `p(i,i,j)` with a literal LHS took `j` for position 2 and could not fill position 3. **Fixed:** every declared name is reserved first, so it becomes `p(i,k,j)`.
+- **Multi-reference terms (#1787):**
+  - **Only the first reference's binder mapping per placement was kept.** In `sum(j$a(i,j), x(i,j)) + sum(k$b(i,k), x(i,k))`, `k` stayed uncontrolled (no solve). **Fixed:** every reference's mappings merge within its placement; a binder at two positions there falls back to the standard path. Solves to 0.324 = NLP.
+  - **A condition binder captured the renamed eq index.** `sum(rp$tranc(r,rp), 1) > 0` became `sum(rp__$(tranc(rp__,rp__)), 1) > 0` (2.222 vs NLP 1.333). **Fixed:** the condition is renamed with the scope-aware `_rename_free_indices`, which now also alpha-renames a nested binder named like a row index (`reserved`); the derivative goes through the same. Solves to 1.333.
+- **Regressions:** four, each failing on the pre-fix code: two cleanup unit tests, and two multi-reference row + solve tests.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,737 passed**, no `225*` dirs.
+
