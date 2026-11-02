@@ -94,6 +94,62 @@ solve m using nlp minimizing obj;
 """
 
 
+# PR #1791 review round 2:
+# - a binder over a SUBSET in one placement (`sum(s$b(i,s), x(i,s))`, s(i) / i3 /):
+#   a representative outside `s` lacks that sum, so the shape keeps the pre-#1787
+#   path (identical to `main`).
+SUBSET_BINDER_IN_PLACEMENT = """\
+Set i / i1*i3 /, s(i) / i3 /;
+Alias (i,j);
+Set a(i,j), b(i,j), c(i,j);
+a(i,j) = yes$(ord(j) > ord(i)); b(i,j) = yes; c(i,j) = yes$(ord(j) < ord(i));
+Parameter wt(i,j);
+wt(i,j) = 1 + mod(7*ord(i) + 3*ord(j), 5)/4;
+Positive Variable x(i,j);
+Variable obj;
+Equation e(i), defobj;
+e(i).. sum(j$a(i,j), x(i,j)) + sum(s$b(i,s), x(i,s)) - sum(j$c(i,j), x(j,i)) =g= 3 - 2*ord(i);
+defobj.. obj =e= sum((i,j), wt(i,j)*sqr(x(i,j)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+# - an indexed `smax` in the guard: its fresh alias needs a self-mapping, or the
+#   PARAMETER's declared domain turns `smax(j, wt(j))` into `wt(i)`. NLP 0.6667
+#   (before: 1.000).
+SMAX_GUARD = """\
+Set i / i1*i3 /;
+Alias (i,j,k);
+Set a(i,j);
+a(i,j) = yes$(ord(i) <> ord(j));
+Parameter wt(i), d(i);
+wt(i) = ord(i); d(i) = ord(i) - 2;
+Positive Variable x(i,j);
+Variable obj;
+Equation e(i), defobj;
+e(i).. sum(k$(a(i,k) and smax(j, wt(j)) > 2), x(i,k) - x(k,i)) =e= d(i);
+defobj.. obj =e= sum((i,j), sqr(x(i,j)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+# - a `.off` set attribute in the equation condition follows the eq coordinate of
+#   each term (`$(j.off = 0)` on the incoming one).
+SET_ATTRIBUTE_CONDITION = """\
+Set i / a, b, c /;
+Alias (i,j);
+Set aa(i,j);
+aa(i,j) = yes$(ord(i) <> ord(j));
+Positive Variable x(i,j);
+Variable obj;
+Equation e(i), defobj;
+e(i)$(i.off = 0).. sum(j$aa(i,j), x(i,j) - x(j,i)) =e= 1;
+defobj.. obj =e= sum((i,j), sqr(x(i,j)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+
 def _emit(tmp_path: Path, source: str) -> str:
     src = tmp_path / "model.gms"
     src.write_text(source)
@@ -136,6 +192,45 @@ def test_a_condition_binder_never_CAPTURES_or_RE_CONTROLS_a_row_index(tmp_path):
     row = _row(_emit(tmp_path, NESTED_CONDITION_BINDER), "stat_trans(")
     assert "tranc(rp__,rp__)" not in row and "sum(rp," not in row, row
     assert "$(sum(r__kkt1$(tranc(rp,r__kkt1)), 1) > 0)" in row, row
+
+
+def test_a_SUBSET_binder_keeps_the_pre_1787_path(monkeypatch):
+    import src.kkt.stationarity as st
+    from src.ad.constraint_jacobian import compute_constraint_jacobian
+    from src.ad.gradient import compute_objective_gradient
+    from src.config import Config
+    from src.emit.expr_to_gams import expr_to_gams
+    from src.ir.normalize import normalize_model
+    from src.ir.parser import parse_model_text
+    from src.kkt.assemble import assemble_kkt_system
+
+    model = parse_model_text(SUBSET_BINDER_IN_PLACEMENT)
+    # Non-vacuity: the shape HAS two placements, so the path would be taken.
+    assert st._multi_reference_layouts(model.equations["e"], "x") is not None
+
+    def stat_x() -> str:
+        m = parse_model_text(SUBSET_BINDER_IN_PLACEMENT)
+        eqs, _ = normalize_model(m)
+        config = Config()
+        gradient = compute_objective_gradient(m, config)
+        j_eq, j_ineq = compute_constraint_jacobian(m, eqs, config)
+        kkt = assemble_kkt_system(m, gradient, j_eq, j_ineq, config)
+        return expr_to_gams(st.build_stationarity_equations(kkt, config)["stat_x"].lhs_rhs[0])
+
+    current = stat_x()
+    monkeypatch.setattr(st, "_multi_reference_layouts", lambda *a, **k: None)
+    assert current == stat_x(), "a subset binder must keep the pre-#1787 path"
+
+
+def test_an_indexed_SMAX_in_the_guard_keeps_its_own_binder(tmp_path):
+    row = _row(_emit(tmp_path, SMAX_GUARD), "stat_x(")
+    assert "wt(i)" not in row and "wt(j)" not in row, row
+    assert "smax(i__kkt1, wt(i__kkt1)) > 2" in row, row
+
+
+def test_a_SET_ATTRIBUTE_in_the_condition_follows_the_eq_coordinate(tmp_path):
+    row = _row(_emit(tmp_path, SET_ATTRIBUTE_CONDITION), "stat_x(")
+    assert "* nu_e(i))$(i.off = 0)" in row and "* nu_e(j))$(j.off = 0)" in row, row
 
 
 def test_the_layouts_need_every_eq_index_and_two_placements():

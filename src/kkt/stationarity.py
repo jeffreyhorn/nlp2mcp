@@ -36,6 +36,7 @@ from src.ir.ast import (
     MultiplierRef,
     ParamRef,
     Prod,
+    SetAttrRef,
     SetMembershipTest,
     Sum,
     SymbolRef,
@@ -677,6 +678,10 @@ def _rename_free_indices(
         return Call(e.func, args)
 
     def hold(e: Expr) -> Expr:
+        # ``i.off`` / ``i.pos`` / ``i.ord`` of an ITERATOR follow its rename (the
+        # base rewriter leaves SetAttrRef unchanged, PR #1791 review).
+        if isinstance(e, SetAttrRef) and e.name.lower() in rename:
+            return SetAttrRef(str(rename[e.name.lower()]), e.attribute)
         reduction = isinstance(e, Call) and _reduction_call_parts(e, model_ir) is not None
         if (
             isinstance(e, (Sum, Prod))
@@ -1035,6 +1040,18 @@ def _build_multi_reference_terms(
             layout[e] < len(v_lab) and e_lab[k] == v_lab[layout[e]] for k, e in enumerate(eq_dom)
         )
 
+    # Every binder must range over its variable position's FULL set: a binder over
+    # a subset (``sum(s$b(i,s), x(i,s))`` with ``s(i)``) contributes only inside
+    # it, which one representative per placement cannot carry (PR #1791 review).
+    for layout in layouts:
+        for sym, pos in layout.items():
+            if sym in eq_dom:
+                continue
+            if _resolve_alias_target(sym, model_ir) != _resolve_alias_target(
+                str(var_domain[pos]), model_ir
+            ):
+                return None
+
     total: Expr | None = None
     for layout in layouts:
         rep_entry = None
@@ -1059,7 +1076,18 @@ def _build_multi_reference_terms(
         rename.update({b: str(var_domain[p]) for b, p in binders.items()})
         row_names = frozenset(str(d).lower() for d in var_domain)
         derivative = _rename_free_indices(derivative, rename, model_ir, row_names)
+        # Self-maps for the row's names AND every set/alias name left in the
+        # derivative (a fresh ``smax`` alias would otherwise be mapped to its
+        # PARAMETER's declared domain: ``smax(j__kkt1, wt(j__kkt1))`` -> ``wt(i)``,
+        # PR #1791 review), as the binder rewrite's ``_pc_self`` does.
         self_map = {str(d): str(d) for d in var_domain}
+        self_map.update(
+            {
+                n: n
+                for n in _index_names_in(derivative)
+                if n in model_ir.sets or n in model_ir.aliases
+            }
+        )
         mapping: Mapping[str, str] = (
             element_to_set.new_child(self_map)
             if isinstance(element_to_set, ChainMap)

@@ -766,6 +766,7 @@ def test_pattern_c_binder_position_solves_to_the_nlp_optimum(tmp_path, fixture, 
         ("EGYPT_SHAPE", 33.25),
         ("BINDERS_PER_PLACEMENT", 0.3241),
         ("NESTED_CONDITION_BINDER", 1.3333),
+        ("SMAX_GUARD", 0.6667),
     ],
 )
 def test_multi_reference_solves_to_the_nlp_optimum(tmp_path, fixture, nlp):

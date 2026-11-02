@@ -201,6 +201,39 @@ def demo_refused(listing: str) -> bool:
     return bool(_DEMO_REFUSAL.search(listing))
 
 
+def classify_demo_refusal(
+    listing: str, emb_status: int | None, ref_obj: float | None
+) -> tuple[str, str] | None:
+    """Attribute a demo refusal to the solve it belongs to (PR #1791 review).
+
+    The presolve listing holds the embedded NLP's solve AND the later MCP's. If
+    the embedded NLP's ``MODEL STATUS`` appears BEFORE the refusal line, the NLP
+    ran and only the (larger) MCP was refused, so the NLP result still counts: a
+    non-optimal embedded NLP against a reference that solves is a divergence,
+    exactly as ``classify_divergence`` would say. Returns None when the listing
+    carries no refusal (classify normally), else ``(status, detail)``.
+    """
+    refusal = _DEMO_REFUSAL.search(listing)
+    if refusal is None:
+        return None
+    first_status = re.search(r"\*\*\*\* MODEL STATUS\s+\d+", listing)
+    if first_status is None or first_status.start() > refusal.start():
+        return (
+            "skipped",
+            "over the demo ceiling (licensed-only; not checkable under the CI demo)",
+        )
+    if ref_obj is not None and emb_status is not None and emb_status not in _OPTIMAL_STATUSES:
+        return (
+            "diverged",
+            f"embedded NLP non-optimal (MODEL STATUS {emb_status}) while the reference "
+            "NLP solves -- the $include re-run diverged (the later MCP was refused by the demo)",
+        )
+    return (
+        "skipped",
+        "the MCP is over the demo ceiling; the embedded NLP solved (not comparable under the CI demo)",
+    )
+
+
 def classify_divergence(
     ref_obj: float | None,
     emb_obj: float | None,
@@ -298,12 +331,13 @@ def check_model(model_id: str, tol: float) -> dict:
             rec["status"] = "timeout"
             rec["detail"] = "embedded presolve GAMS run exceeded 300s (unverified)"
             return rec
-        if demo_refused(emb_listing):
-            rec["status"] = "skipped"
-            rec["detail"] = "over the demo ceiling (licensed-only; not checkable under the CI demo)"
-            return rec
         emb_obj = _parse_scalar_display(emb_listing, "nlp2mcp_obj_val")
         emb_status = _parse_model_status(emb_listing)  # the embedded NLP is the first solve
+        refused = classify_demo_refusal(emb_listing, emb_status, ref_obj)
+        if refused is not None:
+            rec["status"], rec["detail"] = refused
+            rec["embedded_status"] = emb_status
+            return rec
         # A non-zero GAMS exit, an EXECERROR ABORT (korcge #1439 = 5), or a
         # user/matrix error means the embedded $include run did NOT complete
         # normally. (rc 124/127 already handled above.) Note GAMS also prints a

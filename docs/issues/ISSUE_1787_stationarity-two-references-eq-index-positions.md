@@ -94,3 +94,9 @@ Prep Task 10 §2: `∂/∂trans(c,r,rp)` of `fodb(r',cf).. … + sum(rp'$tranc(r
 - Every reference's binder mapping is kept within its placement (two sums over different binders at one position).
 - The equation condition is renamed scope-aware, alpha-renaming nested binders that would capture the renamed eq index or re-control a row index.
 
+## PR #1791 review round 2
+
+- A binder over a SUBSET of its variable position's set excludes the shape (it keeps the pre-#1787 path).
+- Self-maps cover every symbolic name left in the derivative (an `smax` alias).
+- `SetAttrRef` (`i.off`) follows the scope-aware rename.
+

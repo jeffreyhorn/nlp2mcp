@@ -1182,3 +1182,13 @@ P8 landed in PR #1788 (three behavioural pins, 8 / 8). Its one open item, an emi
   - egypt, srpchase and shale go on the allowlist with their reasons: they fail at compile time, before any demo refusal, and they WARN rather than fail.
 - ⚠ **The demo-refusal path is verified by its unit test and PR19's live Day-1 evidence, not by a local demo run** (forcing the demo locally gives rc 7 and no listing). This PR's CI run is the live check. **Confirmed** (run 41382646483, success): exactly the seven skip as over the demo ceiling, egypt / shale / srpchase (and korcge) WARN, and no non-allowlisted divergence.
 
+### PR #1791 review round 2
+
+- **Multi-reference terms (#1787):**
+  - **A subset binder within a placement** (`sum(s$b(i,s), x(i,s))` beside `sum(j$a(i,j), x(i,j))`, `s(i) / i3 /`): a representative outside `s` lacks that sum, and generalising it omitted the subset contribution (0.291 vs NLP 0.2652). **Fixed by exclusion:** every binder must range over its variable position's FULL set, or the pair keeps the pre-#1787 path. That path is byte-identical to `main`, and itself does not solve this shape.
+  - **An indexed `smax` in the guard:** its fresh alias was taken back by the PARAMETER's declared domain (`smax(j, wt(j))` → `wt(i)`, 1.000 vs NLP 0.6667). **Fixed:** self-maps cover every set/alias name left in the derivative, as `_pc_self` does. Solves to 0.667.
+  - **A `.off` attribute in the condition:** `SetAttrRef` was not renamed, so the incoming term kept `$(i.off = 0)`. **Fixed** in `_rename_free_indices`: an iterator's set attribute follows its rename, giving `$(j.off = 0)`.
+- **presolve-divergence:** a demo refusal can belong to the later MCP only, while the embedded NLP has already reported a non-optimal status. **Fixed:** `classify_demo_refusal` attributes the refusal by position. A `MODEL STATUS` before the refusal line means the embedded NLP ran, and a non-optimal one against a reference that solves stays a **divergence**.
+- **Regressions:** `SUBSET_BINDER_IN_PLACEMENT` (pre-#1787 path, plus non-vacuity), `SMAX_GUARD` (row + solve), `SET_ATTRIBUTE_CONDITION` (row), and combined-listing unit tests for the attribution. The pre-fix code fails each.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,743 passed**, no `225*` dirs.
+
