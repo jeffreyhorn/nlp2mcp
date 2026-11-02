@@ -1180,5 +1180,5 @@ P8 landed in PR #1788 (three behavioural pins, 8 / 8). Its one open item, an emi
 - **Fixed:**
   - `check_presolve_divergence.py` classifies a listing carrying the demo's refusal line (`**** The model exceeds the demo license limits`, the pattern PR19 uses) as **skipped**, before its EXECERROR rule. Unit-tested, with korcge's genuine abort as the control.
   - egypt, srpchase and shale go on the allowlist with their reasons: they fail at compile time, before any demo refusal, and they WARN rather than fail.
-- ⚠ **The demo-refusal path is verified by its unit test and PR19's live Day-1 evidence, not by a local demo run** (forcing the demo locally gives rc 7 and no listing). This PR's CI run is the live check.
+- ⚠ **The demo-refusal path is verified by its unit test and PR19's live Day-1 evidence, not by a local demo run** (forcing the demo locally gives rc 7 and no listing). This PR's CI run is the live check. **Confirmed** (run 41382646483, success): exactly the seven skip as over the demo ceiling, egypt / shale / srpchase (and korcge) WARN, and no non-allowlisted divergence.
 
