@@ -1171,3 +1171,14 @@ P8 landed in PR #1788 (three behavioural pins, 8 / 8). Its one open item, an emi
 - **Regressions:** four, each failing on the pre-fix code: two cleanup unit tests, and two multi-reference row + solve tests.
 - **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,737 passed**, no `225*` dirs.
 
+### CI: the presolve-divergence gate (first run since Day 3)
+
+- **The cause:** `presolve-divergence.yml` triggers on `src/emit/original_symbols.py` (#1790), so this was its first run since 2026-10-19. Day 3 had since committed presolve goldens for the **licensed-only** models (the MCP-gated cohort and the admitted NLP-gated set). The workflow runs the DEMO, so it reported 10 hard divergences: airsp2, egypt, glider, robot, shale, srpchase, tfordy, torsion, tricp, turkey.
+- **Measured licensed, locally, model by model:**
+  - **seven are demo artefacts:** airsp2, glider, robot, torsion, tricp, turkey and tfordy show only informational objective gaps;
+  - **three genuinely diverge, and each is pre-existing:** egypt and srpchase fail with `$140` (#1766), and shale with `$148` (`nu_mnmr.l = mnmr.m;`, recorded on #1766). All three are identical at `500ffa1f` / on `main`.
+- **Fixed:**
+  - `check_presolve_divergence.py` classifies a listing carrying the demo's refusal line (`**** The model exceeds the demo license limits`, the pattern PR19 uses) as **skipped**, before its EXECERROR rule. Unit-tested, with korcge's genuine abort as the control.
+  - egypt, srpchase and shale go on the allowlist with their reasons: they fail at compile time, before any demo refusal, and they WARN rather than fail.
+- ⚠ **The demo-refusal path is verified by its unit test and PR19's live Day-1 evidence, not by a local demo run** (forcing the demo locally gives rc 7 and no listing). This PR's CI run is the live check.
+

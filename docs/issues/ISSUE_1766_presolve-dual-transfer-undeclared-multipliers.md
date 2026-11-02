@@ -32,3 +32,16 @@ So the `$140` is a **symptom**. The transfer block iterates the source equations
 - **srpchase:** #1385 (P6).
 
 ⚠ Fixing only the symptom would make both presolve emits run while still missing the constraints. Do not book a match from it without `kkt_residual.py`.
+
+## A sibling: shale's presolve `$148` (Sprint 40 Day 8)
+
+Same layer: the presolve dual transfer. shale's `--nlp-presolve` emit fails to compile with `$148 Dimension different`, at
+
+```
+nu_mnmr.l = mnmr.m;
+lam_mmr3.l = abs(mmr3.m);
+```
+
+That is, a multiplier initialised from an equation marginal with a different dimension than the multiplier is declared with. It is identical at `500ffa1f` (before Sprint 40 Day 7) and on `main`, so it is pre-existing. Prep Task 7 had named it shale's candidate presolve defect.
+
+Found while adding the licensed-only presolve goldens to the presolve-divergence gate's allowlist: egypt and srpchase (this issue's `$140`) and shale (`$148`) are the three that genuinely diverge under the license.

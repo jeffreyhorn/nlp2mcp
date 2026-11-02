@@ -182,6 +182,25 @@ def nlp_reference(model_id: str) -> float | None:
     return _nlp_ref_cache.get(model_id)
 
 
+#: The demo edition's refusal line (the same pattern as scripts/ci/run_pr19_solves.py,
+#: CI_LICENSE_DESIGN.md §6). PR workflows run the DEMO by design, and a model over
+#: its size ceiling is refused at generation: an EXECERROR abort that says nothing
+#: about the $include re-run. Generic GAMS text only.
+_DEMO_REFUSAL = re.compile(r"^\*{4} The model exceeds the demo license limits\b", re.MULTILINE)
+
+
+def demo_refused(listing: str) -> bool:
+    """True if the listing is the demo edition refusing the model's size.
+
+    Sprint 40 Day 3 committed presolve goldens for the licensed-only models (the
+    MCP-gated cohort and the admitted NLP-gated set). Under the demo they abort
+    with EXECERROR, which ``classify_divergence`` would read as a hard divergence.
+    Such a run is not a divergence result at all. It is reported as skipped, and
+    the check stays runnable for these models under a license (locally).
+    """
+    return bool(_DEMO_REFUSAL.search(listing))
+
+
 def classify_divergence(
     ref_obj: float | None,
     emb_obj: float | None,
@@ -278,6 +297,10 @@ def check_model(model_id: str, tol: float) -> dict:
         if rc == 124:
             rec["status"] = "timeout"
             rec["detail"] = "embedded presolve GAMS run exceeded 300s (unverified)"
+            return rec
+        if demo_refused(emb_listing):
+            rec["status"] = "skipped"
+            rec["detail"] = "over the demo ceiling (licensed-only; not checkable under the CI demo)"
             return rec
         emb_obj = _parse_scalar_display(emb_listing, "nlp2mcp_obj_val")
         emb_status = _parse_model_status(emb_listing)  # the embedded NLP is the first solve

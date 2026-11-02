@@ -18,3 +18,13 @@ korcge
 # docs/planning/EPIC_4/SPRINT_36/DAY0_KICKOFF.md §3.1). Fixed by NA-guarding the
 # presolve marginal->multiplier .L transfer in _emit_nlp_presolve (#1322 idiom,
 # emit_gams.py); robustlp presolve now solves MODEL STATUS 1 Optimal.
+#
+# egypt, srpchase, shale (Sprint 40 Day 8): GENUINE pre-existing presolve
+# compile failures, measured licensed and identical on `main`. egypt and
+# srpchase hit $140 (the dual transfer initialises multipliers the MCP never
+# declared, #1766). shale hits $148 (a multiplier initialised from a marginal of
+# a different dimension: `nu_mnmr.l = mnmr.m;`, recorded on #1766). Remove each
+# entry when its presolve compiles.
+egypt
+srpchase
+shale

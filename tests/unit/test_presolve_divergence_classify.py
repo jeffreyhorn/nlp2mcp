@@ -39,6 +39,7 @@ try:
 finally:
     sys.path[:] = _saved_sys_path
 classify_divergence = _mod.classify_divergence
+demo_refused = _mod.demo_refused
 
 TOL = 1e-4
 OPTIMAL = 2  # GAMS MODEL STATUS: locally optimal
@@ -97,3 +98,24 @@ def test_nonconvex_local_optimum_is_informational() -> None:
     # of a non-convex model, NOT a $onMultiR corruption → obj_gap (info), not fail.
     status, _ = classify_divergence(5.0723, 6.959, OPTIMAL, execerror=False, tol=TOL)
     assert status == "obj_gap"
+
+
+def test_a_DEMO_CEILING_refusal_is_recognised_and_is_not_a_divergence() -> None:
+    """Sprint 40 Day 8: CI runs the demo, and the licensed-only presolve goldens
+    committed on Day 3 abort there with EXECERROR. ``check_model`` classifies a
+    listing carrying the demo's refusal line as SKIPPED before the EXECERROR rule,
+    which would otherwise hard-fail it as a divergence."""
+    refused = (
+        "GAMS 54.2.1\n"
+        "**** The model exceeds the demo license limits for nonlinear models\n"
+        "**** SOLVE from line 900 ABORTED, EXECERROR = 1\n"
+    )
+    assert demo_refused(refused)
+    # Positive control: korcge's genuine $include abort carries no refusal line,
+    # so it is NOT skipped and still hard-diverges through classify_divergence.
+    korcge = "**** SOLVE from line 412 ABORTED, EXECERROR = 5\n"
+    assert not demo_refused(korcge)
+    status, _ = classify_divergence(1.0, None, None, execerror=True, tol=TOL)
+    assert status == "diverged"
+    # The phrase must START the line, as GAMS writes it: not any mention of it.
+    assert not demo_refused("* note: The model exceeds the demo license limits\n")
