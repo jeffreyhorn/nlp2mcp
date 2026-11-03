@@ -582,6 +582,24 @@ solve mm using nlp minimizing obj;
 """
 
 
+# PR #1791 review round 3: the binder rewrite's eq coordinate must also take the
+# eq index's own symbol in a `.off` guard (`t.off` stayed, uncontrolled: no
+# solve). NLP 30.1.
+OFF_GUARD_BINDER = """\
+Set t / t1*t4 /;
+Alias (t,v);
+Set vs(t,v);
+vs(t,v) = yes$(ord(t) >= ord(v));
+Positive Variable h(v);
+Variable obj;
+Equation pr(t), defobj;
+pr(t).. sum(v$(vs(t,v) and v.off + 1 >= t.off), h(v)) =g= ord(t);
+defobj.. obj =e= sum(v, ord(v)*sqr(h(v)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+
 def _emit(tmp_path: Path, source: str) -> str:
     src = tmp_path / "model.gms"
     src.write_text(source)
@@ -970,6 +988,11 @@ def test_the_representative_comes_from_the_MAJORITY_structure_group():
     # Positive control: one structure group -> its first eligible entry.
     same = {(0, 0): plain, (1, 1): plain, (2, 1): plain}
     assert _eligible_binder_rep(jac(rows, cols, same), entries, 0) == (0, 0)
+
+
+def test_an_OFF_guard_on_the_eq_index_follows_the_eq_coordinate(tmp_path):
+    row = _row(_emit(tmp_path, OFF_GUARD_BINDER), "stat_h(")
+    assert "v.off + 1 >= t__kkt1.off" in row and "t.off" not in row, row
 
 
 def test_the_swap_needs_the_eq_index_ABSENT_from_every_reference():

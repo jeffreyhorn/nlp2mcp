@@ -1074,6 +1074,13 @@ def _build_multi_reference_terms(
         rename = {str(lab).lower(): str(var_domain[p]) for p, lab in enumerate(v_lab)}
         binders = {s: p for s, p in layout.items() if s not in eq_dom}
         rename.update({b: str(var_domain[p]) for b, p in binders.items()})
+        # The eq indices' own SYMBOLS too: the AD substitutes labels into
+        # references but leaves a set attribute symbolic (``j.off > i.off`` stays
+        # ``i.off``), so in the incoming placement ``i`` must become the row's
+        # other coordinate. Unmapped, the guard read ``i.off > i.off``, always
+        # false, and the term vanished (PR #1791 review). Before re-symbolisation
+        # the variable's coordinates are labels, so this cannot hit them.
+        rename.update({e: str(var_domain[layout[e]]) for e in eq_dom})
         row_names = frozenset(str(d).lower() for d in var_domain)
         derivative = _rename_free_indices(derivative, rename, model_ir, row_names)
         # Self-maps for the row's names AND every set/alias name left in the
@@ -8377,6 +8384,9 @@ def _add_indexed_jacobian_terms(
                             {
                                 **_pc_binder_map,
                                 str(group_eq_indices[_pc_eq_pos]).lower(): _pc_eq_star,
+                                # the eq index's own symbol (a symbolic ``t.off``
+                                # in a guard) follows it too (PR #1791 review)
+                                _pc_eq_idx.lower(): _pc_eq_star,
                             },
                             kkt.model_ir,
                         )

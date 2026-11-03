@@ -150,6 +150,27 @@ solve m using nlp minimizing obj;
 """
 
 
+# PR #1791 review round 3: a `.off` guard on the eq index inside the SUM's
+# condition. The AD leaves the set attribute symbolic (`i.off`), so the incoming
+# term needs the eq index's own symbol renamed too: unmapped, its guard read
+# `i.off > i.off` (always false) and the term vanished. NLP 63.0833 (before: 0).
+OFF_SUM_GUARD = """\
+Set i / a, b, c, d /;
+Alias (i,j);
+Set aa(i,j);
+aa(i,j) = yes$(ord(i) <> ord(j));
+Parameter wt(i,j);
+wt(i,j) = 1 + 3*ord(j);
+Positive Variable x(i,j), z(i);
+Variable obj;
+Equation e(i), defobj;
+e(i).. sum(j$(aa(i,j) and j.off > i.off), x(i,j) - x(j,i)) + z(i) =e= 2*ord(i) - 4;
+defobj.. obj =e= sum((i,j), wt(i,j)*sqr(x(i,j))) + sum(i, 3*sqr(z(i)));
+Model m / all /;
+solve m using nlp minimizing obj;
+"""
+
+
 def _emit(tmp_path: Path, source: str) -> str:
     src = tmp_path / "model.gms"
     src.write_text(source)
@@ -231,6 +252,13 @@ def test_an_indexed_SMAX_in_the_guard_keeps_its_own_binder(tmp_path):
 def test_a_SET_ATTRIBUTE_in_the_condition_follows_the_eq_coordinate(tmp_path):
     row = _row(_emit(tmp_path, SET_ATTRIBUTE_CONDITION), "stat_x(")
     assert "* nu_e(i))$(i.off = 0)" in row and "* nu_e(j))$(j.off = 0)" in row, row
+
+
+def test_an_OFF_sum_guard_follows_the_eq_coordinate_of_each_term(tmp_path):
+    row = _row(_emit(tmp_path, OFF_SUM_GUARD), "stat_x(")
+    assert "1$(aa(i,j) and j.off > i.off) * nu_e(i)" in row, row
+    assert "1$(aa(j,i) and i.off > j.off) * nu_e(j)" in row, row
+    assert "i.off > i.off" not in row, row
 
 
 def test_the_layouts_need_every_eq_index_and_two_placements():

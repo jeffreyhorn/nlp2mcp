@@ -1192,3 +1192,11 @@ P8 landed in PR #1788 (three behavioural pins, 8 / 8). Its one open item, an emi
 - **Regressions:** `SUBSET_BINDER_IN_PLACEMENT` (pre-#1787 path, plus non-vacuity), `SMAX_GUARD` (row + solve), `SET_ATTRIBUTE_CONDITION` (row), and combined-listing unit tests for the attribution. The pre-fix code fails each.
 - **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,743 passed**, no `225*` dirs.
 
+### PR #1791 review round 3
+
+- **The review raised a summary concern, with no comment thread:** equation-index renaming mishandles `.off` sum guards. **Confirmed by measurement.** The AD substitutes labels into references but leaves a set attribute symbolic. In `sum(j$(aa(i,j) and j.off > i.off), x(i,j) - x(j,i))` the representative derivative held `aa(a,j)` and `j.off > i.off`, and the multi-reference rename mapped labels and binders but not the eq index's own symbol. So the incoming term's guard read `i.off > i.off`, always false, and the term vanished (MCP 0.000 vs NLP 63.0833).
+- **Fixed in both paths:** the derivative rename also maps each eq index's own symbol to its placement's coordinate (multi-reference) or to the eq coordinate `E*` (Day 7's binder rewrite, where `t.off` had stayed uncontrolled: no solve). This cannot hit the variable's coordinates, which are labels before re-symbolisation.
+- **Regressions:** `OFF_SUM_GUARD` (rows + solve: 63.083 = NLP) and `OFF_GUARD_BINDER` (row + solve: 30.100 = NLP); the pre-fix code fails both.
+- **Not fixed here, noted:** a guard that mentions the eq index ONLY through `.off` (`sum(j$(j.off > i.off), …)`) is not detected as Pattern C and keeps the pre-existing phantom-offset path. An equation whose `.off`-guarded sum is empty (`e(d)`) is not recognised as empty by the emitter (unfixed multiplier); the fixtures add a `z(i)` term. Both are pre-existing.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,747 passed**, no `225*` dirs.
+
