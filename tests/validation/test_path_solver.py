@@ -734,6 +734,7 @@ def test_issue_1782_reversed_domain_multiplier_values(tmp_path):
         ("SMAX_CONDITION_SCOPE", 14.3662),
         ("THREE_AXIS_GUARD", 0.6667),
         ("NESTED_REDUCTION", 14.3662),
+        ("OFF_GUARD_BINDER", 30.1),
     ],
 )
 def test_pattern_c_binder_position_solves_to_the_nlp_optimum(tmp_path, fixture, nlp):
@@ -751,6 +752,32 @@ def test_pattern_c_binder_position_solves_to_the_nlp_optimum(tmp_path, fixture, 
         / "test_pattern_c_binder_position_1782.py"
     )
     spec = importlib.util.spec_from_file_location("_pattern_c_binder_fixtures", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    obj, _ = _translate_and_solve(tmp_path, fixture.lower(), getattr(module, fixture))
+    assert abs(obj - nlp) < 1e-3 * max(1.0, abs(nlp)), obj
+
+
+@pytest.mark.validation
+@pytest.mark.parametrize(
+    "fixture, nlp",
+    [
+        ("TWO_REFERENCES", 1.3333),
+        ("EGYPT_SHAPE", 33.25),
+        ("BINDERS_PER_PLACEMENT", 0.3241),
+        ("NESTED_CONDITION_BINDER", 1.3333),
+        ("SMAX_GUARD", 0.6667),
+        ("OFF_SUM_GUARD", 63.0833),
+    ],
+)
+def test_multi_reference_solves_to_the_nlp_optimum(tmp_path, fixture, nlp):
+    """Sprint 40 Day 8 (#1787, P4): one term per reference. Before: no solve /
+    34.75 (silent). The fixtures live in the unit module."""
+    import importlib.util
+
+    path = Path(__file__).resolve().parents[1] / "unit" / "kkt" / "test_multi_reference_1787.py"
+    spec = importlib.util.spec_from_file_location("_multi_reference_fixtures", path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

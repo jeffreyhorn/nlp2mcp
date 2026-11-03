@@ -39,6 +39,8 @@ try:
 finally:
     sys.path[:] = _saved_sys_path
 classify_divergence = _mod.classify_divergence
+demo_refused = _mod.demo_refused
+classify_demo_refusal = _mod.classify_demo_refusal
 
 TOL = 1e-4
 OPTIMAL = 2  # GAMS MODEL STATUS: locally optimal
@@ -97,3 +99,43 @@ def test_nonconvex_local_optimum_is_informational() -> None:
     # of a non-convex model, NOT a $onMultiR corruption → obj_gap (info), not fail.
     status, _ = classify_divergence(5.0723, 6.959, OPTIMAL, execerror=False, tol=TOL)
     assert status == "obj_gap"
+
+
+def test_a_DEMO_CEILING_refusal_is_recognised_and_is_not_a_divergence() -> None:
+    """Sprint 40 Day 8: CI runs the demo, and the licensed-only presolve goldens
+    committed on Day 3 abort there with EXECERROR. ``check_model`` classifies a
+    listing carrying the demo's refusal line as SKIPPED before the EXECERROR rule,
+    which would otherwise hard-fail it as a divergence."""
+    refused = (
+        "GAMS 54.2.1\n"
+        "**** The model exceeds the demo license limits for nonlinear models\n"
+        "**** SOLVE from line 900 ABORTED, EXECERROR = 1\n"
+    )
+    assert demo_refused(refused)
+    # Positive control: korcge's genuine $include abort carries no refusal line,
+    # so it is NOT skipped and still hard-diverges through classify_divergence.
+    korcge = "**** SOLVE from line 412 ABORTED, EXECERROR = 5\n"
+    assert not demo_refused(korcge)
+    status, _ = classify_divergence(1.0, None, None, execerror=True, tol=TOL)
+    assert status == "diverged"
+    # The phrase must START the line, as GAMS writes it: not any mention of it.
+    assert not demo_refused("* note: The model exceeds the demo license limits\n")
+
+
+def test_a_demo_refusal_is_ATTRIBUTED_to_the_solve_it_belongs_to() -> None:
+    """PR #1791 review: the presolve listing holds the embedded NLP AND the later
+    MCP. A refusal of the MCP alone must not hide an embedded NLP that already
+    failed (MODEL STATUS 4 against a reference that solves)."""
+    refusal = "**** The model exceeds the demo license limits for nonlinear models\n"
+    nlp_failed = "**** MODEL STATUS      4 Infeasible\n" + refusal
+    status, detail = classify_demo_refusal(nlp_failed, 4, 10.0)
+    assert status == "diverged" and "MODEL STATUS 4" in detail
+    # The embedded NLP solved; only the MCP was refused -> skipped, not clean.
+    nlp_ok = "**** MODEL STATUS      2 Locally Optimal\n" + refusal
+    assert classify_demo_refusal(nlp_ok, 2, 10.0)[0] == "skipped"
+    # The embedded NLP itself refused (no status before the refusal) -> skipped.
+    assert classify_demo_refusal(refusal, None, 10.0)[0] == "skipped"
+    # No reference: a failed NLP cannot be called a divergence -> skipped.
+    assert classify_demo_refusal(nlp_failed, 4, None)[0] == "skipped"
+    # No refusal at all -> None (normal classification).
+    assert classify_demo_refusal("**** MODEL STATUS      2 Locally Optimal\n", 2, 10.0) is None

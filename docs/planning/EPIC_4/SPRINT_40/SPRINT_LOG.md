@@ -1107,3 +1107,116 @@ Run in a throwaway worktree at `7db9aa4c` (the P7 landing), with the raw corpus 
 - **Positive control:** each pin rebuilds its function from its own source with only that guard neutralised and asserts the result changes. Separately, mutating the guard in `src/` (anchor text kept) fails exactly that guard's own pins.
 - **The strength partition moves 5 / 11 → 8 / 8** (behavioural / structural), derived and asserted by identity as before.
 - ⚠ **Proof scope for `_compute_index_offset_key`: function level.** Day 6's pass 0 (the reference binding) now binds an index before either pass runs whenever every reference holds it at one position. So §5's `oik3` emit no longer changes with either guard off. The passes and their guards are reached for indices without a reference binding.
+
+## Day 8 — 2026-10-31 · P4: finish, plus the Class-B design · 4 h · + P8: finish · 1 h · + P5: the `stat_step` class · 5 h
+
+**Branch:** `planning/sprint40-day8-statstep` · **Base:** `e5915ad2` (PR #1788, 12 review rounds). **Phase-0 gates first:** `20e73350` (#1787, #1790, #1789).
+
+### P4: egypt (#1787)
+
+- **Shape:** `fodb(r,cf).. … + sum(rp$tranc(r,rp), trans(cf,rp,r) - trans(cf,r,rp))$ct(cf)` against `trans(c,r,rp)`. The two references hold the eq index at different variable positions. The Pattern C consolidation kept one representative's derivative, on a diagonal instance: `1$(tranc(rp,rp))*nu_fodb(r,c)`, P2's `tranc(rp,rp)`.
+- **Fixed** (`_multi_reference_layouts`, `_build_multi_reference_terms`): one term per placement of the eq indices. Each comes from an entry whose eq labels sit at that placement's positions and at no other's, so its derivative holds only that reference. It is re-symbolised by position before the element map (variable labels and the reference's binder become the variable's position names), and the multiplier and the equation condition follow the eq indices. The pair skips the consolidation.
+- **egypt's `stat_trans`** is now Prep Task 10 §2's hand-derived pair: `-nu_fodb(rp,c)$tranc(rp,r) + nu_fodb(r,c)$tranc(r,rp)` under `$ct(c)$cf(c)`.
+- **Fixtures:** `TWO_REFERENCES` (no solve → 1.3333 = NLP) and `EGYPT_SHAPE` (subset `cf`, outer `$ct`, a PARAMETER `tranc`, another variable: 34.75 silent → 33.25 = NLP). Switching the path off fails all three unit tests.
+- ⚠ **I first wrote that tfordy's `pfs` was not this shape.** That was from a fixture that repeated `v`'s domain. The real `v(s,k,t,te)` does not, and the leak gate shows `stat_v` gaining exactly #1787's predicted second term, `−vpos(t,te)*lam_pfs(s,k,te)`. tfordy stays `model_infeasible`: `lbal`'s collapsed `yv(t,t,…)` remains.
+- **shale: finished on Day 7** (Class A). Its remaining defect is #1786, routed per plan; no Solve projected.
+
+### P4: Class B (#1790), designed and implemented
+
+- **Design:** the declaration and the assignment context are both in the IR (`ParameterDef.domain` vs `expressions[k][0]`). The fix layer is **emit**, `emit_post_assignment_na_cleanup`. A repeated declared domain (`covar(stocks,stocks)`) made the NA-cleanup line touch only the diagonal.
+- **Implemented, since budget remained** (`_cleanup_indices`): the first assignment LHS of distinct set/alias names, else unused aliases, else the declared domain. gussrisk's line 52 becomes `covar(s,sp)$(…) = 0;`.
+- **Tests:** `test_na_cleanup_repeated_domain.py` (LHS, alias fallback, no-repeat control); the pre-fix emitter fails the first two.
+- **nonsharp has one reference of each class** (`inter(col,col,stm)`, `inter(col__kkt1,col__kkt1,stm)`). It is a MINLP the translator refuses, so regeneration cannot move either, and they are recorded as two items, not one.
+
+### P8: finish
+
+P8 landed in PR #1788 (three behavioural pins, 8 / 8). Its one open item, an emit-level pin for `_compute_index_offset_key`, is pre-empted by Day 6's reference binding (recorded on Day 7). **P8 is complete.**
+
+### P5: the `stat_step` class (#1789)
+
+- **Filed #1789**: no issue tracked it. The Phase-0 doc is `ISSUE_1789`.
+- **Reconfirmed, licensed** (`kkt_residual.py`): lnts `CASE_B`, worst `stat_step` rel **9.66**; robot `CASE_B`, worst `stat_step` rel **10.1**, then a smaller boundary group (`stat_the(h0)` 0.21, `stat_rho(h0)` 0.18, `stat_rho(h50)` 0.17), not claimed by this item.
+- **Traced: ONE mechanism, two symptoms, so no split** (PLAN §3 P5). `_add_jacobian_transpose_terms_scalar` builds a scalar variable's term for an indexed constraint from `entries[0]`'s derivative alone, mapped by membership only, with no offset grouping or substitution (cf. #1045 / #1162 in the indexed path):
+  - **lead head** (lnts `pos_eqn(c+2,h+1)`): the representative holds `u(h1) + u(h2)`, both mapped to `h`, giving `2*u(h)`;
+  - **lag head** (robot `rho_eqn(h-1)`): `entries[0]` is the boundary instance, with only `u(h1)`, so a term is dropped.
+- **Minimal reproducers:** MCP 68.577 (lead) / 72.689 (lag) vs NLP 68.5456.
+- **lnts verdict C stands:** the banked diff is not re-applied, and no Solve is projected. Candidates glider and rocket are unconfirmed.
+- The fix is Days 9–10, behind the committed gate.
+
+### Gate
+
+`make typecheck && make format && make lint && make test`: clean; **5,731 passed**, 10 skipped, no `225*` dirs. `make check-index-repeats`: **P2 6 → 3**, with `--update-baseline` in this commit (egypt ×2, gussrisk). Left: dinam's `ts2(te,te)` in `stat_ka`, a mixed direct + summed reference (#1778's family), and nonsharp ×2.
+
+**Leak gate:** complete, no timeouts. 8 goldens over 5 models drifted, all re-solved by `--resolve-changed`:
+
+| model | change | bucket |
+|---|---|---|
+| egypt | `stat_trans`: both reference terms | `model_infeasible` = same (expected, Task 10) |
+| gussrisk | NA cleanup `covar(s,sp)` | `model_optimal` + match = same |
+| harker | `stat_t`: the network balance gets both `+nu_nbal(np) − nu_nbal(n)` (it had one) | presolve match = same |
+| **sroute** | `stat_x`: both `lam_nb` references, the second with its own `not sameas(i,ip)` | **`model_infeasible` → presolve match ✅ forward**; methodology, not floor (presolve-only) |
+| tfordy | `stat_v`: `pfs`'s second reference | `model_infeasible` (resolver: "BACKWARD" against the DB row) |
+
+- **tfordy's "BACKWARD" is not a new regression.** The DB still holds the pre-Day-7 match, because nothing has been persisted since. Day 7's golden, landed by owner decision, was already `model_infeasible`, and today's emit is also `model_infeasible`. So relative to the committed golden the bucket is unchanged, and the change adds a correct term.
+- **sroute** is booked as a presolve match when a persisted run lands it. It needs a `check_mcp_solve_attribution` check before any claim.
+
+### PR #1791 review round 1
+
+- **Class-B cleanup (#1790):**
+  - **A subset LHS was accepted.** `p(s,j) = …` with `s(i)` would index the cleanup by the subset, missing every cell outside it, including the diagonal the old line covered. **Fixed:** an LHS index is accepted only when its alias chain resolves to the declared set at that position.
+  - **The alias fallback could take a later declared name.** `p(i,i,j)` with a literal LHS took `j` for position 2 and could not fill position 3. **Fixed:** every declared name is reserved first, so it becomes `p(i,k,j)`.
+- **Multi-reference terms (#1787):**
+  - **Only the first reference's binder mapping per placement was kept.** In `sum(j$a(i,j), x(i,j)) + sum(k$b(i,k), x(i,k))`, `k` stayed uncontrolled (no solve). **Fixed:** every reference's mappings merge within its placement; a binder at two positions there falls back to the standard path. Solves to 0.324 = NLP.
+  - **A condition binder captured the renamed eq index.** `sum(rp$tranc(r,rp), 1) > 0` became `sum(rp__$(tranc(rp__,rp__)), 1) > 0` (2.222 vs NLP 1.333). **Fixed:** the condition is renamed with the scope-aware `_rename_free_indices`, which now also alpha-renames a nested binder named like a row index (`reserved`); the derivative goes through the same. Solves to 1.333.
+- **Regressions:** four, each failing on the pre-fix code: two cleanup unit tests, and two multi-reference row + solve tests.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,737 passed**, no `225*` dirs.
+
+### CI: the presolve-divergence gate (first run since Day 3)
+
+- **The cause:** `presolve-divergence.yml` triggers on `src/emit/original_symbols.py` (#1790), so this was its first run since 2026-10-19. Day 3 had since committed presolve goldens for the **licensed-only** models (the MCP-gated cohort and the admitted NLP-gated set). The workflow runs the DEMO, so it reported 10 hard divergences: airsp2, egypt, glider, robot, shale, srpchase, tfordy, torsion, tricp, turkey.
+- **Measured licensed, locally, model by model:**
+  - **seven are demo artefacts:** airsp2, glider, robot, torsion, tricp, turkey and tfordy show only informational objective gaps;
+  - **three genuinely diverge, and each is pre-existing:** egypt and srpchase fail with `$140` (#1766), and shale with `$148` (`nu_mnmr.l = mnmr.m;`, recorded on #1766). All three are identical at `500ffa1f` / on `main`.
+- **Fixed:**
+  - `check_presolve_divergence.py` classifies a listing carrying the demo's refusal line (`**** The model exceeds the demo license limits`, the pattern PR19 uses) as **skipped**, before its EXECERROR rule. Unit-tested, with korcge's genuine abort as the control.
+  - egypt, srpchase and shale go on the allowlist with their reasons: they fail at compile time, before any demo refusal, and they WARN rather than fail.
+- ⚠ **The demo-refusal path is verified by its unit test and PR19's live Day-1 evidence, not by a local demo run** (forcing the demo locally gives rc 7 and no listing). This PR's CI run is the live check. **Confirmed** (run 41382646483, success): exactly the seven skip as over the demo ceiling, egypt / shale / srpchase (and korcge) WARN, and no non-allowlisted divergence.
+
+### PR #1791 review round 2
+
+- **Multi-reference terms (#1787):**
+  - **A subset binder within a placement** (`sum(s$b(i,s), x(i,s))` beside `sum(j$a(i,j), x(i,j))`, `s(i) / i3 /`): a representative outside `s` lacks that sum, and generalising it omitted the subset contribution (0.291 vs NLP 0.2652). **Fixed by exclusion:** every binder must range over its variable position's FULL set, or the pair keeps the pre-#1787 path. That path is byte-identical to `main`, and itself does not solve this shape.
+  - **An indexed `smax` in the guard:** its fresh alias was taken back by the PARAMETER's declared domain (`smax(j, wt(j))` → `wt(i)`, 1.000 vs NLP 0.6667). **Fixed:** self-maps cover every set/alias name left in the derivative, as `_pc_self` does. Solves to 0.667.
+  - **A `.off` attribute in the condition:** `SetAttrRef` was not renamed, so the incoming term kept `$(i.off = 0)`. **Fixed** in `_rename_free_indices`: an iterator's set attribute follows its rename, giving `$(j.off = 0)`.
+- **presolve-divergence:** a demo refusal can belong to the later MCP only, while the embedded NLP has already reported a non-optimal status. **Fixed:** `classify_demo_refusal` attributes the refusal by position. A `MODEL STATUS` before the refusal line means the embedded NLP ran, and a non-optimal one against a reference that solves stays a **divergence**.
+- **Regressions:** `SUBSET_BINDER_IN_PLACEMENT` (pre-#1787 path, plus non-vacuity), `SMAX_GUARD` (row + solve), `SET_ATTRIBUTE_CONDITION` (row), and combined-listing unit tests for the attribution. The pre-fix code fails each.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,743 passed**, no `225*` dirs.
+
+### PR #1791 review round 3
+
+- **The review raised a summary concern, with no comment thread:** equation-index renaming mishandles `.off` sum guards. **Confirmed by measurement.** The AD substitutes labels into references but leaves a set attribute symbolic. In `sum(j$(aa(i,j) and j.off > i.off), x(i,j) - x(j,i))` the representative derivative held `aa(a,j)` and `j.off > i.off`, and the multi-reference rename mapped labels and binders but not the eq index's own symbol. So the incoming term's guard read `i.off > i.off`, always false, and the term vanished (MCP 0.000 vs NLP 63.0833).
+- **Fixed in both paths:** the derivative rename also maps each eq index's own symbol to its placement's coordinate (multi-reference) or to the eq coordinate `E*` (Day 7's binder rewrite, where `t.off` had stayed uncontrolled: no solve). This cannot hit the variable's coordinates, which are labels before re-symbolisation.
+- **Regressions:** `OFF_SUM_GUARD` (rows + solve: 63.083 = NLP) and `OFF_GUARD_BINDER` (row + solve: 30.100 = NLP); the pre-fix code fails both.
+- **Not fixed here, noted:** a guard that mentions the eq index ONLY through `.off` (`sum(j$(j.off > i.off), …)`) is not detected as Pattern C and keeps the pre-existing phantom-offset path. An equation whose `.off`-guarded sum is empty (`e(d)`) is not recognised as empty by the emitter (unfixed multiplier); the fixtures add a `z(i)` term. Both are pre-existing.
+- **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,747 passed**, no `225*` dirs.
+
+### PR #1791 assessment: index renaming and subset/offset behaviour
+
+The review asked for a human assessment, with no concrete finding: *"index-renaming and subset-offset behavior can cause conditions to enable, suppress, or omit the wrong stationarity contributions"*. **Assessed by measurement:** a 26-probe battery, solved licensed and compared with the NLP and with `main` (`/tmp/d10/probe.sh`).
+
+**The multi-reference path (#1787), egypt's two-reference shape, with the guard or equation condition varied:**
+
+| variant | path taken | branch vs NLP | `main` |
+|---|---|---|---|
+| base `tranc(r,rp)`; `ord(rp) > ord(r)`; `not sameas(r,rp)`; `card(r) > 2`; `rp.pos > r.pos`; a parameter `w(r) > 1`; a subset `rs(rp)` | yes | **all = NLP** | wrong (71.0) |
+| equation condition `$(ord(r) > 1)`, `$rs(r)`, `$(w(r-1) >= 1)` (a lag) | yes | **all = NLP** (the lag case with literal data, see #1792) | wrong (67.75) |
+| a **lead/lag offset on the eq index in the guard** (`w(r+1) > 2`, `w(r-1) >= 1`) | **no** | 71.0 vs 49.87 / 35.93 | identical |
+| an **equation over a subset** of the reference set (`fodb(rs,c)`) | **no** | 67.75 vs 32.675 | identical |
+
+**The binder rewrite (Day 7, #1782), turkpow's shape:** every probe whose NLP solves matches it (base, `ord`, `card`, `.pos`, the equation conditions `ord` / lag / subset, and a subset equation domain). Five probes have an infeasible NLP, from a guard that empties a row with a positive RHS, and are not informative.
+
+**Conclusion:**
+- Where the new paths run, index renaming (iterators, set attributes, `ord`/`card`/`sameas`, subsets, lags in the equation condition) **neither enables, suppresses nor omits contributions wrongly** on any probe.
+- The wrong contributions the probes found are all in shapes the new path does **not** take: an offset on the eq index inside the guard, and a subset equation domain. Those keep `main`'s pre-existing path, byte-identical. Recorded on #1787 as the next extensions.
+- **Found on the way:** a parameter used only in an equation's `$` condition loses its assignment in the emit (`$141`, identical on `main`): **#1792**.
+

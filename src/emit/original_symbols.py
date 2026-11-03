@@ -149,6 +149,70 @@ def _param_assignment_has_division(param_def: ParameterDef) -> bool:
     return False
 
 
+def _cleanup_indices(param_def, model_ir: ModelIR) -> tuple[str, ...]:
+    """Distinct per-position indices for a parameter's NA-cleanup line.
+
+    Sprint 40 Day 8 (Class B, gussrisk): a declaration may repeat a symbol --
+    ``covar(stocks,stocks)`` -- and in GAMS a repeated controlling index is one
+    iterator, so the cleanup touched only the DIAGONAL while the assignment
+    ``covar(s,sp) = ...`` filled the full matrix. The declaration context and the
+    assignment's LHS tuple are both in the IR, so a repeated declared domain is
+    replaced by the first assignment LHS whose indices are distinct set/alias
+    names, else by unused existing aliases of the repeated set. A domain without
+    repeats is returned unchanged.
+    """
+    domain = tuple(str(d) for d in param_def.domain)
+    if len({d.lower() for d in domain}) == len(domain):
+        return domain
+
+    def root(name: str) -> str:
+        seen: set[str] = set()
+        cur = name
+        while cur.lower() in model_ir.aliases and cur.lower() not in seen:
+            seen.add(cur.lower())
+            cur = str(getattr(model_ir.aliases[cur], "target", cur))
+        return cur.lower()
+
+    def covers(name: object, declared: str) -> bool:
+        # The LHS index must range over the FULL declared set at its position:
+        # an alias of it, not a subset (``p(s,j)`` with ``s(i)`` covers only
+        # ``s``, PR #1791 review).
+        return (
+            isinstance(name, str)
+            and (name in model_ir.sets or name in model_ir.aliases)
+            and root(name) == root(declared)
+        )
+
+    for lhs, _expr in getattr(param_def, "expressions", None) or ():
+        lhs = tuple(lhs)
+        if (
+            len(lhs) == len(domain)
+            and all(covers(i, d) for i, d in zip(lhs, domain, strict=True))
+            and len({str(i).lower() for i in lhs}) == len(lhs)
+        ):
+            return tuple(str(i) for i in lhs)
+
+    # Reserve EVERY declared name up front, so a replacement never takes one a
+    # later position needs (``p(i,i,j)`` must become ``p(i,k,j)``, PR #1791 review).
+    used: set[str] = {d.lower() for d in domain}
+    seen: set[str] = set()
+    out: list[str] = []
+    for d in domain:
+        if d.lower() not in seen:
+            out.append(d)
+            seen.add(d.lower())
+            continue
+        alias = next(
+            (a for a in model_ir.aliases if root(a) == root(d) and a.lower() not in used),
+            None,
+        )
+        if alias is None:
+            return domain  # nothing distinct available: keep the declared domain
+        out.append(alias)
+        used.add(alias.lower())
+    return tuple(out)
+
+
 def emit_post_assignment_na_cleanup(
     model_ir: ModelIR,
     model_relevant_params: set[str] | None = None,
@@ -204,7 +268,7 @@ def emit_post_assignment_na_cleanup(
         if not _param_assignment_has_division(param_def):
             continue
 
-        domain_str = ",".join(param_def.domain)
+        domain_str = ",".join(_cleanup_indices(param_def, model_ir))
         ref = f"{name}({domain_str})"
         cleanup_lines.append(f"{ref}$(NOT ({ref} > -inf and {ref} < inf)) = 0;")
 

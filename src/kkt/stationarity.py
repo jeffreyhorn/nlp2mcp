@@ -36,6 +36,7 @@ from src.ir.ast import (
     MultiplierRef,
     ParamRef,
     Prod,
+    SetAttrRef,
     SetMembershipTest,
     Sum,
     SymbolRef,
@@ -605,7 +606,10 @@ def _index_names_in(expr: Expr) -> set[str]:
 
 
 def _rename_free_indices(
-    expr: Expr, rename: dict[str, str], model_ir: ModelIR | None = None
+    expr: Expr,
+    rename: dict[str, str],
+    model_ir: ModelIR | None = None,
+    reserved: frozenset[str] = frozenset(),
 ) -> Expr:
     """``_rewrite_subset_to_superset`` that respects Sum/Prod scopes (#1782).
 
@@ -615,9 +619,13 @@ def _rename_free_indices(
       name (``{w: v}`` inside ``sum(v, c(v,w))`` gives ``c(v,v)``), so it is
       alpha-renamed to a fresh alias of its set first (needs ``model_ir``).
     * ``card(...)`` operands are sets, not iterators, and are left alone.
+    * A nested binder named like a ``reserved`` name (the stationarity row's
+      controlled indices) is alpha-renamed too: ``sum(rp, a(r,rp))`` inside a
+      row over ``rp`` would re-control ``rp`` (PR #1791 review).
     (PR #1788 review.) Keys are lowercased names.
     """
-    if not rename:
+    reserved = frozenset(r.lower() for r in reserved)
+    if not rename and not reserved:
         return expr
     held: dict[str, Expr] = {}
 
@@ -631,24 +639,24 @@ def _rename_free_indices(
             cond = e.condition  # type: ignore[attr-defined]
         inner = {k: v for k, v in rename.items() if k not in {b.lower() for b in bound}}
         dests = {str(v).lower() for v in inner.values()}
-        if inner and model_ir is not None:
-            reserved = dests | set(inner) | _index_names_in(e)
+        if (inner or reserved) and model_ir is not None:
+            taken = dests | set(inner) | set(reserved) | _index_names_in(e)
             for pos, b in enumerate(bound):
-                if b.lower() in dests:
+                if b.lower() in dests or b.lower() in reserved:
                     # Always a NEW alias: an existing one may be bound by an
                     # ENCLOSING reduction (``sum(q, …smax(v, c(v,w)))`` gave
                     # ``smax(q, c(q,v))``, reusing the controlled ``q``).
                     fresh = _get_or_create_fresh_alias(
-                        _resolve_alias_target(b, model_ir), reserved, model_ir, reuse_existing=False
+                        _resolve_alias_target(b, model_ir), taken, model_ir, reuse_existing=False
                     )
-                    reserved.add(fresh.lower())
+                    taken.add(fresh.lower())
                     body = _rename_free_indices(body, {b.lower(): fresh}, model_ir)
                     if cond is not None:
                         cond = _rename_free_indices(cond, {b.lower(): fresh}, model_ir)
                     bound[pos] = fresh
-        body = _rename_free_indices(body, inner, model_ir)
+        body = _rename_free_indices(body, inner, model_ir, reserved)
         if cond is not None:
-            cond = _rename_free_indices(cond, inner, model_ir)
+            cond = _rename_free_indices(cond, inner, model_ir, reserved)
         if isinstance(e, Call):
             args = (*(SymbolRef(b) for b in bound), *((cond,) if cond is not None else ()), body)
             return Call(e.func, tuple(args))
@@ -670,6 +678,10 @@ def _rename_free_indices(
         return Call(e.func, args)
 
     def hold(e: Expr) -> Expr:
+        # ``i.off`` / ``i.pos`` / ``i.ord`` of an ITERATOR follow its rename (the
+        # base rewriter leaves SetAttrRef unchanged, PR #1791 review).
+        if isinstance(e, SetAttrRef) and e.name.lower() in rename:
+            return SetAttrRef(str(rename[e.name.lower()]), e.attribute)
         reduction = isinstance(e, Call) and _reduction_call_parts(e, model_ir) is not None
         if (
             isinstance(e, (Sum, Prod))
@@ -705,7 +717,7 @@ def _rename_free_indices(
             return DollarConditional(restore(e.value_expr), restore(e.condition))
         return e
 
-    return restore(_rewrite_subset_to_superset(hold(expr), rename))
+    return restore(_rewrite_subset_to_superset(hold(expr), rename) if rename else hold(expr))
 
 
 def _rename_iterators_keeping_card(expr: Expr, rename: dict[str, str]) -> Expr:
@@ -923,6 +935,186 @@ def _eligible_binder_rep(
         ):
             return (rid, cid)
     return None
+
+
+def _multi_reference_layouts(eq_def: Any, var_name: str) -> list[dict[str, int]] | None:
+    """Per-reference index layouts for #1787's shape (Sprint 40 Day 8).
+
+    Every reference to ``var_name`` must use only symbols -- equation indices or
+    binders of an enclosing Sum -- each at one position, with EVERY equation
+    index present. Returns one ``{symbol: position}`` layout per DISTINCT
+    placement of the equation indices (lowercased symbols), or None unless there
+    are at least two: egypt's ``sum(rp$tranc(r,rp), trans(cf,rp,r) -
+    trans(cf,r,rp))`` gives ``{cf:0, rp:1, r:2}`` and ``{cf:0, r:1, rp:2}``.
+    """
+    eq_dom = [str(d).lower() for d in (getattr(eq_def, "domain", None) or ())]
+    if not eq_dom:
+        return None
+    key = var_name.lower()
+    layouts: dict[tuple[int, ...], dict[str, int]] = {}
+    ok = True
+
+    def walk(node: Expr, bound: frozenset[str]) -> None:
+        nonlocal ok
+        if not ok:
+            return
+        if isinstance(node, VarRef) and node.name.lower() == key:
+            layout: dict[str, int] = {}
+            for p, idx in enumerate(node.indices):
+                if not isinstance(idx, str):
+                    ok = False
+                    return
+                low = idx.lower()
+                if low in layout or (low not in bound and low not in eq_dom):
+                    ok = False
+                    return
+                layout[low] = p
+            if any(e not in layout for e in eq_dom):
+                ok = False
+                return
+            # Every reference with this placement contributes its OWN binder
+            # mapping (``sum(j$a(i,j), x(i,j)) + sum(k$b(i,k), x(i,k))``: j and
+            # k both at position 1, PR #1791 review); a binder at two positions
+            # within one placement cannot be rewritten by position.
+            merged = layouts.setdefault(tuple(layout[e] for e in eq_dom), {})
+            for sym, pos in layout.items():
+                if merged.get(sym, pos) != pos:
+                    ok = False
+                    return
+                merged[sym] = pos
+            return
+        if isinstance(node, (Sum, Prod)):
+            inner = bound | frozenset(str(i).lower() for i in node.index_sets)
+            for child in node.children():
+                walk(child, inner)
+            return
+        for child in node.children():
+            walk(child, bound)
+
+    for part in tuple(getattr(eq_def, "lhs_rhs", None) or ()) + (
+        getattr(eq_def, "condition", None),
+    ):
+        if part is not None:
+            walk(part, frozenset())
+    if not ok or len(layouts) < 2:
+        return None
+    return list(layouts.values())
+
+
+def _build_multi_reference_terms(
+    kkt: Any,
+    jacobian: Any,
+    entries: list[tuple[int, int]],
+    eq_def: Any,
+    var_name: str,
+    var_domain: tuple[str, ...],
+    mult_name: str,
+    element_to_set: Mapping[str, str],
+) -> Expr | None:
+    """#1787 (Sprint 40 Day 8): one stationarity term per REFERENCE when the
+    references hold the equation index at different variable positions.
+
+    egypt's ``fodb(r,cf).. sum(rp$tranc(r,rp), trans(cf,rp,r) - trans(cf,r,rp))``
+    against ``trans(c,r,rp)`` needs ``nu_fodb(rp,c)$tranc(rp,r) -
+    nu_fodb(r,c)$tranc(r,rp)``; consolidating every entry into one representative
+    kept a single term (on a diagonal instance, ``1$(tranc(rp,rp))``).
+
+    For each layout, the representative is an entry whose eq labels sit at THIS
+    layout's positions and at no other layout's (so its derivative holds only
+    this reference), with distinct labels throughout. Its derivative is
+    re-symbolised by position, before the element map: every variable label and
+    every binder of the reference become the variable's position names; the
+    multiplier and the equation condition follow the eq indices to theirs.
+    Returns the summed terms, or None to keep the standard path.
+    """
+    layouts = _multi_reference_layouts(eq_def, var_name)
+    if layouts is None:
+        return None
+    model_ir = kkt.model_ir
+    eq_dom = [str(d).lower() for d in (getattr(eq_def, "domain", None) or ())]
+    if len(set(eq_dom)) != len(eq_dom):
+        return None
+
+    def matches(layout: dict[str, int], e_lab: tuple, v_lab: tuple) -> bool:
+        return all(
+            layout[e] < len(v_lab) and e_lab[k] == v_lab[layout[e]] for k, e in enumerate(eq_dom)
+        )
+
+    # Every binder must range over its variable position's FULL set: a binder over
+    # a subset (``sum(s$b(i,s), x(i,s))`` with ``s(i)``) contributes only inside
+    # it, which one representative per placement cannot carry (PR #1791 review).
+    for layout in layouts:
+        for sym, pos in layout.items():
+            if sym in eq_dom:
+                continue
+            if _resolve_alias_target(sym, model_ir) != _resolve_alias_target(
+                str(var_domain[pos]), model_ir
+            ):
+                return None
+
+    total: Expr | None = None
+    for layout in layouts:
+        rep_entry = None
+        for rid, cid in entries:
+            e_lab = tuple(jacobian.index_mapping.row_to_eq[rid][1])
+            v_lab = tuple(jacobian.index_mapping.col_to_var[cid][1])
+            if len(set(v_lab)) != len(v_lab) or len(set(e_lab)) != len(e_lab):
+                continue
+            if matches(layout, e_lab, v_lab) and not any(
+                matches(other, e_lab, v_lab) for other in layouts if other is not layout
+            ):
+                rep_entry = (rid, cid, v_lab)
+                break
+        if rep_entry is None:
+            return None
+        rid, cid, v_lab = rep_entry
+        derivative = jacobian.get_derivative(rid, cid)
+        if derivative is None:
+            return None
+        rename = {str(lab).lower(): str(var_domain[p]) for p, lab in enumerate(v_lab)}
+        binders = {s: p for s, p in layout.items() if s not in eq_dom}
+        rename.update({b: str(var_domain[p]) for b, p in binders.items()})
+        # The eq indices' own SYMBOLS too: the AD substitutes labels into
+        # references but leaves a set attribute symbolic (``j.off > i.off`` stays
+        # ``i.off``), so in the incoming placement ``i`` must become the row's
+        # other coordinate. Unmapped, the guard read ``i.off > i.off``, always
+        # false, and the term vanished (PR #1791 review). Before re-symbolisation
+        # the variable's coordinates are labels, so this cannot hit them.
+        rename.update({e: str(var_domain[layout[e]]) for e in eq_dom})
+        row_names = frozenset(str(d).lower() for d in var_domain)
+        derivative = _rename_free_indices(derivative, rename, model_ir, row_names)
+        # Self-maps for the row's names AND every set/alias name left in the
+        # derivative (a fresh ``smax`` alias would otherwise be mapped to its
+        # PARAMETER's declared domain: ``smax(j__kkt1, wt(j__kkt1))`` -> ``wt(i)``,
+        # PR #1791 review), as the binder rewrite's ``_pc_self`` does.
+        self_map = {str(d): str(d) for d in var_domain}
+        self_map.update(
+            {
+                n: n
+                for n in _index_names_in(derivative)
+                if n in model_ir.sets or n in model_ir.aliases
+            }
+        )
+        mapping: Mapping[str, str] = (
+            element_to_set.new_child(self_map)
+            if isinstance(element_to_set, ChainMap)
+            else {**element_to_set, **self_map}
+        )
+        coeff = _replace_indices_in_expr(
+            derivative, var_domain, mapping, model_ir, equation_domain=var_domain
+        )
+        mult = MultiplierRef(mult_name, tuple(str(var_domain[layout[e]]) for e in eq_dom))
+        term: Expr = Binary("*", coeff, mult)
+        cond = getattr(eq_def, "condition", None)
+        if cond is not None:
+            # Scope-aware: a nested binder that captures a renamed eq index or
+            # re-controls a row index is alpha-renamed (PR #1791 review).
+            cond = _rename_free_indices(
+                cond, {e: str(var_domain[layout[e]]) for e in eq_dom}, model_ir, row_names
+            )
+            term = DollarConditional(value_expr=term, condition=cond)
+        total = term if total is None else Binary("+", total, term)
+    return total
 
 
 def _eq_index_position(eq_def: Any, eq_index: str) -> int | None:
@@ -7425,6 +7617,31 @@ def _add_indexed_jacobian_terms(
                                 or _eligible_binder_rep(jacobian, entries, _pos) is None
                             ):
                                 pattern_c_info = None
+                        # Sprint 40 Day 8 (#1787): the references hold the eq index
+                        # at DIFFERENT variable positions (egypt's ``trans(cf,rp,r)
+                        # - trans(cf,r,rp)``). Consolidating would keep one term,
+                        # so build one per reference and skip the offset groups.
+                        if pattern_c_info is not None and not pattern_c_info.get(
+                            "binder_swap_only"
+                        ):
+                            _mn = name_func(eq_name_base)
+                            _mr_term = (
+                                _build_multi_reference_terms(
+                                    kkt,
+                                    jacobian,
+                                    entries,
+                                    eq_def_for_gate,
+                                    var_name,
+                                    var_domain,
+                                    _mn,
+                                    element_to_set,
+                                )
+                                if _mn in multipliers
+                                else None
+                            )
+                            if _mr_term is not None:
+                                expr = Binary("+", expr, _mr_term)
+                                continue
                         if pattern_c_info is not None:
                             allow_nonzero_offsets = False
                         else:
@@ -8167,6 +8384,9 @@ def _add_indexed_jacobian_terms(
                             {
                                 **_pc_binder_map,
                                 str(group_eq_indices[_pc_eq_pos]).lower(): _pc_eq_star,
+                                # the eq index's own symbol (a symbolic ``t.off``
+                                # in a guard) follows it too (PR #1791 review)
+                                _pc_eq_idx.lower(): _pc_eq_star,
                             },
                             kkt.model_ir,
                         )

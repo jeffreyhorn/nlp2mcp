@@ -41,3 +41,73 @@ solve m using nlp minimizing obj;
 
 - The references bind the eq index at different variable positions, so `_eq_index_ref_binding` gives no binding, and the Pattern C gate (when it fires) consolidates every entry into one representative group. The representative is a diagonal instance (`r = rp`), where the two terms cancel or coincide.
 - **First step:** group the Jacobian entries by WHICH variable position the eq label occupies (label equality per entry), and pick an off-diagonal representative per group. Each group then re-symbolises like a single-reference shape (one term per reference).
+
+## Phase 0: Acceptance Gate (Sprint 40 Day 8, P4: egypt)
+
+### Layer
+
+**KKT / stationarity**: the Pattern C consolidation in `_add_indexed_jacobian_terms`. The pattern is found (binder `rp`, eq index `r`), every entry is consolidated into one offset-0 group, and one representative's derivative stands for all. When the references hold the eq index at different variable positions, that representative carries ONE reference's contribution (or, on a diagonal instance, both cancelled).
+
+### Nearest Existing Mechanism
+
+**Nearest:** the Day-7 binder rewrite (#1782), which re-symbolises one representative by position.
+
+**Why it does not apply:** it needs the eq index ABSENT from every reference. Here it is present in both, at different positions, so there is no single placement to rewrite.
+
+### Positive Control
+
+A single-reference equation, or several references with ONE placement of the eq indices (`_multi_reference_layouts` returns None), keeps today's path byte-identically.
+
+### Hand-Derived KKT Shape
+
+Prep Task 10 §2: `∂/∂trans(c,r,rp)` of `fodb(r',cf).. … + sum(rp'$tranc(r',rp'), trans(cf,rp',r') − trans(cf,r',rp'))$ct(cf)` is `+nu_fodb(rp,c)$tranc(rp,r) − nu_fodb(r,c)$tranc(r,rp)` under `$ct(c)$cf(c)`, with the sign flipped for RHS placement.
+
+### Expected Emit Pattern
+
+- **One term per placement** (`_build_multi_reference_terms`). Each is built from an entry whose eq labels sit at that placement's positions and at no other's, so its derivative holds only that reference. It is re-symbolised by position before the element map: every variable label and the reference's binder become the variable's position names, and the multiplier and the equation condition follow the eq indices.
+- **egypt:** `stat_trans` gets both terms, and P2 loses `tranc(rp,rp)` (golden + presolve).
+
+### Verification Methodology
+
+1. **Fail-before / pass-after** on `TWO_REFERENCES` (no solve → 1.3333 = NLP) and `EGYPT_SHAPE` (34.75 → 33.25 = NLP), plus `_multi_reference_layouts`'s contract.
+2. The positive control.
+3. `make check-index-repeats`, the full leak gate with `--resolve-changed`, then `make test`.
+
+### PROCEED/REPLAN Signal
+
+- **PROCEED** if 1–3 hold and the resolver holds every bucket.
+- **REPLAN** on any backward move.
+- **egypt staying MS 5 is expected** (Task 10: necessary, not sufficient).
+- **tfordy's `pfs`:** ⚠ first thought not this pass's shape, from a fixture that repeated `v`'s domain. The real `v(s,k,t,te)` does not, and the leak gate shows the second term restored (see Day 8 results). tfordy also needs its collapsed `yv(t,t,…)` fixed, so it stays on #1787.
+
+## Day 8 results
+
+- **egypt:** both `stat_trans` terms; P2 `tranc(rp,rp)` gone (golden + presolve). Still `model_infeasible`, as expected.
+- **Also fixed by the same pass** (leak gate, resolver):
+  - **harker**'s `stat_t` network balance (`+nu_nbal(np) − nu_nbal(n)`, match held);
+  - **sroute**'s `stat_x` (`model_infeasible` → presolve match);
+  - **tfordy**'s `pfs` second reference (still infeasible: `yv(t,t,…)` remains).
+- **Open here:** tfordy's `lbal` `yv(t,t,…)` collapse.
+
+## PR #1791 review round 1
+
+- Every reference's binder mapping is kept within its placement (two sums over different binders at one position).
+- The equation condition is renamed scope-aware, alpha-renaming nested binders that would capture the renamed eq index or re-control a row index.
+
+## PR #1791 review round 2
+
+- A binder over a SUBSET of its variable position's set excludes the shape (it keeps the pre-#1787 path).
+- Self-maps cover every symbolic name left in the derivative (an `smax` alias).
+- `SetAttrRef` (`i.off`) follows the scope-aware rename.
+
+
+## Shapes the multi-reference path does NOT take (Sprint 40 Day 8, PR #1791 assessment)
+
+A probe battery over egypt's two-reference shape found two variants that keep the pre-existing (wrong) path. The emit is byte-identical to `main` in both:
+
+| variant | NLP | MCP (branch = `main`) | why the path is not taken |
+|---|---|---|---|
+| a **lead/lag offset on the eq index in the guard**: `sum(rp$(tranc(r,rp) and w(r+1) > 2), trans(c,rp,r) - trans(c,r,rp))` (also `w(r-1)`) | 49.87 / 35.93 | 71.0 | `_body_has_index_offset_on_sets` sees the IndexOffset and skips Pattern C detection entirely |
+| an **equation over a subset** of the reference set: `fodb(rs,c).. … sum(rp$tranc(rs,rp), trans(c,rp,rs) - trans(c,rs,rp))` with `rs(r)` | 32.675 | 67.75 | the binder `rp` is related to `rs` only through the subset, so the pattern is a binder-only admission, which the multi-reference path excludes |
+
+Not caused by PR #1791. Recorded as the next extensions of the per-reference construction.

@@ -49,7 +49,7 @@ execError = 0;
 * If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
 * zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
 * doesn't produce ~1e30 coefficients.
-covar(stocks,stocks)$(NOT (covar(stocks,stocks) > -inf and covar(stocks,stocks) < inf)) = 0;
+covar(s,sp)$(NOT (covar(s,sp) > -inf and covar(s,sp) < inf)) = 0;
 mean(stocks)$(NOT (mean(stocks) > -inf and mean(stocks) < inf)) = 0;
 
 * ============================================

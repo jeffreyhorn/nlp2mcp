@@ -243,7 +243,7 @@ stat_phip(t).. ((-1) * (delt(t) * (-1))) + nu_aplnt(t) =E= 0;
 stat_phir(t).. ((-1) * (delt(t) * (-1))) + nu_aproc(t) =E= 0;
 stat_phix(t).. ((-1) * delt(t)) + nu_asales(t) =E= 0;
 stat_r(c,te).. (nu_lbal(c,te)$(cl(c)) + ((((-1) * muc) * nu_acutc(te))$(t(te)))$(cl(c) and t(te)) + (((-1) * 1$(cl(c))) * lam_bal(c,te))$(t(te)) - lam_sy2(c,te)$(cl(c)) + (lam_sy2(c,te+1)$(cl(c)))$(ord(te) <= card(te) - 1) - piL_r(c,te))$(cl(c)) =E= 0;
-stat_v(s,k,t,te).. sum(cl, (((-1) * yv(t,t,s,cl,k)) * nu_lbal(cl,te))$(cl(cl))) + (1$(vpos(t,te)) * lam_pfs(s,k,t))$(t(t)) - piL_v(s,k,t,te) =E= 0;
+stat_v(s,k,t,te).. sum(cl, (((-1) * yv(t,t,s,cl,k)) * nu_lbal(cl,te))$(cl(cl))) + (1$(vpos(t,te)) * lam_pfs(s,k,t))$(t(t)) + (((-1) * 1$(vpos(t,te))) * lam_pfs(s,k,te))$(t(te)) - piL_v(s,k,t,te) =E= 0;
 stat_w(s,k,u,te).. sum(cl, (((-1) * yw(te,u,s,cl)) * nu_lbal(cl,te))$(cl(cl))) + sum(t__, (10 * 1$(wpos(u,t__)) * lam_efs(s,k,u))$(sameas(t__, te)))$(t(te)) + ((((-1) * 1$(wpos(u,te))) * lam_pfs(s,k,te))$(t(te)))$(t(te)) - piL_w(s,k,u,te) =E= 0;
 stat_x(c,t).. (sum(cf__, (((-1) * pd(cf__)) * nu_asales(t))$(sameas(cf__, c)))$(cf(c)) + (1$(cf(c)) * lam_bal(c,t))$(t(t)) - piL_x(c,t))$(cf(c)) =E= 0;
 stat_z(p,t).. ((-1) * pc(p)) * nu_aproc(t) + sum(c, (((-1) * a(c,p)) * lam_bal(c,t))$(t(t))) + sum(m, b(m,p) * lam_cap(m,t)) - piL_z(p,t) =E= 0;
