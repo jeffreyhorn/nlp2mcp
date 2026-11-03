@@ -100,3 +100,14 @@ Prep Task 10 §2: `∂/∂trans(c,r,rp)` of `fodb(r',cf).. … + sum(rp'$tranc(r
 - Self-maps cover every symbolic name left in the derivative (an `smax` alias).
 - `SetAttrRef` (`i.off`) follows the scope-aware rename.
 
+
+## Shapes the multi-reference path does NOT take (Sprint 40 Day 8, PR #1791 assessment)
+
+A probe battery over egypt's two-reference shape found two variants that keep the pre-existing (wrong) path. The emit is byte-identical to `main` in both:
+
+| variant | NLP | MCP (branch = `main`) | why the path is not taken |
+|---|---|---|---|
+| a **lead/lag offset on the eq index in the guard**: `sum(rp$(tranc(r,rp) and w(r+1) > 2), trans(c,rp,r) - trans(c,r,rp))` (also `w(r-1)`) | 49.87 / 35.93 | 71.0 | `_body_has_index_offset_on_sets` sees the IndexOffset and skips Pattern C detection entirely |
+| an **equation over a subset** of the reference set: `fodb(rs,c).. … sum(rp$tranc(rs,rp), trans(c,rp,rs) - trans(c,rs,rp))` with `rs(r)` | 32.675 | 67.75 | the binder `rp` is related to `rs` only through the subset, so the pattern is a binder-only admission, which the multi-reference path excludes |
+
+Not caused by PR #1791. Recorded as the next extensions of the per-reference construction.

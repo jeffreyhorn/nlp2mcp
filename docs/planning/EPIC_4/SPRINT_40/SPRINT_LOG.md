@@ -1200,3 +1200,23 @@ P8 landed in PR #1788 (three behavioural pins, 8 / 8). Its one open item, an emi
 - **Not fixed here, noted:** a guard that mentions the eq index ONLY through `.off` (`sum(j$(j.off > i.off), …)`) is not detected as Pattern C and keeps the pre-existing phantom-offset path. An equation whose `.off`-guarded sum is empty (`e(d)`) is not recognised as empty by the emitter (unfixed multiplier); the fixtures add a `z(i)` term. Both are pre-existing.
 - **Corpus:** the leak gate is complete and clean: 200 in-scope, **0 drifted**, no timeouts. `make test`: **5,747 passed**, no `225*` dirs.
 
+### PR #1791 assessment: index renaming and subset/offset behaviour
+
+The review asked for a human assessment, with no concrete finding: *"index-renaming and subset-offset behavior can cause conditions to enable, suppress, or omit the wrong stationarity contributions"*. **Assessed by measurement:** a 26-probe battery, solved licensed and compared with the NLP and with `main` (`/tmp/d10/probe.sh`).
+
+**The multi-reference path (#1787), egypt's two-reference shape, with the guard or equation condition varied:**
+
+| variant | path taken | branch vs NLP | `main` |
+|---|---|---|---|
+| base `tranc(r,rp)`; `ord(rp) > ord(r)`; `not sameas(r,rp)`; `card(r) > 2`; `rp.pos > r.pos`; a parameter `w(r) > 1`; a subset `rs(rp)` | yes | **all = NLP** | wrong (71.0) |
+| equation condition `$(ord(r) > 1)`, `$rs(r)`, `$(w(r-1) >= 1)` (a lag) | yes | **all = NLP** (the lag case with literal data, see #1792) | wrong (67.75) |
+| a **lead/lag offset on the eq index in the guard** (`w(r+1) > 2`, `w(r-1) >= 1`) | **no** | 71.0 vs 49.87 / 35.93 | identical |
+| an **equation over a subset** of the reference set (`fodb(rs,c)`) | **no** | 67.75 vs 32.675 | identical |
+
+**The binder rewrite (Day 7, #1782), turkpow's shape:** every probe whose NLP solves matches it (base, `ord`, `card`, `.pos`, the equation conditions `ord` / lag / subset, and a subset equation domain). Five probes have an infeasible NLP, from a guard that empties a row with a positive RHS, and are not informative.
+
+**Conclusion:**
+- Where the new paths run, index renaming (iterators, set attributes, `ord`/`card`/`sameas`, subsets, lags in the equation condition) **neither enables, suppresses nor omits contributions wrongly** on any probe.
+- The wrong contributions the probes found are all in shapes the new path does **not** take: an offset on the eq index inside the guard, and a subset equation domain. Those keep `main`'s pre-existing path, byte-identical. Recorded on #1787 as the next extensions.
+- **Found on the way:** a parameter used only in an equation's `$` condition loses its assignment in the emit (`$141`, identical on `main`): **#1792**.
+
