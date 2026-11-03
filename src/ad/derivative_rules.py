@@ -66,6 +66,12 @@ from ..ir.ast import (
     VarRef,
 )
 
+# Module-level, not function-local (Sprint 40 P6, E8): ``_is_concrete_instance_of``
+# and the other callers sit on the per-derivative hot path, where a local import
+# is re-resolved on every call. No cycle: ``index_mapping`` does not import this
+# module.
+from .index_mapping import resolve_set_members
+
 # SPRINT25_DAY2: Debug instrumentation for the Phase 1 investigation into
 # `_partial_collapse_sum` multi-index concrete→symbolic gap (qabel / #1089).
 # Gated on env var so the trace costs nothing in production; flip it on with
@@ -1903,8 +1909,6 @@ def _try_resolve_cardinality_reversal(idx: object, sum_idx: str, model_ir: Any) 
     if _sole_symbol(card_call) != sum_idx.lower() or _sole_symbol(ord_call) != sum_idx.lower():
         return None
 
-    from .index_mapping import resolve_set_members
-
     # Resolve sum_idx through any alias chain to the canonical set.
     canon = sum_idx
     seen: set[str] = set()
@@ -2125,8 +2129,6 @@ def _try_diff_sum_offset_crossterms(
     offsets = _distinct_var_offsets_in_body(expr.body, wrt_var, sum_idx)
     if offsets is None or not any(o != 0 for o in offsets):
         return None
-
-    from .index_mapping import resolve_set_members
 
     # Resolve sum_idx to its canonical set's ordered members.
     canon = sum_idx
@@ -3244,7 +3246,6 @@ def _declared_member_spelling(value: str, sum_idx: str, config: Config | None) -
     if config is not None and config.model_ir is not None:
         model_ir = config.model_ir
         if sum_idx in model_ir.sets or sum_idx in model_ir.aliases:
-            from .index_mapping import resolve_set_members
 
             try:
                 members, _ = resolve_set_members(sum_idx, model_ir, quiet=True)
@@ -3595,7 +3596,6 @@ def _is_concrete_instance_of(
         #     freely substitute parent-set elements without losing
         #     correctness.
         if symbolic in model_ir.sets or symbolic in model_ir.aliases:
-            from .index_mapping import resolve_set_members
 
             try:
                 # `quiet=True`: suppress the issue-#723 warning when a

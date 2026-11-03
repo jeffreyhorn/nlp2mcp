@@ -140,10 +140,19 @@ def validate_jacobian_entries(jacobian: Any, name: str) -> None:
                             ),
                         )
     else:
-        # JacobianStructure: has both rows (equations) and columns (variables)
-        for row_id in range(jacobian.num_rows):
-            for col_id in range(jacobian.num_cols):
-                entry = jacobian.get_derivative(row_id, col_id)
+        # JacobianStructure: has both rows (equations) and columns (variables).
+        # Sprint 40 P6 (E4): walk the STORED entries, not every rows x columns
+        # pair -- sarf's dense scan was ~453 M probes (113 s) to find ~10^5
+        # entries. Sorted and range-limited, so the first error raised is the
+        # same one the dense row-major scan raised.
+        for row_id in sorted(jacobian.entries):
+            if not 0 <= row_id < jacobian.num_rows:
+                continue
+            row_entries = jacobian.entries[row_id]
+            for col_id in sorted(row_entries):
+                if not 0 <= col_id < jacobian.num_cols:
+                    continue
+                entry = row_entries[col_id]
                 if entry is not None:
                     # Check if entry is a constant with NaN/Inf
                     if hasattr(entry, "value"):  # It's a Const node

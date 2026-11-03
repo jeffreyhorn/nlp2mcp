@@ -73,9 +73,11 @@ if TYPE_CHECKING:
 from ..ir.ast import Binary, Const, DollarConditional, Unary
 from ..ir.symbols import ObjSense, Rel
 from .ad_core import apply_simplification, get_simplification_mode
+from .constraint_jacobian import ReferencedInstanceFilter, _is_zero_const
 from .derivative_rules import differentiate_expr
 from .index_mapping import build_index_mapping, enumerate_variable_instances
 from .jacobian import GradientVector
+from .sparsity import find_variables_in_expr
 
 
 def find_objective_expression(model_ir: ModelIR) -> Expr:
@@ -276,6 +278,32 @@ def compute_objective_gradient(model_ir: ModelIR, config: Config | None = None) 
     # would be corrupted by this enumeration; the gradient re-symbolization that
     # consumes the enumerated cross-terms lives only in _build_indexed_gradient_term.
     # Scope the flag tightly and always restore it.
+    # LP fast path: cap simplification at basic (identity/zero elimination)
+    # instead of expensive advanced simplification, but still respect an
+    # explicit "none" mode from config.
+    is_lp = model_ir.solve_type is not None and model_ir.solve_type.upper() == "LP"
+    mode = get_simplification_mode(config)
+    if is_lp and mode != "none":
+        mode = "basic"
+
+    def component(var_name: str, indices: tuple[str, ...]) -> Expr:
+        # Index-aware differentiation: pass indices to distinguish x(i1) from x(i2)
+        derivative = differentiate_expr(obj_expr, var_name, indices, config)
+        if sense == ObjSense.MAX:
+            # max f(x) = min -f(x), so gradient is -∇f
+            derivative = Unary("-", derivative)
+        return apply_simplification(derivative, mode)
+
+    # E3 (Sprint 40 P6): differentiate only the instances the objective can
+    # reference -- the constraint Jacobian's filter. Every column still gets an
+    # entry (consumers read a missing one as None, not zero): an unreferenced
+    # instance stores ONE differentiated representative of its variable, and
+    # only when that representative is a zero constant; otherwise every
+    # instance is differentiated as before. Unfiltered, sarf differentiated
+    # all 369,165 columns of the objective (21-69 s).
+    obj_vars = find_variables_in_expr(obj_expr)
+    instance_filter = ReferencedInstanceFilter(model_ir)
+
     prev_flag = getattr(config, "enable_obj_offset_crossterms", False)
     config.enable_obj_offset_crossterms = True
     try:
@@ -286,32 +314,31 @@ def compute_objective_gradient(model_ir: ModelIR, config: Config | None = None) 
             # Enumerate all instances of this variable
             instances = enumerate_variable_instances(var_def, model_ir)
 
+            referenced: set[tuple[str, ...]] | None = (
+                instance_filter.referenced(obj_expr, var_name) if var_name in obj_vars else set()
+            )
+            unreferenced_zero: Expr | None = None
+            filter_usable = referenced is not None
+
             for indices in instances:
                 # Get column ID for this variable instance
                 col_id = index_mapping.get_col_id(var_name, indices)
                 if col_id is None:
                     continue
 
-                # Differentiate objective w.r.t. this specific variable instance
-                # Index-aware differentiation: pass indices to distinguish x(i1) from x(i2)
-                derivative = differentiate_expr(obj_expr, var_name, indices, config)
-
-                # Apply objective sense
-                if sense == ObjSense.MAX:
-                    # max f(x) = min -f(x), so gradient is -∇f
-                    derivative = Unary("-", derivative)
-
-                # LP fast path: cap simplification at basic (identity/zero
-                # elimination) instead of expensive advanced simplification,
-                # but still respect an explicit "none" mode from config.
-                is_lp = model_ir.solve_type is not None and model_ir.solve_type.upper() == "LP"
-                mode = get_simplification_mode(config)
-                if is_lp and mode != "none":
-                    mode = "basic"
-                derivative = apply_simplification(derivative, mode)
+                if filter_usable and referenced is not None and indices not in referenced:
+                    if unreferenced_zero is None:
+                        unreferenced_zero = component(var_name, indices)
+                        if not _is_zero_const(unreferenced_zero):
+                            # Not structurally zero: trust nothing, differentiate all.
+                            filter_usable = False
+                            gradient.set_derivative(col_id, unreferenced_zero)
+                            continue
+                    gradient.set_derivative(col_id, unreferenced_zero)
+                    continue
 
                 # Store in gradient vector
-                gradient.set_derivative(col_id, derivative)
+                gradient.set_derivative(col_id, component(var_name, indices))
     finally:
         config.enable_obj_offset_crossterms = prev_flag
 
