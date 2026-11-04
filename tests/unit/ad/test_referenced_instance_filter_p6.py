@@ -73,6 +73,20 @@ e.. sum(s, x(s,'i1')) =e= 1;
 Model m / all /; solve m using nlp minimizing z;
 """
 
+# PR #1794 review: a SET name that is also a declared LABEL. Row c('j')'s
+# substituted ``x(j)`` is the label 'j', but read as the subset j = {i1} the
+# filter emptied the row (the inequality path lost d c('j') / d x('j') = 1).
+_NAME_LABEL_COLLISION_FIXTURE = """
+Set i / i1, 'j' /;
+Set j(i) / i1 /;
+Variable x(i), z;
+Equation obj, c(i), e(i);
+obj.. z =e= sum(i, sqr(x(i) - 1));
+c(i).. x(i) =g= 0;
+e(i).. x(i) + z =e= 2;
+Model m / all /; solve m using nlp minimizing z;
+"""
+
 
 def _translate(src: str, monkeypatch, *, unfiltered: bool = False, simplification=None):
     calls: dict[str, int] = {}
@@ -112,8 +126,8 @@ def _jac(j) -> dict:
 @pytest.mark.unit
 @pytest.mark.parametrize(
     "fixture",
-    [_FIXTURE, _MAX_FIXTURE, _MIXED_CASE_FIXTURE],
-    ids=["min_lp", "max_nlp", "mixed_case_subset"],
+    [_FIXTURE, _MAX_FIXTURE, _MIXED_CASE_FIXTURE, _NAME_LABEL_COLLISION_FIXTURE],
+    ids=["min_lp", "max_nlp", "mixed_case_subset", "set_name_label_collision"],
 )
 @pytest.mark.parametrize(
     "simplification",

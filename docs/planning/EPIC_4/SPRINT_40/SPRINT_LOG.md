@@ -1309,3 +1309,18 @@ The review asked for a human assessment, with no concrete finding: *"index-renam
 - **Gate:**
   - `make typecheck && make format && make lint && make test`: clean, **5,764 passed**.
   - **Leak gate:** complete, 200 in-scope goldens clean, 0 timeouts. No corpus model has the shape, so the fix changes no golden.
+
+### PR #1794 review round 3
+
+- **A set or alias name that is also a declared label at that position now falls back to full enumeration** (`_referenced_index_tuples`, the set/alias/binder branch).
+  - **The bug:** with `Set i / i1, 'j' /; Set j(i) / i1 /;` and `c(i).. x(i) =g= 0`, row `c('j')`'s substituted `x(j)` is the **label** `'j'`. The branch read it as the subset `j = {i1}`, so the inequality path lost `∂c('j')/∂x('j') = 1` and the row came out empty.
+  - **Regression or not:** the inequality half is a regression from this PR, because E1 was unfiltered before. The equality half predates it (Sprint 38).
+  - Neither reading can be claimed safely, so the branch declines.
+- **Test:** a `set_name_label_collision` fixture (an inequality and an equality row) is added to the equivalence test. Reverting the guard fails its three filtered-mode cases.
+  - An alias variant (`Alias(i, k)` with a label `'k'`) was also tried. It does **not** discriminate, because the alias widens to every member of `i`, `'k'` included. So it was not added.
+- **Fixture:** hashes, counts and label builds (4) are unchanged at all four sizes.
+- **Gate:**
+  - `make test`: **5,768 passed**.
+  - **Leak gate:** 200 in-scope goldens clean, 0 timeouts; the guard changes no golden.
+  - **sarf:** `differentiate_expr` counts are identical (inequality **158,666**, equality 122,866, gradient 14), so no sarf set name collides with a label.
+  - **sarf timings:** the Jacobian took 39.3 s at light load, and the run hit the same `RecursionError` in `assemble_kkt_system` at 160 s.

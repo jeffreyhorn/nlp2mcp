@@ -204,6 +204,14 @@ def _referenced_index_tuples(
                 # solved, to a different objective (0.50796 -> 0.513): a wrong
                 # answer, not a crash.
                 #
+                # A name that is ALSO a declared label at this position is
+                # ambiguous (PR #1794 review): `Set i / i1, 'j' /; Set j(i)`
+                # makes row c('j')'s substituted ``x(j)`` the LABEL 'j', but this
+                # branch read it as the subset j = {i1} and emptied the row.
+                # Neither reading is safe to claim, so fall back to the full list.
+                if bare.casefold() in labels(var_name, position):
+                    return None
+
                 # NOTE: resolve_set_members returns (members, resolved_name);
                 # using the 2-tuple directly yields garbage labels.
                 members, _resolved = resolve_set_members(bare, model_ir, quiet=True)
