@@ -1286,3 +1286,12 @@ The review asked for a human assessment, with no concrete finding: *"index-renam
 ### Found and routed (not fixed in place)
 
 - **#1793:** the #1388 condition shift maps `h → h+1` inside `ord()`, emitting `$(ord(h+1) > 1)`, which is illegal GAMS (`$8`). There is a 6-line reproducer (`ISSUE_1793`). **dinam's golden carries it** (`stat_v` / `stat_x`, `$(ord(te+1) > last)`). That is a blocker beyond #926's list, and #926 is cross-referenced.
+
+### PR #1794 review round 1
+
+- **The filter is off when simplification is `"none"`** (`ReferencedInstanceFilter`, which now takes the `config`).
+  - **Why:** in that mode an unreferenced instance's derivative is a **structural** zero. For example, `x('i1') - 5` differentiated w.r.t. `x('i2')` is `0 - 0`, not `Const(0)`, so `_is_zero_const` keeps it and the full enumeration stores it. Filtering then dropped entries.
+  - **Measured on the fixtures at N = 12:** inequality 17 vs 180 and 42 vs 1,404. The **equality** path's Sprint-38 filter had the same gap, 17 vs 73 and 7 vs 37.
+  - **Scope of the change:** it lives in the shared helper, so it covers all three paths and the gradient. The gradient already matched, because its representative is not a zero constant, so it falls back to full differentiation.
+- **Tests:** the equivalence test now runs under `default` / `none` / `basic` / `aggressive`. With the switch disabled, exactly the two `none` cases fail.
+- **Default mode unchanged:** fixture hashes are equal at all four sizes, and the counts are unchanged.

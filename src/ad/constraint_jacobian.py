@@ -259,8 +259,14 @@ class ReferencedInstanceFilter:
     The counters exist for the P6 gate, which bounds builds, not only results.
     """
 
-    def __init__(self, model_ir: ModelIR) -> None:
+    def __init__(self, model_ir: ModelIR, config: Config | None = None) -> None:
         self._model_ir = model_ir
+        # With simplification "none" a non-referenced instance's derivative is a
+        # STRUCTURAL zero (``x('i1') - 5`` w.r.t. ``x('i2')`` is ``0 - 0``), not
+        # ``Const(0)``, and the unfiltered loop stores it. Skipping it would
+        # break the "identical to the full enumeration" contract, so the filter
+        # is off in that mode -- for every path, including the equality one.
+        self._enabled = get_simplification_mode(config) != "none"
         self._positions: dict[str, dict[tuple[str, ...], int]] = {}
         self._labels: dict[tuple[str, int], dict[str, str]] = {}
         self.position_map_builds = 0
@@ -276,7 +282,10 @@ class ReferencedInstanceFilter:
         return cached
 
     def referenced(self, expr: Expr, var_name: str) -> set[tuple[str, ...]] | None:
-        """``_referenced_index_tuples`` through this filter's label cache."""
+        """``_referenced_index_tuples`` through this filter's label cache, or
+        ``None`` (the full-enumeration fallback) when the filter is off."""
+        if not self._enabled:
+            return None
         return _referenced_index_tuples(expr, var_name, self._model_ir, labels=self.labels)
 
     def effective_instances(
@@ -982,7 +991,7 @@ def compute_constraint_jacobian(
 
     # One referenced-instance filter for the whole translation (Sprint 40 P6):
     # its position and label caches are scoped to this call.
-    instance_filter = ReferencedInstanceFilter(model_ir)
+    instance_filter = ReferencedInstanceFilter(model_ir, config)
 
     # Process equality constraints
     _compute_equality_jacobian(
@@ -1173,7 +1182,7 @@ def _compute_equality_jacobian(
         var_instances_cache = _precompute_variable_instances(model_ir)
 
     if instance_filter is None:
-        instance_filter = ReferencedInstanceFilter(model_ir)
+        instance_filter = ReferencedInstanceFilter(model_ir, config)
 
     simp_mode = get_simplification_mode(config)
 
@@ -1313,7 +1322,7 @@ def _compute_inequality_jacobian(
     if var_instances_cache is None:
         var_instances_cache = _precompute_variable_instances(model_ir)
     if instance_filter is None:
-        instance_filter = ReferencedInstanceFilter(model_ir)
+        instance_filter = ReferencedInstanceFilter(model_ir, config)
 
     simp_mode = get_simplification_mode(config)
 
@@ -1440,7 +1449,7 @@ def _compute_bound_jacobian(
     if var_instances_cache is None:
         var_instances_cache = _precompute_variable_instances(model_ir)
     if instance_filter is None:
-        instance_filter = ReferencedInstanceFilter(model_ir)
+        instance_filter = ReferencedInstanceFilter(model_ir, config)
 
     simp_mode = get_simplification_mode(config)
 

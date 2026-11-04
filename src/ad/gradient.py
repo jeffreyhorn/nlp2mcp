@@ -302,7 +302,7 @@ def compute_objective_gradient(model_ir: ModelIR, config: Config | None = None) 
     # instance is differentiated as before. Unfiltered, sarf differentiated
     # all 369,165 columns of the objective (21-69 s).
     obj_vars = find_variables_in_expr(obj_expr)
-    instance_filter = ReferencedInstanceFilter(model_ir)
+    instance_filter = ReferencedInstanceFilter(model_ir, config)
 
     prev_flag = getattr(config, "enable_obj_offset_crossterms", False)
     config.enable_obj_offset_crossterms = True

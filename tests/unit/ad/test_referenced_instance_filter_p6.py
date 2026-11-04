@@ -21,6 +21,7 @@ import src.ad.constraint_jacobian as cj
 import src.ad.gradient as gr
 from src.ad.constraint_jacobian import compute_constraint_jacobian
 from src.ad.gradient import compute_objective_gradient
+from src.config import Config
 from src.ir.ast import Const
 from src.ir.normalize import normalize_model
 from src.ir.parser import parse_model_text
@@ -57,7 +58,7 @@ solve m using nlp maximizing z;
 """
 
 
-def _translate(src: str, monkeypatch, *, unfiltered: bool = False):
+def _translate(src: str, monkeypatch, *, unfiltered: bool = False, simplification=None):
     calls: dict[str, int] = {}
 
     def counting(module, tag):
@@ -79,8 +80,9 @@ def _translate(src: str, monkeypatch, *, unfiltered: bool = False):
     try:
         model = parse_model_text(src)
         normalized_eqs, _ = normalize_model(model)
-        grad = compute_objective_gradient(model)
-        j_eq, j_ineq = compute_constraint_jacobian(model, normalized_eqs)
+        config = Config(simplification=simplification) if simplification else None
+        grad = compute_objective_gradient(model, config)
+        j_eq, j_ineq = compute_constraint_jacobian(model, normalized_eqs, config)
     finally:
         sys.setrecursionlimit(old)
         monkeypatch.undo()
@@ -93,10 +95,20 @@ def _jac(j) -> dict:
 
 @pytest.mark.unit
 @pytest.mark.parametrize("fixture", [_FIXTURE, _MAX_FIXTURE], ids=["min_lp", "max_nlp"])
-def test_filtered_paths_equal_the_unfiltered_enumeration(fixture, monkeypatch):
+@pytest.mark.parametrize(
+    "simplification",
+    # "none": an unreferenced instance's derivative is a STRUCTURAL zero
+    # (``0 - 0``), which the full enumeration stores, so the filter must be off
+    # (PR #1794 review) -- on every path, the pre-existing equality one included.
+    [None, "none", "basic", "aggressive"],
+    ids=["default", "none", "basic", "aggressive"],
+)
+def test_filtered_paths_equal_the_unfiltered_enumeration(fixture, simplification, monkeypatch):
     src = fixture.format(n=40)
-    grad, j_eq, j_ineq, _ = _translate(src, monkeypatch)
-    ref_grad, ref_eq, ref_ineq, _ = _translate(src, monkeypatch, unfiltered=True)
+    grad, j_eq, j_ineq, _ = _translate(src, monkeypatch, simplification=simplification)
+    ref_grad, ref_eq, ref_ineq, _ = _translate(
+        src, monkeypatch, unfiltered=True, simplification=simplification
+    )
 
     assert _jac(j_eq) == _jac(ref_eq)
     assert _jac(j_ineq) == _jac(ref_ineq)
