@@ -115,3 +115,28 @@ The scalar path re-symbolises each offset reference as an `IndexOffset` relative
 - **Gate:** add the literal fixture as a third form.
 
 **Found while building the control, unrelated to `stat_step`: #1793.** The own-index fixture's `stat_x` emits `$(ord(h+1) > 1)`, which is illegal GAMS. dinam's golden carries the same construct.
+
+## Day 10 (P5): banked — the REPLAN signal fired
+
+The Day-9 prototype, made production-shaped, went through the full gate. The diff is preserved on [#1789](https://github.com/jeffreyhorn/nlp2mcp/issues/1789#issuecomment-6643421979).
+- **Gate:** `make test` 5,772 passed. The leak gate was complete, with 0 timeouts.
+- **Drift:** 7 goldens over exactly the predicted 4 models.
+
+| model | resolver | `stat_step` |
+|---|---|---|
+| lnts | `model_infeasible` = same | the intended terms appear, but **`kkt_residual.py` rel 9.66 → 13.26** (`case_b`) |
+| robot | ⛔ **BACKWARD** → `path_solve_terminated` | the intended terms (`rho_dot(h) + rho_dot(h-1)`, …) |
+| rocket | ⛔ **BACKWARD** → `path_solve_terminated` | the intended terms (`v(h) + v(h-1)`, …) |
+| glider | mismatch = same | **wrong**: `sum(h, … (vel(c,i) + vel(c,h)) …)` |
+
+**Three requirements the Day-9 fixtures did not cover:**
+1. **The offset term needs a boundary guard.** Day 9 said GAMS's out-of-range-is-0 rule makes the generalised term exact at the boundary. That is **false under a nonlinear operation**.
+   - robot's `u_the(h-1) / i_the(h-1)` at the first `h` divides by the out-of-range `i_the(h0)`, and `stat_step` evaluates to UNDF (`kkt_residual.py`: `division by zero`, EXECERROR).
+   - rocket's `… / m(h-1)` is the same shape.
+2. **A subset equation domain.** glider's constraint runs over `i(h)`. The offset label resolves through the parent `h`, which leaves an uncontrolled `h`, and #949's wrap then adds a blanket `sum(h, …)`.
+3. **A second defect in lnts' row, not yet attributed.** The residual gets worse even with the intended terms present. The candidate is the 2-D head `pos_eqn(c+2,h+1)`, whose `c+2` is substituted too.
+
+**Gate additions for the next attempt:**
+- a division-under-lag fixture, which must solve;
+- a subset-domain fixture;
+- lnts `stat_step` within tolerance, which a label change alone does not satisfy.

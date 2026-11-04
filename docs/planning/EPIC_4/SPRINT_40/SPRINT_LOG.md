@@ -1324,3 +1324,64 @@ The review asked for a human assessment, with no concrete finding: *"index-renam
   - **Leak gate:** 200 in-scope goldens clean, 0 timeouts; the guard changes no golden.
   - **sarf:** `differentiate_expr` counts are identical (inequality **158,666**, equality 122,866, gradient 14), so no sarf set name collides with a label.
   - **sarf timings:** the Jacobian took 39.3 s at light load, and the run hit the same `RecursionError` in `assemble_kkt_system` at 160 s.
+
+## Day 10 — 2026-11-04 · Checkpoint 2 · 2 h · + P6: land, then bound the recursion · 6 h · + P5: land or bank · 1 h
+
+**Branch:** `planning/sprint40-day10-sarf` · **Base:** `1abcd687` (PR #1794, 3 review rounds). **Docs-only:** `src/` and `tests/` are untouched.
+
+### Checkpoint 2: NO-GO by the rule, on tfordy alone (owner call pending)
+
+Run in a throwaway worktree at `1abcd687` with the raw corpus copied in. **Nothing was persisted.**
+- **The order departs from PLAN.md.** P6's E1–E4 + E7/E8 landed on Day 9 (PR #1794), **before** this checkpoint rather than after it. That change is byte-identical (200 goldens clean), so it cannot move the checkpoint's scope.
+- **Scope:** the dry run reports **31** changed-golden models, with no empty-selection error. `--min-scope 31`, **rc 1, NO-GO**:
+
+  | model | DB row → re-solve | |
+  |---|---|---|
+  | **tfordy** | presolve match → `model_infeasible` | ⛔ **BACKWARD**: Day 7's golden, landed **by owner decision** ("Match −1 as exposed"). The DB still holds the pre-Day-7 match because nothing has been persisted since, so this is the known item, not a new regression. |
+  | abel | mismatch → match | ✅ forward: a stale DB row (Day 5), not booked |
+  | sroute | `model_infeasible` → presolve match | ✅ forward: Day 8's #1787, booked as methodology |
+  | the other 28 | | `= same` |
+
+  0 `missing`. **Whether tfordy's owner-decided move clears the checkpoint is the owner's call.** Until then the checkpoint is recorded **NO-GO**, with tfordy its only cause.
+- **Licensed re-run of the 11 cohort models:** every row is `licensed`, and no row outside the cohort changed.
+  - **8 reproduce their committed rows exactly** on outcome, verdict, edition and objective (4 dp): turkey, glider, srpchase, robot, shale, tricp, ferts, tabora.
+  - tfordy and sroute show the moves above.
+  - **egypt** keeps `model_infeasible`, its verdict and its edition. Only its infeasible iterate's objective changed (1,448,953.756 → 11,645,180), which fits Day 8's change to `stat_trans`.
+
+### P6: E1–E4 + E7/E8 landed (Day 9); E5/E6 diagnosed and re-scoped, so **C7 is UNMET**
+
+- **Landed:** C2, with the leak gate run alone. This is PR #1794, merged at `1abcd687` after three review rounds:
+  - r1: the filter is off under `simplification="none"`;
+  - r2: subset members are canonicalised;
+  - r3: a set name that is also a declared label declines.
+- **E5, the recursion: a SHAPE defect, not `simplify`'s algorithm.**
+  - **The stack** is 49,993 × `simplify` (`ad_core.py:171`, a `Binary`'s left child), entered from `build_stationarity_equations` → `apply_simplification` on `stat_task`.
+  - **`stat_task`'s shape:** its top-level spine is only 7 terms. The depth is inside **`lam_labor`'s `$`-guard**, an OR of 4-`sameas` conjunctions over **51,792 entry tuples**, built left-deep: 51,791 `or` + 3 `and` on the deepest path.
+  - **Where it comes from:** `_build_sameas_guard` → `_build_tuple_or_guard`. The `labor` rows reference a non-Cartesian subset of `task`'s instances, so the #1381 follow-up correctly refuses a per-dimension AND. The semantics are right; the shape is not.
+  - Building `stat_task` takes ≈ 360 s.
+- **Scratch experiments.** These are in a detached worktree and are not landed.
+
+  | patches | sarf |
+  |---|---|
+  | balanced OR tree (depth ≈ 16) | passes `assemble_kkt_system` (156.6 s). Emit then raises `Circular lead/lag with Binary offset not supported` (`luse(c,t++(cs(c,"start",s)-1),s)`, line 365) |
+  | + `t++(expr)` rendering | **translates for the first time** (rc `completed`, 5.2 MB MCP, 415.6 s under checkpoint contention). Compile fails: `$170` ×97 in `btask` / `lreq` data |
+  | + zero-padded numeric ranges (`t / 01*24 /` was read as `1…24`) | translates in **338.2 s** (load 10–16). **The MCP compiles with 0 errors**, but GAMS **generation did not finish in 37 min**: `gamscmex.out` at 100 % CPU and no solver started. The file carries **207,218 `sameas` calls**, and the guard is evaluated for each of `stat_task`'s 369,024 instances. Stopped. |
+
+- **Re-scoped.** The fix is the guard's **shape**: a non-Cartesian entry set emitted as a **declared set** with a membership test. That is larger than a bounded item.
+  - Filed **#1795** (`ISSUE_1795`). It needs a guard-impact review, because `stationarity.py` holds #1741's guard.
+  - Behind it: **#1796**, the circular lead/lag with an expression amount, and **#1797**, the zero-padded numeric range. A grep finds sarf the only corpus user of such a range. Both have scratch-verified fixes.
+- **C7: UNMET.** E5/E6 started and was re-scoped to #1795, so Translate stays **135 flat**. sarf does not produce a byte-stable golden at ≤ 300 s; three filed issues stand between it and one.
+
+### P5 (#1789): banked, mechanism named
+
+The Day-9 prototype went through the full gate and the REPLAN signal fired:
+- robot and rocket moved ⛔ **BACKWARD** to `path_solve_terminated`;
+- lnts `stat_step` residual got **worse**, 9.66 → 13.26;
+- glider's row came out **wrong**: `sum(h, … vel(c,h) …)` on a subset domain.
+
+The causes are recorded in `ISSUE_1789`, Day 10:
+- the offset term needs a boundary guard, because division by an out-of-range `i_the(h0)` is UNDF;
+- the subset domain resolves through the parent set;
+- lnts has a second, unattributed defect.
+
+The diff is preserved on #1789. `src/` is reverted to `HEAD`.
