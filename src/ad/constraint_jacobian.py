@@ -213,7 +213,21 @@ def _referenced_index_tuples(
                     # One position already exceeds the cap, so the Cartesian
                     # product must too. Bail before materialising the strings.
                     return None
-                per_position.append([str(m) for m in members])
+                # CANONICALISE against the declared labels, as the literal
+                # branches do (PR #1794 review): a subset's members keep their
+                # own spelling, `Set s(i) / i2 /` against `i / I1, I2 /`, and a
+                # tuple ('i2','i2') matches no declared column ('I2','I2') -- a
+                # dropped derivative, and E3 then stores the unreferenced zero
+                # for that column. A member with no declared label is not a
+                # claim this function can make: fall back to the full list.
+                declared = labels(var_name, position)
+                canonical_members: list[str] = []
+                for m in members:
+                    canonical = declared.get(str(m).casefold())
+                    if canonical is None:
+                        return None
+                    canonical_members.append(canonical)
+                per_position.append(canonical_members)
                 continue
 
             # Not quoted, not a binder, not a set or alias. It may be a concrete

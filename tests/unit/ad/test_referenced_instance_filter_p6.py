@@ -57,6 +57,22 @@ Model m / all /;
 solve m using nlp maximizing z;
 """
 
+# PR #1794 review: a SUBSET binder whose members are spelled differently from
+# the declared domain (`s(i) / i2 /` vs `i / I1, I2 /`). Uncanonicalised, the
+# filter returned ('i2','i2'), matching no declared column ('I2','I2'): the
+# inequality row lost its derivative and E3 stored a zero gradient for it.
+_MIXED_CASE_FIXTURE = """
+Set i / I1, I2 /;
+Set s(i) / i2 /;
+Variable x(i,i), z;
+x.lo(i,i) = 0;
+Equation obj, c, e;
+obj.. z =e= sum(s, sqr(x(s,s))) + sum(i, x(i,'I1'));
+c.. sum(s, x(s,s)) =g= 1;
+e.. sum(s, x(s,'i1')) =e= 1;
+Model m / all /; solve m using nlp minimizing z;
+"""
+
 
 def _translate(src: str, monkeypatch, *, unfiltered: bool = False, simplification=None):
     calls: dict[str, int] = {}
@@ -94,7 +110,11 @@ def _jac(j) -> dict:
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("fixture", [_FIXTURE, _MAX_FIXTURE], ids=["min_lp", "max_nlp"])
+@pytest.mark.parametrize(
+    "fixture",
+    [_FIXTURE, _MAX_FIXTURE, _MIXED_CASE_FIXTURE],
+    ids=["min_lp", "max_nlp", "mixed_case_subset"],
+)
 @pytest.mark.parametrize(
     "simplification",
     # "none": an unreferenced instance's derivative is a STRUCTURAL zero

@@ -1295,3 +1295,17 @@ The review asked for a human assessment, with no concrete finding: *"index-renam
   - **Scope of the change:** it lives in the shared helper, so it covers all three paths and the gradient. The gradient already matched, because its representative is not a zero constant, so it falls back to full differentiation.
 - **Tests:** the equivalence test now runs under `default` / `none` / `basic` / `aggressive`. With the switch disabled, exactly the two `none` cases fail.
 - **Default mode unchanged:** fixture hashes are equal at all four sizes, and the counts are unchanged.
+
+### PR #1794 review round 2
+
+- **The binder branch of `_referenced_index_tuples` now canonicalises each member against the declared labels**, as the literal branches already did. A member with no declared label returns `None`, the full-enumeration fallback.
+  - **The bug:** a subset's members keep their own spelling. `Set s(i) / i2 /` against `i / I1, I2 /` produced the tuple `('i2','i2')`, which matches no declared column `('I2','I2')`.
+  - **Measured on a reproducer:** the Jacobian lost 2 of 7 entries, and the gradient (new with E3) stored `0` for `x('I2','I2')` instead of `2*x(i2,i2)`.
+  - **Pre-existing in part:** the equality path's half of this predates the PR (Sprint 38's filter). The gradient half is this PR's.
+- **Test:** a `mixed_case_subset` fixture (an inequality, an equality and a gradient reference) is added to the equivalence test. Reverting the canonicalisation fails its three filtered-mode cases.
+- **Fixture:** hashes and differentiation counts are unchanged at all four sizes.
+  - **Label maps are now 4 per translation**, still constant in N: 2 for the Jacobian's filter and 2 for the gradient's, which now consults labels in the binder branch.
+  - That is once per (variable, position) **per filter**, never per row. The §7 figure of 2 counted only the Jacobian's filter.
+- **Gate:**
+  - `make typecheck && make format && make lint && make test`: clean, **5,764 passed**.
+  - **Leak gate:** complete, 200 in-scope goldens clean, 0 timeouts. No corpus model has the shape, so the fix changes no golden.
