@@ -1220,3 +1220,107 @@ The review asked for a human assessment, with no concrete finding: *"index-renam
 - The wrong contributions the probes found are all in shapes the new path does **not** take: an offset on the eq index inside the guard, and a subset equation domain. Those keep `main`'s pre-existing path, byte-identical. Recorded on #1787 as the next extensions.
 - **Found on the way:** a parameter used only in an equation's `$` condition loses its assignment in the emit (`$141`, identical on `main`): **#1792**.
 
+
+## Day 9 — 2026-11-03 · P6: sarf, E1–E4 and the import hoists · 8 h · + P5: trace · 2 h
+
+**Branch:** `planning/sprint40-day9-sarf` · **Base:** `c410057d` (PR #1791).
+
+### P6: E1–E4, E7/E8 (`SARF_JACOBIAN_DESIGN.md` §§6–8)
+
+- **E1/E2: one shared helper**, `ReferencedInstanceFilter` (`src/ad/constraint_jacobian.py`).
+  - **Scope:** one instance per `compute_constraint_jacobian` call, used by the equality, inequality and bound paths, so the predicate cannot drift between copies.
+  - **Position maps:** each variable's declared-position map is built **on a cache miss**, with an explicit test, never `setdefault`.
+  - **Label cache:** `_declared_domain_labels` is cached per (variable, position) and handed to `_referenced_index_tuples` through a new optional `labels` parameter.
+  - The equality path's eager per-call `position_maps` is gone.
+- **E3: the gradient** (`compute_objective_gradient`) differentiates only the instances the objective can reference.
+  - Every column still gets an entry, because consumers read a missing one as `None`.
+  - An unreferenced instance stores **one** differentiated representative of its variable, and only when that representative is a zero constant. Otherwise every instance is differentiated as before.
+  - A variable the objective never names takes the representative path too.
+- **E4: `validate_jacobian_entries`** walks the stored entries, sorted and range-limited, so it raises the **same first error** as the dense row-major scan. The gradient branch was already O(columns) and is unchanged.
+- **E7/E8: hoisted.** The local imports moved to module level: `ad_core.simplify`'s and `simplify_advanced`'s `..ir.ast` imports, and all four `from .index_mapping import resolve_set_members` in `derivative_rules`. There is no cycle, because `index_mapping` imports only `ir.symbols`.
+
+### Gate
+
+- **Fixture** (§6): emit sha256 equal to the §6 golden at all four sizes (`b9747c0b…`, `6b2b96f3…`, `894e58f8…`, `86e64f13…`).
+
+  | path | before (fail-before) | after |
+  |---|---|---|
+  | inequality | 4 × 3N | **16** |
+  | bound | 3N | **1** |
+  | gradient | 3N + 1 | **17** |
+  | equality | 17 | 17 |
+
+  The bound path's fail-before work is non-zero, so the fixture reaches E2. **One filter per translation; 2 position-map builds (`x`, `z`) and 2 label-map builds at every N.**
+- **Tests:** `tests/unit/ad/test_referenced_instance_filter_p6.py`, 7 tests.
+  - Filtered vs unfiltered (`_referenced_index_tuples` forced to `None`) give identical Jacobian and gradient entries, for both a minimise-LP and a maximise-NLP fixture.
+  - Work is flat in N, maps are built once, and E4 still raises, reports the dense scan's first error, and ignores out-of-range entries.
+  - **Four mutants, each caught:** E1 unfiltered, a per-row position-map rebuild, E4 unsorted, and the gradient unfiltered.
+- `make typecheck && make format && make lint && make test`: clean, **5,754 passed**, 10 skipped, no `225*` dirs. `make check-index-repeats`: P2 3 = baseline.
+- **Leak gate: complete, 200 in-scope goldens clean, 0 timeouts or unverified models.** It started at a 5-minute load of 88. No golden moved, so there was nothing to re-solve.
+- **sarf** (`phases.py`, 1,200 s cap): **the Jacobian completes.**
+
+  | phase | s |
+  |---|---|
+  | parse | 14.6 |
+  | gradient (E3) | **1.7** (prep: 20.9–46.4) |
+  | equality Jacobian | 30.5 |
+  | inequality Jacobian (E1) | 40.5 |
+  | bound Jacobian (E2) | 0.0 |
+  | `validate_jacobian_entries` ×3 (E4) | **0.2–0.3** (prep: 113.3–131.3) |
+  | `assemble_kkt_system` | 261.3 → `RecursionError` |
+
+  `differentiate_expr`: inequality **158,666**, the design's figure (not 292 M), equality 122,866, gradient 14.
+  - The translate stops at **350.5 s** with `maximum recursion depth exceeded` **inside KKT assembly**. That is E5, out of P6's scope (Day 10: bound the recursion).
+  - REPLAN exit 1 does **not** fire, because sarf reaches `assemble_kkt_system`.
+  - sarf is **not** a +1 Translate.
+
+### P5: #1789, continued
+
+- **Prototype, not landed**, because P6's gate is byte-identity.
+  - **Representative:** the instance with the most distinct leaf references, so a lag head's boundary instance is not generalised.
+  - **Substitution:** `_apply_offset_substitution` is keyed on the constraint's labels, and skipped for circular offsets.
+  - **Result:** lead and lag fixtures both **68.546**, against the NLP's 68.5456 (68.577 and 72.689 before). The own-index control's `stat_step` is byte-identical.
+  - Still owed for Day 10: corpus drift, and lnts / robot `kkt_residual.py`.
+- **A second mechanism in the same function.** A quoted literal, `u('h3')`, is lifted to `u(h)` by `_replace_indices_in_expr`, giving `2*u(h)`. The prototype neither causes nor fixes it. Recorded on #1789 and in `ISSUE_1789` as a third gate form.
+
+### Found and routed (not fixed in place)
+
+- **#1793:** the #1388 condition shift maps `h → h+1` inside `ord()`, emitting `$(ord(h+1) > 1)`, which is illegal GAMS (`$8`). There is a 6-line reproducer (`ISSUE_1793`). **dinam's golden carries it** (`stat_v` / `stat_x`, `$(ord(te+1) > last)`). That is a blocker beyond #926's list, and #926 is cross-referenced.
+
+### PR #1794 review round 1
+
+- **The filter is off when simplification is `"none"`** (`ReferencedInstanceFilter`, which now takes the `config`).
+  - **Why:** in that mode an unreferenced instance's derivative is a **structural** zero. For example, `x('i1') - 5` differentiated w.r.t. `x('i2')` is `0 - 0`, not `Const(0)`, so `_is_zero_const` keeps it and the full enumeration stores it. Filtering then dropped entries.
+  - **Measured on the fixtures at N = 12:** inequality 17 vs 180 and 42 vs 1,404. The **equality** path's Sprint-38 filter had the same gap, 17 vs 73 and 7 vs 37.
+  - **Scope of the change:** it lives in the shared helper, so it covers all three paths and the gradient. The gradient already matched, because its representative is not a zero constant, so it falls back to full differentiation.
+- **Tests:** the equivalence test now runs under `default` / `none` / `basic` / `aggressive`. With the switch disabled, exactly the two `none` cases fail.
+- **Default mode unchanged:** fixture hashes are equal at all four sizes, and the counts are unchanged.
+
+### PR #1794 review round 2
+
+- **The binder branch of `_referenced_index_tuples` now canonicalises each member against the declared labels**, as the literal branches already did. A member with no declared label returns `None`, the full-enumeration fallback.
+  - **The bug:** a subset's members keep their own spelling. `Set s(i) / i2 /` against `i / I1, I2 /` produced the tuple `('i2','i2')`, which matches no declared column `('I2','I2')`.
+  - **Measured on a reproducer:** the Jacobian lost 2 of 7 entries, and the gradient (new with E3) stored `0` for `x('I2','I2')` instead of `2*x(i2,i2)`.
+  - **Pre-existing in part:** the equality path's half of this predates the PR (Sprint 38's filter). The gradient half is this PR's.
+- **Test:** a `mixed_case_subset` fixture (an inequality, an equality and a gradient reference) is added to the equivalence test. Reverting the canonicalisation fails its three filtered-mode cases.
+- **Fixture:** hashes and differentiation counts are unchanged at all four sizes.
+  - **Label maps are now 4 per translation**, still constant in N: 2 for the Jacobian's filter and 2 for the gradient's, which now consults labels in the binder branch.
+  - That is once per (variable, position) **per filter**, never per row. The §7 figure of 2 counted only the Jacobian's filter.
+- **Gate:**
+  - `make typecheck && make format && make lint && make test`: clean, **5,764 passed**.
+  - **Leak gate:** complete, 200 in-scope goldens clean, 0 timeouts. No corpus model has the shape, so the fix changes no golden.
+
+### PR #1794 review round 3
+
+- **A set or alias name that is also a declared label at that position now falls back to full enumeration** (`_referenced_index_tuples`, the set/alias/binder branch).
+  - **The bug:** with `Set i / i1, 'j' /; Set j(i) / i1 /;` and `c(i).. x(i) =g= 0`, row `c('j')`'s substituted `x(j)` is the **label** `'j'`. The branch read it as the subset `j = {i1}`, so the inequality path lost `∂c('j')/∂x('j') = 1` and the row came out empty.
+  - **Regression or not:** the inequality half is a regression from this PR, because E1 was unfiltered before. The equality half predates it (Sprint 38).
+  - Neither reading can be claimed safely, so the branch declines.
+- **Test:** a `set_name_label_collision` fixture (an inequality and an equality row) is added to the equivalence test. Reverting the guard fails its three filtered-mode cases.
+  - An alias variant (`Alias(i, k)` with a label `'k'`) was also tried. It does **not** discriminate, because the alias widens to every member of `i`, `'k'` included. So it was not added.
+- **Fixture:** hashes, counts and label builds (4) are unchanged at all four sizes.
+- **Gate:**
+  - `make test`: **5,768 passed**.
+  - **Leak gate:** 200 in-scope goldens clean, 0 timeouts; the guard changes no golden.
+  - **sarf:** `differentiate_expr` counts are identical (inequality **158,666**, equality 122,866, gradient 14), so no sarf set name collides with a label.
+  - **sarf timings:** the Jacobian took 39.3 s at light load, and the run hit the same `RecursionError` in `assemble_kkt_system` at 160 s.

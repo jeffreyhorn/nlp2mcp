@@ -47,6 +47,7 @@ between different instances of indexed variables and constraints.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -114,6 +115,7 @@ def _referenced_index_tuples(
     constraint_expr: Expr,
     var_name: str,
     model_ir: ModelIR,
+    labels: Callable[[str, int], dict[str, str]] | None = None,
 ) -> set[tuple[str, ...]] | None:
     """Index tuples of ``var_name`` that this row's expression can possibly reference.
 
@@ -133,6 +135,14 @@ def _referenced_index_tuples(
     is always safe; returning a set that is too small silently drops derivatives,
     so every uncertain case resolves toward ``None`` or toward a wider set.
     """
+    # ``labels`` lets a caller supply a translation-scoped cache of
+    # ``_declared_domain_labels`` (Sprint 40 P6): uncached, every FIXED index of
+    # every row rebuilt the whole position's label map, O(declared) per row.
+    if labels is None:
+
+        def labels(name: str, position: int) -> dict[str, str]:
+            return _declared_domain_labels(name, position, model_ir)
+
     # Traversal uses the AST's own `Expr.children()` rather than `__dict__`
     # introspection: it is the established API, it survives AST changes, and it
     # deliberately does NOT descend into `VarRef.indices` (which hold
@@ -168,9 +178,7 @@ def _referenced_index_tuples(
             if quoted:
                 # An explicit literal, e.g. task("harvest-c", ...). Canonicalise
                 # its case against the declared domain -- see the helper.
-                canonical = _declared_domain_labels(var_name, position, model_ir).get(
-                    bare.casefold()
-                )
+                canonical = labels(var_name, position).get(bare.casefold())
                 if canonical is None:
                     # A literal that is not a member of this position's domain.
                     # Rather than emit a tuple that can never match, decline.
@@ -196,6 +204,14 @@ def _referenced_index_tuples(
                 # solved, to a different objective (0.50796 -> 0.513): a wrong
                 # answer, not a crash.
                 #
+                # A name that is ALSO a declared label at this position is
+                # ambiguous (PR #1794 review): `Set i / i1, 'j' /; Set j(i)`
+                # makes row c('j')'s substituted ``x(j)`` the LABEL 'j', but this
+                # branch read it as the subset j = {i1} and emptied the row.
+                # Neither reading is safe to claim, so fall back to the full list.
+                if bare.casefold() in labels(var_name, position):
+                    return None
+
                 # NOTE: resolve_set_members returns (members, resolved_name);
                 # using the 2-tuple directly yields garbage labels.
                 members, _resolved = resolve_set_members(bare, model_ir, quiet=True)
@@ -205,7 +221,21 @@ def _referenced_index_tuples(
                     # One position already exceeds the cap, so the Cartesian
                     # product must too. Bail before materialising the strings.
                     return None
-                per_position.append([str(m) for m in members])
+                # CANONICALISE against the declared labels, as the literal
+                # branches do (PR #1794 review): a subset's members keep their
+                # own spelling, `Set s(i) / i2 /` against `i / I1, I2 /`, and a
+                # tuple ('i2','i2') matches no declared column ('I2','I2') -- a
+                # dropped derivative, and E3 then stores the unreferenced zero
+                # for that column. A member with no declared label is not a
+                # claim this function can make: fall back to the full list.
+                declared = labels(var_name, position)
+                canonical_members: list[str] = []
+                for m in members:
+                    canonical = declared.get(str(m).casefold())
+                    if canonical is None:
+                        return None
+                    canonical_members.append(canonical)
+                per_position.append(canonical_members)
                 continue
 
             # Not quoted, not a binder, not a set or alias. It may be a concrete
@@ -213,7 +243,7 @@ def _referenced_index_tuples(
             # of this position's declared domain. Anything else is a symbol this
             # function does not understand, and guessing "literal" is precisely
             # how columns get dropped, so fall back to the declared enumeration.
-            canonical = _declared_domain_labels(var_name, position, model_ir).get(bare.casefold())
+            canonical = labels(var_name, position).get(bare.casefold())
             if canonical is not None:
                 per_position.append([canonical])
             else:
@@ -227,6 +257,76 @@ def _referenced_index_tuples(
         for combo in itertools.product(*per_position):
             out.add(tuple(combo))
     return out
+
+
+class ReferencedInstanceFilter:
+    """The referenced-instance filter, shared by the equality, inequality and
+    bound Jacobian paths (Sprint 40 P6, ``SARF_JACOBIAN_DESIGN.md`` §4); the
+    objective gradient (E3, ``gradient.py``) uses ``referenced``.
+
+    One instance per ``compute_constraint_jacobian`` call (translation-scoped,
+    never module-level, so two models sharing a variable name cannot collide):
+
+    * ``effective_instances`` narrows a row's differentiation to the tuples it can
+      reference (``_referenced_index_tuples``), in DECLARED order, so the
+      Jacobian and the emit stay byte-identical. ``None`` from the referenced
+      set falls back to the full declared list.
+    * Each variable's declared-position map is built ONCE, on a cache miss. Not
+      ``cache.setdefault(key, {…})``: that evaluates the comprehension on every
+      call, a hit included -- an O(declared) rebuild per row that looks cached,
+      and it was in the design's own first prototype.
+    * ``_declared_domain_labels`` is cached per (variable, position), so a fixed
+      index in a row no longer rescans the whole position's labels.
+
+    The counters exist for the P6 gate, which bounds builds, not only results.
+    """
+
+    def __init__(self, model_ir: ModelIR, config: Config | None = None) -> None:
+        self._model_ir = model_ir
+        # With simplification "none" a non-referenced instance's derivative is a
+        # STRUCTURAL zero (``x('i1') - 5`` w.r.t. ``x('i2')`` is ``0 - 0``), not
+        # ``Const(0)``, and the unfiltered loop stores it. Skipping it would
+        # break the "identical to the full enumeration" contract, so the filter
+        # is off in that mode -- for every path, including the equality one.
+        self._enabled = get_simplification_mode(config) != "none"
+        self._positions: dict[str, dict[tuple[str, ...], int]] = {}
+        self._labels: dict[tuple[str, int], dict[str, str]] = {}
+        self.position_map_builds = 0
+        self.label_map_builds = 0
+
+    def labels(self, var_name: str, position: int) -> dict[str, str]:
+        key = (var_name, position)
+        cached = self._labels.get(key)
+        if cached is None:
+            cached = _declared_domain_labels(var_name, position, self._model_ir)
+            self._labels[key] = cached
+            self.label_map_builds += 1
+        return cached
+
+    def referenced(self, expr: Expr, var_name: str) -> set[tuple[str, ...]] | None:
+        """``_referenced_index_tuples`` through this filter's label cache, or
+        ``None`` (the full-enumeration fallback) when the filter is off."""
+        if not self._enabled:
+            return None
+        return _referenced_index_tuples(expr, var_name, self._model_ir, labels=self.labels)
+
+    def effective_instances(
+        self,
+        constraint_expr: Expr,
+        var_name: str,
+        var_instances: list[tuple[str, ...]],
+    ) -> list[tuple[str, ...]]:
+        referenced = self.referenced(constraint_expr, var_name)
+        if referenced is None:
+            return var_instances
+        position = self._positions.get(var_name)
+        if position is None:
+            position = {t: i for i, t in enumerate(var_instances)}
+            self._positions[var_name] = position
+            self.position_map_builds += 1
+        # Sort the referenced set by declared position -- NOT a filter of the
+        # declared list, which would be O(declared) per row (the Day-7 trap).
+        return sorted((t for t in referenced if t in position), key=position.__getitem__)
 
 
 def _is_zero_const(expr: Expr | None) -> bool:
@@ -911,20 +1011,38 @@ def compute_constraint_jacobian(
     # Precompute variable instances once (avoids re-enumerating per constraint)
     var_instances_cache = _precompute_variable_instances(model_ir)
 
+    # One referenced-instance filter for the whole translation (Sprint 40 P6):
+    # its position and label caches are scoped to this call.
+    instance_filter = ReferencedInstanceFilter(model_ir, config)
+
     # Process equality constraints
     _compute_equality_jacobian(
-        model_ir, eq_index_mapping, J_h, normalized_eqs, config, var_instances_cache
+        model_ir,
+        eq_index_mapping,
+        J_h,
+        normalized_eqs,
+        config,
+        var_instances_cache,
+        instance_filter,
     )
 
     # Process inequality constraints
     _compute_inequality_jacobian(
-        model_ir, ineq_index_mapping, J_g, normalized_eqs, config, var_instances_cache
+        model_ir,
+        ineq_index_mapping,
+        J_g,
+        normalized_eqs,
+        config,
+        var_instances_cache,
+        instance_filter,
     )
 
     # Process bounds from normalized_bounds
     # Note: If bounds are also in model.inequalities, they're already processed above
     # This handles cases where tests manually add to normalized_bounds without updating inequalities
-    _compute_bound_jacobian(model_ir, ineq_index_mapping, J_g, config, var_instances_cache)
+    _compute_bound_jacobian(
+        model_ir, ineq_index_mapping, J_g, config, var_instances_cache, instance_filter
+    )
 
     return J_h, J_g
 
@@ -1056,6 +1174,7 @@ def _compute_equality_jacobian(
     normalized_eqs: dict[str, NormalizedEquation] | None = None,
     config: Config | None = None,
     var_instances_cache: list[tuple[str, list[tuple[str, ...]]]] | None = None,
+    instance_filter: ReferencedInstanceFilter | None = None,
 ) -> None:
     """
     Compute Jacobian for equality constraints: J_h[i,j] = ∂h_i/∂x_j.
@@ -1084,13 +1203,8 @@ def _compute_equality_jacobian(
     if var_instances_cache is None:
         var_instances_cache = _precompute_variable_instances(model_ir)
 
-    # Declared-order position maps, built ONCE per call (not per row, and not in
-    # module-level state where two models sharing a variable name could collide).
-    # Used to emit the referenced subset in declared order so the Jacobian -- and
-    # the emitted model -- stay byte-identical to the unfiltered path.
-    position_maps: dict[str, dict[tuple[str, ...], int]] = {
-        name: {t: i for i, t in enumerate(instances)} for name, instances in var_instances_cache
-    }
+    if instance_filter is None:
+        instance_filter = ReferencedInstanceFilter(model_ir, config)
 
     simp_mode = get_simplification_mode(config)
 
@@ -1171,15 +1285,9 @@ def _compute_equality_jacobian(
                 # declared list. Filtering is O(declared) per row, which for sarf
                 # is 369,024 membership tests x 1,183 rows: it trades 436M
                 # differentiations for 436M lookups and still does not terminate.
-                referenced = _referenced_index_tuples(constraint_expr, var_name, model_ir)
-                if referenced is None:
-                    effective_instances: list[tuple[str, ...]] = var_instances
-                else:
-                    position = position_maps[var_name]
-                    effective_instances = sorted(
-                        (t for t in referenced if t in position),
-                        key=position.__getitem__,
-                    )
+                effective_instances = instance_filter.effective_instances(
+                    constraint_expr, var_name, var_instances
+                )
 
                 for var_indices in effective_instances:
                     col_id = index_mapping.get_col_id(var_name, var_indices)
@@ -1208,6 +1316,7 @@ def _compute_inequality_jacobian(
     normalized_eqs: dict[str, NormalizedEquation] | None = None,
     config: Config | None = None,
     var_instances_cache: list[tuple[str, list[tuple[str, ...]]]] | None = None,
+    instance_filter: ReferencedInstanceFilter | None = None,
 ) -> None:
     """
     Compute Jacobian for inequality constraints: J_g[i,j] = ∂g_i/∂x_j.
@@ -1234,6 +1343,8 @@ def _compute_inequality_jacobian(
     # Precompute variable instances if not provided
     if var_instances_cache is None:
         var_instances_cache = _precompute_variable_instances(model_ir)
+    if instance_filter is None:
+        instance_filter = ReferencedInstanceFilter(model_ir, config)
 
     simp_mode = get_simplification_mode(config)
 
@@ -1297,7 +1408,14 @@ def _compute_inequality_jacobian(
                 if var_name not in referenced_vars:
                     continue
 
-                for var_indices in var_instances:
+                # E1 (Sprint 40 P6): the same referenced-instance filter as the
+                # equality path. Unfiltered, sarf's 792 rows referencing `task`
+                # asked for 792 x 369,024 differentiations (~36 h).
+                effective_instances = instance_filter.effective_instances(
+                    constraint_expr, var_name, var_instances
+                )
+
+                for var_indices in effective_instances:
                     col_id = index_mapping.get_col_id(var_name, var_indices)
                     if col_id is None:
                         continue
@@ -1323,6 +1441,7 @@ def _compute_bound_jacobian(
     J_g: JacobianStructure,
     config: Config | None = None,
     var_instances_cache: list[tuple[str, list[tuple[str, ...]]]] | None = None,
+    instance_filter: ReferencedInstanceFilter | None = None,
 ) -> None:
     """
     Compute Jacobian rows for bound-derived inequality constraints.
@@ -1351,6 +1470,8 @@ def _compute_bound_jacobian(
     # Precompute variable instances if not provided
     if var_instances_cache is None:
         var_instances_cache = _precompute_variable_instances(model_ir)
+    if instance_filter is None:
+        instance_filter = ReferencedInstanceFilter(model_ir, config)
 
     simp_mode = get_simplification_mode(config)
 
@@ -1381,7 +1502,10 @@ def _compute_bound_jacobian(
             if var_name not in referenced_vars:
                 continue
 
-            for var_indices in var_instances:
+            # E2 (Sprint 40 P6): the same shared filter as E1 and the equality path.
+            for var_indices in instance_filter.effective_instances(
+                bound_expr, var_name, var_instances
+            ):
                 col_id = index_mapping.get_col_id(var_name, var_indices)
                 if col_id is None:
                     continue

@@ -91,3 +91,27 @@ The scalar path re-symbolises each offset reference as an `IndexOffset` relative
 - **REPLAN** on any backward move, or if lnts / robot `stat_step` stays out of tolerance (then a second defect sits in the same row).
 - **No Solve is projected** (lnts verdict C). robot's smaller boundary rows (`stat_the(h0)` 0.21, `stat_rho(h0)` 0.18) are **not** claimed by this item. If they persist after the fix they are a separate defect, banked and routed.
 - **The shared-mechanism question (PLAN §3 P5) is answered: one mechanism, two symptoms.** lnts and robot are not split.
+
+## Day 9 (P5, 2 h): a prototype, and a second mechanism in the same row
+
+**Prototype, not landed.** It lives in a scratch worktree, behind an environment flag. Day 9's PR is P6, which is gated on byte-identical goldens, so a `stat_step` change cannot ride along. Two changes in `_add_jacobian_transpose_terms_scalar`:
+
+1. **The representative** is the instance with the most distinct leaf references, ties going to the first. A lag head's boundary instance, which lost a reference, is therefore not the one generalised. GAMS evaluates the out-of-range `u(h-1)` at the boundary as 0, so the generalised term is exact there too.
+2. **`_apply_offset_substitution`** is keyed on the **constraint's** labels, `(eq_indices, eq_indices, mult_domain)`, rather than the variable's (a scalar has none). It runs before `_replace_indices_in_expr` and is skipped for a circular-offset equation, the indexed path's guard.
+
+| fixture | NLP | main | prototype | prototype `stat_step` term |
+|---|---|---|---|---|
+| lead | 68.5456 | 68.577 | **68.546** | `sum(h, -((u(h) + u(h+1))*0.5) * nu_dyn(h))` |
+| lag | 68.5456 | 72.689 | **68.546** | `sum(h, -((u(h) + u(h-1))*0.5) * nu_dyn(h))` |
+| own-index control | | | `stat_step` byte-identical | `sum(h$(ord(h) > 1), -u(h) * nu_dyn(h))` |
+
+**Still owed (Day 10):** the leak gate and the resolver over the corpus, then `kkt_residual.py` on lnts and robot (Verification steps 3–4).
+
+**A second mechanism in the same function: a quoted literal is lifted to the set.**
+- **Shape:** `dyn(h)$(ord(h)>1).. x(h) =e= x(h-1) + step*(u(h) + u('h3'))`.
+- **Emitted:** `sum(h$(ord(h) > 1), -(2*u(h)) * nu_dyn(h))`.
+- **Cause:** AD keeps the literal quoted (`u("h3")`), and `_replace_indices_in_expr` with the constraint element map lifts it to `u(h)`. Called directly, `u(h2) + u("h3")` gives `u(h) + u(h)`.
+- **Relation to the prototype:** it neither causes nor fixes this. The fix is a separate one, preserving quoted literals in the scalar path's re-symbolisation.
+- **Gate:** add the literal fixture as a third form.
+
+**Found while building the control, unrelated to `stat_step`: #1793.** The own-index fixture's `stat_x` emits `$(ord(h+1) > 1)`, which is illegal GAMS. dinam's golden carries the same construct.

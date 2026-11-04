@@ -36,6 +36,22 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+# Module-level, not inside ``simplify`` (Sprint 40 P6, E7): a function-local
+# import is re-resolved on every call, and ``simplify`` is the AD hot path.
+from ..ir.ast import (
+    Binary,
+    Call,
+    Const,
+    DollarConditional,
+    Expr,
+    MultiplierRef,
+    ParamRef,
+    Prod,
+    Sum,
+    SymbolRef,
+    Unary,
+    VarRef,
+)
 from .term_collection import (
     collect_like_terms,
     simplify_multiplicative_cancellation,
@@ -44,7 +60,6 @@ from .term_collection import (
 
 if TYPE_CHECKING:
     from ..config import Config
-    from ..ir.ast import Expr
 
 
 def differentiate(expr: Expr, wrt_var: str) -> Expr:
@@ -124,20 +139,6 @@ def simplify(expr: Expr) -> Expr:
         Simplification is applied recursively bottom-up through the expression tree.
         The function is safe to call multiple times (idempotent for fully simplified expressions).
     """
-    from ..ir.ast import (
-        Binary,
-        Call,
-        Const,
-        DollarConditional,
-        MultiplierRef,
-        ParamRef,
-        Prod,
-        Sum,
-        SymbolRef,
-        Unary,
-        VarRef,
-    )
-
     match expr:
         # Base cases: already simple
         case Const(_) | VarRef(_, _) | ParamRef(_, _) | MultiplierRef(_, _) | SymbolRef(_):
@@ -350,8 +351,6 @@ def simplify_advanced(expr: Expr) -> Expr:
         >>> result = simplify_advanced(expr)
         >>> # Result: Binary("+", VarRef("x", ()), Const(2)) or Const(2) + VarRef("x")
     """
-    from ..ir.ast import Binary, Call, Prod, Sum, Unary
-
     # Step 1: Apply basic simplification rules
     basic_simplified = simplify(expr)
 
