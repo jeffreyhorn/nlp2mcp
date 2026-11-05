@@ -118,7 +118,7 @@ The scalar path re-symbolises each offset reference as an `IndexOffset` relative
 
 ## Day 10 (P5): banked — the REPLAN signal fired
 
-The Day-9 prototype, made production-shaped, went through the full gate. The diff is preserved on [#1789](https://github.com/jeffreyhorn/nlp2mcp/issues/1789#issuecomment-6643421979).
+The Day-9 prototype, made production-shaped, went through the full gate. **The implementation is archived as the durable commit [`f57bc1d7`](https://github.com/jeffreyhorn/nlp2mcp/commit/f57bc1d7eee0ba0af7aee42e8ac9271e4c103e91) on branch `banked/1789-scalar-offset` (fix + its 4 unit tests, against `1abcd687`; not for merge).** The `stationarity.py` diff is also on [#1789](https://github.com/jeffreyhorn/nlp2mcp/issues/1789#issuecomment-6643421979), in a collapsed block.
 - **Gate:** `make test` 5,772 passed. The leak gate was complete, with 0 timeouts.
 - **Drift:** 7 goldens over exactly the predicted 4 models.
 

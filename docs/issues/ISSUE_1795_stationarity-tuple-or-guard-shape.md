@@ -19,10 +19,12 @@ Emit a non-Cartesian entry set as a **declared set** and guard with a membership
 
 ```gams
 Set nz_labor_task(g,t,mn,mn) / ... the 51,792 tuples ... /;
-... $nz_labor_task(g,t,mn,mn) ...
+stat_task(g,t,mn,mn__).. ... $nz_labor_task(g,t,mn,mn__) ...
 ```
 
-Generation then costs one membership lookup per instance. A threshold (e.g. > 64 tuples) keeps every current golden byte-identical (the largest tuple-OR in the committed goldens is far smaller — to be measured). ⚠ The fix touches `stationarity.py`, which holds #1741's guard (`_build_pattern_c_dim_mismatch_term`): guard-impact review required. A repeated declared domain (`mn,mn`) in a set membership test is positional in GAMS, so it is repeat-safe, but the P1/P2 index-repeat gate must still pass.
+Generation then costs one membership lookup per instance. A threshold (e.g. > 64 tuples) keeps every current golden byte-identical (the largest tuple-OR in the committed goldens is far smaller — to be measured). ⚠ The fix touches `stationarity.py`, which holds #1741's guard (`_build_pattern_c_dim_mismatch_term`): guard-impact review required.
+
+⚠ **Repeated domain: the DECLARATION may repeat `mn`, the REFERENCE must not.** A repeated symbol in a set's declared domain is safe. A repeated symbol in a *membership test* binds both positions to the same element, so `$nz_labor_task(g,t,mn,mn)` would test **only the diagonal** and change the guard's semantics for every off-diagonal `task` instance. The test must use the stationarity head's **distinct** controlling indices, `(g,t,mn,mn__)`, as emitted for sarf today. This is the same rule `tests/integration/emit/test_tricp_repeated_domain_head.py` pins (the head `stat_slp(n,n__)` and the guard `$(e(n,n__))`, never `$(e(n,n))`), and P2 of `make check-index-repeats` would flag the diagonal form as a guard referencing a repeated index.
 
 ## Context
 

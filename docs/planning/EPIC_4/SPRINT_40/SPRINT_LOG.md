@@ -1384,4 +1384,4 @@ The causes are recorded in `ISSUE_1789`, Day 10:
 - the subset domain resolves through the parent set;
 - lnts has a second, unattributed defect.
 
-The diff is preserved on #1789. `src/` is reverted to `HEAD`.
+The implementation is archived as the durable commit [`f57bc1d7`](https://github.com/jeffreyhorn/nlp2mcp/commit/f57bc1d7eee0ba0af7aee42e8ac9271e4c103e91) on branch `banked/1789-scalar-offset` (fix + its 4 unit tests, against `1abcd687`; not for merge); its diff is also on #1789. `src/` is reverted to `HEAD`.
