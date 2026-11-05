@@ -1329,7 +1329,7 @@ The review asked for a human assessment, with no concrete finding: *"index-renam
 
 **Branch:** `planning/sprint40-day10-sarf` · **Base:** `1abcd687` (PR #1794, 3 review rounds). **Docs-only:** `src/` and `tests/` are untouched.
 
-### Checkpoint 2: NO-GO by the rule, on tfordy alone (owner call pending)
+### Checkpoint 2: GO by owner decision; tfordy's move accepted
 
 Run in a throwaway worktree at `1abcd687` with the raw corpus copied in. **Nothing was persisted.**
 - **The order departs from PLAN.md.** P6's E1–E4 + E7/E8 landed on Day 9 (PR #1794), **before** this checkpoint rather than after it. That change is byte-identical (200 goldens clean), so it cannot move the checkpoint's scope.
@@ -1342,7 +1342,19 @@ Run in a throwaway worktree at `1abcd687` with the raw corpus copied in. **Nothi
   | sroute | `model_infeasible` → presolve match | ✅ forward: Day 8's #1787, booked as methodology |
   | the other 28 | | `= same` |
 
-  0 `missing`. **Whether tfordy's owner-decided move clears the checkpoint is the owner's call.** Until then the checkpoint is recorded **NO-GO**, with tfordy its only cause.
+  0 `missing`. By the rule the run is **NO-GO**, on tfordy alone.
+- **Owner decision (2026-11-05): tfordy's move is ACCEPTED as Day 7's owner-decided change, so Checkpoint 2 is a GO.**
+  - **The DB was updated accordingly:** `run_full_test.py --model tfordy` persisted one row, and nothing else changed except `updated_date`. tfordy is now `model_infeasible` (MS 5), `licensed`, comparison `not_tested`, which reproduces the cohort re-run.
+  - **KPIs, by `kpi_block.py`:**
+
+    | corpus | before | after |
+    |---|---|---|
+    | continuity | Solve 115 · Match 97 (65 cold + 32 presolve) · mi 12 | **Solve 114 · Match 96 (65 + 31) · mi 13** | <!-- figures-ok: the 'before' column is the DB before tfordy's persist -->
+    | current | Solve 117 · Match 99 (65 + 34) · mi 12 | **Solve 116 · Match 98 (65 + 33) · mi 13** | <!-- figures-ok: the 'before' column is the DB before tfordy's persist -->
+
+    Translate is unchanged (135 / 139). This is the "Match −1 as exposed" of Day 7.
+  - **Genuine floor stays 76** (`floor_tracker.py`): tfordy is not in `floor_provenance.json`.
+  - **Not persisted:** abel's and sroute's forward rows. abel is a stale-row correction; sroute needs `check_mcp_solve_attribution` before any claim.
 - **Licensed re-run of the 11 cohort models:** every row is `licensed`, and no row outside the cohort changed.
   - **8 reproduce their committed rows exactly** on outcome, verdict, edition and objective (4 dp): turkey, glider, srpchase, robot, shale, tricp, ferts, tabora.
   - tfordy and sroute show the moves above.
