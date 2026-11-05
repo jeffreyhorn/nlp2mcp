@@ -65,6 +65,15 @@ REQUIRED_WHEN_ADDED = ["Nearest Existing Mechanism"]
 #: was in fact falsified. Three of four Sprint-38 gates named the wrong layer.
 LAYER_FIELD = re.compile(r"^\*\*Layer:\*\*", re.M)
 
+#: Sprint 40 P10b. A newly authored gate must name its POSITIVE CONTROL: the
+#: known input that must make the probe fire, and what firing looks like
+#: (``**Positive control:** <input> → <firing>``). Sprint 39 shipped two probes
+#: that passed vacuously because nothing showed they COULD fire.
+#: ⚠ ``[ \t]*``, NOT ``\s*``: ``\s`` consumes the newline, so ``\S`` would then
+#: match the NEXT line's first character and an EMPTY field followed by a
+#: heading or ``**Layer:**`` would pass (measured, PR #1757 review).
+POSITIVE_CONTROL_FIELD = re.compile(r"^\*\*Positive control:\*\*[ \t]*\S", re.M)
+
 #: A "why not" rationale, deliberately LOOSE. This enforces that the question
 #: was ANSWERED, not that the answer is good -- judging the latter is review's
 #: job, and a tighter pattern would only teach authors to paste the magic words.
@@ -158,7 +167,10 @@ def missing_for_added(text: str) -> list[str]:
     out: list[str] = []
     subs = phase0_subsections(text)
     if subs is None:
-        return list(REQUIRED_WHEN_ADDED) + ["**Layer:** metadata line"]
+        return list(REQUIRED_WHEN_ADDED) + [
+            "**Layer:** metadata line",
+            "**Positive control:** metadata line",
+        ]
     for req in REQUIRED_WHEN_ADDED:
         if not any(h.startswith(req) for h in subs):
             out.append(req)
@@ -171,6 +183,8 @@ def missing_for_added(text: str) -> list[str]:
             )
     if not LAYER_FIELD.search(text):
         out.append("**Layer:** metadata line")
+    if not POSITIVE_CONTROL_FIELD.search(text):
+        out.append("**Positive control:** metadata line")
     return out
 
 

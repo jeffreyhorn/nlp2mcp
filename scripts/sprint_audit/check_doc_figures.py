@@ -496,11 +496,11 @@ FACTS: tuple[Fact, ...] = (
         # "all-219 Match" — and the test asserting that label would keep
         # blessing it. `name` is never displayed; it only keys `truths`.
         #
-        # ⚠ `derive` keeps the key `all_219_match`: that is `kpi_block`'s own
-        # dict key, not this tool's label, and renaming it is a separate change.
+        # The key is `all_models_match` (Sprint 40 P9c): it, too, no longer
+        # hard-codes the population size.
         name="all-population Match",
-        derive=_kpi("all_219_match"),
-        source="scripts/sprint_audit/kpi_block.py  ->  all_219_match",
+        derive=_kpi("all_models_match"),
+        source="scripts/sprint_audit/kpi_block.py  ->  all_models_match",
         patterns=(re.compile(rf"{_ALL_POPULATION_MATCH.pattern}\s+\**(?P<value>{NUM})\**"),),
         label_fn=_all_population_label,
     ),

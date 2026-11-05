@@ -66,6 +66,7 @@ missing_subsections = _mod.missing_subsections
 
 _BASE = """\
 **Layer:** **KKT / stationarity** — `src/kkt/stationarity.py` ~123–456
+**Positive control:** mutant `if False:` applied → the fail-before test fails
 
 ## Phase 0: Acceptance Gate
 
@@ -182,6 +183,7 @@ def test_every_existing_issue_doc_still_conforms():
 # each with its own criteria. The second gate holds the added-only fields.
 TWO_GATES = """\
 **Layer:** **AD / differentiation** — `src/ad/ad_core.py`
+**Positive control:** the unfiltered call count at N=6400 → 76,800 calls
 
 ## Phase 0: Acceptance Gate
 
@@ -235,3 +237,56 @@ def test_a_second_phase0_gate_is_not_invisible():
         "the second gate's Nearest Existing Mechanism (and its 'does not apply' "
         "reason) must be seen; reading only the first gate makes this fail"
     )
+
+
+# ---------------------------------------------------------------- Sprint 40 P10b
+# The `**Positive control:**` field: required on ADDED docs only.
+
+_CONTROL_LINE = "**Positive control:** mutant `if False:` applied → the fail-before test fails\n"
+NO_CONTROL = WITH_REASON.replace(_CONTROL_LINE, "")
+# The field is present but EMPTY, followed directly by a heading.
+EMPTY_THEN_HEADING = WITH_REASON.replace(_CONTROL_LINE, "").replace(
+    "## Phase 0: Acceptance Gate", "**Positive control:**\n## Phase 0: Acceptance Gate", 1
+)
+# The field holds only whitespace, followed directly by `**Layer:**`.
+BLANK_THEN_LAYER = WITH_REASON.replace(_CONTROL_LINE, "").replace(
+    "**Layer:**", "**Positive control:**   \n**Layer:**", 1
+)
+
+
+@pytest.mark.unit
+def test_added_doc_without_a_POSITIVE_CONTROL_fails():
+    """P10b fail-before: every other added-only field present, the control absent."""
+    assert missing_subsections(NO_CONTROL) == []
+    assert "**Layer:** metadata line" not in missing_for_added(NO_CONTROL)
+    assert missing_for_added(NO_CONTROL) == ["**Positive control:** metadata line"]
+
+
+@pytest.mark.unit
+def test_a_MODIFIED_doc_without_a_positive_control_still_conforms():
+    """⚠ GRANDFATHERING control: a modified doc is held to the base subsections
+    only (``main`` applies ``missing_for_added`` to ``status == "added"`` alone),
+    so the field cannot turn the gate red on untouched history."""
+    assert missing_subsections(NO_CONTROL) == []
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "doc",
+    [EMPTY_THEN_HEADING, BLANK_THEN_LAYER],
+    ids=["empty_field_then_heading", "whitespace_field_then_layer"],
+)
+def test_an_EMPTY_positive_control_field_is_rejected(doc):
+    """The regex's own test. With ``\\s*`` the class consumes the newline and
+    ``\\S`` matches the NEXT line's first character, so both of these passed."""
+    assert "**Positive control:** metadata line" in missing_for_added(doc)
+
+
+@pytest.mark.unit
+def test_the_whitespace_class_is_LOAD_BEARING():
+    """The two rejection cases above must FAIL against the ``\\s*`` form, or they
+    are not testing the regex at all."""
+    loose = _mod.re.compile(r"^\*\*Positive control:\*\*\s*\S", _mod.re.M)
+    for doc in (EMPTY_THEN_HEADING, BLANK_THEN_LAYER):
+        assert loose.search(doc), "the \\s* form must (wrongly) accept this doc"
+        assert not _mod.POSITIVE_CONTROL_FIELD.search(doc)

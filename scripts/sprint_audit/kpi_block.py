@@ -17,7 +17,7 @@ any figure that must be quoted should carry the commit it was measured at.
 Scope
 -----
 The headline KPIs are reported over the **convex candidates**, not all 219
-models (see ``reference_match_kpi_corpus_scope``). ``all_219_match`` is reported
+models (see ``reference_match_kpi_corpus_scope``). ``all_models_match`` is reported
 separately and is the only figure computed over the whole corpus.
 
 The genuine floor is deliberately NOT derived here
@@ -150,7 +150,7 @@ def compute_kpis(db: dict[str, Any], exclude: frozenset[str] = frozenset()) -> d
     ``model_name``, which holds the human description.
 
     ``exclude`` drops those model ids from the CANDIDATE corpus (the continuity
-    corpus passes the admitted ids). It never touches ``all_219_match`` /
+    corpus passes the admitted ids). It never touches ``all_models_match`` /
     ``total_models``, which are computed over every model.
     """
     models = db.get("models", [])
@@ -187,7 +187,7 @@ def compute_kpis(db: dict[str, Any], exclude: frozenset[str] = frozenset()) -> d
             1 for m in candidates if _outcome(m) == "path_solve_terminated"
         ),
         "path_solve_license": sum(1 for m in candidates if _outcome(m) == "path_solve_license"),
-        "all_219_match": sum(1 for m in models if _compare(m) == "match"),
+        "all_models_match": sum(1 for m in models if _compare(m) == "match"),
         "total_models": len(models),
         # NOT the genuine floor — see the module docstring. Reported so the
         # difference between it and the provenance figure stays visible.
@@ -222,7 +222,7 @@ def _render_markdown(k: dict[str, Any], sha: str, dirty: bool) -> str:
         ("path_syntax_error", k["path_syntax_error"]),
         ("path_solve_terminated", k["path_solve_terminated"]),
         ("path_solve_license", k["path_solve_license"]),
-        (f"all-{k['total_models']} Match", k["all_219_match"]),
+        (f"all-{k['total_models']} Match", k["all_models_match"]),
     ]
     out = [f"**KPI block — derived at `{sha}`{_corpus_label(k)}**", ""]
     if dirty:
@@ -260,7 +260,7 @@ def _render_line(k: dict[str, Any], sha: str, dirty: bool) -> str:
         f"Solve {solve} · Match {match} "
         f"({k['match_cold']} cold + {k['match_presolve']} presolve) · "
         f"Translate {translate} · mi {k['model_infeasible']} · "
-        f"pse {k['path_syntax_error']} · all-{k['total_models']} {k['all_219_match']} "
+        f"pse {k['path_syntax_error']} · all-{k['total_models']} {k['all_models_match']} "
         f"— derived at {sha}{_corpus_label(k)}"
     )
     return line + ("  [WARNING: DB has uncommitted changes]" if dirty else "")

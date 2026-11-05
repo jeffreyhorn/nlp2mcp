@@ -1397,3 +1397,72 @@ The causes are recorded in `ISSUE_1789`, Day 10:
 - lnts has a second, unattributed defect.
 
 The implementation is archived as the durable commit [`f57bc1d7`](https://github.com/jeffreyhorn/nlp2mcp/commit/f57bc1d7eee0ba0af7aee42e8ac9271e4c103e91) on branch `banked/1789-scalar-offset` (fix + its 4 unit tests, against `1abcd687`; not for merge); its diff is also on #1789. `src/` is reverted to `HEAD`.
+
+## Day 11 — 2026-11-05 · P9: the smaller items · 6 h · + P10: 10a and 10b · 4 h
+
+**Branch:** `planning/sprint40-day11-small` · **Base:** `91d7f0ff` (PR #1798). `src/` is untouched; `scripts/` and `tests/` change, so the quality gate applies.
+
+### P9a: an MCP that proves infeasibility against an optimal NLP is now `mismatch` (#1799)
+
+- **The Phase-0 doc is `ISSUE_1799`**, written before the code. It passes `check_phase0_doc.py` as an **added** doc, including today's `**Positive control:**` field.
+- **Both sites share one predicate,** `test_solve.is_completed_own_infeasible`: infeasible model status, solver status 1, and `status_is_ours_and_complete`.
+  - `compare_solutions`' Case-6 exemption is no longer scoped to `nlp_infeasible`.
+  - `run_full_test.py`'s post-solve cascade lets that shape reach the compare stage.
+- **The affected set, derived first from today's DB with the widened condition: 13.**
+  - prep's 7, all still present: agreste, camcge, cesam, fawley, lnts, mine, rocket;
+  - Task 7's five, re-derived: egypt, robot, shale, sroute, tricp;
+  - **tfordy**, persisted on Day 10.
+
+  None has an infeasible NLP, so none can become a both-infeasible match.
+- **Measured on landing: *k* = 12.** sroute drops out by name: its DB row was stale, and on a real re-run it solves through Day 8's #1787 landing. It is not persisted here, because it needs `check_mcp_solve_attribution` first.
+  - **Isolated by an A/B re-run** in a scratch worktree, A with both sites and B with site 2 reverted. Exactly 12 rows go `not_tested` → `mismatch` / `compare_status_mismatch`, only `solution_comparison` moves, and `kpi_block --json` is identical for both corpora.
+  - **The positive control (B) holds:** with site 2 reverted, none of the 12 moves.
+- **Per C9:**
+  - **measured `mismatch` +12 / `not_tested` −12;**
+  - **0 `kpi_block` figures move.** The persisted DB differs from the committed one only in `db_dirty`.
+  - **The 12 checkpoint `forward` moves are relabels, not fixes.** No checkpoint exception is added.
+- **Persisted:** the 12 rows, via `run_full_test.py --model <id>`.
+  - It carries a re-run effect: 7 legacy rows refresh `license_edition` from `null` to `licensed`. That is a stale-row correction, not P9a.
+  - A stray untracked `mine_mcp_presolve.gms`, written by the retry and referenced nowhere, was deleted.
+- **Tests:**
+  - `tests/gamslib/test_own_infeasible_mismatch_1799.py`, 14 tests covering the predicate, Case 6, and `run_pipeline` end to end with the real compare function;
+  - PR #1740's narrowing pin is updated to the owner's decision.
+  - **Controls:** with site 2 reverted, exactly the pipeline test fails. With both sites reverted, the Case-6 test fails too.
+
+### P9b: `scripts/integration_health_check.py` retired
+
+`grep -rn integration_health_check` outside `docs/` finds only 2 CHANGELOG prose lines, and no reader. The file is deleted.
+
+### P9c: `all_219_match` → `all_models_match`
+
+Renamed across **4 code files**: `kpi_block.py`, `check_doc_figures.py`, `test_gate_scope_assertions.py`, and `test_kpi_corpus.py`.
+- The spec listed 4 reader sites. `test_kpi_corpus.py` was added since, so the file count happens to equal it, but the set differs.
+- `check_doc_figures.py`'s "the key is kept" comment is replaced.
+- The old name survives only in planning docs that describe the rename.
+- `make check-doc-figures` is clean.
+
+### P10a: one anchor resolver
+
+- **`tests/helpers/anchor_resolver.py`:**
+  - `_code_only` and `_owning_bodies` are moved **verbatim**, confirmed identical to the current file by an AST comparison, because the scratch commit `b79c1278` predates two later edits to the module;
+  - `AnchorError` and `resolve_unique` come from that scratch commit.
+- `test_positional_domain_sites.py` imports from the helper; 16 passed.
+- **The fail-before test is `tests/unit/test_anchor_resolver.py`**, 4 cases: unique, twice, comment-only, missing function. It fails at import without the helper.
+- **Two weak resolvers migrated, each shown strictly stronger:**
+
+  | test | mutant | old check | new check |
+  |---|---|---|---|
+  | `test_run_full_test_path_relative.py` (the writer, through `resolve_unique` in `run_pipeline`) | **`mcp_file_path`**: key renamed, old line kept in a `# was:` comment | **passes** | **fails** ✅ |
+  | `test_check_doc_figures.py` (the `[0-9.]+` absence check, through `_code_only`) | the pattern on a line that **starts with a string** | **misses** it | **fails** ✅ |
+
+### P10b: the `**Positive control:**` field (added docs only)
+
+- **The rule:** `POSITIVE_CONTROL_FIELD = ^\*\*Positive control:\*\*[ \t]*\S`, applied in `missing_for_added()` next to the layer check.
+- **Tests:** 5 new in `test_phase0_added_only_requirements.py` (12 in the file).
+  - **Against the pre-P10b script:** the 4 new requirement tests fail, and the grandfathering control still passes.
+  - **Against the `\s*` form:** exactly the 3 empty-field tests fail, so `[ \t]*` is shown to be load-bearing.
+- **CONTRIBUTING** §Phase 0 → Workflow step 2 documents **all three** added-only requirements: `**Layer:**`, `**Positive control:**` and `### Nearest Existing Mechanism`. The first and third were enforced but documented nowhere outside `SPRINT_39/`.
+
+### Gate
+
+`make typecheck && make format && make lint && make test` is clean: **5,791 passed**, 10 skipped, no `225*` dirs. `make check-doc-figures` is clean.

@@ -744,14 +744,12 @@ def test_a_status_failure_row_with_NO_own_answer_is_still_refused():
         compare_solutions(_model(mcp_attribution="EMBEDDED-ONLY"))["comparison_status"] == "skipped"
     )
 
-    # ⚠⚠ AND THE NARROWING ITSELF: the exemption is exactly Case 3's condition,
-    # so it requires the NLP to be infeasible too. Dropping `nlp_infeasible`
-    # releases rows whose NLP solved OPTIMALLY into Case 4 — an A/B replay of
-    # all 219 DB rows measured that as moving the seven `model_infeasible`
-    # models (agreste, camcge, cesam, fawley, lnts, mine, rocket) from
-    # `skipped` to `mismatch`. That re-bucketing may be the more honest verdict,
-    # but it is KPI-visible and out of scope for a review fix, so the scoping is
-    # pinned here rather than left to be rediscovered by replay.
+    # ⚠⚠ AND THE WIDENING (Sprint 40 P9a, #1799, owner decision 2026-10-16).
+    # PR #1740 scoped the exemption to Case 3's condition and pinned that here:
+    # dropping `nlp_infeasible` releases rows whose NLP solved OPTIMALLY into
+    # Case 4, a KPI-visible re-bucketing that needed its own Phase-0 doc. That
+    # doc is ISSUE_1799, and such a row is now the honest `mismatch`: our MCP
+    # answered, and disagreed with the NLP.
     nlp_optimal_mcp_infeasible = {
         "model_id": "m",
         "convexity": {
@@ -770,10 +768,10 @@ def test_a_status_failure_row_with_NO_own_answer_is_still_refused():
         },
     }
     out = compare_solutions(nlp_optimal_mcp_infeasible)
-    assert out["comparison_result"] == "compare_mcp_failed", (
-        "the exemption must not release an optimal-NLP row into Case 4: "
-        f"{out['comparison_status']}/{out['comparison_result']}"
-    )
+    assert (out["comparison_status"], out["comparison_result"]) == (
+        "mismatch",
+        "compare_status_mismatch",
+    ), f"an optimal NLP vs our proved-infeasible MCP is a mismatch: {out}"
 
 
 @pytest.mark.unit
