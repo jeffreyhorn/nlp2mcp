@@ -9487,6 +9487,18 @@ def _build_stationarity_expr(
     return expr
 
 
+def _distinct_leaf_references(expr: Expr | None) -> int:
+    """Number of distinct (name, indices) VarRef/ParamRef leaves in *expr*."""
+    seen: set[tuple[str, tuple]] = set()
+    stack: list[Expr] = [expr] if expr is not None else []
+    while stack:
+        node = stack.pop()
+        if isinstance(node, (VarRef, ParamRef)):
+            seen.add((node.name, node.indices))
+        stack.extend(node.children())
+    return len(seen)
+
+
 def _add_jacobian_transpose_terms_scalar(
     expr: Expr,
     jacobian,
@@ -9537,7 +9549,16 @@ def _add_jacobian_transpose_terms_scalar(
         if mult_name not in multipliers:
             continue
 
-        row_id, _ = entries[0]
+        # Issue #1789: ONE instance's derivative is generalised to the whole
+        # domain, so it must not be a boundary instance. A lag head's FIRST
+        # instance (robot's ``rho_eqn(h-1)``) has no ``u(h-1)``; generalising it
+        # drops that reference from every row. Take the instance with the most
+        # distinct leaf references (ties -> the first, so a row with no offset
+        # reference keeps entries[0] and its emit is unchanged).
+        row_id, _ = max(
+            entries,
+            key=lambda entry: _distinct_leaf_references(jacobian.get_derivative(entry[0], col_id)),
+        )
         derivative = jacobian.get_derivative(row_id, col_id)
         _, eq_indices = jacobian.index_mapping.row_to_eq[row_id]
 
@@ -9549,6 +9570,25 @@ def _add_jacobian_transpose_terms_scalar(
                 constraint_element_to_set = _build_constraint_element_mapping(
                     element_to_set, eq_indices, mult_domain
                 )
+                # Issue #1789: a lead/lag reference (lnts' ``u(h+1)``) holds a
+                # label of the constraint's OWN set at an offset from the row's;
+                # membership alone maps both labels to ``h`` and collapses them
+                # (``2*u(h)``). Convert the offset first, as the indexed path does
+                # (#1162), keyed on the CONSTRAINT's labels -- a scalar variable
+                # has none of its own. Skipped for a circular offset, whose
+                # wrap-around the membership map already handles (same guard).
+                eq_def = kkt.model_ir.equations.get(eq_name_base)
+                if eq_def is not None and not _expr_has_circular_offset(
+                    Binary("-", eq_def.lhs_rhs[0], eq_def.lhs_rhs[1])
+                ):
+                    derivative = _apply_offset_substitution(
+                        derivative,
+                        tuple(eq_indices),
+                        tuple(eq_indices),
+                        tuple(mult_domain),
+                        constraint_element_to_set,
+                        kkt.model_ir,
+                    )
                 # Replace concrete indices with symbolic set names.
                 # Issue #730 review: pass mult_domain (not empty tuple) so
                 # _replace_indices_in_expr's `if indices and domain:` guards
@@ -9566,7 +9606,6 @@ def _add_jacobian_transpose_terms_scalar(
                 # contribute.  Without this, summing over the full mult_domain
                 # re-introduces contributions for indices excluded by the
                 # condition (e.g., taumdet(im)$(not sc(im))).
-                eq_def = kkt.model_ir.equations.get(eq_name_base)
                 indexed_condition: Expr | None = None
                 if eq_def is not None and eq_def.condition is not None:
                     indexed_condition = _replace_indices_in_expr(
