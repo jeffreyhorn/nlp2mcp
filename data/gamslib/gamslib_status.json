@@ -1,7 +1,7 @@
 {
   "schema_version": "3.1.0",
   "created_date": "2026-01-26T16:07:08Z",
-  "updated_date": "2026-10-20T03:22:30.530862+00:00",
+  "updated_date": "2026-11-05T21:42:27.665408+00:00",
   "total_models": 219,
   "models": [
     {
@@ -12763,56 +12763,45 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-10-19T23:22:13.199040+00:00",
+        "parse_date": "2026-11-05T21:41:43.390827+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.9691,
+        "parse_time_seconds": 7.0874,
         "variables_count": 12,
         "equations_count": 16
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-10-19T23:22:34.391952+00:00",
+        "translate_date": "2026-11-05T21:41:55.277414+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 21.1438,
+        "translate_time_seconds": 11.4998,
         "output_file": "data/gamslib/mcp/tfordy_mcp.gms"
       },
       "mcp_solve": {
-        "status": "success",
-        "solve_date": "2026-10-19T23:22:59.540011+00:00",
+        "status": "failure",
+        "solve_date": "2026-11-05T21:42:06.139545+00:00",
         "solver": "PATH",
         "solver_version": "5.2.01",
         "gams_version": "54.2.1",
         "license_edition": "licensed",
         "solver_status": 1,
         "solver_status_text": "Normal Completion",
-        "model_status": 1,
-        "model_status_text": "Optimal",
-        "objective_value": 102.0362,
-        "solve_time_seconds": 2.7196,
-        "iterations": 18540,
-        "outcome_category": "model_optimal_presolve",
-        "mcp_attribution": "MCP-SOLVED",
+        "model_status": 5,
+        "model_status_text": "Locally Infeasible",
+        "objective_value": 113.772,
+        "solve_time_seconds": 10.5246,
+        "iterations": 52673,
+        "outcome_category": "model_infeasible",
+        "mcp_attribution": "MCP-FAILED",
         "mcp_completed_own_solve": true,
-        "presolve_required": true,
-        "mcp_file_generated": "data/gamslib/mcp/tfordy_mcp_presolve.gms"
+        "error": {
+          "category": "model_infeasible",
+          "message": "Model: Locally Infeasible (status 5)"
+        }
       },
       "solution_comparison": {
-        "comparison_status": "match",
-        "comparison_date": "2026-10-19T23:22:59.540497+00:00",
-        "nlp_objective": 102.0362,
-        "mcp_objective": 102.0362,
-        "absolute_difference": 0.0,
-        "relative_difference": 0.0,
-        "objective_match": true,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 0.002,
-        "nlp_solver_status": 1,
-        "nlp_model_status": 1,
-        "mcp_solver_status": 1,
-        "mcp_model_status": 1,
-        "status_match": true,
-        "comparison_result": "compare_objective_match",
-        "notes": "Match within tolerance (diff=0.00e+00, tol=2.04e-01)"
+        "comparison_status": "not_tested",
+        "comparison_date": "2026-11-05T21:42:27.665136+00:00",
+        "notes": "Skipped due to solve failure"
       },
       "model_statistics": {
         "variables": 12,
