@@ -1488,3 +1488,32 @@ Renamed across **4 code files**: `kpi_block.py`, `check_doc_figures.py`, `test_g
 - **Symptom.** CI's `test` job and the Performance Budget Check failed at collection: `ModuleNotFoundError: No module named 'tests'; 'tests' is not a package` on the four files that import the new helper (`tests/unit/test_anchor_resolver.py`, `tests/unit/kkt/test_positional_domain_sites.py`, `tests/gamslib/test_run_full_test_path_relative.py`, `tests/unit/sprint_audit/test_check_doc_figures.py`).
 - **Why it passed locally.** The `.venv/bin/pytest` entry-point shim leaks CWD onto `sys.path`; CI's invocation does not. `--import-mode=importlib` (in `pyproject.toml`) deliberately does not insert the rootdir, and the editable install exposes only `src*`.
 - **Fix.** `tests/conftest.py` already added `tests/` to `sys.path`; it now also adds the project root, which is what `from tests.helpers.anchor_resolver import ...` needs. Verified by running the CI invocation locally with `PYTHONPATH` cleared.
+
+---
+
+## Day 12 (2026-11-06) — P10d, P10e · 4 h
+
+Branch `planning/sprint40-day12-process`. The day is deliberately light; the remaining hours are the sprint slack.
+
+### P10d — `check_doc_figures.py --text FILE` + `make check-doc-figures TEXT=`
+
+- **The gap.** The prompt preamble instructs `make check-doc-figures TEXT=/tmp/pr-body.md` once P10d lands. Before this, `TEXT` was silently dropped by the Makefile and the script had no corresponding flag, so the invocation ran the default `--base` check and reported PASS on whatever the diff said — exactly the kind of silently-narrowed check the module exists to catch.
+- **The flag.** `--text FILE` reads every line of `FILE` and scans it against the derived truths. `is_live_doc` scoping does not apply: the user named the file, so archival-scope rules (which exist to keep closed-sprint logs out of the per-commit sweep) would make the flag a no-op on half the plausible invocations (a scratch `/tmp/pr-body.md`, or a path *inside* an archived sprint that the user is explicitly re-checking).
+- **The Makefile.** `TEXT=…` forwards to `--text`, alongside the existing `FACTS` and default `--base` modes. One new `else ifdef TEXT` arm — the `FACTS` and `BASE` branches are untouched.
+- **Tests (4 new in `test_check_doc_figures.py`).**
+  - `check_text` returns findings on every line of a loose file (`Solve 999`, `genuine floor 999` both flagged). <!-- figures-ok: these are the stale-figure test fixtures, not live claims -->
+  - A body with the stale values must be caught; the wrong figures here are fixtures by design.
+  - `check_text` bypasses `is_live_doc` scoping (a path under an invented `SPRINT_18` subdir is picked up when passed explicitly).
+  - **End-to-end through `make`** with a stale body and a clean diff: `subprocess.run(["make", "check-doc-figures", f"TEXT={body}"])` fails rc≠0 and names all three figures. Fails against the pre-P10d Makefile (TEXT dropped, rc=0).
+  - Symmetry: a body carrying the current derived figures passes, rc=0. Figures are derived at test time rather than pinned, so the symmetry test cannot be a false pass by freezing to the stale value the body cites.
+
+### P10e — Review-Round Rules in CONTRIBUTING + prompt-parity test
+
+- **The section.** `CONTRIBUTING.md` gains `## Review-Round Rules (Sprint 40 P10e)`, carrying the four rules verbatim from the sprint prompt preamble: pin by identity not count, sweep the moved set, never `git stash`, grep the PR's own docs after a round. Each rule gets a one-paragraph recap of its failure mode. The section lives below `## Project Structure` so the Phase-0 workflow is not fragmented.
+- **The test.** `tests/unit/test_contributing_review_round_rules.py` is stdlib-only and resolves the current sprint directory the same way `check_doc_figures.current_sprint_dir` does — the test does not hardcode SPRINT_40, so the next sprint's prompt is picked up automatically.
+  - 4 tests: the section header exists; every one of the four canonical phrases is in CONTRIBUTING; every one is still in `SPRINT_<n>/prompts/PLAN_PROMPTS.md` (so the copy and its source cannot silently diverge); the resolver ignores non-`SPRINT_<n>` siblings.
+  - If a future sprint adds a fifth rule, this test fails and forces the author to decide whether it is durable (goes into CONTRIBUTING) or sprint-local (stays only in the prompt and is dropped from the test's `_RULE_PHRASES`). Silent divergence is what the copy exists to prevent.
+
+### Gate
+
+`make typecheck && make format && make lint && make test` is clean. `make check-doc-figures` is clean.

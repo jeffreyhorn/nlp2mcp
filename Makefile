@@ -109,10 +109,13 @@ check-goldens:
 #   make check-doc-figures                   # vs origin/main
 #   make check-doc-figures BASE=main
 #   make check-doc-figures FACTS=1           # print the registry and its truths
+#   make check-doc-figures TEXT=/tmp/pr-body.md   # scan every line of FILE
 .PHONY: check-doc-figures install-hooks
 check-doc-figures:
 ifdef FACTS
 	$(PYTHON) scripts/sprint_audit/check_doc_figures.py --list-facts
+else ifdef TEXT
+	$(PYTHON) scripts/sprint_audit/check_doc_figures.py --text $(TEXT)
 else
 	$(PYTHON) scripts/sprint_audit/check_doc_figures.py --base $(or $(BASE),origin/main)
 endif

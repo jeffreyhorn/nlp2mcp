@@ -1071,3 +1071,109 @@ def test_a_bare_figure_follows_CONTINUITY_once_a_model_is_admitted(monkeypatch) 
         cdf._kpis_current.cache_clear()
     assert truths["Match|continuity|den"] == truths["Match|current|den"] - 1
     assert truths["Match"] == truths["Match|continuity"], "a bare figure is continuity"
+
+
+# ------------------------------------ Sprint 40 P10d: --text FILE and make TEXT=
+
+
+def test_text_mode_scans_every_line_not_just_the_diff(tmp_path: Path) -> None:
+    """A loose text file is in scope line-for-line, no git diff involved.
+
+    The ``--text`` flag exists for PR bodies — a scratch file that was never
+    committed, where the existing ``changed_doc_lines`` path returns nothing.
+    Without this mode the PR-body preamble instruction
+    (``make check-doc-figures TEXT=/tmp/pr-body.md``) would silently check zero
+    lines and report PASS, which is the shape of defect the module exists to
+    catch.
+    """
+    body = tmp_path / "pr-body.md"
+    body.write_text("Sprint close at Solve **999** and genuine floor 999.\n", encoding="utf-8")
+    findings, scanned, _exemptions, truths = cdf.check_text(body)
+    assert scanned >= 1
+    assert truths, "truths must still derive in text mode"
+    facts = {f.fact for f in findings}
+    assert "Solve" in facts
+    assert "genuine floor" in facts
+
+
+def test_text_mode_does_not_apply_is_live_doc_scoping(tmp_path: Path) -> None:
+    """The user named the file; archived-doc scoping must not silently drop it.
+
+    ``is_live_doc`` keeps closed sprint logs out of the per-commit sweep. A path
+    under ``docs/planning/EPIC_4/SPRINT_18`` is archival there, but when a user
+    runs ``--text`` on such a file they are explicitly asking for it to be
+    checked — applying the scope here would make the flag a no-op on half the
+    plausible invocations.
+    """
+    archived = tmp_path / "SPRINT_18" / "notes.md"
+    archived.parent.mkdir()
+    archived.write_text("Solve **999** at the close.\n", encoding="utf-8")
+    assert not cdf.is_live_doc(archived), "precondition: this path is archival by scoping"
+    findings, _scanned, _exempt, _truths = cdf.check_text(archived)
+    assert any(f.fact == "Solve" for f in findings), "text mode must bypass archive scoping"
+
+
+def test_make_check_doc_figures_TEXT_catches_a_stale_body_with_a_clean_diff(
+    tmp_path: Path,
+) -> None:
+    """The entry point the preamble instructs — exercised end-to-end.
+
+    Two invariants at once: the Makefile actually forwards ``TEXT`` (it was
+    silently dropped before P10d), and a stale body is caught even when the
+    working tree carries no doc changes that would feed the diff path. This is
+    the configuration a PR-body check runs under: the diff is clean because the
+    author pushed, and the body lives at a scratch path.
+    """
+    import subprocess
+
+    body = tmp_path / "pr-body.md"
+    body.write_text(
+        "## Summary\n"
+        "\n"
+        "Sprint 40 close reads **Solve 999** · Match **999** · Translate **999**.\n",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        ["make", "--no-print-directory", "check-doc-figures", f"TEXT={body}"],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0, (
+        f"stale TEXT body must fail; got rc={result.returncode}\n"
+        f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    )
+    combined = result.stdout + result.stderr
+    # All three figures must be named — a report that caught only one would be
+    # consistent with the TEXT variable being dropped except for the first line.
+    for fact in ("Solve", "Match", "Translate"):
+        assert fact in combined, f"stale {fact} figure not reported: {combined}"
+
+
+def test_make_check_doc_figures_TEXT_passes_a_clean_body(tmp_path: Path) -> None:
+    """Symmetry: a body carrying only current figures must pass.
+
+    Derives the live figures at test time instead of pinning them, so the test
+    cannot become a false pass by freezing to the same stale value the body
+    cites.
+    """
+    import subprocess
+
+    cdf._kpis.cache_clear()
+    truths = cdf.derive_truths()
+    body = tmp_path / "pr-body.md"
+    body.write_text(
+        f"Solve **{truths['Solve']}** · Match **{truths['Match']}** · "
+        f"Translate **{truths['Translate']}**\n",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        ["make", "--no-print-directory", "check-doc-figures", f"TEXT={body}"],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, (
+        f"clean body must pass; rc={result.returncode}\n"
+        f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    )
