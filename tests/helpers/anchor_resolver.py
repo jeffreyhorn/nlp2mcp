@@ -114,11 +114,13 @@ def resolve_unique(rel: str, qualified: str, snippet: str) -> int:
         cands = [c for n in cands for c in _defs_in(n) if c.name == part]
     if not cands:
         raise AnchorError(f"{rel}::{qualified} — function gone")
+    # One entry per OCCURRENCE, not per matching line (PR #1800 review): two
+    # copies of the anchor on one line are still two, and pin nothing.
     hits = [
         i + 1
         for n in cands
         for i in range(n.lineno - 1, n.end_lineno or n.lineno)
-        if snippet in code_lines[i]
+        for _ in range(code_lines[i].count(snippet))
     ]
     if len(hits) != 1:
         raise AnchorError(

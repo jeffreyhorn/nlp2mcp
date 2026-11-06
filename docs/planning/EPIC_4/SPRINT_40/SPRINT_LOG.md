@@ -1466,3 +1466,11 @@ Renamed across **4 code files**: `kpi_block.py`, `check_doc_figures.py`, `test_g
 ### Gate
 
 `make typecheck && make format && make lint && make test` is clean: **5,791 passed**, 10 skipped, no `225*` dirs. `make check-doc-figures` is clean.
+
+### PR #1800 review round 1
+
+- **`resolve_unique` counts OCCURRENCES, not matching lines.**
+  - **The bug:** it collected line numbers, so `row["k"] = 1; row["k"] = 1` on one line resolved as a single hit, and an ambiguous anchor was pinned.
+  - **The fix:** one entry per occurrence, through `code_lines[i].count(snippet)`.
+  - The module's own `test_every_anchor_occurs_EXACTLY_ONCE_in_its_function` already used `body.count(snippet)`, so it was unaffected.
+- **Test:** a same-line duplicate case is added to `test_anchor_resolver.py`. It fails against the line-counting resolver and passes after the fix.

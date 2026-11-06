@@ -29,6 +29,11 @@ def twice(row):
 def commented(row):
     # row["gone"] = 1  (was: the old key)
     return row
+
+
+def same_line(row):
+    row["k"] = 1; row["k"] = 1
+    return row
 '''
 
 
@@ -48,6 +53,13 @@ def test_a_UNIQUE_anchor_resolves_to_its_line(module):
 def test_an_anchor_appearing_TWICE_in_one_function_is_refused(module):
     with pytest.raises(AnchorError, match="occurs 2x"):
         resolve_unique(module, "twice", 'row["k"] = 1')
+
+
+def test_an_anchor_appearing_TWICE_ON_ONE_LINE_is_refused(module):
+    """Occurrences are counted, not matching lines (PR #1800 review): a resolver
+    that collects lines sees one hit here and pins an ambiguous anchor."""
+    with pytest.raises(AnchorError, match="occurs 2x"):
+        resolve_unique(module, "same_line", 'row["k"] = 1')
 
 
 def test_an_anchor_present_only_in_a_COMMENT_is_refused(module):
