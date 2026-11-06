@@ -441,6 +441,12 @@ A PR that touches BOTH `src/{ad,kkt,emit}/` AND any of the exempted paths still 
 
 1. **File / re-open the issue** with the bug description, reproducer, and investigation pointers.
 2. **Author the `## Phase 0: Acceptance Gate` section** in `docs/issues/ISSUE_<N>_*.md` with the 4 required subsections. Use existing Phase 0 sections (e.g., `docs/issues/ISSUE_1356_*.md` from Sprint 27 Prep Task 2) as format reference.
+
+   **A doc your PR *adds* must also carry three more items.** `scripts/sprint_audit/check_phase0_doc.py` enforces them only when the doc's PR status is `added`. Existing docs are grandfathered: a modified one is held to the 4 subsections alone.
+
+   - **`**Layer:**`** (Sprint 39 P8a). A header line naming the layer and site the gate targets, e.g. ``**Layer:** **KKT / stationarity** — `src/kkt/stationarity.py` ~123–456``. It must be falsifiable: three of four Sprint-38 gates named the wrong layer.
+   - **`**Positive control:**`** (Sprint 40 P10b). A header line naming the known input that must make the probe fire, and what firing looks like: `**Positive control:** <input> → <what firing looks like>`. For example, ``**Positive control:** mutant `if False:` applied → the fail-before test fails``. An empty field is rejected, including one followed directly by another line. Sprint 39 shipped two probes that passed vacuously.
+   - **`### Nearest Existing Mechanism`** (Sprint 39 P8b). Name the nearest mechanism **and why it does not apply**; naming one alone fails the check.
 3. **Run the Verification Methodology commands** against a prototype patch (model-name-guarded to avoid regression risk) BEFORE writing the production fix. Capture the PROCEED / REPLAN signal in the issue.
 4. **If PROCEED:** proceed to Phase 1 (`src/` implementation) with the hand-derived KKT shape as the acceptance reference. Cite Phase 0 in the PR description.
 5. **If REPLAN:** either revise the Phase 0 hand-derivation (if it was wrong), or rescope the issue (e.g., file a successor issue with a different fix-surface diagnosis). Do NOT commit `src/` changes against a REPLAN'd Phase 0.

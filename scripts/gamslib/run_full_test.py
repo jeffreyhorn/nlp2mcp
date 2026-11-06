@@ -1162,7 +1162,16 @@ def run_pipeline(
                 if args.verbose:
                     logger.info("    [RETRY] Re-translate with --nlp-presolve failed")
 
-        if result["status"] != "success":
+        # Sprint 40 P9a (#1799): a COMPLETED own-infeasible solve is an answer,
+        # not a failure to run, so it reaches the compare stage (which records
+        # `mismatch` against an optimal NLP). Every other failed solve still
+        # cascades. ⚠ This is the load-bearing site: `compare_solutions`' own
+        # exemption is never reached without it. Same predicate as that site.
+        from scripts.gamslib.test_solve import is_completed_own_infeasible
+
+        if result["status"] != "success" and not is_completed_own_infeasible(
+            model.get("mcp_solve")
+        ):
             if run_compare:
                 mark_cascade_not_tested(model, "solve", stats)
             return

@@ -392,12 +392,12 @@ class TestKpiBlockDerivation:
         k = compute_kpis(self._db())
         assert (k["match"], k["match_cold"], k["match_presolve"]) == (2, 1, 1)
 
-    def test_all_219_match_spans_the_whole_corpus(self):
+    def test_all_models_match_spans_the_whole_corpus(self):
         """The one figure that is NOT candidate-scoped — it includes non_convex."""
         from scripts.sprint_audit.kpi_block import compute_kpis
 
         k = compute_kpis(self._db())
-        assert k["all_219_match"] == 3
+        assert k["all_models_match"] == 3
 
     def test_solve_counts_the_presolve_retry(self):
         from scripts.sprint_audit.kpi_block import compute_kpis

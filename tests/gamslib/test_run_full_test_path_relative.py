@@ -16,6 +16,7 @@ from __future__ import annotations
 import pytest
 
 from scripts.gamslib.run_full_test import PROJECT_ROOT, _repo_relative_path
+from tests.helpers.anchor_resolver import _code_only, resolve_unique
 
 
 @pytest.mark.unit
@@ -52,16 +53,21 @@ def test_the_writer_records_the_NEW_key_repo_relatively():
     Read out of the source rather than re-executed: driving the branch needs a
     GAMS solve, and the property here is *which key is assigned and with what* —
     which the assignment itself states.
+
+    Sprint 40 P10a: through the shared anchor resolver. The previous whole-module
+    ``in`` checks were unscoped and comment-sensitive: renaming the key to
+    ``mcp_file_path`` and leaving the old assignment in a ``# was: …`` comment
+    passed both. Now the writer must be LIVE code, exactly once, in
+    ``run_pipeline``; and the old key is checked against code only.
     """
-    import inspect
-
-    from scripts.gamslib import run_full_test
-
-    src = inspect.getsource(run_full_test)
-    assert (
-        'model["mcp_solve"]["mcp_file_generated"] = _repo_relative_path(' in src
-    ), "the writer must assign the RENAMED key from _repo_relative_path"
-    assert 'model["mcp_solve"]["mcp_file_used"] =' not in src, (
+    rel = "scripts/gamslib/run_full_test.py"
+    resolve_unique(
+        rel,
+        "run_pipeline",
+        'model["mcp_solve"]["mcp_file_generated"] = _repo_relative_path(',
+    )
+    source = (PROJECT_ROOT / rel).read_text(encoding="utf-8")
+    assert _code_only(source).count('model["mcp_solve"]["mcp_file_used"] =') == 0, (
         "the old key must not still be written — two names for one field is how "
         "a migrated DB silently re-acquires the pre-migration shape"
     )

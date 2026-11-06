@@ -30,6 +30,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.helpers.anchor_resolver import _code_only
+
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 _SPEC = importlib.util.spec_from_file_location(
     "check_doc_figures",
@@ -414,16 +416,19 @@ def test_the_module_never_uses_the_unsafe_number_alternation() -> None:
     The module documents why that alternation is unsafe and then used it inside
     ``_research_hours`` — deriving the very figure whose corruption motivated
     the constant. A doc-comment is not a constraint; this is.
+
+    Sprint 40 P10a: checked against the shared resolver's ``_code_only`` (comments
+    and docstrings blanked, inline string literals kept). The previous ad-hoc
+    filter dropped every line starting with ``#``, ``*`` or ``"``, so it MISSED a
+    real use on a line that starts with a string (``"[0-9.]+",`` in a list) and
+    FALSE-FIRED on an unprefixed docstring line or an inline comment.
     """
     src = (PROJECT_ROOT / "scripts" / "sprint_audit" / "check_doc_figures.py").read_text(
         encoding="utf-8"
     )
-    offenders = [
-        line.strip()
-        for line in src.split("\n")
-        if "[0-9.]+" in line and not line.lstrip().startswith(("#", "*", '"'))
-    ]
-    assert offenders == [], f"unsafe number pattern in use: {offenders}"
+    code = _code_only(src)
+    offenders = [line.strip() for line in code.split("\n") if "[0-9.]+" in line]
+    assert code.count("[0-9.]+") == 0, f"unsafe number pattern in use: {offenders}"
 
 
 def test_dangling_count_does_not_depend_on_the_working_directory(

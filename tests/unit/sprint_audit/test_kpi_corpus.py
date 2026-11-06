@@ -37,7 +37,7 @@ def test_continuity_is_the_140_series_and_current_adds_the_admissions() -> None:
     current, continuity = compute_kpis(DB), compute_kpis(DB, exclude=ADMITTED)
     assert continuity["candidates"] == 140
     assert current["candidates"] == 140 + len(ADMITTED)
-    assert current["all_219_match"] == continuity["all_219_match"], "never corpus-scoped"
+    assert current["all_models_match"] == continuity["all_models_match"], "never corpus-scoped"
 
 
 def _admit_one(db: dict) -> tuple[dict, str]:
@@ -61,7 +61,7 @@ def test_an_admitted_model_grows_current_but_not_continuity() -> None:
     assert current["candidates"] == compute_kpis(DB)["candidates"] + 1, "the silent growth"
     assert continuity == compute_kpis(DB, exclude=ADMITTED), "continuity is unchanged"
     assert continuity["candidates"] == 140
-    assert current["all_219_match"] == continuity["all_219_match"], "never corpus-scoped"
+    assert current["all_models_match"] == continuity["all_models_match"], "never corpus-scoped"
 
 
 def test_an_absent_admissions_file_means_none(tmp_path: Path) -> None:

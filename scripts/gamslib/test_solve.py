@@ -838,6 +838,29 @@ def compare_variable_values(
     }
 
 
+#: Model statuses that mean "infeasible" (GAMS: 4 infeasible, 5 locally
+#: infeasible, 6 intermediate infeasible, 19 infeasible -- no solution).
+_INFEASIBLE_MODEL_STATUSES = (4, 5, 6, 19)
+
+
+def is_completed_own_infeasible(mcp_solve: dict[str, Any] | None) -> bool:
+    """Our own MCP ran to completion and PROVED infeasibility: an answer, not a
+    failure to run.
+
+    Sprint 40 P9a (#1799). The ONE predicate for both sites that must agree:
+    ``compare_solutions``' Case-6 exemption, and ``run_full_test.py``'s
+    post-solve cascade, which otherwise marks the row ``not_tested`` before the
+    compare stage can run. Widening only one of them is inert (``ISSUE_1799``).
+    """
+    if not mcp_solve:
+        return False
+    return (
+        mcp_solve.get("model_status") in _INFEASIBLE_MODEL_STATUSES
+        and mcp_solve.get("solver_status") == 1
+        and status_is_ours_and_complete(mcp_solve)
+    )
+
+
 def compare_solutions(
     model: dict[str, Any],
     rtol: float = DEFAULT_RTOL,
@@ -922,7 +945,7 @@ def compare_solutions(
     # re-classify the whole committed corpus.
     _mcp_attribution = mcp_solve.get("mcp_attribution")
     mcp_solved = mcp_solver_status == 1 and mcp_model_status in (1, 2)
-    mcp_infeasible = mcp_model_status in (4, 5, 6, 19)
+    mcp_infeasible = mcp_model_status in _INFEASIBLE_MODEL_STATUSES
 
     # Decision tree
     # Case 0: Multi-solve model — NLP reference is from a different solve iteration
@@ -994,25 +1017,17 @@ def compare_solutions(
     # completed solver means our model ran and PROVED infeasibility. That is a
     # usable result and belongs to Case 3.
     #
-    # ⚠ THE EXEMPTION IS EXACTLY CASE 3's CONDITION, INCLUDING `nlp_infeasible`
-    # (PR #1740 review). Scoping it to "our MCP proved infeasible" alone is too
-    # wide: it also releases rows whose NLP solved OPTIMALLY into Case 4, which
-    # a full replay of all 219 rows measured as moving the seven
-    # `model_infeasible` models (agreste, camcge, cesam, fawley, lnts, mine,
-    # rocket) from `skipped`/`compare_mcp_failed` to
-    # `mismatch`/`compare_status_mismatch`. That may well be the more honest
-    # verdict, but it is a KPI-visible re-bucketing of seven models and belongs
-    # to a track with a Phase-0 doc, not to a review fix whose stated purpose is
-    # to make a dead branch reachable.
+    # Sprint 40 P9a (#1799, owner decision 2026-10-16): the exemption is NO
+    # LONGER scoped to `nlp_infeasible`. PR #1740 kept it to Case 3's condition
+    # because widening it releases rows whose NLP solved OPTIMALLY into Case 4 --
+    # a KPI-visible re-bucketing that needed its own Phase-0 doc. That doc is
+    # ISSUE_1799: those rows are now `mismatch`/`compare_status_mismatch`,
+    # which is the honest verdict -- our MCP answered, and disagreed.
     #
-    # ⚠ An earlier revision of this comment claimed ZERO impact, derived by
-    # querying only for rows that would become BOTH-INFEASIBLE. It missed the
-    # rows that fall through to OTHER cases — the measurement matched the
-    # intent instead of the code. The figure below is from an A/B replay of
-    # `compare_solutions` over all 219 rows with the branch reverted.
-    #
-    # Measured with `nlp_infeasible` included: 0 of 219 rows change verdict.
-    _own_infeasible_answer = mcp_infeasible and mcp_solver_status == 1 and nlp_infeasible
+    # ⚠ This site ALONE is inert: `run_full_test.py` cascades every failed solve
+    # to `not_tested` before the compare stage runs. Both sites use
+    # `is_completed_own_infeasible`, so they cannot drift.
+    _own_infeasible_answer = is_completed_own_infeasible(mcp_solve)
     if not mcp_solve or (
         mcp_solve.get("status") == "failure" and not _own_infeasible_answer
     ):
