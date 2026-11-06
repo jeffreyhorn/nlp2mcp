@@ -927,7 +927,13 @@ def check_text(
     findings: list[Finding] = []
     exemptions: list[tuple[Path, int, str]] = []
     scanned = 0
-    for lineno, line in enumerate(text.split("\n"), start=1):
+    # `splitlines()` rather than `split("\n")`: on an empty file the latter
+    # yields `[""]` and the scope counter reports one scanned "line", which
+    # would let `--min-scope 1` pass on a file holding nothing. A trailing
+    # newline has the same effect (one extra phantom line). `splitlines()`
+    # returns zero and the real count, so the existing scope floor can tell
+    # discovery apart from silence (PR #1801 review).
+    for lineno, line in enumerate(text.splitlines(), start=1):
         scanned += 1
         line_findings, reason = scan_line(path, lineno, line, truths)
         if reason:

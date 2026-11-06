@@ -115,7 +115,7 @@ check-doc-figures:
 ifdef FACTS
 	$(PYTHON) scripts/sprint_audit/check_doc_figures.py --list-facts
 else ifdef TEXT
-	$(PYTHON) scripts/sprint_audit/check_doc_figures.py --text $(TEXT)
+	$(PYTHON) scripts/sprint_audit/check_doc_figures.py --text '$(TEXT)'
 else
 	$(PYTHON) scripts/sprint_audit/check_doc_figures.py --base $(or $(BASE),origin/main)
 endif

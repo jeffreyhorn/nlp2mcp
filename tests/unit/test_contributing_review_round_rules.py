@@ -5,9 +5,15 @@ rotated out of sight every ~12 days. They are copied into ``CONTRIBUTING.md``
 so they survive the rollover, but a copy is only durable if **something keeps
 the two in step**. This test is that something.
 
-It is intentionally stdlib-only (no pytest imports needed beyond collection)
-and the current-sprint directory is **resolved**, not hardcoded, so the next
-sprint's directory becomes the source of truth automatically.
+The test is intentionally stdlib-only and the current-sprint directory is
+**resolved**, not hardcoded, so the next sprint's directory becomes the source
+of truth automatically.
+
+Parity is checked **symmetrically**, by extracting each surface's rule headings
+and comparing the normalised sets (PR #1801 review). An earlier version pinned
+four hardcoded phrases and asked each surface whether they were present — which
+a fifth rule added to either side alone would silently satisfy, since neither
+check discovers what the OTHER document actually contains.
 """
 
 from __future__ import annotations
@@ -18,19 +24,6 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SPRINT_ROOT = PROJECT_ROOT / "docs" / "planning" / "EPIC_4"
 CONTRIBUTING = PROJECT_ROOT / "CONTRIBUTING.md"
-
-#: The four rule headings, in the order the prompt lists them. Each is a
-#: canonical name — the CONTRIBUTING section must contain every one, and the
-#: current-sprint prompt preamble must still describe every one.
-#:
-#: Matched as substrings so a trailing qualifier (``(Sprint 40 P10e)``) does
-#: not break the check. Keyed by the headline phrase a reader greps for.
-_RULE_PHRASES: tuple[str, ...] = (
-    "Pin by identity, not count",
-    "When a classification moves, sweep the changed",
-    "Never `git stash`",
-    "grep the PR's own docs",
-)
 
 
 def _current_sprint_dir() -> Path:
@@ -51,6 +44,82 @@ def _current_sprint_dir() -> Path:
     return next(p for n, p in numbered if n == top)
 
 
+# ------------------------------------------------- normalisation & extraction
+
+
+_TRAILING_PUNCT = re.compile(r"[.,;:]+\s*$")
+_BACKTICK_RUN = re.compile(r"`+")
+_WHITESPACE = re.compile(r"\s+")
+
+
+def _normalise(heading: str) -> str:
+    """Make two surfaces' rule headings directly comparable.
+
+    The two sources style them differently:
+
+    * **CONTRIBUTING** uses ``### Pin by identity, not count`` — a markdown
+      level-3 heading, no trailing punctuation.
+    * **the prompt preamble** uses ``- **Pin by identity, not count.**`` — a
+      bold bullet, usually with a trailing period, and sometimes with a word
+      capitalised for emphasis (``SET``) that reads ordinary-case in the copy.
+
+    Normalisation strips both forms down to the same canonical key:
+    lowercase, no backticks, no trailing punctuation, single-spaced. The
+    comparison is then exact, so a genuinely different heading cannot collide.
+    """
+    s = _BACKTICK_RUN.sub("", heading).strip()
+    s = _TRAILING_PUNCT.sub("", s)
+    s = _WHITESPACE.sub(" ", s)
+    return s.lower()
+
+
+def _extract_contributing_rules(text: str) -> set[str]:
+    """Every ``### `` heading inside the ``## Review-Round Rules`` section.
+
+    Bounded between the section header and the next ``## `` heading. Reading
+    unbounded would pick up unrelated ``### `` headings elsewhere in the file
+    — exactly the drift the parity check exists to make visible.
+    """
+    m = re.search(
+        r"^## Review-Round Rules\b[^\n]*\n(.*?)(?=^## |\Z)",
+        text,
+        re.M | re.S,
+    )
+    if not m:
+        return set()
+    body = m.group(1)
+    return {_normalise(h) for h in re.findall(r"^###[ \t]+(.+?)[ \t]*$", body, re.M)}
+
+
+def _extract_prompt_rules(text: str) -> set[str]:
+    """Every first-bold phrase in a bullet under the ``**Review-round rules**`` block.
+
+    Bounded between the ``**Review-round rules**`` header and the first blank
+    line that is followed by non-bullet text — the same cue a reader uses to
+    see the block ending. The first ``**...**`` of each bullet is the rule
+    name; anything after it is prose.
+    """
+    m = re.search(
+        r"^\*\*Review-round rules\*\*[^\n]*\n(.*?)(?=\n\n[^\s\-])",
+        text,
+        re.M | re.S,
+    )
+    if not m:
+        return set()
+    body = m.group(1)
+    rules: set[str] = set()
+    for line in body.splitlines():
+        if not line.lstrip().startswith("- "):
+            continue
+        bold = re.match(r"-[ \t]+\*\*(.+?)\*\*", line)
+        if bold:
+            rules.add(_normalise(bold.group(1)))
+    return rules
+
+
+# ------------------------------------------------- the checks
+
+
 def test_contributing_has_the_review_round_rules_section() -> None:
     """A standalone section header anchors the copy. Without one, any future
     reorganisation of CONTRIBUTING could fold the rules into another heading
@@ -61,39 +130,74 @@ def test_contributing_has_the_review_round_rules_section() -> None:
     ), "CONTRIBUTING.md must contain a top-level ## Review-Round Rules section"
 
 
-def test_every_prompt_rule_is_in_CONTRIBUTING() -> None:
-    """Each of the four rules in the current-sprint prompt is in the copy.
-
-    If a sprint prep adds a fifth rule, this test fails and forces the author
-    to decide whether it is a durable rule (goes to CONTRIBUTING) or a
-    sprint-local practice (stays in the prompt and is removed from
-    ``_RULE_PHRASES``). Silent divergence between the two surfaces is what the
-    copy was meant to prevent.
-    """
-    text = CONTRIBUTING.read_text(encoding="utf-8")
-    missing = [phrase for phrase in _RULE_PHRASES if phrase not in text]
-    assert not missing, f"review-round rule(s) missing from CONTRIBUTING.md: {missing}"
-
-
-def test_the_current_sprint_prompt_still_lists_these_rules() -> None:
-    """The prompt preamble is the live expression; CONTRIBUTING is its mirror.
-
-    Grep is intentional — the file is loose markdown, a parser would couple the
-    test to formatting that reviewers routinely churn. A phrase match on four
-    distinct sentences is a stable enough signal.
-
-    The sprint directory is resolved, so a rollover does not break this: the
-    next sprint's ``prompts/PLAN_PROMPTS.md`` becomes the source of truth.
-    """
+def _both_rule_sets() -> tuple[set[str], set[str], Path]:
     sprint = _current_sprint_dir()
     prompt = sprint / "prompts" / "PLAN_PROMPTS.md"
     assert prompt.is_file(), f"current sprint has no prompts/PLAN_PROMPTS.md: {prompt}"
-    text = prompt.read_text(encoding="utf-8")
-    missing = [phrase for phrase in _RULE_PHRASES if phrase not in text]
-    assert not missing, (
-        f"prompt {prompt.relative_to(PROJECT_ROOT)} is missing review-round "
-        f"rule(s) that CONTRIBUTING claims are carried from it: {missing}"
+    contrib = _extract_contributing_rules(CONTRIBUTING.read_text(encoding="utf-8"))
+    pr = _extract_prompt_rules(prompt.read_text(encoding="utf-8"))
+    return contrib, pr, prompt
+
+
+def test_the_two_surfaces_hold_the_SAME_SET_of_rules() -> None:
+    """Symmetric parity: neither side may carry a rule the other does not.
+
+    A fifth rule in the prompt alone, OR in CONTRIBUTING alone, fails this
+    test. The earlier form — four hardcoded phrases asked of each surface —
+    could not: it only noticed rules it already knew about, so adding one in
+    one place left every assertion green (PR #1801 review).
+    """
+    contrib, prompt_rules, prompt_path = _both_rule_sets()
+    assert contrib, "CONTRIBUTING.md Review-Round Rules section parsed to no rules"
+    assert prompt_rules, (
+        f"{prompt_path.relative_to(PROJECT_ROOT)} Review-round rules block " "parsed to no rules"
     )
+    only_contrib = contrib - prompt_rules
+    only_prompt = prompt_rules - contrib
+    assert not only_contrib and not only_prompt, (
+        "review-round rules diverge between surfaces:\n"
+        f"  only in CONTRIBUTING.md: {sorted(only_contrib)}\n"
+        f"  only in {prompt_path.relative_to(PROJECT_ROOT)}: {sorted(only_prompt)}"
+    )
+
+
+def test_a_one_sided_fifth_rule_is_detected_in_either_direction() -> None:
+    """The regression case for the parity test itself.
+
+    An earlier version was vacuously true: four hardcoded phrases, asked of
+    each surface. Adding a fifth rule to either file alone left every
+    assertion green. This test re-runs the real extractors against synthetic
+    one-sided inputs and demands the discrepancy be visible in BOTH
+    directions, so the parity check cannot regress to the earlier form.
+    """
+    base_contrib = (
+        "## Review-Round Rules\n"
+        "\npreamble\n"
+        "\n### Alpha\n"
+        "body\n"
+        "\n### Beta\n"
+        "body\n"
+        "\n## Next Section\n"
+    )
+    base_prompt = (
+        "**Review-round rules** (recorded here):\n"
+        "- **Alpha.** body\n"
+        "- **Beta.** body\n"
+        "\n**Another header**\n"
+    )
+    assert _extract_contributing_rules(base_contrib) == _extract_prompt_rules(base_prompt)
+
+    # A fifth rule in CONTRIBUTING only.
+    contrib_plus = base_contrib.replace("### Beta\n", "### Beta\nbody\n\n### Gamma\n")
+    assert _extract_contributing_rules(contrib_plus) - _extract_prompt_rules(base_prompt) == {
+        "gamma"
+    }
+
+    # A fifth rule in the prompt only.
+    prompt_plus = base_prompt.replace("- **Beta.** body\n", "- **Beta.** body\n- **Gamma.** body\n")
+    assert _extract_prompt_rules(prompt_plus) - _extract_contributing_rules(base_contrib) == {
+        "gamma"
+    }
 
 
 def test_resolution_ignores_non_sprint_directories() -> None:
@@ -108,3 +212,21 @@ def test_resolution_ignores_non_sprint_directories() -> None:
     picked = _current_sprint_dir()
     assert picked.name not in non_sprint
     assert re.fullmatch(r"SPRINT_\d+", picked.name)
+
+
+def test_normalisation_folds_the_two_styles_to_the_same_key() -> None:
+    """Prompt bullets include trailing periods and backticks; CONTRIBUTING headings don't.
+
+    The extractors feed ``_normalise`` the inner bold content (``**`` already
+    stripped by the capture group), so this test pins the remaining folds:
+    trailing period, backticks around a code span, capitalisation. If
+    normalisation is too strict these styles disagree and parity is
+    impossible; if too lax, a different rule collides with an existing one.
+    """
+    assert _normalise("Never `git stash` to switch branches.") == _normalise(
+        "Never git stash to switch branches"
+    )
+    assert _normalise("Pin by identity, not count") == _normalise("Pin by identity, not count.")
+    assert _normalise("WHEN a classification moves") == _normalise("when a classification moves")
+    # ...but genuinely different headings must still differ.
+    assert _normalise("Pin by identity, not count") != _normalise("Pin by count, not identity")

@@ -1150,6 +1150,50 @@ def test_make_check_doc_figures_TEXT_catches_a_stale_body_with_a_clean_diff(
         assert fact in combined, f"stale {fact} figure not reported: {combined}"
 
 
+def test_text_mode_uses_splitlines_so_min_scope_counts_actual_lines(tmp_path: Path) -> None:
+    """``split("\\n")`` on an empty file returns ``[""]``, inflating the scope by one.
+
+    Measured before the fix: ``--text empty.md --min-scope 1`` passed, because
+    the splitter invented a phantom line. ``splitlines()`` returns zero and the
+    coverage floor can then tell discovery apart from silence (PR #1801 review).
+    """
+    empty = tmp_path / "empty.md"
+    empty.write_text("", encoding="utf-8")
+    _findings, scanned, _exempt, _truths = cdf.check_text(empty)
+    assert scanned == 0, "an empty file scans zero lines"
+
+    # A trailing newline must not inflate the count either.
+    trailed = tmp_path / "trailed.md"
+    trailed.write_text("one\ntwo\n", encoding="utf-8")
+    _findings, scanned, _exempt, _truths = cdf.check_text(trailed)
+    assert scanned == 2, "a trailing newline must not add a phantom line"
+
+
+def test_make_check_doc_figures_TEXT_handles_a_path_with_spaces(tmp_path: Path) -> None:
+    """The recipe quotes ``$(TEXT)`` so a space-bearing path is one argument.
+
+    Without quoting, ``make ... TEXT='/tmp/pr body.md'`` splits in the shell
+    and argparse sees two positional arguments for ``--text``; the invocation
+    fails before the file is read (PR #1801 review).
+    """
+    import subprocess
+
+    body_dir = tmp_path / "space test"
+    body_dir.mkdir()
+    body = body_dir / "pr-body.md"
+    body.write_text("plain prose, no figures\n", encoding="utf-8")
+    result = subprocess.run(
+        ["make", "--no-print-directory", "check-doc-figures", f"TEXT={body}"],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, (
+        f"a space-bearing path must be forwarded as one argument; "
+        f"rc={result.returncode}\nstdout: {result.stdout}\nstderr: {result.stderr}"
+    )
+
+
 def test_make_check_doc_figures_TEXT_passes_a_clean_body(tmp_path: Path) -> None:
     """Symmetry: a body carrying only current figures must pass.
 
