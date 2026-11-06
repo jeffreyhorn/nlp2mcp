@@ -115,7 +115,10 @@ check-doc-figures:
 ifdef FACTS
 	$(PYTHON) scripts/sprint_audit/check_doc_figures.py --list-facts
 else ifdef TEXT
-	$(PYTHON) scripts/sprint_audit/check_doc_figures.py --text '$(TEXT)'
+# POSIX single-quote escape: a literal `'` becomes `'\''` (close, escaped
+# literal, reopen) so a filename like `reviewer's body.md` is forwarded as one
+# argument instead of blowing up on an unterminated shell quote.
+	$(PYTHON) scripts/sprint_audit/check_doc_figures.py --text '$(subst ','\'',$(TEXT))'
 else
 	$(PYTHON) scripts/sprint_audit/check_doc_figures.py --base $(or $(BASE),origin/main)
 endif

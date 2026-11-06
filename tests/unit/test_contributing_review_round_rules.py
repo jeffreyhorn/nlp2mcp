@@ -108,8 +108,15 @@ def _extract_prompt_rules(text: str) -> set[str]:
         return set()
     body = m.group(1)
     rules: set[str] = set()
-    for line in body.splitlines():
-        if not line.lstrip().startswith("- "):
+    for raw in body.splitlines():
+        line = raw.lstrip()
+        # ``line.lstrip()`` is also what the match runs against, so indented
+        # bullets are not silently dropped. An earlier form guarded on the
+        # stripped line but matched against the raw one, so a nested list item
+        # (``  - **Foo** bar``) passed the guard and failed the regex at
+        # position 0 — the rule disappeared from the extracted set and the
+        # parity comparison did not see it (PR #1801 review).
+        if not line.startswith("- "):
             continue
         bold = re.match(r"-[ \t]+\*\*(.+?)\*\*", line)
         if bold:
@@ -198,6 +205,25 @@ def test_a_one_sided_fifth_rule_is_detected_in_either_direction() -> None:
     assert _extract_prompt_rules(prompt_plus) - _extract_contributing_rules(base_contrib) == {
         "gamma"
     }
+
+
+def test_prompt_extractor_sees_indented_bullets() -> None:
+    """A nested bullet must not silently vanish from the rule set.
+
+    Markdown lets bullet items carry sub-items as indented bullets. The
+    earlier form guarded on ``line.lstrip()`` but matched against the raw
+    line, so an indented rule passed the guard and failed the regex at
+    position 0 — it fell out of the set entirely, and the parity test could
+    not see it (PR #1801 review).
+    """
+    body = (
+        "**Review-round rules** (recorded here):\n"
+        "- **Alpha.** body\n"
+        "  - **Nested.** an indented rule\n"
+        "- **Beta.** body\n"
+        "\n**Another header**\n"
+    )
+    assert _extract_prompt_rules(body) == {"alpha", "nested", "beta"}
 
 
 def test_resolution_ignores_non_sprint_directories() -> None:

@@ -1169,18 +1169,36 @@ def test_text_mode_uses_splitlines_so_min_scope_counts_actual_lines(tmp_path: Pa
     assert scanned == 2, "a trailing newline must not add a phantom line"
 
 
-def test_make_check_doc_figures_TEXT_handles_a_path_with_spaces(tmp_path: Path) -> None:
-    """The recipe quotes ``$(TEXT)`` so a space-bearing path is one argument.
+@pytest.mark.parametrize(
+    "filename",
+    [
+        pytest.param("pr-body.md", id="plain-name"),
+        pytest.param("space body.md", id="space-in-name"),
+        pytest.param("reviewer's body.md", id="apostrophe-in-name"),
+    ],
+)
+def test_make_check_doc_figures_TEXT_handles_awkward_paths(tmp_path: Path, filename: str) -> None:
+    """The recipe escapes ``$(TEXT)`` so spaces AND apostrophes survive.
 
-    Without quoting, ``make ... TEXT='/tmp/pr body.md'`` splits in the shell
-    and argparse sees two positional arguments for ``--text``; the invocation
-    fails before the file is read (PR #1801 review).
+    Three vectors, each a real failure mode before its fix:
+
+    * **plain-name** — the baseline; nothing clever in the path.
+    * **space-in-name** — unquoted ``$(TEXT)`` split in the shell and
+      ``argparse`` saw two positional args for ``--text``.
+    * **apostrophe-in-name** — single-quoting handled spaces but still broke
+      on a literal ``'`` in the path (``'reviewer's body.md'`` → unterminated
+      shell quote). The POSIX escape ``'\\''`` folds in via ``make``'s
+      ``$(subst ...)`` (PR #1801 review).
+
+    Realistic approximations of what reviewers and CI runners actually
+    produce as scratch paths; awkward filenames here cost zero to support
+    and are hard to re-add correctly if dropped.
     """
     import subprocess
 
     body_dir = tmp_path / "space test"
     body_dir.mkdir()
-    body = body_dir / "pr-body.md"
+    body = body_dir / filename
     body.write_text("plain prose, no figures\n", encoding="utf-8")
     result = subprocess.run(
         ["make", "--no-print-directory", "check-doc-figures", f"TEXT={body}"],
@@ -1189,7 +1207,7 @@ def test_make_check_doc_figures_TEXT_handles_a_path_with_spaces(tmp_path: Path) 
         text=True,
     )
     assert result.returncode == 0, (
-        f"a space-bearing path must be forwarded as one argument; "
+        f"path {filename!r} must be forwarded as one argument; "
         f"rc={result.returncode}\nstdout: {result.stdout}\nstderr: {result.stderr}"
     )
 
