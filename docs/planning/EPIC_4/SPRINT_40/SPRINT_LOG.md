@@ -1421,8 +1421,9 @@ The implementation is archived as the durable commit [`f57bc1d7`](https://github
   - **measured `mismatch` +12 / `not_tested` −12;**
   - **0 `kpi_block` figures move.** The persisted DB differs from the committed one only in `db_dirty`.
   - **The 12 checkpoint `forward` moves are relabels, not fixes.** No checkpoint exception is added.
-- **Persisted:** the 12 rows, via `run_full_test.py --model <id>`.
-  - It carries a re-run effect: 7 legacy rows refresh `license_edition` from `null` to `licensed`. That is a stale-row correction, not P9a.
+- **Persisted:** the 12 rows, via `run_full_test.py --model <id>`. The DB diff against the committed one is **comparison changes plus re-run effects** (PR #1800 review); the comparison-only claim belongs to the A-vs-B isolation above, not to this diff.
+  - **Re-run effects on the 7 legacy rows** (agreste, camcge, cesam, fawley, lnts, mine, rocket): `license_edition` `null` → `licensed`, and the attribution fields `mcp_attribution` `null` → `"MCP-FAILED"` and `mcp_completed_own_solve` `null` → `True`. The attribution fields were added to the schema after their stored rows were written, so a re-run's writer populates them for the first time.
+  - **Re-run effects on egypt and shale**, both already `model_infeasible`: the infeasible iterate's `objective_value` and `iterations` move (egypt 1,448,953.756 → 11,645,180, 62,176 → 69,730; shale 2.38635e-11 → 1.816185e-07, 23,304 → 34,582). An infeasible solve's reported numbers are the last iterate, so run-to-run variation is expected.
   - A stray untracked `mine_mcp_presolve.gms`, written by the retry and referenced nowhere, was deleted.
 - **Tests:**
   - `tests/gamslib/test_own_infeasible_mismatch_1799.py`, 14 tests covering the predicate, Case 6, and `run_pipeline` end to end with the real compare function;
@@ -1474,3 +1475,10 @@ Renamed across **4 code files**: `kpi_block.py`, `check_doc_figures.py`, `test_g
   - **The fix:** one entry per occurrence, through `code_lines[i].count(snippet)`.
   - The module's own `test_every_anchor_occurs_EXACTLY_ONCE_in_its_function` already used `body.count(snippet)`, so it was unaffected.
 - **Test:** a same-line duplicate case is added to `test_anchor_resolver.py`. It fails against the line-counting resolver and passes after the fix.
+
+### PR #1800 review round 2
+
+- **The persisted-change summary in `ISSUE_1799` and the Day 11 entry claimed "the 12 comparison changes and nothing else" for the committed DB diff.** That is the A-vs-B isolation, not the persisted diff. The persisted diff also carries two re-run effects, now documented:
+  - **The 7 legacy rows** gain `mcp_attribution` `"MCP-FAILED"` and `mcp_completed_own_solve` `True` beside the `license_edition` refresh — the attribution fields were added to the schema after their rows were written, and a re-run populates them for the first time.
+  - **egypt and shale** keep `model_infeasible`, so no verdict moves; their infeasible iterate's `objective_value` and `iterations` move (egypt 1,448,953.756 → 11,645,180, 62,176 → 69,730; shale 2.38635e-11 → 1.816185e-07, 23,304 → 34,582). The last-iterate numbers vary run to run.
+- Docs-only fix. No code changed.

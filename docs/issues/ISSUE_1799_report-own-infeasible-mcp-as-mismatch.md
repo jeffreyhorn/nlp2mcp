@@ -83,11 +83,11 @@ The nearest is **Case 3's own-infeasible exemption** (PR #1740 review): `_own_in
   - **`kpi_block.py --json` is identical** for both corpora.
 - **The positive control (pass B) holds:** with site 2 reverted, none of the 12 moves. Site 2 is load-bearing.
 
-**Persisted:** the 12 rows, by `run_full_test.py --model <id>` in the repo. The DB diff against the committed one:
-- the 12 comparison changes and nothing else;
-- the 7 `license_edition` refreshes, which are a stale-row correction;
-- tally `mismatch` **+12**, `not_tested` **−12**;
-- `kpi_block.py --json`: the only key that differs is `db_dirty`. **0 KPI figures move.**
+**Persisted:** the 12 rows, by `run_full_test.py --model <id>` in the repo. The DB diff against the committed one is **comparison changes plus re-run effects**; the comparison-only claim belongs to the A-vs-B isolation above, not to this diff (PR #1800 review):
+- **Comparison changes (P9a):** the 12 rows go `not_tested` → `mismatch`; tally `mismatch` **+12**, `not_tested` **−12**.
+- **Re-run effects on the 7 legacy rows** (agreste, camcge, cesam, fawley, lnts, mine, rocket): `license_edition` `null` → `licensed`, and the attribution fields `mcp_attribution` `null` → `"MCP-FAILED"` and `mcp_completed_own_solve` `null` → `True`. The attribution fields were added to the schema after their stored rows were written, so a re-run's writer populates them for the first time — a stale-row correction, not P9a.
+- **Re-run effects on egypt and shale** (both already `model_infeasible`, so no verdict moves): their infeasible iterate's `objective_value` and `iterations` move (egypt 1,448,953.756 → 11,645,180 and 62,176 → 69,730; shale 2.38635e-11 → 1.816185e-07 and 23,304 → 34,582). An infeasible solve's reported numbers are the last iterate the solver saw, not a converged answer, so run-to-run variation is expected.
+- **`kpi_block.py --json`: the only key that differs is `db_dirty`. 0 KPI figures move.**
 
 **The checkpoint after landing:** the next `--resolve-changed` over these models reads **12 `forward` moves, all relabels, not fixes**. No checkpoint exception is added.
 
