@@ -1482,3 +1482,9 @@ Renamed across **4 code files**: `kpi_block.py`, `check_doc_figures.py`, `test_g
   - **The 7 legacy rows** gain `mcp_attribution` `"MCP-FAILED"` and `mcp_completed_own_solve` `True` beside the `license_edition` refresh — the attribution fields were added to the schema after their rows were written, and a re-run populates them for the first time.
   - **egypt and shale** keep `model_infeasible`, so no verdict moves; their infeasible iterate's `objective_value` and `iterations` move (egypt 1,448,953.756 → 11,645,180, 62,176 → 69,730; shale 2.38635e-11 → 1.816185e-07, 23,304 → 34,582). The last-iterate numbers vary run to run.
 - Docs-only fix. No code changed.
+
+### CI fix after PR #1800: `from tests.helpers…` under `--import-mode=importlib`
+
+- **Symptom.** CI's `test` job and the Performance Budget Check failed at collection: `ModuleNotFoundError: No module named 'tests'; 'tests' is not a package` on the four files that import the new helper (`tests/unit/test_anchor_resolver.py`, `tests/unit/kkt/test_positional_domain_sites.py`, `tests/gamslib/test_run_full_test_path_relative.py`, `tests/unit/sprint_audit/test_check_doc_figures.py`).
+- **Why it passed locally.** The `.venv/bin/pytest` entry-point shim leaks CWD onto `sys.path`; CI's invocation does not. `--import-mode=importlib` (in `pyproject.toml`) deliberately does not insert the rootdir, and the editable install exposes only `src*`.
+- **Fix.** `tests/conftest.py` already added `tests/` to `sys.path`; it now also adds the project root, which is what `from tests.helpers.anchor_resolver import ...` needs. Verified by running the CI invocation locally with `PYTHONPATH` cleared.

@@ -16,6 +16,15 @@ tests_dir = Path(__file__).parent
 if str(tests_dir) not in sys.path:
     sys.path.insert(0, str(tests_dir))
 
+# Add the project root to sys.path so ``from tests.helpers.anchor_resolver import ...``
+# resolves. ``--import-mode=importlib`` (pyproject.toml) deliberately does NOT
+# insert the rootdir, and the editable install only exposes ``src*``, so without
+# this, the import fails in CI with "'tests' is not a package" -- even though
+# it works locally, where CWD leaks in via the entry-point shim.
+project_root = tests_dir.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 
 @pytest.fixture
 def manual_index_mapping():
