@@ -99,8 +99,22 @@ def _extract_prompt_rules(text: str) -> set[str]:
     see the block ending. The first ``**...**`` of each bullet is the rule
     name; anything after it is prose.
     """
+    # The bullet marker class is ``[-*+]`` on BOTH the block boundary and the
+    # per-line match. Markdown accepts all three as list markers; narrowing to
+    # ``-`` lets a one-sided rule written with ``*`` or ``+`` escape the parity
+    # check — the block terminates at the ``*``/``+`` line (so later bullets
+    # vanish) OR the line is read but the regex rejects it (so the rule
+    # vanishes). Either way the extracted set stays equal to the other
+    # surface's and a real divergence reads as clean (PR #1801 review r4).
+    #
+    # The block boundary is "blank line, then a line that is NOT a bullet and
+    # NOT indented continuation". A bullet is ``[-*+]`` followed by whitespace
+    # — expressed as a negative lookahead so a line starting with ``**Another
+    # header**`` (which begins with ``*``, a valid bullet marker) still counts
+    # as the block end (``**`` is not ``* ``). A simple char-class like
+    # ``[^\s\-*+]`` can't express that distinction.
     m = re.search(
-        r"^\*\*Review-round rules\*\*[^\n]*\n(.*?)(?=\n\n[^\s\-])",
+        r"^\*\*Review-round rules\*\*[^\n]*\n(.*?)(?=\n\n(?![-*+][ \t]|\s))",
         text,
         re.M | re.S,
     )
@@ -115,12 +129,12 @@ def _extract_prompt_rules(text: str) -> set[str]:
         # against the raw one, so ``  - **Foo** bar`` failed at position 0
         # and the rule disappeared from the extracted set (PR #1801 review r2).
         #
-        # No separate ``startswith("- ")`` guard: a redundant space-only guard
+        # No separate ``startswith`` guard: a redundant space-only guard
         # discarded tab-separated bullets (``-\t**Foo**``) that the regex below
         # accepts, so a fifth rule in that form could escape the parity check
         # (PR #1801 review r3). The regex is the single source of truth about
         # what counts as a rule bullet.
-        bold = re.match(r"-[ \t]+\*\*(.+?)\*\*", line)
+        bold = re.match(r"[-*+][ \t]+\*\*(.+?)\*\*", line)
         if bold:
             rules.add(_normalise(bold.group(1)))
     return rules
@@ -216,6 +230,21 @@ def test_a_one_sided_fifth_rule_is_detected_in_either_direction() -> None:
     assert _extract_prompt_rules(prompt_tab) - _extract_contributing_rules(base_contrib) == {
         "gamma"
     }
+
+    # A fifth rule in the prompt only, written with an asterisk bullet, and
+    # another with a plus bullet. Both are valid Markdown list markers; an
+    # earlier form matched only ``-`` on both the block boundary and the per-
+    # line regex, so a ``*``/``+`` rule either terminated the block (dropping
+    # later bullets) or was rejected by the line regex — the rule vanished
+    # from the extracted set and parity read clean (PR #1801 review r4).
+    for marker in ("*", "+"):
+        prompt_marker = base_prompt.replace(
+            "- **Beta.** body\n",
+            f"- **Beta.** body\n{marker} **Gamma.** body\n",
+        )
+        assert _extract_prompt_rules(prompt_marker) - _extract_contributing_rules(base_contrib) == {
+            "gamma"
+        }, f"bullet marker {marker!r} escaped parity"
 
 
 def test_prompt_extractor_sees_indented_bullets() -> None:
