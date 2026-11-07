@@ -110,14 +110,16 @@ def _extract_prompt_rules(text: str) -> set[str]:
     rules: set[str] = set()
     for raw in body.splitlines():
         line = raw.lstrip()
-        # ``line.lstrip()`` is also what the match runs against, so indented
-        # bullets are not silently dropped. An earlier form guarded on the
-        # stripped line but matched against the raw one, so a nested list item
-        # (``  - **Foo** bar``) passed the guard and failed the regex at
-        # position 0 — the rule disappeared from the extracted set and the
-        # parity comparison did not see it (PR #1801 review).
-        if not line.startswith("- "):
-            continue
+        # Match against ``line.lstrip()`` so indented bullets are not silently
+        # dropped — an earlier form guarded on the stripped line but matched
+        # against the raw one, so ``  - **Foo** bar`` failed at position 0
+        # and the rule disappeared from the extracted set (PR #1801 review r2).
+        #
+        # No separate ``startswith("- ")`` guard: a redundant space-only guard
+        # discarded tab-separated bullets (``-\t**Foo**``) that the regex below
+        # accepts, so a fifth rule in that form could escape the parity check
+        # (PR #1801 review r3). The regex is the single source of truth about
+        # what counts as a rule bullet.
         bold = re.match(r"-[ \t]+\*\*(.+?)\*\*", line)
         if bold:
             rules.add(_normalise(bold.group(1)))
@@ -203,6 +205,15 @@ def test_a_one_sided_fifth_rule_is_detected_in_either_direction() -> None:
     # A fifth rule in the prompt only.
     prompt_plus = base_prompt.replace("- **Beta.** body\n", "- **Beta.** body\n- **Gamma.** body\n")
     assert _extract_prompt_rules(prompt_plus) - _extract_contributing_rules(base_contrib) == {
+        "gamma"
+    }
+
+    # A fifth rule in the prompt only, written with a TAB after the dash — valid
+    # Markdown, accepted by the capture regex. An earlier guard rejected it on
+    # the space-only ``startswith("- ")`` test, so a one-sided rule in this form
+    # silently escaped the parity check (PR #1801 review r3).
+    prompt_tab = base_prompt.replace("- **Beta.** body\n", "- **Beta.** body\n-\t**Gamma.** body\n")
+    assert _extract_prompt_rules(prompt_tab) - _extract_contributing_rules(base_contrib) == {
         "gamma"
     }
 
