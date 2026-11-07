@@ -563,6 +563,47 @@ Two rules from Sprint 39. Both exist because a *claim* was carried forward witho
 
 ---
 
+## Review-Round Rules (Sprint 40 P10e)
+
+Four rules that have kept re-emerging across Sprint-39 and Sprint-40 review
+rounds — each one records a failure mode that passed quality gates and was
+only caught by a reviewer. They live in the current sprint's prompt preamble
+(`docs/planning/EPIC_4/SPRINT_<n>/prompts/PLAN_PROMPTS.md`) and are copied
+here so they outlive any one sprint's file.
+
+### Pin by identity, not count
+
+A test or a claim about "N of M" **names the set**. Any swap that preserves
+`N` is a silent coverage change. Before merging a test that reads
+`assert len(X) == 7`, ask: *which 7?* If the answer is "whichever 7 happen to
+qualify today", the assertion blesses a moving target and will stop firing on
+exactly the drift it was written to catch.
+
+### When a classification moves, sweep the changed set
+
+A fix that reclassifies some rows is a fix that touched *all* their citations,
+not only the one the diff happens to show. `grep` every claim that mentions a
+member of the moved set, not just the flagged line. Stale references
+elsewhere are the usual source of the follow-up review round.
+
+### Never `git stash` to switch branches
+
+The two safe reads are `git show <ref>:<path>` and `pytest --collect-only` in
+a scratch worktree; both are read-only. `git stash` is reversible in
+principle, but the failure mode under review-round pressure is a half-applied
+pop that loses work, and the pop happens at a moment when the author is
+already juggling several branches.
+
+### After any round that changes `src/`, grep the PR's own docs
+
+For every symbol name the docs mention (function, flag, field, file path),
+re-read the lines that mention it. A doc written before a review round
+describes the code that was replaced; the symbol is still there, the behaviour
+isn't. `check-doc-figures` does not cover this — it checks *figures*, not
+*prose*.
+
+---
+
 ## Project Structure
 
 ```

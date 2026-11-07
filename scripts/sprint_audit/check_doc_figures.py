@@ -908,6 +908,40 @@ def check(
     return findings, scanned, exemptions, truths, archived
 
 
+def check_text(
+    path: Path,
+) -> tuple[list[Finding], int, list[tuple[Path, int, str]], dict[str, float | int]]:
+    """Scan every line of a loose text file against the derived truths.
+
+    Used by ``--text FILE`` so a PR body (``/tmp/pr-body.md``) or any other
+    scratch doc can be checked without going through a git diff. Every line is
+    in scope: the user named the file, so ``is_live_doc`` scoping — which exists
+    to keep archived sprint logs out of the per-commit sweep — does not apply.
+    """
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise SystemExit(f"ERROR: cannot read {path}: {exc}") from exc
+    truths = derive_truths()
+
+    findings: list[Finding] = []
+    exemptions: list[tuple[Path, int, str]] = []
+    scanned = 0
+    # `splitlines()` rather than `split("\n")`: on an empty file the latter
+    # yields `[""]` and the scope counter reports one scanned "line", which
+    # would let `--min-scope 1` pass on a file holding nothing. A trailing
+    # newline has the same effect (one extra phantom line). `splitlines()`
+    # returns zero and the real count, so the existing scope floor can tell
+    # discovery apart from silence (PR #1801 review).
+    for lineno, line in enumerate(text.splitlines(), start=1):
+        scanned += 1
+        line_findings, reason = scan_line(path, lineno, line, truths)
+        if reason:
+            exemptions.append((path, lineno, reason))
+        findings.extend(line_findings)
+    return findings, scanned, exemptions, truths
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(
         description="Flag a figure cited in a changed doc that contradicts its source."
@@ -928,6 +962,16 @@ def main() -> int:
         ),
     )
     ap.add_argument("--list-facts", action="store_true", help="print the registry and exit")
+    ap.add_argument(
+        "--text",
+        type=Path,
+        default=None,
+        help=(
+            "scan every line of FILE against the derived truths. For a PR body "
+            "or any scratch doc not in the diff — `is_live_doc` scoping does not "
+            "apply, so every line is in scope."
+        ),
+    )
     args = ap.parse_args()
 
     if args.list_facts:
@@ -939,7 +983,13 @@ def main() -> int:
             print(f"  {fact.label():34} = {value}\n      {fact.source}")
         return 0
 
-    findings, scanned, exemptions, truths, archived = check(args.base)
+    archived = 0
+    if args.text is not None:
+        findings, scanned, exemptions, truths = check_text(args.text)
+        source_label = f"line(s) in {args.text}"
+    else:
+        findings, scanned, exemptions, truths, archived = check(args.base)
+        source_label = "changed doc line(s)"
 
     # Report the DERIVABLE count, not the registered one. A fact whose source is
     # absent is skipped by `derive_truths`, so quoting len(FACTS) claims coverage
@@ -949,7 +999,7 @@ def main() -> int:
     coverage = f"{derivable} fact(s)"
     if derivable < len(FACTS):
         coverage += f" ({len(FACTS) - derivable} skipped: source not present)"
-    print(f"Doc-figure check: {scanned} changed doc line(s) scanned against {coverage}.")
+    print(f"Doc-figure check: {scanned} {source_label} scanned against {coverage}.")
     if archived:
         print(f"  {archived} line(s) in archived docs not scanned (figures there are historical).")
     if exemptions:
