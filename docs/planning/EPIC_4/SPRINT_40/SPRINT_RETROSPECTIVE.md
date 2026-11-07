@@ -25,8 +25,8 @@ guard correctness and reporting cannot be voided at all.
 
 **Firm landings, all three-gated (C2):** P1 (schema 3.1.0 + hosted licensed CI
 + corpus re-base), P2 (cohort batch persist), P3 (9 admitted by rule), P7
-(#1755), P4 (#1782 Pattern-C binder rewrite; the P2 ratchet moved 9 → 3), P4
-(#1787 + #1790), P6 (#1794 ReferencedInstanceFilter E1–E4 + E7/E8 byte-identical),
+(#1755), P4 (#1782 Pattern-C binder rewrite, Days 6–7, P2 ratchet 11 → 6), P4
+(#1787 + #1790, Day 8, P2 ratchet 6 → 3), P6 (#1794 ReferencedInstanceFilter E1–E4 + E7/E8 byte-identical),
 tfordy's Day-10 persist (owner decision), P9a (#1799 own-infeasible → mismatch),
 P10a–e (five process items). **Fourteen distinct landings.** The one emit-moving
 headline change is turkey's +1 floor, which the Sprint 35 Day 6 fix (`95ba01ea`)
@@ -100,16 +100,22 @@ That is the attribution-check that Sprint 41 owes.
 
 ## 4. The index-repeat ratchet, and why 9 → 3 is a correctness improvement counted as process
 
-**P4 #1782's Pattern-C binder rewrite ratcheted the P2 index-repeat baseline
-9 → 3, −6 across turkpow × 3 + egypt + shale + nonsharp.** None of those moved
-Solve or Match at close; the ratchet is why. These were models whose
-stationarity emit used a repeated controlling index (a guard like
-`$ord(v) > ord(v)`, which is tautologically false), and the right counter to
-"a quiet wrong answer" is a *gate*, not an ad-hoc fix. **P4 wrote the rewrite
-so that at every Pattern-C admission, BEFORE re-symbolisation, binders are
-mapped to their variable-position names and the eq label is replaced with E\*.**
-turkpow's 3 ratcheted first; egypt's and shale's followed on Day 8's `#1782`
-follow-ons; gussrisk's Class-B landed in Day 8 too.
+**The P2 baseline moved 9 → 11 → 9 → 6 → 3 across four persists: Day 3
+grew it +2 as egypt/shale presolve copies were persisted (`f1771435`); Day
+6/7 P4 #1782's Pattern-C binder rewrite hoisted turkpow × 3 and shale ×
+2; Day 8 P4 #1787/#1790 hoisted egypt × 2 and gussrisk. −6 net, across
+four distinct models.** None of those moved Solve or Match at close; the
+ratchet is why. These were models whose stationarity emit used a repeated
+controlling index (a guard like `$ord(v) > ord(v)`, which is tautologically
+false), and the right counter to "a quiet wrong answer" is a *gate*, not
+an ad-hoc fix. **P4 wrote the rewrite so that at every Pattern-C
+admission, BEFORE re-symbolisation, binders are mapped to their
+variable-position names and the eq label is replaced with E\*.** The
+remaining 3 entries at close are **dinam's `ts2(te,te)`** and **nonsharp's
+two `inter(…)` references** (`inter(col,col,stm)`, `inter(col__kkt1,col__kkt1,stm)`);
+**nonsharp was NOT hoisted this sprint** — it is a refused MINLP, so
+regeneration cannot move its golden, and dinam has a separate open
+diagnosis.
 
 **The P2 gate is why this counts.** `make check-index-repeats` runs on every
 PR (enforced in CI since S38 D3); it would have refused a fix that moved two
@@ -122,10 +128,12 @@ than a single PR's green.
 ## 5. What went well
 
 - **The retest ran cleanly.** check-goldens unqualified-and-alone, with
-  `--fail-on-unverified` from P10c, reported 207 goldens all clean (↑ 186);
-  determinism ×3 `PYTHONHASHSEED` {0, 1, 42}: PASS ×3 (207 goldens byte-identical
-  under every seed); make test clean; check-index-repeats PASS (P1 0/3,370,
-  P2 3 = baseline 3); check-doc-figures clean.
+  `--fail-on-unverified` from P10c, reported **200 in-scope goldens** (out of 207
+  discovered; 7 are allowlisted) **all clean** (↑ 186 at S39 close);
+  determinism ×3 `PYTHONHASHSEED` {0, 1, 42}: PASS ×3 (same 200 goldens
+  byte-identical under every seed); make test 5,806 passed;
+  check-index-repeats PASS (P1 0 / 3,370, P2 3 = baseline 3);
+  check-doc-figures clean.
 - **P10 is a sprint of its own in miniature.** Five process items landed —
   anchor resolver, `**Positive control:**` as an added-only requirement,
   `--fail-on-unverified`, `--text FILE`, Review-Round Rules in CONTRIBUTING —

@@ -2,7 +2,7 @@
 
 **From:** Sprint 40 close, `ca83e884`, 2026-11-07 · **Toolchain:** GAMS **54.2.1** / PATH **5.2.01** / schema **3.1.0**
 **Baseline for Sprint 41 (continuity, 140):** Solve **114** · Match **96** (65 cold + 31 presolve) · Translate **135** · mi **13** · pse **6** · `path_solve_terminated` **2** (ferts, tabora — C1 influx, in cohort) · `path_solve_license` **0** · all-219 Match **101** · genuine floor **76** (+0 license-unlocked, not counted)
-**Current (149 = 140 + 9 admitted):** Solve **116** · Match **98** (65 + 33) · Translate **139** · mi **13** · pse **7** · pst **3** (+minsurf, NLP-gated admitted)
+**Current (149 = 140 + 9 admitted):** Solve **116/139** · Match **98/149** (65 cold + 33 presolve) · Translate **139/146** · mi **13** · pse **7** · pst **3** (+minsurf, NLP-gated admitted)
 
 > Every figure here is derived at `ca83e884`. **Anything quoted in a Sprint-41 doc must carry its commit** — Sprint 39 shipped a floor figure that the provenance file disagreed with, and Sprint 40 had a Day-10 Match correction that Day 8's #1787 forecast; a line that does not carry its commit cannot be audited across the twelve-day arc.
 
@@ -14,9 +14,9 @@
 
 **The situation.** Day 8 #1787 landed a multi-reference Jacobian fix that made sroute's cold emit solve. Day 10 CK2 confirmed the re-solve produces a presolve match. Day 11 P9a deliberately did **not** persist sroute, because the licensed cohort CI run (42399418829) at close shows sroute produces its own `MODEL STATUS 1 Optimal` that matches the embedded NLP's answer — the S38 D9 `weapons` spurious-match shape. The current DB row is `model_infeasible + not_tested`; the live run is a match.
 
-**Why this is not just a persist.** If the MCP's own solve produced an own answer, sroute is a real match (Match +1, counted). If it produced an aborted solve and `nlp2mcp_obj_val` carried the embedded NLP's answer as `tetd.l`, the match is spurious (same shape S39 corrected weapons for) and the row should be `model_infeasible` with the current cold emit, not a match.
+**Why this is not just a persist.** If the MCP's own solve produced an own answer, sroute is a real match (Match +1, counted). If it produced an aborted solve and `nlp2mcp_obj_val` carried the embedded NLP's answer as `tetd.l`, the match is spurious (same shape S39 corrected weapons for) and the row should be `path_solve_terminated` — the outcome `test_solve.py:1426–1461` maps an attribution-rejected apparent success to, not a manufactured `model_infeasible` (an aborted or embedded-only solve does not establish MCP infeasibility).
 
-**Bounded next step:** **Sprint 41 Day 0 runs `check_mcp_solve_attribution` on sroute** (and on any cohort row whose MCP produces `MODEL STATUS 1 Optimal` that matches the embedded NLP). Only after that result is read does the row get persisted — and if it says *spurious*, the persistence writes `model_infeasible`, not `match`. **Decide the shape of the general attribution check at the same time** — the fingerprint is "own-optimal + match" in a row whose warm-started MCP produces no `MODEL STATUS` of its own. S38 D9 saw it, S39 D10 corrected it, S40 D11 decided not to reach it. Three sprints is enough.
+**Bounded next step:** **Sprint 41 Day 0 runs the attribution-aware pipeline on sroute** (and on any cohort row whose MCP produces `MODEL STATUS 1 Optimal` that matches the embedded NLP) and persists whatever `test_solve` returns — a real match if `Attribution.mcp_succeeded`'s final-model ownership + completion + status checks hold, `path_solve_terminated` if the attribution is rejected. **Decide the shape of the general rule at the same time** — the fingerprint is "own-optimal + match" in a row whose warm-started MCP never took ownership of the final `MODEL STATUS`. S38 D9 saw it, S39 D10 corrected it, S40 D11 decided not to reach it. Three sprints is enough.
 
 **⚠ Record the decision as a rule, not a checklist item.** The `weapons` → `sroute` pattern says *every* own-optimal match in a license-unlocked row needs an attribution verdict before persistence; adding sroute to a Day-0 one-off is treating a class as a case.
 
@@ -34,7 +34,7 @@ Day 10 CK2 noted `abel` moved `mismatch → match` on re-solve. It is not in the
 | lnts | residual **got worse**, 9.66 → **13.26** — a second, unattributed defect that the +1 revealed rather than fixed |
 | glider | row came out **wrong** — `sum(h, … vel(c,h) …)` on a subset domain (the subset domain resolves through the parent set) |
 
-**Durable commit:** [`f57bc1d7`](https://github.com/jeffreyhorn/claude-code/commit/f57bc1d7eee0ba0af7aee42e8ac9271e4c103e91) on branch `banked/1789-scalar-offset` (fix + 4 unit tests, against `1abcd687`; **not for merge**). The diff + three mechanisms are also on #1789.
+**Durable commit:** [`f57bc1d7`](https://github.com/jeffreyhorn/nlp2mcp/commit/f57bc1d7eee0ba0af7aee42e8ac9271e4c103e91) on branch `banked/1789-scalar-offset` (fix + 4 unit tests, against `1abcd687`; **not for merge**). The diff + three mechanisms are also on #1789.
 
 **Bounded next step:** **the three defects are independent and should be fixed separately,** with a Phase-0 doc each:
 1. the **boundary guard** on the scalar-offset substitution (robot/rocket's UNDF root);
@@ -71,9 +71,15 @@ Three models sit at `path_solve_terminated` at close: **ferts** (cohort, infeasi
 
 ## 7. The P2 index-repeat ratchet ratcheted 9 → 3 — carry the remaining three as an audit, not a defect
 
-The P2 ratchet at close is **3**: turkpow's remaining 3 `$(...)` guard references that index a repeated-index head. Day 7's #1782 Pattern-C binder rewrite ratcheted 6 of 9; the remaining 3 are what P4's rewrite deliberately left — they sit at a place the rewrite could not serve (`_eligible_binder_rep` declines).
+The P2 ratchet at close is **3**, and the remaining references are **not turkpow**. From `scripts/sprint_audit/index_repeat_p2_baseline.json` at close:
 
-**Bounded next step:** **the 3 are correctness-neutral as long as the guards fire 0 times in production;** the S39 D11 pattern (reach count on every leak-gate subprocess) is the measurement that confirms it. Add a reach probe for the three turkpow guards on the Sprint-41 leak-gate run; if any fires, re-open #1782 with a scoped extension.
+| model | reference | diagnosis |
+|---|---|---|
+| **dinam** | `ts2(te,te)` in `stat_ka` — a mixed direct + summed reference | **#1778's family**; see Day 8 log at line 1148 for the diagnosis and the Day-8 ratchet move that left this reference standing |
+| **nonsharp** | `inter(col,col,stm)` | **refused MINLP** — regeneration cannot move its golden; a Phase-0 doc would need to attack the source declaration |
+| **nonsharp** | `inter(col__kkt1,col__kkt1,stm)` | the same reference after KKT alias minting; same disposition as above |
+
+**Bounded next step:** **the 3 are correctness-neutral as long as the guards fire 0 times in production**, and their verification routes differ by model. For **dinam**, Sprint 41 should re-trace `stat_ka` from the AD entry outward — the Day-8 log flags it as #1778's family, so start there. For **nonsharp**'s two references, the baseline cannot be moved by regeneration (MINLP out of scope); the right move is a reach probe on those two guards to confirm they never fire in the corpus (S39 D11 pattern — reach count on every leak-gate subprocess). If a reach is measured, re-open the item against the source declaration.
 
 ## 8. The licensed CI's isolation claim held — keep it in `main`-only and re-verify per release
 
@@ -86,7 +92,7 @@ The P2 ratchet at close is **3**: turkpow's remaining 3 `$(...)` guard reference
 **S38 D9 (weapons):** booked as match; the MCP produced no own `MODEL STATUS`; corrected in S39 D10 to mismatch.
 **S40 D11 (sroute):** deliberately not booked; the MCP produces own MS 1 Optimal that matches the embedded NLP; attribution not yet run.
 
-**The fingerprint:** a license-unlocked row whose MCP writes a `MODEL STATUS 1 Optimal` that matches `tetd.l` (or the equivalent warm-start variable) exactly, after a presolve retry. The *right* match discriminator is whether the MCP solver actually took a step; `nlp2mcp_obj_val = tetd.l` records the embedded NLP's answer regardless of whether the MCP ran.
+**The fingerprint:** a license-unlocked row whose MCP writes a `MODEL STATUS 1 Optimal` that matches `tetd.l` (or the equivalent warm-start variable) exactly, after a presolve retry. The *right* match discriminator is **`Attribution.mcp_succeeded`'s three checks** — final-model ownership, completion, and status — not a per-step count. **Taking a solver step is not an attribution discriminator by itself:** a valid warm start can finish with zero iterations and still own its final `MODEL STATUS` (real match), while a solver can take many steps and abort before claiming ownership (attribution rejects it). Reading `tetd.l` alone proves neither ownership nor failure.
 
 **Bounded next step:** **Sprint 41 item 1 runs `check_mcp_solve_attribution` once on sroute** (the immediate carry) and **decides whether that check becomes a persistence precondition for any license-unlocked own-optimal row** (the general rule). The rule shape beats the per-row shape.
 
