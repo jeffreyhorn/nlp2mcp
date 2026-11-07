@@ -1,0 +1,99 @@
+# Sprint 41 — Carryforwards from Sprint 40
+
+**From:** Sprint 40 close, `ca83e884`, 2026-11-07 · **Toolchain:** GAMS **54.2.1** / PATH **5.2.01** / schema **3.1.0**
+**Baseline for Sprint 41 (continuity, 140):** Solve **114** · Match **96** (65 cold + 31 presolve) · Translate **135** · mi **13** · pse **6** · `path_solve_terminated` **2** (ferts, tabora — C1 influx, in cohort) · `path_solve_license` **0** · all-219 Match **101** · genuine floor **76** (+0 license-unlocked, not counted)
+**Current (149 = 140 + 9 admitted):** Solve **116** · Match **98** (65 + 33) · Translate **139** · mi **13** · pse **7** · pst **3** (+minsurf, NLP-gated admitted)
+
+> Every figure here is derived at `ca83e884`. **Anything quoted in a Sprint-41 doc must carry its commit** — Sprint 39 shipped a floor figure that the provenance file disagreed with, and Sprint 40 had a Day-10 Match correction that Day 8's #1787 forecast; a line that does not carry its commit cannot be audited across the twelve-day arc.
+
+**This file is a convention, not a prompt item.** The Day-13 prompt lists SPRINT_LOG, SPRINT_RETROSPECTIVE and the SUMMARY row; the next sprint's prep looks for `SPRINT_41_CARRYFORWARDS.md` by name (S33 → S40 unbroken, S39 → S40 included the Day-0 Floor-decision brief as the top item).
+
+---
+
+## 1. sroute's DB row is deliberately stale — Sprint 41 Day 0 should run the attribution check
+
+**The situation.** Day 8 #1787 landed a multi-reference Jacobian fix that made sroute's cold emit solve. Day 10 CK2 confirmed the re-solve produces a presolve match. Day 11 P9a deliberately did **not** persist sroute, because the licensed cohort CI run (42399418829) at close shows sroute produces its own `MODEL STATUS 1 Optimal` that matches the embedded NLP's answer — the S38 D9 `weapons` spurious-match shape. The current DB row is `model_infeasible + not_tested`; the live run is a match.
+
+**Why this is not just a persist.** If the MCP's own solve produced an own answer, sroute is a real match (Match +1, counted). If it produced an aborted solve and `nlp2mcp_obj_val` carried the embedded NLP's answer as `tetd.l`, the match is spurious (same shape S39 corrected weapons for) and the row should be `model_infeasible` with the current cold emit, not a match.
+
+**Bounded next step:** **Sprint 41 Day 0 runs `check_mcp_solve_attribution` on sroute** (and on any cohort row whose MCP produces `MODEL STATUS 1 Optimal` that matches the embedded NLP). Only after that result is read does the row get persisted — and if it says *spurious*, the persistence writes `model_infeasible`, not `match`. **Decide the shape of the general attribution check at the same time** — the fingerprint is "own-optimal + match" in a row whose warm-started MCP produces no `MODEL STATUS` of its own. S38 D9 saw it, S39 D10 corrected it, S40 D11 decided not to reach it. Three sprints is enough.
+
+**⚠ Record the decision as a rule, not a checklist item.** The `weapons` → `sroute` pattern says *every* own-optimal match in a license-unlocked row needs an attribution verdict before persistence; adding sroute to a Day-0 one-off is treating a class as a case.
+
+## 2. abel's DB row is stale — Day 10 CK2 noted; carried as a stale-row correction
+
+Day 10 CK2 noted `abel` moved `mismatch → match` on re-solve. It is not in the cohort (not license-gated), so its stale row is a plain refresh, not a license-neutrality call. **Bounded next step:** on the Sprint 41 Day-0 cohort re-run (above), include abel; a successful match persists `model_optimal + match` with `edition=None` or whatever the first-licensed run attaches.
+
+## 3. P5 #1789 stat_step / scalar-offset — BANKED, mechanism confirmed, three defects named
+
+**Day-9 prototype** reached `lnts 68.546 = NLP` on the `_add_jacobian_transpose_terms_scalar` offset handler + `_apply_offset_substitution(deriv, eq_idx, eq_idx, mult_domain, …)`, plus `_replace_indices_in_expr` lifting a quoted literal `u("h3")` → `u(h)`. The **full REPLAN gate fired on Day 10:**
+
+| control | result |
+|---|---|
+| robot, rocket | **⛔ BACKWARD** — `path_solve_terminated` (division by an out-of-range `i_the(h0)` = UNDF; needs a **boundary guard**, not a reindexing) |
+| lnts | residual **got worse**, 9.66 → **13.26** — a second, unattributed defect that the +1 revealed rather than fixed |
+| glider | row came out **wrong** — `sum(h, … vel(c,h) …)` on a subset domain (the subset domain resolves through the parent set) |
+
+**Durable commit:** [`f57bc1d7`](https://github.com/jeffreyhorn/claude-code/commit/f57bc1d7eee0ba0af7aee42e8ac9271e4c103e91) on branch `banked/1789-scalar-offset` (fix + 4 unit tests, against `1abcd687`; **not for merge**). The diff + three mechanisms are also on #1789.
+
+**Bounded next step:** **the three defects are independent and should be fixed separately,** with a Phase-0 doc each:
+1. the **boundary guard** on the scalar-offset substitution (robot/rocket's UNDF root);
+2. the **subset-domain resolution** for `sum(h, …)` where `h` is a subset coord (glider's wrong row);
+3. lnts's **second defect** — unattributed; if the Day-9 prototype made lnts worse, something in the handler is wrong independently of the +1. Trace from the stationarity entry, not the emitter.
+
+Do **not** re-apply the banked diff verbatim; it moved two models BACKWARD and one wrong. The +1 target (lnts 68.546) is real; the delivery mechanism is not.
+
+## 4. P6 E5/E6 sarf recursion — THREE filed issues, recursion diagnosed as a SHAPE defect
+
+**#1795 (Primary):** the `lam_labor` `$`-guard in sarf's `stat_task` is a **51,792-tuple left-deep OR** built by `_build_tuple_or_guard`. The semantics are right (the `labor` rows reference a non-Cartesian subset of task instances, so the #1381 follow-up correctly refuses a per-dimension AND); the shape is not. **Fix surface:** emit the guard as a **declared set** with a membership test, instead of inlining every tuple as an OR of 4-`sameas` conjunctions. ⚠ Needs a guard-impact review, because `stationarity.py` holds #1741's guard.
+
+**#1796:** `t++(expr)` with an expression amount renders as a circular lead/lag; sarf writes `luse(c,t++(cs(c,"start",s)-1),s)` for `MCP compile line 365`. Scratch fix verified.
+
+**#1797:** zero-padded numeric ranges (`t / 01*24 /`) lose the padding and render as `1..24`. A grep finds sarf the only corpus user; scratch fix verified.
+
+**Day-10 measurement, for Sprint 41 planning:** with the balanced-OR-tree scratch patch, sarf **translates in 338.2 s** (load 10–16) and **MCP compiles with 0 errors** — but GAMS generation does not finish in 37 min. `gamscmex.out` runs at 100 % CPU; no solver starts. The file carries **207,218 `sameas` calls**, and the guard is evaluated for each of `stat_task`'s 369,024 instances. **The shape-not-algorithm fix (#1795) is the right one; tree-balance + render-fix are not enough on their own.**
+
+**Bounded next step:** **#1795 first** (the shape), then #1796 and #1797 together (both one-off render fixes). Expect translation to drop well below 300 s once the guard stops being 51,792 OR terms.
+
+**C7 re-registration for Sprint 41:** the +1 Translate target stands, but the precondition should now be *P6 #1795 landed*, not "P6's E5/E6 item started" — that was correct for Sprint 40, when E5/E6 was unscoped. The three issues are the scope now.
+
+## 5. The license-unlocked COLD-match ledger is empty — the shape of the C5 ledger is still provisional
+
+**C5 says a license-unlocked cold match goes in the non-counting `license_unlocked` ledger.** This sprint's dry run predicted zero entries; the sprint delivered zero entries. **The ledger structure has never been exercised.**
+
+**Bounded next step:** if Sprint 41's Day-0 cohort re-run (above, item 1) produces a cold-optimal match for a license-unlocked model (sroute would be a presolve match, not cold; so this is a hypothetical), the first entry should be structured the same way `floor_provenance.json` entries are — per-model, with the commit, the classification, and the expected floor movement — so that `floor_tracker.py` can report both the counted floor and the uncounted ledger side-by-side. Decide the format with the owner the first time an entry is actually needed, not speculatively.
+
+## 6. `path_solve_terminated` is populated, by design — C1's population list is now a living set
+
+Three models sit at `path_solve_terminated` at close: **ferts** (cohort, infeasible NLP), **tabora** (cohort, infeasible NLP), **minsurf** (NLP-gated admitted, infeasible NLP). All three are in the **two populations** C1 names; the "0 outside" measurement holds.
+
+**Bounded next step:** **Sprint 41 Task 7 (or its equivalent) should re-measure these three.** ferts and tabora's NLPs failed under licensed GAMS 54.2.1; a solver version bump or a cold-emit change in the NLP could move them. minsurf is an NLP-gated row; its first-measurement at `path_solve_terminated` says the convexity verifier's `likely_convex` classification does not imply the NLP solves.
+
+## 7. The P2 index-repeat ratchet ratcheted 9 → 3 — carry the remaining three as an audit, not a defect
+
+The P2 ratchet at close is **3**: turkpow's remaining 3 `$(...)` guard references that index a repeated-index head. Day 7's #1782 Pattern-C binder rewrite ratcheted 6 of 9; the remaining 3 are what P4's rewrite deliberately left — they sit at a place the rewrite could not serve (`_eligible_binder_rep` declines).
+
+**Bounded next step:** **the 3 are correctness-neutral as long as the guards fire 0 times in production;** the S39 D11 pattern (reach count on every leak-gate subprocess) is the measurement that confirms it. Add a reach probe for the three turkpow guards on the Sprint-41 leak-gate run; if any fires, re-open #1782 with a scoped extension.
+
+## 8. The licensed CI's isolation claim held — keep it in `main`-only and re-verify per release
+
+**Every Sprint 40 PR workflow ran `edition=demo`, 10 of them.** The one `main`-push on the `gams-licensed` environment plus the nightly schedule both ran `edition=licensed` with the scan positive control hit and no `USER:` line. **The design works as designed.**
+
+**Bounded next step:** **do not assume this across GAMS installer rotations.** The pinned SHA-256 in `licensed-solve.yml` is the only mechanism preventing a silent installer swap. Review the SHA at every GAMS version bump; if GAMS 55 ships, re-measure the discriminator (the `edition=licensed/demo` classification is based on a two-run probe against synthetic models; re-run them before changing the pinned version).
+
+## 9. The attribution surface for own-optimal matches is the broader shape of item 1
+
+**S38 D9 (weapons):** booked as match; the MCP produced no own `MODEL STATUS`; corrected in S39 D10 to mismatch.
+**S40 D11 (sroute):** deliberately not booked; the MCP produces own MS 1 Optimal that matches the embedded NLP; attribution not yet run.
+
+**The fingerprint:** a license-unlocked row whose MCP writes a `MODEL STATUS 1 Optimal` that matches `tetd.l` (or the equivalent warm-start variable) exactly, after a presolve retry. The *right* match discriminator is whether the MCP solver actually took a step; `nlp2mcp_obj_val = tetd.l` records the embedded NLP's answer regardless of whether the MCP ran.
+
+**Bounded next step:** **Sprint 41 item 1 runs `check_mcp_solve_attribution` once on sroute** (the immediate carry) and **decides whether that check becomes a persistence precondition for any license-unlocked own-optimal row** (the general rule). The rule shape beats the per-row shape.
+
+## 10. The Day-13 close process held; record what moves to a prompt template
+
+**Six of nine close rules MET, one UNMET-not-VOID, four take no precondition and all four are MET.** Three mechanisms that earned carry into the next sprint's prompt template:
+
+1. **Pre-registering a rule whose precondition is "always", move it to the always-on list.** C1, C2, C5, C6, C8 have no precondition; they are rules, not bets. The rule-vs-bet distinction is where the pre-registration discipline earns its keep.
+2. **Derive the affected set when the rule starts, not when it was planned.** C9's set was "prep's 7", amended at plan-write time to "derived at Day 11's start". Measured k = 12 ≠ 7; prep's list is the floor, not the ceiling. The same shape applies to any P-item that depends on a measurement taken after the P-item's planning.
+3. **A rule that names a precondition it does not expect to hold is a bet on the plan, not on the work.** C7 was a bet on P6 reaching a Translate golden at ≤ 300 s. The precondition held (E5/E6 started), the goal missed. Neither voided nor met-weak; **UNMET** is the honest shape, and it is a different thing from "we did not try". Record UNMET-not-VOID in the close vocabulary; Sprint 41 may want it at the outset.

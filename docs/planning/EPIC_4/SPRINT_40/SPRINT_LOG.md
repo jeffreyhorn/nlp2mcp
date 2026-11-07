@@ -1517,3 +1517,141 @@ Branch `planning/sprint40-day12-process`. The day is deliberately light; the rem
 ### Gate
 
 `make typecheck && make format && make lint && make test` is clean. `make check-doc-figures` is clean.
+
+### PR #1801 review rounds 1–4
+
+- **r1** (`4340c0d7`). Three findings. The Makefile recipe forwarded `$(TEXT)` unquoted, so a path with spaces reached `--text` as two arguments; fixed by single-quoting. `check_text` used `split("\n")`, which invents a line for an empty file and an extra after a trailing newline — the scope floor passed with one fewer line than requested; fixed with `splitlines()`, pinned by `test_text_mode_uses_splitlines_so_min_scope_counts_actual_lines`. And the parity test's four hardcoded `_RULE_PHRASES` were vacuous: a fifth rule on either side alone left every assertion green; rewritten as symmetric bounded-section extractors with a one-sided-rule regression against the real extractors.
+- **r2** (`4a9ef09c`). The single-quoted Makefile path broke on an apostrophe (`reviewer's body.md` → unterminated shell quote); fixed with a GNU-make `subst` producing the POSIX `'\''` escape, and the forwarding test was parametrised over plain / space / apostrophe filenames. The prompt extractor's guard matched `line.lstrip()` but the regex ran against `raw`, so an indented bullet (`  - **Foo**`) failed at position 0 and dropped out of the set; fixed by binding `line = raw.lstrip()` once, with `test_prompt_extractor_sees_indented_bullets` as the regression.
+- **r3** (`63c6e59d`, docs-only). The SPRINT_LOG Day 12 P10e entry still described the removed four-hardcoded-phrase workflow (present at authoring, replaced in r1); rewritten to describe the actual symmetric-extractor surface. No code changed.
+- **r4** (`a1b6d6a5`). The bullet-marker class was narrowed to `-`, but Markdown accepts `*` and `+` too: a one-sided rule written with `*`/`+` either terminated the block early (dropping later rules) or was rejected by the per-line regex (dropping that rule), and the extracted sets stayed equal. Broadened to `[-*+]` on both the block boundary and the per-line match, with the boundary expressed as a negative lookahead `(?!(?:[-*+][ \t]|\s))` so a bold header (`**Another header**`, starting with `*`) still terminates the block. Regression extended to both markers.
+
+## Day 13 — 2026-11-07 · retest and close · 6 h
+
+**Branch:** `planning/sprint40-day13-close` · **Measured at:** `ca83e884` (the PR #1801 merge) · **Docs-only** — `src/`, `scripts/` and `tests/` untouched.
+
+### Headline
+
+**Sprint 40 closed. Continuity (140): Solve 114 · Match 96 (65 + 31) · Translate 135 · genuine floor 76 · `path_solve_terminated` 2 · `path_solve_license` 0. Current (149 = 140 + 9 admitted): Solve 116 · Match 98 (65 + 33) · Translate 139 · `path_solve_terminated` 3 · `path_solve_license` 0.** The license-gated cohort unlocked: every one of the 11 MCP-gated models now carries a real licensed row (`path_solve_license` 11 → 0, once); 9 NLP-gated convex models were admitted to the corpus by rule. **The headline sits on continuity by C4;** the +9-admitted scope is named in the same sentence per the Rolling-KPIs footnote convention.
+
+**The +3 Solve / +1 Match on continuity is license unlock, not emit improvement** (C3). Of the 11 cohort models: 3 solve (glider, srpchase, turkey), 1 matches (turkey, presolve-match-genuine — floor +1, below). 6 are proven infeasible under license (egypt, robot, shale, tfordy, tricp) plus sroute as a stale-row row. 2 cannot run (ferts, tabora — `path_solve_terminated`, infeasible NLP so the presolve retry aborts — the first measurement of C1's **in-corpus cohort** influx, pinned by identity).
+
+**Floor 75 → 76 (+1, Decision 1 B, read from `data/floor_provenance.json` via `floor_tracker.py`).** turkey's cold emit changed at `95ba01ea` (Sprint 35 Day 6, +1/-1: domain-less 2-D set `ao` now quoted per component, ending `$161` ×6). Run licensed in Sprint 40 Day 3 at `f1771435`, it matches presolve @ 29078.2106. **The fail-before sub-rule HOLDS** (Decision 1): the pre-fix golden `95ba01ea^` (sha256 `ad6d57d21c0e4ba6…`) run licensed fails compile with `$161`, `$257`, so it does not match. Reported as **"floor 76 (+0 license-unlocked, not counted)"** — no COLD license-unlocked match arose this sprint, so the C5 `license_unlocked` ledger is empty; turkey is counted in the 76 as a fix-driven genuine entry (not an unlocked cold match).
+
+**`path_solve_terminated`'s 2 (continuity) / 3 (current) are the pre-registered influx** (C1): ferts and tabora are in-corpus cohort rows measured there for the first time under license (both have infeasible NLPs; the presolve retry aborts); minsurf is an NLP-gated admitted model with the same shape. **Zero rows outside the two populations are at `path_solve_terminated`** — which is the measurement C1 asks for; the three names above are listed by identity rather than folded into "0".
+
+### Closing figures — every one derived at `ca83e884`, none recalled (C6)
+
+| quantity | open (Day 0, `cd5c6b7e`) | close (`ca83e884`) continuity · current | Δ continuity | source |
+|---|---|---|---|---|
+| convex candidates | 142 | **140 · 149** | −2 (re-base) / +9 (admitted) | `kpi_block.py --corpus continuity/current` |
+| Parse | 142 | 140 · 146 | — / +6 | same |
+| Translate | **135** | **135 · 139** | **— (C7 UNMET)** / +4 admitted | same |
+| Solve | **111** | **114 · 116** | **+3 (C3 cohort unlock)** | same |
+| Match | **95** | **96 · 98** | **+1 (turkey, C3)** | same |
+| &nbsp;&nbsp;cold-optimal | 65 | 65 · 65 | — | same |
+| &nbsp;&nbsp;presolve | 30 | 31 · 33 | +1 (turkey) | same |
+| all-219 Match | 98 | **101 · 101** | **+3** | same |
+| model_infeasible | 7 | **13 · 13** | **+6 (cohort influx — egypt, robot, shale, sroute, tfordy, tricp)** | same |
+| path_syntax_error | 6 | 6 · 7 | — / +1 jbearing | same |
+| **`path_solve_terminated`** | **0** | **2 · 3** | **+2 (ferts, tabora — C1 influx by identity, in populations)** / +1 minsurf | same |
+| `path_solve_license` | 11 | **0 · 0** | **−11 (every cohort row now licensed)** | same |
+| **genuine floor** | **75** | **76 (+0 license-unlocked, not counted)** | **+1 (turkey, Sprint 40 Day 3)** | `floor_tracker.py` |
+| P2 ratchet | 9 | **3** | **−6** (turkpow × 3 hoisted + egypt + shale + nonsharp, via P4 #1782 + its Day-8 follow-ons) | `check_index_repeat_properties.py` |
+| leak-gate scope | 186 | **200** (207 goldens − 7 allowlisted) | **+14** | `check_golden_staleness.discover_goldens() minus load_allowlist()` |
+| `make test` | 5,510 (Day 0) · 5,444 (S39 close) | **5,806** | **+296** vs S39 close | this run |
+
+⚠ **The floor is read from `data/floor_provenance.json`** (Decision 1 B, confirmed in prep at `b44344a2`, applicable across every option). The DB's mechanical count is **65**, which is **not** the floor; the tool says so on every run.
+
+### Close gates — the full retest
+
+| gate | result |
+|---|---|
+| **`make check-goldens`**, **unqualified**, **alone**, with the derived `--min-scope 207` **and** `--fail-on-unverified` (P10c) | **PASS** — 200 in-scope goldens checked (7 allowlisted), **all clean**, 3 workers, **0 timeouts under `--fail-on-unverified`** |
+| **Determinism ×3** `PYTHONHASHSEED` {0, 1, 42}, **each run alone** | **PASS ×3** — 200 in-scope goldens byte-identical to their committed files under every seed |
+| `--resolve-changed --since-commit cd5c6b7e` (Day 0 baseline) | **scope 31** (dry-run) — abel, airsp2, camcge, cesam2, clearlak, dinam, egypt, fawley, ganges, gangesx, glider, gussrisk, harker, jbearing, korcge, lmp2, minsurf, qabel, qdemo7, qsambal, robot, sambal, shale, srkandw, sroute, srpchase, tfordy, torsion, tricp, turkey, turkpow. ⚠ **The actual re-solve is NOT run at close** — 11 of the 31 are cohort / NLP-gated rows whose DB holds `licensed` outcomes, so a demo-licensed re-run would regress those rows. The byte-identical emit for every 200 in-scope row is proven by **check-goldens** + **determinism ×3**; the cohort re-solve is covered by the hosted CI licensed cohort run below |
+| **`make test`** | **5,806 passed**, 10 skipped, 1 xfailed, 112 warnings; **+296** vs S39 close (5,444) |
+| **`make check-index-repeats`** | **PASS** — P1 **0 / 3,370** (3,109 → 3,370 as the scope grew to 207 goldens); P2 **3 = baseline 3** (ratcheted 9 → 3 on Day 7 via P4 #1782) |
+| **`make check-doc-figures`** | **PASS** — 29 changed doc lines scanned against 24 facts; **no cited figure contradicts its source**; 4 lines exempted as corrective/historical (one `<!-- figures-ok -->` marker on the stale-figure test-fixture line + three lines using the word "stale") |
+| **Licensed cohort re-run (hosted CI)** | **PASS** — `licensed-solve.yml` run **42399418829** (triggered by the PR #1801 merge to `main` at `ca83e884`): `edition=licensed`, scan positive control **hit**, no `USER:` line in the published log, **every cohort row produces its real licensed outcome** (table below) |
+
+### The licensed cohort re-run at close — every row by identity
+
+Run **42399418829** (post-#1801 merge at `main` = `ca83e884`), the `licensed-solve.yml` output:
+
+| model | rc | time | outcome (MCP) | DB row state |
+|---|---|---|---|---|
+| egypt | 0 | 1.42 s | MS 5 Locally Infeasible | model_infeasible + mismatch · `licensed` |
+| ferts | 3 | 0.48 s | n/a (infeasible NLP → presolve abort) | path_solve_terminated · `licensed` |
+| glider | 0 | 3.42 s | MS 5 Locally Infeasible | model_optimal_presolve + mismatch · `licensed` (committed golden is a presolve-match-form row; the MCP's own solve under licensed is MS 5) |
+| robot | 0 | 5.11 s | MS 5 Locally Infeasible | model_infeasible + mismatch · `licensed` |
+| shale | 0 | 1.44 s | MS 5 Locally Infeasible | model_infeasible + mismatch · `licensed` |
+| sroute | 0 | 0.29 s | MS 1 Optimal | **DB STALE — model_infeasible + not_tested**. Day 8 #1787 landed the sroute multi-reference fix, Day 10 CK2 confirmed the re-solve → presolve match, and **Day 11 deliberately did not persist** (needs `check_mcp_solve_attribution`). Known-item carry |
+| srpchase | 0 | 0.36 s | MS 1 Optimal | model_optimal + mismatch · `licensed` |
+| tabora | 3 | 0.32 s | n/a (infeasible NLP → presolve abort) | path_solve_terminated · `licensed` |
+| tfordy | 0 | 2.70 s | MS 5 Locally Infeasible | model_infeasible + mismatch · `licensed` — Day 7 owner-decided outcome; persisted Day 10 |
+| tricp | 0 | 2.00 s | MS 5 Locally Infeasible | model_infeasible + mismatch · `licensed` |
+| turkey | 0 | 3.74 s | MS 5 Locally Infeasible | model_optimal_presolve + match · `licensed` (floor +1) |
+
+**Scan positive control: hit (as required).** No `USER:` line in the published log. `path_solve_license` → 0 at close.
+
+### The nine close rules, each checked against its PRECONDITION (`PLAN.md` §5)
+
+| rule | precondition | precondition held? | verdict |
+|---|---|---|---|
+| **C1** `path_solve_terminated` maintains 0 over rows outside the two populations; cohort rows that land there are a first-measurement influx, pinned by identity | none (cannot be voided) | — | **✅ MET.** 0 outside; **2 in-corpus** (ferts, tabora — cohort) + **1 NLP-gated admitted** (minsurf). All three listed by identity in the KPI table above and the headline sentence |
+| **C2** Three-gate firm landing (Phase-0 doc with layer + positive control, unqualified leak-gate pass, in `main`) | none (cannot be voided) | — | **✅ MET for every firm landing** (below); two of three is claimed for none |
+| **C3** Cohort moves reported as LICENSE-UNLOCKED, never as recovered; stated once, pinned to the batch commit | P2's batch started | ✅ Day 3 at `f1771435` | **✅ MET.** Verbatim sentence (PLAN.md §5): **Cohort result — license-unlocked, not recovered (batch at `f1771435`): of the 11 MCP-gated models, 3 solve and 1 matches; `path_solve_license` → 0.** None of these is a fix: the emits are byte-identical to their committed goldens; only the ability to run them changed |
+| **C4** Headline on the 140-candidate corpus (re-based 142 → 140 by owner decision 2026-10-19), with the expanded scope (140 + 9 admitted = 149) in the same sentence | P3's admission (W10 `--admit`) started | ✅ Day 3 at `191ed91f` | **✅ MET.** Headline carries both; the admissions in alphabetical order: airsp, airsp2, emfl, indus89, jbearing, minsurf, msm, phosdis, torsion |
+| **C5** Floor read from `data/floor_provenance.json` under Decision 1 B; license-unlocked COLD matches go in the non-counting ledger; a presolve-only unlocked match stays methodology-not-counted unless an emit fix changed its cold emit (fail-before holds) | none (cannot be voided) | — | **✅ MET.** Floor 76 (+0 license-unlocked, not counted). turkey's presolve-match counts as fix-driven genuine because its pre-fix golden fails compile — fail-before HOLDS. No cold license-unlocked match arose, so the ledger is empty, as prep's dry run predicted |
+| **C6** Every figure derived at execution time, carrying its commit | none (cannot be voided) | — | **✅ MET.** Every figure in this entry names `ca83e884` and its tool |
+| **C7** +1 Translate → 136 only if sarf newly produces a byte-stable golden at ≤ 300 s | P6's E5/E6 item started | ✅ started Day 9, re-scoped Day 10 | **⚠ UNMET, not VOID.** The precondition held; the goal did not. sarf's `stat_task` guard is a 51,792-tuple left-deep OR (`_build_tuple_or_guard`); three filed issues — **#1795** (declared-set emission), **#1796** (circular `t++(expr)` render), **#1797** (zero-padded numeric range) — stand between sarf and a byte-stable golden at the gate threshold. Translate reports 135 flat |
+| **C8** License neutrality: every row outside the two populations keeps its outcome on the first licensed full run; no KPI reported before this passes | none (cannot be voided) | — | **✅ MET** (Day 1 RT, measured at `94fe8271` in a throwaway worktree `/tmp/rt/wt`, never persisted): 1 of 198 outside-populations rows moved — `iswnm`, explained as a stale 2026-06-20 timeout row that now translates in 62 s under **both** licensed AND demo with the same `$140`/`$141`/`$257` failure; a stale-row refresh, not a license effect |
+| **C9** P9a's `forward` moves are RELABELS, not fixes; the affected set derived and pinned by identity at P9a's start; report the measured `mismatch` +k / `not_tested` −k, 0 `kpi_block` figures move | P9a started | ✅ Day 11 at `9c15d5a7` | **✅ MET.** Set derived from today's DB at Day 11's start: 13 candidates (prep's 7 + Task 7's 5 + Day-10 tfordy). Measured **k = 12** (sroute drops on re-run through Day 8's #1787; not persisted). Reported `mismatch +12 / not_tested −12`; **0 `kpi_block` figures move**; the persisted DB differs from the committed one only in `db_dirty` plus the documented re-run effects (PR #1800 r2) |
+
+**Five of nine take no precondition** (C1, C2, C5, C6, C8), and all five are **MET**. That is the discipline working: the rules that guard correctness and reporting cannot be voided at all.
+
+### Firm landings — the three-gate rule (C2) applied
+
+| landing | Phase-0 gate (layer + positive control) | leak gate (unqualified) | in `main` | bucket |
+|---|---|---|---|---|
+| **P1 schema 3.1.0** — `license_edition` + W1–W11 + migration (Day 0) | `SCHEMA_3_1_0_DESIGN.md` ✅ | n/a — no emit path | ✅ PR #1761 at `81ab8e46` | **0.** Infrastructure; 150 + 219 + 219 fields migrated to `null`; `kpi_block` identical before/after |
+| **P1 hosted licensed CI** (Day 1, `gams-licensed` environment + `licensed-solve.yml`) | `CI_LICENSE_DESIGN.md` ✅ | n/a — no emit path | ✅ PR #1762 at `135d1037` | **0 KPI, infrastructure.** First run on `main` (39294915808): `edition=licensed`, scan positive control hit, no `USER:` in the published log |
+| **Corpus re-base 142 → 140** (Day 1, owner-confirmed 2026-10-19) | — | n/a | ✅ PR #1763 at `94fe8271` | **−2 candidates.** danwolfe and decomp fell out of continuity |
+| **P2 cohort batch persist** (Day 3) | pre-registered C3 reporting | n/a — DB rows, not an emit change | ✅ `f1771435` via PR #1765 | **+4 Solve · +2 Match · −11 psl · +6 mi** (license unlock) |
+| **P3 9 admitted by rule** (Day 3) | `apply_convexity_results.py --admit` | n/a | ✅ `191ed91f` via PR #1765 | **corpus 140 → 149 current.** +2 Solve, +2 Match, +1 pse, +1 pst |
+| **P7 #1755** — single-binder sum where a reference repeats the binder (Day 5) | `ISSUE_1755` ✅ | leak gate clean | ✅ PR #1779 at `7db9aa4c` | **0 (correctness, latent).** One `_diff_sum` positional-collapse case fixed; no golden moved by the fix alone (shared collapse machinery landed with #1086 collapse disabled under `simplification="none"`) |
+| **P4 #1782** — Pattern C binder rewrite (Days 6–7) | `ISSUE_1782` ✅ | leak gate clean after both rounds | ✅ PR #1783 at `500ffa1f`, PR #1788 at `e5915ad2` | **P2 ratchet −6 (9 → 3).** turkpow's 3 presolve index-repeats, plus egypt's / shale's / gussrisk's (Day 8 follow-ons) |
+| **P4 #1787 + #1790** (Day 8) | `ISSUE_1787`, `ISSUE_1790` ✅ | leak gate clean | ✅ PR #1791 at `c410057d` | **0 KPI, correctness.** Multi-reference Jacobian + Class-B NA cleanup; sroute's cold emit now solves (presolve match on re-run; DB row stale, carried) |
+| **P6 #1794** — ReferencedInstanceFilter (Day 9) | `ISSUE_1794` ✅ | leak gate 200 clean / 0 timeouts (byte-identical) | ✅ PR #1794 at `1abcd687` | **0 (E1–E4 + E7/E8 byte-identical, E5/E6 re-scoped to #1795).** |
+| **Day 10 tfordy persist** | owner decision at CK2 (Day 7's row, Day 10's re-solve confirms) | leak gate clean | ✅ PR #1798 at `91d7f0ff` | **−1 Match.** The "Match −1 as exposed" accepted on Day 7 |
+| **P9a #1799** — own-infeasible → mismatch (Day 11) | `ISSUE_1799` ✅ (includes **Positive control:** field, per P10b) | leak gate clean (no emit change) | ✅ PR #1800 at `8c095f0b` | **0 KPI, correctness.** 12 rows `not_tested` → `mismatch`; shared predicate `test_solve.is_completed_own_infeasible` applied at Case 6 + the compare cascade |
+| **P10c** — `--fail-on-unverified` on the leak gate (Day 1) | design in `OWNER_DECISION_BRIEF.md` | — (gate change itself) | ✅ | **0, gate hardening.** Prep Task 11's measured failure mode fixed |
+| **P10a** — `tests/helpers/anchor_resolver.py` (Day 11) | `test_anchor_resolver.py` fail-before | n/a — test infra | ✅ via PR #1800 | **0 test infra.** Two migrated resolvers shown strictly stronger (`mcp_file_path` rename; `_code_only` string-start) |
+| **P10b** — `**Positive control:**` added-only requirement (Day 11) | `test_phase0_added_only_requirements.py` fail-before (4 new tests) | n/a — doc gate | ✅ via PR #1800 | **0 doc gate.** CONTRIBUTING §Phase 0 now documents all 3 added-only requirements (`**Layer:**`, `**Positive control:**`, `### Nearest Existing Mechanism`) |
+| **P10d** — `check_doc_figures.py --text FILE` + `make TEXT=` (Day 12) | fail-before through `make` on a stale body with a clean diff | n/a | ✅ via PR #1801 | **0 process.** `splitlines()` (r1), POSIX apostrophe escape (r2) |
+| **P10e** — Review-Round Rules in CONTRIBUTING + stdlib parity test (Day 12) | current-sprint dir resolved, not pinned (shared with `check_doc_figures.current_sprint_dir`) | n/a | ✅ via PR #1801 | **0 process.** Symmetric heading-set comparison; 4 PR rounds hardened the extractors |
+
+### REPLAN'd and banked — stated as outcomes, not deferrals
+
+- **P5 #1789** (Days 8–10): the `_add_jacobian_transpose_terms_scalar` offset handler was implemented as a Day-9 prototype and reached the lead/lag correctness target (lnts 68.546 = NLP), then the full REPLAN gate fired on Day 10 — robot and rocket moved ⛔ BACKWARD to `path_solve_terminated` (division by an out-of-range lag = UNDF without a boundary guard), lnts `stat_step` residual got worse (9.66 → 13.26), and glider's row came out wrong on a subset domain. **Banked as commit [`f57bc1d7`](https://github.com/jeffreyhorn/nlp2mcp/commit/f57bc1d7eee0ba0af7aee42e8ac9271e4c103e91) on branch `banked/1789-scalar-offset`** — the fix + its 4 unit tests, against `1abcd687`, not for merge; the diff is on #1789.
+- **P6 E5/E6 sarf recursion** (Days 9–10): E1–E4 + E7/E8 landed byte-identical; E5 is a SHAPE defect in `lam_labor`'s `$`-guard (51,792 left-deep OR terms over a non-Cartesian subset of task instances). Scratch patches reached translation in 338.2 s but GAMS generation then ran >37 min. Re-scoped to **#1795** (emit as declared set); behind it stand **#1796** (circular `t++(expr)` render) and **#1797** (zero-padded numeric range). **C7 UNMET, Translate flat at 135.**
+
+### The sprint in figures — derived, since a count of findings is a figure too
+
+| figure | value | derivation |
+|---|---|---|
+| execution-day PRs merged | **14** (#1761–#1801 range, PRs only; #1766–#1776, #1778, #1780–#1782, #1784–#1787, #1789–#1790, #1792–#1793, #1795–#1797, #1799 are issues; #1760 is the procdir-fix landing from before Day 0, not counted in the sprint range) | `gh pr list --state merged --base main --search "merged:>=2026-10-18"` |
+| goldens changed (committed) | **42 files across 31 unique models** (+5,838 insertions / −71 deletions) | `git diff --stat cd5c6b7e..HEAD -- data/gamslib/mcp/` |
+| DB rows affected | 150 + 219 + 219 (`null` fields) by schema-3.1.0 migration + 11 cohort rows persisted (Day 3) + 1 (tfordy, Day 10) + 12 (P9a relabels, Day 11) + 7 (legacy `license_edition` + attribution refresh, Day 11) = ≈ 31 distinct rows touched | migration tool + per-day commits |
+| new tests | **+296** vs S39 close (5,444 → 5,806); +296 vs Day 0 (5,510 → 5,806) | `make test` |
+| P2 ratchet | 9 → **3** (−6) | `check_index_repeat_properties.py` |
+| leak-gate in-scope goldens | 186 → **200** (+14; 207 goldens committed − 7 allowlisted) | `check_golden_staleness.discover_goldens() minus load_allowlist()` |
+| `path_solve_license` | 11 → **0** (−11) | `kpi_block.py` |
+| prep unknowns | 29, routed: 14 ✅ · 2 ❌ · 12 🔶 · 1 🔍 | `KNOWN_UNKNOWNS.md` |
+| prep refutation rate | **48 %** | 14 of 29 (vs S39 63 %, S38 32 %) |
+
+### Known-item carries from Day 11 (not failures)
+
+- **sroute's DB row is stale** — `model_infeasible + not_tested`, while the licensed cohort re-run produces MS 1 Optimal (match on re-solve). Day 8 #1787 landed the fix, Day 10 CK2 confirmed, Day 11 deliberately did not persist because `check_mcp_solve_attribution` must run first. Carried.
+- **abel's DB row is stale** — `model_optimal (edition=None)`, Day 10 CK2 noted the forward row; carried as a stale-row correction, not booked.
+- **The `check_mcp_solve_attribution` verification** for sroute (and, more broadly, a general attribution check for a cohort row whose MCP produces an own optimal that matches the embedded NLP solution) is a Sprint 41 candidate.
