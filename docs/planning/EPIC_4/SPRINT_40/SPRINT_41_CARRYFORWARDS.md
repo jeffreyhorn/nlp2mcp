@@ -56,7 +56,7 @@ Do **not** re-apply the banked diff verbatim; it moved two models BACKWARD and o
 
 **Bounded next step:** **#1795 first** (the shape), then #1796 and #1797 together (both one-off render fixes). Expect translation to drop well below 300 s once the guard stops being 51,792 OR terms.
 
-**C7 re-registration for Sprint 41:** the +1 Translate target stands, but the precondition should now be *P6 #1795 landed*, not "P6's E5/E6 item started" — that was correct for Sprint 40, when E5/E6 was unscoped. The three issues are the scope now.
+**C7 re-registration for Sprint 41:** the +1 Translate target stands, but the precondition should now be *P6 #1795 implementation started* (a start-state fact, per CONTRIBUTING.md §8c and SPRINT_40/PLAN.md §5) — not "landed", which is an outcome. **Success criteria** (not preconditions): #1795 lands, and sarf produces a byte-stable golden at ≤ 300 s. The distinction matters: a sprint that attempts #1795 and fails to land it should close C7 **UNMET**, not VOID; VOID is reserved for the case where the precondition itself does not hold (implementation never started). Sprint 40's precondition — *P6's E5/E6 item started* — was correct for Sprint 40 because E5/E6 was unscoped then. The three filed issues are the scope now.
 
 ## 5. The license-unlocked COLD-match ledger is empty — the shape of the C5 ledger is still provisional
 
@@ -84,7 +84,7 @@ The P2 ratchet at close is **3**, and the remaining references are **not turkpow
 
 ## 8. The licensed CI's isolation claim held — keep it in `main`-only and re-verify per release
 
-**Every Sprint 40 PR workflow ran `edition=demo`, 10 of them.** The one `main`-push on the `gams-licensed` environment plus the nightly schedule both ran `edition=licensed` with the scan positive control hit and no `USER:` line. **The design works as designed.**
+**Every Sprint 40 PR workflow ran `edition=demo`, 10 of them.** Across the sprint window (2026-10-18 → 2026-11-07) the `gams-licensed` environment saw **13 `push` runs to `main` and 19 nightly `schedule` runs on `main`** (`gh run list --workflow=licensed-solve.yml`): every one that ran reported `edition=licensed` with the scan positive control hit and no `USER:` line. **The design works as designed.**
 
 **Bounded next step:** **do not assume this across GAMS installer rotations.** The pinned SHA-256 in `licensed-solve.yml` is the only mechanism preventing a silent installer swap. Review the SHA at every GAMS version bump; if GAMS 55 ships, re-measure the discriminator (the `edition=licensed/demo` classification is based on a two-run probe against synthetic models; re-run them before changing the pinned version).
 

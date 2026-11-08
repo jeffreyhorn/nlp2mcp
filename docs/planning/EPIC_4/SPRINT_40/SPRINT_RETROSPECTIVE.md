@@ -150,20 +150,27 @@ than a single PR's green.
   escape. Each round was a small, measurable step, and the extractor is now
   more thorough than the hand-pinned four-phrase check it replaced.
 - **The licensed CI held isolation, not just detection.** 10 PR workflow
-  runs this sprint, every one `edition=demo`; the one `main`-push and the
-  nightly schedule both reported `edition=licensed` with the positive control
-  hit and no `USER:` line. The `gams-licensed` environment's branch-policy +
-  per-run activation design works as designed, measured.
+  runs this sprint, every one `edition=demo`; across the sprint window
+  (2026-10-18 → 2026-11-07, derived from `gh run list --workflow=licensed-solve.yml`)
+  the `gams-licensed` environment saw **13 `main`-push runs and 19 nightly
+  `schedule` runs on `main`**, every one `edition=licensed` with the
+  positive control hit and no `USER:` line. The `gams-licensed`
+  environment's branch-policy + per-run activation design works as designed,
+  measured.
 
 ## 6. What did not
 
-- **sarf's +1 Translate missed again** (S37, S38, S39, S40 — the four
-  unfulfilled Translate bets). The cost model was wrong three sprints
-  running: S38 said `_diff_sum` 2.9 % self (correct, irrelevant); Day 9 said
-  one unfiltered loop (correct, insufficient); Day 10 said the guard
-  algorithm (correct, insufficient again). It is now re-scoped to three
-  filed issues (#1795/#1796/#1797), each with a specific fix surface, and
-  there is no Translate claim in the headline.
+- **sarf's +1 Translate missed again** (S37, S38, S40 — three unfulfilled
+  bets; **S39 was a Day-0 deliberate re-scope to branch B**, per
+  SPRINT_39/PLAN.md:11, which made C6 VOID and scheduled no sarf
+  implementation — it does not count as a missed sprint, and conflating
+  VOID with UNMET would collapse the distinction this closeout depends
+  on). The cost model was wrong three sprints running: S38 said
+  `_diff_sum` 2.9 % self (correct, irrelevant); Day 9 said one unfiltered
+  loop (correct, insufficient); Day 10 said the guard algorithm (correct,
+  insufficient again). It is now re-scoped to three filed issues
+  (#1795/#1796/#1797), each with a specific fix surface, and there is no
+  Translate claim in the headline.
 - **P5 #1789 reached a fixture target and was banked.** The lead/lag
   fixtures hit 68.546 = NLP on the prototype — a controlled-input result,
   not a corpus match (and the prototype's quoted-literal lift attempt was
