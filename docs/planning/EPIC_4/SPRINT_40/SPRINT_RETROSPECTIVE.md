@@ -97,10 +97,14 @@ Match 96 → 95; **this sprint is trying not to pay that bill a second time.**
 matches the embedded NLP solution is **under-verified by presolve-match
 alone**. Reading the value of `tetd.l` alone does not distinguish: a
 successfully completed MCP can legitimately retain the warm-started value.
-**The discriminator is `Attribution.mcp_succeeded`'s three checks** —
-final-model ownership, completion, and status — as implemented in
-`check_mcp_solve_attribution.py:318–384`. That is the attribution-check
-that Sprint 41 owes.
+**The discriminator is `Attribution.mcp_succeeded`** — ownership (the
+*last* summary from `self.mcp_summaries`, our emitted MCP), solver completion
+(`solver_status == _NORMAL_COMPLETION`, with the `not aborted` / `not
+abort_ambiguous` safety predicates), and model status (`model_status in
+_SUCCESS_MODEL_STATUS`), as implemented in
+`scripts/sprint_audit/check_mcp_solve_attribution.py:352–384` (the predicate
+itself; the ownership selection is `mcp_summaries` at `:316–319`).
+That is the attribution-check that Sprint 41 owes.
 
 ## 4. The index-repeat ratchet, and why 9 → 3 is a correctness improvement counted as process
 
