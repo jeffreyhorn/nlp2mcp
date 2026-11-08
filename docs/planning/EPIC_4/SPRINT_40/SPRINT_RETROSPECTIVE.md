@@ -8,15 +8,16 @@ number below is derived there and quoted here with its commit; none is recalled.
 **It unlocked the license, measured a long-hidden slice of the corpus, and
 reported it honestly.** `path_solve_license` 11 → 0, once; and the 11 cohort
 rows redistributed by identity, not by headline — **3 solve, 1 matches
-(turkey — floor +1), 2 at `path_solve_terminated` (ferts, tabora, their NLPs
-infeasible), 5 proven infeasible under license (egypt, robot, shale, tfordy,
+(turkey — floor +1), 2 at `path_solve_terminated` (ferts, tabora — cold MCP
+aborts with `EXECERROR 36` on empty-equation-but-unfixed multiplier pairs,
+per #1767), 5 proven infeasible under license (egypt, robot, shale, tfordy,
 tricp), 1 stale-by-design (sroute, Day 11)**. The numbers on the headline rose
 (Solve 111 → 114, Match 95 → 96, floor 75 → 76) — but C3 reports them as
 *license-unlocked, not recovered*, in the plan's pre-written sentence, because
 none of those moves is a fix: every emit is byte-identical to its committed
 golden. Only the ability to run them changed.
 
-**Six of the nine pre-registered close rules (C1, C2, C3, C4, C5, C6, C8, C9)
+**Eight of the nine pre-registered close rules (C1, C2, C3, C4, C5, C6, C8, C9)
 are MET; C7 is UNMET not VOID.** C7's precondition held — P6's E5/E6 started on
 Day 9 and was re-scoped on Day 10 — but sarf did not produce a byte-stable
 golden at the gate threshold, so Translate stays 135. **Five of nine take no
@@ -94,9 +95,12 @@ Match 96 → 95; **this sprint is trying not to pay that bill a second time.**
 
 **The general shape:** a cohort row whose MCP produces an own optimal that
 matches the embedded NLP solution is **under-verified by presolve-match
-alone**, and the discriminator is whether `nlp2mcp_obj_val = tetd.l` (the
-warm-start variable) carried the embedded NLP's answer rather than the MCP's.
-That is the attribution-check that Sprint 41 owes.
+alone**. Reading the value of `tetd.l` alone does not distinguish: a
+successfully completed MCP can legitimately retain the warm-started value.
+**The discriminator is `Attribution.mcp_succeeded`'s three checks** —
+final-model ownership, completion, and status — as implemented in
+`check_mcp_solve_attribution.py:318–384`. That is the attribution-check
+that Sprint 41 owes.
 
 ## 4. The index-repeat ratchet, and why 9 → 3 is a correctness improvement counted as process
 
@@ -160,9 +164,11 @@ than a single PR's green.
   algorithm (correct, insufficient again). It is now re-scoped to three
   filed issues (#1795/#1796/#1797), each with a specific fix surface, and
   there is no Translate claim in the headline.
-- **P5 #1789 reached its correctness target and was banked.** lnts 68.546 =
-  NLP on the prototype; then robot and rocket moved BACKWARD to
-  `path_solve_terminated`, lnts `stat_step` residual got worse, glider's
+- **P5 #1789 reached a fixture target and was banked.** The lead/lag
+  fixtures hit 68.546 = NLP on the prototype — a controlled-input result,
+  not a corpus match (and the prototype's quoted-literal lift attempt was
+  an independent unresolved defect); then robot and rocket moved BACKWARD
+  to `path_solve_terminated`, lnts `stat_step` residual got worse, glider's
   subset domain wrong. The diff is a durable commit (`f57bc1d7` on
   `banked/1789-scalar-offset`), the three mechanisms are named on #1789, and
   it is Sprint 41 work — not because the fix was wrong, but because an
@@ -192,7 +198,7 @@ than a single PR's green.
    verified on the inequality Jacobian's 158,666 differentiations. Three
    sprints of sarf regressions were avoided by that discipline.
 4. **A rule that names a precondition that always holds is not pre-registered,
-   it is just a rule.** C1, C2, C5, C6, C8 have no precondition; four of
+   it is just a rule.** C1, C2, C5, C6, C8 have no precondition; five of
    nine rules are "at every sprint close". Move the ones that keep reaching
    "precondition held" into the always-on list; a precondition that cannot
    fail is naming documentation discipline, not a bet.

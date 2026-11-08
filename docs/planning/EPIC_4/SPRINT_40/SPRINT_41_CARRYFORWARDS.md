@@ -26,7 +26,7 @@ Day 10 CK2 noted `abel` moved `mismatch → match` on re-solve. It is not in the
 
 ## 3. P5 #1789 stat_step / scalar-offset — BANKED, mechanism confirmed, three defects named
 
-**Day-9 prototype** reached `lnts 68.546 = NLP` on the `_add_jacobian_transpose_terms_scalar` offset handler + `_apply_offset_substitution(deriv, eq_idx, eq_idx, mult_domain, …)`, plus `_replace_indices_in_expr` lifting a quoted literal `u("h3")` → `u(h)`. The **full REPLAN gate fired on Day 10:**
+**Day-9 prototype** reached the **lead/lag fixtures at 68.546 = NLP** on the `_add_jacobian_transpose_terms_scalar` offset handler + `_apply_offset_substitution(deriv, eq_idx, eq_idx, mult_domain, …)` — fixture success on a controlled input, not a corpus match. A **separate unresolved defect** was identified alongside: `_replace_indices_in_expr` fails to lift a quoted literal `u("h3")` → `u(h)`, which the prototype attempted to patch but did not resolve correctly; this is a Sprint-41 item independent of the +1 target (named below). The **full REPLAN gate fired on Day 10:**
 
 | control | result |
 |---|---|
@@ -36,12 +36,13 @@ Day 10 CK2 noted `abel` moved `mismatch → match` on re-solve. It is not in the
 
 **Durable commit:** [`f57bc1d7`](https://github.com/jeffreyhorn/nlp2mcp/commit/f57bc1d7eee0ba0af7aee42e8ac9271e4c103e91) on branch `banked/1789-scalar-offset` (fix + 4 unit tests, against `1abcd687`; **not for merge**). The diff + three mechanisms are also on #1789.
 
-**Bounded next step:** **the three defects are independent and should be fixed separately,** with a Phase-0 doc each:
+**Bounded next step:** **the defects are independent and should be fixed separately,** with a Phase-0 doc each:
 1. the **boundary guard** on the scalar-offset substitution (robot/rocket's UNDF root);
 2. the **subset-domain resolution** for `sum(h, …)` where `h` is a subset coord (glider's wrong row);
-3. lnts's **second defect** — unattributed; if the Day-9 prototype made lnts worse, something in the handler is wrong independently of the +1. Trace from the stationarity entry, not the emitter.
+3. lnts's **second defect** — unattributed; if the Day-9 prototype made lnts worse, something in the handler is wrong independently of the +1. Trace from the stationarity entry, not the emitter;
+4. the **quoted-literal lift** — `_replace_indices_in_expr` on `u("h3")` → `u(h)` is an independent unresolved defect the prototype did not fix; it is its own Phase-0 doc.
 
-Do **not** re-apply the banked diff verbatim; it moved two models BACKWARD and one wrong. The +1 target (lnts 68.546) is real; the delivery mechanism is not.
+Do **not** re-apply the banked diff verbatim; it moved two models BACKWARD and one wrong. The +1 target (the lead/lag fixtures' 68.546) is real as a **fixture result**; the delivery mechanism to a corpus match is not.
 
 ## 4. P6 E5/E6 sarf recursion — THREE filed issues, recursion diagnosed as a SHAPE defect
 
@@ -65,9 +66,9 @@ Do **not** re-apply the banked diff verbatim; it moved two models BACKWARD and o
 
 ## 6. `path_solve_terminated` is populated, by design — C1's population list is now a living set
 
-Three models sit at `path_solve_terminated` at close: **ferts** (cohort, infeasible NLP), **tabora** (cohort, infeasible NLP), **minsurf** (NLP-gated admitted, infeasible NLP). All three are in the **two populations** C1 names; the "0 outside" measurement holds.
+Three models sit at `path_solve_terminated` at close, all with **MCP-generation errors** diagnosed on #1767 (not NLP infeasibility): **ferts** (cohort, EXECERROR 36 — 36× empty-equation `comp_mb.lam_mb` pairs whose multiplier is left free), **tabora** (cohort, EXECERROR 36 — 36× empty-equation `comp_lb.lam_lb` pairs whose multiplier is left free), **minsurf** (NLP-gated admitted, EXECERROR 4 — four unmatched corner-fix equations `v_fx_<corner>.nu_v_fx_<corner>` at the boundary corners `x0_y0`, `x0_y26`, `x51_y0`, `x51_y26`). All three are in the **two populations** C1 names; the "0 outside" measurement holds.
 
-**Bounded next step:** **Sprint 41 Task 7 (or its equivalent) should re-measure these three.** ferts and tabora's NLPs failed under licensed GAMS 54.2.1; a solver version bump or a cold-emit change in the NLP could move them. minsurf is an NLP-gated row; its first-measurement at `path_solve_terminated` says the convexity verifier's `likely_convex` classification does not imply the NLP solves.
+**Bounded next step:** **Sprint 41 should fix the emitter's empty-instance handling for inequality multipliers** (ferts/tabora: for instances whose body is data-conditioned away, fix the multiplier via `lam.fx(...)$(row empty) = 0`; same class as #1041 cesam2 and completed ISSUE_1021 spatequ) and the per-element `.fx` emission at doubly-fixed corner points (minsurf; plus the stationarity defect R-B-minsurf #1771 that affects it independently). Not an NLP-solver effect — these are MCP generation errors; a GAMS version bump will not move them.
 
 ## 7. The P2 index-repeat ratchet ratcheted 9 → 3 — carry the remaining three as an audit, not a defect
 
@@ -98,7 +99,7 @@ The P2 ratchet at close is **3**, and the remaining references are **not turkpow
 
 ## 10. The Day-13 close process held; record what moves to a prompt template
 
-**Six of nine close rules MET, one UNMET-not-VOID, four take no precondition and all four are MET.** Three mechanisms that earned carry into the next sprint's prompt template:
+**Eight of nine close rules MET, one UNMET-not-VOID (C7), five take no precondition and all five are MET.** Three mechanisms that earned carry into the next sprint's prompt template:
 
 1. **Pre-registering a rule whose precondition is "always", move it to the always-on list.** C1, C2, C5, C6, C8 have no precondition; they are rules, not bets. The rule-vs-bet distinction is where the pre-registration discipline earns its keep.
 2. **Derive the affected set when the rule starts, not when it was planned.** C9's set was "prep's 7", amended at plan-write time to "derived at Day 11's start". Measured k = 12 ≠ 7; prep's list is the floor, not the ceiling. The same shape applies to any P-item that depends on a measurement taken after the P-item's planning.
