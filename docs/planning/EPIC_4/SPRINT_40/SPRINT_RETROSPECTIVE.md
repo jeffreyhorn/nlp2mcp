@@ -79,16 +79,21 @@ carefully, is a hypothesis until measurement.
 ## 3. The attribution carry (sroute), and why a known-stale row is better than a wrong-written one
 
 **sroute was the sprint's one deliberate non-persist.** Day 8's #1787
-multi-reference fix made its cold emit solve; Day 10 CK2 confirmed it (re-solve
-→ presolve match); the Day-10 CK2 log logged it; **Day 11 P9a deliberately did
-not persist sroute**, because its MCP produces an own `MODEL STATUS 1 Optimal`
-that matches the embedded NLP's answer — the S38 D9 `weapons` spurious-match
-shape. The right verification is `check_mcp_solve_attribution`, not another
-re-persist.
+multi-reference fix made its cold emit solve; **Day 10 CK2's re-solve via
+`run_full_test.py` produced a presolve match** (SPRINT_LOG lines 1157, 1342 —
+the only measurement that exercised a presolve retry); the Day-10 CK2 log
+logged it; **Day 11 P9a deliberately did not persist sroute**, because the
+S38 D9 `weapons` spurious-match shape is in play — an MCP that produces an
+own `MODEL STATUS 1 Optimal` matching the embedded NLP's answer is
+under-verified by presolve-match alone. The right verification is
+`check_mcp_solve_attribution`, not another re-persist.
 
 **The cost of this discipline is a known stale row at close:** the DB has
-sroute as `model_infeasible + not_tested`, the live licensed cohort run (CI
-42399418829) produces MS 1 Optimal. That delta is uncomfortable to read, and
+sroute as `model_infeasible + not_tested`, and the licensed-solve CI run
+**42399418829** reports a **cold** `MS 1 Optimal` in 0.29 s
+(`sroute     edition=licensed rc=0      0.29s  1 Optimal`, SPRINT_LOG line 1588).
+That CI line is a cold-solve observation; it does not establish the Day-10
+presolve match and does not say anything about either run's attribution. That delta is uncomfortable to read, and
 reporting it as *known* rather than *persisted* is the right call. S38 D10
 booked `weapons` as a match without the attribution; S39 D10 had to correct
 Match 96 → 95; **this sprint is trying not to pay that bill a second time.**
@@ -200,10 +205,12 @@ than a single PR's green.
    (whatever shape it takes in Sprint 41) writes rows it measures.
 2. **Pin every cohort row's intended outcome at prep, derived from Task 7's
    measurement.** The sprint's one close-day surprise was not technical: it
-   was finding that the licensed CI run showed sroute MS 1 Optimal while the
-   DB had `model_infeasible` from prep. Task 7 saw the fingerprint; the
-   intended destination was never pinned. Pin it, so that a stale row at
-   close is a decision, not a discovery.
+   was finding that the licensed CI run showed sroute MS 1 Optimal (a cold
+   solve) while the DB had `model_infeasible` from prep, and the separate
+   Day-10 CK2 re-solve produced a presolve match — two independent
+   measurements, neither one persisted pending attribution. Task 7 saw the
+   fingerprint; the intended destination was never pinned. Pin it, so that
+   a stale row at close is a decision, not a discovery.
 3. **When a fix touches shared machinery, prove it is byte-identical on the
    unqualified scope, and name the rows that the author expects to move.**
    PR #1794 (P6 filter) did this exactly right: 200 goldens byte-identical,
