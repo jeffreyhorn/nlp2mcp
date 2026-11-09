@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Filed #1793:** `_reindex_condition_symbols` emits `ord(h+1)` on dinam's `$8` guard where no symbol stands for that quantity.
   - **PR #1794 ran three review rounds** (r1: filter OFF under `simplification="none"`; r2: binder branch canonicalises subset members; r3: a set/alias name that is also a declared label → filter declines; sarf counts unchanged).
 
-- **Day 8 (2026-10-31) — P4 #1787 multi-reference Jacobian + #1790 Class B; P5 #1789 trace; P8 both guards behavioural · 10 h.** Detail: `docs/planning/EPIC_4/SPRINT_40/SPRINT_LOG.md` §Day 8.
+- **Day 8 (2026-10-31) — P4 #1787 multi-reference Jacobian + #1790 Class B; P5 #1789 trace; P8 finish (one open emit-level `_compute_index_offset_key` pin pre-empted by Day 6's reference binding; three behavioural pins recorded on Day 7 land) · 10 h.** Detail: `docs/planning/EPIC_4/SPRINT_40/SPRINT_LOG.md` §Day 8.
   - **#1787 (egypt / harker / sroute / tfordy pfs):** multi-reference Jacobian terms emit one term per reference instead of folding. sroute's cold emit now solves (presolve match on re-run; DB row deliberately stale, awaiting `check_mcp_solve_attribution`).
   - **#1790 (gussrisk):** Class-B NA cleanup on multi-pattern Jacobian; both the warning and the write fire.
   - **P2 ratchet 6 → 3** (continued from Day 7's 9 → 6 via #1782).
@@ -43,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **PR #1791 ran four review rounds** (per-placement binder merge, full-set binders only, eq-index SYMBOL renamed, SetAttrRef in `_rename_free_indices`, reserved row names).
   - Filed **#1792** (param used only in eq `$` condition loses its assignment).
 
-- **Day 7 (2026-10-26) — P4 #1782 Pattern-C binder rewrite (the P2 ratchet lever, 12 review rounds); P8 both guards behavioural · 10 h.** Detail: `docs/planning/EPIC_4/SPRINT_40/SPRINT_LOG.md` §Day 7.
+- **Day 7 (2026-10-26) — P4 #1782 Pattern-C binder rewrite (the P2 ratchet lever, 12 review rounds); P8 three structural guards become behavioural (1 `_match_subset_domain` + 2 `_compute_index_offset_key`, partition 5/11 → 8/8) · 10 h.** Detail: `docs/planning/EPIC_4/SPRINT_40/SPRINT_LOG.md` §Day 7.
   - **#1782 final design:** BEFORE re-symbolisation, binders → their variable position names (`_binder_position_map`), every sum in its own scope (`_rename_free_indices` alpha-renames destination-colliding nested binders; scopes indexed smax/smin `_reduction_call_parts`, `card()` operands → their SET), the representative's eq label → placeholder E\*, eq condition renamed to E\*, self-maps for all row coords + derivative names. `_finish_binder_position_rewrite` points ONLY the multiplier's eq index at E\* (drops the dim-mismatch sameas pin). Admission withdrawn BEFORE consolidation when the rewrite can't serve.
   - **P2 ratchet 9 → 6** (turkpow × 1 + shale × 2 hoisted on Day 7's final design; combined with Day 6's turkpow × 2 under #1782 Phase 1, #1782 hoisted 11 → 6 across Days 6–7).
   - **tfordy presolve match → infeasible BY OWNER DECISION** (correct row; CASE_B underneath, filed as #1787).
