@@ -45,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Day 7 (2026-10-26) — P4 #1782 Pattern-C binder rewrite (the P2 ratchet lever, 12 review rounds); P8 both guards behavioural · 10 h.** Detail: `docs/planning/EPIC_4/SPRINT_40/SPRINT_LOG.md` §Day 7.
   - **#1782 final design:** BEFORE re-symbolisation, binders → their variable position names (`_binder_position_map`), every sum in its own scope (`_rename_free_indices` alpha-renames destination-colliding nested binders; scopes indexed smax/smin `_reduction_call_parts`, `card()` operands → their SET), the representative's eq label → placeholder E\*, eq condition renamed to E\*, self-maps for all row coords + derivative names. `_finish_binder_position_rewrite` points ONLY the multiplier's eq index at E\* (drops the dim-mismatch sameas pin). Admission withdrawn BEFORE consolidation when the rewrite can't serve.
-  - **P2 ratchet 9 → 6** (turkpow × 3 hoisted).
+  - **P2 ratchet 9 → 6** (turkpow × 1 + shale × 2 hoisted on Day 7's final design; combined with Day 6's turkpow × 2 under #1782 Phase 1, #1782 hoisted 11 → 6 across Days 6–7).
   - **tfordy presolve match → infeasible BY OWNER DECISION** (correct row; CASE_B underneath, filed as #1787).
   - **Filed #1784, #1785, #1786, #1787.** Reproducers added to #1776/#1778.
   - **⚠ Fixtures must use a PARAMETER where the source does** (ParamRef → declared-domain mapping + offset subst).
@@ -68,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Day 3 (2026-10-21) — P2 cohort persist (`f1771435`); P3 9 admitted by rule (`191ed91f`); P3 pipeline rows (`570d1c1b`) · 10 h.** Detail: `docs/planning/EPIC_4/SPRINT_40/SPRINT_LOG.md` §Day 3.
   - **Batch persisted `f1771435` (C3 pin: 4 solve, 2 match, psl → 0).** **9 admitted `191ed91f` (current 149 / continuity 140).** Pipeline rows `570d1c1b`.
   - **Floor 75 → 76: turkey credited fix-driven genuine.** Pre-fix golden fails $161 licensed → fail-before HOLDS (Decision 1).
-  - **P2 index-repeat baseline 9 → 11** (egypt/shale presolve copies of the Class-A defects; later hoisted to 6 on Day 7's #1782 and to 3 on Day 8's #1787/#1790; **nonsharp was NOT hoisted** — it is a refused MINLP and dinam has a separate open diagnosis).
+  - **P2 index-repeat baseline 9 → 11** (egypt/shale presolve copies of the Class-A defects; later hoisted to 6 across Days 6–7 under #1782 — Day 6 turkpow × 2 at Phase 1 (11 → 9), Day 7 turkpow × 1 + shale × 2 at the final design (9 → 6) — and to 3 on Day 8's #1787/#1790; **nonsharp was NOT hoisted** — it is a refused MINLP and dinam has a separate open diagnosis).
   - **torsion = 5th multi-solve model.** Tests now state invariants (continuity 140, current 140+admissions; floor fixture).
 
 - **Day 2 (2026-10-20): the license-neutrality gate holds, the cohort batch is measured, and W10 lands.** Detail: `docs/planning/EPIC_4/SPRINT_40/SPRINT_LOG.md` §Day 2.
