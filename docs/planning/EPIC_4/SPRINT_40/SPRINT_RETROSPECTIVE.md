@@ -177,8 +177,10 @@ than a single PR's green.
   Translate claim in the headline.
 - **P5 #1789 reached a fixture target and was banked.** The lead/lag
   fixtures hit 68.546 = NLP on the prototype — a controlled-input result,
-  not a corpus match (and the prototype's quoted-literal lift attempt was
-  an independent unresolved defect); then robot and rocket moved BACKWARD
+  not a corpus match (and `_replace_indices_in_expr`'s incorrect lift of
+  the quoted literal `u('h3')` to `u(h)` was observed as a pre-existing,
+  independent defect in the same function, which the prototype neither
+  caused nor fixed — SPRINT_LOG line 1284); then robot and rocket moved BACKWARD
   to `path_solve_terminated`, lnts `stat_step` residual got worse, glider's
   subset domain wrong. The diff is a durable commit (`f57bc1d7` on
   `banked/1789-scalar-offset`), the three mechanisms are named on #1789, and

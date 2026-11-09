@@ -26,7 +26,7 @@ Day 10 CK2 noted `abel` moved `mismatch → match` on re-solve. It is not in the
 
 ## 3. P5 #1789 stat_step / scalar-offset — BANKED, mechanism confirmed, three defects named
 
-**Day-9 prototype** reached the **lead/lag fixtures at 68.546 = NLP** on the `_add_jacobian_transpose_terms_scalar` offset handler + `_apply_offset_substitution(deriv, eq_idx, eq_idx, mult_domain, …)` — fixture success on a controlled input, not a corpus match. A **separate unresolved defect** was identified alongside: `_replace_indices_in_expr` fails to lift a quoted literal `u("h3")` → `u(h)`, which the prototype attempted to patch but did not resolve correctly; this is a Sprint-41 item independent of the +1 target (named below). The **full REPLAN gate fired on Day 10:**
+**Day-9 prototype** reached the **lead/lag fixtures at 68.546 = NLP** on the `_add_jacobian_transpose_terms_scalar` offset handler + `_apply_offset_substitution(deriv, eq_idx, eq_idx, mult_domain, …)` — fixture success on a controlled input, not a corpus match. A **separate, pre-existing unresolved defect** was observed **in the same function** (SPRINT_LOG line 1284, "a second mechanism in the same function"): `_replace_indices_in_expr` **lifts** a quoted literal `u('h3')` to the bare symbol `u(h)`, giving `2*u(h)` — the lift itself is the bug. **The prototype neither causes nor fixes this;** it was recorded on #1789 as a third gate form, as a Sprint-41 item independent of the +1 target (named below). The **full REPLAN gate fired on Day 10:**
 
 | control | result |
 |---|---|
@@ -40,7 +40,7 @@ Day 10 CK2 noted `abel` moved `mismatch → match` on re-solve. It is not in the
 1. the **boundary guard** on the scalar-offset substitution (robot/rocket's UNDF root);
 2. the **subset-domain resolution** for `sum(h, …)` where `h` is a subset coord (glider's wrong row);
 3. lnts's **second defect** — unattributed; if the Day-9 prototype made lnts worse, something in the handler is wrong independently of the +1. Trace from the stationarity entry, not the emitter;
-4. the **quoted-literal lift** — `_replace_indices_in_expr` on `u("h3")` → `u(h)` is an independent unresolved defect the prototype did not fix; it is its own Phase-0 doc.
+4. the **quoted-literal lift** — `_replace_indices_in_expr` incorrectly lifts `u('h3')` to `u(h)`; the prototype neither causes nor fixes this (SPRINT_LOG line 1284). It is a pre-existing, independent defect on the same function, with its own Phase-0 doc.
 
 Do **not** re-apply the banked diff verbatim; it moved two models BACKWARD and one wrong. The +1 target (the lead/lag fixtures' 68.546) is real as a **fixture result**; the delivery mechanism to a corpus match is not.
 
