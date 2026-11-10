@@ -24,12 +24,7 @@ golden at the gate threshold, so Translate stays 135. **Five of nine take no
 precondition**, and all five are MET. That is the discipline working: rules that
 guard correctness and reporting cannot be voided at all.
 
-**Firm landings, all three-gated (C2):** P1 (schema 3.1.0 + hosted licensed CI
-+ corpus re-base), P2 (cohort batch persist), P3 (9 admitted by rule), P7
-(#1755), P4 (#1782 Pattern-C binder rewrite, Days 6–7, P2 ratchet 11 → 6), P4
-(#1787 + #1790, Day 8, P2 ratchet 6 → 3), P6 (#1794 ReferencedInstanceFilter E1–E4 + E7/E8 byte-identical),
-tfordy's Day-10 persist (owner decision), P9a (#1799 own-infeasible → mismatch),
-P10a–e (five process items). **Fourteen distinct landings.** The one emit-moving
+**Firm landings, C2 applied with each limb that is in scope — the leak-gate limb is `n/a` for non-emit landings** (infrastructure, DB-row writes, test infra and doc/process items leave the committed goldens byte-identical; the leak-gate rule has nothing to measure). The Phase-0 gate and the `in main` limb hold for every landing; the leak-gate limb holds unqualified for every emit-path landing (P7 #1755; P4 #1782 Days 6–7; P4 #1787 + #1790 Day 8; P6 #1794 Day 9 — 200 goldens byte-identical in each case) and is `n/a` for the rest. Per-landing dispositions are tabulated in `SPRINT_LOG.md` under *Firm landings — the three-gate rule (C2) applied* (lines 1613-onward). **The landings:** P1 (schema 3.1.0 + hosted licensed CI + corpus re-base — leak gate n/a, no emit path), P2 (cohort batch persist — leak gate n/a, DB rows only), P3 (9 admitted by rule — leak gate n/a), P7 (#1755, leak gate clean), P4 (#1782 Pattern-C binder rewrite, Days 6–7, P2 ratchet 11 → 6, leak gate clean after both rounds), P4 (#1787 + #1790, Day 8, P2 ratchet 6 → 3, leak gate clean), P6 (#1794 ReferencedInstanceFilter E1–E4 + E7/E8 byte-identical, leak gate 200 clean), tfordy's Day-10 persist (owner decision at CK2, leak gate clean), P9a (#1799 own-infeasible → mismatch, leak gate clean — no emit change), P10a–e (five process items — leak gate n/a, test-infra / doc gate / process gate). **Fourteen distinct landings.** The one emit-moving
 headline change is turkey's +1 floor, which the Sprint 35 Day 6 fix (`95ba01ea`)
 earned and the Sprint 40 license actually tested — a credit that could not be
 booked before.
